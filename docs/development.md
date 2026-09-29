@@ -120,7 +120,10 @@ proposes the bumps after a seven-day cooldown.
 request to `main`. It covers build, vet, the race-enabled test suite
 with coverage, and a static cross-build for the three release targets
 (NFR-10). It also runs golangci-lint, govulncheck, `mdsmith check .`,
-and zizmor over the workflows themselves.
+and zizmor over the workflows themselves. A final job named `CI`
+passes only when every other job passed. It is the one check the
+branch and release-tag rulesets require, because GitHub names a
+required check after a job, never after the workflow.
 
 [nightly.yml](../.github/workflows/nightly.yml) fuzzes every `Fuzz*`
 target in the tree for five minutes each (ENG-07). It discovers the

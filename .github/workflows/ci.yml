@@ -172,3 +172,25 @@ jobs:
           # Fail the job on findings instead of filing them into code
           # scanning: the check itself is the gate.
           advanced-security: false
+
+  # The one check the branch and release-tag rulesets require. GitHub
+  # names a required check after a job, never after the workflow, so
+  # this job carries the name "CI" and passes only when every job above
+  # passed. A job added later joins `needs:` here and the rulesets stay
+  # as they are. `always()` keeps it running after a failure, so a red
+  # job turns this check red instead of leaving it skipped, which a
+  # ruleset would not count as a failure.
+  ci:
+    name: CI
+    if: ${{ always() }}
+    needs: [test, build, lint, vuln, markdown, workflows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail unless every job passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: $RESULTS"
+          for r in $RESULTS; do
+            [ "$r" = "success" ] || { echo "::error::a CI job ended $r"; exit 1; }
+          done
