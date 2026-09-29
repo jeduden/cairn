@@ -169,7 +169,10 @@ Feature: Engineering quality (ENG)
     Given the repository's branch protection for main
     Then direct pushes are rejected
     And commits must be signed
-    And CODEOWNERS requires a security reviewer for security-sensitive packages
+    And every pull request needs an approval from a reviewer other than its author
+    And CODEOWNERS names the stakeholder on the requirement text and on every path that enforces it
+    And CODEOWNERS names no owner on any other path
+    And changes to security-sensitive packages need two approvals, one from the designated security reviewer
 
   @ENG-22 @P0 @pending
   Scenario: every privacy or data-flow statement cites its proving test

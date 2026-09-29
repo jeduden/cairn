@@ -70,6 +70,14 @@ touches.
 - Run `mdsmith merge-driver install` once per clone; see
   [docs/development.md](docs/development.md) for why
 
+## Review
+
+Agents review and approve each other's pull requests (ENG-21). A pull
+request touching a path [CODEOWNERS](.github/CODEOWNERS) assigns —
+the SRS, the gates that enforce it, CI, the lint configuration or the
+agent instructions — also waits for the stakeholder's approval. Keep
+such changes out of code pull requests, so code never waits on it.
+
 ## Requirements and Scenarios
 
 The SRS is normative; the scenarios under `features/` make it

@@ -36,8 +36,9 @@ This plan covers the rest.
    (ENG-15)
 6. Move the release build into a reusable workflow for SLSA Build Level
    3 (ENG-20)
-7. Protect main: reviewed, signed pull requests only, with CODEOWNERS
-   (ENG-21)
+7. Protect main: reviewed, signed pull requests only; agents approve
+   code, and CODEOWNERS puts the stakeholder on the requirement text
+   and the gates that enforce it (ENG-21)
 
 ## Acceptance Criteria
 
