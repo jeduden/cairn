@@ -1,0 +1,67 @@
+---
+title: "Appendix A — Concern traceability"
+summary: >-
+  Every concern raised during research and review, mapped to the
+  requirements that answer it.
+---
+# Appendix A — Concern traceability
+
+Every concern raised during research and review, mapped to Cairn's response.
+
+## A. Security review of lossless-claude/lcm
+
+| #   | Concern                                                                                                    | Cairn's response                                                                                                  | Requirements                           |
+| --- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| A1  | Memory auto-injected at session start and on every prompt re-enters unrelated sessions                     | Pull-only recall; restore limited to `TrustedText`; per-prompt injection off by default and restricted if enabled | INJ-03, INJ-04, SEC-07                 |
+| A2  | Data leaves the machine by default through the summarizer; privacy docs said otherwise                     | No network in shipped binaries; no summarizer in core; privacy claims backed by tests                             | SEC-01, SEC-15, NG7, ENG-12, ENG-22    |
+| A3  | One plaintext archive protected only by regex redaction                                                    | Redaction before storage with salted markers; encryption at rest; retention; secure purge                         | SEC-08, SEC-09, REC-15, ADM-07, SEC-14 |
+| A4  | Isolation only per OS user; fixed loopback port; token file readable by same-user processes                | No sockets and no tokens; ownership and permission checks; tenant binding                                         | SEC-01, SEC-02, SEC-03, ADR-01         |
+| A5  | One FTS5 query froze the daemon for minutes                                                                | No daemon; literal-term query compiler with limits and cancellation                                               | SEC-04, ADR-01                         |
+| A6  | Tool rewrites `settings.json`; `doctor` has no read-only mode; conflicts with managed settings             | Plugin distribution; explicit install with diff; exact uninstall; read-only doctor; managed settings respected    | ADM-01, ADM-02, ADM-03, ADM-10         |
+| A7  | Silent failures dropped 21,279 events unnoticed                                                            | Every failure audited and counted; `doctor` fails on new failures; completeness verification; canary              | OPS-01..04, ADM-09                     |
+| A8  | Credentials frozen into a daemon's inherited environment                                                   | No credentials in core; explicit per-use secret references for any future need                                    | SEC-10                                 |
+| A9  | Repository ships agent skills running destructive commands on the real home; tests reached the real daemon | Isolated test homes with guard; no destructive agent instructions in the repository                               | ENG-14                                 |
+| A10 | Maintainer concentration; heavily AI-authored changes                                                      | Two-approval review with a human and security reviewer; labelled AI changes; ≥ 2 maintainers                      | ENG-21, ENG-25                         |
+| A11 | Uninstall leaves all data behind                                                                           | Uninstall offers purge; status always shows data location and size                                                | ADM-07, ADM-11                         |
+| A12 | Contested memories are still recalled                                                                      | Quarantine removes items from recall immediately                                                                  | SEC-12, RCL-06                         |
+
+## B. How poisoning risk scales
+
+| #   | Concern                                                                   | Cairn's response                                                                                | Requirements                   |
+| --- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------ |
+| B1  | Auto-injection multiplies carry-over of poison (64.7% vs 17.4% pull-only) | Pull-only by design                                                                             | INJ-03, INJ-04, ADR-03         |
+| B2  | Exposure accumulates; a lossless store never forgets poison               | Quarantine without deletion; retention windows for untrusted payloads; rebuildable projections  | SEC-12, REC-15, ADM-08         |
+| B3  | Store growth doesn't dilute poison; manual review stops being feasible    | Flagging at ingest; flags visible in recall and queryable; flagged text excluded from landmarks | PRV-07, LMK-04                 |
+| B4  | Compaction as a write channel                                             | Compaction summaries untrusted and never restored; structural landmarks only                    | PRV-03, INJ-09, LMK-02, ADR-10 |
+| B5  | Shared memory multiplies blast radius                                     | Per-project stores; no cross-project recall; no shared stores in v1                             | RCL-05, NG4, MEM-01            |
+| B6  | Unattended agents act on poisoned content with nobody watching            | Audit trail; recall-taint signal for PreToolUse policy hooks                                    | OPS-01, OPS-02, SEC-13         |
+| B7  | Per-prompt search cost and stalls grow with the store                     | No per-prompt search by default; latency budgets at 1M–10M events; bounded queries              | INJ-04, NFR-01, NFR-03, SEC-04 |
+| B8  | Structural fields (file names, MCP tool names) as an injection vector     | Allow-list sanitization                                                                         | LMK-03                         |
+| B9  | Repository config could downgrade security                                | Project config can only tighten                                                                 | SEC-11                         |
+| B10 | Prompts on runners may carry external content (e.g. issue text)           | `automation` mode by default treats user turns as untrusted                                     | PRV-04                         |
+
+## C. Context-management research
+
+| #   | Concern                                                                             | Cairn's response                                                                           | Requirements           |
+| --- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------- |
+| C1  | Summaries lose exact detail (Scroll 73.1 → 19.9)                                    | Immutable record; exact `expand` and `get`                                                 | REC-06, REC-09, RCL-03 |
+| C2  | Compaction erases constraints, including those stated mid-session                   | Verbatim pins re-injected after every compaction; candidate detection; compaction guidance | PIN-01..09, INJ-01     |
+| C3  | Context rot: effective context is smaller than the window                           | Small fixed restore budget; landmarks; recall on demand; kernel keeps bulk data out        | INJ-07, LMK-05, CMP-06 |
+| C4  | Native compaction can't be reliably disabled                                        | Coexist in v1; compaction control evaluated in S6                                          | NG1, OQ-01             |
+| C5  | Context mutations break prompt caching                                              | Byte-deterministic restore; cache-hit rate is an acceptance metric                         | INJ-06, §11.1          |
+| C6  | Transcripts deleted after `cleanupPeriodDays`                                       | Record independent of sources; missing-source detection                                    | REC-08                 |
+| C7  | Subagent transcripts hold much of the data; compaction hooks lack subagent identity | Subagent ingestion and linking; attribution from source; pins-only fallback                | REC-02, REC-04, INJ-05 |
+| C8  | Model-directed vs deterministic control unsettled                                   | Deterministic for safety-relevant state; model-directed recall                             | ADR-03, ADR-10, §1.3   |
+| C9  | Published results uncontrolled and mostly on other models                           | Acceptance measured on production Claude models only                                       | §11.1                  |
+| C10 | Claude may not use recall tools                                                     | Recall statement in restore; tool-use metric; versioned tool descriptions                  | INJ-01, §9.2, §11.1    |
+| C11 | Multi-session reasoning weak for all systems                                        | Tracked as known weakness; kernel aggregation                                              | §11.1, §13.2           |
+| C12 | Code-based access beats serialized history                                          | Hermetic kernel with read-only record access                                               | CMP-01..07             |
+
+## D. Deployment and operations
+
+| #   | Concern                                                                | Cairn's response                                                                               | Requirements           |
+| --- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------- |
+| D1  | The model runs at the provider, so recalled content leaves the network | Stated in I4; redaction before storage; scope limits and quarantine bound what can be recalled | SEC-08, RCL-05, SEC-12 |
+| D2  | Short hook budgets (`SessionEnd` ≈ 1.5 s)                              | Internal deadlines and work markers; crash-safe store                                          | NFR-01, NFR-02, NFR-07 |
+| D3  | Runner state must survive pause and resume                             | Home on durable volumes; verified in S4                                                        | §2.2, S4               |
+| D4  | Installation on runners without touching managed policy                | Plugin or runner-image installation; managed settings respected                                | ADM-01, ADM-03         |

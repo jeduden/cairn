@@ -1,0 +1,4 @@
+# BEGIN mdsmith merge-driver
+*.md merge=mdsmith
+*.markdown merge=mdsmith
+# END mdsmith merge-driver
