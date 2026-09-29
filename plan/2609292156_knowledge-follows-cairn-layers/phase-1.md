@@ -33,8 +33,8 @@ RED. Rewrite the ENG-18 scenario first:
 
 - every direct dependency in `go.mod` is named by exactly one accepted
   ADR;
-- every accepted ADR's `modules:` entry is a direct dependency in
-  `go.mod`, so a stale decision fails;
+- every module an accepted ADR's Decision table names is a direct
+  dependency in `go.mod`, so a stale decision fails;
 - each named ADR gives a purpose, alternatives and a license on the
   allow-list;
 - there are at most 10 direct dependencies, read from the ENG-18 row
@@ -49,7 +49,7 @@ GREEN, in this order.
 First, add an `adr` kind to `.mdsmith.yml` (the stakeholder
 consented):
 
-- path pattern `docs/adr/*.md`;
+- path pattern `docs/adr/ADR-*.md`;
 - required front matter `id`, `title`, `status` and `summary`;
 - required sections Context, Decision, Alternatives and Consequences;
 - a `unique-frontmatter` rule on `id`;
@@ -68,9 +68,9 @@ Third, replace DEPENDENCIES.md's hand-written table with a
 - keep only decisions with `scope: dependencies`;
 - render one row per ADR with its id, status and summary, linked.
 
-Fourth, point the ENG-18 steps at ADR front matter instead of the
-table. The front-matter reader and the `modules:` matching get their
-own unit tests, and `cmd/cairn` keeps 100% coverage.
+Fourth, point the ENG-18 steps at the ADRs instead of the table. The
+front-matter reader and the Decision-table matching get their own
+unit tests, and `cmd/cairn` and `internal/adr` keep 100% coverage.
 
 Gate: `go test ./cmd/cairn -run 'TestFeatures/^ENG-(18|26):'` passes.
 Then check that the gate actually fails:
@@ -79,6 +79,9 @@ Then check that the gate actually fails:
 - delete the ADR and confirm `@ENG-18` fails;
 - duplicate the ADR id and confirm `@ENG-26` fails.
 
-Revert each change. `mdsmith check .`, `go test -race ./...` and
-`scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario`
-are clean.
+Revert each change. `mdsmith check .`, `go test -race ./...` and the
+coverage floor are clean:
+
+```sh
+scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario ./internal/adr
+```

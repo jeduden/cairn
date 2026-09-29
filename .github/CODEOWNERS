@@ -8,9 +8,11 @@
 /docs/srs/                    @jeduden
 /docs/adr/                    @jeduden
 
-# The requirement–scenario gate, the scenario runner and the import
-# closure test that enforces I4.
+# The requirement–scenario gate, the ADR reader the ENG-18 and ENG-26
+# scenarios check through, the scenario runner and the import closure
+# test that enforces I4.
 /internal/srs/                @jeduden
+/internal/adr/                @jeduden
 /internal/scenario/           @jeduden
 /cmd/cairn/bdd_test.go        @jeduden
 /cmd/cairn/imports_test.go    @jeduden
@@ -23,7 +25,8 @@
 /.mdsmith.yml                 @jeduden
 
 # The supply-chain and disclosure policy: every new direct dependency
-# needs a row in DEPENDENCIES.md (ENG-18), so it passes here.
+# needs an accepted ADR under /docs/adr/, listed in DEPENDENCIES.md
+# (ENG-18), so it passes here.
 /SECURITY.md                  @jeduden
 /DEPENDENCIES.md              @jeduden
 

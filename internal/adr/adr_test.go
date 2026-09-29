@@ -1,8 +1,11 @@
 package adr
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -57,11 +60,12 @@ func TestParseReadsFrontMatterSectionsAndModules(t *testing.T) {
 }
 
 func TestParseWithoutModuleTableHasNoModules(t *testing.T) {
-	a, err := Parse("a.md", []byte("---\nid: ADR-01\n---\n# ADR-01\n\n| A | B |\n| - | - |\n| 1 | 2 |\n"))
+	body := "---\nid: ADR-01\n---\n# ADR-01\n\n## Decision\n\n| A | B |\n| - | - |\n| 1 | 2 |\n"
+	a, err := Parse("a.md", []byte(body))
 
 	require.NoError(t, err)
 	assert.Empty(t, a.Modules)
-	assert.Empty(t, a.Sections)
+	assert.Equal(t, []string{"Decision"}, slices.Collect(maps.Keys(a.Sections)))
 }
 
 func TestParseRefusesWhatItCannotRead(t *testing.T) {
@@ -121,4 +125,47 @@ func TestDecisionRecordsParse(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.NotEmpty(t, adrs)
+}
+
+func TestParseReadsModulesOnlyFromTheDecision(t *testing.T) {
+	body := "---\nid: ADR-01\n---\n# ADR-01\n\n## Decision\n\n| Module | Purpose |\n| - | - |\n| `a` | p |\n\n" +
+		"## Alternatives\n\n| Module | Why not |\n| - | - |\n| `b` | slow |\n"
+	a, err := Parse("a.md", []byte(body))
+
+	require.NoError(t, err)
+	assert.Equal(t, []Module{{Path: "a", Purpose: "p"}}, a.Modules)
+}
+
+func TestParseKeepsFencedHeadingsInsideTheirSection(t *testing.T) {
+	body := "---\nid: ADR-01\n---\n## Alternatives\n\nOne.\n\n```md\n## Not a section\n```\n\nTwo.\n"
+	a, err := Parse("a.md", []byte(body))
+
+	require.NoError(t, err)
+	assert.Equal(t, "One.\n\n```md\n## Not a section\n```\n\nTwo.", a.Sections["Alternatives"])
+	assert.NotContains(t, a.Sections, "Not a section")
+}
+
+func TestParseReadsCRLFLineEndings(t *testing.T) {
+	a, err := Parse("a.md", []byte("---\r\nid: ADR-01\r\nstatus: accepted\r\n---\r\n## Context\r\n\r\nWhy.\r\n"))
+
+	require.NoError(t, err)
+	assert.Equal(t, "ADR-01", a.ID)
+	assert.Equal(t, Accepted, a.Status)
+	assert.Equal(t, "Why.", a.Sections["Context"])
+}
+
+func TestParseRefusesAFrontMatterLineItCannotScan(t *testing.T) {
+	long := "---\nsummary: " + strings.Repeat("x", 2<<20) + "\nstatus: accepted\n---\n"
+	_, err := Parse("a.md", []byte(long))
+
+	assert.ErrorContains(t, err, "adr: a.md: scan front matter")
+}
+
+func TestFenceAfter(t *testing.T) {
+	assert.Empty(t, fenceAfter("", "## Heading\n"))
+	assert.Equal(t, "````", fenceAfter("", "````md\n"))
+	assert.Equal(t, "````", fenceAfter("````", "```\n"), "a shorter run does not close")
+	assert.Equal(t, "````", fenceAfter("````", "~~~~\n"), "another character does not close")
+	assert.Equal(t, "````", fenceAfter("````", "text\n"))
+	assert.Empty(t, fenceAfter("````", "`````\n"))
 }

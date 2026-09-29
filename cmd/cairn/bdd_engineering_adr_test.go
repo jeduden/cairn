@@ -127,8 +127,7 @@ func (e *engineering) statedIn(id, pattern string) (string, error) {
 }
 
 // licensesAllowed checks every accepted module's license against the
-// allow-list ENG-18 states. A family name such as "BSD" admits its
-// variants: BSD-2-Clause, BSD-3-Clause.
+// allow-list ENG-18 states.
 func (e *engineering) licensesAllowed() error {
 	list, err := e.statedIn("ENG-18", `allow-list \(([^)]+)\)`)
 	if err != nil {
@@ -148,9 +147,19 @@ func (e *engineering) licensesAllowed() error {
 	return errors.Join(errs...)
 }
 
+// licenseAllowed reports whether license is on allowed. A family name
+// admits only its named permissive variants, never a bare family or
+// any other id sharing its prefix: "BSD" admits BSD-2-Clause and
+// BSD-3-Clause, not BSD-4-Clause or BSD-Protection.
 func licenseAllowed(license string, allowed []string) bool {
+	families := map[string][]string{"BSD": {"BSD-2-Clause", "BSD-3-Clause"}}
+
 	return slices.ContainsFunc(allowed, func(a string) bool {
-		return license == a || strings.HasPrefix(license, a+"-")
+		if variants, ok := families[a]; ok {
+			return slices.Contains(variants, license)
+		}
+
+		return license == a
 	})
 }
 
@@ -246,8 +255,10 @@ func (e *engineering) adrIDsUnique() error {
 	return errors.Join(errs...)
 }
 
-// supersededNamesSuccessor checks a superseded record points at a
-// record that exists.
+// supersededNamesSuccessor checks a superseded record points at
+// another record that exists, and that a record naming a successor is
+// itself marked superseded, so a replaced decision never stays in
+// force beside its replacement.
 func (e *engineering) supersededNamesSuccessor() error {
 	ids := map[string]bool{}
 	for _, a := range e.adrs {
@@ -255,8 +266,12 @@ func (e *engineering) supersededNamesSuccessor() error {
 	}
 	var errs []error
 	for _, a := range e.adrs {
-		if a.Status == adr.Superseded && !ids[a.SupersededBy] {
-			errs = append(errs, fmt.Errorf("%s is superseded by %q, which is no ADR", a.ID, a.SupersededBy))
+		switch {
+		case a.Status == adr.Superseded && (!ids[a.SupersededBy] || a.SupersededBy == a.ID):
+			errs = append(errs, fmt.Errorf("%s is superseded by %q, which is no other ADR", a.ID, a.SupersededBy))
+		case a.Status != adr.Superseded && a.SupersededBy != "":
+			errs = append(errs, fmt.Errorf("%s names successor %s but its status is %q, not superseded",
+				a.ID, a.SupersededBy, a.Status))
 		}
 	}
 

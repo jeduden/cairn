@@ -39,11 +39,11 @@ func TestTablesNeedsADelimiterRow(t *testing.T) {
 }
 
 func TestFenceMarker(t *testing.T) {
-	assert.Equal(t, "```", fenceMarker("```go"))
-	assert.Equal(t, "~~~~", fenceMarker("~~~~"))
-	assert.Empty(t, fenceMarker("``inline``"))
-	assert.Empty(t, fenceMarker(""))
-	assert.Empty(t, fenceMarker("| a |"))
+	assert.Equal(t, "```", FenceMarker("```go"))
+	assert.Equal(t, "~~~~", FenceMarker("~~~~"))
+	assert.Empty(t, FenceMarker("``inline``"))
+	assert.Empty(t, FenceMarker(""))
+	assert.Empty(t, FenceMarker("| a |"))
 }
 
 func TestIsDelimiterRow(t *testing.T) {

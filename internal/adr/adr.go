@@ -71,12 +71,15 @@ func Load(dir string) ([]ADR, error) {
 	return out, nil
 }
 
-// Parse reads one ADR from body.
+// Parse reads one ADR from body. CRLF line endings read as LF, so a
+// Windows checkout parses the same as any other.
 func Parse(path string, body []byte) (ADR, error) {
+	body = bytes.ReplaceAll(body, []byte("\r\n"), []byte("\n"))
 	fm, rest, err := frontMatter(body)
 	if err != nil {
 		return ADR{}, fmt.Errorf("adr: %s: %w", path, err)
 	}
+	secs := sections(rest)
 
 	return ADR{
 		Path:         path,
@@ -85,8 +88,8 @@ func Parse(path string, body []byte) (ADR, error) {
 		Status:       fm["status"],
 		Summary:      fm["summary"],
 		SupersededBy: fm["superseded-by"],
-		Sections:     sections(rest),
-		Modules:      modules(rest),
+		Sections:     secs,
+		Modules:      modules([]byte(secs["Decision"])),
 	}, nil
 }
 
@@ -127,6 +130,9 @@ func frontMatter(body []byte) (map[string]string, []byte, error) {
 		}
 		out[key] = unquote(value)
 	}
+	if err := sc.Err(); err != nil {
+		return nil, nil, fmt.Errorf("scan front matter: %w", err)
+	}
 
 	return out, rest, nil
 }
@@ -141,12 +147,13 @@ func unquote(s string) string {
 }
 
 // sections maps each level-2 heading in body to the trimmed text
-// under it, up to the next level-2 heading.
+// under it, up to the next level-2 heading. A "## " line inside a
+// fenced code block is text, not a heading.
 func sections(body []byte) map[string]string {
 	out := map[string]string{}
 	var (
-		name string
-		text []string
+		name, fence string
+		text        []string
 	)
 	flush := func() {
 		if name != "" {
@@ -154,7 +161,8 @@ func sections(body []byte) map[string]string {
 		}
 	}
 	for line := range strings.Lines(string(body)) {
-		if h, ok := strings.CutPrefix(strings.TrimRight(line, "\n"), "## "); ok {
+		fence = fenceAfter(fence, line)
+		if h, ok := strings.CutPrefix(strings.TrimRight(line, "\n"), "## "); ok && fence == "" {
 			flush()
 			name, text = strings.TrimSpace(h), nil
 
@@ -165,6 +173,23 @@ func sections(body []byte) map[string]string {
 	flush()
 
 	return out
+}
+
+// fenceAfter returns the fence open after line, given the fence open
+// before it: a fence closes only on a run of its own character at
+// least as long, the way srs.Tables reads fences.
+func fenceAfter(open, line string) string {
+	f := srs.FenceMarker(strings.TrimSpace(line))
+	switch {
+	case f == "":
+		return open
+	case open == "":
+		return f
+	case f[0] == open[0] && len(f) >= len(open):
+		return ""
+	}
+
+	return open
 }
 
 // modules reads body's Module table: the table whose header leads with

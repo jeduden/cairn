@@ -147,5 +147,28 @@ func TestADRIdentityChecks(t *testing.T) {
 	assert.EqualError(t, e.adrsNamedForID(), "docs/adr/other.md is not named for its id 7")
 	assert.EqualError(t, e.adrStatusesValid(), `7: status "draft" is not proposed, accepted or superseded`)
 	assert.EqualError(t, e.adrIDsUnique(), "docs/adr/ADR-01-x.md: id ADR-01 already used by docs/adr/ADR-01-x.md")
-	assert.EqualError(t, e.supersededNamesSuccessor(), `ADR-02 is superseded by "ADR-99", which is no ADR`)
+	assert.EqualError(t, e.supersededNamesSuccessor(), `ADR-02 is superseded by "ADR-99", which is no other ADR`)
+}
+
+func TestLicenseFamilyAdmitsOnlyItsPermissiveVariants(t *testing.T) {
+	allowed := []string{"Apache-2.0", "MIT", "BSD", "ISC"}
+
+	assert.True(t, licenseAllowed("BSD-2-Clause", allowed))
+	assert.True(t, licenseAllowed("BSD-3-Clause", allowed))
+	assert.True(t, licenseAllowed("MIT", allowed))
+	for _, l := range []string{"BSD", "BSD-4-Clause", "BSD-Protection", "MIT-advertising", "Apache-2.0-foo"} {
+		assert.False(t, licenseAllowed(l, allowed), l)
+	}
+}
+
+func TestSupersessionNamesAnotherRecordAndMarksTheOldOne(t *testing.T) {
+	self := depADR("ADR-01", adr.Superseded, "x")
+	self.SupersededBy = "ADR-01"
+	half := depADR("ADR-02", adr.Accepted, "x")
+	half.SupersededBy = "ADR-03"
+	e := &engineering{adrs: []adr.ADR{self, half, depADR("ADR-03", adr.Accepted, "x")}}
+
+	err := e.supersededNamesSuccessor()
+	assert.ErrorContains(t, err, `ADR-01 is superseded by "ADR-01", which is no other ADR`)
+	assert.ErrorContains(t, err, `ADR-02 names successor ADR-03 but its status is "accepted", not superseded`)
 }
