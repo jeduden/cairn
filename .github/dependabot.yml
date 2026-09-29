@@ -1,0 +1,43 @@
+version: 2
+
+# Pinning every action by SHA makes a workflow reproducible, and also
+# makes it go stale silently: a pin never asks to be updated. This is
+# the thing that asks. Every update arrives as a pull request, which
+# is ENG-18's "updates go through reviewed pull requests".
+updates:
+  # A week of cooldown on every ecosystem. Without one, dependabot
+  # offers a version the moment it is published, which is exactly the
+  # window a compromised release is live before it is yanked. Seven
+  # days is what zizmor's dependabot-cooldown audit asks for.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+    # The mdsmith action pins a version string beside its SHA, so its
+    # bump is a decision rather than a merge.
+    ignore:
+      - dependency-name: "jeduden/mdsmith"
+
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 7
+
+  # Dev tools build from their own modfile, so they update on their
+  # own schedule and never constrain consumers of this module.
+  - package-ecosystem: "gomod"
+    directory: "/tools"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 7

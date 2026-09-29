@@ -1,0 +1,174 @@
+name: CI
+
+# The same gate the repository runs locally, run again where it cannot
+# be skipped. Nothing here is new policy: CLAUDE.md's build commands
+# are the source, and a job that drifts from them is the bug.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same pull request makes the older run moot; a
+# push to main always finishes, so every main commit has a verdict.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The OIDC token Codecov exchanges for an upload grant, below.
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No job here pushes, and a checkout that leaves a token in
+          # .git/config hands one to every later step.
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: go build ./...
+      - run: go vet ./...
+      # ENG-09: every test under the race detector. One profile from
+      # every test — the unit tests and the godog scenarios alike;
+      # -coverpkg=./... attributes a hit to the package whose code ran,
+      # so a scenario step in cmd/cairn counts for the internal package
+      # it drives. Pending scenarios are skipped, and `go test -v`
+      # names each one, so the backlog is visible in every run.
+      - run: go test -race ./... -coverpkg=./... -coverprofile=cover.out
+      # codecov is a soft ratchet; this is the hard floor. Every
+      # package named here stays at 100% of its non-excluded
+      # statements (scripts/coverage-exclude.txt lists the justified
+      # exceptions). ENG-11's 90%/80% floors join this call as the
+      # product packages land.
+      - run: scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario
+      # The pending backlog, counted. A measurement, not a gate.
+      - name: Count pending scenarios
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          go test ./cmd/cairn -run TestFeatures -v -count=1 |
+            awk '/--- SKIP/ {s++} /--- PASS: TestFeatures\// {p++}
+                 END {printf "scenarios: %d passing, %d pending\n", p, s}' |
+            tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Summarise coverage
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: go tool cover -func=cover.out | tail -1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage
+          path: cover.out
+      # OIDC over a stored token: the runner mints a short-lived
+      # identity that Codecov exchanges for an upload grant, so no
+      # secret sits in this repository's settings. A fork PR has no
+      # id-token, so the step is skipped rather than failing.
+      - name: Upload coverage to Codecov
+        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          use_oidc: true
+          files: cover.out
+          fail_ci_if_error: false
+
+  # NFR-10 / CON-02: the three release targets compile as static
+  # binaries on every change, not first on release day.
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - { goos: linux, goarch: amd64 }
+          - { goos: linux, goarch: arm64 }
+          - { goos: darwin, goarch: arm64 }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Build
+        env:
+          GOOS: ${{ matrix.target.goos }}
+          GOARCH: ${{ matrix.target.goarch }}
+          CGO_ENABLED: "0"
+        run: go build -trimpath -buildvcs=true -o /dev/null ./cmd/cairn
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          # golangci-lint builds from tools/go.sum and type-checks the
+          # module against go.sum; hash both or the tool's whole
+          # dependency tree downloads again on every run.
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+      # ENG-16: staticcheck, gosec, errcheck, depguard's forbidden
+      # imports and the rest, from .golangci.yml.
+      - run: go tool -modfile=tools/go.mod golangci-lint run
+
+  # ENG-16: no reachable known vulnerability in the module or the
+  # standard library it builds with.
+  vuln:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+      - run: go tool -modfile=tools/go.mod govulncheck ./...
+
+  markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Pinned to the mdsmith release the repository is linted with
+      # locally. Bump the SHA and `version` together.
+      - uses: jeduden/mdsmith@0ca0d2f7c95ab53e3e9ed8851150af98b95088fb # v0.55.1
+        with:
+          version: v0.55.1
+          args: check .
+
+  # Workflows are an attack surface go vet never reads. zizmor checks
+  # them for an unpinned action, a token left in a checkout, an input
+  # interpolated into a shell.
+  workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99 # v0.6.3
+        with:
+          # Pinned: the default is `latest`, which would make the job's
+          # result depend on the day it ran. Dependabot bumps the
+          # action's SHA but not this string, so it is a hand bump.
+          version: "1.29.0"
+          # Fail the job on findings instead of filing them into code
+          # scanning: the check itself is the gate.
+          advanced-security: false

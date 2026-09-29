@@ -1,0 +1,72 @@
+version: "2"
+
+linters:
+  enable:
+    # ENG-16's named gates: staticcheck, gosec and errcheck, beside
+    # the go vet suite that `govet` runs.
+    - errcheck
+    - gosec
+    - govet
+    - staticcheck
+    # ENG-16's forbidden imports, at the source: see depguard below.
+    - depguard
+    # ENG-04: errors wrapped with %w and compared with errors.Is/As.
+    - errorlint
+    # ENG-03: no mutable package-level state. Package-level vars that
+    # are genuinely immutable (compiled regexps, sentinel errors) are
+    # exempt by the linter itself or by a justified nolint.
+    - gochecknoglobals
+    - funlen
+    - gocognit
+    - unused
+    - ineffassign
+    - misspell
+    - lll
+    - prealloc
+    - revive
+  settings:
+    depguard:
+      rules:
+        # SEC-01 / I4: no shipped code opens a socket or spawns a
+        # process. A package that genuinely needs one — the kernel
+        # worker spawning its child (CMP-05) — is carved out here by
+        # path, under review, never by a nolint. Tests may use
+        # os/exec (the import-closure test runs `go list`).
+        no-network-or-exec:
+          files:
+            - "$all"
+            - "!$test"
+          deny:
+            - pkg: "net"
+              desc: "Cairn never talks to the network (I4, SEC-01)"
+            - pkg: "net/http"
+              desc: "Cairn never talks to the network (I4, SEC-01)"
+            - pkg: "os/exec"
+              desc: "no process spawning outside allow-listed packages (ENG-16)"
+    lll:
+      line-length: 120
+      tab-width: 4
+    funlen:
+      lines: 60
+      statements: 40
+    gocognit:
+      min-complexity: 30
+    revive:
+      rules:
+        - name: exported
+        - name: var-naming
+        - name: blank-imports
+  exclusions:
+    rules:
+      # Test files hold the godog step registry (a package-level
+      # slice appended from init, the frit pattern) and table
+      # fixtures; ENG-03 governs shipped code.
+      - path: _test\.go
+        linters:
+          - gochecknoglobals
+          - funlen
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

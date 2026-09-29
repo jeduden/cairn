@@ -1,0 +1,6 @@
+# Declared statement-coverage exclusions, one per statement range,
+# read by check-coverage.sh. Each entry is a pure process boundary — a
+# unit test cannot drive it without a real process exit — never a
+# place to hide untested logic. Format:
+#   path/to/file.go:startLine-endLine  # reason
+cmd/cairn/main.go:35-37  # main(): reads real argv and stdio and calls os.Exit; run() is the tested substitute for everything else

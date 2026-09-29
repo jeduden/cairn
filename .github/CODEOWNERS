@@ -1,0 +1,25 @@
+# ENG-21: a human owner reviews every change. The security-sensitive
+# packages ENG-11 names additionally need the designated security
+# reviewer; that owner is still TBD (SRS front matter), so they list
+# the maintainer alone until one is named — add the reviewer to each
+# line below when they are.
+*                         @jeduden
+
+# What controls CI, releases and the supply-chain posture.
+/.github/                 @jeduden
+/tools/                   @jeduden
+/scripts/                 @jeduden
+/SECURITY.md              @jeduden
+/DEPENDENCIES.md          @jeduden
+/docs/srs/                @jeduden
+
+# Security-sensitive packages (ENG-11), owned before they exist.
+/internal/provenance/     @jeduden
+/internal/redact/         @jeduden
+/internal/flag/           @jeduden
+/internal/query/          @jeduden
+/internal/envelope/       @jeduden
+/internal/inject/         @jeduden
+/internal/pin/            @jeduden
+/internal/landmark/       @jeduden
+/internal/config/         @jeduden

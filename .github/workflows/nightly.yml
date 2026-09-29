@@ -1,0 +1,55 @@
+name: Nightly
+
+# The long-running gates that do not fit a pull request's budget:
+# native fuzzing (ENG-07) today, the crash-consistency harness (ENG-06),
+# the concurrency soak (ENG-09) and the live Claude Code run (ENG-17)
+# as their plans land. Each job discovers its targets from the tree,
+# so a new fuzz target is fuzzed the night after it merges with no
+# edit here.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      # Every Fuzz* target in every package, five minutes each. A
+      # crash writes its input under testdata/fuzz, which is uploaded
+      # below: commit it as a regression seed with the fix (ENG-07
+      # makes any crash a release blocker).
+      - name: Fuzz every target
+        shell: bash
+        run: |
+          found=0
+          for pkg in $(go list ./...); do
+            for target in $(go test -list '^Fuzz' "$pkg" | grep '^Fuzz' || true); do
+              found=1
+              echo "::group::$pkg $target"
+              go test "$pkg" -run '^$' -fuzz "^${target}\$" -fuzztime 5m
+              echo "::endgroup::"
+            done
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "no fuzz targets yet" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: fuzz-crashers
+          path: "**/testdata/fuzz/**"
