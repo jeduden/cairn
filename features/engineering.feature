@@ -144,12 +144,16 @@ Feature: Engineering quality (ENG)
     And a nightly job drives real Claude Code through compaction, restore and recall
 
   @ENG-18 @P0
-  Scenario: every direct dependency is justified with an allow-listed license
+  Scenario: every direct dependency is justified by an accepted ADR with an allow-listed license
     Given the repository checkout
     When the direct dependencies are read from "go.mod"
-    Then each one has a row in "DEPENDENCIES.md" naming its purpose, license, maintenance status and alternatives
-    And each license is one of "Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause, ISC"
-    And there are at most 10 direct dependencies
+    And the ADRs are read from "docs/adr"
+    Then each direct dependency is named by exactly one accepted ADR
+    And every module an accepted ADR names is a direct dependency
+    And each named module has a purpose, a license and a maintenance status, and its ADR weighs alternatives
+    And each license is on the allow-list the ENG-18 requirement states
+    And the direct dependencies stay within the target the ENG-18 requirement states
+    And "DEPENDENCIES.md" lists every ADR that names a module
 
   @ENG-19 @P0 @pending
   Scenario: two independent builders produce bit-identical release artifacts
@@ -199,3 +203,13 @@ Feature: Engineering quality (ENG)
     Given the v1.0 release checklist
     Then at least two active maintainers are listed
     And an incident-response runbook exists in the repository
+
+  @ENG-26 @P0 @pending
+  Scenario: every design decision lives in one ADR file and a changed decision supersedes it
+    Given the repository checkout
+    When the ADRs are read from "docs/adr"
+    Then every ADR has an id, a title, a status and a summary
+    And every ADR's file is named for its id
+    And every ADR's status is proposed, accepted or superseded
+    And no two ADRs share an id
+    And every superseded ADR names an ADR that exists as its successor
