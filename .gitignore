@@ -5,10 +5,10 @@
 *.test
 
 # Coverage and profiles
-*.out
-coverage.*
-*.coverprofile
-*.prof
+/*.out
+/coverage.*
+/*.coverprofile
+/*.prof
 
 # Go workspace
 go.work
