@@ -26,7 +26,8 @@ shipped binary.
    server
 2. Check structured content, cancellation, and the import closure of
    each
-3. Record the decision and, if the SDK wins, its DEPENDENCIES.md row
+3. Record the decision as an ADR, naming the SDK module if it wins
+   (ENG-18, ENG-26)
 
 ## Acceptance Criteria
 

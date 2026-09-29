@@ -204,7 +204,7 @@ Feature: Engineering quality (ENG)
     Then at least two active maintainers are listed
     And an incident-response runbook exists in the repository
 
-  @ENG-26 @P0 @pending
+  @ENG-26 @P0
   Scenario: every design decision lives in one ADR file and a changed decision supersedes it
     Given the repository checkout
     When the ADRs are read from "docs/adr"

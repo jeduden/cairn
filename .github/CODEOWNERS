@@ -3,8 +3,10 @@
 # them, listed below. A path with no owner here merges on the approval
 # of any reviewer other than its author, agent or human.
 
-# The requirement text.
+# The requirement text, and the decision records that justify design
+# and dependencies (ENG-26).
 /docs/srs/                    @jeduden
+/docs/adr/                    @jeduden
 
 # The requirement–scenario gate, the scenario runner and the import
 # closure test that enforces I4.

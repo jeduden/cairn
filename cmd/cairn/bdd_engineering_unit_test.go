@@ -59,36 +59,6 @@ func TestFileContains(t *testing.T) {
 	assert.ErrorContains(t, e.fileContains("nope.md", "x"), "read nope.md")
 }
 
-const depsTable = `# Dependencies
-
-| Module | Purpose | License | Maintenance | Alternatives |
-|---|---|---|---|---|
-| ` + "`example.com/one`" + ` | tests | MIT | active | none |
-| example.com/two | tests | GPL-3.0 | active | none |
-| example.com/three | tests | MIT |  | none |
-`
-
-func TestDepsJustifiedAndLicenses(t *testing.T) {
-	e := checkout(t, map[string]string{"DEPENDENCIES.md": depsTable})
-
-	e.deps = []string{"example.com/one"}
-	assert.NoError(t, e.depsJustified("DEPENDENCIES.md"))
-	assert.NoError(t, e.licensesAllowed("MIT, ISC"))
-
-	e.deps = []string{"example.com/missing"}
-	assert.ErrorContains(t, e.depsJustified("DEPENDENCIES.md"), "no row for example.com/missing")
-
-	e.deps = []string{"example.com/three"}
-	assert.ErrorContains(t, e.depsJustified("DEPENDENCIES.md"), `leaves "Maintenance" empty`)
-
-	e.deps = []string{"example.com/two"}
-	assert.ErrorContains(t, e.licensesAllowed("MIT, ISC"), `licensed "GPL-3.0"`)
-}
-
-func TestDependencyHelpersReportAMissingFile(t *testing.T) {
-	e := checkout(t, nil)
-
-	assert.ErrorContains(t, e.depsJustified("DEPENDENCIES.md"), "read DEPENDENCIES.md")
-	assert.ErrorContains(t, e.licensesAllowed("MIT"), "read DEPENDENCIES.md")
-	assert.ErrorContains(t, e.readDirectDeps("go.mod"), "read go.mod")
+func TestReadDirectDepsReportsAMissingFile(t *testing.T) {
+	assert.ErrorContains(t, checkout(t, nil).readDirectDeps("go.mod"), "read go.mod")
 }

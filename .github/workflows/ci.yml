@@ -49,7 +49,7 @@ jobs:
       # statements (scripts/coverage-exclude.txt lists the justified
       # exceptions). ENG-11's 90%/80% floors join this call as the
       # product packages land.
-      - run: scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario
+      - run: scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario ./internal/adr
       # The pending backlog, counted. A measurement, not a gate.
       - name: Count pending scenarios
         if: ${{ !cancelled() }}

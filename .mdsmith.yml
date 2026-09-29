@@ -50,14 +50,16 @@ rules:
       - "docs/**"
       - "plan/**"
       - ".claude/skills/**"
-  # Plan ids are the minute-precision UTC creation time, so two
-  # machines can allocate one without coordinating. Uniqueness is what
-  # keys a plan.
+  # Plan and ADR ids are the minute-precision UTC creation time, so
+  # two machines can allocate one without coordinating. Uniqueness is
+  # what keys a plan or a decision; the ADR- prefix keeps the two id
+  # spaces apart.
   unique-frontmatter:
     field: id
     include:
       - "plan/*.md"
       - "plan/*/plan.md"
+      - "docs/adr/*.md"
     exclude:
       - "plan/proto.md"
 
@@ -82,6 +84,29 @@ kinds:
     rules:
       required-frontmatter:
         fields: [summary]
+  adr:
+    # One architecture decision record per file (ENG-26), named for
+    # its id. New ids are the minute-precision UTC time, like plan
+    # ids, so parallel agents never collide. The front matter is flat
+    # scalars only: internal/adr reads it without a YAML library, and
+    # a dependency decision keeps its modules in a Decision table
+    # instead (ENG-18). The ENG-26 scenario checks the same shape.
+    path-pattern: "docs/adr/ADR-*.md"
+    schema:
+      frontmatter:
+        id: '=~"^ADR-[0-9]+$"'
+        title: nonEmpty
+        status: '"proposed" | "accepted" | "superseded"'
+        summary: nonEmpty
+        "scope?": '"dependencies"'
+        "superseded-by?": '=~"^ADR-[0-9]+$"'
+      closed: false
+      sections:
+        - heading: null
+        - heading: "Context"
+        - heading: "Decision"
+        - heading: "Alternatives"
+        - heading: "Consequences"
   skill:
     # The plan-* skills `frit skills` writes into .claude/skills. A
     # skill loads into a working session, so every line is paid for:
@@ -162,8 +187,10 @@ kinds:
 # itself. That marks it as its own schema, which stops MDS020 firing on
 # the <?require?> inside it.
 kind-assignment:
-  - glob: ["docs/**/*.md", "!docs/srs/*.md"]
+  - glob: ["docs/**/*.md", "!docs/srs/*.md", "!docs/adr/*.md"]
     kinds: [doc]
+  - glob: ["docs/adr/*.md"]
+    kinds: [adr]
   - glob: ["docs/srs/*.md"]
     kinds: [srs]
   - glob: [".claude/skills/*/SKILL.md"]

@@ -1,7 +1,7 @@
 ---
 n: 1
 title: "Proving slice: dependency decisions as ADR files"
-status: "🔲"
+status: "✅"
 result: false
 ---
 # Phase 1: dependency decisions as ADR files
@@ -19,8 +19,11 @@ them in their own pull request, ahead of the code.
   listed in `DEPENDENCIES.md`. The license allow-list and the target
   stay as they are.
 - ENG-26 (new, P0, Ver T): every design decision MUST live in one ADR
-  file under `docs/adr/`, with a unique id, a status and a summary. A
-  decision MUST be superseded, never rewritten, once accepted.
+  file under `docs/adr/`, named for its unique id, with a title, a
+  status and a summary. A changed decision MUST be a new ADR, and the
+  one it replaces MUST be marked superseded and name its successor.
+  "Never rewritten once accepted" needs git history to check, so it
+  moved to phase 9.
 
 BDD coverage: `@ENG-18` stays off `@pending`, and its steps change.
 `@ENG-26` lands `@pending` with the SRS edit, then comes off
@@ -52,19 +55,18 @@ consented):
 - a `unique-frontmatter` rule on `id`;
 - `/docs/adr/` in `.github/CODEOWNERS`.
 
-Second, write the test-stack ADR under `docs/adr/`. Its `modules:`
-lists all three modules, beside a `license:`. New ids use the
+Second, write the test-stack ADR under `docs/adr/`. Its Decision
+table lists all three modules, each with its purpose, license and
+maintenance status. Front matter stays flat scalars, with
+`scope: dependencies` marking a dependency decision. New ids use the
 minute-precision UTC time, like plan ids, so parallel agents never
 collide. ADR-01 to ADR-10 keep their numbers in phase 2.
 
 Third, replace DEPENDENCIES.md's hand-written table with a
 `<?catalog?>` over `docs/adr/*.md`:
 
-- keep only decisions that carry `modules:`;
-- render one row per ADR with its modules, license, summary and link;
-- if `where:` cannot test for a list field, name dependency ADRs
-  `docs/adr/*-dep-*.md` and glob those instead, and say which form
-  was used in the handoff.
+- keep only decisions with `scope: dependencies`;
+- render one row per ADR with its id, status and summary, linked.
 
 Fourth, point the ENG-18 steps at ADR front matter instead of the
 table. The front-matter reader and the `modules:` matching get their

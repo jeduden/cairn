@@ -23,8 +23,12 @@ the module graph that ENG-18 counts.
 - `go test -run TestName ./...` — run a specific test
 - `go test ./... -coverpkg=./... -coverprofile=cover.out` — all tests,
   one coverage profile; `go tool cover -func=cover.out` summarises it
-- `scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario`
-  — the coverage floor CI enforces
+- the coverage floor CI enforces:
+
+  ```sh
+  scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario ./internal/adr
+  ```
+
 - `go vet ./...` — run go vet
 - `go tool -modfile=tools/go.mod golangci-lint run` — lint
 - `go tool -modfile=tools/go.mod govulncheck ./...` — known

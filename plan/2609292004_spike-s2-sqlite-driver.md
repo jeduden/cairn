@@ -30,13 +30,13 @@ Resolves ADR-07, OQ-03 and OQ-04. The choice must keep CON-02 (static,
    under 50 concurrent writers
 4. Survey an encrypting VFS for each driver (OQ-04)
 5. Check each driver's import closure with the existing import test
-6. Write the report and record the decision in ADR-07 and
-   DEPENDENCIES.md
+6. Write the report and record the decision in ADR-07, whose Decision
+   table names the driver module (ENG-18, ENG-26)
 
 ## Acceptance Criteria
 
 - [ ] A benchmark report is committed beside this plan
 - [ ] ADR-07 names the chosen driver; OQ-03 and OQ-04 are answered or
   re-planned
-- [ ] The chosen driver has a DEPENDENCIES.md row and the ENG-18
+- [ ] The chosen driver is justified by an accepted ADR and the ENG-18
   scenario still passes

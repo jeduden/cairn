@@ -1,7 +1,7 @@
 ---
 id: 2609292156
 title: "The repository's knowledge follows Cairn's layers"
-status: "🔲"
+status: "🔳"
 summary: >-
   Hold the repository's own specs, scenarios, decisions and plans to
   Cairn's invariants, so many agents with limited context keep them
@@ -75,7 +75,7 @@ needs: an `adr` kind and a token budget on CLAUDE.md. Changes under
 2. Move ADR-01 to ADR-10 out of SRS §4.5 into files, and render §4.5
    as a catalog. ADR-07 absorbs the SQLite row spike S2 would otherwise
    write twice.
-3. Verify each dependency ADR's `license:` against the license
+3. Verify each dependency ADR's License column against the license
    detected from the module's source. Check its "test only" claim
    against the shipped import closure.
 4. Pinned context: CLAUDE.md includes the §1.3 invariant table
@@ -91,7 +91,8 @@ needs: an `adr` kind and a token budget on CLAUDE.md. Changes under
 8. A reviewer-agent protocol skill: fresh context, reads `trace`
    bundles and gate output, never the author's summary
 9. Retire, never delete: retired requirements and superseded ADRs
-   keep their files, and the gate rejects a reused id
+   keep their files, an accepted ADR's decision is never rewritten
+   (checked against the merge-base), and the gate rejects a reused id
 
 ## Execution
 
@@ -128,9 +129,10 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                          |
-| --- | ------ | -------------------------------------------------------------- |
-| 1   | 🔲     | [Proving slice: dependency decisions as ADR files](phase-1.md) |
+| #   | Status | Phase                                                                                                                                                             |
+| --- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ✅     | [Proving slice: dependency decisions as ADR files](phase-1.md)                                                                                                    |
+|     | ↳      | ENG-26 added and @ENG-26 off @pending; @ENG-18 now reads ADRs both ways. The test stack is ADR-2609292234, and DEPENDENCIES.md is a catalog over dependency ADRs. |
 <?/catalog?>
 
 ## Acceptance Criteria
