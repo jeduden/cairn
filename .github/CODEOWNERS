@@ -16,15 +16,31 @@
 # CI, the coverage floor, the lint configuration and this file.
 /.github/                     @jeduden
 /scripts/                     @jeduden
+/tools/                       @jeduden
 /.golangci.yml                @jeduden
 /.mdsmith.yml                 @jeduden
+
+# The supply-chain and disclosure policy: every new direct dependency
+# needs a row in DEPENDENCIES.md (ENG-18), so it passes here.
+/SECURITY.md                  @jeduden
+/DEPENDENCIES.md              @jeduden
 
 # The agent instructions.
 /CLAUDE.md                    @jeduden
 /AGENTS.md                    @jeduden
 /.claude/                     @jeduden
 
-# Security-sensitive packages (ENG-11) need a second approval from the
-# designated security reviewer, not the stakeholder. That reviewer is
-# still TBD (SRS front matter), and CODEOWNERS can name only a GitHub
-# user or team, so plan 2609292011 enforces it rather than this file.
+# Security-sensitive packages (ENG-11), owned before they exist. They
+# need a second approval from the designated security reviewer. That
+# reviewer is still TBD (SRS front matter), so the stakeholder holds
+# the role until one is named: replace @jeduden on each line with the
+# reviewer's user or team then.
+/internal/provenance/         @jeduden
+/internal/redact/             @jeduden
+/internal/flag/               @jeduden
+/internal/query/              @jeduden
+/internal/envelope/           @jeduden
+/internal/inject/             @jeduden
+/internal/pin/                @jeduden
+/internal/landmark/           @jeduden
+/internal/config/             @jeduden
