@@ -42,3 +42,8 @@ posted. The gate still requested changes. Opening the pull request as
 a draft and marking it ready ran CI twice on one commit, and the gate
 counted the first run's cancelled checks. It now judges each check by
 its latest run, which the workflow passes as `started_at`.
+
+Drifting run, pull request 6: a docs change that contradicted I4.
+CI passed, and the reviewer requested changes with two blocking
+findings, naming I4 and SEC-01, and I2. That commit also ran CI twice,
+and the gate ignored the cancelled run, as the fix intends.
