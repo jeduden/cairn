@@ -26,8 +26,9 @@ summary: >-
 
 - The workflow runs only from main, so this change cannot review
   itself. Phase 2 runs it live once it merges.
-- The agent needs `ANTHROPIC_API_KEY` as a repository secret. Without
-  it the review job fails and nothing is posted.
+- The agent needs `CLAUDE_CODE_OAUTH_TOKEN`, from `claude setup-token`,
+  as a repository secret. Without it the review job fails and nothing
+  is posted.
 - Check that the app's approval counts toward the ruleset. If it does
   not, give the app Contents read and write; only the post job holds
   its token.

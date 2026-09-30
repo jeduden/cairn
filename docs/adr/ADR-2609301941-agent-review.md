@@ -53,6 +53,12 @@ of the pipeline must hold even when the agent is fooled or wrong.
 - **The Actions token (`github-actions[bot]`).** Needs no app, but
   its approvals count only if the repository lets Actions approve
   pull requests. That setting lets any workflow approve.
+- **An API key.** Per-token billing: about $0.50 to $1 a review on
+  the agent loop, and several dollars for a large pull request. Too
+  expensive for a review on every push of many agents' work.
+- **One API call over a fixed bundle.** About $0.10 a review, but the
+  agent cannot open a file the bundle left out. Worth revisiting once
+  `trace <id>` bundles exist (plan 2609292156, phase 6).
 - **Only a human reviewer.** Holds I2 best, but no human reads most
   diffs at the rate many agents write them; ENG-21 chose agents.
 
@@ -62,7 +68,13 @@ of the pipeline must hold even when the agent is fooled or wrong.
   request that adds it is reviewed another way.
 - A pull request touching a CODEOWNERS path still needs the
   stakeholder. The app's approval never replaces that review.
-- The workflow needs `ANTHROPIC_API_KEY` and `JEDUDEN_REVIEW_AGENT_KEY`
-  as repository secrets. Without either, the run fails and posts
-  nothing.
+- The workflow needs `CLAUDE_CODE_OAUTH_TOKEN` and
+  `JEDUDEN_REVIEW_AGENT_KEY` as repository secrets. Without either,
+  the run fails and posts nothing.
+- The agent runs on the stakeholder's Claude subscription, through
+  the token `claude setup-token` prints, as the action's setup guide
+  describes. A review costs no per-token bill; it counts against the
+  plan's usage limits. Drafts are skipped and the agent's turns are
+  capped at 30, so a pull request is reviewed about once, when marked
+  ready. An API key replaces the token if volume outgrows the plan.
 - Fork pull requests are not reviewed here.
