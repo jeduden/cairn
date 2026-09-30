@@ -189,3 +189,37 @@ func TestIsBlockingIsTheBlockingSeverity(t *testing.T) {
 	assert.True(t, isBlocking(Finding{Severity: Blocking}))
 	assert.False(t, isBlocking(Finding{Severity: Nit}))
 }
+
+func TestDecideJudgesEachCheckByItsLatestRun(t *testing.T) {
+	// A second CI run on one commit cancels the first; the first run's
+	// cancelled jobs and its red gate job must not count against it.
+	checks := []Check{
+		{Name: "CI", Status: "completed", Conclusion: "failure", StartedAt: "2026-09-30T21:38:10Z"},
+		{Name: "test", Status: "completed", Conclusion: "cancelled", StartedAt: "2026-09-30T21:38:09Z"},
+		{Name: "CI", Status: "completed", Conclusion: "success", StartedAt: "2026-09-30T21:40:01Z"},
+		{Name: "test", Status: "completed", Conclusion: "success", StartedAt: "2026-09-30T21:39:10Z"},
+	}
+	r, post, err := Decide(Input{Verdict: approve(), Reviewed: reviewed, Head: reviewed, Checks: checks})
+	require.NoError(t, err)
+	require.True(t, post)
+	assert.Equal(t, Approve, r.Event, r.Body)
+}
+
+func TestDecideStillRefusesWhenTheLatestCIRunFailed(t *testing.T) {
+	checks := []Check{
+		{Name: "CI", Status: "completed", Conclusion: "success", StartedAt: "2026-09-30T21:38:10Z"},
+		{Name: "CI", Status: "completed", Conclusion: "failure", StartedAt: "2026-09-30T21:40:01Z"},
+	}
+	_, _, err := Decide(Input{Verdict: approve(), Reviewed: reviewed, Head: reviewed, Checks: checks})
+	require.ErrorIs(t, err, ErrCI)
+}
+
+func TestLatestKeepsTheNewestRunOfEachCheckInFirstSeenOrder(t *testing.T) {
+	checks := []Check{
+		{Name: "b", Conclusion: "failure", StartedAt: "2026-09-30T21:00:00Z"},
+		{Name: "a", Conclusion: "success", StartedAt: "2026-09-30T21:00:00Z"},
+		{Name: "b", Conclusion: "success", StartedAt: "2026-09-30T21:05:00Z"},
+		{Name: "b", Conclusion: "cancelled", StartedAt: "2026-09-30T21:01:00Z"},
+	}
+	assert.Equal(t, []Check{checks[2], checks[1]}, latest(checks))
+}

@@ -35,3 +35,10 @@ Failure sites and their fixes:
 
 Gate: run 1 ends with the app's approval counted, and run 2 with
 changes requested.
+
+First run, on this spec's own pull request: the agent signed in, read
+the change and found nothing; the post job minted the app's token and
+posted. The gate still requested changes. Opening the pull request as
+a draft and marking it ready ran CI twice on one commit, and the gate
+counted the first run's cancelled checks. It now judges each check by
+its latest run, which the workflow passes as `started_at`.

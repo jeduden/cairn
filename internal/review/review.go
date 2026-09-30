@@ -63,11 +63,14 @@ type Finding struct {
 	Body     string `json:"body"`
 }
 
-// Check is one check run on the reviewed head.
+// Check is one check run on the reviewed head. A commit can carry
+// several runs of one check, when CI ran on it twice; StartedAt, an
+// RFC 3339 UTC time, orders them.
 type Check struct {
 	Name       string `json:"name"`
 	Status     string `json:"status"`
 	Conclusion string `json:"conclusion"`
+	StartedAt  string `json:"started_at"`
 }
 
 // Input is everything the gate decides from.
@@ -159,10 +162,11 @@ func Decide(in Input) (r Review, post bool, err error) {
 	if in.Head != in.Reviewed {
 		return Review{}, false, nil
 	}
-	if !slices.ContainsFunc(in.Checks, passedCI) {
+	checks := latest(in.Checks)
+	if !slices.ContainsFunc(checks, passedCI) {
 		return Review{}, false, fmt.Errorf("%w: %s", ErrCI, in.Reviewed)
 	}
-	failed := failedChecks(in.Checks)
+	failed := failedChecks(checks)
 	event := RequestChanges
 	if in.Verdict.Verdict == ApproveVerdict && len(failed) == 0 &&
 		!slices.ContainsFunc(in.Verdict.Findings, isBlocking) {
@@ -170,6 +174,26 @@ func Decide(in Input) (r Review, post bool, err error) {
 	}
 
 	return Review{CommitID: in.Reviewed, Event: event, Body: render(in.Verdict, failed, event, in.Reviewed)}, true, nil
+}
+
+// latest keeps the newest run of each check, in the order the checks
+// first appear. An older run that a newer one replaced, cancelled or
+// failed, says nothing about the head as it stands.
+func latest(checks []Check) []Check {
+	var out []Check
+	at := map[string]int{}
+	for _, c := range checks {
+		i, seen := at[c.Name]
+		switch {
+		case !seen:
+			at[c.Name] = len(out)
+			out = append(out, c)
+		case c.StartedAt > out[i].StartedAt:
+			out[i] = c
+		}
+	}
+
+	return out
 }
 
 // passedCI reports whether c is the required CI check, passed.
