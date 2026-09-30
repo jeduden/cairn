@@ -31,6 +31,7 @@ func TestScenariosReadsTagsAndPending(t *testing.T) {
     @NFR-01
     Scenario: fast hooks
       Given nothing
+      Then a hook returns
 `)
 
 	got, err := Scenarios(dir)
@@ -40,12 +41,14 @@ func TestScenariosReadsTagsAndPending(t *testing.T) {
 	assert.Equal(t, Scenario{
 		Path: filepath.Join(dir, "x.feature"), Line: 4, Name: "ingest transcripts",
 		ID: "REC-01", Priority: "P0", Invariants: []string{"I1", "I10"}, Pending: true,
+		Steps: []string{"nothing"},
 	}, got[0])
 	assert.Equal(t, "NFR-01", got[1].ID)
 	assert.Empty(t, got[1].Priority)
 	assert.Nil(t, got[1].Invariants)
 	assert.EqualValues(t, 10, got[1].Line)
 	assert.False(t, got[1].Pending)
+	assert.Equal(t, []string{"nothing", "a hook returns"}, got[1].Steps)
 }
 
 func TestScenariosFoldsOutlineRowsOntoOneScenario(t *testing.T) {

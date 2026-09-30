@@ -1,25 +1,57 @@
-# ENG-21: a human owner reviews every change. The security-sensitive
-# packages ENG-11 names additionally need the designated security
-# reviewer; that owner is still TBD (SRS front matter), so they list
-# the maintainer alone until one is named — add the reviewer to each
-# line below when they are.
-*                         @jeduden
+# ENG-21: agents review and approve each other's pull requests. The
+# stakeholder approves what defines the requirements and what enforces
+# them, listed below. A path with no owner here merges on the approval
+# of any reviewer other than its author, agent or human.
 
-# What controls CI, releases and the supply-chain posture.
-/.github/                 @jeduden
-/tools/                   @jeduden
-/scripts/                 @jeduden
-/SECURITY.md              @jeduden
-/DEPENDENCIES.md          @jeduden
-/docs/srs/                @jeduden
+# The requirement text, and the decision records that justify design
+# and dependencies (ENG-26).
+/docs/srs/                    @jeduden
+/docs/adr/                    @jeduden
 
-# Security-sensitive packages (ENG-11), owned before they exist.
-/internal/provenance/     @jeduden
-/internal/redact/         @jeduden
-/internal/flag/           @jeduden
-/internal/query/          @jeduden
-/internal/envelope/       @jeduden
-/internal/inject/         @jeduden
-/internal/pin/            @jeduden
-/internal/landmark/       @jeduden
-/internal/config/         @jeduden
+# The requirement–scenario gate, the ADR reader the ENG-18 and ENG-26
+# scenarios check through, the scenario runner and the import closure
+# test that enforces I4.
+/internal/srs/                @jeduden
+/internal/adr/                @jeduden
+/internal/scenario/           @jeduden
+/internal/drift/              @jeduden
+/cmd/cairn/bdd_test.go        @jeduden
+/cmd/cairn/imports_test.go    @jeduden
+
+# The review gate: what decides the review the reviewer app posts
+# (ENG-28). The workflow that runs it is under /.github/.
+/internal/review/             @jeduden
+/cmd/review-gate/             @jeduden
+
+# CI, the coverage floor, the lint configuration and this file.
+/.github/                     @jeduden
+/scripts/                     @jeduden
+/tools/                       @jeduden
+/.golangci.yml                @jeduden
+/.mdsmith.yml                 @jeduden
+
+# The supply-chain and disclosure policy: every new direct dependency
+# needs an accepted ADR under /docs/adr/, listed in DEPENDENCIES.md
+# (ENG-18), so it passes here.
+/SECURITY.md                  @jeduden
+/DEPENDENCIES.md              @jeduden
+
+# The agent instructions.
+/CLAUDE.md                    @jeduden
+/AGENTS.md                    @jeduden
+/.claude/                     @jeduden
+
+# Security-sensitive packages (ENG-11), owned before they exist. They
+# need a second approval from the designated security reviewer. That
+# reviewer is still TBD (SRS front matter), so the stakeholder holds
+# the role until one is named: replace @jeduden on each line with the
+# reviewer's user or team then.
+/internal/provenance/         @jeduden
+/internal/redact/             @jeduden
+/internal/flag/               @jeduden
+/internal/query/              @jeduden
+/internal/envelope/           @jeduden
+/internal/inject/             @jeduden
+/internal/pin/                @jeduden
+/internal/landmark/           @jeduden
+/internal/config/             @jeduden

@@ -8,6 +8,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    # ready_for_review too: the review workflow skips drafts and runs
+    # after CI, so marking a pull request ready must rerun CI.
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 permissions:
@@ -49,7 +52,7 @@ jobs:
       # statements (scripts/coverage-exclude.txt lists the justified
       # exceptions). ENG-11's 90%/80% floors join this call as the
       # product packages land.
-      - run: scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario
+      - run: scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario ./internal/adr ./internal/drift ./internal/review ./cmd/review-gate
       # The pending backlog, counted. A measurement, not a gate.
       - name: Count pending scenarios
         if: ${{ !cancelled() }}
@@ -153,6 +156,27 @@ jobs:
           version: v0.55.1
           args: check .
 
+  # ENG-27: every check that keeps the specification, its scenarios
+  # and the repository's records in step is proven here. The suite
+  # injects each registered drift into a copy of the checkout and fails
+  # when the check it names lets the drift through. It needs mdsmith on
+  # PATH, so it runs here rather than in `go test ./...`.
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      # The same pinned mdsmith the markdown job lints with, installed
+      # onto PATH without running it. Bump the SHA and `version` together.
+      - uses: jeduden/mdsmith@0ca0d2f7c95ab53e3e9ed8851150af98b95088fb # v0.55.1
+        with:
+          version: v0.55.1
+      - run: go test -tags drift ./internal/drift -count=1 -v
+
   # Workflows are an attack surface go vet never reads. zizmor checks
   # them for an unpinned action, a token left in a checkout, an input
   # interpolated into a shell.
@@ -183,7 +207,7 @@ jobs:
   ci:
     name: CI
     if: ${{ always() }}
-    needs: [test, build, lint, vuln, markdown, workflows]
+    needs: [test, build, lint, vuln, markdown, workflows, drift]
     runs-on: ubuntu-latest
     steps:
       - name: Fail unless every job passed

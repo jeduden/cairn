@@ -37,7 +37,7 @@ func Tables(body []byte) []Table {
 	fence := ""
 	for i := 0; i < len(lines); i++ {
 		trimmed := strings.TrimSpace(lines[i])
-		if f := fenceMarker(trimmed); f != "" {
+		if f := FenceMarker(trimmed); f != "" {
 			switch {
 			case fence == "":
 				fence = f
@@ -63,11 +63,11 @@ func Tables(body []byte) []Table {
 	return out
 }
 
-// fenceMarker returns the run of three or more backticks or tildes a
+// FenceMarker returns the run of three or more backticks or tildes a
 // line opens with, or "" when it is no fence. A fence closes only on a
 // run of the same character at least as long as the one that opened
 // it, so a four-backtick fence can quote a three-backtick one.
-func fenceMarker(line string) string {
+func FenceMarker(line string) string {
 	if line == "" || (line[0] != '`' && line[0] != '~') {
 		return ""
 	}

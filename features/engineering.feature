@@ -144,12 +144,16 @@ Feature: Engineering quality (ENG)
     And a nightly job drives real Claude Code through compaction, restore and recall
 
   @ENG-18 @P0
-  Scenario: every direct dependency is justified with an allow-listed license
+  Scenario: every direct dependency is justified by an accepted ADR with an allow-listed license
     Given the repository checkout
     When the direct dependencies are read from "go.mod"
-    Then each one has a row in "DEPENDENCIES.md" naming its purpose, license, maintenance status and alternatives
-    And each license is one of "Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause, ISC"
-    And there are at most 10 direct dependencies
+    And the ADRs are read from "docs/adr"
+    Then each direct dependency is named by exactly one accepted ADR
+    And every module an accepted ADR names is a direct dependency
+    And each named module has a purpose, a license and a maintenance status, and its ADR weighs alternatives
+    And each license is on the allow-list the ENG-18 requirement states
+    And the direct dependencies stay within the target the ENG-18 requirement states
+    And "DEPENDENCIES.md" lists every ADR that names a module
 
   @ENG-19 @P0 @pending
   Scenario: two independent builders produce bit-identical release artifacts
@@ -169,7 +173,10 @@ Feature: Engineering quality (ENG)
     Given the repository's branch protection for main
     Then direct pushes are rejected
     And commits must be signed
-    And CODEOWNERS requires a security reviewer for security-sensitive packages
+    And every pull request needs an approval from a reviewer other than its author
+    And CODEOWNERS names the stakeholder on the requirement text and on every path that enforces it
+    And CODEOWNERS names no owner on any other path
+    And changes to security-sensitive packages need two approvals, one from the designated security reviewer
 
   @ENG-22 @P0 @pending
   Scenario: every privacy or data-flow statement cites its proving test
@@ -196,3 +203,42 @@ Feature: Engineering quality (ENG)
     Given the v1.0 release checklist
     Then at least two active maintainers are listed
     And an incident-response runbook exists in the repository
+
+  @ENG-26 @P0
+  Scenario: every design decision lives in one ADR file and a changed decision supersedes it
+    Given the repository checkout
+    When the ADRs are read from "docs/adr"
+    Then every ADR has an id, a title, a status and a summary
+    And every ADR's file is named for its id
+    And every ADR's status is proposed, accepted or superseded
+    And no two ADRs share an id
+    And every superseded ADR names an ADR that exists as its successor
+
+  @ENG-27 @P0
+  Scenario: every check that keeps the records in step is proven by an injected drift
+    Given the repository checkout
+    When the drift cases are read
+    Then the CI workflow runs the drift suite with "go test -tags drift ./internal/drift"
+    And every drift case's edit applies to the checkout
+    And every non-pending scenario that inspects the repository checkout has a drift case guarding its id
+    And the requirement-scenario gate and the Appendix B check each have a drift case
+
+  @ENG-28 @P0
+  Scenario: an agent's approval passes through a gate the agent cannot reach
+    Given the repository checkout
+    When the review workflow is read from ".github/workflows/review.yml"
+    Then it runs only when the "CI" workflow completes, as the default branch defines it
+    And the job that runs the reviewing agent holds no write permission and not the "JEDUDEN_REVIEW_AGENT_KEY" key
+    And only one job holds the "JEDUDEN_REVIEW_AGENT_KEY" key, and it runs no agent
+    And that job runs only after the agent's job succeeded
+    And that job decides the review with "go run ./cmd/review-gate"
+    And the review gate decides:
+      | verdict         | finding  | head    | CI     | other check | review          |
+      | approve         | none     | current | passed | passed      | APPROVE         |
+      | approve         | nit      | current | passed | passed      | APPROVE         |
+      | approve         | blocking | current | passed | passed      | REQUEST_CHANGES |
+      | approve         | none     | current | passed | failed      | REQUEST_CHANGES |
+      | request_changes | none     | current | passed | passed      | REQUEST_CHANGES |
+      | approve         | none     | moved   | passed | passed      | nothing         |
+      | approve         | none     | current | failed | passed      | an error        |
+      | malformed       | none     | current | passed | passed      | an error        |

@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/cucumber/godog"
-	"github.com/jeduden/cairn/internal/srs"
+	"github.com/jeduden/cairn/internal/adr"
+	"github.com/jeduden/cairn/internal/drift"
 )
 
 func init() {
@@ -20,8 +20,12 @@ func init() {
 // engineering is what the §10 scenarios track beside the shared world:
 // the checkout they inspect and what a step read out of it.
 type engineering struct {
-	root string
-	deps []string
+	root   string
+	deps   []string
+	adrDir string
+	adrs   []adr.ADR
+	drifts []drift.Case
+	flow   workflow
 }
 
 // bindEngineering binds the step texts of features/engineering.feature.
@@ -45,17 +49,40 @@ func bindEngineering(w *world, sc *godog.ScenarioContext) {
 	sc.Step(`^the direct dependencies are read from "([^"]+)"$`, func(file string) error {
 		return e().readDirectDeps(file)
 	})
-	sc.Step(`^each one has a row in "([^"]+)" naming its purpose, license, maintenance status and alternatives$`,
-		func(file string) error { return e().depsJustified(file) })
-	sc.Step(`^each license is one of "([^"]+)"$`, func(list string) error {
-		return e().licensesAllowed(list)
+	sc.Step(`^the ADRs are read from "([^"]+)"$`, func(dir string) error {
+		return e().readADRs(dir)
 	})
-	sc.Step(`^there are at most (\d+) direct dependencies$`, func(n int) error {
-		if len(e().deps) > n {
-			return fmt.Errorf("%d direct dependencies, want at most %d: %v", len(e().deps), n, e().deps)
-		}
-
-		return nil
+	sc.Step(`^each direct dependency is named by exactly one accepted ADR$`, func() error {
+		return e().depsNamedOnce()
+	})
+	sc.Step(`^every module an accepted ADR names is a direct dependency$`, func() error {
+		return e().modulesAreDeps()
+	})
+	sc.Step(`^each named module has a purpose, a license and a maintenance status, and its ADR weighs alternatives$`,
+		func() error { return e().depsJustified() })
+	sc.Step(`^each license is on the allow-list the ENG-18 requirement states$`, func() error {
+		return e().licensesAllowed()
+	})
+	sc.Step(`^the direct dependencies stay within the target the ENG-18 requirement states$`, func() error {
+		return e().withinTarget()
+	})
+	sc.Step(`^"([^"]+)" lists every ADR that names a module$`, func(file string) error {
+		return e().listsDependencyADRs(file)
+	})
+	sc.Step(`^every ADR has an id, a title, a status and a summary$`, func() error {
+		return e().adrsComplete()
+	})
+	sc.Step(`^every ADR's file is named for its id$`, func() error {
+		return e().adrsNamedForID()
+	})
+	sc.Step(`^every ADR's status is proposed, accepted or superseded$`, func() error {
+		return e().adrStatusesValid()
+	})
+	sc.Step(`^no two ADRs share an id$`, func() error {
+		return e().adrIDsUnique()
+	})
+	sc.Step(`^every superseded ADR names an ADR that exists as its successor$`, func() error {
+		return e().supersededNamesSuccessor()
 	})
 	sc.Step(`^"SECURITY.md" links the private vulnerability reporting channel$`, func() error {
 		return e().fileContains("SECURITY.md", "/security/advisories/new")
@@ -148,65 +175,4 @@ func directDeps(gomod []byte) []string {
 	}
 
 	return deps
-}
-
-// dependencyRows reads the DEPENDENCIES.md table, keyed by module, each
-// value the row's cells by header name.
-func (e *engineering) dependencyRows(file string) (map[string]map[string]string, error) {
-	body, err := e.read(file)
-	if err != nil {
-		return nil, err
-	}
-	rows := map[string]map[string]string{}
-	for _, tbl := range srs.Tables(body) {
-		if tbl.Header[0] != "Module" {
-			continue
-		}
-		for _, r := range tbl.Rows {
-			cells := map[string]string{}
-			for i, h := range tbl.Header {
-				if i < len(r.Cells) {
-					cells[h] = r.Cells[i]
-				}
-			}
-			rows[strings.Trim(r.Cells[0], "`")] = cells
-		}
-	}
-
-	return rows, nil
-}
-
-func (e *engineering) depsJustified(file string) error {
-	rows, err := e.dependencyRows(file)
-	if err != nil {
-		return err
-	}
-	for _, dep := range e.deps {
-		row, ok := rows[dep]
-		if !ok {
-			return fmt.Errorf("%s has no row for %s", file, dep)
-		}
-		for _, col := range []string{"Purpose", "License", "Maintenance", "Alternatives"} {
-			if row[col] == "" {
-				return fmt.Errorf("%s: %s leaves %q empty", file, dep, col)
-			}
-		}
-	}
-
-	return nil
-}
-
-func (e *engineering) licensesAllowed(list string) error {
-	allowed := strings.Split(list, ", ")
-	rows, err := e.dependencyRows("DEPENDENCIES.md")
-	if err != nil {
-		return err
-	}
-	for _, dep := range e.deps {
-		if lic := rows[dep]["License"]; !slices.Contains(allowed, lic) {
-			return fmt.Errorf("%s is licensed %q, not on the allow-list %v", dep, lic, allowed)
-		}
-	}
-
-	return nil
 }

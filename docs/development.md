@@ -23,8 +23,13 @@ the module graph that ENG-18 counts.
 - `go test -run TestName ./...` — run a specific test
 - `go test ./... -coverpkg=./... -coverprofile=cover.out` — all tests,
   one coverage profile; `go tool cover -func=cover.out` summarises it
-- `scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario`
-  — the coverage floor CI enforces
+- the coverage floor CI enforces:
+
+  ```sh
+  scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario ./internal/adr ./internal/drift \
+    ./internal/review ./cmd/review-gate
+  ```
+
 - `go vet ./...` — run go vet
 - `go tool -modfile=tools/go.mod golangci-lint run` — lint
 - `go tool -modfile=tools/go.mod govulncheck ./...` — known
@@ -65,6 +70,31 @@ scenarios on every run.
 - `go test ./cmd/cairn -run 'TestFeatures/^REC-03:'` — one scenario by
   id; the anchor and colon keep `REC-0` from matching `REC-03`
 - `go test ./internal/scenario ./internal/srs` — the gates alone
+
+### Proving the checks: drift injection
+
+A check that keeps the SRS, the scenarios and the records in step can
+be weakened as easily as any other code, and a weakened check turns
+CI greener, not redder. ENG-27 closes that hole. Every such check has
+a registered drift case in
+[internal/drift/cases.go](../internal/drift/cases.go). A case is one
+edit to a copy of the repository, the check to run and the message it
+must fail with.
+
+- `go test -tags drift ./internal/drift -v` — the drift suite. It
+  proves the unedited copy passes every check, then injects each case
+  into a fresh copy and requires its check to fail. It needs mdsmith
+  on PATH; CI's `drift` job runs it.
+- A case the checks miss today is marked `KnownGap`. The suite fails
+  the day a check starts catching it, so the mark goes with the fix.
+- The ENG-27 scenario runs in plain `go test ./...`. It fails when a
+  case's edit no longer finds its target, or when a non-pending
+  scenario that opens on "the repository checkout" has no case
+  guarding its id.
+
+A new check lands with its drift case in the same change. A scenario
+put back on `@pending` skips, so its drift cases go uncaught and the
+suite fails: re-pending shows up here too.
 
 ### Adding or writing a scenario
 
@@ -130,6 +160,21 @@ target in the tree for five minutes each (ENG-07). It discovers the
 targets, so a new one is fuzzed the night after it merges. The crash
 harness (ENG-06), the concurrency soak (ENG-09) and the live Claude
 Code run (ENG-17) join it as their plans land.
+
+[review.yml](../.github/workflows/review.yml) reviews each pull
+request from a branch of this repository once its CI passes (ENG-21,
+ENG-28). It skips drafts, so a pull request is reviewed when it is
+marked ready, which reruns CI. The agent runs on the stakeholder's
+Claude subscription, not a per-token API key. It triggers on
+`workflow_run`, so GitHub runs it as `main` defines it, never as the
+pull request does. The review job runs an agent with read-only tools
+on the pull request's tree, following
+[the review skill](../.claude/skills/review/SKILL.md). The agent only
+writes a verdict. The post job alone holds the reviewer app's key. It
+runs `cmd/review-gate`, which approves only an approving verdict with
+no blocking finding, on the reviewed head, with `CI` green there;
+otherwise it requests changes.
+[ADR-2609301941](adr/ADR-2609301941-agent-review.md) records why.
 
 [release.yml](../.github/workflows/release.yml) runs from the Actions
 "Run workflow" button with a version like `v0.1.0`. A pushed tag is
