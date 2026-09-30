@@ -18,6 +18,11 @@
 /cmd/cairn/bdd_test.go        @jeduden
 /cmd/cairn/imports_test.go    @jeduden
 
+# The review gate: what decides the review the reviewer app posts
+# (ENG-28). The workflow that runs it is under /.github/.
+/internal/review/             @jeduden
+/cmd/review-gate/             @jeduden
+
 # CI, the coverage floor, the lint configuration and this file.
 /.github/                     @jeduden
 /scripts/                     @jeduden

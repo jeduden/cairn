@@ -93,7 +93,9 @@ needs: an `adr` kind and a token budget on CLAUDE.md. Changes under
    merge-base check that no existing id returns to `@pending` and
    that no ✅ plan names a pending id
 9. A reviewer-agent protocol skill: fresh context, reads `trace`
-   bundles and gate output, never the author's summary
+   bundles and gate output, never the author's summary. Plan
+   2609301942 ships the skill and the reviewer app; this phase
+   teaches it to read the `trace` bundles once phase 6 has them
 10. Retire, never delete: retired requirements and superseded ADRs
    keep their files, an accepted ADR's decision is never rewritten
    (checked against the merge-base), and the gate rejects a reused id

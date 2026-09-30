@@ -1,0 +1,155 @@
+name: Review
+
+# ENG-21 and ENG-28: an agent reviews each pull request once its CI
+# passes, and the reviewer app posts the outcome. The agent only
+# writes a verdict. A separate job, the only one that holds the app's
+# key, decides with cmd/review-gate what review to post: an approval
+# only for an approving verdict with no blocking finding, on the head
+# the agent read, with CI green there.
+#
+# `workflow_run` runs this file as main defines it, never as the pull
+# request under review does, so no branch can rewrite its own
+# reviewer. The pull request's tree is checked out beside main's as
+# data the agent reads; nothing from it runs.
+on: # zizmor: ignore[dangerous-triggers] main's definition runs by design; the pull request's tree is only read
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions: {}
+
+# A newer CI run for the same branch makes an older review moot.
+concurrency:
+  group: review-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Only a pull request from a branch of this repository, and only
+    # once its CI passed. A fork's run is never reviewed here.
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      pull: ${{ steps.pull.outputs.number }}
+      verdict: ${{ steps.agent.outputs.structured_output }}
+    steps:
+      - name: Find the pull request
+        id: pull
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          number=$(gh api "repos/$REPO/commits/$HEAD_SHA/pulls" \
+            --jq '[.[] | select(.state == "open" and .head.sha == env.HEAD_SHA)][0].number // empty')
+          if [ -z "$number" ]; then
+            echo "::notice::no open pull request has head $HEAD_SHA; nothing to review"
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+      # The agent works in main's checkout, so it follows main's
+      # protocol and main's CLAUDE.md, never the pull request's.
+      - if: steps.pull.outputs.number != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - if: steps.pull.outputs.number != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          path: pr-head
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Write the pull request's diff against main
+        if: steps.pull.outputs.number != ''
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: git -C pr-head diff "origin/main...$HEAD_SHA" > pr.diff
+      # Read-only tools and a read-only token: the agent can read the
+      # trees and the pull request, and write nothing but its verdict.
+      - name: Review
+        id: agent
+        if: steps.pull.outputs.number != ''
+        uses: anthropics/claude-code-action@12dd8d74c712f5f3669365b2369b558c495b1104 # v1.0.238
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Review the pull request whose tree is in pr-head/ and whose diff
+            against main is in pr.diff. Follow .claude/skills/review/SKILL.md
+            exactly, and answer with the verdict it describes.
+          claude_args: >-
+            --add-dir pr-head
+            --max-turns 60
+            --allowedTools Read,Glob,Grep
+            --disallowedTools Bash,Edit,Write,NotebookEdit,WebFetch,WebSearch
+            --json-schema '{"type":"object","additionalProperties":false,
+            "required":["verdict","summary","findings"],
+            "properties":{"verdict":{"enum":["approve","request_changes"]},
+            "summary":{"type":"string","minLength":1},
+            "findings":{"type":"array","items":{"type":"object","additionalProperties":false,
+            "required":["path","line","severity","body"],
+            "properties":{"path":{"type":"string","minLength":1},
+            "line":{"type":"integer","minimum":0},
+            "severity":{"enum":["blocking","nit"]},
+            "body":{"type":"string","minLength":1}}}}}}'
+
+  post:
+    # Runs only after the review job succeeded: a failed or missing
+    # review posts nothing, and the red run says why.
+    needs: review
+    if: needs.review.outputs.pull != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: {}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      # The app's token, scoped to this repository and to what posting
+      # a review needs. A missing key fails the step, and the job.
+      - name: Mint the reviewer app's token
+        id: app
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: Iv23lie5LIUdOU49SrG9
+          private-key: ${{ secrets.JEDUDEN_REVIEW_AGENT_KEY }}
+          repositories: cairn
+          permission-pull-requests: write
+          permission-checks: read
+      - name: Read the head and its checks
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          REPO: ${{ github.repository }}
+          PULL: ${{ needs.review.outputs.pull }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          gh api "repos/$REPO/pulls/$PULL" --jq .head.sha > head.txt
+          gh api --paginate "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
+            --jq '.check_runs[] | {name, status, conclusion}' > checks.jsonl
+      - name: Decide the review
+        env:
+          VERDICT: ${{ needs.review.outputs.verdict }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          printf '%s' "$VERDICT" > verdict.json
+          go run ./cmd/review-gate -verdict verdict.json -checks checks.jsonl \
+            -reviewed "$HEAD_SHA" -head "$(cat head.txt)" > review.json
+      - name: Post the review
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          REPO: ${{ github.repository }}
+          PULL: ${{ needs.review.outputs.pull }}
+        run: |
+          if [ -s review.json ]; then
+            gh api --method POST "repos/$REPO/pulls/$PULL/reviews" --input review.json
+          fi

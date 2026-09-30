@@ -26,7 +26,8 @@ the module graph that ENG-18 counts.
 - the coverage floor CI enforces:
 
   ```sh
-  scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario ./internal/adr ./internal/drift
+  scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario ./internal/adr ./internal/drift \
+    ./internal/review ./cmd/review-gate
   ```
 
 - `go vet ./...` — run go vet
@@ -159,6 +160,18 @@ target in the tree for five minutes each (ENG-07). It discovers the
 targets, so a new one is fuzzed the night after it merges. The crash
 harness (ENG-06), the concurrency soak (ENG-09) and the live Claude
 Code run (ENG-17) join it as their plans land.
+
+[review.yml](../.github/workflows/review.yml) reviews each pull
+request from a branch of this repository once its CI passes (ENG-21,
+ENG-28). It triggers on `workflow_run`, so GitHub runs it as `main`
+defines it, never as the pull request does. The review job runs an
+agent with read-only tools on the pull request's tree, following
+[the review skill](../.claude/skills/review/SKILL.md). The agent only
+writes a verdict. The post job alone holds the reviewer app's key. It
+runs `cmd/review-gate`, which approves only an approving verdict with
+no blocking finding, on the reviewed head, with `CI` green there;
+otherwise it requests changes.
+[ADR-2609301941](adr/ADR-2609301941-agent-review.md) records why.
 
 [release.yml](../.github/workflows/release.yml) runs from the Actions
 "Run workflow" button with a version like `v0.1.0`. A pushed tag is

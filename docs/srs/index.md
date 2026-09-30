@@ -9,7 +9,7 @@ summary: >-
 | --------------------------- | ----------------------------------------------------------------------------- |
 | **Product**                 | Cairn — lossless, security-first context layer for long-running Claude agents |
 | **Document**                | Software Requirements Specification (SRS)                                     |
-| **Version**                 | 1.3-draft                                                                     |
+| **Version**                 | 1.4-draft                                                                     |
 | **Status**                  | Draft for kickoff review                                                      |
 | **Date**                    | 2026-09-29                                                                    |
 | **Implementation language** | Go                                                                            |
@@ -25,6 +25,7 @@ summary: >-
 | 1.1-draft | 2026-09-29 | ENG-21: agents review each other's changes; the stakeholder approves requirement and gate changes                                 |
 | 1.2-draft | 2026-09-29 | ENG-26: design decisions as ADR files; ENG-18 justifies dependencies through them                                                 |
 | 1.3-draft | 2026-09-30 | ENG-27: every record-keeping check is proven by an injected drift in CI                                                           |
+| 1.4-draft | 2026-09-30 | ENG-28: agent approvals are posted by a reviewer app, through a gate the reviewing agent cannot reach                             |
 
 ## How to read this document
 

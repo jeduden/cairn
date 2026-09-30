@@ -25,6 +25,7 @@ empty: |
 | ID         | Model  | Title                                                                                                       |
 | ---------- | ------ | ----------------------------------------------------------------------------------------------------------- |
 | 2609292156 | sonnet | [The repository's knowledge follows Cairn's layers](plan/2609292156_knowledge-follows-cairn-layers/plan.md) |
+| 2609301942 | sonnet | [Agent review through the reviewer app](plan/2609301942_agent-review-app/plan.md)                           |
 <?/catalog?>
 
 ## All plans
@@ -66,4 +67,5 @@ empty: |
 | 2609292015 | 🔲     | opus   | [M4: the hermetic compute kernel](plan/2609292015_m4-compute-kernel.md)                                       |
 | 2609292016 | 🔲     | opus   | [M5: hardening and evaluation](plan/2609292016_m5-hardening-and-evaluation.md)                                |
 | 2609292156 | 🔳     | sonnet | [The repository's knowledge follows Cairn's layers](plan/2609292156_knowledge-follows-cairn-layers/plan.md)   |
+| 2609301942 | 🔳     | sonnet | [Agent review through the reviewer app](plan/2609301942_agent-review-app/plan.md)                             |
 <?/catalog?>

@@ -10,7 +10,9 @@ const testStack = "docs/adr/ADR-2609292234-test-stack.md"
 // has none.
 func Cases() []Case {
 	var out []Case
-	for _, group := range [][]Case{dependencyCases(), decisionCases(), repositoryCases(), gateCases()} {
+	for _, group := range [][]Case{
+		dependencyCases(), decisionCases(), repositoryCases(), reviewCases(), gateCases(),
+	} {
 		out = append(out, group...)
 	}
 
@@ -113,6 +115,58 @@ func repositoryCases() []Case {
 				Old: "go test -tags drift ./internal/drift", New: "true"},
 			Check: Scenario("ENG-27"),
 			Want:  `does not contain "go test -tags drift ./internal/drift"`,
+		},
+	}
+}
+
+// reviewWorkflow is the workflow the ENG-28 cases drift.
+const reviewWorkflow = ".github/workflows/review.yml"
+
+// reviewCases lists the drifts ENG-28 exists to catch: the reviewing
+// agent reaching the approval, or the approval skipping the gate.
+func reviewCases() []Case {
+	return []Case{
+		{
+			Name:   "the reviewer run as the pull request defines it",
+			Guards: "ENG-28",
+			Edit: Edit{Op: Replace, File: reviewWorkflow,
+				Old: "  workflow_run:\n", New: "  pull_request_target:\n  workflow_run:\n"},
+			Check: Scenario("ENG-28"),
+			Want:  "triggers on [pull_request_target workflow_run], want only workflow_run",
+		},
+		{
+			Name:   "the reviewing agent granted a write permission",
+			Guards: "ENG-28",
+			Edit: Edit{Op: Replace, File: reviewWorkflow,
+				Old: "      pull-requests: read\n", New: "      pull-requests: write\n"},
+			Check: Scenario("ENG-28"),
+			Want:  "agent job review is granted a write permission",
+		},
+		{
+			Name:   "the reviewing agent handed the reviewer app's key",
+			Guards: "ENG-28",
+			Edit: Edit{Op: Replace, File: reviewWorkflow,
+				Old: "          github_token: ${{ github.token }}\n",
+				New: "          github_token: ${{ secrets.JEDUDEN_REVIEW_AGENT_KEY }}\n"},
+			Check: Scenario("ENG-28"),
+			Want:  "agent job review reads JEDUDEN_REVIEW_AGENT_KEY",
+		},
+		{
+			Name:   "the review posted after the agent failed",
+			Guards: "ENG-28",
+			Edit: Edit{Op: Replace, File: reviewWorkflow,
+				Old: "    if: needs.review.outputs.pull != ''\n",
+				New: "    if: always() && needs.review.outputs.pull != ''\n"},
+			Check: Scenario("ENG-28"),
+			Want:  "job post runs on always(), even after a failed review",
+		},
+		{
+			Name:   "the review posted without the gate",
+			Guards: "ENG-28",
+			Edit: Edit{Op: Replace, File: reviewWorkflow,
+				Old: "go run ./cmd/review-gate -verdict", New: "cp verdict.json review.json; true -verdict"},
+			Check: Scenario("ENG-28"),
+			Want:  `job post does not run "go run ./cmd/review-gate"`,
 		},
 	}
 }

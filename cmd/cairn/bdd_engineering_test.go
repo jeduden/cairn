@@ -25,6 +25,7 @@ type engineering struct {
 	adrDir string
 	adrs   []adr.ADR
 	drifts []drift.Case
+	flow   workflow
 }
 
 // bindEngineering binds the step texts of features/engineering.feature.

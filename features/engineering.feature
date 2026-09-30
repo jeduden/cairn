@@ -222,3 +222,23 @@ Feature: Engineering quality (ENG)
     And every drift case's edit applies to the checkout
     And every non-pending scenario that inspects the repository checkout has a drift case guarding its id
     And the requirement-scenario gate and the Appendix B check each have a drift case
+
+  @ENG-28 @P0
+  Scenario: an agent's approval passes through a gate the agent cannot reach
+    Given the repository checkout
+    When the review workflow is read from ".github/workflows/review.yml"
+    Then it runs only when the "CI" workflow completes, as the default branch defines it
+    And the job that runs the reviewing agent holds no write permission and not the "JEDUDEN_REVIEW_AGENT_KEY" key
+    And only one job holds the "JEDUDEN_REVIEW_AGENT_KEY" key, and it runs no agent
+    And that job runs only after the agent's job succeeded
+    And that job decides the review with "go run ./cmd/review-gate"
+    And the review gate decides:
+      | verdict         | finding  | head    | CI     | other check | review          |
+      | approve         | none     | current | passed | passed      | APPROVE         |
+      | approve         | nit      | current | passed | passed      | APPROVE         |
+      | approve         | blocking | current | passed | passed      | REQUEST_CHANGES |
+      | approve         | none     | current | passed | failed      | REQUEST_CHANGES |
+      | request_changes | none     | current | passed | passed      | REQUEST_CHANGES |
+      | approve         | none     | moved   | passed | passed      | nothing         |
+      | approve         | none     | current | failed | passed      | an error        |
+      | malformed       | none     | current | passed | passed      | an error        |
