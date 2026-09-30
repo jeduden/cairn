@@ -83,6 +83,7 @@ footer: |
 | --- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | ✅     | [The review gate, the workflow and ENG-28](phase-1.md)                                                                                                                                        |
 |     | ↳      | ENG-28 added and off @pending. The review workflow runs the agent read-only after CI; the post job alone holds the app key and posts what the tested gate decides. Five drift cases guard it. |
+| 2   | 🔳     | [The reviewer, live: one clean and one drifting pull request](phase-2.md)                                                                                                                     |
 <?/catalog?>
 
 ## Acceptance Criteria
