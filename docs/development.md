@@ -140,6 +140,11 @@ whole import closure of the shipped binary. That test catches the
 same packages arriving through a dependency. Both are the import half
 of SEC-01; the network-deny sandbox half is ENG-12, still pending.
 
+A package that summarises a session for the restore block may call
+the Claude API directly. Carve it out of `no-network-or-exec` by path
+in `.golangci.yml` and list it in `imports_test.go`'s allowed set, the
+same way the kernel worker's process spawn is carved out.
+
 ## CI, nightly and release
 
 Every workflow lives in `.github/workflows`. Every action is pinned
