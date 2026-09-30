@@ -1,0 +1,230 @@
+// Package review is the gate between a reviewing agent and the
+// approval it may earn (ENG-21, ENG-28). The agent only writes a
+// structured verdict; this package, run by the workflow step that
+// alone holds the reviewer app's key, decides what review to post. It
+// approves only an approving verdict with no blocking finding, on the
+// head the agent read, once CI passed there. It is build-time tooling
+// and never links into the shipped binary.
+package review
+
+import (
+	"bufio"
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"slices"
+	"strings"
+)
+
+// The answers a verdict can give.
+const (
+	ApproveVerdict        = "approve"
+	RequestChangesVerdict = "request_changes"
+)
+
+// The severities a finding can carry. A blocking finding withholds
+// approval whatever the verdict says.
+const (
+	Blocking = "blocking"
+	Nit      = "nit"
+)
+
+// The review events the gate posts, as GitHub names them.
+const (
+	Approve        = "APPROVE"
+	RequestChanges = "REQUEST_CHANGES"
+)
+
+// ciCheck is the check the branch ruleset requires: the job that
+// passes only when every CI job passed.
+const ciCheck = "CI"
+
+// ErrVerdict marks agent output that does not fit the verdict schema.
+var ErrVerdict = errors.New("review: malformed verdict")
+
+// ErrCI marks a head whose required CI check has not passed.
+var ErrCI = errors.New("review: CI has not passed on the reviewed head")
+
+// Verdict is the reviewing agent's structured output.
+type Verdict struct {
+	Verdict  string    `json:"verdict"`
+	Summary  string    `json:"summary"`
+	Findings []Finding `json:"findings"`
+}
+
+// Finding is one problem the agent found, at a path and line of the
+// reviewed tree; line 0 means the whole file.
+type Finding struct {
+	Path     string `json:"path"`
+	Line     int    `json:"line"`
+	Severity string `json:"severity"`
+	Body     string `json:"body"`
+}
+
+// Check is one check run on the reviewed head.
+type Check struct {
+	Name       string `json:"name"`
+	Status     string `json:"status"`
+	Conclusion string `json:"conclusion"`
+}
+
+// Input is everything the gate decides from.
+type Input struct {
+	Verdict Verdict
+	// Reviewed is the head commit the agent read.
+	Reviewed string
+	// Head is the pull request's head commit now.
+	Head   string
+	Checks []Check
+}
+
+// Review is the pull request review to post, in the shape GitHub's
+// create-review endpoint takes.
+type Review struct {
+	CommitID string `json:"commit_id"`
+	Event    string `json:"event"`
+	Body     string `json:"body"`
+}
+
+// ParseVerdict decodes the agent's output strictly: one object, no
+// unknown field, and every value one the schema names.
+func ParseVerdict(data []byte) (Verdict, error) {
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields()
+	var v Verdict
+	if err := dec.Decode(&v); err != nil {
+		return Verdict{}, fmt.Errorf("%w: %w", ErrVerdict, err)
+	}
+	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
+		return Verdict{}, fmt.Errorf("%w: data after the verdict", ErrVerdict)
+	}
+
+	if err := validate(v); err != nil {
+		return Verdict{}, err
+	}
+
+	return v, nil
+}
+
+// validate checks every value in v is one the schema names.
+func validate(v Verdict) error {
+	if v.Verdict != ApproveVerdict && v.Verdict != RequestChangesVerdict {
+		return fmt.Errorf("%w: verdict %q is neither %s nor %s", ErrVerdict, v.Verdict,
+			ApproveVerdict, RequestChangesVerdict)
+	}
+	if strings.TrimSpace(v.Summary) == "" {
+		return fmt.Errorf("%w: no summary", ErrVerdict)
+	}
+	for i, f := range v.Findings {
+		switch {
+		case f.Severity != Blocking && f.Severity != Nit:
+			return fmt.Errorf("%w: finding %d: severity %q", ErrVerdict, i, f.Severity)
+		case f.Path == "" || strings.TrimSpace(f.Body) == "":
+			return fmt.Errorf("%w: finding %d has no path or no body", ErrVerdict, i)
+		case f.Line < 0:
+			return fmt.Errorf("%w: finding %d: line %d", ErrVerdict, i, f.Line)
+		}
+	}
+
+	return nil
+}
+
+// ParseChecks reads one check run per line, as `gh api --jq` prints
+// them; blank lines are skipped.
+func ParseChecks(data []byte) ([]Check, error) {
+	var checks []Check
+	sc := bufio.NewScanner(bytes.NewReader(data))
+	for n := 1; sc.Scan(); n++ {
+		line := bytes.TrimSpace(sc.Bytes())
+		if len(line) == 0 {
+			continue
+		}
+		var c Check
+		if err := json.Unmarshal(line, &c); err != nil {
+			return nil, fmt.Errorf("review: check line %d: %w", n, err)
+		}
+		checks = append(checks, c)
+	}
+
+	return checks, nil
+}
+
+// Decide returns the review to post, or post false when the pull
+// request moved past the reviewed head: the run for the newer head
+// decides instead. A head whose CI has not passed is an error, so the
+// step fails loudly rather than posting anything.
+func Decide(in Input) (r Review, post bool, err error) {
+	if in.Head != in.Reviewed {
+		return Review{}, false, nil
+	}
+	if !slices.ContainsFunc(in.Checks, passedCI) {
+		return Review{}, false, fmt.Errorf("%w: %s", ErrCI, in.Reviewed)
+	}
+	failed := failedChecks(in.Checks)
+	event := RequestChanges
+	if in.Verdict.Verdict == ApproveVerdict && len(failed) == 0 &&
+		!slices.ContainsFunc(in.Verdict.Findings, isBlocking) {
+		event = Approve
+	}
+
+	return Review{CommitID: in.Reviewed, Event: event, Body: render(in.Verdict, failed, event, in.Reviewed)}, true, nil
+}
+
+// passedCI reports whether c is the required CI check, passed.
+func passedCI(c Check) bool {
+	return c.Name == ciCheck && c.Status == "completed" && c.Conclusion == "success"
+}
+
+// isBlocking reports whether f withholds approval.
+func isBlocking(f Finding) bool {
+	return f.Severity == Blocking
+}
+
+// failedChecks lists the completed checks that neither passed nor were
+// skipped. A check still running, this review among them, is not
+// counted: the required CI check has already passed.
+func failedChecks(checks []Check) []Check {
+	var out []Check
+	for _, c := range checks {
+		if c.Status == "completed" && !slices.Contains([]string{"success", "neutral", "skipped"}, c.Conclusion) {
+			out = append(out, c)
+		}
+	}
+
+	return out
+}
+
+// render writes the review body: the outcome and the head it covers,
+// the agent's summary, its blocking findings, then its nits, then the
+// checks that failed.
+func render(v Verdict, failed []Check, event, head string) string {
+	var b strings.Builder
+	outcome := "Changes requested"
+	if event == Approve {
+		outcome = "Approved"
+	}
+	fmt.Fprintf(&b, "**%s** by the review agent on `%s`.\n\n%s\n", outcome, head[:min(len(head), 12)], v.Summary)
+	for _, sev := range []string{Blocking, Nit} {
+		for _, f := range v.Findings {
+			if f.Severity == sev {
+				fmt.Fprintf(&b, "\n- %s `%s`: %s", sev, location(f), f.Body)
+			}
+		}
+	}
+	for _, c := range failed {
+		fmt.Fprintf(&b, "\n- check `%s`: %s", c.Name, c.Conclusion)
+	}
+
+	return b.String()
+}
+
+// location names a finding's file, and its line when it has one.
+func location(f Finding) string {
+	if f.Line == 0 {
+		return f.Path
+	}
+
+	return fmt.Sprintf("%s:%d", f.Path, f.Line)
+}
