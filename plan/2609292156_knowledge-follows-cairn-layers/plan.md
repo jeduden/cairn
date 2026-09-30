@@ -138,7 +138,8 @@ footer: |
 | --- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | ✅     | [Proving slice: dependency decisions as ADR files](phase-1.md)                                                                                                    |
 |     | ↳      | ENG-26 added and @ENG-26 off @pending; @ENG-18 now reads ADRs both ways. The test stack is ADR-2609292234, and DEPENDENCIES.md is a catalog over dependency ADRs. |
-| 2   | 🔳     | [Drift injection: prove every check catches its drift](phase-2.md)                                                                                                |
+| 2   | ✅     | [Drift injection: prove every check catches its drift](phase-2.md)                                                                                                |
+|     | ↳      | ENG-27 added and off @pending. 14 registered drifts, 13 caught and one known gap; the drift CI job fails when a check lets one through.                           |
 <?/catalog?>
 
 ## Acceptance Criteria

@@ -39,6 +39,8 @@ type Scenario struct {
 	Priority   string
 	Invariants []string
 	Pending    bool
+	// Steps are the step texts in order, keywords left out.
+	Steps []string
 }
 
 // Scenarios lists every scenario under dir in the order godog walks
@@ -80,6 +82,9 @@ func Scenarios(dir string) ([]Scenario, error) {
 // invariants, and whether it is pending.
 func scenarioOf(uri string, line int64, p *messages.Pickle) (Scenario, error) {
 	sc := Scenario{Path: uri, Line: line, Name: p.Name}
+	for _, step := range p.Steps {
+		sc.Steps = append(sc.Steps, step.Text)
+	}
 	var ids, prios []string
 	for _, tag := range p.Tags {
 		switch {

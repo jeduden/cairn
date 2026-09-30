@@ -108,6 +108,8 @@ fails the build when the two drift. The mechanics are in
   change, `@pending` until written.
 - Never delete, retag or re-pend a scenario to make CI green. A
   scenario that cannot pass as written is a finding to raise.
+- A check that inspects the repository's own records lands with a
+  drift case in `internal/drift` that proves it fails (ENG-27).
 - Behavior surfaced mid-work — a bug found while fixing something
   else — is checked against the matrix before being judged covered.
 

@@ -10,6 +10,7 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/jeduden/cairn/internal/adr"
+	"github.com/jeduden/cairn/internal/drift"
 )
 
 func init() {
@@ -23,6 +24,7 @@ type engineering struct {
 	deps   []string
 	adrDir string
 	adrs   []adr.ADR
+	drifts []drift.Case
 }
 
 // bindEngineering binds the step texts of features/engineering.feature.

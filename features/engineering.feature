@@ -214,11 +214,11 @@ Feature: Engineering quality (ENG)
     And no two ADRs share an id
     And every superseded ADR names an ADR that exists as its successor
 
-  @ENG-27 @P0 @pending
+  @ENG-27 @P0
   Scenario: every check that keeps the records in step is proven by an injected drift
     Given the repository checkout
     When the drift cases are read
-    Then every drift case's edit applies to the checkout
+    Then the CI workflow runs the drift suite with "go test -tags drift ./internal/drift"
+    And every drift case's edit applies to the checkout
     And every non-pending scenario that inspects the repository checkout has a drift case guarding its id
     And the requirement-scenario gate and the Appendix B check each have a drift case
-    And the CI workflow runs the drift suite with "go test -tags drift ./internal/drift"

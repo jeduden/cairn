@@ -14,6 +14,7 @@
 /internal/srs/                @jeduden
 /internal/adr/                @jeduden
 /internal/scenario/           @jeduden
+/internal/drift/              @jeduden
 /cmd/cairn/bdd_test.go        @jeduden
 /cmd/cairn/imports_test.go    @jeduden
 

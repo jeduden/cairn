@@ -1,7 +1,7 @@
 ---
 n: 2
 title: "Drift injection: prove every check catches its drift"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 2: drift injection

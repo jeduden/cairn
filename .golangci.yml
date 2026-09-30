@@ -1,5 +1,10 @@
 version: "2"
 
+run:
+  # The drift suite (ENG-27) builds only under this tag; lint it too.
+  build-tags:
+    - drift
+
 linters:
   enable:
     # ENG-16's named gates: staticcheck, gosec and errcheck, beside

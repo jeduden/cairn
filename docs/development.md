@@ -26,7 +26,7 @@ the module graph that ENG-18 counts.
 - the coverage floor CI enforces:
 
   ```sh
-  scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario ./internal/adr
+  scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario ./internal/adr ./internal/drift
   ```
 
 - `go vet ./...` — run go vet
@@ -69,6 +69,31 @@ scenarios on every run.
 - `go test ./cmd/cairn -run 'TestFeatures/^REC-03:'` — one scenario by
   id; the anchor and colon keep `REC-0` from matching `REC-03`
 - `go test ./internal/scenario ./internal/srs` — the gates alone
+
+### Proving the checks: drift injection
+
+A check that keeps the SRS, the scenarios and the records in step can
+be weakened as easily as any other code, and a weakened check turns
+CI greener, not redder. ENG-27 closes that hole. Every such check has
+a registered drift case in
+[internal/drift/cases.go](../internal/drift/cases.go). A case is one
+edit to a copy of the repository, the check to run and the message it
+must fail with.
+
+- `go test -tags drift ./internal/drift -v` — the drift suite. It
+  proves the unedited copy passes every check, then injects each case
+  into a fresh copy and requires its check to fail. It needs mdsmith
+  on PATH; CI's `drift` job runs it.
+- A case the checks miss today is marked `KnownGap`. The suite fails
+  the day a check starts catching it, so the mark goes with the fix.
+- The ENG-27 scenario runs in plain `go test ./...`. It fails when a
+  case's edit no longer finds its target, or when a non-pending
+  scenario that opens on "the repository checkout" has no case
+  guarding its id.
+
+A new check lands with its drift case in the same change. A scenario
+put back on `@pending` skips, so its drift cases go uncaught and the
+suite fails: re-pending shows up here too.
 
 ### Adding or writing a scenario
 
