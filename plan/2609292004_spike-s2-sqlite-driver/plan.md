@@ -1,7 +1,7 @@
 ---
 id: 2609292004
 title: "Spike S2: choose the pure-Go SQLite driver"
-status: "🔲"
+status: "🔳"
 summary: >-
   Benchmark modernc.org/sqlite against ncruces/go-sqlite3 for FTS5,
   cancellation, WAL concurrency, encryption and 10M-event

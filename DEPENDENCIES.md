@@ -44,9 +44,10 @@ footer: |
 
 ?>
 
-| ADR                                                     | Status   | Decision                                                                                                                                                          |
-| ------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ADR-2609292234](docs/adr/ADR-2609292234-test-stack.md) | accepted | The executable requirement matrix runs through godog and reads Gherkin through cucumber's messages types; testify asserts in every test. All three are test-only. |
+| ADR                                                        | Status   | Decision                                                                                                                                                                                                                                                             |
+| ---------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-2609292234](docs/adr/ADR-2609292234-test-stack.md)    | accepted | The executable requirement matrix runs through godog and reads Gherkin through cucumber's messages types; testify asserts in every test. All three are test-only.                                                                                                    |
+| [ADR-2609302341](docs/adr/ADR-2609302341-sqlite-driver.md) | proposed | The store opens SQLite through github.com/ncruces/go-sqlite3, a cgo-free wasm2go translation of SQLite. It links no network or process package, and it ships encrypting VFSes. Spike S2 measured it against modernc.org/sqlite at 10M events (ADR-07, OQ-03, OQ-04). |
 <?/catalog?>
 
 Every dependency listed is test-only today. None links into the
