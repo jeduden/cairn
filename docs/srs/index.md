@@ -9,7 +9,7 @@ summary: >-
 | --------------------------- | ----------------------------------------------------------------------------- |
 | **Product**                 | Cairn — lossless, security-first context layer for long-running Claude agents |
 | **Document**                | Software Requirements Specification (SRS)                                     |
-| **Version**                 | 1.2-draft                                                                     |
+| **Version**                 | 1.3-draft                                                                     |
 | **Status**                  | Draft for kickoff review                                                      |
 | **Date**                    | 2026-09-29                                                                    |
 | **Implementation language** | Go                                                                            |
@@ -24,6 +24,7 @@ summary: >-
 | 1.0-draft | 2026-09-29 | Full rewrite: verifiable requirements, trust model, event-sourced design, assumptions register, engineering and verification plan |
 | 1.1-draft | 2026-09-29 | ENG-21: agents review each other's changes; the stakeholder approves requirement and gate changes                                 |
 | 1.2-draft | 2026-09-29 | ENG-26: design decisions as ADR files; ENG-18 justifies dependencies through them                                                 |
+| 1.3-draft | 2026-09-30 | ENG-27: every record-keeping check is proven by an injected drift in CI                                                           |
 
 ## How to read this document
 

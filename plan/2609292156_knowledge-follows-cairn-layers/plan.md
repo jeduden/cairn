@@ -72,25 +72,29 @@ needs: an `adr` kind and a token budget on CLAUDE.md. Changes under
 1. Proving slice: an `adr` kind, one ADR file for the test stack,
    DEPENDENCIES.md rendered as a catalog over dependency ADRs, and
    ENG-18 checking the ADRs both ways (ENG-18, new ENG-26)
-2. Move ADR-01 to ADR-10 out of SRS §4.5 into files, and render §4.5
+2. A drift-injection suite: every check that keeps the specification,
+   scenarios and records in step has a registered drift case, and a
+   CI job injects each drift into a copy of the repository and fails
+   when the check lets it through (new ENG-27)
+3. Move ADR-01 to ADR-10 out of SRS §4.5 into files, and render §4.5
    as a catalog. ADR-07 absorbs the SQLite row spike S2 would otherwise
    write twice.
-3. Verify each dependency ADR's License column against the license
+4. Verify each dependency ADR's License column against the license
    detected from the module's source. Check its "test only" claim
    against the shipped import closure.
-4. Pinned context: CLAUDE.md includes the §1.3 invariant table
+5. Pinned context: CLAUDE.md includes the §1.3 invariant table
    verbatim, and mdsmith gives CLAUDE.md a token budget
-5. Stable ids: every id mentioned in Markdown resolves, and
+6. Stable ids: every id mentioned in Markdown resolves, and
    `trace <id>` prints one id's requirement, scenario, bound steps,
    ADRs and plans
-6. No hand-written derived state: pending and passing status and
+7. No hand-written derived state: pending and passing status and
    coverage are generated, and status sentences leave the prose
-7. Drift gates: a requirement hash tag on each scenario, and a
+8. Wording and pending gates: a requirement hash tag on each scenario, and a
    merge-base check that no existing id returns to `@pending` and
    that no ✅ plan names a pending id
-8. A reviewer-agent protocol skill: fresh context, reads `trace`
+9. A reviewer-agent protocol skill: fresh context, reads `trace`
    bundles and gate output, never the author's summary
-9. Retire, never delete: retired requirements and superseded ADRs
+10. Retire, never delete: retired requirements and superseded ADRs
    keep their files, an accepted ADR's decision is never rewritten
    (checked against the merge-base), and the gate rejects a reused id
 
@@ -99,14 +103,15 @@ needs: an `adr` kind and a token budget on CLAUDE.md. Changes under
 | Phase | Model  | Gate                                                                  |
 | ----- | ------ | --------------------------------------------------------------------- |
 | 1     | opus   | `@ENG-18` and `@ENG-26` pass; a stray go.mod or ADR change fails them |
-| 2     | sonnet | `mdsmith check .`; the gate still parses every ADR id §4 cites        |
-| 3     | sonnet | `@ENG-18` fails on a fixture ADR with a mislabelled license           |
-| 4     | haiku  | `mdsmith check .` fails when CLAUDE.md's invariants differ from §1.3  |
-| 5     | sonnet | A dangling id fails the gate; `trace REC-03` matches a golden file    |
-| 6     | sonnet | `mdsmith check .` fails on a stale generated status table             |
-| 7     | opus   | Editing a requirement without its scenario hash fails the gate        |
-| 8     | opus   | A dry review of a seeded drifting pull request flags the drift        |
-| 9     | sonnet | The gate fails on a reused id and on a deleted retired scenario       |
+| 2     | opus   | The drift job fails when any registered drift goes uncaught           |
+| 3     | sonnet | `mdsmith check .`; the gate still parses every ADR id §4 cites        |
+| 4     | sonnet | `@ENG-18` fails on a fixture ADR with a mislabelled license           |
+| 5     | haiku  | `mdsmith check .` fails when CLAUDE.md's invariants differ from §1.3  |
+| 6     | sonnet | A dangling id fails the gate; `trace REC-03` matches a golden file    |
+| 7     | sonnet | `mdsmith check .` fails on a stale generated status table             |
+| 8     | opus   | Editing a requirement without its scenario hash fails the gate        |
+| 9     | opus   | A dry review of a seeded drifting pull request flags the drift        |
+| 10    | sonnet | The gate fails on a reused id and on a deleted retired scenario       |
 
 ## Phases
 
@@ -133,6 +138,7 @@ footer: |
 | --- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | ✅     | [Proving slice: dependency decisions as ADR files](phase-1.md)                                                                                                    |
 |     | ↳      | ENG-26 added and @ENG-26 off @pending; @ENG-18 now reads ADRs both ways. The test stack is ADR-2609292234, and DEPENDENCIES.md is a catalog over dependency ADRs. |
+| 2   | 🔳     | [Drift injection: prove every check catches its drift](phase-2.md)                                                                                                |
 <?/catalog?>
 
 ## Acceptance Criteria

@@ -28,7 +28,7 @@ not listed here.
 
 | Priority | Functional and security (§5–§6) | Engineering (§10) |
 | -------- | ------------------------------- | ----------------- |
-| P0       | 76                              | 24                |
+| P0       | 76                              | 25                |
 | P1       | 20                              | 2                 |
 | P2       | 4                               | 0                 |
 | —        | Non-functional (§7): 14         |                   |
