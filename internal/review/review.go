@@ -65,8 +65,10 @@ type Finding struct {
 
 // Check is one check run on the reviewed head. A commit can carry
 // several runs of one check, when CI ran on it twice; StartedAt, an
-// RFC 3339 UTC time, orders them.
+// RFC 3339 UTC time, orders them, and ID, which GitHub assigns in
+// creation order, breaks a tie within one second.
 type Check struct {
+	ID         int64  `json:"id"`
 	Name       string `json:"name"`
 	Status     string `json:"status"`
 	Conclusion string `json:"conclusion"`
@@ -188,12 +190,22 @@ func latest(checks []Check) []Check {
 		case !seen:
 			at[c.Name] = len(out)
 			out = append(out, c)
-		case c.StartedAt > out[i].StartedAt:
+		case newer(c, out[i]):
 			out[i] = c
 		}
 	}
 
 	return out
+}
+
+// newer reports whether run a started after run b, by start time and
+// then by run id.
+func newer(a, b Check) bool {
+	if a.StartedAt != b.StartedAt {
+		return a.StartedAt > b.StartedAt
+	}
+
+	return a.ID > b.ID
 }
 
 // passedCI reports whether c is the required CI check, passed.

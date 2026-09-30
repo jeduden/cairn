@@ -77,4 +77,12 @@ of the pipeline must hold even when the agent is fooled or wrong.
   plan's usage limits. Drafts are skipped and the agent's turns are
   capped at 30, so a pull request is reviewed about once, when marked
   ready. An API key replaces the token if volume outgrows the plan.
+- The app itself needs Contents: Read and write. GitHub counts an
+  approval only from a reviewer with write access; with Contents: Read
+  the app's approval posted but did not count (plan 2609301942, phase
+  2). The token the post job mints still asks for pull request write
+  and checks read only, so it cannot push.
+- A commit can carry several runs of one check, when a newer CI run
+  cancels an older one or a job is re-run. The gate judges each check
+  by its latest run, by start time and then by run id.
 - Fork pull requests are not reviewed here.

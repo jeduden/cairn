@@ -223,3 +223,24 @@ func TestLatestKeepsTheNewestRunOfEachCheckInFirstSeenOrder(t *testing.T) {
 	}
 	assert.Equal(t, []Check{checks[2], checks[1]}, latest(checks))
 }
+
+func TestLatestBreaksASameSecondTieByTheHigherRunID(t *testing.T) {
+	// started_at has one-second resolution, so two runs can tie; GitHub
+	// numbers check runs in creation order.
+	at := "2026-09-30T21:00:00Z"
+	checks := []Check{
+		{Name: "CI", Conclusion: "success", StartedAt: at, ID: 7},
+		{Name: "CI", Conclusion: "failure", StartedAt: at, ID: 9},
+		{Name: "CI", Conclusion: "cancelled", StartedAt: at, ID: 8},
+	}
+	assert.Equal(t, []Check{checks[1]}, latest(checks))
+}
+
+func TestNewerOrdersByStartThenByID(t *testing.T) {
+	early := Check{StartedAt: "2026-09-30T21:00:00Z", ID: 9}
+	late := Check{StartedAt: "2026-09-30T21:00:01Z", ID: 1}
+	assert.True(t, newer(late, early), "a later start wins over a higher id")
+	assert.False(t, newer(early, late))
+	assert.True(t, newer(Check{StartedAt: early.StartedAt, ID: 10}, early))
+	assert.False(t, newer(early, early))
+}
