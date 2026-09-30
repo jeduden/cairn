@@ -1,7 +1,7 @@
 ---
 id: 2609301942
 title: "Agent review through the reviewer app"
-status: "🔳"
+status: "✅"
 summary: >-
   An agent reviews each pull request after CI, from main's workflow,
   with read-only tools; a separate job holding the reviewer app's key
@@ -79,19 +79,21 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                                                                                                                                                         |
-| --- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | ✅     | [The review gate, the workflow and ENG-28](phase-1.md)                                                                                                                                        |
-|     | ↳      | ENG-28 added and off @pending. The review workflow runs the agent read-only after CI; the post job alone holds the app key and posts what the tested gate decides. Five drift cases guard it. |
-| 2   | 🔳     | [The reviewer, live: one clean and one drifting pull request](phase-2.md)                                                                                                                     |
+| #   | Status | Phase                                                                                                                                                                                                       |
+| --- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ✅     | [The review gate, the workflow and ENG-28](phase-1.md)                                                                                                                                                      |
+|     | ↳      | ENG-28 added and off @pending. The review workflow runs the agent read-only after CI; the post job alone holds the app key and posts what the tested gate decides. Five drift cases guard it.               |
+| 2   | ✅     | [The reviewer, live: one clean and one drifting pull request](phase-2.md)                                                                                                                                   |
+|     | ↳      | Live runs on pull requests 5 to 9. The reviewer caught a drift CI missed and a prompt injection, and its approval counts once the app has Contents write. The gate now judges each check by its latest run. |
 <?/catalog?>
 
 ## Acceptance Criteria
 
 - [x] Scenario @ENG-28 passes, off `@pending`
 - [x] The drift suite catches every review-workflow drift
-- [ ] A seeded drifting pull request gets changes requested
-- [ ] A clean pull request gets an approval the ruleset counts
+- [x] A seeded drifting pull request gets changes requested
+- [x] A pull request carrying a prompt injection gets changes requested
+- [x] A clean pull request gets an approval the ruleset counts
 - [x] All tests pass: `go test -race ./...`
 - [x] `mdsmith check .` is clean
 - [x] `go tool -modfile=tools/go.mod golangci-lint run` is clean
