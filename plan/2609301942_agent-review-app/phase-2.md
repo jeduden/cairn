@@ -47,3 +47,14 @@ Drifting run, pull request 6: a docs change that contradicted I4.
 CI passed, and the reviewer requested changes with two blocking
 findings, naming I4 and SEC-01, and I2. That commit also ran CI twice,
 and the gate ignored the cancelled run, as the fix intends.
+
+Clean run, pull request 7: the id range fix in the development guide.
+The reviewer approved, but the ruleset did not count it: the app had
+Contents: Read, and GitHub counts only reviewers with write access.
+With Contents: Read and write, the same approval made the pull request
+mergeable. The review of pull request 5 had flagged that `started_at`
+ties within one second; the gate now breaks a tie by check run id.
+
+Not changed: the CI gate job keeps `if: always()`. With
+`!cancelled()` a cancelled run's gate job would be skipped, and GitHub
+counts a skipped required check as passing.
