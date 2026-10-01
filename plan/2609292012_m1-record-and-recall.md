@@ -34,11 +34,12 @@ four things for M1:
   driver's URI parsers, in the SEC-01 import test. FTS5 is registered
   on every connection.
 - Task 6 bounds BM25 ranking. Full ranking of a common term at 10M
-  events takes seconds, far over NFR-03's 200 ms, and a rare-term
-  query takes 286–310 ms.
-- Task 1's store meets NFR-04 at a hook's real commit size. One event
-  per commit ran at about 1,000 ev/s against 5,000; caching prepared
-  statements and committing a hook's events together are the levers.
+  events takes seconds, far over NFR-03's 200 ms. Ranking only the
+  newest 2,000 matches still reaches 268–299 ms p95 on emulated
+  reference hardware.
+- Task 1's hooks commit their events together. 100 events per commit
+  met NFR-04 over 1M events (10–13k events per second), while one
+  event per commit ranged from 0.7k to 4.2k.
 
 ## Tasks
 

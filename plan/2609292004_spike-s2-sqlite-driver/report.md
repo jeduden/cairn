@@ -1,8 +1,8 @@
 # Spike S2 benchmark report: the pure-Go SQLite driver
 
 Spike S2 settles ADR-07: which pure-Go SQLite driver backs the store.
-It also answers OQ-03 (is pure Go fast enough at 10M events) and
-OQ-04 (encryption at rest). The decision record is
+It also bears on OQ-03 (is pure Go fast enough at 10M events) and
+answers OQ-04 (encryption at rest). The decision record is
 [ADR-2609302341](../../docs/adr/ADR-2609302341-sqlite-driver.md).
 
 ## Verdict
@@ -13,19 +13,19 @@ closure decides:
 - `modernc.org/sqlite` links `os/exec` and `net` into the binary.
 - `ncruces/go-sqlite3` links neither, and it ships an encrypting VFS.
 
-ncruces is 10–25% slower at full-ranked search and batched ingest,
-50–85% slower when a rare term anchors the query, and a third faster
-at one event per commit. The gap changes one outcome: the rare-anchor
-query meets NFR-03 with modernc (167–191 ms) and misses it with
-ncruces (286–310 ms). The decision accepts that miss for the closure
-and the VFS, and M1's bounded ranking has to bring it under budget.
+On speed the two are close. On the large host ncruces was 10–25%
+slower at full-ranked search and batched ingest. There a rare anchor
+term kept modernc inside NFR-03 (167–191 ms) and put ncruces outside
+(286–310 ms). On emulated reference hardware both missed that query
+(340 and 274 ms), and the full-ranking gap shrank to about 10%. No
+target's outcome on the reference hardware turns on the driver.
 
-No CGO build is needed (OQ-03). Both drivers miss the same three
-targets: full BM25 ranking of a common term, one event per commit,
-and store overhead. FTS5's cost model and the schema cause the first
-and last, so they would miss under CGO too. CGO's typical 1.5–2×
-would not lift one-event commits to 5,000 ev/s. It might close
-ncruces's rare-anchor miss, which bounded ranking targets instead.
+Both drivers meet NFR-04 on the reference hardware: 13.1k (modernc)
+and 10.4k (ncruces) events per second over 1M events. Both meet
+expand latency and hook memory. Both miss two targets: NFR-03 search
+and NFR-09 store overhead. FTS5's cost model and the schema cause
+those, so a CGO build would miss them too. OQ-03 stays open until
+M1's bounded ranking meets NFR-03.
 
 ## Setup
 
@@ -42,10 +42,17 @@ ncruces's rare-anchor miss, which bounded ranking targets instead.
   numbers.
 - Connection settings for both drivers: WAL, `synchronous=NORMAL`, a
   busy timeout, and `BEGIN IMMEDIATE` (ADR-01).
-- Host: 4 vCPU, 15 GiB RAM, Linux, Go 1.26.8, `CGO_ENABLED=0`. Both
-  drivers write the same file format, so the latency runs read one
-  warmed file with each driver in turn. That isolates the driver from
-  page-cache effects.
+- Large host: 4 vCPU, 15 GiB RAM, Linux, Go 1.26.8,
+  `CGO_ENABLED=0`. Both drivers write the same file format, so the
+  latency runs read one warmed file with each driver in turn. That
+  isolates the driver from page-cache effects.
+- Emulated reference hardware (SRS §7: 2 vCPU, 4 GiB RAM): the same
+  host, with a cgroup pinning two CPUs and capping memory, page cache
+  included, at 4 GiB. The store's file cache was dropped before the
+  search runs. Pages cached before the cgroup started could still
+  serve reads: the cgroup peaked at 2.2 GiB during search, so those
+  runs may understate cold-disk latency. The 1M-event ingest runs hit
+  the 4 GiB cap. The disk is the host's.
 
 ## Correctness
 
@@ -92,33 +99,41 @@ modernc links seven more modules into the binary, and ncruces three.
 
 ## Performance at 10M events
 
-Each latency figure is the p95 of 300 to 600 queries after 30 warm-up
-queries. The runs took each percentile one rank above nearest-rank,
-so the figures are slight upper bounds. The harness now uses nearest
-rank. The ingest runs prepared both INSERT statements again in every
-transaction. That cost weighs most on the one-event-per-transaction
-row, which a store caching its statements could beat.
+The large-host search figures are the p95 of 300 to 600 queries after
+30 warm-up queries, taken one rank above nearest-rank, so they are
+slight upper bounds. The reference figures use nearest rank over 150
+queries (full ranking) or 300 (bounded), 50 or 100 per term band.
+The ingest runs prepare both INSERT statements again in every
+transaction. The ingest and hook rows were rerun after the harness
+switched appended events to the store's vocabulary.
 
-The ingest and hook runs drew their events from a vocabulary of their
-own, not the store's. Ingest indexed mostly new terms, and the hook's
-search matched only its own batch, so its RSS figure leaves out a
-ranked search over the store. The harness now draws appended events
-from the store's vocabulary; both rows want a rerun.
-
-| Target                               | Measure                            | modernc     | ncruces     | Met?     |
-| ------------------------------------ | ---------------------------------- | ----------- | ----------- | -------- |
-| NFR-03 search ≤ 200 ms               | BM25 over all matches, query mix   | 3.57–3.81 s | 4.22–4.32 s | no, both |
-|                                      | the same, rare anchor term         | 167–191 ms  | 286–310 ms  | modernc  |
-|                                      | BM25 over the newest 2,000 matches | 313 ms      | 390 ms      | no, both |
-| NFR-03 expand ≤ 100 ms               | 50-event window by `seq`           | 0.26 ms     | 0.25 ms     | yes      |
-| NFR-04 ingest ≥ 5,000 ev/s, one core | 100 events per transaction         | 7,260–8,661 | 6,356–6,613 | yes      |
-|                                      | 1 event per transaction            | 943         | 1,264       | no, both |
-| NFR-09 hook peak RSS ≤ 50 MiB        | open, append 100, search, close    | 17.7–18.0   | 18.5–20.3   | yes      |
-| NFR-09 store overhead ≤ 1.5× text    | file size / text size              | 1.96        | 1.96        | no, both |
+| Target                               | Measure                            | Host modernc | Host ncruces | Ref. modernc | Ref. ncruces | Met on reference? |
+| ------------------------------------ | ---------------------------------- | ------------ | ------------ | ------------ | ------------ | ----------------- |
+| NFR-03 search ≤ 200 ms               | BM25 over all matches, query mix   | 3.57–3.81 s  | 4.22–4.32 s  | 2.95 s       | 3.24 s       | no, both          |
+|                                      | the same, rare anchor term         | 167–191 ms   | 286–310 ms   | 340 ms       | 274 ms       | no, both          |
+|                                      | BM25 over the newest 2,000 matches | 313 ms       | 390 ms       | 268 ms       | 299 ms       | no, both          |
+| NFR-03 expand ≤ 100 ms               | 50-event window by `seq`           | 0.26 ms      | 0.25 ms      | 1.24 ms      | 0.26 ms      | yes               |
+| NFR-04 ingest ≥ 5,000 ev/s, one core | 1M events, 100 per transaction     | —            | —            | 13,134       | 10,358       | yes               |
+|                                      | 50k events, 100 per transaction    | 7,295–8,237  | 5,657–5,725  | 4,777–15,246 | 3,970–13,971 | merge timing      |
+|                                      | 1 event per transaction            | 953          | 909          | 694–4,167    | 885–4,214    | not NFR-04's load |
+| NFR-09 hook peak RSS ≤ 50 MiB        | open, append 100, search, close    | 21.7–21.8    | 20.1–20.5    | 21.6–21.8    | 20.2–20.8    | yes               |
+| NFR-09 store overhead ≤ 1.5× text    | file size / text size              | 1.96         | 1.96         | 1.96         | 1.96         | no, both          |
 
 The bulk load ran at 15.0k (modernc) and 13.5k (ncruces) events per
 second, with 10,000 events per transaction and both loads running at
 once.
+
+### Ingest
+
+Short ingest runs measure FTS5's automerge more than the driver. An
+insert that tips a level rewrites a large index segment, so a
+50k-event run either lands on a merge or misses it. The same run gave
+4.8k and then 15.2k events per second back to back. NFR-04's scenario
+ingests a 1M-event transcript, long enough to average the merges, and
+both drivers clear 5,000 there with room to spare. One event per
+commit ranges from 0.7k to 4.2k with either driver. That is not
+NFR-04's workload, but it argues for committing a hook's events
+together.
 
 ### Search
 
@@ -143,9 +158,9 @@ comes from multi-term queries that pair a rare term with common ones.
 
 This is FTS5's cost model, not the driver's. A CGO build typically
 runs SQLite 1.5–2× faster than either translation. That would not
-bring 4 s near 200 ms. So OQ-03's answer is no CGO, plus a
-query design in M1. Candidates are bounded ranking, a merged index,
-and a stop-list for terms that match too much to rank.
+bring 3–4 s near 200 ms. So OQ-03 stays open, with no CGO build:
+M1's query design decides NFR-03. Candidates are bounded ranking, a
+merged index, and a stop-list for terms that match too much to rank.
 
 ### Store overhead
 
@@ -198,7 +213,7 @@ go build -o /tmp/bench .
 /tmp/bench search -driver ncruces -db /tmp/s2.db -n 300
 /tmp/bench search -driver ncruces -db /tmp/s2.db -n 600 -recent 2000
 /tmp/bench expand -driver ncruces -db /tmp/s2.db -n 300
-/tmp/bench ingest -driver ncruces -db /tmp/s2.db -n 50000 -batch 100
+/tmp/bench ingest -driver ncruces -db /tmp/s2.db -n 1000000 -batch 100
 /tmp/bench hook -driver ncruces -db /tmp/s2.db
 /tmp/bench cancel -driver ncruces -db /tmp/s2.db
 /tmp/bench optimize -driver ncruces -db /tmp/s2.db

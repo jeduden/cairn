@@ -34,25 +34,23 @@ The measurements are in the spike's
 
 ## Alternatives
 
-- `modernc.org/sqlite`, the other candidate. It is 10–25% faster at
-  full-ranked search and batched ingest. It also meets NFR-03 on
-  rare-term search (167–191 ms) where ncruces misses (286–310 ms), a
-  miss M1's bounded ranking has to absorb. But its
-  C runtime, `modernc.org/libc`, links `os/exec` to emulate
-  `system()` and `popen()`, and it pulls in `net` through
+- `modernc.org/sqlite`, the other candidate. On a large host it is
+  10–25% faster at full-ranked search and batched ingest, and it met
+  NFR-03 on rare-term queries where ncruces missed. On emulated
+  reference hardware the gap shrinks to about 10%, and both miss that
+  query. But its C runtime, `modernc.org/libc`, links `os/exec` to
+  emulate `system()` and `popen()`, and it pulls in `net` through
   `github.com/google/uuid`. Admitting it means allow-listing both in
   the SEC-01 import-closure test, for code Cairn never calls. It also
   has no writable VFS API, so it offers no encryption at rest.
 - CGO `mattn/go-sqlite3`, already rejected by ADR-07. It breaks
   CON-02.
-- A CGO build for large deployments (OQ-03). Not chosen. Pure Go
-  meets batched ingest, expand and hook memory at 10M events. Three
-  targets miss with either driver: ranked search on common terms, one
-  event per commit, and store overhead. FTS5, the schema and the
-  per-commit cost cause them, and a CGO build shares all three. CGO's
-  typical 1.5–2× might close ncruces's rare-term miss. M1's bounded
-  ranking targets it without CGO, and OQ-03 stays open until M1's
-  NFR-03 scenario passes.
+- A CGO build for large deployments (OQ-03). Not chosen. On emulated
+  reference hardware pure Go meets NFR-04 (10–13k events per second
+  over 1M events), expand latency and hook memory at 10M events. Two
+  targets miss with either driver: ranked search and store overhead.
+  FTS5 and the schema cause both, and a CGO build shares them. OQ-03
+  stays open until M1's NFR-03 scenario passes.
 
 ## Consequences
 

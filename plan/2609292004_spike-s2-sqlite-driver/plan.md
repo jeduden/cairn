@@ -37,8 +37,9 @@ Resolves ADR-07, OQ-03 and OQ-04. The choice must keep CON-02 (static,
 
 The [benchmark report](report.md) holds the numbers. Both drivers
 passed the FTS5, cancellation and 50-writer WAL checks. ncruces is
-10–25% slower at full-ranked search and batched ingest, and it misses
-NFR-03 on rare-term search, which modernc meets. It still wins:
+10–25% slower at full-ranked search and batched ingest on a large
+host, about 10% on emulated reference hardware, where no target's
+outcome turns on the driver. It wins:
 modernc links `os/exec` and `net` into the binary, and only ncruces
 offers an encrypting VFS.
 [ADR-2609302341](../../docs/adr/ADR-2609302341-sqlite-driver.md)
@@ -57,11 +58,12 @@ Deviations from the tasks:
 Handed on:
 
 - M1 must bound BM25 ranking for NFR-03. Full ranking of a common
-  term takes seconds with either driver, and a rare-term query takes
-  286–310 ms with ncruces.
-- M1's store must meet NFR-04 at the hook's real commit size. One
-  event per commit ran at 943–1,264 ev/s with either driver, against
-  5,000, with statements prepared again in every transaction.
+  term takes seconds with either driver. Ranking only the newest
+  2,000 matches still reaches 268–299 ms p95 on emulated reference
+  hardware.
+- M1's hooks should commit their events together. Both drivers meet
+  NFR-04 over 1M events at 100 per commit (10–13k events per second),
+  while one event per commit ranges from 0.7k to 4.2k.
 - Spike S8 freezes NFR-09's 1.5× store overhead. This schema measures
   1.96× before payload files count as stored text.
 - The OQ-04 default and key management go to the security review.
