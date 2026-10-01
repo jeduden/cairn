@@ -36,10 +36,11 @@ Resolves ADR-07, OQ-03 and OQ-04. The choice must keep CON-02 (static,
 ## Outcome
 
 The [benchmark report](report.md) holds the numbers. Both drivers
-passed the FTS5, cancellation and 50-writer WAL checks. ncruces is
-10–25% slower at full-ranked search and batched ingest on a large
-host, about 10% on emulated reference hardware, where no target's
-outcome turns on the driver. It wins:
+passed the FTS5, cancellation and 50-writer WAL checks. On a large
+host ncruces takes 11–21% longer at full-ranked search and ingests
+21–31% fewer events per second in batches. On emulated reference
+hardware the gaps are about 10% and 21%, and no target's outcome
+turns on the driver. It wins:
 modernc links `os/exec` and `net` into the binary, and only ncruces
 offers an encrypting VFS.
 [ADR-2609302341](../../docs/adr/ADR-2609302341-sqlite-driver.md)

@@ -34,15 +34,18 @@ The measurements are in the spike's
 
 ## Alternatives
 
-- `modernc.org/sqlite`, the other candidate. On a large host it is
-  10–25% faster at full-ranked search and batched ingest, and it met
-  NFR-03 on rare-term queries where ncruces missed. On emulated
-  reference hardware the gap shrinks to about 10%, and both miss that
-  query. But its C runtime, `modernc.org/libc`, links `os/exec` to
-  emulate `system()` and `popen()`, and it pulls in `net` through
-  `github.com/google/uuid`. Admitting it means allow-listing both in
-  the SEC-01 import-closure test, for code Cairn never calls. It also
-  has no writable VFS API, so it offers no encryption at rest.
+- `modernc.org/sqlite`, the other candidate. On a large host ncruces
+  takes 11–21% longer than it at full-ranked search and ingests
+  21–31% fewer events per second in batches, and modernc met NFR-03
+  on rare-term queries where ncruces missed. On emulated reference
+  hardware the search gap shrinks to about 10% and both miss that
+  query; over 1M events ncruces still ingests 21% fewer events per
+  second, both above NFR-04. But its C runtime, `modernc.org/libc`,
+  links `os/exec` to emulate `system()` and `popen()`, and it pulls
+  in `net` through `github.com/google/uuid`. Admitting it means
+  allow-listing both in the SEC-01 import-closure test, for code
+  Cairn never calls. It also has no writable VFS API, so it offers no
+  encryption at rest.
 - CGO `mattn/go-sqlite3`, already rejected by ADR-07. It breaks
   CON-02.
 - A CGO build for large deployments (OQ-03). Not chosen. On emulated

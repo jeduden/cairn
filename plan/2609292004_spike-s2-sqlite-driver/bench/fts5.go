@@ -44,12 +44,7 @@ func cmdFTS5(ctx context.Context, o opts) error {
 	}
 	// Each tokenizer is exercised, not just created: a query only that
 	// tokenizer can answer must hit the one document it targets.
-	tokenizers := []struct{ tok, q string }{
-		{"unicode61 remove_diacritics 2", `resume`},
-		{"trigram", `igrati`},
-		{"porter unicode61", `repeating`},
-	}
-	for _, t := range tokenizers {
+	for _, t := range fts5Tokenizers() {
 		hits, err := probeTokenizer(ctx, db, t.tok, t.q, docs)
 		fmt.Printf("RESULT fts5 driver=%s tokenizer=%q query=%q ok=%v hits=%d err=%q\n", o.driver, t.tok, t.q, err == nil && hits == 1, hits, errString(err))
 	}
@@ -84,7 +79,8 @@ func fts5Docs() []string {
 		"the migration failed because the sqlite driver was missing FTS5",
 		"we pinned the constraint: never touch the production database",
 		"driver benchmark: modernc versus ncruces at ten million events",
-		"Ünïcödé naïve café résumé text with diacritics",
+		// ở carries two marks: only remove_diacritics 2 folds it.
+		"Ünïcödé naïve café résumé phở text with diacritics",
 		"the driver the driver the driver repeated term frequency",
 		// Filler without the probe terms: BM25's IDF floors at zero
 		// for a term in half the documents or more, which would tie
@@ -93,6 +89,17 @@ func fts5Docs() []string {
 		"the hook failed open and the agent continued",
 		"recall stays pull-only and every result is enveloped",
 		"payload files are content-addressed by hash",
+	}
+}
+
+// fts5Tokenizers pairs each tokenizer the probe exercises with a query
+// only that tokenizer answers: the store's default unicode61, which
+// is remove_diacritics 1, finds no document for it.
+func fts5Tokenizers() []struct{ tok, q string } {
+	return []struct{ tok, q string }{
+		{"unicode61 remove_diacritics 2", `pho`},
+		{"trigram", `igrati`},
+		{"porter unicode61", `repeating`},
 	}
 }
 

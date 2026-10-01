@@ -37,7 +37,7 @@ four things for M1:
   events takes seconds, far over NFR-03's 200 ms. Ranking only the
   newest 2,000 matches still reaches 268–299 ms p95 on emulated
   reference hardware.
-- Task 1's hooks commit their events together. 100 events per commit
+- Task 2's ingestion commits a hook's events together. 100 events per commit
   met NFR-04 over 1M events (10–13k events per second), while one
   event per commit ranged from 0.7k to 4.2k.
 

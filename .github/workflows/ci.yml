@@ -38,6 +38,12 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          # The spike harnesses below download their own drivers; hash
+          # their go.sum too, or a cache hit on cairn's go.sum leaves
+          # them out and they download again on every run.
+          cache-dependency-path: |
+            go.sum
+            plan/*/bench/go.sum
       - run: go build ./...
       - run: go vet ./...
       # A spike's benchmark harness is its own module, so `./...` skips

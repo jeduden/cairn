@@ -163,15 +163,3 @@ var bands = []band{
 	{"mid", 300, 5000},
 	{"rare", 5000, vocabSize},
 }
-
-// query draws an FTS5 query of 1–3 terms from one band, quoting each
-// term so identifiers with underscores parse as plain tokens.
-func (c *corpus) query(r *rand.Rand, b band) string {
-	n := 1 + r.IntN(3)
-	terms := make([]string, n)
-	for j := range terms {
-		terms[j] = `"` + c.words[b.lo+r.IntN(b.hi-b.lo)] + `"`
-	}
-
-	return strings.Join(terms, " ")
-}

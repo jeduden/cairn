@@ -50,8 +50,9 @@ footer: |
 | [ADR-2609302341](docs/adr/ADR-2609302341-sqlite-driver.md) | proposed | The store opens SQLite through github.com/ncruces/go-sqlite3, a cgo-free wasm2go translation of SQLite. It links no socket or process-spawning package, and it ships encrypting VFSes. Spike S2 measured it against modernc.org/sqlite at 10M events (ADR-07, OQ-03, OQ-04). |
 <?/catalog?>
 
-Every dependency listed is test-only today. None links into the
-shipped `cairn` binary, and the import-closure test in
+Every dependency `go.mod` requires is test-only today. The SQLite
+driver's ADR stays proposed until M1 adds the module. None links
+into the shipped `cairn` binary, and the import-closure test in
 [cmd/cairn/imports_test.go](cmd/cairn/imports_test.go) keeps network
 and process packages out of it.
 

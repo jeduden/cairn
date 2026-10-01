@@ -145,6 +145,23 @@ func TestFTS5ProbesFindTheirDocuments(t *testing.T) {
 	}
 }
 
+func TestFTS5TokenizersAnswerWhatTheDefaultCannot(t *testing.T) {
+	for _, d := range []string{"modernc", "ncruces"} {
+		t.Run(d, func(t *testing.T) {
+			ctx := context.Background()
+			db := probeStore(t, d)
+			for _, tk := range fts5Tokenizers() {
+				if ids, err := probeIDs(ctx, db, tk.q); err != nil || len(ids) != 0 {
+					t.Errorf("default tokenizer answers %q: %v, %v; want no hit", tk.q, ids, err)
+				}
+				if n, err := probeTokenizer(ctx, db, tk.tok, tk.q, fts5Docs()); err != nil || n != 1 {
+					t.Errorf("tokenizer %q on %q: %d hits, %v; want 1", tk.tok, tk.q, n, err)
+				}
+			}
+		})
+	}
+}
+
 func probeStore(t *testing.T, driver string) *sql.DB {
 	t.Helper()
 	ctx := context.Background()
@@ -192,6 +209,63 @@ func TestSearchRefusesRecentWithWindow(t *testing.T) {
 
 	if err == nil {
 		t.Error("search with both -recent and -window succeeded, want an error")
+	}
+}
+
+// countedStore is a store with its schema and counters, holding no
+// events.
+func countedStore(t *testing.T, events int64) opts {
+	t.Helper()
+	ctx := context.Background()
+	o := opts{driver: "ncruces", db: filepath.Join(t.TempDir(), "s.db"), n: 1, seed: 1}
+	db, err := open(o)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	if err := createSchema(ctx, db); err != nil {
+		t.Fatal(err)
+	}
+	for k, v := range map[string]int64{"events": events, "text_bytes": 0} {
+		if err := setMeta(ctx, db, k, v); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	return o
+}
+
+func TestCheckBatchAcceptsOnlyAPositiveBatch(t *testing.T) {
+	for batch, wantErr := range map[int]bool{-1: true, 0: true, 1: false, 100: false} {
+		if err := checkBatch(batch); (err != nil) != wantErr {
+			t.Errorf("checkBatch(%d) = %v, want error %v", batch, err, wantErr)
+		}
+	}
+}
+
+func TestIngestRefusesAnEmptyBatch(t *testing.T) {
+	o := countedStore(t, 0)
+	o.batch = 0
+
+	if err := cmdIngest(context.Background(), o); err == nil {
+		t.Error("ingest with -batch 0 succeeded, want an error")
+	}
+}
+
+func TestHookRefusesANegativeBatch(t *testing.T) {
+	o := countedStore(t, 0)
+	o.batch = -1
+
+	if err := cmdHook(context.Background(), o); err == nil {
+		t.Error("hook with -batch -1 succeeded, want an error")
+	}
+}
+
+func TestExpandRefusesAStoreBelowOneWindow(t *testing.T) {
+	o := countedStore(t, 50)
+
+	if err := cmdExpand(context.Background(), o); err == nil {
+		t.Error("expand over a 50-event store succeeded, want an error")
 	}
 }
 

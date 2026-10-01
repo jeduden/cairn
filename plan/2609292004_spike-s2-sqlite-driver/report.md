@@ -13,12 +13,14 @@ closure decides:
 - `modernc.org/sqlite` links `os/exec` and `net` into the binary.
 - `ncruces/go-sqlite3` links neither, and it ships an encrypting VFS.
 
-On speed the two are close. On the large host ncruces was 10–25%
-slower at full-ranked search and batched ingest. There a rare anchor
-term kept modernc inside NFR-03 (167–191 ms) and put ncruces outside
-(286–310 ms). On emulated reference hardware both missed that query
-(340 and 274 ms), and the full-ranking gap shrank to about 10%. No
-target's outcome on the reference hardware turns on the driver.
+On speed the two are close. On the large host ncruces took 11–21%
+longer at full-ranked search and ingested 21–31% fewer events per
+second in batches. There a rare anchor term kept modernc inside
+NFR-03 (167–191 ms) and put ncruces outside (286–310 ms). On emulated
+reference hardware both missed that query (340 and 274 ms), and the
+full-ranking gap shrank to about 10%. Over 1M events ncruces still
+ingested 21% fewer events per second. No target's outcome on the
+reference hardware turns on the driver.
 
 Both drivers meet NFR-04 on the reference hardware: 13.1k (modernc)
 and 10.4k (ncruces) events per second over 1M events. Both meet
@@ -106,6 +108,12 @@ queries (full ranking) or 300 (bounded), 50 or 100 per term band.
 The ingest runs prepare both INSERT statements again in every
 transaction. The ingest and hook rows were rerun after the harness
 switched appended events to the store's vocabulary.
+
+About 14% of the rare band's anchors are identifiers such as
+`ka_lo12`. FTS5's default tokenizer splits them on `_`, so they run
+as phrases led by a common syllable, at about three times the median
+latency of a single-token rare anchor. That inflates the rare band's
+tail for both drivers alike.
 
 | Target                               | Measure                            | Host modernc | Host ncruces | Ref. modernc | Ref. ncruces | Met on reference? |
 | ------------------------------------ | ---------------------------------- | ------------ | ------------ | ------------ | ------------ | ----------------- |
@@ -223,7 +231,9 @@ go build -o /tmp/bench .
 ```
 
 Running the two `search` lines again after `optimize` measures the
-merged index.
+merged index. `ingest` and `hook` append about 1M events first, so
+run `optimize` and the repeated searches on a copy of the store saved
+before them, or the merged and unmerged runs differ in size too.
 
 The closure check:
 

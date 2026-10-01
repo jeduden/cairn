@@ -170,6 +170,10 @@ func searchQueries(ctx context.Context, db *sql.DB, c *corpus, r *rand.Rand, n i
 		if len(anchor) == 0 {
 			continue
 		}
+		// Quoting keeps each word one FTS5 string, but unicode61 splits
+		// an identifier at '_': such an anchor is a two-token phrase
+		// whose first token is a common syllable. The band ranks the
+		// word, not its tokens.
 		terms := []string{`"` + anchor[r.IntN(len(anchor))] + `"`}
 		for extra := r.IntN(3); extra > 0 && len(other) > 0; extra-- {
 			terms = append(terms, `"`+other[r.IntN(len(other))]+`"`)
@@ -334,6 +338,11 @@ func cmdExpand(ctx context.Context, o opts) error {
 	if err != nil {
 		return err
 	}
+	// A window starts at a random seq in [1, events-50]; a store of
+	// 50 events or fewer has no room for one.
+	if events <= 50 {
+		return fmt.Errorf("expand needs more than 50 events, store holds %d", events)
+	}
 	r := rand.New(rand.NewPCG(o.seed+9, 13))
 	var lat []time.Duration
 	for i := int64(0); i < o.n+30; i++ {
@@ -372,6 +381,9 @@ func cmdExpand(ctx context.Context, o opts) error {
 // existing store (NFR-04: >= 5,000 events/s), o.batch events per
 // transaction, the unit one hook invocation commits.
 func cmdIngest(ctx context.Context, o opts) error {
+	if err := checkBatch(o.batch); err != nil {
+		return err
+	}
 	runtime.GOMAXPROCS(1)
 	db, err := open(o)
 	if err != nil {
@@ -420,6 +432,16 @@ func cmdIngest(ctx context.Context, o opts) error {
 	return addMeta(ctx, db, o.n, text)
 }
 
+// checkBatch refuses a batch that appends nothing: ingest would spin
+// on empty transactions, and hook cannot size a negative one.
+func checkBatch(batch int) error {
+	if batch < 1 {
+		return fmt.Errorf("-batch must be at least 1, got %d", batch)
+	}
+
+	return nil
+}
+
 // addMeta adds appended events and their text to the store's counters,
 // so later size ratios and query draws see the events ingest and hook
 // appended.
@@ -446,6 +468,9 @@ func addMeta(ctx context.Context, db *sql.DB, events, text int64) error {
 // one batch, run one search, close — and reports its peak RSS
 // (NFR-09: <= 50 MiB) and wall time.
 func cmdHook(ctx context.Context, o opts) error {
+	if err := checkBatch(o.batch); err != nil {
+		return err
+	}
 	start := time.Now()
 	c := newCorpusFrom(o.seed, o.seed+2000)
 	evs := make([]event, o.batch)
