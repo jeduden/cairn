@@ -5,8 +5,8 @@ status: proposed
 scope: dependencies
 summary: >-
   The store opens SQLite through github.com/ncruces/go-sqlite3, a
-  cgo-free wasm2go translation of SQLite. It links no network or
-  process package, and it ships encrypting VFSes. Spike S2 measured it
+  cgo-free wasm2go translation of SQLite. It links no socket or
+  process-spawning package, and it ships encrypting VFSes. Spike S2 measured it
   against modernc.org/sqlite at 10M events (ADR-07, OQ-03, OQ-04).
 ---
 # ADR-2609302341: The SQLite driver
@@ -45,14 +45,14 @@ The measurements are in the spike's
   has no writable VFS API, so it offers no encryption at rest.
 - CGO `mattn/go-sqlite3`, already rejected by ADR-07. It breaks
   CON-02.
-- A CGO build for large deployments (OQ-03). Not needed. Pure Go
+- A CGO build for large deployments (OQ-03). Not chosen. Pure Go
   meets batched ingest, expand and hook memory at 10M events. Three
   targets miss with either driver: ranked search on common terms, one
-  event per commit (about 1,000 ev/s against 5,000), and store
-  overhead. FTS5 and the schema cause the first and last, so a CGO
-  build shares them. Its typical 1.5–2× speed-up would not close the
-  third. It might close ncruces's rare-term miss, which bounded
-  ranking targets without CGO.
+  event per commit, and store overhead. FTS5, the schema and the
+  per-commit cost cause them, and a CGO build shares all three. CGO's
+  typical 1.5–2× might close ncruces's rare-term miss. M1's bounded
+  ranking targets it without CGO, and OQ-03 stays open until M1's
+  NFR-03 scenario passes.
 
 ## Consequences
 

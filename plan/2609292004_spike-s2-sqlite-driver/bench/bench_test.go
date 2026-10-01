@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"database/sql"
+	"io"
 	"math/rand/v2"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -191,4 +193,71 @@ func TestSearchRefusesRecentWithWindow(t *testing.T) {
 	if err == nil {
 		t.Error("search with both -recent and -window succeeded, want an error")
 	}
+}
+
+func TestVerdictPassesOnlyAnIntactStore(t *testing.T) {
+	if err := verdict(true, true, true, "ok", nil); err != nil {
+		t.Errorf("verdict(intact) = %v, want nil", err)
+	}
+}
+
+func TestVerdictNamesEveryBrokenInvariant(t *testing.T) {
+	err := verdict(false, false, false, "row 7 missing", sql.ErrNoRows)
+
+	if err == nil {
+		t.Fatal("verdict(broken) = nil, want an error")
+	}
+	for _, want := range []string{"transactions missing", "gap-free", "chain broken", "row 7 missing", "fts integrity-check"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("verdict() = %q, want it to name %q", err, want)
+		}
+	}
+}
+
+func TestCancelledWriteRollsBackTheWholeTransaction(t *testing.T) {
+	for _, d := range []string{"modernc", "ncruces"} {
+		t.Run(d, func(t *testing.T) {
+			o := opts{driver: d, db: filepath.Join(t.TempDir(), "c.db"), seed: 1}
+			ctx := context.Background()
+			db, err := open(o)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := createSchema(ctx, db); err != nil {
+				t.Fatal(err)
+			}
+			db.Close()
+
+			out := captureStdout(t, func() error { return cmdCancel(ctx, o) })
+
+			if !strings.Contains(out, "query=write_tx") || !strings.Contains(out, "sentinel_rows=0 rolled_back=true") {
+				t.Errorf("cancel output lacks a proven rollback:\n%s", out)
+			}
+		})
+	}
+}
+
+// captureStdout runs f and returns what it printed.
+func captureStdout(t *testing.T, f func() error) string {
+	t.Helper()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := os.Stdout
+	os.Stdout = w
+	done := make(chan string)
+	go func() {
+		b, _ := io.ReadAll(r)
+		done <- string(b)
+	}()
+	ferr := f()
+	w.Close()
+	os.Stdout = old
+	out := <-done
+	if ferr != nil {
+		t.Fatalf("%v\n%s", ferr, out)
+	}
+
+	return out
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"math/rand/v2"
 	"os"
@@ -108,7 +109,14 @@ func cmdWAL(ctx context.Context, o opts) error {
 	fmt.Printf("RESULT wal driver=%s writers=%d tx_per_writer=%d elapsed=%s failed_writers=%d busy_retries=%d worst_commit=%s reads=%d read_errors=%d\n",
 		o.driver, o.workers, o.n, el.Round(time.Millisecond), failed, retries, worst, reads.Load(), readErrs.Load())
 
-	return verifyStore(ctx, o, int64(o.workers)*o.n)
+	// A failed writer or reader fails the probe, even when the store
+	// it left behind verifies clean.
+	var probeErr error
+	if failed > 0 || readErrs.Load() > 0 {
+		probeErr = fmt.Errorf("concurrency probe failed: %d writers, %d reads", failed, readErrs.Load())
+	}
+
+	return errors.Join(probeErr, verifyStore(ctx, o, int64(o.workers)*o.n))
 }
 
 // verifyStore checks the record after the concurrent run.
@@ -171,7 +179,30 @@ func verifyStore(ctx context.Context, o opts, wantTx int64) error {
 	fmt.Printf("RESULT walverify driver=%s events=%d transactions=%d/%d seq_min=%d seq_max=%d gap_free=%v chain_ok=%v integrity=%s fts_integrity_err=%q\n",
 		o.driver, n, txs, wantTx, lo, hi, lo == 1 && hi == n, chainOK, integ, errString(ftsErr))
 
-	return nil
+	return verdict(txs == wantTx, lo == 1 && hi == n, chainOK, integ, ftsErr)
+}
+
+// verdict turns the store checks into an error naming every one that
+// failed, so a broken invariant fails the command, not just its output.
+func verdict(allTx, gapFree, chainOK bool, integ string, ftsErr error) error {
+	var errs []error
+	if !allTx {
+		errs = append(errs, errors.New("transactions missing"))
+	}
+	if !gapFree {
+		errs = append(errs, errors.New("seq not gap-free"))
+	}
+	if !chainOK {
+		errs = append(errs, errors.New("hash chain broken"))
+	}
+	if integ != "ok" {
+		errs = append(errs, fmt.Errorf("integrity_check: %s", integ))
+	}
+	if ftsErr != nil {
+		errs = append(errs, fmt.Errorf("fts integrity-check: %w", ftsErr))
+	}
+
+	return errors.Join(errs...)
 }
 
 // cmdWALWorker is one writer process: o.n transactions of 1–3 events,

@@ -549,10 +549,20 @@ func cmdCancel(ctx context.Context, o opts) error {
 	// transaction itself runs on the parent context: database/sql rolls
 	// back any transaction whose BeginTx context ends, which would pass
 	// this check for every driver. Only the statement gets the deadline,
-	// so the rollback observed is the driver's and SQLite's.
+	// so the rollback observed is the driver's and SQLite's. A sentinel
+	// row written before the long statement tells a rolled-back
+	// transaction from one where only the interrupted statement failed:
+	// statements are atomic, so counting rows alone cannot.
+	if _, err := conn.ExecContext(ctx, `DELETE FROM meta WHERE k = 'sentinel'`); err != nil {
+		return err
+	}
 	before, berr := count(ctx, conn)
 	tx, err := conn.BeginTx(ctx, nil)
 	if err != nil {
+		return err
+	}
+	if _, err := tx.ExecContext(ctx, `INSERT INTO meta(k, v) VALUES('sentinel', 1)`); err != nil {
+		tx.Rollback()
 		return err
 	}
 	wctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
@@ -563,13 +573,17 @@ func cmdCancel(ctx context.Context, o opts) error {
 		// The deadline never fired; never commit the junk rows.
 		cerr = errors.Join(errors.New("statement finished before its deadline"), tx.Rollback())
 	} else {
+		// Try to commit: if the interrupt left the transaction open,
+		// the sentinel lands and the check below fails.
 		cerr = tx.Commit()
 	}
 	after, aerr := count(ctx, conn)
+	var sentinels int64
+	serr := conn.QueryRowContext(ctx, `SELECT count(*) FROM meta WHERE k = 'sentinel'`).Scan(&sentinels)
 	// A count that failed proves nothing either way.
-	fmt.Printf("RESULT cancel driver=%s query=write_tx exec_err=%q commit_err=%q count_err=%q rows_before=%d rows_after=%d rolled_back=%v\n",
-		o.driver, errString(werr), errString(cerr), errString(errors.Join(berr, aerr)), before, after,
-		berr == nil && aerr == nil && before == after)
+	fmt.Printf("RESULT cancel driver=%s query=write_tx exec_err=%q commit_err=%q count_err=%q rows_before=%d rows_after=%d sentinel_rows=%d rolled_back=%v\n",
+		o.driver, errString(werr), errString(cerr), errString(errors.Join(berr, aerr, serr)), before, after, sentinels,
+		werr != nil && berr == nil && aerr == nil && serr == nil && before == after && sentinels == 0)
 
 	return nil
 }
