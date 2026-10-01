@@ -195,7 +195,12 @@ func cmdSearch(ctx context.Context, o opts) error {
 	var hits int
 	for i, q := range qs {
 		t := time.Now()
-		n, err := runSearchFrom(ctx, db, q, floor)
+		var n int
+		if o.recent > 0 {
+			n, err = runSearchRecent(ctx, db, q, o.recent)
+		} else {
+			n, err = runSearchFrom(ctx, db, q, floor)
+		}
 		d := time.Since(t)
 		if err != nil {
 			return fmt.Errorf("query %q: %w", q, err)
@@ -208,7 +213,7 @@ func cmdSearch(ctx context.Context, o opts) error {
 		lat["all"] = append(lat["all"], d)
 	}
 	for _, name := range []string{"common", "mid", "rare", "all"} {
-		fmt.Printf("RESULT search driver=%s window=%d band=%s %s\n", o.driver, o.window, name, stats(lat[name]))
+		fmt.Printf("RESULT search driver=%s window=%d recent=%d band=%s %s\n", o.driver, o.window, o.recent, name, stats(lat[name]))
 	}
 	fmt.Printf("RESULT search driver=%s mean_hits=%.1f\n", o.driver, float64(hits)/float64(len(lat["all"])))
 
@@ -217,6 +222,50 @@ func cmdSearch(ctx context.Context, o opts) error {
 
 func runSearch(ctx context.Context, db *sql.DB, q string) (int, error) {
 	return runSearchFrom(ctx, db, q, 0)
+}
+
+// recentSQL ranks by BM25 only the most recent k matches. FTS5 walks
+// a doclist in rowid order natively, so ORDER BY rowid DESC LIMIT k
+// stops after k rows and bm25() is computed for those alone; the
+// outer query keeps the best 20.
+const recentSQL = `SELECT r FROM (
+		SELECT rowid AS r, bm25(events_fts) AS s FROM events_fts
+		WHERE events_fts MATCH ? ORDER BY rowid DESC LIMIT ?)
+	ORDER BY s LIMIT 20`
+
+const snippetSQL = `SELECT e.seq, e.session, snippet(events_fts, 0, '[', ']', '…', 16)
+	FROM events_fts JOIN events e ON e.seq = events_fts.rowid
+	WHERE events_fts MATCH ? AND events_fts.rowid = ?`
+
+// runSearchRecent is the bounded query shape: rank the most recent k
+// matches, then fetch snippets for the 20 kept.
+func runSearchRecent(ctx context.Context, db *sql.DB, q string, k int64) (int, error) {
+	rows, err := db.QueryContext(ctx, recentSQL, q, k)
+	if err != nil {
+		return 0, err
+	}
+	var ids []int64
+	for rows.Next() {
+		var r int64
+		if err := rows.Scan(&r); err != nil {
+			rows.Close()
+			return 0, err
+		}
+		ids = append(ids, r)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return 0, err
+	}
+	for _, id := range ids {
+		var seq int64
+		var ses, snip string
+		if err := db.QueryRowContext(ctx, snippetSQL, q, id).Scan(&seq, &ses, &snip); err != nil {
+			return 0, err
+		}
+	}
+
+	return len(ids), nil
 }
 
 func runSearchFrom(ctx context.Context, db *sql.DB, q string, floor int64) (int, error) {

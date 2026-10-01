@@ -28,6 +28,7 @@ func main() {
 	fs.IntVar(&o.workers, "workers", 50, "concurrent writer processes (wal)")
 	fs.IntVar(&o.id, "id", 0, "worker id (walworker)")
 	fs.Uint64Var(&o.seed, "seed", 1, "corpus seed")
+	fs.Int64Var(&o.recent, "recent", 0, "search: rank only the most recent this many matches (0 ranks all)")
 	fs.Int64Var(&o.window, "window", 1<<62, "search: rank only the most recent this many events")
 	fs.StringVar(&encVFS, "vfs", "", "encrypting VFS for the OQ-04 probe: xts or adiantum (ncruces only)")
 	fs.Parse(args)
@@ -71,4 +72,5 @@ type opts struct {
 	id      int
 	seed    uint64
 	window  int64
+	recent  int64
 }
