@@ -7,18 +7,25 @@ OQ-04 (encryption at rest). The decision record is
 
 ## Verdict
 
-`github.com/ncruces/go-sqlite3`. Both drivers are correct, and both
-meet or miss the same targets. The import closure decides:
+`github.com/ncruces/go-sqlite3`. Both drivers are correct. The import
+closure decides:
 
 - `modernc.org/sqlite` links `os/exec` and `net` into the binary.
 - `ncruces/go-sqlite3` links neither, and it ships an encrypting VFS.
 
-ncruces is 15–25% slower at search and ingest, and that gap changes
-no target's outcome. No CGO build is needed (OQ-03). Both drivers
-miss the same three targets: full BM25 ranking of a common term, one
-event per commit, and store overhead. FTS5's cost model and the
-schema cause the first and last, so they would miss under CGO too.
-CGO's typical 1.5–2× would not lift one-event commits to 5,000 ev/s.
+ncruces is 10–25% slower at full-ranked search and batched ingest,
+50–85% slower when a rare term anchors the query, and a third faster
+at one event per commit. The gap changes one outcome: the rare-anchor
+query meets NFR-03 with modernc (167–191 ms) and misses it with
+ncruces (286–310 ms). The decision accepts that miss for the closure
+and the VFS, and M1's bounded ranking has to bring it under budget.
+
+No CGO build is needed (OQ-03). Both drivers miss the same three
+targets: full BM25 ranking of a common term, one event per commit,
+and store overhead. FTS5's cost model and the schema cause the first
+and last, so they would miss under CGO too. CGO's typical 1.5–2×
+would not lift one-event commits to 5,000 ev/s. It might close
+ncruces's rare-anchor miss, which bounded ranking targets instead.
 
 ## Setup
 
@@ -184,13 +191,18 @@ go build -o /tmp/bench .
 /tmp/bench load -driver modernc -db /tmp/s2.db -n 10000000
 /tmp/bench search -driver ncruces -db /tmp/s2.db -n 300
 /tmp/bench search -driver ncruces -db /tmp/s2.db -n 600 -recent 2000
+/tmp/bench expand -driver ncruces -db /tmp/s2.db -n 300
 /tmp/bench ingest -driver ncruces -db /tmp/s2.db -n 50000 -batch 100
 /tmp/bench hook -driver ncruces -db /tmp/s2.db
 /tmp/bench cancel -driver ncruces -db /tmp/s2.db
+/tmp/bench optimize -driver ncruces -db /tmp/s2.db
 /tmp/bench wal -driver ncruces -db /tmp/s2-wal.db -workers 50 -n 40
 /tmp/bench fts5 -driver ncruces -db /tmp/s2-fts.db
 /tmp/bench load -driver ncruces -vfs xts -db /tmp/s2-enc.db -n 200000
 ```
+
+Running the two `search` lines again after `optimize` measures the
+merged index.
 
 The closure check:
 

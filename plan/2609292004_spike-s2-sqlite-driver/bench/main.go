@@ -15,7 +15,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage: bench <load|search|expand|ingest|hook|cancel|wal|walworker|fts5> [flags]")
+		fmt.Fprintln(os.Stderr, "usage: bench <load|search|expand|ingest|hook|cancel|wal|walworker|fts5|optimize> [flags]")
 		os.Exit(2)
 	}
 	cmd, args := os.Args[1], os.Args[2:]

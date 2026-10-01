@@ -24,7 +24,9 @@ func cmdFTS5(ctx context.Context, o opts) error {
 	defer db.Close()
 	db.SetMaxOpenConns(1)
 	var version string
-	db.QueryRowContext(ctx, `SELECT sqlite_version()`).Scan(&version)
+	if err := db.QueryRowContext(ctx, `SELECT sqlite_version()`).Scan(&version); err != nil {
+		return fmt.Errorf("sqlite version: %w", err)
+	}
 	fmt.Printf("RESULT fts5 driver=%s sqlite_version=%s\n", o.driver, version)
 	if err := createSchema(ctx, db); err != nil {
 		return err
@@ -43,7 +45,10 @@ func cmdFTS5(ctx context.Context, o opts) error {
 		"recall stays pull-only and every result is enveloped",
 		"payload files are content-addressed by hash",
 	}
-	tx, _ := db.BeginTx(ctx, nil)
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
 	a, err := newAppender(ctx, tx)
 	if err != nil {
 		return err

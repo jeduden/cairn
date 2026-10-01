@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/ncruces/go-sqlite3/driver"
 	"github.com/ncruces/go-sqlite3/ext/fts5"
@@ -34,8 +35,12 @@ func dsn(path, vfs string, extra ...string) string {
 	}
 	q.Set("_txlock", "immediate")
 
-	return "file:" + path + "?" + q.Encode()
+	return "file:" + uriPath.Replace(path) + "?" + q.Encode()
 }
+
+// uriPath escapes the characters a file: URI gives meaning to, so a
+// path holding '?', '#' or '%' names the file it spells.
+var uriPath = strings.NewReplacer("%", "%25", "?", "%3f", "#", "%23")
 
 // testKey is the spike's fixed 256-bit key; key management is out of
 // the probe's scope (OQ-04 records it).

@@ -34,8 +34,10 @@ The measurements are in the spike's
 
 ## Alternatives
 
-- `modernc.org/sqlite`, the other candidate. It is 15–25% faster at
-  search and ingest, a gap that changes no target's outcome. But its
+- `modernc.org/sqlite`, the other candidate. It is 10–25% faster at
+  full-ranked search and batched ingest. It also meets NFR-03 on
+  rare-term search (167–191 ms) where ncruces misses (286–310 ms), a
+  miss M1's bounded ranking has to absorb. But its
   C runtime, `modernc.org/libc`, links `os/exec` to emulate
   `system()` and `popen()`, and it pulls in `net` through
   `github.com/google/uuid`. Admitting it means allow-listing both in
@@ -49,7 +51,8 @@ The measurements are in the spike's
   event per commit (about 1,000 ev/s against 5,000), and store
   overhead. FTS5 and the schema cause the first and last, so a CGO
   build shares them. Its typical 1.5–2× speed-up would not close the
-  third.
+  third. It might close ncruces's rare-term miss, which bounded
+  ranking targets without CGO.
 
 ## Consequences
 

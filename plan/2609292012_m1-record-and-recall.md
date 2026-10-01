@@ -25,7 +25,7 @@ Split into phases when started.
 
 Spike S2 chose `github.com/ncruces/go-sqlite3`
 ([report](2609292004_spike-s2-sqlite-driver/report.md)). It leaves
-three things for M1:
+four things for M1:
 
 - Task 1 adds the module to `go.mod` and flips
   [ADR-2609302341](../docs/adr/ADR-2609302341-sqlite-driver.md) to
@@ -34,7 +34,11 @@ three things for M1:
   driver's URI parsers, in the SEC-01 import test. FTS5 is registered
   on every connection.
 - Task 6 bounds BM25 ranking. Full ranking of a common term at 10M
-  events takes seconds, far over NFR-03's 200 ms.
+  events takes seconds, far over NFR-03's 200 ms, and a rare-term
+  query takes 286–310 ms.
+- Task 1's store meets NFR-04 at a hook's real commit size. One event
+  per commit ran at about 1,000 ev/s against 5,000; caching prepared
+  statements and committing a hook's events together are the levers.
 
 ## Tasks
 

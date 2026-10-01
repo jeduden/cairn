@@ -403,10 +403,28 @@ func cmdIngest(ctx context.Context, o opts) error {
 	el := time.Since(start)
 	fmt.Printf("RESULT ingest driver=%s events=%d batch=%d gomaxprocs=1 elapsed=%s rate=%.0f ev/s\n",
 		o.driver, o.n, o.batch, el.Round(time.Millisecond), float64(o.n)/el.Seconds())
-	events, _ := getMeta(ctx, db, "events")
-	tb, _ := getMeta(ctx, db, "text_bytes")
-	setMeta(ctx, db, "events", events+o.n)
-	setMeta(ctx, db, "text_bytes", tb+text)
+
+	return addMeta(ctx, db, o.n, text)
+}
+
+// addMeta adds appended events and their text to the store's counters,
+// so later size ratios and query draws see the events ingest and hook
+// appended.
+func addMeta(ctx context.Context, db *sql.DB, events, text int64) error {
+	n, err := getMeta(ctx, db, "events")
+	if err != nil {
+		return fmt.Errorf("read events: %w", err)
+	}
+	tb, err := getMeta(ctx, db, "text_bytes")
+	if err != nil {
+		return fmt.Errorf("read text_bytes: %w", err)
+	}
+	if err := setMeta(ctx, db, "events", n+events); err != nil {
+		return fmt.Errorf("write events: %w", err)
+	}
+	if err := setMeta(ctx, db, "text_bytes", tb+text); err != nil {
+		return fmt.Errorf("write text_bytes: %w", err)
+	}
 
 	return nil
 }
@@ -440,9 +458,11 @@ func cmdHook(ctx context.Context, o opts) error {
 	if err != nil {
 		return err
 	}
+	var text int64
 	for _, e := range evs {
 		seq++
 		e.source, e.line = 2_000_000, seq
+		text += int64(len(e.body))
 		if prev, err = a.append(ctx, seq, e, prev); err != nil {
 			return err
 		}
@@ -462,7 +482,15 @@ func cmdHook(ctx context.Context, o opts) error {
 	fmt.Printf("RESULT hook driver=%s batch=%d wall=%s maxrss_before_open=%.1fMiB maxrss=%.1fMiB\n",
 		o.driver, o.batch, time.Since(start).Round(time.Millisecond), float64(ru0.Maxrss)/1024, float64(ru.Maxrss)/1024)
 
-	return nil
+	// The counters update after the measurement, on a fresh
+	// connection, so they cost the measured hook nothing.
+	mdb, err := open(o)
+	if err != nil {
+		return err
+	}
+	defer mdb.Close()
+
+	return addMeta(ctx, mdb, int64(len(evs)), text)
 }
 
 // cmdCancel checks that a context deadline stops a running query
