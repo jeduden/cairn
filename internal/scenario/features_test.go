@@ -87,6 +87,16 @@ Feature: Inherited
 	assert.True(t, got[0].Pending)
 }
 
+func TestScenariosAcceptsTheCueFamily(t *testing.T) {
+	dir := writeFeature(t, "Feature: Cues\n\n  @CUE-01 @P0 @I2 @pending\n  Scenario: a cue points\n    Given nothing\n")
+
+	got, err := Scenarios(dir)
+
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Equal(t, "CUE-01", got[0].ID)
+}
+
 func TestScenariosRejectsMissingOrDoubledTags(t *testing.T) {
 	cases := map[string]string{
 		"no requirement tag":   "Feature: F\n\n  @P0\n  Scenario: s\n    Given x\n",

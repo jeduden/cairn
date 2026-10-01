@@ -2,8 +2,8 @@
 title: "9. Interfaces"
 summary: >-
   Normative interfaces: the hook contract, the MCP tools, the recall
-  envelope, the restore block, the CLI with its exit codes, and the
-  configuration keys a project may only tighten.
+  envelope, the restore block, the CLI with its exit codes, the
+  configuration keys a project may only tighten, and the cue format.
 ---
 # 9. Interfaces
 
@@ -13,15 +13,17 @@ All hooks read one JSON object from stdin and write at most one JSON object to
 stdout. Output uses the harness's `hookSpecificOutput` structure; injection uses
 `additionalContext`.
 
-| Hook                  | Matcher                      | Inputs used                                                       | Output                                                                          | Budget | On internal failure         |
-| --------------------- | ---------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------ | --------------------------- |
-| `SessionStart`        | `startup`, `resume`, `clear` | `session_id`, `transcript_path`, `cwd`, `source`                  | Pins + recall statement (INJ-02)                                                | 150 ms | Empty output, exit 0, audit |
-| `SessionStart`        | `compact`                    | as above                                                          | Restore block (INJ-01)                                                          | 150 ms | Empty output, exit 0, audit |
-| `PreCompact`          | `manual`, `auto`             | `session_id`, `transcript_path`, `trigger`, `custom_instructions` | Static compaction guidance if supported (PIN-07); never blocks compaction in v1 | 2 s    | Exit 0, audit               |
-| `PostCompact`         | —                            | `session_id`, `compact_summary`                                   | None; records `compact_summary` as `harness_text`                               | 100 ms | Exit 0, audit               |
-| `PostToolUse`, `Stop` | —                            | `session_id`, `transcript_path`                                   | None; incremental ingestion (REC-13)                                            | 100 ms | Exit 0, audit               |
-| `UserPromptSubmit`    | —                            | `session_id`, `prompt`                                            | Pin-candidate detection (PIN-05); injection only if enabled (INJ-04)            | 50 ms  | Exit 0, audit               |
-| `SessionEnd`          | —                            | `session_id`, `transcript_path`                                   | None; writes work marker and ingests what fits                                  | 1 s    | Exit 0, audit               |
+| Hook               | Matcher                      | Inputs used                                                       | Output                                                                                         | Budget | On internal failure         |
+| ------------------ | ---------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------ | --------------------------- |
+| `SessionStart`     | `startup`, `resume`, `clear` | `session_id`, `transcript_path`, `cwd`, `source`                  | Pins + recall statement (INJ-02)                                                               | 150 ms | Empty output, exit 0, audit |
+| `SessionStart`     | `compact`                    | as above                                                          | Restore block (INJ-01)                                                                         | 150 ms | Empty output, exit 0, audit |
+| `PreCompact`       | `manual`, `auto`             | `session_id`, `transcript_path`, `trigger`, `custom_instructions` | Static compaction guidance if supported (PIN-07); never blocks compaction in v1                | 2 s    | Exit 0, audit               |
+| `PostCompact`      | —                            | `session_id`, `compact_summary`                                   | None; records `compact_summary` as `harness_text`                                              | 100 ms | Exit 0, audit               |
+| `PreToolUse`       | file tools, `Bash`           | `session_id`, `transcript_path`, `tool_name`, `tool_input`        | Touch or repeat cue (CUE-04, CUE-06)                                                           | 50 ms  | No cue, exit 0, audit       |
+| `PostToolUse`      | —                            | `session_id`, `transcript_path`, `tool_name`, `tool_response`     | Recurrence cue on failure (CUE-05); incremental ingestion (REC-13)                             | 100 ms | No cue, exit 0, audit       |
+| `Stop`             | —                            | `session_id`, `transcript_path`                                   | None; incremental ingestion (REC-13)                                                           | 100 ms | Exit 0, audit               |
+| `UserPromptSubmit` | —                            | `session_id`, `prompt`                                            | Pin candidates (PIN-05); back-reference cue (CUE-03); other injection only if enabled (INJ-04) | 50 ms  | Exit 0, audit               |
+| `SessionEnd`       | —                            | `session_id`, `transcript_path`                                   | None; writes work marker and ingests what fits                                                 | 1 s    | Exit 0, audit               |
 
 ## 9.2 MCP tools
 
@@ -117,20 +119,53 @@ failure).
 
 ## 9.6 Configuration reference (selected keys)
 
-| Key                                         | Default                  | Settable in project config |
-| ------------------------------------------- | ------------------------ | -------------------------- |
-| `mode`                                      | `automation`             | No                         |
-| `transcript_roots`                          | `["~/.claude/projects"]` | No                         |
-| `tenant_id`                                 | unset                    | No                         |
-| `payload_threshold_bytes`                   | 8192                     | Yes                        |
-| `inject.on_start.landmarks`                 | `false`                  | Yes, only to `false`       |
-| `inject.on_prompt`                          | `false`                  | Only to `false`            |
-| `budget.restore_tokens`                     | 2000                     | Only lower                 |
-| `budget.pins_tokens`                        | 1000                     | Only lower                 |
-| `recall.default_session_scope`              | `current`                | Only `current`             |
-| `recall.max_k`                              | 50                       | Only lower                 |
-| `redaction.extra_patterns`                  | `[]`                     | Yes, add only              |
-| `flagging.enabled`                          | `true`                   | Only `true`                |
-| `retention.<provenance>`                    | keep forever             | Only shorter               |
-| `kernel.enabled`                            | `true` (when shipped)    | Only to `false`            |
-| `kernel.wall_seconds` / `kernel.memory_mib` | 10 / 512                 | Only lower                 |
+| Key                                                                   | Default                  | Settable in project config |
+| --------------------------------------------------------------------- | ------------------------ | -------------------------- |
+| `mode`                                                                | `automation`             | No                         |
+| `transcript_roots`                                                    | `["~/.claude/projects"]` | No                         |
+| `tenant_id`                                                           | unset                    | No                         |
+| `payload_threshold_bytes`                                             | 8192                     | Yes                        |
+| `inject.on_start.landmarks`                                           | `false`                  | Yes, only to `false`       |
+| `inject.on_prompt`                                                    | `false`                  | Only to `false`            |
+| `budget.restore_tokens`                                               | 2000                     | Only lower                 |
+| `budget.pins_tokens`                                                  | 1000                     | Only lower                 |
+| `recall.default_session_scope`                                        | `current`                | Only `current`             |
+| `recall.max_k`                                                        | 50                       | Only lower                 |
+| `redaction.extra_patterns`                                            | `[]`                     | Yes, add only              |
+| `flagging.enabled`                                                    | `true`                   | Only `true`                |
+| `retention.<provenance>`                                              | keep forever             | Only shorter               |
+| `kernel.enabled`                                                      | `true` (when shipped)    | Only to `false`            |
+| `kernel.wall_seconds` / `kernel.memory_mib`                           | 10 / 512                 | Only lower                 |
+| `cues.enabled`                                                        | `true`                   | Only to `false`            |
+| `cues.back_reference`, `cues.touch`, `cues.recurrence`, `cues.repeat` | `true`                   | Only to `false`            |
+| `cues.max_targets`                                                    | 3                        | Only lower                 |
+| `cues.cycle_tokens`                                                   | 600                      | Only lower                 |
+| `cues.anchor_max_share`                                               | 0.001                    | Only lower                 |
+| `cues.min_follow_rate`                                                | 0.3                      | Only higher                |
+
+## 9.7 Cue
+
+A cue is one block in `additionalContext`, in this shape. Each moment
+has one fixed template, so equal inputs give equal bytes (CUE-08).
+
+```text
+<cairn-cue v="1" moment="touch">
+internal/store/fts.go has history out of view:
+seq 41020–41388 · session current · Edit×6 Bash×4 (1 error) · tool_result:Bash, untrusted
+Recall: expand seq_from=41020 seq_to=41388
+</cairn-cue>
+```
+
+```text
+<cairn-cue v="1" moment="recurrence">
+This failure matches one out of view (signature 3f9a1c2e):
+seq 22301 · session current · tool_result:Bash, untrusted
+followed by seq 22302–22410 · Edit×4 Bash×2 · files: go.mod, internal/store/driver.go
+Recall: expand seq_from=22301 seq_to=22410
+</cairn-cue>
+```
+
+The block contains only `TrustedText` (CUE-01). Anchors and paths are
+sanitized per LMK-03, and quoted user text is encoded so that no field
+can contain `<`, `>` or a line break (CUE-13). It never contains tool
+output, web content, assistant text or compaction summaries.

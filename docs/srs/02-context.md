@@ -2,7 +2,7 @@
 title: "2. Context"
 summary: >-
   Stakeholders, deployment context, the assumptions register
-  (ASM-01..10) about Claude Code behaviour that M0 must verify, and
+  (ASM-01..11) about Claude Code behaviour that M0 must verify, and
   the hard constraints (CON-01..05).
 ---
 # 2. Context
@@ -14,7 +14,7 @@ summary: >-
 | Platform team (primary operator) | Runs Claude Code on self-hosted runners and Agent SDK workers; needs isolation, observability, predictable cost |
 | Developers using Claude Code     | Sessions that don't forget; no setup friction; no slowdown                                                      |
 | Security team                    | No new exfiltration or injection paths; auditability; purge on request                                          |
-| Claude (the agent)               | Small, stable context; precise tools to recover exact detail when needed                                        |
+| Claude (the agent)               | Small, stable context; precise tools to recover exact detail, and a pointer to it at the moment it matters      |
 
 ## 2.2 Deployment context
 
@@ -46,6 +46,7 @@ requirements are re-planned.
 | ASM-08 | Self-hosted runners seed the runner host's `~/.claude/` into each session; each runner is locked to one user account                                                                                                                                                                   | Claude Code self-hosted environments docs                                                | S4          | ADM-01, SEC-01 |
 | ASM-09 | A `PreCompact` hook exiting with code 2 blocks compaction                                                                                                                                                                                                                              | One hooks guide says yes; Morph plugin README says native compaction cannot be prevented | S6          | OQ-01          |
 | ASM-10 | Hook timeouts are configurable per hook, but `SessionEnd` receives a short shared budget (≈1.5 s)                                                                                                                                                                                      | lcm PR #517                                                                              | S1          | NFR-02         |
+| ASM-11 | `PreToolUse` inputs include `tool_name` and `tool_input`; `PostToolUse` inputs add `tool_response`, which shows whether the tool failed; both hooks can return `additionalContext` that reaches Claude before its next step                                                            | Hook docs; unverified for `PreToolUse` context                                           | S1          | CUE-04..06     |
 
 ## 2.4 Constraints
 

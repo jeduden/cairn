@@ -31,7 +31,7 @@ context. It is not binding; §5–§10 are.
  │  (harness)                                          (seq, hash chain)  │
  │                                                                        │
  │  query compiler · recall · envelope · landmarks · pins · quarantine    │
- │  restore builder (TrustedText only) · audit · counters                 │
+ │  restore and cue builders (TrustedText only) · audit · counters        │
  └───────────────┬───────────────────────────────────┬────────────────────┘
                  ▼                                   ▼
    ┌──────────────────────────────┐    ┌──────────────────────────────┐
@@ -81,6 +81,19 @@ purges stay auditable.
 5. Later, Claude needs a detail that compaction dropped. It calls
    `cairn.search`, then `cairn.expand` on the returned `seq` range, and receives
    the exact original inside an untrusted-data envelope.
+
+### A cue at the right moment
+
+1. Hours after a compaction, Claude decides to edit `internal/store/fts.go`.
+   Claude Code fires `PreToolUse` for the edit.
+2. `cairn hook PreToolUse` finds that the path is out of view: it was last
+   edited, with a failing test, in a span that compaction evicted.
+3. The candidate passes the gates of §5.11, so the hook returns a cue of about
+   60 tokens. It names the span's `seq` range, its counts, and the recall call
+   ([ADR-2610012329](../adr/ADR-2610012329-recall-cues.md)).
+4. Claude calls `expand` on that range and reads why the earlier edit failed,
+   inside the envelope, before it repeats the mistake. The recall marks the cue
+   as followed.
 
 ### Aggregation over large history
 

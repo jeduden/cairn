@@ -31,8 +31,8 @@ The main principle. Cairn's contract is ten invariants, I1–I10, in
 requirement serves at least one. The ones that shape everyday code:
 
 - **I2** — no automatic path from untrusted content to the model.
-  Only `TrustedText` reaches a restore block; recall is pull-only and
-  always enveloped.
+  Only `TrustedText` reaches a restore block or a cue; a cue points,
+  never copies, and recall is pull-only and always enveloped.
 - **I4** — Cairn never talks to the network. No `net`, `net/http` or
   `os/exec` in shipped code; depguard and an import-closure test
   enforce it.

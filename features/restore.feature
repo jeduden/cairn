@@ -31,12 +31,12 @@ Feature: Restore and injection (INJ)
       | clear   |
 
   @INJ-03 @P0 @I2 @pending
-  Scenario: the restore builder accepts only TrustedText
+  Scenario: the restore and cue builders accept only TrustedText
     Given the injection package source
     When a package outside injection tries to construct a TrustedText value
     Then the build fails because the TrustedText constructor is unexported
-    And the only TrustedText sources are active pins and sanitized structural fields
-    And the restore builder signature accepts no type but TrustedText
+    And the only TrustedText sources are active pins, sanitized structural fields, and trusted user text within the LMK-02 and CUE-10 limits
+    And the restore and cue builder signatures accept no type but TrustedText
 
   @INJ-04 @P0 @I2 @pending
   Scenario: prompt injection is off by default and audited when enabled

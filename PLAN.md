@@ -62,7 +62,7 @@ empty: |
 | 2609292011 | 🔲     | sonnet | [The remaining engineering gates in CI](plan/2609292011_ci-engineering-gates.md)                              |
 | 2609292012 | 🔲     | opus   | [M1: record and recall](plan/2609292012_m1-record-and-recall.md)                                              |
 | 2609292013 | 🔲     | opus   | [M2: pins and restore](plan/2609292013_m2-pins-and-restore.md)                                                |
-| 2609292014 | 🔲     | opus   | [M3: landmarks and lifecycle](plan/2609292014_m3-landmarks-and-lifecycle.md)                                  |
+| 2609292014 | 🔲     | opus   | [M3: landmarks, cues and lifecycle](plan/2609292014_m3-landmarks-and-lifecycle.md)                            |
 | 2609292015 | 🔲     | opus   | [M4: the hermetic compute kernel](plan/2609292015_m4-compute-kernel.md)                                       |
 | 2609292016 | 🔲     | opus   | [M5: hardening and evaluation](plan/2609292016_m5-hardening-and-evaluation.md)                                |
 | 2609292156 | 🔳     | sonnet | [The repository's knowledge follows Cairn's layers](plan/2609292156_knowledge-follows-cairn-layers/plan.md)   |

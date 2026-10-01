@@ -57,6 +57,16 @@ func TestParsePassesOtherTablesBy(t *testing.T) {
 	assert.Empty(t, got)
 }
 
+func TestParseAcceptsTheCueFamily(t *testing.T) {
+	body := "| ID | Pri | Requirement | Ver | Traces |\n|---|---|---|---|---|\n| CUE-01 | P0 | Point. | T | I2 |\n"
+
+	got, err := Parse("doc.md", []byte(body))
+
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Equal(t, "CUE-01", got[0].ID)
+}
+
 func TestParseRejectsMalformedIDsAndTraces(t *testing.T) {
 	_, err := Parse("doc.md", []byte("| ID | Requirement |\n|---|---|\n| rec-1 | x |\n"))
 	assert.ErrorContains(t, err, `doc.md:3: malformed requirement id "rec-1"`)
@@ -113,5 +123,5 @@ func TestSpecificationParses(t *testing.T) {
 	reqs, err := Load(srsDir)
 
 	require.NoError(t, err)
-	assert.Len(t, reqs, 100+14+28+10, "§5–§6, NFR, ENG and ASM rows")
+	assert.Len(t, reqs, 113+14+28+11, "§5–§6, NFR, ENG and ASM rows")
 }

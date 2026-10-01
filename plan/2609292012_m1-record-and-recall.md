@@ -44,6 +44,8 @@ Split into phases when started.
 - [ ] Every scenario in scope passes; none of them is still @pending
 - [ ] Recall of at least 95% after 1 to 3 compactions on the §11.1
   evaluation
+- [ ] The §11.1 retrieval evaluation runs on baselines B0 and C, so
+  recall tool use is measured from M1 on
 - [ ] `cairn verify` proves completeness, and quarantine is effective
 - [ ] ENG-11 coverage floors hold for every security-sensitive package
   landed
