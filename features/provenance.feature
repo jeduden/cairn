@@ -10,8 +10,10 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And a project with a Claude Code transcript "every-kind"
     And "every-kind" holds a user prompt, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent result, lifecycle metadata, a system reminder and a malformed line
+    And the Bash tool call of "every-kind" was ingested in an earlier run than its result
     When the operator runs "cairn ingest --all"
     Then every event carries exactly one provenance class
+    And the Bash result carries provenance "tool_result:Bash"
     And every provenance class is one of:
       | user               |
       | assistant          |
@@ -57,11 +59,12 @@ Feature: Provenance and trust (PRV)
     Then the event is stored with provenance "<provenance>" and trust "untrusted"
 
     Examples:
-      | source                                                      | provenance   |
-      | an assistant message quoting "ignore previous instructions" | assistant    |
-      | a Bash tool call written by the assistant                   | tool_call    |
-      | the compact_summary passed to the hook "PostCompact"        | harness_text |
-      | a system reminder in the transcript                         | harness_text |
+      | source                                                             | provenance   |
+      | an assistant message quoting "ignore previous instructions"        | assistant    |
+      | a Bash tool call written by the assistant                          | tool_call    |
+      | the compact_summary passed to the hook "PostCompact"               | harness_text |
+      | a system reminder in the transcript                                | harness_text |
+      | the restore block Cairn returned, written back into the transcript | harness_text |
 
   @PRV-04 @P0 @I2 @pending
   Scenario: automation is the default mode and interactive is a tenant-only opt-in
@@ -127,3 +130,21 @@ Feature: Provenance and trust (PRV)
       | an <invoke name=Bash> tool-call block                        |
       | a right-to-left override character U+202E                    |
       | a 4 KiB base64 block                                         |
+
+  @PRV-08 @P0 @I2 @pending
+  Scenario Outline: provenance comes from a line's structure, and text markers only lower trust
+    Given an isolated Cairn home
+    And deployment mode "interactive"
+    When <source> is recorded
+    Then the event is stored with provenance "<provenance>" and trust "<trust>"
+
+    Examples:
+      | source                                                                          | provenance       | trust     |
+      | a "user" line holding a prompt the person typed                                 | user             | trusted   |
+      | a "user" line holding only a Bash tool_result                                   | tool_result:Bash | untrusted |
+      | a "user" line with isMeta true                                                  | harness_text     | untrusted |
+      | a "user" line holding "<local-command-stdout>" output                           | harness_text     | untrusted |
+      | an "instructions" attachment carrying a CLAUDE.md file, rendered with role user | file             | untrusted |
+      | an "mcp_instructions_delta" attachment from the MCP server "docs"               | mcp:docs         | untrusted |
+      | a "skill_listing" attachment                                                    | harness_text     | untrusted |
+      | a Bash tool_result whose output contains "<system-reminder>"                    | tool_result:Bash | untrusted |

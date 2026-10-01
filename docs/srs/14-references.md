@@ -36,3 +36,5 @@ summary: >-
     Scheme).
 16. OWASP Top 10 for Agentic Applications 2026, ASI06 Memory and Context
     Poisoning.
+17. latent-spaces/sottochat at commit `dae5739`: its Claude Code transcript
+    parser and session discovery (`src/jsonl.ts`, `src/claude-discovery.ts`).

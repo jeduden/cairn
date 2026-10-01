@@ -105,3 +105,49 @@ Feature: Assumptions register (ASM)
     When the hook "SessionEnd" runs with a handler that sleeps past 1.5 s
     Then the recorded harness terminated the handler after about 1.5 s
     And the other hooks ran up to their configured 10 s timeout
+
+  @ASM-11 @pending
+  Scenario: context the harness adds is written as attachment records (S3)
+    Given a recorded transcript for Claude Code "supported" from a project with a CLAUDE.md file, an MCP server and a skill
+    When each line of the recording is read
+    Then the CLAUDE.md file, the MCP server instructions and the skill listing appear as "attachment" records
+    And each of those records carries "attachment.type" and "renderedRole"
+
+  @ASM-12 @pending
+  Scenario: one API message spans several lines, one content block each (S3)
+    Given a recorded transcript for Claude Code "supported" with an assistant reply holding text and two tool calls
+    When each line of the recording is read
+    Then each assistant line holds exactly one content block
+    And the reply's lines share one "message.id" and repeat its "usage"
+
+  @ASM-13 @pending
+  Scenario: a tool-result line repeats the output and names its call (S3)
+    Given a recorded transcript for Claude Code "supported" with a Bash tool call and its result
+    When each line of the recording is read
+    Then the result line holds the output in "message.content" and again in "toolUseResult"
+    And its "sourceToolAssistantUUID" names the line holding the Bash tool call
+
+  @ASM-14 @pending
+  Scenario Outline: some record types carry no uuid or no timestamp (S3)
+    Given a recorded transcript for Claude Code "supported"
+    When each line of the recording is read
+    Then every line of type "<type>" carries <missing>
+
+    Examples:
+      | type            | missing                        |
+      | last-prompt     | neither "uuid" nor "timestamp" |
+      | queue-operation | no "uuid"                      |
+      | ai-title        | neither "uuid" nor "timestamp" |
+
+  @ASM-15 @pending
+  Scenario: thinking blocks keep their signature but not their text (S3)
+    Given a recorded transcript for Claude Code "supported" with extended thinking enabled
+    When each line of the recording is read
+    Then every thinking block carries a signature and empty thinking text
+
+  @ASM-16 @pending
+  Scenario: how working directories map to project directories is recorded (S3)
+    Given a recorded "~/.claude/projects" tree for Claude Code "supported" after one session in each of "/w/my_app", "/w/my.app" and "/w/my-app"
+    When the transcript discovery walks the tree
+    Then the recording shows whether the three sessions share the project directory "-w-my-app"
+    And the observed behaviour is written into the OQ-12 recommendation

@@ -88,6 +88,7 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a tenant-defined redaction pattern "ACME-[0-9]{8}"
     And a project with a Claude Code transcript "secrets"
+    And "secrets" holds a Bash result whose output carries an AWS access key in both "message.content" and "toolUseResult"
     When the operator runs "cairn ingest --all"
     Then no stored text field, payload, or hook input contains an AWS access key or "ACME-12345678"
     And each secret is replaced by "[REDACTED:<rule>:<HASH8>]"
