@@ -17,7 +17,8 @@ signed off, the evaluation published and the pilot clean.
 
 ## Context
 
-Milestone M5. Scope: PRV-07, PIN-05, PIN-07, PIN-09, REC-13 to REC-15,
+Milestone M5. Scope: PRV-07, PIN-05, PIN-07, PIN-09, CUE-06, CUE-10,
+CUE-11, REC-13 to REC-15,
 SEC-09, SEC-13, OPS-04, OPS-05, ADM-12, ENG-13, ENG-25, the §11
 evaluation, the external review and the pilot.
 
@@ -33,6 +34,8 @@ evaluation, the external review and the pilot.
 6. Mutation testing and the maintainer runbook: ENG-13, ENG-25
 7. Run the §11.1 evaluation and publish it
 8. External security review and the two-week pilot
+9. Repeat cues, quoted trusted turns, muting on poor follow-through:
+   CUE-06, CUE-10, CUE-11
 
 ## Acceptance Criteria
 

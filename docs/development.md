@@ -41,8 +41,9 @@ the module graph that ENG-18 counts.
 ## The executable requirement matrix
 
 The SRS under [docs/srs](srs/index.md) is executable. Every
-requirement row — `REC-01` through `ENG-28`, plus the assumptions
-`ASM-01` to `ASM-10` — has exactly one Gherkin scenario under
+requirement row — `REC-01` through `ENG-28`, the `CUE` rows included,
+plus the assumptions `ASM-01` to `ASM-11` — has exactly one Gherkin
+scenario under
 `features/`, one file per SRS section. The scenario carries the row's
 id, its priority and its traced invariants as tags:
 
