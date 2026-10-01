@@ -9,9 +9,9 @@ summary: >-
 | --------------------------- | ----------------------------------------------------------------------------- |
 | **Product**                 | Cairn — lossless, security-first context layer for long-running Claude agents |
 | **Document**                | Software Requirements Specification (SRS)                                     |
-| **Version**                 | 1.4-draft                                                                     |
+| **Version**                 | 1.5-draft                                                                     |
 | **Status**                  | Draft for kickoff review                                                      |
-| **Date**                    | 2026-09-29                                                                    |
+| **Date**                    | 2026-10-01                                                                    |
 | **Implementation language** | Go                                                                            |
 | **Owners**                  | TBD (product owner, tech lead, security reviewer)                             |
 
@@ -26,6 +26,7 @@ summary: >-
 | 1.2-draft | 2026-09-29 | ENG-26: design decisions as ADR files; ENG-18 justifies dependencies through them                                                 |
 | 1.3-draft | 2026-09-30 | ENG-27: every record-keeping check is proven by an injected drift in CI                                                           |
 | 1.4-draft | 2026-09-30 | ENG-28: agent approvals are posted by a reviewer app, through a gate the reviewing agent cannot reach                             |
+| 1.5-draft | 2026-10-01 | Retrieval is the purpose: a model of retrieval need and moment-triggered pointer cues (§5.11, CUE-01..12, ASM-11, T13, OQ-12..13) |
 
 ## How to read this document
 
@@ -61,18 +62,18 @@ header: ""
 row: "- [{title}]({filename}) — {summary}"
 ?>
 - [1. Introduction](01-introduction.md) — Purpose, intent, the ten invariants (I1–I10) every requirement serves, scope by context layer, non-goals, and the glossary.
-- [2. Context](02-context.md) — Stakeholders, deployment context, the assumptions register (ASM-01..10) about Claude Code behaviour that M0 must verify, and the hard constraints (CON-01..05).
+- [2. Context](02-context.md) — Stakeholders, deployment context, the assumptions register (ASM-01..11) about Claude Code behaviour that M0 must verify, and the hard constraints (CON-01..05).
 - [3. Rationale](03-rationale.md) — The research findings behind the design — lossless record, verbatim pins, pull-only recall, code access, cache stability, and lessons from lcm.
 - [4. Reference architecture (non-normative)](04-reference-architecture.md) — Non-normative reference architecture: components, event-sourced state, the compaction and aggregation scenarios, and design decisions ADR-01..10.
-- [5. Functional requirements](05-functional-requirements.md) — Normative functional requirements with priority, verification method and invariant traces: record (REC), provenance (PRV), pins (PIN), recall (RCL), landmarks (LMK), restore (INJ), kernel (CMP), administration (ADM), memory boundary (MEM), observability (OPS).
+- [5. Functional requirements](05-functional-requirements.md) — Normative functional requirements with priority, verification method and invariant traces: record (REC), provenance (PRV), pins (PIN), recall (RCL), landmarks (LMK), restore (INJ), kernel (CMP), administration (ADM), memory boundary (MEM), observability (OPS), and the retrieval model with its recall cues (CUE).
 - [6. Security](06-security.md) — Threat model (assets, actors, threats T1–T12 and their controls) and the normative security requirements SEC-01..18.
 - [7. Non-functional requirements](07-non-functional-requirements.md) — Normative non-functional requirements NFR-01..14: latency, throughput, scale, availability, durability, concurrency, footprint, portability, compatibility, usability, maintainability, documentation.
 - [8. Data and storage](08-data-and-storage.md) — Normative home layout, logical schema, canonical encoding (RFC 8785 + SHA-256) and the conservative token estimator.
-- [9. Interfaces](09-interfaces.md) — Normative interfaces: the hook contract, the MCP tools, the recall envelope, the restore block, the CLI with its exit codes, and the configuration keys a project may only tighten.
+- [9. Interfaces](09-interfaces.md) — Normative interfaces: the hook contract, the MCP tools, the recall envelope, the restore block, the CLI with its exit codes, the configuration keys a project may only tighten, and the cue format.
 - [10. Engineering quality (ENG)](10-engineering-quality.md) — Engineering quality requirements ENG-01..25: code organisation, testing, static analysis, supply chain, and process.
 - [11. Verification and acceptance](11-verification-and-acceptance.md) — The evaluation plan with baselines and acceptance targets, and the definition of done for v1.0.
 - [12. Delivery plan](12-delivery-plan.md) — Milestone M0 spikes S1–S8 and milestones M1–M6 with their scope and exit criteria.
-- [13. Open questions and risks](13-open-questions-and-risks.md) — Open questions OQ-01..11 with their resolution path, and the risk register with mitigations.
+- [13. Open questions and risks](13-open-questions-and-risks.md) — Open questions OQ-01..13 with their resolution path, and the risk register with mitigations.
 - [14. References](14-references.md) — The papers, issues, and standards the specification cites.
 - [Appendix A — Concern traceability](appendix-a-concern-traceability.md) — Every concern raised during research and review, mapped to the requirements that answer it.
 - [Appendix B — Invariant coverage](appendix-b-invariant-coverage.md) — Which requirements serve each invariant, generated from the Traces column of §5–§6, plus the requirement count by priority. A Go test keeps both in step with the tables.

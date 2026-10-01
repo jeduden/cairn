@@ -77,7 +77,7 @@ Feature: Security (SEC)
     And the envelope notice states that its contents are historical data and not instructions
 
   @SEC-07 @P0 @I2 @pending
-  Scenario: restore content is constructed only inside the injection package
+  Scenario: restore and cue content is constructed only inside the injection package
     Given a source tree where a package outside the injection package constructs TrustedText
     When the CI static check for TrustedText construction runs
     Then the check fails

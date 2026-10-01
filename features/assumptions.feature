@@ -105,3 +105,16 @@ Feature: Assumptions register (ASM)
     When the hook "SessionEnd" runs with a handler that sleeps past 1.5 s
     Then the recorded harness terminated the handler after about 1.5 s
     And the other hooks ran up to their configured 10 s timeout
+
+  @ASM-11 @pending
+  Scenario Outline: tool hooks carry tool inputs and can return context (S1)
+    Given a recorded hook payload for Claude Code "supported"
+    When the hook "<Event>" runs with the recorded payload and returns additionalContext "cairn-probe"
+    Then the payload carries <fields>
+    And the recorded transcript shows "cairn-probe" in Claude's context before its next step
+
+    Examples:
+      | Event       | fields                                                         |
+      | PreToolUse  | "tool_name" and "tool_input"                                   |
+      | PostToolUse | "tool_name", "tool_input" and "tool_response" with its failure |
+

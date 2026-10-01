@@ -4,7 +4,8 @@ summary: >-
   Normative functional requirements with priority, verification method
   and invariant traces: record (REC), provenance (PRV), pins (PIN),
   recall (RCL), landmarks (LMK), restore (INJ), kernel (CMP),
-  administration (ADM), memory boundary (MEM), observability (OPS).
+  administration (ADM), memory boundary (MEM), observability (OPS),
+  and the retrieval model with its recall cues (CUE).
 ---
 # 5. Functional requirements
 
@@ -83,17 +84,17 @@ method) · **Traces** (invariants).
 
 ## 5.6 Restore and injection (INJ)
 
-| ID     | Pri | Requirement                                                                                                                                                                                                                             | Ver  | Traces |
-| ------ | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------ |
-| INJ-01 | P0  | On `SessionStart` with `source = compact`, Cairn MUST return a restore block containing: active pins (PIN-06, PIN-08), the landmark index for the current session, and a one-line statement that recall tools are available.            | T    | I3     |
-| INJ-02 | P0  | On `SessionStart` with `source` = `startup`, `resume`, or `clear`, Cairn MUST by default return active pins and, if the project has history, the recall statement. Including the landmark index MUST be configurable.                   | T    | I3     |
-| INJ-03 | P0  | The restore builder MUST accept only values of type `TrustedText`. `TrustedText` MUST be constructible only inside the injection package, only from active pins and sanitized structural fields, enforced by an unexported constructor. | I, T | I2     |
-| INJ-04 | P0  | Injection on `UserPromptSubmit` MUST be disabled by default. If enabled, it MUST be limited to `TrustedText` and every injection MUST be audited.                                                                                       | T    | I2     |
-| INJ-05 | P0  | If Cairn cannot determine unambiguously which session a hook belongs to (ASM-06), it MUST inject pins only.                                                                                                                             | T    | I9     |
-| INJ-06 | P0  | For identical record state, the restore block MUST be byte-identical: stable ordering, no timestamps, no absolute paths, no random identifiers.                                                                                         | T    | I10    |
-| INJ-07 | P0  | The restore block MUST respect a total budget (default 2,000 tokens†). When over budget, Cairn MUST remove landmark detail deterministically, coarsest tier last, and MUST NOT reduce pins below the PIN-08 rule.                       | T    | I9     |
-| INJ-08 | P0  | The restore block MUST use fixed delimiters, and no injected field may contain the delimiter sequences (guaranteed by construction of `TrustedText`).                                                                                   | T    | I2     |
-| INJ-09 | P0  | Content with provenance `harness_text` (including compaction summaries) MUST NOT appear in any restore block.                                                                                                                           | T    | I2     |
+| ID     | Pri | Requirement                                                                                                                                                                                                                                                                                         | Ver  | Traces |
+| ------ | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------ |
+| INJ-01 | P0  | On `SessionStart` with `source = compact`, Cairn MUST return a restore block containing: active pins (PIN-06, PIN-08), the landmark index for the current session, and a one-line statement that recall tools are available.                                                                        | T    | I3     |
+| INJ-02 | P0  | On `SessionStart` with `source` = `startup`, `resume`, or `clear`, Cairn MUST by default return active pins and, if the project has history, the recall statement. Including the landmark index MUST be configurable.                                                                               | T    | I3     |
+| INJ-03 | P0  | The restore and cue builders MUST accept only values of type `TrustedText`. `TrustedText` MUST be constructible only inside the injection package, only from active pins, sanitized structural fields, and the trusted `user` text LMK-02 and CUE-10 permit, enforced by an unexported constructor. | I, T | I2     |
+| INJ-04 | P0  | Injection on `UserPromptSubmit` beyond a cue (§5.11) MUST be disabled by default. If enabled, it MUST be limited to `TrustedText` and every injection MUST be audited.                                                                                                                              | T    | I2     |
+| INJ-05 | P0  | If Cairn cannot determine unambiguously which session a hook belongs to (ASM-06), it MUST inject pins only.                                                                                                                                                                                         | T    | I9     |
+| INJ-06 | P0  | For identical record state, the restore block MUST be byte-identical: stable ordering, no timestamps, no absolute paths, no random identifiers.                                                                                                                                                     | T    | I10    |
+| INJ-07 | P0  | The restore block MUST respect a total budget (default 2,000 tokens†). When over budget, Cairn MUST remove landmark detail deterministically, coarsest tier last, and MUST NOT reduce pins below the PIN-08 rule.                                                                                   | T    | I9     |
+| INJ-08 | P0  | The restore block MUST use fixed delimiters, and no injected field may contain the delimiter sequences (guaranteed by construction of `TrustedText`).                                                                                                                                               | T    | I2     |
+| INJ-09 | P0  | Content with provenance `harness_text` (including compaction summaries) MUST NOT appear in any restore block.                                                                                                                                                                                       | T    | I2     |
 
 ## 5.7 Compute kernel (CMP)
 
@@ -142,3 +143,89 @@ method) · **Traces** (invariants).
 | OPS-03 | P0  | `cairn doctor` MUST exit non-zero while any failure counter has increased since the last operator acknowledgement (`cairn ack`).                                                              | T   | I6     |
 | OPS-04 | P1  | Cairn SHOULD provide an end-to-end canary (`cairn canary`) that writes a marker through the hook path and recalls it through MCP, exiting non-zero on failure, runnable in CI and on runners. | T   | I6     |
 | OPS-05 | P1  | Cairn SHOULD emit structured logs (`log/slog`, JSON) to a file or stderr, suitable for collection by an external agent. Cairn itself MUST NOT ship logs anywhere.                             | T   | I4     |
+
+## 5.11 Retrieval model and cues (CUE)
+
+Retrieval is what Cairn is for (§1.2). Pull-only recall (§5.4) answers
+when Claude asks. This section models when Claude should be helped to
+ask, and what to point it at. The aim is the right history at the
+right moment, and silence otherwise.
+
+### 5.11.1 The model
+
+**Working view.** Cairn models what Claude can see as the *in-view*
+events. These are the current session's events after its latest
+compaction boundary, plus the restore block and the cues delivered
+since. Every other event of the project is *out of view*: earlier
+spans of the session, other sessions, and subagent transcripts beyond
+the result they returned. The boundary is read from the record, so the
+model is rebuildable (I10).
+
+**Need.** Claude has a *need* when its next step would go better with
+an out-of-view event. Cairn cannot observe a need. It observes
+*signals* at *moments* and treats them as evidence of one.
+
+**Moment.** A hook event at which Cairn can observe a signal and still
+deliver context before Claude's next step (ASM-02, ASM-11).
+
+**Anchor.** A term specific enough to point at one place in history.
+It is an identifier-shaped token from the prompt or the tool input,
+4 to 64 characters long, that contains a digit, `_`, `.`, `/`, `-`,
+`::` or an inner capital letter. It must occur in at most 0.1%† of the
+project's events. File paths and failure signatures are anchors by
+construction.
+
+**Failure signature.** The first line of a failed tool result's error
+text, lowercased, with digits, hexadecimal runs, quoted strings and
+absolute paths replaced by fixed placeholders, then hashed with
+SHA-256. Only the hash leaves the hook.
+
+| Moment         | Hook                                     | Signal                                                    | Target                                                         |
+| -------------- | ---------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
+| Re-entry       | `SessionStart`                           | The working view was emptied or replaced                  | The restore block (INJ-01, INJ-02)                             |
+| Back-reference | `UserPromptSubmit`                       | The prompt carries an anchor found out of view, not in it | The out-of-view spans holding the anchor                       |
+| Touch          | `PreToolUse` on a tool that names a file | The path occurs in out-of-view spans and not in view      | The latest out-of-view spans that read, edited or failed on it |
+| Recurrence     | `PostToolUse` with a failed result       | The failure signature matches an out-of-view failure      | That failure and the span that followed it                     |
+| Repeat         | `PreToolUse` on `Bash`                   | The same command, whitespace collapsed, ran out of view   | That earlier call and its result                               |
+
+**Gates.** A candidate becomes a cue only if it passes every gate. The
+gates are what keep useless context out.
+
+| Gate        | Passes when                                                                                                                   |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Out of view | Every target event is out of view. Context Claude can still see is never repeated.                                            |
+| Specific    | The match rests on an anchor, a path or a signature, never on common words.                                                   |
+| Unambiguous | The moment's rule yields at most 3† target ranges. A back-reference with more matches delivers nothing: Claude should search. |
+| Fresh       | No cue in this session has named the same target since the latest compaction.                                                 |
+| Clean       | No target event is quarantined or flagged (PRV-07).                                                                           |
+| Budget      | The cue fits its own cap and the compaction cycle's budget (CUE-08).                                                          |
+| Calibrated  | The moment kind is not muted for poor follow-through (CUE-11).                                                                |
+
+**Delivery form.** A cue is a pointer, never a copy. It names the
+moment, the target `seq` ranges, the session, event counts by kind,
+sanitized paths and anchors, the targets' provenance and trust, and
+the recall call that fetches them. Claude pulls the content with one
+call, inside the envelope (RCL-04). What Cairn pushes is `TrustedText`;
+untrusted content still reaches Claude only when Claude asks (I2).
+
+**Outcome.** A cue is *followed* when a recall call in the same
+session, within 5† tool calls, returns an event in the cue's target
+set. Follow-through is the online measure of a cue's precision; §11.1
+measures usefulness offline.
+
+### 5.11.2 Requirements
+
+| ID     | Pri | Requirement                                                                                                                                                                                                                                                                                                                                    | Ver  | Traces  |
+| ------ | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------- |
+| CUE-01 | P0  | Cue content MUST be `TrustedText` (INJ-03): the moment, target `seq` ranges, the relative session, event counts by kind, paths sanitized per LMK-03, anchors taken from the current hook input and sanitized the same way, the targets' provenance and trust, and a recall call. A cue MUST NOT contain record text, except as CUE-10 permits. | I, T | I2      |
+| CUE-02 | P0  | Cairn MUST classify every event of the project as in view or out of view per §5.11.1, as a deterministic function of the record. Cue selection MUST be a deterministic function of the record and the hook input.                                                                                                                              | T    | I10     |
+| CUE-03 | P0  | On `UserPromptSubmit`, Cairn MUST extract the prompt's anchors and, when one occurs out of view and nowhere in view, offer a back-reference cue to the spans that hold it.                                                                                                                                                                     | T    | —       |
+| CUE-04 | P0  | On `PreToolUse` for a tool whose input names a file path, Cairn MUST offer a touch cue to at most the 2† latest out-of-view spans that read, edited or failed on that path, when the path occurs nowhere in view.                                                                                                                              | T    | —       |
+| CUE-05 | P0  | On `PostToolUse` with a failed result, Cairn MUST compute the failure signature and, when it matches an out-of-view failure, offer a recurrence cue to the latest such failure and the span that followed it.                                                                                                                                  | T    | —       |
+| CUE-06 | P1  | On `PreToolUse` for `Bash`, Cairn SHOULD offer a repeat cue when the same command, whitespace collapsed, ran out of view, naming that call and its result.                                                                                                                                                                                     | T    | —       |
+| CUE-07 | P0  | A candidate MUST be delivered only if it passes every gate of §5.11.1. A quarantined or flagged event MUST never be named in a cue.                                                                                                                                                                                                            | T    | I2, I5  |
+| CUE-08 | P0  | A hook MUST deliver at most one cue, of at most 120 tokens†, and the cues of one compaction cycle MUST total at most 600 tokens†. Cue text MUST be byte-identical for identical record state and hook input. A lookup that misses the hook's internal deadline MUST deliver nothing.                                                           | T    | I9      |
+| CUE-09 | P0  | Every delivered cue MUST be appended to the record as a `cue` event carrying its moment and target `seq` set. Every candidate a gate rejects, and every lookup that misses its deadline, MUST increment a counter named by that gate or deadline. `cairn stats` MUST report cues delivered, followed and rejected per moment.                  | T    | I6, I10 |
+| CUE-10 | P1  | In `interactive` mode, when every target event is a trusted `user` turn, a cue MAY include up to 200† characters of that turn verbatim, built as `TrustedText` inside the injection package.                                                                                                                                                   | T    | I2      |
+| CUE-11 | P1  | When fewer than 30%† of a moment kind's last 20† cues in the project were followed, Cairn MUST mute that kind for the rest of the session and write an audit entry.                                                                                                                                                                            | T    | I6, I9  |
+| CUE-12 | P0  | Cues MUST be on by default. Tenant configuration MAY switch any moment off; project configuration MAY only switch moments off or tighten gate thresholds (SEC-11).                                                                                                                                                                             | T    | I2, I7  |

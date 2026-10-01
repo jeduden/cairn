@@ -42,3 +42,12 @@ maps every individual concern to requirements.
    different reader models and setups, and most context-management results come
    from non-Claude models. → All acceptance criteria are measured on our own
    Claude models and workloads (§11).
+8. **Pull-only recall depends on Claude knowing what it has forgotten.** After
+   compaction Claude sees a structural index and a hint, not what it once
+   knew, so it cannot ask for history it does not know exists. Pushing history
+   back is what item 3 warns against. A pointer is neither: it carries
+   addresses and counts, not content, so it opens no path for untrusted text,
+   and it costs a few dozen tokens. Each pointer a need does not call for still
+   costs attention and teaches Claude to skip the next one. → An explicit model
+   of retrieval need, cues at the moments a need is likely, and gates and
+   follow-through measured for precision (§5.11, §11.1).

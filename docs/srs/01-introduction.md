@@ -24,6 +24,14 @@ from the first line of code. Where usefulness and safety conflict, Cairn chooses
 the design that keeps the agent safe and makes the convenience opt-in, never the
 reverse.
 
+Retrieval is the purpose. The record, provenance, pins, landmarks and the
+kernel all exist so that Claude finds the right history at the right moment. A
+record Claude cannot find its way back into is worth nothing, and context
+delivered when it is not needed costs attention, tokens and cache. So Cairn
+models retrieval need explicitly (§5.11). It offers pointers at the moments a
+need is likely, holds them to measured precision (§11.1), and stays silent
+otherwise.
+
 ## 1.3 Invariants
 
 The invariants are Cairn's contract. Every requirement serves at least one of
@@ -47,13 +55,13 @@ security review and a new major version, not a bug fix.
 
 Cairn implements layers 1–4 of the agent context architecture:
 
-| Layer | Name           | In Cairn v1                                               |
-| ----- | -------------- | --------------------------------------------------------- |
-| 1     | Record         | Append-only, provenance-tagged event log of every session |
-| 2     | Pinned context | Constraints that survive every compaction verbatim        |
-| 3     | Working view   | Pull-only recall, landmark index, post-compaction restore |
-| 4     | Compute        | Hermetic kernel with read-only access to the record       |
-| 5     | Durable memory | **Not in scope.** Export interface only (§5.9)            |
+| Layer | Name           | In Cairn v1                                                            |
+| ----- | -------------- | ---------------------------------------------------------------------- |
+| 1     | Record         | Append-only, provenance-tagged event log of every session              |
+| 2     | Pinned context | Constraints that survive every compaction verbatim                     |
+| 3     | Working view   | Pull-only recall, recall cues, landmark index, post-compaction restore |
+| 4     | Compute        | Hermetic kernel with read-only access to the record                    |
+| 5     | Durable memory | **Not in scope.** Export interface only (§5.9)                         |
 
 ## 1.5 Non-goals for v1
 
@@ -69,25 +77,28 @@ Cairn implements layers 1–4 of the agent context architecture:
 
 ## 1.6 Glossary
 
-| Term              | Definition                                                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Tenant**        | The security principal that owns a Cairn home: one OS user, optionally bound to a tenant ID supplied by the runner environment. |
-| **Home**          | Directory holding all of a tenant's Cairn state (`CAIRN_HOME`, default `~/.cairn`).                                             |
-| **Project**       | A working directory as identified by Claude Code (one transcript directory). Each project has its own store.                    |
-| **Session**       | One Claude Code or Agent SDK session, identified by `session_id`. A subagent run is a child session.                            |
-| **Source**        | A transcript file that Cairn ingests.                                                                                           |
-| **Record**        | The append-only log of events for a project. The source of truth.                                                               |
-| **Event**         | One immutable entry in the record: a message, tool call, tool result, hook observation, or administrative action.               |
-| **seq**           | An event's address: a strictly increasing integer, unique within a project, never reused.                                       |
-| **Payload**       | The full content of a large event, stored content-addressed outside the event row.                                              |
-| **Provenance**    | Where an event's content came from (§5.2).                                                                                      |
-| **Trust level**   | `trusted` or `untrusted`, derived from provenance by the trust policy.                                                          |
-| **Taint**         | The trust level inherited by a derived artifact: untrusted if any source event is untrusted.                                    |
-| **Span**          | A contiguous range of events within a session, bounded by user turns, compactions, or subagent boundaries.                      |
-| **Landmark**      | A structural headline describing a span, bound to its exact `seq` range.                                                        |
-| **Pin**           | A constraint the tenant has explicitly marked as always-present, stored verbatim.                                               |
-| **Quarantine**    | Exclusion of events or artifacts from recall and injection, recorded as an event, without deletion.                             |
-| **Envelope**      | The structured wrapper in which recalled content is returned to Claude, marking it as untrusted historical data.                |
-| **Restore block** | The deterministic text Cairn injects after compaction: pins, landmark index, and a recall hint.                                 |
-| **Working view**  | Whatever is currently in the model's context window. A projection; never the source of truth.                                   |
-| **Kernel**        | The layer-4 compute environment in which Claude runs code over the record.                                                      |
+| Term              | Definition                                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Tenant**        | The security principal that owns a Cairn home: one OS user, optionally bound to a tenant ID supplied by the runner environment.    |
+| **Home**          | Directory holding all of a tenant's Cairn state (`CAIRN_HOME`, default `~/.cairn`).                                                |
+| **Project**       | A working directory as identified by Claude Code (one transcript directory). Each project has its own store.                       |
+| **Session**       | One Claude Code or Agent SDK session, identified by `session_id`. A subagent run is a child session.                               |
+| **Source**        | A transcript file that Cairn ingests.                                                                                              |
+| **Record**        | The append-only log of events for a project. The source of truth.                                                                  |
+| **Event**         | One immutable entry in the record: a message, tool call, tool result, hook observation, or administrative action.                  |
+| **seq**           | An event's address: a strictly increasing integer, unique within a project, never reused.                                          |
+| **Payload**       | The full content of a large event, stored content-addressed outside the event row.                                                 |
+| **Provenance**    | Where an event's content came from (§5.2).                                                                                         |
+| **Trust level**   | `trusted` or `untrusted`, derived from provenance by the trust policy.                                                             |
+| **Taint**         | The trust level inherited by a derived artifact: untrusted if any source event is untrusted.                                       |
+| **Span**          | A contiguous range of events within a session, bounded by user turns, compactions, or subagent boundaries.                         |
+| **Landmark**      | A structural headline describing a span, bound to its exact `seq` range.                                                           |
+| **Pin**           | A constraint the tenant has explicitly marked as always-present, stored verbatim.                                                  |
+| **Quarantine**    | Exclusion of events or artifacts from recall and injection, recorded as an event, without deletion.                                |
+| **Envelope**      | The structured wrapper in which recalled content is returned to Claude, marking it as untrusted historical data.                   |
+| **Restore block** | The deterministic text Cairn injects after compaction: pins, landmark index, and a recall hint.                                    |
+| **In view**       | An event Claude can still see: the current session after its latest compaction boundary (§5.11). Every other event is out of view. |
+| **Moment**        | A hook event at which Cairn can observe a sign that Claude needs out-of-view history, and still deliver a cue (§5.11).             |
+| **Cue**           | A short `TrustedText` pointer to out-of-view events, delivered at a moment; Claude pulls the content itself (§5.11).               |
+| **Working view**  | Whatever is currently in the model's context window. A projection; never the source of truth.                                      |
+| **Kernel**        | The layer-4 compute environment in which Claude runs code over the record.                                                         |
