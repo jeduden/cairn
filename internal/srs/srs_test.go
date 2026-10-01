@@ -123,5 +123,5 @@ func TestSpecificationParses(t *testing.T) {
 	reqs, err := Load(srsDir)
 
 	require.NoError(t, err)
-	assert.Len(t, reqs, 112+14+28+11, "§5–§6, NFR, ENG and ASM rows")
+	assert.Len(t, reqs, 113+14+28+11, "§5–§6, NFR, ENG and ASM rows")
 }

@@ -166,5 +166,6 @@ Recall: expand seq_from=22301 seq_to=22410
 ```
 
 The block contains only `TrustedText` (CUE-01). Anchors and paths are
-sanitized per LMK-03. It never contains tool output, web content,
-assistant text or compaction summaries.
+sanitized per LMK-03, and quoted user text is encoded so that no field
+can contain `<`, `>` or a line break (CUE-13). It never contains tool
+output, web content, assistant text or compaction summaries.

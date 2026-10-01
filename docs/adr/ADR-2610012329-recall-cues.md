@@ -56,7 +56,8 @@ the next one.
   more, and is the poisoning path §3 measures. It would break I2.
 - **Content excerpts for every target.** Saves Claude one call, but
   most targets are tool output, which is untrusted. Only trusted user
-  turns in `interactive` mode may be quoted (CUE-10).
+  turns in `interactive` mode may be quoted (CUE-10), encoded so they
+  cannot forge a cue delimiter (CUE-13).
 - **Cues on by heuristics alone, with no follow-through measure.**
   Simpler, but nothing would catch a moment kind that only adds
   noise. Calibration makes precision observable and self-correcting.

@@ -26,7 +26,7 @@ summary: >-
 | 1.2-draft | 2026-09-29 | ENG-26: design decisions as ADR files; ENG-18 justifies dependencies through them                                                 |
 | 1.3-draft | 2026-09-30 | ENG-27: every record-keeping check is proven by an injected drift in CI                                                           |
 | 1.4-draft | 2026-09-30 | ENG-28: agent approvals are posted by a reviewer app, through a gate the reviewing agent cannot reach                             |
-| 1.5-draft | 2026-10-01 | Retrieval is the purpose: a model of retrieval need and moment-triggered pointer cues (§5.11, CUE-01..12, ASM-11, T13, OQ-12..13) |
+| 1.5-draft | 2026-10-01 | Retrieval is the purpose: a model of retrieval need and moment-triggered pointer cues (§5.11, CUE-01..13, ASM-11, T13, OQ-12..13) |
 
 ## How to read this document
 
