@@ -108,8 +108,19 @@ matches millions of the 10M events, so a one-word query on it takes
 2–8 s with either driver. Bounding by recency, ranking only the most
 recent 2,000 matches, cuts the common-term p95 to about 0.3 s. It does
 not cut multi-term queries below the target, because FTS5 still walks
-the common terms' doclists to intersect them. The index fragmentation
-section below measures what merging the index adds.
+the common terms' doclists to intersect them.
+
+Merging the index barely helps. The bulk load left 22 FTS5 segments.
+`optimize` merged them into one in 52 s, and the store grew by 0.6%.
+
+| Query shape, merged index        | modernc p95 | ncruces p95 | Before merge   |
+| -------------------------------- | ----------- | ----------- | -------------- |
+| BM25 over all matches, query mix | 3.46 s      | 4.12 s      | 3.57 s, 4.22 s |
+| BM25 over the newest 2,000, mix  | 299 ms      | 363 ms      | 313 ms, 390 ms |
+| the same, median                 | 41 ms       | 67 ms       | 48 ms, 74 ms   |
+
+The bounded shape's median sits well inside the budget. Its tail
+comes from multi-term queries that pair a rare term with common ones.
 
 This is FTS5's cost model, not the driver's. A CGO build typically
 runs SQLite 1.5–2× faster than either translation. That would not

@@ -1,7 +1,7 @@
 ---
 id: 2609292004
 title: "Spike S2: choose the pure-Go SQLite driver"
-status: "🔳"
+status: "✅"
 summary: >-
   Benchmark modernc.org/sqlite against ncruces/go-sqlite3 for FTS5,
   cancellation, WAL concurrency, encryption and 10M-event
@@ -33,10 +33,42 @@ Resolves ADR-07, OQ-03 and OQ-04. The choice must keep CON-02 (static,
 6. Write the report and record the decision in ADR-07, whose Decision
    table names the driver module (ENG-18, ENG-26)
 
+## Outcome
+
+The [benchmark report](report.md) holds the numbers. Both drivers
+passed the FTS5, cancellation and 50-writer WAL checks, and both met
+or missed the same targets at 10M events. ncruces is 15–25% slower.
+It still wins: modernc links `os/exec` and `net` into the binary,
+and only ncruces offers an encrypting VFS.
+[ADR-2609302341](../../docs/adr/ADR-2609302341-sqlite-driver.md)
+records the choice.
+
+Deviations from the tasks:
+
+- Task 5 used a minimal binary per driver rather than the cairn
+  import test, which bans the whole `net/` prefix. ncruces needs
+  `net/url` and `net/netip` allow-listed there when M1 first links
+  the store.
+- The ADR is `proposed`, not `accepted`. ENG-18 fails on an accepted
+  ADR whose module `go.mod` does not require. The M1 change that adds
+  the module flips the status.
+
+Handed on:
+
+- M1 must bound BM25 ranking for NFR-03. Full ranking of a common
+  term takes seconds with either driver.
+- Spike S8 freezes NFR-09's 1.5× store overhead. This schema measures
+  1.96× before payload files count as stored text.
+- The OQ-04 default and key management go to the security review.
+
+No requirement closes and no scenario leaves `@pending`. The spike
+gathers evidence for NFR-03, NFR-04, NFR-05 and NFR-09.
+
 ## Acceptance Criteria
 
-- [ ] A benchmark report is committed beside this plan
-- [ ] ADR-07 names the chosen driver; OQ-03 and OQ-04 are answered or
+- [x] A benchmark report is committed beside this plan
+- [x] ADR-07 names the chosen driver; OQ-03 and OQ-04 are answered or
   re-planned
-- [ ] The chosen driver is justified by an accepted ADR and the ENG-18
-  scenario still passes
+- [x] The chosen driver is justified by an ADR, proposed until the M1
+  change that adds it to `go.mod` accepts it, and the ENG-18 scenario
+  still passes
