@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
 	"math/rand/v2"
 	"os"
 	"runtime"
@@ -16,7 +17,7 @@ import (
 
 // cmdLoad builds a store of o.n synthetic events.
 func cmdLoad(ctx context.Context, o opts) error {
-	db, err := open(o.driver, o.db)
+	db, err := open(o)
 	if err != nil {
 		return err
 	}
@@ -174,7 +175,7 @@ func searchQueries(ctx context.Context, db *sql.DB, c *corpus, r *rand.Rand, n i
 
 // cmdSearch measures FTS5 BM25 search latency (NFR-03: p95 <= 200 ms).
 func cmdSearch(ctx context.Context, o opts) error {
-	db, err := open(o.driver, o.db, "query_only(1)")
+	db, err := open(o, "query_only(1)")
 	if err != nil {
 		return err
 	}
@@ -293,7 +294,10 @@ func stats(ds []time.Duration) string {
 	}
 	s := slices.Clone(ds)
 	slices.Sort(s)
-	p := func(q float64) time.Duration { return s[min(len(s)-1, int(q*float64(len(s))))] }
+	// Nearest rank: the p95 of 300 samples is the 285th, s[284].
+	p := func(q float64) time.Duration {
+		return s[max(0, int(math.Ceil(q*float64(len(s))))-1)]
+	}
 	var sum time.Duration
 	for _, d := range s {
 		sum += d
@@ -307,7 +311,7 @@ func stats(ds []time.Duration) string {
 // cmdExpand measures fetching a 50-event window by seq (NFR-03:
 // expand p95 <= 100 ms).
 func cmdExpand(ctx context.Context, o opts) error {
-	db, err := open(o.driver, o.db, "query_only(1)")
+	db, err := open(o, "query_only(1)")
 	if err != nil {
 		return err
 	}
@@ -356,7 +360,7 @@ func cmdExpand(ctx context.Context, o opts) error {
 // transaction, the unit one hook invocation commits.
 func cmdIngest(ctx context.Context, o opts) error {
 	runtime.GOMAXPROCS(1)
-	db, err := open(o.driver, o.db)
+	db, err := open(o)
 	if err != nil {
 		return err
 	}
@@ -419,7 +423,7 @@ func cmdHook(ctx context.Context, o opts) error {
 	}
 	var ru0 syscall.Rusage
 	syscall.Getrusage(syscall.RUSAGE_SELF, &ru0)
-	db, err := open(o.driver, o.db)
+	db, err := open(o)
 	if err != nil {
 		return err
 	}
@@ -464,7 +468,7 @@ func cmdHook(ctx context.Context, o opts) error {
 // cmdCancel checks that a context deadline stops a running query
 // promptly and leaves the connection usable.
 func cmdCancel(ctx context.Context, o opts) error {
-	db, err := open(o.driver, o.db)
+	db, err := open(o)
 	if err != nil {
 		return err
 	}
@@ -500,17 +504,26 @@ func cmdCancel(ctx context.Context, o opts) error {
 				errString(err), errors.Is(err, context.DeadlineExceeded), aerr == nil)
 		}
 	}
-	// A write transaction cancelled mid-way must roll back.
+	// A write interrupted mid-way must leave nothing behind. The
+	// transaction itself runs on the parent context: database/sql rolls
+	// back any transaction whose BeginTx context ends, which would pass
+	// this check for every driver. Only the statement gets the deadline,
+	// so the rollback observed is the driver's and SQLite's.
 	before, _ := count(ctx, conn)
-	wctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
-	tx, err := conn.BeginTx(wctx, nil)
+	tx, err := conn.BeginTx(ctx, nil)
 	if err != nil {
-		cancel()
 		return err
 	}
+	wctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
 	_, werr := tx.ExecContext(wctx, `INSERT INTO meta(k, v) WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM c LIMIT 50000000) SELECT 'junk' || x, x FROM c`)
-	cerr := tx.Commit()
 	cancel()
+	var cerr error
+	if werr == nil {
+		// The deadline never fired; never commit the junk rows.
+		cerr = errors.Join(errors.New("statement finished before its deadline"), tx.Rollback())
+	} else {
+		cerr = tx.Commit()
+	}
 	after, _ := count(ctx, conn)
 	fmt.Printf("RESULT cancel driver=%s query=write_tx exec_err=%q commit_err=%q rows_before=%d rows_after=%d rolled_back=%v\n",
 		o.driver, errString(werr), errString(cerr), before, after, before == after)

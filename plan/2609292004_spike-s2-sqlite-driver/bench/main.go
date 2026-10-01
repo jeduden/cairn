@@ -30,7 +30,7 @@ func main() {
 	fs.Uint64Var(&o.seed, "seed", 1, "corpus seed")
 	fs.Int64Var(&o.recent, "recent", 0, "search: rank only the most recent this many matches (0 ranks all)")
 	fs.Int64Var(&o.window, "window", 1<<62, "search: rank only the most recent this many events")
-	fs.StringVar(&encVFS, "vfs", "", "encrypting VFS for the OQ-04 probe: xts or adiantum (ncruces only)")
+	fs.StringVar(&o.vfs, "vfs", "", "encrypting VFS for the OQ-04 probe: xts or adiantum (ncruces only)")
 	fs.Parse(args)
 
 	ctx := context.Background()
@@ -75,4 +75,5 @@ type opts struct {
 	seed    uint64
 	window  int64
 	recent  int64
+	vfs     string // encrypting VFS for the OQ-04 probe (ncruces only); empty opens plain files
 }

@@ -24,7 +24,7 @@ func cmdWAL(ctx context.Context, o opts) error {
 	for _, suf := range []string{"", "-wal", "-shm"} {
 		os.Remove(o.db + suf)
 	}
-	db, err := open(o.driver, o.db)
+	db, err := open(o)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func cmdWAL(ctx context.Context, o opts) error {
 		rwg.Add(1)
 		go func() {
 			defer rwg.Done()
-			rdb, err := open(o.driver, o.db, "query_only(1)")
+			rdb, err := open(o, "query_only(1)")
 			if err != nil {
 				readErrs.Add(1)
 				return
@@ -73,7 +73,9 @@ func cmdWAL(ctx context.Context, o opts) error {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			cmd := exec.Command(os.Args[0], "walworker", "-driver", o.driver, "-db", o.db,
+			// Workers must open the store the way this process does,
+			// including the encrypting VFS when -vfs is set.
+			cmd := exec.Command(os.Args[0], "walworker", "-driver", o.driver, "-db", o.db, "-vfs", o.vfs,
 				"-n", strconv.FormatInt(o.n, 10), "-id", strconv.Itoa(w), "-seed", strconv.FormatUint(o.seed, 10))
 			out, err := cmd.CombinedOutput()
 			outs[w], fails[w] = string(out), err
@@ -111,7 +113,7 @@ func cmdWAL(ctx context.Context, o opts) error {
 
 // verifyStore checks the record after the concurrent run.
 func verifyStore(ctx context.Context, o opts, wantTx int64) error {
-	db, err := open(o.driver, o.db)
+	db, err := open(o)
 	if err != nil {
 		return err
 	}
@@ -121,15 +123,20 @@ func verifyStore(ctx context.Context, o opts, wantTx int64) error {
 		return err
 	}
 	var txs int64
-	db.QueryRowContext(ctx, `SELECT count(DISTINCT source * 1000000 + line / 3) FROM events`).Scan(&txs)
+	if err := db.QueryRowContext(ctx, `SELECT count(DISTINCT source * 1000000 + line / 3) FROM events`).Scan(&txs); err != nil {
+		return err
+	}
 
 	rows, err := db.QueryContext(ctx, `SELECT seq, body, prev_hash, hash FROM events ORDER BY seq`)
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 	prev := make([]byte, 32)
 	chainOK := true
+	var walked int64
 	for rows.Next() {
+		walked++
 		var seq int64
 		var body string
 		var ph, h []byte
@@ -147,9 +154,19 @@ func verifyStore(ctx context.Context, o opts, wantTx int64) error {
 		}
 		prev = h
 	}
+	// A walk cut short by an error must not read as an intact chain.
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("walk chain: %w", err)
+	}
 	rows.Close()
+	if walked != n {
+		fmt.Printf("chain walk read %d of %d events\n", walked, n)
+		chainOK = false
+	}
 	var integ string
-	db.QueryRowContext(ctx, `PRAGMA integrity_check`).Scan(&integ)
+	if err := db.QueryRowContext(ctx, `PRAGMA integrity_check`).Scan(&integ); err != nil {
+		return err
+	}
 	_, ftsErr := db.ExecContext(ctx, `INSERT INTO events_fts(events_fts, rank) VALUES('integrity-check', 1)`)
 	fmt.Printf("RESULT walverify driver=%s events=%d transactions=%d/%d seq_min=%d seq_max=%d gap_free=%v chain_ok=%v integrity=%s fts_integrity_err=%q\n",
 		o.driver, n, txs, wantTx, lo, hi, lo == 1 && hi == n, chainOK, integ, errString(ftsErr))
@@ -195,7 +212,7 @@ func cmdWALWorker(ctx context.Context, o opts) error {
 // writeTx opens its own connection per transaction, so every
 // transaction pays the open a hook process pays.
 func writeTx(ctx context.Context, o opts, evs []event) error {
-	db, err := open(o.driver, o.db)
+	db, err := open(o)
 	if err != nil {
 		return err
 	}

@@ -7,41 +7,23 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/ncruces/go-sqlite3"
-	_ "github.com/ncruces/go-sqlite3/driver"
+	"github.com/ncruces/go-sqlite3/driver"
 	"github.com/ncruces/go-sqlite3/ext/fts5"
 	_ "github.com/ncruces/go-sqlite3/vfs/adiantum"
 	_ "github.com/ncruces/go-sqlite3/vfs/xts"
 	_ "modernc.org/sqlite"
 )
 
-// ncruces ships FTS5 as a separate module linked into each
-// connection; modernc compiles it in.
-func init() {
-	sqlite3.AutoExtension(fts5.Register)
-}
-
-// driverName maps the spike's driver label to the database/sql name
-// each module registers.
-func driverName(label string) (string, error) {
-	switch label {
-	case "modernc":
-		return "sqlite", nil
-	case "ncruces":
-		return "sqlite3", nil
-	}
-
-	return "", fmt.Errorf("unknown driver %q", label)
-}
-
 // dsn builds the same URI for both drivers: WAL, NORMAL sync, a busy
 // timeout, and BEGIN IMMEDIATE for every read-write transaction, the
-// settings ADR-01 names. extra carries further _pragma values.
-func dsn(path string, extra ...string) string {
+// settings ADR-01 names. vfs names an encrypting VFS (ncruces only)
+// for the OQ-04 probe, empty for plain files. extra carries further
+// _pragma values.
+func dsn(path, vfs string, extra ...string) string {
 	q := url.Values{}
-	if encVFS != "" {
+	if vfs != "" {
 		// The key PRAGMA must run first, before the file is read.
-		q.Set("vfs", encVFS)
+		q.Set("vfs", vfs)
 		q.Add("_pragma", "hexkey('"+testKey+"')")
 	}
 	q.Add("_pragma", "busy_timeout(20000)")
@@ -55,22 +37,24 @@ func dsn(path string, extra ...string) string {
 	return "file:" + path + "?" + q.Encode()
 }
 
-// encVFS names an encrypting VFS (ncruces only) for the OQ-04
-// probe; empty opens plain files. It is set once from the -vfs flag
-// before any store opens.
-var encVFS string
-
 // testKey is the spike's fixed 256-bit key; key management is out of
 // the probe's scope (OQ-04 records it).
 const testKey = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
-func open(label, path string, extra ...string) (*sql.DB, error) {
-	name, err := driverName(label)
-	if err != nil {
-		return nil, err
+// open opens o.db with o.driver. modernc compiles FTS5 in; ncruces
+// ships it as a separate module, registered here on each connection
+// through driver.Open's init hook rather than the process-global
+// sqlite3.AutoExtension.
+func open(o opts, extra ...string) (*sql.DB, error) {
+	name := dsn(o.db, o.vfs, extra...)
+	switch o.driver {
+	case "modernc":
+		return sql.Open("sqlite", name)
+	case "ncruces":
+		return driver.Open(name, fts5.Register)
 	}
 
-	return sql.Open(name, dsn(path, extra...))
+	return nil, fmt.Errorf("unknown driver %q", o.driver)
 }
 
 // schema approximates SRS §8.2's events record and its FTS5

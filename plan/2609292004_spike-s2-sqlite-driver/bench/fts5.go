@@ -17,7 +17,7 @@ func cmdFTS5(ctx context.Context, o opts) error {
 	for _, suf := range []string{"", "-wal", "-shm"} {
 		os.Remove(o.db + suf)
 	}
-	db, err := open(o.driver, o.db)
+	db, err := open(o)
 	if err != nil {
 		return err
 	}
@@ -35,6 +35,13 @@ func cmdFTS5(ctx context.Context, o opts) error {
 		"driver benchmark: modernc versus ncruces at ten million events",
 		"Ünïcödé naïve café résumé text with diacritics",
 		"the driver the driver the driver repeated term frequency",
+		// Filler without the probe terms: BM25's IDF floors at zero
+		// for a term in half the documents or more, which would tie
+		// every bm25_order score and prove no ranking at all.
+		"compaction keeps the pinned constraints verbatim",
+		"the hook failed open and the agent continued",
+		"recall stays pull-only and every result is enveloped",
+		"payload files are content-addressed by hash",
 	}
 	tx, _ := db.BeginTx(ctx, nil)
 	a, err := newAppender(ctx, tx)
@@ -60,7 +67,8 @@ func cmdFTS5(ctx context.Context, o opts) error {
 		{"boolean_not", `driver NOT benchmark`},
 	}
 	for _, p := range probes {
-		rows, err := db.QueryContext(ctx, `SELECT rowid, round(bm25(events_fts), 3), snippet(events_fts, 0, '[', ']', '…', 6)
+		rows, err := db.QueryContext(ctx, `SELECT rowid, round(bm25(events_fts), 3), snippet(events_fts, 0, '[', ']', '…', 6),
+			highlight(events_fts, 0, '[', ']')
 			FROM events_fts WHERE events_fts MATCH ? ORDER BY rank`, p.q)
 		if err != nil {
 			fmt.Printf("RESULT fts5 driver=%s probe=%s ok=false err=%q\n", o.driver, p.name, err)
@@ -70,16 +78,28 @@ func cmdFTS5(ctx context.Context, o opts) error {
 		for rows.Next() {
 			var id int64
 			var score float64
-			var snip string
-			rows.Scan(&id, &score, &snip)
-			got = append(got, fmt.Sprintf("%d(%.3f)%s", id, score, snip))
+			var snip, hl string
+			if err = rows.Scan(&id, &score, &snip, &hl); err != nil {
+				break
+			}
+			got = append(got, fmt.Sprintf("%d(%.3f)%s{%s}", id, score, snip, hl))
+		}
+		if err == nil {
+			err = rows.Err()
 		}
 		rows.Close()
-		fmt.Printf("RESULT fts5 driver=%s probe=%s ok=true hits=%q\n", o.driver, p.name, strings.Join(got, " | "))
+		fmt.Printf("RESULT fts5 driver=%s probe=%s ok=%v err=%q hits=%q\n", o.driver, p.name, err == nil, errString(err), strings.Join(got, " | "))
 	}
-	for _, tok := range []string{"unicode61 remove_diacritics 2", "trigram", "porter unicode61"} {
-		_, err := db.ExecContext(ctx, `CREATE VIRTUAL TABLE t_`+strings.Fields(tok)[0]+` USING fts5(x, tokenize='`+tok+`')`)
-		fmt.Printf("RESULT fts5 driver=%s tokenizer=%q ok=%v err=%q\n", o.driver, tok, err == nil, errString(err))
+	// Each tokenizer is exercised, not just created: a query only that
+	// tokenizer can answer must hit the one document it targets.
+	tokenizers := []struct{ tok, q string }{
+		{"unicode61 remove_diacritics 2", `resume`},
+		{"trigram", `igrati`},
+		{"porter unicode61", `repeating`},
+	}
+	for _, t := range tokenizers {
+		hits, err := probeTokenizer(ctx, db, t.tok, t.q, docs)
+		fmt.Printf("RESULT fts5 driver=%s tokenizer=%q query=%q ok=%v hits=%d err=%q\n", o.driver, t.tok, t.q, err == nil && hits == 1, hits, errString(err))
 	}
 	_, err = db.ExecContext(ctx, `INSERT INTO events_fts(events_fts) VALUES('delete-all')`)
 	if err == nil {
@@ -101,9 +121,26 @@ func cmdFTS5(ctx context.Context, o opts) error {
 		rows.Close()
 	}
 	fmt.Printf("RESULT fts5 driver=%s compile_options=%q\n", o.driver, strings.Join(opts, ","))
-	_ = sql.ErrNoRows
 
 	return nil
+}
+
+// probeTokenizer indexes docs in a fresh FTS5 table with tokenizer tok
+// and counts the documents query q matches.
+func probeTokenizer(ctx context.Context, db *sql.DB, tok, q string, docs []string) (int64, error) {
+	table := "t_" + strings.Fields(tok)[0]
+	if _, err := db.ExecContext(ctx, `CREATE VIRTUAL TABLE `+table+` USING fts5(x, tokenize='`+tok+`')`); err != nil {
+		return 0, err
+	}
+	for _, d := range docs {
+		if _, err := db.ExecContext(ctx, `INSERT INTO `+table+`(x) VALUES(?)`, d); err != nil {
+			return 0, err
+		}
+	}
+	var n int64
+	err := db.QueryRowContext(ctx, `SELECT count(*) FROM `+table+` WHERE `+table+` MATCH ?`, q).Scan(&n)
+
+	return n, err
 }
 
 // cmdOptimize reports the FTS5 index's segment count, merges it into
@@ -111,7 +148,7 @@ func cmdFTS5(ctx context.Context, o opts) error {
 // the store's size afterwards. Bulk loading leaves many segments, and
 // every query reads each one.
 func cmdOptimize(ctx context.Context, o opts) error {
-	db, err := open(o.driver, o.db)
+	db, err := open(o)
 	if err != nil {
 		return err
 	}

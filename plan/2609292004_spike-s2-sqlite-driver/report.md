@@ -14,9 +14,11 @@ meet or miss the same targets. The import closure decides:
 - `ncruces/go-sqlite3` links neither, and it ships an encrypting VFS.
 
 ncruces is 15–25% slower at search and ingest, and that gap changes
-no target's outcome. Pure Go is fast enough at 10M events, so no CGO
-build is needed (OQ-03). The one miss, full BM25 ranking of a common
-term, is FTS5's cost model and would miss under CGO too.
+no target's outcome. No CGO build is needed (OQ-03). Both drivers
+miss the same three targets: full BM25 ranking of a common term, one
+event per commit, and store overhead. FTS5's cost model and the
+schema cause the first and last, so they would miss under CGO too.
+CGO's typical 1.5–2× would not lift one-event commits to 5,000 ev/s.
 
 ## Setup
 
@@ -29,7 +31,7 @@ term, is FTS5's cost model and would miss under CGO too.
 - Corpus: 10M events in 2,000 sessions, 4.61 GB of text. 60% are
   short messages of 40–200 bytes, 30% are 200–1,000 bytes, and 10%
   are 2 KiB payload previews. Words follow a Zipf distribution over a
-  60,000-term vocabulary of pseudo-words, identifiers, paths and
+  60,000-term vocabulary of pseudo-words, identifiers and
   numbers.
 - Connection settings for both drivers: WAL, `synchronous=NORMAL`, a
   busy timeout, and `BEGIN IMMEDIATE` (ADR-01).
@@ -78,13 +80,17 @@ admitting modernc would mean allow-listing `net` and `os/exec`.
 
 Both build statically with `CGO_ENABLED=0` for linux/amd64,
 linux/arm64 and darwin/arm64. The stripped minimal binary is 6.4 MB
-with modernc and 8.8 MB with ncruces. modernc's module graph adds
-seven modules, ncruces's three.
+with modernc and 8.8 MB with ncruces. Besides the driver itself,
+modernc links seven more modules into the binary, and ncruces three.
 
 ## Performance at 10M events
 
 Each latency figure is the p95 of 300 to 600 queries after 30 warm-up
-queries.
+queries. The runs took each percentile one rank above nearest-rank,
+so the figures are slight upper bounds. The harness now uses nearest
+rank. The ingest runs prepared both INSERT statements again in every
+transaction. That cost weighs most on the one-event-per-transaction
+row, which a store caching its statements could beat.
 
 | Target                               | Measure                            | modernc     | ncruces     | Met?     |
 | ------------------------------------ | ---------------------------------- | ----------- | ----------- | -------- |

@@ -44,9 +44,12 @@ The measurements are in the spike's
 - CGO `mattn/go-sqlite3`, already rejected by ADR-07. It breaks
   CON-02.
 - A CGO build for large deployments (OQ-03). Not needed. Pure Go
-  meets ingest, expand and hook memory at 10M events. The two misses
-  come from FTS5 and the schema, and a CGO build shares both: ranked
-  search on common terms, and store overhead.
+  meets batched ingest, expand and hook memory at 10M events. Three
+  targets miss with either driver: ranked search on common terms, one
+  event per commit (about 1,000 ev/s against 5,000), and store
+  overhead. FTS5 and the schema cause the first and last, so a CGO
+  build shares them. Its typical 1.5–2× speed-up would not close the
+  third.
 
 ## Consequences
 
@@ -61,9 +64,11 @@ The measurements are in the spike's
   bans the whole `net/` prefix, so it has to allow-list these two
   parsing packages, under review, in the change that first links the
   store into `cairn`. `net` and `os/exec` stay banned.
-- FTS5 is a separate translated module registered on each
-  connection (`ext/fts5`). The store has to register it before it
-  opens a connection.
+- FTS5 is a separate translated module (`ext/fts5`). The store
+  passes `fts5.Register` to `driver.Open`, which runs it on each new
+  connection. The process-global `sqlite3.AutoExtension` would be
+  mutable package-level state (ENG-03), and the spike harness no
+  longer uses it.
 - An interrupted query returns `sqlite3: interrupted`, not an error
   that wraps `context.DeadlineExceeded`. The store maps interrupts to
   its typed deadline error by checking `ctx.Err()` (ENG-04).
