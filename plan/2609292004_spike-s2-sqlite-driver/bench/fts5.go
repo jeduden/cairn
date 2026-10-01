@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 // cmdFTS5 probes the FTS5 features Cairn's recall relies on (ADR-05,
@@ -103,4 +104,34 @@ func cmdFTS5(ctx context.Context, o opts) error {
 	_ = sql.ErrNoRows
 
 	return nil
+}
+
+// cmdOptimize reports the FTS5 index's segment count, merges it into
+// one segment with the 'optimize' command, and reports the time and
+// the store's size afterwards. Bulk loading leaves many segments, and
+// every query reads each one.
+func cmdOptimize(ctx context.Context, o opts) error {
+	db, err := open(o.driver, o.db)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	db.SetMaxOpenConns(1)
+	segs := func() int64 {
+		var n int64
+		db.QueryRowContext(ctx, `SELECT count(DISTINCT segid) FROM events_fts_idx`).Scan(&n)
+		return n
+	}
+	before := segs()
+	t := time.Now()
+	if _, err := db.ExecContext(ctx, `INSERT INTO events_fts(events_fts) VALUES('optimize')`); err != nil {
+		return err
+	}
+	el := time.Since(t)
+	if _, err := db.ExecContext(ctx, `PRAGMA wal_checkpoint(TRUNCATE)`); err != nil {
+		return err
+	}
+	fmt.Printf("RESULT optimize driver=%s segments_before=%d segments_after=%d elapsed=%s\n", o.driver, before, segs(), el.Round(time.Second))
+
+	return reportSize(ctx, db, o)
 }

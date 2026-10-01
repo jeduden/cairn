@@ -54,6 +54,8 @@ func main() {
 		err = cmdWALWorker(ctx, o)
 	case "fts5":
 		err = cmdFTS5(ctx, o)
+	case "optimize":
+		err = cmdOptimize(ctx, o)
 	default:
 		err = fmt.Errorf("unknown command %q", cmd)
 	}

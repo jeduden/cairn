@@ -34,17 +34,19 @@ The measurements are in the spike's
 
 ## Alternatives
 
-- `modernc.org/sqlite`, the other candidate. It ties or edges ahead
-  on speed. But its C runtime, `modernc.org/libc`, links `os/exec`
-  to emulate `system()` and `popen()`, and it pulls in `net` through
+- `modernc.org/sqlite`, the other candidate. It is 15–25% faster at
+  search and ingest, a gap that changes no target's outcome. But its
+  C runtime, `modernc.org/libc`, links `os/exec` to emulate
+  `system()` and `popen()`, and it pulls in `net` through
   `github.com/google/uuid`. Admitting it means allow-listing both in
   the SEC-01 import-closure test, for code Cairn never calls. It also
   has no writable VFS API, so it offers no encryption at rest.
 - CGO `mattn/go-sqlite3`, already rejected by ADR-07. It breaks
   CON-02.
-- A CGO build for large deployments (OQ-03). Not needed: the pure-Go
-  driver meets the targets at 10M events. The one miss, ranked search
-  on common terms, is a query-design limit of FTS5 that CGO shares.
+- A CGO build for large deployments (OQ-03). Not needed. Pure Go
+  meets ingest, expand and hook memory at 10M events. The two misses
+  come from FTS5 and the schema, and a CGO build shares both: ranked
+  search on common terms, and store overhead.
 
 ## Consequences
 
