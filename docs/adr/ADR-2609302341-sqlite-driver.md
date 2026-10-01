@@ -60,7 +60,7 @@ The measurements are in the spike's
   requirements, `go-sqlite3-wasm/v6` (MIT-0 over public-domain
   SQLite), `julianday` and `golang.org/x/sys`, stay indirect. Importing
   an encrypting VFS adds `golang.org/x/crypto` as an indirect
-  dependency.
+  dependency, and `vfs/adiantum` also adds `lukechampine.com/adiantum`.
 - The driver parses `file:` URIs with `net/url`, which imports
   `net/netip`. Neither opens a socket. The import-closure test in
   [cmd/cairn/imports_test.go](../../cmd/cairn/imports_test.go)

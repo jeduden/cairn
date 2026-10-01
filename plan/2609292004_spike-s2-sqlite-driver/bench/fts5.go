@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"time"
 )
@@ -31,69 +32,15 @@ func cmdFTS5(ctx context.Context, o opts) error {
 	if err := createSchema(ctx, db); err != nil {
 		return err
 	}
-	docs := []string{
-		"the migration failed because the sqlite driver was missing FTS5",
-		"we pinned the constraint: never touch the production database",
-		"driver benchmark: modernc versus ncruces at ten million events",
-		"Ünïcödé naïve café résumé text with diacritics",
-		"the driver the driver the driver repeated term frequency",
-		// Filler without the probe terms: BM25's IDF floors at zero
-		// for a term in half the documents or more, which would tie
-		// every bm25_order score and prove no ranking at all.
-		"compaction keeps the pinned constraints verbatim",
-		"the hook failed open and the agent continued",
-		"recall stays pull-only and every result is enveloped",
-		"payload files are content-addressed by hash",
-	}
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
+	docs := fts5Docs()
+	if err := appendBodies(ctx, db, docs); err != nil {
 		return err
 	}
-	a, err := newAppender(ctx, tx)
-	if err != nil {
-		return err
-	}
-	prev := make([]byte, 32)
-	for i, d := range docs {
-		if prev, err = a.append(ctx, int64(i+1), event{session: "s", source: 1, line: int64(i), kind: "user", body: d}, prev); err != nil {
-			return err
-		}
-	}
-	a.close()
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-	probes := []struct{ name, q string }{
-		{"bm25_order", `driver`},
-		{"phrase", `"sqlite driver"`},
-		{"prefix", `bench*`},
-		{"near", `NEAR(migration FTS5, 8)`},
-		{"diacritics_folded", `cafe`},
-		{"boolean_not", `driver NOT benchmark`},
-	}
-	for _, p := range probes {
-		rows, err := db.QueryContext(ctx, `SELECT rowid, round(bm25(events_fts), 3), snippet(events_fts, 0, '[', ']', '…', 6),
-			highlight(events_fts, 0, '[', ']')
-			FROM events_fts WHERE events_fts MATCH ? ORDER BY rank`, p.q)
-		if err != nil {
-			fmt.Printf("RESULT fts5 driver=%s probe=%s ok=false err=%q\n", o.driver, p.name, err)
-			continue
-		}
-		var got []string
-		for rows.Next() {
-			var id int64
-			var score float64
-			var snip, hl string
-			if err = rows.Scan(&id, &score, &snip, &hl); err != nil {
-				break
-			}
-			got = append(got, fmt.Sprintf("%d(%.3f)%s{%s}", id, score, snip, hl))
-		}
-		if err == nil {
-			err = rows.Err()
-		}
-		rows.Close()
-		fmt.Printf("RESULT fts5 driver=%s probe=%s ok=%v err=%q hits=%q\n", o.driver, p.name, err == nil, errString(err), strings.Join(got, " | "))
+	for _, p := range fts5Probes() {
+		got, err := probeHits(ctx, db, p.q)
+		ids := hitIDs(got)
+		fmt.Printf("RESULT fts5 driver=%s probe=%s ok=%v ids=%v want=%v err=%q hits=%q\n", o.driver, p.name,
+			err == nil && slices.Equal(ids, p.want), ids, p.want, errString(err), strings.Join(hitStrings(got), " | "))
 	}
 	// Each tokenizer is exercised, not just created: a query only that
 	// tokenizer can answer must hit the one document it targets.
@@ -128,6 +75,123 @@ func cmdFTS5(ctx context.Context, o opts) error {
 	fmt.Printf("RESULT fts5 driver=%s compile_options=%q\n", o.driver, strings.Join(opts, ","))
 
 	return nil
+}
+
+// fts5Docs is the probe store's text, one event per document, seq
+// counting from 1.
+func fts5Docs() []string {
+	return []string{
+		"the migration failed because the sqlite driver was missing FTS5",
+		"we pinned the constraint: never touch the production database",
+		"driver benchmark: modernc versus ncruces at ten million events",
+		"Ünïcödé naïve café résumé text with diacritics",
+		"the driver the driver the driver repeated term frequency",
+		// Filler without the probe terms: BM25's IDF floors at zero
+		// for a term in half the documents or more, which would tie
+		// every bm25_order score and prove no ranking at all.
+		"compaction keeps the pinned constraints verbatim",
+		"the hook failed open and the agent continued",
+		"recall stays pull-only and every result is enveloped",
+		"payload files are content-addressed by hash",
+	}
+}
+
+// fts5Probe is one FTS5 query and the seqs it must return, best rank
+// first. A probe passes only on exactly those documents in that order,
+// so a driver whose FTS5 parses a query but answers it wrongly fails.
+type fts5Probe struct {
+	name, q string
+	want    []int64
+}
+
+func fts5Probes() []fts5Probe {
+	return []fts5Probe{
+		// The three-fold repeat outranks the shorter document, which
+		// outranks the longer one.
+		{"bm25_order", `driver`, []int64{5, 3, 1}},
+		{"phrase", `"sqlite driver"`, []int64{1}},
+		{"prefix", `bench*`, []int64{3}},
+		{"near", `NEAR(migration FTS5, 8)`, []int64{1}},
+		{"diacritics_folded", `cafe`, []int64{4}},
+		{"boolean_not", `driver NOT benchmark`, []int64{5, 1}},
+	}
+}
+
+// appendBodies appends one event per body in a single transaction,
+// seq counting from 1.
+func appendBodies(ctx context.Context, db *sql.DB, bodies []string) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	a, err := newAppender(ctx, tx)
+	if err != nil {
+		return err
+	}
+	defer a.close()
+	prev := make([]byte, 32)
+	for i, b := range bodies {
+		ev := event{session: "s", source: 1, line: int64(i), kind: "user", body: b}
+		if prev, err = a.append(ctx, int64(i+1), ev, prev); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+// probeHit is one row a probe query returned.
+type probeHit struct {
+	id              int64
+	score           float64
+	snippet, marked string
+}
+
+// probeHits runs q with BM25, snippet and highlight, best rank first.
+func probeHits(ctx context.Context, db *sql.DB, q string) ([]probeHit, error) {
+	rows, err := db.QueryContext(ctx, `SELECT rowid, round(bm25(events_fts), 3), snippet(events_fts, 0, '[', ']', '…', 6),
+		highlight(events_fts, 0, '[', ']')
+		FROM events_fts WHERE events_fts MATCH ? ORDER BY rank`, q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []probeHit
+	for rows.Next() {
+		var h probeHit
+		if err := rows.Scan(&h.id, &h.score, &h.snippet, &h.marked); err != nil {
+			return nil, err
+		}
+		out = append(out, h)
+	}
+
+	return out, rows.Err()
+}
+
+// probeIDs returns the seqs q matches, best rank first.
+func probeIDs(ctx context.Context, db *sql.DB, q string) ([]int64, error) {
+	hits, err := probeHits(ctx, db, q)
+
+	return hitIDs(hits), err
+}
+
+func hitIDs(hits []probeHit) []int64 {
+	ids := make([]int64, len(hits))
+	for i, h := range hits {
+		ids[i] = h.id
+	}
+
+	return ids
+}
+
+func hitStrings(hits []probeHit) []string {
+	out := make([]string, len(hits))
+	for i, h := range hits {
+		out[i] = fmt.Sprintf("%d(%.3f)%s{%s}", h.id, h.score, h.snippet, h.marked)
+	}
+
+	return out
 }
 
 // probeTokenizer indexes docs in a fresh FTS5 table with tokenizer tok

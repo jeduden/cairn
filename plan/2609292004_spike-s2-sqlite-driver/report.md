@@ -99,6 +99,12 @@ rank. The ingest runs prepared both INSERT statements again in every
 transaction. That cost weighs most on the one-event-per-transaction
 row, which a store caching its statements could beat.
 
+The ingest and hook runs drew their events from a vocabulary of their
+own, not the store's. Ingest indexed mostly new terms, and the hook's
+search matched only its own batch, so its RSS figure leaves out a
+ranked search over the store. The harness now draws appended events
+from the store's vocabulary; both rows want a rerun.
+
 | Target                               | Measure                            | modernc     | ncruces     | Met?     |
 | ------------------------------------ | ---------------------------------- | ----------- | ----------- | -------- |
 | NFR-03 search ≤ 200 ms               | BM25 over all matches, query mix   | 3.57–3.81 s | 4.22–4.32 s | no, both |

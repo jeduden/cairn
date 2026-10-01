@@ -140,8 +140,16 @@ func searchQueries(ctx context.Context, db *sql.DB, c *corpus, r *rand.Rand, n i
 	for i, w := range c.words {
 		rank[strings.ToLower(w)] = i
 	}
+	if events <= floor {
+		return nil, nil, fmt.Errorf("no events to draw queries from: window (%d, %d]", floor, events)
+	}
 	var qs, qb []string
-	for len(qs) < n {
+	// Every query lifts its anchor from a stored event; a window whose
+	// events hold no term of a band would otherwise draw forever.
+	for tries := 0; len(qs) < n; tries++ {
+		if tries >= 1000*(n+1) {
+			return nil, nil, fmt.Errorf("found %d of %d queries in %d events", len(qs), n, tries)
+		}
 		b := bands[len(qs)%len(bands)]
 		var body string
 		if err := db.QueryRowContext(ctx, `SELECT body FROM events WHERE seq = ?`, floor+1+r.Int64N(events-floor)).Scan(&body); err != nil {
@@ -175,6 +183,11 @@ func searchQueries(ctx context.Context, db *sql.DB, c *corpus, r *rand.Rand, n i
 
 // cmdSearch measures FTS5 BM25 search latency (NFR-03: p95 <= 200 ms).
 func cmdSearch(ctx context.Context, o opts) error {
+	// The bounded shape ranks the newest matches of the whole store; it
+	// takes no window, and a run naming both would report one it ignored.
+	if o.recent > 0 && o.window < defaultWindow {
+		return errors.New("-recent and -window do not combine")
+	}
 	db, err := open(o, "query_only(1)")
 	if err != nil {
 		return err
@@ -366,7 +379,7 @@ func cmdIngest(ctx context.Context, o opts) error {
 	}
 	defer db.Close()
 	db.SetMaxOpenConns(1)
-	c := newCorpus(o.seed + 1000)
+	c := newCorpusFrom(o.seed, o.seed+1000)
 	evs := make([]event, o.n)
 	for i := range evs {
 		evs[i] = c.next()
@@ -434,7 +447,7 @@ func addMeta(ctx context.Context, db *sql.DB, events, text int64) error {
 // (NFR-09: <= 50 MiB) and wall time.
 func cmdHook(ctx context.Context, o opts) error {
 	start := time.Now()
-	c := newCorpus(o.seed + 2000)
+	c := newCorpusFrom(o.seed, o.seed+2000)
 	evs := make([]event, o.batch)
 	for i := range evs {
 		evs[i] = c.next()
@@ -537,7 +550,7 @@ func cmdCancel(ctx context.Context, o opts) error {
 	// back any transaction whose BeginTx context ends, which would pass
 	// this check for every driver. Only the statement gets the deadline,
 	// so the rollback observed is the driver's and SQLite's.
-	before, _ := count(ctx, conn)
+	before, berr := count(ctx, conn)
 	tx, err := conn.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -552,9 +565,11 @@ func cmdCancel(ctx context.Context, o opts) error {
 	} else {
 		cerr = tx.Commit()
 	}
-	after, _ := count(ctx, conn)
-	fmt.Printf("RESULT cancel driver=%s query=write_tx exec_err=%q commit_err=%q rows_before=%d rows_after=%d rolled_back=%v\n",
-		o.driver, errString(werr), errString(cerr), before, after, before == after)
+	after, aerr := count(ctx, conn)
+	// A count that failed proves nothing either way.
+	fmt.Printf("RESULT cancel driver=%s query=write_tx exec_err=%q commit_err=%q count_err=%q rows_before=%d rows_after=%d rolled_back=%v\n",
+		o.driver, errString(werr), errString(cerr), errString(errors.Join(berr, aerr)), before, after,
+		berr == nil && aerr == nil && before == after)
 
 	return nil
 }

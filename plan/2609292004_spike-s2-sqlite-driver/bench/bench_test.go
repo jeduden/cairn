@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"math/rand/v2"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -101,5 +104,91 @@ func TestAddMetaFailsWithoutCounters(t *testing.T) {
 
 	if err := addMeta(ctx, db, 5, 50); err == nil {
 		t.Error("addMeta on a store without counters succeeded, want an error")
+	}
+}
+
+func TestCorpusStreamsShareTheStoreVocabulary(t *testing.T) {
+	store, stream := newCorpus(1), newCorpusFrom(1, 2001)
+
+	if !slices.Equal(store.words, stream.words) {
+		t.Error("a stream seeded apart from the store draws from another vocabulary")
+	}
+	if store.next().body == stream.next().body {
+		t.Error("a stream with its own seed repeats the store's events")
+	}
+}
+
+func TestCorpusFromItsOwnSeedIsTheStoreCorpus(t *testing.T) {
+	a, b := newCorpus(1), newCorpusFrom(1, 1)
+
+	for range 100 {
+		if ea, eb := a.next(), b.next(); ea != eb {
+			t.Fatalf("newCorpusFrom(1, 1) drew %+v, newCorpus(1) drew %+v", eb, ea)
+		}
+	}
+}
+
+func TestFTS5ProbesFindTheirDocuments(t *testing.T) {
+	for _, d := range []string{"modernc", "ncruces"} {
+		t.Run(d, func(t *testing.T) {
+			ctx := context.Background()
+			db := probeStore(t, d)
+			for _, p := range fts5Probes() {
+				got, err := probeIDs(ctx, db, p.q)
+				if err != nil || !slices.Equal(got, p.want) {
+					t.Errorf("probe %s: got %v, %v; want %v", p.name, got, err, p.want)
+				}
+			}
+		})
+	}
+}
+
+func probeStore(t *testing.T, driver string) *sql.DB {
+	t.Helper()
+	ctx := context.Background()
+	db, err := open(opts{driver: driver, db: filepath.Join(t.TempDir(), "f.db")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { db.Close() })
+	if err := createSchema(ctx, db); err != nil {
+		t.Fatal(err)
+	}
+	if err := appendBodies(ctx, db, fts5Docs()); err != nil {
+		t.Fatal(err)
+	}
+
+	return db
+}
+
+func TestSearchQueriesRefusesAnEmptyWindow(t *testing.T) {
+	db := probeStore(t, "ncruces")
+
+	_, _, err := searchQueries(context.Background(), db, newCorpus(1), rand.New(rand.NewPCG(1, 2)), 1, 9, 9)
+
+	if err == nil {
+		t.Error("searchQueries over an empty window succeeded, want an error")
+	}
+}
+
+func TestSearchQueriesGivesUpWithoutAnchorTerms(t *testing.T) {
+	ctx := context.Background()
+	db := probeStore(t, "ncruces")
+	if _, err := db.ExecContext(ctx, `UPDATE events SET body = 'zzqq'`); err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, err := searchQueries(ctx, db, newCorpus(1), rand.New(rand.NewPCG(1, 2)), 1, 0, 9)
+
+	if err == nil {
+		t.Error("searchQueries over events without corpus terms succeeded, want an error")
+	}
+}
+
+func TestSearchRefusesRecentWithWindow(t *testing.T) {
+	err := cmdSearch(context.Background(), opts{driver: "ncruces", recent: 2000, window: 10})
+
+	if err == nil {
+		t.Error("search with both -recent and -window succeeded, want an error")
 	}
 }

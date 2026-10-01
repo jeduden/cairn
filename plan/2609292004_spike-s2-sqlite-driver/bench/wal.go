@@ -178,7 +178,7 @@ func verifyStore(ctx context.Context, o opts, wantTx int64) error {
 // each allocating seq and chaining onto the tail inside BEGIN
 // IMMEDIATE.
 func cmdWALWorker(ctx context.Context, o opts) error {
-	c := newCorpus(o.seed + uint64(o.id)*7919)
+	c := newCorpusFrom(o.seed, o.seed+uint64(o.id)*7919)
 	r := rand.New(rand.NewPCG(uint64(o.id), 5))
 	var retries int
 	var lat []time.Duration

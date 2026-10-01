@@ -69,9 +69,23 @@ type corpus struct {
 	n      int64
 }
 
+// newCorpus is the store's own corpus: vocabulary and events both
+// drawn from seed.
 func newCorpus(seed uint64) *corpus {
-	r := rand.New(rand.NewPCG(seed, seed^0x9e3779b97f4a7c15))
+	return newCorpusFrom(seed, seed)
+}
+
+// newCorpusFrom draws its vocabulary from vocabSeed and its events
+// from streamSeed. Events appended to a loaded store pass the store's
+// seed as vocabSeed, so their terms are the terms the store indexed and
+// the queries drawn from that vocabulary find them. Equal seeds give
+// newCorpus's stream exactly, so the loaded store stays reproducible.
+func newCorpusFrom(vocabSeed, streamSeed uint64) *corpus {
+	r := pcg(vocabSeed)
 	words := vocab(r)
+	if streamSeed != vocabSeed {
+		r = pcg(streamSeed)
+	}
 
 	return &corpus{
 		r:      r,
@@ -79,6 +93,10 @@ func newCorpus(seed uint64) *corpus {
 		words:  words,
 		perSes: 5000,
 	}
+}
+
+func pcg(seed uint64) *rand.Rand {
+	return rand.New(rand.NewPCG(seed, seed^0x9e3779b97f4a7c15))
 }
 
 var kinds = []string{"user", "assistant", "tool_use", "tool_result", "system"}
