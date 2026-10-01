@@ -17,16 +17,16 @@ summary: >-
 
 ## Change log
 
-| Version   | Date       | Summary                                                                                                                                                    |
-| --------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0.1       | 2026-09-29 | Initial requirements                                                                                                                                       |
-| 0.2       | 2026-09-29 | Intent, invariants, concern traceability                                                                                                                   |
-| 1.0-draft | 2026-09-29 | Full rewrite: verifiable requirements, trust model, event-sourced design, assumptions register, engineering and verification plan                          |
-| 1.1-draft | 2026-09-29 | ENG-21: agents review each other's changes; the stakeholder approves requirement and gate changes                                                          |
-| 1.2-draft | 2026-09-29 | ENG-26: design decisions as ADR files; ENG-18 justifies dependencies through them                                                                          |
-| 1.3-draft | 2026-09-30 | ENG-27: every record-keeping check is proven by an injected drift in CI                                                                                    |
-| 1.4-draft | 2026-09-30 | ENG-28: agent approvals are posted by a reviewer app, through a gate the reviewing agent cannot reach                                                      |
-| 1.5-draft | 2026-10-01 | ASM-11..16 and PRV-08 from a review of sottochat's transcript parser: harness context in attachments, structure-only provenance, missing timestamps, OQ-12 |
+| Version   | Date       | Summary                                                                                                                                                                                         |
+| --------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.1       | 2026-09-29 | Initial requirements                                                                                                                                                                            |
+| 0.2       | 2026-09-29 | Intent, invariants, concern traceability                                                                                                                                                        |
+| 1.0-draft | 2026-09-29 | Full rewrite: verifiable requirements, trust model, event-sourced design, assumptions register, engineering and verification plan                                                               |
+| 1.1-draft | 2026-09-29 | ENG-21: agents review each other's changes; the stakeholder approves requirement and gate changes                                                                                               |
+| 1.2-draft | 2026-09-29 | ENG-26: design decisions as ADR files; ENG-18 justifies dependencies through them                                                                                                               |
+| 1.3-draft | 2026-09-30 | ENG-27: every record-keeping check is proven by an injected drift in CI                                                                                                                         |
+| 1.4-draft | 2026-09-30 | ENG-28: agent approvals are posted by a reviewer app, through a gate the reviewing agent cannot reach                                                                                           |
+| 1.5-draft | 2026-10-01 | ASM-11..16 and PRV-08 from a review of sottochat's transcript parser: harness context in attachments, structure-only provenance, missing timestamps, a closed kernel allow-list (CMP-03), OQ-12 |
 
 ## How to read this document
 

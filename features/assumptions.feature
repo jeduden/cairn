@@ -149,5 +149,4 @@ Feature: Assumptions register (ASM)
   Scenario: how working directories map to project directories is recorded (S3)
     Given a recorded "~/.claude/projects" tree for Claude Code "supported" after one session in each of "/w/my_app", "/w/my.app" and "/w/my-app"
     When the transcript discovery walks the tree
-    Then the recording shows whether the three sessions share the project directory "-w-my-app"
-    And the observed behaviour is written into the OQ-12 recommendation
+    Then the three sessions share the project directory "-w-my-app"

@@ -131,9 +131,9 @@ Feature: Record (REC)
     And line 12 of "main-session" carries no timestamp
     When the operator runs "cairn ingest --all"
     Then the events of "main-session" have seq in the order of their source lines
-    And each event keeps its source timestamp as metadata
+    And each event whose line carries a timestamp keeps it as metadata
     And the event of line 12 carries no source timestamp
-    And a second fresh home that ingests "main-session" holds the same chain head hash
+    And a second fresh home with the same tenant salt that ingests "main-session" holds the same chain head hash
     And "cairn expand" returns line 10 before line 11
 
   @REC-13 @P1 @I9 @pending

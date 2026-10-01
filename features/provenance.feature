@@ -148,3 +148,5 @@ Feature: Provenance and trust (PRV)
       | an "mcp_instructions_delta" attachment from the MCP server "docs"               | mcp:docs         | untrusted |
       | a "skill_listing" attachment                                                    | harness_text     | untrusted |
       | a Bash tool_result whose output contains "<system-reminder>"                    | tool_result:Bash | untrusted |
+      | an "ai-title" record holding a session title                                    | harness_text     | untrusted |
+      | a "last-prompt" record repeating a typed prompt                                 | harness_text     | untrusted |
