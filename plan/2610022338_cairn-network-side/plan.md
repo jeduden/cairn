@@ -1,17 +1,17 @@
 ---
 id: 2610022338
-title: "Build Cairn's network side: sync agent, relay and public host"
+title: "Build Cairn's network side: sync, relay, lane server and public host"
 status: "🔲"
 summary: >-
-  Builds the processes that move session records between machines:
-  a sync agent per host, a relay server for real-time fan-out, and a
-  host for public sessions. Each runs apart from the core binary, so
+  Builds the processes that move lane records between machines and
+  people: a sync agent per host, a relay for real-time fan-out, a lane
+  server with live chat and result views, and a public host. Each runs apart from the core binary, so
   the core still never opens a socket (I4), and everything they carry
   reaches the model only as untrusted, pull-only recall (I2).
 model: sonnet
 depends-on: [2610012322]
 ---
-# Build Cairn's network side: sync agent, relay and public host
+# Build Cairn's network side: sync, relay, lane server and public host
 
 ## Goal
 
@@ -37,6 +37,8 @@ opens a socket. The network components are separate binaries:
 - `cairn-relay`, the server: stores and fans out signed segments and
   checkpoints, and never sees a plaintext payload when the origin
   encrypts;
+- a lane server: live chat, presence and result views for each lane,
+  behind a web interface; the live pull request;
 - a public host: serves reviewed, signed session bundles read-only.
 
 A compromised network component can only deliver bytes. The core
@@ -76,6 +78,10 @@ dependency needs an ADR (ENG-18).
    signed bundles, read-only serving, import as untrusted
 5. Git as a second carrier: one ref per writer for open-source
    projects, after the relay is proven
+6. Lane server and web interface: live chat in a lane, presence,
+   several agents and humans per lane, and interactive result views
+   for test runs, benchmarks and diffs. Messages from anyone but the
+   lane owner reach agents as untrusted, enveloped data
 
 ## Execution
 

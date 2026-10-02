@@ -19,6 +19,13 @@ separate worktrees, in ephemeral cloud sandboxes, on several machines,
 in open source, and in real time. Turn the decision into SRS changes
 the stakeholder approves before M1 builds the store.
 
+The stakeholder's answer is the lane. A lane is a branch, its
+worktrees, its agents and humans, and their conversations and results.
+That is a pull request in all but its interface, so Cairn holds the
+lane as one record: the conversation and the code changes in one
+order, never two histories joined by a link. Git stays where code
+lands. The record is what a live, multiplayer pull request reads.
+
 ## Context
 
 For one agent on one machine, Claude can already grep its own
@@ -39,6 +46,14 @@ fleet, which is the stakeholder's own workflow:
 Shared memory between agents is a prompt-injection network unless
 provenance and trust travel with every event. That makes the security
 model the product rather than a feature.
+
+Linking sessions to commits drifts. The research found trailers lost
+(3 of 24 Copilot agent commits kept theirs), notes refs clobbered and
+links broken by squash. So the record carries the edits themselves:
+patches from tool calls, checkpoints of the worktree and landed commit
+ids, in the same order as the messages. A lane also admits humans and
+other agents. Only the lane owner's messages are trusted input; every
+other participant's reach an agent enveloped and untrusted (I2).
 
 Spike S2 ([plan 2609292004](../2609292004_spike-s2-sqlite-driver/plan.md))
 chose the SQLite driver for a single-node store. It also showed
@@ -81,7 +96,9 @@ because it builds the store's identity model.
 ## Tasks
 
 1. Proving slice: a scope proposal, and a prototype that rebuilds the
-   same index from two origins' segments in any order
+   same index from two origins' segments in any order. The proposal
+   defines the lane: its identity, edits as events, and the owner's
+   trust model for messages from other participants
 2. The proposed SRS changes in their own pull request: goals and
    non-goals, deployment context, invariants restated for many nodes,
    the identity model, and new ADRs for the record/index split
