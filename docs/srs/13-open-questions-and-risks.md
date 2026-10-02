@@ -1,7 +1,7 @@
 ---
 title: "13. Open questions and risks"
 summary: >-
-  Open questions OQ-01..11 with their resolution path, and the risk
+  Open questions OQ-01..12 with their resolution path, and the risk
   register with mitigations.
 ---
 # 13. Open questions and risks
@@ -21,6 +21,7 @@ summary: >-
 | OQ-09 | Project license: Apache-2.0 proposed for its patent grant.                                                                                                                                                                                                                                                                                                        | Product owner                                                                                                                                                                                                                                                |
 | OQ-10 | Starlark or Python as the default kernel language.                                                                                                                                                                                                                                                                                                                | S5                                                                                                                                                                                                                                                           |
 | OQ-11 | Should recall-log events (RCL-07) be excluded from `search` by default to avoid recall results echoing earlier queries?                                                                                                                                                                                                                                           | M1                                                                                                                                                                                                                                                           |
+| OQ-12 | If distinct working directories share one project directory (ASM-16), should a project be keyed by its transcript directory and its `cwd`, or should `cairn doctor` warn when one directory holds several `cwd` values? Splitting keeps RCL-05's project boundary between repositories.                                                                           | S3, then M1                                                                                                                                                                                                                                                  |
 
 ## 13.2 Risks
 

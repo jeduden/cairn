@@ -65,3 +65,15 @@ Every concern raised during research and review, mapped to Cairn's response.
 | D2  | Short hook budgets (`SessionEnd` ≈ 1.5 s)                              | Internal deadlines and work markers; crash-safe store                                          | NFR-01, NFR-02, NFR-07 |
 | D3  | Runner state must survive pause and resume                             | Home on durable volumes; verified in S4                                                        | §2.2, S4               |
 | D4  | Installation on runners without touching managed policy                | Plugin or runner-image installation; managed settings respected                                | ADM-01, ADM-03         |
+
+## E. Prior art: sottochat's transcript parser
+
+| #   | Concern                                                                                                              | Cairn's response                                                                     | Requirements           |
+| --- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------- |
+| E1  | Context the harness adds, CLAUDE.md included, is written as attachment records whose rendered role can be `user`     | Provenance from structure, never from the rendered role; repository files are `file` | ASM-11, PRV-08         |
+| E2  | Most `type: "user"` lines hold tool results, harness metadata or command output, not text the person typed           | Only typed text is `user`; everything else takes its own class                       | PRV-08, LMK-01         |
+| E3  | Markers such as `<system-reminder>` also appear inside tool output, where anyone controlling the tool can write them | Text markers may lower trust and never raise it                                      | PRV-08                 |
+| E4  | A tool result is stored twice on its line, and its call may have been ingested in an earlier run                     | Redaction covers every field; the tool is resolved from the stored record            | ASM-13, SEC-08, PRV-08 |
+| E5  | Some lines carry no timestamp; filling one from the clock makes two ingests of one transcript disagree               | No stand-in timestamp; the hash chain stays reproducible                             | ASM-14, REC-12, REC-10 |
+| E6  | A deny-list of interpreter features admits whatever a new release adds                                               | The kernel's predeclared names are a closed set                                      | CMP-03                 |
+| E7  | Distinct working directories may share one project directory                                                         | Recorded as an assumption to verify; project key left open                           | ASM-16, OQ-12          |

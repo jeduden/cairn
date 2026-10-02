@@ -31,6 +31,8 @@ Feature: Compute kernel (CMP)
     When Claude calls the MCP tool "kernel_exec" with code "hits = cairn.search(query='migration'); print(type(hits), hits[0]['seq'])"
     Then the printed output names a list and an integer seq
     And the built-ins "cairn.expand", "cairn.get", "cairn.landmarks", "json", "re", "math" and "time" are callable
+    And every global name the kernel exposes, the interpreter's universal built-ins included, is on the kernel's allow-list
+    And a built-in added to the interpreter's universe is unavailable to kernel code
     And the record holds the same number of events as before the execution
 
   @CMP-04 @P1 @I4 @pending

@@ -12,7 +12,7 @@ summary: >-
 | ----- | ---------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------------------------- |
 | S1    | Exact hook payloads, output handling, and budgets, including subagent compaction                                       | ASM-01, 02, 06, 10   | Recorded fixtures for every hook; written contract |
 | S2    | Which pure-Go SQLite driver meets FTS5, cancellation, WAL concurrency, encryption, and performance needs at 10M events | ADR-07, OQ-03, OQ-04 | Benchmark report and driver decision               |
-| S3    | Transcript formats: main, subagent, rewrites, deletion after cleanup                                                   | ASM-03, 04, 05       | Parser fixtures covering all observed variants     |
+| S3    | Transcript formats: main, subagent, rewrites, deletion after cleanup                                                   | ASM-03..05, 11..16   | Parser fixtures covering all observed variants     |
 | S4    | Plugin distribution on workstations, runner images, and the Agent SDK                                                  | ASM-07, 08           | Working install on each target                     |
 | S5    | Claude's success rate writing Starlark versus Python on 30 aggregation tasks                                           | ADR-04, OQ-10        | Go/no-go on Starlark default                       |
 | S6    | Can compaction be deferred via `PreCompact`, and what happens at a full window                                         | ASM-09, OQ-01        | Documented behaviour and recommendation            |
