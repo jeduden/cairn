@@ -34,3 +34,6 @@ from.
   platforms that combine git, chat and encryption, git interfaces
   over custom storage, chat protocols and their deletion semantics,
   and crypto-shredding in law and practice.
+- [Agent session storage sweep](notes/agent-session-storage-sweep/):
+  the catalog of 308 systems, with storage-pattern counts, cross-cutting
+  findings and lessons, plus every fact sheet in `sheets.json`.
