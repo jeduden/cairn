@@ -56,6 +56,10 @@ Each origin (node and session) writes only its own log, so there are
 no write conflicts and no CRDT. Sync, publishing and sandbox
 persistence all become moving segments.
 
+The evidence for this plan is in [research](../../research/README.md).
+Its merged report argues that Cairn should own the record and let git
+carry copies, and that code should stay on git.
+
 What was searched and weighed:
 
 - Replicated SQLite. Litestream ships one writer to replicas only.
