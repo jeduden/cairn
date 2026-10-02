@@ -38,8 +38,25 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          # The spike harnesses below download their own drivers; hash
+          # their go.sum too, or a cache hit on cairn's go.sum leaves
+          # them out and they download again on every run.
+          cache-dependency-path: |
+            go.sum
+            plan/*/bench/go.sum
       - run: go build ./...
       - run: go vet ./...
+      # A spike's benchmark harness is its own module, so `./...` skips
+      # it and its drivers stay out of cairn's module graph. Vet and
+      # test each one here, so the evidence behind a decision keeps
+      # building.
+      - name: Vet and test spike harnesses
+        shell: bash
+        run: |
+          shopt -s nullglob
+          for mod in plan/*/bench/go.mod; do
+            (cd "$(dirname "$mod")" && go vet ./... && go test ./...)
+          done
       # ENG-09: every test under the race detector. One profile from
       # every test — the unit tests and the godog scenarios alike;
       # -coverpkg=./... attributes a hit to the package whose code ran,
