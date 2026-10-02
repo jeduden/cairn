@@ -6,7 +6,7 @@ summary: >-
   The append-only record, provenance and trust, pull-only recall
   over MCP, and the security and operations floor under them.
 model: opus
-depends-on: [2609292003, 2609292004, 2609292005, 2609292009, 2609292010, 2609292011]
+depends-on: [2609292003, 2609292004, 2609292005, 2609292009, 2609292010, 2609292011, 2610012322]
 ---
 # M1: record and recall
 
@@ -22,6 +22,24 @@ Milestone M1 of [docs/srs/12-delivery-plan.md](../docs/srs/12-delivery-
 plan.md). Scope: REC P0, PRV P0, RCL P0, SEC-01 to SEC-08, SEC-12,
 SEC-16, SEC-18, OPS-01 to OPS-03, and ADM-04, ADM-05, ADM-09 and ADM-11.
 Split into phases when started.
+
+Spike S2 chose `github.com/ncruces/go-sqlite3`
+([report](2609292004_spike-s2-sqlite-driver/report.md)). It leaves
+four things for M1:
+
+- Task 1 adds the module to `go.mod` and flips
+  [ADR-2609302341](../docs/adr/ADR-2609302341-sqlite-driver.md) to
+  `accepted` in the same change.
+- That change also allow-lists `net/url` and `net/netip`, the
+  driver's URI parsers, in the SEC-01 import test. FTS5 is registered
+  on every connection.
+- Task 6 bounds BM25 ranking. Full ranking of a common term at 10M
+  events takes seconds, far over NFR-03's 200 ms. Ranking only the
+  newest 2,000 matches still reaches 268–299 ms p95 on emulated
+  reference hardware.
+- Task 2's ingestion commits a hook's events together. 100 events per commit
+  met NFR-04 over 1M events (10–13k events per second), while one
+  event per commit ranged from 0.7k to 4.2k.
 
 ## Tasks
 
