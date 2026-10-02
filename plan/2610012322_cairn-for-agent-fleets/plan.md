@@ -8,7 +8,7 @@ summary: >-
   in real time. Splits the record (per-origin log segments) from the
   index (SQLite), and ends in proposed SRS changes M1 builds on.
 model: opus
-depends-on: []
+depends-on: [2609292004]
 ---
 # Scope Cairn for agent fleets: shared, real-time, public sessions
 
@@ -132,5 +132,6 @@ footer: |
   byte-identical index, and foreign events stay untrusted
 - [ ] The SRS changes are proposed in a separate pull request
 - [ ] M1 is re-planned on the approved identity model
-- [ ] All tests pass: `go test ./...`
+- [ ] All tests pass: `go test ./...` at the root and in the
+  prototype's own module
 - [ ] `mdsmith check .` is clean
