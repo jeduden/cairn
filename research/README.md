@@ -13,6 +13,9 @@ from.
 - [Git as agent session storage](reports/git-as-agent-session-storage.md):
   20 systems compared on storing sessions in git, with twelve design
   rules.
+- [Custom storage, git and chat interfaces](reports/custom-storage-git-and-chat-interfaces.md):
+  Cairn owns the record and its keys. Git and chat are opt-in views
+  outside the shipped binary, and shredding works by destroying keys.
 - [Interesting ideas digest](reports/interesting-ideas-digest.md):
   the top ideas from a sweep of about 175 systems.
 
