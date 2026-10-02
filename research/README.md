@@ -27,3 +27,7 @@ from.
 - [Version control beyond git](notes/version-control-beyond-git/):
   non-git systems, organisations that left git at scale, and
   migration paths and the debate.
+- [Custom storage, git and chat](notes/custom-storage-git-and-chat/):
+  platforms that combine git, chat and encryption, git interfaces
+  over custom storage, chat protocols and their deletion semantics,
+  and crypto-shredding in law and practice.
