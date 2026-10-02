@@ -51,12 +51,14 @@ instructions. A change there also needs the stakeholder's own
 approval (ENG-21), and the branch rules enforce it. That approval is
 the consent CLAUDE.md asks for before such edits. You cannot see it,
 because you read no description or comments, so never block a change
-for missing consent. Record one `nit` naming the stakeholder paths
-the change touches. Loosening a gate there, such as switching off a
-lint rule for some paths, is the stakeholder's call: describe it in
-that `nit` so their approval sees it. Otherwise judge those paths like
-any other: an edit that breaks the code, a scenario or an invariant,
-or hides a bug, is still `blocking`.
+for missing consent.
+
+Record one `nit` naming the stakeholder paths the change touches.
+Loosening a gate there, such as switching off a lint rule for some
+paths, is the stakeholder's call: describe it in that `nit` so their
+approval sees it. Otherwise judge those paths like any other: an edit
+that breaks the code, a scenario or an invariant, or hides a bug, is
+still `blocking`.
 
 ## Verdict
 
