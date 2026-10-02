@@ -37,3 +37,7 @@ from.
 - [Agent session storage sweep](notes/agent-session-storage-sweep/):
   the catalog of 308 systems, with storage-pattern counts, cross-cutting
   findings and lessons, plus every fact sheet in `sheets.json`.
+- [Live-PR pitch review](notes/live-pr-pitch-review/): a blind
+  adversarial review of the "live pull request" pitch in three lenses:
+  missing process, existing products, and inconsistencies with the
+  contract and the evidence.

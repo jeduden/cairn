@@ -23,8 +23,11 @@ The stakeholder's answer is the lane. A lane is a branch, its
 worktrees, its agents and humans, and their conversations and results.
 That is a pull request in all but its interface, so Cairn holds the
 lane as one record: the conversation and the code changes in one
-order, never two histories joined by a link. Git stays where code
-lands. The record is what a live, multiplayer pull request reads.
+order. Git stays where code lands, and landing makes a second history.
+Squash, rebase and edits on the forge then break any stored link, so
+the lane derives its link to landed commits from the record, and says
+"not proven" when it cannot. The record is what a live, multiplayer
+pull request reads.
 
 ## Context
 
@@ -51,9 +54,13 @@ Linking sessions to commits drifts. The research found trailers lost
 (3 of 24 Copilot agent commits kept theirs), notes refs clobbered and
 links broken by squash. So the record carries the edits themselves:
 patches from tool calls, checkpoints of the worktree and landed commit
-ids, in the same order as the messages. A lane also admits humans and
-other agents. Only the lane owner's messages are trusted input; every
-other participant's reach an agent enveloped and untrusted (I2).
+ids, in the same order as the messages. Edits made outside the
+agent's tool calls, by a person, a formatter or a shell, reach the
+record only through worktree checkpoints. A lane also admits humans
+and other agents. Their messages reach an agent enveloped and
+untrusted (I2). Even the owner is trusted only through their own local
+session, or a key the lane server never holds; in automation mode
+(PRV-04) not even the owner's prompts are trusted.
 
 Spike S2 ([plan 2609292004](../2609292004_spike-s2-sqlite-driver/plan.md))
 chose the SQLite driver for a single-node store. It also showed
@@ -98,7 +105,12 @@ because it builds the store's identity model.
 1. Proving slice: a scope proposal, and a prototype that rebuilds the
    same index from two origins' segments in any order. The proposal
    defines the lane: its identity, edits as events, and the owner's
-   trust model for messages from other participants
+   trust model for messages from other participants. It also defines
+   the process a pull request runs: the merge gate and who approves,
+   identities and permissions for agents and humans, the landing path
+   through squash, rebase and merge queues, and how a lane coexists
+   with the forge's review, checks and bots. It decides whether the
+   network side changes I4 or ships as a separate product
 2. The proposed SRS changes in their own pull request: goals and
    non-goals, deployment context, invariants restated for many nodes,
    the identity model, and new ADRs for the record/index split

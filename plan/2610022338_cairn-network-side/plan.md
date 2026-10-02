@@ -28,9 +28,15 @@ left the relay and public bundles as unplanned spikes. Real-time
 sharing across machines needs a server, so this plan builds one rather
 than leaving it to a third party.
 
-I4 is about the core binary, not the project. The core holds the
-record, runs the hooks and builds what reaches the model, and it never
-opens a socket. The network components are separate binaries:
+The contract rules these components out today. I4 says Cairn never
+talks to the network, SEC-01 bans sockets in every shipped binary,
+CON-04 bans network access in any binary with P0 features, and NG4 and
+NG5 put shared stores and a graphical interface out of v1. Building
+them therefore needs one of two decisions, made in plan 2610012322's
+SRS change: narrow I4 to the core that feeds the model, through a
+security review and a new major version, or ship the network side as
+a separate product with its own contract. Either way the core keeps
+no socket. The network components are separate binaries:
 
 - `cairn-sync`, one per host: pushes the host's sealed segments and
   pulls others' into the local inbox the core imports from;
