@@ -68,4 +68,5 @@ empty: |
 | 2609292156 | 🔳     | sonnet | [The repository's knowledge follows Cairn's layers](plan/2609292156_knowledge-follows-cairn-layers/plan.md)        |
 | 2609301942 | ✅     | sonnet | [Agent review through the reviewer app](plan/2609301942_agent-review-app/plan.md)                                  |
 | 2610012322 | 🔲     | opus   | [Scope Cairn for agent fleets: shared, real-time, public sessions](plan/2610012322_cairn-for-agent-fleets/plan.md) |
+| 2610022338 | 🔲     | sonnet | [Build Cairn's network side: sync agent, relay and public host](plan/2610022338_cairn-network-side/plan.md)        |
 <?/catalog?>
