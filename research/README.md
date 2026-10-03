@@ -37,6 +37,8 @@ from.
 - [Agent session storage sweep](notes/agent-session-storage-sweep/):
   the catalog of 308 systems, with storage-pattern counts, cross-cutting
   findings and lessons, plus every fact sheet in `sheets.json`.
+- [T3 Code](notes/t3code/t3code.md): a local GUI over coding agents,
+  event sourced in SQLite, compared with Cairn's lane view.
 - [Live-PR pitch review](notes/live-pr-pitch-review/): a blind
   adversarial review of the "live pull request" pitch in three lenses:
   missing process, existing products, and inconsistencies with the
