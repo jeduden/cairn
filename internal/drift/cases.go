@@ -200,6 +200,22 @@ func gateCases() []Case {
 			Want:  "Not equal",
 		},
 		{
+			Name:   "a requirement serving no persona",
+			Guards: "TestAppendixCCoversEveryRequirement",
+			Edit: Edit{Op: Replace, File: "docs/srs/appendix-c-persona-coverage.md",
+				Old: "SEC-17, ENG-29", New: "SEC-17, ENG-99"},
+			Check: GoTest("./internal/srs", "TestAppendixCCoversEveryRequirement"),
+			Want:  "ENG-29 serves no persona in Appendix C",
+		},
+		{
+			Name:   "a persona agent with no persona",
+			Guards: "TestPersonasMatchTheAgents",
+			Edit: Edit{Op: Copy, File: ".claude/agents/persona-agent.md",
+				New: ".claude/agents/persona-stray.md"},
+			Check: GoTest("./internal/srs", "TestPersonasMatchTheAgents"),
+			Want:  "persona-stray",
+		},
+		{
 			Name:   "an ADR edited without regenerating DEPENDENCIES.md",
 			Guards: "mdsmith check",
 			Edit: Edit{Op: Replace, File: testStack,

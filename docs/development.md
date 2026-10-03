@@ -41,8 +41,8 @@ the module graph that ENG-18 counts.
 ## The executable requirement matrix
 
 The SRS under [docs/srs](srs/index.md) is executable. Every
-requirement row — `REC-01` through `ENG-28`, plus the assumptions
-`ASM-01` to `ASM-10` — has exactly one Gherkin scenario under
+requirement row, from `REC-01` to `ENG-29`, and every
+assumption `ASM-` row, has exactly one Gherkin scenario under
 `features/`, one file per SRS section. The scenario carries the row's
 id, its priority and its traced invariants as tags:
 
@@ -56,7 +56,8 @@ two sides in step. A requirement with no scenario fails it. So does a
 scenario naming no requirement, an id tagged twice, or a priority or
 invariant tag that disagrees with the row. `internal/srs` also checks
 that Appendix B's invariant coverage and requirement counts match the
-tables they summarise.
+tables they summarise, that Appendix C gives every requirement a
+persona, and that §2.5's personas match the agents in `.claude/agents`.
 
 A scenario still tagged `@pending` is declared but not written. It
 is skipped and reported as such, never counted as a pass. godog runs
