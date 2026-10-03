@@ -6,14 +6,14 @@ Feature: Peer network (PEER)
   implements the requirement lands.
 
   @PEER-01 @P2 @I4 @I9 @pending
-  Scenario: peering runs only in the separate cairn-peer binary, started by the tenant
+  Scenario: peering runs only in its own cairn peer component, started by the tenant
     Given an isolated Cairn home
     And an ephemeral sandbox whose environment carries the tenant's write-once peering setting
     When the sandbox starts and the core runs its hooks and "cairn status --json"
-    Then the core neither links nor starts "cairn-peer"
-    And the sandbox's own entrypoint starts "cairn-peer" on the strength of the tenant's setting
-    And on a home with no such tenant action "cairn-peer" stays off
-    And with "cairn-peer" absent or stopped the core behaves exactly as in standalone
+    Then no core process starts "cairn peer", in-process or as a child
+    And the sandbox's own entrypoint starts "cairn peer" on the strength of the tenant's setting
+    And on a home with no such tenant action "cairn peer" stays off
+    And with "cairn peer" absent or stopped the core behaves exactly as in standalone
 
   @PEER-02 @P2 @I4 @pending
   Scenario: a peer holds complete lane copies and serves them only to the lane's members
@@ -82,7 +82,7 @@ Feature: Peer network (PEER)
     Given an isolated Cairn home
     And the owner opted in to the git carrier with their own remote
     And no peer is reachable
-    When "cairn-publish" carries the sealed segments of lane "l-1"
+    When "cairn publish" carries the sealed segments of lane "l-1"
     Then each writer's segments go to one ref under "refs/cairn/" on the owner's remote
     And each segment is encrypted to the enrolled keys of the lane's members
     And a reader of the remote sees only ref names, sizes and times, and the carrier says so

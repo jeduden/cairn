@@ -61,14 +61,14 @@ requirements are re-planned.
 
 ## 2.4 Constraints
 
-| ID     | Constraint                                                                                                                                                                                                      |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CON-01 | Implementation language is Go.                                                                                                                                                                                  |
-| CON-02 | Every Cairn binary (`cairn`, `cairn-ui`, `cairn-run`, `cairn-peer`, `cairn-publish`, `cairn-bridge`) ships statically linked (`CGO_ENABLED=0`) for linux/amd64, linux/arm64, darwin/arm64.                      |
-| CON-03 | No runtime dependency on Python, Node.js, or a database server for any P0 feature.                                                                                                                              |
-| CON-04 | No network access, at build-verified level, in the core binary `cairn`. Every other binary is confined, at build-verified level, to the one boundary the register assigns it (SEC-19, ENG-12).                  |
-| CON-05 | The record is append-only, one log per writer, held in sealed segments. Derived state is rebuilt from the segments a node holds. Payloads live in a keyed store. Formats and storage engines are chosen by ADR. |
-| CON-06 | No feature at any boundary may depend on a central or third-party service. Every node can serve what it holds, and self-hosting is the normal case.                                                             |
+| ID     | Constraint                                                                                                                                                                                                                                                         |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CON-01 | Implementation language is Go.                                                                                                                                                                                                                                     |
+| CON-02 | Cairn ships as one binary, `cairn`, whose components (the core, `cairn ui`, `cairn run`, `cairn peer`, `cairn publish`, `cairn bridge`) are its entry points, statically linked (`CGO_ENABLED=0`) for linux/amd64, linux/arm64, darwin/arm64.                      |
+| CON-03 | No runtime dependency on Python, Node.js, or a database server for any P0 feature.                                                                                                                                                                                 |
+| CON-04 | No network access, at build-verified level, in the core component. Every other component is confined, at build-verified level, to the one boundary the register assigns it, whether or not it shares an executable with the core (SEC-01, SEC-19, ENG-12, ENG-16). |
+| CON-05 | The record is append-only, one log per writer, held in sealed segments. Derived state is rebuilt from the segments a node holds. Payloads live in a keyed store. Formats and storage engines are chosen by ADR.                                                    |
+| CON-06 | No feature at any boundary may depend on a central or third-party service. Every node can serve what it holds, and self-hosting is the normal case.                                                                                                                |
 
 ## 2.5 Personas
 

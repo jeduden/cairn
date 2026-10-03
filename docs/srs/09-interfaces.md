@@ -135,7 +135,7 @@ compaction summaries.
 | `cairn catchup [--since <boundary>]`                                                      | Catch up                                                                                                |
 | `cairn search`                                                                            | operator search over every lane (VIEW-09)                                                               |
 | `cairn why <file>:<line>` · `cairn why commit <sha>`                                      | hunk and landed-link chain                                                                              |
-| `cairn open <address>`                                                                    | print the link a running `cairn-ui` opens at that address; opens nothing itself                         |
+| `cairn open <address>`                                                                    | print the link a running `cairn ui` opens at that address; opens nothing itself                         |
 | `cairn verify [--lane L]` · `cairn receipt make\|check`                                   | integrity and receipts                                                                                  |
 | `cairn project show\|bind`                                                                | project identity (LANE-02)                                                                              |
 | `cairn approve\|request-changes\|land <lane>` (P2)                                        | lane verdicts and landing                                                                               |
@@ -143,9 +143,9 @@ compaction summaries.
 | `cairn export --bundle\|--report\|--trusted-only` · `cairn import <file\|ref>`            | bundles; export is an owner act under SEC-26                                                            |
 | `cairn reject <lane>`                                                                     | reject a foreign lane with a reason (LANE-15)                                                           |
 | `cairn purge --writer\|--actor\|…`                                                        | purge (ADM-07, ADM-14)                                                                                  |
-| `cairn-ui [--print] [--device phone]`                                                     | lane view server                                                                                        |
-| `cairn-run -- <harness>`                                                                  | launcher                                                                                                |
-| `cairn-peer on\|off\|invite\|enroll\|revoke\|token\|status` (P2)                          | peering                                                                                                 |
+| `cairn ui [--print] [--device phone]`                                                     | lane view server                                                                                        |
+| `cairn run -- <harness>`                                                                  | launcher                                                                                                |
+| `cairn peer on\|off\|invite\|enroll\|revoke\|token\|status` (P2)                          | peering                                                                                                 |
 
 The verbs added in 2.0 come from plan 2610012322's proposal; every verb
 that writes an owner act passes OWN-12, and read-only verbs do not.

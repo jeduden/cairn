@@ -22,10 +22,10 @@ Feature: Owner acts (OWN)
 
     Examples:
       | surface                      | outcome                                                      |
-      | cairn-ui under SEC-20        | recorded as an operator event covered by its writer's seal   |
+      | cairn ui under SEC-20        | recorded as an operator event covered by its writer's seal   |
       | the CLI under OWN-12         | recorded as an operator event covered by its writer's seal   |
       | the harness's own prompt     | recorded as user or a harness_meta outcome, not an owner act |
-      | the terminal cairn-run hosts | recorded as user or a harness_meta outcome, not an owner act |
+      | the terminal cairn run hosts | recorded as user or a harness_meta outcome, not an owner act |
       | any other surface            | refused and audited                                          |
 
   @OWN-03 @P1 @I2 @pending
@@ -173,7 +173,7 @@ Feature: Owner acts (OWN)
     Given an isolated Cairn home
     And Claude Code installed through plain hooks
     When the operator runs "cairn install"
-    Then it offers, as a shown diff, an opt-in routing every harness launch through cairn-run
+    Then it offers, as a shown diff, an opt-in routing every harness launch through cairn run
     And it states the controls the installed path lacks, including mid-turn steer, interrupt, stop and terminal takeover
     And each such control is shown unavailable with its reason and the launch path that offers it
     And no such control is simulated
@@ -183,7 +183,7 @@ Feature: Owner acts (OWN)
     Given an isolated Cairn home
     And a phone credential minted by a widening owner act
     When the phone tries to allow a held permission request for the whole session
-    Then cairn-ui refuses it on the server
+    Then cairn ui refuses it on the server
     And the phone can only read, allow once and deny held permission requests
     And where an authenticator is required each allow carries the phone's own assertion bound to that answer
 
@@ -203,15 +203,15 @@ Feature: Owner acts (OWN)
     When the person confirms the command for a witness run
     Then the person was shown its exact text with hidden characters visible before confirming
     And the act is recorded as theirs
-    And the witness run executes only through cairn-run, outside any agent context, on a fresh checkout of the exact commit, with network and the user's home denied
+    And the witness run executes only through cairn run, outside any agent context, on a fresh checkout of the exact commit, with network and the user's home denied
     And its command, exit status and tree hash are recorded
 
   @OWN-19 @P1 @I1 @I4 @pending
   Scenario: terminal takeover stays local and no-echo input is not stored
     Given an isolated Cairn home
-    And a harness hosted by cairn-run on this machine
+    And a harness hosted by cairn run on this machine
     When the owner takes over its terminal and types at a no-echo prompt
-    Then the takeover runs only in cairn-run on the harness's machine
+    Then the takeover runs only in cairn run on the harness's machine
     And the no-echo input is not stored
     And no takeover from another machine is offered
 
@@ -254,7 +254,7 @@ Feature: Owner acts (OWN)
       | grant                                                   | target                                   | outcome                                   |
       | no grant                                                | a subagent in its own session            | recorded under OWN-24, with no grant      |
       | no grant                                                | a new session in another worktree        | refused, audited and shown                |
-      | a grant naming that worktree, a budget and an expiry    | a new session in that worktree           | started through cairn-run and recorded    |
+      | a grant naming that worktree, a budget and an expiry    | a new session in that worktree           | started through cairn run and recorded    |
       | an expired grant                                        | an existing session of the same principal | refused, audited and shown                |
 
   @OWN-24 @P1 @I2 @pending

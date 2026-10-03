@@ -121,7 +121,7 @@ field sends text, not shortcuts.
 | `p`                   | pause / resume                         | `c` / `C`       | comment / request-changes sheet     |
 | `S`                   | stop (opens the stop sheet)            | `Y`             | approve sheet                       |
 | `f`                   | fork lane from here                    | `l`             | land sheet                          |
-| `t`                   | take over / release (`cairn-run` only) | `V` / `s`       | compare versions / since my verdict |
+| `t`                   | take over / release (`cairn run` only) | `V` / `s`       | compare versions / since my verdict |
 | `h`                   | hand back                              | `(` / `)`       | previous / next comment             |
 | `Q`                   | away mode                              | `<` / `>`       | down / up the stack                 |
 | `F`                   | follow a person                        | `Ctrl+T`        | add the lane to the focus set       |

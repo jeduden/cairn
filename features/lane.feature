@@ -68,7 +68,7 @@ Feature: Lane (LANE)
       | tool output alone                                                                                 | claim       | —       |
       | a command, its exit status and its tree recorded by a hook on the lane's own node                 | own run     | bound   |
       | a command recorded by a hook after edits made through a shell                                     | claim       | unbound |
-      | the command run through "cairn-run" on a fresh checkout of the exact commit by an uninvolved node | witness run | —       |
+      | the command run through "cairn run" on a fresh checkout of the exact commit by an uninvolved node | witness run | —       |
       | a check result for the exact commit signed by an enrolled CI key and brought by the CI carrier    | CI attested | —       |
 
   @LANE-06 @P1 @I6 @I10 @pending

@@ -30,19 +30,19 @@ accepted only when every change reads approved. The threat model
 ([§6.3](../srs/06-security.md#63-boundary-register)) are reviewed with the
 changes they control.
 
-| #   | Change                                                    | Review  |
-| --- | --------------------------------------------------------- | ------- |
-| 1   | I1, Nothing is lost                                       | pending |
-| 2   | I2, No automatic path from untrusted content to the model | pending |
-| 3   | I4, Cairn never talks to the network                      | pending |
-| 4   | I5, Bad data can be removed without destroying evidence   | pending |
-| 5   | I8, Isolation follows the tenant                          | pending |
-| 6   | I10, Everything derived is rebuildable                    | pending |
-| 7   | CON-04, No network in a P0 binary                         | pending |
-| 8   | CON-06, No central service (new)                          | pending |
-| 9   | Owner acts rest on the sandbox                            | pending |
-| 10  | Owner key certifies device keys                           | pending |
-| 11  | Delegation joins I2's closed list                         | pending |
+| #   | Change                                                    | Review                          |
+| --- | --------------------------------------------------------- | ------------------------------- |
+| 1   | I1, Nothing is lost                                       | approved, 3 October 2026        |
+| 2   | I2, No automatic path from untrusted content to the model | approved, 3 October 2026        |
+| 3   | I4, Cairn never talks to the network                      | pending, revised for one binary |
+| 4   | I5, Bad data can be removed without destroying evidence   | approved, 3 October 2026        |
+| 5   | I8, Isolation follows the tenant                          | approved, 3 October 2026        |
+| 6   | I10, Everything derived is rebuildable                    | approved, 3 October 2026        |
+| 7   | CON-04, No network in the core                            | pending, revised for one binary |
+| 8   | CON-06, No central service (new)                          | approved, 3 October 2026        |
+| 9   | Owner acts rest on the sandbox                            | approved, 3 October 2026        |
+| 10  | Owner key certifies device keys                           | approved, 3 October 2026        |
+| 11  | Delegation joins I2's closed list                         | approved, 3 October 2026        |
 
 ### 1. I1, Nothing is lost
 
@@ -59,7 +59,7 @@ changes they control.
     recorded like any other.
 - **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
   [REC-06][REC], [REC-22][REC], [REC-23][REC].
-- **Review:** pending.
+- **Review:** approved, 3 October 2026.
 
 ### 2. I2, No automatic path from untrusted content to the model
 
@@ -78,7 +78,7 @@ changes they control.
     can reach a model.
 - **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
   [PRV-02][PRV], [PRV-10][PRV], [OWN-03][OWN], [OWN-08][OWN], [OWN-09][OWN].
-- **Review:** pending.
+- **Review:** approved, 3 October 2026.
 
 ### 3. I4, Cairn never talks to the network
 
@@ -88,15 +88,25 @@ changes they control.
   and only the core reaches the model." B0, the core, still opens no socket.
   B1 may listen on loopback only. B2 (peers you enrol by key) and B3
   (publishing to hosts you name) are off until you turn them on, and managed
-  policy can lock each off.
+  policy can lock each off. Boundaries hold per component and per process, so
+  every component can be a subcommand of the one `cairn` binary.
 - **What changes:**
-  - The core's guarantee is unchanged; only new, optional binaries may use the
-    network, each confined to its boundary and checked in CI.
+  - The core's guarantee is unchanged: a hook, MCP or CLI process opens no
+    socket.
+  - `cairn ui`, `cairn peer` and the rest are subcommands of the same binary,
+    not separate binaries. A process runs exactly one component, fixed when it
+    starts, and a core process never starts a network component.
+  - CI checks each component's import closure, runs each under its boundary's
+    sandbox, and fails when any linked package touches the network or starts a
+    program while initialising, since Go initialises every linked package in
+    every process.
+  - What you trade: the shipped file contains network code, so the guarantee
+    is a property of each process, not of the binary's symbol table.
   - The browser lane view on localhost and opt-in peer to peer become possible
     inside one product.
 - **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
   [SEC-01][SEC], [SEC-19][SEC], [SEC-22][SEC], [ENG-12][ENG], [ENG-16][ENG].
-- **Review:** pending.
+- **Review:** pending, revised for one binary.
 
 ### 4. I5, Bad data can be removed without destroying evidence
 
@@ -110,7 +120,7 @@ changes they control.
     their node is asked, and the answer is shown.
 - **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
   [SEC-12][SEC], [PEER-11][PEER].
-- **Review:** pending.
+- **Review:** approved, 3 October 2026.
 
 ### 5. I8, Isolation follows the tenant
 
@@ -124,7 +134,7 @@ changes they control.
     and cannot raise its trust.
 - **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
   [PRV-02][PRV], [PRV-09][PRV].
-- **Review:** pending.
+- **Review:** approved, 3 October 2026.
 
 ### 6. I10, Everything derived is rebuildable
 
@@ -138,21 +148,22 @@ changes they control.
     first.
 - **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
   [ADM-08][ADM], [PEER-03][PEER].
-- **Review:** pending.
+- **Review:** approved, 3 October 2026.
 
-### 7. CON-04, No network in a P0 binary
+### 7. CON-04, No network in the core
 
 - **Before (1.4):** No network access in any binary that ships P0 features.
-- **After (2.0):** No network access in the core binary `cairn`; every other
-  binary is confined to the one boundary the register assigns it, checked at
-  build level.
+- **After (2.0):** No network access in the core component; every other
+  component is confined to the one boundary the register assigns it, whether
+  or not it shares an executable with the core, checked at build level. CON-02
+  now ships Cairn as one binary whose components are its entry points.
 - **What changes:**
-  - Each binary's reach is a row in the [boundary
+  - Each component's reach is a row in the [boundary
     register](../srs/06-security.md#63-boundary-register), and CI fails on
     more.
 - **Where:** [wording](../srs/02-context.md#24-constraints); requirements
-  [SEC-19][SEC].
-- **Review:** pending.
+  [SEC-01][SEC], [SEC-19][SEC], [ENG-16][ENG].
+- **Review:** pending, revised for one binary.
 
 ### 8. CON-06, No central service (new)
 
@@ -165,7 +176,7 @@ changes they control.
     may be blind (PEER-12).
 - **Where:** [wording](../srs/02-context.md#24-constraints); requirements
   [PEER-02][PEER].
-- **Review:** pending.
+- **Review:** approved, 3 October 2026.
 
 ### 9. Owner acts rest on the sandbox
 
@@ -184,7 +195,7 @@ changes they control.
 - **Where:**
   [wording](../srs/05c-owner-and-peer-requirements.md#513-owner-acts-own);
   requirements [OWN-11][OWN], [OWN-12][OWN], [OWN-22][OWN].
-- **Review:** pending.
+- **Review:** approved, 3 October 2026.
 
 ### 10. Owner key certifies device keys
 
@@ -199,7 +210,7 @@ changes they control.
 - **Where:**
   [wording](../srs/05-functional-requirements.md#52-provenance-and-trust-prv);
   requirements [PRV-10][PRV], [OWN-17][OWN], [PEER-07][PEER].
-- **Review:** pending.
+- **Review:** approved, 3 October 2026.
 
 ### 11. Delegation joins I2's closed list
 
@@ -216,12 +227,15 @@ changes they control.
 - **Where:**
   [wording](../srs/05c-owner-and-peer-requirements.md#513-owner-acts-own);
   requirements [OWN-23][OWN], [OWN-24][OWN], [OWN-25][OWN], [OWN-26][OWN].
-- **Review:** pending.
+- **Review:** approved, 3 October 2026.
 
 ## Alternatives
 
 - Keep I4 as written and ship the lane view and the network side as a
   separate product with its own SRS; declined by the stakeholder (D1).
+- One binary per boundary (`cairn-ui`, `cairn-peer` and so on), so the
+  core's file links no network code; declined by the reviewer, who wants
+  a single binary. The boundary moves from the file to the process.
 - Keep one project chain; it rules out peering and the multi-machine
   persona.
 - A per-act WebAuthn assertion as the mandatory guard against an

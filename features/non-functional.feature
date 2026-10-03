@@ -10,7 +10,7 @@ Feature: Non-functional requirements (NFR)
   Scenario Outline: hooks meet their p95 wall-clock budgets on a 1M-event project under fleet load
     Given an isolated Cairn home
     And a synthetic project store with 1M events on the reference hardware
-    And cairn-ui is open and ten harnesses are writing
+    And cairn ui is open and ten harnesses are writing
     When the hook "<Event>" runs 1,000 times with a representative payload
     Then the p95 wall-clock time is at most <budget>
 
@@ -98,15 +98,15 @@ Feature: Non-functional requirements (NFR)
     And "cairn verify" exits 0
 
   @NFR-09 @pending
-  Scenario: the core leaves no resident process and every user-run binary stays within its footprint
+  Scenario: the core leaves no resident process and every user-run component stays within its footprint
     Given an isolated Cairn home
     And a synthetic project store with 1M events on the reference hardware
-    When every hook runs once, the session ends, and cairn-ui, cairn-peer, cairn-publish, cairn-bridge and ten cairn-run instances run idle
-    Then no Cairn process runs between sessions except the binaries the user started
+    When every hook runs once, the session ends, and cairn ui, cairn peer, cairn publish, cairn bridge and ten cairn run instances run idle
+    Then no Cairn process runs between sessions except the components the user started
     And each hook's peak RSS is at most 50 MiB and the store overhead is at most 1.5 times the stored text
-    And each of cairn-ui, cairn-peer, cairn-publish and cairn-bridge peaks at most 256 MiB RSS and idles at most 5% of one core
-    And the ten cairn-run instances together peak at most 256 MiB RSS and idle at most 5% of one core
-    And cairn-run adds at most 10 ms p95 to keystroke-to-echo latency
+    And each of cairn ui, cairn peer, cairn publish and cairn bridge peaks at most 256 MiB RSS and idles at most 5% of one core
+    And the ten cairn run instances together peak at most 256 MiB RSS and idle at most 5% of one core
+    And cairn run adds at most 10 ms p95 to keystroke-to-echo latency
 
   @NFR-10 @pending
   Scenario Outline: a single static binary builds for each supported platform

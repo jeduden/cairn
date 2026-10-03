@@ -62,18 +62,18 @@ Feature: Observability (OPS)
     And the process opened no network connection
 
   @OPS-06 @P1 @I6 @pending
-  Scenario Outline: every failure of a user-run binary reaches the tenant's audit log and a named counter
+  Scenario Outline: every failure of a user-run component reaches the tenant's audit log and a named counter
     Given an isolated Cairn home
-    And "<binary>" is running
-    When an operation of "<binary>" is <outcome>
+    And "<component>" is running
+    When an operation of "<component>" is <outcome>
     Then the tenant's audit log records the operation as "<outcome>"
     And a named counter for it increases by 1
     And "cairn status" shows the failure outside any browser
 
     Examples:
-      | binary       | outcome   |
-      | cairn-ui     | rejected  |
-      | cairn-ui     | coalesced |
-      | cairn-run    | timed-out |
-      | cairn-peer   | dropped   |
-      | cairn-bridge | failed    |
+      | component    | outcome   |
+      | cairn ui     | rejected  |
+      | cairn ui     | coalesced |
+      | cairn run    | timed-out |
+      | cairn peer   | dropped   |
+      | cairn bridge | failed    |

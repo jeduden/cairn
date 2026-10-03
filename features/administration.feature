@@ -18,9 +18,9 @@ Feature: Administration and lifecycle (ADM)
     Given an isolated Cairn home
     And a Claude Code settings file with unrelated user entries
     And "cairn install --scope user" showed a diff of every configuration change, was declined and left the settings file unchanged
-    And "cairn install --scope user --yes" has run and every Cairn binary has created its artifacts
+    And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
     When the operator runs "cairn uninstall" and keeps only the device key
-    Then the output lists the hooks, plugin and MCP registration, cairn-ui credentials, cairn-run sockets, writer and device keys, enrolments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
+    Then the output lists the hooks, plugin and MCP registration, cairn ui credentials, cairn run sockets, writer and device keys, enrolments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
@@ -37,19 +37,19 @@ Feature: Administration and lifecycle (ADM)
   Scenario Outline: managed policy overrides every layer and a widening change waits for a recorded act
     Given an isolated Cairn home
     And <configuration>
-    When a session runs and the operator starts "<binary>"
-    Then "<binary>" <result>
+    When a session runs and the operator starts "<component>"
+    Then "<component>" <result>
     And the core records every event of the session
 
     Examples:
-      | configuration                                                                              | binary    | result                                                        |
-      | a managed policy file at the documented system path that the tenant can write              | cairn-ui  | refuses to start, and an audit entry and a counter record why |
-      | a managed policy file in a directory the tenant can write                                  | cairn-run | refuses to start, and an audit entry and a counter record why |
-      | an unparsable managed policy file                                                          | cairn-ui  | refuses to start, and an audit entry and a counter record why |
-      | a managed policy file with an unknown key                                                  | cairn-run | refuses to start, and an audit entry and a counter record why |
-      | a project ".cairn.toml" that turns on cairn-ui with no widening act recording its digest   | cairn-ui  | stays off                                                     |
-      | a project ".cairn.toml" that turns on cairn-ui and a widening act that recorded its digest | cairn-ui  | starts                                                        |
-      | a managed policy that turns on cairn-ui and a tenant config that turns it off              | cairn-ui  | starts                                                        |
+      | configuration                                                                              | component | result                                                        |
+      | a managed policy file at the documented system path that the tenant can write              | cairn ui  | refuses to start, and an audit entry and a counter record why |
+      | a managed policy file in a directory the tenant can write                                  | cairn run | refuses to start, and an audit entry and a counter record why |
+      | an unparsable managed policy file                                                          | cairn ui  | refuses to start, and an audit entry and a counter record why |
+      | a managed policy file with an unknown key                                                  | cairn run | refuses to start, and an audit entry and a counter record why |
+      | a project ".cairn.toml" that turns on cairn ui with no widening act recording its digest   | cairn ui  | stays off                                                     |
+      | a project ".cairn.toml" that turns on cairn ui and a widening act that recorded its digest | cairn ui  | starts                                                        |
+      | a managed policy that turns on cairn ui and a tenant config that turns it off              | cairn ui  | starts                                                        |
 
   @ADM-05 @P0 @I1 @pending
   Scenario: segment and schema migrations run forward after a verified backup and newer versions are refused
@@ -153,7 +153,7 @@ Feature: Administration and lifecycle (ADM)
     Given an isolated Cairn home
     And a project that is a git repository with a working tree, refs, notes, configuration and hooks
     And the owner has enabled the git carrier
-    When a session runs, the operator confirms "cairn install --scope project" and every Cairn binary does its work
+    When a session runs, the operator confirms "cairn install --scope project" and every Cairn component does its work
     Then the only changed file in the working tree is the project settings file
     And the only new or changed refs lie under "refs/cairn/", and every new object is reachable only from them
     And the repository's other refs, notes, configuration and hooks are byte-identical to before
@@ -188,12 +188,12 @@ Feature: Administration and lifecycle (ADM)
       | local writer        | the session appends another event          | the event is recorded, a failure counter rises and a Needs you item appears |
 
   @ADM-16 @P1 @I6 @pending
-  Scenario Outline: status and doctor report every user-run binary, peer lag, open chains and boundaries
+  Scenario Outline: status and doctor report every user-run component, peer lag, open chains and boundaries
     Given an isolated Cairn home
-    And managed policy that permits cairn-ui and cairn-peer, forbids cairn-run and locks one boundary
-    And cairn-ui is running, a bridge has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment
+    And managed policy that permits cairn ui and cairn peer, forbids cairn run and locks one boundary
+    And cairn ui is running, a bridge has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment
     When the operator runs "cairn <command>"
-    Then for cairn-ui, cairn-run, cairn-peer and the bridge the output shows whether policy permits it, whether it runs and its failure counters
+    Then for cairn ui, cairn run, cairn peer and the bridge the output shows whether policy permits it, whether it runs and its failure counters
     And the output shows the peer's sync lag for each writer
     And the output names the writer chain that ended without a closed segment
     And the output shows each boundary's state and whether managed policy locks it

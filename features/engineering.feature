@@ -104,19 +104,19 @@ Feature: Engineering quality (ENG)
     And the module as a whole is at least 80% covered
 
   @ENG-12 @P0 @pending
-  Scenario Outline: the end-to-end suite runs each binary inside its boundary's sandbox
-    Given the end-to-end suite runs "<binary>" inside a sandbox that <sandbox>
-    When "<binary>" opens a socket outside the boundary the register assigns it
-    Then the suite fails naming the binary and the caller
+  Scenario Outline: the end-to-end suite runs each component inside its boundary's sandbox
+    Given the end-to-end suite runs "<component>" inside a sandbox that <sandbox>
+    When "<component>" opens a socket outside the boundary the register assigns it
+    Then the suite fails naming the component and the caller
 
     Examples:
-      | binary        | sandbox                       |
-      | cairn         | denies all network            |
-      | cairn-ui      | denies all but loopback       |
-      | cairn-run     | denies all but loopback       |
-      | cairn-peer    | allows only its register rows |
-      | cairn-publish | allows only its register rows |
-      | cairn-bridge  | allows only its register rows |
+      | component     | sandbox                       |
+      | core          | denies all network            |
+      | cairn ui      | denies all but loopback       |
+      | cairn run     | denies all but loopback       |
+      | cairn peer    | allows only its register rows |
+      | cairn publish | allows only its register rows |
+      | cairn bridge  | allows only its register rows |
 
   @ENG-13 @P1 @pending
   Scenario: mutation testing scores the security-sensitive packages
@@ -138,20 +138,20 @@ Feature: Engineering quality (ENG)
     Then the benchmark CI job fails naming the benchmark
 
   @ENG-16 @P0 @pending
-  Scenario Outline: CI gates on the static analyzers and one import allow-list per binary
+  Scenario Outline: CI gates on the static analyzers and one import allow-list per component
     Given the CI workflow
-    When the import allow-list check reads "<binary>"
+    When the import allow-list check reads "<component>"
     Then the workflow gates on go vet, staticcheck, gosec, errcheck, govulncheck and the custom analyzers
-    And the allow-list for "<binary>" <rule>
+    And the allow-list for "<component>" <rule>
 
     Examples:
-      | binary        | rule                                                                            |
-      | cairn         | forbids net, net/http and os/exec outside the kernel-worker re-exec             |
-      | cairn-run     | allows os/exec and loopback listening sockets, and forbids outbound connections |
-      | cairn-ui      | allows listening sockets, and forbids os/exec and outbound connections          |
-      | cairn-peer    | allows listening sockets and outbound connections, and forbids os/exec          |
-      | cairn-publish | allows listening sockets and outbound connections, and forbids os/exec          |
-      | cairn-bridge  | allows outbound connections, and forbids os/exec and listening sockets          |
+      | component     | rule                                                                            |
+      | core          | forbids net, net/http and os/exec outside the kernel-worker re-exec             |
+      | cairn run     | allows os/exec and loopback listening sockets, and forbids outbound connections |
+      | cairn ui      | allows listening sockets, and forbids os/exec and outbound connections          |
+      | cairn peer    | allows listening sockets and outbound connections, and forbids os/exec          |
+      | cairn publish | allows listening sockets and outbound connections, and forbids os/exec          |
+      | cairn bridge  | allows outbound connections, and forbids os/exec and listening sockets          |
 
   @ENG-17 @P0 @pending
   Scenario: contract tests replay every supported Claude Code version

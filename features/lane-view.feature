@@ -37,7 +37,7 @@ Feature: Lane view (VIEW)
   Scenario: statuses come from structural events only and unrecorded sessions surface
     Given an isolated Cairn home
     And a lane with one harness whose transcript is longer than its ingested position
-    And a "cairn-run" launch with no hook event that belongs to no lane
+    And a "cairn run" launch with no hook event that belongs to no lane
     When the person opens Fleet and runs "cairn lanes"
     Then every harness shows exactly one status from the closed set of §9.7.1 with its freshness mark
     And the lane shows one lane status and the worst freshness mark of its harnesses, never Quiet
