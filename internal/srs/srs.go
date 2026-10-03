@@ -30,7 +30,7 @@ type Requirement struct {
 
 // idPattern is the shape of every requirement id: a family prefix and
 // a two-digit number.
-var idPattern = regexp.MustCompile(`^(REC|PRV|PIN|RCL|LMK|INJ|CMP|ADM|MEM|OPS|SEC|NFR|ENG|ASM)-[0-9]{2}$`)
+var idPattern = regexp.MustCompile(`^(REC|PRV|PIN|RCL|LMK|INJ|CMP|ADM|MEM|OPS|LANE|VIEW|OWN|PEER|SEC|NFR|ENG|ASM)-[0-9]{2}$`)
 
 // invariantPattern is the shape of one trace, I1 to I10.
 var invariantPattern = regexp.MustCompile(`^I([1-9]|10)$`)

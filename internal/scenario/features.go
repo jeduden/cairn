@@ -18,7 +18,7 @@ import (
 var (
 	// idTag is the shape of a scenario's requirement tag, the same id
 	// the SRS row carries: @REC-01, @SEC-18, @ASM-04.
-	idTag = regexp.MustCompile(`^@((?:REC|PRV|PIN|RCL|LMK|INJ|CMP|ADM|MEM|OPS|SEC|NFR|ENG|ASM)-[0-9]{2})$`)
+	idTag = regexp.MustCompile(`^@((?:REC|PRV|PIN|RCL|LMK|INJ|CMP|ADM|MEM|OPS|LANE|VIEW|OWN|PEER|SEC|NFR|ENG|ASM)-[0-9]{2})$`)
 	// priorityTag mirrors the row's Pri column.
 	priorityTag = regexp.MustCompile(`^@(P[0-2])$`)
 	// invariantTag mirrors one entry of the row's Traces column.
