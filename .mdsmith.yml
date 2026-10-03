@@ -43,13 +43,15 @@ rules:
   cross-file-reference-integrity:
     strict: true
   # A stray Markdown file anywhere else fails the lint: docs live
-  # under docs/, plans under plan/, skills under .claude/skills/.
+  # under docs/, plans under plan/, skills under .claude/skills/,
+  # subagents under .claude/agents/, research under research/.
   directory-structure:
     allowed:
       - "."
       - "docs/**"
       - "plan/**"
       - ".claude/skills/**"
+      - ".claude/agents/**"
       - "research/**"
   # Plan and ADR ids are the minute-precision UTC creation time, so
   # two machines can allocate one without coordinating. Uniqueness is
@@ -129,6 +131,43 @@ kinds:
         per-level:
           1: 10
           2: 40
+  agent:
+    # Subagents under .claude/agents: one perspective each, such as a
+    # persona reviewer. Skills hold objective procedures; agents hold
+    # subjective viewpoints. A subagent's file loads into its own
+    # context, not the session's, so its caps are looser than a skill's.
+    path-pattern: ".claude/agents/*.md"
+    rules:
+      required-frontmatter:
+        fields: [name, description]
+      table-readability: false
+      max-file-length:
+        max: 90
+      token-budget:
+        mode: heuristic
+        max: 1100
+      paragraph-structure:
+        max-sentences: 6
+        max-words-per-sentence: 35
+  persona:
+    # A persona reviewer carries the same sections every time, so a
+    # persona's journeys and its reasons to give up cannot be dropped
+    # quietly: they are what requirement work tends to lose.
+    path-pattern: ".claude/agents/persona-*.md"
+    schema:
+      frontmatter:
+        name: '=~"^persona-[a-z-]+$"'
+        description: nonEmpty
+        # Persona reviewers read; they never write, run or fetch.
+        tools: '"Read, Grep, Glob"'
+      closed: false
+      sections:
+        - heading: null
+        - heading: "Who you are"
+        - heading: "What you need"
+        - heading: "Your journeys"
+        - heading: "When you give up"
+        - heading: "How you review"
   proto:
     # proto.md leads with directives and placeholder headings rather
     # than real content; the structural rules step aside for it.
@@ -196,6 +235,10 @@ kind-assignment:
     kinds: [srs]
   - glob: [".claude/skills/*/SKILL.md"]
     kinds: [skill]
+  - glob: [".claude/agents/*.md"]
+    kinds: [agent]
+  - glob: [".claude/agents/persona-*.md"]
+    kinds: [persona]
   - glob: ["**/proto.md"]
     kinds: [proto]
   - glob: ["plan/*.md", "plan/*/plan.md"]
@@ -219,6 +262,28 @@ overrides:
       max-file-length: false
       cross-file-reference-integrity: false
       required-structure: false
+      # Companion analyses such as requirement traces are wide
+      # matrices, as research notes are.
+      table-readability: false
+      token-budget: false
+
+  # Companion subfolders of a plan (for example ux/) hold working
+  # design drafts, written and reviewed like research notes.
+  - glob: ["plan/*/*/**/*.md"]
+    rules:
+      first-line-heading: false
+      heading-increment: false
+      paragraph-readability: false
+      paragraph-structure: false
+      max-file-length: false
+      cross-file-reference-integrity: false
+      required-structure: false
+      no-duplicate-headings: false
+      line-length: false
+      no-emphasis-as-heading: false
+      fenced-code-language: false
+      table-readability: false
+      token-budget: false
 
   # Research reports and their raw notes are kept verbatim as evidence:
   # the readability and length rules that shape docs step aside, and

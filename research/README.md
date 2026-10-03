@@ -37,3 +37,13 @@ from.
 - [Agent session storage sweep](notes/agent-session-storage-sweep/):
   the catalog of 308 systems, with storage-pattern counts, cross-cutting
   findings and lessons, plus every fact sheet in `sheets.json`.
+- [Live-PR pitch review](notes/live-pr-pitch-review/): a blind
+  adversarial review of the "live pull request" pitch in three lenses:
+  missing process, existing products, and inconsistencies with the
+  contract and the evidence.
+- [OpenAI agent UI](notes/openai-agent-ui/): how OpenAI's Codex
+  surfaces show a live harness, its results and several agents, the
+  app-server protocol, and what needs OpenAI's central service.
+- [OpenAI dots](notes/openai-agent-ui/dots.md): always-on agents with
+  their own cloud computer, launched 29 September 2026, and what
+  Cairn's pitch and design take from them.

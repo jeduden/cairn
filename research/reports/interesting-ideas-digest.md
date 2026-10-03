@@ -1,6 +1,7 @@
 # Interesting ideas digest: storing and sharing agent sessions
 
-Source: `lessons_compact.md`, 194 lines. That is about 175 distinct systems,
+Source: [lessons-compact.md](../notes/git-alternatives-for-agent-sessions/lessons-compact.md),
+194 entries. That is about 175 distinct systems,
 because some appear more than once (GitHub Copilot's cloud agent five times,
 NIP-34 three times). The "where" and "lesson" fields are cut short in the
 file, so some claims below rest on the first few hundred characters of an
