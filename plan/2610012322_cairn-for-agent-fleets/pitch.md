@@ -66,7 +66,7 @@ its interface. Git keeps the code; Cairn keeps the lane.
    results and the other harnesses. Harnesses also connect directly;
    the UI is one more client, never a required hop.
 9. The standalone UI is a web page in the browser on a loopback-only
-   port. Standalone means nothing leaves the machine.
+   port. Standalone means Cairn sends nothing off the machine.
 10. Network boundaries are defined explicitly: process, machine, peer
     and public. See
     [plan 2610022338](../2610022338_cairn-network-side/plan.md).

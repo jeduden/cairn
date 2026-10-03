@@ -60,3 +60,9 @@ Round 4 re-ran the five personas with open blockers; it is merged in
 [round-4/README.md](round-4/README.md). Three blockers came up, one of
 them a conflict between the fleet developer and the security officer,
 settled for safety and put to the stakeholder as OQ-29.
+
+## Round 5
+
+Round 5 re-ran the three personas with open blockers; see
+[round-5/README.md](round-5/README.md). It settled the owner-act
+question: widening acts need a WebAuthn assertion.

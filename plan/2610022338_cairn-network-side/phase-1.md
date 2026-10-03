@@ -17,16 +17,14 @@ harness of the agent being worked with, live (prompts, tool calls,
 permission requests, output); the work results; and the other
 harnesses on the machine, each a live tile that opens full size. The
 lane's timeline shows the conversation, each edit as a diff, each
-tool run and its result, and who did what: agent or person. Requests
-for input surface at the top, as dots' Activity view does. Background
+tool run and its result, and who did what: agent or person. Background
 agents appear as child threads you can open, and steer where the
 adapter allows; a control it lacks is shown as unavailable (OWN-15).
 A result shows its evidence class, `claim` or `own run`, because a
 completed run is not a verified one; witness runs and CI attestation
 come later (LANE-05). Words and marks follow the proposal's §8.
 
-Standalone means Cairn sends nothing off the machine; what an agent
-recalls travels to its model provider as it does today. The UI is a
+Standalone means Cairn sends nothing off the machine. The UI is a
 web page in the browser, served on a loopback-only port with a token
 per launch and Host and Origin checks. Harnesses write to the same
 store with no UI running, and the UI joins later and shows the same
@@ -47,11 +45,13 @@ It also checks these cases:
 - Every result shows its LANE-05 class, and a result known only from
   agent text or tool output shows `claim`.
 - Neither harness's events reach the other's context except through
-  enveloped recall, and each restore block holds its own lane's pins
-  verbatim, still after the harness switches branch and compacts.
-- A same-user process without the launch credential, or driving the
-  CLI through a pipe or a pty it controls, cannot complete any owner
-  act that widens what an agent may do.
+  enveloped recall. After a harness switches branch and compacts, its
+  restore block holds the pins of both the old and the new lane, word
+  for word, and names both lanes.
+- A same-user process cannot complete an owner act that widens what
+  an agent may do: not without the launch credential, not through a
+  pipe or a pty it controls, and not by starting its own `cairn-ui
+  --print`, `cairn-ui --device phone` or `cairn-run`.
 - Under a root-owned managed policy that disables `cairn-ui`, starting
   it is refused, audited and shown by `cairn doctor`.
 - A recorded-weekend fixture runs through Catch up, search to replay
