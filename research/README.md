@@ -37,6 +37,9 @@ from.
 - [Agent session storage sweep](notes/agent-session-storage-sweep/):
   the catalog of 308 systems, with storage-pattern counts, cross-cutting
   findings and lessons, plus every fact sheet in `sheets.json`.
+- [Amp orbs](notes/amp-orbs/amp-orbs.md): remote agent machines,
+  agent-to-agent threads and multiplayer on Amp's service, compared with
+  Cairn's lane.
 - [T3 Code](notes/t3code/t3code.md): a local GUI over coding agents,
   read from its source: event sourced in SQLite with no tamper
   evidence, remote access and telemetry built in.

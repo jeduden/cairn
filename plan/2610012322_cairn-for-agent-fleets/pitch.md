@@ -79,20 +79,23 @@ Zed Delta is the closest product: public beta since 16 September 2026,
 Code competes with the standalone lane view today: a local GUI that
 drives several harnesses, with diffs, checkpoints and in-app review, but
 one agent per thread and one person per environment. It is read from its
-source in the [T3 Code note](../../research/notes/t3code/t3code.md).
+source in the [T3 Code note](../../research/notes/t3code/t3code.md). Amp's
+orbs run agents on its remote machines and add agent-to-agent messaging
+and multiplayer threads, all on Amp's service, with no documented trust
+boundary ([Amp orbs note](../../research/notes/amp-orbs/amp-orbs.md)).
 
-|                  | Zed Delta                                   | Cairn (vision; not built)                                                      | T3 Code                                                                 |
-| ---------------- | ------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| Unit             | Thread: conversation and edits side by side | Lane: conversation, edits, tool runs and results in one record; approvals next | Thread per agent session; worktrees and checkpoints                     |
-| Topology         | Central: Cloudflare Durable Objects backend | Standalone first; peer to peer, no central service                             | Local server; remote access via Tailscale, SSH or a T3 relay            |
-| Partitions       | Not documented                              | Each side keeps working; logs merge on reconnect                               | Not applicable: one server per environment                              |
-| Live co-editing  | CRDT worktrees                              | Planned; agents in separate worktrees need none                                | None; one person, several devices; one agent per thread                 |
-| Editor           | Zed's own app, agents over ACP              | Any editor; Claude Code first                                                  | Its own web, desktop and mobile GUI; Codex app-server, Claude Agent SDK |
-| Record integrity | No signing documented                       | Hash-chained log per writer, sealed by the writer's key (P1)                   | Event store in SQLite; no chain or signatures                           |
-| Co-author trust  | None documented                             | Each agent answers to one person; others reach it by endorsement (I2)          | None; history recalled raw, no untrusted envelope                       |
-| Merge gate       | Land step; PRs off, pushes to main          | Next: signed approvals and required checks on the lane                         | In-app PR review and merge, sent to the forge                           |
-| Data control     | Cloudflare-managed keys, deletion by email  | Removal on your own nodes, no hash left to confirm it; peers asked too         | Local SQLite, soft deletes, no redaction; telemetry on by default       |
-| Maturity         | Shipping                                    | Pre-implementation                                                             | Shipping, MIT, fast-moving                                              |
+|                  | Zed Delta                                   | Cairn (vision; not built)                                                      | T3 Code                                                                 | Amp orbs                                                        |
+| ---------------- | ------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Unit             | Thread: conversation and edits side by side | Lane: conversation, edits, tool runs and results in one record; approvals next | Thread per agent session; worktrees and checkpoints                     | Thread per agent; agents message each other across threads      |
+| Topology         | Central: Cloudflare Durable Objects backend | Standalone first; peer to peer, no central service                             | Local server; remote access via Tailscale, SSH or a T3 relay            | Central: Amp's servers hold threads and run orbs                |
+| Partitions       | Not documented                              | Each side keeps working; logs merge on reconnect                               | Not applicable: one server per environment                              | Not documented                                                  |
+| Live co-editing  | CRDT worktrees                              | Planned; agents in separate worktrees need none                                | None; one person, several devices; one agent per thread                 | Workspace members join a thread and instruct the agent directly |
+| Editor           | Zed's own app, agents over ACP              | Any editor; Claude Code first                                                  | Its own web, desktop and mobile GUI; Codex app-server, Claude Agent SDK | Its own terminal, web and mobile apps; agents in remote orbs    |
+| Record integrity | No signing documented                       | Hash-chained log per writer, sealed by the writer's key (P1)                   | Event store in SQLite; no chain or signatures                           | Server-side threads; no signing documented                      |
+| Co-author trust  | None documented                             | Each agent answers to one person; others reach it by endorsement (I2)          | None; history recalled raw, no untrusted envelope                       | None documented; teammates' messages read as instructions       |
+| Merge gate       | Land step; PRs off, pushes to main          | Next: signed approvals and required checks on the lane                         | In-app PR review and merge, sent to the forge                           | Changes view and diffs; not documented further                  |
+| Data control     | Cloudflare-managed keys, deletion by email  | Removal on your own nodes, no hash left to confirm it; peers asked too         | Local SQLite, soft deletes, no redaction; telemetry on by default       | Amp's service; workspace threads shared by default              |
+| Maturity         | Shipping                                    | Pre-implementation                                                             | Shipping, MIT, fast-moving                                              | Shipping                                                        |
 
 ## Lessons from OpenAI dots
 
