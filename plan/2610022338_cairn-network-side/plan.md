@@ -86,7 +86,10 @@ What each piece needs:
 | The harness itself (Claude Code)     | no         | no       | no                                         | yes, to its model provider, as today; not Cairn's traffic    |
 
 Standalone uses only the first three rows. Peering adds the peer rows,
-LAN first, then remote. Publishing and git are separate opt-ins.
+LAN first, then remote. The self-hosted peer that remote peers and
+sandboxes dial accepts inbound connections from the internet, from
+enrolled peers only; that listener sits behind B2. Publishing and git
+are separate opt-ins.
 
 Across all four, Cairn sends no telemetry and calls no third-party
 service. Data reaches the model provider only the way it does today:

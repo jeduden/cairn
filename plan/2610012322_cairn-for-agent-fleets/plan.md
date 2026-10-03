@@ -1,7 +1,7 @@
 ---
 id: 2610012322
 title: "Scope Cairn for agent fleets: shared, real-time, public sessions"
-status: "🔲"
+status: "🔳"
 summary: >-
   Widen Cairn from one agent's local memory to secure session memory
   shared across worktrees, cloud sandboxes, machines and the public,
@@ -60,7 +60,7 @@ agent's tool calls, by a person, a formatter or a shell, reach the
 record only through worktree checkpoints. A lane also admits humans
 and other agents. Their messages reach an agent enveloped and
 untrusted (I2). Even the owner is trusted only through their own local
-session, or a key the lane server never holds; in automation mode
+session, or a key no other node ever holds; in automation mode
 (PRV-04) not even the owner's prompts are trusted.
 
 Spike S2 ([plan 2609292004](../2609292004_spike-s2-sqlite-driver/plan.md))
@@ -75,9 +75,11 @@ it in two:
 | Record | append-only, content-addressed, hash-chained log segments, one writer per origin             |
 | Index  | local SQLite with FTS5, rebuilt from the segments a node holds (I10), on S2's ncruces driver |
 
-Each origin (node and session) writes only its own log, so there are
-no write conflicts and no CRDT. Sync, publishing and sandbox
-persistence all become moving segments.
+Each origin (node and session) writes only its own log, so the
+record has no write conflicts and needs no CRDT. Only state several
+participants edit at once, lane metadata and live co-editing, needs
+one ([plan 2610022338](../2610022338_cairn-network-side/plan.md)).
+Sync, publishing and sandbox persistence all become moving segments.
 
 The evidence for this plan is in [research](../../research/README.md).
 Its merged report argues that Cairn should own the record and let git
@@ -96,7 +98,7 @@ What was searched and weighed:
   reused for the index side: its corpus, its FTS5 probes and its
   measurements.
 
-The changes touch §1, §2.2, §4.5, §8 and the invariants, so they wait
+The changes touch §1, §2, §4.5, §6, §8 and the invariants, so they wait
 for the stakeholder. A change that weakens I1–I10 needs a security
 review and a new major version (CLAUDE.md). M1 blocks on this plan
 because it builds the store's identity model.
@@ -155,7 +157,7 @@ footer: |
 
 | #   | Status | Phase                                                           |
 | --- | ------ | --------------------------------------------------------------- |
-| 1   | 🔲     | [Scope proposal and the record/index proving slice](phase-1.md) |
+| 1   | 🔳     | [Scope proposal and the record/index proving slice](phase-1.md) |
 <?/catalog?>
 
 ## Acceptance Criteria

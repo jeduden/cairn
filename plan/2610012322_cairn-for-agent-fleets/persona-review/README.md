@@ -8,7 +8,9 @@ is beside this file.
 
 ## Merged findings
 
-Ranked by how many personas raised them, then severity.
+Numbered in the order they were merged; the numbers are cited
+elsewhere, so they stay. Rank by the severity and raised-by columns,
+not by position.
 
 | #   | Finding                                                                                                                                                                          | Raised by                                                 | Severity  | Action                                                                                                 |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------ |
