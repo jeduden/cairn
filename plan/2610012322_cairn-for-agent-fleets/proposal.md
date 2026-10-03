@@ -533,13 +533,14 @@ running as the same OS user, which can reach loopback and run the CLI.
 | T24 | Launcher command execution   | A recorded command run through `cairn-run`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | SEC-29, OWN-18                          |
 
 Residual risks only sandboxing the agent removes, put to the
-stakeholder in OQ-29: the agent typing into the harness's own prompt
-to approve itself; editing the harness settings or replacing the
-`cairn` binary; deleting or rolling back `CAIRN_HOME` (shown only by
-an off-machine receipt); consent phishing, a widening digest awaiting
-a touch behind a harmless screen; reading every lane from the store or
-its own `cairn-ui` unenveloped; cut acts used against other agents,
-audited; and the terminal-confirmation opt-in, passable by design.
+stakeholder in OQ-29 and taken up by plan 2610031222: the agent typing
+into the harness's own prompt to approve itself; editing the harness
+settings or replacing the `cairn` binary; deleting or rolling back
+`CAIRN_HOME` (shown only by an off-machine receipt); consent phishing,
+a widening digest awaiting a touch behind a harmless screen; reading
+every lane from the store or its own `cairn-ui` unenveloped; cut acts
+used against other agents, audited; and the terminal-confirmation
+opt-in, passable by design.
 
 ### 6.13 Non-functional and engineering (NFR, ENG)
 
