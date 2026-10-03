@@ -73,3 +73,9 @@ Round 6 re-ran the security officer and the fleet developer; see
 [round-6/README.md](round-6/README.md). Widening acts now carry one
 assertion each, and the first authenticator needs hardware attestation
 or a root-owned policy entry.
+
+## Round 7
+
+Round 7 re-ran the security officer; see
+[round-7/README.md](round-7/README.md). Two holes closed, and seven
+residual risks that only sandboxing removes went to OQ-29.

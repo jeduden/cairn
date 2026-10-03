@@ -49,7 +49,7 @@ It also checks these cases:
   restore block holds the pins of both the old and the new lane, word
   for word, and names both lanes.
 - A same-user process cannot complete an owner act that widens what
-  an agent may do, by any vector the proposal's T21 names.
+  an agent may do, by any vector T21 or §11.3 of the proposal names.
 - Under a root-owned managed policy that disables `cairn-ui`, starting
   it is refused, audited and shown by `cairn doctor`.
 - A recorded-weekend fixture runs through Catch up, search to replay
