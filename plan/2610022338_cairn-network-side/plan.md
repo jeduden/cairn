@@ -61,6 +61,38 @@ so the SRS change rewords it: no socket reachable from off the machine
 and no outbound connection in standalone, with peering as the opt-in
 step. Local harnesses connect directly through the local store.
 
+Network boundaries. Four boundaries, from strictest to widest. Each
+component sits behind exactly one, and a wider boundary is never on
+by default:
+
+| Boundary   | Inside                                                  | What may cross                                                                           | Default | Enforced by                                                                          |
+| ---------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------ |
+| B0 process | the core: record, hooks, recall, what reaches the model | nothing; it talks only to the local store                                                | always  | the core's import closure bans `net`, `net/http`, `os/exec`                          |
+| B1 machine | the UI server and local harnesses                       | loopback only: the browser to the UI, with a token per launch and Host and Origin checks | on      | binds to loopback only; a test fails on any other address or any outbound connection |
+| B2 peer    | the peer process                                        | signed segments, to and from peers the user enrolled by key                              | off     | peer allow-list, signature and chain checks, imported as untrusted (I2)              |
+| B3 public  | the public host                                         | reviewed, signed lane bundles, read-only, to anyone                                      | off     | export review step, stricter redaction, no write path                                |
+
+What each piece needs:
+
+| Piece                                | No network | Loopback | Local network (LAN)                        | Remote network (internet)                                    |
+| ------------------------------------ | ---------- | -------- | ------------------------------------------ | ------------------------------------------------------------ |
+| Core (hooks, recall, MCP over stdio) | yes        | no       | no                                         | no                                                           |
+| Local store                          | yes        | no       | no                                         | no                                                           |
+| UI server and browser                | no         | yes      | no                                         | no                                                           |
+| Peer: machines on one network        | no         | no       | yes, to enrolled peers; optional discovery | no                                                           |
+| Peer: other sites, cloud sandboxes   | no         | no       | no                                         | yes: outbound to a self-hosted peer; sandboxes only dial out |
+| Public host                          | no         | no       | no                                         | yes: inbound, read-only                                      |
+| Git carrier                          | no         | no       | optional                                   | yes: to the user's own git remote                            |
+| The harness itself (Claude Code)     | no         | no       | no                                         | yes, to its model provider, as today; not Cairn's traffic    |
+
+Standalone uses only the first three rows. Peering adds the peer rows,
+LAN first, then remote. Publishing and git are separate opt-ins.
+
+Across all four, Cairn sends no telemetry and calls no third-party
+service. Data reaches the model provider only the way it does today:
+through the harness, when the agent recalls it (I4). The SRS change
+turns this table into the reworded I4 and SEC-01.
+
 A harness view must not be tied to one agent. The Agent Client
 Protocol (ACP), which Zed uses, streams a session as updates and can
 replay it with `session/load`; Claude Code's hooks and transcripts
