@@ -21,14 +21,14 @@ the stakeholder approves before M1 builds the store.
 
 The stakeholder's answer is the lane. A lane is a branch, its
 worktrees, its agents and humans, and their conversations and results.
-That is a pull request in all but its interface, so Cairn holds the
-lane as one record: the conversation and the code changes in one
-order. Git stays where code lands, and landing makes a second history.
-Squash, rebase and edits on the forge then break any stored link, so
-the lane derives its link to landed commits from the record, and says
-"not proven" when it cannot. The record is what a live, multiplayer
-pull request reads. The working pitch and the stakeholder's decisions
-are in [pitch.md](pitch.md).
+It holds what a pull request's conversation holds, plus the runs and
+results behind it, so Cairn holds the lane as one record: the
+conversation and the code changes in one order. Git stays where code
+lands, and landing makes a second history. Squash, rebase and edits on
+the forge then break any stored link, so the lane derives its link to
+landed commits from the record, and says "not proven" when it cannot.
+The record is what a live, multiplayer pull request reads. The working
+pitch and the stakeholder's decisions are in [pitch.md](pitch.md).
 
 ## Context
 

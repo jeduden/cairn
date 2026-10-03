@@ -21,19 +21,21 @@ harnesses on the machine, each a live tile that opens full size. The
 lane's timeline shows the conversation, each edit as a diff, each
 tool run and its result, and who did what: agent or person. Requests
 for input surface at the top, as dots' Activity view does. Background
-agents appear as child threads you can open and steer. A result shows
-what checked it, a claim, a local run or the canonical CI, because a
-completed run is not a verified one. Standalone shows claims and own
-runs; witness runs and CI attestation come later (LANE-05).
+agents appear as child threads you can open, and steer where the
+adapter allows; a control it lacks is shown as unavailable (OWN-15).
+A result shows its evidence class, `claim` or `own run`, because a
+completed run is not a verified one; witness runs and CI attestation
+come later (LANE-05). Words and marks follow the proposal's §8.
 
 Standalone means Cairn sends nothing off the machine; what an agent
-recalls travels to its model provider as it does today. The UI is a web page in
-the browser, served on a loopback-only port with a token per launch
-and Host and Origin checks. Harnesses connect directly
-through the same store, so two of them exchange lane events with no
-UI running, and the UI joins later and shows the same lanes. The view
-is built against recorded lanes first, so the design can be judged
-before any live harness is wired in.
+recalls travels to its model provider as it does today. The UI is a
+web page in the browser, served on a loopback-only port with a token
+per launch and Host and Origin checks. Harnesses write to the same
+store with no UI running, and the UI joins later and shows the same
+lanes. Neither harness receives the other's events except through
+enveloped recall, when it asks. The view is built against recorded
+lanes first, so the design can be judged before any live harness is
+wired in.
 
 RED: a test runs in a sandbox that denies all but loopback, with `HOME` and
 `CAIRN_HOME` in a temporary directory (ENG-14). It starts two
@@ -41,9 +43,21 @@ harnesses on separate worktrees of one clone. It fails until both
 lanes, their edits and their results appear in one view, the view
 updates as each harness writes, and no socket is reachable from off
 the machine and no outbound connection is made. The same test holds
-every NFR-01 hook budget with the view open and ten harnesses writing,
-and runs a recorded-weekend fixture through Catch up, search to replay
-and lane verify.
+every NFR-01 hook budget with the view open and ten harnesses writing.
+It also checks these cases:
+
+- Every result shows its LANE-05 class, and a result known only from
+  agent text or tool output shows `claim`.
+- Neither harness's events reach the other's context except through
+  enveloped recall, and each restore block holds its own lane's pins
+  verbatim.
+- Under a root-owned managed policy that disables `cairn-ui`, starting
+  it is refused, audited and shown by `cairn doctor`.
+- A recorded-weekend fixture runs through Catch up, search to replay
+  and lane verify, in the view and through the CLI alone. It holds a
+  failed capture, a session in no lane, a missing segment, a late
+  ingest, a quarantine, a purge, an unsynced writer and an altered
+  segment, and the test fails when Catch up omits any of them.
 
 GREEN sites: the lane view, the local event feed it reads, and the
 recorded-lane fixtures.

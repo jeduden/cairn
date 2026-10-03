@@ -4,15 +4,15 @@ The working pitch, the stakeholder's decisions behind it, and how it
 got here. The SRS change this plan ends in turns it into the contract;
 until then it is direction, not requirement.
 
-## The pitch (3 October 2026, after the persona reviews)
+## The pitch (3 October 2026, after three persona reviews)
 
 > Cairn: know exactly what your agents did, and work with them live.
 >
 > Agents now work around the clock, in parallel, across machines. Cairn
-> keeps the full, tamper-evident record of each lane of work (every
+> keeps the full, hash-chained record of each lane of work (every
 > message, edit, tool run and result) on your own machines, with
 > secrets redacted before anything is written, and tells you when any
-> of it is missing. Your standing rules are
+> of it is missing or changed. Your standing rules are
 > pinned: they come back word for word after every compaction, and
 > your agents recall exactly what they did whenever they ask.
 >
@@ -23,7 +23,8 @@ until then it is direction, not requirement.
 > It runs standalone: nothing leaves your machine except what your
 > agent recalls into its own model call. Next, turn on peer to peer to
 > work a lane live with others, with no central service and no break
-> when the network splits.
+> when the network splits, and hand a maintainer a lane as a reviewed,
+> signed bundle they can check.
 >
 > Others can then post to your lane; only you decide what becomes an
 > instruction to your agents. Endorsing a post sends exactly what you
@@ -32,18 +33,18 @@ until then it is direction, not requirement.
 
 What the requirement traces changed in the pitch, and why:
 
-| Pitch change                                                                                      | Reason from the SRS                                                                                                                         |
-| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Added pinned rules restored word for word, and exact recall                                       | I3 and RCL-03 are the SRS's core value and its strongest measured result; the pitch had dropped them                                        |
-| Added redaction before anything is written                                                        | SEC-08 redacts before storage; the security officer and maintainer personas need it                                                         |
-| "Reach agents only when they ask" instead of "reach them as untrusted data"                       | I2 has two halves, the label and the asking; the pitch kept only the label                                                                  |
-| "Others can post; only you decide what becomes an instruction" instead of "only you can instruct" | PRV-04 makes automation the default, where even the owner is untrusted; the owner adopts a post as an instruction as its own recorded event |
-| Tool output and web pages named as untrusted too                                                  | I2 covers all content outside the trusted boundary, not only other people                                                                   |
-| "Nothing leaves your machine except what your agent recalls"                                      | I4 itself lets recalled content travel to the model provider                                                                                |
-| "What verified it: claim, local run or CI"                                                        | No requirement covered verification; LANE-04 adds a level per result                                                                        |
-| "Tells you when any of it is missing"; re-runs and CI marked next                                 | Persona reviews: VIEW-08 and REC-19 report gaps; witness runs and CI attestation are P2 (LANE-05, SEC-28)                                   |
-| "Endorsing a post sends exactly what you saw"                                                     | D2 and OWN-08: a principal's endorsement is the one path from another person's words to an agent                                            |
-| Peer to peer is "next"                                                                            | Peering is P2 work after the standalone release; NG4 excludes it from v1                                                                    |
+| Pitch change                                                                                      | Reason from the SRS                                                                                                                       |
+| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Added pinned rules restored word for word, and exact recall                                       | I3 and RCL-03 are the SRS's core value and its strongest measured result; the pitch had dropped them                                      |
+| Added redaction before anything is written                                                        | SEC-08 redacts before storage; the security officer and maintainer personas need it                                                       |
+| "Reach agents only when they ask" instead of "reach them as untrusted data"                       | I2 has two halves, the label and the asking; the pitch kept only the label                                                                |
+| "Others can post; only you decide what becomes an instruction" instead of "only you can instruct" | PRV-04 makes automation the default, where even the owner is untrusted; a principal endorses a post to their own agents as a recorded act |
+| Tool output and web pages named as untrusted too                                                  | I2 covers all content outside the trusted boundary, not only other people                                                                 |
+| "Nothing leaves your machine except what your agent recalls"                                      | I4 itself lets recalled content travel to the model provider                                                                              |
+| "What verified it: the agent's claim or its own run; re-runs and CI next"                         | No requirement covered verification; LANE-05 gives each result one evidence class                                                         |
+| "Tells you when any of it is missing"; re-runs and CI marked next                                 | Persona reviews: VIEW-08 and REC-19 report gaps; witness runs and CI attestation are P2 (LANE-05, SEC-28)                                 |
+| "Endorsing a post sends exactly what you saw"                                                     | D2 and OWN-08: a principal's endorsement is the one path from another person's words to an agent                                          |
+| Peer to peer is "next"                                                                            | Peering is P2 work after the standalone release; NG4 excludes it from v1                                                                  |
 
 The lane is the unit: a branch, its worktrees, its agents and humans,
 and their conversations and results. That is a pull request in all but
@@ -111,7 +112,7 @@ what checked them; rule levels per action shape the owner's control.
    ([forward](trace-forward.md), [backward](trace-backward.md)): restore
    pinning, recall and redaction; keep I2's asking half; scope owner
    trust and "nothing leaves the machine" to what the SRS can hold.
-8. After two persona reviews ([persona-review](persona-review/README.md)):
+8. After the persona reviews ([persona-review](persona-review/README.md)):
    say what is missing, mark re-runs, CI and the gate as next, and name
    endorsement as the way another person's words reach an agent.
 
