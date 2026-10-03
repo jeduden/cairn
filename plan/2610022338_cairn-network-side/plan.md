@@ -51,12 +51,15 @@ The stakeholder's decisions (3 October 2026):
    its worktrees, its harnesses and the UI. Peer to peer is an
    extension the user turns on, built on top of standalone.
 
-Standalone keeps I4 as written, and peering is the opt-in step the
-SRS change has to scope. So the standalone UI must not open a
-listening socket either (SEC-01): a terminal UI or a desktop app that
-reads the local store qualifies, while a web UI on a loopback port
-does not. Local harnesses connect directly through the local store,
-with no socket between them.
+Standalone means nothing leaves the machine; it does not mean giving
+up the interface people expect. The UI is a web page in the browser,
+served from a port bound to loopback only, as local tools such as
+Jupyter do. It guards against the known local attacks: a token per
+launch, Host and Origin checks against DNS rebinding, and no
+cross-origin requests. SEC-01 as worded bans every listening socket,
+so the SRS change rewords it: no socket reachable from off the machine
+and no outbound connection in standalone, with peering as the opt-in
+step. Local harnesses connect directly through the local store.
 
 A harness view must not be tied to one agent. The Agent Client
 Protocol (ACP), which Zed uses, streams a session as updates and can
@@ -160,7 +163,8 @@ footer: |
 ## Acceptance Criteria
 
 - [ ] Standalone works with no network: several local harnesses, their
-  results and one view, with no listening socket
+  results and one browser view, served on loopback only, with no
+  traffic off the machine
 - [ ] The stakeholder signs off the lane experience before peering is
   built
 - [ ] Two peers that never reach a server, split by a partition, both

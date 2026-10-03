@@ -21,19 +21,20 @@ harnesses on the machine, each a live tile that opens full size. The
 lane's timeline shows the conversation, each edit as a diff, each
 tool run and its result, and who did what: agent or person.
 
-Standalone means no network at all. The UI reads the local store and
-opens no listening socket (SEC-01): a terminal UI or a desktop app,
-not a web server on a loopback port. Harnesses connect directly
+Standalone means nothing leaves the machine. The UI is a web page in
+the browser, served on a loopback-only port with a token per launch
+and Host and Origin checks. Harnesses connect directly
 through the same store, so two of them exchange lane events with no
 UI running, and the UI joins later and shows the same lanes. The view
 is built against recorded lanes first, so the design can be judged
 before any live harness is wired in.
 
-RED: a test runs under a network-deny sandbox with `HOME` and
+RED: a test runs in a sandbox that denies all but loopback, with `HOME` and
 `CAIRN_HOME` in a temporary directory (ENG-14). It starts two
 harnesses on separate worktrees of one clone. It fails until both
 lanes, their edits and their results appear in one view, the view
-updates as each harness writes, and nothing opens a socket.
+updates as each harness writes, and no socket is reachable from off
+the machine and no outbound connection is made.
 
 GREEN sites: the lane view, the local event feed it reads, and the
 recorded-lane fixtures.
