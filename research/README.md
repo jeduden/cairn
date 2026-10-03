@@ -41,3 +41,6 @@ from.
   adversarial review of the "live pull request" pitch in three lenses:
   missing process, existing products, and inconsistencies with the
   contract and the evidence.
+- [OpenAI agent UI](notes/openai-agent-ui/): how OpenAI's Codex
+  surfaces show a live harness, its results and several agents, the
+  app-server protocol, and what needs OpenAI's central service.
