@@ -30,10 +30,13 @@ RED: a test in a separate module beside this plan, reusing S2's corpus,
 writes events as segments for two origins, A and B. It builds the
 SQLite index from A then B, and from B then A. It fails until both
 indexes are byte-identical, every event keeps its origin and trust,
-and B's events read as untrusted on A's node.
+and B's events read as untrusted on A's node. It also purges one of A's
+events and fails until no stored or replicated value matches a guess
+at its content (REC-17, the per-event commitment).
 
 GREEN sites: the segment writer and reader, and the index rebuild,
 inside that module only. Nothing enters cairn's module graph.
 
-Gate: the test passes on both orders, and the proposal covers every
-fleet setting above.
+Gate: the test passes on both orders and after the purge. The
+proposal covers every fleet setting above. A persona review of the
+proposal reports no blocker.

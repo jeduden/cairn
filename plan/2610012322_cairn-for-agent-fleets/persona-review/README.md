@@ -46,4 +46,4 @@ not by position.
 
 The personas re-reviewed the reconciled proposal; the merged result is
 in [round-2/README.md](round-2/README.md). Every finding above has an
-answer there, and eight new blockers, R1–R8, came up.
+answer in the proposal; eight new blockers, R1–R8, came up.
