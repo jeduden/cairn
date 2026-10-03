@@ -76,20 +76,21 @@ its interface. Git keeps the code; Cairn keeps the lane.
 Zed Delta is the closest product: public beta since 16 September 2026,
 "Replacing pull requests". Sources are in the
 [review](../../research/notes/live-pr-pitch-review/competitors.md). T3
-Code is the closest to the standalone lane view: a local GUI that drives
-several harnesses, read from its source in the
-[T3 Code note](../../research/notes/t3code/t3code.md).
+Code competes with the standalone lane view today: a local GUI that
+drives several harnesses, with diffs, checkpoints and in-app review, but
+one agent per thread and one person per environment. It is read from its
+source in the [T3 Code note](../../research/notes/t3code/t3code.md).
 
 |                  | Zed Delta                                   | Cairn (vision; not built)                                                      | T3 Code                                                                 |
 | ---------------- | ------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
 | Unit             | Thread: conversation and edits side by side | Lane: conversation, edits, tool runs and results in one record; approvals next | Thread per agent session; worktrees and checkpoints                     |
 | Topology         | Central: Cloudflare Durable Objects backend | Standalone first; peer to peer, no central service                             | Local server; remote access via Tailscale, SSH or a T3 relay            |
 | Partitions       | Not documented                              | Each side keeps working; logs merge on reconnect                               | Not applicable: one server per environment                              |
-| Live co-editing  | CRDT worktrees                              | Planned; agents in separate worktrees need none                                | None; one user, several devices                                         |
+| Live co-editing  | CRDT worktrees                              | Planned; agents in separate worktrees need none                                | None; one person, several devices; one agent per thread                 |
 | Editor           | Zed's own app, agents over ACP              | Any editor; Claude Code first                                                  | Its own web, desktop and mobile GUI; Codex app-server, Claude Agent SDK |
 | Record integrity | No signing documented                       | Hash-chained log per writer, sealed by the writer's key (P1)                   | Event store in SQLite; no chain or signatures                           |
 | Co-author trust  | None documented                             | Each agent answers to one person; others reach it by endorsement (I2)          | None; history recalled raw, no untrusted envelope                       |
-| Merge gate       | Land step; PRs off, pushes to main          | Next: signed approvals and required checks on the lane                         | One-click PR and merge through the forge CLI                            |
+| Merge gate       | Land step; PRs off, pushes to main          | Next: signed approvals and required checks on the lane                         | In-app PR review and merge, sent to the forge                           |
 | Data control     | Cloudflare-managed keys, deletion by email  | Removal on your own nodes, no hash left to confirm it; peers asked too         | Local SQLite, soft deletes, no redaction; telemetry on by default       |
 | Maturity         | Shipping                                    | Pre-implementation                                                             | Shipping, MIT, fast-moving                                              |
 
