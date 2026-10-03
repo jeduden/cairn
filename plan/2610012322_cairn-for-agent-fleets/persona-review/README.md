@@ -47,3 +47,9 @@ not by position.
 The personas re-reviewed the reconciled proposal; the merged result is
 in [round-2/README.md](round-2/README.md). Every finding above has an
 answer in the proposal; eight new blockers, R1–R8, came up.
+
+## Round 3
+
+The third round, on the revision that answered round 2, is merged in
+[round-3/README.md](round-3/README.md): five personas report no
+blocker, and six narrow blockers remain, R3-1 to R3-6.
