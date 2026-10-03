@@ -24,12 +24,12 @@ review screen never shows a bare green tick. Each result carries one
 of four marks, and the gate policy names which marks satisfy a
 required check:
 
-| Mark         | Glyph | What it is                                                                                 | Who produced it         | Satisfies a required check?        |
-| ------------ | ----- | ------------------------------------------------------------------------------------------ | ----------------------- | ---------------------------------- |
-| Claim        | `○`   | An agent or person said so in text ("tests pass")                                          | anyone                  | never                              |
-| Local run    | `◐`   | Cairn's hook saw the command, its exit code and the worktree checkpoint it ran on          | the lane's own node     | only if policy allows, never alone |
-| Witness run  | `◑`   | The same command re-run on the same head by a node whose key authors no change in the lane | a reviewer's node       | if policy allows                   |
-| Canonical CI | `●`   | A check run the forge or the team's CI reports for the exact commit SHA                    | the forge, via a bridge | yes                                |
+| Mark         | Glyph | What it is                                                                                 | Who produced it         | Satisfies a required check?       |
+| ------------ | ----- | ------------------------------------------------------------------------------------------ | ----------------------- | --------------------------------- |
+| Claim        | `○`   | An agent or person said so in text ("tests pass")                                          | anyone                  | never                             |
+| Local run    | `◐`   | Cairn's hook saw the command, its exit code and the worktree checkpoint it ran on          | the lane's own node     | only if policy says so explicitly |
+| Witness run  | `◑`   | The same command re-run on the same head by a node whose key authors no change in the lane | a reviewer's node       | if policy allows                  |
+| Canonical CI | `●`   | A check run the forge or the team's CI reports for the exact commit SHA                    | the forge, via a bridge | yes                               |
 
 A claim is drawn from assistant or human text and links to the run
 that backs it, or reads "no run found". A local run is a `tool_result`
