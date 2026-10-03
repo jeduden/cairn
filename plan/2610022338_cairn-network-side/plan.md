@@ -51,11 +51,11 @@ The stakeholder's decisions (3 October 2026):
    its worktrees, its harnesses and the UI. Peer to peer is an
    extension the user turns on, built on top of standalone.
 
-Standalone means nothing leaves the machine; it does not mean giving
-up the interface people expect. The UI is a web page in the browser,
-served from a port bound to loopback only, as local tools such as
-Jupyter do. It guards against the known local attacks: a token per
-launch, Host and Origin checks against DNS rebinding, and no
+Standalone means Cairn sends nothing off the machine; it does not mean
+giving up the interface people expect. The UI is a web page in the
+browser, served from a port bound to loopback only, as local tools
+such as Jupyter do. It guards against the known local attacks: a token
+per launch, Host and Origin checks against DNS rebinding, and no
 cross-origin requests. SEC-01 as worded bans every listening socket,
 so the SRS change rewords it: no socket reachable from off the machine
 and no outbound connection in standalone, with peering as the opt-in

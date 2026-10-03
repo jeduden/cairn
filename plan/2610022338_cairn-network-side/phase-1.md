@@ -49,9 +49,7 @@ It also checks these cases:
   restore block holds the pins of both the old and the new lane, word
   for word, and names both lanes.
 - A same-user process cannot complete an owner act that widens what
-  an agent may do: not without the launch credential, not through a
-  pipe or a pty it controls, and not by starting its own `cairn-ui
-  --print`, `cairn-ui --device phone` or `cairn-run`.
+  an agent may do, by any vector the proposal's T21 names.
 - Under a root-owned managed policy that disables `cairn-ui`, starting
   it is refused, audited and shown by `cairn doctor`.
 - A recorded-weekend fixture runs through Catch up, search to replay

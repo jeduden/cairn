@@ -66,3 +66,10 @@ settled for safety and put to the stakeholder as OQ-29.
 Round 5 re-ran the three personas with open blockers; see
 [round-5/README.md](round-5/README.md). It settled the owner-act
 question: widening acts need a WebAuthn assertion.
+
+## Round 6
+
+Round 6 re-ran the security officer and the fleet developer; see
+[round-6/README.md](round-6/README.md). Widening acts now carry one
+assertion each, and the first authenticator needs hardware attestation
+or a root-owned policy entry.
