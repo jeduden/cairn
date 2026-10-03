@@ -44,3 +44,6 @@ from.
 - [OpenAI agent UI](notes/openai-agent-ui/): how OpenAI's Codex
   surfaces show a live harness, its results and several agents, the
   app-server protocol, and what needs OpenAI's central service.
+- [OpenAI dots](notes/openai-agent-ui/dots.md): always-on agents with
+  their own cloud computer, launched 29 September 2026, and what
+  Cairn's pitch and design take from them.

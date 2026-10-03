@@ -110,7 +110,10 @@ because it builds the store's identity model.
    identities and permissions for agents and humans, the landing path
    through squash, rebase and merge queues, and how a lane coexists
    with the forge's review, checks and bots. It decides whether the
-   network side changes I4 or ships as a separate product
+   network side changes I4 or ships as a separate product. From OpenAI
+   dots it weighs rule levels per agent action (act, act when told,
+   ask first, hand off) beside I2's rule on what an agent reads, and
+   one identity per harness across terminal, UI and other harnesses
 2. The proposed SRS changes in their own pull request: goals and
    non-goals, deployment context, invariants restated for many nodes,
    the identity model, and new ADRs for the record/index split

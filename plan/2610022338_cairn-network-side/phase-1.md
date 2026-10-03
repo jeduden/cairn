@@ -19,7 +19,11 @@ harness of the agent being worked with, live (prompts, tool calls,
 permission requests, output); the work results; and the other
 harnesses on the machine, each a live tile that opens full size. The
 lane's timeline shows the conversation, each edit as a diff, each
-tool run and its result, and who did what: agent or person.
+tool run and its result, and who did what: agent or person. Requests
+for input surface at the top, as dots' Activity view does. Background
+agents appear as child threads you can open and steer. A result shows
+what checked it, a claim, a local run or the canonical CI, because a
+completed run is not a verified one.
 
 Standalone means nothing leaves the machine. The UI is a web page in
 the browser, served on a loopback-only port with a token per launch
