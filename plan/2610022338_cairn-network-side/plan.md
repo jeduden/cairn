@@ -16,7 +16,9 @@ depends-on: [2610012322]
 ## Goal
 
 People and agents work a lane together live, from any machine or
-sandbox, with no central service. Like git, every node holds the whole
+sandbox, with no central service. One view shows each agent's
+harness as it runs, its work results, and the other harnesses on the
+lane or the fleet. Like git, every node holds the whole
 lane and can serve it; a self-hosted node is the normal case, not an
 upgrade. A lane split by a network partition keeps working on every
 side and merges cleanly when the sides meet again.
@@ -33,6 +35,22 @@ The stakeholder's decisions (3 October 2026):
 3. Design the user experience first. Making it seamless is the second
    step. Security must be good enough, measured against Zed Delta,
    which syncs through a central Cloudflare backend.
+4. There is a UI. It shows a harness (an agent session such as Claude
+   Code, live: prompts, tool calls, permission requests, output), the
+   work results, and other harnesses, in one view. NG5 must be lifted
+   in the SRS change. The UI sits next to harnesses that connect
+   directly: a harness joins a lane through its local peer, reads
+   and writes the lane from inside the session, and reaches other
+   harnesses with no UI in between. The UI is one more client of the
+   same lanes, never a required hop.
+
+A harness view must not be tied to one agent. The Agent Client
+Protocol (ACP), which Zed uses, streams a session as updates and can
+replay it with `session/load`; Claude Code's hooks and transcripts
+feed the same view for Claude first. Orchestrators in the research
+show several agents side by side (Conductor, Agor, Vibe Kanban, Claude
+Squad, Superset); none pairs that with a trust model or a peer
+network.
 
 What merges without conflict already: plan 2610012322 gives each
 writer its own append-only, signed log. The set of all writers' logs

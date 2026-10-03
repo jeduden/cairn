@@ -14,13 +14,20 @@ BDD coverage: a scenario per behavior once the SRS ids exist. Here the
 gates are a test against the built binaries and the stakeholder's
 walk-through.
 
-Experience first. A lane view shows, in one timeline, the
-conversation, each edit as a diff, each tool run and its result, and
-who did what: agent or person, owner or not. Results render as views
+Experience first. One view holds three things side by side: the
+harness of the agent being worked with, live (prompts, tool calls,
+permission requests, output); the work results; and the other
+harnesses on the lane or the fleet, each a live tile that opens full
+size. The lane's timeline shows the conversation, each edit as a
+diff, each tool run and its result, and who did what: agent or
+person, owner or not. Results render as views
 you can open, not pasted logs. Messages from anyone but the owner are
 marked untrusted, and the view shows which ones an agent has read.
 The view is built against recorded lanes first, so the design can be
-judged before any sync exists.
+judged before any sync exists. Harnesses also connect directly: a
+harness joins the lane through its local peer, with or without the UI
+open, so the slice shows two harnesses exchanging lane events with no
+UI running, and the UI joining later and showing the same lane.
 
 RED: a test starts two peers on loopback, each with its own `HOME` and
 `CAIRN_HOME` in a temporary directory (ENG-14), and no server. Both

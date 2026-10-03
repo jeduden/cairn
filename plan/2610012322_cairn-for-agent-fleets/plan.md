@@ -118,7 +118,9 @@ because it builds the store's identity model.
 4. Name the lane and its peer network in the SRS change: no central
    service, every node a full peer, partitions merged on reconnect,
    their trust boundary and the invariants that govern them. Plan
-   2610022338 builds them, experience first.
+   2610022338 builds them, experience first. The change also lifts
+   NG5 (no graphical interface): the lane needs a UI that shows each
+   agent's harness, its work results and other harnesses in one view
 
 ## Execution
 
