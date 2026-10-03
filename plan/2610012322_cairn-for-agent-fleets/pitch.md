@@ -23,8 +23,8 @@ until then it is direction, not requirement.
 > It runs standalone: nothing leaves your machine except what your
 > agent recalls into its own model call. Next, turn on peer to peer to
 > work a lane live with others, with no central service and no break
-> when the network splits, and hand a maintainer a lane as a reviewed,
-> signed bundle they can check.
+> when the network splits. Also next: hand a maintainer a lane as a
+> reviewed, signed bundle, a plain file with no account or peering.
 >
 > Others can then post to your lane; only you decide what becomes an
 > instruction to your agents. Endorsing a post sends exactly what you

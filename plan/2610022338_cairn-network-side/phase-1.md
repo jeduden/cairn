@@ -8,11 +8,9 @@ result: false
 
 Requirements. None closes yet: plan 2610012322's SRS change names the
 lane, lifts NG5 and scopes peering first. This phase fixes the
-experience and the test approach later phases copy.
+experience and the test approach.
 
-BDD coverage: a scenario per behavior once the SRS ids exist. Here the
-gates are a test against the built binaries and the stakeholder's
-walk-through.
+BDD coverage: a scenario per behavior once the SRS ids exist.
 
 Experience first. One view holds three things side by side: the
 harness of the agent being worked with, live (prompts, tool calls,
@@ -50,7 +48,10 @@ It also checks these cases:
   agent text or tool output shows `claim`.
 - Neither harness's events reach the other's context except through
   enveloped recall, and each restore block holds its own lane's pins
-  verbatim.
+  verbatim, still after the harness switches branch and compacts.
+- A same-user process without the launch credential, or driving the
+  CLI through a pipe or a pty it controls, cannot complete any owner
+  act that widens what an agent may do.
 - Under a root-owned managed policy that disables `cairn-ui`, starting
   it is refused, audited and shown by `cairn doctor`.
 - A recorded-weekend fixture runs through Catch up, search to replay

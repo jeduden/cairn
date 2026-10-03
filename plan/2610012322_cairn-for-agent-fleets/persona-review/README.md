@@ -53,3 +53,10 @@ answer in the proposal; eight new blockers, R1–R8, came up.
 The third round, on the revision that answered round 2, is merged in
 [round-3/README.md](round-3/README.md): five personas report no
 blocker, and six narrow blockers remain, R3-1 to R3-6.
+
+## Round 4
+
+Round 4 re-ran the five personas with open blockers; it is merged in
+[round-4/README.md](round-4/README.md). Three blockers came up, one of
+them a conflict between the fleet developer and the security officer,
+settled for safety and put to the stakeholder as OQ-29.
