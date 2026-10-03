@@ -1,99 +1,101 @@
 ---
 id: 2610022338
-title: "Build Cairn's network side: sync, relay, lane server and public host"
+title: "Cairn's lane experience and peer network: no central service"
 status: "🔲"
 summary: >-
-  Builds the processes that move lane records between machines and
-  people: a sync agent per host, a relay for real-time fan-out, a lane
-  server with live chat and result views, and a public host. Each runs apart from the core binary, so
-  the core still never opens a socket (I4), and everything they carry
-  reaches the model only as untrusted, pull-only recall (I2).
-model: sonnet
+  Builds the live lane — a pull request with chat, real time,
+  multiplayer and result views — over a peer network that needs no
+  central service. Every node is a full peer, self-hosting is normal,
+  and a partitioned lane keeps working and merges on reconnect. The
+  experience comes first; making sync seamless follows.
+model: opus
 depends-on: [2610012322]
 ---
-# Build Cairn's network side: sync, relay, lane server and public host
+# Cairn's lane experience and peer network: no central service
 
 ## Goal
 
-Agents on many machines, in cloud sandboxes and across contributors
-share session records in seconds. The components that carry them are
-built and run by this project. The core binary that holds the record
-and feeds the model stays network-free.
+People and agents work a lane together live, from any machine or
+sandbox, with no central service. Like git, every node holds the whole
+lane and can serve it; a self-hosted node is the normal case, not an
+upgrade. A lane split by a network partition keeps working on every
+side and merges cleanly when the sides meet again.
 
 ## Context
 
-Plan 2610012322 scopes Cairn for agent fleets: one signed, hash-chained
-log segment per writer, and an index any node rebuilds from them. It
-left the relay and public bundles as unplanned spikes. Real-time
-sharing across machines needs a server, so this plan builds one rather
-than leaving it to a third party.
+The stakeholder's decisions (3 October 2026):
 
-The contract rules these components out today. I4 says Cairn never
-talks to the network, SEC-01 bans sockets in every shipped binary,
-CON-04 bans network access in any binary with P0 features, and NG4 and
-NG5 put shared stores and a graphical interface out of v1. Building
-them therefore needs one of two decisions, made in plan 2610012322's
-SRS change: narrow I4 to the core that feeds the model, through a
-security review and a new major version, or ship the network side as
-a separate product with its own contract. Either way the core keeps
-no socket. The network components are separate binaries:
+1. Cairn must not depend on a central service. Self-hosting is normal,
+   as it is for git.
+2. Multiplayer must work without a central server, because networks
+   partition. CRDTs and other conflict-resolution methods handle the
+   merge.
+3. Design the user experience first. Making it seamless is the second
+   step. Security must be good enough, measured against Zed Delta,
+   which syncs through a central Cloudflare backend.
 
-- `cairn-sync`, one per host: pushes the host's sealed segments and
-  pulls others' into the local inbox the core imports from;
-- `cairn-relay`, the server: stores and fans out signed segments and
-  checkpoints, and never sees a plaintext payload when the origin
-  encrypts;
-- a lane server: live chat, presence and result views for each lane,
-  behind a web interface; the live pull request;
-- a public host: serves reviewed, signed session bundles read-only.
+What merges without conflict already: plan 2610012322 gives each
+writer its own append-only, signed log. The set of all writers' logs
+is a grow-only set, so any two peers that exchange logs converge, in
+any order, after any partition. Messages, tool runs, results and
+approvals are events in those logs; their order across writers is
+causal (each event names the heads it saw), not wall-clock.
 
-A compromised network component can only deliver bytes. The core
-verifies every segment against its origin's key and chain, and treats
-every foreign event as untrusted (I2). The import-closure test in
-[cmd/cairn/imports_test.go](../../cmd/cairn/imports_test.go) keeps
-`net`, `net/http` and `os/exec` out of the core; the new binaries get
-their own closure, reviewed separately.
+What needs a CRDT: state that several participants edit at once. Two
+cases are known:
 
-What was searched, from
-[the research](../../research/README.md) on agent session storage:
+- lane metadata (title, status, labels, assignment): small registers
+  and sets;
+- files edited live by several people and agents in one worktree, as
+  Delta's CRDT worktrees do. Agents in separate worktrees, the common
+  case, need none: their edits are events, and git merges code at
+  landing.
 
-- filippo.io/torchwood (Go): tlog-tiles, signed notes, a witness and
-  litebastion. The segment and checkpoint format should follow C2SP
-  tlog-tiles, so torchwood is the first candidate to reuse.
-- Trillian Tessera (Go): a tile-log library for the relay's storage.
-- Durable Streams, S2 and NATS JetStream: hosted or heavyweight stream
-  servers; their append-with-offset rule is borrowed, not the service.
-- iroh and Hypercore: peer-to-peer replication, kept as a later
-  carrier, since sandboxes need an outbound-only path to one server.
-- Git as a carrier: one ref per writer stays an option for open source,
-  built after the relay.
+The contract rules a network side out today. I4 says Cairn never talks
+to the network. SEC-01 and CON-04 ban sockets in shipped binaries. NG4
+and NG5 put shared stores and a graphical interface out of v1. Plan
+2610012322's SRS change must decide first: narrow I4 to the core that
+feeds the model, through a security review and a new major version,
+or ship this as a separate product. Either way the core
+keeps no socket, and everything a peer delivers reaches an agent only
+as untrusted, pull-only data (I2).
 
-The SRS change from plan 2610012322 must first name these components,
-their trust boundary and their own invariants. Each new direct
-dependency needs an ADR (ENG-18).
+What was searched, from [the research](../../research/README.md):
+
+- Zed Delta: the benchmark for the experience; central, Cloudflare
+  Durable Objects, no signing, no trust model for co-authors.
+- Block Buzz: branch as room over a signed event log, but one relay
+  holds the community.
+- Radicle, NIP-34 and Tangled: peer-to-peer git collaboration with
+  signed refs; Radicle's per-peer namespaces fit one log per writer.
+- iroh, Hypercore and Willow: peer-to-peer transport and range-based
+  reconciliation; candidates for the sync layer.
+- Automerge, Loro and Yjs: CRDTs for the metadata and live co-editing
+  cases; Go support decides between them (ENG-18).
+- torchwood and C2SP tlog-tiles: the segment and checkpoint format.
+
+A cloud sandbox can only dial out, so it needs some reachable peer.
+That is any self-hosted node, including the user's own machine; no
+node is special.
 
 ## Tasks
 
-1. Proving slice: two hosts exchange a segment through a relay in
-   seconds, and a tampered segment is refused
-2. Harden the relay: authentication per origin, quotas, retention,
-   and encrypted payloads it cannot read
-3. Run `cairn-sync` alongside the hooks: start, back-off, offline
-   queue, and a status the core reports without a socket
-4. Public host: export with stricter redaction and a review step,
-   signed bundles, read-only serving, import as untrusted
-5. Git as a second carrier: one ref per writer for open-source
-   projects, after the relay is proven
-6. Lane server and web interface: live chat in a lane, presence,
-   several agents and humans per lane, and interactive result views
-   for test runs, benchmarks and diffs. Messages from anyone but the
-   lane owner reach agents as untrusted, enveloped data
+1. Proving slice: the lane experience over two peers, with a partition
+   and a merge, and no server
+2. Seamless sync: peer discovery, sandboxes behind outbound-only
+   networks, background sync and offline queues
+3. Live co-editing in one worktree, with a CRDT chosen by ADR
+4. The merge gate on the lane: signed approvals, required checks and
+   landing in git, working across partitions
+5. Public lanes: export with stricter redaction and review, signed,
+   served by any peer, imported as untrusted
+6. Git as a carrier: one ref per writer for open-source projects
 
 ## Execution
 
-| Phase | Model | Gate                                                                                                                              |
-| ----- | ----- | --------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | opus  | Two isolated CAIRN_HOMEs exchange a segment through a local relay in under 5 s, a tampered segment is refused, core closure holds |
+| Phase | Model | Gate                                                                                                                               |
+| ----- | ----- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | opus  | Two isolated peers, split and rejoined, render the same lane; the stakeholder walks through the lane view and signs off the design |
 
 ## Phases
 
@@ -116,19 +118,21 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                      |
-| --- | ------ | ---------------------------------------------------------- |
-| 1   | 🔲     | [Two hosts exchange a segment through a relay](phase-1.md) |
+| #   | Status | Phase                                                              |
+| --- | ------ | ------------------------------------------------------------------ |
+| 1   | 🔲     | [The lane experience over two peers, with a partition](phase-1.md) |
 <?/catalog?>
 
 ## Acceptance Criteria
 
-- [ ] A segment sealed on one host is imported on another within 5 s
-  through the relay, with its origin, chain and trust intact
+- [ ] The stakeholder signs off the lane experience before sync is
+  made seamless
+- [ ] Two peers that never reach a server, split by a partition, both
+  keep working and converge to the same lane after they reconnect
 - [ ] A segment with a broken signature or chain is refused and
   audited, never imported (I6)
-- [ ] The core's import closure still holds no `net`, `net/http` or
-  `os/exec`
+- [ ] The core that feeds the model holds no `net`, `net/http` or
+  `os/exec` in its import closure
 - [ ] Every new direct dependency has an accepted ADR (ENG-18)
 - [ ] All tests pass: `go test ./...`
 - [ ] `mdsmith check .` is clean

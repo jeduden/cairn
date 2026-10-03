@@ -1,35 +1,38 @@
 ---
 n: 1
-title: "Two hosts exchange a segment through a relay"
+title: "The lane experience over two peers, with a partition"
 status: "🔲"
 result: false
 ---
-# Phase 1: two hosts exchange a segment through a relay
+# Phase 1: the lane experience over two peers, with a partition
 
-Requirements. None closes yet: the SRS change from plan 2610012322
-names these components first. This phase proves the shape and fixes
-the test approach later phases copy.
+Requirements. None closes yet: plan 2610012322's SRS change names the
+lane and decides I4 first. This phase fixes the experience and the
+test approach later phases copy.
 
 BDD coverage: a scenario per behavior once the SRS ids exist. Here the
-gate is a test that runs the built binaries, since the claim is about
-processes talking.
+gates are a test against the built binaries and the stakeholder's
+walk-through.
 
-RED: a test starts a relay on a loopback port and two `cairn-sync`
-processes, each with its own `HOME` and `CAIRN_HOME` in a temporary
-directory (ENG-14). Host A seals a segment. The test fails until host
-B's inbox holds it within 5 s, byte for byte, with A's signature and
-chain verifying. A second case flips one byte of a segment in the
-relay's store and fails until B refuses it, audits the refusal and
-imports nothing.
+Experience first. A lane view shows, in one timeline, the
+conversation, each edit as a diff, each tool run and its result, and
+who did what: agent or person, owner or not. Results render as views
+you can open, not pasted logs. Messages from anyone but the owner are
+marked untrusted, and the view shows which ones an agent has read.
+The view is built against recorded lanes first, so the design can be
+judged before any sync exists.
 
-GREEN sites:
+RED: a test starts two peers on loopback, each with its own `HOME` and
+`CAIRN_HOME` in a temporary directory (ENG-14), and no server. Both
+write to one lane. The test then cuts the link, writes on both sides,
+and restores it. It fails until both peers hold the same event set and
+render the same lane: causal order, every author and trust class
+intact. A second case flips one byte of a segment in transit and fails
+until the receiver refuses it, audits the refusal and imports nothing.
 
-- `cmd/cairn-relay`: stores segments per origin and serves them by
-  offset; it checks a segment's signature before accepting it;
-- `cmd/cairn-sync`: pushes sealed segments, pulls by offset, and writes
-  verified ones into the inbox directory the core reads;
-- the segment and checkpoint format from plan 2610012322, following
-  C2SP tlog-tiles; torchwood is tried first for signed notes.
+GREEN sites: the lane view and the peer that exchanges segments. The
+segment format comes from plan 2610012322. It follows C2SP tlog-tiles.
 
-Gate: the RED test passes against the built binaries, and the core's
-import-closure test still passes unchanged.
+Gate: the RED test passes against the built binaries. The stakeholder
+walks through the lane view and signs off the design. Only then does
+phase 2 make sync seamless.

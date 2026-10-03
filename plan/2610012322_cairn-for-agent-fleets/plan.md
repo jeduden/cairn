@@ -115,9 +115,10 @@ because it builds the store's identity model.
    non-goals, deployment context, invariants restated for many nodes,
    the identity model, and new ADRs for the record/index split
 3. Re-plan M1 against the approved identity model
-4. Name the network components in the SRS change: the sync agent,
-   the relay and the public host, their trust boundary and the
-   invariants that govern them. Plan 2610022338 builds them.
+4. Name the lane and its peer network in the SRS change: no central
+   service, every node a full peer, partitions merged on reconnect,
+   their trust boundary and the invariants that govern them. Plan
+   2610022338 builds them, experience first.
 
 ## Execution
 
