@@ -241,3 +241,48 @@ Feature: Owner acts (OWN)
     And the act is refused unless a recorded acceptance names each open risk, including that the agent can forge it
     And an acceptance is shown on every surface beside each session relying on it
     And the acceptance is asked again when the set of open risks grows
+
+  @OWN-23 @P1 @I2 @I6 @pending
+  Scenario Outline: delegation beyond the session rests on a grant in force
+    Given an isolated Cairn home
+    And an agent of the principal in a running session
+    And <grant>
+    When the agent delegates a task to <target>
+    Then the delegation is <outcome>
+
+    Examples:
+      | grant                                                   | target                                   | outcome                                   |
+      | no grant                                                | a subagent in its own session            | recorded under OWN-24, with no grant      |
+      | no grant                                                | a new session in another worktree        | refused, audited and shown                |
+      | a grant naming that worktree, a budget and an expiry    | a new session in that worktree           | started through cairn-run and recorded    |
+      | an expired grant                                        | an existing session of the same principal | refused, audited and shown                |
+
+  @OWN-24 @P1 @I2 @pending
+  Scenario: a delegate inherits the delegating agent's ceiling and taint
+    Given an isolated Cairn home
+    And an agent whose session is recall-tainted, delegating under a grant whose rule ceiling is "ask first"
+    When the delegate session starts
+    Then the delegation is recorded on both sides with the delegating agent, the grant and the task's address
+    And the delegate holds no rule level looser than the grant's or the delegating agent's
+    And the delegate's session is recall-tainted
+    And the task reached the delegate through the harness's input inside the fixed template, marked as written by the delegating agent
+    And a further delegation beyond the grant's depth is refused
+
+  @OWN-25 @P1 @I2 @I6 @pending
+  Scenario: a delegate's result is pulled, never pushed
+    Given an isolated Cairn home
+    And a delegation outside the session that has returned a result
+    When the delegating agent calls lane_result for that delegation
+    Then the result arrives inside the untrusted envelope
+    And no result text entered the delegating agent's context before that call
+    And cancelling the grant stops every delegate it covers, as a cut act
+
+  @OWN-26 @P2 @I2 @I8 @pending
+  Scenario: another principal's agent takes work only under their acceptance grant
+    Given an isolated Cairn home
+    And a lane shared by principals "owner" and "co-author"
+    And "co-author" has recorded an acceptance grant naming "owner", a target agent, a rule ceiling, a budget and an expiry
+    When an agent of "owner" delegates a task to that target
+    Then the task reaches the target in the fixed template, marked as from "owner"'s agent
+    And the target keeps "co-author" as its one principal
+    And the same delegation without the acceptance grant is refused and audited

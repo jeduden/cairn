@@ -192,3 +192,12 @@ Feature: Lane view (VIEW)
     When the person opens the request in the lane
     Then it shows the delivery state to each agent's principal
     And it shows the diff and events since that verdict's head
+
+  @VIEW-20 @P1 @I6 @pending
+  Scenario: the lane view shows every delegation as a link
+    Given an isolated Cairn home
+    And a lane where an agent delegated one task to a subagent and one to another session under a grant
+    When the person opens the lane view
+    Then each delegation shows as a link from the delegating agent to its delegate
+    And each link shows its grant, the task's address and its state
+    And the delegate's spend shows against the grant's budget

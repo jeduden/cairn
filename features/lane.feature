@@ -198,3 +198,32 @@ Feature: Lane (LANE)
       | co-author | posts, their own agents' events, comments, endorsing to their own agents |
       | reviewer  | posts, comments, approvals, requests for changes                         |
       | watcher   | reading, a request for a wider role                                      |
+
+  @LANE-17 @P1 @I6 @I8 @pending
+  Scenario: every lane shows its visibility
+    Given an isolated Cairn home
+    And a private lane, a lane shared with two members, a published lane and a lane stored on a blind peer
+    When the person opens the lane view and runs "cairn lanes"
+    Then each lane shows its visibility on both surfaces
+    And a shared lane lists each member's petname and role
+    And changing a lane's visibility is recorded as an owner act
+
+  @LANE-18 @P2 @I2 @I8 @pending
+  Scenario: an invite link binds once and reveals nothing early
+    Given an isolated Cairn home
+    And the owner issued an invite link with the role "reviewer" and an expiry
+    When a person opens the link for the first time
+    Then the token binds to that person's key
+    And the invite takes effect only after the owner's review step
+    And no lane content is revealed before it does
+    And a second use of the link, or a use after its expiry, is refused and audited
+
+  @LANE-19 @P1 @I1 @I6 @pending
+  Scenario: subagents sharing a worktree are told apart
+    Given an isolated Cairn home
+    And an orchestrating agent whose two subagents edit the same worktree at once
+    When both edit "internal/store/fts.go" and one changes another file through a shell
+    Then each tool-call edit is attributed to its subagent
+    And the shell change's checkpoint hunk is marked ambiguous, naming both subagents
+    And a Needs you item names both subagents and the file
+    And a run marked unbound names the edits that unbound it
