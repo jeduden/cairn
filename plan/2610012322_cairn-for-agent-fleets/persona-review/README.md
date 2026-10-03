@@ -41,3 +41,9 @@ not by position.
 - One principal per agent, and petnames over sender-chosen names.
 - Per-writer signed logs, no relay and enrolment by key.
 - Claims shown beside the evidence that checks them.
+
+## Round 2
+
+The personas re-reviewed the reconciled proposal; the merged result is
+in [round-2/README.md](round-2/README.md). Every finding above has an
+answer there, and eight new blockers, R1–R8, came up.
