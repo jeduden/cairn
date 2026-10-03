@@ -262,6 +262,10 @@ overrides:
       max-file-length: false
       cross-file-reference-integrity: false
       required-structure: false
+      # Companion analyses such as requirement traces are wide
+      # matrices, as research notes are.
+      table-readability: false
+      token-budget: false
 
   # Research reports and their raw notes are kept verbatim as evidence:
   # the readability and length rules that shape docs step aside, and
