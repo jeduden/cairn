@@ -15,9 +15,10 @@ depends-on: [2610012322]
 
 ## Goal
 
-Standalone first: on one machine, with no network at all, several
-harnesses work their lanes and one view shows them all: each agent's
-harness as it runs, its work results, and the other harnesses.
+Standalone comes first. One machine runs with no network at all.
+Several harnesses work their lanes there, and one view shows them all.
+It shows each agent's harness as it runs, its work results, and the
+other harnesses.
 
 Peer to peer extends that, opt-in. People and agents work a lane
 together live, from any machine or sandbox, with no central service.
