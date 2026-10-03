@@ -27,7 +27,8 @@ order. Git stays where code lands, and landing makes a second history.
 Squash, rebase and edits on the forge then break any stored link, so
 the lane derives its link to landed commits from the record, and says
 "not proven" when it cannot. The record is what a live, multiplayer
-pull request reads.
+pull request reads. The working pitch and the stakeholder's decisions
+are in [pitch.md](pitch.md).
 
 ## Context
 

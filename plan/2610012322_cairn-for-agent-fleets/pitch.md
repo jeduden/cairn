@@ -1,0 +1,92 @@
+# Cairn's pitch and direction
+
+The working pitch, the stakeholder's decisions behind it, and how it
+got here. The SRS change this plan ends in turns it into the contract;
+until then it is direction, not requirement.
+
+## The pitch (3 October 2026)
+
+> Cairn: know exactly what your agents did, and work with them live.
+>
+> Agents now work around the clock, in parallel, across machines. Cairn
+> keeps the full, tamper-evident record of each lane of work (every
+> message, edit, tool run and result) on your own machines. One view
+> shows each agent as it works, what it produced, and what actually
+> verified it.
+>
+> It runs standalone with no network. Turn on peer to peer to work a
+> lane live with others, with no central service and no break when the
+> network splits. Only you can instruct your agents; everyone else's
+> words reach them as untrusted data.
+
+The lane is the unit: a branch, its worktrees, its agents and humans,
+and their conversations and results. That is a pull request in all but
+its interface. Git keeps the code; Cairn keeps the lane.
+
+## The stakeholder's decisions
+
+1. Keep the name Cairn.
+2. The lane, a live pull request, is the unit Cairn holds.
+3. No dependence on a central service. Self-hosting is normal, as it
+   is for git.
+4. Standalone works with no network at all. Peer to peer extends it.
+5. Multiplayer works without a central server, through partitions;
+   CRDTs and other conflict resolution handle the merge.
+6. The user experience comes first; making sync seamless is the second
+   step.
+7. Security must be good enough, measured against Zed Delta.
+8. There is a UI. One view shows an agent's harness live, its work
+   results and the other harnesses. Harnesses also connect directly;
+   the UI is one more client, never a required hop.
+9. The standalone UI is a web page in the browser on a loopback-only
+   port. Standalone means nothing leaves the machine.
+10. Network boundaries are defined explicitly: process, machine, peer
+    and public. See
+    [plan 2610022338](../2610022338_cairn-network-side/plan.md).
+
+## Direction compared with Zed Delta
+
+Zed Delta is the closest product: public beta since 16 September 2026,
+"Replacing pull requests". Sources are in the
+[review](../../research/notes/live-pr-pitch-review/competitors.md).
+
+|                  | Zed Delta                                   | Cairn (vision; not built)                                                 |
+| ---------------- | ------------------------------------------- | ------------------------------------------------------------------------- |
+| Unit             | Thread: conversation and edits side by side | Lane: conversation, edits, tool runs, results and approvals in one record |
+| Topology         | Central: Cloudflare Durable Objects backend | Standalone first; peer to peer, no central service                        |
+| Partitions       | Not documented                              | Each side keeps working; logs merge on reconnect                          |
+| Live co-editing  | CRDT worktrees                              | Planned; agents in separate worktrees need none                           |
+| Editor           | Zed's own app, agents over ACP              | Any editor; Claude Code first                                             |
+| Record integrity | No signing documented                       | Signed, hash-chained log per writer                                       |
+| Co-author trust  | None documented                             | Only the owner instructs agents; others are untrusted (I2)                |
+| Merge gate       | Land step; PRs off, pushes to main          | Signed approvals and required checks on the lane                          |
+| Data control     | Cloudflare-managed keys, deletion by email  | Your own nodes; erasure by key after the keyed-hash fix                   |
+| Maturity         | Shipping                                    | Pre-implementation                                                        |
+
+## Lessons from OpenAI dots
+
+From [the dots notes](../../research/notes/openai-agent-ui/dots.md):
+the question of the moment is "what did my agent do?", which Cairn's
+record answers; a completed run is not a verified one, so results show
+what checked them; rule levels per action shape the owner's control.
+
+## How the pitch changed
+
+1. A lossless, secure memory for one agent.
+2. Session history next to git, shared across a fleet.
+3. The live pull request: the lane as one record.
+4. After a blind adversarial review
+   ([notes](../../research/notes/live-pr-pitch-review/)): lead with
+   security, since Delta owns the live-PR headline; add the process a
+   pull request runs; stop claiming that code and talk "never drift".
+5. Standalone first, peer to peer second, a UI over harnesses.
+6. After OpenAI dots: lead with knowing what your agents did.
+
+## Open before the SRS change
+
+- Scope peering as the opt-in step beyond I4, and reword SEC-01.
+- Lift NG5 for the UI.
+- How a co-author's message reaches an agent without the owner relaying
+  it: a signed endorsement or a granted role.
+- Replace unsalted content hashes with keyed ones (REC-09, REC-10,
+  the §8.2 tombstone).
