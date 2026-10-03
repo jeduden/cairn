@@ -281,26 +281,27 @@ Priorities: P0 for v1.0, P1 expected for v1.0, P2 later, specified now.
    local writer is refused (PRV-09). Reason: "nothing imported" leaves
    the owner's phone and second machine powerless (D3), while trust by
    claimed origin lets any peer forge it; a certified, scoped key is
-   the narrowest rule that serves both. 2. **Per-event keyed
-   commitment, not tenant-keyed or lane-keyed hashing.** The traces
-   disagreed on the key. Rule: content enters the chain, seals,
-   tombstones and anything replicated only as a keyed commitment to
-   the content under `k_e`, where `k_e` is drawn per event, stored
-   with the content and erased with it (REC-17). Local file and
-   directory names use a tenant-local storage key that never leaves
-   the node (REC-09, LANE-02). Reason: a tenant key cannot be shared
-   with co-authors' nodes, so they could not check content; a lane key
-   is shared by every holder, so any holder could confirm a guess at
-   purged content from the retained commitment. Only a key erased with
-   the content meets "no retained or replicated value confirms purged
-   content". 3. **Recall defaults to the session; lane and project are
-   explicit.** Rule: RCL-05 keeps the current session as the default,
-   adds an explicit, logged `lane` and `project` scope, puts foreign
-   lanes outside every widened scope (RCL-10), and keeps cross-project
+   the narrowest rule that serves both.
+2. **Per-event keyed commitment, not tenant-keyed or lane-keyed
+   hashing.** The traces disagreed on the key. Rule: content enters
+   the chain, seals, tombstones and anything replicated only as a
+   keyed commitment to the content under `k_e`, where `k_e` is drawn
+   per event, stored with the content and erased with it (REC-17).
+   Local file and directory names use a tenant-local storage key that
+   never leaves the node (REC-09, LANE-02). Reason: a tenant key
+   cannot be shared with co-authors' nodes, so they could not check
+   content; a lane key is shared by every holder, so any holder could
+   confirm a guess at purged content from the retained commitment.
+   Only a key erased with the content meets "no retained or replicated
+   value confirms purged content".
+3. **Recall defaults to the session; lane and project are explicit.**
+   Rule: RCL-05 keeps the current session as the default, adds an
+   explicit, logged `lane` and `project` scope, puts foreign lanes
+   outside every widened scope (RCL-10), and keeps cross-project
    recall out of v1. Reason: a lane-wide default widens what every
    agent reads, and recall taint (SEC-13) with it, for no request of
    the agent's; the explicit scope gives lane work to agents that ask.
-   4. **Every owner act is `operator`.** The UX drafts gave owner acts
+4. **Every owner act is `operator`.** The UX drafts gave owner acts
    `user`, `operator` or `harness_meta`. Rule: every owner act the
    glossary lists, written by an authenticated owner surface, is
    `operator` (OWN-02). A prompt typed into the harness stays `user`,
