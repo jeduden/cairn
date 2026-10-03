@@ -15,13 +15,16 @@ depends-on: [2610012322]
 
 ## Goal
 
-People and agents work a lane together live, from any machine or
-sandbox, with no central service. One view shows each agent's
-harness as it runs, its work results, and the other harnesses on the
-lane or the fleet. Like git, every node holds the whole
-lane and can serve it; a self-hosted node is the normal case, not an
-upgrade. A lane split by a network partition keeps working on every
-side and merges cleanly when the sides meet again.
+Standalone first: on one machine, with no network at all, several
+harnesses work their lanes and one view shows them all: each agent's
+harness as it runs, its work results, and the other harnesses.
+
+Peer to peer extends that, opt-in. People and agents work a lane
+together live, from any machine or sandbox, with no central service.
+Like git, every node holds the whole lane and can serve it; a
+self-hosted node is the normal case, not an upgrade. A lane split by
+a network partition keeps working on every side and merges cleanly
+when the sides meet again.
 
 ## Context
 
@@ -43,6 +46,16 @@ The stakeholder's decisions (3 October 2026):
    and writes the lane from inside the session, and reaches other
    harnesses with no UI in between. The UI is one more client of the
    same lanes, never a required hop.
+5. Self-hosted standalone works with no network at all: one machine,
+   its worktrees, its harnesses and the UI. Peer to peer is an
+   extension the user turns on, built on top of standalone.
+
+Standalone keeps I4 as written, and peering is the opt-in step the
+SRS change has to scope. So the standalone UI must not open a
+listening socket either (SEC-01): a terminal UI or a desktop app that
+reads the local store qualifies, while a web UI on a loopback port
+does not. Local harnesses connect directly through the local store,
+with no socket between them.
 
 A harness view must not be tied to one agent. The Agent Client
 Protocol (ACP), which Zed uses, streams a session as updates and can
@@ -98,22 +111,24 @@ node is special.
 
 ## Tasks
 
-1. Proving slice: the lane experience over two peers, with a partition
-   and a merge, and no server
-2. Seamless sync: peer discovery, sandboxes behind outbound-only
+1. Proving slice: the standalone lane experience on one machine, with
+   no network: several harnesses, their results and one view
+2. Peer to peer: two peers, no server, split by a partition and
+   merged on reconnect
+3. Seamless sync: peer discovery, sandboxes behind outbound-only
    networks, background sync and offline queues
-3. Live co-editing in one worktree, with a CRDT chosen by ADR
-4. The merge gate on the lane: signed approvals, required checks and
+4. Live co-editing in one worktree, with a CRDT chosen by ADR
+5. The merge gate on the lane: signed approvals, required checks and
    landing in git, working across partitions
-5. Public lanes: export with stricter redaction and review, signed,
+6. Public lanes: export with stricter redaction and review, signed,
    served by any peer, imported as untrusted
-6. Git as a carrier: one ref per writer for open-source projects
+7. Git as a carrier: one ref per writer for open-source projects
 
 ## Execution
 
-| Phase | Model | Gate                                                                                                                               |
-| ----- | ----- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | opus  | Two isolated peers, split and rejoined, render the same lane; the stakeholder walks through the lane view and signs off the design |
+| Phase | Model | Gate                                                                                                                                        |
+| ----- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | opus  | With networking denied, two local harnesses on separate worktrees show in one view with their results; the stakeholder signs off the design |
 
 ## Phases
 
@@ -136,15 +151,17 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                              |
-| --- | ------ | ------------------------------------------------------------------ |
-| 1   | 🔲     | [The lane experience over two peers, with a partition](phase-1.md) |
+| #   | Status | Phase                                                         |
+| --- | ------ | ------------------------------------------------------------- |
+| 1   | 🔲     | [The standalone lane experience, with no network](phase-1.md) |
 <?/catalog?>
 
 ## Acceptance Criteria
 
-- [ ] The stakeholder signs off the lane experience before sync is
-  made seamless
+- [ ] Standalone works with no network: several local harnesses, their
+  results and one view, with no listening socket
+- [ ] The stakeholder signs off the lane experience before peering is
+  built
 - [ ] Two peers that never reach a server, split by a partition, both
   keep working and converge to the same lane after they reconnect
 - [ ] A segment with a broken signature or chain is refused and
