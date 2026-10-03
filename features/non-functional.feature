@@ -7,20 +7,24 @@ Feature: Non-functional requirements (NFR)
   implements the requirement lands.
 
   @NFR-01 @pending
-  Scenario Outline: hooks meet their p95 wall-clock budgets on a 1M-event project
+  Scenario Outline: hooks meet their p95 wall-clock budgets on a 1M-event project under fleet load
     Given an isolated Cairn home
     And a synthetic project store with 1M events on the reference hardware
+    And cairn-ui is open and ten harnesses are writing
     When the hook "<Event>" runs 1,000 times with a representative payload
     Then the p95 wall-clock time is at most <budget>
 
     Examples:
-      | Event            | budget |
-      | UserPromptSubmit | 50 ms  |
-      | SessionStart     | 150 ms |
-      | PostToolUse      | 100 ms |
-      | Stop             | 100 ms |
-      | PreCompact       | 2 s    |
-      | SessionEnd       | 1 s    |
+      | Event             | budget                                                                                                                |
+      | UserPromptSubmit  | 50 ms                                                                                                                 |
+      | SessionStart      | 150 ms                                                                                                                |
+      | PostToolUse       | 100 ms                                                                                                                |
+      | Stop              | 100 ms                                                                                                                |
+      | SubagentStop      | 100 ms                                                                                                                |
+      | Notification      | 100 ms                                                                                                                |
+      | PreCompact        | 2 s                                                                                                                   |
+      | SessionEnd        | 1 s                                                                                                                   |
+      | PermissionRequest | 50 ms beyond the owner's hold, which ends within the owner's hold window and at least 10 s before the harness timeout |
 
   @NFR-02 @pending
   Scenario: a hook stops at its internal deadline and hands off the rest through a work marker
@@ -94,13 +98,15 @@ Feature: Non-functional requirements (NFR)
     And "cairn verify" exits 0
 
   @NFR-09 @pending
-  Scenario: no resident process, bounded hook memory and bounded store overhead
+  Scenario: the core leaves no resident process and every user-run binary stays within its footprint
     Given an isolated Cairn home
-    And a synthetic project store with 1M events
-    When every hook runs once and the session ends
-    Then no Cairn process remains running
-    And each hook's peak RSS is at most 50 MiB
-    And the database plus index size is at most 1.5 times the stored text size
+    And a synthetic project store with 1M events on the reference hardware
+    When every hook runs once, the session ends, and cairn-ui, cairn-peer, cairn-publish, cairn-bridge and ten cairn-run instances run idle
+    Then no Cairn process runs between sessions except the binaries the user started
+    And each hook's peak RSS is at most 50 MiB and the store overhead is at most 1.5 times the stored text
+    And each of cairn-ui, cairn-peer, cairn-publish and cairn-bridge peaks at most 256 MiB RSS and idles at most 5% of one core
+    And the ten cairn-run instances together peak at most 256 MiB RSS and idle at most 5% of one core
+    And cairn-run adds at most 10 ms p95 to keystroke-to-echo latency
 
   @NFR-10 @pending
   Scenario Outline: a single static binary builds for each supported platform
@@ -140,3 +146,20 @@ Feature: Non-functional requirements (NFR)
     Given a release artifact set
     When its documentation is listed
     Then it contains the operator guide, threat model, configuration reference, MCP tool reference and upgrade notes
+
+  @NFR-15 @pending
+  Scenario Outline: the lane surfaces meet their p95 targets on a 10M-event node and say when they miss
+    Given an isolated Cairn home
+    And a node holding 10M events across 50 lanes on the reference hardware
+    When "<action>" is measured 1,000 times
+    Then the p95 time is at most <budget>
+    And any run that misses its target says so on screen
+
+    Examples:
+      | action                                     | budget |
+      | an ingested event appears in the lane view | 1 s    |
+      | Catch up paints                            | 1 s    |
+      | search shows its first results             | 300 ms |
+      | a hit opens in context                     | 150 ms |
+      | replay steps from one event to the next    | 50 ms  |
+      | replay rebuilds a worktree                 | 500 ms |

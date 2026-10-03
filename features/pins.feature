@@ -30,15 +30,15 @@ Feature: Pins (PIN)
     And the active pin count is 0
     And no MCP tool creates or activates a pin
 
-  @PIN-03 @P0 @I3 @pending
-  Scenario: a pin stores its verbatim text and metadata
+  @PIN-03 @P0 @I3 @I5 @pending
+  Scenario: a pin stores its verbatim text, scope, creating address and commitment
     Given an isolated Cairn home
+    And a session in lane "L1"
     When the operator runs "cairn pin add --type constraint --priority 1 'Never push directly to main; open a pull request.'"
     Then the command exits 0
-    And the pin stores that text verbatim with type "constraint", priority 1, its creating event seq, author "operator" and the SHA-256 of its text
-    When the operator adds a pin whose text is 1,001 characters long
-    Then the command exits 2
-    And the active pin count is 1
+    And the pin stores that text verbatim with type "constraint", priority 1, scope lane "L1", the address (writer, seq) of its creating event, author "operator" and that event's commitment
+    And the pin stores no bare hash of its text
+    And adding a pin whose text is 1,001 characters long exits 2 and leaves the active pin count at 1
 
   @PIN-04 @P0 @I10 @pending
   Scenario: changing a pin records a removal followed by an addition
@@ -105,3 +105,29 @@ Feature: Pins (PIN)
     When the operator runs "cairn doctor --json"
     Then the output warns that the pin "Never push directly to main." duplicates text in "CLAUDE.md"
     And the output has no warning about the pin "Run go test before committing."
+
+  @PIN-10 @P0 @I3 @I2 @pending
+  Scenario: a restore block holds the principal's trusted pins of every lane the session has belonged to
+    Given an isolated Cairn home
+    And a session that started in lane "L1" and moved to lane "L2", into which lane "L3" was then merged
+    And trusted pins of the session's principal scoped to "L1", "L3", the session and the whole project, a tenant-configuration pin, and a pin in "L2" written by another principal
+    And a principal's "/pin" whose creating event was recorded in interactive mode, while the current mode is "automation"
+    When the hook "SessionStart" runs with source "compact"
+    Then the restore block holds the "L1" pin, the "L3" pin as a pin of "L2", the session pin, the project-wide pin, the tenant-configuration pin as project-wide, and the interactive-mode pin
+    And the restore block names "L1" and "L2" by id, and the merged lane by both "L2" and "L3"
+    And the other principal's pin is stated only by count, lane id and key fingerprint, with no text, and an audit entry records it
+
+  @PIN-11 @P2 @I3 @I6 @pending
+  Scenario Outline: a pin active on another of the owner's nodes but not here is stated by count and reason
+    Given an isolated Cairn home
+    And a pin active on another of the owner's nodes that is not active on this node because <reason>
+    When the hook "SessionStart" runs with source "compact"
+    Then the restore block states that 1 such pin exists because <reason>
+    And the restore block holds none of that pin's text
+    And an audit entry records the pin not active on this node
+
+    Examples:
+      | reason                             |
+      | its device key lacks the pin scope |
+      | its certificate is revoked         |
+      | its event has not arrived          |

@@ -104,10 +104,19 @@ Feature: Engineering quality (ENG)
     And the module as a whole is at least 80% covered
 
   @ENG-12 @P0 @pending
-  Scenario: the end-to-end suite runs with the network denied
-    Given the end-to-end suite runs inside a network-denied sandbox
-    When any code under test creates a socket
-    Then the suite fails naming the caller
+  Scenario Outline: the end-to-end suite runs each binary inside its boundary's sandbox
+    Given the end-to-end suite runs "<binary>" inside a sandbox that <sandbox>
+    When "<binary>" opens a socket outside the boundary the register assigns it
+    Then the suite fails naming the binary and the caller
+
+    Examples:
+      | binary        | sandbox                       |
+      | cairn         | denies all network            |
+      | cairn-ui      | denies all but loopback       |
+      | cairn-run     | denies all but loopback       |
+      | cairn-peer    | allows only its register rows |
+      | cairn-publish | allows only its register rows |
+      | cairn-bridge  | allows only its register rows |
 
   @ENG-13 @P1 @pending
   Scenario: mutation testing scores the security-sensitive packages
@@ -129,12 +138,20 @@ Feature: Engineering quality (ENG)
     Then the benchmark CI job fails naming the benchmark
 
   @ENG-16 @P0 @pending
-  Scenario: CI gates on the static analyzers and the custom checks
+  Scenario Outline: CI gates on the static analyzers and one import allow-list per binary
     Given the CI workflow
-    Then it gates on go vet, staticcheck, gosec, errcheck and govulncheck
-    And it gates on the TrustedText construction check
-    And it gates on the forbidden-import check for net, net/http and os/exec
-    And it gates on the wall-clock and randomness check for projection code
+    When the import allow-list check reads "<binary>"
+    Then the workflow gates on go vet, staticcheck, gosec, errcheck, govulncheck and the custom analyzers
+    And the allow-list for "<binary>" <rule>
+
+    Examples:
+      | binary        | rule                                                                            |
+      | cairn         | forbids net, net/http and os/exec outside the kernel-worker re-exec             |
+      | cairn-run     | allows os/exec and loopback listening sockets, and forbids outbound connections |
+      | cairn-ui      | allows listening sockets, and forbids os/exec and outbound connections          |
+      | cairn-peer    | allows listening sockets and outbound connections, and forbids os/exec          |
+      | cairn-publish | allows listening sockets and outbound connections, and forbids os/exec          |
+      | cairn-bridge  | allows outbound connections, and forbids os/exec and listening sockets          |
 
   @ENG-17 @P0 @pending
   Scenario: contract tests replay every supported Claude Code version
@@ -242,3 +259,11 @@ Feature: Engineering quality (ENG)
       | approve         | none     | moved   | passed | passed      | nothing         |
       | approve         | none     | current | failed | passed      | an error        |
       | malformed       | none     | current | passed | passed      | an error        |
+
+  @ENG-29 @P0 @pending
+  Scenario: an invariant or I2-review change lands only with an ADR recording a named security reviewer's approval
+    Given the repository checkout
+    When a change to an invariant or to a requirement marked for I2 review is proposed
+    Then it lands only with an accepted ADR that records a named human security reviewer's approval
+    And until that ADR is accepted, every component that crosses B0 is built only behind a prototype build tag
+    And no release build or tagged release contains prototype code

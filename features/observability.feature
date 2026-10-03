@@ -60,3 +60,20 @@ Feature: Observability (OPS)
     When the operator runs "cairn ingest --all"
     Then every line of "logs/cairn.log" is a JSON object with "time", "level" and "msg"
     And the process opened no network connection
+
+  @OPS-06 @P1 @I6 @pending
+  Scenario Outline: every failure of a user-run binary reaches the tenant's audit log and a named counter
+    Given an isolated Cairn home
+    And "<binary>" is running
+    When an operation of "<binary>" is <outcome>
+    Then the tenant's audit log records the operation as "<outcome>"
+    And a named counter for it increases by 1
+    And "cairn status" shows the failure outside any browser
+
+    Examples:
+      | binary       | outcome   |
+      | cairn-ui     | rejected  |
+      | cairn-ui     | coalesced |
+      | cairn-run    | timed-out |
+      | cairn-peer   | dropped   |
+      | cairn-bridge | failed    |

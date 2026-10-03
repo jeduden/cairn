@@ -105,3 +105,35 @@ Feature: Assumptions register (ASM)
     When the hook "SessionEnd" runs with a handler that sleeps past 1.5 s
     Then the recorded harness terminated the handler after about 1.5 s
     And the other hooks ran up to their configured 10 s timeout
+
+  @ASM-17 @pending
+  Scenario: transcript lines are appended within 1 s of their event while a session runs (S9)
+    Given a recorded session from Claude Code "supported" with the time of each hook event
+    When the recorded transcript is replayed with the write time of each line
+    Then each transcript line was appended within 1 s of its event
+
+  @ASM-18 @pending
+  Scenario: the harness prompt stays answerable during PermissionRequest and accepts no decision (S9)
+    Given a recorded hook payload for Claude Code "supported"
+    When the hook "PermissionRequest" runs with a handler that waits and then returns no decision
+    Then the recorded harness kept its own permission prompt answerable while the handler waited
+    And the recorded harness accepted the handler's exit without a decision and left the choice to its prompt
+
+  @ASM-19 @pending
+  Scenario Outline: each agent harness exposes inputs for steer, interrupt and stop (S10)
+    Given the recorded input interface of "<harness>"
+    When its inputs are listed
+    Then it exposes an input for steer, one for interrupt and one for stop
+
+    Examples:
+      | harness          |
+      | Agent SDK        |
+      | ACP              |
+      | Codex app-server |
+
+  @ASM-20 @pending
+  Scenario: a clone's root commit, HEAD, refs and trees are readable from git's files alone (S11)
+    Given a recorded git clone
+    When Cairn reads the clone's files with process creation forbidden
+    Then it resolves the root commit, HEAD, every ref and the tree of every ref
+    And no process was started
