@@ -4,20 +4,41 @@ The working pitch, the stakeholder's decisions behind it, and how it
 got here. The SRS change this plan ends in turns it into the contract;
 until then it is direction, not requirement.
 
-## The pitch (3 October 2026)
+## The pitch (3 October 2026, after the requirement traces)
 
 > Cairn: know exactly what your agents did, and work with them live.
 >
 > Agents now work around the clock, in parallel, across machines. Cairn
 > keeps the full, tamper-evident record of each lane of work (every
-> message, edit, tool run and result) on your own machines. One view
-> shows each agent as it works, what it produced, and what actually
-> verified it.
+> message, edit, tool run and result) on your own machines, with
+> secrets redacted before anything is written. Your standing rules are
+> pinned: they come back word for word after every compaction, and
+> your agents recall exactly what they did whenever they ask.
 >
-> It runs standalone with no network. Turn on peer to peer to work a
-> lane live with others, with no central service and no break when the
-> network splits. Only you can instruct your agents; everyone else's
-> words reach them as untrusted data.
+> One view shows each agent as it works, what it produced, and what
+> verified it: the agent's own claim, a local run, or CI.
+>
+> It runs standalone: nothing leaves your machine except what your
+> agent recalls into its own model call. Next, turn on peer to peer to
+> work a lane live with others, with no central service and no break
+> when the network splits.
+>
+> Others can post to your lane; only you decide what becomes an
+> instruction. Their words, like tool output and web pages, reach your
+> agents only when the agents ask, marked untrusted.
+
+What the requirement traces changed in the pitch, and why:
+
+| Pitch change                                                                                      | Reason from the SRS                                                                                                                         |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Added pinned rules restored word for word, and exact recall                                       | I3 and RCL-03 are the SRS's core value and its strongest measured result; the pitch had dropped them                                        |
+| Added redaction before anything is written                                                        | SEC-08 redacts before storage; the security officer and maintainer personas need it                                                         |
+| "Reach agents only when they ask" instead of "reach them as untrusted data"                       | I2 has two halves, the label and the asking; the pitch kept only the label                                                                  |
+| "Others can post; only you decide what becomes an instruction" instead of "only you can instruct" | PRV-04 makes automation the default, where even the owner is untrusted; the owner adopts a post as an instruction as its own recorded event |
+| Tool output and web pages named as untrusted too                                                  | I2 covers all content outside the trusted boundary, not only other people                                                                   |
+| "Nothing leaves your machine except what your agent recalls"                                      | I4 itself lets recalled content travel to the model provider                                                                                |
+| "What verified it: claim, local run or CI"                                                        | No requirement covered verification; LANE-04 adds a level per result                                                                        |
+| Peer to peer is "next"                                                                            | Peering is P2 work after the standalone release; NG4 excludes it from v1                                                                    |
 
 The lane is the unit: a branch, its worktrees, its agents and humans,
 and their conversations and results. That is a pull request in all but
@@ -81,6 +102,10 @@ what checked them; rule levels per action shape the owner's control.
    pull request runs; stop claiming that code and talk "never drift".
 5. Standalone first, peer to peer second, a UI over harnesses.
 6. After OpenAI dots: lead with knowing what your agents did.
+7. After the requirement traces
+   ([forward](trace-forward.md), [backward](trace-backward.md)): restore
+   pinning, recall and redaction; keep I2's asking half; scope owner
+   trust and "nothing leaves the machine" to what the SRS can hold.
 
 ## Open before the SRS change
 
