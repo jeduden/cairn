@@ -41,10 +41,14 @@ seven residual risks that only sandboxing removes (OQ-29):
 | R6  | It uses cut acts (stop, deny, quarantine) against other agents           |
 | R7  | It passes the terminal-confirmation opt-in, by design                    |
 
-The stakeholder's decision (3 October 2026): sandboxing is a separate
-arm. Cairn likely has to support a range of sandbox technologies. The
-first two named are NVIDIA OpenShell and Deno's Claw Patrol. The
-initial [survey](survey.md) places them and the others.
+The stakeholder's decisions (3 October 2026): sandboxing is a separate
+arm, and for an unsandboxed session the residual risks are accepted
+rather than fought. The fleets proposal carries the second as OWN-22:
+each session's sandbox state, and the owner's recorded acceptance of
+the risks it leaves open. This arm supplies what OWN-22 rests on.
+Cairn likely has to support a range of sandbox technologies. The first
+two named are NVIDIA OpenShell and Deno's Claw Patrol. The initial
+[survey](survey.md) places them and the others.
 
 Two shapes of sandbox exist, and they put the record writer in
 different places. A tool sandbox, like Claude Code's and Codex's own,
@@ -78,20 +82,26 @@ Invariants touched:
    and cloud sandboxes
 2. Write the capability contract: one property per residual risk, a
    way to test each, and where the record writer and its key sit in
-   each sandbox shape
+   each sandbox shape; in a whole-harness sandbox the agent's tools
+   must not reach the writer key, or the writer moves outside
 3. Proving slice: a conformance probe that attempts each residual
    attack from inside a sandbox and reports which are blocked, run
    against at least two technologies
 4. Detection: Cairn records each session's sandbox, its policy digest
    and the contract properties that hold, as `harness_meta`, and shows
-   unsandboxed sessions on every surface
-5. The SRS change: requirements and `@pending` scenarios for the
+   unsandboxed sessions on every surface. Settle who may vouch for a
+   sandbox, so an agent cannot claim one it does not run in: the
+   launcher, or an adapter outside the sandbox, never the agent
+5. Risk acceptance (OWN-22): the install and Setup flow that names
+   each open risk, asks again when the set grows, and lets managed
+   policy forbid it
+6. The SRS change: requirements and `@pending` scenarios for the
    contract, detection and labelling; T21 scoped by sandbox state;
-   OQ-29's option B written out
-6. Adapters for the supported set: `cairn install` shows, as a diff,
+   OWN-22 carried into the SRS
+7. Adapters for the supported set: `cairn install` shows, as a diff,
    the sandbox policy that denies Cairn's paths, sockets and the
    owner's terminals; witness runs use the same adapters
-7. Egress firewalls: read Claw Patrol's or OpenShell's decisions from
+8. Egress firewalls: read Claw Patrol's or OpenShell's decisions from
    files as untrusted events in the lane, and decide whether their
    human approvals can appear in Needs you
 
