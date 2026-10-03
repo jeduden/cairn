@@ -181,16 +181,8 @@ landmark index (LMK-01, LMK-02, LMK-05), in three parts.
    `seq 41020–41388 · turns 31–33 · Edit×6 Bash×4 · files:
    internal/store/fts.go, internal/store/fts_test.go`. Older spans
    fold into tier lines as LMK-05 rolls them up. Each card expands
-   into fact lines built from templates over structural events:
-
-  - "Ran `go test ./...` 4 times; last exit 1 (`local run`)";
-  - "Committed `9b1e04d`; HEAD captured by hook (`proven`)";
-  - "Asked to run `git push --force`; you approved at 03:12";
-  - "Read 3 web pages (`○`), 1 flagged (`⚑`)";
-  - "Context compacted at turn 30; restore block re-injected 2 pins".
-   Tool names and file paths pass the LMK-03 sanitizer. Flagged and
-   quarantined events contribute counts only (LMK-04).
-
+   into fact lines built from templates over structural events, as
+   listed after these three parts.
 2. *Agent says.* The agent's last message, collapsed, in a quoted
    block marked `agent · ○ untrusted · claim`. It sits beside the
    record and is never merged into the digest's voice or parsed into
@@ -199,6 +191,17 @@ landmark index (LMK-01, LMK-02, LMK-05), in three parts.
 3. *You said.* In interactive mode, the first 80 characters of each
    trusted owner turn (LMK-02). In automation mode (PRV-04) the
    owner's prompts are untrusted and show only as "prompt · open".
+
+Fact lines under a span card read like these:
+
+- "Ran `go test ./...` 4 times; last exit 1 (`local run`)";
+- "Committed `9b1e04d`; HEAD captured by hook (`proven`)";
+- "Asked to run `git push --force`; you approved at 03:12";
+- "Read 3 web pages (`○`), 1 flagged (`⚑`)";
+- "Context compacted at turn 30; restore block re-injected 2 pins".
+
+Tool names and file paths pass the LMK-03 sanitizer. Flagged and
+quarantined events contribute counts only (LMK-04).
 
 Every line carries its address chip. Clicking a chip opens the lane
 in replay at that range (section 4). `Copy digest` copies the digest
