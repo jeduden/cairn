@@ -115,3 +115,15 @@ Feature: Peer network (PEER)
     And each peer's state, applied, refused or unreachable, is audited, counted and shown
     And the view says "b" kept its copy
     And a quarantine request travels to the peers the same way
+
+  @PEER-12 @P2 @I4 @I8 @pending
+  Scenario: a blind peer stores and serves a lane it cannot read
+    Given an isolated Cairn home
+    And a lane whose members are "owner" and "co-author"
+    And a peer run by another entity, enrolled as a blind peer
+    When the members' nodes sync the lane's sealed ranges through the blind peer
+    Then the blind peer stores only ranges encrypted to the members' keys
+    And it verifies the writer's signature over each range before storing it
+    And it holds no event content, header field, commitment key or lane metadata
+    And it derives no lane state and counts as no member
+    And every surface marks it as a blind peer

@@ -155,7 +155,8 @@ node is special.
 2. Peer to peer: two peers, no server, split by a partition and
    merged on reconnect
 3. Seamless sync: peer discovery, sandboxes behind outbound-only
-   networks, background sync and offline queues
+   networks, background sync and offline queues, and a blind peer
+   another entity can host without reading the lanes (PEER-12)
 4. Live co-editing in one worktree, with a CRDT chosen by ADR
 5. The merge gate on the lane: signed approvals, required checks and
    landing in git, working across partitions
