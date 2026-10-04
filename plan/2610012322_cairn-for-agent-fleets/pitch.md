@@ -168,9 +168,10 @@ what checked them; rule levels per action shape the owner's control.
    compaction, the unexplained diff, the review without its story),
    then what Cairn changes; add reviewing the outcome, delegation and
    lane sharing; half the words of v9. The stakeholder named the
-   process Cairn must excel at: intent to outcome. The pitch now follows that loop:
-   state the intent, watch, judge the outcome, correct course, with
-   several judges on top. A person judges; Cairn never does.
+   process Cairn must excel at: intent to outcome. The pitch now
+   follows that loop: state the intent, watch, judge the outcome,
+   correct course, with several judges on top. A person judges; Cairn
+   never does.
 
 ## Open before the SRS change
 
