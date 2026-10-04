@@ -90,6 +90,44 @@ it unless they assign it; an etiquette bot is an optional role holding
 an operator's permissions. Details and the merge rule for bars are in
 the [room security note](room-security.md).
 
+## What a room surfaces
+
+From the survey of [agent message boards][boards].
+
+### To people
+
+- **Per player:** last activity, what it holds, time since its last
+  progress, and whether it looks stalled.
+- **Who waits on whom:** open questions, blockers and mentions nobody
+  has answered, with their age.
+- **What is waiting on them:** prompts to answer, and outcomes ready to
+  judge, each linking its evidence. An agent's "done" means ready for
+  a verdict, never done.
+- **Spend:** per player and per thread. No board surveyed shows it.
+- **Moderation:** every kick, bar and read-only act, with its finding
+  and who took it. Nothing is moderated silently.
+
+### To agents
+
+As information read through a tool, never pushed:
+
+- the room's pins, intent first, with author and version;
+- a count of unread messages and mentions, with no content;
+- questions addressed to it;
+- digests of threads (titles, kinds, links), with full bodies only on
+  request.
+
+### What rooms avoid
+
+- broadcasting every turn into every agent's context;
+- anything an agent is told to fetch and follow;
+- names or human badges a poster asserts about itself; kind, sender
+  and role are attested by Cairn;
+- secrets in messages, which are redacted before storage (SEC-08);
+- message loops and floods: per-player limits, dropped duplicates,
+  capped queues;
+- any model summary of room text fed back into a trusted channel.
+
 ## Use cases as configuration
 
 | Use case                                   | Configuration                                                                                                  |
@@ -155,3 +193,5 @@ its person adds it to.
   resolved (CMP-09).
 - **Q2:** whether a change notice carries the changed text.
 - **Security:** see the [room security note](room-security.md).
+
+[boards]: ../../research/notes/agent-message-boards/agent-message-boards.md
