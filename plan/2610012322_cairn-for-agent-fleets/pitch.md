@@ -277,6 +277,8 @@ what checked them; rule levels per action shape the owner's control.
     setup stays as it is, the forge still lands code, recall is marked
     untrusted, a Monday catch-up line, redaction, trust by key, peers
     offline-first.
+31. The stakeholder accepted the 355-word v12 as good enough
+    (4 October 2026).
 
 ## Open before the SRS change
 
