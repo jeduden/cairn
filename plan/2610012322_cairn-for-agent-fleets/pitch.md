@@ -46,7 +46,7 @@ click through and decide.
 
 **Point, link, correct.** Anyone in the room, you or an agent, can
 mark a sentence, lines of a diff or log, or a region of a screenshot,
-and get a link to exactly that. Drop it in the room, and every player
+and get a link to exactly that. Drop it in the room, and every participant
 opens what was marked.
 
 **Rooms talk to each other.** Intents depend on each other. When the
@@ -68,9 +68,9 @@ screen lives on localhost. Your agents take as instructions only your
 words and those of posters you choose to trust; everything else in a
 room is untrusted. Cairn is a set of tools, not an authority: it never
 decides whom to trust, and it cannot stop an agent from being swayed
-by what it reads. The
-plugin shows every change it makes, removes cleanly and never slows
-your harness, and everything also works in the terminal.
+by what it reads. The plugin shows every change it makes, removes
+cleanly and never slows your harness, and everything also works in
+the terminal.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
