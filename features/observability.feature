@@ -71,9 +71,9 @@ Feature: Observability (OPS)
     And "cairn status" shows the failure outside any browser
 
     Examples:
-      | component    | outcome   |
-      | cairn ui     | rejected  |
-      | cairn ui     | coalesced |
-      | cairn run    | timed-out |
-      | cairn peer   | dropped   |
-      | cairn bridge | failed    |
+      | component           | outcome   |
+      | lane-view component | rejected  |
+      | lane-view component | coalesced |
+      | run component       | timed-out |
+      | peer component      | dropped   |
+      | bridge component    | failed    |

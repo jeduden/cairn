@@ -19,7 +19,7 @@ depends-on: [2610012322]
 
 An agent Cairn records cannot reach Cairn's store, keys or owner
 surfaces. Nor can it reach the owner's terminals and browser, the
-harness's configuration or the `cairn` binary. That holds whichever
+harness's configuration or Cairn's executables. That holds whichever
 sandbox technology the user runs. Cairn says on every surface whether
 it holds for each session.
 
@@ -31,15 +31,15 @@ check proves who acted. The proposal now demands a per-act WebAuthn
 assertion for every widening owner act. After its threat T21 it lists
 seven residual risks that only sandboxing removes (OQ-29):
 
-| #   | Residual risk                                                            |
-| --- | ------------------------------------------------------------------------ |
-| R1  | The agent types into the harness's own prompt to approve itself          |
-| R2  | It edits the harness's settings or hooks, or replaces the `cairn` binary |
-| R3  | It deletes or rolls back `CAIRN_HOME`                                    |
-| R4  | It shows a harmless screen while a widening digest waits for a touch     |
-| R5  | It reads every lane straight from the store, unenveloped                 |
-| R6  | It uses cut acts (stop, deny, quarantine) against other agents           |
-| R7  | It passes the terminal-confirmation opt-in, by design                    |
+| #   | Residual risk                                                             |
+| --- | ------------------------------------------------------------------------- |
+| R1  | The agent types into the harness's own prompt to approve itself           |
+| R2  | It edits the harness's settings or hooks, or replaces Cairn's executables |
+| R3  | It deletes or rolls back `CAIRN_HOME`                                     |
+| R4  | It shows a harmless screen while a widening digest waits for a touch      |
+| R5  | It reads every lane straight from the store, unenveloped                  |
+| R6  | It uses cut acts (stop, deny, quarantine) against other agents            |
+| R7  | It passes the terminal-confirmation opt-in, by design                     |
 
 The stakeholder's decisions (3 October 2026): sandboxing is a separate
 arm, and for an unsandboxed session the residual risks are accepted
@@ -146,6 +146,7 @@ footer: |
 - [ ] Every session records its sandbox state, and every surface shows
   an unsandboxed session as such
 - [ ] Cairn records an unsandboxed agent rather than refusing it (I9)
-- [ ] The core still holds no `net`, `net/http` or `os/exec` in its
-  import closure
+- [ ] Build-time evidence still shows that no code the core can
+  execute opens a socket or starts a program beyond its own kernel
+  worker
 - [ ] `mdsmith check .` is clean

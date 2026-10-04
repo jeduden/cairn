@@ -95,14 +95,14 @@ Feature: Record (REC)
     And "cairn expand" still returns all 40 events of "main-session"
 
   @REC-09 @P0 @I1 @pending
-  Scenario: content above the payload threshold goes to a payload store named by a keyed hash
+  Scenario: content above the payload threshold goes to a payload store under a name that reveals nothing off the node
     Given an isolated Cairn home
     And a project with a Claude Code transcript "main-session"
     And "main-session" holds a Bash tool result of 20 KiB and one of 2 KiB, against the default 8 KiB threshold
     When the operator runs "cairn ingest --all"
-    Then the 20 KiB content is stored in the payload store under a keyed hash made with the tenant's local storage key, and its event holds a preview of at most 512 bytes, the payload reference and the commitment
+    Then the 20 KiB content is stored in the payload store under a name from which no one off this node can confirm a guess at the content, and its event holds a preview of at most 512 bytes, the payload reference and the commitment
     And the 2 KiB content is stored inline in its event
-    And the tenant's local storage key appears in no export, lane bundle or replicated structure
+    And nothing in an export, lane bundle or replicated structure lets a reader off this node confirm a guess at the content from a payload name
     And each payload was written to a temporary file, fsynced, then renamed into place
 
   @REC-10 @P0 @I10 @pending
@@ -226,7 +226,7 @@ Feature: Record (REC)
     Then the record gains an event with provenance "file" holding the checked-out commit id, the branch and a payload diff against the previous checkpoint
     And the diff covers the tracked change and the untracked file but not the ignored file, with the API key redacted
     And a checkpoint taken for a rewrite of the branch head keeps the replaced head
-    And Cairn read the worktree and git's files without starting a process, within the hook budget, leaving any rest to a work marker
+    And Cairn obtained the worktree state and git data within the core's boundary, with no program started and no connection opened, within the hook budget, leaving any rest to a work marker
 
     Examples:
       | moment                                   |
@@ -292,10 +292,10 @@ Feature: Record (REC)
       | the node identity value is unavailable                    |
 
   @REC-25 @P1 @I1 @I10 @pending
-  Scenario: closed segments are merged in the background so a writer holds at most 48 segment files a day
+  Scenario: closed segments are merged as deferred work so a writer holds at most 48 segments a day
     Given an isolated Cairn home
     And a writer that closed 200 sealed segments during one day of activity
-    When a later hook's work marker runs in the background
-    Then the writer holds at most 48 segment files for that day
+    When deferred work runs outside every hook budget
+    Then the writer holds at most 48 stored segments for that day
     And every address, commitment and chain head is unchanged
     And "cairn verify" checks every seal and exits 0

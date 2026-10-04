@@ -1,7 +1,7 @@
 ---
 title: "Appendix C — Persona coverage"
 summary: >-
-  Which personas (§2.5) each requirement of §5–§7 and §10 serves. A Go
+  Which personas (§2.5) each requirement of §5–§7 and §10 serves. A gate
   test keeps every requirement covered and every persona served, and
   another keeps §2.5 in step with the persona agents.
 ---

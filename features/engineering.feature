@@ -110,13 +110,13 @@ Feature: Engineering quality (ENG)
     Then the suite fails naming the component and the caller
 
     Examples:
-      | component     | sandbox                       |
-      | core          | denies all network            |
-      | cairn ui      | denies all but loopback       |
-      | cairn run     | denies all but loopback       |
-      | cairn peer    | allows only its register rows |
-      | cairn publish | allows only its register rows |
-      | cairn bridge  | allows only its register rows |
+      | component           | sandbox                       |
+      | core                | denies all network            |
+      | lane-view component | denies all but loopback       |
+      | run component       | denies all but loopback       |
+      | peer component      | allows only its register rows |
+      | publish component   | allows only its register rows |
+      | bridge component    | allows only its register rows |
 
   @ENG-13 @P1 @pending
   Scenario: mutation testing scores the security-sensitive packages
@@ -138,20 +138,22 @@ Feature: Engineering quality (ENG)
     Then the benchmark CI job fails naming the benchmark
 
   @ENG-16 @P0 @pending
-  Scenario Outline: CI gates on the static analyzers and one import allow-list per component
+  Scenario Outline: CI gates on the static checks and on build-time reach evidence per component
     Given the CI workflow
-    When the import allow-list check reads "<component>"
-    Then the workflow gates on go vet, staticcheck, gosec, errcheck, govulncheck and the custom analyzers
-    And the allow-list for "<component>" <rule>
+    When CI reads the build-time reach evidence for the "<component>", dependencies and start-up code included
+    Then the workflow gates on go vet, staticcheck, gosec, errcheck, govulncheck and the custom checks
+    And a build-time check fails when projection code reads a clock or a source of randomness
+    And a build-time check fails when restore content is built from anything but trusted text
+    And CI fails when the evidence for the "<component>" is missing or shows that it <violation>
 
     Examples:
-      | component     | rule                                                                            |
-      | core          | forbids net, net/http and os/exec outside the kernel-worker re-exec             |
-      | cairn run     | allows os/exec and loopback listening sockets, and forbids outbound connections |
-      | cairn ui      | allows listening sockets, and forbids os/exec and outbound connections          |
-      | cairn peer    | allows listening sockets and outbound connections, and forbids os/exec          |
-      | cairn publish | allows listening sockets and outbound connections, and forbids os/exec          |
-      | cairn bridge  | allows outbound connections, and forbids os/exec and listening sockets          |
+      | component           | violation                                                                 |
+      | core                | opens any socket, or starts a program other than its own kernel worker    |
+      | run component       | makes an outbound connection or listens beyond loopback                   |
+      | lane-view component | starts a program, makes an outbound connection or listens beyond loopback |
+      | peer component      | starts a program or reaches beyond its register rows                      |
+      | publish component   | starts a program or reaches beyond its register rows                      |
+      | bridge component    | starts a program, listens, or reaches beyond its register rows            |
 
   @ENG-17 @P0 @pending
   Scenario: contract tests replay every supported Claude Code version
@@ -265,5 +267,5 @@ Feature: Engineering quality (ENG)
     Given the repository checkout
     When a change to an invariant or to a requirement marked for I2 review is proposed
     Then it lands only with an accepted ADR that records a named human security reviewer's approval
-    And until that ADR is accepted, every component that crosses B0 is built only behind a prototype build tag
-    And no release build or tagged release contains prototype code
+    And until that ADR is accepted, every component that crosses B0 is built only as a prototype
+    And evidence from the release build proves no release artifact or tagged release contains prototype code

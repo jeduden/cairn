@@ -7,12 +7,13 @@ Feature: Security (SEC)
 
   @SEC-01 @P0 @I4 @pending
   Scenario: the core opens no socket and each B1 component listens only locally
-    Given the import graph of every component's entry point, all of them linked into one executable
-    When the CI import allow-list check runs per component and each boundary's sandbox suite runs
-    Then the core's entry points import nothing outside its allow-list and open no socket or outbound connection
-    And no package linked into the executable reaches the network or starts a program while initialising
+    Given the build-time reach evidence of every component, whether the components ship in one executable or several
+    When CI reads that evidence per component and each boundary's sandbox suite runs
+    Then no code the core can execute, dependencies and start-up code included, opens a socket or an outbound connection
+    And no code any component can execute starts a program outside the run component, save the core's own kernel worker
+    And CI fails when a component's evidence is missing or shows a violation
     And no core process runs or starts a component behind B1 to B3
-    And "cairn ui" and "cairn run" listen only on loopback or a 0600 Unix socket in CAIRN_HOME
+    And the lane-view and run components listen only on loopback or on a local endpoint only the same local user can reach
     And neither connects anywhere else
 
   @SEC-02 @P0 @I8 @pending
@@ -108,9 +109,9 @@ Feature: Security (SEC)
   Scenario: the core holds only its own keys, generated on the node and never exposed
     Given an isolated Cairn home
     And the parent environment sets "ANTHROPIC_API_KEY", "GITHUB_TOKEN" and a writer key value
-    And no OS key store is available
+    And no platform key store is available
     When the operator runs "cairn status --json"
-    Then the writer key was generated on the node into a 0600 file, not taken from the environment
+    Then the writer key was generated on the node into a file only the tenant's user can read, not taken from the environment
     And the status says the key is a file an unsandboxed agent of the same user could read
     And no key or credential value appears in the store, a segment, a backup, an export, the audit log or any log output
     And every credential of another component is loaded only by the component that uses it, never by a core process
@@ -215,17 +216,18 @@ Feature: Security (SEC)
     And the boundary register kept in the repository
     When the CI boundary check runs
     Then every Cairn component, process and protocol is assigned to exactly one of B0, B1, B2 and B3
-    And the check fails when a component's import closure or a test under its boundary's sandbox shows more reach than its row grants
+    And the check fails when a component's build-time reach evidence is missing, or when that evidence or a test under its boundary's sandbox shows more reach than its row grants
     And the check fails when a process exists that the register does not list
-    And every B1, B2 and B3 component and "cairn run" stays off on the home until the tenant starts it
+    And every B1, B2 and B3 component and the run component stays off on the home until the tenant starts it
 
   @SEC-20 @P1 @I4 @I6 @I8 @pending
   Scenario: the lane view binds to loopback and accepts only its own per-launch credential
     Given an isolated Cairn home
-    When the operator starts "cairn ui"
-    Then it listens only on a loopback address at an ephemeral port
-    And its launch credential has at least 128 bits and travels only in the URL fragment, never in argv, an environment another UID can read, a log or a referrer
-    And the credential is exchanged once for one kept in origin-scoped storage, never in a cookie
+    When the operator starts the lane-view component
+    Then it listens only on a loopback address, on a port chosen at launch
+    And its launch credential has at least 128 bits and is never sent to the server in a request line, nor placed in argv, an environment another UID can read, a log or a referrer
+    And the credential is exchanged once for a session credential that only the lane view's own origin, port included, can read or send
+    And a page served from another loopback port cannot obtain or replay that session credential
     And it permits enveloped reading and cut or neutral acts, and widening acts only with the widening-act confirmation, until the instance stops
     And a request whose Host or Origin is not its own, and any cross-origin request, is rejected and audited
 
@@ -233,7 +235,7 @@ Feature: Security (SEC)
   Scenario: the lane view renders record content as inert text
     Given an isolated Cairn home
     And a stored untrusted tool result containing HTML, a script, a Markdown link and a Markdown image
-    When the operator opens the lane view in "cairn ui"
+    When the operator opens the lane view
     Then the content is shown as literal text with no element, script, link or image interpreted
     And the Content-Security-Policy forbids every resource from outside the lane view's own origin
     And the untrusted content is visibly marked
@@ -247,10 +249,10 @@ Feature: Security (SEC)
 
     Examples:
       | policy                                      | attempt                                                     | outcome                                            |
-      | B1 disabled                                 | the operator starts "cairn ui"                              | Cairn refuses to start it and audits the refusal |
-      | B2 disabled                                 | the operator starts "cairn peer"                            | Cairn refuses to start it and audits the refusal |
-      | B3 disabled                                 | the operator starts "cairn bridge"                          | Cairn refuses to start it and audits the refusal |
-      | "cairn run" disabled                        | the operator starts "cairn run"                             | Cairn refuses to start it and audits the refusal |
+      | B1 disabled                                 | the operator starts the lane-view component                 | Cairn refuses to start it and audits the refusal   |
+      | B2 disabled                                 | the operator starts the peer component                      | Cairn refuses to start it and audits the refusal   |
+      | B3 disabled                                 | the operator starts the bridge component                    | Cairn refuses to start it and audits the refusal   |
+      | the run component disabled                  | the operator starts the run component                       | Cairn refuses to start it and audits the refusal   |
       | a store quota                               | ingest exceeds the quota                                    | the quota is enforced                              |
       | a pinned deployment mode                    | the operator changes the deployment mode                    | the change is refused                              |
       | a pinned state for every boundary           | the operator turns on B2                                    | the change is refused                              |
@@ -265,7 +267,7 @@ Feature: Security (SEC)
   @SEC-23 @P1 @I7 @pending
   Scenario: the lane view writes no configuration and points to the CLI instead
     Given an isolated Cairn home
-    And the lane view is open in "cairn ui"
+    And the lane view is open
     When the operator asks the lane view to change the agent configuration, the Cairn configuration, the deployment mode or a boundary's state
     Then no configuration, deployment mode or boundary state is written
     And the lane view shows the diff and the CLI command that would make the change
@@ -274,17 +276,17 @@ Feature: Security (SEC)
   @SEC-24 @P2 @I4 @I8 @pending
   Scenario: peer traffic is mutually authenticated and carries only sealed ranges and presence hints
     Given an isolated Cairn home
-    And "cairn peer" configured to listen on "127.0.0.1:7400" with an enrolled peer
-    When "cairn peer" starts and the peers exchange data
+    And the peer component configured to listen on "127.0.0.1:7400" with an enrolled peer
+    When the peer component starts and the peers exchange data
     Then it listens only on "127.0.0.1:7400", it listens on nothing when no address is configured, and it refuses a wildcard address
     And every connection is encrypted and mutually authenticated with enrolled keys
     And the traffic carries only sealed ranges, in both directions whichever side dialled, and ephemeral signed presence hints
     And local discovery advertises only a random per-boot instance id and a port, never a tenant, host or lane name
 
   @SEC-25 @P2 @I2 @I6 @I8 @pending
-  Scenario Outline: cairn peer imports only sealed, chained segments from known writer keys
+  Scenario Outline: the peer component imports only sealed, chained segments from known writer keys
     Given an isolated Cairn home
-    And "cairn peer" running with an enrolled peer
+    And the peer component running with an enrolled peer
     When the peer offers a segment that <segment>
     Then the segment is <outcome>
 
@@ -318,25 +320,25 @@ Feature: Security (SEC)
     And a receipt of per-writer heads verifies on another node with no network
 
   @SEC-28 @P2 @I2 @I4 @I6 @pending
-  Scenario: outbound bridges run only in cairn bridge, per enabled destination, and carry little
+  Scenario: outbound bridges run only in the bridge component, per enabled destination, and carry little
     Given an isolated Cairn home
     And the owner enabled one forge bridge destination and one notification bridge destination by owner act
-    When "cairn bridge" runs and a held request and a forge comment arrive
-    Then every outbound component runs only in "cairn bridge", which is listed in the register, outbound only, and off for every destination not enabled
+    When the bridge component runs and a held request and a forge comment arrive
+    Then every outbound component runs only in the bridge component, which is listed in the register, outbound only, and off for every destination not enabled
     And the forge comment is imported only as an untrusted event
     And the notification carries only the owner's lane alias, the queue class and a count, and no answer to it is accepted
     And every send and failure is counted and audited
 
   @SEC-29 @P1 @I4 @I2 @pending
-  Scenario: cairn run is the only component that starts programs, and only confirmed ones
+  Scenario: the run component is the only one that starts programs, and only confirmed ones
     Given an isolated Cairn home
-    And the tenant started "cairn run"
+    And the tenant started the run component
     When the person confirms a command and an agent asks to run an unconfirmed one
     Then only the confirmed command runs, and each process it starts has its own register row
-    And CI finds no other component that starts a program, save the core's re-exec of itself as the kernel worker
-    And "cairn run" connects nowhere beyond loopback to "cairn ui"
-    And any listener it opens meets the lane-view listener rules or is a 0600 Unix socket in CAIRN_HOME that refuses a peer of another UID
-    And on a home where the tenant never started it, "cairn run" is off
+    And build-time evidence shows no other component that starts a program, save the core starting its own kernel worker
+    And the run component connects nowhere beyond loopback to the lane-view component
+    And any listener it opens meets the lane-view listener rules or is a local endpoint only the same local user can reach, refusing a peer of another UID
+    And on a home where the tenant never started it, the run component is off
 
   @SEC-30 @P2 @I5 @I6 @pending
   Scenario: a purge travels as a signed tombstone and a co-author can request erasure

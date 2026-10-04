@@ -65,12 +65,12 @@ Network boundaries. Four boundaries, from strictest to widest. Each
 component sits behind exactly one, and a wider boundary is never on
 by default:
 
-| Boundary   | Inside                                                  | What may cross                                                                           | Default | Enforced by                                                                          |
-| ---------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------ |
-| B0 process | the core: record, hooks, recall, what reaches the model | nothing; it talks only to the local store                                                | always  | the core's import closure bans `net`, `net/http`, `os/exec`                          |
-| B1 machine | the UI server and local harnesses                       | loopback only: the browser to the UI, with a token per launch and Host and Origin checks | on      | binds to loopback only; a test fails on any other address or any outbound connection |
-| B2 peer    | the peer process                                        | signed segments, to and from peers the user enrolled by key                              | off     | peer allow-list, signature and chain checks, imported as untrusted (I2)              |
-| B3 public  | the public host                                         | reviewed, signed lane bundles, read-only, to anyone                                      | off     | export review step, stricter redaction, no write path                                |
+| Boundary   | Inside                                                  | What may cross                                                                           | Default | Enforced by                                                                                                            |
+| ---------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- |
+| B0 process | the core: record, hooks, recall, what reaches the model | nothing; it talks only to the local store                                                | always  | build-time evidence shows no code the core can execute opens a socket or starts a program beyond its own kernel worker |
+| B1 machine | the UI server and local harnesses                       | loopback only: the browser to the UI, with a token per launch and Host and Origin checks | on      | binds to loopback only; a test fails on any other address or any outbound connection                                   |
+| B2 peer    | the peer process                                        | signed segments, to and from peers the user enrolled by key                              | off     | peer allow-list, signature and chain checks, imported as untrusted (I2)                                                |
+| B3 public  | the public host                                         | reviewed, signed lane bundles, read-only, to anyone                                      | off     | export review step, stricter redaction, no write path                                                                  |
 
 What each piece needs:
 
@@ -141,7 +141,7 @@ What was searched, from [the research](../../research/README.md):
 - iroh, Hypercore and Willow: peer-to-peer transport and range-based
   reconciliation; candidates for the sync layer.
 - Automerge, Loro and Yjs: CRDTs for the metadata and live co-editing
-  cases; Go support decides between them (ENG-18).
+  cases; the tech re-evaluation (OQ-32) decides between them (ENG-18).
 - torchwood and C2SP tlog-tiles: the segment and checkpoint format.
 
 A cloud sandbox can only dial out, so it needs some reachable peer.
@@ -207,8 +207,8 @@ footer: |
   keep working and converge to the same lane after they reconnect
 - [ ] A segment with a broken signature or chain is refused and
   audited, never imported (I6)
-- [ ] The core that feeds the model holds no `net`, `net/http` or
-  `os/exec` in its import closure
+- [ ] Build-time evidence shows that no code the core can execute
+  opens a socket or starts a program beyond its own kernel worker
 - [ ] Every new direct dependency has an accepted ADR (ENG-18)
 - [ ] All tests pass: `go test ./...`
 - [ ] `mdsmith check .` is clean

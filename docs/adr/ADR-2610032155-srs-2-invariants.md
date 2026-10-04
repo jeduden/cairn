@@ -91,19 +91,19 @@ changes they control.
   B1 may listen on loopback only. B2 (peers you enrol by key) and B3
   (publishing to hosts you name) are off until you turn them on, and managed
   policy can lock each off. Boundaries hold per component and per process, so
-  every component can be a subcommand of the one `cairn` binary.
+  they hold whether the components ship as one executable or several.
 - **What changes:**
   - The core's guarantee is unchanged: a hook, MCP or CLI process opens no
     socket.
-  - `cairn ui`, `cairn peer` and the rest are subcommands of the same binary,
-    not separate binaries. A process runs exactly one component, fixed when it
-    starts, and a core process never starts a network component.
-  - CI checks each component's import closure, runs each under its boundary's
-    sandbox, and fails when any linked package touches the network or starts a
-    program while initialising, since Go initialises every linked package in
-    every process.
-  - What you trade: the shipped file contains network code, so the guarantee
-    is a property of each process, not of the binary's symbol table.
+  - The components may share the core's executable or ship apart. A
+    process runs exactly one component, fixed when it starts, and a core
+    process never starts a network component.
+  - CI checks build-time evidence of each component's reach, start-up code
+    included (some runtimes run every linked module's start-up code in
+    every process), runs each under its boundary's sandbox, and fails when
+    any code the component can execute reaches beyond its row.
+  - What you trade if the components share one executable: the shipped file
+    contains network code, so the guarantee is a property of each process.
   - The browser lane view on localhost and opt-in peer to peer become possible
     inside one product.
 - **Where:** [wording](../srs/invariants.md); requirements
@@ -157,8 +157,9 @@ changes they control.
 - **Before (1.4):** No network access in any binary that ships P0 features.
 - **After (2.0):** No network access in the core component; every other
   component is confined to the one boundary the register assigns it, whether
-  or not it shares an executable with the core, checked at build level. CON-02
-  now ships Cairn as one binary whose components are its entry points.
+  or not it shares an executable with the core, checked at build level. The
+  boundary no longer depends on packaging, so one executable or several both
+  remain open for the tech re-evaluation (OQ-32).
 - **What changes:**
   - Each component's reach is a row in the [boundary
     register](../srs/06-security.md#63-boundary-register), and CI fails on
@@ -188,7 +189,7 @@ changes they control.
   an authenticated surface or a terminal. Widening acts need the same while
   every session runs in a sandbox that blocks the residual risks, and your
   recorded acceptance of the open risks otherwise; managed policy may forbid
-  acceptance. Per-act WebAuthn is optional hardening.
+  acceptance. A per-act hardware presence check is optional hardening.
 - **What changes:**
   - Against an unsandboxed agent, the seven [residual
     risks](../srs/06-security.md#61-threat-model) are accepted openly, shown
@@ -273,12 +274,13 @@ changes they control.
 
 - Keep I4 as written and ship the lane view and the network side as a
   separate product with its own SRS; declined by the stakeholder (D1).
-- One binary per boundary (`cairn-ui`, `cairn-peer` and so on), so the
-  core's file links no network code; declined by the reviewer, who wants
-  a single binary. The boundary moves from the file to the process.
+- One binary per boundary (`cairn-ui`, `cairn-peer` and so on) as the basis
+  of the guarantee, so the core's file links no network code; declined by
+  the reviewer, who wants the boundary to hold per process so that a single
+  binary stays possible. The boundary moves from the file to the process.
 - Keep one project chain; it rules out peering and the multi-machine
   persona.
-- A per-act WebAuthn assertion as the mandatory guard against an
+- A per-act hardware presence check as the mandatory guard against an
   unsandboxed agent; the persona reviews showed no software-only check
   holds, and the stakeholder chose the sandbox with recorded risk
   acceptance (OQ-29).
@@ -291,6 +293,11 @@ of the approved changes stops being a draft, and components that cross
 B0 may leave the prototype stage under ENG-29, each still confined to
 its row of the boundary register. Change 13's trust grants still need
 their requirements written before any grant is honoured.
+
+- Packaging (one executable or several), the implementation language and
+  any mechanism named in change 3 are not decided by this record; they
+  wait for the tech re-evaluation once the SRS is complete
+  ([OQ-32](../srs/13-open-questions-and-risks.md#131-open-questions)).
 
 [PIN]: ../srs/05-functional-requirements.md#53-pins-pin
 [REC]: ../srs/05-functional-requirements.md#51-record-rec

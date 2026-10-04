@@ -21,12 +21,12 @@ Feature: Owner acts (OWN)
     Then the outcome is "<outcome>"
 
     Examples:
-      | surface                      | outcome                                                      |
-      | cairn ui under SEC-20        | recorded as an operator event covered by its writer's seal   |
-      | the CLI under OWN-12         | recorded as an operator event covered by its writer's seal   |
-      | the harness's own prompt     | recorded as user or a harness_meta outcome, not an owner act |
-      | the terminal cairn run hosts | recorded as user or a harness_meta outcome, not an owner act |
-      | any other surface            | refused and audited                                          |
+      | surface                              | outcome                                                      |
+      | the lane-view component under SEC-20 | recorded as an operator event covered by its writer's seal   |
+      | the CLI under OWN-12                 | recorded as an operator event covered by its writer's seal   |
+      | the harness's own prompt             | recorded as user or a harness_meta outcome, not an owner act |
+      | the terminal the run component hosts | recorded as user or a harness_meta outcome, not an owner act |
+      | any other surface                    | refused and audited                                          |
 
   @OWN-03 @P1 @I2 @pending
   Scenario: owner text reaches an agent only through the harness's input interface
@@ -136,12 +136,12 @@ Feature: Owner acts (OWN)
     Then the act is "<outcome>"
 
     Examples:
-      | surface                 | risk state      | class    | outcome                                                      |
-      | authenticated           | permits         | widen    | accepted                                                     |
-      | authenticated           | does not permit | widen    | refused                                                      |
-      | authenticated           | permits         | unlisted | treated as widening and accepted                             |
-      | not backed by assertion | permits         | cut      | recorded with a mark naming its surface, free text untrusted |
-      | not backed by assertion | permits         | neutral  | recorded with a mark naming its surface, free text untrusted |
+      | surface                        | risk state      | class    | outcome                                                      |
+      | authenticated                  | permits         | widen    | accepted                                                     |
+      | authenticated                  | does not permit | widen    | refused                                                      |
+      | authenticated                  | permits         | unlisted | treated as widening and accepted                             |
+      | not backed by a presence check | permits         | cut      | recorded with a mark naming its surface, free text untrusted |
+      | not backed by a presence check | permits         | neutral  | recorded with a mark naming its surface, free text untrusted |
 
   @OWN-12 @P1 @I2 @pending
   Scenario: a CLI verb writing an owner act refuses without a terminal
@@ -173,7 +173,7 @@ Feature: Owner acts (OWN)
     Given an isolated Cairn home
     And Claude Code installed through plain hooks
     When the operator runs "cairn install"
-    Then it offers, as a shown diff, an opt-in routing every harness launch through cairn run
+    Then it offers, as a shown diff, an opt-in routing every harness launch through the run component
     And it states the controls the installed path lacks, including mid-turn steer, interrupt, stop and terminal takeover
     And each such control is shown unavailable with its reason and the launch path that offers it
     And no such control is simulated
@@ -183,9 +183,9 @@ Feature: Owner acts (OWN)
     Given an isolated Cairn home
     And a phone credential minted by a widening owner act
     When the phone tries to allow a held permission request for the whole session
-    Then cairn ui refuses it on the server
+    Then the lane-view component refuses it on the server
     And the phone can only read, allow once and deny held permission requests
-    And where an authenticator is required each allow carries the phone's own assertion bound to that answer
+    And where an authenticator is required each allow carries the phone's own presence check bound to that answer
 
   @OWN-17 @P2 @I2 @I8 @pending
   Scenario: an owner act from another of the owner's devices takes effect only within its scope
@@ -203,15 +203,15 @@ Feature: Owner acts (OWN)
     When the person confirms the command for a witness run
     Then the person was shown its exact text with hidden characters visible before confirming
     And the act is recorded as theirs
-    And the witness run executes only through cairn run, outside any agent context, on a fresh checkout of the exact commit, with network and the user's home denied
+    And the witness run executes only through the run component, outside any agent context, on a fresh checkout of the exact commit, with network and the user's home denied
     And its command, exit status and tree hash are recorded
 
   @OWN-19 @P1 @I1 @I4 @pending
   Scenario: terminal takeover stays local and no-echo input is not stored
     Given an isolated Cairn home
-    And a harness hosted by cairn run on this machine
+    And a harness hosted by the run component on this machine
     When the owner takes over its terminal and types at a no-echo prompt
-    Then the takeover runs only in cairn run on the harness's machine
+    Then the takeover runs only in the run component on the harness's machine
     And the no-echo input is not stored
     And no takeover from another machine is offered
 
@@ -251,11 +251,11 @@ Feature: Owner acts (OWN)
     Then the delegation is <outcome>
 
     Examples:
-      | grant                                                   | target                                   | outcome                                   |
-      | no grant                                                | a subagent in its own session            | recorded under OWN-24, with no grant      |
-      | no grant                                                | a new session in another worktree        | refused, audited and shown                |
-      | a grant naming that worktree, a budget and an expiry    | a new session in that worktree           | started through cairn run and recorded    |
-      | an expired grant                                        | an existing session of the same principal | refused, audited and shown                |
+      | grant                                                | target                                    | outcome                                        |
+      | no grant                                             | a subagent in its own session             | recorded under OWN-24, with no grant           |
+      | no grant                                             | a new session in another worktree         | refused, audited and shown                     |
+      | a grant naming that worktree, a budget and an expiry | a new session in that worktree            | started through the run component and recorded |
+      | an expired grant                                     | an existing session of the same principal | refused, audited and shown                     |
 
   @OWN-24 @P1 @I2 @pending
   Scenario: a delegate inherits the delegating agent's ceiling and taint

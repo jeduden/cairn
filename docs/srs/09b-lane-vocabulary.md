@@ -102,35 +102,35 @@ agents are one line on Health, not a mark on every tile.
 One map, no key bound to two actions. Typing in a composer or text
 field sends text, not shortcuts.
 
-| Key                   | Action                                 | Key             | Action                              |
-| --------------------- | -------------------------------------- | --------------- | ----------------------------------- |
-| `?`                   | all shortcuts                          | `a` / `A`       | allow once / allow for session      |
-| `/`                   | search and filter                      | `d`             | deny                                |
-| `⌘K` / `Ctrl+K`       | command palette                        | `r`             | reply                               |
-| `⌘G` / `Ctrl+G`       | go to address                          | `e` / `E`       | endorse / edit and send             |
-| `g i`                 | Needs you                              | `z`             | snooze                              |
-| `g f`                 | Fleet                                  | `x`             | dismiss, Q3, Q4 and overlap items   |
-| `g c`                 | Catch up                               | `y`             | copy address                        |
-| `g q` / `g v`         | quarantine list / verify panel         | `o`             | open the lane at this item          |
-| `g h` / `g p`         | Health / Peers                         | `n` / `N`       | next / previous item that needs you |
-| `1` / `2` / `3`       | lane tabs: Timeline / Review / Replay  | `m`             | point an agent at this address      |
-| `j` / `k`             | next / previous row, item or file      | `q`             | quarantine selection                |
-| `Enter`               | open                                   | `⌘S` / `Ctrl+S` | save search                         |
-| `Space`               | preview or peek                        | `+` / `-`       | more / less context around a hit    |
-| `Esc`                 | close sheet                            | `w` / `b`       | why panel / blame gutter            |
-| `I`                   | interrupt (harness pane)               | `W`             | witness run                         |
-| `p`                   | pause / resume                         | `c` / `C`       | comment / request-changes sheet     |
-| `S`                   | stop (opens the stop sheet)            | `Y`             | approve sheet                       |
-| `f`                   | fork lane from here                    | `l`             | land sheet                          |
-| `t`                   | take over / release (`cairn run` only) | `V` / `s`       | compare versions / since my verdict |
-| `h`                   | hand back                              | `(` / `)`       | previous / next comment             |
-| `Q`                   | away mode                              | `<` / `>`       | down / up the stack                 |
-| `F`                   | follow a person                        | `Ctrl+T`        | add the lane to the focus set       |
-| `Shift+Space`         | replay play / pause                    | `←` / `→`       | replay previous / next event        |
-| `Shift+←` / `Shift+→` | replay previous / next span            | `,` / `.`       | replay previous / next turn         |
-| `[` / `]`             | replay previous / next edit            | `{` / `}`       | replay previous / next error        |
-| `;` / `:`             | replay next / previous request         | `v`             | replay context lens                 |
-| `L`                   | replay jump to live                    | `Home` / `End`  | replay start / end                  |
+| Key                   | Action                                   | Key             | Action                              |
+| --------------------- | ---------------------------------------- | --------------- | ----------------------------------- |
+| `?`                   | all shortcuts                            | `a` / `A`       | allow once / allow for session      |
+| `/`                   | search and filter                        | `d`             | deny                                |
+| `⌘K` / `Ctrl+K`       | command palette                          | `r`             | reply                               |
+| `⌘G` / `Ctrl+G`       | go to address                            | `e` / `E`       | endorse / edit and send             |
+| `g i`                 | Needs you                                | `z`             | snooze                              |
+| `g f`                 | Fleet                                    | `x`             | dismiss, Q3, Q4 and overlap items   |
+| `g c`                 | Catch up                                 | `y`             | copy address                        |
+| `g q` / `g v`         | quarantine list / verify panel           | `o`             | open the lane at this item          |
+| `g h` / `g p`         | Health / Peers                           | `n` / `N`       | next / previous item that needs you |
+| `1` / `2` / `3`       | lane tabs: Timeline / Review / Replay    | `m`             | point an agent at this address      |
+| `j` / `k`             | next / previous row, item or file        | `q`             | quarantine selection                |
+| `Enter`               | open                                     | `⌘S` / `Ctrl+S` | save search                         |
+| `Space`               | preview or peek                          | `+` / `-`       | more / less context around a hit    |
+| `Esc`                 | close sheet                              | `w` / `b`       | why panel / blame gutter            |
+| `I`                   | interrupt (harness pane)                 | `W`             | witness run                         |
+| `p`                   | pause / resume                           | `c` / `C`       | comment / request-changes sheet     |
+| `S`                   | stop (opens the stop sheet)              | `Y`             | approve sheet                       |
+| `f`                   | fork lane from here                      | `l`             | land sheet                          |
+| `t`                   | take over / release (run component only) | `V` / `s`       | compare versions / since my verdict |
+| `h`                   | hand back                                | `(` / `)`       | previous / next comment             |
+| `Q`                   | away mode                                | `<` / `>`       | down / up the stack                 |
+| `F`                   | follow a person                          | `Ctrl+T`        | add the lane to the focus set       |
+| `Shift+Space`         | replay play / pause                      | `←` / `→`       | replay previous / next event        |
+| `Shift+←` / `Shift+→` | replay previous / next span              | `,` / `.`       | replay previous / next turn         |
+| `[` / `]`             | replay previous / next edit              | `{` / `}`       | replay previous / next error        |
+| `;` / `:`             | replay next / previous request           | `v`             | replay context lens                 |
+| `L`                   | replay jump to live                      | `Home` / `End`  | replay start / end                  |
 
 Interrupt moved from `Esc Esc` to `I`, so no key repeats into a
 second act. Composer: `Enter` steer, `Ctrl+Enter` queue for the next turn,

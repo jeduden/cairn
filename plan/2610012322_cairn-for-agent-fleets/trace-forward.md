@@ -146,7 +146,8 @@ Each entry gives id, priority, verification and traces, then the text.
   rules, and MUST NOT enter the record, an export, a backup or a
   segment.
 
-REC-17 needs a pure-Go git reader, since `os/exec` is banned: own code
+REC-17 needs a git reader that works within the core's boundary, with
+no program start: own code
 or a dependency with its ADR (ENG-18). REC-18 changes SEC-10's "The v1
 core MUST handle no credentials" to "The core MUST handle no credential
 other than its own origin signing key (REC-18)". A same-UID attacker

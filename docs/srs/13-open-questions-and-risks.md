@@ -1,7 +1,7 @@
 ---
 title: "13. Open questions and risks"
 summary: >-
-  Open questions OQ-01..31 with their resolution path, and the risk
+  Open questions OQ-01..32 with their resolution path, and the risk
   register with mitigations.
 ---
 # 13. Open questions and risks
@@ -36,6 +36,7 @@ summary: >-
 | OQ-28 | SEC-13's recall-taint gate: raise to P0 when co-author posts arrive in M8?                                                                                                                                                                                                                                                                                        | Security review; M8                                                                                                                                                                                                                                          |
 | OQ-30 | What does v1 ship? The default under discussion makes the standalone lane view P1 in v1, with peering, the merge gate, public lanes and bridges P2; the alternatives move the view after v1.0 or make it P0. Until settled, the VIEW and OWN priorities are provisional.                                                                                          | Stakeholder; a longer discussion                                                                                                                                                                                                                             |
 | OQ-31 | Should a lane be watchable live in public, beyond a published bundle snapshot (SEC-26)? It would need a public read-only peer, redaction applied continuously, and a rate of publication the owner controls.                                                                                                                                                      | Stakeholder; after PEER                                                                                                                                                                                                                                      |
+| OQ-32 | Which implementation language, runtime and storage engine fit the complete SRS? CON-01's Go and the ADRs that assume it stand until this is re-evaluated; nothing in SRS 2.0-draft decides it.                                                                                                                                                                    | Stakeholder, once the SRS is complete                                                                                                                                                                                                                        |
 
 ## 13.2 Risks
 

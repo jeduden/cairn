@@ -26,7 +26,7 @@ fail for the risk to count as blocked:
 
 - R1: inject keystrokes into a terminal multiplexer session outside
   the sandbox.
-- R2: write the harness settings file or the `cairn` binary.
+- R2: write the harness settings file or Cairn's executables.
 - R3: delete or replace `CAIRN_HOME`.
 - R4: reach the browser profile or a GUI input socket.
 - R5: read the fixture store and key.

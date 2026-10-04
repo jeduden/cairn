@@ -23,7 +23,7 @@ Feature: Lane (LANE)
     When the first hook event for the clone runs
     Then the project identity is <identity>
     And no identity is minted from the local path
-    And the home directory name is a keyed hash of the identity under the tenant's local storage key
+    And no name Cairn derives from the identity for its local state reveals anything about the identity off this node
     And a later change in the identity the directory resolves to is audited, starts no new store, and rebinds only on "cairn project bind"
 
     Examples:
@@ -63,13 +63,13 @@ Feature: Lane (LANE)
     And the class is derived from structural events only, never from event text
 
     Examples:
-      | source                                                                                            | class       | binding |
-      | an assistant message stating the tests pass                                                       | claim       | —       |
-      | tool output alone                                                                                 | claim       | —       |
-      | a command, its exit status and its tree recorded by a hook on the lane's own node                 | own run     | bound   |
-      | a command recorded by a hook after edits made through a shell                                     | claim       | unbound |
-      | the command run through "cairn run" on a fresh checkout of the exact commit by an uninvolved node | witness run | —       |
-      | a check result for the exact commit signed by an enrolled CI key and brought by the CI carrier    | CI attested | —       |
+      | source                                                                                                  | class       | binding |
+      | an assistant message stating the tests pass                                                             | claim       | —       |
+      | tool output alone                                                                                       | claim       | —       |
+      | a command, its exit status and its tree recorded by a hook on the lane's own node                       | own run     | bound   |
+      | a command recorded by a hook after edits made through a shell                                           | claim       | unbound |
+      | the command run through the run component on a fresh checkout of the exact commit by an uninvolved node | witness run | —       |
+      | a check result for the exact commit signed by an enrolled CI key and brought by the CI carrier          | CI attested | —       |
 
   @LANE-06 @P1 @I6 @I10 @pending
   Scenario Outline: the lanes behind a landed commit carry one proof class
@@ -176,11 +176,11 @@ Feature: Lane (LANE)
   @LANE-15 @P2 @I2 @I6 @pending
   Scenario: a foreign lane view states what is asserted and verifies the contributor's binding
     Given an isolated Cairn home
-    And a foreign lane bundle whose pull request commits are signed by a git signing key that also signed a binding statement naming the bundle's owner key
+    And a foreign lane bundle whose pull request commits are signed by the contributor's existing commit-signing identity, which also signed a binding statement naming the bundle's owner key
     And a writer key in the bundle that does not chain to the owner key, and flags carried by the bundle
     When the operator imports the bundle and opens the foreign lane view
     Then the view states that every event, evidence class and proof mark in it is asserted by the publisher's key
-    And the commits show as a match for the owner key, verified without starting a process or opening a socket
+    And the commits show as a match for the owner key, verified offline within the core's boundary, with no program started and no connection opened
     And the writer key that does not chain is shown unbound, by its fingerprint
     And PRV-07 flags are computed locally, the bundle's flags are ignored, and hidden characters are shown in place
 

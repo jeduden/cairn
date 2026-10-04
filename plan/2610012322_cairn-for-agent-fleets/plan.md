@@ -76,9 +76,10 @@ it in two:
 | Index  | local SQLite with FTS5, rebuilt from the segments a node holds (I10), on S2's ncruces driver |
 
 Each origin (node and session) writes only its own log, so the
-record has no write conflicts and needs no CRDT. Only state several
-participants edit at once, lane metadata and live co-editing, needs
-one ([plan 2610022338](../2610022338_cairn-network-side/plan.md)).
+record has no write conflicts and needs no conflict-free merge
+method. Only state several participants edit at once, lane metadata
+and live co-editing, needs one
+([plan 2610022338](../2610022338_cairn-network-side/plan.md)).
 Sync, publishing and sandbox persistence all become moving segments.
 
 The evidence for this plan is in [research](../../research/README.md).
@@ -129,6 +130,8 @@ because it builds the store's identity model.
    2610022338 builds them, experience first. The change also lifts
    NG5 (no graphical interface): the lane needs a UI that shows each
    agent's harness, its work results and other harnesses in one view
+5. Re-evaluate the implementation stack against the complete SRS
+   (OQ-32) before any implementation plan starts
 
 ## Execution
 

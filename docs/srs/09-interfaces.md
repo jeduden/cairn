@@ -139,7 +139,7 @@ compaction summaries.
 | `cairn catchup [--since <boundary>]`                                                      | Catch up                                                                                                |
 | `cairn search`                                                                            | operator search over every lane (VIEW-09)                                                               |
 | `cairn why <file>:<line>` · `cairn why commit <sha>`                                      | hunk and landed-link chain                                                                              |
-| `cairn open <address>`                                                                    | print the link a running `cairn ui` opens at that address; opens nothing itself                         |
+| `cairn open <address>`                                                                    | print the link a running lane view opens at that address; opens nothing itself                          |
 | `cairn verify [--lane L]` · `cairn receipt make\|check`                                   | integrity and receipts                                                                                  |
 | `cairn project show\|bind`                                                                | project identity (LANE-02)                                                                              |
 | `cairn approve\|request-changes\|land <lane>` (P2)                                        | lane verdicts and landing                                                                               |
@@ -147,14 +147,17 @@ compaction summaries.
 | `cairn export --bundle\|--report\|--trusted-only` · `cairn import <file\|ref>`            | bundles; export is an owner act under SEC-26                                                            |
 | `cairn reject <lane>`                                                                     | reject a foreign lane with a reason (LANE-15)                                                           |
 | `cairn purge --writer\|--actor\|…`                                                        | purge (ADM-07, ADM-14)                                                                                  |
-| `cairn ui [--print] [--device phone]`                                                     | lane view server                                                                                        |
-| `cairn run -- <harness>`                                                                  | launcher                                                                                                |
-| `cairn peer on\|off\|invite\|enroll\|revoke\|token\|status` (P2)                          | peering                                                                                                 |
+| `cairn ui [--print] [--device phone]`                                                     | start the lane-view component (B1)                                                                      |
+| `cairn run -- <harness>`                                                                  | start the run component (B1)                                                                            |
+| `cairn peer on\|off\|invite\|enroll\|revoke\|token\|status` (P2)                          | start and manage the peer component (B2)                                                                |
 
 The verbs added in 2.0 come from plan 2610012322's proposal; every verb
 that writes an owner act passes OWN-12, and read-only verbs do not.
 `answer` is the verb for held requests and `approve` the verb for lane
-verdicts, so one word never means two acts.
+verdicts, so one word never means two acts. A command that starts a B1–B3
+component names the component the person starts; whether that component runs
+in the same executable or a separate one is not decided (OQ-32), and SEC-01
+holds either way.
 
 Every command MUST support `--json` output for automation and MUST use
 documented exit codes (0 success, 1 failure, 2 usage error, 3 integrity

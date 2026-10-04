@@ -623,25 +623,26 @@ risks are accepted rather than fought. The proposal follows:
 
 Recorded on 3 October 2026:
 
-| Decision        | Answer                                                                                                 |
-| --------------- | ------------------------------------------------------------------------------------------------------ |
-| D1, I4          | Restate I4 by network boundary, B0 to B3                                                               |
-| D1, record      | One signed log per writer; the requirements name no technology, and ADRs choose formats and algorithms |
-| D2              | One principal per agent, endorsement, notices off; granted roles later (OQ-14)                         |
-| D3              | An owner key certifies device keys; the phone only allows once or denies                               |
-| D4              | No deny on a timeout without an away policy; steering through the harness's input; OQ-17 yes           |
-| D5              | Decided earlier through OQ-29 (§10.18)                                                                 |
-| D6              | Search scope is the person's choice on every search; an agent selects its own under RCL-05             |
-| D7              | Open, for a longer discussion                                                                          |
-| ENG-29 reviewer | The stakeholder, @jeduden                                                                              |
-| D1, packaging   | One binary: boundaries hold per component and per process, not per binary (ADR-2610032155, change 3)   |
+| Decision        | Answer                                                                                                                              |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| D1, I4          | Restate I4 by network boundary, B0 to B3                                                                                            |
+| D1, record      | One signed log per writer; the requirements name no technology, and ADRs choose formats and algorithms                              |
+| D2              | One principal per agent, endorsement, notices off; granted roles later (OQ-14)                                                      |
+| D3              | An owner key certifies device keys; the phone only allows once or denies                                                            |
+| D4              | No deny on a timeout without an away policy; steering through the harness's input; OQ-17 yes                                        |
+| D5              | Decided earlier through OQ-29 (§10.18)                                                                                              |
+| D6              | Search scope is the person's choice on every search; an agent selects its own under RCL-05                                          |
+| D7              | Open, for a longer discussion                                                                                                       |
+| ENG-29 reviewer | The stakeholder, @jeduden                                                                                                           |
+| D1, packaging   | Not decided: boundaries hold per component and per process, so one executable or several both fit (ADR-2610032155, change 3; OQ-32) |
 
-The packaging answer came during the security review: the components
-behind B1 to B3 are entry points of the one `cairn` binary, a process
-runs exactly one component, and no core process starts another. The
-rows above that still say "separate binary" are superseded by SRS
-2.0-draft's SEC-01, SEC-19, SEC-28, SEC-29, PEER-01, CON-02, CON-04,
-ENG-12 and ENG-16.
+The packaging answer came during the security review: a process runs
+exactly one component, no core process starts another, and the
+boundaries hold whether the components behind B1 to B3 ship in one
+executable or several. Which one waits for the tech re-evaluation
+(OQ-32). The rows above that still say "separate binary", or name a
+mechanism, are superseded by SRS 2.0-draft's SEC-01, SEC-19, SEC-28,
+SEC-29, PEER-01, CON-02, CON-04, ENG-12 and ENG-16.
 
 ## 11. Delivery plan changes for §12
 

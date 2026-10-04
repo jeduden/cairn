@@ -28,12 +28,12 @@ A source is a player of kind bot with its own participant id. It
 posts events into a room as messages of kind event: data, untrusted,
 stamped by Cairn with the source's id.
 
-| Source           | Runs where                                                                   | Posts                                                                                                                    |
-| ---------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Timer            | Inside the `cairn` binary, in the running Cairn service that holds the rooms | A tick naming its schedule, for example "nightly 02:00"                                                                  |
-| Webhook endpoint | The `cairn` binary on a deployed Cairn node, receiving the forge's webhooks  | Issue opened, labelled or commented; pull request opened, reviewed or merged; each with a link to a snapshot of the item |
-| Git, locally     | A git hook or a fetch the person runs                                        | A commit landed on the default branch, matched to its room's branch by the record (LANE-06)                              |
-| CI carrier       | `cairn bridge`, B3                                                           | A check result for an exact commit                                                                                       |
+| Source           | Runs where                                            | Posts                                                                                                                    |
+| ---------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Timer            | In the running Cairn service that holds the rooms     | A tick naming its schedule, for example "nightly 02:00"                                                                  |
+| Webhook endpoint | A deployed Cairn node, receiving the forge's webhooks | Issue opened, labelled or commented; pull request opened, reviewed or merged; each with a link to a snapshot of the item |
+| Git, locally     | A git hook or a fetch the person runs                 | A commit landed on the default branch, matched to its room's branch by the record (LANE-06)                              |
+| CI carrier       | the bridge component, B3                              | A check result for an exact commit                                                                                       |
 
 A merge "the old way", on the forge, is seen twice and agrees: the
 bridge posts the forge's event, and the local fetch derives the
@@ -122,7 +122,7 @@ first.
 
 | #   | Question                     | Options                                                                                                                                                                                          | Recommendation |
 | --- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
-| A1  | Who runs automations?        | Decided: cron runs in the `cairn` binary; other events arrive at a webhook endpoint Cairn provides, which requires a deployed Cairn                                                              | —              |
+| A1  | Who runs automations?        | Decided: cron runs in the running Cairn service; other events arrive at a webhook endpoint Cairn provides, which requires a deployed Cairn                                                       | —              |
 | A2  | Can a person trust a bridge? | Decided: never                                                                                                                                                                                   | —              |
 | A3  | Where does the timer run?    | Decided: in the Cairn service; without a running Cairn service there are no rooms                                                                                                                | —              |
 | A4  | How is a merge detected?     | Decided: the webhook triggers, local git confirms; an automation acts only when the landed commit matches the room's branch with a proven class (LANE-06), and raises a Needs you item otherwise | —              |

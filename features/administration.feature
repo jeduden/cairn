@@ -20,7 +20,7 @@ Feature: Administration and lifecycle (ADM)
     And "cairn install --scope user" showed a diff of every configuration change, was declined and left the settings file unchanged
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
     When the operator runs "cairn uninstall" and keeps only the device key
-    Then the output lists the hooks, plugin and MCP registration, cairn ui credentials, cairn run sockets, writer and device keys, enrolments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
+    Then the output lists the hooks, plugin and MCP registration, lane-view credentials, run-component endpoints, writer and device keys, enrolments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
@@ -42,20 +42,20 @@ Feature: Administration and lifecycle (ADM)
     And the core records every event of the session
 
     Examples:
-      | configuration                                                                              | component | result                                                        |
-      | a managed policy file at the documented system path that the tenant can write              | cairn ui  | refuses to start, and an audit entry and a counter record why |
-      | a managed policy file in a directory the tenant can write                                  | cairn run | refuses to start, and an audit entry and a counter record why |
-      | an unparsable managed policy file                                                          | cairn ui  | refuses to start, and an audit entry and a counter record why |
-      | a managed policy file with an unknown key                                                  | cairn run | refuses to start, and an audit entry and a counter record why |
-      | a project ".cairn.toml" that turns on cairn ui with no widening act recording its digest   | cairn ui  | stays off                                                     |
-      | a project ".cairn.toml" that turns on cairn ui and a widening act that recorded its digest | cairn ui  | starts                                                        |
-      | a managed policy that turns on cairn ui and a tenant config that turns it off              | cairn ui  | starts                                                        |
+      | configuration                                                                                   | component               | result                                                        |
+      | a managed policy file at the documented system path that the tenant can write                   | the lane-view component | refuses to start, and an audit entry and a counter record why |
+      | a managed policy file in a directory the tenant can write                                       | the run component       | refuses to start, and an audit entry and a counter record why |
+      | an unparsable managed policy file                                                               | the lane-view component | refuses to start, and an audit entry and a counter record why |
+      | a managed policy file with an unknown key                                                       | the run component       | refuses to start, and an audit entry and a counter record why |
+      | a project ".cairn.toml" that turns on the lane view with no widening act recording its digest   | the lane-view component | stays off                                                     |
+      | a project ".cairn.toml" that turns on the lane view and a widening act that recorded its digest | the lane-view component | starts                                                        |
+      | a managed policy that turns on the lane view and a tenant config that turns it off              | the lane-view component | starts                                                        |
 
   @ADM-05 @P0 @I1 @pending
   Scenario: segment and schema migrations run forward after a verified backup and newer versions are refused
     Given an isolated Cairn home
     And a project whose segments and derived state are at the previous version
-    And a segment whose format version is newer than this binary supports
+    And a segment whose format version is newer than this node supports
     When the operator runs "cairn migrate"
     Then a verified backup with its audit chain exists from before the migration
     And the segments and derived state report the current version
@@ -77,7 +77,7 @@ Feature: Administration and lifecycle (ADM)
     Given an isolated Cairn home
     And a project with a Claude Code transcript "session-a" in lane "lane-a"
     When the operator runs "cairn purge <scope>"
-    Then the purged events are gone from the sealed segment files, events, the FTS index, projections, the payload store and every copy of their content
+    Then the purged events are gone from the sealed segments, events, the FTS index, projections, the payload store and every copy of their content
     And the commitment key and payload reference of every purged event are erased
     And a tombstone event per purged range holds only addresses, counts, reason and commitments
     And the database is compacted and "cairn verify" confirms every rewritten segment's seals
@@ -149,13 +149,13 @@ Feature: Administration and lifecycle (ADM)
     And no untrusted event appears in the export
 
   @ADM-13 @P0 @I7 @pending
-  Scenario: Cairn writes to no git repository beyond the confirmed settings file and the carrier refs
+  Scenario: Cairn writes to no git repository beyond the confirmed settings file and the carrier's location
     Given an isolated Cairn home
     And a project that is a git repository with a working tree, refs, notes, configuration and hooks
     And the owner has enabled the git carrier
     When a session runs, the operator confirms "cairn install --scope project" and every Cairn component does its work
     Then the only changed file in the working tree is the project settings file
-    And the only new or changed refs lie under "refs/cairn/", and every new object is reachable only from them
+    And the only new or changed refs lie in the namespaced location the owner enabled for the carrier, and every new object is reachable only from them
     And the repository's other refs, notes, configuration and hooks are byte-identical to before
 
   @ADM-14 @P1 @I1 @I5 @pending
@@ -190,10 +190,10 @@ Feature: Administration and lifecycle (ADM)
   @ADM-16 @P1 @I6 @pending
   Scenario Outline: status and doctor report every user-run component, peer lag, open chains and boundaries
     Given an isolated Cairn home
-    And managed policy that permits cairn ui and cairn peer, forbids cairn run and locks one boundary
-    And cairn ui is running, a bridge has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment
+    And managed policy that permits the lane-view and peer components, forbids the run component and locks one boundary
+    And the lane-view component is running, a bridge has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment
     When the operator runs "cairn <command>"
-    Then for cairn ui, cairn run, cairn peer and the bridge the output shows whether policy permits it, whether it runs and its failure counters
+    Then for the lane-view, run and peer components and the bridge the output shows whether policy permits it, whether it runs and its failure counters
     And the output shows the peer's sync lag for each writer
     And the output names the writer chain that ended without a closed segment
     And the output shows each boundary's state and whether managed policy locks it

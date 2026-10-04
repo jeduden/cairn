@@ -63,6 +63,6 @@ recorded-lane fixtures.
 
 Gate: the RED test passes against the built binaries. The stakeholder
 walks through the view and signs off the design. The listening socket
-stays a prototype, behind a build tag that release builds exclude,
+stays a prototype, provably absent from release artifacts,
 until the ENG-29 security review of I4 and SEC-01 is accepted. Only
 then does phase 2 add peer to peer.

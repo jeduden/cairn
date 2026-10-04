@@ -24,11 +24,11 @@ Feature: Lane view (VIEW)
     And no hook exceeds its NFR-01 budget while the view reads
 
   @VIEW-03 @P1 @I9 @I10 @pending
-  Scenario: every lane-view surface is an optional, read-only client of the core library
+  Scenario: every lane-view surface is an optional, read-only client of the core
     Given an isolated Cairn home
     And a lane with recorded harnesses
     When the lane view runs and is then stopped
-    Then the view reads the store only through the core library and never writes to it
+    Then the view reads the record only through the core's read path and never writes to it
     And the view holds no state the record cannot rebuild beyond per-viewer conveniences
     And every capability the view offers also exists in the CLI or MCP
     And hooks, ingestion and recall keep working with the view stopped
@@ -37,7 +37,7 @@ Feature: Lane view (VIEW)
   Scenario: statuses come from structural events only and unrecorded sessions surface
     Given an isolated Cairn home
     And a lane with one harness whose transcript is longer than its ingested position
-    And a "cairn run" launch with no hook event that belongs to no lane
+    And a run-component launch with no hook event that belongs to no lane
     When the person opens Fleet and runs "cairn lanes"
     Then every harness shows exactly one status from the closed set of §9.7.1 with its freshness mark
     And the lane shows one lane status and the worst freshness mark of its harnesses, never Quiet
@@ -171,7 +171,7 @@ Feature: Lane view (VIEW)
     Given an isolated Cairn home
     And an open loopback tab of the lane view and a terminal session
     When a Needs you item opens while one notification is suppressed
-    Then the desktop notification is raised by the tab through the browser's Notification API, with no vendor push service
+    Then the desktop notification is raised on the same device by the open loopback lane view, with no vendor push service
     And it carries only the queue class, the owner's lane alias and a count
     And the suppressed notification is counted
     And the terminal signal goes only to the terminal, never into hook output the harness adds to the model's context

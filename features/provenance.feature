@@ -40,22 +40,22 @@ Feature: Provenance and trust (PRV)
     And the event shapes restore blocks, rule levels, grants, trust and enrolments only if it is trusted and "cairn verify" reports nothing about it
 
     Examples:
-      | mode        | writer                                                                                 | provenance       | trust     | verify                                               |
-      | automation  | a writer of this node                                                                  | operator         | trusted   | reports nothing                                      |
-      | automation  | a writer of this node                                                                  | harness_meta     | trusted   | reports nothing                                      |
-      | interactive | a writer of this node                                                                  | user             | trusted   | reports nothing                                      |
-      | automation  | a writer of this node                                                                  | user             | untrusted | reports nothing                                      |
-      | interactive | a writer of this node                                                                  | assistant        | untrusted | reports nothing                                      |
-      | interactive | a writer of this node                                                                  | tool_result:Bash | untrusted | reports nothing                                      |
-      | interactive | a writer of this node                                                                  | harness_text     | untrusted | reports nothing                                      |
-      | interactive | a writer of this node                                                                  | post             | untrusted | reports nothing                                      |
-      | interactive | a writer of this node, from a transcript the hooks did not report                      | user             | untrusted | reports nothing                                      |
-      | interactive | a key on another node chaining to this tenant's owner key within its scope             | operator         | trusted   | reports nothing                                      |
-      | interactive | a key on another node with no certificate from this tenant's owner key                 | operator         | untrusted | reports nothing                                      |
-      | interactive | a writer of another node                                                               | user             | untrusted | reports nothing                                      |
-      | interactive | a writer of another tenant                                                             | operator         | untrusted | reports nothing                                      |
-      | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance | operator         | trusted   | reports it as a widening event that fails OWN-22     |
-      | automation  | a writer of this node, widening with a required assertion that does not verify         | operator         | trusted   | reports it as a widening event whose assertion fails |
+      | mode        | writer                                                                                 | provenance       | trust     | verify                                                    |
+      | automation  | a writer of this node                                                                  | operator         | trusted   | reports nothing                                           |
+      | automation  | a writer of this node                                                                  | harness_meta     | trusted   | reports nothing                                           |
+      | interactive | a writer of this node                                                                  | user             | trusted   | reports nothing                                           |
+      | automation  | a writer of this node                                                                  | user             | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                  | assistant        | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                  | tool_result:Bash | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                  | harness_text     | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                  | post             | untrusted | reports nothing                                           |
+      | interactive | a writer of this node, from a transcript the hooks did not report                      | user             | untrusted | reports nothing                                           |
+      | interactive | a key on another node chaining to this tenant's owner key within its scope             | operator         | trusted   | reports nothing                                           |
+      | interactive | a key on another node with no certificate from this tenant's owner key                 | operator         | untrusted | reports nothing                                           |
+      | interactive | a writer of another node                                                               | user             | untrusted | reports nothing                                           |
+      | interactive | a writer of another tenant                                                             | operator         | untrusted | reports nothing                                           |
+      | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance | operator         | trusted   | reports it as a widening event that fails OWN-22          |
+      | automation  | a writer of this node, widening with a required presence check that does not verify    | operator         | trusted   | reports it as a widening event whose presence check fails |
 
   @PRV-03 @P0 @I2 @pending
   Scenario Outline: model-reproducible and harness-summarised text is untrusted
