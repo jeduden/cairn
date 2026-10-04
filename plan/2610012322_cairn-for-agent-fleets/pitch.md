@@ -4,84 +4,64 @@ The working pitch, the stakeholder's decisions behind it, and how it
 got here. The SRS change this plan ends in turns it into the contract;
 until then it is direction, not requirement.
 
-## Draft v10: the developer pitch (4 October 2026)
+## Pitch v11: for the developer (4 October 2026)
 
-Written for developers: their problem in their words first, then what
-Cairn changes. Items marked "next" are P2 in the SRS.
+Written for developers: their day first, then what Cairn changes.
+Items marked "next" are P2 in the SRS.
 
 ### Cairn: from intent to outcome
 
-State what you want. Judge what you got. Correct course. Then run more
-agents than you could before.
+Multiplayer for you and your agents. Say what you want, watch them
+work, judge what you got, correct course.
 
-**You know this.** Five agents on five things is already a lot: Claude
-Code in five worktrees, some spawning subagents. One waits on a
-permission prompt in a tab you cannot find. Another lost your rule to
-compaction ("never push to main"). A third reports "all tests pass",
-and to judge it you open the app, the diff and the logs in separate
-windows, still unsure how it got there or whether it did what you
-asked. Two of them edited the same file. When one is wrong, you start
-a new session and explain it all again. You would run more agents, if
-you could keep up with five.
+**You know this.** Five agents on five things is already a lot. One
+waits on a permission prompt in a tab you cannot find. Another forgot
+your rule after compaction. A third says "all tests pass", and to check
+you juggle the app, the diff and the logs, still unsure how it got
+there. Two edited the same file. When one goes wrong, you start over
+and explain it all again. You would run more agents if you could keep
+up with five.
 
 **With Cairn.** Install the plugin, keep your harness, and open Cairn
-in your browser. It is multiplayer for you and your agents: one room
-per intent, where you see every agent at work, follow any of them, and
-talk to all of them at once.
+in your browser.
 
-- **Left, your intents.** Each with its agents and what needs you,
-  ranked: a prompt to answer, an outcome ready to judge, a failure, two
-  agents touching the same file.
-- **Middle, the room.** One conversation per intent, with every agent
-  on it. Each agent's messages, edits, commands and prompts appear in
-  place, under its name. Say something and every agent in the room
-  hears it; answer a prompt right where it appears.
-- **Right, the work, live.** The running app from each agent's dev
-  server, the files, the diff, the test runs, changing as the agents
-  work; parallel attempts side by side. Follow any player and the file
-  view follows them: you see the file being edited as the edit
-  happens, and the command running as it runs.
-- **On top, the intent.** The goal and its criteria, each with its
-  evidence: a test run the harness recorded, or only the agent's word.
+- **Your intents, on the left.** Each with its agents and what needs
+  you, ranked: a prompt, an outcome to judge, a failure, two agents on
+  one file.
+- **The room, in the middle.** One conversation per intent with every
+  agent on it, each message, edit and command under its agent's name.
+  Speak once and every agent hears you.
+- **The work, live, on the right.** The running app, the files, the
+  diff, the test runs. Follow any agent and watch the file it is
+  editing change as it edits.
 
-1. **Say it once.** Write the intent in Cairn, or type `/intent` in
-   your harness: the goal and what done means. Pin your rules beside
-   it. Both come back word for word after every compaction and go with
-   every task an agent hands to a subagent.
-2. **Judge where you see it.** Each agent presents its outcome against
-   the criteria with links to the screen in the app, the lines in the
-   diff, the test run. Cairn marks what it recorded
-   and what is only the agent's word. Click through, then mark each
-   criterion met or needs changes; Cairn never decides for you.
-3. **Correct course in place.** Mark what is wrong, a sentence in the
-   room, lines in the diff or a test log, a region of a screenshot of
-   the running app, and get a link to exactly that. Put the link in
-   your correction beside the criterion; every agent on the intent
-   opens what you marked. Watch the outcome change. Or sharpen the intent, or
-   retry from an earlier checkpoint in a fresh worktree, with the first
-   attempt kept beside it.
-4. **Catch up.** Back after lunch or the weekend? The intents show
-   what changed, what failed and what waits, each line linked to the
-   record. If capture failed or part of the record is missing, Cairn
-   says so.
+**Say it once.** Write the goal and what done means; pin your rules.
+Both survive every compaction word for word, and go with every task an
+agent hands on.
 
-The plugin shows every settings change before making it, removes
-cleanly, and never slows or blocks your harness. Every agent's work is
-recorded on your machine, secrets redacted. Prefer the terminal?
-Everything in Cairn works there too.
+**Judge where you see it.** Agents present their outcome against your
+criteria, linking the screen, the diff lines and the test run. Cairn
+marks what it recorded and what is only the agent's word. You decide.
 
-**Built to grow.** When five agents feel easy, run more: hand an agent
-a budget and let it delegate, and keep judging by intent rather than
-by agent. Next, more players: share an intent peer to peer, with no
-server; teammates join the room as players you can follow too, judge
-the same outcome under their own names, and their corrections reach
-your agents only when you pass them on.
+**Point, link, correct.** Mark a sentence, lines of a diff or log, or a
+region of a screenshot, and get a link to exactly that. Drop it in the
+room, and every agent opens what you marked. Or retry from an earlier
+checkpoint, with the first attempt kept beside it.
 
-**Yours alone.** Until you turn sharing on, Cairn connects to nothing.
-Its screen is served only on localhost, for your browser. Your agent
-gets its history only when it asks, marked untrusted, never as a
-command. In the room, agents take orders only from you, never from
-each other.
+**Catch up.** Back after the weekend? Each intent says what changed,
+what failed and what waits, every line linked to the record, gaps
+flagged.
+
+**Built to grow.** Hand an agent a budget and let it delegate. Next,
+teammates join the room peer to peer, with no server: they follow,
+judge under their own names, and their words reach your agents only
+when you pass them on.
+
+**Safe by default.** Cairn connects to nothing until you share; its
+screen lives on localhost. Agents take orders only from you, never
+from each other or from what they read. The plugin shows every change
+it makes, removes cleanly and never slows your harness, and everything
+also works in the terminal.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
@@ -268,6 +248,8 @@ what checked them; rule levels per action shape the owner's control.
     as pull requests link lines but extended to images. People and
     agents use the links in the discussion, the correction and the
     presentation of an outcome.
+23. v11: rewritten from scratch around everything since v9, in half the
+    words of the last v10 draft (git history holds v10).
 
 ## Open before the SRS change
 
