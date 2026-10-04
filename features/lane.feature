@@ -227,3 +227,43 @@ Feature: Lane (LANE)
     And the shell change's checkpoint hunk is marked ambiguous, naming both subagents
     And a Needs you item names both subagents and the file
     And a run marked unbound names the edits that unbound it
+
+  @LANE-20 @P1 @I2 @I3 @pending
+  Scenario: the owner's intent is versioned and restored word for word
+    Given an isolated Cairn home
+    And a lane whose owner set the intent "add CSV export" with criteria "C1 exports every column" and "C2 keeps the header row"
+    And an agent of the lane proposed a criterion "C3 streams large files"
+    When the owner revises C2 and the agent's context compacts
+    Then the intent's second version is recorded with its diff against the first
+    And the restore block carries the second version word for word with its version
+    And C3 stays untrusted text until the owner adopts it, exactly as shown
+
+  @LANE-21 @P1 @I2 @I10 @pending
+  Scenario: every result traces to the intent it was produced under
+    Given an isolated Cairn home
+    And a lane whose intent names criteria C1 and C2 and the path "internal/export/"
+    When an agent links its test run to C1 through "lane_link" and edits "go.mod"
+    Then the run names the intent version in force when its turn began
+    And the link to C1 reads as a claim
+    And no result is linked to C2 from event text
+    And the edit to "go.mod" is marked "outside intent"
+
+  @LANE-22 @P2 @I2 @I10 @pending
+  Scenario: several people judge one outcome and only the owner changes the intent
+    Given an isolated Cairn home
+    And a lane shared by its owner, a reviewer and a co-author
+    When the reviewer records "not met" on C1, the owner records "met" on C1 and the co-author posts a revised criterion
+    Then every member sees both verdicts on C1 side by side, each with its judge's petname and role
+    And neither verdict replaces the other
+    And the co-author's revision reaches no agent until the owner adopts it
+
+  @VIEW-21 @P1 @I2 @I10 @pending
+  Scenario: the lane view puts the outcome beside the intent so a person can judge it
+    Given an isolated Cairn home
+    And a lane whose intent names C1, C2 and C3, with a run linked to C1 and an agent's claim linked to C2
+    When its agents go idle and the person opens the lane view
+    Then C1 shows the run and its evidence class, C2 shows a claim and C3 reads "no evidence"
+    And every criterion reads "unjudged"
+    And the view shows edits outside the intent, the agents' exposure and the diff since the last verdict
+    And a Q3 item "outcome ready to judge" is raised
+    And no verdict, score or suggestion derived by Cairn is shown

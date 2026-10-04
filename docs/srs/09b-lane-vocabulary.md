@@ -68,7 +68,8 @@ Queue classes, named Q1–Q4 so they never read as priorities P0–P2:
 **Q1 blocking now** (permission, question, hand-off), **Q2 blocking
 the lane** (failed required check, crash, rate limit with no resume,
 refused segment, overlap), **Q3 waiting on you** (review requested,
-co-author request, parked request, quota crossed), **Q4 for your
+outcome ready to judge, co-author request, parked request, quota
+crossed), **Q4 for your
 record** (never alerts). Order: class; inside Q1, the number of agents
 blocked on the same answer, then causal order of raising; inside Q2
 and Q3, lanes in the focus set first, then causal order. Causal order,

@@ -286,3 +286,24 @@ Feature: Owner acts (OWN)
     Then the task reaches the target in the fixed template, marked as from "owner"'s agent
     And the target keeps "co-author" as its one principal
     And the same delegation without the acceptance grant is refused and audited
+
+  @OWN-27 @P1 @I2 @I10 @pending
+  Scenario: only a person judges, and a verdict goes stale when what it judged changes
+    Given an isolated Cairn home
+    And a lane whose agent stated "C1 is done" and recorded a passing test run linked to C1
+    When the owner records "met" on C1 and the agent then edits a file
+    Then the verdict is recorded as the owner's act, bound to the intent version, the head and the evidence shown
+    And Cairn pre-filled no verdict, and the agent's statement stays a claim
+    And after the edit the verdict reads stale
+    And the verdict does not approve the lane for landing
+
+  @OWN-28 @P1 @I1 @I2 @pending
+  Scenario: the owner course-corrects from the verdict
+    Given an isolated Cairn home
+    And a lane where the owner recorded "needs changes" on C2
+    When the owner sends the correction "keep the header row in every file" and retries from an earlier checkpoint
+    Then the correction reaches the agent through the harness's input in the fixed template naming the verdict, C2 and the results it concerns
+    And the retry starts a new session in a new worktree at that checkpoint with the intent in force and the correction
+    And the retry receives no content of the abandoned attempt except what it recalls
+    And the abandoned attempt stays on record, shown beside the retry
+    And C2 reads "unjudged" until the next verdict

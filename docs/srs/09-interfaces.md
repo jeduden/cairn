@@ -50,6 +50,7 @@ addresses (RCL-08).
 | `lane_post`     | P1  | `text`; writes a `post`, always untrusted (PRV-01)                                                                                                                                                                 |                                                                                  |                                            |
 | `lane_delegate` | P1  | `target`, `task`; delegates under a grant in force (OWN-23), refused without one                                                                                                                                   |                                                                                  |                                            |
 | `lane_result`   | P1  | `delegation`; returns a delegate's result in the untrusted envelope (OWN-25)                                                                                                                                       |                                                                                  |                                            |
+| `lane_link`     | P1  | `intent`; links one of the agent's own results to criteria of the intent in force, recorded as a `claim` (LANE-21)                                                                                                 |                                                                                  |                                            |
 
 ## 9.3 Recall envelope
 
@@ -131,6 +132,9 @@ compaction summaries.
 | `cairn pin add\|change\|end` · `cairn quarantine [--release]`                             | pins and quarantine (OWN-11, OWN-12)                                                                    |
 | `/pin` · `/unpin` at the harness's own prompt                                             | session pins with only the core (PIN-01, OWN-11)                                                        |
 | `cairn lane ready\|handover <lane>`                                                       | mark ready (OWN-21); hand over (LANE-11)                                                                |
+| `cairn intent set\|revise\|show <lane>`                                                   | set or revise the intent, or show its versions (LANE-20)                                                |
+| `cairn judge <lane> [<criterion>] met\|not-met\|needs-changes`                            | record a verdict (OWN-27)                                                                               |
+| `cairn correct <lane> [--retry-from <address>]`                                           | send a correction or retry from a checkpoint (OWN-28)                                                   |
 | `cairn risks show\|accept\|withdraw`                                                      | the residual risks open on this node and the owner's acceptance (OWN-22)                                |
 | `cairn catchup [--since <boundary>]`                                                      | Catch up                                                                                                |
 | `cairn search`                                                                            | operator search over every lane (VIEW-09)                                                               |
