@@ -8,98 +8,46 @@ until then it is direction, not requirement.
 
 Written for developers: their day first, then what Cairn changes.
 Items marked "next" are P2 in the SRS. Revised through three loops of
-blind persona review ([round 10](persona-review/round-10/README.md)).
+blind persona review ([round 10](persona-review/round-10/README.md)),
+then cut to a third of its length; the detail the reviews asked for
+lives in the concepts and the requirements.
 
 ### Cairn: from intent to outcome
 
-Multiplayer for you and your agents. Say what you want, watch them work,
-look at what you got, keep it or correct course.
+Multiplayer for you and your agents. Say what you want, watch them
+work, keep what you got or correct course.
 
-**You know this.** Five agents on five things is already a lot. One
-waits on a permission prompt in a tab you cannot find. Another forgot
-your rule after compaction. A third says "all tests pass", and to check
-you juggle the app, the diff and the logs. Two edited the same file. The
-pull request that lands says nothing of how the code came to be. You
-would run more agents if you could keep up with five.
+**You know this.** Five agents is already a lot. One waits on a prompt
+in a lost tab, another forgot your rule after compaction, a third says
+"all tests pass" and you dig through logs to check. Two edited the same
+file. The pull request says nothing of how the code came to be.
 
-**With Cairn.** Install the plugin and keep your harness. Start a room
-for an intent with one command or one click, from the branch you are on;
-agents already running join it when you say so. Open Cairn in your
-browser, or stay in your terminal: every room, answer and pin works from
-the command line too.
+**With Cairn,** every intent gets a room, in your browser or your
+terminal. Your rooms on the left, ranked by what needs you. In the
+middle, one conversation with every agent on the intent. On the right,
+whatever an agent presents: the running app, the diff, the test run. Or
+follow an agent and watch its file change as it edits.
 
-- **Your rooms, on the left.** One per intent, each with what needs you,
-  ranked: a prompt, an outcome to look at, a failure, two agents on one
-  file. Answer a prompt where it shows; steer or stop an agent from its
-  room, wherever your harness allows it.
-- **The conversation, in the middle.** Every agent on the intent in one
-  conversation, each message, edit and command under its name. Talk to
-  them all at once.
-- **The outcome window, on the right.** The running app, the diff, the
-  test run: whatever an agent presents. Or follow any agent and watch
-  the file it edits change as it edits.
+**Say it once.** Pin the goal and your rules. They come back to your
+agents word for word after every compaction.
 
-**Say it once.** The room's first pin is the intent: the goal and what
-done means. Pin your rules beside it. Your pins come back to your agents
-word for word, in order, after every compaction, and a change reaches
-them at their next turn. Agents pin what they are on; those pins are
-notes, marked with who wrote them, read only when an agent looks. Cairn
-warns you the moment a second agent edits a file another has edited.
+**Try it several ways.** Each attempt is a branch in the room; compare
+them side by side.
 
-**Try it several ways.** Each attempt is a branch in the room, in its
-own worktree. Put three agents on three approaches; each presents in the
-same window, against the same intent, and you switch between them.
+**Keep it or correct course.** Click through to the lines and the runs
+behind an outcome. Commit it, or pin a correction every agent takes.
 
-**Keep it or correct course.** Look where the agent shows it and click
-through to the lines, and to each run as the hook recorded it, not as
-the agent reported it: the command, its exit code and the commit it ran
-on. Keep it: commit, then review and land it on your forge as always. Or
-pin a correction, and every agent of yours in the room takes it.
+**Point, link, find.** Mark any line, sentence or screenshot region and
+get a link. Every commit links back to its room. Search finds the exact
+moment; agents recall it the same way.
 
-**Point and link.** Anyone, you or an agent, can mark a sentence, lines
-of a diff or log, or a region of a screenshot, and get a link to exactly
-that.
+**Rooms talk.** The API room posts to the frontend room. Its agents
+read it when they look; it instructs them only if you say so.
 
-**Every commit knows its room.** Each commit made in a room carries a
-link to it in its message, which survives a squash that keeps commit
-messages. It opens the conversation, the attempts and the runs behind
-the change: for you, and for others once you share the room.
-
-**Find it again.** Search every room and land on the exact message or
-run. Your agents recall the same way: the exact message, command or
-output, found by search or behind a link, wrapped as untrusted data with
-who wrote it.
-
-**Rooms talk to each other.** When the API room changes an endpoint, you
-or its agent post to the frontend room with a link to the diff. Agents
-there see only that a post waits and who sent it, and read it when they
-look.
-
-**Catch up.** Back after the weekend? One page across all rooms and
-attempts says what changed since you left, what failed and what waits
-for you, ranked, every line linked to the record. Every gap is named: a
-failed hook, a redaction, a missing entry.
-
-**Built to grow.** Hand an agent a budget and let it delegate, or
-schedule a nightly attempt within a budget; it waits for you in the
-morning. Next: your laptop, server and sandboxes share rooms peer to
-peer, enrolled by key, with no central service, each working offline and
-merging on reconnect; then teammates join by invitation, watch the room
-live and talk with you. Their words reach your agents only when you
-forward them, in one step, marked as theirs and forwarded by you, and
-you can hand them the room.
-
-**Safe by default.** Cairn opens no connection off your machine until
-you share; its screen listens on localhost behind a token. The record is
-append-only and hash-chained, so Cairn shows you any entry missing or
-altered since it was written, and detected secrets are redacted before
-anything is written. Cairn delivers as instructions only your words and
-those of posters you choose to trust, by key; everything else reaches
-your agents as untrusted data, when they ask. Cairn is a set of tools,
-not an authority: it never decides whom to trust, and it cannot stop an
-agent from being swayed by what it reads. The plugin shows every change
-it makes, removes cleanly, and never holds your harness up: every hook
-has a deadline, fails open, and counts each failure.
+**Safe by default.** Nothing leaves your machine until you share.
+Agents take instructions only from you and those you trust; everything
+else is untrusted data. Next: your machines and teammates share rooms
+peer to peer, with no central service.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
@@ -313,6 +261,8 @@ what checked them; rule levels per action shape the owner's control.
     pins come back as rules; notices carry no text; recall wrapped as
     untrusted; runs as the hook recorded them; the terminal beside the
     browser; stop where the harness allows it; integrity and gaps named.
+29. v12 cut to 300 words at the stakeholder's request: one sentence per
+    idea; the review's precision moves to the requirements.
 
 ## Open before the SRS change
 
