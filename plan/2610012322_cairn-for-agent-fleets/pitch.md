@@ -123,8 +123,10 @@ its interface. Git keeps the code; Cairn keeps the lane.
     [plan 2610022338](../2610022338_cairn-network-side/plan.md).
 11. Judging happens beside the chat: the lane view shows the outcome
     live (the running app from the dev server, the diff, the files the
-    harness produced, the test runs). The running-app preview ships in
-    the first release, not later (4 October 2026); it informs OQ-30.
+    harness produced, the test runs). The outcome pane is table stakes:
+    all of it, the running-app preview included, ships in the first
+    release (4 October 2026). What sets Cairn apart is judging against
+    the intent and correcting in place. This informs OQ-30.
 
 ## Direction compared with Zed Delta
 
