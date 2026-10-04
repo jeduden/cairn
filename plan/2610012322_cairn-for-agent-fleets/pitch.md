@@ -36,7 +36,8 @@ in your browser.
   editing change as it edits.
 
 **Say it once.** Write the goal, what done means and your rules, once
-for the room. Every agent in it works from the same text.
+for the room. Every agent that joins gets them word for word, keeps
+them through every compaction, and hears of every change.
 
 **Judge where you see it.** Agents present their outcome against your
 criteria, linking the screen, the diff lines and the test run. You
@@ -262,6 +263,9 @@ what checked them; rule levels per action shape the owner's control.
 25. Messages between rooms: a player in one room posts to another,
     with links; agents there read it when they look, and it instructs
     them only when the person passes it on.
+26. Restoring pins is part of the room protocol (join, participate,
+    leave), so the pitch again promises rules kept through every
+    compaction.
 
 ## Open before the SRS change
 
@@ -271,11 +275,11 @@ OWN-08) and keyed commitments (REC-17). What stays open is in its §12.
 
 Open from pitch v11, for the stakeholder:
 
-- **Pinning in a room.** Pins were designed for one agent: restored
-  word for word after its compaction. With several agents in a room,
-  whose pins reach which agent, when a subagent or a new attempt joins,
-  and how a change reaches agents mid-task, has no model yet. The pitch
-  promises only that every agent works from the same text.
+- **Pinning in a room.** Settled by the room protocol in the
+  [entity model](entity-model.md): an agent gets the intent and its
+  person's pins on joining, keeps them through every compaction, and
+  gets each change at its next turn. Harness support for subagents and
+  next-turn notices stays to be checked (ASM-18, spike S9).
 - **Retry with several players.** Retrying from an earlier checkpoint
   is defined for one owner and one agent. In a room it is open who may
   start a retry, whether it joins the same room, and what the other

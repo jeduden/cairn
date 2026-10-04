@@ -72,6 +72,41 @@ of them, a person, can instruct an agent.
    agent fetches them as untrusted data, and out of the lane view's own
    origin.
 
+## Room protocol: join, participate, leave
+
+Restoring pins is part of being in a room. A restore is Cairn writing
+trusted text into one agent's context at a point the harness offers
+(INJ-01): after compaction, at startup, resume or clear. The room
+protocol says when each member gets what.
+
+**Join.** A person adds a player to a room, recorded as a membership
+event: an agent they run, a subagent or delegate an agent starts in
+the room, or, later, a teammate. An agent joining gets, word for word:
+the intent in force, its own person's pins for the room, and a fixed
+notice naming the room and its players. A subagent the harness starts
+without a hook of its own gets the same text inside the task it is
+handed, which counts as its join.
+
+**Participate.** While a member, an agent:
+
+- has the intent and its person's pins restored after every
+  compaction, at startup, resume and clear;
+- gets a changed intent or pin at its next turn, as a fixed notice
+  naming the new version; the change is the person's act, so the
+  notice is a write I2 allows;
+- reads room messages, cross-room messages and links when it asks,
+  marked untrusted, and posts its own;
+- takes instructions only from its own person.
+
+**Leave.** A person removes a player, the agent's session ends, or a
+delegate returns its result. The membership event records it. Cairn
+stops restoring the room's pins to that agent; everything it did stays
+in the record.
+
+In a shared room each person's pins reach only that person's agents.
+A teammate who joins sees every pin in the room, and their own agents
+restore their own person's pins.
+
 ## Where this settles the open questions
 
 - **Messages in a room** are data: every player in the room can read
@@ -81,5 +116,7 @@ of them, a person, can instruct an agent.
   instructs no one until a person passes it on.
 - **Handing tasks to another room** is rule 5: possible only under a
   grant, not by message.
-- **Pinning in a room** stays open: a pin is data, and the open part is
-  which agents restore which pins and when.
+- **Pinning in a room** follows the room protocol above. What stays
+  open is harness support: whether a harness gives a subagent its own
+  restore hook, and whether it accepts a notice at the next turn
+  without an adapter (ASM-18, spike S9).
