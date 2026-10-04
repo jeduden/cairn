@@ -133,18 +133,39 @@ to peer.
 
 ## The proposed chain
 
-1. **Owner key.** A person's root, kept in a key event log inside the
-   record and committing to its next key, which is held offline as a
-   recovery key. Used rarely, ideally from hardware.
-2. **Device key.** Certified by an owner-log entry naming its scope
-   and rule ceiling, and countersigned by the device.
-3. **Harness key.** Issued once by the device when a harness is first
+Developers already have an SSH identity: the key git pushes with and,
+with `gpg.format=ssh`, signs commits with, held in ssh-agent (often on
+a hardware security key) and frequently published on their forge. The
+chain starts from it instead of a new key.
+
+1. **Owner key: the person's existing SSH signing key.** It is used
+   through ssh-agent, so the private key never leaves the agent or the
+   hardware token, and Cairn never holds it. Cairn signs with it the
+   way git does, `ssh-keygen -Y sign` under its own namespaces
+   (`cairn-device`, `cairn-participant@<room>`), so a Cairn signature
+   can never pass as a git signature or the reverse. The same key in
+   the person's git allowed-signers file, or listed by their forge,
+   is evidence of who they are, never authority.
+2. **Rotation and recovery.** SSH has no pre-rotation, so the owner's
+   key event log in the record does it: the log names the current
+   SSH key and commits to the next one, a second SSH key held offline
+   (a spare hardware key) for recovery. A rotation entry is signed by
+   the committed next key.
+3. **Device key.** Certified by an owner-log entry signed with the
+   SSH key, naming its scope and rule ceiling, and countersigned by
+   the device.
+4. **Harness key.** Issued once by the device when a harness is first
    used, with a standing grant: which commands and rooms, and how many
-   joins. Held by a local signer process the harness asks to sign.
-4. **Participant key.** Minted per room on joining, as a did:key,
+   joins. Held by a local signer process, as ssh-agent holds SSH keys,
+   that the harness asks to sign.
+5. **Participant key.** Minted per room on joining, as a did:key,
    signed by the harness key within its standing grant, so the person
    approves once per harness, not per join. Joining proves possession
    by signing a room nonce.
+
+OpenSSH certificates cannot chain beyond one level, so the chain is
+kept as SSH-signed entries in the record rather than as OpenSSH
+certificates; the principal-and-namespace idea carries over.
 
 **Checking a bar offline.**
 
