@@ -134,7 +134,17 @@ against exist, not whether a library does.
     A UI the core draws must supply them: AccessKit covers screen readers
     on all five platforms, natively in Rust (I) and through its C API in
     Zig (H), but IME and selection are the toolkit's or Cairn's own
-    work.
+    work. Ghostty shows the pattern and its limits: the core hands its
+    visible text to the host through the C API, and the macOS host
+    exposes one terminal surface as an `AXTextArea` through NSAccessibility
+    in `SurfaceView_AppKit.swift`, with selection and change
+    notifications; position queries were still missing in 2026
+    ([#9932][gh-9932]), and no Linux support was found (unverified).
+    Cairn needs a whole tree (rooms, messages, buttons), which is
+    AccessKit's model. Accessibility is also a read-and-act channel for
+    same-user processes (T21): AT-SPI on Linux needs no permission, so an
+    exposed "Allow" action must not count as an owner act without the
+    presence check of OWN-11.
 
 HC-23. Rust meets it by construction with `forbid(unsafe_code)`. Go
 meets it without `unsafe` and cgo, with races excluded by design and
@@ -218,3 +228,5 @@ parallel lanes, and the numbers decide:
   HC-23 as a requirement; P-256 device keys.
 - **Carried from revision 1.** Whether build-only tools count toward
   the ten; the running-app preview; the kernel spike S5 in three arms.
+
+[gh-9932]: https://github.com/ghostty-org/ghostty/issues/9932
