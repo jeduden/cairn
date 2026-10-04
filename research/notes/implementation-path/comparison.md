@@ -33,7 +33,7 @@ note says so, and the rest wait for the spikes at the end.
 | 9   | Terminal parity                   | strong            | strong              | strong                 | strong            | workable             | weak                    |
 | 10  | One view model across surfaces    | strong            | strong              | strong                 | strong            | workable             | strong                  |
 | 11  | Git and signatures in the core    | workable          | workable            | workable               | strong            | workable             | weak                    |
-| 12  | Kernel and MCP                    | workable          | workable            | workable               | strong            | weak                 | weak                    |
+| 12  | Kernel sandbox and MCP            | workable          | workable            | workable               | strong            | workable             | weak                    |
 | 13  | P2 reach without a rewrite        | workable          | workable            | strong                 | strong            | workable             | weak                    |
 | 14  | Verification toolchain            | strong            | strong              | strong                 | workable          | weak                 | weak                    |
 | 15  | Cost of the change                | strong            | strong              | strong                 | weak              | fails                | weak                    |
@@ -87,10 +87,19 @@ note says so, and the rest wait for the spikes at the end.
 11. **Git in the core.** Rust's gix is the strongest in-process git.
     Go has go-git and x/crypto for SSH signatures, workable with care
     for the `Stop` budget.
-12. **Kernel and MCP.** Starlark exists in Go and Rust. Go's MCP SDKs
-    import `net/http`, so A to C write their own stdio server; Rust's
-    `rmcp` turns HTTP off with features. JavaScript has no maintained
-    Starlark.
+12. **Kernel sandbox and MCP.** The criterion rates the host's sandbox,
+    not the guest language, which spike S5 decides (OQ-10). A WASM
+    guest is hermetic by construction: a module given no imports has
+    no filesystem, network or process. Go hosts Starlark natively or a
+    WASM guest under wazero, which stops a run when its context ends
+    but has no instruction metering (to verify in S5), so the step
+    budget falls to a wall-clock limit and the worker's OS limits. Rust
+    has Starlark and wasmtime, whose fuel meters steps exactly. Bun
+    runs WASM guests but has no Starlark. Go's MCP SDKs import
+    `net/http`, so A to C write their own stdio server; Rust's `rmcp`
+    turns HTTP off with features; Bun has the reference SDK.
+    Kotlin/Native has no Starlark found, and a WASM runtime for it is
+    unverified.
 13. **P2 reach.** Go has the transports (QUIC, Noise, WireGuard) but no
     cgo-free CRDT; C closes that gap with a CRDT as a WASM module. Rust
     holds iroh, p2panda, Automerge and Loro natively. Every option
@@ -146,6 +155,7 @@ Each answers a criterion the desk cannot.
 | Page: hypermedia or SPA | the three-pane room twice, Datastar islands and a small SPA, over the same SSE feed                                     | criterion 8, 5 and 6; code and deps per page | A against B                   |
 | Shared VT model         | `ghostty-vt.wasm` in the run component via wasm2go and wazero, and in the page; ten hosted harnesses, a late joiner     | criterion 7; keystroke-to-echo p95, RSS      | C's core idea                 |
 | Session credential      | the fragment token, page-memory secret and live-stream auth; replay from another loopback port; WebAuthn on `localhost` | HC-5, open points 3 and 12                   | any option; SEC-20 wording    |
+| Kernel language (S5)    | the 30 aggregation tasks of S5 in three arms: Starlark, Python as a WASM guest, and no kernel (the `cairn` CLI's JSON)  | task success, tokens, step-budget behaviour  | ADR-04, OQ-10; not the option |
 | Rust core, if D stays   | the core slot in Rust: store, seal, MCP over stdio, per-crate reach evidence                                            | criteria 2, 5 and 14                         | whether D's cost is justified |
 
 ## Decisions for the stakeholder
@@ -160,3 +170,6 @@ Each answers a criterion the desk cannot.
   Ed25519 key (common ground item 10).
 - **The running-app preview.** It needs a requirement and a SEC-21
   decision in every option (common ground item 11).
+- **The kernel.** Whether S5 widens to three arms, and whether ADR-04's
+  Starlark default stays open until it reports (common ground item
+  12).

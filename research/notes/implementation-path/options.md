@@ -77,6 +77,12 @@ language.
     view's origin; a mark on it is a snapshot the run component takes
     (open points 4 and 5). This needs a requirement and a SEC-21
     decision in any option.
+12. **Kernel.** A hermetic, metered sandbox in the `cairn
+    kernel-worker` child process (CMP-03 to CMP-05). Starlark, as
+    ADR-04 assumes, or a WASM runtime running Python, Starlark or
+    JavaScript; spike S5 decides the guest language (OQ-10). Go, Rust
+    and Bun each carry a WASM runtime, so the kernel does not pick
+    among options A to E.
 
 ## The options at a glance
 
@@ -104,7 +110,7 @@ so the release path has no JavaScript toolchain at all.
 - **Core.** Go as CON-01 and the ADRs assume: ncruces/go-sqlite3,
   `crypto/ed25519` and `crypto/sha256` from the standard library, a
   hand-written stdio MCP server (the Go MCP SDKs import `net/http`),
-  Starlark in Go for the kernel.
+  the kernel as Starlark in Go or a WASM guest under wazero.
 - **Lane view.** `html/template` fragments pushed over one SSE stream
   with Datastar (one vendored 33.5 KB file, CSP mode on). The two panes
   that need client code, the diff and the terminal, are web-component
@@ -126,7 +132,8 @@ so the release path has no JavaScript toolchain at all.
 - **Evidence.** Today's import-closure test, made per entry point,
   plus a call graph from each entry; `net/http` code is in the file but
   unreachable from the core's entry (HC-1, HC-3).
-- **Direct dependencies.** sqlite, Starlark, pty, Bubble Tea, Lip
+- **Direct dependencies.** sqlite, the kernel (Starlark or wazero),
+  pty, Bubble Tea, Lip
   Gloss, the three test modules, Datastar, CodeMirror merge, ghostty-web
   and the ghostty-vt module: eleven, one over the target.
 - **Precedent.** Crush and Claude Squad ship Go with Bubble Tea as
@@ -207,7 +214,8 @@ phone.
 
 - **Core.** rusqlite with FTS5 bundled, `rmcp` with HTTP features off,
   `ed25519-dalek`, `sha2`, `serde_json_canonicalizer`, the `regex`
-  crate for RE2-compatible redaction, Starlark in Rust for the kernel.
+  crate for RE2-compatible redaction, the kernel as Starlark in Rust
+  or a WASM guest under wasmtime, whose fuel meters steps.
 - **Lane view.** hyper or axum on loopback; the page is a TS SPA as in
   B.
 - **Run component.** portable-pty and libghostty-vt linked natively, as
@@ -239,8 +247,8 @@ phone.
 ecosystem for harnesses, CRDTs and UI.
 
 - **Core.** `bun:sqlite`, WebCrypto, the reference MCP SDK, the
-  `canonicalize` package; Starlark has no maintained JavaScript
-  implementation, so the kernel runs another language or a WASM build.
+  `canonicalize` package; the kernel as a WASM guest, since Starlark
+  has no maintained JavaScript implementation.
 - **Lane view and page.** Bun's server and a TS SPA, sharing types and
   the view model code with the server.
 - **Run component.** `Bun.Terminal` and `@xterm/headless`, the same

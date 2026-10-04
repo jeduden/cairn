@@ -56,7 +56,9 @@ What the SRS requires of it:
   ≤ 200 ms and `expand` ≤ 100 ms p95 at 10M events (NFR-03). Spike S7
   decides SDK or in-house server.
 - **Kernel worker** (row 3): the only program the core starts. A
-  hermetic Starlark interpreter by default (ADR-04) with allow-listed
+  hermetic Starlark interpreter by default (ADR-04, unproven until
+  spike S5 answers OQ-10; a WASM sandbox is the language-neutral
+  alternative, see criterion 12) with allow-listed
   globals (CMP-03), no filesystem, network, process or environment
   (CMP-04), step budget and OS limits of 10 s and 512 MiB (CMP-05),
   enveloped and tainted output (CMP-06).
@@ -381,10 +383,16 @@ measure it.
     verify SSH and OpenPGP commit signatures offline; the dependency
     cost.
 12. **Kernel and MCP.** Traces: ADR-04, CMP-03 to CMP-07, S5, S7,
-    RCL-01, §9.2, NFR-03; U9. Measure: a Starlark interpreter with a
-    step budget and an allow-list of every global; an MCP server over
-    stdio with cancellation and structured content; the worker under OS
-    limits.
+    RCL-01, §9.2, NFR-03; U9. Measure: a hermetic, metered sandbox
+    with an allow-list of every global, whatever the guest language:
+    a Starlark interpreter, or a WASM runtime running Python, Starlark
+    or JavaScript, where a module given no imports has no filesystem,
+    network or process; how steps are budgeted (an interpreter's step
+    count, a runtime's fuel, or a wall-clock limit plus the worker's OS
+    limits); an MCP server over stdio with cancellation and structured
+    content. The guest language is S5's question (OQ-10), not the host
+    language's, so this criterion rates the host's sandbox and MCP
+    server only.
 13. **P2 reach without a rewrite.** Traces: PEER-01 to PEER-12, SEC-24,
     SEC-25, LANE-09, PEER-08, register row 17; U3, U6, U7. Measure: for
     each P2 need (mutually authenticated transport, dial-out, discovery,
