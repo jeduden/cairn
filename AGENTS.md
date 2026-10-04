@@ -26,8 +26,7 @@ The product itself arrives plan by plan.
 
 ## The Invariants Come First
 
-The main principle. Every requirement serves at least one of the ten
-invariants. Their single source is
+The main principle. The ten invariants' single source is
 [docs/srs/invariants.md](docs/srs/invariants.md);
 this file and every other copy include it, so edit only the source and
 run `mdsmith fix .`.
@@ -56,10 +55,20 @@ security review and a new major version, not a bug fix.
 | **I10** | **Everything derived is rebuildable**                                                              | All derived state (indexes, landmarks, active pins, quarantine set, statuses, queues, evidence, proof and gate verdicts, statistics) is a deterministic function of the set of writer logs a node holds and the node's own key set, independent of the order in which logs arrived. Rebuilding reproduces it exactly.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 <?/include?>
 
-A change that would break an invariant is a design change that needs
-security review and a new major version, not a bug fix. Where
-usefulness and safety conflict, pick safety and make the convenience
-opt-in.
+What they mean for everyday code:
+
+- **I2** — only `TrustedText` reaches a restore block; recall is
+  pull-only and always enveloped.
+- **I4** — no `net`, `net/http` or `os/exec` in the core; depguard and
+  an import-closure test enforce it.
+- **I6** — every dropped, rejected, redacted or failed operation is
+  audited and counted.
+- **I9** — hooks fail open, except where continuing would break I2, I4
+  or I8.
+- **I10** — projection code reads no clock and no randomness.
+
+Where usefulness and safety conflict, pick safety and make the
+convenience opt-in.
 
 ## Docs
 

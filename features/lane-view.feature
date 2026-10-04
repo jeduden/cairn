@@ -201,3 +201,14 @@ Feature: Lane view (VIEW)
     Then each delegation shows as a link from the delegating agent to its delegate
     And each link shows its grant, the task's address and its state
     And the delegate's spend shows against the grant's budget
+
+  @VIEW-21 @P1 @I2 @I10 @pending
+  Scenario: the lane view puts the outcome beside the intent so a person can judge it
+    Given an isolated Cairn home
+    And a lane whose intent names C1, C2 and C3, with a run linked to C1 and an agent's claim linked to C2
+    When its agents go idle and the person opens the lane view
+    Then C1 shows the run and its evidence class, C2 shows a claim and C3 reads "no evidence"
+    And every criterion reads "unjudged"
+    And the view shows edits outside the intent, the agents' exposure and the diff since the last verdict
+    And a Q3 item "outcome ready to judge" is raised
+    And no verdict, score or suggestion derived by Cairn is shown

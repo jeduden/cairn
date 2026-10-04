@@ -1,6 +1,7 @@
 package srs
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -69,18 +70,25 @@ func TestPersonaAgentsRejectsBadRows(t *testing.T) {
 	assert.ErrorContains(t, err, "malformed persona row")
 	_, err = PersonaAgents([]byte("# none\n"))
 	assert.ErrorContains(t, err, "no persona table")
+	_, err = PersonaAgents([]byte("| # | Persona | Agent |\n|---|---|---|\n" +
+		"| U1 | p | `persona-a` |\n| U1 | p | `persona-a` |\n"))
+	assert.ErrorContains(t, err, "U1 listed twice")
 }
 
 // TestAppendixCCoversEveryRequirement keeps Appendix C honest: every
 // requirement of §5–§7 and §10 serves at least one persona, every id
-// it lists is a real requirement, and every persona serves some
-// requirement.
+// it lists is a real requirement, every persona it names is one §2.5
+// defines, and every persona of §2.5 serves some requirement.
 func TestAppendixCCoversEveryRequirement(t *testing.T) {
 	reqs, err := Load(srsDir)
 	require.NoError(t, err)
 	body, err := os.ReadFile(filepath.Join(srsDir, "appendix-c-persona-coverage.md"))
 	require.NoError(t, err)
 	coverage, err := PersonaCoverage(body)
+	require.NoError(t, err)
+	context, err := os.ReadFile(filepath.Join(srsDir, "02-context.md"))
+	require.NoError(t, err)
+	defined, err := PersonaAgents(context)
 	require.NoError(t, err)
 
 	known := map[string]bool{}
@@ -92,13 +100,14 @@ func TestAppendixCCoversEveryRequirement(t *testing.T) {
 		assert.Contains(t, coverage, r.ID, "%s serves no persona in Appendix C", r.ID)
 	}
 	served := map[string]bool{}
-	for id, personas := range coverage {
+	for _, id := range slices.Sorted(maps.Keys(coverage)) {
 		assert.True(t, known[id], "Appendix C lists %s, which is no requirement", id)
-		for _, p := range personas {
+		for _, p := range coverage[id] {
+			assert.Contains(t, defined, p, "Appendix C names %s, which §2.5 does not define", p)
 			served[p] = true
 		}
 	}
-	for _, p := range []string{"U1", "U2", "U3", "U4", "U5", "U6", "U7", "U8", "U9"} {
+	for _, p := range slices.Sorted(maps.Keys(defined)) {
 		assert.True(t, served[p], "persona %s serves no requirement", p)
 	}
 }
@@ -118,11 +127,6 @@ func TestPersonasMatchTheAgents(t *testing.T) {
 	for _, f := range files {
 		onDisk = append(onDisk, strings.TrimSuffix(filepath.Base(f), ".md"))
 	}
-	listed := make([]string, 0, len(named))
-	for _, agent := range named {
-		listed = append(listed, agent)
-	}
 	slices.Sort(onDisk)
-	slices.Sort(listed)
-	assert.Equal(t, onDisk, listed, "§2.5 personas and .claude/agents/persona-*.md")
+	assert.Equal(t, onDisk, slices.Sorted(maps.Values(named)), "§2.5 personas and .claude/agents/persona-*.md")
 }

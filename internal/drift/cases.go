@@ -208,6 +208,14 @@ func gateCases() []Case {
 			Want:  "ENG-29 serves no persona in Appendix C",
 		},
 		{
+			Name:   "Appendix C naming a persona §2.5 does not define",
+			Guards: "TestAppendixCCoversEveryRequirement",
+			Edit: Edit{Op: Replace, File: "docs/srs/02-context.md",
+				Old: "\n| U9  | Agent", New: "\n\n| U9  | Agent"},
+			Check: GoTest("./internal/srs", "TestAppendixCCoversEveryRequirement"),
+			Want:  "Appendix C names U9, which §2.5 does not define",
+		},
+		{
 			Name:   "a persona agent with no persona",
 			Guards: "TestPersonasMatchTheAgents",
 			Edit: Edit{Op: Copy, File: ".claude/agents/persona-agent.md",

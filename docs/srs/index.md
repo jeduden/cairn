@@ -5,15 +5,15 @@ summary: >-
 ---
 # Cairn — Software Requirements Specification
 
-|                             |                                                                                        |
-| --------------------------- | -------------------------------------------------------------------------------------- |
-| **Product**                 | Cairn — lossless, security-first context layer for long-running Claude agents          |
-| **Document**                | Software Requirements Specification (SRS)                                              |
-| **Version**                 | 2.0-draft                                                                              |
-| **Status**                  | Draft; the invariant changes await the security reviewer\'s recorded approval (ENG-29) |
-| **Date**                    | 2026-10-03                                                                             |
-| **Implementation language** | Go                                                                                     |
-| **Owners**                  | Product owner and security reviewer: @jeduden                                          |
+|                             |                                                                                                                   |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Product**                 | Cairn — lossless, security-first context layer for long-running Claude agents                                     |
+| **Document**                | Software Requirements Specification (SRS)                                                                         |
+| **Version**                 | 2.0-draft                                                                                                         |
+| **Status**                  | Draft; the invariant changes are approved in [ADR-2610032155](../adr/ADR-2610032155-srs-2-invariants.md) (ENG-29) |
+| **Date**                    | 2026-10-03                                                                                                        |
+| **Implementation language** | Go                                                                                                                |
+| **Owners**                  | Product owner and security reviewer: @jeduden                                                                     |
 
 ## Change log
 
@@ -70,7 +70,7 @@ row: "- [{title}]({filename}) — {summary}"
 - [5. Functional requirements](05-functional-requirements.md) — Normative functional requirements with priority, verification method and invariant traces: record (REC), provenance (PRV), pins (PIN), recall (RCL), landmarks (LMK), restore (INJ), kernel (CMP), administration (ADM), memory boundary (MEM), observability (OPS). The lane families continue in 05b and 05c.
 - [5. Functional requirements: lane and lane view](05b-lane-requirements.md) — Normative functional requirements for the lane (LANE): identity, actors, results, evidence, landing and membership; and for the lane view (VIEW): what a person reads on every surface. Part of §5.
 - [5. Functional requirements: owner acts and peers](05c-owner-and-peer-requirements.md) — Normative functional requirements for owner acts (OWN): answers, steering, endorsement, the owner-act classes and the sandbox state they rest on; and for the peer network (PEER). Part of §5.
-- [6. Security](06-security.md) — Threat model (assets, actors, threats T1–T24 and their controls, and the residual risks R1–R7 only a sandbox removes), the normative security requirements SEC-01..31, and the boundary register.
+- [6. Security](06-security.md) — Threat model (assets, actors, threats T1–T25 and their controls, and the residual risks R1–R7 only a sandbox removes), the normative security requirements SEC-01..31, and the boundary register.
 - [7. Non-functional requirements](07-non-functional-requirements.md) — Normative non-functional requirements NFR-01..15: latency, throughput, scale, availability, durability, concurrency, footprint, portability, compatibility, usability, maintainability, documentation.
 - [8. Data and storage](08-data-and-storage.md) — Normative home layout, logical schema, canonical encoding (RFC 8785 + SHA-256) and the conservative token estimator.
 - [9. Interfaces](09-interfaces.md) — Normative interfaces: the hook contract, the MCP tools, the recall envelope, the restore block, the CLI with its exit codes, and the configuration keys a project may only tighten.
