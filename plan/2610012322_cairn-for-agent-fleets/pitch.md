@@ -47,6 +47,11 @@ mark a sentence, lines of a diff or log, or a region of a screenshot,
 and get a link to exactly that. Drop it in the room, and every player
 opens what was marked.
 
+**Rooms talk to each other.** Intents depend on each other. When the
+API room changes an endpoint, you or its agent post to the frontend
+room, with a link to the diff. The frontend agents can read it when
+they look, and it becomes their instruction only when you pass it on.
+
 **Catch up.** Back after the weekend? Each intent says what changed,
 what failed and what waits, every line linked to the record, gaps
 flagged.
@@ -254,6 +259,9 @@ what checked them; rule levels per action shape the owner's control.
     model; any player links, not only agents; the recorded-versus-claim
     line dropped; retry left out until it works with several players;
     Cairn controls what it delivers to an agent, not what sways it.
+25. Messages between rooms: a player in one room posts to another,
+    with links; agents there read it when they look, and it instructs
+    them only when the person passes it on.
 
 ## Open before the SRS change
 
