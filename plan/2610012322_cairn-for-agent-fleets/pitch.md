@@ -11,45 +11,30 @@ Cairn changes. Items marked "next" are P2 in the SRS.
 
 ### Cairn: know exactly what your agents did, and work with them live
 
-**You know this.** You run Claude Code in three terminals, each on its
-own branch. You flip between tabs to find the one stuck on a
-permission prompt. Two hours in, the context compacts, and the agent
-forgets the rule you gave it at the start: don't touch the
-migrations. You say it again. You come back from lunch to a diff and
-the agent's own summary, "all tests pass". Did it run them? What did
-it try first? The diff shows what changed, not why. The conversation
-that explains it sits in a log file on your laptop, and your reviewer
-never sees it. To help a colleague's agent, you share a screen or
-paste logs into chat.
+**You know this.** Three agents, three terminals, three branches. You
+hunt through tabs for the one waiting on a prompt. After compaction it
+forgets your rule, and you repeat it. Then you review what it made: a
+diff and "all tests pass". Did it run them? Why this approach? The
+answer sits in a log on your laptop, and your reviewer never sees it.
 
 **Cairn keeps the story behind the code.** Git keeps the code; Cairn
-keeps the lane: the branch, its agents, and every message, edit,
-command and result that produced it. It records on your machine,
-redacts secrets before anything is written, and tells you when part
-of the record is missing or changed.
+keeps the lane: every message, edit, command and result behind a
+branch, on your machine, secrets redacted.
 
-- **Say it once.** Pin a rule and it comes back word for word after
-  every compaction. Your agent can look up exactly what it did earlier
-  instead of guessing.
-- **See every agent at once.** One local view shows which agent is
-  working, which is waiting on you, what each produced, and what
-  checked it: the agent's claim, or a test run it recorded.
-- **Let agents split the work, within limits you set.** An agent hands
-  tasks to subagents or other sessions under a grant you record: which
-  agents, what they may do, how much they may spend, until when.
-- **Review the work, not just the diff (next).** Hand a reviewer the
-  lane with the pull request: the story, the diff and the evidence, in
-  one signed file.
-- **Work a lane live with your team (next).** Open a lane to the
-  teammates you choose, peer to peer, with no server in between.
-  They can watch, post and pair; only you decide what reaches your
-  agents.
+- **Say it once.** Pinned rules return word for word after compaction.
+  Agents look up what they did instead of guessing.
+- **See every agent.** One view: who is working, who is waiting on you.
+- **Review the outcome.** Each result shows how it got there and what
+  checked it: the agent's claim, or a test run it recorded. Next: hand
+  your reviewer the same, in one signed file.
+- **Split the work safely.** Agents delegate to subagents and other
+  sessions within limits you set.
+- **Work live with your team (next).** Share a lane peer to peer, with
+  no server. Only you decide what reaches your agents.
 
-**Safe by default.** Cairn runs on your machine and sends nothing off
-it; what your agent looks up goes only into its own model call. Your
-agents reach their own history only when they
-ask for it, marked untrusted, so an instruction hidden in a web page
-or a tool's output never comes back as a command.
+**Safe by default.** Nothing leaves your machine except what your agent
+looks up for its own model call. History returns only when an agent
+asks, marked untrusted, never as a command.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
@@ -171,7 +156,8 @@ what checked them; rule levels per action shape the owner's control.
    endorsement as the way another person's words reach an agent.
 9. For developers: open with the day they already have (tabs,
    compaction, the unexplained diff, the review without its story),
-   then what Cairn changes; add delegation and lane sharing.
+   then what Cairn changes; add reviewing the outcome, delegation and
+   lane sharing; half the words of v9.
 
 ## Open before the SRS change
 
