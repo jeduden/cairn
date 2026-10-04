@@ -201,7 +201,7 @@ S supported, P partial, U unsupported, ? unverified.
 
 | #   | Question                                           | Options                                                                                                 | Recommendation                                                |
 | --- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Q1  | Is a room a lane or a group of lanes?              | (a) a lane with an intent; (b) a group of lanes, intent and pins on the room; (c) a view                | (b): five agents on one intent are five branches              |
+| Q1  | Is a room a lane or a group of lanes?              | Answered: split into independent concepts composed by bindings; see [concepts](concepts.md)             | —                                                             |
 | Q2  | Does the change notice carry the text?             | (a) ids only, recalled as untrusted; (b) verbatim, on for members; (c) adapter only                     | (b): otherwise the agent's own rule reads as untrusted        |
 | Q3  | What does leaving do to a running agent?           | (a) lift its rules at once; (b) keep them until a safe point; (c) stop the agent                        | (b) by default, (a) as an explicit choice                     |
 | Q4  | Can a session be in several rooms?                 | (a) one at a time; (b) many, equal; (c) one active, earlier rules carried                               | (c), as pins already accumulate across lanes                  |
