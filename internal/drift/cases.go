@@ -219,7 +219,7 @@ func personaCases() []Case {
 			Name:   "a requirement serving no persona",
 			Guards: "TestAppendixCCoversEveryRequirement",
 			Edit: Edit{Op: Replace, File: "docs/srs/appendix-c-persona-coverage.md",
-				Old: "SEC-17, ENG-29", New: "SEC-17, ENG-99"},
+				Old: "| SEC-17, ENG-29", New: "| SEC-17"},
 			Check: GoTest("./internal/srs", "TestAppendixCCoversEveryRequirement"),
 			Want:  "ENG-29 serves no persona in Appendix C",
 		},
@@ -246,6 +246,13 @@ func personaCases() []Case {
 				New: ".claude/agents/persona-stray.md"},
 			Check: GoTest("./internal/srs", "TestPersonasMatchTheAgents"),
 			Want:  "persona-stray",
+		},
+		{
+			Name:   "a persona whose agent file is gone",
+			Guards: "TestPersonasMatchTheAgents",
+			Edit:   Edit{Op: Remove, File: ".claude/agents/persona-reviewer.md"},
+			Check:  GoTest("./internal/srs", "TestPersonasMatchTheAgents"),
+			Want:   "persona-reviewer",
 		},
 	}
 }

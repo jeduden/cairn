@@ -32,11 +32,13 @@ linters:
   settings:
     depguard:
       rules:
-        # SEC-01 / I4: no shipped code opens a socket or spawns a
-        # process. A package that genuinely needs one — the kernel
-        # worker spawning its child (CMP-05) — is carved out here by
-        # path, under review, never by a nolint. Tests may use
-        # os/exec (the import-closure test runs `go list`).
+        # SEC-01 / I4: the core (B0) opens no socket and spawns no
+        # process, and today all shipped code is the core. A package
+        # that genuinely needs one — the kernel worker spawning its
+        # child (CMP-05), or a B1–B3 component inside its register
+        # row — is carved out here by path, under review, never by a
+        # nolint. Tests may use os/exec (the import-closure test runs
+        # `go list`).
         no-network-or-exec:
           files:
             - "$all"
