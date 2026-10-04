@@ -9,8 +9,10 @@ Feature: Landmarks (LMK)
   Scenario: spans start at every user turn, compaction and subagent boundary
     Given an isolated Cairn home
     And a project with a Claude Code transcript "turns-compaction-subagent"
+    And "turns-compaction-subagent" holds an isMeta "user" line and a "user" line of command output
     When the operator runs "cairn landmarks --json"
     Then a new span starts at each user turn, each compaction, and each subagent start and end
+    And neither the isMeta line nor the command output starts a span
     And after the operator runs "cairn rebuild" the span boundaries are byte-identical
 
   @LMK-02 @P0 @I2 @pending
