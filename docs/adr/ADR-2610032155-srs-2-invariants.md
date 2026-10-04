@@ -1,7 +1,7 @@
 ---
 id: ADR-2610032155
 title: "Security review of the SRS 2.0 invariant changes"
-status: proposed
+status: accepted
 summary: >-
   The named security reviewer's record for the SRS 2.0 invariant and
   constraint changes: I4 restated by network boundary, one signed log
@@ -34,17 +34,17 @@ changes they control.
 | --- | --------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 1   | I1, Nothing is lost                                       | approved, 3 October 2026                                                     |
 | 2   | I2, No automatic path from untrusted content to the model | approved, 3 October 2026                                                     |
-| 3   | I4, Cairn never talks to the network                      | pending, revised for one binary                                              |
+| 3   | I4, Cairn never talks to the network                      | approved, 4 October 2026                                                     |
 | 4   | I5, Bad data can be removed without destroying evidence   | approved, 3 October 2026                                                     |
 | 5   | I8, Isolation follows the tenant                          | approved, 3 October 2026                                                     |
 | 6   | I10, Everything derived is rebuildable                    | approved, 3 October 2026                                                     |
-| 7   | CON-04, No network in the core                            | pending, revised for one binary                                              |
+| 7   | CON-04, No network in the core                            | approved, 4 October 2026                                                     |
 | 8   | CON-06, No central service (new)                          | approved, 3 October 2026                                                     |
 | 9   | Owner acts rest on the sandbox                            | approved, 3 October 2026                                                     |
 | 10  | Owner key certifies device keys                           | approved, 3 October 2026                                                     |
 | 11  | Delegation joins I2's closed list                         | approved, 3 October 2026                                                     |
 | 12  | Room pins reach every member agent (new)                  | withdrawn, 4 October 2026: room pins are information, not instructions (Q12) |
-| 13  | Trust grants to posters (new)                             | pending                                                                      |
+| 13  | Trust grants to posters (new)                             | approved, 4 October 2026                                                     |
 
 ### 1. I1, Nothing is lost
 
@@ -108,7 +108,7 @@ changes they control.
     inside one product.
 - **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
   [SEC-01][SEC], [SEC-19][SEC], [SEC-22][SEC], [ENG-12][ENG], [ENG-16][ENG].
-- **Review:** pending, revised for one binary.
+- **Review:** approved, 4 October 2026.
 
 ### 4. I5, Bad data can be removed without destroying evidence
 
@@ -165,7 +165,7 @@ changes they control.
     more.
 - **Where:** [wording](../srs/02-context.md#24-constraints); requirements
   [SEC-01][SEC], [SEC-19][SEC], [ENG-16][ENG].
-- **Review:** pending, revised for one binary.
+- **Review:** approved, 4 October 2026.
 
 ### 8. CON-06, No central service (new)
 
@@ -267,7 +267,7 @@ changes they control.
     note](../../plan/2610012322_cairn-for-agent-fleets/room-security.md).
 - **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
   [OWN-01][OWN], [OWN-08][OWN], [PRV-02][PRV].
-- **Review:** pending.
+- **Review:** approved, 4 October 2026.
 
 ## Alternatives
 
@@ -285,10 +285,12 @@ changes they control.
 
 ## Consequences
 
-Until this record is accepted, the 2.0 wording stands as a draft, and
-plan 2610022338's lane view and every B1 to B3 component stay prototypes
-behind a build tag that release builds exclude. A declined change goes
-back to the proposal.
+The reviewer approved every change except change 12, which was
+withdrawn, so the record is accepted (4 October 2026). The 2.0 wording
+of the approved changes stops being a draft, and components that cross
+B0 may leave the prototype stage under ENG-29, each still confined to
+its row of the boundary register. Change 13's trust grants still need
+their requirements written before any grant is honoured.
 
 [PIN]: ../srs/05-functional-requirements.md#53-pins-pin
 [REC]: ../srs/05-functional-requirements.md#51-record-rec

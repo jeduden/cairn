@@ -120,8 +120,8 @@ because it builds the store's identity model.
 2. The proposed SRS changes, in pull request #16 at the stakeholder's
    choice: goals and non-goals, deployment context, invariants restated
    for many nodes, the identity model, and new ADRs for the record/index
-   split. Landed as SRS 2.0-draft, with the security review drafted as
-   ADR-2610032155
+   split. Landed as SRS 2.0-draft, with the security review in
+   ADR-2610032155, accepted on 4 October 2026
 3. Re-plan M1 against the approved identity model
 4. Name the lane and its peer network in the SRS change: no central
    service, every node a full peer, partitions merged on reconnect,
@@ -169,7 +169,8 @@ footer: |
 - [ ] Two origins' segments, merged in either order, rebuild a
   byte-identical index, and foreign events stay untrusted
 - [x] The SRS changes are proposed, in pull request #16 (SRS
-  2.0-draft); the invariant changes await ADR-2610032155's approval
+  2.0-draft); the invariant changes are approved in ADR-2610032155,
+  accepted on 4 October 2026
 - [ ] M1 is re-planned on the approved identity model
 - [ ] All tests pass: `go test ./...` at the root and in the
   prototype's own module
