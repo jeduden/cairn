@@ -28,16 +28,15 @@ Cairn applies those grants; it never grants trust itself.
 Each stands alone: it can exist, be created and be removed without
 any other, and it says nothing about the others.
 
-| Concept     | Kind    | What it is, and nothing more                                                                                                                     | Owner            |
-| ----------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- |
-| Player      | compute | A person, or an agent session in a harness                                                                                                       | itself           |
-| Workspace   | data    | Where code changes: a branch and its worktrees (the SRS lane, narrowed)                                                                          | a person         |
-| Room        | data    | A conversation with its participants and pins; its first pin is its intent; pins are information, instructions only from posters a person trusts | a person         |
-| Rule set    | data    | A person's rules for their agents: all of them, or one                                                                                           | a person         |
-| Trust grant | data    | A person's explicit trust in a poster, for their own agents: in one room or everywhere                                                           | a person         |
-| Role        | data    | A named set of capabilities in a room: viewer, participant, operator, etiquette or facilitator bot                                               | the room's owner |
-| Grant       | data    | Authority to delegate: which agents, which targets, how much, until when                                                                         | a person         |
-| Link        | data    | An address plus a range: text, lines or an image region                                                                                          | its writer       |
+| Concept     | Kind    | What it is, and nothing more                                                                                                                                         | Owner            |
+| ----------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| Player      | compute | A person, or an agent session in a harness                                                                                                                           | itself           |
+| Room        | data    | Where an intent is worked on: its conversation, participants and pins (intent first), and its code: zero or more branches with their worktrees, results and evidence | a person         |
+| Rule set    | data    | A person's rules for their agents: all of them, or one                                                                                                               | a person         |
+| Trust grant | data    | A person's explicit trust in a poster, for their own agents: in one room or everywhere                                                                               | a person         |
+| Role        | data    | A named set of capabilities in a room: viewer, participant, operator, etiquette or facilitator bot                                                                   | the room's owner |
+| Grant       | data    | Authority to delegate: which agents, which targets, how much, until when                                                                                             | a person         |
+| Link        | data    | An address plus a range: text, lines or an image region                                                                                                              | its writer       |
 
 Pins are rules: for agents to follow, for people to read and adjust.
 There are two kinds, set by the stakeholder: a person's rules for
@@ -114,22 +113,48 @@ participant id that joining returns. Roles (viewer, participant,
 operator, etiquette or facilitator bot) are held by participants; the
 owner stands beside them.
 
+## Room capabilities, extended to code
+
+Merging the workspace into the room extends the room's capabilities
+from conversation to code. Each role is a set of them, and Cairn
+checks every act against the owner's configuration.
+
+| Capability                 | Lets a participant                                                        |
+| -------------------------- | ------------------------------------------------------------------------- |
+| read                       | Read the conversation, pins, branches, diffs, results and evidence        |
+| post, link                 | Post messages and links to marked ranges                                  |
+| claim                      | Claim work or paths, about itself                                         |
+| work                       | Work on a branch of the room it was given: edit, run commands, checkpoint |
+| branch                     | Open a new branch in the room, for a new attempt                          |
+| present                    | Present an outcome of its branch against the intent                       |
+| judge                      | Record a verdict on an outcome; people only, never agents or bots         |
+| land                       | Mark a branch ready, land it, retire it                                   |
+| move                       | Move a branch into or out of the room                                     |
+| kick, bar, read only, hide | Moderate participants and messages                                        |
+
+| Role                         | Capabilities                                                                                   |
+| ---------------------------- | ---------------------------------------------------------------------------------------------- |
+| Viewer                       | read                                                                                           |
+| Participant                  | read, post, link, claim; work and present on the branches it is given; a person may also judge |
+| Operator (always there)      | a participant's, plus branch, kick, bar, read only, hide                                       |
+| Etiquette or facilitator bot | an operator's, plus posting findings against the pins; never judge or land                     |
+| Owner (beside the roles)     | everything, plus pins, roles, land, move, successor and handover                               |
+
 ## Bindings compose them
 
 A binding is a recorded, versioned fact that relates two concepts. It
 is data, written by a person or derived from structural events.
 Bindings are the only way concepts affect each other.
 
-| Binding        | Relates                 | Means                                                                                                               | Written by                         |
-| -------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| works in       | player → workspace      | This agent session edits this workspace                                                                             | structural (session start)         |
-| participant in | player → room           | This player reads, posts and is addressed in this room under the participant id that joining returns to its harness | the player's person, or structural |
-| serves         | workspace → room        | Work here is presented and judged against the room's intent                                                         | a person                           |
-| applies to     | rule set → agents       | All of the person's agents, or one agent                                                                            | the rule set's person              |
-| trusts         | trust grant → poster    | This person's agents take this poster's messages as instructions                                                    | the agents' person                 |
-| holds          | player → role in a room | This player fills this role; its permissions follow from the role                                                   | the room's owner                   |
-| delegated by   | player → player         | This agent works for that one, under a grant                                                                        | structural (delegation record)     |
-| linked from    | link → message          | This message points at that range                                                                                   | the message's writer               |
+| Binding        | Relates                   | Means                                                                                                               | Written by                         |
+| -------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| works on       | player → branch in a room | This agent session edits this branch of the room                                                                    | structural (session start)         |
+| participant in | player → room             | This player reads, posts and is addressed in this room under the participant id that joining returns to its harness | the player's person, or structural |
+| applies to     | rule set → agents         | All of the person's agents, or one agent                                                                            | the rule set's person              |
+| trusts         | trust grant → poster      | This person's agents take this poster's messages as instructions                                                    | the agents' person                 |
+| holds          | player → role in a room   | This player fills this role; its permissions follow from the role                                                   | the room's owner                   |
+| delegated by   | player → player           | This agent works for that one, under a grant                                                                        | structural (delegation record)     |
+| linked from    | link → message            | This message points at that range                                                                                   | the message's writer               |
 
 ## Three composition rules
 
@@ -146,9 +171,9 @@ Everything a player gets is derived from the bindings, deterministically
    untrusted envelope with the author's key. Access to a room is
    access to its pins; trusting the room's owner or operator is what
    turns its pins into instructions for that person's agents.
-2. **Work is judged against an intent** when its workspace serves the
-   room whose first pin it is. Agents present their outcome against it;
-   people judge.
+2. **Work is judged against the room's intent.** Every branch in a
+   room is presented and judged against its first pin. Agents present
+   their outcome against it; people judge.
 3. **Messages reach a player** only through membership, and only when
    it reads them: data, never instructions. A cross-room message is a
    message whose writer is a participant in the sending room, addressed to
@@ -213,17 +238,17 @@ As information read through a tool, never pushed:
 
 | Use case                                   | Configuration                                                                                                       |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| One agent, one task (today's Cairn)        | One workspace; the agent works in it; your rule set applies to your agents. No room needed.                         |
-| One agent with a stated goal               | Add a room whose first pin is the goal; the workspace serves it; the agent is a participant.                        |
-| Five agents, parallel attempts at one goal | Five workspaces serving one room; the five agents are participants.                                                 |
+| One agent, one task (today's Cairn)        | The first session on a branch gets a room of its own, with no intent yet; your rule set applies to your agents.     |
+| One agent with a stated goal               | Write the room's first pin: the goal and what done means.                                                           |
+| Five agents, parallel attempts at one goal | One room with five branches, one per agent, their outcomes side by side.                                            |
 | One agent on two goals                     | The agent is a participant in two rooms, each with its own intent and pins.                                         |
 | A chat with no goal                        | A room with participants and no pins.                                                                               |
-| A goal with no chat (batch)                | A room with pins and no messages; workspaces serve it.                                                              |
+| A goal with no chat (batch)                | A room with pins and branches and no messages.                                                                      |
 | Orchestrator with subagents                | Subagents delegated by the orchestrator; participants of its room if you add them, otherwise your rules for agents. |
 | Rooms talking                              | A message in room A addressed to room B.                                                                            |
 | Handing work to another room               | A grant naming room B's agents as targets; the task arrives as data marked as from the delegating agent.            |
 | A teammate joins (next)                    | The teammate adds themselves and their agents to the room; their agents follow its pins, as yours do.               |
-| A reviewer                                 | A participant in the room, with no workspace and no agents.                                                         |
+| A reviewer                                 | A participant in the room who works on no branch.                                                                   |
 | A rule only for one agent                  | A rule set that applies to that agent.                                                                              |
 
 ## Stakeholder decisions of 4 October 2026
@@ -250,6 +275,11 @@ As information read through a tool, never pushed:
 | Q22 | What may a notice contain?                 | A notice is a message kind. Every room message is untrusted unless the agent's person explicitly trusts its poster; Cairn is a set of tools, not an authority     |
 | Q23 | How is a harness known in a room?          | Joining gives it a participant id; any harness can join, and its messages and links are stamped with that id                                                      |
 | Q24 | Which roles does a room have?              | Viewer, participant, operator (always there), etiquette or facilitator bot (optional); the owner stands beside them                                               |
+| Q25 | Workspace and room: two concepts or one?   | One: the room absorbs the workspace; its capabilities extend to code                                                                                              |
+| Q26 | Is every session in a room?                | Yes: the first session on a branch no room holds gets a room of its own; Cairn suggests merging it into an existing room                                          |
+| Q27 | Parallel attempts?                         | Several branches in one room, each worked by its own agent                                                                                                        |
+| Q28 | Can a branch move between rooms?           | Yes, as a recorded owner act; its history stays with the room it was in                                                                                           |
+| Q29 | What happens to "lane" in the SRS?         | It is renamed room; LANE ids map to room ids                                                                                                                      |
 
 Q4, Q5 and Q7 follow from the split: a session may be in any number of
 rooms; a plain session in no room follows its person's rules for
@@ -258,10 +288,10 @@ its person adds it to.
 
 ## What this changes
 
-- **The SRS lane narrows to the workspace.** Its conversation and
-  intent move to rooms; the scope of its pins moves to rule sets and
-  rooms. LANE requirements about results and evidence stay with the
-  workspace.
+- **The SRS lane becomes the room.** The workspace was merged back
+  into the room (Q25): a room holds its conversation, participants,
+  pins and branches. Every event belongs to exactly one room, so no
+  fact lives in two places.
 - **LANE-20 merges into room pins.** The intent is the room's first
   pin, versioned like every pin.
 - **I2 stays as it is.** Room pins are information an agent reads,

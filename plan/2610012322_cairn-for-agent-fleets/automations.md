@@ -32,25 +32,25 @@ stamped by Cairn with the source's id.
 | ---------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Timer            | Inside the `cairn` binary, in the running Cairn service that holds the rooms | A tick naming its schedule, for example "nightly 02:00"                                                                  |
 | Webhook endpoint | The `cairn` binary on a deployed Cairn node, receiving the forge's webhooks  | Issue opened, labelled or commented; pull request opened, reviewed or merged; each with a link to a snapshot of the item |
-| Git, locally     | A git hook or a fetch the person runs                                        | A commit landed on the default branch, matched to its workspace by the record (LANE-06)                                  |
+| Git, locally     | A git hook or a fetch the person runs                                        | A commit landed on the default branch, matched to its room's branch by the record (LANE-06)                              |
 | CI carrier       | `cairn bridge`, B3                                                           | A check result for an exact commit                                                                                       |
 
 A merge "the old way", on the forge, is seen twice and agrees: the
 bridge posts the forge's event, and the local fetch derives the
-landed commit and its workspace from the record without any network.
+landed commit and its room's branch from the record without any network.
 
 ### 2. Automation rules are a person's grants
 
 An automation is data a person records as their own act: a rule plus
 a grant, much like a delegation grant (OWN-23).
 
-| Field    | Meaning                                                                                                                                                           |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Trigger  | A room, a source and an event kind, matched on structural fields only (kind, label, branch, schedule), never on text                                              |
-| Action   | One from a closed set: post a notice, open a room from a template, start a session in a workspace, run a recorded command, close a room or mark an outcome landed |
-| Template | Fixed text naming ids and links, never the event's own text                                                                                                       |
-| Budget   | Tokens, sessions and how many firings, plus a cap on concurrent runs                                                                                              |
-| Expiry   | By count or the person's revocation, never by clock in projections                                                                                                |
+| Field    | Meaning                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Trigger  | A room, a source and an event kind, matched on structural fields only (kind, label, branch, schedule), never on text                                                           |
+| Action   | One from a closed set: post a notice, open a room from a template, start a session on a new branch of the room, run a recorded command, close a room or mark an outcome landed |
+| Template | Fixed text naming ids and links, never the event's own text                                                                                                                    |
+| Budget   | Tokens, sessions and how many firings, plus a cap on concurrent runs                                                                                                           |
+| Expiry   | By count or the person's revocation, never by clock in projections                                                                                                             |
 
 ### 3. `cairn run` fires them
 
@@ -66,11 +66,11 @@ first.
 
 ## The three examples
 
-| Example                       | Source posts                                 | Rule                                                                                                             | What happens                                                                                                        |
-| ----------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Nightly dependency update     | Timer: "nightly 02:00" in room "deps"        | Start a session in a fresh workspace from the default branch, template "Nightly run for room r-…; read the pins" | The agent works against the room's intent; by morning its outcome waits for a verdict, linked to its evidence       |
-| GitHub issue labelled "agent" | Bridge: issue labelled, link to its snapshot | Open a room from a template whose intent pin reads "Resolve issue <link>", start a session serving it            | The issue's text stays untrusted; the agent reads it on request; the person edits the intent when needed            |
-| Pull request merged on GitHub | Bridge: merged; local fetch: commit landed   | Mark the room's outcome landed, post a cross-room notice to rooms that depend on it, retire the workspace        | Dependent rooms see a notice with a link to the diff; nothing instructs their agents unless their people pass it on |
+| Example                       | Source posts                                 | Rule                                                                                                                      | What happens                                                                                                        |
+| ----------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Nightly dependency update     | Timer: "nightly 02:00" in room "deps"        | Start a session on a fresh branch of the room from the default branch, template "Nightly run for room r-…; read the pins" | The agent works against the room's intent; by morning its outcome waits for a verdict, linked to its evidence       |
+| GitHub issue labelled "agent" | Bridge: issue labelled, link to its snapshot | Open a room from a template whose intent pin reads "Resolve issue <link>", start a session serving it                     | The issue's text stays untrusted; the agent reads it on request; the person edits the intent when needed            |
+| Pull request merged on GitHub | Bridge: merged; local fetch: commit landed   | Mark the room's outcome landed, post a cross-room notice to rooms that depend on it, retire the branch                    | Dependent rooms see a notice with a link to the diff; nothing instructs their agents unless their people pass it on |
 
 ## What never happens
 
@@ -118,9 +118,9 @@ first.
 
 ## Decisions for the stakeholder
 
-| #   | Question                     | Options                                                                                                                                                                                             | Recommendation |
-| --- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| A1  | Who runs automations?        | Decided: cron runs in the `cairn` binary; other events arrive at a webhook endpoint Cairn provides, which requires a deployed Cairn                                                                 | —              |
-| A2  | Can a person trust a bridge? | Decided: never                                                                                                                                                                                      | —              |
-| A3  | Where does the timer run?    | Decided: in the Cairn service; without a running Cairn service there are no rooms                                                                                                                   | —              |
-| A4  | How is a merge detected?     | Decided: the webhook triggers, local git confirms; an automation acts only when the landed commit matches the workspace's work with a proven class (LANE-06), and raises a Needs you item otherwise | —              |
+| #   | Question                     | Options                                                                                                                                                                                          | Recommendation |
+| --- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
+| A1  | Who runs automations?        | Decided: cron runs in the `cairn` binary; other events arrive at a webhook endpoint Cairn provides, which requires a deployed Cairn                                                              | —              |
+| A2  | Can a person trust a bridge? | Decided: never                                                                                                                                                                                   | —              |
+| A3  | Where does the timer run?    | Decided: in the Cairn service; without a running Cairn service there are no rooms                                                                                                                | —              |
+| A4  | How is a merge detected?     | Decided: the webhook triggers, local git confirms; an automation acts only when the landed commit matches the room's branch with a proven class (LANE-06), and raises a Needs you item otherwise | —              |

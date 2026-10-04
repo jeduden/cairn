@@ -114,16 +114,18 @@ fill them (Q16). Cairn holds the roles and enforces their permissions
 deterministically; it never judges and never calls a model (CMP-09,
 I4).
 
-| Role                         | Always there | Capabilities                                                                                 | Filled by                                                     |
-| ---------------------------- | ------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Viewer                       | no           | Read                                                                                         | A player its person adds, or one an operator set to read only |
-| Participant                  | yes          | Read, post, link, claim                                                                      | A player its person adds                                      |
-| Operator                     | yes          | A participant's, plus kick, bar, set read only (make a viewer), hide a message from the view | The owner, unless the owner assigns others                    |
-| Etiquette or facilitator bot | no           | An operator's, plus posting findings against the pins                                        | A bot the owner provides                                      |
+| Role                         | Always there | Capabilities                                                                                                | Filled by                                                     |
+| ---------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Viewer                       | no           | Read                                                                                                        | A player its person adds, or one an operator set to read only |
+| Participant                  | yes          | Read, post, link, claim; work and present on the branches it is given; a person may also judge              | A player its person adds                                      |
+| Operator                     | yes          | A participant's, plus open a branch, kick, bar, set read only (make a viewer), hide a message from the view | The owner, unless the owner assigns others                    |
+| Etiquette or facilitator bot | no           | An operator's, plus posting findings against the pins; never judge or land                                  | A bot the owner provides                                      |
 
 The owner stands beside the roles: the owner writes pins, configures
-which roles the room has and who holds them, names a successor and
-hands the room over.
+which roles the room has and who holds them, lands and moves
+branches, names a successor and hands the room over. The full
+capability list, extended to the room's code, is in the
+[concepts](concepts.md#room-capabilities-extended-to-code).
 
 - **The etiquette or facilitator bot** is a player of kind bot with
   its own key, run by the owner or an operator outside Cairn, like a
@@ -142,7 +144,8 @@ hands the room over.
 - **A room without one.** The owner may run no etiquette bot; the
   operator role is still there, held by the owner by default.
 - **Capabilities and modes.** Each role is a set of capabilities:
-  read, post, link, claim, kick, bar, set read only, hide. The
+  read, post, link, claim, work, branch, present, judge, land, move,
+  kick, bar, set read only, hide. The
   owner's configuration grants them; Cairn checks every act against
   them. Read only (Q17) makes a player a viewer: for one player, as
   IRC's quiet, or for the whole room as a mode, as IRC's +m, leaving

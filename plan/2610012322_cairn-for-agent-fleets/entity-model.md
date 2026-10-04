@@ -29,11 +29,11 @@ of them, a person, can instruct an agent.
 | Checkpoint         | Cairn, from the worktree     | The state of a worktree at a point                                                                                                        |
 | Verdict            | a person                     | Met or needs changes, on a criterion                                                                                                      |
 | Grant              | a person                     | A delegation budget: which agents, which targets, how much, until                                                                         |
-| Room               | a person                     | One intent's shared space: its players, its messages and links                                                                            |
+| Room               | a person                     | One intent's shared space: its players, messages, links and pins, and its code: the branches worked on for the intent                     |
 | Membership         | a person, or structural      | A player joining or leaving a room: added or removed by its person, or derived from a session start or end or a delegation                |
-| Role and holder    | the room's owner             | A room's roles, their permissions and who fills each: owner, operator, etiquette bot, participant                                         |
+| Role and holder    | the room's owner             | A room's roles, their capabilities and who fills each: viewer, participant, operator, etiquette bot; the owner beside them                |
 | Kick and bar       | an operator                  | Removing a player now, or keeping it out, under the authorisation layer                                                                   |
-| Lane               | derived by Cairn             | A branch and its worktrees, as the record holds them                                                                                      |
+| Branch in a room   | derived by Cairn             | A branch and its worktrees, results and evidence, as the record holds them; what the SRS called a lane                                    |
 | Status and queue   | derived by Cairn             | What needs whom, rebuilt from the record (I10)                                                                                            |
 
 ## Compute with data
