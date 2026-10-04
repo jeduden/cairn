@@ -59,7 +59,7 @@ changes they control.
     both.
   - Importing someone else's lane may redact secrets first; that removal is
     recorded like any other.
-- **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
+- **Where:** [wording](../srs/invariants.md); requirements
   [REC-06][REC], [REC-22][REC], [REC-23][REC].
 - **Review:** approved, 3 October 2026.
 
@@ -78,7 +78,7 @@ changes they control.
     sending exactly what you saw.
   - Every automatic write Cairn makes is listed, so nothing outside the list
     can reach a model.
-- **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
+- **Where:** [wording](../srs/invariants.md); requirements
   [PRV-02][PRV], [PRV-10][PRV], [OWN-03][OWN], [OWN-08][OWN], [OWN-09][OWN].
 - **Review:** approved, 3 October 2026.
 
@@ -106,7 +106,7 @@ changes they control.
     is a property of each process, not of the binary's symbol table.
   - The browser lane view on localhost and opt-in peer to peer become possible
     inside one product.
-- **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
+- **Where:** [wording](../srs/invariants.md); requirements
   [SEC-01][SEC], [SEC-19][SEC], [SEC-22][SEC], [ENG-12][ENG], [ENG-16][ENG].
 - **Review:** approved, 4 October 2026.
 
@@ -120,7 +120,7 @@ changes they control.
 - **What changes:**
   - A quarantine on your laptop cannot silently change a co-author's copy;
     their node is asked, and the answer is shown.
-- **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
+- **Where:** [wording](../srs/invariants.md); requirements
   [SEC-12][SEC], [PEER-11][PEER].
 - **Review:** approved, 3 October 2026.
 
@@ -134,7 +134,7 @@ changes they control.
 - **What changes:**
   - Holding a co-author's log in a shared lane no longer breaks the invariant,
     and cannot raise its trust.
-- **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
+- **Where:** [wording](../srs/invariants.md); requirements
   [PRV-02][PRV], [PRV-09][PRV].
 - **Review:** approved, 3 October 2026.
 
@@ -148,7 +148,7 @@ changes they control.
 - **What changes:**
   - Two peers holding the same logs show the same lane, whatever they synced
     first.
-- **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
+- **Where:** [wording](../srs/invariants.md); requirements
   [ADM-08][ADM], [PEER-03][PEER].
 - **Review:** approved, 3 October 2026.
 
@@ -244,7 +244,7 @@ changes they control.
   - Another person's pin text reaches your agent automatically once you admit
     it to their room; admission is the bound. See the [concepts
     note](../../plan/2610012322_cairn-for-agent-fleets/concepts.md).
-- **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
+- **Where:** [wording](../srs/invariants.md); requirements
   [OWN-01][OWN], [PIN-01][PIN], [PIN-10][PIN].
 - **Review:** withdrawn, 4 October 2026: room pins are information, not
   instructions (Q12).
@@ -265,7 +265,7 @@ changes they control.
     until the grant is revoked; grants are recorded, revocable and shown in
     the room. See the [room security
     note](../../plan/2610012322_cairn-for-agent-fleets/room-security.md).
-- **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
+- **Where:** [wording](../srs/invariants.md); requirements
   [OWN-01][OWN], [OWN-08][OWN], [PRV-02][PRV].
 - **Review:** approved, 4 October 2026.
 

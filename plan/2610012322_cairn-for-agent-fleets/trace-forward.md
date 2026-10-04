@@ -1,5 +1,8 @@
 # Trace forward: Cairn's pitch to the SRS
 
+Invariant wording quoted below is historical; the accepted text
+is in [§1.3](../../docs/srs/invariants.md).
+
 This file traces the pitch of 3 October 2026 and the stakeholder's ten
 decisions in [pitch.md](pitch.md) into the SRS
 ([index](../../docs/srs/index.md), 1.4-draft), with detail from

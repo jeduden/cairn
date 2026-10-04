@@ -9,7 +9,7 @@ here is normative. Draft MUST sentences are proposals and carry no ids.
 
 Read first: [pitch.md](../pitch.md), the network boundaries B0 to B3 in
 [plan 2610022338](../../2610022338_cairn-network-side/plan.md), and the
-invariants in [the SRS introduction](../../../docs/srs/01-introduction.md).
+invariants in [§1.3](../../../docs/srs/invariants.md).
 
 ## Shared vocabulary
 

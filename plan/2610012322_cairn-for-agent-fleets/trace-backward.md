@@ -1,5 +1,8 @@
 # Backward trace: the SRS against the pitch
 
+Invariant wording quoted below is historical; the accepted text
+is in [§1.3](../../docs/srs/invariants.md).
+
 This file walks the SRS (version 1.4-draft) from the specification's
 side and asks where the pitch of 3 October 2026 and the stakeholder's
 decisions in [pitch.md](pitch.md) fail to match it. It feeds task 2 of

@@ -9,7 +9,7 @@ network or a vendor push service in standalone (I4, B1).
 Inputs: the [pitch and decisions](../pitch.md), the network boundaries
 in [plan 2610022338](../../2610022338_cairn-network-side/plan.md) and
 its [phase 1](../../2610022338_cairn-network-side/phase-1.md), the
-invariants in [§1.3](../../../docs/srs/01-introduction.md), and the
+invariants in [§1.3](../../../docs/srs/invariants.md), and the
 proposed VIEW, PRV-09 and SEC-19 changes in
 [trace-backward.md](../trace-backward.md).
 

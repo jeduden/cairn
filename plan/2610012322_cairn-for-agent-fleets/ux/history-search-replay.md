@@ -13,7 +13,7 @@ Status: design direction for the SRS change in
 Nothing here is normative. Draft MUST sentences carry no ids.
 
 Sources read: the SRS invariants
-([§1.3](../../../docs/srs/01-introduction.md)), recall, landmarks and
+([§1.3](../../../docs/srs/invariants.md)), recall, landmarks and
 pins ([§5](../../../docs/srs/05-functional-requirements.md)), security
 ([§6](../../../docs/srs/06-security.md)), storage
 ([§8](../../../docs/srs/08-data-and-storage.md)), interfaces
