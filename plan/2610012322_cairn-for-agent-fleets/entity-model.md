@@ -17,36 +17,37 @@ of them, a person, can instruct an agent.
 
 ## Data
 
-| Entity             | Written by                   | What it is                                                                                                                 |
-| ------------------ | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Event              | the compute entity behind it | One entry of the record: a message, an edit, a command, a result                                                           |
-| Intent             | the room's owner             | The room's first pin: the goal and what done means                                                                         |
-| Pin                | a person                     | A rule for agents to follow and people to read: a person's rule for their agents, or a room's pin for every agent in it    |
-| Room message       | a player, person or agent    | A post addressed to one room; every player in it can read it                                                               |
-| Cross-room message | a player in another room     | A post from one room to another, arriving as data in the target room                                                       |
-| Mark and link      | a person or an agent         | An address plus a range: characters, lines or an image region                                                              |
-| Snapshot           | Cairn, from a compute entity | A screenshot of the app, a diff, a file version, a test log                                                                |
-| Checkpoint         | Cairn, from the worktree     | The state of a worktree at a point                                                                                         |
-| Verdict            | a person                     | Met or needs changes, on a criterion                                                                                       |
-| Grant              | a person                     | A delegation budget: which agents, which targets, how much, until                                                          |
-| Room               | a person                     | One intent's shared space: its players, its messages and links                                                             |
-| Membership         | a person, or structural      | A player joining or leaving a room: added or removed by its person, or derived from a session start or end or a delegation |
-| Lane               | derived by Cairn             | A branch and its worktrees, as the record holds them                                                                       |
-| Status and queue   | derived by Cairn             | What needs whom, rebuilt from the record (I10)                                                                             |
+| Entity             | Written by                   | What it is                                                                                                                           |
+| ------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Event              | the compute entity behind it | One entry of the record: a message, an edit, a command, a result                                                                     |
+| Intent             | the room's owner             | The room's first pin: the goal and what done means                                                                                   |
+| Pin                | a person                     | A rule: a person's rule for their agents, which they follow, or a room's pin, which member agents are aware of and a room bot checks |
+| Room message       | a player, person or agent    | A post addressed to one room; every player in it can read it                                                                         |
+| Cross-room message | a player in another room     | A post from one room to another, arriving as data in the target room                                                                 |
+| Mark and link      | a person or an agent         | An address plus a range: characters, lines or an image region                                                                        |
+| Snapshot           | Cairn, from a compute entity | A screenshot of the app, a diff, a file version, a test log                                                                          |
+| Checkpoint         | Cairn, from the worktree     | The state of a worktree at a point                                                                                                   |
+| Verdict            | a person                     | Met or needs changes, on a criterion                                                                                                 |
+| Grant              | a person                     | A delegation budget: which agents, which targets, how much, until                                                                    |
+| Room               | a person                     | One intent's shared space: its players, its messages and links                                                                       |
+| Membership         | a person, or structural      | A player joining or leaving a room: added or removed by its person, or derived from a session start or end or a delegation           |
+| Lane               | derived by Cairn             | A branch and its worktrees, as the record holds them                                                                                 |
+| Status and queue   | derived by Cairn             | What needs whom, rebuilt from the record (I10)                                                                                       |
 
 ## Compute with data
 
-| Entity                  | Holds                     | Acts by                                     | Trust                                                          |
-| ----------------------- | ------------------------- | ------------------------------------------- | -------------------------------------------------------------- |
-| Person (player)         | keys, judgement           | writing intents, messages, verdicts, grants | The only source of instructions to their own agents            |
-| Agent                   | a context window          | calling tools through its harness           | Swayed by what it reads; Cairn cannot stop that, only limit it |
-| Harness                 | a process, its transcript | running the agent's tool calls              | Its own input channel is the person's                          |
-| Subagent and delegate   | a context window          | as an agent, within its parent's grant      | No looser than its parent                                      |
-| Running app, dev server | a process, its pages      | executing code an agent wrote               | Untrusted; its screens are untrusted data                      |
-| Command and test run    | a process, briefly        | executing, then exiting with a status       | Its output is untrusted data; its exit status is structural    |
-| Cairn                   | the record, derived state | recording, deriving, delivering, displaying | Deterministic, no model, never judges (I10, CMP-09)            |
-| Peer node               | another person's record   | syncing data by key                         | Its data arrives as theirs, untrusted                          |
-| Model provider          | outside Cairn             | serving the harness's model calls           | Outside every Cairn boundary                                   |
+| Entity                  | Holds                     | Acts by                                                     | Trust                                                                       |
+| ----------------------- | ------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Person (player)         | keys, judgement           | writing intents, messages, verdicts, grants                 | The only source of instructions to their own agents                         |
+| Agent                   | a context window          | calling tools through its harness                           | Swayed by what it reads; Cairn cannot stop that, only limit it              |
+| Harness                 | a process, its transcript | running the agent's tool calls                              | Its own input channel is the person's                                       |
+| Subagent and delegate   | a context window          | as an agent, within its parent's grant                      | No looser than its parent                                                   |
+| Room bot                | a classifier, its key     | posting findings and, by grant, barring players in one room | Run by the room's owner or operator, outside Cairn; its findings are claims |
+| Running app, dev server | a process, its pages      | executing code an agent wrote                               | Untrusted; its screens are untrusted data                                   |
+| Command and test run    | a process, briefly        | executing, then exiting with a status                       | Its output is untrusted data; its exit status is structural                 |
+| Cairn                   | the record, derived state | recording, deriving, delivering, displaying                 | Deterministic, no model, never judges (I10, CMP-09)                         |
+| Peer node               | another person's record   | syncing data by key                                         | Its data arrives as theirs, untrusted                                       |
+| Model provider          | outside Cairn             | serving the harness's model calls                           | Outside every Cairn boundary                                                |
 
 ## Rules that follow
 

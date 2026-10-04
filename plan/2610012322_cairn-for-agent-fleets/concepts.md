@@ -55,11 +55,14 @@ Bindings are the only way concepts affect each other.
 Everything a player gets is derived from the bindings, deterministically
 (I10). No concept carries its own delivery logic.
 
-1. **An agent follows** its own person's rules for agents, then the
-   pins of every room it is a member of, each room's intent first. Room
-   pins reach every member agent, whoever wrote them: access to a room
-   is access to its pins. Adding an agent to a room is its own person's
-   act, so it is that person accepting the room's pins for that agent.
+1. **An agent follows** its own person's rules for agents, restored
+   word for word as trusted text. **It is aware of** the pins of every
+   room it is a member of, each room's intent first: access to a room
+   is access to its pins. Room pins are information, not instructions.
+   On joining and after every compaction the agent is told, in a fixed
+   notice, which rooms it is in and which pin versions they hold, and
+   it reads them through a tool, inside the untrusted envelope.
+   Enforcing them is a room bot's job (below), not Cairn's.
 2. **Work is judged against an intent** when its workspace serves the
    room whose first pin it is. Agents present their outcome against it;
    people judge.
@@ -91,16 +94,17 @@ agent, delivered at its next hook point.
 
 ## Stakeholder decisions of 4 October 2026
 
-| #   | Question                                   | Decision                                                                                              |
-| --- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Q1  | Is a room a lane or a group of lanes?      | Neither: independent concepts, composed by bindings                                                   |
-| Q2  | Does a change notice carry the text?       | Decided later                                                                                         |
-| Q3  | What does leaving do to a running agent?   | The agent decides. Cairn stops restoring the room's pins and tells the agent it left                  |
-| Q6  | Does the intent reach a teammate's agents? | Yes. Access to a room is access to its pins, and the intent is the room's first pin                   |
-| Q8  | A quarantined pin still in context?        | The agents figure it out, possibly with their people. Cairn tells member agents the pin was withdrawn |
-| Q9  | Can the owner leave their own room?        | Yes                                                                                                   |
-| Q10 | Who writes room pins and adds players?     | The room's owner writes its pins; only a player's own person adds it to a room                        |
-| Q11 | A room whose owner left?                   | Nobody changes its pins until the owner hands the room over; the pins stay as they were               |
+| #   | Question                                   | Decision                                                                                                   |
+| --- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Q1  | Is a room a lane or a group of lanes?      | Neither: independent concepts, composed by bindings                                                        |
+| Q2  | Does a change notice carry the text?       | Decided later                                                                                              |
+| Q3  | What does leaving do to a running agent?   | The agent decides. Cairn stops restoring the room's pins and tells the agent it left                       |
+| Q6  | Does the intent reach a teammate's agents? | Yes. Access to a room is access to its pins, and the intent is the room's first pin                        |
+| Q8  | A quarantined pin still in context?        | The agents figure it out, possibly with their people. Cairn tells member agents the pin was withdrawn      |
+| Q9  | Can the owner leave their own room?        | Yes                                                                                                        |
+| Q10 | Who writes room pins and adds players?     | The room's owner writes its pins; only a player's own person adds it to a room                             |
+| Q11 | A room whose owner left?                   | Nobody changes its pins until the owner hands the room over; the pins stay as they were                    |
+| Q12 | Do room pins instruct agents?              | No. Room pins are information agents must be aware of; a room bot the owner or operator runs enforces them |
 
 Q4, Q5 and Q7 follow from the split: a session may be in any number of
 rooms; a plain session in no room follows its person's rules for
@@ -115,17 +119,19 @@ its person adds it to.
   workspace.
 - **LANE-20 merges into room pins.** The intent is the room's first
   pin, versioned like every pin.
-- **I2 changes for room pins.** Today only an agent's own person's
-  words reach it. With Q6, a room's pins reach every member agent,
-  including pins another person wrote. The path stays bounded: the
-  agent's own person admits it to the room, and that admission is the
-  act that accepts the room's pins. This is an invariant change for
-  the security review (ADR-2610032155).
+- **I2 stays as it is.** Room pins are information an agent reads,
+  not trusted text Cairn writes into it, so no other person's words
+  reach an agent automatically. ADR-2610032155 change 12 is withdrawn.
+- **Enforcement moves to a room bot.** The room's owner or operator
+  runs a classifier that checks the room against its pins (see the
+  [room security note](room-security.md)). Cairn never judges
+  (CMP-09); the bot is compute outside Cairn, like a harness.
 
 ## Open points
 
-- **Room pins and rules for agents together.** Both apply, the
-  person's rules for agents first, each by priority, never merged
-  (I3). Contradictions are shown to people, not resolved (CMP-09).
+- **Room pins beside rules for agents.** The person's rules for agents
+  are what the agent follows; room pins are what it is aware of and
+  what the room bot checks. Contradictions are shown to people, not
+  resolved (CMP-09).
 - **Q2:** whether a change notice carries the changed text.
 - **Security:** see the [room security note](room-security.md).

@@ -72,36 +72,54 @@ them in that study ([arXiv 2410.07283](https://arxiv.org/abs/2410.07283)).
 
 ### What the decided model does
 
-| Path into an agent                    | Treatment                                                                       |
-| ------------------------------------- | ------------------------------------------------------------------------------- |
-| Its own person's rules for agents     | Trusted; restored word for word                                                 |
-| Pins of a room its person added it to | Trusted, whoever wrote them; admission by its own person is the acceptance (Q6) |
-| Messages in the room                  | Data: read only when the agent asks, inside the untrusted envelope              |
-| Cross-room messages                   | Data, as above; never start a turn, route work or reach another room            |
-| Links                                 | Resolved by recall: untrusted envelope, and the session counts as tainted       |
-| Another agent's proposal of a pin     | Untrusted until the room's owner adopts the exact text                          |
+| Path into an agent                | Treatment                                                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Its own person's rules for agents | Trusted; restored word for word                                                                                                 |
+| Pins of a room it is a member of  | Information: a fixed notice names the room and pin versions; the agent reads them through a tool, inside the untrusted envelope |
+| Messages in the room              | Data: read only when the agent asks, inside the untrusted envelope                                                              |
+| Cross-room messages               | Data, as above; never start a turn, route work or reach another room                                                            |
+| Links                             | Resolved by recall: untrusted envelope, and the session counts as tainted                                                       |
+| A room bot's findings             | Data in the room, like any post; never instructions to anyone's agent                                                           |
 
 The sender is stamped by Cairn from the writer's key, never taken from
 a name the writer chose, and the content is marked untrusted: the two
 together are what the study found effective.
 
-### The new risk Q6 creates
+Because room pins are information (Q12), no other person's words
+reach an agent automatically, and I2 stays as it is. A room owner
+cannot steer a teammate's agents through a pin; the most a pin can do
+is be read, as any message can.
 
-A room's pins reach every member agent as trusted text. So the room's
-owner, or anyone who controls the owner's device, can write a pin that
-every member agent follows, including a teammate's agents. Admission
-bounds it: only your own act puts your agent in a room. Three further
-bounds are proposed:
+## Enforcement by a room bot
 
-1. **Pins never grant capability.** A pin is text an agent follows; it
-   cannot raise a rule level, allow an action class or extend a grant
-   (OWN-10). Room pins can only narrow what an agent may do.
-2. **You see what you accept.** Adding your agent to a room shows you
-   its pins in full first, and the admission records the version you
-   saw.
-3. **A pin change by someone else waits for you** (option, Q12 below):
-   a changed pin written by another person reaches your agents only
-   after you accept that version, as admission did.
+The room's owner, or an operator for them, can run a room bot: a
+classifier that checks what happens in the room against its pins. It
+is compute outside Cairn, like a harness, so Cairn still never judges
+and never calls a model (CMP-09, I4).
+
+- **What it is.** A player of kind bot, added to the room by its
+  owner, run on the owner's or operator's machine, with its own key.
+- **What it reads.** What its owner admitted it to: the room's pins,
+  its messages and links, and what members chose to make visible in the
+  room. It reads through the same tools an agent does.
+- **What it does.** It posts findings to the room, each linking the
+  pin and the content it judged, and raises a Needs you item for the
+  room's owner and for the person whose agent the finding concerns.
+  With a grant from the owner it may also bar a player from the room.
+- **What it never does.** Instruct, steer or stop another person's
+  agents; change pins; or act outside the room. Its findings are a
+  classifier's claims, shown as such, and every bar is reversible by
+  the owner.
+
+### What stays for the bot
+
+- **Errors.** A classifier misses things and flags innocent work.
+  Findings are claims, never verdicts; people judge.
+- **The bot as a target.** It reads untrusted content too, so it can
+  be swayed. Its powers are therefore narrow: posting, raising items
+  and, by grant, barring.
+- **Privacy across people.** What a bot may read of a teammate's work
+  is the teammate's choice of what to make visible in the room.
 
 ### What stays for injection
 
@@ -117,10 +135,12 @@ remaining defences are around the agent, not in it:
 
 ## Decisions for the stakeholder
 
-| #   | Question                                                    | Options                                                                                       | Recommendation                                        |
-| --- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| Q12 | Does another person's pin change reach your agents at once? | (a) at once, admission covers it; (b) after you accept the version; (c) per room, your choice | (c), defaulting to (b) in rooms owned by someone else |
-| Q13 | How does an owner keep a player out?                        | (a) a bar list the owner writes, combined by "and"; (b) the owner edits membership            | (a): single writer per fact, no merge between people  |
-| Q14 | Can room pins widen what an agent may do?                   | (a) never: pins only narrow; (b) yes, if the owner says so                                    | (a)                                                   |
+| #   | Question                                  | Options                                                                                                      | Recommendation                                       |
+| --- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| Q12 | Do room pins instruct agents?             | Decided: no. They are information; a room bot enforces them                                                  | —                                                    |
+| Q13 | How does an owner keep a player out?      | (a) a bar list the owner writes, combined by "and"; (b) the owner edits membership                           | (a): single writer per fact, no merge between people |
+| Q14 | Can room pins widen what an agent may do? | Moot: room pins are information and grant nothing                                                            | —                                                    |
+| Q15 | What may a room bot do beyond posting?    | (a) post and raise items only; (b) also bar, by the owner's grant; (c) also interrupt the owner's own agents | (b)                                                  |
+| Q16 | Does Cairn ship a room bot?               | (a) an interface only, the operator brings the classifier; (b) a reference bot outside the core              | (a) first, (b) later as a separate program           |
 
 [hydra]: https://matrix.org/blog/2025/08/project-hydra-improving-state-res/

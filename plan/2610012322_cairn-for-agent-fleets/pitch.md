@@ -35,9 +35,10 @@ in your browser.
   diff, the test runs. Follow any agent and watch the file it is
   editing change as it edits.
 
-**Say it once.** Write the goal, what done means and your rules, once
-for the room. Every agent that joins gets them word for word, keeps
-them through every compaction, and hears of every change.
+**Say it once.** Write the goal, what done means and the room's rules,
+once for the room. Every agent that joins learns them, is reminded
+after every compaction, and hears of every change. A room bot you run
+can check that they are kept.
 
 **Judge where you see it.** Agents present their outcome against your
 criteria, linking the screen, the diff lines and the test run. You
@@ -266,6 +267,9 @@ what checked them; rule levels per action shape the owner's control.
 26. Restoring pins is part of the room protocol (join, participate,
     leave), so the pitch again promises rules kept through every
     compaction.
+27. Room pins are information agents must be aware of, not
+    instructions; a room bot the owner or operator runs enforces them,
+    and I2 stays as it was.
 
 ## Open before the SRS change
 

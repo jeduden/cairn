@@ -25,25 +25,25 @@ approval. The reviewer is the stakeholder, @jeduden.
 ## Decision
 
 The reviewer approves or declines each change below. The status moves to
-accepted only when every change reads approved. The threat model
+accepted only when every change reads approved or withdrawn. The threat model
 ([§6.1](../srs/06-security.md#61-threat-model)) and the boundary register
 ([§6.3](../srs/06-security.md#63-boundary-register)) are reviewed with the
 changes they control.
 
-| #   | Change                                                    | Review                          |
-| --- | --------------------------------------------------------- | ------------------------------- |
-| 1   | I1, Nothing is lost                                       | approved, 3 October 2026        |
-| 2   | I2, No automatic path from untrusted content to the model | approved, 3 October 2026        |
-| 3   | I4, Cairn never talks to the network                      | pending, revised for one binary |
-| 4   | I5, Bad data can be removed without destroying evidence   | approved, 3 October 2026        |
-| 5   | I8, Isolation follows the tenant                          | approved, 3 October 2026        |
-| 6   | I10, Everything derived is rebuildable                    | approved, 3 October 2026        |
-| 7   | CON-04, No network in the core                            | pending, revised for one binary |
-| 8   | CON-06, No central service (new)                          | approved, 3 October 2026        |
-| 9   | Owner acts rest on the sandbox                            | approved, 3 October 2026        |
-| 10  | Owner key certifies device keys                           | approved, 3 October 2026        |
-| 11  | Delegation joins I2's closed list                         | approved, 3 October 2026        |
-| 12  | Room pins reach every member agent (new)                  | pending                         |
+| #   | Change                                                    | Review                                                                       |
+| --- | --------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 1   | I1, Nothing is lost                                       | approved, 3 October 2026                                                     |
+| 2   | I2, No automatic path from untrusted content to the model | approved, 3 October 2026                                                     |
+| 3   | I4, Cairn never talks to the network                      | pending, revised for one binary                                              |
+| 4   | I5, Bad data can be removed without destroying evidence   | approved, 3 October 2026                                                     |
+| 5   | I8, Isolation follows the tenant                          | approved, 3 October 2026                                                     |
+| 6   | I10, Everything derived is rebuildable                    | approved, 3 October 2026                                                     |
+| 7   | CON-04, No network in the core                            | pending, revised for one binary                                              |
+| 8   | CON-06, No central service (new)                          | approved, 3 October 2026                                                     |
+| 9   | Owner acts rest on the sandbox                            | approved, 3 October 2026                                                     |
+| 10  | Owner key certifies device keys                           | approved, 3 October 2026                                                     |
+| 11  | Delegation joins I2's closed list                         | approved, 3 October 2026                                                     |
+| 12  | Room pins reach every member agent (new)                  | withdrawn, 4 October 2026: room pins are information, not instructions (Q12) |
 
 ### 1. I1, Nothing is lost
 
@@ -245,7 +245,8 @@ changes they control.
     note](../../plan/2610012322_cairn-for-agent-fleets/concepts.md).
 - **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
   [OWN-01][OWN], [PIN-01][PIN], [PIN-10][PIN].
-- **Review:** pending.
+- **Review:** withdrawn, 4 October 2026: room pins are information, not
+  instructions (Q12).
 
 ## Alternatives
 
