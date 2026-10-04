@@ -248,8 +248,8 @@ what checked them; rule levels per action shape the owner's control.
     as pull requests link lines but extended to images. People and
     agents use the links in the discussion, the correction and the
     presentation of an outcome.
-23. v11: rewritten from scratch around everything since v9, in half the
-    words of the last v10 draft (git history holds v10).
+23. v11: rewritten from scratch around everything since v9, in a third fewer
+    words than the last v10 draft (git history holds v10).
 
 ## Open before the SRS change
 
