@@ -45,11 +45,60 @@ their agents, and a room's pins for every agent inside it. The intent
 is not a concept of its own: it is the room's first pin, the goal and
 what done means.
 
-A harness joining a room receives a **participant id** from the room.
-The id is how the room addresses and stamps that player, whatever the
-harness: Claude Code, the Agent SDK, Codex or any other that can join.
-A subagent that joins receives its own participant id, linked to its
-parent's.
+## Joining a room, from Cairn's side
+
+Cairn is a set of tools, so a room issues nothing and Cairn chooses
+nothing. When a harness session joins a room, Cairn's tools do this:
+
+1. **Check.** The join is asked for by the session's own person, or
+   by the person accepting Cairn's suggestion. Cairn checks it against
+   the admission capability the room's owner configured.
+2. **Record.** Cairn writes a membership event into the record, signed
+   by the session's writer key, which the person's device key and
+   owner key certify.
+3. **Derive.** The participant id is derived from that event: from the
+   room's id and the session's writer key. Nobody picks it, and
+   anyone holding the record derives the same id (I10).
+4. **Stamp and check.** From then on Cairn stamps everything the
+   session posts in the room (messages, links, claims) with that id,
+   taken from the key the session writes with, never from what the
+   session says. It checks each act against the capabilities the
+   owner configured.
+5. **Deliver.** Cairn writes into the session's context only its
+   person's words, the messages of posters its person trusts, and
+   Cairn's own ids, versions and counts. The session pulls the rest.
+6. **End.** A leave, kick or bar is another recorded event. The
+   participant id stays in the room's history and stops being
+   accepted.
+
+## What it means for the harness
+
+- **Nothing to manage.** The harness never holds or sends its
+  participant id. Cairn maps the session to its id; the harness keeps
+  using its own session id as before.
+- **It is told who it is.** On joining, and after every compaction, a
+  notice of Cairn's own ids says which rooms the session is in and its
+  participant id in each, for example "participant p-4c1e in room
+  r-7f3a".
+- **It cannot pose as anyone else.** Its posts carry its id because
+  Cairn derives the sender from its key; a tool argument naming
+  another participant is refused.
+- **It sees who else is there.** Other participants appear by id and
+  kind (person, agent, bot), attested by Cairn, with what each has
+  claimed.
+- **Restarts are visible.** A resumed session writes with the same key
+  and keeps its id. A new session gets a new id, linked to the same
+  person, so the room shows that a fresh session took over.
+- **Subagents.** A subagent that joins, on Cairn's suggestion
+  accepted by its person, gets its own participant id linked to its
+  parent's. One that does not join works inside its parent's context
+  and has no identity in the room.
+- **Kicks, bars and read only reach it.** Each arrives as a notice, and
+  a tool call it may no longer make returns an explicit error.
+- **Any harness can join.** One with hooks gets notices at its own
+  points; one without (driven over ACP, for example) joins through
+  Cairn's tools, and whatever Cairn cannot deliver is shown as not
+  delivered.
 
 ## Bindings compose them
 
@@ -217,8 +266,9 @@ its person adds it to.
 - **Message kinds (Q19):** a design phase decides whether messages
   carry a kind and which kinds.
 - **Security:** see the [room security note](room-security.md).
-- **Participant ids (Q23):** proposed, one per room, kept when a
-  session resumes, new for a new session, and bound to the person's
-  key so a bar on the person reaches every participant id they hold.
+- **Participant ids (Q23):** derived per room from the join event and
+  the session's writer key, so kept on resume and new for a new
+  session; a bar on the person's owner key reaches every participant
+  id certified under it.
 
 [boards]: ../../research/notes/agent-message-boards/agent-message-boards.md
