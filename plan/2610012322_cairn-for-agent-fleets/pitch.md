@@ -7,79 +7,99 @@ until then it is direction, not requirement.
 ## Pitch v12: for the developer (4 October 2026)
 
 Written for developers: their day first, then what Cairn changes.
-Items marked "next" are P2 in the SRS.
+Items marked "next" are P2 in the SRS. Revised through three loops of
+blind persona review ([round 10](persona-review/round-10/README.md)).
 
 ### Cairn: from intent to outcome
 
-Multiplayer for you and your agents. Say what you want, watch them
-work, look at what you got, keep it or correct course.
+Multiplayer for you and your agents. Say what you want, watch them work,
+look at what you got, keep it or correct course.
 
 **You know this.** Five agents on five things is already a lot. One
 waits on a permission prompt in a tab you cannot find. Another forgot
 your rule after compaction. A third says "all tests pass", and to check
-you juggle the app, the diff and the logs. Two edited the same file.
-The pull request that lands says nothing of how the code came to be.
-You would run more agents if you could keep up with five.
+you juggle the app, the diff and the logs. Two edited the same file. The
+pull request that lands says nothing of how the code came to be. You
+would run more agents if you could keep up with five.
 
-**With Cairn.** Install the plugin, keep your harness, and open Cairn
-in your browser. Every intent gets a room.
+**With Cairn.** Install the plugin and keep your harness. Start a room
+for an intent with one command or one click, from the branch you are on;
+agents already running join it when you say so. Open Cairn in your
+browser, or stay in your terminal: every room, answer and pin works from
+the command line too.
 
-- **Your rooms, on the left.** One per intent, each with what needs
-  you, ranked: a question, an outcome to look at, a failure, two
-  agents on one file.
-- **The conversation, in the middle.** Every agent on the intent in
-  one conversation, each message, edit and command under its name.
-  Speak once and every agent hears you.
+- **Your rooms, on the left.** One per intent, each with what needs you,
+  ranked: a prompt, an outcome to look at, a failure, two agents on one
+  file. Answer a prompt where it shows; steer or stop an agent from its
+  room, wherever your harness allows it.
+- **The conversation, in the middle.** Every agent on the intent in one
+  conversation, each message, edit and command under its name. Talk to
+  them all at once.
 - **The outcome window, on the right.** The running app, the diff, the
-  test run: whatever an agent presents. Or follow any player and watch
+  test run: whatever an agent presents. Or follow any agent and watch
   the file it edits change as it edits.
 
 **Say it once.** The room's first pin is the intent: the goal and what
-done means. Pin your rules beside it. Every agent that joins sees the
-pins, gets them back after every compaction and hears of every change.
-Agents pin what they are on, and Cairn warns you when two touch the
-same file.
+done means. Pin your rules beside it. Your pins come back to your agents
+word for word, in order, after every compaction, and a change reaches
+them at their next turn. Agents pin what they are on; those pins are
+notes, marked with who wrote them, read only when an agent looks. Cairn
+warns you the moment a second agent edits a file another has edited.
 
-**Try it several ways.** Each attempt is a branch in the room. Put
-three agents on three approaches; each presents in the same window,
-against the same intent, and you switch between them.
+**Try it several ways.** Each attempt is a branch in the room, in its
+own worktree. Put three agents on three approaches; each presents in the
+same window, against the same intent, and you switch between them.
 
 **Keep it or correct course.** Look where the agent shows it and click
-through to the lines and the run behind it. Keep it: commit, and git
-lands it as always. Or pin a correction, and every agent in the room
-sees it.
+through to the lines, and to each run as the hook recorded it, not as
+the agent reported it: the command, its exit code and the commit it ran
+on. Keep it: commit, then review and land it on your forge as always. Or
+pin a correction, and every agent of yours in the room takes it.
 
 **Point and link.** Anyone, you or an agent, can mark a sentence, lines
-of a diff or log, or a region of a screenshot, and get a link to
-exactly that.
+of a diff or log, or a region of a screenshot, and get a link to exactly
+that.
 
-**Every commit knows its room.** Each commit made in a room links back
-to it in its message. Whoever you let into the room opens the
-conversation, the attempts and the runs behind a change, even after a
-squash merge.
+**Every commit knows its room.** Each commit made in a room carries a
+link to it in its message, which survives a squash that keeps commit
+messages. It opens the conversation, the attempts and the runs behind
+the change: for you, and for others once you share the room.
 
-**Rooms talk to each other.** When the API room changes an endpoint,
-you or its agent post to the frontend room with a link to the diff.
-Agents there read it when they look; it instructs them only when you
-pass it on.
+**Find it again.** Search every room and land on the exact message or
+run. Your agents recall the same way: the exact message, command or
+output, found by search or behind a link, wrapped as untrusted data with
+who wrote it.
 
-**Catch up.** Back after the weekend? Each room says what changed, what
-failed and what waits, every line linked to the record, gaps flagged.
+**Rooms talk to each other.** When the API room changes an endpoint, you
+or its agent post to the frontend room with a link to the diff. Agents
+there see only that a post waits and who sent it, and read it when they
+look.
 
-**Built to grow.** Hand an agent a budget and let it delegate. Let a
-nightly timer start an attempt within a budget you set. Next: a
-labelled issue opens a room, through a Cairn you deploy; teammates join
-rooms peer to peer, with no central service; a room bot you run checks
-the pins are kept.
+**Catch up.** Back after the weekend? One page across all rooms and
+attempts says what changed since you left, what failed and what waits
+for you, ranked, every line linked to the record. Every gap is named: a
+failed hook, a redaction, a missing entry.
 
-**Safe by default.** Cairn connects to nothing until you share; its
-screen lives on localhost. Your agents take as instructions only your
-words and those of posters you choose to trust; everything else in a
-room is untrusted. Cairn is a set of tools, not an authority: it never
-decides whom to trust, and it cannot stop an agent from being swayed
-by what it reads. The plugin shows every change it makes, removes
-cleanly and never slows your harness, and everything also works in
-the terminal.
+**Built to grow.** Hand an agent a budget and let it delegate, or
+schedule a nightly attempt within a budget; it waits for you in the
+morning. Next: your laptop, server and sandboxes share rooms peer to
+peer, enrolled by key, with no central service, each working offline and
+merging on reconnect; then teammates join by invitation, watch the room
+live and talk with you. Their words reach your agents only when you
+forward them, in one step, marked as theirs and forwarded by you, and
+you can hand them the room.
+
+**Safe by default.** Cairn opens no connection off your machine until
+you share; its screen listens on localhost behind a token. The record is
+append-only and hash-chained, so Cairn shows you any entry missing or
+altered since it was written, and detected secrets are redacted before
+anything is written. Cairn delivers as instructions only your words and
+those of posters you choose to trust, by key; everything else reaches
+your agents as untrusted data, when they ask. Cairn is a set of tools,
+not an authority: it never decides whom to trust, and it cannot stop an
+agent from being swayed by what it reads. The plugin shows every change
+it makes, removes cleanly, and never holds your harness up: every hook
+has a deadline, fails open, and counts each failure.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
@@ -285,6 +305,14 @@ what checked them; rule levels per action shape the owner's control.
 27. Room pins are information agents must be aware of, not
     instructions; a room bot the owner or operator runs enforces them,
     and I2 stays as it was.
+28. v12, for the room model: rooms per intent, the outcome window,
+    attempts as branches, keep it or correct course in place of
+    verdicts, commits that link to their room, search and exact recall,
+    automations within a budget. Three loops of blind persona review
+    ([round 10](persona-review/round-10/README.md)) added: only your
+    pins come back as rules; notices carry no text; recall wrapped as
+    untrusted; runs as the hook recorded them; the terminal beside the
+    browser; stop where the harness allows it; integrity and gaps named.
 
 ## Open before the SRS change
 
@@ -292,16 +320,15 @@ The reconciled [proposal](proposal.md) answers the items once listed
 here: I4 by boundary and SEC-01 (§3), NG5 (§3.3), endorsement (D2,
 OWN-08) and keyed commitments (REC-17). What stays open is in its §12.
 
-Open from pitch v11, for the stakeholder:
+Open from pitch v11, now answered:
 
 - **Pinning in a room.** Settled by the room protocol in the
   [entity model](entity-model.md): an agent gets the intent and its
   person's pins on joining, keeps them through every compaction, and
   gets each change at its next turn. The [room protocol deep
   dive](room-protocol.md) holds harness support and nine decisions.
-- **Retry with several players.** Retrying from an earlier checkpoint
-  is defined for one owner and one agent. In a room it is open who may
-  start a retry, whether it joins the same room, and what the other
-  players and agents see of it. The pitch leaves retry out.
+- **Retry with several players.** Answered by the room model: a retry
+  is a new attempt, a branch in the same room from an earlier commit,
+  presented beside the others ([concepts](concepts.md)).
 
 [cf]: ../../research/notes/cloudflare-artifacts/cloudflare-artifacts.md

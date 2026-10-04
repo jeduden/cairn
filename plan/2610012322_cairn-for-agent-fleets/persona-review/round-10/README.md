@@ -76,3 +76,42 @@ Not taken, with the reason:
 - **Signed room bundles for strangers** (OSS): export is P2.
 - **Cutting "follow any agent"** (owner, agent): the stakeholder named
   it the heart of multiplayer; "player" became "agent" to stay defined.
+
+## Loop 3: final
+
+| Seat                    | Try it?             | Blocking                                      |
+| ----------------------- | ------------------- | --------------------------------------------- |
+| Fleet developer         | Partly, leaning yes | none                                          |
+| Returning owner         | Yes                 | none                                          |
+| Reviewer                | Partly              | none                                          |
+| Live collaborator       | Partly (needs Next) | none                                          |
+| OSS maintainer          | Partly              | none                                          |
+| Multi-machine developer | Partly (needs Next) | none                                          |
+| Platform operator       | Partly              | purge and retention, out of the pitch's scope |
+| Security officer        | Partly              | none                                          |
+| Agent                   | Yes                 | none                                          |
+
+Wording taken into the final v12: attempts in their own worktree; runs
+"not as the agent reported it"; the commit link survives "a squash that
+keeps commit messages" and opens "for others once you share the room";
+recall "found by search or behind a link"; catch-up "since you left";
+peers "enrolled by key"; teammates join by invitation, watch live and
+talk with you; forwarded words "marked as theirs and forwarded by you";
+entries "missing or altered since it was written".
+
+Carried to the requirements, not the pitch:
+
+- **Trusting an agent's key** (security): trusting one of your own
+  agents as a poster would launder what it read; the trust-grant
+  requirements must say whether agents can be trusted posters.
+- **Forwarded text** (agent, security): forwarding marks the original
+  author and the forwarder (R9-8); whether it then counts as the
+  forwarder's instruction is the endorsement rule (OWN-08).
+- **Integrity before landing** (owner): show whether a room's record is
+  whole before a commit from it is kept.
+- **Outbound-only peers** (multi-machine): a sandbox that can only dial
+  out must join and sync, and its record must outlive it.
+- **Retention and purge** (operator): purge as an audited marker the
+  chain accepts, not an altered entry.
+- **Commit trailers opt-in** (fleet): not taken; the stakeholder decided
+  they are always on (concepts Q35).
