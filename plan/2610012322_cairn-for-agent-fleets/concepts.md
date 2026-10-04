@@ -147,24 +147,25 @@ As information read through a tool, never pushed:
 
 ## Stakeholder decisions of 4 October 2026
 
-| #   | Question                                   | Decision                                                                                                             |
-| --- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| Q1  | Is a room a lane or a group of lanes?      | Neither: independent concepts, composed by bindings                                                                  |
-| Q2  | Does a change notice carry the text?       | Decided later                                                                                                        |
-| Q3  | What does leaving do to a running agent?   | The agent decides. Cairn stops restoring the room's pins and tells the agent it left                                 |
-| Q6  | Does the intent reach a teammate's agents? | Yes. Access to a room is access to its pins, and the intent is the room's first pin                                  |
-| Q8  | A quarantined pin still in context?        | The agents figure it out, possibly with their people. Cairn tells member agents the pin was withdrawn                |
-| Q9  | Can the owner leave their own room?        | Yes                                                                                                                  |
-| Q10 | Who writes room pins and adds players?     | The room's owner writes its pins; only a player's own person adds it to a room                                       |
-| Q11 | A room whose owner left?                   | Nobody changes its pins until the owner hands the room over; the pins stay as they were                              |
-| Q12 | Do room pins instruct agents?              | No. Room pins are information agents must be aware of; a room bot the owner or operator runs enforces them           |
-| Q13 | How is a player kept out?                  | The authorisation layer: operators kick and bar                                                                      |
-| Q15 | What may a room bot do?                    | Post findings, kick and bar                                                                                          |
-| Q16 | Who fills a room's roles?                  | The owner configures roles and provides the players; the operator role is always there, an etiquette bot is optional |
-| Q17 | Can a player be read only?                 | Yes: a capability the owner's authorisation layer withholds, for one player or room-wide as a mode                   |
-| Q18 | What does the etiquette bot do?            | It is an operator and enforces the pins itself; every act is audited with its finding, and the owner can undo it     |
-| Q19 | Do messages carry a kind?                  | Likely; a design phase decides the set                                                                               |
-| Q20 | Can an agent claim work or paths?          | Yes, as information like a pin, never a lock; the etiquette bot may enforce it                                       |
+| #   | Question                                   | Decision                                                                                                                                                          |
+| --- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Q1  | Is a room a lane or a group of lanes?      | Neither: independent concepts, composed by bindings                                                                                                               |
+| Q2  | Does a change notice carry the text?       | At least a link to the changed pin; likely also a diff against the version before. A summary only if the pin's author writes one, since Cairn never calls a model |
+| Q3  | What does leaving do to a running agent?   | The agent decides. Cairn stops restoring the room's pins and tells the agent it left                                                                              |
+| Q6  | Does the intent reach a teammate's agents? | Yes. Access to a room is access to its pins, and the intent is the room's first pin                                                                               |
+| Q8  | A quarantined pin still in context?        | The agents figure it out, possibly with their people. Cairn tells member agents the pin was withdrawn                                                             |
+| Q9  | Can the owner leave their own room?        | Yes                                                                                                                                                               |
+| Q10 | Who writes room pins and adds players?     | The room's owner writes its pins; only a player's own person adds it to a room                                                                                    |
+| Q11 | A room whose owner left?                   | Nobody changes its pins until the owner hands the room over; the pins stay as they were                                                                           |
+| Q12 | Do room pins instruct agents?              | No. Room pins are information agents must be aware of; a room bot the owner or operator runs enforces them                                                        |
+| Q13 | How is a player kept out?                  | The authorisation layer: operators kick and bar                                                                                                                   |
+| Q15 | What may a room bot do?                    | Post findings, kick and bar                                                                                                                                       |
+| Q16 | Who fills a room's roles?                  | The owner configures roles and provides the players; the operator role is always there, an etiquette bot is optional                                              |
+| Q17 | Can a player be read only?                 | Yes: a capability the owner's authorisation layer withholds, for one player or room-wide as a mode                                                                |
+| Q18 | What does the etiquette bot do?            | It is an operator and enforces the pins itself; every act is audited with its finding, and the owner can undo it                                                  |
+| Q19 | Do messages carry a kind?                  | Likely; a design phase decides the set                                                                                                                            |
+| Q20 | Can an agent claim work or paths?          | Yes, as information like a pin, never a lock; the etiquette bot may enforce it                                                                                    |
+| Q21 | Who may write a claim?                     | A player, about itself only; the room's other pins stay the owner's                                                                                               |
 
 Q4, Q5 and Q7 follow from the split: a session may be in any number of
 rooms; a plain session in no room follows its person's rules for
@@ -193,11 +194,8 @@ its person adds it to.
   are what the agent follows; room pins are what it is aware of and
   what the room bot checks. Contradictions are shown to people, not
   resolved (CMP-09).
-- **Q2:** whether a change notice carries the changed text.
 - **Message kinds (Q19):** a design phase decides whether messages
   carry a kind and which kinds.
-- **Who writes a claim (Q20):** proposed, a player about itself only;
-  the room's other pins stay the owner's.
 - **Security:** see the [room security note](room-security.md).
 
 [boards]: ../../research/notes/agent-message-boards/agent-message-boards.md
