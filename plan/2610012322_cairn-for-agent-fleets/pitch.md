@@ -30,9 +30,10 @@ in your browser. One screen holds the work:
 - **Left, your intents.** Each with its agents and what needs you,
   ranked: a prompt to answer, an outcome ready to judge, a failure, two
   agents touching the same file.
-- **Middle, the chat.** The live conversation with the agent you
-  picked, every edit and command in place. Answer its prompt or reply
-  right there.
+- **Middle, the room.** One conversation per intent, with every agent
+  on it. Each agent's messages, edits, commands and prompts appear in
+  place, under its name. Say something and every agent in the room
+  hears it; answer a prompt right where it appears.
 - **Right, the outcome, live.** The running app from that worktree's
   dev server, the diff, the files it produced, the test runs, changing
   as the agent works.
@@ -64,14 +65,15 @@ Everything in Cairn works there too.
 **Built to grow.** When five agents feel easy, run more: hand an agent
 a budget and let it delegate, and keep judging by intent rather than
 by agent. Next, bring your team in: share an intent peer to peer, with
-no server; teammates see the same screen, judge the same outcome under
+no server; teammates join the room, judge the same outcome under
 their own names, and their corrections reach your agents only when you
 pass them on.
 
 **Yours alone.** Until you turn sharing on, Cairn connects to nothing.
 Its screen is served only on localhost, for your browser. Your agent
 gets its history only when it asks, marked untrusted, never as a
-command.
+command. In the room, agents take orders only from you, never from
+each other.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
@@ -234,6 +236,10 @@ what checked them; rule levels per action shape the owner's control.
 17. Cairn's screen leads: intents on the left, the chat in the middle,
     the live outcome on the right, the intent and its criteria on top.
     The terminal is the alternative, not the frame.
+18. The middle is a room per intent, not a chat with one agent: the
+    person talks to every agent on the intent at once, each agent's work
+    appears under its name, and agents take orders only from the
+    person.
 
 ## Open before the SRS change
 
