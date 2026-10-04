@@ -9,32 +9,38 @@ until then it is direction, not requirement.
 Written for developers: their problem in their words first, then what
 Cairn changes. Items marked "next" are P2 in the SRS.
 
-### Cairn: from intent to outcome, with nothing lost in between
+### Cairn: from intent to outcome
+
+State what you want. Judge what you got. Correct course. Then do it
+together.
 
 **You know this.** You tell an agent what you want. Hours later you get
 a diff and "all tests pass". In between, your intent slipped:
-compaction dropped the rule you set, the agent drifted, and three
-agents in three terminals each made their own calls. Now you review
-the outcome without knowing how it got there, or whether it did what
-you asked. Your reviewer knows even less.
+compaction dropped your rule, the agent drifted, and three agents in
+three terminals each made their own calls. Now you must judge the
+outcome without knowing how it got there, or whether it did what you
+asked. When it is wrong, you start over and explain it all again.
 
-**Cairn connects what you asked for to what you got.** Git keeps the
-code; Cairn keeps the lane behind it.
+**Cairn closes the loop.** Git keeps the code; Cairn keeps the lane
+behind it: every message, edit, command and result, on your machine,
+secrets redacted.
 
-- **Your intent stays intact.** What you ask for and the rules you pin
-  come back word for word after every compaction.
-- **Every step on the record.** Each message, edit, command and result,
-  on your machine, secrets redacted. Agents look up what they did
-  instead of guessing.
-- **Review the outcome against the intent.** Each result sits next to
-  what you asked for, with how it got there and what checked it: the
-  agent's claim, or a test run it recorded. Next: your reviewer sees
-  the same, in one signed file.
-- **See every agent.** One view: who is working, who is waiting on you.
-- **Split the work safely.** Agents delegate to subagents and other
-  sessions within limits you set.
-- **Work live with your team (next).** Share a lane peer to peer, with
-  no server. Only you decide what reaches your agents.
+1. **State your intent once.** A goal and what done means. It survives
+   every compaction word for word and travels with every task an agent
+   hands off.
+2. **Watch the work.** One view of every agent: who is working, who is
+   waiting on you.
+3. **Judge the outcome against the intent.** Each criterion beside its
+   evidence: a recorded test run, or only the agent's word. What nobody
+   checked says so. You decide; Cairn never does.
+4. **Correct course.** Send a correction tied to what you judged,
+   sharpen the intent, or retry from an earlier point. The next outcome
+   shows against the corrected intent.
+
+**Then bring others in (next).** Share a lane peer to peer, with no
+server. Reviewers and teammates judge the same outcome, each verdict
+under their own name. They can propose corrections; only you decide
+what reaches your agents.
 
 **Safe by default.** Nothing leaves your machine except what your agent
 looks up for its own model call. History returns only when an agent
@@ -162,7 +168,9 @@ what checked them; rule levels per action shape the owner's control.
    compaction, the unexplained diff, the review without its story),
    then what Cairn changes; add reviewing the outcome, delegation and
    lane sharing; half the words of v9. The stakeholder named the
-   process Cairn must excel at: intent to outcome.
+   process Cairn must excel at: intent to outcome. The pitch now follows that loop:
+   state the intent, watch, judge the outcome, correct course, with
+   several judges on top. A person judges; Cairn never does.
 
 ## Open before the SRS change
 
