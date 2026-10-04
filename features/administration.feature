@@ -34,7 +34,7 @@ Feature: Administration and lifecycle (ADM)
     And the output states that managed settings are in force and names the documented managed install path
 
   @ADM-04 @P0 @I6 @I7 @pending
-  Scenario Outline: managed policy overrides every layer and a widening change waits for a recorded act
+  Scenario Outline: configuration is validated strictly, managed policy overrides every layer, and a widening change waits for a recorded act
     Given an isolated Cairn home
     And <configuration>
     When a session runs and the operator starts "<component>"
@@ -42,14 +42,18 @@ Feature: Administration and lifecycle (ADM)
     And the core records every event of the session
 
     Examples:
-      | configuration                                                                                   | component               | result                                                        |
-      | a managed policy file at the documented system path that the tenant can write                   | the lane-view component | refuses to start, and an audit entry and a counter record why |
-      | a managed policy file in a directory the tenant can write                                       | the run component       | refuses to start, and an audit entry and a counter record why |
-      | an unparsable managed policy file                                                               | the lane-view component | refuses to start, and an audit entry and a counter record why |
-      | a managed policy file with an unknown key                                                       | the run component       | refuses to start, and an audit entry and a counter record why |
-      | a project ".cairn.toml" that turns on the lane view with no widening act recording its digest   | the lane-view component | stays off                                                     |
-      | a project ".cairn.toml" that turns on the lane view and a widening act that recorded its digest | the lane-view component | starts                                                        |
-      | a managed policy that turns on the lane view and a tenant config that turns it off              | the lane-view component | starts                                                        |
+      | configuration                                                                                   | component               | result                                                                                        |
+      | a managed policy file at the documented system path that the tenant can write                   | the lane-view component | refuses to start, and an audit entry and a counter record why                                 |
+      | a managed policy file in a directory the tenant can write                                       | the run component       | refuses to start, and an audit entry and a counter record why                                 |
+      | an unparsable managed policy file                                                               | the lane-view component | refuses to start, and an audit entry and a counter record why                                 |
+      | a managed policy file with an unknown key                                                       | the run component       | refuses to start, and an audit entry and a counter record why                                 |
+      | a project ".cairn.toml" that turns on the lane view with no widening act recording its digest   | the lane-view component | stays off                                                                                     |
+      | a project ".cairn.toml" that turns on the lane view and a widening act that recorded its digest | the lane-view component | starts                                                                                        |
+      | a managed policy that turns on the lane view and a tenant config that turns it off              | the lane-view component | starts                                                                                        |
+      | a tenant config.toml containing "recal.max_k = 10"                                              | "cairn status"          | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
+      | a tenant config.toml containing "recall.max_k = 'ten'"                                          | "cairn status"          | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
+      | a tenant config.toml containing "recall.max_k = 500"                                            | "cairn status"          | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
+      | a tenant config.toml containing "payload_threshold_bytes = -1"                                  | "cairn status"          | exits 2, and the error names the key "payload_threshold_bytes" and the problem "out of range" |
 
   @ADM-05 @P0 @I1 @pending
   Scenario: segment and schema migrations run forward after a verified backup and newer versions are refused
