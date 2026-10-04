@@ -32,9 +32,12 @@ holds everything and nothing merges.
 2. **Keeping a player out is the authorisation layer's job (Q13).**
    A room's owner assigns roles; a role carries permissions; an
    operator may kick a player (remove it now) or bar it (keep it out).
-   A player is in the room when its person has added it and no
-   operator's bar stands. Bars from several operators combine by "any
-   bar wins", so a late or reordered sync can only make the result
+   A player is in the room when its person has added it, that add has
+   not been kicked, and no operator's bar stands. A kick revokes the
+   current add, so only the player's person can add it again; a bar
+   keeps it out until lifted. Bars name a key, never a name. Bars from
+   several operators combine by "any bar wins", so a late or reordered
+   sync can only make the result
    stricter. A bar is lifted only by the operator who set it or by the
    owner, and an operator whose role the owner revokes writes no
    further bars.
@@ -144,14 +147,49 @@ remaining defences are around the agent, not in it:
 - the sandbox state and risk acceptance bound what an unsandboxed
   agent can do (OWN-22).
 
+## Lessons from IRC
+
+IRC has run rooms with roles, bots and splits for decades; the
+[IRC note](../../research/notes/irc/irc.md) has the detail. What the
+room model takes:
+
+- **Joining** shows the room's pins, intent first, each with its author
+  and time, then the roster with roles, as IRC sends the topic and the
+  member list.
+- **Pin edits** by anyone but the owner are refused by the
+  authorisation layer, not reverted afterwards (IRC's +t, not
+  TOPICLOCK).
+- **Authority lives in the owner's configuration**, not in who is
+  present, as ChanServ's access lists replaced whoever held ops.
+  Nothing grants operator status on join.
+- **Kick and bar differ**, as on IRC: a kick removes a player now, a
+  bar keeps it out. A bar records its target key, reason, private
+  note, optional expiry and setter, and is audited.
+- **Merging** never uses time: IRC's timestamp rule trusts servers'
+  clocks, and peers' clocks are whatever the writer claims. Kicks and
+  bars from both sides are unioned; powers come only from the owner's
+  grant chain.
+- **A room's id** comes from its creation record, so a partition
+  cannot recreate it under the same name, as with RFC 2811's safe
+  channels; the name can change freely.
+- **Player kind and sender** are attested by Cairn, as IRCv3's
+  server-set bot tag and account tag are, never claimed in a message.
+- **No act is parsed from room text**: bots that read channel text as
+  commands were injectable, so every act is a typed request through
+  the authorisation layer.
+- **The owner and successor** are set only on the owner's own machine,
+  and a handover needs both sides, as Limnoria and ChanServ do.
+
 ## Decisions for the stakeholder
 
-| #   | Question                                  | Options                                                                                                                                                 | Recommendation |
-| --- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| Q12 | Do room pins instruct agents?             | Decided: no. They are information; a room bot enforces them                                                                                             | —              |
-| Q13 | How does an owner keep a player out?      | Decided: the authorisation layer provides it; operators kick and bar                                                                                    | —              |
-| Q14 | Can room pins widen what an agent may do? | Moot: room pins are information and grant nothing                                                                                                       | —              |
-| Q15 | What may a room bot do beyond posting?    | Decided: also bar and kick players                                                                                                                      | —              |
-| Q16 | Does Cairn ship a room bot?               | Decided: rooms have roles; the owner configures them and provides the players, an etiquette bot among them, optional; the operator role is always there | —              |
+| #   | Question                                   | Options                                                                                                                                                 | Recommendation                                                |
+| --- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Q12 | Do room pins instruct agents?              | Decided: no. They are information; a room bot enforces them                                                                                             | —                                                             |
+| Q13 | How does an owner keep a player out?       | Decided: the authorisation layer provides it; operators kick and bar                                                                                    | —                                                             |
+| Q14 | Can room pins widen what an agent may do?  | Moot: room pins are information and grant nothing                                                                                                       | —                                                             |
+| Q15 | What may a room bot do beyond posting?     | Decided: also bar and kick players                                                                                                                      | —                                                             |
+| Q16 | Does Cairn ship a room bot?                | Decided: rooms have roles; the owner configures them and provides the players, an etiquette bot among them, optional; the operator role is always there | —                                                             |
+| Q17 | Is there a quiet restriction?              | (a) no: kick and bar only; (b) yes: an operator can keep a player present but unable to post, as IRC's quiet                                            | (b): the gentler step before a kick                           |
+| Q18 | What does the etiquette bot do by default? | (a) act at once: kick and bar; (b) flag to operators, act only on a timed ladder (warn, quiet, kick, bar) the owner turns on                            | (b): a classifier's mistake must not remove a player silently |
 
 [hydra]: https://matrix.org/blog/2025/08/project-hydra-improving-state-res/
