@@ -121,6 +121,10 @@ its interface. Git keeps the code; Cairn keeps the lane.
 10. Network boundaries are defined explicitly: process, machine, peer
     and public. See
     [plan 2610022338](../2610022338_cairn-network-side/plan.md).
+11. Judging happens beside the chat: the lane view shows the outcome
+    live (the running app from the dev server, the diff, the files the
+    harness produced, the test runs). The running-app preview ships in
+    the first release, not later (4 October 2026); it informs OQ-30.
 
 ## Direction compared with Zed Delta
 
