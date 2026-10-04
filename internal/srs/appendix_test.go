@@ -42,6 +42,9 @@ func TestInvariantCoverageRejectsMalformedRows(t *testing.T) {
 	_, err = InvariantCoverage([]byte("| Invariant | Requirements |\n|---|---|\n| **I1** |\n"))
 	assert.ErrorContains(t, err, "malformed invariant row")
 
+	_, err = InvariantCoverage([]byte("| Invariant | Requirements |\n|---|---|\n| **I1** | REC-1 |\n"))
+	assert.ErrorContains(t, err, `line 3: malformed requirement id "REC-1"`)
+
 	_, err = InvariantCoverage([]byte("no table"))
 	assert.ErrorContains(t, err, "no invariant coverage table")
 }

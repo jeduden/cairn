@@ -27,9 +27,11 @@ func InvariantCoverage(body []byte) (map[string][]string, error) {
 			if m == nil {
 				return nil, fmt.Errorf("srs: line %d: malformed invariant row", row.Line)
 			}
-			for id := range strings.SplitSeq(row.Cells[1], ",") {
-				out[m[1]] = append(out[m[1]], strings.TrimSpace(id))
+			ids, err := splitList(row.Cells[1], idPattern, "requirement id")
+			if err != nil {
+				return nil, fmt.Errorf("srs: line %d: %w", row.Line, err)
 			}
+			out[m[1]] = append(out[m[1]], ids...)
 		}
 
 		return out, nil
