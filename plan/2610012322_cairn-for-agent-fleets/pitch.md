@@ -14,37 +14,41 @@ Cairn changes. Items marked "next" are P2 in the SRS.
 State what you want. Judge what you got. Correct course. Then do it
 together.
 
-**You know this.** You tell an agent what you want. Hours later you get
-a diff and "all tests pass". In between, your intent slipped:
-compaction dropped your rule, the agent drifted, and three agents in
-three terminals each made their own calls. Now you must judge the
-outcome without knowing how it got there, or whether it did what you
-asked. When it is wrong, you start over and explain it all again.
+**You know this.** You give Claude Code a task. Hours later you get a
+diff and "all tests pass". In between, your intent slipped: compaction
+dropped your rule, the agent drifted, and the harnesses in your other
+terminals each made their own calls. Now you must judge the outcome
+without knowing how it got there, or whether it did what you asked.
+When it is wrong, you open a new session and explain it all again.
 
-**Cairn closes the loop.** Git keeps the code; Cairn keeps the lane
-behind it: every message, edit, command and result, on your machine,
-secrets redacted.
+**With Cairn.** Install the plugin and keep working in your harness as
+before. Every branch becomes a lane: Cairn records each message, edit,
+command and result on your machine, secrets redacted.
 
-1. **State your intent once.** A goal and what done means. It survives
-   every compaction word for word and travels with every task an agent
-   hands off.
-2. **Watch the work.** One view of every agent: who is working, who is
-   waiting on you.
-3. **Judge the outcome against the intent.** Each criterion beside its
-   evidence: a recorded test run, or only the agent's word. What nobody
-   checked says so. You decide; Cairn never does.
-4. **Correct course.** Send a correction tied to what you judged,
-   sharpen the intent, or retry from an earlier point. The next outcome
-   shows against the corrected intent.
+1. **State your intent once.** Type `/intent` in your harness: the goal
+   and what done means. It comes back word for word after every
+   compaction and goes with every task the agent hands to a subagent.
+2. **Watch every harness.** Open the lane view in your browser. Each
+   harness is a tile: working, done, or waiting on you. Answer its
+   prompt there instead of hunting for the terminal.
+3. **Judge the outcome against the intent.** When the work stops, the
+   lane lists each criterion beside its evidence: the test run the
+   harness recorded, or only the agent's word. What nobody checked
+   says so. You mark each one met or needs changes; Cairn never decides
+   for you.
+4. **Correct course.** Type a correction next to the criterion, and it
+   goes to the harness tied to what you judged. Or sharpen the intent,
+   or restart from an earlier point. The next outcome shows against the
+   corrected intent.
 
 **Then bring others in (next).** Share a lane peer to peer, with no
-server. Reviewers and teammates judge the same outcome, each verdict
-under their own name. They can propose corrections; only you decide
-what reaches your agents.
+server. Reviewers and teammates see the same lane and judge the same
+outcome, each verdict under their own name. Their corrections reach
+your harness only when you pass them on.
 
-**Safe by default.** Nothing leaves your machine except what your agent
-looks up for its own model call. History returns only when an agent
-asks, marked untrusted, never as a command.
+**Safe by default.** Nothing leaves your machine except what your
+harness looks up for its own model call. History returns only when the
+agent asks, marked untrusted, never as a command.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
@@ -172,6 +176,9 @@ what checked them; rule levels per action shape the owner's control.
    follows that loop: state the intent, watch, judge the outcome,
    correct course, with several judges on top. A person judges; Cairn
    never does.
+10. The developer's experience step by step, in the harness and the
+    lane view; "harness" where the harness is meant; "git keeps the
+    code" dropped.
 
 ## Open before the SRS change
 
