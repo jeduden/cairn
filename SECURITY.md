@@ -8,7 +8,8 @@ summary: >-
 
 Cairn stores long agent histories and feeds recalled content back to
 a model. Its invariants — no automatic path from untrusted content to
-the model, no network, isolation per tenant — are security claims.
+the model, no network in the core and every other component inside
+its declared boundary, isolation per tenant — are security claims.
 A way to break one is a vulnerability. See
 [docs/srs/06-security.md](docs/srs/06-security.md) for the threat
 model.

@@ -11,7 +11,8 @@ const testStack = "docs/adr/ADR-2609292234-test-stack.md"
 func Cases() []Case {
 	var out []Case
 	for _, group := range [][]Case{
-		dependencyCases(), decisionCases(), repositoryCases(), reviewCases(), gateCases(),
+		dependencyCases(), decisionCases(), repositoryCases(), reviewCases(),
+		gateCases(), personaCases(),
 	} {
 		out = append(out, group...)
 	}
@@ -206,6 +207,52 @@ func gateCases() []Case {
 				Old: "All three are test-only.", New: "All three are test-only, for now."},
 			Check: Mdsmith(),
 			Want:  "generated section is out of date",
+		},
+	}
+}
+
+// personaCases lists the drifts the persona gates catch between §2.5,
+// Appendix C and the persona agents.
+func personaCases() []Case {
+	return []Case{
+		{
+			Name:   "a requirement serving no persona",
+			Guards: "TestAppendixCCoversEveryRequirement",
+			Edit: Edit{Op: Replace, File: "docs/srs/appendix-c-persona-coverage.md",
+				Old: "| SEC-17, ENG-29", New: "| SEC-17"},
+			Check: GoTest("./internal/srs", "TestAppendixCCoversEveryRequirement"),
+			Want:  "ENG-29 serves no persona in Appendix C",
+		},
+		{
+			Name:   "Appendix C listing an id that is no requirement",
+			Guards: "TestAppendixCCoversEveryRequirement",
+			Edit: Edit{Op: Replace, File: "docs/srs/appendix-c-persona-coverage.md",
+				Old: "SEC-17, ENG-29", New: "SEC-17, ENG-29, ENG-98"},
+			Check: GoTest("./internal/srs", "TestAppendixCCoversEveryRequirement"),
+			Want:  "Appendix C lists ENG-98, which is no requirement",
+		},
+		{
+			Name:   "Appendix C naming a persona §2.5 does not define",
+			Guards: "TestAppendixCCoversEveryRequirement",
+			Edit: Edit{Op: Replace, File: "docs/srs/02-context.md",
+				Old: "\n| U9  | Agent", New: "\n\n| U9  | Agent"},
+			Check: GoTest("./internal/srs", "TestAppendixCCoversEveryRequirement"),
+			Want:  "Appendix C names U9, which §2.5 does not define",
+		},
+		{
+			Name:   "a persona agent with no persona",
+			Guards: "TestPersonasMatchTheAgents",
+			Edit: Edit{Op: Copy, File: ".claude/agents/persona-agent.md",
+				New: ".claude/agents/persona-stray.md"},
+			Check: GoTest("./internal/srs", "TestPersonasMatchTheAgents"),
+			Want:  "persona-stray",
+		},
+		{
+			Name:   "a persona whose agent file is gone",
+			Guards: "TestPersonasMatchTheAgents",
+			Edit:   Edit{Op: Remove, File: ".claude/agents/persona-reviewer.md"},
+			Check:  GoTest("./internal/srs", "TestPersonasMatchTheAgents"),
+			Want:   "persona-reviewer",
 		},
 	}
 }

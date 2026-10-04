@@ -30,7 +30,11 @@ type Requirement struct {
 
 // idPattern is the shape of every requirement id: a family prefix and
 // a two-digit number.
-var idPattern = regexp.MustCompile(`^(REC|PRV|PIN|RCL|LMK|INJ|CMP|ADM|MEM|OPS|SEC|NFR|ENG|ASM)-[0-9]{2}$`)
+var idPattern = regexp.MustCompile(`^(` + Families + `)-[0-9]{2}$`)
+
+// Families lists every requirement family prefix as a regular
+// expression alternation, so the scenario gate reads ids the same way.
+const Families = `REC|PRV|PIN|RCL|LMK|INJ|CMP|ADM|MEM|OPS|LANE|VIEW|OWN|PEER|SEC|NFR|ENG|ASM`
 
 // invariantPattern is the shape of one trace, I1 to I10.
 var invariantPattern = regexp.MustCompile(`^I([1-9]|10)$`)
@@ -148,13 +152,20 @@ func parseTraces(cell string) ([]string, error) {
 		return nil, nil
 	}
 
+	return splitList(cell, invariantPattern, "trace")
+}
+
+// splitList reads a comma-separated cell whose every entry, trimmed,
+// matches pattern; the first entry that does not is reported as a
+// malformed kind.
+func splitList(cell string, pattern *regexp.Regexp, kind string) ([]string, error) {
 	var out []string
 	for part := range strings.SplitSeq(cell, ",") {
-		inv := strings.TrimSpace(part)
-		if !invariantPattern.MatchString(inv) {
-			return nil, fmt.Errorf("malformed trace %q", inv)
+		entry := strings.TrimSpace(part)
+		if !pattern.MatchString(entry) {
+			return nil, fmt.Errorf("malformed %s %q", kind, entry)
 		}
-		out = append(out, inv)
+		out = append(out, entry)
 	}
 
 	return out, nil

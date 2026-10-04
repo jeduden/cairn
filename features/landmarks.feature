@@ -21,7 +21,7 @@ Feature: Landmarks (LMK)
     And deployment mode "<mode>"
     And a project with a Claude Code transcript "two-closed-spans"
     When Claude calls the MCP tool "landmarks" with session "current"
-    Then there is one landmark per closed span with its seq range, turn range, event counts by kind, tool call counts, touched file paths and error indicator
+    Then there is one landmark per closed span with its address range, turn range, event counts by kind, tool call counts, touched file paths and error indicator
     And the landmark user-turn excerpt is <excerpt>
 
     Examples:
@@ -49,9 +49,9 @@ Feature: Landmarks (LMK)
   Scenario: flagged and quarantined events count but contribute no text
     Given an isolated Cairn home
     And a project with a Claude Code transcript "flagged-and-quarantined"
-    And the operator runs "cairn quarantine add --seq 12"
+    And the operator runs "cairn quarantine add --range w-1:12-12"
     When the operator runs "cairn landmarks --json"
-    Then the event counts include the flagged event and quarantined seq 12
+    Then the event counts include the flagged event and the quarantined event w-1·12
     And no tool name, file path or excerpt in any landmark comes from those events
 
   @LMK-05 @P0 @I10 @pending

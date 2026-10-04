@@ -113,5 +113,28 @@ func TestSpecificationParses(t *testing.T) {
 	reqs, err := Load(srsDir)
 
 	require.NoError(t, err)
-	assert.Len(t, reqs, 101+14+28+16, "§5–§6, NFR, ENG and ASM rows")
+	assert.Len(t, reqs, 220+15+29+20, "§5–§6, NFR, ENG and ASM rows")
+}
+
+func TestParseAcceptsTheLaneFamilies(t *testing.T) {
+	body := "| ID | Pri | Requirement | Ver | Traces |\n|---|---|---|---|---|\n" +
+		"| LANE-01 | P0 | Lanes. | T | I1 |\n| VIEW-19 | P2 | Views. | T | I6 |\n" +
+		"| OWN-22 | P1 | Owner acts. | T | I2 |\n| PEER-11 | P2 | Peers. | T | I5 |\n"
+
+	got, err := Parse("doc.md", []byte(body))
+
+	require.NoError(t, err)
+	require.Len(t, got, 4)
+	assert.Equal(t, []string{"LANE-01", "VIEW-19", "OWN-22", "PEER-11"},
+		[]string{got[0].ID, got[1].ID, got[2].ID, got[3].ID})
+}
+
+func TestSplitListReadsACommaSeparatedCell(t *testing.T) {
+	got, err := splitList(" I1 ,I10", invariantPattern, "trace")
+
+	require.NoError(t, err)
+	assert.Equal(t, []string{"I1", "I10"}, got)
+
+	_, err = splitList("I1, I11", invariantPattern, "trace")
+	assert.EqualError(t, err, `malformed trace "I11"`)
 }

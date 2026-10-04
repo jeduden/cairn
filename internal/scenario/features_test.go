@@ -108,3 +108,18 @@ func TestScenariosReportsUnreadableFeatures(t *testing.T) {
 func TestScenarioLinesOfADocumentWithNoFeature(t *testing.T) {
 	assert.Empty(t, scenarioLines(&messages.GherkinDocument{}))
 }
+
+func TestScenariosAcceptsTheLaneFamilies(t *testing.T) {
+	dir := writeFeature(t, "Feature: F\n\n"+
+		"  @LANE-01 @P0 @I1\n  Scenario: a\n    Given x\n\n"+
+		"  @VIEW-19 @P2\n  Scenario: b\n    Given x\n\n"+
+		"  @OWN-22 @P1\n  Scenario: c\n    Given x\n\n"+
+		"  @PEER-11 @P2\n  Scenario: d\n    Given x\n")
+
+	got, err := Scenarios(dir)
+
+	require.NoError(t, err)
+	require.Len(t, got, 4)
+	assert.Equal(t, []string{"LANE-01", "VIEW-19", "OWN-22", "PEER-11"},
+		[]string{got[0].ID, got[1].ID, got[2].ID, got[3].ID})
+}

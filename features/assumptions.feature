@@ -150,3 +150,35 @@ Feature: Assumptions register (ASM)
     Given a recorded "~/.claude/projects" tree for Claude Code "supported" after one session in each of "/w/my_app", "/w/my.app" and "/w/my-app"
     When the transcript discovery walks the tree
     Then the three sessions share the project directory "-w-my-app"
+
+  @ASM-17 @pending
+  Scenario: transcript lines are appended within 1 s of their event while a session runs (S9)
+    Given a recorded session from Claude Code "supported" with the time of each hook event
+    When the recorded transcript is replayed with the write time of each line
+    Then each transcript line was appended within 1 s of its event
+
+  @ASM-18 @pending
+  Scenario: the harness prompt stays answerable during PermissionRequest and accepts no decision (S9)
+    Given a recorded hook payload for Claude Code "supported"
+    When the hook "PermissionRequest" runs with a handler that waits and then returns no decision
+    Then the recorded harness kept its own permission prompt answerable while the handler waited
+    And the recorded harness accepted the handler's exit without a decision and left the choice to its prompt
+
+  @ASM-19 @pending
+  Scenario Outline: each agent harness exposes inputs for steer, interrupt and stop (S10)
+    Given the recorded input interface of "<harness>"
+    When its inputs are listed
+    Then it exposes an input for steer, one for interrupt and one for stop
+
+    Examples:
+      | harness          |
+      | Agent SDK        |
+      | ACP              |
+      | Codex app-server |
+
+  @ASM-20 @pending
+  Scenario: a clone's root commit, HEAD, refs and trees are obtainable within the core's boundary (S11)
+    Given a recorded git clone
+    When Cairn reads the clone with process creation and the network forbidden
+    Then it resolves the root commit, HEAD, every ref and the tree of every ref
+    And no process was started and no connection was opened

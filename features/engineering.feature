@@ -104,10 +104,19 @@ Feature: Engineering quality (ENG)
     And the module as a whole is at least 80% covered
 
   @ENG-12 @P0 @pending
-  Scenario: the end-to-end suite runs with the network denied
-    Given the end-to-end suite runs inside a network-denied sandbox
-    When any code under test creates a socket
-    Then the suite fails naming the caller
+  Scenario Outline: the end-to-end suite runs each component inside its boundary's sandbox
+    Given the end-to-end suite runs "<component>" inside a sandbox that <sandbox>
+    When "<component>" opens a socket outside the boundary the register assigns it
+    Then the suite fails naming the component and the caller
+
+    Examples:
+      | component           | sandbox                       |
+      | core                | denies all network            |
+      | lane-view component | denies all but loopback       |
+      | run component       | denies all but loopback       |
+      | peer component      | allows only its register rows |
+      | publish component   | allows only its register rows |
+      | bridge component    | allows only its register rows |
 
   @ENG-13 @P1 @pending
   Scenario: mutation testing scores the security-sensitive packages
@@ -129,12 +138,22 @@ Feature: Engineering quality (ENG)
     Then the benchmark CI job fails naming the benchmark
 
   @ENG-16 @P0 @pending
-  Scenario: CI gates on the static analyzers and the custom checks
+  Scenario Outline: CI gates on the static checks and on build-time reach evidence per component
     Given the CI workflow
-    Then it gates on go vet, staticcheck, gosec, errcheck and govulncheck
-    And it gates on the TrustedText construction check
-    And it gates on the forbidden-import check for net, net/http and os/exec
-    And it gates on the wall-clock and randomness check for projection code
+    When CI reads the build-time reach evidence for the "<component>", dependencies and start-up code included
+    Then the workflow gates on go vet, staticcheck, gosec, errcheck, govulncheck and the custom checks
+    And a build-time check fails when projection code reads a clock or a source of randomness
+    And a build-time check fails when restore content is built from anything but trusted text
+    And CI fails when the evidence for the "<component>" is missing or shows that it <violation>
+
+    Examples:
+      | component           | violation                                                                 |
+      | core                | opens any socket, or starts a program other than its own kernel worker    |
+      | run component       | makes an outbound connection or listens beyond loopback                   |
+      | lane-view component | starts a program, makes an outbound connection or listens beyond loopback |
+      | peer component      | starts a program or reaches beyond its register rows                      |
+      | publish component   | starts a program or reaches beyond its register rows                      |
+      | bridge component    | starts a program, listens, or reaches beyond its register rows            |
 
   @ENG-17 @P0 @pending
   Scenario: contract tests replay every supported Claude Code version
@@ -221,7 +240,7 @@ Feature: Engineering quality (ENG)
     Then the CI workflow runs the drift suite with "go test -tags drift ./internal/drift"
     And every drift case's edit applies to the checkout
     And every non-pending scenario that inspects the repository checkout has a drift case guarding its id
-    And the requirement-scenario gate and the Appendix B check each have a drift case
+    And the requirement-scenario gate, the Appendix B check and the persona gates each have a drift case
 
   @ENG-28 @P0
   Scenario: an agent's approval passes through a gate the agent cannot reach
@@ -242,3 +261,11 @@ Feature: Engineering quality (ENG)
       | approve         | none     | moved   | passed | passed      | nothing         |
       | approve         | none     | current | failed | passed      | an error        |
       | malformed       | none     | current | passed | passed      | an error        |
+
+  @ENG-29 @P0 @pending
+  Scenario: an invariant or I2-review change lands only with an ADR recording a named security reviewer's approval
+    Given the repository checkout
+    When a change to an invariant or to a requirement marked for I2 review is proposed
+    Then it lands only with an accepted ADR that records a named human security reviewer's approval
+    And until that ADR is accepted, every component that crosses B0 is built only as a prototype
+    And evidence from the release build proves no release artifact or tagged release contains prototype code

@@ -233,3 +233,12 @@ Six products store agent conversations as first-class data: Zed Delta/DeltaDB (l
 - No source documents whether Delta lets users export or self-host conversation data, or how long it keeps it.
 - Diversion's and GitButler's transcript storage locations are undocumented.
 - I found no system that encrypts session records at rest in git, or that does git transport of sessions across cloud sandboxes without the user's git credentials.
+
+## Addendum, 4 October 2026: Cloudflare Artifacts
+
+Cloudflare's Artifacts, in open beta since 1 October 2026, is a
+versioned filesystem behind a git interface, built for many agents: a
+fork per task, read and write tokens per repo, events on push, fork
+and clone, and agent session context persisted with the code. It is
+managed and Cloudflare-hosted. See the
+[Artifacts note](../cloudflare-artifacts/cloudflare-artifacts.md).
