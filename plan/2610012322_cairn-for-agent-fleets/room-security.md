@@ -114,16 +114,21 @@ fill them (Q16). Cairn holds the roles and enforces their permissions
 deterministically; it never judges and never calls a model (CMP-09,
 I4).
 
-| Role          | Always there | Permissions                                                                  | Filled by                                    |
-| ------------- | ------------ | ---------------------------------------------------------------------------- | -------------------------------------------- |
-| Owner         | yes          | Write pins, configure roles, assign holders, hand over the room              | The person who created or took over the room |
-| Operator      | yes          | Kick and bar players, lift their own bars, hide a message from the room view | The owner, unless the owner assigns others   |
-| Etiquette bot | no, optional | An operator's permissions, plus posting findings against the pins            | A classifier the owner provides              |
-| Participant   | yes          | Read, post, link                                                             | Any player its person adds                   |
+| Role                         | Always there | Capabilities                                                                                 | Filled by                                                     |
+| ---------------------------- | ------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Viewer                       | no           | Read                                                                                         | A player its person adds, or one an operator set to read only |
+| Participant                  | yes          | Read, post, link, claim                                                                      | A player its person adds                                      |
+| Operator                     | yes          | A participant's, plus kick, bar, set read only (make a viewer), hide a message from the view | The owner, unless the owner assigns others                    |
+| Etiquette or facilitator bot | no           | An operator's, plus posting findings against the pins                                        | A bot the owner provides                                      |
 
-- **The etiquette bot** is a player of kind bot with its own key, run
-  by the owner or an operator outside Cairn, like a harness. It reads
-  the room's pins, messages and links, and what participants chose to make
+The owner stands beside the roles: the owner writes pins, configures
+which roles the room has and who holds them, names a successor and
+hands the room over.
+
+- **The etiquette or facilitator bot** is a player of kind bot with
+  its own key, run by the owner or an operator outside Cairn, like a
+  harness. It reads the room's pins, messages and links, and what
+  participants chose to make
   visible in the room, through the same tools an agent uses.
 - **What it does.** It posts findings to the room, each linking the
   pin and the content it judged, raises a Needs you item for the owner
@@ -137,11 +142,11 @@ I4).
 - **A room without one.** The owner may run no etiquette bot; the
   operator role is still there, held by the owner by default.
 - **Capabilities and modes.** Each role is a set of capabilities:
-  read, post, link, write pins, kick, bar, set read only, configure
-  roles. The owner's configuration grants them; Cairn checks every act
-  against them. Read only (Q17) is the post capability withheld: for
-  one player, as IRC's quiet, or for the whole room as a mode, as
-  IRC's +m, leaving posting to the roles the owner names.
+  read, post, link, claim, kick, bar, set read only, hide. The
+  owner's configuration grants them; Cairn checks every act against
+  them. Read only (Q17) makes a player a viewer: for one player, as
+  IRC's quiet, or for the whole room as a mode, as IRC's +m, leaving
+  posting to the roles the owner names.
 
 ### What stays for the bot
 

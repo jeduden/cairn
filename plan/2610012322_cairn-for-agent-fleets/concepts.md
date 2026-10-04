@@ -28,16 +28,16 @@ Cairn applies those grants; it never grants trust itself.
 Each stands alone: it can exist, be created and be removed without
 any other, and it says nothing about the others.
 
-| Concept     | Kind    | What it is, and nothing more                                                           | Owner            |
-| ----------- | ------- | -------------------------------------------------------------------------------------- | ---------------- |
-| Player      | compute | A person, or an agent session in a harness                                             | itself           |
-| Workspace   | data    | Where code changes: a branch and its worktrees (the SRS lane, narrowed)                | a person         |
-| Room        | data    | A conversation, and the pins every agent in it follows; its first pin is its intent    | a person         |
-| Rule set    | data    | A person's rules for their agents: all of them, or one                                 | a person         |
-| Trust grant | data    | A person's explicit trust in a poster, for their own agents: in one room or everywhere | a person         |
-| Role        | data    | A named set of permissions in a room: owner, operator, etiquette bot, participant      | the room's owner |
-| Grant       | data    | Authority to delegate: which agents, which targets, how much, until when               | a person         |
-| Link        | data    | An address plus a range: text, lines or an image region                                | its writer       |
+| Concept     | Kind    | What it is, and nothing more                                                                       | Owner            |
+| ----------- | ------- | -------------------------------------------------------------------------------------------------- | ---------------- |
+| Player      | compute | A person, or an agent session in a harness                                                         | itself           |
+| Workspace   | data    | Where code changes: a branch and its worktrees (the SRS lane, narrowed)                            | a person         |
+| Room        | data    | A conversation, and the pins every agent in it follows; its first pin is its intent                | a person         |
+| Rule set    | data    | A person's rules for their agents: all of them, or one                                             | a person         |
+| Trust grant | data    | A person's explicit trust in a poster, for their own agents: in one room or everywhere             | a person         |
+| Role        | data    | A named set of capabilities in a room: viewer, participant, operator, etiquette or facilitator bot | the room's owner |
+| Grant       | data    | Authority to delegate: which agents, which targets, how much, until when                           | a person         |
+| Link        | data    | An address plus a range: text, lines or an image region                                            | its writer       |
 
 Pins are rules: for agents to follow, for people to read and adjust.
 There are two kinds, set by the stakeholder: a person's rules for
@@ -110,8 +110,9 @@ nothing. When a harness session joins a room, Cairn's tools do this:
 
 A room has participants. A participant is a player present in a room:
 a person, or an agent session joined through its harness, under the
-participant id that joining returns. Roles (owner, operator,
-etiquette bot, participant) are held by participants.
+participant id that joining returns. Roles (viewer, participant,
+operator, etiquette or facilitator bot) are held by participants; the
+owner stands beside them.
 
 ## Bindings compose them
 
@@ -248,6 +249,7 @@ As information read through a tool, never pushed:
 | Q21 | Who may write a claim?                     | A player, about itself only; the room's other pins stay the owner's                                                                                               |
 | Q22 | What may a notice contain?                 | A notice is a message kind. Every room message is untrusted unless the agent's person explicitly trusts its poster; Cairn is a set of tools, not an authority     |
 | Q23 | How is a harness known in a room?          | Joining gives it a participant id; any harness can join, and its messages and links are stamped with that id                                                      |
+| Q24 | Which roles does a room have?              | Viewer, participant, operator (always there), etiquette or facilitator bot (optional); the owner stands beside them                                               |
 
 Q4, Q5 and Q7 follow from the split: a session may be in any number of
 rooms; a plain session in no room follows its person's rules for
