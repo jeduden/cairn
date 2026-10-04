@@ -10,6 +10,18 @@ component notes the [options](options.md) list; where a rating rests on
 a measurement, the note it comes from says so, and the rest wait for
 the bake-off at the end.
 
+## Decision so far
+
+On 4 October 2026 the stakeholder chose **Tauri 2 as the app shell**
+on five platforms, with the same page serving the browser when Cairn
+is hosted ([ADR-2610042341][adr-shell], proposed). The browser settled
+it: a web page reaches the browser unchanged, while a UI the core draws
+needs a second UI there ([shells](tauri-vs-xilem.md)). The core
+language stays open between a Rust core in process (D) and a Go node
+as a sidecar (C); the bake-off decides. Options E, F, G, H and I leave
+the field as shells; H and I's lessons (drawn text is never parsed as
+HTML, a C-ABI core) carry into the core's design.
+
 ## Ratings
 
 - **strong**: meets the criterion with maintained parts as they are.
@@ -233,3 +245,4 @@ parallel lanes, and the numbers decide:
   the ten; the running-app preview; the kernel spike S5 in three arms.
 
 [gh-9932]: https://github.com/ghostty-org/ghostty/issues/9932
+[adr-shell]: ../../../docs/adr/ADR-2610042341-app-shell-tauri.md
