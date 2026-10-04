@@ -11,49 +11,50 @@ Cairn changes. Items marked "next" are P2 in the SRS.
 
 ### Cairn: from intent to outcome
 
-State what you want. Judge what you got. Correct course. Then do it
-together.
+State what you want. Judge what you got. Correct course.
 
-**You know this.** You give Claude Code a task. Hours later you get a
-diff and "all tests pass". In between, your intent slipped: compaction
-dropped your rule, the agent drifted, and the harnesses in your other
-terminals each made their own calls. To judge the outcome you open the
-app, the diff and the logs in separate windows, and still cannot tell
-how it got there. When it is wrong, you open a new session and explain
-it all again.
+**You know this.** You run Claude Code in five worktrees. One waits on
+a permission prompt in a tab you cannot find. Another lost your rule to
+compaction ("never push to main") and needs telling again. A third
+reports "all tests pass". To judge it you open the app, the diff and
+the logs in separate windows, and still cannot tell how it got there,
+or whether it did what you asked. Two of them edited the same file.
+When one is wrong, you start a new session and explain it all again.
 
-**With Cairn.** Install the plugin and keep working in your harness.
-Every branch becomes a lane, recorded on your machine with secrets
-redacted. Open the lane view in your browser: the chat on one side,
-the outcome right next to it, updating live as the harness works. The
-running app from your dev server, the code as a diff, the files it
-produced, the test runs. Your intent sits on top.
+**With Cairn.** Install the plugin: it shows every settings change
+before making it, removes cleanly, and never slows or blocks your
+harness. Keep working as before. Every branch becomes a lane, recorded
+on your machine with secrets redacted. Open the lane view in your
+browser, or stay in the terminal; everything works from both.
 
-1. **State your intent once.** Type `/intent` in your harness or the
-   lane view: the goal and what done means. It comes back word for word
-   after every compaction and goes with every task handed to a
-   subagent.
-2. **Watch every harness.** Each harness is a tile: working, done, or
-   waiting on you. Answer its prompt there instead of hunting for the
-   terminal.
-3. **Judge the outcome where you see it.** Click through the running
-   app, read the diff, open the file, all beside the chat that made
-   them. Each criterion shows its evidence: a test run the harness
-   recorded, or only the agent's word. Mark it met or needs changes;
-   Cairn never decides for you.
-4. **Correct course in place.** Type the correction in the chat beside
-   the outcome, tied to the criterion you judged, and watch the outcome
-   change. Or sharpen the intent, or rewind to an earlier point and
-   retry.
+1. **Say it once.** `/intent` states the goal and what done means;
+   `/pin` keeps your rules. Both come back word for word after every
+   compaction and go with every task handed to a subagent.
+2. **See every harness.** One tile per session: working, done, or
+   waiting on you, the waiting ones first. Answer the prompt from the
+   tile. Cairn warns you when two lanes touch the same file.
+3. **Judge the outcome beside the chat.** The chat on one side; on the
+   other, live as it works: the running app from that worktree's dev
+   server, the diff, the files it produced, the test runs. Each
+   criterion shows its evidence: a test run the harness recorded, or
+   only the agent's word. You mark it met or needs changes; Cairn never
+   decides for you.
+4. **Correct course in place.** Type the correction beside the
+   criterion and watch the outcome change. Or sharpen the intent, or
+   retry from an earlier checkpoint in a fresh worktree, with the first
+   attempt kept beside it.
+5. **Catch up.** Back after lunch or the weekend? One page says what
+   changed, what failed and what waits, each line linked to the record.
+   If capture failed or part of the record is missing, it says so.
 
-**Then bring others in (next).** Share a lane peer to peer, with no
-server. Teammates see the same chat and the same live outcome, and
-judge it, each verdict under their own name. Their corrections reach
-your harness only when you pass them on.
+**Yours alone.** Cairn connects to nothing. The lane view listens only
+on localhost, for your browser. Your agent gets its history only when
+it asks, marked untrusted, never as a command.
 
-**Safe by default.** Nothing leaves your machine except what your
-harness looks up for its own model call. History returns only when the
-agent asks, marked untrusted, never as a command.
+**Next: bring others in.** Turn on sharing and work a lane peer to
+peer, with no server. Teammates judge the same outcome under their own
+names; their corrections reach your harness only when you pass them
+on, marked as theirs.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
@@ -193,6 +194,11 @@ what checked them; rule levels per action shape the owner's control.
 11. The lane view leads: chat and live outcome side by side (the
     running app, the diff, the files, the test runs), and the person
     judges and corrects right there.
+12. After the blind review ([round 8](persona-review/round-8/README.md)):
+    the pitch is for the developer alone. Fleet framing, pinned rules
+    beside the intent, catch-up, the install contract, the terminal as
+    an equal surface, overlap warnings, a clear retry, and a plain
+    statement of what Cairn connects to.
 
 ## Open before the SRS change
 
