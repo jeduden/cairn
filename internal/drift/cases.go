@@ -208,6 +208,14 @@ func gateCases() []Case {
 			Want:  "ENG-29 serves no persona in Appendix C",
 		},
 		{
+			Name:   "Appendix C listing an id that is no requirement",
+			Guards: "TestAppendixCCoversEveryRequirement",
+			Edit: Edit{Op: Replace, File: "docs/srs/appendix-c-persona-coverage.md",
+				Old: "SEC-17, ENG-29", New: "SEC-17, ENG-29, ENG-98"},
+			Check: GoTest("./internal/srs", "TestAppendixCCoversEveryRequirement"),
+			Want:  "Appendix C lists ENG-98, which is no requirement",
+		},
+		{
 			Name:   "Appendix C naming a persona §2.5 does not define",
 			Guards: "TestAppendixCCoversEveryRequirement",
 			Edit: Edit{Op: Replace, File: "docs/srs/02-context.md",

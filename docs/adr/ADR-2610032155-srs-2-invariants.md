@@ -283,7 +283,7 @@ changes they control.
 - A per-act hardware presence check as the mandatory guard against an
   unsandboxed agent; the persona reviews showed no software-only check
   holds, and the stakeholder chose the sandbox with recorded risk
-  acceptance (OQ-29).
+  acceptance (OWN-22).
 
 ## Consequences
 

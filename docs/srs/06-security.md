@@ -1,9 +1,10 @@
 ---
 title: "6. Security"
 summary: >-
-  Threat model (assets, actors, threats T1–T25 and their controls, and
-  the residual risks R1–R7 only a sandbox removes), the normative
-  security requirements SEC-01..31, and the boundary register.
+  Threat model (assets, actors, threats T1–T12 and T14–T25 with their
+  controls, and the residual risks R1–R7 only a sandbox removes), the
+  normative security requirements SEC-01..31, and the boundary
+  register.
 ---
 # 6. Security
 
