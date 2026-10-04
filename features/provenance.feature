@@ -46,8 +46,14 @@ Feature: Provenance and trust (PRV)
       | interactive | a writer of this node                                                                  | user             | trusted   | reports nothing                                           |
       | automation  | a writer of this node                                                                  | user             | untrusted | reports nothing                                           |
       | interactive | a writer of this node                                                                  | assistant        | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                  | tool_call        | untrusted | reports nothing                                           |
       | interactive | a writer of this node                                                                  | tool_result:Bash | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                  | web              | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                  | mcp:github       | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                  | file             | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                  | subagent_result  | untrusted | reports nothing                                           |
       | interactive | a writer of this node                                                                  | harness_text     | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                  | unparsed         | untrusted | reports nothing                                           |
       | interactive | a writer of this node                                                                  | post             | untrusted | reports nothing                                           |
       | interactive | a writer of this node, from a transcript the hooks did not report                      | user             | untrusted | reports nothing                                           |
       | interactive | a key on another node chaining to this tenant's owner key within its scope             | operator         | trusted   | reports nothing                                           |

@@ -2,6 +2,7 @@ package srs
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 )
@@ -69,7 +70,8 @@ func splitPersonas(cell string) ([]string, error) {
 // PersonaAgents reads §2.5's persona table in body — the table whose
 // header leads with "#", "Persona", "Agent" — keyed by persona, each
 // value the agent that encodes it under .claude/agents. A persona
-// listed twice is reported with its line.
+// listed twice, or an agent two personas name, is reported with its
+// line.
 func PersonaAgents(body []byte) (map[string]string, error) {
 	for _, tbl := range Tables(body) {
 		if len(tbl.Header) < 3 || tbl.Header[0] != "#" || tbl.Header[1] != "Persona" || tbl.Header[2] != "Agent" {
@@ -77,21 +79,35 @@ func PersonaAgents(body []byte) (map[string]string, error) {
 		}
 		out := map[string]string{}
 		for _, row := range tbl.Rows {
-			if len(row.Cells) < 3 || !personaPattern.MatchString(row.Cells[0]) {
-				return nil, fmt.Errorf("srs: line %d: malformed persona row", row.Line)
+			persona, agent, err := personaRow(row)
+			if err != nil {
+				return nil, err
 			}
-			m := agentCell.FindStringSubmatch(row.Cells[2])
-			if m == nil {
-				return nil, fmt.Errorf("srs: line %d: malformed persona row", row.Line)
+			if _, dup := out[persona]; dup {
+				return nil, fmt.Errorf("srs: line %d: %s listed twice", row.Line, persona)
 			}
-			if _, dup := out[row.Cells[0]]; dup {
-				return nil, fmt.Errorf("srs: line %d: %s listed twice", row.Line, row.Cells[0])
+			if slices.Contains(slices.Collect(maps.Values(out)), agent) {
+				return nil, fmt.Errorf("srs: line %d: %s named twice", row.Line, agent)
 			}
-			out[row.Cells[0]] = m[1]
+			out[persona] = agent
 		}
 
 		return out, nil
 	}
 
 	return nil, fmt.Errorf("srs: no persona table")
+}
+
+// personaRow reads one §2.5 row: its persona, U1 to U9, and the agent
+// its backticked Agent cell names.
+func personaRow(row Row) (persona, agent string, err error) {
+	if len(row.Cells) < 3 || !personaPattern.MatchString(row.Cells[0]) {
+		return "", "", fmt.Errorf("srs: line %d: malformed persona row", row.Line)
+	}
+	m := agentCell.FindStringSubmatch(row.Cells[2])
+	if m == nil {
+		return "", "", fmt.Errorf("srs: line %d: malformed persona row", row.Line)
+	}
+
+	return row.Cells[0], m[1], nil
 }

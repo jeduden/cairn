@@ -175,10 +175,10 @@ Feature: Security (SEC)
 
   @SEC-15 @P0 @I4 @pending
   Scenario: no telemetry, remote crash reporting, or update check ships
-    Given the import graph and source of the shipped executable
+    Given the import graph and source of every component, whether the components ship in one executable or several
     When the CI telemetry check runs
     Then no telemetry, crash-reporting, or update-check code or dependency is found
-    And a full test suite run under a network-deny sandbox records no connection attempt
+    And a full test suite run with each component under its boundary's sandbox records no connection attempt outside that boundary
 
   @SEC-16 @P0 @I6 @I9 @pending
   Scenario: a hook input that fails schema validation is rejected fail-open and audited

@@ -50,10 +50,10 @@ Feature: Administration and lifecycle (ADM)
       | a project ".cairn.toml" that turns on the lane view with no widening act recording its digest   | the lane-view component | stays off                                                                                     |
       | a project ".cairn.toml" that turns on the lane view and a widening act that recorded its digest | the lane-view component | starts                                                                                        |
       | a managed policy that turns on the lane view and a tenant config that turns it off              | the lane-view component | starts                                                                                        |
-      | a tenant config.toml containing "recal.max_k = 10"                                              | "cairn status"          | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
-      | a tenant config.toml containing "recall.max_k = 'ten'"                                          | "cairn status"          | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
-      | a tenant config.toml containing "recall.max_k = 500"                                            | "cairn status"          | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
-      | a tenant config.toml containing "payload_threshold_bytes = -1"                                  | "cairn status"          | exits 2, and the error names the key "payload_threshold_bytes" and the problem "out of range" |
+      | a tenant config.toml containing "recal.max_k = 10"                                              | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
+      | a tenant config.toml containing "recall.max_k = 'ten'"                                          | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
+      | a tenant config.toml containing "recall.max_k = 500"                                            | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
+      | a tenant config.toml containing "payload_threshold_bytes = -1"                                  | cairn status            | exits 2, and the error names the key "payload_threshold_bytes" and the problem "out of range" |
 
   @ADM-05 @P0 @I1 @pending
   Scenario: segment and schema migrations run forward after a verified backup and newer versions are refused
@@ -64,6 +64,10 @@ Feature: Administration and lifecycle (ADM)
     Then a verified backup with its audit chain exists from before the migration
     And the segments and derived state report the current version
     And the newer segment is refused, named in the output and left unchanged
+    Given derived state whose schema version is newer than this node supports
+    When the operator runs "cairn status"
+    Then the command exits 3
+    And the derived state is unchanged
 
   @ADM-06 @P0 @I1 @I6 @pending
   Scenario: backup and restore keep every later removal and never reuse a writer's log
@@ -73,6 +77,7 @@ Feature: Administration and lifecycle (ADM)
     When the owner runs "cairn restore" as a widening act
     Then the backup held every segment sealed fresh, the payload store, derived state and the audit log with its chain, no writer or device key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was restored
+    And every event and payload outside session "session-a" recalled before the backup is recalled identically
     And session "session-a" stays purged and the ended pin stays ended
     And each restored local writer is followed by a new audited writer, and no restored writer's log gains an event or reuses a seq
 
@@ -100,7 +105,7 @@ Feature: Administration and lifecycle (ADM)
   @ADM-08 @P0 @I10 @pending
   Scenario: rebuild regenerates derived state byte-identically whatever order the logs arrived in
     Given an isolated Cairn home
-    And two homes with the same node keys holding the same writer logs with pins, quarantine and landmarks, received in opposite orders
+    And a second isolated Cairn home with the same node keys, the two holding the same writer logs with pins, quarantine and landmarks, received in opposite orders
     When the operator runs "cairn rebuild" in each home
     Then the command exits 0 in each home
     And "cairn verify" confirms every projection is byte-identical to its state before rebuild

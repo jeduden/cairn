@@ -87,6 +87,9 @@ func TestPersonaAgentsRejectsBadRows(t *testing.T) {
 	_, err = PersonaAgents([]byte("| # | Persona | Agent |\n|---|---|---|\n" +
 		"| U1 | p | `persona-a` |\n| U1 | p | `persona-a` |\n"))
 	assert.ErrorContains(t, err, "U1 listed twice")
+	_, err = PersonaAgents([]byte("| # | Persona | Agent |\n|---|---|---|\n" +
+		"| U1 | p | `persona-a` |\n| U2 | q | `persona-a` |\n"))
+	assert.ErrorContains(t, err, "line 4: persona-a named twice")
 }
 
 // TestAppendixCCoversEveryRequirement keeps Appendix C honest: every
@@ -143,4 +146,17 @@ func TestPersonasMatchTheAgents(t *testing.T) {
 	}
 	slices.Sort(onDisk)
 	assert.Equal(t, slices.Sorted(maps.Values(named)), onDisk, "§2.5 personas and .claude/agents/persona-*.md")
+}
+
+func TestPersonaRowReadsOneRow(t *testing.T) {
+	persona, agent, err := personaRow(Row{Line: 3, Cells: []string{"U2", "p", "`persona-b`"}})
+
+	require.NoError(t, err)
+	assert.Equal(t, "U2", persona)
+	assert.Equal(t, "persona-b", agent)
+
+	_, _, err = personaRow(Row{Line: 4, Cells: []string{"U2", "p"}})
+	assert.EqualError(t, err, "srs: line 4: malformed persona row")
+	_, _, err = personaRow(Row{Line: 5, Cells: []string{"U2", "p", "persona-b"}})
+	assert.EqualError(t, err, "srs: line 5: malformed persona row")
 }
