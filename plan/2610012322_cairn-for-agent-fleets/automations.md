@@ -38,19 +38,21 @@ stamped by Cairn with the source's id.
 A merge "the old way", on the forge, is seen twice and agrees: the
 bridge posts the forge's event, and the local fetch derives the
 landed commit and its room's branch from the record without any network.
+The commit's `Cairn-Room:` trailer names the room even after a squash,
+but only as an assertion; the rule acts on the record's proof.
 
 ### 2. Automation rules are a person's grants
 
 An automation is data a person records as their own act: a rule plus
 a grant, much like a delegation grant (OWN-23).
 
-| Field    | Meaning                                                                                                                                                                        |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Trigger  | A room, a source and an event kind, matched on structural fields only (kind, label, branch, schedule), never on text                                                           |
-| Action   | One from a closed set: post a notice, open a room from a template, start a session on a new branch of the room, run a recorded command, close a room or mark an outcome landed |
-| Template | Fixed text naming ids and links, never the event's own text                                                                                                                    |
-| Budget   | Tokens, sessions and how many firings, plus a cap on concurrent runs                                                                                                           |
-| Expiry   | By count or the person's revocation, never by clock in projections                                                                                                             |
+| Field    | Meaning                                                                                                                                                          |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Trigger  | A room, a source and an event kind, matched on structural fields only (kind, label, branch, schedule), never on text                                             |
+| Action   | One from a closed set: post a notice, open a room from a template, start a session on a new branch of the room, run a recorded command, close a branch or a room |
+| Template | Fixed text naming ids and links, never the event's own text                                                                                                      |
+| Budget   | Tokens, sessions and how many firings, plus a cap on concurrent runs                                                                                             |
+| Expiry   | By count or the person's revocation, never by clock in projections                                                                                               |
 
 ### 3. `cairn run` fires them
 
@@ -70,7 +72,7 @@ first.
 | ----------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Nightly dependency update     | Timer: "nightly 02:00" in room "deps"        | Start a session on a fresh branch of the room from the default branch, template "Nightly run for room r-…; read the pins" | The agent works against the room's intent; by morning its outcome waits for a verdict, linked to its evidence       |
 | GitHub issue labelled "agent" | Bridge: issue labelled, link to its snapshot | Open a room from a template whose intent pin reads "Resolve issue <link>", start a session serving it                     | The issue's text stays untrusted; the agent reads it on request; the person edits the intent when needed            |
-| Pull request merged on GitHub | Bridge: merged; local fetch: commit landed   | Mark the room's outcome landed, post a cross-room notice to rooms that depend on it, retire the branch                    | Dependent rooms see a notice with a link to the diff; nothing instructs their agents unless their people pass it on |
+| Pull request merged on GitHub | Bridge: merged; local fetch: commit landed   | Post in the room that the attempt landed, post a cross-room notice to rooms that depend on it, close the branch           | Dependent rooms see a notice with a link to the diff; nothing instructs their agents unless their people pass it on |
 
 ## What never happens
 

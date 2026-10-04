@@ -25,9 +25,10 @@ holds everything and nothing merges.
 
 ### How the decided model avoids it
 
-1. **Every fact has exactly one writer.** The room's pins are written
-   only by the room's owner. A player's membership is written only by
-   that player's own person. No two people ever write the same fact,
+1. **Every fact has exactly one writer.** Each pin is written by its
+   author alone, and the intent by the owner; unpins, like bars,
+   combine by "any unpin wins". A player's membership is written only
+   by that player's own person. No two people ever write the same fact,
    so no merge ever decides between two people.
 2. **Keeping a player out is the authorisation layer's job (Q13).**
    A room's owner assigns roles; a role carries permissions; an
@@ -114,16 +115,16 @@ fill them (Q16). Cairn holds the roles and enforces their permissions
 deterministically; it never judges and never calls a model (CMP-09,
 I4).
 
-| Role                         | Always there | Capabilities                                                                                                | Filled by                                                     |
-| ---------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Viewer                       | no           | Read                                                                                                        | A player its person adds, or one an operator set to read only |
-| Participant                  | yes          | Read, post, link, claim; work and present on the branches it is given; a person may also judge              | A player its person adds                                      |
-| Operator                     | yes          | A participant's, plus open a branch, kick, bar, set read only (make a viewer), hide a message from the view | The owner, unless the owner assigns others                    |
-| Etiquette or facilitator bot | no           | An operator's, plus posting findings against the pins; never judge or land                                  | A bot the owner provides                                      |
+| Role                         | Always there | Capabilities                                                                                                                                        | Filled by                                                     |
+| ---------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Viewer                       | no           | Read                                                                                                                                                | A player its person adds, or one an operator set to read only |
+| Participant                  | yes          | Read, post, link, pin and unpin its own pins; work on the branches it is given; present in the outcome window                                       | A player its person adds                                      |
+| Operator                     | yes          | A participant's, plus open and close branches, unpin any pin but the intent, kick, bar, set read only (make a viewer), hide a message from the view | The owner, unless the owner assigns others                    |
+| Etiquette or facilitator bot | no           | An operator's, plus posting findings against the pins                                                                                               | A bot the owner provides                                      |
 
 The owner stands beside the roles: the owner writes pins, configures
-which roles the room has and who holds them, lands and moves
-branches, names a successor and hands the room over. The full
+which roles the room has and who holds them, names a successor and
+hands the room over. The full
 capability list, extended to the room's code, is in the
 [concepts](concepts.md#room-capabilities-extended-to-code).
 
@@ -144,8 +145,8 @@ capability list, extended to the room's code, is in the
 - **A room without one.** The owner may run no etiquette bot; the
   operator role is still there, held by the owner by default.
 - **Capabilities and modes.** Each role is a set of capabilities:
-  read, post, link, claim, work, branch, present, judge, land, move,
-  kick, bar, set read only, hide. The
+  read, post, link, pin and unpin, work, branch, present, kick, bar,
+  set read only, hide. The
   owner's configuration grants them; Cairn checks every act against
   them. Read only (Q17) makes a player a viewer: for one player, as
   IRC's quiet, or for the whole room as a mode, as IRC's +m, leaving
@@ -154,7 +155,7 @@ capability list, extended to the room's code, is in the
 ### What stays for the bot
 
 - **Errors.** A classifier misses things and flags innocent work.
-  Findings are claims, never verdicts; people judge.
+  Findings are a classifier's opinion; people decide.
 - **The bot as a target.** It reads untrusted content too, so it can
   be swayed into kicking or barring. Its powers stay inside the room:
   it can remove players, never instruct them, and the owner can undo
@@ -183,8 +184,9 @@ room model takes:
 - **Joining** shows the room's pins, intent first, each with its author
   and time, then the roster with roles, as IRC sends the topic and the
   participant list.
-- **Pin edits** by anyone but the owner are refused by the
-  authorisation layer, not reverted afterwards (IRC's +t, not
+- **Pin edits** by anyone but the pin's author, and edits of the
+  intent by anyone but the owner, are refused by the authorisation
+  layer, not reverted afterwards (IRC's +t, not
   TOPICLOCK).
 - **Authority lives in the owner's configuration**, not in who is
   present, as ChanServ's access lists replaced whoever held ops.
@@ -209,16 +211,16 @@ room model takes:
 
 ## Decisions for the stakeholder
 
-| #   | Question                                    | Options                                                                                                                                                                  | Recommendation |
-| --- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
-| Q12 | Do room pins instruct agents?               | Decided: no. They are information; a room bot enforces them                                                                                                              | —              |
-| Q13 | How does an owner keep a player out?        | Decided: the authorisation layer provides it; operators kick and bar                                                                                                     | —              |
-| Q14 | Can room pins widen what an agent may do?   | Moot: room pins are information and grant nothing                                                                                                                        | —              |
-| Q15 | What may a room bot do beyond posting?      | Decided: also bar and kick players                                                                                                                                       | —              |
-| Q16 | Does Cairn ship a room bot?                 | Decided: rooms have roles; the owner configures them and provides the players, an etiquette bot among them, optional; the operator role is always there                  | —              |
-| Q17 | Is there a read-only restriction?           | Decided: yes. Read only is a capability the owner's authorisation layer withholds, room-wide as a mode or for one player                                                 | —              |
-| Q18 | What does the etiquette bot do?             | Decided: it is an operator and enforces: it kicks, bars and sets read only itself, each act audited with its finding and undoable by the owner                           | —              |
-| Q19 | Do messages carry a kind?                   | Likely; needs its own design phase before the requirements                                                                                                               | —              |
-| Q20 | Can an agent claim work or paths in a room? | Yes, as information, like a pin: a claim says who is working on what and is not a lock; the etiquette bot may enforce it. A player writes claims about itself only (Q21) | —              |
+| #   | Question                                    | Options                                                                                                                                                 | Recommendation |
+| --- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| Q12 | Do room pins instruct agents?               | Decided: no. They are information; a room bot enforces them                                                                                             | —              |
+| Q13 | How does an owner keep a player out?        | Decided: the authorisation layer provides it; operators kick and bar                                                                                    | —              |
+| Q14 | Can room pins widen what an agent may do?   | Moot: room pins are information and grant nothing                                                                                                       | —              |
+| Q15 | What may a room bot do beyond posting?      | Decided: also bar and kick players                                                                                                                      | —              |
+| Q16 | Does Cairn ship a room bot?                 | Decided: rooms have roles; the owner configures them and provides the players, an etiquette bot among them, optional; the operator role is always there | —              |
+| Q17 | Is there a read-only restriction?           | Decided: yes. Read only is a capability the owner's authorisation layer withholds, room-wide as a mode or for one player                                | —              |
+| Q18 | What does the etiquette bot do?             | Decided: it is an operator and enforces: it kicks, bars and sets read only itself, each act audited with its finding and undoable by the owner          | —              |
+| Q19 | Do messages carry a kind?                   | Likely; needs its own design phase before the requirements                                                                                              | —              |
+| Q20 | Can an agent claim work or paths in a room? | Yes, as a pin about itself, not a lock; the etiquette bot may enforce it. Claim is no capability of its own (concepts Q30)                              | —              |
 
 [hydra]: https://matrix.org/blog/2025/08/project-hydra-improving-state-res/

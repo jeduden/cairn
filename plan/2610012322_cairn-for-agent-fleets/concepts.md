@@ -62,7 +62,7 @@ nothing. When a harness session joins a room, Cairn's tools do this:
 4. **Verify and check.** On every room act the harness presents its
    participant id and signs with the participant key. Cairn verifies
    the signature against the key the id was derived from, stamps the
-   post (message, link, claim) with that id, and checks the act
+   post (message, link, pin) with that id, and checks the act
    against the capabilities the owner configured.
 5. **Deliver.** Cairn writes into the session's context only its
    person's words, the messages of posters its person trusts, and
@@ -90,8 +90,8 @@ nothing. When a harness session joins a room, Cairn's tools do this:
   leak or misuse it. A harness that cannot hold state gets an adapter
   from Cairn that holds it on the harness's behalf.
 - **It sees who else is there.** Other participants appear by id and
-  kind (person, agent, bot), attested by Cairn, with what each has
-  claimed.
+  kind (person, agent, bot), attested by Cairn, with the pins each has
+  written.
 - **Restarts are the harness's choice.** A resumed session that kept
   its key and id continues as the same participant. A new session
   joins anew and gets a new id, linked to the same person, so the room
@@ -117,28 +117,49 @@ owner stands beside them.
 
 Merging the workspace into the room extends the room's capabilities
 from conversation to code. Each role is a set of them, and Cairn
-checks every act against the owner's configuration.
+checks every act against the owner's configuration. A room produces
+two things a person keeps: commits, which git lands, and pins, which
+stay in the room. Cairn records no verdicts.
 
-| Capability                 | Lets a participant                                                        |
-| -------------------------- | ------------------------------------------------------------------------- |
-| read                       | Read the conversation, pins, branches, diffs, results and evidence        |
-| post, link                 | Post messages and links to marked ranges                                  |
-| claim                      | Claim work or paths, about itself                                         |
-| work                       | Work on a branch of the room it was given: edit, run commands, checkpoint |
-| branch                     | Open a new branch in the room, for a new attempt                          |
-| present                    | Present an outcome of its branch against the intent                       |
-| judge                      | Record a verdict on an outcome; people only, never agents or bots         |
-| land                       | Mark a branch ready, land it, retire it                                   |
-| move                       | Move a branch into or out of the room                                     |
-| kick, bar, read only, hide | Moderate participants and messages                                        |
+| Capability                 | Lets a participant                                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| read                       | Read the conversation, pins, branches, diffs, results and evidence                                         |
+| post, link                 | Post messages and links to marked ranges                                                                   |
+| pin, unpin                 | Pin information to the room, a claim of work among it, or withdraw a pin                                   |
+| work                       | Work on a branch of the room it was given: edit, run commands, checkpoint, commit                          |
+| branch                     | Open a branch in the room for a new attempt, or close one                                                  |
+| present                    | Control the room's outcome window: what it shows (a dev server, an artifact, a file followed live, a diff) |
+| kick, bar, read only, hide | Moderate participants and messages                                                                         |
 
-| Role                         | Capabilities                                                                                   |
-| ---------------------------- | ---------------------------------------------------------------------------------------------- |
-| Viewer                       | read                                                                                           |
-| Participant                  | read, post, link, claim; work and present on the branches it is given; a person may also judge |
-| Operator (always there)      | a participant's, plus branch, kick, bar, read only, hide                                       |
-| Etiquette or facilitator bot | an operator's, plus posting findings against the pins; never judge or land                     |
-| Owner (beside the roles)     | everything, plus pins, roles, land, move, successor and handover                               |
+| Role                         | Capabilities                                                                            |
+| ---------------------------- | --------------------------------------------------------------------------------------- |
+| Viewer                       | read                                                                                    |
+| Participant                  | read, post, link, pin and unpin its own pins; work on the branches it is given; present |
+| Operator (always there)      | a participant's, plus branch, unpin any pin but the intent, kick, bar, read only, hide  |
+| Etiquette or facilitator bot | an operator's, plus posting findings against the pins                                   |
+| Owner (beside the roles)     | everything, plus the intent, roles, successor and handover                              |
+
+### Terms
+
+- **Attempt.** One branch in a room: one try at the room's intent,
+  from a base commit, worked by the participants given that branch.
+  Its outcome is what it presents in the outcome window and the
+  commits on its branch. It ends when its commits land or its branch
+  is closed. Parallel attempts are several branches in one room,
+  measured against the same intent; Cairn picks none of them.
+- **Pin.** Information in the room, written by one participant, its
+  author. A claim ("p-4c1e is on src/auth") is a pin about its author.
+  Only the author edits a pin. Unpinning is a separate act: the author
+  may, and so may an operator, except the intent, which only the owner
+  pins or unpins. Unpins combine by "any unpin wins", as bars do, so a
+  late sync can only withdraw, never revive; pinning again writes a
+  new pin.
+- **Outcome window.** The room's shared view of the work, beside the
+  conversation. A participant with present chooses what it shows; the
+  latest present in the room's record wins. Any viewer may instead
+  follow one player in their own view, which needs no capability.
+- **Judging.** A person judges by looking, as today, and Cairn records
+  only what follows: a commit, or a pin that corrects course.
 
 ## Bindings compose them
 
@@ -146,15 +167,15 @@ A binding is a recorded, versioned fact that relates two concepts. It
 is data, written by a person or derived from structural events.
 Bindings are the only way concepts affect each other.
 
-| Binding        | Relates                   | Means                                                                                                               | Written by                         |
-| -------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| works on       | player → branch in a room | This agent session edits this branch of the room                                                                    | structural (session start)         |
-| participant in | player → room             | This player reads, posts and is addressed in this room under the participant id that joining returns to its harness | the player's person, or structural |
-| applies to     | rule set → agents         | All of the person's agents, or one agent                                                                            | the rule set's person              |
-| trusts         | trust grant → poster      | This person's agents take this poster's messages as instructions                                                    | the agents' person                 |
-| holds          | player → role in a room   | This player fills this role; its permissions follow from the role                                                   | the room's owner                   |
-| delegated by   | player → player           | This agent works for that one, under a grant                                                                        | structural (delegation record)     |
-| linked from    | link → message            | This message points at that range                                                                                   | the message's writer               |
+| Binding        | Relates                   | Means                                                                                                               | Written by                                  |
+| -------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| works on       | player → branch in a room | This agent edits this branch of the room                                                                            | structural (an edit recorded on the branch) |
+| participant in | player → room             | This player reads, posts and is addressed in this room under the participant id that joining returns to its harness | the player's person, or structural          |
+| applies to     | rule set → agents         | All of the person's agents, or one agent                                                                            | the rule set's person                       |
+| trusts         | trust grant → poster      | This person's agents take this poster's messages as instructions                                                    | the agents' person                          |
+| holds          | player → role in a room   | This player fills this role; its permissions follow from the role                                                   | the room's owner                            |
+| delegated by   | player → player           | This agent works for that one, under a grant                                                                        | structural (delegation record)              |
+| linked from    | link → message            | This message points at that range                                                                                   | the message's writer                        |
 
 ## Three composition rules
 
@@ -171,9 +192,10 @@ Everything a player gets is derived from the bindings, deterministically
    untrusted envelope with the author's key. Access to a room is
    access to its pins; trusting the room's owner or operator is what
    turns its pins into instructions for that person's agents.
-2. **Work is judged against the room's intent.** Every branch in a
-   room is presented and judged against its first pin. Agents present
-   their outcome against it; people judge.
+2. **Work is measured against the room's intent.** Every attempt in a
+   room presents its outcome against the first pin. A person's
+   judgement leaves the room as a commit or as a pin; Cairn records no
+   verdict.
 3. **Messages reach a player** only through membership, and only when
    it reads them: data, never instructions. A cross-room message is a
    message whose writer is a participant in the sending room, addressed to
@@ -189,7 +211,7 @@ Roles turn "who may do what in a room" into configuration. The owner
 defines which roles a room has and who holds them; each role carries a
 fixed set of permissions; Cairn checks every room act against them,
 deterministically. Roles are sets of capabilities (read, post, link,
-write pins, kick, bar, set read only, configure roles); read only is a
+pin and unpin, work, branch, present, kick, bar, set read only); read only is a
 capability withheld, for one player or the whole room as a mode (Q17).
 The operator role always exists and the owner holds
 it unless they assign it; an etiquette bot is an optional role holding
@@ -202,13 +224,13 @@ From the survey of [agent message boards][boards].
 
 ### To people
 
-- **Per player:** last activity, what it claims, time since its last
+- **Per player:** last activity, what it has pinned, time since its last
   progress, and whether it looks stalled.
 - **Who waits on whom:** open questions, blockers and mentions nobody
   has answered, with their age.
-- **What is waiting on them:** prompts to answer, and outcomes ready to
-  judge, each linking its evidence. An agent's "done" means ready for
-  a verdict, never done.
+- **What is waiting on them:** prompts to answer, and outcomes
+  presented, each linking its evidence. An agent's "done" means ready
+  to look at, never done: a person commits or pins a correction.
 - **Spend:** per player and per thread. No board surveyed shows it.
 - **Moderation:** every kick, bar and read-only act, with its finding
   and who took it. Nothing is moderated silently.
@@ -238,9 +260,9 @@ As information read through a tool, never pushed:
 
 | Use case                                   | Configuration                                                                                                       |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| One agent, one task (today's Cairn)        | The first session on a branch gets a room of its own, with no intent yet; your rule set applies to your agents.     |
+| One agent, one task (today's Cairn)        | No room needed: your rule set applies to your agents; a harness joins a room when its person wants one.             |
 | One agent with a stated goal               | Write the room's first pin: the goal and what done means.                                                           |
-| Five agents, parallel attempts at one goal | One room with five branches, one per agent, their outcomes side by side.                                            |
+| Five agents, parallel attempts at one goal | One room with five attempts, a branch each, presenting in turn in the outcome window.                               |
 | One agent on two goals                     | The agent is a participant in two rooms, each with its own intent and pins.                                         |
 | A chat with no goal                        | A room with participants and no pins.                                                                               |
 | A goal with no chat (batch)                | A room with pins and branches and no messages.                                                                      |
@@ -248,7 +270,7 @@ As information read through a tool, never pushed:
 | Rooms talking                              | A message in room A addressed to room B.                                                                            |
 | Handing work to another room               | A grant naming room B's agents as targets; the task arrives as data marked as from the delegating agent.            |
 | A teammate joins (next)                    | The teammate adds themselves and their agents to the room; their agents follow its pins, as yours do.               |
-| A reviewer                                 | A participant in the room who works on no branch.                                                                   |
+| A reviewer                                 | A participant in the room who works on no branch; their judgement becomes a commit or a pin.                        |
 | A rule only for one agent                  | A rule set that applies to that agent.                                                                              |
 
 ## Stakeholder decisions of 4 October 2026
@@ -261,7 +283,7 @@ As information read through a tool, never pushed:
 | Q6  | Does the intent reach a teammate's agents? | Yes. Access to a room is access to its pins, and the intent is the room's first pin                                                                               |
 | Q8  | A quarantined pin still in context?        | The agents figure it out, possibly with their people. Cairn tells participant agents the pin was withdrawn                                                        |
 | Q9  | Can the owner leave their own room?        | Yes                                                                                                                                                               |
-| Q10 | Who writes room pins and adds players?     | The room's owner writes its pins; only a player's own person adds it to a room                                                                                    |
+| Q10 | Who writes room pins and adds players?     | Pins: holders of the pin capability, each pin by its author alone; the intent by the owner. Players: only a player's own person adds it                           |
 | Q11 | A room whose owner left?                   | Nobody changes its pins until the owner hands the room over; the pins stay as they were                                                                           |
 | Q12 | Do room pins instruct agents?              | No. Room pins are information agents must be aware of; a room bot the owner or operator runs enforces them                                                        |
 | Q13 | How is a player kept out?                  | The authorisation layer: operators kick and bar                                                                                                                   |
@@ -270,21 +292,59 @@ As information read through a tool, never pushed:
 | Q17 | Can a player be read only?                 | Yes: a capability the owner's authorisation layer withholds, for one player or room-wide as a mode                                                                |
 | Q18 | What does the etiquette bot do?            | It is an operator and enforces the pins itself; every act is audited with its finding, and the owner can undo it                                                  |
 | Q19 | Do messages carry a kind?                  | Likely; a design phase decides the set                                                                                                                            |
-| Q20 | Can an agent claim work or paths?          | Yes, as information like a pin, never a lock; the etiquette bot may enforce it                                                                                    |
-| Q21 | Who may write a claim?                     | A player, about itself only; the room's other pins stay the owner's                                                                                               |
+| Q20 | Can an agent claim work or paths?          | Yes, as a pin about itself, never a lock; claim is no capability of its own                                                                                       |
+| Q21 | Who may write a claim?                     | Its author, about itself, through the pin capability                                                                                                              |
 | Q22 | What may a notice contain?                 | A notice is a message kind. Every room message is untrusted unless the agent's person explicitly trusts its poster; Cairn is a set of tools, not an authority     |
 | Q23 | How is a harness known in a room?          | Joining gives it a participant id; any harness can join, and its messages and links are stamped with that id                                                      |
 | Q24 | Which roles does a room have?              | Viewer, participant, operator (always there), etiquette or facilitator bot (optional); the owner stands beside them                                               |
 | Q25 | Workspace and room: two concepts or one?   | One: the room absorbs the workspace; its capabilities extend to code                                                                                              |
-| Q26 | Is every session in a room?                | Yes: the first session on a branch no room holds gets a room of its own; Cairn suggests merging it into an existing room                                          |
-| Q27 | Parallel attempts?                         | Several branches in one room, each worked by its own agent                                                                                                        |
-| Q28 | Can a branch move between rooms?           | Yes, as a recorded owner act; its history stays with the room it was in                                                                                           |
-| Q29 | What happens to "lane" in the SRS?         | It is renamed room; LANE ids map to room ids                                                                                                                      |
+| Q26 | Is every session in a room?                | Not Cairn's question: a session is the harness's concept. Cairn knows participants; a harness joins rooms and maps its sessions to them                           |
+| Q27 | Parallel attempts?                         | Several branches in one room; an attempt is one branch, one try at the intent (see Terms)                                                                         |
+| Q28 | Can a branch move between rooms?           | No: git has no move. A branch stays in the room it was opened in; work continues elsewhere as a new branch from its commits, opened in the other room             |
+| Q29 | What happens to "lane" in the SRS?         | Confirmed: it is renamed room; LANE ids map to room ids                                                                                                           |
+| Q30 | Is claim a capability?                     | No. Pin and unpin are; a claim is a pin                                                                                                                           |
+| Q31 | What does present mean?                    | Controlling the room's outcome window                                                                                                                             |
+| Q32 | Does a room record verdicts?               | No. A person commits files or pins to the room                                                                                                                    |
+| Q33 | How are commits linked to rooms?           | A link in the commit message to the room that worked on the commit (see below)                                                                                    |
 
-Q4, Q5 and Q7 follow from the split: a session may be in any number of
-rooms; a plain session in no room follows its person's rules for
-agents, as today; a subagent follows the same, plus the pins of rooms
+Q4, Q5 and Q7 follow from the split: an agent may be in any number of
+rooms; an agent in no room follows its person's rules for agents, as
+today; a subagent follows the same, plus the pins of rooms
 its person adds it to.
+
+## Linking commits to rooms
+
+Every commit made in a room carries a link back to it in its message,
+as git trailers:
+
+```text
+Cairn-Room: https://cairn.example.org/r/r-7f3a
+Cairn-Link: https://cairn.example.org/r/r-7f3a/m/91#L3-L7
+```
+
+- **Cairn-Room** names the room whose branch the commit was made on,
+  one per commit. **Cairn-Link**, optional and repeatable, points at
+  the pins, messages or marked ranges behind the commit.
+- **Written for the agent, not by it.** A `prepare-commit-msg` hook
+  that `cairn` installs looks up the room of the worktree's branch in
+  the record and appends the trailers, so no agent has to remember.
+  A harness's own commit attribution can add the same lines.
+- **The address** is the deployed Cairn node's URL when one is
+  configured, so a forge renders it clickable, and a `cairn:` address
+  otherwise. The room id comes from its creation record and says
+  nothing about the room; opening the link needs access to the room.
+- **It survives the forge.** A squash or rebase merge rewrites SHAs,
+  so LANE-06's SHA-based classes fail with `history-rewritten`, but
+  the forge keeps the message, so the trailer still names the room.
+- **A trailer is a claim.** Anyone can type one, so Cairn shows it as
+  `asserted` (LANE-06) until the record proves the link (same commit,
+  patch or tree). A commit signed by an SSH key that chains to a
+  participant's owner key shows who asserted it. A trailer never
+  instructs and never puts content into a room.
+- **The other direction** needs no trailer: the room lists the commits
+  on its branches from the record and the local clone.
+- **OQ-25 answered:** the SRS asked whether to suggest a `Cairn-Lane:`
+  trailer at landing; this writes `Cairn-Room:` at every commit.
 
 ## What this changes
 
@@ -292,6 +352,10 @@ its person adds it to.
   into the room (Q25): a room holds its conversation, participants,
   pins and branches. Every event belongs to exactly one room, so no
   fact lives in two places.
+- **LANE-07 and LANE-08 lose verdicts.** No approvals or requests
+  for changes are recorded; a person's judgement becomes a commit or
+  a pin, and the forge keeps its own reviews. The proof class
+  `contains approved diff` (LANE-06) goes with them.
 - **LANE-20 merges into room pins.** The intent is the room's first
   pin, versioned like every pin.
 - **I2 stays as it is.** Room pins are information an agent reads,
@@ -303,6 +367,13 @@ its person adds it to.
   (CMP-09); the bot is compute outside Cairn, like a harness.
 
 ## Open points
+
+- **The outcome window when several present at once:** the latest
+  present wins; whether the owner may hold it on one attempt, or the
+  window splits per attempt, is open.
+- **Trailers in public repositories:** the room id reveals that a room
+  exists, nothing more; whether a repository setting turns trailers
+  off is open.
 
 - **Room pins beside rules for agents.** The person's rules for agents
   are what the agent follows; room pins are what it is aware of and
