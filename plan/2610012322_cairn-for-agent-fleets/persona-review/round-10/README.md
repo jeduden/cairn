@@ -44,3 +44,35 @@ Not taken, with the reason:
   named it the heart of multiplayer.
 - **A lane file for strangers** (OSS): export is P2 and not in the
   room model's pitch yet.
+
+## Loop 2: after the loop-1 changes
+
+The agent seat moved to yes; the other eight stayed at partly, each
+with fewer and narrower findings.
+
+| #      | Finding                                                                             | Seats                     | Change in loop 3                                                                                  |
+| ------ | ----------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------- |
+| P10-14 | "Instruction only when you pass it on" against "posters you trust": which is it?    | agent, security           | "Cairn delivers as instructions only your words and those of posters you trust"; the rest is data |
+| P10-15 | What does "a post waits" carry? A preview would push untrusted text                 | security, agent           | "Only that a post waits and who sent it"                                                          |
+| P10-16 | Recall is marked by author, not as untrusted                                        | agent, OSS                | "Wrapped as untrusted data with who wrote it"                                                     |
+| P10-17 | Who creates a room, and how?                                                        | fleet                     | One command or click from the branch you are on; running agents join when you say so              |
+| P10-18 | No stop                                                                             | fleet                     | Steer or stop from the room, wherever the harness allows it (OWN-14, OWN-15)                      |
+| P10-19 | Whose run is "the run behind it"?                                                   | reviewer (twice), owner   | Each run as the hook recorded it: command, exit code, commit                                      |
+| P10-20 | The commit link is dead for a reviewer until rooms are shared                       | reviewer, OSS, fleet      | "For you now and for whoever you share the room with next"                                        |
+| P10-21 | "Append-only" is no proof; redaction overclaims; fail-open looks silent             | owner, security, operator | Hash-chained, missing or altered entries shown; "detected secrets"; every hook failure counted    |
+| P10-22 | Catch-up names no failed hooks or redactions, and is not ranked                     | owner                     | Ranked, across rooms and attempts; gaps named: failed hook, redaction, missing entry              |
+| P10-23 | When does a pin change reach an agent, and in what order?                           | agent                     | "Word for word, in order"; a change at the next turn                                              |
+| P10-24 | Peering says nothing of partitions                                                  | machine                   | Each machine works offline and merges on reconnect                                                |
+| P10-25 | How is a teammate's message passed on; no handover                                  | collaborator              | Forward in one step; hand them the room                                                           |
+| P10-26 | A localhost page that renders agent content and answers prompts is a browser target | security                  | "Behind a token"; the sandboxing detail stays in the SRS                                          |
+
+Not taken, with the reason:
+
+- **"Multiplayer" in the headline** (collaborator, fleet, operator):
+  it says "you and your agents", which the first release delivers;
+  the stakeholder set the line.
+- **Purge, retention and tenancy** (operator): the operator's path is
+  in the SRS, not the developer pitch.
+- **Signed room bundles for strangers** (OSS): export is P2.
+- **Cutting "follow any agent"** (owner, agent): the stakeholder named
+  it the heart of multiplayer; "player" became "agent" to stay defined.
