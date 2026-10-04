@@ -20,8 +20,8 @@ of them, a person, can instruct an agent.
 | Entity             | Written by                   | What it is                                                                                                                 |
 | ------------------ | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | Event              | the compute entity behind it | One entry of the record: a message, an edit, a command, a result                                                           |
-| Intent             | a person                     | A goal, what done means and the rules, versioned                                                                           |
-| Pin                | a person                     | A rule to restore to agents; its model for rooms is open                                                                   |
+| Intent             | the room's owner             | The room's first pin: the goal and what done means                                                                         |
+| Pin                | a person                     | A rule for agents to follow and people to read: a person's rule for their agents, or a room's pin for every agent in it    |
 | Room message       | a player, person or agent    | A post addressed to one room; every player in it can read it                                                               |
 | Cross-room message | a player in another room     | A post from one room to another, arriving as data in the target room                                                       |
 | Mark and link      | a person or an agent         | An address plus a range: characters, lines or an image region                                                              |

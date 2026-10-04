@@ -199,6 +199,9 @@ S supported, P partial, U unsupported, ? unverified.
 
 ## Decisions for the stakeholder
 
+The stakeholder decided these on 4 October 2026; the decisions and
+what follows from them are in [concepts](concepts.md). Q2 stays open.
+
 | #   | Question                                           | Options                                                                                                 | Recommendation                                                |
 | --- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | Q1  | Is a room a lane or a group of lanes?              | Answered: split into independent concepts composed by bindings; see [concepts](concepts.md)             | —                                                             |

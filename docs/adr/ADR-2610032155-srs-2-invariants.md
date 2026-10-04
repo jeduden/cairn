@@ -43,6 +43,7 @@ changes they control.
 | 9   | Owner acts rest on the sandbox                            | approved, 3 October 2026        |
 | 10  | Owner key certifies device keys                           | approved, 3 October 2026        |
 | 11  | Delegation joins I2's closed list                         | approved, 3 October 2026        |
+| 12  | Room pins reach every member agent (new)                  | pending                         |
 
 ### 1. I1, Nothing is lost
 
@@ -229,6 +230,23 @@ changes they control.
   requirements [OWN-23][OWN], [OWN-24][OWN], [OWN-25][OWN], [OWN-26][OWN].
 - **Review:** approved, 3 October 2026.
 
+### 12. Room pins reach every member agent (new)
+
+- **Before (1.4):** Only an agent's own person's words reach it automatically,
+  and pins restore only to the person's own agents.
+- **After (2.0):** A room's pins, its intent first, reach every agent that is
+  a member of the room, whoever wrote them. Only an agent's own person can add
+  it to a room, and that act accepts the room's pins for that agent.
+- **What changes:**
+  - Teammates' agents in a shared room work from the same intent and pins as
+    yours, by design (stakeholder decision Q6, 4 October 2026).
+  - Another person's pin text reaches your agent automatically once you admit
+    it to their room; admission is the bound. See the [concepts
+    note](../../plan/2610012322_cairn-for-agent-fleets/concepts.md).
+- **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
+  [OWN-01][OWN], [PIN-01][PIN], [PIN-10][PIN].
+- **Review:** pending.
+
 ## Alternatives
 
 - Keep I4 as written and ship the lane view and the network side as a
@@ -250,6 +268,7 @@ plan 2610022338's lane view and every B1 to B3 component stay prototypes
 behind a build tag that release builds exclude. A declined change goes
 back to the proposal.
 
+[PIN]: ../srs/05-functional-requirements.md#53-pins-pin
 [REC]: ../srs/05-functional-requirements.md#51-record-rec
 [PRV]: ../srs/05-functional-requirements.md#52-provenance-and-trust-prv
 [ADM]: ../srs/05-functional-requirements.md#58-administration-and-lifecycle-adm
