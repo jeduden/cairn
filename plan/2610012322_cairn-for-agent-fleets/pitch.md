@@ -11,53 +11,57 @@ Cairn changes. Items marked "next" are P2 in the SRS.
 
 ### Cairn: from intent to outcome, for a hundred agents
 
-State what you want. Judge what you got. Correct course. At any scale.
+Ten things you want done. A hundred agents doing them. You judge every
+outcome and correct course.
 
 **You know this.** You run dozens of agents and want a hundred: Claude
-Code in many worktrees, each spawning subagents. You cannot watch a
-hundred terminals. One waits on a permission prompt in a tab you
-cannot find. Another lost your rule to compaction ("never push to
-main"). A third reports "all tests pass", and to judge it you open the
-app, the diff and the logs in separate windows, still unsure how it got
-there or whether it did what you asked. Two of them edited the same
-file. When one is wrong, you start over and explain it all again.
+Code in many worktrees, each spawning subagents, several working on
+the same goal. You cannot watch a hundred terminals. One waits on a
+permission prompt in a tab you cannot find. Another lost your rule to
+compaction ("never push to main"). A third reports "all tests pass",
+and to judge it you open the app, the diff and the logs in separate
+windows, still unsure how it got there or whether it did what you
+asked. Two of them edited the same file. When one is wrong, you start
+over and explain it all again.
 
 **With Cairn.** Install the plugin: it shows every settings change
 before making it, removes cleanly, and never slows or blocks your
-harness. Keep working as before. Every branch becomes a lane, recorded
-on your machine with secrets redacted. Open the lane view in your
+harness. Keep working as before. Every agent's work is recorded on
+your machine with secrets redacted. Open the lane view in your
 browser, or stay in the terminal; everything works from both.
 
-1. **Say it once.** `/intent` states the goal and what done means;
+1. **Say it once.** `/intent` states a goal and what done means;
    `/pin` keeps your rules. Both come back word for word after every
-   compaction and go with every task an agent hands to a subagent or
-   another session, within the budget you grant.
-2. **See only what needs you.** A hundred agents run; you see the few
-   that need you, ranked: a prompt to answer, an outcome ready to
-   judge, a failure, two lanes touching the same file. Answer from the
-   list. Everything else keeps running.
-3. **Judge the outcome beside the chat.** Open one: the chat on one
-   side; on the other, live as it works, the running app from that
+   compaction and go with every task an agent hands on, to a subagent
+   or another session, within the budget you grant.
+2. **See ten intents, not a hundred agents.** Each intent shows its
+   criteria, the agents working on it and what needs you, ranked: a
+   prompt to answer, an outcome ready to judge, a failure, two agents
+   touching the same file. Answer from there. Everything else keeps
+   running.
+3. **Judge the outcome beside the chat.** Open an intent: the chat on
+   one side; on the other, live as it works, the running app from that
    worktree's dev server, the diff, the files it produced, the test
-   runs. Each criterion shows its evidence: a test run the harness
-   recorded, or only the agent's word. You mark it met or needs
-   changes; Cairn never decides for you.
+   runs, with parallel attempts side by side. Each criterion shows its
+   evidence: a test run the harness recorded, or only the agent's word.
+   You mark it met or needs changes; Cairn never decides for you.
 4. **Correct course in place.** Type the correction beside the
-   criterion and watch the outcome change. Or sharpen the intent, or
-   retry from an earlier checkpoint in a fresh worktree, with the first
-   attempt kept beside it.
-5. **Catch up.** Back after lunch or the weekend? One page says what
-   changed, what failed and what waits, each line linked to the record.
-   If capture failed or part of the record is missing, it says so.
+   criterion, and it reaches every agent on that intent. Or sharpen the
+   intent, or retry from an earlier checkpoint in a fresh worktree,
+   with the first attempt kept beside it.
+5. **Catch up.** Back after lunch or the weekend? One page per intent
+   says what changed, what failed and what waits, each line linked to
+   the record. If capture failed or part of the record is missing, it
+   says so.
 
 **Yours alone.** Cairn connects to nothing. The lane view listens only
 on localhost, for your browser. Your agent gets its history only when
 it asks, marked untrusted, never as a command.
 
-**Next: bring others in.** Turn on sharing and work a lane peer to
+**Next: bring others in.** Turn on sharing and work an intent peer to
 peer, with no server. Teammates judge the same outcome under their own
-names; their corrections reach your harness only when you pass them
-on, marked as theirs.
+names; their corrections reach your agents only when you pass them on,
+marked as theirs.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
@@ -205,6 +209,9 @@ what checked them; rule levels per action shape the owner's control.
 13. The tooling must let one developer run a hundred agents: the view
     shows only what needs the person, ranked, and delegation runs
     within a granted budget.
+14. A hundred agents work on about ten intents. The intent, not the
+    agent or the lane, is what the person sees, judges and corrects; an
+    intent may hold several lanes and parallel attempts.
 
 ## Open before the SRS change
 
