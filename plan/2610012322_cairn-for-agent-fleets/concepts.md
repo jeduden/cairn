@@ -11,7 +11,7 @@ compose.
 The SRS lane holds a branch, its worktrees, its sessions, the people
 on it, their conversation, its intent (LANE-20), its pins' scope
 (PIN-10), its notices and its endorse queue. The pitch's room added a
-second bundle: a conversation, an intent, members and pins. Five
+second bundle: a conversation, an intent, participants and pins. Five
 agents on one intent then forced a choice between the two, which is
 the sign they were not independent.
 
@@ -35,7 +35,7 @@ any other, and it says nothing about the others.
 | Room        | data    | A conversation, and the pins every agent in it follows; its first pin is its intent    | a person         |
 | Rule set    | data    | A person's rules for their agents: all of them, or one                                 | a person         |
 | Trust grant | data    | A person's explicit trust in a poster, for their own agents: in one room or everywhere | a person         |
-| Role        | data    | A named set of permissions in a room: owner, operator, etiquette bot, member           | the room's owner |
+| Role        | data    | A named set of permissions in a room: owner, operator, etiquette bot, participant      | the room's owner |
 | Grant       | data    | Authority to delegate: which agents, which targets, how much, until when               | a person         |
 | Link        | data    | An address plus a range: text, lines or an image region                                | its writer       |
 
@@ -108,22 +108,27 @@ nothing. When a harness session joins a room, Cairn's tools do this:
   Cairn's tools, and whatever Cairn cannot deliver is shown as not
   delivered.
 
+A room has participants. A participant is a player present in a room:
+a person, or an agent session joined through its harness, under the
+participant id that joining returns. Roles (owner, operator,
+etiquette bot, participant) are held by participants.
+
 ## Bindings compose them
 
 A binding is a recorded, versioned fact that relates two concepts. It
 is data, written by a person or derived from structural events.
 Bindings are the only way concepts affect each other.
 
-| Binding      | Relates                 | Means                                                                                                    | Written by                         |
-| ------------ | ----------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| works in     | player → workspace      | This agent session edits this workspace                                                                  | structural (session start)         |
-| member of    | player → room           | This player reads, posts and is addressed in this room under a participant id the room issues on joining | the player's person, or structural |
-| serves       | workspace → room        | Work here is presented and judged against the room's intent                                              | a person                           |
-| applies to   | rule set → agents       | All of the person's agents, or one agent                                                                 | the rule set's person              |
-| trusts       | trust grant → poster    | This person's agents take this poster's messages as instructions                                         | the agents' person                 |
-| holds        | player → role in a room | This player fills this role; its permissions follow from the role                                        | the room's owner                   |
-| delegated by | player → player         | This agent works for that one, under a grant                                                             | structural (delegation record)     |
-| linked from  | link → message          | This message points at that range                                                                        | the message's writer               |
+| Binding        | Relates                 | Means                                                                                                               | Written by                         |
+| -------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| works in       | player → workspace      | This agent session edits this workspace                                                                             | structural (session start)         |
+| participant in | player → room           | This player reads, posts and is addressed in this room under the participant id that joining returns to its harness | the player's person, or structural |
+| serves         | workspace → room        | Work here is presented and judged against the room's intent                                                         | a person                           |
+| applies to     | rule set → agents       | All of the person's agents, or one agent                                                                            | the rule set's person              |
+| trusts         | trust grant → poster    | This person's agents take this poster's messages as instructions                                                    | the agents' person                 |
+| holds          | player → role in a room | This player fills this role; its permissions follow from the role                                                   | the room's owner                   |
+| delegated by   | player → player         | This agent works for that one, under a grant                                                                        | structural (delegation record)     |
+| linked from    | link → message          | This message points at that range                                                                                   | the message's writer               |
 
 ## Three composition rules
 
@@ -145,7 +150,7 @@ Everything a player gets is derived from the bindings, deterministically
    people judge.
 3. **Messages reach a player** only through membership, and only when
    it reads them: data, never instructions. A cross-room message is a
-   message whose writer is a member of the sending room, addressed to
+   message whose writer is a participant in the sending room, addressed to
    another room.
 
 Restore, join, leave and change notices are then not concepts of their
@@ -205,20 +210,20 @@ As information read through a tool, never pushed:
 
 ## Use cases as configuration
 
-| Use case                                   | Configuration                                                                                                  |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| One agent, one task (today's Cairn)        | One workspace; the agent works in it; your rule set applies to your agents. No room needed.                    |
-| One agent with a stated goal               | Add a room whose first pin is the goal; the workspace serves it; the agent is a member.                        |
-| Five agents, parallel attempts at one goal | Five workspaces serving one room; the five agents are members.                                                 |
-| One agent on two goals                     | The agent is a member of two rooms, each with its own intent and pins.                                         |
-| A chat with no goal                        | A room with members and no pins.                                                                               |
-| A goal with no chat (batch)                | A room with pins and no messages; workspaces serve it.                                                         |
-| Orchestrator with subagents                | Subagents delegated by the orchestrator; members of its room if you add them, otherwise your rules for agents. |
-| Rooms talking                              | A message in room A addressed to room B.                                                                       |
-| Handing work to another room               | A grant naming room B's agents as targets; the task arrives as data marked as from the delegating agent.       |
-| A teammate joins (next)                    | The teammate adds themselves and their agents to the room; their agents follow its pins, as yours do.          |
-| A reviewer                                 | A member of the room, with no workspace and no agents.                                                         |
-| A rule only for one agent                  | A rule set that applies to that agent.                                                                         |
+| Use case                                   | Configuration                                                                                                       |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| One agent, one task (today's Cairn)        | One workspace; the agent works in it; your rule set applies to your agents. No room needed.                         |
+| One agent with a stated goal               | Add a room whose first pin is the goal; the workspace serves it; the agent is a participant.                        |
+| Five agents, parallel attempts at one goal | Five workspaces serving one room; the five agents are participants.                                                 |
+| One agent on two goals                     | The agent is a participant in two rooms, each with its own intent and pins.                                         |
+| A chat with no goal                        | A room with participants and no pins.                                                                               |
+| A goal with no chat (batch)                | A room with pins and no messages; workspaces serve it.                                                              |
+| Orchestrator with subagents                | Subagents delegated by the orchestrator; participants of its room if you add them, otherwise your rules for agents. |
+| Rooms talking                              | A message in room A addressed to room B.                                                                            |
+| Handing work to another room               | A grant naming room B's agents as targets; the task arrives as data marked as from the delegating agent.            |
+| A teammate joins (next)                    | The teammate adds themselves and their agents to the room; their agents follow its pins, as yours do.               |
+| A reviewer                                 | A participant in the room, with no workspace and no agents.                                                         |
+| A rule only for one agent                  | A rule set that applies to that agent.                                                                              |
 
 ## Stakeholder decisions of 4 October 2026
 
@@ -228,7 +233,7 @@ As information read through a tool, never pushed:
 | Q2  | Does a change notice carry the text?       | At least a link to the changed pin; likely also a diff against the version before. A summary only if the pin's author writes one, since Cairn never calls a model |
 | Q3  | What does leaving do to a running agent?   | The agent decides. Cairn stops restoring the room's pins and tells the agent it left                                                                              |
 | Q6  | Does the intent reach a teammate's agents? | Yes. Access to a room is access to its pins, and the intent is the room's first pin                                                                               |
-| Q8  | A quarantined pin still in context?        | The agents figure it out, possibly with their people. Cairn tells member agents the pin was withdrawn                                                             |
+| Q8  | A quarantined pin still in context?        | The agents figure it out, possibly with their people. Cairn tells participant agents the pin was withdrawn                                                        |
 | Q9  | Can the owner leave their own room?        | Yes                                                                                                                                                               |
 | Q10 | Who writes room pins and adds players?     | The room's owner writes its pins; only a player's own person adds it to a room                                                                                    |
 | Q11 | A room whose owner left?                   | Nobody changes its pins until the owner hands the room over; the pins stay as they were                                                                           |

@@ -44,13 +44,13 @@ the record alone, with no clock (I10).
 
 | State          | Meaning                                                                                         |
 | -------------- | ----------------------------------------------------------------------------------------------- |
-| none           | Not a member                                                                                    |
+| none           | Not a participant                                                                               |
 | pending        | Membership recorded; the join text not yet delivered                                            |
-| member         | Join delivered; restores active                                                                 |
+| participant    | Join delivered; restores active                                                                 |
 | notice pending | The record holds a newer pin or intent version than the last delivery                           |
 | undelivered    | The harness offers no delivery point; shown as "rules not delivered" with a Needs you item (I6) |
 | left, carrying | Removed while running; rules kept until its next startup or clear                               |
-| ended          | Session over; a session that died without an end event stays a member, shown "unconfirmed"      |
+| ended          | Session over; a session that died without an end event stays a participant, shown "unconfirmed" |
 
 ## What the harnesses offer
 
@@ -205,7 +205,7 @@ what follows from them are in [concepts](concepts.md). Q2 stays open.
 | #   | Question                                           | Options                                                                                                 | Recommendation                                                |
 | --- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | Q1  | Is a room a lane or a group of lanes?              | Answered: split into independent concepts composed by bindings; see [concepts](concepts.md)             | —                                                             |
-| Q2  | Does the change notice carry the text?             | (a) ids only, recalled as untrusted; (b) verbatim, on for members; (c) adapter only                     | (b): otherwise the agent's own rule reads as untrusted        |
+| Q2  | Does the change notice carry the text?             | (a) ids only, recalled as untrusted; (b) verbatim, on for participants; (c) adapter only                | (b): otherwise the agent's own rule reads as untrusted        |
 | Q3  | What does leaving do to a running agent?           | (a) lift its rules at once; (b) keep them until a safe point; (c) stop the agent                        | (b) by default, (a) as an explicit choice                     |
 | Q4  | Can a session be in several rooms?                 | (a) one at a time; (b) many, equal; (c) one active, earlier rules carried                               | (c), as pins already accumulate across lanes                  |
 | Q5  | How does a plain session join?                     | (a) explicit add only; (b) automatically from its lane's room; (c) only via `cairn run`                 | (b): joining only tightens, and a session must not lack rules |

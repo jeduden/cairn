@@ -89,14 +89,14 @@ revocable and shown in the room.
 
 ### What the decided model does
 
-| Path into an agent                | Treatment                                                                                                                       |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Its own person's rules for agents | Trusted; restored word for word                                                                                                 |
-| Pins of a room it is a member of  | Information: a fixed notice names the room and pin versions; the agent reads them through a tool, inside the untrusted envelope |
-| Messages in the room              | Data: read only when the agent asks, inside the untrusted envelope                                                              |
-| Cross-room messages               | Data, as above; never start a turn, route work or reach another room                                                            |
-| Links                             | Resolved by recall: untrusted envelope, and the session counts as tainted                                                       |
-| A room bot's findings             | Data in the room, like any post; never instructions to anyone's agent                                                           |
+| Path into an agent                    | Treatment                                                                                                                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Its own person's rules for agents     | Trusted; restored word for word                                                                                                 |
+| Pins of a room it is a participant in | Information: a fixed notice names the room and pin versions; the agent reads them through a tool, inside the untrusted envelope |
+| Messages in the room                  | Data: read only when the agent asks, inside the untrusted envelope                                                              |
+| Cross-room messages                   | Data, as above; never start a turn, route work or reach another room                                                            |
+| Links                                 | Resolved by recall: untrusted envelope, and the session counts as tainted                                                       |
+| A room bot's findings                 | Data in the room, like any post; never instructions to anyone's agent                                                           |
 
 The sender is stamped by Cairn from the writer's key, never taken from
 a name the writer chose, and the content is marked untrusted: the two
@@ -119,11 +119,11 @@ I4).
 | Owner         | yes          | Write pins, configure roles, assign holders, hand over the room              | The person who created or took over the room |
 | Operator      | yes          | Kick and bar players, lift their own bars, hide a message from the room view | The owner, unless the owner assigns others   |
 | Etiquette bot | no, optional | An operator's permissions, plus posting findings against the pins            | A classifier the owner provides              |
-| Member        | yes          | Read, post, link                                                             | Any player its person adds                   |
+| Participant   | yes          | Read, post, link                                                             | Any player its person adds                   |
 
 - **The etiquette bot** is a player of kind bot with its own key, run
   by the owner or an operator outside Cairn, like a harness. It reads
-  the room's pins, messages and links, and what members chose to make
+  the room's pins, messages and links, and what participants chose to make
   visible in the room, through the same tools an agent uses.
 - **What it does.** It posts findings to the room, each linking the
   pin and the content it judged, raises a Needs you item for the owner
@@ -174,7 +174,7 @@ room model takes:
 
 - **Joining** shows the room's pins, intent first, each with its author
   and time, then the roster with roles, as IRC sends the topic and the
-  member list.
+  participant list.
 - **Pin edits** by anyone but the owner are refused by the
   authorisation layer, not reverted afterwards (IRC's +t, not
   TOPICLOCK).

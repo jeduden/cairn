@@ -17,24 +17,24 @@ of them, a person, can instruct an agent.
 
 ## Data
 
-| Entity             | Written by                   | What it is                                                                                                                           |
-| ------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Event              | the compute entity behind it | One entry of the record: a message, an edit, a command, a result                                                                     |
-| Intent             | the room's owner             | The room's first pin: the goal and what done means                                                                                   |
-| Pin                | a person                     | A rule: a person's rule for their agents, which they follow, or a room's pin, which member agents are aware of and a room bot checks |
-| Room message       | a player, person or agent    | A post addressed to one room; every player in it can read it                                                                         |
-| Cross-room message | a player in another room     | A post from one room to another, arriving as data in the target room                                                                 |
-| Mark and link      | a person or an agent         | An address plus a range: characters, lines or an image region                                                                        |
-| Snapshot           | Cairn, from a compute entity | A screenshot of the app, a diff, a file version, a test log                                                                          |
-| Checkpoint         | Cairn, from the worktree     | The state of a worktree at a point                                                                                                   |
-| Verdict            | a person                     | Met or needs changes, on a criterion                                                                                                 |
-| Grant              | a person                     | A delegation budget: which agents, which targets, how much, until                                                                    |
-| Room               | a person                     | One intent's shared space: its players, its messages and links                                                                       |
-| Membership         | a person, or structural      | A player joining or leaving a room: added or removed by its person, or derived from a session start or end or a delegation           |
-| Role and holder    | the room's owner             | A room's roles, their permissions and who fills each: owner, operator, etiquette bot, member                                         |
-| Kick and bar       | an operator                  | Removing a player now, or keeping it out, under the authorisation layer                                                              |
-| Lane               | derived by Cairn             | A branch and its worktrees, as the record holds them                                                                                 |
-| Status and queue   | derived by Cairn             | What needs whom, rebuilt from the record (I10)                                                                                       |
+| Entity             | Written by                   | What it is                                                                                                                                |
+| ------------------ | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Event              | the compute entity behind it | One entry of the record: a message, an edit, a command, a result                                                                          |
+| Intent             | the room's owner             | The room's first pin: the goal and what done means                                                                                        |
+| Pin                | a person                     | A rule: a person's rule for their agents, which they follow, or a room's pin, which participant agents are aware of and a room bot checks |
+| Room message       | a player, person or agent    | A post addressed to one room; every player in it can read it                                                                              |
+| Cross-room message | a player in another room     | A post from one room to another, arriving as data in the target room                                                                      |
+| Mark and link      | a person or an agent         | An address plus a range: characters, lines or an image region                                                                             |
+| Snapshot           | Cairn, from a compute entity | A screenshot of the app, a diff, a file version, a test log                                                                               |
+| Checkpoint         | Cairn, from the worktree     | The state of a worktree at a point                                                                                                        |
+| Verdict            | a person                     | Met or needs changes, on a criterion                                                                                                      |
+| Grant              | a person                     | A delegation budget: which agents, which targets, how much, until                                                                         |
+| Room               | a person                     | One intent's shared space: its players, its messages and links                                                                            |
+| Membership         | a person, or structural      | A player joining or leaving a room: added or removed by its person, or derived from a session start or end or a delegation                |
+| Role and holder    | the room's owner             | A room's roles, their permissions and who fills each: owner, operator, etiquette bot, participant                                         |
+| Kick and bar       | an operator                  | Removing a player now, or keeping it out, under the authorisation layer                                                                   |
+| Lane               | derived by Cairn             | A branch and its worktrees, as the record holds them                                                                                      |
+| Status and queue   | derived by Cairn             | What needs whom, rebuilt from the record (I10)                                                                                            |
 
 ## Compute with data
 
@@ -80,7 +80,7 @@ of them, a person, can instruct an agent.
 Restoring pins is part of being in a room. A restore is Cairn writing
 trusted text into one agent's context at a point the harness offers
 (INJ-01): after compaction, at startup, resume or clear. The room
-protocol says when each member gets what.
+protocol says when each participant gets what.
 
 **Join.** A person adds a player to a room, recorded as a membership
 event: an agent they run, a subagent or delegate an agent starts in
@@ -91,7 +91,7 @@ by a name someone chose. A subagent gets the same through its own start
 hook where the harness offers one (Claude Code and Codex do); without
 one it is shown as "rules not delivered".
 
-**Participate.** While a member, an agent:
+**Participate.** While a participant, an agent:
 
 - has the intent and its person's pins restored after every
   compaction, at startup, resume and clear;
