@@ -118,9 +118,9 @@ first.
 
 ## Decisions for the stakeholder
 
-| #   | Question                     | Options                                                                                                                             | Recommendation |
-| --- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| A1  | Who runs automations?        | Decided: cron runs in the `cairn` binary; other events arrive at a webhook endpoint Cairn provides, which requires a deployed Cairn | —              |
-| A2  | Can a person trust a bridge? | Decided: never                                                                                                                      | —              |
-| A3  | Where does the timer run?    | Decided: in the Cairn service; without a running Cairn service there are no rooms                                                   | —              |
-| A4  | How is a merge detected?     | Open: the webhook reports it; whether local git must confirm it before an automation acts (see below)                               | —              |
+| #   | Question                     | Options                                                                                                                                                                                             | Recommendation |
+| --- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| A1  | Who runs automations?        | Decided: cron runs in the `cairn` binary; other events arrive at a webhook endpoint Cairn provides, which requires a deployed Cairn                                                                 | —              |
+| A2  | Can a person trust a bridge? | Decided: never                                                                                                                                                                                      | —              |
+| A3  | Where does the timer run?    | Decided: in the Cairn service; without a running Cairn service there are no rooms                                                                                                                   | —              |
+| A4  | How is a merge detected?     | Decided: the webhook triggers, local git confirms; an automation acts only when the landed commit matches the workspace's work with a proven class (LANE-06), and raises a Needs you item otherwise | —              |
