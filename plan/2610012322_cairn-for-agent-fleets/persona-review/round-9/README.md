@@ -75,7 +75,17 @@ requirements must keep them:
   the owner does (collaborator); the pitch promises it, and sharing
   carries it.
 
-## Next
+## Stakeholder decisions of 4 October 2026
 
-The stakeholder decides the fixes for R9-1 to R9-12; the rest go into
-the requirements with the room model.
+| Fix   | Decision                                                                                                                                                                 |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| R9-1  | Open: notices with ids, versions and counts only, explained further                                                                                                      |
+| R9-3  | Yes: admission is a capability of the owner's authorisation layer (invite only, allow list)                                                                              |
+| R9-4  | Yes: the owner names a successor beforehand                                                                                                                              |
+| R9-6  | Yes, for now: the bot's acts are rate-limited and shown to the player they hit; it never acts on the owner or an operator; setting a whole room read only needs a person |
+| R9-8  | Yes: one-step forwarding, recording writer and forwarder, with a state the writer sees                                                                                   |
+| R9-9  | Yes: bars name the person's owner key, covering every key it certified                                                                                                   |
+| R9-12 | Open: "session" to be defined first                                                                                                                                      |
+
+R9-2, R9-5, R9-7, R9-10 and R9-11 are clarifications applied to the
+room model. The rest go into the requirements with the room model.
