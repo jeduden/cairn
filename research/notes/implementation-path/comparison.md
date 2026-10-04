@@ -141,7 +141,10 @@ against exist, not whether a library does.
     notifications; position queries were still missing in 2026
     ([#9932][gh-9932]), and no Linux support was found (unverified).
     Cairn needs a whole tree (rooms, messages, buttons), which is
-    AccessKit's model. Accessibility is also a read-and-act channel for
+    AccessKit's model. Among Rust GPU toolkits, Masonry and Xilem on
+    Vello and egui are built on AccessKit; GPUI's support is
+    experimental and absent in practice on Windows; Makepad has none
+    ([options](options.md#option-i-rust-core-library-ghosttys-shape)). Accessibility is also a read-and-act channel for
     same-user processes (T21): AT-SPI on Linux needs no permission, so an
     exposed "Allow" action must not count as an owner act without the
     presence check of OWN-11.

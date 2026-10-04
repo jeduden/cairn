@@ -350,7 +350,16 @@ browser for results, as in H. Rust has the GPU UI toolkits Zig lacks.
   the Linebender project. The terminal is libghostty linked from Rust
   for its renderer, or libghostty-vt with the toolkit drawing the cells.
 - **Hosts, results, accessibility, security.** As H; AccessKit is
-  native Rust here ([AccessKit][accesskit]).
+  native Rust here ([AccessKit][accesskit]). Accessibility splits the
+  toolkits, as of October 2026: Masonry and Xilem, drawn with Vello,
+  are built on AccessKit ([Xilem][xilem]); egui integrates AccessKit
+  too; GPUI's support is experimental behind `ZED_EXPERIMENTAL_A11Y`,
+  with menus but not the editor reachable and none in practice on
+  Windows ([Zed a11y][zed-a11y]); Makepad has no screen reader support,
+  its accessibility issue open since August 2023 ([Makepad
+  #196][makepad-a11y]). Vello is a renderer only and carries no
+  accessibility of its own. So I's toolkit is Masonry on Vello, or
+  egui, unless Makepad's phone reach outweighs a screen reader.
 - **Precedent.** Zed draws its whole editor with GPUI; herdr links
   libghostty-vt from Rust; Element X shows a Rust core under room UIs on
   iOS and Android, though with native views ([Element X iOS][elementx-ios],
@@ -387,4 +396,7 @@ browser for results, as in H. Rust has the GPU UI toolkits Zig lacks.
 [gpui]: https://docs.rs/crate/open-gpui/0.2.0
 [makepad]: https://github.com/makepad/makepad
 [accesskit]: https://github.com/AccessKit/accesskit
+[xilem]: https://github.com/linebender/xilem
+[zed-a11y]: https://github.com/zed-industries/zed/discussions/6576
+[makepad-a11y]: https://github.com/makepad/makepad/issues/196
 [prior]: prior-art-stacks.md#patterns
