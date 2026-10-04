@@ -64,9 +64,11 @@ judge under their own names, and their words reach your agents only
 when you pass them on.
 
 **Safe by default.** Cairn connects to nothing until you share; its
-screen lives on localhost. Cairn delivers only your words to an agent
-as instructions, never another agent's words or anything an agent
-read; it cannot stop an agent from being swayed by what it reads. The
+screen lives on localhost. Your agents take as instructions only your
+words and those of posters you choose to trust; everything else in a
+room is untrusted. Cairn is a set of tools, not an authority: it never
+decides whom to trust, and it cannot stop an agent from being swayed
+by what it reads. The
 plugin shows every change it makes, removes cleanly and never slows
 your harness, and everything also works in the terminal.
 

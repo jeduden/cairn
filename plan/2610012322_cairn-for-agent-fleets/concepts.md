@@ -15,20 +15,29 @@ second bundle: a conversation, an intent, members and pins. Five
 agents on one intent then forced a choice between the two, which is
 the sign they were not independent.
 
+## Cairn is a set of tools, not an authority
+
+Cairn records, derives, checks and delivers; it decides nothing about
+whom to trust. Every message in a room, including a notice, is
+untrusted unless the reading agent's own person has explicitly given
+trust to its poster: an operator, a participant, the etiquette bot.
+Cairn applies those grants; it never grants trust itself.
+
 ## The concepts
 
 Each stands alone: it can exist, be created and be removed without
 any other, and it says nothing about the others.
 
-| Concept   | Kind    | What it is, and nothing more                                                        | Owner            |
-| --------- | ------- | ----------------------------------------------------------------------------------- | ---------------- |
-| Player    | compute | A person, or an agent session in a harness                                          | itself           |
-| Workspace | data    | Where code changes: a branch and its worktrees (the SRS lane, narrowed)             | a person         |
-| Room      | data    | A conversation, and the pins every agent in it follows; its first pin is its intent | a person         |
-| Rule set  | data    | A person's rules for their agents: all of them, or one                              | a person         |
-| Role      | data    | A named set of permissions in a room: owner, operator, etiquette bot, member        | the room's owner |
-| Grant     | data    | Authority to delegate: which agents, which targets, how much, until when            | a person         |
-| Link      | data    | An address plus a range: text, lines or an image region                             | its writer       |
+| Concept     | Kind    | What it is, and nothing more                                                           | Owner            |
+| ----------- | ------- | -------------------------------------------------------------------------------------- | ---------------- |
+| Player      | compute | A person, or an agent session in a harness                                             | itself           |
+| Workspace   | data    | Where code changes: a branch and its worktrees (the SRS lane, narrowed)                | a person         |
+| Room        | data    | A conversation, and the pins every agent in it follows; its first pin is its intent    | a person         |
+| Rule set    | data    | A person's rules for their agents: all of them, or one                                 | a person         |
+| Trust grant | data    | A person's explicit trust in a poster, for their own agents: in one room or everywhere | a person         |
+| Role        | data    | A named set of permissions in a room: owner, operator, etiquette bot, member           | the room's owner |
+| Grant       | data    | Authority to delegate: which agents, which targets, how much, until when               | a person         |
+| Link        | data    | An address plus a range: text, lines or an image region                                | its writer       |
 
 Pins are rules: for agents to follow, for people to read and adjust.
 There are two kinds, set by the stakeholder: a person's rules for
@@ -48,6 +57,7 @@ Bindings are the only way concepts affect each other.
 | member of    | player → room           | This player reads, posts and, if an agent, follows the pins       | the player's person, or structural |
 | serves       | workspace → room        | Work here is presented and judged against the room's intent       | a person                           |
 | applies to   | rule set → agents       | All of the person's agents, or one agent                          | the rule set's person              |
+| trusts       | trust grant → poster    | This person's agents take this poster's messages as instructions  | the agents' person                 |
 | holds        | player → role in a room | This player fills this role; its permissions follow from the role | the room's owner                   |
 | delegated by | player → player         | This agent works for that one, under a grant                      | structural (delegation record)     |
 | linked from  | link → message          | This message points at that range                                 | the message's writer               |
@@ -57,14 +67,16 @@ Bindings are the only way concepts affect each other.
 Everything a player gets is derived from the bindings, deterministically
 (I10). No concept carries its own delivery logic.
 
-1. **An agent follows** its own person's rules for agents, restored
-   word for word as trusted text. **It is aware of** the pins of every
-   room it is a member of, each room's intent first: access to a room
-   is access to its pins. Room pins are information, not instructions.
-   On joining and after every compaction the agent is told, in a fixed
-   notice, which rooms it is in and which pin versions they hold, and
-   it reads them through a tool, inside the untrusted envelope.
-   Enforcing them is a room bot's job (below), not Cairn's.
+1. **An agent takes as instructions** only its own person's words and
+   the messages of posters its person explicitly trusts. Its person's
+   rules for agents are restored word for word after every
+   compaction. Everything else in a room is untrusted: pins, messages,
+   links and notices, which are a kind of message. Cairn pushes into
+   an agent's context only trusted text and its own ids, versions and
+   counts; the agent pulls the rest through a tool, inside the
+   untrusted envelope with the author's key. Access to a room is
+   access to its pins; trusting the room's owner or operator is what
+   turns its pins into instructions for that person's agents.
 2. **Work is judged against an intent** when its workspace serves the
    room whose first pin it is. Agents present their outcome against it;
    people judge.
@@ -166,6 +178,7 @@ As information read through a tool, never pushed:
 | Q19 | Do messages carry a kind?                  | Likely; a design phase decides the set                                                                                                                            |
 | Q20 | Can an agent claim work or paths?          | Yes, as information like a pin, never a lock; the etiquette bot may enforce it                                                                                    |
 | Q21 | Who may write a claim?                     | A player, about itself only; the room's other pins stay the owner's                                                                                               |
+| Q22 | What may a notice contain?                 | A notice is a message kind. Every room message is untrusted unless the agent's person explicitly trusts its poster; Cairn is a set of tools, not an authority     |
 
 Q4, Q5 and Q7 follow from the split: a session may be in any number of
 rooms; a plain session in no room follows its person's rules for

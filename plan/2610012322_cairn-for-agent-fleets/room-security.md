@@ -76,6 +76,17 @@ from agent to agent that way; naming the sender cut attacks by about
 5%, while naming the sender and marking the content untrusted stopped
 them in that study ([arXiv 2410.07283](https://arxiv.org/abs/2410.07283)).
 
+### Trust is given by people, not by Cairn
+
+Cairn is a set of tools, not an authority. Every message in a room,
+notices included, is untrusted for an agent unless that agent's own
+person has explicitly trusted its poster, in that room or everywhere.
+A person may trust a room's operator, a participant or the etiquette
+bot; then that poster's messages, pins included, reach the person's
+agents as instructions. Without a grant, the most another poster's
+text can do is be read. A grant is the person's act, recorded,
+revocable and shown in the room.
+
 ### What the decided model does
 
 | Path into an agent                | Treatment                                                                                                                       |

@@ -44,6 +44,7 @@ changes they control.
 | 10  | Owner key certifies device keys                           | approved, 3 October 2026                                                     |
 | 11  | Delegation joins I2's closed list                         | approved, 3 October 2026                                                     |
 | 12  | Room pins reach every member agent (new)                  | withdrawn, 4 October 2026: room pins are information, not instructions (Q12) |
+| 13  | Trust grants to posters (new)                             | pending                                                                      |
 
 ### 1. I1, Nothing is lost
 
@@ -247,6 +248,26 @@ changes they control.
   [OWN-01][OWN], [PIN-01][PIN], [PIN-10][PIN].
 - **Review:** withdrawn, 4 October 2026: room pins are information, not
   instructions (Q12).
+
+### 13. Trust grants to posters (new)
+
+- **Before (1.4):** Only an agent's own person's words reach it as
+  instructions; every other writer is untrusted, with no way to change that.
+- **After (2.0):** Still only its own person's words by default. A person may
+  explicitly trust a poster for their own agents, in one room or everywhere:
+  an operator, a participant, an etiquette bot. That poster's messages, pins
+  included, then reach the person's agents as instructions. Cairn applies
+  grants and never grants trust itself.
+- **What changes:**
+  - Trust becomes configuration a person controls, replacing change 12's
+    automatic trust in room pins.
+  - A trusted poster's compromised key steers the granting person's agents
+    until the grant is revoked; grants are recorded, revocable and shown in
+    the room. See the [room security
+    note](../../plan/2610012322_cairn-for-agent-fleets/room-security.md).
+- **Where:** [wording](../srs/01-introduction.md#13-invariants); requirements
+  [OWN-01][OWN], [OWN-08][OWN], [PRV-02][PRV].
+- **Review:** pending.
 
 ## Alternatives
 
