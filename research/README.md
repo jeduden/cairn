@@ -51,7 +51,7 @@ from.
   surfaces show a live harness, its results and several agents, the
   app-server protocol, and what needs OpenAI's central service.
 - [Implementation path](notes/implementation-path/options.md): OQ-32
-  in two steps, revision 2. Eight options fill one evaluation frame
+  in two steps, revision 2. Nine options fill one evaluation frame
   ([constraints](notes/implementation-path/constraints.md)) for an app
   on Linux, Windows, macOS, iOS and Android built by a software
   factory, from sourced notes on terminals, protocols, UI and

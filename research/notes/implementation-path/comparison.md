@@ -1,7 +1,7 @@
 # Implementation path: comparing the options
 
 Scope: step 2 of answering OQ-32, revision 2, written 4 October 2026.
-It rates the eight [options](options.md) on the
+It rates the nine [options](options.md) on the
 [evaluation frame's](constraints.md#comparison-criteria) fifteen
 criteria and on the criteria the stakeholder's direction added since
 revision 1: the five-platform app, memory safety (HC-23) and the
@@ -24,36 +24,38 @@ against exist, not whether a library does.
 
 ## The table
 
-| #   | Criterion                      | A. Go node, hypermedia | B. Go node, TS page | C. Go node, WASM cores | D. Rust, Tauri | E. TS on Bun | F. Kotlin MP | G. Rust, Flutter | H. Zig, TigerStyle |
-| --- | ------------------------------ | ---------------------- | ------------------- | ---------------------- | -------------- | ------------ | ------------ | ---------------- | ------------------ |
-| 0   | The app on five platforms      | workable               | workable            | workable               | strong         | weak         | weak         | workable         | workable           |
-| 1   | Hook path                      | strong                 | strong              | strong                 | strong         | weak         | weak         | strong           | strong             |
-| 2   | Boundary evidence              | strong                 | strong              | strong                 | workable       | fails        | weak         | workable         | weak               |
-| 3   | Determinism and cryptography   | strong                 | strong              | strong                 | strong         | workable     | weak         | strong           | strong             |
-| 4   | Store engine                   | strong                 | strong              | strong                 | strong         | strong       | workable     | strong           | workable           |
-| 5   | Dependency budget and licences | workable               | workable            | workable               | weak           | fails        | weak         | weak             | workable           |
-| 6   | Reproducible, signed artifact  | strong                 | workable            | workable               | workable       | weak         | weak         | workable         | workable           |
-| 7   | Run component and pty          | strong                 | strong              | strong                 | strong         | workable     | weak         | strong           | strong             |
-| 8   | View and the three panes       | workable               | strong              | strong                 | strong         | strong       | weak         | workable         | strong             |
-| 9   | Terminal parity                | strong                 | strong              | strong                 | strong         | workable     | weak         | strong           | workable           |
-| 10  | One view model                 | strong                 | strong              | strong                 | strong         | workable     | strong       | strong           | strong             |
-| 11  | Git and signatures             | workable               | workable            | workable               | strong         | workable     | weak         | strong           | workable           |
-| 12  | Kernel sandbox and MCP         | workable               | workable            | workable               | strong         | workable     | weak         | strong           | weak               |
-| 13  | P2 reach                       | weak                   | weak                | workable               | strong         | workable     | weak         | strong           | workable           |
-| 14  | Verification toolchain         | strong                 | strong              | strong                 | workable       | weak         | weak         | workable         | workable           |
-| 15  | Cost of the change             | strong                 | strong              | strong                 | workable       | fails        | weak         | weak             | workable           |
-| 16  | Agent fluency                  | strong                 | strong              | strong                 | strong         | strong       | workable     | workable         | workable           |
-| 17  | Compiler as reviewer           | workable               | workable            | workable               | strong         | weak         | workable     | strong           | workable           |
-| 18  | Iteration speed                | strong                 | strong              | strong                 | workable       | strong       | weak         | workable         | strong             |
-| 19  | Toolchain stability            | strong                 | strong              | workable               | strong         | workable     | workable     | workable         | weak               |
-| HC  | HC-23, memory safety           | workable               | workable            | workable               | strong         | workable     | workable     | strong           | weak               |
+| #   | Criterion                      | A. Go node, hypermedia | B. Go node, TS page | C. Go node, WASM cores | D. Rust, Tauri | E. TS on Bun | F. Kotlin MP | G. Rust, Flutter | H. Zig, Ghostty shape | I. Rust, Ghostty shape |
+| --- | ------------------------------ | ---------------------- | ------------------- | ---------------------- | -------------- | ------------ | ------------ | ---------------- | --------------------- | ---------------------- |
+| 0   | The app on five platforms      | workable               | workable            | workable               | strong         | weak         | weak         | workable         | workable              | workable               |
+| 1   | Hook path                      | strong                 | strong              | strong                 | strong         | weak         | weak         | strong           | strong                | strong                 |
+| 2   | Boundary evidence              | strong                 | strong              | strong                 | workable       | fails        | weak         | workable         | weak                  | workable               |
+| 3   | Determinism and cryptography   | strong                 | strong              | strong                 | strong         | workable     | weak         | strong           | strong                | strong                 |
+| 4   | Store engine                   | strong                 | strong              | strong                 | strong         | strong       | workable     | strong           | workable              | strong                 |
+| 5   | Dependency budget and licences | workable               | workable            | workable               | weak           | fails        | weak         | weak             | workable              | weak                   |
+| 6   | Reproducible, signed artifact  | strong                 | workable            | workable               | workable       | weak         | weak         | workable         | workable              | workable               |
+| 7   | Run component and pty          | strong                 | strong              | strong                 | strong         | workable     | weak         | strong           | strong                | strong                 |
+| 8   | View and the three panes       | workable               | strong              | strong                 | strong         | strong       | weak         | workable         | workable              | workable               |
+| 9   | Terminal parity                | strong                 | strong              | strong                 | strong         | workable     | weak         | strong           | workable              | strong                 |
+| 10  | One view model                 | strong                 | strong              | strong                 | strong         | workable     | strong       | strong           | strong                | strong                 |
+| 11  | Git and signatures             | workable               | workable            | workable               | strong         | workable     | weak         | strong           | workable              | strong                 |
+| 12  | Kernel sandbox and MCP         | workable               | workable            | workable               | strong         | workable     | weak         | strong           | weak                  | strong                 |
+| 13  | P2 reach                       | weak                   | weak                | workable               | strong         | workable     | weak         | strong           | workable              | strong                 |
+| 14  | Verification toolchain         | strong                 | strong              | strong                 | workable       | weak         | weak         | workable         | workable              | workable               |
+| 15  | Cost of the change             | strong                 | strong              | strong                 | workable       | fails        | weak         | weak             | workable              | workable               |
+| 16  | Agent fluency                  | strong                 | strong              | strong                 | strong         | strong       | workable     | workable         | workable              | strong                 |
+| 17  | Compiler as reviewer           | workable               | workable            | workable               | strong         | weak         | workable     | strong           | workable              | strong                 |
+| 18  | Iteration speed                | strong                 | strong              | strong                 | workable       | strong       | weak         | workable         | strong                | workable               |
+| 19  | Toolchain stability            | strong                 | strong              | workable               | strong         | workable     | workable     | workable         | weak                  | strong                 |
+| HC  | HC-23, memory safety           | workable               | workable            | workable               | strong         | workable     | workable     | strong           | weak                  | strong                 |
 
 ## Why each row reads as it does
 
 0. **The app on five platforms.** D runs one Rust core in a Tauri shell
    on all five, phones included. G does the same with Flutter, whose
-   room panes are weak. H embeds a C-ABI core in any shell, but Zig
-   0.17 regressed an iOS library build. A, B and C give every platform
+   room panes are weak. H and I take Ghostty's shape, a native UI per
+   platform over one core, which Element X proves for rooms on iOS and
+   Android; it means four UI codebases, and Windows is the weakest
+   native path. Zig 0.17 also regressed an iOS library build. A, B and C give every platform
    a window onto the node, but the phone cannot be a peer without a
    second core language (C narrows that with WASM modules). E and F
    miss platforms or a single binary.
@@ -82,8 +84,11 @@ against exist, not whether a library does.
    portable-pty; Zig has Ghostty's own pty and libghostty-vt with no
    FFI.
 8. **View and panes.** A web page with CodeMirror and ghostty-web
-   carries the panes in B to E and H; A's server-rendered page and G's
-   widgets are the weaker paths.
+   carries the panes in B to E; A's server-rendered page and G's widgets
+   are weaker. H and I draw the terminal with libghostty's own GPU
+   renderer, the best terminal of any option, but build the diff and
+   the room natively per platform and keep a webview for the
+   running-app preview.
 9. **Terminal parity.** Bubble Tea and ratatui are mature; libvaxis is
    younger.
 10. **One view model.** Computed once in the core in every option; in
@@ -144,18 +149,28 @@ JavaScript in E are garbage-collected.
   memory safety for long-lived components and on toolchain stability.
 - **G is D with a different UI**, not worth the weaker panes unless a
   native-feeling UI outweighs them.
+- **H and I are Ghostty's shape**, and the shell choice is separate
+  from the core language: the same native UIs sit over a Zig core (H)
+  or a Rust core (I). Native shells give the best terminal, no webview
+  frame (so the vendor webview diagnostics touch only the preview pane)
+  and native key stores, at the cost of four UI codebases the factory
+  writes and VIEW-14 must keep as one vocabulary. I keeps D's safety and
+  ecosystem with Ghostty's shell; H keeps Zig's build and terminal
+  advantages with its safety and stability risks.
 - **The choice is reversible.** A factory ported Bun in 11 days against
   its tests; Cairn's executable SRS, driving the binary through the CLI
   and MCP, is the same kind of oracle if the bindings stay black-box.
 
 ## Shortlist
 
-1. **D, Rust core and Tauri**, if the five-platform app with a peer
-   phone is the first release.
+1. **A Rust core: D with Tauri, or I in Ghostty's shape**, if the
+   five-platform app with a peer phone is the first release. The core is
+   the same; the shell spike below picks between a webview and native
+   UIs.
 2. **C, Go node with WASM cores**, if a node-first release with phones
    as windows comes first; port the core later if the phone must be a
    peer.
-3. **H, Zig with TigerStyle**, if the bake-off shows arena discipline
+3. **H, Zig in Ghostty's shape**, if the bake-off shows arena discipline
    and simulation hold HC-23 in the long-lived components, and the
    toolchain churn is acceptable.
 
@@ -164,15 +179,16 @@ JavaScript in E are garbage-collected.
 The factory builds the same slice in Rust (D), Go (C) and Zig (H), in
 parallel lanes, and the numbers decide:
 
-| Part of the slice              | Measures                                                                                                    |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| Canonical JSON, the signed log | RFC 8785 vectors pass; first-attempt pass rate; iterations to green                                         |
-| Stdio MCP server with recall   | MCP Inspector passes; hook and MCP p95 and RSS on the reference hardware                                    |
-| A port of Go's `regexp`        | RE2's test files pass; differential fuzzing against Go finds no divergence in a fixed budget (Go reuses it) |
-| The core in a phone app        | the same library verifies a seal inside a Tauri app on iOS and Android                                      |
-| Reach evidence                 | a drift case that adds a socket to the core turns CI red                                                    |
-| A long-lived component         | a lane-view loop under fuzzing and a deterministic simulation, run for a fixed budget, with no memory error |
-| Factory cost                   | agent time, tokens, CPU per edit–build–test cycle, findings from reviewers, fuzzers and the security review |
+| Part of the slice              | Measures                                                                                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Canonical JSON, the signed log | RFC 8785 vectors pass; first-attempt pass rate; iterations to green                                                                                           |
+| Stdio MCP server with recall   | MCP Inspector passes; hook and MCP p95 and RSS on the reference hardware                                                                                      |
+| A port of Go's `regexp`        | RE2's test files pass; differential fuzzing against Go finds no divergence in a fixed budget (Go reuses it)                                                   |
+| The core in a phone app        | the same library verifies a seal inside a Tauri app on iOS and Android                                                                                        |
+| Reach evidence                 | a drift case that adds a socket to the core turns CI red                                                                                                      |
+| A long-lived component         | a lane-view loop under fuzzing and a deterministic simulation, run for a fixed budget, with no memory error                                                   |
+| The shell                      | the room with its terminal pane as a Tauri page and as a native SwiftUI view over the same core, on one platform: code size, VIEW-14 drift, terminal fidelity |
+| Factory cost                   | agent time, tokens, CPU per edit–build–test cycle, findings from reviewers, fuzzers and the security review                                                   |
 
 ## Decisions for the stakeholder
 

@@ -34,18 +34,25 @@ choice lands as an ADR and an SRS change.
   suite ([compile times](compile-times-bun.md)).
 - **Memory safety is a hard constraint** for hostile-input and trust
   code (HC-23, below).
-- **New options.** G puts a Flutter UI over a Rust core; H is a Zig
-  core library, with TigerStyle discipline and smalt's tooling. Zig
+- **New options.** G puts a Flutter UI over a Rust core. H takes
+  Ghostty's shape: a Zig core library behind a C ABI that does the hard
+  work, rendering the terminal included, under a native UI on each
+  platform, with TigerStyle discipline and smalt's tooling. I applies the
+  same shape to a Rust core, as Element X does for Matrix rooms. Zig
   leaves "options left out".
 
 ## How the options were cut
 
-The options differ on two questions: which language holds the core,
-and where the core runs. In A, B and C the core runs only on the
-owner's desktop nodes, and every shell is a thin window over the node's
-page. In D, G and H one core library is linked into every shell, the
-phone's included, so a phone can verify, sync and sign with the same
-code as the node. Everything else is held equal in
+The options differ on three questions: which language holds the core,
+where the core runs, and what kind of shell draws the UI. In A, B and C
+the core runs only on the owner's desktop nodes, and every shell is a
+thin window over the node's page. In D, G, H and I one core library is
+linked into every shell, the phone's included, so a phone can verify,
+sync and sign with the same code as the node. The shell is a web page
+in a webview (A to D), one widget toolkit everywhere (F, G), or, in
+Ghostty's shape, a native UI per platform over the core (H, I): SwiftUI
+and AppKit on macOS and iOS, GTK on Linux, Jetpack Compose on Android,
+WinUI on Windows. Everything else is held equal in
 [common ground](#common-ground), so a difference in step 2 traces to
 the option.
 
@@ -121,20 +128,20 @@ does not depend on the language.
 
 ## The options at a glance
 
-| Slot                   | A. Go node, hypermedia                 | B. Go node, TS page                  | C. Go node, TS page, WASM cores                   | D. Rust core, Tauri                    | E. TypeScript on Bun         | F. Kotlin Multiplatform    | G. Rust core, Flutter     | H. Zig core, TigerStyle                                          |
-| ---------------------- | -------------------------------------- | ------------------------------------ | ------------------------------------------------- | -------------------------------------- | ---------------------------- | -------------------------- | ------------------------- | ---------------------------------------------------------------- |
-| Core                   | Go                                     | Go                                   | Go                                                | Rust library                           | TypeScript on Bun            | Kotlin/Native              | Rust library              | Zig library, C ABI                                               |
-| Where the core runs    | desktop nodes                          | desktop nodes                        | desktop nodes; seal and sync modules everywhere   | every shell, phones included           | desktop; phone via Capacitor | every shell                | every shell               | every shell                                                      |
-| Desktop shell          | thin Tauri window over the node page   | thin Tauri window over the node page | thin Tauri window over the node page              | Tauri, page over IPC                   | Electron                     | Compose Desktop (JVM)      | Flutter                   | Tauri around the Zig library, or webview C lib                   |
-| Phone app              | wrapper over the node page, key plugin | as A                                 | as A, with the shared WASM modules in the webview | Tauri mobile, core in process          | Capacitor                    | Compose on iOS and Android | Flutter, core through FFI | Tauri mobile or native shells, core through C                    |
-| Page                   | server-rendered HTML + Datastar        | TS SPA                               | TS SPA plus shared WASM modules                   | TS SPA                                 | TS SPA                       | Compose for Web            | Flutter widgets           | TS SPA                                                           |
-| Run component          | Go pty; ghostty-vt.wasm via wasm2go    | as A                                 | as A, the same `.wasm` in the page                | portable-pty; libghostty-vt native     | `Bun.Terminal`; xterm        | POSIX pty by interop       | as D                      | Ghostty's pty and libghostty-vt, native Zig                      |
-| TUI                    | Bubble Tea                             | Bubble Tea                           | Bubble Tea                                        | ratatui                                | OpenTUI or Ink               | Mosaic or own              | ratatui                   | libvaxis                                                         |
-| Peer                   | Go transports, own range sync          | as A                                 | as A; CRDT as WASM                                | iroh or p2panda, own relays            | Hypercore or js-libp2p       | iroh-ffi (MPL-2.0) or own  | as D                      | own Noise port; QUIC and CRDT linked from C or Rust              |
-| Memory safety          | GC, `unsafe` banned, race design       | as A                                 | as A                                              | `forbid(unsafe_code)` per crate        | GC in JS; the runtime is Zig | GC                         | as D                      | ReleaseSafe, TigerStyle allocation, simulation                   |
-| Reach evidence         | import closure per entry               | as A                                 | as A, plus each module's imports                  | crate per component, lints, symbols    | runtime permissions only     | per-module deps, unproven  | as D                      | separate single-threaded core executable, own `Io`, symbol check |
-| Languages in the build | Go, a Rust shell                       | Go, TS, a Rust shell                 | Go, TS, Zig and Rust as WASM, a Rust shell        | Rust, TS                               | TS                           | Kotlin                     | Rust, Dart                | Zig, TS, a Rust shell                                            |
-| SRS language rows      | none                                   | none                                 | none                                              | CON-01, ENG-01 to 09, ENG-16, two ADRs | as D, and CON-03             | as D                       | as D                      | as D                                                             |
+| Slot                   | A. Go node, hypermedia                 | B. Go node, TS page                  | C. Go node, TS page, WASM cores                   | D. Rust core, Tauri                    | E. TypeScript on Bun         | F. Kotlin Multiplatform    | G. Rust core, Flutter     | H. Zig core, Ghostty shape                                                                | I. Rust core, Ghostty shape                                                               |
+| ---------------------- | -------------------------------------- | ------------------------------------ | ------------------------------------------------- | -------------------------------------- | ---------------------------- | -------------------------- | ------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Core                   | Go                                     | Go                                   | Go                                                | Rust library                           | TypeScript on Bun            | Kotlin/Native              | Rust library              | Zig library, C ABI                                                                        | Rust library, hand-written C ABI                                                          |
+| Where the core runs    | desktop nodes                          | desktop nodes                        | desktop nodes; seal and sync modules everywhere   | every shell, phones included           | desktop; phone via Capacitor | every shell                | every shell               | every shell                                                                               | every shell                                                                               |
+| Desktop shell          | thin Tauri window over the node page   | thin Tauri window over the node page | thin Tauri window over the node page              | Tauri, page over IPC                   | Electron                     | Compose Desktop (JVM)      | Flutter                   | native per platform: SwiftUI and AppKit, GTK from Zig, WinUI; core through its C API      | native per platform: SwiftUI and AppKit, GTK (gtk4-rs), WinUI; core through its C API     |
+| Phone app              | wrapper over the node page, key plugin | as A                                 | as A, with the shared WASM modules in the webview | Tauri mobile, core in process          | Capacitor                    | Compose on iOS and Android | Flutter, core through FFI | SwiftUI on iOS, Compose on Android, core through its C API                                | SwiftUI on iOS, Compose on Android, core through its C API                                |
+| Page                   | server-rendered HTML + Datastar        | TS SPA                               | TS SPA plus shared WASM modules                   | TS SPA                                 | TS SPA                       | Compose for Web            | Flutter widgets           | native views; libghostty renders the terminal; a webview only for the running-app preview | native views; libghostty renders the terminal; a webview only for the running-app preview |
+| Run component          | Go pty; ghostty-vt.wasm via wasm2go    | as A                                 | as A, the same `.wasm` in the page                | portable-pty; libghostty-vt native     | `Bun.Terminal`; xterm        | POSIX pty by interop       | as D                      | Ghostty's pty and libghostty-vt, native Zig                                               | as D                                                                                      |
+| TUI                    | Bubble Tea                             | Bubble Tea                           | Bubble Tea                                        | ratatui                                | OpenTUI or Ink               | Mosaic or own              | ratatui                   | libvaxis                                                                                  | ratatui                                                                                   |
+| Peer                   | Go transports, own range sync          | as A                                 | as A; CRDT as WASM                                | iroh or p2panda, own relays            | Hypercore or js-libp2p       | iroh-ffi (MPL-2.0) or own  | as D                      | own Noise port; QUIC and CRDT linked from C or Rust                                       | as D                                                                                      |
+| Memory safety          | GC, `unsafe` banned, race design       | as A                                 | as A                                              | `forbid(unsafe_code)` per crate        | GC in JS; the runtime is Zig | GC                         | as D                      | ReleaseSafe, TigerStyle allocation, simulation                                            | as D                                                                                      |
+| Reach evidence         | import closure per entry               | as A                                 | as A, plus each module's imports                  | crate per component, lints, symbols    | runtime permissions only     | per-module deps, unproven  | as D                      | separate single-threaded core executable, own `Io`, symbol check                          | as D                                                                                      |
+| Languages in the build | Go, a Rust shell                       | Go, TS, a Rust shell                 | Go, TS, Zig and Rust as WASM, a Rust shell        | Rust, TS                               | TS                           | Kotlin                     | Rust, Dart                | Zig, Swift, Kotlin, a Windows UI language                                                 | Rust, Swift, Kotlin, a Windows UI language                                                |
+| SRS language rows      | none                                   | none                                 | none                                              | CON-01, ENG-01 to 09, ENG-16, two ADRs | as D, and CON-03             | as D                       | as D                      | as D                                                                                      | as D                                                                                      |
 
 ## Option A: Go node, hypermedia
 
@@ -262,21 +269,33 @@ a web page, stable on all five platforms.
 - **Biggest risk.** The room's panes, which are web-native, rebuilt in a
   widget toolkit with thin libraries.
 
-## Option H: Zig core library, TigerStyle
+## Option H: Zig core library, Ghostty's shape
 
-**Thesis.** One Zig core library behind a C ABI, linked into every
-shell as TigerBeetle links one native library into six client
-languages, built with smalt's coverage, lint and gate tooling and
-TigerStyle's discipline ([Zig note](zig-option.md)).
+**Thesis.** Build Cairn the way Ghostty is built. A Zig core library
+behind a C API does the hard work, rendering the terminal included, and
+each platform gets a native UI that links it: Ghostty's macOS app is
+Swift with AppKit and SwiftUI over the libghostty C API, and its Linux
+app is written in Zig against GTK 4 ([About Ghostty][ghostty]). The core
+is built with smalt's coverage, lint and gate tooling and TigerStyle's
+discipline, and every client links the same library, as TigerBeetle's
+six client languages do ([Zig note](zig-option.md)).
 
 - **Core.** SQLite with FTS5 built statically by Zig; `std.crypto`;
   canonical JSON, the MCP server, RE2 redaction (a port of Go's
   `regexp`) and the git reader as vendored ports with equivalence jobs
   against their originals; QUIC and a CRDT linked from C or Rust
   libraries when P2 needs them.
-- **Shells.** Tauri on desktop and phone with the Zig library linked
-  into the thin Rust shell, or the webview C library on desktop and
-  native Swift and Kotlin wrappers on phones, as Ghostty does.
+- **Shells.** Native on every platform: SwiftUI and AppKit on macOS
+  and iOS (one Swift codebase), GTK 4 driven from Zig on Linux as
+  Ghostty does, Jetpack Compose on Android through JNI, WinUI on
+  Windows. The core computes the view model (common ground item 4), so
+  each UI only draws it; the factory writes four UI codebases against
+  one view model.
+- **Panes.** The terminal is libghostty's own GPU renderer (Metal,
+  OpenGL), as in Ghostty and in cmux, which builds its agent panes on
+  libghostty. The diff and the room are native views per platform. Only
+  the running-app preview needs a webview, so the I4 question about
+  vendor webview diagnostics shrinks to that one pane.
 - **Run component and TUI.** Ghostty's pty with ConPTY and libghostty-vt
   natively, no FFI; libvaxis.
 - **Memory safety.** ReleaseSafe in shipped builds (TigerBeetle ships
@@ -289,12 +308,38 @@ TigerStyle's discipline ([Zig note](zig-option.md)).
   every binary (measured), so the core is its own single-threaded
   executable with an own `Io` for files and clocks, lint rules per
   component root and a symbol check of the artifact.
-- **Precedent.** Ghostty, TigerBeetle, herdr's terminal core and the
-  stakeholder's smalt (266k lines of Zig 0.16 built by agents).
+- **Precedent.** Ghostty, cmux, TigerBeetle, herdr's terminal core and
+  the stakeholder's smalt (266k lines of Zig 0.16 built by agents).
 - **Biggest risk.** Long-lived components rest on arena discipline,
   not a guarantee; every release breaks code (0.17 regressed an iOS
   library build); upstream bans LLM-written reports, so the factory
-  cannot file a compiler bug itself.
+  cannot file a compiler bug itself. Four native UIs must stay one
+  vocabulary (VIEW-14).
+
+## Option I: Rust core library, Ghostty's shape
+
+**Thesis.** Ghostty's shape with a Rust core: one Rust library behind a
+C API does the hard work, the terminal renderer included, and each
+platform draws a native UI over it. Element X does this for Matrix
+rooms: the Matrix Rust SDK underneath, SwiftUI on iOS and Jetpack
+Compose on Android over an FFI layer ([Element X iOS][elementx-ios],
+[Element X Android][elementx]).
+
+- **Core, run component, TUI, peer, evidence, memory safety.** As D:
+  rusqlite, `rmcp` with HTTP off, the `regex` crate, portable-pty,
+  ratatui, iroh or p2panda, `forbid(unsafe_code)` in hostile-input and
+  trust crates.
+- **The C API.** Hand-written `extern "C"` functions and one header,
+  as `ghostty.h` is; UniFFI and cbindgen are MPL-2.0, which is off the
+  allow-list, so they are out unless ENG-18 changes.
+- **Terminal.** libghostty linked from Rust for its renderer, or
+  libghostty-vt for the model with each UI drawing the cells.
+- **Shells.** As H: SwiftUI and AppKit, GTK 4 through gtk4-rs, Jetpack
+  Compose through JNI, WinUI.
+- **Precedent.** Element X on the Matrix Rust SDK; herdr links
+  libghostty-vt from Rust.
+- **Biggest risk.** As H's four UI codebases, plus Rust's build times
+  for every shell; Windows has the weakest native UI path from Rust.
 
 ## Shells and hosts any option can add
 
@@ -319,4 +364,7 @@ TigerStyle's discipline ([Zig note](zig-option.md)).
 - **Dioxus.** Watched: native phone APIs arrive only in 0.8.
 
 [pitch]: ../../../plan/2610012322_cairn-for-agent-fleets/pitch.md
+[ghostty]: https://ghostty.org/docs/about
+[elementx]: https://github.com/element-hq/element-x-android
+[elementx-ios]: https://github.com/element-hq/element-x-ios
 [prior]: prior-art-stacks.md#patterns
