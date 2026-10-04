@@ -9,8 +9,10 @@ until then it is direction, not requirement.
 Written for developers: their day first, then what Cairn changes.
 Items marked "next" are P2 in the SRS. Revised through three loops of
 blind persona review ([round 10](persona-review/round-10/README.md)),
-then cut to a third of its length; the detail the reviews asked for
-lives in the concepts and the requirements.
+then cut to a third of its length and set against dots, Amp orbs and
+Buzz in a blind preference panel
+([round 11](persona-review/round-11/README.md)); the detail the reviews
+asked for lives in the concepts and the requirements.
 
 ### Cairn: from intent to outcome
 
@@ -22,11 +24,12 @@ in a lost tab, another forgot your rule after compaction, a third says
 "all tests pass" and you dig through logs to check. Two edited the same
 file. The pull request says nothing of how the code came to be.
 
-**With Cairn,** every intent gets a room, in your browser or your
-terminal. Your rooms on the left, ranked by what needs you. In the
-middle, one conversation with every agent on the intent. On the right,
-whatever an agent presents: the running app, the diff, the test run. Or
-follow an agent and watch its file change as it edits.
+**With Cairn,** every intent gets a room. Install the plugin; your
+harness, terminal and settings stay as they are. Your rooms on the
+left, ranked by what needs you. In the middle, one conversation with
+every agent on the intent. On the right, whatever an agent presents:
+the running app, the diff, the test run. Or follow an agent and watch
+its file change as it edits. All of it works in the terminal too.
 
 **Say it once.** Pin the goal and your rules. They come back to your
 agents word for word after every compaction.
@@ -35,19 +38,24 @@ agents word for word after every compaction.
 them side by side.
 
 **Keep it or correct course.** Click through to the lines and the runs
-behind an outcome. Commit it, or pin a correction every agent takes.
+behind an outcome. Commit and land it on your forge as always, or pin a
+correction every agent takes.
 
 **Point, link, find.** Mark any line, sentence or screenshot region and
 get a link. Every commit links back to its room. Search finds the exact
-moment; agents recall it the same way.
+moment; agents recall it the same way, marked as untrusted data.
 
 **Rooms talk.** The API room posts to the frontend room. Its agents
 read it when they look; it instructs them only if you say so.
 
-**Safe by default.** Nothing leaves your machine until you share.
-Agents take instructions only from you and those you trust; everything
-else is untrusted data. Next: your machines and teammates share rooms
-peer to peer, with no central service.
+**Back on Monday?** Each room says what changed, what failed and what
+waits for you, with every gap flagged.
+
+**Safe by default.** Nothing leaves your machine until you share, and
+secrets are redacted before anything is written. Agents take
+instructions only from you and those you trust by key; everything else
+is untrusted data. Next: your machines and teammates share rooms peer
+to peer, offline-first, with no central service.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
@@ -263,6 +271,12 @@ what checked them; rule levels per action shape the owner's control.
     browser; stop where the harness allows it; integrity and gaps named.
 29. v12 cut to 300 words at the stakeholder's request: one sentence per
     idea; the review's precision moves to the requirements.
+30. A blind panel ranked it against the launch pitches of dots, Amp
+    orbs and Buzz ([round 11](persona-review/round-11/README.md)):
+    first for eight of nine seats. Adjusted from their notes: your
+    setup stays as it is, the forge still lands code, recall is marked
+    untrusted, a Monday catch-up line, redaction, trust by key, peers
+    offline-first.
 
 ## Open before the SRS change
 
