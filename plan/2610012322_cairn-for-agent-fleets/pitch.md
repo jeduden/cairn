@@ -9,24 +9,28 @@ until then it is direction, not requirement.
 Written for developers: their problem in their words first, then what
 Cairn changes. Items marked "next" are P2 in the SRS.
 
-### Cairn: know exactly what your agents did, and work with them live
+### Cairn: from intent to outcome, with nothing lost in between
 
-**You know this.** Three agents, three terminals, three branches. You
-hunt through tabs for the one waiting on a prompt. After compaction it
-forgets your rule, and you repeat it. Then you review what it made: a
-diff and "all tests pass". Did it run them? Why this approach? The
-answer sits in a log on your laptop, and your reviewer never sees it.
+**You know this.** You tell an agent what you want. Hours later you get
+a diff and "all tests pass". In between, your intent slipped:
+compaction dropped the rule you set, the agent drifted, and three
+agents in three terminals each made their own calls. Now you review
+the outcome without knowing how it got there, or whether it did what
+you asked. Your reviewer knows even less.
 
-**Cairn keeps the story behind the code.** Git keeps the code; Cairn
-keeps the lane: every message, edit, command and result behind a
-branch, on your machine, secrets redacted.
+**Cairn connects what you asked for to what you got.** Git keeps the
+code; Cairn keeps the lane behind it.
 
-- **Say it once.** Pinned rules return word for word after compaction.
-  Agents look up what they did instead of guessing.
+- **Your intent stays intact.** What you ask for and the rules you pin
+  come back word for word after every compaction.
+- **Every step on the record.** Each message, edit, command and result,
+  on your machine, secrets redacted. Agents look up what they did
+  instead of guessing.
+- **Review the outcome against the intent.** Each result sits next to
+  what you asked for, with how it got there and what checked it: the
+  agent's claim, or a test run it recorded. Next: your reviewer sees
+  the same, in one signed file.
 - **See every agent.** One view: who is working, who is waiting on you.
-- **Review the outcome.** Each result shows how it got there and what
-  checked it: the agent's claim, or a test run it recorded. Next: hand
-  your reviewer the same, in one signed file.
 - **Split the work safely.** Agents delegate to subagents and other
   sessions within limits you set.
 - **Work live with your team (next).** Share a lane peer to peer, with
@@ -157,7 +161,8 @@ what checked them; rule levels per action shape the owner's control.
 9. For developers: open with the day they already have (tabs,
    compaction, the unexplained diff, the review without its story),
    then what Cairn changes; add reviewing the outcome, delegation and
-   lane sharing; half the words of v9.
+   lane sharing; half the words of v9. The stakeholder named the
+   process Cairn must excel at: intent to outcome.
 
 ## Open before the SRS change
 
