@@ -51,11 +51,12 @@ talk to all of them at once.
 2. **Judge where you see it.** Click through the app, read the diff,
    check each criterion against its evidence. Mark it met or needs
    changes; Cairn never decides for you.
-3. **Correct course in place.** Type the correction beside the
-   criterion, and it reaches the agents on that intent; watch the
-   outcome change. Or sharpen the intent, or retry from an earlier
-   checkpoint in a fresh worktree, with the first attempt kept beside
-   it.
+3. **Correct course in place.** Point at what is wrong, an element in
+   the running app or a line in the diff, and type the correction
+   beside the criterion. It reaches the agents on that intent with what
+   you pointed at; watch the outcome change. Or sharpen the intent, or
+   retry from an earlier checkpoint in a fresh worktree, with the first
+   attempt kept beside it.
 4. **Catch up.** Back after lunch or the weekend? The intents show
    what changed, what failed and what waits, each line linked to the
    record. If capture failed or part of the record is missing, Cairn
@@ -164,6 +165,8 @@ source in the [T3 Code note](../../research/notes/t3code/t3code.md). Amp's
 orbs run agents on its remote machines and add agent-to-agent messaging
 and multiplayer threads, all on Amp's service, with no documented trust
 boundary ([Amp orbs note](../../research/notes/amp-orbs/amp-orbs.md)).
+How their screens, and Claude Code on the web, lay out the work is
+compared in the [agent UX note](../../research/notes/agent-ux/agent-ux.md).
 
 |                  | Zed Delta                                   | Cairn (vision; not built)                                                      | T3 Code                                                                 | Amp orbs                                                        |
 | ---------------- | ------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------- |
@@ -249,6 +252,11 @@ what checked them; rule levels per action shape the owner's control.
     and the command it runs as it runs. This is multiplayer: the person
     and their agents are the players from the first release; teammates
     join the same room later, and every player can be followed.
+20. After the [agent UX note](../../research/notes/agent-ux/agent-ux.md):
+    the three-pane screen and a live preview are table stakes; pointing
+    at an element or a line carries into the correction. A verdict per
+    criterion, recorded evidence, one ranked queue, a correction tied to
+    a verdict and a room of agents are what none of them do.
 
 ## Open before the SRS change
 
