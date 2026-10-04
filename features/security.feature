@@ -114,7 +114,7 @@ Feature: Security (SEC)
     Then the writer key was generated on the node into a file only the tenant's user can read, not taken from the environment
     And the status says the key is a file an unsandboxed agent of the same user could read
     And no key or credential value appears in the store, a segment, a backup, an export, the audit log or any log output
-    And every credential of another component is loaded only by the component that uses it, never by a core process
+    And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
 
   @SEC-11 @P0 @I2 @I7 @pending
   Scenario Outline: project configuration may only tighten security settings
@@ -146,7 +146,7 @@ Feature: Security (SEC)
 
     Examples:
       | selector                     |
-      | --range 100-200              |
+      | --range w-1:100-200          |
       | --session s-1                |
       | --lane l-1                   |
       | --writer w-1                 |

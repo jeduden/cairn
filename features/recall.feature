@@ -27,7 +27,7 @@ Feature: Recall (RCL)
       | query "deploy"                       | 10   |
       | query "deploy", k 50                 | 50   |
       | query "deploy", k 500                | 50   |
-      | query "deploy", session "all"        | 10   |
+      | query "deploy", scope "project"      | 10   |
       | query "deploy", provenance ["web"]   | 10   |
       | query "deploy", kind ["tool_result"] | 10   |
       | query "deploy", trust "trusted"      | 10   |

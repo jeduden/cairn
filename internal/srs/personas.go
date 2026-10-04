@@ -2,7 +2,6 @@ package srs
 
 import (
 	"fmt"
-	"maps"
 	"regexp"
 	"slices"
 )
@@ -78,6 +77,7 @@ func PersonaAgents(body []byte) (map[string]string, error) {
 			continue
 		}
 		out := map[string]string{}
+		named := map[string]bool{}
 		for _, row := range tbl.Rows {
 			persona, agent, err := personaRow(row)
 			if err != nil {
@@ -86,10 +86,11 @@ func PersonaAgents(body []byte) (map[string]string, error) {
 			if _, dup := out[persona]; dup {
 				return nil, fmt.Errorf("srs: line %d: %s listed twice", row.Line, persona)
 			}
-			if slices.Contains(slices.Collect(maps.Values(out)), agent) {
+			if named[agent] {
 				return nil, fmt.Errorf("srs: line %d: %s named twice", row.Line, agent)
 			}
 			out[persona] = agent
+			named[agent] = true
 		}
 
 		return out, nil

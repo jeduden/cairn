@@ -35,7 +35,7 @@ context. It is not binding; §5–§10 are.
  └───────────────┬───────────────────────────────────┬────────────────────┘
                  ▼                                   ▼
    ┌──────────────────────────────┐    ┌──────────────────────────────┐
-   │ project store (SQLite, WAL)  │    │ payload store (CAS, sha256)  │
+   │ project store (SQLite, WAL)  │    │ payload store (REC-09 names) │
    │ events · events_fts · spans  │    │ large tool outputs, files    │
    │ landmarks · pins · quarantine│    └──────────────────────────────┘
    │ counters · audit · meta      │

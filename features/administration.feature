@@ -80,13 +80,15 @@ Feature: Administration and lifecycle (ADM)
     And every event and payload outside session "session-a" recalled before the backup is recalled identically
     And session "session-a" stays purged and the ended pin stays ended
     And each restored local writer is followed by a new audited writer, and no restored writer's log gains an event or reuses a seq
+    And "cairn verify" exits 0 on the restored home
 
   @ADM-07 @P0 @I1 @I5 @pending
   Scenario Outline: purge removes a scope everywhere, erases its commitment keys and leaves a tombstone
     Given an isolated Cairn home
     And a project with a Claude Code transcript "session-a" in lane "lane-a"
     When the operator runs "cairn purge <scope>"
-    Then the purged events are gone from the sealed segments, events, the FTS index, projections, the payload store and every copy of their content
+    Then the command exits 0
+    And the purged events are gone from the sealed segments, events, the FTS index, projections, the payload store and every copy of their content
     And the commitment key and payload reference of every purged event are erased
     And a tombstone event per purged range holds only addresses, counts, reason and commitments
     And the database is compacted and "cairn verify" confirms every rewritten segment's seals
