@@ -43,9 +43,9 @@ linters:
             - "!$test"
           deny:
             - pkg: "net"
-              desc: "Cairn never talks to the network (I4, SEC-01)"
+              desc: "the core never talks to the network (I4, SEC-01)"
             - pkg: "net/http"
-              desc: "Cairn never talks to the network (I4, SEC-01)"
+              desc: "the core never talks to the network (I4, SEC-01)"
             - pkg: "os/exec"
               desc: "no process spawning outside allow-listed packages (ENG-16)"
     lll:

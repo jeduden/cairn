@@ -37,19 +37,30 @@ func TestPersonaCoverageReadsTheTable(t *testing.T) {
 }
 
 func TestPersonaCoverageRejectsBadRows(t *testing.T) {
-	cases := map[string]string{
-		"a persona outside U1–U9": "| Requirements | Personas |\n|---|---|\n| REC-01 | U10 |\n",
-		"no persona":              "| Requirements | Personas |\n|---|---|\n| REC-01 | |\n",
-		"an id listed twice":      "| Requirements | Personas |\n|---|---|\n| REC-01 | U1 |\n| REC-01 | U2 |\n",
-		"a malformed id":          "| Requirements | Personas |\n|---|---|\n| rec-1 | U1 |\n",
-		"a short row":             "| Requirements | Personas |\n|---|---|\n| REC-01 |\n",
+	const head = "| Requirements | Personas |\n|---|---|\n"
+	cases := map[string]struct{ body, want string }{
+		"a persona outside U1–U9": {head + "| REC-01 | U10 |\n", `line 3: malformed persona "U10"`},
+		"no persona":              {head + "| REC-01 | |\n", `line 3: malformed persona ""`},
+		"an id listed twice":      {head + "| REC-01 | U1 |\n| REC-01 | U2 |\n", "line 4: REC-01 listed twice"},
+		"a malformed id":          {head + "| rec-1 | U1 |\n", `line 3: malformed requirement id "rec-1"`},
+		"a short row":             {head + "| REC-01 |\n", "line 3: malformed persona coverage row"},
 	}
-	for name, body := range cases {
-		_, err := PersonaCoverage([]byte(body))
-		assert.Error(t, err, name)
+	for name, c := range cases {
+		_, err := PersonaCoverage([]byte(c.body))
+		assert.ErrorContains(t, err, c.want, name)
 	}
 	_, err := PersonaCoverage([]byte("# no table\n"))
 	assert.ErrorContains(t, err, "no persona coverage table")
+}
+
+func TestSplitPersonasReadsTheCell(t *testing.T) {
+	got, err := splitPersonas(" U9 , U4,U1 ")
+
+	require.NoError(t, err)
+	assert.Equal(t, []string{"U9", "U4", "U1"}, got)
+
+	_, err = splitPersonas("U1, X2")
+	assert.ErrorContains(t, err, `malformed persona "X2"`)
 }
 
 func TestPersonaAgentsReadsSection25(t *testing.T) {
@@ -128,5 +139,5 @@ func TestPersonasMatchTheAgents(t *testing.T) {
 		onDisk = append(onDisk, strings.TrimSuffix(filepath.Base(f), ".md"))
 	}
 	slices.Sort(onDisk)
-	assert.Equal(t, onDisk, slices.Sorted(maps.Values(named)), "§2.5 personas and .claude/agents/persona-*.md")
+	assert.Equal(t, slices.Sorted(maps.Values(named)), onDisk, "§2.5 personas and .claude/agents/persona-*.md")
 }
