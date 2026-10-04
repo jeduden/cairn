@@ -39,7 +39,7 @@ addresses (RCL-08).
 | `search`        | P0  | `query` (string, literal terms), `any_of` / `all_of` / `phrase` (optional structured operators), `scope` (`session` \| `lane` \| `project`; default `session`), `lane`, `session` (an id within the scope), `provenance[]`, `kind[]`, `trust`, `since`, `until`, `k` | Envelope of hits: `seq`, session, provenance, trust, flags, kind, preview, score | k ≤ 50; 2 s deadline                       |
 | `expand`        | P0  | `seq_from`, `seq_to` (addresses, RCL-08), `scope` (default `session`), `lane`, `cursor`                                                                                                                                                                              | Envelope of full events in range, payloads resolved                              | 8,000 tokens per call; continuation cursor |
 | `get`           | P0  | `seq` (an address, RCL-08), `cursor`                                                                                                                                                                                                                                 | Envelope with one full event                                                     | 8,000 tokens per call                      |
-| `landmarks`     | P0  | `scope` (default `session`), `lane`, `tier`                                                                                                                                                                                                                          | Landmark blocks with `seq` ranges                                                | 4,000 tokens                               |
+| `landmarks`     | P0  | `scope` (default `session`), `lane`, `tier`                                                                                                                                                                                                                          | Landmark blocks with address ranges                                              | 4,000 tokens                               |
 | `pins_list`     | P0  | —                                                                                                                                                                                                                                                                    | Active pins and pending candidates (candidates marked)                           | —                                          |
 | `stats`         | P0  | —                                                                                                                                                                                                                                                                    | Event counts, sessions, compactions, recall counts for the project               | —                                          |
 | `pins_propose`  | P1  | `text`, `type`, `reason`                                                                                                                                                                                                                                             | Candidate ID; states that activation requires the user                           | 1,000 characters                           |
@@ -76,7 +76,8 @@ addresses (RCL-08).
 ```
 
 From 2.0, each item also carries `writer`, `actor`, `origin`, trust level and
-`chain` (RCL-09), and `seq` becomes an address (writer, seq). `session` is
+`chain` (RCL-09), and `seq`, and a tombstone's `seq_from` and `seq_to`,
+become addresses (writer, seq). `session` is
 rendered relative (`current`, `other`) rather than as a raw
 identifier when the session is in scope, to keep outputs compact. Items are
 ordered by score (search) or `seq` (expand).
@@ -90,10 +91,10 @@ Pinned constraints (verbatim, set by the user):
 2. Do not modify files under migrations/ without explicit approval.
 
 Session landmarks (use cairn tools `landmarks`, `search`, `expand` to recover exact detail):
-[T0] seq 41020–41388 · turns 31–33 · Edit×6 Bash×4 · files: internal/store/fts.go, internal/store/fts_test.go
-[T0] seq 41389–41950 · turns 34–36 · Bash×9 (2 errors) · files: Makefile
-[T1] seq 30112–41019 · turns 18–30 · Edit×21 Read×40 Bash×17
-[T2] seq 1–30111 · turns 1–17 · Read×88 Edit×35 WebFetch×6
+[T0] A1·41020–41388 · turns 31–33 · Edit×6 Bash×4 · files: internal/store/fts.go, internal/store/fts_test.go
+[T0] A1·41389–41950 · turns 34–36 · Bash×9 (2 errors) · files: Makefile
+[T1] A1·30112–41019 · turns 18–30 · Edit×21 Read×40 Bash×17
+[T2] A1·1–30111 · turns 1–17 · Read×88 Edit×35 WebFetch×6
 
 Earlier detail was compacted but is fully recoverable with the cairn recall tools.
 </cairn-restore>

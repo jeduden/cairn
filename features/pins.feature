@@ -91,7 +91,7 @@ Feature: Pins (PIN)
     Given an isolated Cairn home
     And 6 active constraint pins of 250 estimated tokens each, against the default pin budget of 1,000 tokens
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block holds 4 of the pins, ordered by priority then seq
+    Then the restore block holds 4 of the pins, ordered by priority, then by creating address, writer then seq
     And each included pin's text is complete and verbatim
     And the restore block states that 2 pins were omitted
     And an audit entry records "2 pins omitted over the pin budget"

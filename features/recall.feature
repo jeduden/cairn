@@ -38,7 +38,7 @@ Feature: Recall (RCL)
   Scenario: expand returns exact post-redaction content under the token cap
     Given an isolated Cairn home
     And a project with a Claude Code transcript "large-payloads"
-    When Claude calls the MCP tool "expand" with seq_from 1, seq_to 400
+    When Claude calls the MCP tool "expand" with seq_from "w-1·1", seq_to "w-1·400"
     Then the result is wrapped in the recall envelope
     And the items hold the exact post-redaction content with payload references resolved
     And the envelope is at most 8,000 tokens with "truncated" true and a "next_cursor"
@@ -53,10 +53,10 @@ Feature: Recall (RCL)
     And the envelope carries "cairn_envelope" 1 and the fixed untrusted-data notice
 
     Examples:
-      | tool   | args                  |
-      | search | query "deploy"        |
-      | expand | seq_from 1, seq_to 20 |
-      | get    | seq 7                 |
+      | tool   | args                                |
+      | search | query "deploy"                      |
+      | expand | seq_from "w-1·1", seq_to "w-1·20" |
+      | get    | seq "w-1·7"                         |
 
   @RCL-05 @P0 @I8 @pending
   Scenario: recall defaults to the current session and widening to lane or project is explicit and logged
@@ -71,11 +71,11 @@ Feature: Recall (RCL)
   Scenario: quarantined events are never recalled and purged ranges return a tombstone
     Given an isolated Cairn home
     And a project with a Claude Code transcript "poisoned-web"
-    And the operator runs "cairn quarantine add --seq 12"
-    And the operator runs "cairn purge --range 30-40"
-    When Claude calls the MCP tool "expand" with seq_from 1, seq_to 50
+    And the operator runs "cairn quarantine add --range w-1:12-12"
+    And the operator runs "cairn purge --range w-1:30-40"
+    When Claude calls the MCP tool "expand" with seq_from "w-1·1", seq_to "w-1·50"
     Then the result is wrapped in the recall envelope
-    And no item has seq 12 and no item lies in seq 30-40, which appear as a tombstone with reason "purged"
+    And no item has address w-1·12 and no item lies in w-1·30–40, which appears as a tombstone with reason "purged"
 
   @RCL-07 @P0 @I6 @pending
   Scenario: every recall call is appended to the record
@@ -83,7 +83,7 @@ Feature: Recall (RCL)
     And a project with a Claude Code transcript "short-session"
     When Claude calls the MCP tool "search" with query "deploy"
     Then the record gains one recall event with provenance "assistant" carrying the query
-    And that event lists the returned seq set
+    And that event lists the addresses of the returned events
     And the counter "recall_calls" increases by 1
 
   @RCL-08 @P1 @I1 @pending

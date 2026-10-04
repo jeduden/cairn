@@ -107,6 +107,7 @@ Feature: Provenance and trust (PRV)
       | file             |
       | subagent_result  |
       | harness_text     |
+      | post             |
       | unparsed         |
 
   @PRV-06 @P0 @I2 @pending
@@ -114,7 +115,7 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And a project holding an event with provenance "harness_meta" and one with provenance "web"
     When the <artifact> is derived from both events
-    Then the <artifact> records the seq of both source events
+    Then the <artifact> records the addresses of both source events
     And the <artifact> has trust "untrusted"
     And the <artifact> derived from the "harness_meta" event alone has trust "trusted"
 

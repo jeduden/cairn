@@ -61,9 +61,10 @@ pin removal, quarantine, release, purge tombstones, retention runs — are
 themselves appended as events with provenance `operator`. Every other table (FTS
 index, spans, landmarks, active pins, quarantine set, counters) is a projection
 that `cairn rebuild` reproduces exactly from the record (I10). Purge removes
-content but leaves a tombstone event carrying the removed range, reason,
-operator, and a hash of the removed content, so rebuilds stay deterministic and
-purges stay auditable.
+content but leaves a tombstone event carrying the removed addresses, counts,
+reason, operator, and the commitments of the removed events (REC-17, ADM-07),
+never a hash of the removed content, so rebuilds stay deterministic, purges
+stay auditable and nothing retained confirms a guess at what was purged.
 
 ## 4.4 Key scenarios
 
@@ -79,8 +80,8 @@ purges stay auditable.
    **restore block**: active pins (verbatim), the landmark index, and a one-line
    hint that recall tools exist.
 5. Later, Claude needs a detail that compaction dropped. It calls
-   `cairn.search`, then `cairn.expand` on the returned `seq` range, and receives
-   the exact original inside an untrusted-data envelope.
+   `cairn.search`, then `cairn.expand` on the returned address range, and
+   receives the exact original inside an untrusted-data envelope.
 
 ### Aggregation over large history
 
