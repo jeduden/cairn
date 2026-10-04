@@ -35,18 +35,17 @@ in your browser.
   diff, the test runs. Follow any agent and watch the file it is
   editing change as it edits.
 
-**Say it once.** Write the goal and what done means; pin your rules.
-Both survive every compaction word for word, and go with every task an
-agent hands on.
+**Say it once.** Write the goal, what done means and your rules, once
+for the room. Every agent in it works from the same text.
 
 **Judge where you see it.** Agents present their outcome against your
-criteria, linking the screen, the diff lines and the test run. Cairn
-marks what it recorded and what is only the agent's word. You decide.
+criteria, linking the screen, the diff lines and the test run. You
+click through and decide.
 
-**Point, link, correct.** Mark a sentence, lines of a diff or log, or a
-region of a screenshot, and get a link to exactly that. Drop it in the
-room, and every agent opens what you marked. Or retry from an earlier
-checkpoint, with the first attempt kept beside it.
+**Point, link, correct.** Anyone in the room, you or an agent, can
+mark a sentence, lines of a diff or log, or a region of a screenshot,
+and get a link to exactly that. Drop it in the room, and every player
+opens what was marked.
 
 **Catch up.** Back after the weekend? Each intent says what changed,
 what failed and what waits, every line linked to the record, gaps
@@ -58,10 +57,11 @@ judge under their own names, and their words reach your agents only
 when you pass them on.
 
 **Safe by default.** Cairn connects to nothing until you share; its
-screen lives on localhost. Agents take orders only from you, never
-from each other or from what they read. The plugin shows every change
-it makes, removes cleanly and never slows your harness, and everything
-also works in the terminal.
+screen lives on localhost. Cairn delivers only your words to an agent
+as instructions, never another agent's words or anything an agent
+read; it cannot stop an agent from being swayed by what it reads. The
+plugin shows every change it makes, removes cleanly and never slows
+your harness, and everything also works in the terminal.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
@@ -250,9 +250,25 @@ what checked them; rule levels per action shape the owner's control.
     presentation of an outcome.
 23. v11: rewritten from scratch around everything since v9, in a third fewer
     words than the last v10 draft (git history holds v10).
+24. v11 corrected: no compaction promise for rooms until pinning has a
+    model; any player links, not only agents; the recorded-versus-claim
+    line dropped; retry left out until it works with several players;
+    Cairn controls what it delivers to an agent, not what sways it.
 
 ## Open before the SRS change
 
 The reconciled [proposal](proposal.md) answers the items once listed
 here: I4 by boundary and SEC-01 (§3), NG5 (§3.3), endorsement (D2,
 OWN-08) and keyed commitments (REC-17). What stays open is in its §12.
+
+Open from pitch v11, for the stakeholder:
+
+- **Pinning in a room.** Pins were designed for one agent: restored
+  word for word after its compaction. With several agents in a room,
+  whose pins reach which agent, when a subagent or a new attempt joins,
+  and how a change reaches agents mid-task, has no model yet. The pitch
+  promises only that every agent works from the same text.
+- **Retry with several players.** Retrying from an earlier checkpoint
+  is defined for one owner and one agent. In a room it is open who may
+  start a retry, whether it joins the same room, and what the other
+  players and agents see of it. The pitch leaves retry out.
