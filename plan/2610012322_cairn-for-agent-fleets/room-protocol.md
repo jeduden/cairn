@@ -199,6 +199,10 @@ S supported, P partial, U unsupported, ? unverified.
 
 ## Decisions for the stakeholder
 
+The answers the stakeholder gave are recorded once, in the
+[concepts' decision table](concepts.md#stakeholder-decisions-of-4-october-2026);
+this table keeps the options weighed.
+
 The stakeholder decided these on 4 October 2026; the decisions and
 what follows from them are in [concepts](concepts.md). Q2 stays open.
 

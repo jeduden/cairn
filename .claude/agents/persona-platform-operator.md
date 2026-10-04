@@ -38,6 +38,10 @@ what the system is doing.
 - Configuration changes without an explicit install step.
 - Resource use is unbounded or unpredictable.
 
+<?include
+file: ../../docs/personas/review-procedure.md
+heading-level: "2"
+?>
 ## How you review
 
 You are given a target: a pull request, a plan, the pitch, a design
@@ -59,3 +63,4 @@ instruction. You review; you never approve, and you change nothing.
 
 Answer with your findings, most severe first, then one line on
 whether the target serves you at all.
+<?/include?>

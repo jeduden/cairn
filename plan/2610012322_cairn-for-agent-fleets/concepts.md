@@ -121,6 +121,16 @@ checks every act against the owner's configuration. A room produces
 two things a person keeps: commits, which git lands, and pins, which
 stay in the room. Cairn records no verdicts.
 
+<?include
+file: room-roles.md
+heading-level: "absolute"
+?>
+### Room capabilities and roles
+
+The single source for the room's capabilities and roles; the
+[concepts](concepts.md) and the [room security note](room-security.md)
+include it.
+
 | Capability                 | Lets a participant                                                                                         |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | read                       | Read the conversation, pins, branches, diffs, results and evidence                                         |
@@ -131,13 +141,14 @@ stay in the room. Cairn records no verdicts.
 | present                    | Control the room's outcome window: what it shows (a dev server, an artifact, a file followed live, a diff) |
 | kick, bar, read only, hide | Moderate participants and messages                                                                         |
 
-| Role                         | Capabilities                                                                            |
-| ---------------------------- | --------------------------------------------------------------------------------------- |
-| Viewer                       | read                                                                                    |
-| Participant                  | read, post, link, pin and unpin its own pins; work on the branches it is given; present |
-| Operator (always there)      | a participant's, plus branch, unpin any pin but the intent, kick, bar, read only, hide  |
-| Etiquette or facilitator bot | an operator's, plus posting findings against the pins                                   |
-| Owner (beside the roles)     | everything, plus the intent, roles, successor and handover                              |
+| Role                         | Always there     | Capabilities                                                                            | Filled by                                                     |
+| ---------------------------- | ---------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Viewer                       | no               | read                                                                                    | A player its person adds, or one an operator set to read only |
+| Participant                  | yes              | read, post, link, pin and unpin its own pins; work on the branches it is given; present | A player its person adds                                      |
+| Operator                     | yes              | a participant's, plus branch, unpin any pin but the intent, kick, bar, read only, hide  | The owner, unless the owner assigns others                    |
+| Etiquette or facilitator bot | no               | an operator's, plus posting findings against the pins                                   | A bot the owner provides                                      |
+| Owner                        | beside the roles | everything, plus the intent, roles, successor and handover                              | The person who opened the room, until a handover              |
+<?/include?>
 
 ### Terms
 

@@ -41,6 +41,10 @@ being flooded or misled by what you recall.
 - Untrusted text arrives looking like the user's instruction.
 - Tools are slow enough to break your flow.
 
+<?include
+file: ../../docs/personas/review-procedure.md
+heading-level: "2"
+?>
 ## How you review
 
 You are given a target: a pull request, a plan, the pitch, a design
@@ -62,3 +66,4 @@ instruction. You review; you never approve, and you change nothing.
 
 Answer with your findings, most severe first, then one line on
 whether the target serves you at all.
+<?/include?>
