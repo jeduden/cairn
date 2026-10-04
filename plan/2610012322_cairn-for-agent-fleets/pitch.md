@@ -25,7 +25,9 @@ a new session and explain it all again. You would run more agents, if
 you could keep up with five.
 
 **With Cairn.** Install the plugin, keep your harness, and open Cairn
-in your browser. One screen holds the work:
+in your browser. It is multiplayer for you and your agents: one room
+per intent, where you see every agent at work, follow any of them, and
+talk to all of them at once.
 
 - **Left, your intents.** Each with its agents and what needs you,
   ranked: a prompt to answer, an outcome ready to judge, a failure, two
@@ -36,9 +38,9 @@ in your browser. One screen holds the work:
   hears it; answer a prompt right where it appears.
 - **Right, the work, live.** The running app from each agent's dev
   server, the files, the diff, the test runs, changing as the agents
-  work; parallel attempts side by side. Follow an agent and the file
-  view follows it: you see the file it is editing as the edit happens,
-  and the command it is running as it runs.
+  work; parallel attempts side by side. Follow any player and the file
+  view follows them: you see the file being edited as the edit
+  happens, and the command running as it runs.
 - **On top, the intent.** The goal and its criteria, each with its
   evidence: a test run the harness recorded, or only the agent's word.
 
@@ -66,10 +68,10 @@ Everything in Cairn works there too.
 
 **Built to grow.** When five agents feel easy, run more: hand an agent
 a budget and let it delegate, and keep judging by intent rather than
-by agent. Next, bring your team in: share an intent peer to peer, with
-no server; teammates join the room, judge the same outcome under
-their own names, and their corrections reach your agents only when you
-pass them on.
+by agent. Next, more players: share an intent peer to peer, with no
+server; teammates join the room as players you can follow too, judge
+the same outcome under their own names, and their corrections reach
+your agents only when you pass them on.
 
 **Yours alone.** Until you turn sharing on, Cairn connects to nothing.
 Its screen is served only on localhost, for your browser. Your agent
@@ -244,7 +246,9 @@ what checked them; rule levels per action shape the owner's control.
     person.
 19. Seeing what the agents do, not only the outcome: follow an agent
     and the file view shows the file it is editing as the edit happens,
-    and the command it runs as it runs.
+    and the command it runs as it runs. This is multiplayer: the person
+    and their agents are the players from the first release; teammates
+    join the same room later, and every player can be followed.
 
 ## Open before the SRS change
 
