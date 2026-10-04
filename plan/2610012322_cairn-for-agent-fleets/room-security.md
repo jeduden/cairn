@@ -144,6 +144,9 @@ capability list, extended to the room's code, is in the
   classifier's claims, shown as such, and the owner can lift any bar.
 - **A room without one.** The owner may run no etiquette bot; the
   operator role is still there, held by the owner by default.
+- **The outcome window.** When participants' presents compete, the
+  facilitator decides what the room's outcome window shows; without
+  one, an operator; last, the owner.
 - **Capabilities and modes.** Each role is a set of capabilities:
   read, post, link, pin and unpin, work, branch, present, kick, bar,
   set read only, hide. The

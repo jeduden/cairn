@@ -155,9 +155,12 @@ stay in the room. Cairn records no verdicts.
   late sync can only withdraw, never revive; pinning again writes a
   new pin.
 - **Outcome window.** The room's shared view of the work, beside the
-  conversation. A participant with present chooses what it shows; the
-  latest present in the room's record wins. Any viewer may instead
-  follow one player in their own view, which needs no capability.
+  conversation. A participant with present puts its outcome there.
+  When presents compete, the room's facilitator decides what the
+  window shows; in a room without one, an operator; and last, the
+  owner. Until one of them decides, the latest present in the room's
+  record shows. Any viewer may instead follow one player in their own
+  view, which needs no capability.
 - **Judging.** A person judges by looking, as today, and Cairn records
   only what follows: a commit, or a pin that corrects course.
 
@@ -275,37 +278,39 @@ As information read through a tool, never pushed:
 
 ## Stakeholder decisions of 4 October 2026
 
-| #   | Question                                   | Decision                                                                                                                                                          |
-| --- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Q1  | Is a room a lane or a group of lanes?      | Neither: independent concepts, composed by bindings                                                                                                               |
-| Q2  | Does a change notice carry the text?       | At least a link to the changed pin; likely also a diff against the version before. A summary only if the pin's author writes one, since Cairn never calls a model |
-| Q3  | What does leaving do to a running agent?   | The agent decides. Cairn stops restoring the room's pins and tells the agent it left                                                                              |
-| Q6  | Does the intent reach a teammate's agents? | Yes. Access to a room is access to its pins, and the intent is the room's first pin                                                                               |
-| Q8  | A quarantined pin still in context?        | The agents figure it out, possibly with their people. Cairn tells participant agents the pin was withdrawn                                                        |
-| Q9  | Can the owner leave their own room?        | Yes                                                                                                                                                               |
-| Q10 | Who writes room pins and adds players?     | Pins: holders of the pin capability, each pin by its author alone; the intent by the owner. Players: only a player's own person adds it                           |
-| Q11 | A room whose owner left?                   | Nobody changes its pins until the owner hands the room over; the pins stay as they were                                                                           |
-| Q12 | Do room pins instruct agents?              | No. Room pins are information agents must be aware of; a room bot the owner or operator runs enforces them                                                        |
-| Q13 | How is a player kept out?                  | The authorisation layer: operators kick and bar                                                                                                                   |
-| Q15 | What may a room bot do?                    | Post findings, kick and bar                                                                                                                                       |
-| Q16 | Who fills a room's roles?                  | The owner configures roles and provides the players; the operator role is always there, an etiquette bot is optional                                              |
-| Q17 | Can a player be read only?                 | Yes: a capability the owner's authorisation layer withholds, for one player or room-wide as a mode                                                                |
-| Q18 | What does the etiquette bot do?            | It is an operator and enforces the pins itself; every act is audited with its finding, and the owner can undo it                                                  |
-| Q19 | Do messages carry a kind?                  | Likely; a design phase decides the set                                                                                                                            |
-| Q20 | Can an agent claim work or paths?          | Yes, as a pin about itself, never a lock; claim is no capability of its own                                                                                       |
-| Q21 | Who may write a claim?                     | Its author, about itself, through the pin capability                                                                                                              |
-| Q22 | What may a notice contain?                 | A notice is a message kind. Every room message is untrusted unless the agent's person explicitly trusts its poster; Cairn is a set of tools, not an authority     |
-| Q23 | How is a harness known in a room?          | Joining gives it a participant id; any harness can join, and its messages and links are stamped with that id                                                      |
-| Q24 | Which roles does a room have?              | Viewer, participant, operator (always there), etiquette or facilitator bot (optional); the owner stands beside them                                               |
-| Q25 | Workspace and room: two concepts or one?   | One: the room absorbs the workspace; its capabilities extend to code                                                                                              |
-| Q26 | Is every session in a room?                | Not Cairn's question: a session is the harness's concept. Cairn knows participants; a harness joins rooms and maps its sessions to them                           |
-| Q27 | Parallel attempts?                         | Several branches in one room; an attempt is one branch, one try at the intent (see Terms)                                                                         |
-| Q28 | Can a branch move between rooms?           | No: git has no move. A branch stays in the room it was opened in; work continues elsewhere as a new branch from its commits, opened in the other room             |
-| Q29 | What happens to "lane" in the SRS?         | Confirmed: it is renamed room; LANE ids map to room ids                                                                                                           |
-| Q30 | Is claim a capability?                     | No. Pin and unpin are; a claim is a pin                                                                                                                           |
-| Q31 | What does present mean?                    | Controlling the room's outcome window                                                                                                                             |
-| Q32 | Does a room record verdicts?               | No. A person commits files or pins to the room                                                                                                                    |
-| Q33 | How are commits linked to rooms?           | A link in the commit message to the room that worked on the commit (see below)                                                                                    |
+| #   | Question                                              | Decision                                                                                                                                                          |
+| --- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Q1  | Is a room a lane or a group of lanes?                 | Neither: independent concepts, composed by bindings                                                                                                               |
+| Q2  | Does a change notice carry the text?                  | At least a link to the changed pin; likely also a diff against the version before. A summary only if the pin's author writes one, since Cairn never calls a model |
+| Q3  | What does leaving do to a running agent?              | The agent decides. Cairn stops restoring the room's pins and tells the agent it left                                                                              |
+| Q6  | Does the intent reach a teammate's agents?            | Yes. Access to a room is access to its pins, and the intent is the room's first pin                                                                               |
+| Q8  | A quarantined pin still in context?                   | The agents figure it out, possibly with their people. Cairn tells participant agents the pin was withdrawn                                                        |
+| Q9  | Can the owner leave their own room?                   | Yes                                                                                                                                                               |
+| Q10 | Who writes room pins and adds players?                | Pins: holders of the pin capability, each pin by its author alone; the intent by the owner. Players: only a player's own person adds it                           |
+| Q11 | A room whose owner left?                              | Nobody changes its pins until the owner hands the room over; the pins stay as they were                                                                           |
+| Q12 | Do room pins instruct agents?                         | No. Room pins are information agents must be aware of; a room bot the owner or operator runs enforces them                                                        |
+| Q13 | How is a player kept out?                             | The authorisation layer: operators kick and bar                                                                                                                   |
+| Q15 | What may a room bot do?                               | Post findings, kick and bar                                                                                                                                       |
+| Q16 | Who fills a room's roles?                             | The owner configures roles and provides the players; the operator role is always there, an etiquette bot is optional                                              |
+| Q17 | Can a player be read only?                            | Yes: a capability the owner's authorisation layer withholds, for one player or room-wide as a mode                                                                |
+| Q18 | What does the etiquette bot do?                       | It is an operator and enforces the pins itself; every act is audited with its finding, and the owner can undo it                                                  |
+| Q19 | Do messages carry a kind?                             | Likely; a design phase decides the set                                                                                                                            |
+| Q20 | Can an agent claim work or paths?                     | Yes, as a pin about itself, never a lock; claim is no capability of its own                                                                                       |
+| Q21 | Who may write a claim?                                | Its author, about itself, through the pin capability                                                                                                              |
+| Q22 | What may a notice contain?                            | A notice is a message kind. Every room message is untrusted unless the agent's person explicitly trusts its poster; Cairn is a set of tools, not an authority     |
+| Q23 | How is a harness known in a room?                     | Joining gives it a participant id; any harness can join, and its messages and links are stamped with that id                                                      |
+| Q24 | Which roles does a room have?                         | Viewer, participant, operator (always there), etiquette or facilitator bot (optional); the owner stands beside them                                               |
+| Q25 | Workspace and room: two concepts or one?              | One: the room absorbs the workspace; its capabilities extend to code                                                                                              |
+| Q26 | Is every session in a room?                           | Not Cairn's question: a session is the harness's concept. Cairn knows participants; a harness joins rooms and maps its sessions to them                           |
+| Q27 | Parallel attempts?                                    | Several branches in one room; an attempt is one branch, one try at the intent (see Terms)                                                                         |
+| Q28 | Can a branch move between rooms?                      | No: git has no move. A branch stays in the room it was opened in; work continues elsewhere as a new branch from its commits, opened in the other room             |
+| Q29 | What happens to "lane" in the SRS?                    | Confirmed: it is renamed room; LANE ids map to room ids                                                                                                           |
+| Q30 | Is claim a capability?                                | No. Pin and unpin are; a claim is a pin                                                                                                                           |
+| Q31 | What does present mean?                               | Controlling the room's outcome window                                                                                                                             |
+| Q32 | Does a room record verdicts?                          | No. A person commits files or pins to the room                                                                                                                    |
+| Q33 | How are commits linked to rooms?                      | A link in the commit message to the room that worked on the commit (see below)                                                                                    |
+| Q34 | Who decides the outcome window when presents compete? | The facilitator if the room has one, otherwise an operator, last the owner                                                                                        |
+| Q35 | Can trailers be turned off, for public repositories?  | No: every commit made in a room carries them; the room id reveals only that a room exists                                                                         |
 
 Q4, Q5 and Q7 follow from the split: an agent may be in any number of
 rooms; an agent in no room follows its person's rules for agents, as
@@ -367,13 +372,6 @@ Cairn-Link: https://cairn.example.org/r/r-7f3a/m/91#L3-L7
   (CMP-09); the bot is compute outside Cairn, like a harness.
 
 ## Open points
-
-- **The outcome window when several present at once:** the latest
-  present wins; whether the owner may hold it on one attempt, or the
-  window splits per attempt, is open.
-- **Trailers in public repositories:** the room id reveals that a room
-  exists, nothing more; whether a repository setting turns trailers
-  off is open.
 
 - **Room pins beside rules for agents.** The person's rules for agents
   are what the agent follows; room pins are what it is aware of and
