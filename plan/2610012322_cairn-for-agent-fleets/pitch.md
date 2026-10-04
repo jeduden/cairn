@@ -34,9 +34,9 @@ in your browser. One screen holds the work:
   on it. Each agent's messages, edits, commands and prompts appear in
   place, under its name. Say something and every agent in the room
   hears it; answer a prompt right where it appears.
-- **Right, the outcome, live.** The running app from that worktree's
-  dev server, the diff, the files it produced, the test runs, changing
-  as the agent works.
+- **Right, the outcome, live.** The running app from each agent's dev
+  server, the diff, the files produced, the test runs, changing as the
+  agents work; parallel attempts side by side.
 - **On top, the intent.** The goal and its criteria, each with its
   evidence: a test run the harness recorded, or only the agent's word.
 
