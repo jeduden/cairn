@@ -284,8 +284,9 @@ its person adds it to.
 - **Participant ids (Q23):** derived per room from the join event and
   the participant key the harness holds; the harness keeps both with
   its session; a bar on the person's owner key reaches every
-  participant id certified under it. Open: how a participant key is
-  certified by the person's device key without the person acting on
-  every join.
+  participant id certified under it. The proposed chain (owner key
+  with pre-rotation, device key, harness key with a standing grant,
+  participant key per room) is in the
+  [identity note](../../research/notes/identity-keys/identity-keys.md).
 
 [boards]: ../../research/notes/agent-message-boards/agent-message-boards.md
