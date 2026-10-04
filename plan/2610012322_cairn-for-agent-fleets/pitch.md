@@ -34,9 +34,11 @@ in your browser. One screen holds the work:
   on it. Each agent's messages, edits, commands and prompts appear in
   place, under its name. Say something and every agent in the room
   hears it; answer a prompt right where it appears.
-- **Right, the outcome, live.** The running app from each agent's dev
-  server, the diff, the files produced, the test runs, changing as the
-  agents work; parallel attempts side by side.
+- **Right, the work, live.** The running app from each agent's dev
+  server, the files, the diff, the test runs, changing as the agents
+  work; parallel attempts side by side. Follow an agent and the file
+  view follows it: you see the file it is editing as the edit happens,
+  and the command it is running as it runs.
 - **On top, the intent.** The goal and its criteria, each with its
   evidence: a test run the harness recorded, or only the agent's word.
 
@@ -240,6 +242,9 @@ what checked them; rule levels per action shape the owner's control.
     person talks to every agent on the intent at once, each agent's work
     appears under its name, and agents take orders only from the
     person.
+19. Seeing what the agents do, not only the outcome: follow an agent
+    and the file view shows the file it is editing as the edit happens,
+    and the command it runs as it runs.
 
 ## Open before the SRS change
 
