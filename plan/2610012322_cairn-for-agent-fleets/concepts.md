@@ -99,6 +99,8 @@ agent, delivered at its next hook point.
 | Q6  | Does the intent reach a teammate's agents? | Yes. Access to a room is access to its pins, and the intent is the room's first pin                   |
 | Q8  | A quarantined pin still in context?        | The agents figure it out, possibly with their people. Cairn tells member agents the pin was withdrawn |
 | Q9  | Can the owner leave their own room?        | Yes                                                                                                   |
+| Q10 | Who writes room pins and adds players?     | The room's owner writes its pins; only a player's own person adds it to a room                        |
+| Q11 | A room whose owner left?                   | Nobody changes its pins until the owner hands the room over; the pins stay as they were               |
 
 Q4, Q5 and Q7 follow from the split: a session may be in any number of
 rooms; a plain session in no room follows its person's rules for
@@ -122,12 +124,8 @@ its person adds it to.
 
 ## Open points
 
-- **Who may write bindings and room pins.** Proposed: the room's owner
-  writes its pins; only a player's own person adds it to a room.
-- **A room whose owner left (Q9).** Who may then change its pins:
-  proposed, nobody until the owner hands the room over, so pins stay
-  as they were.
 - **Room pins and rules for agents together.** Both apply, the
   person's rules for agents first, each by priority, never merged
   (I3). Contradictions are shown to people, not resolved (CMP-09).
 - **Q2:** whether a change notice carries the changed text.
+- **Security:** see the [room security note](room-security.md).
