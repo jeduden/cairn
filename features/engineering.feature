@@ -240,7 +240,7 @@ Feature: Engineering quality (ENG)
     Then the CI workflow runs the drift suite with "go test -tags drift ./internal/drift"
     And every drift case's edit applies to the checkout
     And every non-pending scenario that inspects the repository checkout has a drift case guarding its id
-    And the requirement-scenario gate and the Appendix B check each have a drift case
+    And the requirement-scenario gate, the Appendix B check and the persona gates each have a drift case
 
   @ENG-28 @P0
   Scenario: an agent's approval passes through a gate the agent cannot reach

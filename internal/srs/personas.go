@@ -3,7 +3,7 @@ package srs
 import (
 	"fmt"
 	"regexp"
-	"strings"
+	"slices"
 )
 
 var (
@@ -16,8 +16,8 @@ var (
 // PersonaCoverage reads Appendix C's coverage table in body — the
 // table whose header is "Requirements", "Personas" — keyed by
 // requirement id, each value the personas that requirement serves. An
-// id listed twice, a malformed id, an empty persona list or a persona
-// outside U1–U9 is reported with its line.
+// id listed twice, a malformed id, an empty persona list, a persona
+// outside U1–U9 or one named twice in a row is reported with its line.
 func PersonaCoverage(body []byte) (map[string][]string, error) {
 	for _, tbl := range Tables(body) {
 		if len(tbl.Header) != 2 || tbl.Header[0] != "Requirements" || tbl.Header[1] != "Personas" {
@@ -32,11 +32,11 @@ func PersonaCoverage(body []byte) (map[string][]string, error) {
 			if err != nil {
 				return nil, fmt.Errorf("srs: line %d: %w", row.Line, err)
 			}
-			for id := range strings.SplitSeq(row.Cells[0], ",") {
-				id = strings.TrimSpace(id)
-				if !idPattern.MatchString(id) {
-					return nil, fmt.Errorf("srs: line %d: malformed requirement id %q", row.Line, id)
-				}
+			ids, err := splitList(row.Cells[0], idPattern, "requirement id")
+			if err != nil {
+				return nil, fmt.Errorf("srs: line %d: %w", row.Line, err)
+			}
+			for _, id := range ids {
 				if _, dup := out[id]; dup {
 					return nil, fmt.Errorf("srs: line %d: %s listed twice", row.Line, id)
 				}
@@ -51,15 +51,16 @@ func PersonaCoverage(body []byte) (map[string][]string, error) {
 }
 
 // splitPersonas reads a Personas cell: a comma-separated, non-empty
-// list of U1–U9.
+// list of U1–U9, each named once.
 func splitPersonas(cell string) ([]string, error) {
-	var out []string
-	for part := range strings.SplitSeq(cell, ",") {
-		p := strings.TrimSpace(part)
-		if !personaPattern.MatchString(p) {
-			return nil, fmt.Errorf("malformed persona %q", p)
+	out, err := splitList(cell, personaPattern, "persona")
+	if err != nil {
+		return nil, err
+	}
+	for i, p := range out {
+		if slices.Contains(out[:i], p) {
+			return nil, fmt.Errorf("persona %s listed twice", p)
 		}
-		out = append(out, p)
 	}
 
 	return out, nil

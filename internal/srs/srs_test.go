@@ -128,3 +128,13 @@ func TestParseAcceptsTheLaneFamilies(t *testing.T) {
 	assert.Equal(t, []string{"LANE-01", "VIEW-19", "OWN-22", "PEER-11"},
 		[]string{got[0].ID, got[1].ID, got[2].ID, got[3].ID})
 }
+
+func TestSplitListReadsACommaSeparatedCell(t *testing.T) {
+	got, err := splitList(" I1 ,I10", invariantPattern, "trace")
+
+	require.NoError(t, err)
+	assert.Equal(t, []string{"I1", "I10"}, got)
+
+	_, err = splitList("I1, I11", invariantPattern, "trace")
+	assert.EqualError(t, err, `malformed trace "I11"`)
+}

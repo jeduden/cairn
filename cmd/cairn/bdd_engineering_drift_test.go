@@ -16,10 +16,13 @@ import (
 // check the registry itself, so they run without mdsmith.
 
 // gateTests are the gate tests outside the scenarios that ENG-27 holds
-// to a drift case: the requirement–scenario gate and the Appendix B
-// check.
+// to a drift case: the requirement–scenario gate, the Appendix B check
+// and the persona gates of Appendix C and §2.5.
 func gateTests() []string {
-	return []string{"TestSpecificationAndFeaturesAgree", "TestAppendixBMatchesTheTraces"}
+	return []string{
+		"TestSpecificationAndFeaturesAgree", "TestAppendixBMatchesTheTraces",
+		"TestAppendixCCoversEveryRequirement", "TestPersonasMatchTheAgents",
+	}
 }
 
 // checkoutStep is the step a scenario opens with when it inspects the
@@ -46,9 +49,8 @@ func bindDrift(w *world, sc *godog.ScenarioContext) {
 	})
 	sc.Step(`^every non-pending scenario that inspects the repository checkout has a drift case guarding its id$`,
 		func() error { return e().checkoutScenariosGuarded() })
-	sc.Step(`^the requirement-scenario gate and the Appendix B check each have a drift case$`, func() error {
-		return e().guarded(gateTests())
-	})
+	sc.Step(`^the requirement-scenario gate, the Appendix B check and the persona gates each have a drift case$`,
+		func() error { return e().guarded(gateTests()) })
 }
 
 // driftsApply refuses a case whose edit no longer finds its target, so

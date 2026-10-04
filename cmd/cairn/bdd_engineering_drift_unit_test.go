@@ -49,5 +49,8 @@ func TestGuarded(t *testing.T) {
 
 	assert.NoError(t, e.guarded([]string{"TestA"}))
 	assert.EqualError(t, e.guarded([]string{"TestA", "TestB"}), "TestB has no drift case")
-	assert.Equal(t, []string{"TestSpecificationAndFeaturesAgree", "TestAppendixBMatchesTheTraces"}, gateTests())
+	assert.Equal(t, []string{
+		"TestSpecificationAndFeaturesAgree", "TestAppendixBMatchesTheTraces",
+		"TestAppendixCCoversEveryRequirement", "TestPersonasMatchTheAgents",
+	}, gateTests())
 }

@@ -152,13 +152,20 @@ func parseTraces(cell string) ([]string, error) {
 		return nil, nil
 	}
 
+	return splitList(cell, invariantPattern, "trace")
+}
+
+// splitList reads a comma-separated cell whose every entry, trimmed,
+// matches pattern; the first entry that does not is reported as a
+// malformed kind.
+func splitList(cell string, pattern *regexp.Regexp, kind string) ([]string, error) {
 	var out []string
 	for part := range strings.SplitSeq(cell, ",") {
-		inv := strings.TrimSpace(part)
-		if !invariantPattern.MatchString(inv) {
-			return nil, fmt.Errorf("malformed trace %q", inv)
+		entry := strings.TrimSpace(part)
+		if !pattern.MatchString(entry) {
+			return nil, fmt.Errorf("malformed %s %q", kind, entry)
 		}
-		out = append(out, inv)
+		out = append(out, entry)
 	}
 
 	return out, nil

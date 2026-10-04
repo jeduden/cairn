@@ -61,6 +61,9 @@ func TestSplitPersonasReadsTheCell(t *testing.T) {
 
 	_, err = splitPersonas("U1, X2")
 	assert.ErrorContains(t, err, `malformed persona "X2"`)
+
+	_, err = splitPersonas("U1, U4, U1")
+	assert.ErrorContains(t, err, "persona U1 listed twice")
 }
 
 func TestPersonaAgentsReadsSection25(t *testing.T) {
