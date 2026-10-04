@@ -17,33 +17,38 @@ together.
 **You know this.** You give Claude Code a task. Hours later you get a
 diff and "all tests pass". In between, your intent slipped: compaction
 dropped your rule, the agent drifted, and the harnesses in your other
-terminals each made their own calls. Now you must judge the outcome
-without knowing how it got there, or whether it did what you asked.
-When it is wrong, you open a new session and explain it all again.
+terminals each made their own calls. To judge the outcome you open the
+app, the diff and the logs in separate windows, and still cannot tell
+how it got there. When it is wrong, you open a new session and explain
+it all again.
 
-**With Cairn.** Install the plugin and keep working in your harness as
-before. Every branch becomes a lane: Cairn records each message, edit,
-command and result on your machine, secrets redacted.
+**With Cairn.** Install the plugin and keep working in your harness.
+Every branch becomes a lane, recorded on your machine with secrets
+redacted. Open the lane view in your browser: the chat on one side,
+the outcome right next to it, updating live as the harness works. The
+running app from your dev server, the code as a diff, the files it
+produced, the test runs. Your intent sits on top.
 
-1. **State your intent once.** Type `/intent` in your harness: the goal
-   and what done means. It comes back word for word after every
-   compaction and goes with every task the agent hands to a subagent.
-2. **Watch every harness.** Open the lane view in your browser. Each
-   harness is a tile: working, done, or waiting on you. Answer its
-   prompt there instead of hunting for the terminal.
-3. **Judge the outcome against the intent.** When the work stops, the
-   lane lists each criterion beside its evidence: the test run the
-   harness recorded, or only the agent's word. What nobody checked
-   says so. You mark each one met or needs changes; Cairn never decides
-   for you.
-4. **Correct course.** Type a correction next to the criterion, and it
-   goes to the harness tied to what you judged. Or sharpen the intent,
-   or restart from an earlier point. The next outcome shows against the
-   corrected intent.
+1. **State your intent once.** Type `/intent` in your harness or the
+   lane view: the goal and what done means. It comes back word for word
+   after every compaction and goes with every task handed to a
+   subagent.
+2. **Watch every harness.** Each harness is a tile: working, done, or
+   waiting on you. Answer its prompt there instead of hunting for the
+   terminal.
+3. **Judge the outcome where you see it.** Click through the running
+   app, read the diff, open the file, all beside the chat that made
+   them. Each criterion shows its evidence: a test run the harness
+   recorded, or only the agent's word. Mark it met or needs changes;
+   Cairn never decides for you.
+4. **Correct course in place.** Type the correction in the chat beside
+   the outcome, tied to the criterion you judged, and watch the outcome
+   change. Or sharpen the intent, or rewind to an earlier point and
+   retry.
 
 **Then bring others in (next).** Share a lane peer to peer, with no
-server. Reviewers and teammates see the same lane and judge the same
-outcome, each verdict under their own name. Their corrections reach
+server. Teammates see the same chat and the same live outcome, and
+judge it, each verdict under their own name. Their corrections reach
 your harness only when you pass them on.
 
 **Safe by default.** Nothing leaves your machine except what your
@@ -179,6 +184,9 @@ what checked them; rule levels per action shape the owner's control.
 10. The developer's experience step by step, in the harness and the
     lane view; "harness" where the harness is meant; "git keeps the
     code" dropped.
+11. The lane view leads: chat and live outcome side by side (the
+    running app, the diff, the files, the test runs), and the person
+    judges and corrects right there.
 
 ## Open before the SRS change
 
