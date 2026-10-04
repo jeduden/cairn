@@ -24,42 +24,52 @@ asked. Two of them edited the same file. When one is wrong, you start
 a new session and explain it all again. You would run more agents, if
 you could keep up with five.
 
-**With Cairn.** Install the plugin: it shows every settings change
-before making it, removes cleanly, and never slows or blocks your
-harness. Keep working as before. Every agent's work is recorded on
-your machine with secrets redacted. Open the lane view in your
-browser, or stay in the terminal; everything works from both.
+**With Cairn.** Install the plugin, keep your harness, and open Cairn
+in your browser. One screen holds the work:
 
-1. **Say it once.** `/intent` states a goal and what done means;
-   `/pin` keeps your rules. Both come back word for word after every
-   compaction and go with every task an agent hands to a subagent.
-2. **See what needs you.** Each intent shows its criteria, its agents
-   and what needs you, ranked: a prompt to answer, an outcome ready to
-   judge, a failure, two agents touching the same file. Answer from
-   there. Everything else keeps running.
-3. **Judge the outcome beside the chat.** Open an intent: the chat on
-   one side; on the other, live as it works, the running app from that
-   worktree's dev server, the diff, the files it produced, the test
-   runs. Each criterion shows its evidence: a test run the harness
-   recorded, or only the agent's word. You mark it met or needs
+- **Left, your intents.** Each with its agents and what needs you,
+  ranked: a prompt to answer, an outcome ready to judge, a failure, two
+  agents touching the same file.
+- **Middle, the chat.** The live conversation with the agent you
+  picked, every edit and command in place. Answer its prompt or reply
+  right there.
+- **Right, the outcome, live.** The running app from that worktree's
+  dev server, the diff, the files it produced, the test runs, changing
+  as the agent works.
+- **On top, the intent.** The goal and its criteria, each with its
+  evidence: a test run the harness recorded, or only the agent's word.
+
+1. **Say it once.** Write the intent in Cairn, or type `/intent` in
+   your harness: the goal and what done means. Pin your rules beside
+   it. Both come back word for word after every compaction and go with
+   every task an agent hands to a subagent.
+2. **Judge where you see it.** Click through the app, read the diff,
+   check each criterion against its evidence. Mark it met or needs
    changes; Cairn never decides for you.
-4. **Correct course in place.** Type the correction beside the
-   criterion, and it reaches the agents on that intent. Or sharpen the
-   intent, or retry from an earlier checkpoint in a fresh worktree,
-   with the first attempt kept beside it.
-5. **Catch up.** Back after lunch or the weekend? One page per intent
-   says what changed, what failed and what waits, each line linked to
-   the record. If capture failed or part of the record is missing, it
+3. **Correct course in place.** Type the correction beside the
+   criterion, and it reaches the agents on that intent; watch the
+   outcome change. Or sharpen the intent, or retry from an earlier
+   checkpoint in a fresh worktree, with the first attempt kept beside
+   it.
+4. **Catch up.** Back after lunch or the weekend? The intents show
+   what changed, what failed and what waits, each line linked to the
+   record. If capture failed or part of the record is missing, Cairn
    says so.
+
+The plugin shows every settings change before making it, removes
+cleanly, and never slows or blocks your harness. Every agent's work is
+recorded on your machine, secrets redacted. Prefer the terminal?
+Everything in Cairn works there too.
 
 **Built to grow.** When five agents feel easy, run more: hand an agent
 a budget and let it delegate, and keep judging by intent rather than
 by agent. Next, bring your team in: share an intent peer to peer, with
-no server; teammates judge the same outcome under their own names, and
-their corrections reach your agents only when you pass them on.
+no server; teammates see the same screen, judge the same outcome under
+their own names, and their corrections reach your agents only when you
+pass them on.
 
 **Yours alone.** Until you turn sharing on, Cairn connects to nothing.
-The lane view listens only on localhost, for your browser. Your agent
+Its screen is served only on localhost, for your browser. Your agent
 gets its history only when it asks, marked untrusted, never as a
 command.
 
@@ -221,6 +231,9 @@ what checked them; rule levels per action shape the owner's control.
     lot. The pitch opens there and promises growth: delegation, judging
     by intent, then the team. The hundred agents and the team of four
     stay the direction, not the opening.
+17. Cairn's screen leads: intents on the left, the chat in the middle,
+    the live outcome on the right, the intent and its criteria on top.
+    The terminal is the alternative, not the frame.
 
 ## Open before the SRS change
 
