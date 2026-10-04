@@ -28,12 +28,12 @@ A source is a player of kind bot with its own participant id. It
 posts events into a room as messages of kind event: data, untrusted,
 stamped by Cairn with the source's id.
 
-| Source       | Runs where                            | Posts                                                                                                                    |
-| ------------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Timer        | Locally, beside `cairn run`           | A tick naming its schedule, for example "nightly 02:00"                                                                  |
-| Forge bridge | `cairn bridge`, B3, outbound          | Issue opened, labelled or commented; pull request opened, reviewed or merged; each with a link to a snapshot of the item |
-| Git, locally | A git hook or a fetch the person runs | A commit landed on the default branch, matched to its workspace by the record (LANE-06)                                  |
-| CI carrier   | `cairn bridge`, B3                    | A check result for an exact commit                                                                                       |
+| Source           | Runs where                                                                   | Posts                                                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Timer            | Inside the `cairn` binary, in the running Cairn service that holds the rooms | A tick naming its schedule, for example "nightly 02:00"                                                                  |
+| Webhook endpoint | The `cairn` binary on a deployed Cairn node, receiving the forge's webhooks  | Issue opened, labelled or commented; pull request opened, reviewed or merged; each with a link to a snapshot of the item |
+| Git, locally     | A git hook or a fetch the person runs                                        | A commit landed on the default branch, matched to its workspace by the record (LANE-06)                                  |
+| CI carrier       | `cairn bridge`, B3                                                           | A check result for an exact commit                                                                                       |
 
 A merge "the old way", on the forge, is seen twice and agrees: the
 bridge posts the forge's event, and the local fetch derives the
@@ -83,6 +83,21 @@ first.
 - A silent failure: a skipped, refused or failed firing raises a
   Needs you item and a counter.
 
+## Decided on 4 October 2026: a service and a webhook endpoint
+
+- **Rooms need a running Cairn service.** Without it there are no
+  rooms, so the timer lives in that service, inside the `cairn`
+  binary. The core's hooks still need no resident process (NFR-09);
+  the room service is its own component.
+- **Forge events arrive by webhook.** Cairn provides a webhook
+  endpoint, so receiving them requires a deployed Cairn node the forge
+  can reach. That is an inbound listener beyond loopback, a new row in
+  the boundary register: off by default, enabled by a person's act,
+  lockable by managed policy, and each delivery verified against the
+  forge's webhook signature before it is recorded.
+- **Webhook payloads are third parties' text**, recorded as untrusted
+  events by the endpoint's own participant id, never trusted.
+
 ## SRS work
 
 - **OWN-09 and I2's closed list** gain automations under a recorded
@@ -97,14 +112,15 @@ first.
   - budgets and counters;
   - a per-room switch off;
   - managed policy able to disable automations (SEC-22).
-- **SEC-28** extends the forge bridge to issue and pull request
-  events.
+- **SEC-28** gains an inbound webhook endpoint for issue and pull
+  request events, with its own boundary row and signature check; this
+  widens I4's boundaries and needs security review.
 
 ## Decisions for the stakeholder
 
-| #   | Question                     | Options                                                                                                                             | Recommendation                                                                                      |
-| --- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| A1  | Who runs automations?        | (a) rules executed by `cairn run`; (b) the room's facilitator bot decides; (c) both: rules for the fixed cases, a bot for judgement | (c): deterministic rules by default; a facilitator bot the owner provides where judgement is needed |
-| A2  | Can a person trust a bridge? | (a) never; (b) yes, at their risk                                                                                                   | (a)                                                                                                 |
-| A3  | Where does the timer run?    | (a) inside `cairn run`; (b) the operating system's scheduler calling a Cairn command                                                | (b): no resident process is required (NFR-09); `cairn run` serves when it is already running        |
-| A4  | How is a merge detected?     | (a) the forge bridge only; (b) local git first, the bridge as confirmation                                                          | (b): it works with no network at all                                                                |
+| #   | Question                     | Options                                                                                                                             | Recommendation |
+| --- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| A1  | Who runs automations?        | Decided: cron runs in the `cairn` binary; other events arrive at a webhook endpoint Cairn provides, which requires a deployed Cairn | —              |
+| A2  | Can a person trust a bridge? | Decided: never                                                                                                                      | —              |
+| A3  | Where does the timer run?    | Decided: in the Cairn service; without a running Cairn service there are no rooms                                                   | —              |
+| A4  | How is a merge detected?     | Open: the webhook reports it; whether local git must confirm it before an automation acts (see below)                               | —              |
