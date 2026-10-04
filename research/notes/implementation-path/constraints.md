@@ -411,6 +411,35 @@ measure it.
     to port; maintainers and reviewer agents fluent in the language
     (ENG-25 asks for two maintainers).
 
+### Criteria added in revision 2
+
+The stakeholder's direction after revision 1 added these; the
+[comparison](comparison.md) rates them beside the fifteen.
+
+- **0. The app on five platforms.** Traces: the pitch, decisions 8 and 9;
+  CON-02, NFR-10, OWN-16, OWN-17, NG4; every persona. Measure: start
+  Cairn on Linux, Windows, macOS, iOS and Android and see the person's
+  rooms; whether a phone verifies, syncs and signs with the core's own
+  code ([five platforms](five-platform-apps.md)).
+- **16. Agent fluency.** Traces: ENG-21, ENG-25. Measure:
+  first-attempt pass rate and iterations to green on the bake-off
+  slice.
+- **17. Compiler as reviewer.** Traces: ENG-11, ENG-16,
+  HC-23. Measure: the classes of defect the compiler rejects that
+  review or fuzzing would otherwise have to catch.
+- **18. Iteration speed.** Traces: ENG-15, NFR-01.
+  Measure: CPU and wall time per edit, build and test cycle at
+  Cairn's size ([compile times](compile-times-bun.md)).
+- **19. Toolchain stability.** Traces: ENG-01, ENG-20.
+  Measure: breaking changes per release and the upgrade cost across
+  five platform builds ([Zig](zig-option.md)).
+- **HC-23, memory safety** (a hard constraint). Traces: I2, I8, I9,
+  SEC-05, T8. Hostile-input and trust code cannot perform an
+  out-of-bounds access, a use after free, a double free, an
+  uninitialised read or a data race, by construction or by stopping
+  before the access; every exception is listed with its fuzz target
+  ([Zig note](zig-option.md)).
+
 ## Packaging and one binary
 
 ### What the SRS says

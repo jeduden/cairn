@@ -1,175 +1,191 @@
 # Implementation path: comparing the options
 
-Scope: step 2 of answering OQ-32, written 4 October 2026. It rates the
-six [options](options.md) on the fifteen criteria of the
-[evaluation frame](constraints.md#comparison-criteria), in the frame's
-order. It is a desk assessment from the
-[terminal](terminal-components.md),
-[protocol and data](protocol-and-data-components.md),
-[UI and packaging](ui-and-packaging-components.md) and
-[prior-art](prior-art-stacks.md) notes. Every criterion names a
-measurement; where a rating rests on a measurement already taken, the
-note says so, and the rest wait for the spikes at the end.
+Scope: step 2 of answering OQ-32, revision 2, written 4 October 2026.
+It rates the eight [options](options.md) on the
+[evaluation frame's](constraints.md#comparison-criteria) fifteen
+criteria and on the criteria the stakeholder's direction added since
+revision 1: the five-platform app, memory safety (HC-23) and the
+software factory's own needs. It is a desk assessment from the
+component notes the [options](options.md) list; where a rating rests on
+a measurement, the note it comes from says so, and the rest wait for
+the bake-off at the end.
 
 ## Ratings
 
 - **strong**: meets the criterion with maintained parts as they are.
-- **workable**: meets it with Cairn's own code or one stated caveat.
+- **workable**: meets it with Cairn's own code, a vendored port, or one
+  stated caveat.
 - **weak**: experimental, unmeasured on a risky point, or a poor fit.
 - **fails**: breaks a hard constraint as the SRS words it today.
 
+Since a factory ports what it lacks (common ground item 11), criteria
+3, 11, 12 and 13 rate whether a source to port and an oracle to test
+against exist, not whether a library does.
+
 ## The table
 
-| #   | Criterion                         | A. Go, hypermedia | B. Go and a TS page | C. Go host, WASM cores | D. Rust and Tauri | E. TypeScript on Bun | F. Kotlin Multiplatform |
-| --- | --------------------------------- | ----------------- | ------------------- | ---------------------- | ----------------- | -------------------- | ----------------------- |
-| 1   | Hook path under the full binary   | strong            | strong              | strong                 | strong            | weak                 | weak                    |
-| 2   | Boundary evidence in one binary   | strong            | strong              | strong                 | workable          | fails                | weak                    |
-| 3   | Determinism and cryptography      | strong            | strong              | strong                 | strong            | workable             | weak                    |
-| 4   | Store engine                      | strong            | strong              | strong                 | strong            | strong               | workable                |
-| 5   | Dependency budget and licences    | workable          | workable            | workable               | weak              | fails                | weak                    |
-| 6   | One reproducible, signed artifact | strong            | workable            | workable               | workable          | weak                 | weak                    |
-| 7   | Run component: hosting and pty    | strong            | strong              | strong                 | strong            | workable             | weak                    |
-| 8   | Lane view and the three panes     | workable          | strong              | strong                 | strong            | strong               | weak                    |
-| 9   | Terminal parity                   | strong            | strong              | strong                 | strong            | workable             | weak                    |
-| 10  | One view model across surfaces    | strong            | strong              | strong                 | strong            | workable             | strong                  |
-| 11  | Git and signatures in the core    | workable          | workable            | workable               | strong            | workable             | weak                    |
-| 12  | Kernel sandbox and MCP            | workable          | workable            | workable               | strong            | workable             | weak                    |
-| 13  | P2 reach without a rewrite        | workable          | workable            | strong                 | strong            | workable             | weak                    |
-| 14  | Verification toolchain            | strong            | strong              | strong                 | workable          | weak                 | weak                    |
-| 15  | Cost of the change                | strong            | strong              | strong                 | weak              | fails                | weak                    |
+| #   | Criterion                      | A. Go node, hypermedia | B. Go node, TS page | C. Go node, WASM cores | D. Rust, Tauri | E. TS on Bun | F. Kotlin MP | G. Rust, Flutter | H. Zig, TigerStyle |
+| --- | ------------------------------ | ---------------------- | ------------------- | ---------------------- | -------------- | ------------ | ------------ | ---------------- | ------------------ |
+| 0   | The app on five platforms      | workable               | workable            | workable               | strong         | weak         | weak         | workable         | workable           |
+| 1   | Hook path                      | strong                 | strong              | strong                 | strong         | weak         | weak         | strong           | strong             |
+| 2   | Boundary evidence              | strong                 | strong              | strong                 | workable       | fails        | weak         | workable         | weak               |
+| 3   | Determinism and cryptography   | strong                 | strong              | strong                 | strong         | workable     | weak         | strong           | strong             |
+| 4   | Store engine                   | strong                 | strong              | strong                 | strong         | strong       | workable     | strong           | workable           |
+| 5   | Dependency budget and licences | workable               | workable            | workable               | weak           | fails        | weak         | weak             | workable           |
+| 6   | Reproducible, signed artifact  | strong                 | workable            | workable               | workable       | weak         | weak         | workable         | workable           |
+| 7   | Run component and pty          | strong                 | strong              | strong                 | strong         | workable     | weak         | strong           | strong             |
+| 8   | View and the three panes       | workable               | strong              | strong                 | strong         | strong       | weak         | workable         | strong             |
+| 9   | Terminal parity                | strong                 | strong              | strong                 | strong         | workable     | weak         | strong           | workable           |
+| 10  | One view model                 | strong                 | strong              | strong                 | strong         | workable     | strong       | strong           | strong             |
+| 11  | Git and signatures             | workable               | workable            | workable               | strong         | workable     | weak         | strong           | workable           |
+| 12  | Kernel sandbox and MCP         | workable               | workable            | workable               | strong         | workable     | weak         | strong           | weak               |
+| 13  | P2 reach                       | weak                   | weak                | workable               | strong         | workable     | weak         | strong           | workable           |
+| 14  | Verification toolchain         | strong                 | strong              | strong                 | workable       | weak         | weak         | workable         | workable           |
+| 15  | Cost of the change             | strong                 | strong              | strong                 | workable       | fails        | weak         | weak             | workable           |
+| 16  | Agent fluency                  | strong                 | strong              | strong                 | strong         | strong       | workable     | workable         | workable           |
+| 17  | Compiler as reviewer           | workable               | workable            | workable               | strong         | weak         | workable     | strong           | workable           |
+| 18  | Iteration speed                | strong                 | strong              | strong                 | workable       | strong       | weak         | workable         | strong             |
+| 19  | Toolchain stability            | strong                 | strong              | workable               | strong         | workable     | workable     | workable         | weak               |
+| HC  | HC-23, memory safety           | workable               | workable            | workable               | strong         | workable     | workable     | strong           | weak               |
 
 ## Why each row reads as it does
 
-1. **Hook path.** A Go or Rust static binary starts in milliseconds
-   and loads embedded assets only in the lane view. Bun's runtime and a
-   95 MB image meet the 50 MiB hook budget (NFR-09) only if measured to;
-   Kotlin/Native's start-up and garbage collector are unmeasured.
-2. **Boundary evidence.** Go already has the import-closure test; per
-   entry point plus a call graph covers `init` code (HC-3). C adds each
-   module's import list, which is everything a WASM module can call.
-   Rust needs a crate per component, clippy bans and a symbol check,
-   all still to build. In Bun `fetch`, `Bun.listen` and `Bun.spawn` are
-   globals, so no build-time evidence exists, as HC-3 requires.
-3. **Determinism and cryptography.** Go's standard library holds
-   SHA-256, Ed25519, HMAC and an AEAD; canonical JSON is own code or one
-   small module. Rust needs a crate for each but all are strong.
-   JavaScript's number formatting is what RFC 8785 was written around,
-   but bans on `Date.now` and `Math.random` are lint-only. Kotlin/Native
-   has no canonical JSON library.
-4. **Store.** SQLite with FTS5 is strong in Go (the proposed driver,
-   measured at 10M events), Rust and Bun; SQLDelight's native driver is
-   workable.
-5. **Dependencies.** A comes to about eleven direct dependencies, one
-   over the target; B and C add a bundler or wazero. Rust's standard
-   library lacks HTTP, JSON and cryptography, so D passes ten in the
-   core alone. Bun links LGPL-2 JavaScriptCore, off the allow-list.
-6. **Reproducible artifact.** A has no JavaScript build in the release
-   path and Go builds were measured bit-identical. B adds a pinned npm
-   build inside the two-builder check; C adds guest modules from Zig and
-   Rust toolchains whose reproducibility is unverified. Rust matched for
-   a hello build but not yet with Apple's linker. Bun embeds the output
-   name and has open macOS signing bugs.
-7. **Run component.** creack/pty covers all three targets (Windows is
-   not one, CON-02); `ghostty-vt.wasm` under wasm2go is shown working
-   in Go by hauntty. Rust has herdr's native build as a reference. Bun's
-   terminal is POSIX only; Kotlin/Native has neither a pty library nor
-   a VT model.
-8. **Lane view.** An SPA in B to E carries live follow, replay and
-   region marks naturally. A pushes HTML over SSE and needs islands for
-   the diff and terminal; how far that stretches is the open question.
-   Compose for Web draws to a canvas, which makes text selection for
-   marks and line links hard.
-9. **Terminal parity.** Bubble Tea and ratatui are mature; OpenTUI is
-   young and changed under OpenCode within a year.
-10. **One view model.** Every option computes it in the core by common
-    ground. A renders it on the server, so the page holds none; E's
-    shared types make it easy to reimplement in the client by accident.
-11. **Git in the core.** Rust's gix is the strongest in-process git.
-    Go has go-git and x/crypto for SSH signatures, workable with care
-    for the `Stop` budget.
-12. **Kernel sandbox and MCP.** The criterion rates the host's sandbox,
-    not the guest language, which spike S5 decides (OQ-10). A WASM
-    guest is hermetic by construction: a module given no imports has
-    no filesystem, network or process. Go hosts Starlark natively or a
-    WASM guest under wazero, which stops a run when its context ends
-    but has no instruction metering (to verify in S5), so the step
-    budget falls to a wall-clock limit and the worker's OS limits. Rust
-    has Starlark and wasmtime, whose fuel meters steps exactly. Bun
-    runs WASM guests but has no Starlark. Go's MCP SDKs import
-    `net/http`, so A to C write their own stdio server; Rust's `rmcp`
-    turns HTTP off with features; Bun has the reference SDK.
-    Kotlin/Native has no Starlark found, and a WASM runtime for it is
-    unverified.
-13. **P2 reach.** Go has the transports (QUIC, Noise, WireGuard) but no
-    cgo-free CRDT; C closes that gap with a CRDT as a WASM module. Rust
-    holds iroh, p2panda, Automerge and Loro natively. Every option
-    replaces default public relays and discovery (CON-06).
-14. **Verification toolchain.** Native fuzzing, the race detector,
-    coverage floors and the godog bindings exist in Go today. Rust has
-    cargo-fuzz and strong static guarantees, but the gates under
-    `internal/` would be ported or kept in Go as black-box drivers.
-15. **Cost of the change.** A to C keep CON-01 and every ADR. D
-    rewords CON-01, ENG-01 to ENG-09, ENG-16 and supersedes two ADRs.
-    E breaks three hard constraints besides.
+0. **The app on five platforms.** D runs one Rust core in a Tauri shell
+   on all five, phones included. G does the same with Flutter, whose
+   room panes are weak. H embeds a C-ABI core in any shell, but Zig
+   0.17 regressed an iOS library build. A, B and C give every platform
+   a window onto the node, but the phone cannot be a peer without a
+   second core language (C narrows that with WASM modules). E and F
+   miss platforms or a single binary.
+1. **Hook path.** Go, Rust and Zig executables start in milliseconds
+   (Zig measured at 0.44 ms); Bun's runtime and the JVM do not.
+2. **Boundary evidence.** Go's import closure per entry exists today,
+   checked per function on Windows. Rust needs a crate per component,
+   lints and a symbol check. Zig's standard I/O links socket and spawn
+   code into every binary (measured), so H needs a separate core
+   executable with an own `Io`. Bun's globals leave no build-time
+   evidence.
+3. **Determinism and cryptography.** Go and Zig hold the primitives in
+   their standard libraries, and Zig passes clock and randomness in as a
+   value; Rust uses audited crates; canonical JSON is a short port
+   against RFC vectors everywhere.
+4. **Store.** SQLite with FTS5 everywhere; H builds it statically
+   (measured) with its own binding.
+5. **Dependencies and licences.** Rust's thin standard library pushes D
+   and G past ten crates; Zig's broad one keeps H near five plus ports;
+   Bun links LGPL-2. SQLite's public domain needs a ruling in every
+   option.
+6. **Reproducible artifact.** Go builds were measured bit-identical, Zig
+   across three targets (measured); Rust's Apple and MSVC paths and the
+   phone builds on Xcode and the NDK are unverified for all.
+7. **Run component.** Go has creack/pty and ConPTY packages; Rust has
+   portable-pty; Zig has Ghostty's own pty and libghostty-vt with no
+   FFI.
+8. **View and panes.** A web page with CodeMirror and ghostty-web
+   carries the panes in B to E and H; A's server-rendered page and G's
+   widgets are the weaker paths.
+9. **Terminal parity.** Bubble Tea and ratatui are mature; libvaxis is
+   younger.
+10. **One view model.** Computed once in the core in every option; in
+    D, G and H the same library computes it inside every shell.
+11. **Git.** gix in Rust; go-git in Go; a port of go-git's plumbing in
+    Zig, with `git` itself as the oracle.
+12. **Kernel and MCP.** Rust has wasmtime with fuel and `rmcp`; Go writes
+    its stdio MCP server and meters a wazero guest by wall clock; Zig has
+    no verified metered runtime.
+13. **P2 reach.** Rust holds iroh, p2panda, Automerge and Loro natively.
+    Zig ports Noise and links QUIC and a CRDT from C or Rust. Go has the
+    transports but no CRDT, and A and B leave the phone without a core;
+    C carries a CRDT and the seal code as modules.
+14. **Verification toolchain.** Go's gates exist today. smalt brings
+    coverage, lint and a gate table to Zig, beside a built-in fuzzer and
+    the thread sanitizer; Rust has cargo-fuzz and Miri. The gates under
+    `internal/` would be ported or kept as black-box drivers.
+15. **Cost of the change.** A to C keep CON-01 and every ADR. D, G and H
+    reword the Go-specific rows; the factory does the porting, so the
+    cost is review, not writing.
+16. **Agent fluency.** Models write Go, Rust and TypeScript well; Zig
+    needs version-pinned aids, which smalt has (a `zig-reviewer` agent
+    and a pinned toolchain); Dart and Kotlin are less common in agent
+    work.
+17. **Compiler as reviewer.** Rust's compiler rejects memory and data
+    race errors that the others leave to review; Zig and Go reject
+    ignored errors; TypeScript's types vanish at runtime.
+18. **Iteration speed.** Go builds a codebase of Cairn's size in
+    seconds; Zig rebuilds incrementally in hundreds of milliseconds on
+    x86_64 Linux; Rust's incremental builds take seconds to tens of
+    seconds, and Bun published none for its Rust port.
+19. **Toolchain stability.** Go and Rust keep compatibility; every Zig
+    release since 0.15 broke code, and upstream bans LLM-written
+    reports, so the factory cannot file a compiler bug itself.
+
+HC-23. Rust meets it by construction with `forbid(unsafe_code)`. Go
+meets it without `unsafe` and cgo, with races excluded by design and
+the race detector. Zig meets it on the hook path, where a process
+allocates at start and frees at exit, and only by arena discipline in
+the long-lived lane view, run and peer components. Kotlin and the
+JavaScript in E are garbage-collected.
 
 ## What the comparison says
 
-- **E and F leave the field.** E fails HC-3, HC-13 and HC-22 as written
-  and costs 95 MB per binary; F is weak in most core slots and strong
-  only on the phone, the smallest slot. Their strengths (E's ecosystem,
-  F's native phone) survive as parts: a TypeScript page in B to D, and
-  a native signer for the phone in any option.
-- **A, B and C are one family.** They share the core, run component,
-  TUI and binary, and differ only in the page and in how foreign cores
-  enter. B is A with a richer page; C is B with shared WASM modules. A
-  team can start at B and grow into C when the VT model or a CRDT
-  needs it.
-- **D is the challenger.** It wins on P2 reach, git and the MCP server,
-  and reuses the core on the phone through Tauri. It loses on the
-  dependency budget, the verification toolchain and the cost of the
-  change. It is worth its cost only if peer sync and CRDTs move ahead
-  of the single-developer release.
-- **The phone does not pick the language.** No option holds an Ed25519
-  key in the iPhone's Secure Enclave, and the phone's job is small
-  (OWN-16, OWN-17). A native signer or a wrapped SPA serves every
-  option.
+- **E and F leave the field**, as in revision 1: E fails three hard
+  constraints, and F's desktop shell cannot meet CON-02.
+- **D leads on the new requirement.** One Rust core in a Tauri shell on
+  all five platforms makes a phone a full peer, and it is the only
+  option strong on both the app and HC-23. Its costs are compile time
+  in the factory's inner loop and a dependency count past ten.
+- **The Go family is the cheap path for a node-first release.** A, B
+  and C keep every gate and ADR and the fastest loop, and ship the app
+  as thin windows onto the node. They fall behind the moment a phone
+  must work offline as a peer; C delays that point with WASM modules.
+- **H is the factory's own language, with the safety risk Bun left.**
+  It is strongest on the terminal, on embedding one core everywhere and
+  on the build loop, and smalt pays for its tooling. It is weakest on
+  memory safety for long-lived components and on toolchain stability.
+- **G is D with a different UI**, not worth the weaker panes unless a
+  native-feeling UI outweighs them.
+- **The choice is reversible.** A factory ported Bun in 11 days against
+  its tests; Cairn's executable SRS, driving the binary through the CLI
+  and MCP, is the same kind of oracle if the bindings stay black-box.
 
 ## Shortlist
 
-1. **C, entered through B**: Go for every process, a TypeScript page,
-   and `ghostty-vt.wasm` as the shared VT model from the start; a CRDT
-   module when P2 needs it.
-2. **A**: the same, with a server-rendered page, if the page spike
-   shows the three panes hold up without an SPA. It keeps npm out of
-   the release path.
-3. **D**: only if the stakeholder weights P2 above the cost of the
-   change.
+1. **D, Rust core and Tauri**, if the five-platform app with a peer
+   phone is the first release.
+2. **C, Go node with WASM cores**, if a node-first release with phones
+   as windows comes first; port the core later if the phone must be a
+   peer.
+3. **H, Zig with TigerStyle**, if the bake-off shows arena discipline
+   and simulation hold HC-23 in the long-lived components, and the
+   toolchain churn is acceptable.
 
-## Spikes that decide
+## The bake-off
 
-Each answers a criterion the desk cannot.
+The factory builds the same slice in Rust (D), Go (C) and Zig (H), in
+parallel lanes, and the numbers decide:
 
-| Spike                   | Builds                                                                                                                  | Measures                                     | Decides                       |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ----------------------------- |
-| One binary, per-entry   | a multi-call Go binary with core, lane view and run entries; the per-entry reach test and its drift case                | criterion 2 and 6; hook p95 and RSS (1)      | whether one binary holds      |
-| Page: hypermedia or SPA | the three-pane room twice, Datastar islands and a small SPA, over the same SSE feed                                     | criterion 8, 5 and 6; code and deps per page | A against B                   |
-| Shared VT model         | `ghostty-vt.wasm` in the run component via wasm2go and wazero, and in the page; ten hosted harnesses, a late joiner     | criterion 7; keystroke-to-echo p95, RSS      | C's core idea                 |
-| Session credential      | the fragment token, page-memory secret and live-stream auth; replay from another loopback port; WebAuthn on `localhost` | HC-5, open points 3 and 12                   | any option; SEC-20 wording    |
-| Kernel language (S5)    | the 30 aggregation tasks of S5 in three arms: Starlark, Python as a WASM guest, and no kernel (the `cairn` CLI's JSON)  | task success, tokens, step-budget behaviour  | ADR-04, OQ-10; not the option |
-| Rust core, if D stays   | the core slot in Rust: store, seal, MCP over stdio, per-crate reach evidence                                            | criteria 2, 5 and 14                         | whether D's cost is justified |
+| Part of the slice              | Measures                                                                                                    |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| Canonical JSON, the signed log | RFC 8785 vectors pass; first-attempt pass rate; iterations to green                                         |
+| Stdio MCP server with recall   | MCP Inspector passes; hook and MCP p95 and RSS on the reference hardware                                    |
+| A port of Go's `regexp`        | RE2's test files pass; differential fuzzing against Go finds no divergence in a fixed budget (Go reuses it) |
+| The core in a phone app        | the same library verifies a seal inside a Tauri app on iOS and Android                                      |
+| Reach evidence                 | a drift case that adds a socket to the core turns CI red                                                    |
+| A long-lived component         | a lane-view loop under fuzzing and a deterministic simulation, run for a fixed budget, with no memory error |
+| Factory cost                   | agent time, tokens, CPU per edit–build–test cycle, findings from reviewers, fuzzers and the security review |
 
 ## Decisions for the stakeholder
 
-- **The weight of P2.** If peer sync and co-edited text are next after
-  v1, D gains; if they follow the single-developer release by a long
-  way, the Go family keeps them in reach through C.
-- **Frontend toolchain and ENG-18.** Whether build-only tools and
-  vendored page assets count toward the ten (open point 8).
-- **The phone at stage two.** A native signer per platform, or the SPA
-  wrapped by Tauri or Capacitor; and P-256 device keys or a wrapped
-  Ed25519 key (common ground item 10).
-- **The running-app preview.** It needs a requirement and a SEC-21
-  decision in every option (common ground item 11).
-- **The kernel.** Whether S5 widens to three arms, and whether ADR-04's
-  Starlark default stays open until it reports (common ground item
-  12).
+- **One binary or one download.** Whether a desktop app carrying a
+  static core executable beside the app executable meets "one binary".
+- **The first release.** Whether the phone must be a peer from the
+  start (favouring D or H) or may begin as a window onto a node
+  (allowing C).
+- **SRS changes in every option.** Windows in CON-02 and NFR-10; a
+  phone that chats (OWN-16, OWN-17); peering or the owner's tunnel in
+  v1 (NG4); VIEW-17 on iPhone; channels and the Codex daemon on
+  OWN-03's list; WebView2 and Android WebView diagnostics under I4;
+  SQLite's public domain under ENG-18; vendored forks under ENG-18;
+  HC-23 as a requirement; P-256 device keys.
+- **Carried from revision 1.** Whether build-only tools count toward
+  the ten; the running-app preview; the kernel spike S5 in three arms.
