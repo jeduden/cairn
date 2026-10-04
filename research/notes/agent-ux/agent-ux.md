@@ -97,18 +97,18 @@ app or `claude --cloud`
 
 ## Synthesis for Cairn
 
-| Pattern                                  | T3 Code                    | Amp orbs                 | Claude Code web             | Cairn                                         |
-| ---------------------------------------- | -------------------------- | ------------------------ | --------------------------- | --------------------------------------------- |
-| Sessions left, chat centre, review right | yes                        | yes                      | yes                         | intents left, room centre, work right         |
-| Live app preview                         | embedded, annotatable      | portals, annotatable     | desktop only                | per agent's dev server                        |
-| Follow an agent's edits live             | browser cursor, devices    | shared terminal          | per-file diffs as it edits  | follow any player in the file view            |
-| Several agents in one conversation       | no; a thread each          | no; agents message       | no; a session each          | a room per intent                             |
-| Several people in one conversation       | no                         | yes, server-hosted       | read-only snapshots         | next, peer to peer                            |
-| Needs-you signal                         | priority pills, inbox      | notifications, feed      | Waiting on you bucket       | one ranked queue across intents               |
-| Goal stated up front                     | plan mode                  | none found               | project Goal                | intent with criteria                          |
-| Agent presents the outcome per criterion | no; a plan, then a summary | no                       | pasted summary (prose)      | agent links results to criteria with UI tools |
-| Evidence: recorded run against claim     | exit codes in a log        | Ship runs tests, unshown | pasted test summary (claim) | each criterion shows recorded run or claim    |
-| Correction tied to a verdict             | no; per prompt             | no                       | no                          | yes                                           |
+| Pattern                                  | T3 Code                                 | Amp orbs                  | Claude Code web             | Cairn                                            |
+| ---------------------------------------- | --------------------------------------- | ------------------------- | --------------------------- | ------------------------------------------------ |
+| Sessions left, chat centre, review right | yes                                     | yes                       | yes                         | intents left, room centre, work right            |
+| Live app preview                         | embedded, annotatable                   | portals, annotatable      | desktop only                | per agent's dev server                           |
+| Follow an agent's edits live             | browser cursor, devices                 | shared terminal           | per-file diffs as it edits  | follow any player in the file view               |
+| Several agents in one conversation       | no; a thread each                       | no; agents message        | no; a session each          | a room per intent                                |
+| Several people in one conversation       | no                                      | yes, server-hosted        | read-only snapshots         | next, peer to peer                               |
+| Needs-you signal                         | priority pills, inbox                   | notifications, feed       | Waiting on you bucket       | one ranked queue across intents                  |
+| Goal stated up front                     | plan mode                               | none found                | project Goal                | intent with criteria                             |
+| Agent presents the outcome per criterion | no; a plan, then a summary              | no                        | pasted summary (prose)      | agent links results to criteria with UI tools    |
+| Evidence: recorded run against claim     | exit codes in a log                     | Ship runs tests, unshown  | pasted test summary (claim) | each criterion shows recorded run or claim       |
+| Link to a marked passage or image region | quote chips; annotate a preview element | annotate a portal element | inline diff comments        | a link to any marked text, lines or image region |
 
 **Table stakes:** the three-pane layout, background runs watched from a
 phone, a ship or pull-request action, mid-run messages, a needs-you
@@ -130,6 +130,8 @@ signal, and a live preview with element annotation (two of three).
   a person to judge.
 - A result linked to the recorded run that verified it.
 - One queue ranked across many agents.
-- A course correction tied to the judgement that prompted it.
+- A link to exactly what someone marked, text, lines or a region of an
+  image, that people and agents can pass around the discussion. Pull
+  requests link lines; none of the three links a region of an image.
 - A room where several agents and, later, several people share one
   conversation without one agent instructing another.

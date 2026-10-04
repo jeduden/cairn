@@ -49,14 +49,15 @@ talk to all of them at once.
    it. Both come back word for word after every compaction and go with
    every task an agent hands to a subagent.
 2. **Judge where you see it.** Each agent presents its outcome against
-   the criteria with the tools Cairn gives it: the screen in the app,
-   the lines in the diff, the test run. Cairn marks what it recorded
+   the criteria with links to the screen in the app, the lines in the
+   diff, the test run. Cairn marks what it recorded
    and what is only the agent's word. Click through, then mark each
    criterion met or needs changes; Cairn never decides for you.
-3. **Correct course in place.** Point at what is wrong, an element in
-   the running app or a line in the diff, and type the correction
-   beside the criterion. It reaches the agents on that intent with what
-   you pointed at; watch the outcome change. Or sharpen the intent, or
+3. **Correct course in place.** Mark what is wrong, a sentence in the
+   room, lines in the diff or a test log, a region of a screenshot of
+   the running app, and get a link to exactly that. Put the link in
+   your correction beside the criterion; every agent on the intent
+   opens what you marked. Watch the outcome change. Or sharpen the intent, or
    retry from an earlier checkpoint in a fresh worktree, with the first
    attempt kept beside it.
 4. **Catch up.** Back after lunch or the weekend? The intents show
@@ -262,6 +263,11 @@ what checked them; rule levels per action shape the owner's control.
 21. Presenting the outcome against the criteria is the agent's job,
     done with tools the UI offers; Cairn marks which evidence it
     recorded, and the person judges.
+22. One primitive for pointing: mark text in the room, lines in a diff
+    or log, or a region of an image, and get a link to exactly that,
+    as pull requests link lines but extended to images. People and
+    agents use the links in the discussion, the correction and the
+    presentation of an outcome.
 
 ## Open before the SRS change
 
