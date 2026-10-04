@@ -157,6 +157,10 @@ and multiplayer threads, all on Amp's service, with no documented trust
 boundary ([Amp orbs note](../../research/notes/amp-orbs/amp-orbs.md)).
 How their screens, and Claude Code on the web, lay out the work is
 compared in the [agent UX note](../../research/notes/agent-ux/agent-ux.md).
+Cloudflare's Artifacts (1 October 2026) offers a hosted, git-compatible
+store for "hundreds, or even thousands, of agents", a fork per task,
+and asks what the next GitHub looks like; it states no trust model
+([Artifacts note][cf]).
 
 |                  | Zed Delta                                   | Cairn (vision; not built)                                                      | T3 Code                                                                 | Amp orbs                                                        |
 | ---------------- | ------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------- |
@@ -288,3 +292,5 @@ Open from pitch v11, for the stakeholder:
   is defined for one owner and one agent. In a room it is open who may
   start a retry, whether it joins the same room, and what the other
   players and agents see of it. The pitch leaves retry out.
+
+[cf]: ../../research/notes/cloudflare-artifacts/cloudflare-artifacts.md
