@@ -9,18 +9,18 @@ until then it is direction, not requirement.
 Written for developers: their problem in their words first, then what
 Cairn changes. Items marked "next" are P2 in the SRS.
 
-### Cairn: from intent to outcome
+### Cairn: from intent to outcome, for a hundred agents
 
-State what you want. Judge what you got. Correct course.
+State what you want. Judge what you got. Correct course. At any scale.
 
-**You know this.** You run a lot of agents: Claude Code in eight
-worktrees, each spawning subagents. One waits on a permission prompt in
-a tab you cannot find. Another lost your rule to
-compaction ("never push to main") and needs telling again. A third
-reports "all tests pass". To judge it you open the app, the diff and
-the logs in separate windows, and still cannot tell how it got there,
-or whether it did what you asked. Two of them edited the same file.
-When one is wrong, you start a new session and explain it all again.
+**You know this.** You run dozens of agents and want a hundred: Claude
+Code in many worktrees, each spawning subagents. You cannot watch a
+hundred terminals. One waits on a permission prompt in a tab you
+cannot find. Another lost your rule to compaction ("never push to
+main"). A third reports "all tests pass", and to judge it you open the
+app, the diff and the logs in separate windows, still unsure how it got
+there or whether it did what you asked. Two of them edited the same
+file. When one is wrong, you start over and explain it all again.
 
 **With Cairn.** Install the plugin: it shows every settings change
 before making it, removes cleanly, and never slows or blocks your
@@ -30,17 +30,18 @@ browser, or stay in the terminal; everything works from both.
 
 1. **Say it once.** `/intent` states the goal and what done means;
    `/pin` keeps your rules. Both come back word for word after every
-   compaction and go with every task handed to a subagent.
-2. **See every harness.** One tile per session, however many you run:
-   working, done, or waiting on you, the waiting ones first. Answer the
-   prompt from the tile. Cairn warns you when two lanes touch the same
-   file.
-3. **Judge the outcome beside the chat.** The chat on one side; on the
-   other, live as it works: the running app from that worktree's dev
-   server, the diff, the files it produced, the test runs. Each
-   criterion shows its evidence: a test run the harness recorded, or
-   only the agent's word. You mark it met or needs changes; Cairn never
-   decides for you.
+   compaction and go with every task an agent hands to a subagent or
+   another session, within the budget you grant.
+2. **See only what needs you.** A hundred agents run; you see the few
+   that need you, ranked: a prompt to answer, an outcome ready to
+   judge, a failure, two lanes touching the same file. Answer from the
+   list. Everything else keeps running.
+3. **Judge the outcome beside the chat.** Open one: the chat on one
+   side; on the other, live as it works, the running app from that
+   worktree's dev server, the diff, the files it produced, the test
+   runs. Each criterion shows its evidence: a test run the harness
+   recorded, or only the agent's word. You mark it met or needs
+   changes; Cairn never decides for you.
 4. **Correct course in place.** Type the correction beside the
    criterion and watch the outcome change. Or sharpen the intent, or
    retry from an earlier checkpoint in a fresh worktree, with the first
@@ -200,8 +201,10 @@ what checked them; rule levels per action shape the owner's control.
     the pitch is for the developer with a lot of agents. Fleet framing,
     pinned rules beside the intent, catch-up, the install contract, the
     terminal as an equal surface, overlap warnings, a clear retry, and a
-    plain
-    statement of what Cairn connects to.
+    plain statement of what Cairn connects to.
+13. The tooling must let one developer run a hundred agents: the view
+    shows only what needs the person, ranked, and delegation runs
+    within a granted budget.
 
 ## Open before the SRS change
 
