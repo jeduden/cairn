@@ -46,16 +46,18 @@ against exist, not whether a library does.
 | 17  | Compiler as reviewer           | workable               | workable            | workable               | strong         | weak         | workable     | strong           | workable              | strong                 |
 | 18  | Iteration speed                | strong                 | strong              | strong                 | workable       | strong       | weak         | workable         | strong                | workable               |
 | 19  | Toolchain stability            | strong                 | strong              | workable               | strong         | workable     | workable     | workable         | weak                  | strong                 |
+| 20  | Accessibility and text input   | strong                 | strong              | strong                 | strong         | strong       | workable     | strong           | weak                  | workable               |
 | HC  | HC-23, memory safety           | workable               | workable            | workable               | strong         | workable     | workable     | strong           | weak                  | strong                 |
 
 ## Why each row reads as it does
 
 0. **The app on five platforms.** D runs one Rust core in a Tauri shell
    on all five, phones included. G does the same with Flutter, whose
-   room panes are weak. H and I take Ghostty's shape, a native UI per
-   platform over one core, which Element X proves for rooms on iOS and
-   Android; it means four UI codebases, and Windows is the weakest
-   native path. Zig 0.17 also regressed an iOS library build. A, B and C give every platform
+   room panes are weak. H and I take Ghostty's shape: the core draws one
+   UI on the GPU under a thin host per platform. Rust has a toolkit for
+   that on all five (Makepad; GPUI covers only the desktops); Zig has
+   sokol, which smalt draws with, and must build the widgets itself. Zig
+   0.17 also regressed an iOS library build. A, B and C give every platform
    a window onto the node, but the phone cannot be a peer without a
    second core language (C narrows that with WASM modules). E and F
    miss platforms or a single binary.
@@ -85,10 +87,12 @@ against exist, not whether a library does.
    FFI.
 8. **View and panes.** A web page with CodeMirror and ghostty-web
    carries the panes in B to E; A's server-rendered page and G's widgets
-   are weaker. H and I draw the terminal with libghostty's own GPU
-   renderer, the best terminal of any option, but build the diff and
-   the room natively per platform and keep a webview for the
-   running-app preview.
+   are weaker. H and I draw everything themselves: the terminal with
+   libghostty, the best of any option, and the chat and diff with the
+   same glyph stack, while an embedded browser shows results. Agent text
+   is never parsed as HTML there, so inert rendering (SEC-21) holds by
+   construction; the cost is Markdown, code highlighting, selection and
+   links written into the core.
 9. **Terminal parity.** Bubble Tea and ratatui are mature; libvaxis is
    younger.
 10. **One view model.** Computed once in the core in every option; in
@@ -124,6 +128,14 @@ against exist, not whether a library does.
     release since 0.15 broke code, and upstream bans LLM-written
     reports, so the factory cannot file a compiler bug itself.
 
+20. **Accessibility and text input.** No SRS row asks for it yet, and
+    every option needs one. A webview (A to E) and Flutter's semantics
+    tree give screen readers, IME and text selection largely for free.
+    A UI the core draws must supply them: AccessKit covers screen readers
+    on all five platforms, natively in Rust (I) and through its C API in
+    Zig (H), but IME and selection are the toolkit's or Cairn's own
+    work.
+
 HC-23. Rust meets it by construction with `forbid(unsafe_code)`. Go
 meets it without `unsafe` and cgo, with races excluded by design and
 the race detector. Zig meets it on the hook path, where a process
@@ -150,12 +162,13 @@ JavaScript in E are garbage-collected.
 - **G is D with a different UI**, not worth the weaker panes unless a
   native-feeling UI outweighs them.
 - **H and I are Ghostty's shape**, and the shell choice is separate
-  from the core language: the same native UIs sit over a Zig core (H)
-  or a Rust core (I). Native shells give the best terminal, no webview
-  frame (so the vendor webview diagnostics touch only the preview pane)
-  and native key stores, at the cost of four UI codebases the factory
-  writes and VIEW-14 must keep as one vocabulary. I keeps D's safety and
-  ecosystem with Ghostty's shell; H keeps Zig's build and terminal
+  from the core language: the core draws one UI on the GPU over a thin
+  host, in Zig (H) or Rust (I), with an embedded browser for results.
+  It gives the best terminal, one UI identical on five platforms
+  (VIEW-14 by construction), no HTML parsing of agent text, and vendor
+  webview diagnostics confined to the results browser. It costs
+  accessibility, IME and rich text, which a webview gives for free. I
+  has GPU toolkits to start from; H keeps Zig's build and terminal
   advantages with its safety and stability risks.
 - **The choice is reversible.** A factory ported Bun in 11 days against
   its tests; Cairn's executable SRS, driving the binary through the CLI
@@ -179,16 +192,16 @@ JavaScript in E are garbage-collected.
 The factory builds the same slice in Rust (D), Go (C) and Zig (H), in
 parallel lanes, and the numbers decide:
 
-| Part of the slice              | Measures                                                                                                                                                      |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Canonical JSON, the signed log | RFC 8785 vectors pass; first-attempt pass rate; iterations to green                                                                                           |
-| Stdio MCP server with recall   | MCP Inspector passes; hook and MCP p95 and RSS on the reference hardware                                                                                      |
-| A port of Go's `regexp`        | RE2's test files pass; differential fuzzing against Go finds no divergence in a fixed budget (Go reuses it)                                                   |
-| The core in a phone app        | the same library verifies a seal inside a Tauri app on iOS and Android                                                                                        |
-| Reach evidence                 | a drift case that adds a socket to the core turns CI red                                                                                                      |
-| A long-lived component         | a lane-view loop under fuzzing and a deterministic simulation, run for a fixed budget, with no memory error                                                   |
-| The shell                      | the room with its terminal pane as a Tauri page and as a native SwiftUI view over the same core, on one platform: code size, VIEW-14 drift, terminal fidelity |
-| Factory cost                   | agent time, tokens, CPU per edit–build–test cycle, findings from reviewers, fuzzers and the security review                                                   |
+| Part of the slice              | Measures                                                                                                                                                                                                       |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Canonical JSON, the signed log | RFC 8785 vectors pass; first-attempt pass rate; iterations to green                                                                                                                                            |
+| Stdio MCP server with recall   | MCP Inspector passes; hook and MCP p95 and RSS on the reference hardware                                                                                                                                       |
+| A port of Go's `regexp`        | RE2's test files pass; differential fuzzing against Go finds no divergence in a fixed budget (Go reuses it)                                                                                                    |
+| The core in a phone app        | the same library verifies a seal inside a Tauri app on iOS and Android                                                                                                                                         |
+| Reach evidence                 | a drift case that adds a socket to the core turns CI red                                                                                                                                                       |
+| A long-lived component         | a lane-view loop under fuzzing and a deterministic simulation, run for a fixed budget, with no memory error                                                                                                    |
+| The shell                      | the room's chat and terminal as a Tauri page and as a UI the core draws (Makepad or sokol) over the same core, on macOS and Android: code size, frame time, screen reader and IME behaviour, terminal fidelity |
+| Factory cost                   | agent time, tokens, CPU per edit–build–test cycle, findings from reviewers, fuzzers and the security review                                                                                                    |
 
 ## Decisions for the stakeholder
 

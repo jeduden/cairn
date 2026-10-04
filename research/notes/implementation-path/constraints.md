@@ -433,6 +433,10 @@ The stakeholder's direction after revision 1 added these; the
 - **19. Toolchain stability.** Traces: ENG-01, ENG-20.
   Measure: breaking changes per release and the upgrade cost across
   five platform builds ([Zig](zig-option.md)).
+- **20. Accessibility and text input.** Traces: no SRS row yet, a gap
+  every option must close. Measure: a screen reader reads the room and
+  its messages, and IME input and text selection work, on all five
+  platforms.
 - **HC-23, memory safety** (a hard constraint). Traces: I2, I8, I9,
   SEC-05, T8. Hostile-input and trust code cannot perform an
   out-of-bounds access, a use after free, a double free, an

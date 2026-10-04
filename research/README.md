@@ -57,7 +57,7 @@ from.
   factory, from sourced notes on terminals, protocols, UI and
   packaging, five-platform shells, phone reach, Windows, Zig, smalt's
   tooling, Bun's compile times and 27 agent products. They are then
-  [compared](notes/implementation-path/comparison.md) on twenty
+  [compared](notes/implementation-path/comparison.md) on twenty-one
   criteria and memory safety.
 - [OpenAI dots](notes/openai-agent-ui/dots.md): always-on agents with
   their own cloud computer, launched 29 September 2026, and what
