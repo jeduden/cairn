@@ -13,8 +13,9 @@ Cairn changes. Items marked "next" are P2 in the SRS.
 
 State what you want. Judge what you got. Correct course.
 
-**You know this.** You run Claude Code in five worktrees. One waits on
-a permission prompt in a tab you cannot find. Another lost your rule to
+**You know this.** You run a lot of agents: Claude Code in eight
+worktrees, each spawning subagents. One waits on a permission prompt in
+a tab you cannot find. Another lost your rule to
 compaction ("never push to main") and needs telling again. A third
 reports "all tests pass". To judge it you open the app, the diff and
 the logs in separate windows, and still cannot tell how it got there,
@@ -30,9 +31,10 @@ browser, or stay in the terminal; everything works from both.
 1. **Say it once.** `/intent` states the goal and what done means;
    `/pin` keeps your rules. Both come back word for word after every
    compaction and go with every task handed to a subagent.
-2. **See every harness.** One tile per session: working, done, or
-   waiting on you, the waiting ones first. Answer the prompt from the
-   tile. Cairn warns you when two lanes touch the same file.
+2. **See every harness.** One tile per session, however many you run:
+   working, done, or waiting on you, the waiting ones first. Answer the
+   prompt from the tile. Cairn warns you when two lanes touch the same
+   file.
 3. **Judge the outcome beside the chat.** The chat on one side; on the
    other, live as it works: the running app from that worktree's dev
    server, the diff, the files it produced, the test runs. Each
@@ -195,9 +197,10 @@ what checked them; rule levels per action shape the owner's control.
     running app, the diff, the files, the test runs), and the person
     judges and corrects right there.
 12. After the blind review ([round 8](persona-review/round-8/README.md)):
-    the pitch is for the developer alone. Fleet framing, pinned rules
-    beside the intent, catch-up, the install contract, the terminal as
-    an equal surface, overlap warnings, a clear retry, and a plain
+    the pitch is for the developer with a lot of agents. Fleet framing,
+    pinned rules beside the intent, catch-up, the install contract, the
+    terminal as an equal surface, overlap warnings, a clear retry, and a
+    plain
     statement of what Cairn connects to.
 
 ## Open before the SRS change
