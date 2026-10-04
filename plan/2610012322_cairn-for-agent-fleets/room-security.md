@@ -117,7 +117,9 @@ I4).
 - **What it does.** It posts findings to the room, each linking the
   pin and the content it judged, raises a Needs you item for the owner
   and for the person whose agent a finding concerns, and, holding an
-  operator's permissions, kicks or bars players (Q15).
+  operator's permissions, kicks, bars and sets read only itself
+  (Q15, Q18). Every act it takes is audited with the finding behind
+  it.
 - **What it never does.** Instruct, steer or stop another person's
   agents, change pins, or act outside the room. Its findings are a
   classifier's claims, shown as such, and the owner can lift any bar.
@@ -188,14 +190,14 @@ room model takes:
 
 ## Decisions for the stakeholder
 
-| #   | Question                                   | Options                                                                                                                                                 | Recommendation                                                |
-| --- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Q12 | Do room pins instruct agents?              | Decided: no. They are information; a room bot enforces them                                                                                             | —                                                             |
-| Q13 | How does an owner keep a player out?       | Decided: the authorisation layer provides it; operators kick and bar                                                                                    | —                                                             |
-| Q14 | Can room pins widen what an agent may do?  | Moot: room pins are information and grant nothing                                                                                                       | —                                                             |
-| Q15 | What may a room bot do beyond posting?     | Decided: also bar and kick players                                                                                                                      | —                                                             |
-| Q16 | Does Cairn ship a room bot?                | Decided: rooms have roles; the owner configures them and provides the players, an etiquette bot among them, optional; the operator role is always there | —                                                             |
-| Q17 | Is there a read-only restriction?          | Decided: yes. Read only is a capability the owner's authorisation layer withholds, room-wide as a mode or for one player                                | —                                                             |
-| Q18 | What does the etiquette bot do by default? | (a) act at once: kick and bar; (b) flag to operators, act only on a timed ladder (warn, quiet, kick, bar) the owner turns on                            | (b): a classifier's mistake must not remove a player silently |
+| #   | Question                                  | Options                                                                                                                                                 | Recommendation |
+| --- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| Q12 | Do room pins instruct agents?             | Decided: no. They are information; a room bot enforces them                                                                                             | —              |
+| Q13 | How does an owner keep a player out?      | Decided: the authorisation layer provides it; operators kick and bar                                                                                    | —              |
+| Q14 | Can room pins widen what an agent may do? | Moot: room pins are information and grant nothing                                                                                                       | —              |
+| Q15 | What may a room bot do beyond posting?    | Decided: also bar and kick players                                                                                                                      | —              |
+| Q16 | Does Cairn ship a room bot?               | Decided: rooms have roles; the owner configures them and provides the players, an etiquette bot among them, optional; the operator role is always there | —              |
+| Q17 | Is there a read-only restriction?         | Decided: yes. Read only is a capability the owner's authorisation layer withholds, room-wide as a mode or for one player                                | —              |
+| Q18 | What does the etiquette bot do?           | Decided: it is an operator and enforces: it kicks, bars and sets read only itself, each act audited with its finding and undoable by the owner          | —              |
 
 [hydra]: https://matrix.org/blog/2025/08/project-hydra-improving-state-res/

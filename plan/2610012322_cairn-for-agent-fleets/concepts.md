@@ -124,6 +124,7 @@ the [room security note](room-security.md).
 | Q15 | What may a room bot do?                    | Post findings, kick and bar                                                                                          |
 | Q16 | Who fills a room's roles?                  | The owner configures roles and provides the players; the operator role is always there, an etiquette bot is optional |
 | Q17 | Can a player be read only?                 | Yes: a capability the owner's authorisation layer withholds, for one player or room-wide as a mode                   |
+| Q18 | What does the etiquette bot do?            | It is an operator and enforces the pins itself; every act is audited with its finding, and the owner can undo it     |
 
 Q4, Q5 and Q7 follow from the split: a session may be in any number of
 rooms; a plain session in no room follows its person's rules for
