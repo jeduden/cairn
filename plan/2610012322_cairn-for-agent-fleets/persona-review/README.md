@@ -79,3 +79,11 @@ or a root-owned policy entry.
 Round 7 re-ran the security officer; see
 [round-7/README.md](round-7/README.md). Two holes closed, and seven
 residual risks that only sandboxing removes went to OQ-29.
+
+## Round 8
+
+Round 8 was a blind review of pitch v10 by all nine personas, given
+only its text; see [round-8/README.md](round-8/README.md). Everyone
+kept reading and nobody would install yet: the pitch serves the owner
+at the screen, and the other seats appear only under "next" or not at
+all.
