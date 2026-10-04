@@ -123,6 +123,12 @@ I4).
   classifier's claims, shown as such, and the owner can lift any bar.
 - **A room without one.** The owner may run no etiquette bot; the
   operator role is still there, held by the owner by default.
+- **Capabilities and modes.** Each role is a set of capabilities:
+  read, post, link, write pins, kick, bar, set read only, configure
+  roles. The owner's configuration grants them; Cairn checks every act
+  against them. Read only (Q17) is the post capability withheld: for
+  one player, as IRC's quiet, or for the whole room as a mode, as
+  IRC's +m, leaving posting to the roles the owner names.
 
 ### What stays for the bot
 
@@ -189,7 +195,7 @@ room model takes:
 | Q14 | Can room pins widen what an agent may do?  | Moot: room pins are information and grant nothing                                                                                                       | —                                                             |
 | Q15 | What may a room bot do beyond posting?     | Decided: also bar and kick players                                                                                                                      | —                                                             |
 | Q16 | Does Cairn ship a room bot?                | Decided: rooms have roles; the owner configures them and provides the players, an etiquette bot among them, optional; the operator role is always there | —                                                             |
-| Q17 | Is there a quiet restriction?              | (a) no: kick and bar only; (b) yes: an operator can keep a player present but unable to post, as IRC's quiet                                            | (b): the gentler step before a kick                           |
+| Q17 | Is there a read-only restriction?          | Decided: yes. Read only is a capability the owner's authorisation layer withholds, room-wide as a mode or for one player                                | —                                                             |
 | Q18 | What does the etiquette bot do by default? | (a) act at once: kick and bar; (b) flag to operators, act only on a timed ladder (warn, quiet, kick, bar) the owner turns on                            | (b): a classifier's mistake must not remove a player silently |
 
 [hydra]: https://matrix.org/blog/2025/08/project-hydra-improving-state-res/

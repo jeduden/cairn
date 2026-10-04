@@ -82,7 +82,10 @@ agent, delivered at its next hook point.
 Roles turn "who may do what in a room" into configuration. The owner
 defines which roles a room has and who holds them; each role carries a
 fixed set of permissions; Cairn checks every room act against them,
-deterministically. The operator role always exists and the owner holds
+deterministically. Roles are sets of capabilities (read, post, link,
+write pins, kick, bar, set read only, configure roles); read only is a
+capability withheld, for one player or the whole room as a mode (Q17).
+The operator role always exists and the owner holds
 it unless they assign it; an etiquette bot is an optional role holding
 an operator's permissions. Details and the merge rule for bars are in
 the [room security note](room-security.md).
@@ -120,6 +123,7 @@ the [room security note](room-security.md).
 | Q13 | How is a player kept out?                  | The authorisation layer: operators kick and bar                                                                      |
 | Q15 | What may a room bot do?                    | Post findings, kick and bar                                                                                          |
 | Q16 | Who fills a room's roles?                  | The owner configures roles and provides the players; the operator role is always there, an etiquette bot is optional |
+| Q17 | Can a player be read only?                 | Yes: a capability the owner's authorisation layer withholds, for one player or room-wide as a mode                   |
 
 Q4, Q5 and Q7 follow from the split: a session may be in any number of
 rooms; a plain session in no room follows its person's rules for
