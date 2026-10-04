@@ -31,23 +31,25 @@ of them, a person, can instruct an agent.
 | Grant              | a person                     | A delegation budget: which agents, which targets, how much, until                                                                    |
 | Room               | a person                     | One intent's shared space: its players, its messages and links                                                                       |
 | Membership         | a person, or structural      | A player joining or leaving a room: added or removed by its person, or derived from a session start or end or a delegation           |
+| Role and holder    | the room's owner             | A room's roles, their permissions and who fills each: owner, operator, etiquette bot, member                                         |
+| Kick and bar       | an operator                  | Removing a player now, or keeping it out, under the authorisation layer                                                              |
 | Lane               | derived by Cairn             | A branch and its worktrees, as the record holds them                                                                                 |
 | Status and queue   | derived by Cairn             | What needs whom, rebuilt from the record (I10)                                                                                       |
 
 ## Compute with data
 
-| Entity                  | Holds                     | Acts by                                                     | Trust                                                                       |
-| ----------------------- | ------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Person (player)         | keys, judgement           | writing intents, messages, verdicts, grants                 | The only source of instructions to their own agents                         |
-| Agent                   | a context window          | calling tools through its harness                           | Swayed by what it reads; Cairn cannot stop that, only limit it              |
-| Harness                 | a process, its transcript | running the agent's tool calls                              | Its own input channel is the person's                                       |
-| Subagent and delegate   | a context window          | as an agent, within its parent's grant                      | No looser than its parent                                                   |
-| Room bot                | a classifier, its key     | posting findings and, by grant, barring players in one room | Run by the room's owner or operator, outside Cairn; its findings are claims |
-| Running app, dev server | a process, its pages      | executing code an agent wrote                               | Untrusted; its screens are untrusted data                                   |
-| Command and test run    | a process, briefly        | executing, then exiting with a status                       | Its output is untrusted data; its exit status is structural                 |
-| Cairn                   | the record, derived state | recording, deriving, delivering, displaying                 | Deterministic, no model, never judges (I10, CMP-09)                         |
-| Peer node               | another person's record   | syncing data by key                                         | Its data arrives as theirs, untrusted                                       |
-| Model provider          | outside Cairn             | serving the harness's model calls                           | Outside every Cairn boundary                                                |
+| Entity                  | Holds                     | Acts by                                                   | Trust                                                                                  |
+| ----------------------- | ------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Person (player)         | keys, judgement           | writing intents, messages, verdicts, grants               | The only source of instructions to their own agents                                    |
+| Agent                   | a context window          | calling tools through its harness                         | Swayed by what it reads; Cairn cannot stop that, only limit it                         |
+| Harness                 | a process, its transcript | running the agent's tool calls                            | Its own input channel is the person's                                                  |
+| Subagent and delegate   | a context window          | as an agent, within its parent's grant                    | No looser than its parent                                                              |
+| Etiquette bot           | a classifier, its key     | posting findings, kicking and barring players in one room | An optional role the room's owner provides, run outside Cairn; its findings are claims |
+| Running app, dev server | a process, its pages      | executing code an agent wrote                             | Untrusted; its screens are untrusted data                                              |
+| Command and test run    | a process, briefly        | executing, then exiting with a status                     | Its output is untrusted data; its exit status is structural                            |
+| Cairn                   | the record, derived state | recording, deriving, delivering, displaying               | Deterministic, no model, never judges (I10, CMP-09)                                    |
+| Peer node               | another person's record   | syncing data by key                                       | Its data arrives as theirs, untrusted                                                  |
+| Model provider          | outside Cairn             | serving the harness's model calls                         | Outside every Cairn boundary                                                           |
 
 ## Rules that follow
 

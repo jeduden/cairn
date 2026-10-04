@@ -20,14 +20,15 @@ the sign they were not independent.
 Each stands alone: it can exist, be created and be removed without
 any other, and it says nothing about the others.
 
-| Concept   | Kind    | What it is, and nothing more                                                        | Owner      |
-| --------- | ------- | ----------------------------------------------------------------------------------- | ---------- |
-| Player    | compute | A person, or an agent session in a harness                                          | itself     |
-| Workspace | data    | Where code changes: a branch and its worktrees (the SRS lane, narrowed)             | a person   |
-| Room      | data    | A conversation, and the pins every agent in it follows; its first pin is its intent | a person   |
-| Rule set  | data    | A person's rules for their agents: all of them, or one                              | a person   |
-| Grant     | data    | Authority to delegate: which agents, which targets, how much, until when            | a person   |
-| Link      | data    | An address plus a range: text, lines or an image region                             | its writer |
+| Concept   | Kind    | What it is, and nothing more                                                        | Owner            |
+| --------- | ------- | ----------------------------------------------------------------------------------- | ---------------- |
+| Player    | compute | A person, or an agent session in a harness                                          | itself           |
+| Workspace | data    | Where code changes: a branch and its worktrees (the SRS lane, narrowed)             | a person         |
+| Room      | data    | A conversation, and the pins every agent in it follows; its first pin is its intent | a person         |
+| Rule set  | data    | A person's rules for their agents: all of them, or one                              | a person         |
+| Role      | data    | A named set of permissions in a room: owner, operator, etiquette bot, member        | the room's owner |
+| Grant     | data    | Authority to delegate: which agents, which targets, how much, until when            | a person         |
+| Link      | data    | An address plus a range: text, lines or an image region                             | its writer       |
 
 Pins are rules: for agents to follow, for people to read and adjust.
 There are two kinds, set by the stakeholder: a person's rules for
@@ -41,14 +42,15 @@ A binding is a recorded, versioned fact that relates two concepts. It
 is data, written by a person or derived from structural events.
 Bindings are the only way concepts affect each other.
 
-| Binding      | Relates            | Means                                                       | Written by                         |
-| ------------ | ------------------ | ----------------------------------------------------------- | ---------------------------------- |
-| works in     | player → workspace | This agent session edits this workspace                     | structural (session start)         |
-| member of    | player → room      | This player reads, posts and, if an agent, follows the pins | the player's person, or structural |
-| serves       | workspace → room   | Work here is presented and judged against the room's intent | a person                           |
-| applies to   | rule set → agents  | All of the person's agents, or one agent                    | the rule set's person              |
-| delegated by | player → player    | This agent works for that one, under a grant                | structural (delegation record)     |
-| linked from  | link → message     | This message points at that range                           | the message's writer               |
+| Binding      | Relates                 | Means                                                             | Written by                         |
+| ------------ | ----------------------- | ----------------------------------------------------------------- | ---------------------------------- |
+| works in     | player → workspace      | This agent session edits this workspace                           | structural (session start)         |
+| member of    | player → room           | This player reads, posts and, if an agent, follows the pins       | the player's person, or structural |
+| serves       | workspace → room        | Work here is presented and judged against the room's intent       | a person                           |
+| applies to   | rule set → agents       | All of the person's agents, or one agent                          | the rule set's person              |
+| holds        | player → role in a room | This player fills this role; its permissions follow from the role | the room's owner                   |
+| delegated by | player → player         | This agent works for that one, under a grant                      | structural (delegation record)     |
+| linked from  | link → message          | This message points at that range                                 | the message's writer               |
 
 ## Three composition rules
 
@@ -75,6 +77,16 @@ Restore, join, leave and change notices are then not concepts of their
 own: they are the moments the derived result of rule 1 changes for an
 agent, delivered at its next hook point.
 
+## The authorisation layer
+
+Roles turn "who may do what in a room" into configuration. The owner
+defines which roles a room has and who holds them; each role carries a
+fixed set of permissions; Cairn checks every room act against them,
+deterministically. The operator role always exists and the owner holds
+it unless they assign it; an etiquette bot is an optional role holding
+an operator's permissions. Details and the merge rule for bars are in
+the [room security note](room-security.md).
+
 ## Use cases as configuration
 
 | Use case                                   | Configuration                                                                                                  |
@@ -94,17 +106,20 @@ agent, delivered at its next hook point.
 
 ## Stakeholder decisions of 4 October 2026
 
-| #   | Question                                   | Decision                                                                                                   |
-| --- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| Q1  | Is a room a lane or a group of lanes?      | Neither: independent concepts, composed by bindings                                                        |
-| Q2  | Does a change notice carry the text?       | Decided later                                                                                              |
-| Q3  | What does leaving do to a running agent?   | The agent decides. Cairn stops restoring the room's pins and tells the agent it left                       |
-| Q6  | Does the intent reach a teammate's agents? | Yes. Access to a room is access to its pins, and the intent is the room's first pin                        |
-| Q8  | A quarantined pin still in context?        | The agents figure it out, possibly with their people. Cairn tells member agents the pin was withdrawn      |
-| Q9  | Can the owner leave their own room?        | Yes                                                                                                        |
-| Q10 | Who writes room pins and adds players?     | The room's owner writes its pins; only a player's own person adds it to a room                             |
-| Q11 | A room whose owner left?                   | Nobody changes its pins until the owner hands the room over; the pins stay as they were                    |
-| Q12 | Do room pins instruct agents?              | No. Room pins are information agents must be aware of; a room bot the owner or operator runs enforces them |
+| #   | Question                                   | Decision                                                                                                             |
+| --- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Q1  | Is a room a lane or a group of lanes?      | Neither: independent concepts, composed by bindings                                                                  |
+| Q2  | Does a change notice carry the text?       | Decided later                                                                                                        |
+| Q3  | What does leaving do to a running agent?   | The agent decides. Cairn stops restoring the room's pins and tells the agent it left                                 |
+| Q6  | Does the intent reach a teammate's agents? | Yes. Access to a room is access to its pins, and the intent is the room's first pin                                  |
+| Q8  | A quarantined pin still in context?        | The agents figure it out, possibly with their people. Cairn tells member agents the pin was withdrawn                |
+| Q9  | Can the owner leave their own room?        | Yes                                                                                                                  |
+| Q10 | Who writes room pins and adds players?     | The room's owner writes its pins; only a player's own person adds it to a room                                       |
+| Q11 | A room whose owner left?                   | Nobody changes its pins until the owner hands the room over; the pins stay as they were                              |
+| Q12 | Do room pins instruct agents?              | No. Room pins are information agents must be aware of; a room bot the owner or operator runs enforces them           |
+| Q13 | How is a player kept out?                  | The authorisation layer: operators kick and bar                                                                      |
+| Q15 | What may a room bot do?                    | Post findings, kick and bar                                                                                          |
+| Q16 | Who fills a room's roles?                  | The owner configures roles and provides the players; the operator role is always there, an etiquette bot is optional |
 
 Q4, Q5 and Q7 follow from the split: a session may be in any number of
 rooms; a plain session in no room follows its person's rules for
