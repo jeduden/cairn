@@ -17,22 +17,22 @@ of them, a person, can instruct an agent.
 
 ## Data
 
-| Entity             | Written by                   | What it is                                                           |
-| ------------------ | ---------------------------- | -------------------------------------------------------------------- |
-| Event              | the compute entity behind it | One entry of the record: a message, an edit, a command, a result     |
-| Intent             | a person                     | A goal, what done means and the rules, versioned                     |
-| Pin                | a person                     | A rule to restore to agents; its model for rooms is open             |
-| Room message       | a player, person or agent    | A post addressed to one room; every player in it can read it         |
-| Cross-room message | a player in another room     | A post from one room to another, arriving as data in the target room |
-| Mark and link      | a person or an agent         | An address plus a range: characters, lines or an image region        |
-| Snapshot           | Cairn, from a compute entity | A screenshot of the app, a diff, a file version, a test log          |
-| Checkpoint         | Cairn, from the worktree     | The state of a worktree at a point                                   |
-| Verdict            | a person                     | Met or needs changes, on a criterion                                 |
-| Grant              | a person                     | A delegation budget: which agents, which targets, how much, until    |
-| Room               | a person                     | One intent's shared space: its players, its messages and links       |
-| Membership         | a person                     | A player joining or leaving a room: a person, an agent or a delegate |
-| Lane               | derived by Cairn             | A branch and its worktrees, as the record holds them                 |
-| Status and queue   | derived by Cairn             | What needs whom, rebuilt from the record (I10)                       |
+| Entity             | Written by                   | What it is                                                                                                                 |
+| ------------------ | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Event              | the compute entity behind it | One entry of the record: a message, an edit, a command, a result                                                           |
+| Intent             | a person                     | A goal, what done means and the rules, versioned                                                                           |
+| Pin                | a person                     | A rule to restore to agents; its model for rooms is open                                                                   |
+| Room message       | a player, person or agent    | A post addressed to one room; every player in it can read it                                                               |
+| Cross-room message | a player in another room     | A post from one room to another, arriving as data in the target room                                                       |
+| Mark and link      | a person or an agent         | An address plus a range: characters, lines or an image region                                                              |
+| Snapshot           | Cairn, from a compute entity | A screenshot of the app, a diff, a file version, a test log                                                                |
+| Checkpoint         | Cairn, from the worktree     | The state of a worktree at a point                                                                                         |
+| Verdict            | a person                     | Met or needs changes, on a criterion                                                                                       |
+| Grant              | a person                     | A delegation budget: which agents, which targets, how much, until                                                          |
+| Room               | a person                     | One intent's shared space: its players, its messages and links                                                             |
+| Membership         | a person, or structural      | A player joining or leaving a room: added or removed by its person, or derived from a session start or end or a delegation |
+| Lane               | derived by Cairn             | A branch and its worktrees, as the record holds them                                                                       |
+| Status and queue   | derived by Cairn             | What needs whom, rebuilt from the record (I10)                                                                             |
 
 ## Compute with data
 
@@ -83,9 +83,10 @@ protocol says when each member gets what.
 event: an agent they run, a subagent or delegate an agent starts in
 the room, or, later, a teammate. An agent joining gets, word for word:
 the intent in force, its own person's pins for the room, and a fixed
-notice naming the room and its players. A subagent the harness starts
-without a hook of its own gets the same text inside the task it is
-handed, which counts as its join.
+notice naming the room and its players by id and key fingerprint, never
+by a name someone chose. A subagent gets the same through its own start
+hook where the harness offers one (Claude Code and Codex do); without
+one it is shown as "rules not delivered".
 
 **Participate.** While a member, an agent:
 
@@ -117,6 +118,5 @@ restore their own person's pins.
 - **Handing tasks to another room** is rule 5: possible only under a
   grant, not by message.
 - **Pinning in a room** follows the room protocol above. What stays
-  open is harness support: whether a harness gives a subagent its own
-  restore hook, and whether it accepts a notice at the next turn
-  without an adapter (ASM-18, spike S9).
+  open is harness support per harness and the stakeholder's decisions
+  in the [room protocol deep dive](room-protocol.md).

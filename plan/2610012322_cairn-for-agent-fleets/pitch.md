@@ -278,8 +278,8 @@ Open from pitch v11, for the stakeholder:
 - **Pinning in a room.** Settled by the room protocol in the
   [entity model](entity-model.md): an agent gets the intent and its
   person's pins on joining, keeps them through every compaction, and
-  gets each change at its next turn. Harness support for subagents and
-  next-turn notices stays to be checked (ASM-18, spike S9).
+  gets each change at its next turn. The [room protocol deep
+  dive](room-protocol.md) holds harness support and nine decisions.
 - **Retry with several players.** Retrying from an earlier checkpoint
   is defined for one owner and one agent. In a room it is open who may
   start a retry, whether it joins the same room, and what the other
