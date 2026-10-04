@@ -17,20 +17,22 @@ of them, a person, can instruct an agent.
 
 ## Data
 
-| Entity           | Written by                   | What it is                                                        |
-| ---------------- | ---------------------------- | ----------------------------------------------------------------- |
-| Event            | the compute entity behind it | One entry of the record: a message, an edit, a command, a result  |
-| Intent           | a person                     | A goal, what done means and the rules, versioned                  |
-| Pin              | a person                     | A rule to restore to agents; its model for rooms is open          |
-| Message          | a person or an agent         | A post in a room or to another room                               |
-| Mark and link    | a person or an agent         | An address plus a range: characters, lines or an image region     |
-| Snapshot         | Cairn, from a compute entity | A screenshot of the app, a diff, a file version, a test log       |
-| Checkpoint       | Cairn, from the worktree     | The state of a worktree at a point                                |
-| Verdict          | a person                     | Met or needs changes, on a criterion                              |
-| Grant            | a person                     | A delegation budget: which agents, which targets, how much, until |
-| Room             | derived by Cairn             | The view of one intent's events, players and links                |
-| Lane             | derived by Cairn             | A branch and its worktrees, as the record holds them              |
-| Status and queue | derived by Cairn             | What needs whom, rebuilt from the record (I10)                    |
+| Entity             | Written by                   | What it is                                                           |
+| ------------------ | ---------------------------- | -------------------------------------------------------------------- |
+| Event              | the compute entity behind it | One entry of the record: a message, an edit, a command, a result     |
+| Intent             | a person                     | A goal, what done means and the rules, versioned                     |
+| Pin                | a person                     | A rule to restore to agents; its model for rooms is open             |
+| Room message       | a player, person or agent    | A post addressed to one room; every player in it can read it         |
+| Cross-room message | a player in another room     | A post from one room to another, arriving as data in the target room |
+| Mark and link      | a person or an agent         | An address plus a range: characters, lines or an image region        |
+| Snapshot           | Cairn, from a compute entity | A screenshot of the app, a diff, a file version, a test log          |
+| Checkpoint         | Cairn, from the worktree     | The state of a worktree at a point                                   |
+| Verdict            | a person                     | Met or needs changes, on a criterion                                 |
+| Grant              | a person                     | A delegation budget: which agents, which targets, how much, until    |
+| Room               | a person                     | One intent's shared space: its players, its messages and links       |
+| Membership         | a person                     | A player joining or leaving a room: a person, an agent or a delegate |
+| Lane               | derived by Cairn             | A branch and its worktrees, as the record holds them                 |
+| Status and queue   | derived by Cairn             | What needs whom, rebuilt from the record (I10)                       |
 
 ## Compute with data
 
@@ -72,6 +74,9 @@ of them, a person, can instruct an agent.
 
 ## Where this settles the open questions
 
+- **Messages in a room** are data: every player in the room can read
+  them; only the person's own words reach their agents as
+  instructions.
 - **Messages between rooms** are data: an agent may write one, and it
   instructs no one until a person passes it on.
 - **Handing tasks to another room** is rule 5: possible only under a
