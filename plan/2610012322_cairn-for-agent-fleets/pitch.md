@@ -48,9 +48,11 @@ talk to all of them at once.
    your harness: the goal and what done means. Pin your rules beside
    it. Both come back word for word after every compaction and go with
    every task an agent hands to a subagent.
-2. **Judge where you see it.** Click through the app, read the diff,
-   check each criterion against its evidence. Mark it met or needs
-   changes; Cairn never decides for you.
+2. **Judge where you see it.** Each agent presents its outcome against
+   the criteria with the tools Cairn gives it: the screen in the app,
+   the lines in the diff, the test run. Cairn marks what it recorded
+   and what is only the agent's word. Click through, then mark each
+   criterion met or needs changes; Cairn never decides for you.
 3. **Correct course in place.** Point at what is wrong, an element in
    the running app or a line in the diff, and type the correction
    beside the criterion. It reaches the agents on that intent with what
@@ -254,9 +256,12 @@ what checked them; rule levels per action shape the owner's control.
     join the same room later, and every player can be followed.
 20. After the [agent UX note](../../research/notes/agent-ux/agent-ux.md):
     the three-pane screen and a live preview are table stakes; pointing
-    at an element or a line carries into the correction. A verdict per
-    criterion, recorded evidence, one ranked queue, a correction tied to
-    a verdict and a room of agents are what none of them do.
+    at an element or a line carries into the correction. Tools for the
+    agent to present its outcome per criterion, recorded evidence, one
+    ranked queue and a room of agents are what none of them do.
+21. Presenting the outcome against the criteria is the agent's job,
+    done with tools the UI offers; Cairn marks which evidence it
+    recorded, and the person judges.
 
 ## Open before the SRS change
 
