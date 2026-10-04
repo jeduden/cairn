@@ -11,7 +11,8 @@ const testStack = "docs/adr/ADR-2609292234-test-stack.md"
 func Cases() []Case {
 	var out []Case
 	for _, group := range [][]Case{
-		dependencyCases(), decisionCases(), repositoryCases(), reviewCases(), gateCases(),
+		dependencyCases(), decisionCases(), repositoryCases(), reviewCases(),
+		gateCases(), personaCases(),
 	} {
 		out = append(out, group...)
 	}
@@ -200,6 +201,21 @@ func gateCases() []Case {
 			Want:  "Not equal",
 		},
 		{
+			Name:   "an ADR edited without regenerating DEPENDENCIES.md",
+			Guards: "mdsmith check",
+			Edit: Edit{Op: Replace, File: testStack,
+				Old: "All three are test-only.", New: "All three are test-only, for now."},
+			Check: Mdsmith(),
+			Want:  "generated section is out of date",
+		},
+	}
+}
+
+// personaCases lists the drifts the persona gates catch between §2.5,
+// Appendix C and the persona agents.
+func personaCases() []Case {
+	return []Case{
+		{
 			Name:   "a requirement serving no persona",
 			Guards: "TestAppendixCCoversEveryRequirement",
 			Edit: Edit{Op: Replace, File: "docs/srs/appendix-c-persona-coverage.md",
@@ -230,14 +246,6 @@ func gateCases() []Case {
 				New: ".claude/agents/persona-stray.md"},
 			Check: GoTest("./internal/srs", "TestPersonasMatchTheAgents"),
 			Want:  "persona-stray",
-		},
-		{
-			Name:   "an ADR edited without regenerating DEPENDENCIES.md",
-			Guards: "mdsmith check",
-			Edit: Edit{Op: Replace, File: testStack,
-				Old: "All three are test-only.", New: "All three are test-only, for now."},
-			Check: Mdsmith(),
-			Want:  "generated section is out of date",
 		},
 	}
 }
