@@ -4,7 +4,7 @@ The working pitch, the stakeholder's decisions behind it, and how it
 got here. The SRS change this plan ends in turns it into the contract;
 until then it is direction, not requirement.
 
-## Pitch v11: for the developer (4 October 2026)
+## Pitch v12: for the developer (4 October 2026)
 
 Written for developers: their day first, then what Cairn changes.
 Items marked "next" are P2 in the SRS.
@@ -12,56 +12,65 @@ Items marked "next" are P2 in the SRS.
 ### Cairn: from intent to outcome
 
 Multiplayer for you and your agents. Say what you want, watch them
-work, judge what you got, correct course.
+work, look at what you got, keep it or correct course.
 
 **You know this.** Five agents on five things is already a lot. One
 waits on a permission prompt in a tab you cannot find. Another forgot
 your rule after compaction. A third says "all tests pass", and to check
-you juggle the app, the diff and the logs, still unsure how it got
-there. Two edited the same file. When one goes wrong, you start over
-and explain it all again. You would run more agents if you could keep
-up with five.
+you juggle the app, the diff and the logs. Two edited the same file.
+The pull request that lands says nothing of how the code came to be.
+You would run more agents if you could keep up with five.
 
 **With Cairn.** Install the plugin, keep your harness, and open Cairn
-in your browser.
+in your browser. Every intent gets a room.
 
-- **Your intents, on the left.** Each with its agents and what needs
-  you, ranked: a prompt, an outcome to judge, a failure, two agents on
-  one file.
-- **The room, in the middle.** One conversation per intent with every
-  agent on it, each message, edit and command under its agent's name.
+- **Your rooms, on the left.** One per intent, each with what needs
+  you, ranked: a question, an outcome to look at, a failure, two
+  agents on one file.
+- **The conversation, in the middle.** Every agent on the intent in
+  one conversation, each message, edit and command under its name.
   Speak once and every agent hears you.
-- **The work, live, on the right.** The running app, the files, the
-  diff, the test runs. Follow any agent and watch the file it is
-  editing change as it edits.
+- **The outcome window, on the right.** The running app, the diff, the
+  test run: whatever an agent presents. Or follow any player and watch
+  the file it edits change as it edits.
 
-**Say it once.** Write the goal, what done means and the room's rules,
-once for the room. Every agent that joins learns them, is reminded
-after every compaction, and hears of every change. A room bot you run
-can check that they are kept.
+**Say it once.** The room's first pin is the intent: the goal and what
+done means. Pin your rules beside it. Every agent that joins sees the
+pins, gets them back after every compaction and hears of every change.
+Agents pin what they are on, and Cairn warns you when two touch the
+same file.
 
-**Judge where you see it.** Agents present their outcome against your
-criteria, linking the screen, the diff lines and the test run. You
-click through and decide.
+**Try it several ways.** Each attempt is a branch in the room. Put
+three agents on three approaches; each presents in the same window,
+against the same intent, and you switch between them.
 
-**Point, link, correct.** Anyone in the room, you or an agent, can
-mark a sentence, lines of a diff or log, or a region of a screenshot,
-and get a link to exactly that. Drop it in the room, and every participant
-opens what was marked.
+**Keep it or correct course.** Look where the agent shows it and click
+through to the lines and the run behind it. Keep it: commit, and git
+lands it as always. Or pin a correction, and every agent in the room
+sees it.
 
-**Rooms talk to each other.** Intents depend on each other. When the
-API room changes an endpoint, you or its agent post to the frontend
-room, with a link to the diff. The frontend agents can read it when
-they look, and it becomes their instruction only when you pass it on.
+**Point and link.** Anyone, you or an agent, can mark a sentence, lines
+of a diff or log, or a region of a screenshot, and get a link to
+exactly that.
 
-**Catch up.** Back after the weekend? Each intent says what changed,
-what failed and what waits, every line linked to the record, gaps
-flagged.
+**Every commit knows its room.** Each commit made in a room links back
+to it in its message. Whoever you let into the room opens the
+conversation, the attempts and the runs behind a change, even after a
+squash merge.
 
-**Built to grow.** Hand an agent a budget and let it delegate. Next,
-teammates join the room peer to peer, with no server: they follow,
-judge under their own names, and their words reach your agents only
-when you pass them on.
+**Rooms talk to each other.** When the API room changes an endpoint,
+you or its agent post to the frontend room with a link to the diff.
+Agents there read it when they look; it instructs them only when you
+pass it on.
+
+**Catch up.** Back after the weekend? Each room says what changed, what
+failed and what waits, every line linked to the record, gaps flagged.
+
+**Built to grow.** Hand an agent a budget and let it delegate. Let a
+nightly timer start an attempt within a budget you set. Next: a
+labelled issue opens a room, through a Cairn you deploy; teammates join
+rooms peer to peer, with no central service; a room bot you run checks
+the pins are kept.
 
 **Safe by default.** Cairn connects to nothing until you share; its
 screen lives on localhost. Your agents take as instructions only your
