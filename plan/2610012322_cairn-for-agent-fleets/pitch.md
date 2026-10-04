@@ -9,22 +9,20 @@ until then it is direction, not requirement.
 Written for developers: their problem in their words first, then what
 Cairn changes. Items marked "next" are P2 in the SRS.
 
-### Cairn: from intent to outcome, for a team and its hundred agents
+### Cairn: from intent to outcome
 
-Four people. Ten intents. A hundred agents. Every outcome judged by a
-person, every course correction made in place.
+State what you want. Judge what you got. Correct course. Then run more
+agents than you could before.
 
-**You know this.** Your team of four runs dozens of agents and wants a
-hundred: Claude Code in many worktrees, each spawning subagents,
-several on the same goal. Nobody can watch a hundred terminals. One
-agent waits on a permission prompt in a tab you cannot find. Another
-lost your rule to compaction ("never push to main"). A third reports
-"all tests pass", and to judge it you open the app, the diff and the
-logs in separate windows, still unsure how it got there or whether it
-did what you asked. A teammate's agent edited the file yours was
-editing; you find out at merge. To help a colleague, you share a
-screen. When an agent is wrong, someone starts over and explains it
-all again.
+**You know this.** Five agents on five things is already a lot: Claude
+Code in five worktrees, some spawning subagents. One waits on a
+permission prompt in a tab you cannot find. Another lost your rule to
+compaction ("never push to main"). A third reports "all tests pass",
+and to judge it you open the app, the diff and the logs in separate
+windows, still unsure how it got there or whether it did what you
+asked. Two of them edited the same file. When one is wrong, you start
+a new session and explain it all again. You would run more agents, if
+you could keep up with five.
 
 **With Cairn.** Install the plugin: it shows every settings change
 before making it, removes cleanly, and never slows or blocks your
@@ -34,38 +32,36 @@ browser, or stay in the terminal; everything works from both.
 
 1. **Say it once.** `/intent` states a goal and what done means;
    `/pin` keeps your rules. Both come back word for word after every
-   compaction and go with every task an agent hands on, to a subagent
-   or another session, within the budget you grant.
-2. **See ten intents, not a hundred agents.** Each intent shows its
-   owner, its criteria, the agents on it and what needs you, ranked: a
-   prompt to answer, an outcome ready to judge, a failure, two agents
-   touching the same file, yours or a teammate's. Everything else
-   keeps running.
+   compaction and go with every task an agent hands to a subagent.
+2. **See what needs you.** Each intent shows its criteria, its agents
+   and what needs you, ranked: a prompt to answer, an outcome ready to
+   judge, a failure, two agents touching the same file. Answer from
+   there. Everything else keeps running.
 3. **Judge the outcome beside the chat.** Open an intent: the chat on
    one side; on the other, live as it works, the running app from that
    worktree's dev server, the diff, the files it produced, the test
-   runs, with parallel attempts side by side. Each criterion shows its
-   evidence: a test run the harness recorded, or only the agent's word.
-   You and your teammates mark it met or needs changes, each verdict
-   under its own name; Cairn never decides.
+   runs. Each criterion shows its evidence: a test run the harness
+   recorded, or only the agent's word. You mark it met or needs
+   changes; Cairn never decides for you.
 4. **Correct course in place.** Type the correction beside the
-   criterion, and it reaches every agent on your intent. Or sharpen the
+   criterion, and it reaches the agents on that intent. Or sharpen the
    intent, or retry from an earlier checkpoint in a fresh worktree,
-   with the first attempt kept beside it. A teammate's correction
-   reaches your agents only when you pass it on, marked as theirs.
+   with the first attempt kept beside it.
 5. **Catch up.** Back after lunch or the weekend? One page per intent
-   says what changed, what failed, what waits and who judged what, each
-   line linked to the record. If capture failed or part of the record
-   is missing, it says so.
+   says what changed, what failed and what waits, each line linked to
+   the record. If capture failed or part of the record is missing, it
+   says so.
 
-**Together, with no server.** The four of you share intents peer to
-peer, machine to machine. Each person's agents answer to that person
-alone. Sharing is off until you turn it on, and arrives after the
-single-developer release.
+**Built to grow.** When five agents feel easy, run more: hand an agent
+a budget and let it delegate, and keep judging by intent rather than
+by agent. Next, bring your team in: share an intent peer to peer, with
+no server; teammates judge the same outcome under their own names, and
+their corrections reach your agents only when you pass them on.
 
-**Yours alone.** Without sharing, Cairn connects to nothing. The lane
-view listens only on localhost, for your browser. Your agent gets its
-history only when it asks, marked untrusted, never as a command.
+**Yours alone.** Until you turn sharing on, Cairn connects to nothing.
+The lane view listens only on localhost, for your browser. Your agent
+gets its history only when it asks, marked untrusted, never as a
+command.
 
 ## Pitch v9 (3 October 2026, after three persona reviews)
 
@@ -220,6 +216,11 @@ what checked them; rule levels per action shape the owner's control.
     Teammates judge, correct and collide inside the main story, not in
     a footnote; sharing still arrives after the single-developer
     release.
+16. Start from today: nobody runs a hundred agents, because the
+    tooling does not exist; five agents on five intents is already a
+    lot. The pitch opens there and promises growth: delegation, judging
+    by intent, then the team. The hundred agents and the team of four
+    stay the direction, not the opening.
 
 ## Open before the SRS change
 
