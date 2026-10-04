@@ -87,3 +87,11 @@ only its text; see [round-8/README.md](round-8/README.md). Everyone
 kept reading and nobody would install yet: the pitch serves the owner
 at the screen, and the other seats appear only under "next" or not at
 all.
+
+## Round 9
+
+Round 9 was a blind review of the room model by all nine personas; see
+[round-9/README.md](round-9/README.md). Every seat endorsed the trust
+split. Twelve fixes came out, chiefly notices that push other players'
+text, undefined admission, a deadlock when an owner leaves, and limits
+on the etiquette bot.
