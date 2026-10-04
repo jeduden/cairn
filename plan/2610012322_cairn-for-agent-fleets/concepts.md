@@ -45,22 +45,28 @@ their agents, and a room's pins for every agent inside it. The intent
 is not a concept of its own: it is the room's first pin, the goal and
 what done means.
 
+A harness joining a room receives a **participant id** from the room.
+The id is how the room addresses and stamps that player, whatever the
+harness: Claude Code, the Agent SDK, Codex or any other that can join.
+A subagent that joins receives its own participant id, linked to its
+parent's.
+
 ## Bindings compose them
 
 A binding is a recorded, versioned fact that relates two concepts. It
 is data, written by a person or derived from structural events.
 Bindings are the only way concepts affect each other.
 
-| Binding      | Relates                 | Means                                                             | Written by                         |
-| ------------ | ----------------------- | ----------------------------------------------------------------- | ---------------------------------- |
-| works in     | player → workspace      | This agent session edits this workspace                           | structural (session start)         |
-| member of    | player → room           | This player reads, posts and, if an agent, follows the pins       | the player's person, or structural |
-| serves       | workspace → room        | Work here is presented and judged against the room's intent       | a person                           |
-| applies to   | rule set → agents       | All of the person's agents, or one agent                          | the rule set's person              |
-| trusts       | trust grant → poster    | This person's agents take this poster's messages as instructions  | the agents' person                 |
-| holds        | player → role in a room | This player fills this role; its permissions follow from the role | the room's owner                   |
-| delegated by | player → player         | This agent works for that one, under a grant                      | structural (delegation record)     |
-| linked from  | link → message          | This message points at that range                                 | the message's writer               |
+| Binding      | Relates                 | Means                                                                                                    | Written by                         |
+| ------------ | ----------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| works in     | player → workspace      | This agent session edits this workspace                                                                  | structural (session start)         |
+| member of    | player → room           | This player reads, posts and is addressed in this room under a participant id the room issues on joining | the player's person, or structural |
+| serves       | workspace → room        | Work here is presented and judged against the room's intent                                              | a person                           |
+| applies to   | rule set → agents       | All of the person's agents, or one agent                                                                 | the rule set's person              |
+| trusts       | trust grant → poster    | This person's agents take this poster's messages as instructions                                         | the agents' person                 |
+| holds        | player → role in a room | This player fills this role; its permissions follow from the role                                        | the room's owner                   |
+| delegated by | player → player         | This agent works for that one, under a grant                                                             | structural (delegation record)     |
+| linked from  | link → message          | This message points at that range                                                                        | the message's writer               |
 
 ## Three composition rules
 
@@ -179,6 +185,7 @@ As information read through a tool, never pushed:
 | Q20 | Can an agent claim work or paths?          | Yes, as information like a pin, never a lock; the etiquette bot may enforce it                                                                                    |
 | Q21 | Who may write a claim?                     | A player, about itself only; the room's other pins stay the owner's                                                                                               |
 | Q22 | What may a notice contain?                 | A notice is a message kind. Every room message is untrusted unless the agent's person explicitly trusts its poster; Cairn is a set of tools, not an authority     |
+| Q23 | How is a harness known in a room?          | Joining gives it a participant id; any harness can join, and its messages and links are stamped with that id                                                      |
 
 Q4, Q5 and Q7 follow from the split: a session may be in any number of
 rooms; a plain session in no room follows its person's rules for
@@ -210,5 +217,8 @@ its person adds it to.
 - **Message kinds (Q19):** a design phase decides whether messages
   carry a kind and which kinds.
 - **Security:** see the [room security note](room-security.md).
+- **Participant ids (Q23):** proposed, one per room, kept when a
+  session resumes, new for a new session, and bound to the person's
+  key so a bar on the person reaches every participant id they hold.
 
 [boards]: ../../research/notes/agent-message-boards/agent-message-boards.md
