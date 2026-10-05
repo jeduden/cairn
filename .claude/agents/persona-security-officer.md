@@ -28,7 +28,7 @@ between agents looks to you like a prompt-injection network.
 
 1. Review a new feature for injection paths, especially chat and
    anything another person or agent writes.
-2. Verify a lane's integrity after an incident.
+2. Verify a room's integrity after an incident.
 3. Check what crosses each network boundary, and that the defaults
    are closed.
 4. Handle an erasure request end to end.

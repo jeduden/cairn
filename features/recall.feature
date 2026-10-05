@@ -59,16 +59,16 @@ Feature: Recall (RCL)
       | get    | seq "w-1:7"                       |
 
   @RCL-05 @P0 @I8 @pending
-  Scenario: recall defaults to the current session and widening to lane or project is explicit and logged
+  Scenario: recall defaults to the current session and widening to room or project is explicit and logged
     Given an isolated Cairn home
-    And a project whose current lane has sessions on two worktrees and two writers this node holds, beside another lane of the project, a foreign lane and another project
+    And a project whose current room has sessions on two worktrees and two writers this node holds, beside another room of the project, a foreign room and another project
     When Claude calls the MCP tool "search" with query "deploy" and no scope
     Then every hit belongs to the current session
-    And with scope "lane" the hits come from every session of the current lane, and with scope "project" from every lane of the project, and an audit entry logs each widening
-    And no scope returns a hit from the foreign lane or from another project
-    When Claude calls the MCP tool "get" with seq "w-2:5", an event of another session of the current lane, and no scope
+    And with scope "room" the hits come from every session of the current room, and with scope "project" from every room of the project, and an audit entry logs each widening
+    And no scope returns a hit from the foreign room or from another project
+    When Claude calls the MCP tool "get" with seq "w-2:5", an event of another session of the current room, and no scope
     Then the event is not returned, and the result says the address lies outside the current scope
-    And with scope "lane" the event is returned, and an audit entry logs the widening
+    And with scope "room" the event is returned, and an audit entry logs the widening
 
   @RCL-06 @P0 @I5 @pending
   Scenario: quarantined events are never recalled and purged ranges return a tombstone
@@ -120,23 +120,23 @@ Feature: Recall (RCL)
       | a sealed event this node witnessed                 | witnessed | verified   |
       | an event past its writer's newest seal             | witnessed | unsigned   |
       | a sealed event imported from a transcript          | imported  | verified   |
-      | a sealed event of a foreign lane                   | foreign   | verified   |
+      | a sealed event of a foreign room                   | foreign   | verified   |
       | a peer's event after a break in its writer's chain | peer      | unverified |
       | a peer's event whose chain check fails             | peer      | broken     |
 
   @RCL-10 @P2 @I2 @I8 @pending
-  Scenario: a foreign lane is recalled only by naming it in the call, enveloped, untrusted and tainting
+  Scenario: a foreign room is recalled only by naming it in the call, enveloped, untrusted and tainting
     Given an isolated Cairn home
-    And a project holding a foreign lane "vendor-lane" imported from a lane bundle
-    When Claude calls the MCP tool "search" with query "deploy" and lane "vendor-lane"
-    Then the hits come from "vendor-lane", wrapped in the recall envelope, each with trust "untrusted"
+    And a project holding a foreign room "vendor-room" imported from a room bundle
+    When Claude calls the MCP tool "search" with query "deploy" and room "vendor-room"
+    Then the hits come from "vendor-room", wrapped in the recall envelope, each with trust "untrusted"
     And an audit entry logs the call and the session is tainted under SEC-13
-    And a following call without the lane parameter, under any scope, returns no hit from "vendor-lane"
+    And a following call without the room parameter, under any scope, returns no hit from "vendor-room"
 
   @RCL-11 @P2 @I6 @pending
-  Scenario: recalling another participant's post is recorded and shown in the lane timeline
+  Scenario: recalling another participant's post is recorded and shown in the room timeline
     Given an isolated Cairn home
-    And a lane owned by "owner-a" holding a post written by participant "bob"
+    And a room owned by "owner-a" holding a post written by participant "bob"
     When Claude on this node calls the MCP tool "get" with the post's address
     Then this node's writer log gains the recall event, listing the post's address among the returned events
-    And the lane timeline shows the recall with its recall address to "owner-a" and to "bob"
+    And the room timeline shows the recall with its recall address to "owner-a" and to "bob"

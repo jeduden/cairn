@@ -22,7 +22,7 @@ Feature: Owner acts (OWN)
 
     Examples:
       | surface                              | outcome                                                      |
-      | the lane-view component under SEC-20 | recorded as an operator event covered by its writer's seal   |
+      | the room-view component under SEC-20 | recorded as an operator event covered by its writer's seal   |
       | the CLI under OWN-12                 | recorded as an operator event covered by its writer's seal   |
       | the harness's own prompt             | recorded as user or a harness_meta outcome, not an owner act |
       | the terminal the run component hosts | recorded as user or a harness_meta outcome, not an owner act |
@@ -76,7 +76,7 @@ Feature: Owner acts (OWN)
   @OWN-07 @P1 @I2 @I9 @pending
   Scenario Outline: an away policy only replies to the agent's own pending request
     Given an isolated Cairn home
-    And the owner turned on the away policy "<policy>" for the lane as an owner act
+    And the owner turned on the away policy "<policy>" for the room as an owner act
     And an agent's permission request is held past the hold window
     When the hold window ends
     Then the agent's pending request gets the reply "<reply>"
@@ -93,14 +93,14 @@ Feature: Owner acts (OWN)
   @OWN-08 @P2 @I2 @I6 @pending
   Scenario: an endorsement sends exactly the confirmed text inside a fixed template
     Given an isolated Cairn home
-    And a post in the lane longer than its preview, holding hidden characters
+    And a post in the room longer than its preview, holding hidden characters
     When a principal expands it, edits it and endorses it to one of their own agents
     Then Endorse was enabled only after the post was expanded
     And the agent receives exactly the confirmed text with hidden characters stripped and their count recorded
     And the endorsement is a signed owner act naming the post's commitment, writer key, target agent, original text and sent text
     And the post's writer is shown the edit as a diff
     And the text reaches the agent through the harness's input interface in a fixed template naming the writer key's short fingerprint and the post's recall address, with no petname
-    When the post's writer is given the co-author role and the lane's settings are changed to the most open values
+    When the post's writer is given the co-author role and the room's settings are changed to the most open values
     Then the writer's later posts still reach the principal's agents only as untrusted recall or by endorsement
     And a trust grant naming the writer's key that the principal records is not honoured, since its requirements have not shipped
 
@@ -186,7 +186,7 @@ Feature: Owner acts (OWN)
     Given an isolated Cairn home
     And a phone credential minted by a widening owner act
     When the phone tries to allow a held permission request for the whole session
-    Then the lane-view component refuses it on the server
+    Then the room-view component refuses it on the server
     And the phone can only read, allow once and deny held permission requests
     And where an authenticator is required each allow carries the phone's own presence check bound to that answer
 
@@ -230,10 +230,10 @@ Feature: Owner acts (OWN)
   @OWN-21 @P1 @I6 @I10 @pending
   Scenario: Ready for review follows only an owner act and a later edit clears it
     Given an isolated Cairn home
-    And a lane at head "h1"
-    When the owner runs "cairn lane ready" and the agent then edits the worktree
-    Then the lane showed Ready for review only after the act recorded with head "h1"
-    And after the edit the lane returns to Running or Quiet until marked again
+    And a room at head "h1"
+    When the owner runs "cairn room ready" and the agent then edits the worktree
+    Then the room showed Ready for review only after the act recorded with head "h1"
+    And after the edit the room returns to Running or Quiet until marked again
 
   @OWN-22 @P1 @I2 @I6 @I9 @pending
   Scenario: an open residual risk refuses widening acts unless the owner accepted it
@@ -275,7 +275,7 @@ Feature: Owner acts (OWN)
   Scenario: a delegate's result is pulled, never pushed
     Given an isolated Cairn home
     And a delegation outside the session that has returned a result
-    When the delegating agent calls lane_result for that delegation
+    When the delegating agent calls room_result for that delegation
     Then the result arrives inside the untrusted envelope
     And no result text entered the delegating agent's context before that call
     And cancelling the grant stops every delegate it covers, as a cut act
@@ -283,7 +283,7 @@ Feature: Owner acts (OWN)
   @OWN-26 @P2 @I2 @I8 @pending
   Scenario: another principal's agent takes work only under their acceptance grant
     Given an isolated Cairn home
-    And a lane shared by principals "owner" and "co-author"
+    And a room shared by principals "owner" and "co-author"
     And "co-author" has recorded an acceptance grant naming "owner", a target agent, a rule ceiling, a budget and an expiry
     When an agent of "owner" delegates a task to that target
     Then the task reaches the target in the fixed template, marked as from "owner"'s agent
@@ -293,17 +293,17 @@ Feature: Owner acts (OWN)
   @OWN-27 @P1 @I2 @I10 @pending
   Scenario: only a person judges, and a verdict goes stale when what it judged changes
     Given an isolated Cairn home
-    And a lane whose agent stated "C1 is done" and recorded a passing test run linked to C1
+    And a room whose agent stated "C1 is done" and recorded a passing test run linked to C1
     When the owner records "met" on C1 and the agent then edits a file
     Then the verdict is recorded as the owner's act, bound to the intent version, the head and the evidence shown
     And Cairn pre-filled no verdict, and the agent's statement stays a claim
     And after the edit the verdict reads stale
-    And the verdict does not approve the lane for landing
+    And the verdict does not approve the room for landing
 
   @OWN-28 @P1 @I1 @I2 @pending
   Scenario: the owner course-corrects from the verdict
     Given an isolated Cairn home
-    And a lane where the owner recorded "needs changes" on C2
+    And a room where the owner recorded "needs changes" on C2
     When the owner sends the correction "keep the header row in every file" and retries from an earlier checkpoint
     Then the correction reaches the agent through the harness's input in the fixed template naming the verdict, C2 and the results it concerns
     And the retry starts a new session in a new worktree at that checkpoint, given the correction and the intent pin in force through its restore block
@@ -311,5 +311,5 @@ Feature: Owner acts (OWN)
     And the abandoned attempt stays on record, shown beside the retry
     And C2 reads "unjudged" until the next verdict
     When the owner revises the intent from the same verdict
-    Then a new version of the lane's intent pin is recorded
-    And it reaches the lane's agents in the same fixed template and, as a pin, in their next restore block
+    Then a new version of the room's intent pin is recorded
+    And it reaches the room's agents in the same fixed template and, as a pin, in their next restore block

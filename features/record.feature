@@ -102,7 +102,7 @@ Feature: Record (REC)
     When the operator runs "cairn ingest --all"
     Then the 20 KiB content is stored in the payload store under a name from which no one off this node can confirm a guess at the content, and its event holds a preview of at most 512 bytes, the payload reference and the commitment
     And the 2 KiB content is stored inline in its event
-    And nothing in an export, lane bundle or replicated structure lets a reader off this node confirm a guess at the content from a payload name
+    And nothing in an export, room bundle or replicated structure lets a reader off this node confirm a guess at the content from a payload name
     And each payload was written to a temporary file, fsynced, then renamed into place
 
   @REC-10 @P0 @I10 @pending
@@ -235,7 +235,7 @@ Feature: Record (REC)
       | moment                                   |
       | the hook "Stop" runs                     |
       | the hook "SessionEnd" runs               |
-      | the agent hands the lane back            |
+      | the agent hands the room back            |
       | the branch head is rewritten by a rebase |
 
   @REC-21 @P1 @I6 @pending
@@ -257,24 +257,24 @@ Feature: Record (REC)
     When the operator runs "cairn ingest --path" on "pre-install" and on "elsewhere"
     Then every event of "pre-install" carries an "imported" mark with its source and ingest position, shown on every surface, and none is shown as witnessed
     And the user prompt from "pre-install" has trust "untrusted"
-    And "elsewhere" is held as a foreign lane shown as "imported", with no publisher key and every writer "unbound"
+    And "elsewhere" is held as a foreign room shown as "imported", with no publisher key and every writer "unbound"
 
   @REC-23 @P2 @I2 @I4 @I6 @pending
-  Scenario Outline: lane bundles are imported only from local sources, verified, redacted and audited
+  Scenario Outline: room bundles are imported only from local sources, verified, redacted and audited
     Given an isolated Cairn home
     And this node holds a foreign writer's chain under the owner key "owner-b"
-    And a lane bundle in a local file that <bundle>, holding a withheld event and an event with an API key the tenant's redaction rules match
+    And a room bundle in a local file that <bundle>, holding a withheld event and an event with an API key the tenant's redaction rules match
     When the operator imports the bundle
     Then the import is <outcome> and an audit entry records it
     And an accepted bundle had its seals and chains verified as received, across the withheld event from its retained header, and the API key redacted with its event's commitment key erased, both results recorded
-    And accepted events form a foreign lane
+    And accepted events form a foreign room
     And a bundle named by a URL is refused without network access, while one at a git ref already fetched into a local clone is read
 
     Examples:
       | bundle                                               | outcome  |
       | continues the foreign writer's chain under "owner-b" | accepted |
       | forks the foreign writer's chain under "owner-b"     | refused  |
-      | claims a lane of this tenant                         | refused  |
+      | claims a room of this tenant                         | refused  |
       | claims a writer of this tenant                       | refused  |
 
   @REC-24 @P1 @I1 @I8 @I10 @pending

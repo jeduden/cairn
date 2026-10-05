@@ -72,8 +72,8 @@ Feature: Observability (OPS)
 
     Examples:
       | component           | outcome   |
-      | lane-view component | rejected  |
-      | lane-view component | coalesced |
+      | room-view component | rejected  |
+      | room-view component | coalesced |
       | run component       | timed-out |
       | peer component      | dropped   |
       | bridge component    | failed    |

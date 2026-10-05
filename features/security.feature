@@ -13,7 +13,7 @@ Feature: Security (SEC)
     And no code any component can execute starts a program outside the run component, save the core's own kernel worker
     And CI fails when a component's evidence is missing or shows a violation
     And no core process runs or starts a component behind B1 to B3
-    And the lane-view and run components listen only on loopback or on a local endpoint only the same local user can reach
+    And the room-view and run components listen only on loopback or on a local endpoint only the same local user can reach
     And neither connects anywhere else
 
   @SEC-02 @P0 @I8 @pending
@@ -154,7 +154,7 @@ Feature: Security (SEC)
       | selector                     |
       | --range w-1:100-200          |
       | --session s-1                |
-      | --lane l-1                   |
+      | --room room-1                |
       | --writer w-1                 |
       | --provenance web             |
       | --flag instruction_like      |
@@ -230,23 +230,23 @@ Feature: Security (SEC)
     And every B1, B2 and B3 component and the run component stays off on the home until the tenant starts it
 
   @SEC-20 @P1 @I4 @I6 @I8 @pending
-  Scenario: the lane view binds to loopback and accepts only its own per-launch credential
+  Scenario: the room view binds to loopback and accepts only its own per-launch credential
     Given an isolated Cairn home
-    When the operator starts the lane-view component
+    When the operator starts the room-view component
     Then it listens only on a loopback address, on a port chosen at launch
     And its launch credential has at least 128 bits and is never sent to the server in a request line, nor placed in argv, an environment another UID can read, a log or a referrer
-    And the credential is exchanged once for a session credential that only the lane view's own origin, port included, can read or send
+    And the credential is exchanged once for a session credential that only the room view's own origin, port included, can read or send
     And a page served from another loopback port cannot obtain or replay that session credential
     And it permits enveloped reading and cut or neutral acts, and widening acts only with the widening-act confirmation, until the instance stops
     And a request whose Host or Origin is not its own, and any cross-origin request, is rejected and audited
 
   @SEC-21 @P1 @I2 @I4 @pending
-  Scenario: the lane view renders record content as inert text
+  Scenario: the room view renders record content as inert text
     Given an isolated Cairn home
     And a stored untrusted tool result containing HTML, a script, a Markdown link and a Markdown image
-    When the operator opens the lane view
+    When the operator opens the room view
     Then the content is shown as literal text with no element, script, link or image interpreted
-    And the Content-Security-Policy forbids every resource from outside the lane view's own origin
+    And the Content-Security-Policy forbids every resource from outside the room view's own origin
     And the untrusted content is visibly marked
 
   @SEC-22 @P0 @I4 @I7 @I6 @pending
@@ -258,7 +258,7 @@ Feature: Security (SEC)
 
     Examples:
       | policy                                      | attempt                                                     | outcome                                            |
-      | B1 disabled                                 | the operator starts the lane-view component                 | Cairn refuses to start it and audits the refusal   |
+      | B1 disabled                                 | the operator starts the room-view component                 | Cairn refuses to start it and audits the refusal   |
       | B2 disabled                                 | the operator starts the peer component                      | Cairn refuses to start it and audits the refusal   |
       | B3 disabled                                 | the operator starts the bridge component                    | Cairn refuses to start it and audits the refusal   |
       | the run component disabled                  | the operator starts the run component                       | Cairn refuses to start it and audits the refusal   |
@@ -274,12 +274,12 @@ Feature: Security (SEC)
       | a 30-day retention window for project "p"   | an event of "p" ages past 30 days                           | it is purged with a tombstone, audited and counted |
 
   @SEC-23 @P1 @I7 @pending
-  Scenario: the lane view writes no configuration and points to the CLI instead
+  Scenario: the room view writes no configuration and points to the CLI instead
     Given an isolated Cairn home
-    And the lane view is open
-    When the operator asks the lane view to change the agent configuration, the Cairn configuration, the deployment mode or a boundary's state
+    And the room view is open
+    When the operator asks the room view to change the agent configuration, the Cairn configuration, the deployment mode or a boundary's state
     Then no configuration, deployment mode or boundary state is written
-    And the lane view shows the diff and the CLI command that would make the change
+    And the room view shows the diff and the CLI command that would make the change
     And running that command shows the diff before it applies the change
 
   @SEC-24 @P2 @I4 @I8 @pending
@@ -290,7 +290,7 @@ Feature: Security (SEC)
     Then it listens only on "127.0.0.1:7400", it listens on nothing when no address is configured, and it refuses a wildcard address
     And every connection is encrypted and mutually authenticated with enrolled keys
     And the traffic carries only sealed ranges, in both directions whichever side dialled, and ephemeral signed presence hints
-    And local discovery advertises only a random per-boot instance id and a port, never a tenant, host or lane name
+    And local discovery advertises only a random per-boot instance id and a port, never a tenant, host or room name
 
   @SEC-25 @P2 @I2 @I6 @I8 @pending
   Scenario Outline: the peer component imports only sealed, chained segments from known writer keys
@@ -310,7 +310,7 @@ Feature: Security (SEC)
   @SEC-26 @P2 @I2 @I4 @pending
   Scenario: an export or publish is a reviewed, redacted and signed owner act
     Given an isolated Cairn home
-    And a lane holding a secret, an absolute path, a user name, a host name, an email address and a withheld range
+    And a room holding a secret, an absolute path, a user name, a host name, an email address and a withheld range
     When the owner runs "cairn export" and confirms the review step
     Then the review showed included and withheld content by class, and the export is audited
     And the secret, absolute path, user name, host name and email address are redacted, and an unresolved secret-scan hit fails the export closed
@@ -335,7 +335,7 @@ Feature: Security (SEC)
     When the bridge component runs and a held request and a forge comment arrive
     Then every outbound component runs only in the bridge component, which is listed in the register, outbound only, and off for every destination not enabled
     And the forge comment is imported only as an untrusted event
-    And the notification carries only the owner's lane alias, the queue class and a count, and no answer to it is accepted
+    And the notification carries only the owner's room alias, the queue class and a count, and no answer to it is accepted
     And every send and failure is counted and audited
 
   @SEC-29 @P1 @I4 @I2 @pending
@@ -345,14 +345,14 @@ Feature: Security (SEC)
     When the person confirms a command and an agent asks to run an unconfirmed one
     Then only the confirmed command runs, and each process it starts has its own register row
     And build-time evidence shows no other component that starts a program, save the core starting its own kernel worker
-    And the run component connects nowhere beyond loopback to the lane-view component
-    And any listener it opens meets the lane-view listener rules or is a local endpoint only the same local user can reach, refusing a peer of another UID
+    And the run component connects nowhere beyond loopback to the room-view component
+    And any listener it opens meets the room-view listener rules or is a local endpoint only the same local user can reach, refusing a peer of another UID
     And on a home where the tenant never started it, the run component is off
 
   @SEC-30 @P2 @I5 @I6 @pending
   Scenario: a purge travels as a signed tombstone and a co-author can request erasure
     Given an isolated Cairn home
-    And a lane shared with two enrolled peers and a co-author writer
+    And a room shared with two enrolled peers and a co-author writer
     When the owner purges a range, one peer applies it and the other suppresses the events
     Then the purge is sent as a signed tombstone event
     And the applying peer shows a tombstone and the suppressing peer shows a gap

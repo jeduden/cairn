@@ -20,7 +20,7 @@ Feature: Administration and lifecycle (ADM)
     And "cairn install --scope user" showed a diff of every configuration change, was declined and left the settings file unchanged
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
     When the operator runs "cairn uninstall" and keeps only the device key
-    Then the output lists the hooks, plugin and MCP registration, lane-view credentials, run-component endpoints, writer and device keys, enrolments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
+    Then the output lists the hooks, plugin and MCP registration, room-view credentials, run-component endpoints, writer and device keys, enrolments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
@@ -43,14 +43,14 @@ Feature: Administration and lifecycle (ADM)
 
     Examples:
       | configuration                                                                                   | component               | result                                                                                        |
-      | a managed policy file at the documented system path that the tenant can write                   | the lane-view component | refuses to start, and an audit entry and a counter record why                                 |
+      | a managed policy file at the documented system path that the tenant can write                   | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
       | a managed policy file in a directory the tenant can write                                       | the run component       | refuses to start, and an audit entry and a counter record why                                 |
-      | an unparsable managed policy file                                                               | the lane-view component | refuses to start, and an audit entry and a counter record why                                 |
+      | an unparsable managed policy file                                                               | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
       | a managed policy file with an unknown key                                                       | the run component       | refuses to start, and an audit entry and a counter record why                                 |
-      | a project ".cairn.toml" that turns on the lane view and a widening act that recorded its digest | the lane-view component | stays off, and an audit entry and a counter record the ignored key                            |
-      | a tenant config.toml that turns on the lane view with no widening act recording its digest      | the lane-view component | stays off                                                                                     |
-      | a tenant config.toml that turns on the lane view and a widening act that recorded its digest    | the lane-view component | starts                                                                                        |
-      | a managed policy that turns on the lane view and a tenant config that turns it off              | the lane-view component | starts                                                                                        |
+      | a project ".cairn.toml" that turns on the room view and a widening act that recorded its digest | the room-view component | stays off, and an audit entry and a counter record the ignored key                            |
+      | a tenant config.toml that turns on the room view with no widening act recording its digest      | the room-view component | stays off                                                                                     |
+      | a tenant config.toml that turns on the room view and a widening act that recorded its digest    | the room-view component | starts                                                                                        |
+      | a managed policy that turns on the room view and a tenant config that turns it off              | the room-view component | starts                                                                                        |
       | a tenant config.toml containing "recal.max_k = 10"                                              | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
       | a tenant config.toml containing "recall.max_k = 'ten'"                                          | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
       | a tenant config.toml containing "recall.max_k = 500"                                            | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
@@ -86,7 +86,7 @@ Feature: Administration and lifecycle (ADM)
   @ADM-07 @P0 @I1 @I5 @pending
   Scenario Outline: purge removes a scope everywhere, erases its commitment keys and leaves a tombstone
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "session-a" in lane "lane-a"
+    And a project with a Claude Code transcript "session-a" in room "room-a"
     When the operator runs "cairn purge <scope>"
     Then the command exits 0
     And the purged events are gone from the sealed segments, events, the FTS index, projections, the payload store and every copy of their content
@@ -97,7 +97,7 @@ Feature: Administration and lifecycle (ADM)
     Examples:
       | scope                  |
       | --project              |
-      | --lane lane-a          |
+      | --room room-a          |
       | --session session-a    |
       | --writer writer-a      |
       | --actor alice          |
@@ -202,10 +202,10 @@ Feature: Administration and lifecycle (ADM)
   @ADM-16 @P1 @I6 @pending
   Scenario Outline: status and doctor report every user-run component, peer lag, open chains and boundaries
     Given an isolated Cairn home
-    And managed policy that permits the lane-view and peer components, forbids the run component and locks one boundary
-    And the lane-view component is running, a bridge has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment
+    And managed policy that permits the room-view and peer components, forbids the run component and locks one boundary
+    And the room-view component is running, a bridge has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment
     When the operator runs "cairn <command>"
-    Then for the lane-view, run and peer components and the bridge the output shows whether policy permits it, whether it runs and its failure counters
+    Then for the room-view, run and peer components and the bridge the output shows whether policy permits it, whether it runs and its failure counters
     And the output shows the peer's sync lag for each writer
     And the output names the writer chain that ended without a closed segment
     And the output shows each boundary's state and whether managed policy locks it

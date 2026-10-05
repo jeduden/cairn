@@ -33,10 +33,10 @@ Feature: Pins (PIN)
   @PIN-03 @P0 @I3 @I5 @pending
   Scenario: a pin stores its verbatim text, scope, creating address and commitment
     Given an isolated Cairn home
-    And a session in lane "L1"
+    And a session in room "L1"
     When the operator runs "cairn pin add --type constraint --priority 1 'Never push directly to main; open a pull request.'"
     Then the command exits 0
-    And the pin stores that text verbatim with type "constraint", priority 1, scope lane "L1", the address (writer, seq) of its creating event, author "operator" and that event's commitment
+    And the pin stores that text verbatim with type "constraint", priority 1, scope room "L1", the address (writer, seq) of its creating event, author "operator" and that event's commitment
     And the pin stores no bare hash of its text
     And adding a pin whose text is 1,001 characters long exits 2 and leaves the active pin count at 1
 
@@ -70,7 +70,7 @@ Feature: Pins (PIN)
   Scenario: only constraint, preference and intent pins are injected automatically
     Given an isolated Cairn home
     And one active pin of each type "constraint", "preference", "decision", "fact" and "episode"
-    And a lane of the session whose owner set an intent, stored as its pin of type "intent"
+    And a room of the session whose owner set an intent, stored as its pin of type "intent"
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "constraint", "preference" and "intent" pins verbatim
     And the restore block includes no "decision", "fact" or "episode" pin
@@ -110,15 +110,15 @@ Feature: Pins (PIN)
     And the output has no warning about the pin "Run go test before committing."
 
   @PIN-10 @P0 @I3 @I2 @pending
-  Scenario: a restore block holds the principal's trusted pins of every lane the session has belonged to
+  Scenario: a restore block holds the principal's trusted pins of every room the session has belonged to
     Given an isolated Cairn home
-    And a session that started in lane "L1" and moved to lane "L2", into which lane "L3" was then merged
+    And a session that started in room "L1" and moved to room "L2", into which room "L3" was then merged
     And trusted pins of the session's principal scoped to "L1", "L3", the session and the whole project, a tenant-configuration pin, and a pin in "L2" written by another principal
     And a principal's "/pin" whose creating event was recorded in interactive mode, while the current mode is "automation"
     When the hook "SessionStart" runs with source "compact"
     Then the restore block holds the "L1" pin, the "L3" pin as a pin of "L2", the session pin, the project-wide pin, the tenant-configuration pin as project-wide, and the interactive-mode pin
-    And the restore block names "L1" and "L2" by id, and the merged lane by both "L2" and "L3"
-    And the other principal's pin is stated only by count, lane id and key fingerprint, with no text, and an audit entry records it
+    And the restore block names "L1" and "L2" by id, and the merged room by both "L2" and "L3"
+    And the other principal's pin is stated only by count, room id and key fingerprint, with no text, and an audit entry records it
 
   @PIN-11 @P2 @I3 @I6 @pending
   Scenario Outline: a pin active on another of the owner's nodes but not here is stated by count and reason

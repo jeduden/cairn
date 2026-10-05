@@ -112,7 +112,7 @@ Feature: Engineering quality (ENG)
     Examples:
       | component           | sandbox                       |
       | core                | denies all network            |
-      | lane-view component | denies all but loopback       |
+      | room-view component | denies all but loopback       |
       | run component       | denies all but loopback       |
       | peer component      | allows only its register rows |
       | publish component   | allows only its register rows |
@@ -150,7 +150,7 @@ Feature: Engineering quality (ENG)
       | component           | violation                                                                 |
       | core                | opens any socket, or starts a program other than its own kernel worker    |
       | run component       | makes an outbound connection or listens beyond loopback                   |
-      | lane-view component | starts a program, makes an outbound connection or listens beyond loopback |
+      | room-view component | starts a program, makes an outbound connection or listens beyond loopback |
       | peer component      | starts a program or reaches beyond its register rows                      |
       | publish component   | starts a program or reaches beyond its register rows                      |
       | bridge component    | starts a program, listens, or reaches beyond its register rows            |

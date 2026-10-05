@@ -18,7 +18,7 @@ what is waiting for you, and whether anything went wrong.
 
 ## What you need
 
-- A summary per lane and across lanes, every line linked to the
+- A summary per room and across rooms, every line linked to the
   exact events.
 - What is waiting for you, ranked.
 - Proof that nothing was lost or altered while you were away.
@@ -26,11 +26,11 @@ what is waiting for you, and whether anything went wrong.
 
 ## Your journeys
 
-1. Open Cairn; read what happened across all lanes in two minutes.
+1. Open Cairn; read what happened across all rooms in two minutes.
 2. Drill from a summary line to the exact tool run behind it.
 3. Find the decision an agent made on Saturday by searching for a
    word you remember.
-4. Check a lane's integrity before you land it.
+4. Check a room's integrity before you land it.
 
 ## When you give up
 

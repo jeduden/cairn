@@ -95,10 +95,10 @@ Feature: Restore and injection (INJ)
     And the restore block contains no untrusted bytes
 
   @INJ-10 @P1 @I2 @I6 @pending
-  Scenario Outline: waiting-post notices are opt-in per lane, built from counts and addresses only, and audited
+  Scenario Outline: waiting-post notices are opt-in per room, built from counts and addresses only, and audited
     Given an isolated Cairn home
-    And a lane holding 2 waiting posts from 2 writers, one containing "POST-CANARY-91c2"
-    And waiting-post notices <setting> for the lane
+    And a room holding 2 waiting posts from 2 writers, one containing "POST-CANARY-91c2"
+    And waiting-post notices <setting> for the room
     When the hook "<hook>" runs
     Then the hook returns <notice>
     And any notice is TrustedText holding only the count 2, short key fingerprints and the posts' recall addresses, without "POST-CANARY-91c2" or any other text a writer chose

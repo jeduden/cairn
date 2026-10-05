@@ -19,7 +19,7 @@ and distrust services you cannot run yourself.
 
 ## What you need
 
-- One view of every lane, wherever its agent runs.
+- One view of every room, wherever its agent runs.
 - Work that continues on each machine when the network splits, and
   merges cleanly when it comes back.
 - No vendor relay or central service in the path.
@@ -27,11 +27,11 @@ and distrust services you cannot run yourself.
 
 ## Your journeys
 
-1. Start a lane in a cloud sandbox from your laptop; watch it live.
-2. Go offline on a train; keep working on the laptop's lanes; come
+1. Start a room in a cloud sandbox from your laptop; watch it live.
+2. Go offline on a train; keep working on the laptop's rooms; come
    back online and see both sides merged.
 3. Enrol the home server as a peer by key.
-4. A sandbox is reclaimed; its lane's record is still complete.
+4. A sandbox is reclaimed; its room's record is still complete.
 
 ## When you give up
 

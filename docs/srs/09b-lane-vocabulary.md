@@ -1,11 +1,11 @@
 ---
-title: "9.7 Lane vocabulary"
+title: "9.7 Room vocabulary"
 summary: >-
   The one vocabulary every surface uses (VIEW-14): harness status and
-  freshness, lane status, evidence and proof classes, the Needs you
+  freshness, room status, evidence and proof classes, the Needs you
   order, integrity seals, trust marks and the keymap. Part of §9.
 ---
-# 9.7 Lane vocabulary
+# 9.7 Room vocabulary
 
 One vocabulary for every surface (VIEW-14): status words, marks, queue
 order and keys. The reasons behind each choice are in plan 2610012322's
@@ -31,15 +31,15 @@ proposal, §8.
 | `imported`     | ingested from a transcript Cairn did not watch (REC-22)                          |
 | `stuck?`       | viewer-side only: Working with no event past a threshold                         |
 
-## 9.7.2 Lane status
+## 9.7.2 Room status
 
 First match wins, in this order: **Abandoned** and **Landed** (closed
-lanes only), **Needs you**, **Failing** (a required check failed on
+rooms only), **Needs you**, **Failing** (a required check failed on
 the head, evidence `own run` or stronger), **Blocked**, **Running**,
 **Ready for review** (only after the owner act of OWN-21), **Quiet**
 (never while a harness is `unrecorded` or `behind`, VIEW-04). Review
 states (Draft, In review, Changes requested, Approved, Queued,
-Landing) live on the gate pill (P2), not in the lane status. Approval
+Landing) live on the gate pill (P2), not in the room status. Approval
 states: Current, Stale, Carried, Revoked, Void. Check states: Pending,
 Running, Passed, Failed, Stale, Unbound, Absent.
 
@@ -66,13 +66,13 @@ Running, Passed, Failed, Stale, Unbound, Absent.
 
 Queue classes, named Q1–Q4 so they never read as priorities P0–P2:
 **Q1 blocking now** (permission, question, hand-off), **Q2 blocking
-the lane** (failed required check, crash, rate limit with no resume,
+the room** (failed required check, crash, rate limit with no resume,
 refused segment, overlap), **Q3 waiting on you** (review requested,
 outcome ready to judge, co-author request, parked request, quota
 crossed), **Q4 for your
 record** (never alerts). Order: class; inside Q1, the number of agents
 blocked on the same answer, then causal order of raising; inside Q2
-and Q3, lanes in the focus set first, then causal order. Causal order,
+and Q3, rooms in the focus set first, then causal order. Causal order,
 not wall-clock age, because age differs between nodes and reads a
 clock (I10); it is oldest first wherever clocks agree. Review requests
 join the same queue.
@@ -111,9 +111,9 @@ field sends text, not shortcuts.
 | `g i`                 | Needs you                                | `z`             | snooze                              |
 | `g f`                 | Fleet                                    | `x`             | dismiss, Q3, Q4 and overlap items   |
 | `g c`                 | Catch up                                 | `y`             | copy address                        |
-| `g q` / `g v`         | quarantine list / verify panel           | `o`             | open the lane at this item          |
+| `g q` / `g v`         | quarantine list / verify panel           | `o`             | open the room at this item          |
 | `g h` / `g p`         | Health / Peers                           | `n` / `N`       | next / previous item that needs you |
-| `1` / `2` / `3`       | lane tabs: Timeline / Review / Replay    | `m`             | point an agent at this address      |
+| `1` / `2` / `3`       | room tabs: Timeline / Review / Replay    | `m`             | point an agent at this address      |
 | `j` / `k`             | next / previous row, item or file        | `q`             | quarantine selection                |
 | `Enter`               | open                                     | `⌘S` / `Ctrl+S` | save search                         |
 | `Space`               | preview or peek                          | `+` / `-`       | more / less context around a hit    |
@@ -121,11 +121,11 @@ field sends text, not shortcuts.
 | `I`                   | interrupt (harness pane)                 | `W`             | witness run                         |
 | `p`                   | pause / resume                           | `c` / `C`       | comment / request-changes sheet     |
 | `S`                   | stop (opens the stop sheet)              | `Y`             | approve sheet                       |
-| `f`                   | fork lane from here                      | `l`             | land sheet                          |
+| `f`                   | fork room from here                      | `l`             | land sheet                          |
 | `t`                   | take over / release (run component only) | `V` / `s`       | compare versions / since my verdict |
 | `h`                   | hand back                                | `(` / `)`       | previous / next comment             |
 | `Q`                   | away mode                                | `<` / `>`       | down / up the stack                 |
-| `F`                   | follow a person                          | `Ctrl+T`        | add the lane to the focus set       |
+| `F`                   | follow a person                          | `Ctrl+T`        | add the room to the focus set       |
 | `Shift+Space`         | replay play / pause                      | `←` / `→`       | replay previous / next event        |
 | `Shift+←` / `Shift+→` | replay previous / next span              | `,` / `.`       | replay previous / next turn         |
 | `[` / `]`             | replay previous / next edit              | `{` / `}`       | replay previous / next error        |
@@ -137,7 +137,7 @@ second act. Composer: `Enter` steer, `Ctrl+Enter` queue for the next turn,
 `Shift+Enter` redirect. Clashes resolved: `x` (dismiss, expand, mark
 seen) is dismiss only, with context on `+`/`-`; `e` (snooze, endorse,
 next error) is endorse, snooze moves to `z`, errors to `{`/`}`; `]`/`[`
-(next lane, next edit, stack) are edits, lanes move to `n`/`N`, the
+(next room, next edit, stack) are edits, rooms move to `n`/`N`, the
 stack to `<`/`>`; `a` (allow, approve, next approval) is allow,
 approve moves to `Y`, replay requests to `;`/`:`; `r` (reply, request
 changes, replay) is reply, request changes moves to `C`, replay to tab

@@ -10,7 +10,7 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And a project with a Claude Code transcript "every-kind"
     And "every-kind" holds a user prompt, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent result, lifecycle metadata, a system reminder and a malformed line
-    And the project's lane holds an operator act and a post from another participant
+    And the project's room holds an operator act and a post from another participant
     And the Bash tool call of "every-kind" was ingested in an earlier run than its result
     When the operator runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
@@ -184,7 +184,7 @@ Feature: Provenance and trust (PRV)
   Scenario Outline: an operator event from another node is trusted only through an owner-certified key chain
     Given an isolated Cairn home
     And this tenant's offline owner key certified a laptop device key with scope "allow, deny, pin" and maximum rule level 2, delegated to certify writer keys for one repository, and a phone key with the scope "allow, deny"
-    And the laptop key certified a sandbox token key limited to the token's project, lanes and expiry, which certified a sandbox writer key
+    And the laptop key certified a sandbox token key limited to the token's project, rooms and expiry, which certified a sandbox writer key
     When an "operator" event <event> arrives from another node
     Then the event is <outcome>
     And every revocation is a signed event that replicates like any other

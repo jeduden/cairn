@@ -28,12 +28,12 @@ five minutes.
 
 ## Your journeys
 
-1. Morning: start three new lanes from issues, check two that ran
+1. Morning: start three new rooms from issues, check two that ran
    overnight.
 2. An agent asks for permission; answer it from wherever you are.
 3. Two agents touch the same file; find out before they collide.
 4. An agent goes off course; stop it, redirect it, carry on.
-5. A lane is done; hand it to review and land it.
+5. A room is done; hand it to review and land it.
 
 ## When you give up
 
