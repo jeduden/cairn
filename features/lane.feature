@@ -205,7 +205,7 @@ Feature: Room (LANE)
       | role                           | capabilities                                                                            |
       | viewer                         | read                                                                                    |
       | participant                    | read, post, link, pin and unpin its own pins, work on the branches it is given, present |
-      | operator                       | a participant's, plus branch, unpin any pin but the intent, kick, bar, read only, hide  |
+      | operator                       | a participant's, plus branch, unpin any pin but the intent, kick, bar, read only  |
       | operator appointed to a bot    | an operator's within SEC-32's limits, plus posting findings against the pins            |
       | operator appointed to an agent | an operator's within SEC-32's limits                                                    |
       | read only, set by an operator  | read                                                                                    |
