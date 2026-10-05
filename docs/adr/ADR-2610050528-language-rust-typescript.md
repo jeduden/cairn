@@ -52,10 +52,12 @@ a node. The stakeholder chose Rust and TypeScript on 5 October 2026.
 - **Vendored forks.** A crate Cairn changes or ports lives in the
   repository with its upstream version, a divergence list and an
   equivalence job, as mdsmith keeps goldmark.
-- **Repository tooling may stay Go.** The gates under `internal/` and
-  `cmd/review-gate` check the repository, not the product. They stay
-  Go until a plan ports them, and drive the shipped binary as a black
-  box through the CLI and MCP.
+- **The whole toolchain moves to Rust.** The stakeholder decided on 5
+  October 2026 that the gates under `internal/` and `cmd/review-gate`,
+  the scenario runner, CI, release and coverage move too. Scenarios
+  run through cucumber-rs in place of godog. Plan
+  [2610050706](../../plan/2610050706_toolchain-to-rust/plan.md) ports
+  each gate beside its Go original, then removes Go.
 
 ## Alternatives
 
