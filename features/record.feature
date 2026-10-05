@@ -138,7 +138,7 @@ Feature: Record (REC)
     Then the events of "main-session" have seq in the order of their source lines
     And each event whose line carries a timestamp keeps it as metadata
     And the event of line 12 carries no source timestamp
-    And a second fresh home with the same tenant salt that ingests "main-session" holds the same chain head hash
+    And a second fresh home that ingests "main-session" under the same writer id holds the same chain head hash
     And "cairn expand" returns line 10 before line 11
 
   @REC-13 @P1 @I9 @pending

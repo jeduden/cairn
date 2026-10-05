@@ -15,7 +15,7 @@ illustrative; the implementation MAY differ as long as every constraint marked
 ```text
 $CAIRN_HOME/                          0700, owned by tenant UID            (N)
 ├── config.toml                       tenant configuration                 0600
-├── tenant.json                       tenant ID binding, redaction salt    0600
+├── tenant.json                       tenant ID binding                    0600
 ├── index.db                          project-id → project path mapping    0600
 ├── audit/audit-NNNNNN.jsonl          hash-chained audit log               0600
 ├── logs/                             structured logs (optional)
