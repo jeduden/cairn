@@ -82,15 +82,17 @@ a node. The stakeholder chose Rust and TypeScript on 5 October 2026.
   is a separate ruling), CON-03, ENG-01 to ENG-05, ENG-07 (cargo-fuzz),
   ENG-09 (data races excluded by the compiler, Miri or ThreadSanitizer
   for `unsafe`), ENG-11, ENG-16 (clippy, `cargo-deny`, `cargo-audit`,
-  `forbid(unsafe_code)`), INJ-03 (a `pub(crate)` constructor), SEC-07,
-  OPS-05, ADM-01, NFR-10, NFR-13, ADR-04, ADR-06, ADR-07, S2, S7,
-  OQ-03 and OQ-32.
+  `forbid(unsafe_code)`), INJ-03 (private fields and a `pub(crate)`
+  constructor), SEC-07, OPS-05, ADM-01, NFR-10, NFR-13, ADR-04,
+  ADR-06, ADR-07, S2, S7, OQ-03, OQ-04 and OQ-32.
 - **ADRs to supersede** once their successors are written:
   [ADR-2609292234](ADR-2609292234-test-stack.md) (godog and testify;
   the successor picks a Rust test stack or keeps godog driving the
   binary) and [ADR-2609302341](ADR-2609302341-sqlite-driver.md)
   (ncruces/go-sqlite3; the successor picks `rusqlite` with FTS5
-  bundled). Spike S2's measurements of FTS5 at 10M events carry over.
+  bundled, and SQLCipher or a VFS of Cairn's own for the encrypting
+  VFS that OQ-04 loses with ncruces). Spike S2's measurements of FTS5
+  at 10M events carry over.
 - **Dependencies (ENG-18).** Rust's standard library has no HTTP, JSON
   or cryptography, so the direct crates pass the target of ten. The
   allow-list is enforced with `cargo-deny`, and needs widening for
