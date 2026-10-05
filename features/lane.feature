@@ -148,7 +148,7 @@ Feature: Room (LANE)
     And pending requests stay with each agent's principal
     When "bob" names "carol" as successor, the naming stands past 7 days, and "bob" leaves the room
     Then "carol"'s signed acceptance completes the handover
-    And in a room whose owner left with no successor named, every change to its pins is refused until a handover
+    And in a room whose owner left with no successor named, every change to its pins, an author's edit and an operator's unpin included, is refused until a handover
 
   @LANE-12 @P2 @I6 @pending
   Scenario: only requests addressed to an agent enter its principal's endorse queue
@@ -193,20 +193,22 @@ Feature: Room (LANE)
   @LANE-16 @P1 @I2 @I4 @I10 @pending
   Scenario Outline: each room role holds exactly its capabilities, checked without a model
     Given an isolated Cairn home
-    And a room whose owner configured its roles, with no etiquette bot
+    And a room whose owner configured its roles
     And a participant holding the role "<role>"
     When the participant attempts every room act
     Then Cairn accepts exactly "<capabilities>" and refuses every other act
     And each decision is a deterministic function of the record, and no model is called
     And the room view shows the participant the role "<role>" and those capabilities
+    And only the owner assigns a role, and only a person holding operator appoints an agent or a bot to operator, revocable by that person or the owner
 
     Examples:
-      | role                          | capabilities                                                                            |
-      | viewer                        | read                                                                                    |
-      | participant                   | read, post, link, pin and unpin its own pins, work on the branches it is given, present |
-      | operator                      | a participant's, plus branch, unpin any pin but the intent, kick, bar, read only, hide  |
-      | etiquette or facilitator bot  | an operator's within SEC-32's limits, plus posting findings against the pins            |
-      | read only, set by an operator | read                                                                                    |
+      | role                           | capabilities                                                                            |
+      | viewer                         | read                                                                                    |
+      | participant                    | read, post, link, pin and unpin its own pins, work on the branches it is given, present |
+      | operator                       | a participant's, plus branch, unpin any pin but the intent, kick, bar, read only, hide  |
+      | operator appointed to a bot    | an operator's within SEC-32's limits, plus posting findings against the pins            |
+      | operator appointed to an agent | an operator's within SEC-32's limits                                                    |
+      | read only, set by an operator  | read                                                                                    |
 
   @LANE-17 @P1 @I6 @I8 @pending
   Scenario: every room shows its visibility
@@ -307,7 +309,7 @@ Feature: Room (LANE)
     When two devices of one person, under one owner key, concurrently record an add and a removal
     Then the removal wins and the conflict is recorded and shown
     And no sequence of deliveries, reorderings or duplications of these events re-admits "bob" or revives the removed membership
-    And the kicked and barred participants each get a notice and an explicit error on their next post
+    And the kicked and barred participants each get an explicit error naming the act's id on their next post, and read its reason through a tool
 
   @LANE-26 @P1 @I2 @I6 @I10 @pending
   Scenario: a room pin has one author, any unpin wins, and a claim is never a lock
@@ -319,6 +321,8 @@ Feature: Room (LANE)
     Then the pin stays unpinned
     And pinning the same text again writes a new pin
     And "p-2" can still edit files under "src/auth"
+    When agent participant "p-3" pins "use the staging database"
+    Then the pin is stored inactive with provenance "assistant" and shown as unstamped
 
   @LANE-27 @P1 @I2 @I3 @pending
   Scenario: room pins are information, and only the agent's own person's pins restore
@@ -358,5 +362,32 @@ Feature: Room (LANE)
     Then each notice holds only room, participant, pin, message and act ids, versions and counts, short key fingerprints and recall addresses
     And no notice carries the room's name, a petname, pin text, a diff, a reason or the question
     And every notice is audited and none starts or resumes a turn
-    When the agent compacts
-    Then its restore block names each room its harness joined for that session with its participant id there
+    When the agent compacts and its harness supplies its participant ids, one of them since kicked
+    Then its restore block names each room the session joined with its participant id there, leaving out the room of the kicked id
+    And no record links the session to those participant ids
+
+  @LANE-31 @P1 @I6 @I8 @I10 @pending
+  Scenario: concurrent room acts resolve by one rule, whatever order they arrive in
+    Given an isolated Cairn home
+    And a room held on two nodes where, concurrently, an operator kicks a player while its person adds it again, an operator unpins a pin while its author edits it, and one operator bars a key while another lifts an earlier bar on it
+    When each node receives the other's acts in every order, with duplicates
+    Then both nodes derive the same membership, pins and bars, with no clock read
+    And in each pair the more restrictive act wins, and the edit of the unpinned pin is void
+    And two equally restrictive concurrent acts on one object resolve to the act with the lower commitment
+    And every resolved conflict is recorded and shown with both acts
+    And only a later explicit act restores what a winning act removed
+
+  @LANE-32 @P1 @I2 @I3 @I10 @pending
+  Scenario: a person's stamp makes one version of an agent's pin restore to that person's own agents only
+    Given an isolated Cairn home
+    And a room where an agent of "bob" pinned "run migrations only on staging", stored inactive and shown unstamped
+    And agents of "alice" and "carol" in the room
+    When "alice" stamps version 1 of the pin as a widening owner act, after its text, author id and key fingerprint are shown
+    Then the pin shows "alice"'s id beside it
+    And after compaction "alice"'s agent's restore block holds version 1 word for word, and "carol"'s agent's states it only as PIN-10 does
+    When "bob"'s agent edits the pin to version 2
+    Then no version of the pin restores to any agent until a person stamps version 2
+    And the edit that ended "alice"'s stamp is audited and raises a Needs you item for "alice"
+    When "alice" stamps version 2 and later revokes that stamp
+    Then the pin no longer restores to her agents
+    And an unpin ends every stamp on a pin, and no act but a stamp makes an agent's pin active

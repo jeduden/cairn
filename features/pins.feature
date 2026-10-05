@@ -13,12 +13,13 @@ Feature: Pins (PIN)
     Then the active pin count is <active>
 
     Examples:
-      | mode        | action                                     | active |
-      | automation  | the operator runs "cairn pin add"          | 1      |
-      | automation  | the tenant configuration declares a pin    | 1      |
-      | interactive | the user issues the slash command "/pin"   | 1      |
-      | automation  | the user issues the slash command "/pin"   | 0      |
-      | interactive | the project's ".cairn.toml" declares a pin | 0      |
+      | mode        | action                                      | active |
+      | automation  | the operator runs "cairn pin add"           | 1      |
+      | automation  | the tenant configuration declares a pin     | 1      |
+      | interactive | the user issues the slash command "/pin"    | 1      |
+      | automation  | the user issues the slash command "/pin"    | 0      |
+      | automation  | a person stamps an agent's room pin version | 1      |
+      | interactive | the project's ".cairn.toml" declares a pin  | 0      |
 
   @PIN-02 @P0 @I2 @pending
   Scenario: a pin Claude proposes stays an inactive assistant candidate
@@ -28,7 +29,7 @@ Feature: Pins (PIN)
     Then the result gives a candidate ID and states that activation requires the user
     And the candidate is stored inactive with provenance "assistant"
     And the active pin count is 0
-    And no MCP tool creates or activates a pin
+    And no MCP tool makes any pin active
 
   @PIN-03 @P0 @I3 @I5 @pending
   Scenario: a pin stores its verbatim text, scope, creating address and commitment
@@ -114,9 +115,10 @@ Feature: Pins (PIN)
     Given an isolated Cairn home
     And a session that started in room "L1" and moved to room "L2", into which room "L3" was then merged
     And trusted pins of the session's principal scoped to "L1", "L3", the session and the whole project, a tenant-configuration pin, and a pin in "L2" written by another principal
+    And the principal's stamp on one version of an agent's pin in "L1"
     And a principal's "/pin" whose creating event was recorded in interactive mode, while the current mode is "automation"
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block holds the "L1" pin, the "L3" pin as a pin of "L2", the session pin, the project-wide pin, the tenant-configuration pin as project-wide, and the interactive-mode pin
+    Then the restore block holds the "L1" pin, the "L3" pin as a pin of "L2", the session pin, the project-wide pin, the tenant-configuration pin as project-wide, the interactive-mode pin, and the stamped version
     And the restore block names "L1" and "L2" by id, and the merged room by both "L2" and "L3"
     And the other principal's pin is stated only by count, room id and key fingerprint, with no text, and an audit entry records it
 

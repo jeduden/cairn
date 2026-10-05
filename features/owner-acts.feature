@@ -323,6 +323,7 @@ Feature: Owner acts (OWN)
     And "carol"'s next post reaches "alice"'s agent through the harness's input in a fixed template naming her key fingerprint and the post's recall address
     And it starts or resumes no turn, does not restore, and reaches "bob"'s agent only as untrusted recall
     And a grant naming an agent's key, or a bot that relays third parties' text, is refused and audited
+    And a grant naming the room's facilitator bot is recorded only after "alice" is shown that the bot reads untrusted room text
     And no role, membership or room setting makes any poster trusted
     When "alice" revokes the grant as a cut act
     Then "carol"'s later posts reach "alice"'s agent only as untrusted recall

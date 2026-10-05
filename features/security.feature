@@ -371,11 +371,14 @@ Feature: Security (SEC)
   @SEC-32 @P1 @I2 @I6 @pending
   Scenario: the facilitator bot moderates within limits and never instructs
     Given an isolated Cairn home
-    And a room whose owner provides a facilitator bot with a rate of two moderation acts per hour
+    And a room where a person holding operator appointed a facilitator bot, with a rate of two moderation acts per hour
     When a post persuades the bot to bar three participants, an operator and the owner, and to set the room read only
     Then the first two bars are recorded, each audited with its finding linking the pin and the content judged
-    And each barred participant is shown the bar, and a Needs you item reaches the owner and the participant's person
+    And each bar is shown in the room view and named by id in the error each barred participant's next call returns
+    And a Needs you item reaches the owner, the appointer and the participant's person
     And the third bar is refused and counted
     And the acts on the operator and the owner, and the room-wide read only, are refused and audited
-    And the owner can undo each bar
+    And the owner and the appointer can each undo each bar
+    And each finding is in the bot's own words and links the content it judged by recall address, quoting none of it
     And the bot's findings reach no agent as instructions unless that agent's person trusts the bot
+    And an agent appointed operator is held to the same limits
