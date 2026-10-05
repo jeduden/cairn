@@ -129,6 +129,12 @@ its interface. Git keeps the code; Cairn keeps the lane.
     all of it, the running-app preview included, ships in the first
     release (4 October 2026). What sets Cairn apart is judging against
     the intent and correcting in place. This informs OQ-30.
+12. Cairn runs a git repository per project on each node, and the
+    worktrees its rooms work in (5 October 2026). Git and the forge
+    still land code. SRS 2.1-draft carries it: LANE-23, LANE-24, NG8
+    and ADM-13.
+13. A room can span several repositories: one branch in each, with
+    landing tracked per repository (LANE-25).
 
 ## Direction compared with Zed Delta
 
@@ -142,6 +148,9 @@ source in the [T3 Code note](../../research/notes/t3code/t3code.md). Amp's
 orbs run agents on its remote machines and add agent-to-agent messaging
 and multiplayer threads, all on Amp's service, with no documented trust
 boundary ([Amp orbs note](../../research/notes/amp-orbs/amp-orbs.md)).
+Block's Buzz gives each branch a room on one signed Nostr relay that
+also hosts git; the [Buzz note](../../research/notes/buzz/buzz.md) sets
+it against Cairn after decisions 12 and 13.
 How their screens, and Claude Code on the web, lay out the work is
 compared in the [agent UX note](../../research/notes/agent-ux/agent-ux.md).
 Cloudflare's Artifacts (1 October 2026) offers a hosted, git-compatible

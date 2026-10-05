@@ -37,6 +37,9 @@ from.
 - [Agent session storage sweep](notes/agent-session-storage-sweep/):
   the catalog of 308 systems, with storage-pattern counts, cross-cutting
   findings and lessons, plus every fact sheet in `sheets.json`.
+- [Buzz](notes/buzz/buzz.md): Block's workspace for humans and agents
+  on one signed Nostr relay that also hosts git, set against Cairn
+  after the node repository and lanes over several repositories.
 - [Amp orbs](notes/amp-orbs/amp-orbs.md): remote agent machines,
   agent-to-agent threads and multiplayer on Amp's service, compared with
   Cairn's lane.

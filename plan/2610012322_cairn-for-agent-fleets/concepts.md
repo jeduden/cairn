@@ -28,15 +28,15 @@ Cairn applies those grants; it never grants trust itself.
 Each stands alone: it can exist, be created and be removed without
 any other, and it says nothing about the others.
 
-| Concept     | Kind    | What it is, and nothing more                                                                                                                                         | Owner            |
-| ----------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| Player      | compute | A person, or an agent session in a harness                                                                                                                           | itself           |
-| Room        | data    | Where an intent is worked on: its conversation, participants and pins (intent first), and its code: zero or more branches with their worktrees, results and evidence | a person         |
-| Rule set    | data    | A person's rules for their agents: all of them, or one                                                                                                               | a person         |
-| Trust grant | data    | A person's explicit trust in a poster, for their own agents: in one room or everywhere                                                                               | a person         |
-| Role        | data    | A named set of capabilities in a room: viewer, participant, operator, etiquette or facilitator bot                                                                   | the room's owner |
-| Grant       | data    | Authority to delegate: which agents, which targets, how much, until when                                                                                             | a person         |
-| Link        | data    | An address plus a range: text, lines or an image region                                                                                                              | its writer       |
+| Concept     | Kind    | What it is, and nothing more                                                                                                                                                                       | Owner            |
+| ----------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| Player      | compute | A person, or an agent session in a harness                                                                                                                                                         | itself           |
+| Room        | data    | Where an intent is worked on: its conversation, participants and pins (intent first), and its code: zero or more branches, in one or more repositories, with their worktrees, results and evidence | a person         |
+| Rule set    | data    | A person's rules for their agents: all of them, or one                                                                                                                                             | a person         |
+| Trust grant | data    | A person's explicit trust in a poster, for their own agents: in one room or everywhere                                                                                                             | a person         |
+| Role        | data    | A named set of capabilities in a room: viewer, participant, operator, etiquette or facilitator bot                                                                                                 | the room's owner |
+| Grant       | data    | Authority to delegate: which agents, which targets, how much, until when                                                                                                                           | a person         |
+| Link        | data    | An address plus a range: text, lines or an image region                                                                                                                                            | its writer       |
 
 Pins are rules: for agents to follow, for people to read and adjust.
 There are two kinds, set by the stakeholder: a person's rules for
