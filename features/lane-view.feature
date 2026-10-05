@@ -186,12 +186,11 @@ Feature: Room view (VIEW)
     And every configuration change it offers is shown as a diff with the CLI command that applies it
 
   @VIEW-19 @P2 @I6 @I10 @pending
-  Scenario: a request for changes shows its delivery state and what changed since its verdict
+  Scenario: a needs-changes verdict shows what changed since it
     Given an isolated Cairn home
-    And a room with a request for changes addressed to two agents
-    When the person opens the request in the room
-    Then it shows the delivery state to each agent's principal
-    And it shows the diff and events since that verdict's head
+    And a room where the owner recorded "needs changes" on C2, after which an agent edited two files
+    When the person opens the verdict in the room
+    Then it shows the diff and events since that verdict's head
 
   @VIEW-20 @P1 @I6 @pending
   Scenario: the room view shows every delegation as a link
@@ -214,12 +213,13 @@ Feature: Room view (VIEW)
     And no verdict, score or suggestion derived by Cairn is shown
 
   @VIEW-22 @P1 @I2 @I10 @pending
-  Scenario: the outcome window follows the room's decider, else the latest present
+  Scenario: the outcome window follows the room's pick, else the latest present
     Given an isolated Cairn home
     And a room with no facilitator bot, where participants "p-1" and "p-2" each hold present
     When "p-1" presents a dev server and then "p-2" presents a diff
     Then the outcome window shows "p-2"'s diff, as every node holding the record derives it
-    When an operator chooses "p-1"'s present
+    When an operator records a signed pick of "p-1"'s present
     Then the window shows "p-1"'s dev server
+    And a pick by a participant holding only present is refused
     And a viewer with no capability can follow "p-2" in their own view without changing the window
-    And Cairn picks no attempt and records no verdict of its own
+    And Cairn chooses no attempt and records no verdict of its own

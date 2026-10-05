@@ -96,10 +96,10 @@ Feature: Restore and injection (INJ)
     And the restore block contains no untrusted bytes
 
   @INJ-10 @P1 @I2 @I6 @pending
-  Scenario Outline: waiting-post notices are opt-in per room, built from counts and addresses only, and audited
+  Scenario Outline: waiting-post notices need the room owner's allowance and the person's opt-in, carry counts and addresses only, and are audited
     Given an isolated Cairn home
     And a room holding 2 waiting posts from 2 writers, one containing "POST-CANARY-91c2"
-    And waiting-post notices <setting> for the room
+    And waiting-post notices for the room <setting>
     When the hook "<hook>" runs
     Then the hook returns <notice>
     And any notice is TrustedText holding only the count 2, short key fingerprints and the posts' recall addresses, without "POST-CANARY-91c2" or any other text a writer chose
@@ -107,8 +107,10 @@ Feature: Restore and injection (INJ)
     And no notice starts or resumes a turn
 
     Examples:
-      | setting                | hook             | notice    |
-      | left at the default    | UserPromptSubmit | no notice |
-      | turned on by the owner | UserPromptSubmit | a notice  |
-      | turned on by the owner | SessionStart     | a notice  |
-      | turned on by the owner | PostToolUse      | no notice |
+      | setting                                                  | hook             | notice    |
+      | left at the default                                      | UserPromptSubmit | no notice |
+      | allowed by the room's owner only                         | UserPromptSubmit | no notice |
+      | opted into by the agent's person only                    | UserPromptSubmit | no notice |
+      | allowed by the room's owner and opted into by the person | UserPromptSubmit | a notice  |
+      | allowed by the room's owner and opted into by the person | SessionStart     | a notice  |
+      | allowed by the room's owner and opted into by the person | PostToolUse      | no notice |

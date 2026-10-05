@@ -298,7 +298,8 @@ Feature: Owner acts (OWN)
     Then the verdict is recorded as a pin the owner wrote, an owner act bound to the intent version, the head and the evidence shown
     And Cairn pre-filled no verdict, and the agent's statement stays a claim
     And after the edit the verdict reads stale
-    And the verdict does not approve the room for landing
+    And a verdict on the room as a whole, rather than on a criterion, is refused
+    And the verdict approves nothing for landing, which stays with git and the forge
 
   @OWN-28 @P1 @I1 @I2 @pending
   Scenario: the owner course-corrects from the verdict

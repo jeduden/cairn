@@ -20,7 +20,8 @@ not the narrative, and you have little time per change.
 
 - The diff, why it changed, and what verified it, in one place.
 - To tell an agent's claim from a local run from the canonical CI.
-- To approve or request changes with a signature that counts.
+- To approve or request changes once, on the forge, and see it in
+  the room.
 - The merge gate respected: not the author, required checks green.
 
 ## Your journeys
@@ -29,8 +30,8 @@ not the narrative, and you have little time per change.
    moments of the conversation behind it.
 2. Check which results were verified, and by what.
 3. Ask for a change; see the agent's follow-up in the same room.
-4. Approve; watch it land through squash or a merge queue, and find
-   the room again from the landed commit.
+4. Approve on the forge; watch it land through squash or a merge
+   queue, and find the room again from the landed commit.
 
 ## When you give up
 

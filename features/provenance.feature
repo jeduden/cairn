@@ -180,7 +180,7 @@ Feature: Provenance and trust (PRV)
       | an event claiming a writer of this node                     | refused                |
       | a segment signed by a key the peer did not declare          | refused                |
 
-  @PRV-10 @P2 @I2 @I8 @pending
+  @PRV-10 @P1 @I2 @I8 @pending
   Scenario Outline: an operator event from another node is trusted only through an owner-certified key chain
     Given an isolated Cairn home
     And this tenant's offline owner key certified a laptop device key with scope "allow, deny, pin" and maximum rule level 2, delegated to certify writer keys for one repository, and a phone key with the scope "allow, deny"
@@ -188,6 +188,7 @@ Feature: Provenance and trust (PRV)
     When an "operator" event <event> arrives from another node
     Then the event is <outcome>
     And every revocation is a signed event that replicates like any other
+    And a participant key the laptop key certified for a room chains owner → device → participant
     And a recorded I2 security review of this requirement exists before it ships
 
     Examples:

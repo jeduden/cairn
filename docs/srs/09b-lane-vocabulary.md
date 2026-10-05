@@ -34,33 +34,33 @@ proposal, §8.
 ## 9.7.2 Room status
 
 First match wins, in this order: **Abandoned** and **Landed** (closed
-rooms only), **Needs you**, **Failing** (a required check failed on
-the head, evidence `own run` or stronger), **Blocked**, **Running**,
-**Ready for review** (only after the owner act of OWN-21), **Quiet**
-(never while a harness is `unrecorded` or `behind`, VIEW-04). Review
-states (Draft, In review, Changes requested, Approved, Queued,
-Landing) live on the gate pill (P2), not in the room status. Approval
-states: Current, Stale, Carried, Revoked, Void. Check states: Pending,
-Running, Passed, Failed, Stale, Unbound, Absent.
+rooms only), **Needs you**, **Failing** (a check failed on the head,
+evidence `own run` or stronger), **Blocked**, **Running**, **Ready for
+review** (only after the owner act of OWN-21), **Quiet** (never while
+a harness is `unrecorded` or `behind`, VIEW-04). The pull-request
+states a forge reports (Draft, In review, Changes requested, Approved,
+Queued, Landing) live on the pull-request pill (P2, LANE-08), marked
+`asserted`, not in the room status; Cairn keeps no approval state of
+its own. Check states: Pending, Running, Passed, Failed, Stale,
+Unbound, Absent.
 
 ## 9.7.3 Evidence and proof classes
 
-| Evidence class | Glyph | Satisfies a required check                    |
-| -------------- | ----- | --------------------------------------------- |
-| `claim`        | `○`   | never                                         |
-| `own run`      | `◐`   | only where the gate policy says so explicitly |
-| `witness run`  | `◑`   | yes, unless the policy excludes it            |
-| `CI attested`  | `●`   | yes                                           |
+| Evidence class | Glyph | Rank (LANE-05)  |
+| -------------- | ----- | --------------- |
+| `claim`        | `○`   | lowest          |
+| `own run`      | `◐`   | above `claim`   |
+| `witness run`  | `◑`   | above `own run` |
+| `CI attested`  | `●`   | highest         |
 
-| Proof class              | Counts as proven |
-| ------------------------ | ---------------- |
-| `same commit`            | yes              |
-| `same patch`             | yes              |
-| `same tree`              | yes              |
-| `contains approved diff` | yes              |
-| `likely`                 | no               |
-| `asserted`               | no               |
-| `not proven` + reason    | no               |
+| Proof class           | Counts as proven |
+| --------------------- | ---------------- |
+| `same commit`         | yes              |
+| `same patch`          | yes              |
+| `same tree`           | yes              |
+| `likely`              | no               |
+| `asserted`            | no               |
+| `not proven` + reason | no               |
 
 ## 9.7.4 Needs you order
 
@@ -119,9 +119,9 @@ field sends text, not shortcuts.
 | `Space`               | preview or peek                          | `+` / `-`       | more / less context around a hit    |
 | `Esc`                 | close sheet                              | `w` / `b`       | why panel / blame gutter            |
 | `I`                   | interrupt (harness pane)                 | `W`             | witness run                         |
-| `p`                   | pause / resume                           | `c` / `C`       | comment / request-changes sheet     |
-| `S`                   | stop (opens the stop sheet)              | `Y`             | approve sheet                       |
-| `f`                   | fork room from here                      | `l`             | land sheet                          |
+| `p`                   | pause / resume                           | `c` / `C`       | comment / verdict sheet             |
+| `S`                   | stop (opens the stop sheet)              | `P`             | pick what the outcome window shows  |
+| `f`                   | fork room from here                      | `l`             | branch and pull-request links       |
 | `t`                   | take over / release (run component only) | `V` / `s`       | compare versions / since my verdict |
 | `h`                   | hand back                                | `(` / `)`       | previous / next comment             |
 | `Q`                   | away mode                                | `<` / `>`       | down / up the stack                 |
@@ -138,9 +138,9 @@ second act. Composer: `Enter` steer, `Ctrl+Enter` queue for the next turn,
 seen) is dismiss only, with context on `+`/`-`; `e` (snooze, endorse,
 next error) is endorse, snooze moves to `z`, errors to `{`/`}`; `]`/`[`
 (next room, next edit, stack) are edits, rooms move to `n`/`N`, the
-stack to `<`/`>`; `a` (allow, approve, next approval) is allow,
-approve moves to `Y`, replay requests to `;`/`:`; `r` (reply, request
-changes, replay) is reply, request changes moves to `C`, replay to tab
+stack to `<`/`>`; `a` (allow, next request) is allow, replay
+requests move to `;`/`:`; `r` (reply, verdict, replay) is reply, the
+verdict sheet moves to `C`, replay to tab
 `3`; `c` (copy, comment) is comment, copy moves to `y`; `p` (pause,
 previous comment, point agent) is pause; `.` (next turn, follow) is
 next turn, follow moves to `F`; `Space` (select, peek, play) is peek,
