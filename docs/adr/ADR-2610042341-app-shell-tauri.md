@@ -5,8 +5,8 @@ status: proposed
 summary: >-
   Cairn's app is a Tauri 2 shell on Linux, Windows, macOS, iOS and
   Android around one web page, and the same page serves the browser
-  when Cairn is hosted. It answers OQ-32's UI and packaging half; the
-  core language stays open.
+  when Cairn is hosted. It answers OQ-32's UI and packaging half;
+  ADR-2610050528 answers the language.
 ---
 # ADR-2610042341: The app shell
 
@@ -42,10 +42,8 @@ browser unchanged. A UI the core draws needs a second UI there.
   or tool output as HTML, under a CSP with no inline script and no
   `eval` (SEC-21), and the IPC exposes only the commands a capability
   allow-list names.
-- **The core language stays open.** Tauri hosts a Rust core in process
-  (option D) or a Go node as a sidecar (option C); the bake-off in the
-  [comparison](../../research/notes/implementation-path/comparison.md)
-  decides.
+- **The core is Rust, in process.** Tauri hosts the Rust core library
+  on every platform; [ADR-2610050528][lang] records the language.
 
 ## Alternatives
 
@@ -92,10 +90,11 @@ browser unchanged. A UI the core draws needs a second UI there.
   hardware keys are P-256, not Ed25519.
 - **Accessibility, IME and copy** come from each webview and the
   browser.
-- **The bake-off narrows** to the core: Rust in process against a Go
-  node, on the same Tauri shell.
+- **The bake-off becomes a proving slice** of the Rust core in this
+  shell ([ADR-2610050528][lang]).
 - The status stays `proposed` until the stakeholder approves it and
   the SRS changes above land.
 
 [notes]: ../../research/notes/implementation-path/options.md
 [shells]: ../../research/notes/implementation-path/tauri-vs-xilem.md
+[lang]: ADR-2610050528-language-rust-typescript.md
