@@ -109,16 +109,16 @@ Feature: Non-functional requirements (NFR)
     And the run component adds at most 10 ms p95 to keystroke-to-echo latency
 
   @NFR-10 @pending
-  Scenario Outline: a single static binary builds for each supported platform
+  Scenario Outline: the core executable builds for each supported platform
     Given the release build
-    When it builds cairn for "<platform>"
-    Then the result is one statically linked executable with no dynamic library dependencies
+    When it builds the cairn core executable for "<platform>"
+    Then the result is one executable that links <linking>
 
     Examples:
-      | platform     |
-      | linux/amd64  |
-      | linux/arm64  |
-      | darwin/arm64 |
+      | platform     | linking                                          |
+      | linux/amd64  | no dynamic library at all                        |
+      | linux/arm64  | no dynamic library at all                        |
+      | darwin/arm64 | no dynamic library beyond the operating system's |
 
   @NFR-11 @pending
   Scenario: the supported Claude Code versions are accepted and incompatible formats are loud
@@ -136,10 +136,10 @@ Feature: Non-functional requirements (NFR)
     And no configuration file had to be written by hand
 
   @NFR-13 @pending
-  Scenario: a new transcript format version changes only the harness adapter package
+  Scenario: a new transcript format version changes only the harness adapter crate
     Given the change that added the most recent transcript format version
     When its changed files are listed
-    Then every changed non-test source file lies in the harness adapter package
+    Then every changed non-test source file lies in the harness adapter crate
 
   @NFR-14 @pending
   Scenario: every release ships its operator documentation
