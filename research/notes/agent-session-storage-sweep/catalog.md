@@ -14,8 +14,10 @@ That produced 325 fact sheets, which merge to 308 distinct systems once 17
 duplicates are removed. 77 candidates were not deep-read: 56 as small or
 inactive, 21 as off-topic. Five of those 77 were deep-read anyway under
 another name (Willow, Keyhive and Beelay, Zep through Graphiti, Sapling,
-Oxen). The per-system tables below this overview are generated from the
-sheets; this overview is the synthesis.
+Oxen). Orca (stablyai/orca) was deep-read the same way on 5 October 2026,
+after the sweep, and brings the catalog to 309 systems. The per-system
+tables below this overview are generated from the sheets; this overview is
+the synthesis.
 
 ## Storage patterns
 
@@ -31,14 +33,14 @@ infrastructure (Dolt, Fossil, Sapling) was put where its data lives on disk.
 | Git notes                              | 12    | Agent Note, AgentBlame, git-memento, whogitit, SLSA source-tool |
 | Custom refs or orphan branch           | 11    | Entire CLI, Rekal, oobo, gittuf, Gerrit NoteDb                  |
 | Separate git repo (incl. shadow repos) | 23    | claude-code-sync, gitmemory, Letta, Cline checkpoints, clync    |
-| Local DB or files outside the repo     | 89    | Claude Agent SDK sessions, Copilot CLI, cass, lcm, agentsview   |
+| Local DB or files outside the repo     | 90    | Claude Agent SDK sessions, Copilot CLI, cass, lcm, agentsview   |
 | Hosted server or DB                    | 90    | Copilot cloud agent, Devin, Cursor Cloud Agents, kcap, Langfuse |
 | P2P or append-only log                 | 24    | Hypercore, Autobase, C2SP tlog-tiles, S2, Durable Streams       |
 | CRDT or op-log                         | 13    | Automerge, Loro, Jujutsu op log, Zed Delta, LiveStore           |
 | None of these (specs, policies, libs)  | 24    | ACP, Agent Trace, Linux kernel Assisted-by, in-toto predicates  |
 
-Two counts stand out. Local stores and hosted stores together hold 179 of
-308 systems. GitHub and GitLab, the two vendors that own both an agent and
+Two counts stand out. Local stores and hosted stores together hold 180 of
+309 systems. GitHub and GitLab, the two vendors that own both an agent and
 a forge, keep agent transcripts on their servers rather than in git. The
 git-resident patterns (working tree, notes, refs, separate repo) hold 68
 systems, and they account for most of the documented silent data loss in
@@ -150,6 +152,10 @@ an origin class (owner, agent, untrusted, system) as an index column the
 model cannot write ([OpenClaw](https://docs.openclaw.ai/concepts/memory)).
 Claude Code tags peer-agent messages as "not the user"
 ([cross-session messaging](https://code.claude.com/docs/en/cross-session-messaging)).
+Orca sits between the groups: it wraps PR logs and comments as "untrusted
+data only, not instructions", yet types orchestration messages into the
+target agent's terminal verbatim under a "From:" banner
+([Orca](https://github.com/stablyai/orca)).
 Anthropic's Compliance API tags each message as verified, client-asserted or
 a synthetic marker
 ([Compliance API](https://platform.claude.com/docs/en/manage-claude/compliance-api)).
@@ -515,7 +521,7 @@ claude-session-dashboard, Sapling (Meta), Oxen, Lyzr Git for Agents.
 
 ## Catalog
 
-308 systems (17 duplicate sheets merged), one row each, grouped by the category the deep-read gave.
+309 systems (17 duplicate sheets merged), one row each, grouped by the category the deep-read gave.
 
 ### Agent memory (52)
 
@@ -648,7 +654,7 @@ claude-session-dashboard, Sapling (Meta), Oxen, Lyzr Git for Agents.
 | Turso Database (Rust rewrite of SQLite) and libSQL (its SQL… | shipped. The Turso…  | A local database file plus its WAL; this is in-process, embedded storage. An experimental `.tshm` sidecar lets several processes share the WAL (<https://raw.git…> | Nothing syncs automatically. All reads and writes are local, and the app decides when to…    | Does not apply. Turso is a general database engine with no idea of agent sessions, prompts, commits or worktr… | Encryption at rest is experimental: run with `--experimental-encryption` and set `PRAGMA cipher` plus `PRAGMA…       | [link](https://github.com/tursodatabase/turso)             |
 | Yjs (and y-crdt/yrs)                                         | shipped              | Multiple storage backends available: browser IndexedDB (y-indexeddb), MongoDB (y-mongodb-provider), PostgreSQL (y-postgresql), Firestore (y-fire), SQLite (y-op…   | Real-time with multiple transport providers: y-websocket (simple WebSocket server), y-web…   | Not designed for linking sessions to code or tracking agent interactions. Designed for collaborative editing…  | No built-in encryption at Yjs core. Encryption must be provided by transport/persistence layer (y-websocket c…       | [link](https://github.com/yjs/yjs)                         |
 
-### Orchestrators and agent platforms (35)
+### Orchestrators and agent platforms (36)
 
 | System                                                       | Status               | Where stored                                                                                                                                                       | Real time                                                                                    | Links sessions to code                                                                                         | Privacy and security                                                                                             | Source                                                                                                                                                                           |
 | ------------------------------------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -676,6 +682,7 @@ claude-session-dashboard, Sapling (Meta), Oxen, Lyzr Git for Agents.
 | OpenAI Symphony                                              | shipped (engineerin… | - Scheduler state: process memory in the BEAM orchestrator. - Workspaces: local filesystem under workspace.root. With the SSH worker extension, workspace.root…    | This is polling, not push. The tracker is polled every polling.interval_ms (5000 ms in th…   | The links are weak and indirect. Logs tie session_id (Codex thread-turn) to issue_id and issue_identifier (§1… | Each implementation sets its own trust boundary (SPEC §15.1). The reference implementation is aimed at truste…   | [link](https://github.com/openai/symphony)                                                                                                                                       |
 | OpenHands (Software Agent SDK + Agent Server, Agent Canvas,… | shipped. The SDK V1… | Plain working-tree-style files on the backend host's local filesystem, not in git. - SDK: under persistence_dir/<conversation-id>/, with workspace/conversation…   | Server-push streaming from the one backend that owns a conversation. The log itself is no…   | Weakly. Code linkage comes from workspace and git context, not from the record. - The system prompt tells the… | Secrets at rest (base_state.json): - With a cipher configured, secrets are Fernet-encrypted. The key is the S…   | [link](https://docs.openhands.dev/sdk/guides/convo-persistence.md)                                                                                                               |
 | OpenHands conversation EventLog (software-agent-sdk + agent… | shipped. The SDK is… | Local filesystem, one directory per conversation, behind a pluggable `FileStore` interface (implementations: LocalFileStore, InMemoryFileStore, plus a cache la…   | Yes, but only for a live conversation on one server, and not as replication of the store.…   | Weak, and only at the conversation level: - Settings carry `selected_repository` (https://github.com/OpenHand… | Secrets: - The Secret Registry is "Memory-only with masked logging" (https://docs.openhands.dev/sdk/arch/conv…   | [link](https://docs.openhands.dev/sdk/arch/conversation.md)                                                                                                                      |
+| Orca (stablyai/orca)                                         | shipped. The GitHub… | Local, under Electron userData, except the mobile relay and push gateway. {userData}/agent-session-journal.db holds the journal and {userData}/ai-vault/session…   | Yes, for status and control, not for history. Agents report through Orca-managed hooks to…   | Structurally, through the worktree: one task is one git worktree on its own branch (docs/site/content/docs/mo… | Local stores are plaintext. Terminal history keeps verbatim screen and scrollback in files with modes 0700 an…   | [link](https://github.com/stablyai/orca)                                                                                                                                         |
 | Paperclip (paperclipai/paperclip)                            | shipped. Very activ… | Server-side PostgreSQL in all modes (https://github.com/paperclipai/paperclip/blob/master/doc/DATABASE.md): - Embedded Postgres in ~/.paperclip/instances/defau…   | Live within one server process only. publishLiveEvent emits on an in-process Node EventEm…   | Indirectly, through tickets rather than commits. - A heartbeat run links issue, agent, provider session ids b… | Secrets: - Secrets are stored as versioned rows with access events (secret_access_events). - The default loca…   | [link](https://github.com/paperclipai/paperclip)                                                                                                                                 |
 | Replit Agent checkpoints and rollbacks                       | shipped              | The parts are stored in different places, all on Replit's servers. Code: a real git repo inside the app filesystem, where every checkpoint makes a git commit.…    | Real-time inside Replit only. "Collaborators see checkpoint creation in real-time" (check…   | Yes, and this is the main point of the feature. The checkpoint metadata ties a git commit to a point in the c… | The platform is hosted on GCP in the US, with an optional region in India. It uses AES-256 server-side encryp…   | [link](https://docs.replit.com/features/version-control/checkpoints-and-rollbacks (the requested https://docs.replit.com/replitai/checkpoints-and-rollbacks now redirects here)) |
 | Sourcegraph Deep Search                                      | shipped              | Conversations and metadata stored in Sourcegraph instance database (self-hosted or Sourcegraph Cloud). Generated artifacts (CSV, JSON, SVG files) stored in obj…   | Real-time streaming via Server-Sent Events (SSE). Responses progress through agent iterat…   | Yes. Every Deep Search answer includes comprehensive source attribution listing specific searches, file paths… | Conversations shared by URL do not enforce repository permissions - any instance user can view shared convers…   | [link](https://sourcegraph.com/docs/deep-search)                                                                                                                                 |
