@@ -10,11 +10,13 @@ Feature: Lane (LANE)
     Given an isolated Cairn home
     And a session on branch "main" that switches to branch "feature/x", which no lane of the project holds
     And a second node that created a lane for "feature/x" concurrently
-    When the session's hooks run and the two nodes' records are merged
+    And a second session started in the lane directory of lane "csv-export"
+    When the sessions' hooks run and the two nodes' records are merged
     Then every event carries the project identity and exactly one lane id, minted as 128 random bits with no Cairn command
     And the events after the branch observation belong to the lane of "feature/x" with no owner act
     And the two lanes for "feature/x" merge in derived state into the lower id, keeping both creation events
     And every reference to the merged id resolves to the surviving lane
+    And every event of the second session belongs to lane "csv-export"
 
   @LANE-02 @P0 @I1 @I6 @I8 @pending
   Scenario Outline: a project's identity is independent of the local path
@@ -256,3 +258,38 @@ Feature: Lane (LANE)
     Then every member sees both verdicts on C1 side by side, each with its judge's petname and role
     And neither verdict replaces the other
     And the co-author's revision reaches no agent until the owner adopts it
+
+  @LANE-23 @P1 @I1 @I6 @I8 @pending
+  Scenario: the node runs one repository per project and keeps every commit made in it
+    Given an isolated Cairn home
+    And a clone of project "api" whose remote "origin" has a URL that embeds a token
+    When the owner starts the first lane of "api" in its own worktrees
+    Then the run component creates one bare node repository for "api" under the Cairn home, readable only by the tenant and named without the project's identity or path
+    And it seeds the repository from the clone over the local file system, and every other transport is refused
+    And the repository carries the remote "origin" without the token, and the run component fetches from and pushes to no remote
+    And after an agent amends a commit in its lane worktree, the replaced head stays under a namespaced ref and nothing is pruned
+    And a clone whose project identity differs from the bound one is refused and audited
+
+  @LANE-24 @P1 @I1 @I6 @I8 @pending
+  Scenario: an owner act starts a lane in worktrees Cairn creates, and only an owner act removes them
+    Given an isolated Cairn home
+    And a node repository for project "api"
+    When the owner runs "cairn lane new csv-export --project api=../api --from main" and the act starts a session
+    Then the run component creates a lane directory named by the lane id, a branch from "main" and a worktree of it named "api" inside the directory
+    And an operator event records the lane, the project, the branch, the base commit and the path
+    And the session starts in the lane directory and its events belong to the lane
+    And a checkout of another branch in the worktree is recorded and raised as a Needs you item naming the lane and the project
+    And removing the worktree while it holds changes no commit and no checkpoint covers is refused, unless the owner confirms their loss, which is audited
+    And "cairn uninstall" lists the node repository and the lane worktree among its artifacts
+    And sessions in the person's own clone keep their lanes as before
+
+  @LANE-25 @P1 @I6 @I10 @pending
+  Scenario: one lane spans two repositories and lands in each on its own
+    Given an isolated Cairn home
+    And node repositories for projects "api" and "web"
+    When the owner starts lane "csv-export" over both and an agent edits a file in each worktree
+    Then the lane holds one branch in each project and its lane directory one worktree of each
+    And every event is stored with the record of "api", the home project, and each edit also carries the identity of the project whose worktree holds its path
+    And checkpoints, overlap items, proof classes and gates are kept per project
+    And after "api" lands and "web" does not, the lane shows as partly landed, naming "web" as still open
+    And a project is added or removed only by an owner act

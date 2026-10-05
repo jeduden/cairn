@@ -19,13 +19,18 @@ $CAIRN_HOME/                          0700, owned by tenant UID            (N)
 ├── index.db                          project-id → project path mapping    0600
 ├── audit/audit-NNNNNN.jsonl          hash-chained audit log               0600
 ├── logs/                             structured logs (optional)
+├── lanes/<lane-id>/                  lane directory (LANE-24)             0700
+│   └── <name>/                       a lane worktree per project, named by the owner (LANE-24)
 └── projects/<project-id>/            project-id: derived from the project identity (LANE-02), never from its path  (N)
     ├── store.db  (+ -wal, -shm)      record and projections               0600
     ├── payloads/<name>               payloads, named per REC-09           0600
+    ├── repo.git/                     node repository (LANE-23)            0700
     └── work/                         work markers for deferred ingestion
 ```
 
-Directory names MUST NOT reveal project paths (N).
+Directory names MUST NOT reveal project paths (N). A lane worktree's
+directory carries the name the owner gave its project in the lane,
+never the clone's path (LANE-24).
 
 ## 8.2 Logical schema
 

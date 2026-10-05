@@ -335,6 +335,7 @@ Feature: Security (SEC)
     And the tenant started the run component
     When the person confirms a command and an agent asks to run an unconfirmed one
     Then only the confirmed command runs, and each process it starts has its own register row
+    And the git operations on node repositories and lane worktrees run only for the owner act that asked for them, over the local file system alone
     And build-time evidence shows no other component that starts a program, save the core starting its own kernel worker
     And the run component connects nowhere beyond loopback to the lane-view component
     And any listener it opens meets the lane-view listener rules or is a local endpoint only the same local user can reach, refusing a peer of another UID
