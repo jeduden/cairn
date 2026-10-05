@@ -35,7 +35,7 @@ from.
   over custom storage, chat protocols and their deletion semantics,
   and crypto-shredding in law and practice.
 - [Agent session storage sweep](notes/agent-session-storage-sweep/):
-  the catalog of 308 systems, with storage-pattern counts, cross-cutting
+  the catalog of 309 systems, with storage-pattern counts, cross-cutting
   findings and lessons, plus every fact sheet in `sheets.json`.
 - [Amp orbs](notes/amp-orbs/amp-orbs.md): remote agent machines,
   agent-to-agent threads and multiplayer on Amp's service, compared with
