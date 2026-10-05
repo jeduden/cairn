@@ -20,7 +20,7 @@ Feature: Administration and lifecycle (ADM)
     And "cairn install --scope user" showed a diff of every configuration change, was declined and left the settings file unchanged
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
     When the operator runs "cairn uninstall" and keeps only the device key
-    Then the output lists the hooks, plugin and MCP registration, lane-view credentials, run-component endpoints, writer and device keys, enrolments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
+    Then the output lists the hooks, plugin and MCP registration, lane-view credentials, run-component endpoints, writer and device keys, enrolments, git-carrier refs, node repositories, lane worktrees and managed state Cairn wrote, each with an offer to remove it
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
@@ -160,14 +160,15 @@ Feature: Administration and lifecycle (ADM)
     And no untrusted event appears in the export
 
   @ADM-13 @P0 @I7 @pending
-  Scenario: Cairn writes to no git repository beyond the confirmed settings file and the carrier's location
+  Scenario: Cairn writes to no git repository beyond its own, the confirmed settings file and the carrier's location
     Given an isolated Cairn home
     And a project that is a git repository with a working tree, refs, notes, configuration and hooks
-    And the owner has enabled the git carrier
+    And the owner has enabled the git carrier and started a lane of the project in its own worktrees
     When a session runs, the operator confirms "cairn install --scope project" and every Cairn component does its work
     Then the only changed file in the working tree is the project settings file
     And the only new or changed refs lie in the namespaced location the owner enabled for the carrier, and every new object is reachable only from them
     And the repository's other refs, notes, configuration and hooks are byte-identical to before
+    And only the run component wrote to the node repository and the lane worktree, and only in the operations the owner's act asked for
 
   @ADM-14 @P1 @I1 @I5 @pending
   Scenario Outline: purge by writer key or actor removes one person's data with an audit trail on every node

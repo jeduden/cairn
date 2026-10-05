@@ -9,9 +9,9 @@ summary: >-
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | **Product**                 | Cairn — lossless, security-first context layer for long-running Claude agents                                     |
 | **Document**                | Software Requirements Specification (SRS)                                                                         |
-| **Version**                 | 2.0-draft                                                                                                         |
+| **Version**                 | 2.1-draft                                                                                                         |
 | **Status**                  | Draft; the invariant changes are approved in [ADR-2610032155](../adr/ADR-2610032155-srs-2-invariants.md) (ENG-29) |
-| **Date**                    | 2026-10-03                                                                                                        |
+| **Date**                    | 2026-10-05                                                                                                        |
 | **Implementation language** | Go                                                                                                                |
 | **Owners**                  | Product owner and security reviewer: @jeduden                                                                     |
 
@@ -28,6 +28,7 @@ summary: >-
 | 1.4-draft | 2026-09-30 | ENG-28: agent approvals are posted by a reviewer app, through a gate the reviewing agent cannot reach                                                                                                                                                                                                                                                                                                                                                         |
 | 1.5-draft | 2026-10-01 | ASM-11..16 and PRV-08 from a review of sottochat's transcript parser: harness context in attachments, structure-only provenance, missing timestamps, a closed kernel allow-list (CMP-03), OQ-12                                                                                                                                                                                                                                                               |
 | 2.0-draft | 2026-10-03 | The lane: one signed log per writer, network boundaries B0–B3 (I1, I2, I4, I5, I8 and I10 reworded), the LANE, VIEW, OWN and PEER families, personas U1–U9 with Appendix C, the boundary register and the lane vocabulary, from plan 2610012322's proposal; blind peers another entity can host (PEER-12); agent-to-agent delegation (OWN-23 to OWN-26, VIEW-20); lane visibility and invite links (LANE-17, LANE-18); subagents sharing a worktree (LANE-19) |
+| 2.1-draft | 2026-10-05 | The node repository and lane worktrees: Cairn runs one git repository per project on each node, and the worktrees its lanes work in, through the run component only (LANE-23, LANE-24); a lane may span several repositories (LANE-25). NG8, the glossary, LANE-01, LANE-06, ADM-02, ADM-13, SEC-29, the boundary register (row 28), the home layout, M7 and OQ-33, OQ-34 follow                                                                              |
 
 ## How to read this document
 
