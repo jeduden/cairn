@@ -113,7 +113,7 @@ func TestSpecificationParses(t *testing.T) {
 	reqs, err := Load(srsDir)
 
 	require.NoError(t, err)
-	assert.Len(t, reqs, 220+15+29+20, "§5–§6, NFR, ENG and ASM rows")
+	assert.Len(t, reqs, 232+15+29+20, "§5–§6, NFR, ENG and ASM rows")
 }
 
 func TestParseAcceptsTheLaneFamilies(t *testing.T) {

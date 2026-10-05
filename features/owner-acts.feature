@@ -100,9 +100,9 @@ Feature: Owner acts (OWN)
     And the endorsement is a signed owner act naming the post's commitment, writer key, target agent, original text and sent text
     And the post's writer is shown the edit as a diff
     And the text reaches the agent through the harness's input interface in a fixed template naming the writer key's short fingerprint and the post's recall address, with no petname
-    When the post's writer is given the co-author role and the room's settings are changed to the most open values
+    When the post's writer is given the operator role and the room's settings are changed to the most open values
     Then the writer's later posts still reach the principal's agents only as untrusted recall or by endorsement
-    And a trust grant naming the writer's key that the principal records is not honoured, since its requirements have not shipped
+    And only a trust grant the principal records under OWN-29 makes the writer's posts trusted for the principal's agents
 
   @OWN-09 @P1 @I2 @pending
   Scenario Outline: nothing but a current owner act starts, resumes or sends text to an agent
@@ -295,7 +295,7 @@ Feature: Owner acts (OWN)
     Given an isolated Cairn home
     And a room whose agent stated "C1 is done" and recorded a passing test run linked to C1
     When the owner records "met" on C1 and the agent then edits a file
-    Then the verdict is recorded as the owner's act, bound to the intent version, the head and the evidence shown
+    Then the verdict is recorded as a pin the owner wrote, an owner act bound to the intent version, the head and the evidence shown
     And Cairn pre-filled no verdict, and the agent's statement stays a claim
     And after the edit the verdict reads stale
     And the verdict does not approve the room for landing
@@ -313,3 +313,16 @@ Feature: Owner acts (OWN)
     When the owner revises the intent from the same verdict
     Then a new version of the room's intent pin is recorded
     And it reaches the room's agents in the same fixed template and, as a pin, in their next restore block
+
+  @OWN-29 @P1 @I2 @I6 @I8 @pending
+  Scenario: a person's trust grant makes a poster's posts trusted for their own agents only
+    Given an isolated Cairn home
+    And a room where "alice" and "bob" each have an agent, and "carol" posts
+    When "alice" records a trust grant naming "carol"'s owner key for this room
+    Then the grant is a widening owner act, shown in the room with its grantor, the poster's key and its scope
+    And "carol"'s next post reaches "alice"'s agent through the harness's input in a fixed template naming her key fingerprint and the post's recall address
+    And it starts or resumes no turn, does not restore, and reaches "bob"'s agent only as untrusted recall
+    And a grant naming an agent's key, or a bot that relays third parties' text, is refused and audited
+    And no role, membership or room setting makes any poster trusted
+    When "alice" revokes the grant as a cut act
+    Then "carol"'s later posts reach "alice"'s agent only as untrusted recall

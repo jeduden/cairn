@@ -367,3 +367,15 @@ Feature: Security (SEC)
     Then every copy in any writer's log, found by address or commitment, is erased or tombstoned, and the backup is erased or listed
     And ingesting its source positions again from the harness transcript is refused with an audit entry
     And a signed purge receipt names the scope, the ranges, the copies erased and every known copy Cairn cannot erase
+
+  @SEC-32 @P1 @I2 @I6 @pending
+  Scenario: the facilitator bot moderates within limits and never instructs
+    Given an isolated Cairn home
+    And a room whose owner provides a facilitator bot with a rate of two moderation acts per hour
+    When a post persuades the bot to bar three participants, an operator and the owner, and to set the room read only
+    Then the first two bars are recorded, each audited with its finding linking the pin and the content judged
+    And each barred participant is shown the bar, and a Needs you item reaches the owner and the participant's person
+    And the third bar is refused and counted
+    And the acts on the operator and the owner, and the room-wide read only, are refused and audited
+    And the owner can undo each bar
+    And the bot's findings reach no agent as instructions unless that agent's person trusts the bot

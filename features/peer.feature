@@ -128,3 +128,13 @@ Feature: Peer network (PEER)
     And it holds no event content, header field, commitment key or room metadata
     And it derives no room state and counts as no member
     And every surface marks it as a blind peer
+
+  @PEER-13 @P2 @I6 @I8 @pending
+  Scenario: a bar takes effect at once on its node and stops future segments
+    Given an isolated Cairn home
+    And a room shared between the owner's node and the nodes of "bob" and "carol"
+    When an operator on the owner's node bars "bob"'s owner key while "carol"'s node is unreachable
+    Then the bar takes effect on the owner's node at once
+    And the owner's peer component sends no further segments of the room to any key the bar covers
+    And "carol"'s node, until it receives the bar, shows the gap in the operator's log beside the room's membership
+    And the view says "bob" keeps what his node already holds

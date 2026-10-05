@@ -161,13 +161,14 @@ Feature: Administration and lifecycle (ADM)
     And no untrusted event appears in the export
 
   @ADM-13 @P0 @I7 @pending
-  Scenario: Cairn writes to no git repository beyond the confirmed settings file and the carrier's location
+  Scenario: Cairn writes to no git repository beyond the confirmed settings file, the trailer hook and the carrier's location
     Given an isolated Cairn home
     And a project that is a git repository with a working tree, refs, notes, configuration and hooks
     And the owner has enabled the git carrier
     When a session runs, the operator confirms "cairn install --scope project" and every Cairn component does its work
     Then the only changed file in the working tree is the project settings file
     And the only new or changed refs lie in the namespaced location the owner enabled for the carrier, and every new object is reachable only from them
+    And the only changed hook is the commit-message hook for room trailers that the confirmed install set up
     And the repository's other refs, notes, configuration and hooks are byte-identical to before
 
   @ADM-14 @P1 @I1 @I5 @pending

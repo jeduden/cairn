@@ -212,3 +212,14 @@ Feature: Room view (VIEW)
     And the view shows edits outside the intent, the agents' exposure and the diff since the last verdict
     And a Q3 item "outcome ready to judge" is raised
     And no verdict, score or suggestion derived by Cairn is shown
+
+  @VIEW-22 @P1 @I2 @I10 @pending
+  Scenario: the outcome window follows the room's decider, else the latest present
+    Given an isolated Cairn home
+    And a room with no facilitator bot, where participants "p-1" and "p-2" each hold present
+    When "p-1" presents a dev server and then "p-2" presents a diff
+    Then the outcome window shows "p-2"'s diff, as every node holding the record derives it
+    When an operator chooses "p-1"'s present
+    Then the window shows "p-1"'s dev server
+    And a viewer with no capability can follow "p-2" in their own view without changing the window
+    And Cairn picks no attempt and records no verdict of its own
