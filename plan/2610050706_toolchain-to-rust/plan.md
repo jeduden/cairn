@@ -27,7 +27,9 @@ October 2026 the stakeholder chose to move the whole toolchain. SRS
 2.1-draft still lets tooling stay Go in CON-01, ENG-01 and ENG-16;
 those clauses go when Go does.
 
-The Go code today is about 4,800 lines:
+Spike S2's benchmark is its own Go module of about 1,900 lines. It is
+evidence ADR-07 cites, not tooling, and no task ports it. The tooling
+is about 4,800 lines, about 3,000 of them tests:
 
 | Go code                                      | What it does                                                          |
 | -------------------------------------------- | --------------------------------------------------------------------- |
@@ -45,7 +47,10 @@ The Go code today is about 4,800 lines:
 Most of these paths are the stakeholder's under
 [CODEOWNERS](../../.github/CODEOWNERS), as are the CI workflows, so
 every phase needs the stakeholder's approval. The Rust replacements
-join CODEOWNERS in the phase that adds them.
+join CODEOWNERS in the phase that adds them. The security-sensitive
+owner lines move from `internal/<name>/` to the matching crate paths
+before the first such crate lands, so ENG-21's second approval keeps
+applying.
 
 Reuse, searched first:
 

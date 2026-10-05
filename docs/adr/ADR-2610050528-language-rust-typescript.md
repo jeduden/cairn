@@ -48,7 +48,8 @@ a node. The stakeholder chose Rust and TypeScript on 5 October 2026.
   allows, and a symbol check of each shipped executable.
 - **Two executables per desktop.** A static core executable runs as
   the hooks and the MCP server; the app executable carries the window.
-  Both come in one download.
+  Both come in one download. This is the packaging proposed for
+  OQ-32's open half; CON-02 leaves it open until that is ruled.
 - **Vendored forks.** A crate Cairn changes or ports lives in the
   repository with its upstream version, a divergence list and an
   equivalence job, as mdsmith keeps goldmark.

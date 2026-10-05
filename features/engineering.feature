@@ -28,7 +28,7 @@ Feature: Engineering quality (ENG)
     Given the source tree
     When the static analyzers run
     Then no crate declares mutable global state
-    And every public blocking operation takes a deadline or a cancellation token
+    And every public blocking operation takes a deadline, directly or through a cancellation token a deadline fires
     And no projection crate reads the wall clock or a random source
 
   @ENG-04 @P0 @pending
@@ -120,8 +120,8 @@ Feature: Engineering quality (ENG)
       | bridge component    | allows only its register rows |
 
   @ENG-13 @P1 @pending
-  Scenario: mutation testing scores the security-sensitive packages
-    Given the security-sensitive packages
+  Scenario: mutation testing scores the security-sensitive crates
+    Given the security-sensitive crates
     When mutation testing runs
     Then the mutation score is at least 70%
 
@@ -197,7 +197,7 @@ Feature: Engineering quality (ENG)
     And every pull request needs an approval from a reviewer other than its author
     And CODEOWNERS names the stakeholder on the requirement text and on every path that enforces it
     And CODEOWNERS names no owner on any other path
-    And changes to security-sensitive packages need two approvals, one from the designated security reviewer
+    And changes to security-sensitive crates need two approvals, one from the designated security reviewer
 
   @ENG-22 @P0 @pending
   Scenario: every privacy or data-flow statement cites its proving test

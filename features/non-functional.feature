@@ -112,13 +112,13 @@ Feature: Non-functional requirements (NFR)
   Scenario Outline: the core executable builds for each supported platform
     Given the release build
     When it builds the cairn core executable for "<platform>"
-    Then the result is one executable that links no dynamic library beyond the operating system's
+    Then the result is one executable that links <linking>
 
     Examples:
-      | platform     |
-      | linux/amd64  |
-      | linux/arm64  |
-      | darwin/arm64 |
+      | platform     | linking                                          |
+      | linux/amd64  | no dynamic library at all                        |
+      | linux/arm64  | no dynamic library at all                        |
+      | darwin/arm64 | no dynamic library beyond the operating system's |
 
   @NFR-11 @pending
   Scenario: the supported Claude Code versions are accepted and incompatible formats are loud
