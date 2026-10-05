@@ -6,13 +6,13 @@ Feature: Peer network (PEER)
   implements the requirement lands.
 
   @PEER-01 @P2 @I4 @I9 @pending
-  Scenario: peering runs only in its own peer component, started by the tenant
+  Scenario: peering runs only in its own peer component, started by the person
     Given an isolated Cairn home
-    And an ephemeral sandbox whose environment carries the tenant's write-once peering setting
+    And an ephemeral sandbox whose environment carries the person's write-once peering setting
     When the sandbox starts and the core runs its hooks and "cairn status --json"
     Then no core process starts the peer component, in-process or as a child
-    And the sandbox's own entrypoint starts the peer component on the strength of the tenant's setting
-    And on a home with no such tenant action the peer component stays off
+    And the sandbox's own entrypoint starts the peer component on the strength of the person's setting
+    And on a home with no such action of the person the peer component stays off
     And with the peer component absent or stopped the core behaves exactly as in standalone
     And the outcome is the same whether the peer component ships in the core's executable or its own
 
@@ -47,8 +47,8 @@ Feature: Peer network (PEER)
   @PEER-05 @P2 @I1 @I6 @pending
   Scenario: an ephemeral node offers its sealed tail often and a retired writer's lost tail shows as a gap
     Given an isolated Cairn home
-    And an ephemeral node connected to a peer and running a session
-    When the session runs for 65 s, passes "Stop", "SubagentStop" and "SessionEnd", and its writer token expires
+    And an ephemeral node connected to a peer and running an agent
+    When the run is active for 65 s, passes "Stop", "SubagentStop" and "SessionEnd", and its writer token expires
     Then the open segment was sealed and offered at each of those hooks and at least every 30 s, each sealed range as soon as it was sealed
     And the writer is marked retired
     And its later segments that continue its chain without a fork are accepted and marked delivered after retirement, and only a revocation would refuse them
@@ -57,9 +57,9 @@ Feature: Peer network (PEER)
   @PEER-06 @P2 @I6 @I8 @pending
   Scenario: enrollment verifies keys on both nodes and a sandbox token is scoped, carried and audited
     Given an isolated Cairn home
-    And the tenant mints, as a widening act, a sandbox token for repository "r" continuing room "room-1" with an expiry, read from an environment secret by recorded opt-in
+    And the person mints, as a widening act, a sandbox token carrying repository "r"'s identity and continuing room "room-1" with an expiry, read from an environment secret by recorded opt-in
     When a sandbox starts with the token before it reaches any peer
-    Then the sandbox certifies its own writer key from the token's bound identity, project delegation and expiry, and knows every peer address and git-carrier remote it may deliver to
+    Then the sandbox certifies its own writer key from the token's bound identity, room delegation and expiry, and knows every peer address and git-carrier remote it may deliver to
     And its restore block holds the room's active pins from the token as signed operator events and says later pins may be missing
     And "cairn status" names the token's source and no child process inherits the token in its environment
     And the token's issue, use, rotation and revocation are audited, and the issuing node shows an unused token as "enrolled, never synced"
@@ -91,11 +91,11 @@ Feature: Peer network (PEER)
   @PEER-09 @P2 @I2 @I8 @pending
   Scenario: presence and typing hints are ephemeral and drafts stay private to their writer
     Given an isolated Cairn home
-    And two connected participants in room "room-1", which allows typing hints but not live drafts
-    When one participant types a draft
+    And two connected seats in room "room-1", which allows typing hints but not live drafts
+    When one seat types a draft
     Then the other's room view shows the typist's presence and typing, attributed only to the peer key that authenticated the connection
     And no presence or typing hint is stored in the record
-    And the draft is not sent to the other participant
+    And the draft is not sent to the other seat
 
   @PEER-10 @P2 @I6 @I10 @pending
   Scenario: a writer that seals two different events at one seq is marked equivocated

@@ -7,9 +7,9 @@ Feature: Non-functional requirements (NFR)
   implements the requirement lands.
 
   @NFR-01 @pending
-  Scenario Outline: hooks meet their p95 wall-clock budgets on a 1M-event project under fleet load
+  Scenario Outline: hooks meet their p95 wall-clock budgets on a 1M-event store under fleet load
     Given an isolated Cairn home
-    And a synthetic project store with 1M events on the reference hardware
+    And a synthetic store with 1M events on the reference hardware
     And the room view is open and ten harnesses are writing
     When the hook "<Event>" runs 1,000 times with a representative payload
     Then the p95 wall-clock time is at most <budget>
@@ -29,7 +29,7 @@ Feature: Non-functional requirements (NFR)
   @NFR-02 @pending
   Scenario: a hook stops at its internal deadline and hands off the rest through a work marker
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "large-backlog"
+    And an agent run with a Claude Code transcript "large-backlog"
     When the hook "SessionEnd" runs with a harness timeout of 1.5 s
     Then the hook exits 0 before its internal deadline, below the harness timeout
     And a work marker records the unfinished ingestion
@@ -38,7 +38,7 @@ Feature: Non-functional requirements (NFR)
   @NFR-03 @pending
   Scenario Outline: MCP recall meets its p95 latency at 10M events
     Given an isolated Cairn home
-    And a synthetic project store with 10M events on the reference hardware
+    And a synthetic store with 10M events on the reference hardware
     When Claude calls the MCP tool "<tool>" with representative arguments 1,000 times
     Then the p95 latency excluding large payload transfer is at most <budget>
 
@@ -56,10 +56,10 @@ Feature: Non-functional requirements (NFR)
     And the measured ingestion rate is at least 5,000 events/s
 
   @NFR-05 @pending
-  Scenario: a project scales to 10M events, 100 GiB of payloads and 50 concurrent writers
+  Scenario: a store scales to 10M events, 100 GiB of payloads and 50 concurrent runs
     Given an isolated Cairn home
-    And a synthetic project with 10M events, 100 GiB of payloads and one session above 10M tokens
-    When 50 sessions and subagents ingest concurrently
+    And a synthetic store with 10M events, 100 GiB of payloads and one run above 10M tokens
+    When 50 runs, subagents included, ingest concurrently
     Then every event is stored and recallable by its address (writer, seq)
     And "cairn verify" exits 0
 
@@ -91,7 +91,7 @@ Feature: Non-functional requirements (NFR)
   @NFR-08 @pending
   Scenario: concurrent writers never corrupt, lose, or duplicate events
     Given an isolated Cairn home
-    And 50 writers each appending 10,000 events to one project
+    And 50 writers each appending 10,000 events to one store
     When all writers run concurrently to completion
     Then the store holds exactly 500,000 events
     And no two events share an address (writer, seq), and no seq is duplicated within a writer's log
@@ -100,9 +100,9 @@ Feature: Non-functional requirements (NFR)
   @NFR-09 @pending
   Scenario: the core leaves no resident process and every user-run component stays within its footprint
     Given an isolated Cairn home
-    And a synthetic project store with 1M events on the reference hardware
-    When every hook runs once, the session ends, and the room-view, peer, publish and bridge components and ten run-component instances run idle
-    Then no Cairn process runs between sessions except the components the user started
+    And a synthetic store with 1M events on the reference hardware
+    When every hook runs once, the run ends, and the room-view, peer, publish and bridge components and ten run-component instances run idle
+    Then no Cairn process runs while no run is active except the components the user started
     And each hook's peak RSS is at most 50 MiB and the store overhead is at most 1.5 times the stored text
     And each of the room-view, peer, publish and bridge components peaks at most 256 MiB RSS and idles at most 5% of one core
     And the ten run-component instances together peak at most 256 MiB RSS and idle at most 5% of one core
@@ -129,9 +129,9 @@ Feature: Non-functional requirements (NFR)
     And a transcript in an incompatible format makes the command exit 1 with an audit entry
 
   @NFR-12 @pending
-  Scenario: a new tenant reaches a working setup with defaults in five minutes
+  Scenario: a new person reaches a working setup with defaults in five minutes
     Given a clean workstation with Claude Code installed and no Cairn configuration
-    When a new tenant follows the documented plugin install
+    When a new person follows the documented plugin install
     Then "cairn doctor" exits 0 within 5 minutes of starting
     And no configuration file had to be written by hand
 

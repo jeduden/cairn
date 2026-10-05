@@ -15,11 +15,11 @@ Feature: Pins (PIN)
     Examples:
       | mode        | action                                      | active |
       | automation  | the operator runs "cairn pin add"           | 1      |
-      | automation  | the tenant configuration declares a pin     | 1      |
+      | automation  | the person's configuration declares a pin     | 1      |
       | interactive | the user issues the slash command "/pin"    | 1      |
       | automation  | the user issues the slash command "/pin"    | 0      |
       | automation  | a person stamps an agent's room pin version | 1      |
-      | interactive | the project's ".cairn.toml" declares a pin  | 0      |
+      | interactive | the repository's ".cairn.toml" declares a pin  | 0      |
 
   @PIN-02 @P0 @I2 @pending
   Scenario: a pin Claude proposes stays an inactive assistant candidate
@@ -32,12 +32,12 @@ Feature: Pins (PIN)
     And no MCP tool makes any pin active
 
   @PIN-03 @P0 @I3 @I5 @pending
-  Scenario: a pin stores its verbatim text, scope, creating address and commitment
+  Scenario: a pin stores its verbatim text, room, creating address and commitment
     Given an isolated Cairn home
-    And a session in room "L1"
+    And a run working in room "L1"
     When the operator runs "cairn pin add --type constraint --priority 1 'Never push directly to main; open a pull request.'"
     Then the command exits 0
-    And the pin stores that text verbatim with type "constraint", priority 1, scope room "L1", the address (writer, seq) of its creating event, author "operator" and that event's commitment
+    And the pin stores that text verbatim with type "constraint", priority 1, room "L1", the address (writer, seq) of its creating event, author "operator" and that event's commitment
     And the pin stores no bare hash of its text
     And adding a pin whose text is 1,001 characters long exits 2 and leaves the active pin count at 1
 
@@ -54,7 +54,7 @@ Feature: Pins (PIN)
   Scenario Outline: pin candidates from user prompts activate only on trusted confirmation
     Given an isolated Cairn home
     And deployment mode "<mode>"
-    And the tenant configuration holds <config>
+    And the person's configuration holds <config>
     When the hook "UserPromptSubmit" runs with prompt "Never edit files under migrations/ without asking"
     Then <candidates> inactive pin candidates are recorded
     And the active pin count is 0
@@ -71,7 +71,7 @@ Feature: Pins (PIN)
   Scenario: only constraint, preference and intent pins are injected automatically
     Given an isolated Cairn home
     And one active pin of each type "constraint", "preference", "decision", "fact" and "episode"
-    And a room of the session whose owner set an intent, stored as its pin of type "intent", and recorded a verdict, stored as a pin of type "verdict"
+    And a room of the run whose owner set an intent, stored as its pin of type "intent", and recorded a verdict, stored as a pin of type "verdict"
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "constraint", "preference" and "intent" pins verbatim
     And the restore block includes no "decision", "fact", "episode" or "verdict" pin
@@ -83,11 +83,11 @@ Feature: Pins (PIN)
   @PIN-07 @P1 @I2 @I3 @pending
   Scenario: pre-compact guidance is static text free of record content
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "session"
-    When the hook "PreCompact" runs with trigger "auto" for "session"
+    And an agent run with a Claude Code transcript "long-run"
+    When the hook "PreCompact" runs with trigger "auto" for "long-run"
     Then the output carries guidance to preserve user-stated constraints verbatim
-    And the guidance is byte-identical to that for trigger "manual" on an empty project
-    And the guidance contains no text from "session" or from any pin
+    And the guidance is byte-identical to that for trigger "manual" on an empty record
+    And the guidance contains no text from "long-run" or from any pin
     And the hook exits 0 without blocking compaction
 
   @PIN-08 @P0 @I3 @I6 @pending
@@ -103,7 +103,7 @@ Feature: Pins (PIN)
   @PIN-09 @P1 @pending
   Scenario: doctor warns about a pin that repeats CLAUDE.md text
     Given an isolated Cairn home
-    And a project whose "CLAUDE.md" contains "Never push directly to main."
+    And a working tree whose "CLAUDE.md" contains "Never push directly to main."
     And an active pin "Never push directly to main."
     And an active pin "Run go test before committing."
     When the operator runs "cairn doctor --json"
@@ -111,18 +111,18 @@ Feature: Pins (PIN)
     And the output has no warning about the pin "Run go test before committing."
 
   @PIN-10 @P0 @I3 @I2 @pending
-  Scenario: a restore block holds the principal's trusted pins of every room the session's recorded joins name
+  Scenario: a restore block holds the principal's trusted pins of every room the run holds a seat in
     Given an isolated Cairn home
-    And a session whose writer log records its joins to room "L1" and then room "L2", into which room "L3" was then merged
-    And a branch switch that moved the session's later events into room "L4", which it never joined
-    And trusted pins of the session's principal scoped to "L1", "L3", the session and the whole project, a tenant-configuration pin, and a pin in "L2" written by another principal
+    And a run whose seats' writers record its joins to room "L1" and then room "L2"
+    And a branch switch onto a branch of room "L4", which the run never joined, so its later events went to its personal-room seat
+    And trusted pins of the run's principal in "L1" and in its personal room, a pin from the person's configuration, and a pin in "L2" written by another principal
     And the principal's stamp on one version of an agent's pin in "L1", and on one version of a second pin another principal wrote in "L2"
-    And a trusted pin of the principal scoped to "L4"
+    And a trusted pin of the principal in "L4"
     And a principal's "/pin" whose creating event was recorded in interactive mode, while the current mode is "automation"
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block holds the "L1" pin, the "L3" pin as a pin of "L2", the session pin, the project-wide pin, the tenant-configuration pin as project-wide, the interactive-mode pin, and both stamped versions, each under its original author
+    Then the restore block holds the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the interactive-mode pin, and both stamped versions, each under its original author
     And the restore block holds no pin of "L4"
-    And the restore block names "L1" and "L2" by id, and the merged room by both "L2" and "L3"
+    And the restore block names "L1", "L2" and the personal room by id
     And the other principal's unstamped pin is stated only by count, room id and key fingerprint, with no text, and an audit entry records it
 
   @PIN-11 @P2 @I3 @I6 @pending

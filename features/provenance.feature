@@ -8,9 +8,9 @@ Feature: Provenance and trust (PRV)
   @PRV-01 @P0 @I2 @pending
   Scenario: every event carries its writer and exactly one provenance class from the closed set
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "every-kind"
+    And an agent run with a Claude Code transcript "every-kind"
     And "every-kind" holds a user prompt, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent result, lifecycle metadata, a system reminder and a malformed line
-    And the project's room holds an operator act and a post from another participant
+    And the run's room holds an operator act and a post from another seat
     And the Bash tool call of "every-kind" was ingested in an earlier run than its result
     When the operator runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
@@ -56,10 +56,10 @@ Feature: Provenance and trust (PRV)
       | interactive | a writer of this node                                                                  | unparsed         | untrusted | reports nothing                                           |
       | interactive | a writer of this node                                                                  | post             | untrusted | reports nothing                                           |
       | interactive | a writer of this node, from a transcript the hooks did not report                      | user             | untrusted | reports nothing                                           |
-      | interactive | a key on another node chaining to this tenant's owner key within its scope             | operator         | trusted   | reports nothing                                           |
-      | interactive | a key on another node with no certificate from this tenant's owner key                 | operator         | untrusted | reports nothing                                           |
+      | interactive | a key on another node chaining to this person's owner key within its scope             | operator         | trusted   | reports nothing                                           |
+      | interactive | a key on another node with no certificate from this person's owner key                 | operator         | untrusted | reports nothing                                           |
       | interactive | a writer of another node                                                               | user             | untrusted | reports nothing                                           |
-      | interactive | a writer of another tenant                                                             | operator         | untrusted | reports nothing                                           |
+      | interactive | a writer of another person                                                             | operator         | untrusted | reports nothing                                           |
       | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance | operator         | trusted   | reports it as a widening event that fails OWN-22          |
       | automation  | a writer of this node, widening with a required presence check that does not verify    | operator         | trusted   | reports it as a widening event whose presence check fails |
 
@@ -79,20 +79,20 @@ Feature: Provenance and trust (PRV)
       | the restore block Cairn returned, written back into the transcript | harness_text |
 
   @PRV-04 @P0 @I2 @pending
-  Scenario: automation is the default mode and interactive is a tenant-only opt-in
+  Scenario: automation is the default mode and interactive is an opt-in of the person's own configuration
     Given an isolated Cairn home
-    And the tenant configuration sets no mode
-    And the project's ".cairn.toml" sets mode to "interactive"
+    And the person's configuration sets no mode
+    And the repository's ".cairn.toml" sets mode to "interactive"
     When a user prompt is ingested
     Then the deployment mode is "automation"
     And the event is stored with provenance "user" and trust "untrusted"
-    And an audit entry records "rejected project setting mode"
+    And an audit entry records "rejected repository setting mode"
 
   @PRV-05 @P0 @I2 @pending
   Scenario Outline: configuration cannot trust a provenance class beyond the default policy
     Given an isolated Cairn home
     And deployment mode "interactive"
-    And the tenant configuration sets the trust of "<provenance>" to "trusted"
+    And the person's configuration sets the trust of "<provenance>" to "trusted"
     When an event with provenance "<provenance>" is ingested
     Then the event is stored with provenance "<provenance>" and trust "untrusted"
     And an audit entry records "rejected trust override for <provenance>"
@@ -113,7 +113,7 @@ Feature: Provenance and trust (PRV)
   @PRV-06 @P0 @I2 @pending
   Scenario Outline: a derived artifact records its sources and inherits their taint
     Given an isolated Cairn home
-    And a project holding an event with provenance "harness_meta" and one with provenance "web"
+    And a record holding an event with provenance "harness_meta" and one with provenance "web"
     When the <artifact> is derived from both events
     Then the <artifact> records the addresses of both source events
     And the <artifact> has trust "untrusted"
@@ -129,8 +129,8 @@ Feature: Provenance and trust (PRV)
   @PRV-07 @P1 @I5 @I6 @pending
   Scenario Outline: instruction-like untrusted content is flagged without blocking storage
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "session"
-    And "session" holds a WebFetch result containing <content>
+    And an agent run with a Claude Code transcript "web-run"
+    And "web-run" holds a WebFetch result containing <content>
     When the operator runs "cairn ingest --all"
     Then the WebFetch result is stored as a "web" event flagged "instruction_like"
     And its hit from the MCP tool "search" carries the flag, and no landmark contains its text
@@ -183,12 +183,12 @@ Feature: Provenance and trust (PRV)
   @PRV-10 @P1 @I2 @I8 @pending
   Scenario Outline: an operator event from another node is trusted only through an owner-certified key chain
     Given an isolated Cairn home
-    And this tenant's offline owner key certified a laptop device key with scope "allow, deny, pin" and maximum rule level 2, delegated to certify writer keys for one repository, and a phone key with the scope "allow, deny"
-    And the laptop key certified a sandbox token key limited to the token's project, rooms and expiry, which certified a sandbox writer key
+    And this person's offline owner key certified a laptop device key with scope "allow, deny, pin" and maximum rule level 2, delegated to certify writer keys for named rooms, and a phone key with the scope "allow, deny"
+    And the laptop key certified a sandbox token key limited to the token's rooms and expiry, which certified a sandbox writer key
     When an "operator" event <event> arrives from another node
     Then the event is <outcome>
     And every revocation is a signed event that replicates like any other
-    And a participant key the laptop key certified for a room chains owner → device → participant
+    And a seat key the laptop key certified for a room chains owner → device → seat
     And a recorded I2 security review of this requirement exists before it ships
 
     Examples:

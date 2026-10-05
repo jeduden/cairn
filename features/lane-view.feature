@@ -6,7 +6,7 @@ Feature: Room view (VIEW)
   implements the requirement lands.
 
   @VIEW-01 @P1 @I1 @I6 @pending
-  Scenario: the room view shows every harness of the tenant's rooms grouped by room
+  Scenario: the room view shows every harness of the person's rooms grouped by room
     Given an isolated Cairn home
     And two rooms with one live and one recorded harness each
     When the person opens the room view and selects one harness
@@ -16,10 +16,10 @@ Feature: Room view (VIEW)
     And every other harness appears as a tile that opens full size
 
   @VIEW-02 @P1 @I9 @pending
-  Scenario: the room view shows a running session's lines within 2 s without slowing hooks
+  Scenario: the room view shows an active run's lines within 2 s without slowing hooks
     Given an isolated Cairn home
     And ten local harnesses writing transcripts in one room
-    When the person watches one running session in the room view
+    When the person watches one active run in the room view
     Then each transcript line appears within 2 s of the harness writing it
     And no hook exceeds its NFR-01 budget while the view reads
 
@@ -34,14 +34,14 @@ Feature: Room view (VIEW)
     And hooks, ingestion and recall keep working with the view stopped
 
   @VIEW-04 @P1 @I6 @I10 @pending
-  Scenario: statuses come from structural events only and unrecorded sessions surface
+  Scenario: statuses come from structural events only and unrecorded runs surface
     Given an isolated Cairn home
     And a room with one harness whose transcript is longer than its ingested position
-    And a run-component launch with no hook event that belongs to no room
+    And a run-component launch with no hook event, sitting only in its personal room
     When the person opens Fleet and runs "cairn rooms"
     Then every harness shows exactly one status from the closed set of §9.7.1 with its freshness mark
     And the room shows one room status and the worst freshness mark of its harnesses, never Quiet
-    And the unattached session appears as its own row on Fleet and in "cairn rooms"
+    And that run appears under its personal room on Fleet and in "cairn rooms"
     And text an agent wrote changes no status, and time-relative marks are computed in the viewer from an explicit boundary
 
   @VIEW-05 @P1 @I6 @I10 @pending
@@ -75,7 +75,7 @@ Feature: Room view (VIEW)
   @VIEW-08 @P1 @I6 @I10 @pending
   Scenario: Catch up is one deterministic projection of the record and a boundary
     Given an isolated Cairn home
-    And rooms with capture gaps, an unsynced writer, a tombstone, a room merge and finished work since a boundary
+    And rooms with capture gaps, an unsynced writer, a tombstone, a voided branch open and finished work since a boundary
     And a receipt of chain heads outside CAIRN_HOME
     When the person opens Catch up at that boundary
     Then it shows the boundary it used and where it came from, and links every line to its events
@@ -86,7 +86,7 @@ Feature: Room view (VIEW)
   @VIEW-09 @P1 @I6 @I8 @pending
   Scenario Outline: operator search uses the scope the person selects and states its coverage
     Given an isolated Cairn home
-    And a tenant with two rooms, an unsynced writer and a quarantined match
+    And a person with two rooms, an unsynced writer and a quarantined match
     When the person searches "fix (login" with scope "<scope>"
     Then the result list shows the scope "<scope>" it used
     And the typed text is matched as literal terms
@@ -95,9 +95,8 @@ Feature: Room view (VIEW)
 
     Examples:
       | scope      |
-      | session    |
+      | run        |
       | room       |
-      | project    |
       | every room |
 
   @VIEW-10 @P1 @I6 @I10 @pending
@@ -169,7 +168,7 @@ Feature: Room view (VIEW)
   @VIEW-17 @P1 @I2 @I4 @I6 @pending
   Scenario: notifications stay local, carry no room text and are counted when dropped
     Given an isolated Cairn home
-    And an open loopback tab of the room view and a terminal session
+    And an open loopback tab of the room view and a terminal
     When a Needs you item opens while one notification is suppressed
     Then the desktop notification is raised on the same device by the open loopback room view, with no vendor push service
     And it carries only the queue class, the owner's room alias and a count
@@ -195,31 +194,31 @@ Feature: Room view (VIEW)
   @VIEW-20 @P1 @I6 @pending
   Scenario: the room view shows every delegation as a link
     Given an isolated Cairn home
-    And a room where an agent delegated one task to a subagent and one to another session under a grant
+    And a room where an agent delegated one task to a subagent and one to another run under a grant
     When the person opens the room view
     Then each delegation shows as a link from the delegating agent to its delegate
     And each link shows its grant, the task's address and its state
     And the delegate's spend shows against the grant's budget
 
   @VIEW-21 @P1 @I2 @I10 @pending
-  Scenario: the room view puts the outcome beside the intent so a person can judge it
+  Scenario: the room view puts the outcome beside the intent so a person can record a verdict
     Given an isolated Cairn home
     And a room whose intent names C1, C2 and C3, with a run linked to C1 and an agent's claim linked to C2
     When its agents go idle and the person opens the room view
     Then C1 shows the run and its evidence class, C2 shows a claim and C3 reads "no evidence"
-    And every criterion reads "unjudged"
+    And every criterion reads "no verdict"
     And the view shows edits outside the intent, the agents' exposure and the diff since the last verdict
-    And a Q3 item "outcome ready to judge" is raised
+    And a Q3 item "outcome awaiting a verdict" is raised
     And no verdict, score or suggestion derived by Cairn is shown
 
   @VIEW-22 @P1 @I2 @I10 @pending
   Scenario: the outcome window follows the room's pick, else the latest present
     Given an isolated Cairn home
-    And a room with no facilitator bot, where participants "p-1" and "p-2" each hold present
+    And a room with no facilitator bot, where seats "p-1" and "p-2" each hold present
     When "p-1" presents a dev server and then "p-2" presents a diff
     Then the outcome window shows "p-2"'s diff, as every node holding the record derives it
     When an operator records a signed pick of "p-1"'s present
     Then the window shows "p-1"'s dev server
-    And a pick by a participant holding only present is refused
+    And a pick by a seat holding only present is refused
     And a viewer with no capability can follow "p-2" in their own view without changing the window
     And Cairn chooses no attempt and records no verdict of its own

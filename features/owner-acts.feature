@@ -6,17 +6,17 @@ Feature: Owner acts (OWN)
   implements the requirement lands.
 
   @OWN-01 @P1 @I2 @pending
-  Scenario: only the session's principal can instruct it
+  Scenario: only the run's principal can instruct it
     Given an isolated Cairn home
-    And an agent session started by tenant "tenant-a" on its node
-    When tenant "tenant-b" writes an owner act addressed to that session
-    Then the session's one principal is "tenant-a"
-    And the act from "tenant-b" does not instruct the session
+    And an agent's run started by person "alice" on her node
+    When person "bob" writes an owner act addressed to that run
+    Then the run's one principal is "alice"
+    And the act from "bob" does not instruct the run
 
   @OWN-02 @P1 @I2 @I6 @pending
   Scenario Outline: an owner act is recorded only from an authenticated owner surface
     Given an isolated Cairn home
-    And a running agent session
+    And an agent's active run
     When an owner act arrives from <surface>
     Then the outcome is "<outcome>"
 
@@ -31,7 +31,7 @@ Feature: Owner acts (OWN)
   @OWN-03 @P1 @I2 @pending
   Scenario: owner text reaches an agent only through the harness's input interface
     Given an isolated Cairn home
-    And a running agent session whose harness offers an input interface
+    And an agent's active run whose harness offers an input interface
     And an untrusted event in the record
     When the owner sends a steer naming that event's id
     Then the steer reaches the agent through the harness's own input interface
@@ -81,7 +81,7 @@ Feature: Owner acts (OWN)
     When the hold window ends
     Then the agent's pending request gets the reply "<reply>"
     And no turn is started or resumed
-    And a later approval reaches only the requesting session as the fixed template "Request <id> was approved by the owner" with a grant for the identical action
+    And a later approval reaches only the requesting run as the fixed template "Request <id> was approved by the owner" with a grant for the identical action
     And the held-request id resolves through get to the request's recorded event
 
     Examples:
@@ -107,8 +107,8 @@ Feature: Owner acts (OWN)
   @OWN-09 @P1 @I2 @pending
   Scenario Outline: nothing but a current owner act starts, resumes or sends text to an agent
     Given an isolated Cairn home
-    And an idle agent session
-    When <source> arrives for the session
+    And an agent's idle run
+    When <source> arrives for the run
     Then no turn is started or resumed
     And no text is sent to the agent
 
@@ -126,7 +126,7 @@ Feature: Owner acts (OWN)
     And a repository file sets "force pushes" to "act without asking"
     When a recall-tainted child agent of a parent at that level attempts a force push
     Then the repository file does not loosen the level
-    And the sensitive class is raised one level for the tainted session
+    And the sensitive class is raised one level for the tainted run
     And the child holds no looser level than its parent
     And every rule change on record is an owner act
 
@@ -149,10 +149,10 @@ Feature: Owner acts (OWN)
   @OWN-12 @P1 @I2 @pending
   Scenario: a CLI verb writing an owner act refuses without a terminal
     Given an isolated Cairn home
-    And a session on the node leaves a residual risk open with no recorded acceptance
+    And a run on the node leaves a residual risk open with no recorded acceptance
     When the operator runs a widening owner-act verb at a terminal
     Then the verb refuses
-    And the refusal names the open residual risks and the sessions that leave them open
+    And the refusal names the open residual risks and the runs that leave them open
     And the same verb with standard input or output not a terminal refuses before any other check
 
   @OWN-13 @P1 @I2 @pending
@@ -166,7 +166,7 @@ Feature: Owner acts (OWN)
   @OWN-14 @P1 @I6 @pending
   Scenario: a stop lists effects first and shows stopped only on acknowledgement
     Given an isolated Cairn home
-    And a running agent session with completed, in-flight and waiting effects
+    And an agent's active run with completed, in-flight and waiting effects
     When the owner asks to stop it
     Then the view lists the completed effects, what is in flight and what is waiting, with whether and how each can be undone
     And no surface shows the harness as stopped before its acknowledgement is recorded
@@ -185,7 +185,7 @@ Feature: Owner acts (OWN)
   Scenario: a phone credential is minted by a widening act and limited to its scope
     Given an isolated Cairn home
     And a phone credential minted by a widening owner act
-    When the phone tries to allow a held permission request for the whole session
+    When the phone tries to allow a held permission request for the harness's whole session
     Then the room-view component refuses it on the server
     And the phone can only read, allow once and deny held permission requests
     And where an authenticator is required each allow carries the phone's own presence check bound to that answer
@@ -238,43 +238,43 @@ Feature: Owner acts (OWN)
   @OWN-22 @P1 @I2 @I6 @I9 @pending
   Scenario: an open residual risk refuses widening acts unless the owner accepted it
     Given an isolated Cairn home
-    And a session with no sandbox state record
+    And a run with no sandbox state record
     When the owner writes a widening act
-    Then the session counts as unsandboxed and is still recorded
+    Then the run counts as unsandboxed and is still recorded
     And the act is refused unless a recorded acceptance names each open risk, including that the agent can forge it
-    And an acceptance is shown on every surface beside each session relying on it
+    And an acceptance is shown on every surface beside each run relying on it
     And the acceptance is asked again when the set of open risks grows
 
   @OWN-23 @P1 @I2 @I6 @pending
-  Scenario Outline: delegation beyond the session rests on a grant in force
+  Scenario Outline: delegation beyond a subagent rests on a grant in force
     Given an isolated Cairn home
-    And an agent of the principal in a running session
+    And an agent of the principal in an active run
     And <grant>
     When the agent delegates a task to <target>
     Then the delegation is <outcome>
 
     Examples:
       | grant                                                | target                                    | outcome                                        |
-      | no grant                                             | a subagent in its own session             | recorded under OWN-24, with no grant           |
-      | no grant                                             | a new session in another worktree         | refused, audited and shown                     |
-      | a grant naming that worktree, a budget and an expiry | a new session in that worktree            | started through the run component and recorded |
-      | an expired grant                                     | an existing session of the same principal | refused, audited and shown                     |
+      | no grant                                             | its own subagent                          | recorded under OWN-24, with no grant           |
+      | no grant                                             | a new run in another worktree             | refused, audited and shown                     |
+      | a grant naming that worktree, a budget and an expiry | a new run in that worktree                | started through the run component and recorded |
+      | an expired grant                                     | an existing run of the same principal     | refused, audited and shown                     |
 
   @OWN-24 @P1 @I2 @pending
   Scenario: a delegate inherits the delegating agent's ceiling and taint
     Given an isolated Cairn home
-    And an agent whose session is recall-tainted, delegating under a grant whose rule ceiling is "ask first"
-    When the delegate session starts
+    And an agent whose run is recall-tainted, delegating under a grant whose rule ceiling is "ask first"
+    When the delegate's run starts
     Then the delegation is recorded on both sides with the delegating agent, the grant and the task's address
     And the delegate holds no rule level looser than the grant's or the delegating agent's
-    And the delegate's session is recall-tainted
+    And the delegate's run is recall-tainted
     And the task reached the delegate through the harness's input inside the fixed template, marked as written by the delegating agent
     And a further delegation beyond the grant's depth is refused
 
   @OWN-25 @P1 @I2 @I6 @pending
   Scenario: a delegate's result is pulled, never pushed
     Given an isolated Cairn home
-    And a delegation outside the session that has returned a result
+    And a delegation to an agent other than a subagent that has returned a result
     When the delegating agent calls room_result for that delegation
     Then the result arrives inside the untrusted envelope
     And no result text entered the delegating agent's context before that call
@@ -291,7 +291,7 @@ Feature: Owner acts (OWN)
     And the same delegation without the acceptance grant is refused and audited
 
   @OWN-27 @P1 @I2 @I10 @pending
-  Scenario: only a person judges, and a verdict goes stale when what it judged changes
+  Scenario: only a person records a verdict, and it goes stale when what it was bound to changes
     Given an isolated Cairn home
     And a room whose agent stated "C1 is done" and recorded a passing test run linked to C1
     When the owner records "met" on C1 and the agent then edits a file
@@ -307,10 +307,10 @@ Feature: Owner acts (OWN)
     And a room where the owner recorded "needs changes" on C2
     When the owner sends the correction "keep the header row in every file" and retries from an earlier checkpoint
     Then the correction reaches the agent through the harness's input in the fixed template naming the verdict, C2 and the results it concerns
-    And the retry starts a new session in a new worktree at that checkpoint, given the correction and the intent pin in force through its restore block
+    And the retry starts a new run in a new worktree at that checkpoint, given the correction and the intent pin in force through its restore block
     And the retry receives no content of the abandoned attempt except what it recalls
     And the abandoned attempt stays on record, shown beside the retry
-    And C2 reads "unjudged" until the next verdict
+    And C2 reads "no verdict" until the next verdict
     When the owner revises the intent from the same verdict
     Then a new version of the room's intent pin is recorded
     And it reaches the room's agents in the same fixed template and, as a pin, in their next restore block

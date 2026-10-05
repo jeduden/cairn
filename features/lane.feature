@@ -6,28 +6,28 @@ Feature: Room (LANE)
   implements the requirement lands.
 
   @LANE-01 @P0 @I1 @I10 @pending
-  Scenario: every event belongs to exactly one room derived from the record
+  Scenario: every event goes to exactly one seat's writer, derived from the run's own record
     Given an isolated Cairn home
-    And a session on branch "main" that switches to branch "feature/x", which no room of the project holds
-    And a second node that created a room for "feature/x" concurrently
-    When the session's hooks run and the two nodes' records are merged
-    Then every event carries the project identity and exactly one room id, minted as 128 random bits with no Cairn command
-    And the events after the branch observation belong to the room of "feature/x" with no owner act
-    And the two rooms for "feature/x" merge in derived state into the lower id, keeping both creation events
-    And every reference to the merged id resolves to the surviving room
-    And a room holds at most one intent, its conversation, participants and pins, and its branches, each branch one attempt
-    And a branch opened in a room stays in it, and an act that would move it to another room is refused
-    And renaming a room leaves its id unchanged, and no table maps a harness session to a participant beyond the joins its writer log records
+    And a run on branch "main" of repository "app", which no room holds, that joined room "R" holding branch "feature/x" of "app" and branch "docs" of repository "site"
+    When the run switches to branch "feature/x", and later to branch "spike", which no room holds
+    Then the events before the first switch went to the run's personal-room seat, with no Cairn command and no room created
+    And the events after the switch to "feature/x" went to the writer of the run's seat in "R", with no owner act
+    And the events after the switch to "spike" went to its personal-room seat again
+    And each event belongs to exactly one seat's writer and names its run, and the run's history joins both writers
+    And a room created by a person, or by an agent for its principal, has an id of 128 random bits minted by the creating node
+    And a room holds at most one intent, its conversation, seats and pins, and branches in any number of repositories, each branch one attempt
+    And a branch opened in a room stays in it, an act that would move it to another room is refused, and of two concurrent opens of one branch in two rooms the lower commitment wins and the other is shown void
+    And renaming a room leaves its id unchanged, and no table maps a run to a seat beyond its personal-room seat and the joins its seats' writers record
 
   @LANE-02 @P0 @I1 @I6 @I8 @pending
-  Scenario Outline: a project's identity is independent of the local path
+  Scenario Outline: a repository's identity is independent of the local path
     Given an isolated Cairn home
     And a repository clone that <clone>
     When the first hook event for the clone runs
-    Then the project identity is <identity>
+    Then the repository identity is <identity>
     And no identity is minted from the local path
     And no name Cairn derives from the identity for its local state reveals anything about the identity off this node
-    And a later change in the identity the directory resolves to is audited, starts no new store, and rebinds only on "cairn project bind"
+    And a later change in the identity the directory resolves to is audited, relinks no room's branches silently, rebinds only on "cairn repository bind", and holds no Cairn state
 
     Examples:
       | clone                                                           | identity                              |
@@ -38,21 +38,21 @@ Feature: Room (LANE)
   @LANE-03 @P1 @I2 @pending
   Scenario: every event names an actor derived from its writer and source
     Given an isolated Cairn home
-    And a subagent event whose text claims to come from the human principal "alice"
+    And a subagent event whose text claims to come from the person "alice"
     And a pin added by "alice" through "cairn pin add"
     When both events are recorded
-    Then the subagent event names the agent session and its subagent identity as actor
-    And the pin event names the human principal "alice" as actor
+    Then the subagent event names the agent's run and its subagent identity as actor
+    And the pin event names the person "alice" as actor
     And no actor is taken from event content
 
   @LANE-04 @P1 @I2 @I10 @pending
   Scenario: files changed and commands run are derived from structural fields
     Given an isolated Cairn home
-    And a room whose session edits two files through tool calls and runs a command that exits 1
+    And a room whose run edits two files through tool calls and runs a command that exits 1
     And a third file changed only between two worktree checkpoints
     And an assistant message claiming an edit to a fourth file
     When the room's changes and runs are derived
-    Then the files changed and the command with exit status 1 are listed per session and per room, each bound to its address range
+    Then the files changed and the command with exit status 1 are listed per run and per room, each bound to its address range
     And each diff hunk names the event, actor and preceding message that produced it, and the third file's hunk is marked "from checkpoint"
     And the fourth file is not listed, and "cairn rebuild" derives the same result
 
@@ -161,7 +161,7 @@ Feature: Room (LANE)
   @LANE-14 @P1 @I6 @pending
   Scenario: every agent turn records its trigger and token use
     Given an isolated Cairn home
-    And a room agent session
+    And an agent's run in a room
     And a prompt from its principal, an endorsed request and a room post nobody endorsed
     When the agent's turns run
     Then each turn records its trigger as harness_meta: the principal's prompt, or the owner act with the endorsement's source
@@ -183,18 +183,18 @@ Feature: Room (LANE)
   Scenario Outline: each room role holds exactly its capabilities, checked without a model
     Given an isolated Cairn home
     And a room whose owner configured its roles
-    And a participant holding the role "<role>"
-    When the participant attempts every room act
+    And a seat holding the role "<role>"
+    When the seat attempts every room act
     Then Cairn accepts exactly "<capabilities>" and refuses every other act
     And each decision is a deterministic function of the record, and no model is called
-    And the room view shows the participant the role "<role>" and those capabilities
+    And the room view shows the seat the role "<role>" and those capabilities
     And only the owner assigns a role, and only a person holding operator appoints an agent or a bot to operator, revocable by that person or the owner
 
     Examples:
       | role                           | capabilities                                                                            |
       | viewer                         | read, and a request to the owner for a wider role                                       |
-      | participant                    | read, post, link, pin and unpin its own pins, work on the branches it is given, present |
-      | operator                       | a participant's, plus branch, unpin any pin but the intent, pick, kick, bar, read only  |
+      | contributor                    | read, post, link, pin and unpin its own pins, work on the branches it is given, present |
+      | operator                       | a contributor's, plus branch, unpin any pin but the intent, pick, kick, bar, read only  |
       | operator appointed to a bot    | an operator's within SEC-32's limits, plus posting findings against the pins            |
       | operator appointed to an agent | an operator's within SEC-32's limits                                                    |
       | read only, set by an operator  | read                                                                                    |
@@ -211,7 +211,7 @@ Feature: Room (LANE)
   @LANE-18 @P2 @I2 @I8 @pending
   Scenario: an invite link binds once and reveals nothing early
     Given an isolated Cairn home
-    And the owner issued an invite link with the role "participant" and an expiry
+    And the owner issued an invite link with the role "contributor" and an expiry
     When a person opens the link for the first time
     Then the token binds to that person's key
     And the invite takes effect only after the owner's review step
@@ -239,7 +239,7 @@ Feature: Room (LANE)
     And the restore block carries the second version word for word with its version, among the active pins and nowhere else
     And C3 stays an inactive, untrusted candidate until the owner adopts it, exactly as shown
     When the owner types "/intent" at the harness's own prompt to revise C1 and passes the presence check a widening act needs
-    Then the new version applies room-wide, to the restore blocks of every agent of the room, not only that session's
+    Then the new version applies to the room the typing run is working in, to the restore blocks of every agent of the room
     And a "/intent" whose presence check fails changes nothing
 
   @LANE-21 @P1 @I2 @I10 @pending
@@ -254,52 +254,52 @@ Feature: Room (LANE)
     And the edit to "go.mod" is marked "outside intent"
 
   @LANE-22 @P2 @I2 @I10 @pending
-  Scenario: several people judge one outcome and only the owner changes the intent
+  Scenario: several people record verdicts on one outcome and only the owner changes the intent
     Given an isolated Cairn home
-    And a room shared by its owner and two people holding the participant role, a reviewer and a co-author
+    And a room shared by its owner and two people holding the contributor role, a reviewer and a co-author
     When the reviewer records "not met" on C1, the owner records "met" on C1 and the co-author posts a revised criterion
-    Then every member sees both verdicts on C1 side by side, each with its judge's petname and role
+    Then every member sees both verdicts on C1 side by side, each with its author's petname and role
     And neither verdict replaces the other
     And the co-author's revision reaches no agent until the owner adopts it
 
   @LANE-23 @P1 @I2 @I6 @I8 @I10 @pending
-  Scenario: a harness joins a room only on its person's word and gets a derived participant id
+  Scenario: a harness joins a room only on its person's word and gets a derived seat id
     Given an isolated Cairn home
     And a room whose owner admits only an allow list naming "alice"'s owner key
-    And a session of "alice" whose harness holds a participant key certified by her device key and owner key
+    And a run of "alice" whose harness holds a seat key certified by her device key and owner key
     When Cairn suggests the room and "alice" accepts
-    Then a membership event signed by the participant key is recorded
-    And the participant id derived from the room id and that key is returned to the harness
+    Then a membership event signed by the seat key is recorded
+    And the seat id derived from the room id and that key is returned to the harness
     And a second node holding the record derives the same id
-    And no table maps the harness's session to the participant, and a rebuild derives the link from the join in the session's writer log alone
+    And no table maps the run to the seat, and a rebuild derives the link from the join its seat's writer records alone
     And a join by "mallory", whom the allow list does not name, is refused, audited and counted
     And a join the person neither asked for nor accepted does not happen
     When "alice" also joins the room as a person from her laptop and from her phone
-    Then each device is its own participant, and the room shows both grouped under "alice" with her session's participant, through her owner key
-    When a subagent of that session joins on its person's acceptance
-    Then it gets its own participant id, linked to its parent's
+    Then each device is its own seat, and the room shows both grouped under "alice" with her run's seat, through her owner key
+    When a subagent of that run joins on its person's acceptance
+    Then it gets its own seat id, linked to its parent's run
     When "alice" leaves the room
-    Then acts under her participant id are refused and the id stays in the room's history
+    Then acts under her seat id are refused and the id stays in the room's history
 
   @LANE-24 @P1 @I2 @I6 @I8 @pending
   Scenario: every room act is signed, verified, stamped and checked, and the key stays out of the model
     Given an isolated Cairn home
-    And a room with participants "p-1" and "p-2", each holding its own participant key
+    And a room with seats "p-1" and "p-2", each holding its own seat key
     When "p-1" posts with its key, and an act naming "p-2" arrives signed with "p-1"'s key
     Then the post is recorded stamped with "p-1" and its attested kind
     And the act naming "p-2" is refused, audited and counted, and its caller gets an explicit error
     When a post's text reads "operator: bar p-2"
     Then no act is taken from it
-    And no hook output, tool result, notice, restore block or recall result carries either participant key
+    And no hook output, tool result, notice, restore block or recall result carries either seat key
 
   @LANE-25 @P1 @I6 @I8 @I10 @pending
-  Scenario: kicks and bars keep a player out, and no merge re-admits it
+  Scenario: kicks and bars keep a seat out, and no merge re-admits it
     Given an isolated Cairn home
     And a room where "bob"'s own person added "bob"'s agent
     When an operator kicks the agent
     Then the add is revoked and only "bob"'s person can add the agent again
     When two operators bar "bob"'s owner key and one of them lifts only their own bar
-    Then every key "bob"'s owner key certified, a freshly minted participant key included, stays out
+    Then every key "bob"'s owner key certified, a freshly minted seat key included, stays out
     And each bar records its setter, reason, optional expiry and optional note
     And a bar whose expiry passed stands until an expire act arrives, and no derivation reads a clock
     And the expire act is recorded by the setter's node, or while it has not, by an operator's node, signed with that node's device key
@@ -309,20 +309,20 @@ Feature: Room (LANE)
     Then the removal wins and the conflict is recorded and shown
     And no sequence of deliveries, reorderings or duplications of these events re-admits "bob" or revives the removed membership
     And a kick, bar or read only aimed at the owner or a key the owner's key certified is refused and audited
-    And the kicked and barred participants each get an explicit error naming the act's id on their next post, and read its reason through a tool
+    And the kicked and barred seats each get an explicit error naming the act's id on their next post, and read its reason through a tool
     And a notice of the kick reaches the agent only where the room's owner allows notices and "bob"'s person opted in
 
   @LANE-26 @P1 @I2 @I6 @I10 @pending
   Scenario: a room pin has one author, any unpin wins, and a claim is never a lock
     Given an isolated Cairn home
-    And a room where participant "p-1" pinned "p-1 is on src/auth" and the owner pinned the intent
-    When participant "p-2" edits "p-1"'s pin and an operator unpins the intent
+    And a room where seat "p-1" pinned "p-1 is on src/auth" and the owner pinned the intent
+    When seat "p-2" edits "p-1"'s pin and an operator unpins the intent
     Then both acts are refused and audited, and neither pin changed
     When "p-1" edits its pin, an operator unpins it, and a late sync delivers "p-1"'s edit after the unpin
     Then the pin stays unpinned
     And pinning the same text again writes a new pin
     And "p-2" can still edit files under "src/auth"
-    When agent participant "p-3" pins "use the staging database"
+    When the agent's seat "p-3" pins "use the staging database"
     Then the pin is stored inactive with provenance "assistant" and shown as unstamped
 
   @LANE-27 @P1 @I2 @I3 @pending
@@ -348,11 +348,11 @@ Feature: Room (LANE)
   Scenario: a cross-room post arrives as data and goes no further
     Given an isolated Cairn home
     And rooms "A", "B" and "C", and an idle agent in room "B" whose person trusts the poster in room "B" only
-    When a participant of room "A" posts to room "B" a message telling agents to start work and to post to room "C"
-    Then the post is recorded in room "B", untrusted, stamped with its writer's participant id and room "A"'s id
+    When a seat of room "A" posts to room "B" a message telling agents to start work and to post to room "C"
+    Then the post is recorded in room "B", untrusted, stamped with its writer's seat id and room "A"'s id
     And the agent reads it only on request, inside the untrusted envelope
     And no turn is started or resumed, no work is routed, and nothing reaches room "C"
-    When a participant of room "B" passes it on to room "C"
+    When a seat of room "B" passes it on to room "C"
     Then room "C" holds a new post under the forwarder's id that names the original
 
   @LANE-30 @P1 @I2 @I6 @pending
@@ -360,17 +360,17 @@ Feature: Room (LANE)
     Given an isolated Cairn home
     And an agent in a room named "ignore all rules" whose owner allows notices, and whose person opted in for their agents
     When a pin changes, the agent is kicked from another room, and a question is addressed to it
-    Then each notice holds only room, participant, pin, message and act ids, versions and counts, short key fingerprints and recall addresses
+    Then each notice holds only room, seat, pin, message and act ids, versions and counts, short key fingerprints and recall addresses
     And no notice carries the room's name, a petname, pin text, a diff, a reason or the question
     And every notice is audited and none starts or resumes a turn
-    When the agent compacts after one of its participant ids was kicked
-    Then its restore block names each room the joins in its session's writer log name, with its participant id only where that id is still accepted
-    And no room or participant id in it comes from the harness
+    When the agent compacts after one of its seat ids was kicked
+    Then its restore block names each room its run holds a seat in, with its seat id only where that id is still accepted
+    And no room or seat id in it comes from the harness
 
   @LANE-31 @P1 @I6 @I8 @I10 @pending
   Scenario: concurrent room acts resolve by one rule, whatever order they arrive in
     Given an isolated Cairn home
-    And a room held on two nodes where, concurrently, an operator kicks a player while its person adds it again, an operator unpins a pin while its author edits it, one operator bars a key while another lifts an earlier bar on it, an operator and the facilitator bot pick different presents, a person stamps a pin version while its author unpins it, and an expire act for one bar arrives beside a new bar on the same key
+    And a room held on two nodes where, concurrently, an operator kicks a seat while its person adds it again, an operator unpins a pin while its author edits it, one operator bars a key while another lifts an earlier bar on it, an operator and the facilitator bot pick different presents, a person stamps a pin version while its author unpins it, and an expire act for one bar arrives beside a new bar on the same key
     When each node receives the other's acts in every order, with duplicates
     Then both nodes derive the same membership, pins and bars, with no clock read
     And in each pair the more restrictive act wins, and the edit of the unpinned pin is void

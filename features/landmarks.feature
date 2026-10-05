@@ -8,7 +8,7 @@ Feature: Landmarks (LMK)
   @LMK-01 @P0 @I10 @pending
   Scenario: spans start at every user turn, compaction and subagent boundary
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "turns-compaction-subagent"
+    And an agent run with a Claude Code transcript "turns-compaction-subagent"
     And "turns-compaction-subagent" holds an isMeta "user" line and a "user" line of command output
     When the operator runs "cairn landmarks --json"
     Then a new span starts at each user turn, each compaction, and each subagent start and end
@@ -19,8 +19,8 @@ Feature: Landmarks (LMK)
   Scenario Outline: a closed span yields one landmark of structural fields only
     Given an isolated Cairn home
     And deployment mode "<mode>"
-    And a project with a Claude Code transcript "two-closed-spans"
-    When Claude calls the MCP tool "landmarks" with session "current"
+    And an agent run with a Claude Code transcript "two-closed-spans"
+    When Claude calls the MCP tool "landmarks" with run "current"
     Then there is one landmark per closed span with its address range, turn range, event counts by kind, tool call counts, touched file paths and error indicator
     And the landmark user-turn excerpt is <excerpt>
 
@@ -32,7 +32,7 @@ Feature: Landmarks (LMK)
   @LMK-03 @P0 @I2 @pending
   Scenario Outline: untrusted structural fields are sanitized to the allow-list
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "hostile-field-names"
+    And an agent run with a Claude Code transcript "hostile-field-names"
     And the transcript has a <field> value "<value>"
     When the operator runs "cairn landmarks --json"
     Then the landmark shows that <field> as "<shown>"
@@ -48,7 +48,7 @@ Feature: Landmarks (LMK)
   @LMK-04 @P0 @I2 @I5 @pending
   Scenario: flagged and quarantined events count but contribute no text
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "flagged-and-quarantined"
+    And an agent run with a Claude Code transcript "flagged-and-quarantined"
     And the operator runs "cairn quarantine add --range w-1:12-12"
     When the operator runs "cairn landmarks --json"
     Then the event counts include the flagged event and the quarantined event w-1·12
@@ -57,7 +57,7 @@ Feature: Landmarks (LMK)
   @LMK-05 @P0 @I10 @pending
   Scenario: landmarks roll up into tiers of at most k blocks
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "seventy-spans"
+    And an agent run with a Claude Code transcript "seventy-spans"
     When the operator runs "cairn landmarks --json"
     Then no tier holds more than 8 blocks
     And the newest block keeps full detail while older blocks collapse to one line each and merge into the next tier
@@ -67,7 +67,7 @@ Feature: Landmarks (LMK)
   Scenario: natural-language headlines appear only on all-trusted spans
     Given an isolated Cairn home
     And headline generation is enabled
-    And a project with a Claude Code transcript "trusted-and-web-spans"
+    And an agent run with a Claude Code transcript "trusted-and-web-spans"
     When the operator runs "cairn landmarks --json"
     Then a span whose every event is trusted may carry a headline
     And a span containing any untrusted event carries no headline

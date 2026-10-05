@@ -33,13 +33,13 @@ Feature: Security (SEC)
       | payload store  | 0600 | another UID |
 
   @SEC-03 @P0 @I8 @pending
-  Scenario: a mismatched tenant id refuses to open the home
+  Scenario: a mismatched home id refuses to open the home
     Given an isolated Cairn home
-    And the home is configured with tenant id "tenant-a"
-    And the environment supplies tenant id "tenant-b"
+    And the home is configured with home id "home-a"
+    And the environment supplies home id "home-b"
     When the operator runs "cairn status"
     Then the command exits 1
-    And the error states that the tenant id does not match
+    And the error states that the home id does not match
     And no store file is opened
 
   @SEC-04 @P0 @I9 @pending
@@ -89,15 +89,15 @@ Feature: Security (SEC)
   @SEC-08 @P0 @I1 @pending
   Scenario: secrets are redacted before anything is written
     Given an isolated Cairn home
-    And a tenant-defined redaction pattern "ACME-[0-9]{8}"
-    And a project with a Claude Code transcript "secrets"
+    And a redaction pattern the person defined "ACME-[0-9]{8}"
+    And an agent run with a Claude Code transcript "secrets"
     And "secrets" holds a Bash result whose output carries an AWS access key in both "message.content" and "toolUseResult"
     When the operator runs "cairn ingest --all"
     Then no stored text field, payload, or hook input contains an AWS access key or "ACME-12345678"
     And each secret is replaced by "[REDACTED:<rule>]", with no hash or other value derived from the secret
     And no stored event, segment, export or replicated structure carries a value from which the secret could be confirmed
     And any correlation of the repeated AWS access key lives only in a node-local index under this node's own storage key
-    When the operator runs "cairn purge --session secrets"
+    When the operator runs "cairn purge --run secrets"
     Then the correlation index holds no entry for the purged events
 
   @SEC-09 @P1 @pending
@@ -113,30 +113,30 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And the parent environment sets "ANTHROPIC_API_KEY", "GITHUB_TOKEN", a writer key value and an at-rest encryption key value
     And no platform key store is available
-    And encryption at rest is on, with its key named by a secret reference to a file only the tenant's user can read
+    And encryption at rest is on, with its key named by a secret reference to a file only the person's OS user can read
     When the operator runs "cairn status --json"
     And the operator runs "cairn backup"
-    Then the writer key was generated on the node into a file only the tenant's user can read, not taken from the environment
+    Then the writer key was generated on the node into a file only the person's OS user can read, not taken from the environment
     And the status says the key is a file an unsandboxed agent of the same user could read
     And the at-rest encryption key is read from its secret reference on each use, not from the environment
     And no key or credential value appears in the store, a segment, derived state, a backup, an export, the audit log or any log output
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
-    When a session's harness hands a seat's private key to its MCP server at launch
-    Then the key lives only in that server's memory for the session, and no file, log, event, backup or output carries it
+    When a run's harness hands a seat's private key to its MCP server at launch
+    Then the key lives only in that server's memory for the run, and no file, log, event, backup or output carries it
 
   @SEC-11 @P0 @I2 @I7 @pending
-  Scenario Outline: project configuration may only tighten security settings
+  Scenario Outline: repository configuration may only tighten security settings
     Given an isolated Cairn home
-    And a project ".cairn.toml" setting "<key>" to "<value>"
+    And a repository ".cairn.toml" setting "<key>" to "<value>"
     When the operator runs "cairn status --json"
-    Then the effective value of "<key>" is unchanged by the project file
-    And an audit entry records "project configuration attempted to loosen <key>", and a counter counts it
+    Then the effective value of "<key>" is unchanged by the repository file
+    And an audit entry records "repository configuration attempted to loosen <key>", and a counter counts it
 
     Examples:
       | key                       | value       |
       | inject.on_prompt          | true        |
       | inject.on_start.landmarks | true        |
-      | recall.default_scope      | project     |
+      | recall.default_scope      | rooms       |
       | mode                      | interactive |
       | flagging.enabled          | false       |
       | redaction.extra_patterns  | []          |
@@ -155,7 +155,8 @@ Feature: Security (SEC)
     Examples:
       | selector                     |
       | --range w-1:100-200          |
-      | --session s-1                |
+      | --run r-1                    |
+      | --actor alice                |
       | --room room-1                |
       | --writer w-1                 |
       | --provenance web             |
@@ -163,22 +164,22 @@ Feature: Security (SEC)
       | --since 2026-01-01T00:00:00Z |
 
   @SEC-13 @P1 @I2 @pending
-  Scenario: a session is tainted once untrusted content is recalled into it
+  Scenario: a run is tainted once untrusted content is recalled into it
     Given an isolated Cairn home
     And a store with an untrusted web tool result
-    When Claude calls the MCP tool "search" with a query matching the untrusted result in session "s-1"
-    And the operator runs "cairn policy check --session s-1 --json"
-    Then the recall-taint flag for "s-1" is set
+    When Claude calls the MCP tool "search" with a query matching the untrusted result in run "r-1"
+    And the operator runs "cairn policy check --run r-1 --json"
+    Then the recall-taint flag for "r-1" is set
     And the example PreToolUse policy hook requires approval for a configured sensitive action
 
   @SEC-14 @P0 @I5 @pending
   Scenario: purged content is not recoverable from the storage the purge freed
     Given an isolated Cairn home
-    And a session "s-1" with events holding the marker "zebra-purge-7" and payload files
-    When the operator runs "cairn purge --session s-1"
+    And a run "r-1" with events holding the marker "zebra-purge-7" and payload files
+    When the operator runs "cairn purge --run r-1"
     Then the command exits 0
     And no byte sequence "zebra-purge-7" remains in any file under the Cairn home, free space inside those files included
-    And the session's payload files no longer exist
+    And the run's payload files no longer exist
     And the documentation states that SSD erasure is not guaranteed without encryption at rest
 
   @SEC-15 @P0 @I4 @pending
@@ -205,10 +206,10 @@ Feature: Security (SEC)
     And it compares Cairn with Zed Delta control by control on record signing, co-author trust, central-service dependence and key custody
 
   @SEC-18 @P0 @I8 @pending
-  Scenario Outline: paths outside the allowed roots are rejected and audited, and the session's own repository is read-only
+  Scenario Outline: paths outside the allowed roots are rejected and audited, and the run's own repository is read-only
     Given an isolated Cairn home
     And the transcript roots are "~/.claude/projects"
-    And a session whose hook "cwd" is "~/src/app/pkg", inside a repository whose top level is "~/src/app"
+    And a run whose hook "cwd" is "~/src/app/pkg", inside a repository whose top level is "~/src/app"
     When the hook "Stop" runs and a hook input, transcript field or worktree checkpoint names the path "<path>"
     Then <result>
 
@@ -229,7 +230,7 @@ Feature: Security (SEC)
     Then every Cairn component, process and protocol is assigned to exactly one of B0, B1, B2 and B3
     And the check fails when a component's build-time reach evidence is missing, or when that evidence or a test under its boundary's sandbox shows more reach than its row grants
     And the check fails when a process exists that the register does not list
-    And every B1, B2 and B3 component and the run component stays off on the home until the tenant starts it
+    And every B1, B2 and B3 component and the run component stays off on the home until the person starts it
 
   @SEC-20 @P1 @I4 @I6 @I8 @pending
   Scenario: the room view binds to loopback and accepts only its own per-launch credential
@@ -237,8 +238,8 @@ Feature: Security (SEC)
     When the operator starts the room-view component
     Then it listens only on a loopback address, on a port chosen at launch
     And its launch credential has at least 128 bits and is never sent to the server in a request line, nor placed in argv, an environment another UID can read, a log or a referrer
-    And the credential is exchanged once for a session credential that only the room view's own origin, port included, can read or send
-    And a page served from another loopback port cannot obtain or replay that session credential
+    And the credential is exchanged once for a login credential that only the room view's own origin, port included, can read or send
+    And a page served from another loopback port cannot obtain or replay that login credential
     And it permits enveloped reading and cut or neutral acts, and widening acts only with the widening-act confirmation, until the instance stops
     And a request whose Host or Origin is not its own, and any cross-origin request, is rejected and audited
 
@@ -273,7 +274,7 @@ Feature: Security (SEC)
       | holds disabled                              | a permission request would be held                          | no hold is placed                                  |
       | an authenticator required for widening acts | the owner confirms a widening act without the authenticator | the act is refused                                 |
       | risk acceptance forbidden                   | the owner accepts a risk                                    | the acceptance is refused                          |
-      | a 30-day retention window for project "p"   | an event of "p" ages past 30 days                           | it is purged with a tombstone, audited and counted |
+      | a 30-day retention window for room "p"      | an event of "p" ages past 30 days                           | it is purged with a tombstone, audited and counted |
 
   @SEC-23 @P1 @I7 @pending
   Scenario: the room view writes no configuration and points to the CLI instead
@@ -292,7 +293,7 @@ Feature: Security (SEC)
     Then it listens only on "127.0.0.1:7400", it listens on nothing when no address is configured, and it refuses a wildcard address
     And every connection is encrypted and mutually authenticated with enrolled keys
     And the traffic carries only sealed ranges, in both directions whichever side dialled, and ephemeral signed presence hints
-    And local discovery advertises only a random per-boot instance id and a port, never a tenant, host or room name
+    And local discovery advertises only a random per-boot instance id and a port, never a person, host or room name
 
   @SEC-25 @P2 @I2 @I6 @I8 @pending
   Scenario Outline: the peer component imports only sealed, chained segments from known writer keys
@@ -343,13 +344,13 @@ Feature: Security (SEC)
   @SEC-29 @P1 @I4 @I2 @pending
   Scenario: the run component is the only one that starts programs, and only confirmed ones
     Given an isolated Cairn home
-    And the tenant started the run component
+    And the person started the run component
     When the person confirms a command and an agent asks to run an unconfirmed one
     Then only the confirmed command runs, and each process it starts has its own register row
     And build-time evidence shows no other component that starts a program, save the core starting its own kernel worker
     And the run component connects nowhere beyond loopback to the room-view component
     And any listener it opens meets the room-view listener rules or is a local endpoint only the same local user can reach, refusing a peer of another UID
-    And on a home where the tenant never started it, the run component is off
+    And on a home where the person never started it, the run component is off
 
   @SEC-30 @P2 @I5 @I6 @pending
   Scenario: a purge travels as a signed tombstone and a co-author can request erasure
@@ -374,14 +375,14 @@ Feature: Security (SEC)
   Scenario: the facilitator bot moderates within limits and never instructs
     Given an isolated Cairn home
     And a room where a person holding operator appointed a facilitator bot, with a rate of two moderation acts per hour
-    When a post persuades the bot to bar three participants, an operator and the owner, and to set the room read only
-    Then the first two bars are recorded, each audited with its finding linking the pin and the content judged
-    And each bar is shown in the room view and named by id in the error each barred participant's next call returns
-    And a Needs you item reaches the owner, the appointer and the participant's person
+    When a post persuades the bot to bar three seats, an operator and the owner, and to set the room read only
+    Then the first two bars are recorded, each audited with its finding linking the pin and the content flagged
+    And each bar is shown in the room view and named by id in the error each barred seat's next call returns
+    And a Needs you item reaches the owner, the appointer and the seat's person
     And the third bar is refused and counted
     And the acts on the operator and the owner, and the room-wide read only, are refused and audited
     And the owner and the appointer can each undo each bar
     And the bot's attempt to lift one of its own bars is refused and audited, since unbarring is a person's widening act
-    And each finding is in the bot's own words and links the content it judged by recall address, quoting none of it
+    And each finding is in the bot's own words and links the content it flagged by recall address, quoting none of it
     And the bot's findings reach no agent as instructions unless that agent's person trusts the bot
     And an agent appointed operator is held to the same limits

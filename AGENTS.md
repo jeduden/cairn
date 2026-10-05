@@ -16,7 +16,7 @@ strip-frontmatter: "true"
 
 Cairn — a lossless, security-first context layer for long-running
 Claude agents, written in Go. It keeps an append-only record of every
-session. It re-injects pinned constraints verbatim after compaction.
+agent run. It re-injects pinned constraints verbatim after compaction.
 Claude recalls exact history on demand. Stored history never becomes
 a prompt-injection channel.
 
@@ -43,7 +43,7 @@ security review and a new major version, not a bug fix.
 
 - **I1 — Nothing is lost.** Every event an agent saw or produced remains
   recoverable by its stable address, (writer, seq), across any number of
-  compactions and sessions, on every node that holds its writer's log.
+  compactions and agent runs, on every node that holds its writer's log.
   The only exceptions are secrets removed by redaction before storage or
   on import, and data an operator explicitly purges or expires by
   policy. Every exception is recorded.
@@ -84,7 +84,7 @@ security review and a new major version, not a bug fix.
   the tenant turned on; whatever such a component brings in is untrusted
   (I2).
 - **I5 — Bad data can be removed from circulation without destroying
-  evidence.** Any event, span, session, writer or derived artifact can
+  evidence.** Any event, span, run, writer or derived artifact can
   be quarantined from recall immediately on the node that records the
   quarantine, while the record stays intact for forensics. A quarantine
   reaches another node only as a request that node's operator applies.

@@ -8,7 +8,7 @@ Feature: Observability (OPS)
   @OPS-01 @P0 @I6 @pending
   Scenario Outline: every degraded operation is audited and counted
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "session-a"
+    And an agent run with a Claude Code transcript "run-a"
     When <operation>
     Then an audit entry records "<outcome>"
     And the counter "<counter>" increases by 1
@@ -62,11 +62,11 @@ Feature: Observability (OPS)
     And the process opened no network connection
 
   @OPS-06 @P1 @I6 @pending
-  Scenario Outline: every failure of a user-run component reaches the tenant's audit log and a named counter
+  Scenario Outline: every failure of a user-run component reaches the home's audit log and a named counter
     Given an isolated Cairn home
     And "<component>" is running
     When an operation of "<component>" is <outcome>
-    Then the tenant's audit log records the operation as "<outcome>"
+    Then the home's audit log records the operation as "<outcome>"
     And a named counter for it increases by 1
     And "cairn status" shows the failure outside any browser
 

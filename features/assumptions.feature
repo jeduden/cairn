@@ -37,10 +37,10 @@ Feature: Assumptions register (ASM)
       | supported | PostCompact      | never shows |
 
   @ASM-03 @pending
-  Scenario: transcripts are one JSONL file per session with subagents nested (S3)
+  Scenario: transcripts are one JSONL file per harness session with subagents nested (S3)
     Given a recorded "~/.claude/projects" tree for Claude Code "supported"
     When the transcript discovery walks the tree
-    Then each session is one JSONL file under "~/.claude/projects/<project-slug>/"
+    Then each harness session is one JSONL file under "~/.claude/projects/<project-slug>/"
     And each subagent transcript lies under "<session>/subagents/"
 
   @ASM-04 @pending
@@ -59,7 +59,7 @@ Feature: Assumptions register (ASM)
   Scenario: transcripts can be deleted after cleanupPeriodDays (S3)
     Given a recorded "~/.claude/projects" tree before and after cleanup with "cleanupPeriodDays" of 30
     When the operator runs "cairn ingest --all" on each recording in turn
-    Then the sessions whose transcripts were deleted remain recallable from the store
+    Then the runs whose transcripts were deleted remain recallable from the store
     And an audit entry records "transcript deleted by harness cleanup"
 
   @ASM-06 @pending
@@ -67,15 +67,15 @@ Feature: Assumptions register (ASM)
     Given a recorded hook payload for Claude Code "supported"
     And the payload was captured during a subagent's compaction
     When the hook "PreCompact" runs with the recorded payload
-    Then its "session_id" and "transcript_path" are the parent session's
+    Then its "session_id" and "transcript_path" are the parent's
     And it carries no subagent-specific field
 
   @ASM-07 @pending
   Scenario Outline: a plugin bundling hooks and an MCP server loads on each target (S4)
     Given the Cairn plugin bundling its hooks and the "cairn mcp" server
     When it is installed on "<target>"
-    Then the recorded session shows every Cairn hook firing
-    And the recorded session lists the Cairn MCP tools
+    Then the recorded harness session shows every Cairn hook firing
+    And the recorded harness session lists the Cairn MCP tools
 
     Examples:
       | target           |
@@ -84,11 +84,11 @@ Feature: Assumptions register (ASM)
       | Agent SDK worker |
 
   @ASM-08 @pending
-  Scenario: self-hosted runners seed ~/.claude into each session under one user account (S4)
-    Given a recorded self-hosted runner session for Claude Code "supported"
-    When the session's home and process owner are inspected
-    Then the session's "~/.claude/" was seeded from the runner host's "~/.claude/"
-    And every session on the runner ran as the same one user account
+  Scenario: self-hosted runners seed ~/.claude into each harness session under one user account (S4)
+    Given a recorded self-hosted runner harness session for Claude Code "supported"
+    When the harness session's home and process owner are inspected
+    Then the harness session's "~/.claude/" was seeded from the runner host's "~/.claude/"
+    And every harness session on the runner ran as the same one user account
 
   @ASM-09 @pending
   Scenario: whether a PreCompact hook exiting 2 blocks compaction is recorded (S6)
@@ -108,7 +108,7 @@ Feature: Assumptions register (ASM)
 
   @ASM-11 @pending
   Scenario: context the harness adds is written as attachment records (S3)
-    Given a recorded transcript for Claude Code "supported" from a project with a CLAUDE.md file, an MCP server and a skill
+    Given a recorded transcript for Claude Code "supported" from a working tree with a CLAUDE.md file, an MCP server and a skill
     When each line of the recording is read
     Then the CLAUDE.md file, the MCP server instructions and the skill listing appear as "attachment" records
     And each of those records carries "attachment.type" and "renderedRole"
@@ -146,14 +146,14 @@ Feature: Assumptions register (ASM)
     Then every thinking block carries a signature and empty thinking text
 
   @ASM-16 @pending
-  Scenario: how working directories map to project directories is recorded (S3)
-    Given a recorded "~/.claude/projects" tree for Claude Code "supported" after one session in each of "/w/my_app", "/w/my.app" and "/w/my-app"
+  Scenario: how working directories map to transcript directories is recorded (S3)
+    Given a recorded "~/.claude/projects" tree for Claude Code "supported" after one harness session in each of "/w/my_app", "/w/my.app" and "/w/my-app"
     When the transcript discovery walks the tree
-    Then the three sessions share the project directory "-w-my-app"
+    Then the three harness sessions share the transcript directory "-w-my-app"
 
   @ASM-17 @pending
-  Scenario: transcript lines are appended within 1 s of their event while a session runs (S9)
-    Given a recorded session from Claude Code "supported" with the time of each hook event
+  Scenario: transcript lines are appended within 1 s of their event while an agent runs (S9)
+    Given a recorded harness session from Claude Code "supported" with the time of each hook event
     When the recorded transcript is replayed with the write time of each line
     Then each transcript line was appended within 1 s of its event
 
@@ -186,6 +186,6 @@ Feature: Assumptions register (ASM)
   @ASM-21 @pending
   Scenario: the harness hands a seat's private key to its own MCP server outside the model's context (S4)
     Given a recorded plugin launch of Claude Code "supported" with its MCP server
-    When the harness starts the MCP server for a session that holds a seat key
+    When the harness starts the MCP server for a run that holds a seat key
     Then the MCP server receives the key at launch through a channel the harness keeps out of the model's context
-    And no transcript line, hook payload or tool result of the session carries the key
+    And no transcript line, hook payload or tool result of the run carries the key

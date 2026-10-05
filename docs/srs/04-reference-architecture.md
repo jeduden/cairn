@@ -13,14 +13,14 @@ context. It is not binding; §5–§10 are.
 ## 4.1 Overview
 
 ```text
- ┌──────────────────────────── Claude Code / Agent SDK session ────────────────────────────┐
+ ┌──────────────────────────── Claude Code / Agent SDK harness ────────────────────────────┐
  │                                                                                           │
  │   hooks (command, stdin JSON)                          MCP client (stdio)                 │
  │        │                                                     │                            │
  └────────┼─────────────────────────────────────────────────────┼────────────────────────────┘
           ▼                                                     ▼
    cairn hook <event>                                     cairn mcp
-   (short-lived process)                                  (process per session)
+   (short-lived process)                                  (process per run)
           │                                                     │        spawns
           │                                                     ├──────────────► cairn kernel-worker
           ▼                                                     ▼                (rlimits, hermetic,
@@ -35,12 +35,12 @@ context. It is not binding; §5–§10 are.
  └───────────────┬───────────────────────────────────┬────────────────────┘
                  ▼                                   ▼
    ┌──────────────────────────────┐    ┌──────────────────────────────┐
-   │ project store (SQLite, WAL)  │    │ payload store (REC-09 names) │
+   │ store (SQLite, WAL)          │    │ payload store (REC-09 names) │
    │ events · events_fts · spans  │    │ large tool outputs, files    │
    │ landmarks · pins · quarantine│    └──────────────────────────────┘
    │ counters · audit · meta      │
    └──────────────────────────────┘
-          CAIRN_HOME/<project-id>/            (0700 dirs, 0600 files, tenant-bound)
+          CAIRN_HOME/                         (0700 dirs, 0600 files, one person's)
 ```
 
 ## 4.2 Components
@@ -48,7 +48,7 @@ context. It is not binding; §5–§10 are.
 | Component             | Responsibility                                                                                                                                    |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cairn hook <event>`  | Reads hook input from stdin, performs bounded work within the hook budget, writes hook output to stdout, always exits in a fail-open manner (I9). |
-| `cairn mcp`           | Per-session MCP server over stdio exposing recall, landmarks, pins, and kernel tools. Read-mostly.                                                |
+| `cairn mcp`           | Per-run MCP server over stdio exposing recall, landmarks, pins, and kernel tools. Read-mostly.                                                    |
 | `cairn kernel-worker` | Child process of `cairn mcp` running the hermetic kernel under OS resource limits with a read-only store handle.                                  |
 | Admin CLI             | Install, verify, rebuild, quarantine, purge, backup, migrate, stats, audit, doctor.                                                               |
 | Core library          | All logic; no global state; every blocking operation takes a deadline, directly or through a cancellation token a deadline fires.                 |
@@ -88,7 +88,7 @@ stay auditable and nothing retained confirms a guess at what was purged.
 1. Claude calls `kernel.exec` with a script such as `hits =
    cairn.search("timeout", kind="tool_result")` followed by a loop that extracts
    and counts error codes.
-2. The worker binds results to variables in the session namespace; only the
+2. The worker binds results to variables in the run's namespace; only the
    script's explicit `print` output (capped) returns to Claude, tainted per its
    sources.
 
@@ -96,7 +96,7 @@ stay auditable and nothing retained confirms a guess at what was purged.
 
 | ADR    | Decision                                                                                                                                                                                                                                                           | Alternatives considered                                                                      | Rationale                                                                                                                                                                                                                                                                                  |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ADR-01 | **Daemonless core.** Hooks and per-session MCP processes open the store directly. The room-view, run, peer, publish and bridge components are optional, started by the user, never on a hook or recall path, and their failure never touches a session (I9).       | Long-running daemon on loopback (lcm)                                                        | Removes the port, token, stale-daemon, and wedged-daemon failure classes observed in lcm; zero idle footprint; simpler isolation (I8, I9).                                                                                                                                                 |
+| ADR-01 | **Daemonless core.** Hooks and per-run MCP processes open the store directly. The room-view, run, peer, publish and bridge components are optional, started by the user, never on a hook or recall path, and their failure never touches an agent run (I9).        | Long-running daemon on loopback (lcm)                                                        | Removes the port, token, stale-daemon, and wedged-daemon failure classes observed in lcm; zero idle footprint; simpler isolation (I8, I9).                                                                                                                                                 |
 | ADR-02 | **Event sourcing.** All derived state, including admin actions, is rebuildable from the record.                                                                                                                                                                    | Mutable tables                                                                               | Makes verification, rollback, and forensic replay possible (I5, I10).                                                                                                                                                                                                                      |
 | ADR-03 | **Pull-only recall.** Automatic injection accepts only the `TrustedText` type, which can be constructed only from pins and sanitized structural fields.                                                                                                            | Per-prompt memory hints (lcm, claude-mem)                                                    | Poisoning evidence (§3, item 3). Enforced by the type system, not convention (I2).                                                                                                                                                                                                         |
 | ADR-04 | **Hermetic Starlark kernel by default**; external Python kernel as optional P2.                                                                                                                                                                                    | Python/Jupyter kernel as default                                                             | Starlark (Python dialect, implemented in Rust) has no filesystem or network unless the host provides it, is deterministic, supports step limits, and needs no Python runtime (CON-03). Risk: less capable than Python for Claude. Gate: spike S5 measures Claude's task success with each. |

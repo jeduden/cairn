@@ -3,14 +3,14 @@
 A lossless, security-first context layer for long-running Claude
 agents, written in Go.
 
-Long sessions compact, and compaction forgets. Cairn keeps an
-append-only, provenance-tagged record of every session. It re-injects
+Long agent runs compact, and compaction forgets. Cairn keeps an
+append-only, provenance-tagged record of every agent run. It re-injects
 the constraints you pinned, verbatim, after every compaction. Claude
 recalls exact history on demand through MCP tools, always wrapped as
 untrusted data. It does this without opening a new attack surface: no
 automatic path from untrusted content to the model, a daemonless core
 that never touches the network, every other component off until you
-start it, strict per-tenant isolation.
+start it, strict per-person isolation.
 
 ## Status
 
@@ -39,7 +39,7 @@ security review and a new major version, not a bug fix.
 
 - **I1 — Nothing is lost.** Every event an agent saw or produced remains
   recoverable by its stable address, (writer, seq), across any number of
-  compactions and sessions, on every node that holds its writer's log.
+  compactions and agent runs, on every node that holds its writer's log.
   The only exceptions are secrets removed by redaction before storage or
   on import, and data an operator explicitly purges or expires by
   policy. Every exception is recorded.
@@ -80,7 +80,7 @@ security review and a new major version, not a bug fix.
   the tenant turned on; whatever such a component brings in is untrusted
   (I2).
 - **I5 — Bad data can be removed from circulation without destroying
-  evidence.** Any event, span, session, writer or derived artifact can
+  evidence.** Any event, span, run, writer or derived artifact can
   be quarantined from recall immediately on the node that records the
   quarantine, while the record stays intact for forensics. A quarantine
   reaches another node only as a request that node's operator applies.

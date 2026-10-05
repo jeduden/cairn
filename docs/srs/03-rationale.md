@@ -20,9 +20,9 @@ maps every individual concern to requirements.
    *Compaction Cliff*: Claude Code's `/compact` on Sonnet 4.6 kept 53% of safety
    rules after one round and 10% after five. *Constraint Pinning* restored 0%
    violations at about 47 tokens per re-injection. → Verbatim pins (I3).
-3. **Automatic injection multiplies memory poisoning.** In a cross-session
-   poisoning study, a design that injected memory at session start carried
-   poisoned entries into later sessions 64.7% of the time versus 17.4% for
+3. **Automatic injection multiplies memory poisoning.** In a cross-run
+   poisoning study, a design that injected memory at each agent run's start
+   carried poisoned entries into later runs 64.7% of the time versus 17.4% for
    pull-only retrieval. Store size does not dilute poison: AgentPoison reached
    ≥80% attack success at <0.1% poison rate. → Pull-only recall (I2), quarantine
    (I5).

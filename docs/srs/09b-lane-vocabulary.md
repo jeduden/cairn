@@ -21,7 +21,7 @@ proposal, §8.
 | **Idle**      | turn ended, nothing pending                            | `claims done` when the agent says so (a mark) |
 | **Paused**    | held by the owner at a safe point, acknowledged        | —                                             |
 | **Blocked**   | cannot proceed without something other than a decision | `rate limit`, `error`                         |
-| **Ended**     | session closed, acknowledged                           | `by agent`, `by owner`, `crashed`             |
+| **Ended**     | run ended, acknowledged                                | `by agent`, `by owner`, `crashed`             |
 
 | Freshness mark | Meaning                                                                          |
 | -------------- | -------------------------------------------------------------------------------- |
@@ -68,7 +68,7 @@ Queue classes, named Q1–Q4 so they never read as priorities P0–P2:
 **Q1 blocking now** (permission, question, hand-off), **Q2 blocking
 the room** (failed required check, crash, rate limit with no resume,
 refused segment, overlap), **Q3 waiting on you** (review requested,
-outcome ready to judge, co-author request, parked request, quota
+outcome awaiting a verdict, co-author request, parked request, quota
 crossed), **Q4 for your
 record** (never alerts). Order: class; inside Q1, the number of agents
 blocked on the same answer, then causal order of raising; inside Q2
@@ -91,7 +91,7 @@ No mark on this node's own trusted events and on certified owner acts
 (the latter show a device glyph). `○` plus petname on anything
 untrusted from another person, agent, node or bundle; a key with no
 petname shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined.
-`▬` removed. `imported`. `new key`. "from a removed participant",
+`▬` removed. `imported`. `new key`. "from a removed seat",
 "from a revoked node". Timeline rails: solid for the agent's
 principal, hollow for other people, dotted for agents and the forge.
 Sandbox events are untrusted on every other node (PRV-02). Unsandboxed
