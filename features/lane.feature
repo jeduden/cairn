@@ -191,7 +191,7 @@ Feature: Room (LANE)
 
     Examples:
       | role                           | capabilities                                                                            |
-      | viewer                         | read                                                                                    |
+      | viewer                         | read, and a request to the owner for a wider role                                       |
       | participant                    | read, post, link, pin and unpin its own pins, work on the branches it is given, present |
       | operator                       | a participant's, plus branch, unpin any pin but the intent, pick, kick, bar, read only  |
       | operator appointed to a bot    | an operator's within SEC-32's limits, plus posting findings against the pins            |
@@ -301,6 +301,7 @@ Feature: Room (LANE)
     When two devices of one person, under one owner key, concurrently record an add and a removal
     Then the removal wins and the conflict is recorded and shown
     And no sequence of deliveries, reorderings or duplications of these events re-admits "bob" or revives the removed membership
+    And a kick, bar or read only aimed at the owner or a key the owner's key certified is refused and audited
     And the kicked and barred participants each get an explicit error naming the act's id on their next post, and read its reason through a tool
     And a notice of the kick reaches the agent only where the room's owner allows notices and "bob"'s person opted in
 
