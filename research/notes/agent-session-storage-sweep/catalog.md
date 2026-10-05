@@ -14,10 +14,10 @@ That produced 325 fact sheets, which merge to 308 distinct systems once 17
 duplicates are removed. 77 candidates were not deep-read: 56 as small or
 inactive, 21 as off-topic. Five of those 77 were deep-read anyway under
 another name (Willow, Keyhive and Beelay, Zep through Graphiti, Sapling,
-Oxen). Orca (stablyai/orca) was deep-read the same way on 5 October 2026,
-after the sweep, and brings the catalog to 309 systems. The per-system
-tables below this overview are generated from the sheets; this overview is
-the synthesis.
+Oxen). Orca (stablyai/orca) was deep-read against the same fields on
+5 October 2026, after the sweep, and brings the catalog to 309 systems.
+The per-system tables below this overview are generated from the sheets;
+this overview is the synthesis.
 
 ## Storage patterns
 
@@ -313,7 +313,7 @@ adjusts a few.
   signed export. The memory category's auto-injection habit is wider than
   the digest showed: about a dozen systems, first-party ones included.
 - **Counts.** Hosted and local stores came out larger than the digest's
-  keyword counts (about 90 and 89 here, against about 75 and 80 for local
+  keyword counts (about 90 each here, against about 75 and 80 for local
   databases plus local files), mostly because the sweep added hosted
   platforms, viewers and orchestrators.
 
