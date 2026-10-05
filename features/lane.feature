@@ -239,7 +239,7 @@ Feature: Room (LANE)
     And the restore block carries the second version word for word with its version, among the active pins and nowhere else
     And C3 stays an inactive, untrusted candidate until the owner adopts it, exactly as shown
     When the owner types "/intent" at the harness's own prompt to revise C1 and passes the presence check a widening act needs
-    Then the new version applies to the room the typing run is working in, to the restore blocks of every agent of the room
+    Then the new version applies to the room the typing run is working in, to the restore blocks of the owner's agents in the room, and other people's agents get it only as PIN-10 states
     And a "/intent" whose presence check fails changes nothing
 
   @LANE-21 @P1 @I2 @I10 @pending

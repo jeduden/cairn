@@ -170,7 +170,7 @@ Feature: Record (REC)
   Scenario: retention policies expire content per provenance class through tombstoned purges
     Given an isolated Cairn home
     And a home whose record holds "web" payloads and "user" events that are 40 days old
-    And the person's configuration sets "retention.web" to 30 days
+    And the person's configuration sets "retention.*.web" to 30 days
     When the retention policy is applied
     Then the content of the "web" events is removed and a tombstone records each purged range with reason "retention"
     And the "user" events are kept and "cairn verify" exits 0

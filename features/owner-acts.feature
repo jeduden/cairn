@@ -313,7 +313,7 @@ Feature: Owner acts (OWN)
     And C2 reads "no verdict" until the next verdict
     When the owner revises the intent from the same verdict
     Then a new version of the room's intent pin is recorded
-    And it reaches the room's agents in the same fixed template and, as a pin, in their next restore block
+    And it reaches the owner's agents in the room in the same fixed template and, as a pin, in their next restore block
 
   @OWN-29 @P1 @I2 @I6 @I8 @pending
   Scenario: a person's trust grant makes a poster's posts trusted for their own agents only
