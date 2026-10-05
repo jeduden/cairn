@@ -303,7 +303,7 @@ their requirements written before any grant is honoured.
 [REC]: ../srs/05-functional-requirements.md#51-record-rec
 [PRV]: ../srs/05-functional-requirements.md#52-provenance-and-trust-prv
 [ADM]: ../srs/05-functional-requirements.md#58-administration-and-lifecycle-adm
-[LANE]: ../srs/05b-lane-requirements.md#511-lane-lane
+[LANE]: ../srs/05b-lane-requirements.md#511-room-lane
 [OWN]: ../srs/05c-owner-and-peer-requirements.md#513-owner-acts-own
 [PEER]: ../srs/05c-owner-and-peer-requirements.md#514-peer-network-peer
 [SEC]: ../srs/06-security.md#62-security-requirements-sec

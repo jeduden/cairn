@@ -205,7 +205,7 @@ Feature: Room (LANE)
       | viewer                        | read                                                                                    |
       | participant                   | read, post, link, pin and unpin its own pins, work on the branches it is given, present |
       | operator                      | a participant's, plus branch, unpin any pin but the intent, kick, bar, read only, hide  |
-      | etiquette or facilitator bot  | an operator's, plus posting findings against the pins                                   |
+      | etiquette or facilitator bot  | an operator's within SEC-32's limits, plus posting findings against the pins            |
       | read only, set by an operator | read                                                                                    |
 
   @LANE-17 @P1 @I6 @I8 @pending
@@ -220,7 +220,7 @@ Feature: Room (LANE)
   @LANE-18 @P2 @I2 @I8 @pending
   Scenario: an invite link binds once and reveals nothing early
     Given an isolated Cairn home
-    And the owner issued an invite link with the role "reviewer" and an expiry
+    And the owner issued an invite link with the role "participant" and an expiry
     When a person opens the link for the first time
     Then the token binds to that person's key
     And the invite takes effect only after the owner's review step
@@ -238,12 +238,12 @@ Feature: Room (LANE)
     And a run marked unbound names the edits that unbound it
 
   @LANE-20 @P1 @I2 @I3 @pending
-  Scenario: the owner's intent is the room's first pin, versioned and restored word for word
+  Scenario: the owner's intent is the room's lead pin, versioned and restored word for word
     Given an isolated Cairn home
     And a room whose owner set the intent "add CSV export" with criteria "C1 exports every column" and "C2 keeps the header row"
     And an agent of the room proposed a criterion "C3 streams large files"
     When the owner revises C2 and the agent's context compacts
-    Then the intent is stored as the room's first pin, of type "intent", at the highest priority
+    Then the intent is stored as the room's lead pin, listed before every other pin, of type "intent", at the highest priority
     And the revision is recorded as the removal of the first version's pin followed by the addition of the second, with its version and its diff against the first
     And the restore block carries the second version word for word with its version, among the active pins and nowhere else
     And C3 stays an inactive, untrusted candidate until the owner adopts it, exactly as shown
