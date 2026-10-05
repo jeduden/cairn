@@ -191,6 +191,44 @@ fails the build when the two drift. The mechanics are in
 - Behavior surfaced mid-work — a bug found while fixing something
   else — is checked against the matrix before being judged covered.
 
+## Domain Model
+
+The domain-model agent guards Cairn's concepts. It holds the closed
+list, their relations and the banned terms. Consult it:
+
+- on every change to the SRS under `docs/srs` and to the scenarios;
+- before naming a function, type, module, crate, CLI verb, MCP tool,
+  config key or event;
+- on documentation, UX and UI copy, and developer experience: error
+  and help text, logs, setup.
+
+Speak only in its concepts. A new concept lands in the glossary and
+in that file before anything uses it. Its findings block a change
+until fixed or the stakeholder rules on them.
+
+## Agents
+
+The subagents under `.claude/agents`, each one perspective:
+
+<?catalog
+glob:
+  - ".claude/agents/*.md"
+sort: path
+header: ""
+row: "- [{name}]({filename}) — {description}"
+?>
+- [domain-model](.claude/agents/domain-model.md) — Guards Cairn's domain model: the closed set of concepts, what each means and how they relate. Reviews every SRS change, and is consulted on names (functions, types, modules, CLI verbs, MCP tools, config keys), documentation, UX and UI copy and developer experience. Reports every term used outside the model. Never approves.
+- [persona-agent](.claude/agents/persona-agent.md) — Claude itself as a user of Cairn: an agent that needs its constraints back after compaction and exact recall of its own history. Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
+- [persona-fleet-developer](.claude/agents/persona-fleet-developer.md) — A developer running five or more agents at once on one machine, each in its own worktree, and steering them through the day. Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
+- [persona-live-collaborator](.claude/agents/persona-live-collaborator.md) — A teammate joining someone else's room live, to help, pair or take over, alongside agents they do not own. Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
+- [persona-multi-machine-developer](.claude/agents/persona-multi-machine-developer.md) — A developer whose agents run across a laptop, a home server and ephemeral cloud sandboxes, often offline or on bad networks. Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
+- [persona-oss-maintainer](.claude/agents/persona-oss-maintainer.md) — An open-source maintainer receiving an outside contribution together with its room, from someone they do not know. Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
+- [persona-platform-operator](.claude/agents/persona-platform-operator.md) — A platform engineer running Cairn for many developers on self-hosted runners and Agent SDK workers. Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
+- [persona-returning-owner](.claude/agents/persona-returning-owner.md) — Someone coming back after hours or days who asks one question first: what did my agents do while I was away? Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
+- [persona-reviewer](.claude/agents/persona-reviewer.md) — A reviewer deciding whether a room may land: reads the story, the diff and the evidence, and signs off or asks for changes. Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
+- [persona-security-officer](.claude/agents/persona-security-officer.md) — A security reviewer who must sign off that Cairn adds no new exfiltration or injection path, and that its audit trail holds. Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
+<?/catalog?>
+
 ## Plan Maintenance
 
 Plans live in `plan/`, in frit's format ([plan/proto.md](plan/proto.md)),
