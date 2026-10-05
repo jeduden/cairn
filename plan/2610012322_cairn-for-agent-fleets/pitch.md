@@ -131,7 +131,7 @@ its interface. Git keeps the code; Cairn keeps the lane.
     the intent and correcting in place. This informs OQ-30.
 12. Cairn runs a git repository per project on each node, and the
     worktrees its rooms work in (5 October 2026). Git and the forge
-    still land code. SRS 2.1-draft carries it: LANE-23, LANE-24, NG8
+    still land code. SRS 2.2-draft carries it: LANE-23, LANE-24, NG8
     and ADM-13.
 13. A room can span several repositories: one branch in each, with
     landing tracked per repository (LANE-25).

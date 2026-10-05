@@ -280,6 +280,7 @@ Feature: Lane (LANE)
     And the session starts in the lane directory and its events belong to the lane
     And a checkout of another branch in the worktree is recorded and raised as a Needs you item naming the lane and the project
     And removing the worktree while it holds changes no commit and no checkpoint covers is refused, unless the owner confirms their loss, which is audited
+    And "cairn uninstall" lists the node repository and the lane worktree among its artifacts
     And sessions in the person's own clone keep their lanes as before
 
   @LANE-25 @P1 @I6 @I10 @pending

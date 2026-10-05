@@ -53,6 +53,15 @@ from.
 - [OpenAI agent UI](notes/openai-agent-ui/): how OpenAI's Codex
   surfaces show a live harness, its results and several agents, the
   app-server protocol, and what needs OpenAI's central service.
+- [Implementation path](notes/implementation-path/options.md): OQ-32
+  in two steps, revision 2. Nine options fill one evaluation frame
+  ([constraints](notes/implementation-path/constraints.md)) for an app
+  on Linux, Windows, macOS, iOS and Android built by a software
+  factory, from sourced notes on terminals, protocols, UI and
+  packaging, five-platform shells, phone reach, Windows, Zig, smalt's
+  tooling, Bun's compile times and 27 agent products. They are then
+  [compared](notes/implementation-path/comparison.md) on twenty-one
+  criteria and memory safety.
 - [OpenAI dots](notes/openai-agent-ui/dots.md): always-on agents with
   their own cloud computer, launched 29 September 2026, and what
   Cairn's pitch and design take from them.

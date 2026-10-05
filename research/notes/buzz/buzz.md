@@ -1,12 +1,12 @@
 # Buzz and Cairn: rooms, repositories and trust
 
-Scope: Block's Buzz set against Cairn's pitch v12 and SRS 2.1-draft,
+Scope: Block's Buzz set against Cairn's pitch v12 and SRS 2.2-draft,
 on 5 October 2026. Buzz's facts come from the research notes gathered
 on 2–4 October 2026 and were not fetched again; each one names its
 source. Cairn is pre-implementation, so its column states the
 requirement, not shipped behaviour.
 
-2.1-draft changes the comparison. Cairn now runs a git repository per
+2.2-draft changes the comparison. Cairn now runs a git repository per
 project on each node, and the worktrees its lanes work in, and a lane
 may span several repositories (LANE-23, LANE-24, LANE-25). Before that
 change, git hosting was a point where Buzz led and Cairn did not
@@ -70,7 +70,7 @@ market.
 
 ## Against Cairn
 
-| Question             | Buzz                                                                             | Cairn (2.1-draft)                                                                                                                         |
+| Question             | Buzz                                                                             | Cairn (2.2-draft)                                                                                                                         |
 | -------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | Unit                 | A room per branch of one repository                                              | A lane per intent: one branch in each repository it spans, several attempts beside each other (LANE-25)                                   |
 | Code                 | The relay hosts git for the community; Smart HTTP clone and push                 | Each node runs a node repository per project and the lane worktrees (LANE-23, LANE-24); the forge still lands (NG8)                       |
