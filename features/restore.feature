@@ -32,9 +32,9 @@ Feature: Restore and injection (INJ)
 
   @INJ-03 @P0 @I2 @pending
   Scenario: the restore builder accepts only TrustedText
-    Given the injection package source
-    When a package outside injection tries to construct a TrustedText value
-    Then the build fails because the TrustedText constructor is unexported
+    Given the injection crate source
+    When a crate outside injection tries to construct a TrustedText value
+    Then the build fails because the TrustedText constructor is private to the injection crate
     And the only TrustedText sources are active pins and sanitized structural fields
     And the restore builder signature accepts no type but TrustedText
 

@@ -109,10 +109,10 @@ Feature: Non-functional requirements (NFR)
     And the run component adds at most 10 ms p95 to keystroke-to-echo latency
 
   @NFR-10 @pending
-  Scenario Outline: a single static binary builds for each supported platform
+  Scenario Outline: the core executable builds for each supported platform
     Given the release build
-    When it builds cairn for "<platform>"
-    Then the result is one statically linked executable with no dynamic library dependencies
+    When it builds the cairn core executable for "<platform>"
+    Then the result is one executable that links no dynamic library beyond the operating system's
 
     Examples:
       | platform     |
@@ -136,10 +136,10 @@ Feature: Non-functional requirements (NFR)
     And no configuration file had to be written by hand
 
   @NFR-13 @pending
-  Scenario: a new transcript format version changes only the harness adapter package
+  Scenario: a new transcript format version changes only the harness adapter crate
     Given the change that added the most recent transcript format version
     When its changed files are listed
-    Then every changed non-test source file lies in the harness adapter package
+    Then every changed non-test source file lies in the harness adapter crate
 
   @NFR-14 @pending
   Scenario: every release ships its operator documentation

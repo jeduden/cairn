@@ -74,13 +74,15 @@ a node. The stakeholder chose Rust and TypeScript on 5 October 2026.
 
 ## Consequences
 
-- **SRS changes, each the stakeholder's.** CON-01 names Rust and
-  TypeScript. The rows the [frame][frame] lists as worded for Go are
-  reworded: CON-02 (no cgo, Windows added), ENG-01 to ENG-05, ENG-07
-  (fuzzing with cargo-fuzz), ENG-09 (the race detector, now the
-  compiler plus a 50-writer soak), ENG-16 (clippy, `cargo-deny`,
-  `cargo-audit`, Miri), INJ-03 (a `pub(crate)` constructor), ADR-04,
-  ADR-07 and S2.
+- **SRS changes, each the stakeholder's,** made in SRS 2.1-draft.
+  CON-01 names Rust and TypeScript, and the rows the [frame][frame]
+  lists as worded for Go are restated: CON-02 (no cgo; adding Windows
+  is a separate ruling), CON-03, ENG-01 to ENG-05, ENG-07 (cargo-fuzz),
+  ENG-09 (data races excluded by the compiler, Miri or ThreadSanitizer
+  for `unsafe`), ENG-11, ENG-16 (clippy, `cargo-deny`, `cargo-audit`,
+  `forbid(unsafe_code)`), INJ-03 (a `pub(crate)` constructor), SEC-07,
+  OPS-05, ADM-01, NFR-10, NFR-13, ADR-04, ADR-06, ADR-07, S2, S7,
+  OQ-03 and OQ-32.
 - **ADRs to supersede** once their successors are written:
   [ADR-2609292234](ADR-2609292234-test-stack.md) (godog and testify;
   the successor picks a Rust test stack or keeps godog driving the

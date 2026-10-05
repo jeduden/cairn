@@ -6,12 +6,12 @@ Feature: Administration and lifecycle (ADM)
   implements the requirement lands.
 
   @ADM-01 @P0 @I7 @pending
-  Scenario: the plugin registers the hooks and the MCP server with the static binary
+  Scenario: the plugin registers the hooks and the MCP server with the core executable
     Given an isolated Cairn home
     When the Claude Code plugin bundle is built
     Then the plugin manifest registers every hook of the hook contract as "cairn hook <event>"
     And the plugin manifest registers the MCP server "cairn mcp"
-    And the bundle carries the statically linked cairn binary
+    And the bundle carries the cairn core executable for each supported platform
 
   @ADM-02 @P0 @I7 @I6 @pending
   Scenario: install asks before every change and uninstall lists, offers and audits every artifact
