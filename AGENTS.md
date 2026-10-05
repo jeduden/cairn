@@ -142,6 +142,7 @@ row: "- [{filename}]({filename}) — {summary}"
 - [CHANGELOG.md](CHANGELOG.md) — Release notes and upgrade notes per version, newest first (ENG-23).
 - [DEPENDENCIES.md](DEPENDENCIES.md) — Every direct Go dependency, listed through the decision record that justifies it (ENG-18, ENG-26). The ENG-18 scenario fails the build when go.mod and the dependency ADRs disagree or a license is off the allow-list.
 - [docs/development.md](docs/development.md) — Build and test commands, the executable requirement matrix (every SRS id has one tagged Gherkin scenario, pending until written), the coverage floors, and how CI, the nightly fuzz run and the reproducible, signed release pipeline work.
+- [docs/domain-model.md](docs/domain-model.md) — Cairn's domain model: the closed set of concepts, how they relate, the terms that are not Cairn concepts, and how names in code, docs and UI follow the model. The domain-model agent reviews against it.
 - [docs/srs/index.md](docs/srs/index.md) — The Cairn Software Requirements Specification — the normative source for every requirement id a feature scenario is tagged with.
 - [SECURITY.md](SECURITY.md) — How to report a vulnerability in Cairn privately, the 90-day coordinated disclosure policy, which versions get fixes, and how to verify a release (ENG-24, ENG-20).
 <?/catalog?>
@@ -193,8 +194,9 @@ fails the build when the two drift. The mechanics are in
 
 ## Domain Model
 
-The domain-model agent guards Cairn's concepts. It holds the closed
-list, their relations and the banned terms. Consult it:
+Cairn's concepts, their relations and the terms that are not Cairn
+concepts live in [docs/domain-model.md](docs/domain-model.md). The
+domain-model agent reviews against that document. Consult it:
 
 - on every change to the SRS under `docs/srs` and to the scenarios;
 - before naming a function, type, module, crate, CLI verb, MCP tool,
@@ -202,8 +204,8 @@ list, their relations and the banned terms. Consult it:
 - on documentation, UX and UI copy, and developer experience: error
   and help text, logs, setup.
 
-Speak only in its concepts. A new concept lands in the glossary and
-in that file before anything uses it. Its findings block a change
+Speak only in the model's concepts. A new concept lands in the model
+and the glossary before anything uses it. Its findings block a change
 until fixed or the stakeholder rules on them.
 
 ## Agents
@@ -217,7 +219,7 @@ sort: path
 header: ""
 row: "- [{name}]({filename}) — {description}"
 ?>
-- [domain-model](.claude/agents/domain-model.md) — Guards Cairn's domain model: the closed set of concepts, what each means and how they relate. Reviews every SRS change, and is consulted on names (functions, types, modules, CLI verbs, MCP tools, config keys), documentation, UX and UI copy and developer experience. Reports every term used outside the model. Never approves.
+- [domain-model](.claude/agents/domain-model.md) — Guards Cairn's domain model as docs/domain-model.md defines it. Reviews every SRS change, and is consulted on names (functions, types, modules, CLI verbs, MCP tools, config keys), documentation, UX and UI copy and developer experience. Reports every term used outside the model. Never approves.
 - [persona-agent](.claude/agents/persona-agent.md) — Claude itself as a user of Cairn: an agent that needs its constraints back after compaction and exact recall of its own history. Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
 - [persona-fleet-developer](.claude/agents/persona-fleet-developer.md) — A developer running five or more agents at once on one machine, each in its own worktree, and steering them through the day. Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
 - [persona-live-collaborator](.claude/agents/persona-live-collaborator.md) — A teammate joining someone else's room live, to help, pair or take over, alongside agents they do not own. Reviews a pull request, plan, pitch, design or spec from this seat and reports where it fails them. Never approves.
