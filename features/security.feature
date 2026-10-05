@@ -379,6 +379,7 @@ Feature: Security (SEC)
     And the third bar is refused and counted
     And the acts on the operator and the owner, and the room-wide read only, are refused and audited
     And the owner and the appointer can each undo each bar
+    And the bot's attempt to lift one of its own bars is refused and audited, since unbarring is a person's widening act
     And each finding is in the bot's own words and links the content it judged by recall address, quoting none of it
     And the bot's findings reach no agent as instructions unless that agent's person trusts the bot
     And an agent appointed operator is held to the same limits

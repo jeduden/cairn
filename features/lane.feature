@@ -263,7 +263,7 @@ Feature: Room (LANE)
   @LANE-22 @P2 @I2 @I10 @pending
   Scenario: several people judge one outcome and only the owner changes the intent
     Given an isolated Cairn home
-    And a room shared by its owner, a reviewer and a co-author
+    And a room shared by its owner and two people holding the participant role, a reviewer and a co-author
     When the reviewer records "not met" on C1, the owner records "met" on C1 and the co-author posts a revised criterion
     Then every member sees both verdicts on C1 side by side, each with its judge's petname and role
     And neither verdict replaces the other
