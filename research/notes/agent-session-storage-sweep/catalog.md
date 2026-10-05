@@ -153,8 +153,8 @@ model cannot write ([OpenClaw](https://docs.openclaw.ai/concepts/memory)).
 Claude Code tags peer-agent messages as "not the user"
 ([cross-session messaging](https://code.claude.com/docs/en/cross-session-messaging)).
 Orca sits between the groups: it wraps PR logs and comments as "untrusted
-data only, not instructions", yet types orchestration messages into the
-target agent's terminal verbatim under a "From:" banner
+data only, not instructions", yet types a coordinator agent's task spec
+into a worker's terminal verbatim under a fixed preamble
 ([Orca](https://github.com/stablyai/orca)).
 Anthropic's Compliance API tags each message as verified, client-asserted or
 a synthetic marker
