@@ -121,6 +121,8 @@ Feature: Security (SEC)
     And the at-rest encryption key is read from its secret reference on each use, not from the environment
     And no key or credential value appears in the store, a segment, derived state, a backup, an export, the audit log or any log output
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
+    When a session's harness hands a seat's private key to its MCP server at launch
+    Then the key lives only in that server's memory for the session, and no file, log, event, backup or output carries it
 
   @SEC-11 @P0 @I2 @I7 @pending
   Scenario Outline: project configuration may only tighten security settings

@@ -182,3 +182,10 @@ Feature: Assumptions register (ASM)
     When Cairn reads the clone with process creation and the network forbidden
     Then it resolves the root commit, HEAD, every ref and the tree of every ref
     And no process was started and no connection was opened
+
+  @ASM-21 @pending
+  Scenario: the harness hands a seat's private key to its own MCP server outside the model's context (S4)
+    Given a recorded plugin launch of Claude Code "supported" with its MCP server
+    When the harness starts the MCP server for a session that holds a seat key
+    Then the MCP server receives the key at launch through a channel the harness keeps out of the model's context
+    And no transcript line, hook payload or tool result of the session carries the key

@@ -2,7 +2,7 @@
 title: "2. Context"
 summary: >-
   Stakeholders, deployment context, the assumptions register
-  (ASM-01..20) about Claude Code behaviour that M0 must verify,
+  (ASM-01..21) about Claude Code behaviour that M0 must verify,
   the hard constraints (CON-01..06), and the personas U1–U9.
 ---
 # 2. Context
@@ -64,6 +64,7 @@ requirements are re-planned.
 | ASM-18 | While a `PermissionRequest` hook runs, Claude Code's own prompt stays answerable, and the hook may return no decision                                                                                                                                                                  | none yet; the fleet-developer review suspects not                                        | S9          | OWN-06, OWN-15           |
 | ASM-19 | The Agent SDK, ACP and the Codex app-server expose input interfaces for steer, interrupt and stop                                                                                                                                                                                      | none yet                                                                                 | S10         | OWN-03, OWN-15           |
 | ASM-20 | The root commit, HEAD, refs and trees of a clone are obtainable within the core's boundary: no program start, no network                                                                                                                                                               | none yet                                                                                 | S11         | LANE-02, LANE-06, REC-20 |
+| ASM-21 | The harness can hand a seat's private key to its own MCP server at launch, outside the model's context                                                                                                                                                                                 | none yet                                                                                 | S4          | SEC-10, LANE-23, LANE-24 |
 
 ## 2.4 Constraints
 

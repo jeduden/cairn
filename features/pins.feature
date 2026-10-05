@@ -71,10 +71,10 @@ Feature: Pins (PIN)
   Scenario: only constraint, preference and intent pins are injected automatically
     Given an isolated Cairn home
     And one active pin of each type "constraint", "preference", "decision", "fact" and "episode"
-    And a room of the session whose owner set an intent, stored as its pin of type "intent"
+    And a room of the session whose owner set an intent, stored as its pin of type "intent", and recorded a verdict, stored as a pin of type "verdict"
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "constraint", "preference" and "intent" pins verbatim
-    And the restore block includes no "decision", "fact" or "episode" pin
+    And the restore block includes no "decision", "fact", "episode" or "verdict" pin
     When the operator runs "cairn pin add --type note 'Prefer tabs'"
     Then the command exits 2
     When the operator runs "cairn pin add --type intent 'Ship CSV export'"
@@ -111,16 +111,19 @@ Feature: Pins (PIN)
     And the output has no warning about the pin "Run go test before committing."
 
   @PIN-10 @P0 @I3 @I2 @pending
-  Scenario: a restore block holds the principal's trusted pins of every room the session has belonged to
+  Scenario: a restore block holds the principal's trusted pins of every room the session's recorded joins name
     Given an isolated Cairn home
-    And a session that started in room "L1" and moved to room "L2", into which room "L3" was then merged
+    And a session whose writer log records its joins to room "L1" and then room "L2", into which room "L3" was then merged
+    And a branch switch that moved the session's later events into room "L4", which it never joined
     And trusted pins of the session's principal scoped to "L1", "L3", the session and the whole project, a tenant-configuration pin, and a pin in "L2" written by another principal
-    And the principal's stamp on one version of an agent's pin in "L1"
+    And the principal's stamp on one version of an agent's pin in "L1", and on one version of a second pin another principal wrote in "L2"
+    And a trusted pin of the principal scoped to "L4"
     And a principal's "/pin" whose creating event was recorded in interactive mode, while the current mode is "automation"
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block holds the "L1" pin, the "L3" pin as a pin of "L2", the session pin, the project-wide pin, the tenant-configuration pin as project-wide, the interactive-mode pin, and the stamped version
+    Then the restore block holds the "L1" pin, the "L3" pin as a pin of "L2", the session pin, the project-wide pin, the tenant-configuration pin as project-wide, the interactive-mode pin, and both stamped versions, each under its original author
+    And the restore block holds no pin of "L4"
     And the restore block names "L1" and "L2" by id, and the merged room by both "L2" and "L3"
-    And the other principal's pin is stated only by count, room id and key fingerprint, with no text, and an audit entry records it
+    And the other principal's unstamped pin is stated only by count, room id and key fingerprint, with no text, and an audit entry records it
 
   @PIN-11 @P2 @I3 @I6 @pending
   Scenario Outline: a pin active on another of the owner's nodes but not here is stated by count and reason
