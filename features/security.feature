@@ -94,8 +94,11 @@ Feature: Security (SEC)
     And "secrets" holds a Bash result whose output carries an AWS access key in both "message.content" and "toolUseResult"
     When the operator runs "cairn ingest --all"
     Then no stored text field, payload, or hook input contains an AWS access key or "ACME-12345678"
-    And each secret is replaced by "[REDACTED:<rule>:<HASH8>]"
-    And the same secret yields the same tenant-salted HASH8 at every occurrence
+    And each secret is replaced by "[REDACTED:<rule>]", with no hash or other value derived from the secret
+    And no stored event, segment, export or replicated structure carries a value from which the secret could be confirmed
+    And any correlation of the repeated AWS access key lives only in a node-local index under this node's own storage key
+    When the operator runs "cairn purge --session secrets"
+    Then the correlation index holds no entry for the purged events
 
   @SEC-09 @P1 @pending
   Scenario: the database and payload store can be encrypted at rest
@@ -106,14 +109,17 @@ Feature: Security (SEC)
     And the deployment documentation requires encrypted volumes when encryption is not enabled
 
   @SEC-10 @P0 @I4 @pending
-  Scenario: the core holds only its own keys, generated on the node and never exposed
+  Scenario: the core holds only its own keys and the at-rest key, never exposed
     Given an isolated Cairn home
-    And the parent environment sets "ANTHROPIC_API_KEY", "GITHUB_TOKEN" and a writer key value
+    And the parent environment sets "ANTHROPIC_API_KEY", "GITHUB_TOKEN", a writer key value and an at-rest encryption key value
     And no platform key store is available
+    And encryption at rest is on, with its key named by a secret reference to a file only the tenant's user can read
     When the operator runs "cairn status --json"
+    And the operator runs "cairn backup"
     Then the writer key was generated on the node into a file only the tenant's user can read, not taken from the environment
     And the status says the key is a file an unsandboxed agent of the same user could read
-    And no key or credential value appears in the store, a segment, a backup, an export, the audit log or any log output
+    And the at-rest encryption key is read from its secret reference on each use, not from the environment
+    And no key or credential value appears in the store, a segment, derived state, a backup, an export, the audit log or any log output
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
 
   @SEC-11 @P0 @I2 @I7 @pending
@@ -122,16 +128,16 @@ Feature: Security (SEC)
     And a project ".cairn.toml" setting "<key>" to "<value>"
     When the operator runs "cairn status --json"
     Then the effective value of "<key>" is unchanged by the project file
-    And an audit entry records "project configuration attempted to loosen <key>"
+    And an audit entry records "project configuration attempted to loosen <key>", and a counter counts it
 
     Examples:
-      | key                          | value       |
-      | inject.on_prompt             | true        |
-      | inject.on_start.landmarks    | true        |
-      | recall.default_session_scope | all         |
-      | mode                         | interactive |
-      | flagging.enabled             | false       |
-      | redaction.extra_patterns     | []          |
+      | key                       | value       |
+      | inject.on_prompt          | true        |
+      | inject.on_start.landmarks | true        |
+      | recall.default_scope      | project     |
+      | mode                      | interactive |
+      | flagging.enabled          | false       |
+      | redaction.extra_patterns  | []          |
 
   @SEC-12 @P0 @I5 @pending
   Scenario Outline: quarantine takes effect immediately on the recording node and is recorded
@@ -164,12 +170,12 @@ Feature: Security (SEC)
     And the example PreToolUse policy hook requires approval for a configured sensitive action
 
   @SEC-14 @P0 @I5 @pending
-  Scenario: purge rewrites the database with secure delete and unlinks payloads
+  Scenario: purged content is not recoverable from the storage the purge freed
     Given an isolated Cairn home
-    And a session "s-1" with events and payload files
+    And a session "s-1" with events holding the marker "zebra-purge-7" and payload files
     When the operator runs "cairn purge --session s-1"
     Then the command exits 0
-    And SQLite secure_delete was enabled for the operation and the database was rewritten
+    And no byte sequence "zebra-purge-7" remains in any file under the Cairn home, free space inside those files included
     And the session's payload files no longer exist
     And the documentation states that SSD erasure is not guaranteed without encryption at rest
 
@@ -197,18 +203,21 @@ Feature: Security (SEC)
     And it compares Cairn with Zed Delta control by control on record signing, co-author trust, central-service dependence and key custody
 
   @SEC-18 @P0 @I8 @pending
-  Scenario Outline: paths outside the allowed roots are rejected and audited
+  Scenario Outline: paths outside the allowed roots are rejected and audited, and the session's own repository is read-only
     Given an isolated Cairn home
     And the transcript roots are "~/.claude/projects"
-    When the hook "Stop" runs with a "transcript_path" of "<path>"
-    Then the path is rejected and nothing is read from it
-    And an audit entry records "path outside allowed roots"
+    And a session whose hook "cwd" is "~/src/app/pkg", inside a repository whose top level is "~/src/app"
+    When the hook "Stop" runs and a hook input, transcript field or worktree checkpoint names the path "<path>"
+    Then <result>
 
     Examples:
-      | path                                                     |
-      | /etc/passwd                                              |
-      | ~/.claude/projects/../../.ssh/id_ed25519                 |
-      | ~/.claude/projects/p/link-to-root.jsonl (a symlink to /) |
+      | path                                                     | result                                                                                                 |
+      | /etc/passwd                                              | the path is rejected, nothing is read from it, and an audit entry records "path outside allowed roots" |
+      | ~/.claude/projects/../../.ssh/id_ed25519                 | the path is rejected, nothing is read from it, and an audit entry records "path outside allowed roots" |
+      | ~/.claude/projects/p/link-to-root.jsonl (a symlink to /) | the path is rejected, nothing is read from it, and an audit entry records "path outside allowed roots" |
+      | ~/src/app/README.md                                      | the file is read, and nothing in the repository is written                                             |
+      | ~/src/app/.git/HEAD                                      | the file is read, and nothing in the repository is written                                             |
+      | ~/src/app/docs/key (a symlink to ~/.ssh/id_ed25519)      | the path is rejected, nothing is read from it, and an audit entry records "path outside allowed roots" |
 
   @SEC-19 @P0 @I4 @pending
   Scenario: every component, process and protocol sits in exactly one boundary of the register

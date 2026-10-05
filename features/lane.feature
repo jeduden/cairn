@@ -229,14 +229,15 @@ Feature: Lane (LANE)
     And a run marked unbound names the edits that unbound it
 
   @LANE-20 @P1 @I2 @I3 @pending
-  Scenario: the owner's intent is versioned and restored word for word
+  Scenario: the owner's intent is the lane's first pin, versioned and restored word for word
     Given an isolated Cairn home
     And a lane whose owner set the intent "add CSV export" with criteria "C1 exports every column" and "C2 keeps the header row"
     And an agent of the lane proposed a criterion "C3 streams large files"
     When the owner revises C2 and the agent's context compacts
-    Then the intent's second version is recorded with its diff against the first
-    And the restore block carries the second version word for word with its version
-    And C3 stays untrusted text until the owner adopts it, exactly as shown
+    Then the intent is stored as the lane's first pin, of type "intent", at the highest priority
+    And the revision is recorded as the removal of the first version's pin followed by the addition of the second, with its version and its diff against the first
+    And the restore block carries the second version word for word with its version, among the active pins and nowhere else
+    And C3 stays an inactive, untrusted candidate until the owner adopts it, exactly as shown
 
   @LANE-21 @P1 @I2 @I10 @pending
   Scenario: every result traces to the intent it was produced under

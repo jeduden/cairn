@@ -100,6 +100,9 @@ Feature: Owner acts (OWN)
     And the endorsement is a signed owner act naming the post's commitment, writer key, target agent, original text and sent text
     And the post's writer is shown the edit as a diff
     And the text reaches the agent through the harness's input interface in a fixed template naming the writer key's short fingerprint and the post's recall address, with no petname
+    When the post's writer is given the co-author role and the lane's settings are changed to the most open values
+    Then the writer's later posts still reach the principal's agents only as untrusted recall or by endorsement
+    And a trust grant naming the writer's key that the principal records is not honoured, since its requirements have not shipped
 
   @OWN-09 @P1 @I2 @pending
   Scenario Outline: nothing but a current owner act starts, resumes or sends text to an agent
@@ -303,7 +306,10 @@ Feature: Owner acts (OWN)
     And a lane where the owner recorded "needs changes" on C2
     When the owner sends the correction "keep the header row in every file" and retries from an earlier checkpoint
     Then the correction reaches the agent through the harness's input in the fixed template naming the verdict, C2 and the results it concerns
-    And the retry starts a new session in a new worktree at that checkpoint with the intent in force and the correction
+    And the retry starts a new session in a new worktree at that checkpoint, given the correction and the intent pin in force through its restore block
     And the retry receives no content of the abandoned attempt except what it recalls
     And the abandoned attempt stays on record, shown beside the retry
     And C2 reads "unjudged" until the next verdict
+    When the owner revises the intent from the same verdict
+    Then a new version of the lane's intent pin is recorded
+    And it reaches the lane's agents in the same fixed template and, as a pin, in their next restore block

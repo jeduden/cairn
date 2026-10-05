@@ -116,14 +116,17 @@ Feature: Record (REC)
     And events of the two writers are ordered by the heads each cites, never by wall-clock time
 
   @REC-11 @P0 @pending
-  Scenario: event and payload text is full-text indexed up to the indexing cap
+  Scenario: event and payload text is full-text indexed up to the indexing cap, with ranked search
     Given an isolated Cairn home
     And a project with a Claude Code transcript "main-session"
     And "main-session" holds a 2 MiB tool result with "quokka-early" in its first KiB and "quokka-late" beyond its first 1 MiB
+    And "main-session" holds one user turn naming "wombat" once and another naming it five times
     When the operator runs "cairn ingest --all"
     And Claude calls the MCP tool "search" with query "quokka-early"
     Then the tool result event is a hit
     And a search for "quokka-late" returns no hit, because indexing stops at the default 1 MiB cap
+    When Claude calls the MCP tool "search" with query "wombat"
+    Then the hits are ranked by score, the user turn naming "wombat" five times above the one naming it once
 
   @REC-12 @P0 @I10 @pending
   Scenario: events are appended in source order and seq alone defines order

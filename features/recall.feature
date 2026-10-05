@@ -38,7 +38,7 @@ Feature: Recall (RCL)
   Scenario: expand returns exact post-redaction content under the token cap
     Given an isolated Cairn home
     And a project with a Claude Code transcript "large-payloads"
-    When Claude calls the MCP tool "expand" with seq_from "w-1·1", seq_to "w-1·400"
+    When Claude calls the MCP tool "expand" with seq_from "w-1:1", seq_to "w-1:400"
     Then the result is wrapped in the recall envelope
     And the items hold the exact post-redaction content with payload references resolved
     And the envelope is at most 8,000 tokens with "truncated" true and a "next_cursor"
@@ -53,10 +53,10 @@ Feature: Recall (RCL)
     And the envelope carries "cairn_envelope" 1 and the fixed untrusted-data notice
 
     Examples:
-      | tool   | args                                |
-      | search | query "deploy"                      |
-      | expand | seq_from "w-1·1", seq_to "w-1·20" |
-      | get    | seq "w-1·7"                         |
+      | tool   | args                              |
+      | search | query "deploy"                    |
+      | expand | seq_from "w-1:1", seq_to "w-1:20" |
+      | get    | seq "w-1:7"                       |
 
   @RCL-05 @P0 @I8 @pending
   Scenario: recall defaults to the current session and widening to lane or project is explicit and logged
@@ -66,6 +66,9 @@ Feature: Recall (RCL)
     Then every hit belongs to the current session
     And with scope "lane" the hits come from every session of the current lane, and with scope "project" from every lane of the project, and an audit entry logs each widening
     And no scope returns a hit from the foreign lane or from another project
+    When Claude calls the MCP tool "get" with seq "w-2:5", an event of another session of the current lane, and no scope
+    Then the event is not returned, and the result says the address lies outside the current scope
+    And with scope "lane" the event is returned, and an audit entry logs the widening
 
   @RCL-06 @P0 @I5 @pending
   Scenario: quarantined events are never recalled and purged ranges return a tombstone
@@ -73,7 +76,7 @@ Feature: Recall (RCL)
     And a project with a Claude Code transcript "poisoned-web"
     And the operator runs "cairn quarantine add --range w-1:12-12"
     And the operator runs "cairn purge --range w-1:30-40"
-    When Claude calls the MCP tool "expand" with seq_from "w-1·1", seq_to "w-1·50"
+    When Claude calls the MCP tool "expand" with seq_from "w-1:1", seq_to "w-1:50"
     Then the result is wrapped in the recall envelope
     And no item has address w-1·12 and no item lies in w-1·30–40, which appears as a tombstone with reason "purged"
 
@@ -87,19 +90,22 @@ Feature: Recall (RCL)
     And the counter "recall_calls" increases by 1
 
   @RCL-08 @P1 @I1 @pending
-  Scenario Outline: every address Cairn shows resolves through get or expand
+  Scenario Outline: every address Cairn shows, and its ASCII input form, resolves wherever an address is taken
     Given an isolated Cairn home
     And a project with a Claude Code transcript "short-session"
     And an event address shown to a person or an agent in <form> form
     When Claude calls the MCP tool "<tool>" with that address
     Then the result holds exactly the events the address names
     And an address of a purged or quarantined event resolves to its tombstone or quarantine notice
+    And "cairn expand" given the same address in the same form returns the same events
 
     Examples:
-      | form  | tool   |
-      | short | get    |
-      | range | expand |
-      | full  | get    |
+      | form                                 | tool   |
+      | short                                | get    |
+      | range                                | expand |
+      | full                                 | get    |
+      | ASCII input, such as "w-1:7"         | get    |
+      | ASCII input range, such as "w-1:3-9" | expand |
 
   @RCL-09 @P1 @I2 @I6 @pending
   Scenario Outline: every recalled item carries its writer, actor, trust, origin and chain status

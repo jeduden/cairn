@@ -76,18 +76,18 @@ Feature: Engineering quality (ENG)
     Then the property "<property>" holds for every one
 
     Examples:
-      | property                                          |
-      | seq is strictly increasing and gap-free           |
-      | ingest twice equals ingest once                   |
-      | rebuild reproduces projections exactly            |
-      | envelope encoding round-trips any byte sequence   |
-      | sanitized fields never contain restore delimiters |
+      | property                                                                                                           |
+      | within each writer's log, seq is strictly increasing and gap-free, so no two events share an address (writer, seq) |
+      | ingest twice equals ingest once                                                                                    |
+      | rebuild reproduces projections exactly                                                                             |
+      | envelope encoding round-trips any byte sequence                                                                    |
+      | sanitized fields never contain restore delimiters                                                                  |
 
   @ENG-09 @P0 @pending
   Scenario: the suite passes under the race detector and survives a concurrency soak
     Given an isolated Cairn home
     When 50 concurrent writers append 1000000 events
-    Then no seq value is duplicated or skipped
+    Then no two events share an address (writer, seq), and no seq is duplicated or skipped within any writer's log
     And "cairn verify" exits 0
     And the whole suite passes with -race
 

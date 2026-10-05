@@ -60,7 +60,7 @@ Feature: Non-functional requirements (NFR)
     Given an isolated Cairn home
     And a synthetic project with 10M events, 100 GiB of payloads and one session above 10M tokens
     When 50 sessions and subagents ingest concurrently
-    Then every event is stored and recallable by its seq
+    Then every event is stored and recallable by its address (writer, seq)
     And "cairn verify" exits 0
 
   @NFR-06 @pending
@@ -94,7 +94,7 @@ Feature: Non-functional requirements (NFR)
     And 50 writers each appending 10,000 events to one project
     When all writers run concurrently to completion
     Then the store holds exactly 500,000 events
-    And no two events share a seq value
+    And no two events share an address (writer, seq), and no seq is duplicated within a writer's log
     And "cairn verify" exits 0
 
   @NFR-09 @pending

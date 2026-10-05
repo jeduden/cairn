@@ -134,7 +134,7 @@ Feature: Provenance and trust (PRV)
     When the operator runs "cairn ingest --all"
     Then the WebFetch result is stored as a "web" event flagged "instruction_like"
     And its hit from the MCP tool "search" carries the flag, and no landmark contains its text
-    And "cairn audit --flagged" lists its seq
+    And "cairn audit --flagged" lists its address (writer, seq)
 
     Examples:
       | content                                                      |

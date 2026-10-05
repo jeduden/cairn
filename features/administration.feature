@@ -34,7 +34,7 @@ Feature: Administration and lifecycle (ADM)
     And the output states that managed settings are in force and names the documented managed install path
 
   @ADM-04 @P0 @I6 @I7 @pending
-  Scenario Outline: configuration is validated strictly, managed policy overrides every layer, and a widening change waits for a recorded act
+  Scenario Outline: configuration is validated strictly, managed policy overrides every layer, a project file only tightens, and a tenant widening waits for a recorded act
     Given an isolated Cairn home
     And <configuration>
     When a session runs and the operator starts "<component>"
@@ -47,8 +47,9 @@ Feature: Administration and lifecycle (ADM)
       | a managed policy file in a directory the tenant can write                                       | the run component       | refuses to start, and an audit entry and a counter record why                                 |
       | an unparsable managed policy file                                                               | the lane-view component | refuses to start, and an audit entry and a counter record why                                 |
       | a managed policy file with an unknown key                                                       | the run component       | refuses to start, and an audit entry and a counter record why                                 |
-      | a project ".cairn.toml" that turns on the lane view with no widening act recording its digest   | the lane-view component | stays off                                                                                     |
-      | a project ".cairn.toml" that turns on the lane view and a widening act that recorded its digest | the lane-view component | starts                                                                                        |
+      | a project ".cairn.toml" that turns on the lane view and a widening act that recorded its digest | the lane-view component | stays off, and an audit entry and a counter record the ignored key                            |
+      | a tenant config.toml that turns on the lane view with no widening act recording its digest      | the lane-view component | stays off                                                                                     |
+      | a tenant config.toml that turns on the lane view and a widening act that recorded its digest    | the lane-view component | starts                                                                                        |
       | a managed policy that turns on the lane view and a tenant config that turns it off              | the lane-view component | starts                                                                                        |
       | a tenant config.toml containing "recal.max_k = 10"                                              | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
       | a tenant config.toml containing "recall.max_k = 'ten'"                                          | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
@@ -156,7 +157,7 @@ Feature: Administration and lifecycle (ADM)
     And a project with a Claude Code transcript "session-a" with user prompts and web tool results
     When the operator runs "cairn export --trusted-only"
     Then the command exits 0
-    And every exported JSONL line is a trusted event carrying its seq, provenance and trust
+    And every exported JSONL line is a trusted event carrying its address (writer, seq), provenance and trust
     And no untrusted event appears in the export
 
   @ADM-13 @P0 @I7 @pending

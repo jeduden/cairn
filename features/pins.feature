@@ -67,13 +67,16 @@ Feature: Pins (PIN)
       | automation  | inject.on_prompt = true   | 0          | 0         |
 
   @PIN-06 @P0 @I3 @pending
-  Scenario: only constraint and preference pins are injected automatically
+  Scenario: only constraint, preference and intent pins are injected automatically
     Given an isolated Cairn home
     And one active pin of each type "constraint", "preference", "decision", "fact" and "episode"
+    And a lane of the session whose owner set an intent, stored as its pin of type "intent"
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block includes the "constraint" and "preference" pins verbatim
+    Then the restore block includes the "constraint", "preference" and "intent" pins verbatim
     And the restore block includes no "decision", "fact" or "episode" pin
     When the operator runs "cairn pin add --type note 'Prefer tabs'"
+    Then the command exits 2
+    When the operator runs "cairn pin add --type intent 'Ship CSV export'"
     Then the command exits 2
 
   @PIN-07 @P1 @I2 @I3 @pending

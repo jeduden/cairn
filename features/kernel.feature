@@ -82,7 +82,7 @@ Feature: Compute kernel (CMP)
     And a project with a Claude Code transcript "session-a"
     And a project with a Claude Code transcript "session-b"
     And the operator has quarantined w-1·7 with "cairn quarantine add --range w-1:7-7"
-    When Claude calls the MCP tool "kernel_exec" with code "print(cairn.get(seq='w-1·7'), cairn.search(query='x', scope='project'))"
+    When Claude calls the MCP tool "kernel_exec" with code "print(cairn.get(seq='w-1:7'), cairn.search(query='x', scope='project'))"
     Then the kernel returns exactly what the MCP tools "get" and "search" return for the same arguments
     And w-1·7, foreign lanes and other projects are absent
 
