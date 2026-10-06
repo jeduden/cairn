@@ -36,7 +36,7 @@ offers also exists in the CLI or MCP.
 2. The person's other devices, as enrolled, mutually authenticated
    peers (B2).
 3. Browsers on other machines with a login.
-4. A service on a host the owner names.
+4. A service on a host the principal names.
 
 Stages 1 and 2 fit I4 as written. Stages 3 and 4 need new I4 wording,
 approved by ADR with a security review, before any requirement asks

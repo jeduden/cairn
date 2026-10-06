@@ -6,21 +6,23 @@ Feature: Landmarks (LMK)
   implements the requirement lands.
 
   @LMK-01 @P0 @I10 @pending
-  Scenario: spans start at every user turn, compaction and subagent boundary
+  Scenario: spans start at every user turn, compaction, subagent boundary and change of writer
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "turns-compaction-subagent"
     And "turns-compaction-subagent" holds an isMeta "user" line and a "user" line of command output
-    When the operator runs "cairn landmarks --json"
-    Then a new span starts at each user turn, each compaction, and each subagent start and end
+    And midway the run joins room "L1", which names its current branch, so its later events go to the writer of its seat in "L1"
+    When the person runs "cairn landmarks --json"
+    Then a new span starts at each user turn, each compaction, each subagent start and end, and where the run's events move to its seat's writer in "L1"
+    And no span holds events of two writers
     And neither the isMeta line nor the command output starts a span
-    And after the operator runs "cairn rebuild" the span boundaries are byte-identical
+    And after the person runs "cairn rebuild" the span boundaries are byte-identical
 
   @LMK-02 @P0 @I2 @pending
   Scenario Outline: a closed span yields one landmark of structural fields only
     Given an isolated Cairn home
     And deployment mode "<mode>"
     And an agent run with a Claude Code transcript "two-closed-spans"
-    When Claude calls the MCP tool "landmarks" with run "current"
+    When Claude calls the MCP tool "landmark_list" with run "current"
     Then there is one landmark per closed span with its address range, turn range, event counts by kind, tool call counts, touched file paths and error indicator
     And the landmark user-turn excerpt is <excerpt>
 
@@ -34,7 +36,7 @@ Feature: Landmarks (LMK)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "hostile-field-names"
     And the transcript has a <field> value "<value>"
-    When the operator runs "cairn landmarks --json"
+    When the person runs "cairn landmarks --json"
     Then the landmark shows that <field> as "<shown>"
 
     Examples:
@@ -49,8 +51,8 @@ Feature: Landmarks (LMK)
   Scenario: flagged and quarantined events count but contribute no text
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "flagged-and-quarantined"
-    And the operator runs "cairn quarantine add --range w-1:12-12"
-    When the operator runs "cairn landmarks --json"
+    And the person runs "cairn quarantine add --range w-1:12-12"
+    When the person runs "cairn landmarks --json"
     Then the event counts include the flagged event and the quarantined event w-1·12
     And no tool name, file path or excerpt in any landmark comes from those events
 
@@ -58,7 +60,7 @@ Feature: Landmarks (LMK)
   Scenario: landmarks roll up into tiers of at most k blocks
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "seventy-spans"
-    When the operator runs "cairn landmarks --json"
+    When the person runs "cairn landmarks --json"
     Then no tier holds more than 8 blocks
     And the newest block keeps full detail while older blocks collapse to one line each and merge into the next tier
     And the index holds O(k log_k n) blocks for n = 70 spans
@@ -68,6 +70,6 @@ Feature: Landmarks (LMK)
     Given an isolated Cairn home
     And headline generation is enabled
     And an agent run with a Claude Code transcript "trusted-and-web-spans"
-    When the operator runs "cairn landmarks --json"
+    When the person runs "cairn landmarks --json"
     Then a span whose every event is trusted may carry a headline
     And a span containing any untrusted event carries no headline

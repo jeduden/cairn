@@ -19,8 +19,8 @@ Feature: Administration and lifecycle (ADM)
     And a Claude Code settings file with unrelated user entries
     And "cairn install --scope user" showed a diff of every configuration change, was declined and left the settings file unchanged
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
-    When the operator runs "cairn uninstall" and keeps only the device key
-    Then the output lists the hooks, plugin and MCP registration, room-view credentials, run-component endpoints, writer and device keys, enrolments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
+    When the person runs "cairn uninstall" and keeps only the device key
+    Then the output lists the hooks, plugin and MCP registration, room-view credentials, launcher endpoints, seat and device keys, enrolments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
@@ -28,45 +28,45 @@ Feature: Administration and lifecycle (ADM)
   Scenario: managed settings are detected and never written
     Given an isolated Cairn home
     And a managed settings file that registers the Cairn hooks
-    When the operator runs "cairn install --scope user --yes"
+    When the person runs "cairn install --scope user --yes"
     Then the command exits 1
     And the managed settings file is byte-identical to before
     And the output states that managed settings are in force and names the documented managed install path
 
   @ADM-04 @P0 @I6 @I7 @pending
-  Scenario Outline: configuration is validated strictly, managed policy overrides every layer, repository configuration only tightens, and a widening in the person's configuration waits for a recorded act
+  Scenario Outline: configuration is validated strictly, managed policy overrides every layer, repository configuration only tightens, and a widening in the person's configuration waits for a recorded principal act
     Given an isolated Cairn home
     And <configuration>
-    When an agent runs and the operator starts "<component>"
+    When an agent runs and the person starts "<component>"
     Then "<component>" <result>
     And the core records every event of the run
 
     Examples:
-      | configuration                                                                                   | component               | result                                                                                        |
-      | a managed policy file at the documented system path that the person can write                   | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
-      | a managed policy file in a directory the person can write                                       | the run component       | refuses to start, and an audit entry and a counter record why                                 |
-      | an unparsable managed policy file                                                               | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
-      | a managed policy file with an unknown key                                                       | the run component       | refuses to start, and an audit entry and a counter record why                                 |
+      | configuration                                                                                      | component               | result                                                                                        |
+      | a managed policy file at the documented system path that the person can write                      | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
+      | a managed policy file in a directory the person can write                                          | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
+      | an unparsable managed policy file                                                                  | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
+      | a managed policy file with an unknown key                                                          | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
       | a repository ".cairn.toml" that turns on the room view and a widening act that recorded its digest | the room-view component | stays off, and an audit entry and a counter record the ignored key                            |
-      | the person's config.toml that turns on the room view with no widening act recording its digest      | the room-view component | stays off                                                                                     |
-      | the person's config.toml that turns on the room view and a widening act that recorded its digest    | the room-view component | starts                                                                                        |
-      | a managed policy that turns on the room view and the person's config that turns it off              | the room-view component | starts                                                                                        |
-      | the person's config.toml containing "recal.max_k = 10"                                              | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
-      | the person's config.toml containing "recall.max_k = 'ten'"                                          | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
-      | the person's config.toml containing "recall.max_k = 500"                                            | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
-      | the person's config.toml containing "payload_threshold_bytes = -1"                                  | cairn status            | exits 2, and the error names the key "payload_threshold_bytes" and the problem "out of range" |
+      | the person's config.toml that turns on the room view with no widening act recording its digest     | the room-view component | stays off                                                                                     |
+      | the person's config.toml that turns on the room view and a widening act that recorded its digest   | the room-view component | starts                                                                                        |
+      | a managed policy that turns on the room view and the person's config that turns it off             | the room-view component | starts                                                                                        |
+      | the person's config.toml containing "recal.max_k = 10"                                             | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
+      | the person's config.toml containing "recall.max_k = 'ten'"                                         | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
+      | the person's config.toml containing "recall.max_k = 500"                                           | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
+      | the person's config.toml containing "payload_threshold_bytes = -1"                                 | cairn status            | exits 2, and the error names the key "payload_threshold_bytes" and the problem "out of range" |
 
   @ADM-05 @P0 @I1 @pending
   Scenario: segment and schema migrations run forward after a verified backup and newer versions are refused
     Given an isolated Cairn home
     And a home whose segments and derived state are at the previous version
     And a segment whose format version is newer than this node supports
-    When the operator runs "cairn migrate"
+    When the person runs "cairn migrate"
     Then a verified backup with its audit chain exists from before the migration
     And the segments and derived state report the current version
     And the newer segment is refused, named in the output and left unchanged
     Given derived state whose schema version is newer than this node supports
-    When the operator runs "cairn status"
+    When the person runs "cairn status"
     Then the command exits 3
     And the derived state is unchanged
 
@@ -74,12 +74,12 @@ Feature: Administration and lifecycle (ADM)
   Scenario: backup and restore keep every later removal and never reuse a writer's log
     Given an isolated Cairn home
     And a home with sealed segments, an open segment, payloads, derived state and an audit log
-    And a backup taken by "cairn backup", followed by a purge of run "run-a" and the end of a pin
-    When the owner runs "cairn restore" as a widening act
-    Then the backup held every segment sealed fresh, the payload store, derived state and the audit log with its chain, no writer or device key, and an audit entry recorded it
+    And a backup taken by "cairn backup", followed by a purge of run "run-a" and the unpin of a pin
+    When the person runs "cairn restore" as a widening principal act
+    Then the backup held every segment sealed fresh, the payload store, derived state and the audit log with its chain, no seat or device key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was restored
     And every event and payload outside run "run-a" recalled before the backup is recalled identically
-    And run "run-a" stays purged and the ended pin stays ended
+    And run "run-a" stays purged and the unpinned pin stays unpinned
     And each restored local writer is followed by a new audited writer, and no restored writer's log gains an event or reuses a seq
     And "cairn verify" exits 0 on the restored home
 
@@ -87,7 +87,7 @@ Feature: Administration and lifecycle (ADM)
   Scenario Outline: purge removes a scope everywhere, erases its commitment keys and leaves a tombstone
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a" in room "room-a"
-    When the operator runs "cairn purge <scope>"
+    When the person runs "cairn purge <scope>"
     Then the command exits 0
     And the purged events are gone from the sealed segments, events, the FTS index, projections, the payload store and every copy of their content
     And the commitment key and payload reference of every purged event are erased
@@ -99,7 +99,7 @@ Feature: Administration and lifecycle (ADM)
       | --room room-a          |
       | --run run-a            |
       | --writer writer-a      |
-      | --actor alice          |
+      | --author alice         |
       | --range writer-a:10-20 |
       | --before 2026-01-01    |
       | --provenance web       |
@@ -108,7 +108,7 @@ Feature: Administration and lifecycle (ADM)
   Scenario: rebuild regenerates derived state byte-identically whatever order the logs arrived in
     Given an isolated Cairn home
     And a second isolated Cairn home with the same node keys, the two holding the same writer logs with pins, quarantine and landmarks, received in opposite orders
-    When the operator runs "cairn rebuild" in each home
+    When the person runs "cairn rebuild" in each home
     Then the command exits 0 in each home
     And "cairn verify" confirms every projection is byte-identical to its state before rebuild
     And the derived state of the two homes is byte-identical
@@ -118,7 +118,7 @@ Feature: Administration and lifecycle (ADM)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a"
     And <damage>
-    When the operator runs "cairn verify"
+    When the person runs "cairn verify"
     Then the command exits 3
     And the output names the failed check "<check>"
 
@@ -133,9 +133,9 @@ Feature: Administration and lifecycle (ADM)
   Scenario: doctor is read-only and doctor --fix shows each change first
     Given an isolated Cairn home
     And a Cairn home whose store file has mode 0644
-    When the operator runs "cairn doctor"
+    When the person runs "cairn doctor"
     Then the store file still has mode 0644
-    When the operator runs "cairn doctor --fix"
+    When the person runs "cairn doctor --fix"
     Then the change "chmod 0600" is shown before it is applied
     And the store file has mode 0600
 
@@ -145,7 +145,7 @@ Feature: Administration and lifecycle (ADM)
     And deployment mode "automation"
     And an agent run with a Claude Code transcript "run-a"
     And the counter "hook_timeout" is 2
-    When the operator runs "cairn status --json"
+    When the person runs "cairn status --json"
     Then the command exits 0
     And the output shows the store location, its size, the schema version and mode "automation"
     And the output shows the counter "hook_timeout" with value 2
@@ -154,7 +154,7 @@ Feature: Administration and lifecycle (ADM)
   Scenario: export writes only trusted events with provenance as JSONL
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a" with user prompts and web tool results
-    When the operator runs "cairn export --trusted-only"
+    When the person runs "cairn export --trusted-only"
     Then the command exits 0
     And every exported JSONL line is a trusted event carrying its address (writer, seq), provenance and trust
     And no untrusted event appears in the export
@@ -163,25 +163,25 @@ Feature: Administration and lifecycle (ADM)
   Scenario: Cairn writes to no git repository beyond the confirmed settings file, the trailer hook and the carrier's location
     Given an isolated Cairn home
     And a git repository with a working tree, refs, notes, configuration and hooks
-    And the owner has enabled the git carrier
-    When an agent runs, the operator confirms "cairn install --scope project" and every Cairn component does its work
+    And the node's principal has enabled the git carrier
+    When an agent runs, the person confirms "cairn install --scope project" and every Cairn component does its work
     Then the only changed file in the working tree is the harness settings file that install wrote
-    And the only new or changed refs lie in the namespaced location the owner enabled for the carrier, and every new object is reachable only from them
+    And the only new or changed refs lie in the namespaced location the node's principal enabled for the carrier, and every new object is reachable only from them
     And the only changed hook is the commit-message hook for room trailers that the confirmed install set up
     And the repository's other refs, notes, configuration and hooks are byte-identical to before
 
   @ADM-14 @P1 @I1 @I5 @pending
-  Scenario Outline: purge by writer key or actor removes one person's data with an audit trail on every node
+  Scenario Outline: purge by seat key or author removes one principal's data with an audit trail on every node
     Given an isolated Cairn home
-    And two nodes that both hold the events of the person "alice" written under the writer key "alice-key"
-    When the operator runs "cairn purge <scope>" on each node
+    And two nodes that both hold the events of the principal "alice" written under the seat key "alice-key"
+    When the person runs "cairn purge <scope>" on each node
     Then neither node holds an event of the selected scope
     And each node's audit log records the purge with its scope and ranges
 
     Examples:
       | scope              |
       | --writer alice-key |
-      | --actor alice      |
+      | --author alice     |
 
   @ADM-15 @P1 @I6 @I9 @I1 @pending
   Scenario Outline: disk quotas refuse and audit what exceeds them and never drop an accepted event
@@ -193,19 +193,19 @@ Feature: Administration and lifecycle (ADM)
     And every event accepted before is still stored and recallable
 
     Examples:
-      | quota               | arrival                                    | outcome                                                                     |
-      | imported writer     | a peer offers another event of that writer | the event is refused and an audit entry records it                          |
-      | peer                | the peer offers another segment            | the segment is refused and an audit entry records it                        |
-      | worktree checkpoint | the hook "Stop" records another checkpoint | the checkpoint is refused and an audit entry records it                     |
-      | local writer        | the run appends another event          | the event is recorded, a failure counter rises and a Needs you item appears |
+      | quota               | arrival                                             | outcome                                                                     |
+      | imported writer     | a peer offers another event of that writer          | the event is refused and an audit entry records it                          |
+      | peer                | the peer offers another segment                     | the segment is refused and an audit entry records it                        |
+      | worktree checkpoint | the hook "Stop" records another worktree checkpoint | the worktree checkpoint is refused and an audit entry records it            |
+      | local writer        | the run appends another event                       | the event is recorded, a failure counter rises and a Needs you item appears |
 
   @ADM-16 @P1 @I6 @pending
   Scenario Outline: status and doctor report every user-run component, peer lag, open chains and boundaries
     Given an isolated Cairn home
-    And managed policy that permits the room-view and peer components, forbids the run component and locks one boundary
+    And managed policy that permits the room-view and peer components, forbids the launcher and locks one boundary
     And the room-view component is running, a bridge has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment
-    When the operator runs "cairn <command>"
-    Then for the room-view, run and peer components and the bridge the output shows whether policy permits it, whether it runs and its failure counters
+    When the person runs "cairn <command>"
+    Then for the room-view component, the launcher, the peer component and the bridge the output shows whether policy permits it, whether it runs and its failure counters
     And the output shows the peer's sync lag for each writer
     And the output names the writer chain that ended without a closed segment
     And the output shows each boundary's state and whether managed policy locks it

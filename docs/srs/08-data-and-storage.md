@@ -13,8 +13,8 @@ illustrative; the implementation MAY differ as long as every constraint marked
 ## 8.1 Home layout
 
 ```text
-$CAIRN_HOME/                          0700, owned by the person's OS user  (N)
-├── config.toml                       the person's configuration           0600
+$CAIRN_HOME/                          0700, owned by one OS user           (N)
+├── config.toml                       the principal's configuration        0600
 ├── home.json                         home ID binding (SEC-03)             0600
 ├── audit/audit-NNNNNN.jsonl          hash-chained audit log               0600
 ├── logs/                             structured logs (optional)

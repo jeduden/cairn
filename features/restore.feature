@@ -9,7 +9,7 @@ Feature: Restore and injection (INJ)
   Scenario: a compaction restart returns pins, landmarks and the recall statement
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "compacted-run"
-    And the operator runs "cairn pin add --type constraint 'Never push directly to main; open a pull request.'"
+    And the person runs "cairn pin add --type constraint 'Never push directly to main; open a pull request.'"
     When the hook "SessionStart" runs with source "compact"
     Then the additionalContext holds a restore block with the active pin verbatim
     And the restore block holds the landmark index of the current run
@@ -19,7 +19,7 @@ Feature: Restore and injection (INJ)
   Scenario Outline: a fresh start returns pins and the recall statement by default
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "prior-history"
-    And the operator runs "cairn pin add --type constraint 'Never push directly to main; open a pull request.'"
+    And the person runs "cairn pin add --type constraint 'Never push directly to main; open a pull request.'"
     When the hook "SessionStart" runs with source "<source>"
     Then the restore block holds the active pin verbatim and the recall statement but no landmark index
     And with "inject.on_start.landmarks" set to true the same hook also returns the landmark index
@@ -62,7 +62,7 @@ Feature: Restore and injection (INJ)
   Scenario: identical record state yields a byte-identical restore block
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "compacted-run"
-    When the hook "SessionStart" runs with source "compact" twice, once before and once after the operator runs "cairn rebuild"
+    When the hook "SessionStart" runs with source "compact" twice, once before and once after the person runs "cairn rebuild"
     Then both restore blocks are byte-identical
     And neither contains a timestamp, an absolute path or a random identifier
 
@@ -96,21 +96,21 @@ Feature: Restore and injection (INJ)
     And the restore block contains no untrusted bytes
 
   @INJ-10 @P1 @I2 @I6 @pending
-  Scenario Outline: waiting-post notices need the room owner's allowance and the person's opt-in, carry counts and addresses only, and are audited
+  Scenario Outline: opt-in notices of waiting posts need the room owner's notice allowance and the agent's principal's notice opt-in, carry counts and addresses only, and are audited
     Given an isolated Cairn home
     And a room holding 2 waiting posts from 2 writers, one containing "POST-CANARY-91c2"
-    And waiting-post notices for the room <setting>
+    And opt-in notices of waiting posts for the room <setting>
     When the hook "<hook>" runs
     Then the hook returns <notice>
-    And any notice is TrustedText holding only the count 2, short key fingerprints and the posts' recall addresses, without "POST-CANARY-91c2" or any other text an author chose
-    And an audit entry records every notice returned
-    And no notice starts or resumes a turn
+    And any opt-in notice is TrustedText holding only the count 2, short key fingerprints and the posts' recall addresses, without "POST-CANARY-91c2" or any other text an author chose
+    And an audit entry records every opt-in notice returned
+    And no opt-in notice starts or resumes a turn
 
     Examples:
-      | setting                                                  | hook             | notice    |
-      | left at the default                                      | UserPromptSubmit | no notice |
-      | allowed by the room's owner only                         | UserPromptSubmit | no notice |
-      | opted into by the agent's person only                    | UserPromptSubmit | no notice |
-      | allowed by the room's owner and opted into by the person | UserPromptSubmit | a notice  |
-      | allowed by the room's owner and opted into by the person | SessionStart     | a notice  |
-      | allowed by the room's owner and opted into by the person | PostToolUse      | no notice |
+      | setting                                                             | hook             | notice    |
+      | left at the default                                                 | UserPromptSubmit | no notice |
+      | allowed by the room's owner only                                    | UserPromptSubmit | no notice |
+      | opted into by the agent's principal only                            | UserPromptSubmit | no notice |
+      | allowed by the room's owner and opted into by the agent's principal | UserPromptSubmit | a notice  |
+      | allowed by the room's owner and opted into by the agent's principal | SessionStart     | a notice  |
+      | allowed by the room's owner and opted into by the agent's principal | PostToolUse      | no notice |

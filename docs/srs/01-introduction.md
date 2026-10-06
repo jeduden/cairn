@@ -22,11 +22,12 @@ compaction and without turning stored history into a prompt-injection channel.
 ## 1.2 Intent
 
 Cairn keeps the **complete, tamper-evident record of what long-running Claude
-agents did**, one room at a time, on the person's own machines. It gives the
-agents exact recall of it and the people working with them a live view of it,
-without any new path from untrusted content to an agent. The record shows
-tampering by anyone but a process of the same user until a receipt leaves the
-machine. Every surface beyond the core is opt-in, bounded and reviewed.
+agents did**, one room at a time, on their principals' own machines. It gives
+the agents exact recall of it and the people working with them a live view of
+it, without any new path from untrusted content to an agent. The record shows
+tampering by anyone but a process of the same OS user until a head receipt
+leaves the machine. Every surface beyond the core is opt-in, bounded and
+reviewed.
 
 Existing tools treat memory as a convenience feature and add security
 afterwards. Cairn treats the memory store as security-critical infrastructure

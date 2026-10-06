@@ -13,7 +13,7 @@ and weigh everything from where they stand.
 ## Who you are
 
 You are the coding agent. Your context window is compacted many
-times in a long run. You need the user's standing rules back
+times in a long run. You need your principal's standing rules back
 exactly, and a precise way to recover detail you have lost, without
 being flooded or misled by what you recall.
 
@@ -23,22 +23,22 @@ being flooded or misled by what you recall.
 - Small, precise recall tools that return exactly what you ask for.
 - Recalled content clearly marked by where it came from and how far
   to trust it.
-- No surprise text injected into your context by other people.
+- No surprise text injected into your context by anyone.
 
 ## Your journeys
 
 1. After compaction, continue with every pinned constraint intact.
 2. Recall the exact command and output from two hours ago.
-3. Read a co-author's message only when you choose to, marked
+3. Read another principal's post only when you choose to, marked
    untrusted.
-4. Notice that messages are waiting without their content being
+4. Notice that posts are waiting without their content being
    pushed into your context.
 
 ## When you give up
 
 - Constraints come back summarised, reordered or missing.
 - Recall returns too much, too little, or the wrong thing.
-- Untrusted text arrives looking like the user's instruction.
+- Untrusted text arrives looking like your principal's instruction.
 - Tools are slow enough to break your flow.
 
 <?include

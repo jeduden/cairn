@@ -41,12 +41,12 @@ Feature: Assumptions register (ASM)
     Given a recorded "~/.claude/projects" tree for Claude Code "supported"
     When the transcript discovery walks the tree
     Then each harness session is one JSONL file under "~/.claude/projects/<project-slug>/"
-    And each subagent transcript lies under "<session>/subagents/"
+    And each subagent transcript lies under "<session_id>/subagents/"
 
   @ASM-04 @pending
   Scenario Outline: transcripts are append-mostly but can be truncated or rewritten (S3)
     Given a recorded transcript before and after a "<flow>" flow for Claude Code "supported"
-    When the operator runs "cairn ingest --all" on each recording in turn
+    When the person runs "cairn ingest --all" on each recording in turn
     Then the second recording is detected as <change>
     And an audit entry records "transcript <change>"
 
@@ -58,7 +58,7 @@ Feature: Assumptions register (ASM)
   @ASM-05 @pending
   Scenario: transcripts can be deleted after cleanupPeriodDays (S3)
     Given a recorded "~/.claude/projects" tree before and after cleanup with "cleanupPeriodDays" of 30
-    When the operator runs "cairn ingest --all" on each recording in turn
+    When the person runs "cairn ingest --all" on each recording in turn
     Then the runs whose transcripts were deleted remain recallable from the store
     And an audit entry records "transcript deleted by harness cleanup"
 
@@ -86,7 +86,7 @@ Feature: Assumptions register (ASM)
   @ASM-08 @pending
   Scenario: self-hosted runners seed ~/.claude into each harness session under one user account (S4)
     Given a recorded self-hosted runner harness session for Claude Code "supported"
-    When the harness session's home and process owner are inspected
+    When the harness session's home and the user account of its process are inspected
     Then the harness session's "~/.claude/" was seeded from the runner host's "~/.claude/"
     And every harness session on the runner ran as the same one user account
 

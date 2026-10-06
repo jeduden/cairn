@@ -2,7 +2,7 @@
 summary: >-
   Build and test commands, the executable requirement matrix (every SRS
   id has one tagged Gherkin scenario, pending until written), the
-  coverage floors, and how CI, the nightly fuzz run and the
+  coverage floors, and how CI, the nightly fuzz job and the
   reproducible, signed release pipeline work.
 ---
 # Development
@@ -64,7 +64,7 @@ is skipped and reported as such, never counted as a pass. godog runs
 the rest in strict mode from `cmd/cairn`'s `TestFeatures`, so a step
 whose text matches no definition fails instead of passing as
 undefined. CI's test job prints the count of passing and pending
-scenarios on every run.
+scenarios each time it runs.
 
 - `go test ./cmd/cairn -run TestFeatures -v` — every scenario, pending
   ones listed as skipped
@@ -160,7 +160,7 @@ required check after a job, never after the workflow.
 target in the tree for five minutes each (ENG-07). It discovers the
 targets, so a new one is fuzzed the night after it merges. The crash
 harness (ENG-06), the concurrency soak (ENG-09) and the live Claude
-Code run (ENG-17) join it as their plans land.
+Code contract test (ENG-17) join it as their plans land.
 
 [review.yml](../.github/workflows/review.yml) reviews each pull
 request from a branch of this repository once its CI passes (ENG-21,
@@ -180,7 +180,7 @@ otherwise it requests changes.
 [release.yml](../.github/workflows/release.yml) runs from the Actions
 "Run workflow" button with a version like `v0.1.0`. A pushed tag is
 deliberately not the trigger: a failed build would leave a public tag
-pointing at nothing. The run takes these steps:
+pointing at nothing. The workflow takes these steps:
 
 1. Validate the version and run vet and the race-enabled suite.
 2. Build each target on two builders, Linux and macOS, with

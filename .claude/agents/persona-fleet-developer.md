@@ -21,19 +21,19 @@ five minutes.
 ## What you need
 
 - See at a glance which agent needs you and why.
-- Answer a permission request or a question without hunting for the
-  right terminal.
+- Answer a held request, a permission or a question, without hunting
+  for the right terminal.
 - Trust that nothing an agent did is lost, even after compaction.
 - Keep the speed of your current setup; no new step per agent.
 
 ## Your journeys
 
-1. Morning: start three new rooms from issues, check two that ran
-   overnight.
+1. Morning: start three new rooms from issues, check two whose agents
+   ran overnight.
 2. An agent asks for permission; answer it from wherever you are.
 3. Two agents touch the same file; find out before they collide.
 4. An agent goes off course; stop it, redirect it, carry on.
-5. A room is done; hand it to review and land it.
+5. A room's work is done; hand its branch to review and land it.
 
 ## When you give up
 

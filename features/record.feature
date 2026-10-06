@@ -11,7 +11,7 @@ Feature: Record (REC)
     And the person's configuration <roots>
     And an agent run with a Claude Code transcript "main-run"
     And "main-run" lies under "<root>"
-    When the operator runs "cairn ingest --all"
+    When the person runs "cairn ingest --all"
     Then the command exits 0
     And every line of "main-run" is stored as an event of its run
 
@@ -25,7 +25,7 @@ Feature: Record (REC)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "parent-run"
     And a subagent transcript "explore-agent" of "parent-run" naming the agent "Explore"
-    When the operator runs "cairn ingest --all"
+    When the person runs "cairn ingest --all"
     Then the source "explore-agent" records "parent-run" as its parent run
     And the source "explore-agent" records the agent identity "Explore"
 
@@ -34,8 +34,8 @@ Feature: Record (REC)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
     And "main-run" holds 40 lines and has been ingested, then grows by 10 lines
-    When the operator runs "cairn ingest --all"
-    And the operator runs "cairn ingest --all"
+    When the person runs "cairn ingest --all"
+    And the person runs "cairn ingest --all"
     Then the record holds exactly 50 events, one per line of "main-run"
     And the cursor of "main-run" holds its byte length and the SHA-256 of its consumed prefix
 
@@ -53,7 +53,7 @@ Feature: Record (REC)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
     And "main-run" holds a malformed JSON line and a line of unknown type "future_kind", each containing an API key
-    When the operator runs "cairn ingest --all"
+    When the person runs "cairn ingest --all"
     Then both lines are stored as events of kind "unparsed" holding the raw line with the API key redacted
     And no line of "main-run" is missing from the record
     And the counter "events_unparsed" increases by 2
@@ -63,7 +63,7 @@ Feature: Record (REC)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run" whose writer has appended seq 1 to 20 and purged seq 5-9
     And an append transaction of that writer that rolled back
-    When the operator runs "cairn ingest --all" while the hook "PostToolUse" ingests "main-run" concurrently
+    When the person runs "cairn ingest --all" while the hook "PostToolUse" ingests "main-run" concurrently
     Then every event carries the address (writer, seq) of the writer that appended it
     And that writer's new events continue from seq 21 with no gap and no repeat, and no seq is reused
     And each seq was assigned by its writer inside the append transaction that wrote its event
@@ -75,7 +75,7 @@ Feature: Record (REC)
     And an agent run with a Claude Code transcript "main-run"
     And "main-run" holds 40 lines and has been ingested
     When "main-run" is <change>
-    And the operator runs "cairn ingest --all"
+    And the person runs "cairn ingest --all"
     Then "main-run" starts generation 2 and all 40 events of generation 1 remain in the record
     And an audit entry records "new source generation for main-run"
 
@@ -90,7 +90,7 @@ Feature: Record (REC)
     And an agent run with a Claude Code transcript "main-run"
     And "main-run" holds 40 lines and has been ingested
     And "cut-short" holds 30 lines of which 20 were ingested before both transcript files were deleted
-    When the operator runs "cairn verify --json"
+    When the person runs "cairn verify --json"
     Then the report names "cut-short", and only it, as a source that disappeared before it was fully ingested
     And "cairn expand" still returns all 40 events of "main-run"
 
@@ -99,7 +99,7 @@ Feature: Record (REC)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
     And "main-run" holds a Bash tool result of 20 KiB and one of 2 KiB, against the default 8 KiB threshold
-    When the operator runs "cairn ingest --all"
+    When the person runs "cairn ingest --all"
     Then the 20 KiB content is stored in the payload store under a name from which no one off this node can confirm a guess at the content, and its event holds a preview of at most 512 bytes, the payload reference and the commitment
     And the 2 KiB content is stored inline in its event
     And nothing in an export, room bundle or replicated structure lets a reader off this node confirm a guess at the content from a payload name
@@ -109,7 +109,7 @@ Feature: Record (REC)
   Scenario: each writer's events form their own hash chain over a header that holds no content
     Given an isolated Cairn home
     And a record in which two writers have each appended 20 events, each having seen the other's log, the second writer's clock running an hour behind
-    When the operator runs "cairn verify"
+    When the person runs "cairn verify"
     Then the command exits 0
     And each event's hash is a collision-resistant hash of prev_hash, its writer's previous event, followed by the canonical encoding of its header
     And the header holds only the address, kind, provenance class, prev_hash, the heads of the other writers' logs the writer had seen, and the commitment
@@ -121,11 +121,11 @@ Feature: Record (REC)
     And an agent run with a Claude Code transcript "main-run"
     And "main-run" holds a 2 MiB tool result with "quokka-early" in its first KiB and "quokka-late" beyond its first 1 MiB
     And "main-run" holds one user turn naming "wombat" once and another naming it five times
-    When the operator runs "cairn ingest --all"
-    And Claude calls the MCP tool "search" with query "quokka-early"
+    When the person runs "cairn ingest --all"
+    And Claude calls the MCP tool "event_search" with query "quokka-early"
     Then the tool result event is a hit
     And a search for "quokka-late" returns no hit, because indexing stops at the default 1 MiB cap
-    When Claude calls the MCP tool "search" with query "wombat"
+    When Claude calls the MCP tool "event_search" with query "wombat"
     Then the hits are ranked by score, the user turn naming "wombat" five times above the one naming it once
 
   @REC-12 @P0 @I10 @pending
@@ -134,7 +134,7 @@ Feature: Record (REC)
     And an agent run with a Claude Code transcript "main-run"
     And the timestamp of line 11 of "main-run" is earlier than that of line 10
     And line 12 of "main-run" carries no timestamp
-    When the operator runs "cairn ingest --all"
+    When the person runs "cairn ingest --all"
     Then the events of "main-run" have seq in the order of their source lines
     And each event whose line carries a timestamp keeps it as metadata
     And the event of line 12 carries no source timestamp
@@ -162,7 +162,7 @@ Feature: Record (REC)
   Scenario: Claude Agent SDK transcripts are ingested from configurable roots
     Given an isolated Cairn home
     And the person's configuration adds a root holding a Claude Agent SDK transcript "sdk-run"
-    When the operator runs "cairn ingest --all"
+    When the person runs "cairn ingest --all"
     Then the command exits 0
     And every line of "sdk-run" is stored as an event of its run
 
@@ -180,7 +180,7 @@ Feature: Record (REC)
   Scenario: a Claude Managed Agents event history can be imported
     Given an isolated Cairn home
     And an exported Claude Managed Agents event history "managed-run"
-    When the operator runs "cairn ingest --path managed-run"
+    When the person runs "cairn ingest --path managed-run"
     Then the command exits 0
     And every event of "managed-run" is stored with its run and a provenance class
 
@@ -188,7 +188,7 @@ Feature: Record (REC)
   Scenario: event content is reached only through a keyed commitment whose key is erased with it
     Given an isolated Cairn home
     And a home whose record holds 40 events, of which seq 10-14 have since been purged
-    When the operator runs "cairn verify"
+    When the person runs "cairn verify"
     Then the command exits 0
     And every event carries a commitment to its canonical content under a random per-event key of at least 256 bits, stored with the content and absent from its chained header
     And the hash chain, every seal, every tombstone and every exported structure refer to event content, structural fields included, only through the commitment
@@ -198,9 +198,9 @@ Feature: Record (REC)
   @REC-18 @P1 @I6 @I10 @pending
   Scenario: writer seals are verified and events past the newest seal show as unsigned
     Given an isolated Cairn home
-    And a writer whose log holds 30 events and is sealed at seq 20 with its writer key
+    And a writer whose log holds 30 events and is sealed at seq 20 with its seat key
     And a second writer whose seal at seq 10 has one altered byte
-    When the operator runs "cairn verify"
+    When the person runs "cairn verify"
     Then the command exits 3 and names the second writer's seal at seq 10 as a mismatch
     And the first writer's seal, over its writer id, seq 20 and the chain head at seq 20, verifies against its public key
     And events 21 to 30 of the first writer are shown and recalled as "unsigned"
@@ -224,25 +224,25 @@ Feature: Record (REC)
   @REC-20 @P1 @I1 @pending
   Scenario Outline: worktree checkpoints record the commit, branch and redacted diff at every hand-off point
     Given an isolated Cairn home
-    And a run on a git worktree with a previous checkpoint, a tracked change holding an API key, an untracked file and an ignored file
+    And a run on a git worktree with a previous worktree checkpoint, a tracked change holding an API key, an untracked file and an ignored file
     When <moment>
-    Then the record gains an event with provenance "file" holding the checked-out commit id, the branch and a payload diff against the previous checkpoint
+    Then the record gains an event with provenance "file" holding the checked-out commit id, the branch and a payload diff against the previous worktree checkpoint
     And the diff covers the tracked change and the untracked file but not the ignored file, with the API key redacted
-    And a checkpoint taken for a rewrite of the branch head keeps the replaced head
+    And a worktree checkpoint taken for a rewrite of the branch head keeps the replaced head
     And Cairn obtained the worktree state and git data within the core's boundary, with no program started and no connection opened, within the hook budget, leaving any rest to a work marker
 
     Examples:
-      | moment                                   |
-      | the hook "Stop" runs                     |
-      | the hook "SessionEnd" runs               |
-      | the agent hands the room back            |
-      | the branch head is rewritten by a rebase |
+      | moment                                        |
+      | the hook "Stop" runs                          |
+      | the hook "SessionEnd" runs                    |
+      | the principal hands control back to the agent |
+      | the branch head is rewritten by a rebase      |
 
   @REC-21 @P1 @I6 @pending
   Scenario: a segment of an unsupported format version is refused, audited and left untouched
     Given an isolated Cairn home
     And a writer log holding a segment of a format version this node supports and a segment of format version 99
-    When the operator runs "cairn rebuild"
+    When the person runs "cairn rebuild"
     Then every segment this node wrote carries a format version
     And the supported segment is read
     And the version 99 segment is refused and an audit entry records its unsupported format version
@@ -254,38 +254,38 @@ Feature: Record (REC)
     And deployment mode "interactive"
     And a transcript "pre-install" under the configured transcript roots, written before Cairn's hooks were installed, holding a user prompt
     And a transcript "elsewhere" from outside the configured transcript roots
-    When the operator runs "cairn ingest --path" on "pre-install" and on "elsewhere"
+    When the person runs "cairn ingest --path" on "pre-install" and on "elsewhere"
     Then every event of "pre-install" carries an "imported" mark with its source and ingest position, shown on every surface, and none is shown as witnessed
     And the user prompt from "pre-install" has trust "untrusted"
-    And "elsewhere" is held as a foreign room shown as "imported", with no publisher key and every writer "unbound"
+    And "elsewhere" is held as an imported run in the principal's personal room, shown as "imported", and every event of it has trust "untrusted"
 
   @REC-23 @P2 @I2 @I4 @I6 @pending
   Scenario Outline: room bundles are imported only from local sources, verified, redacted and audited
     Given an isolated Cairn home
-    And this node holds a foreign writer's chain under the owner key "owner-b"
-    And a room bundle in a local file that <bundle>, holding a withheld event and an event with an API key the person's redaction rules match
-    When the operator imports the bundle
+    And this node holds a foreign room's writer chain under the principal key "principal-b"
+    And a room bundle in a local file that <bundle>, holding a withheld event and an event with an API key the redaction rules of this node's principal match
+    When the person imports the bundle
     Then the import is <outcome> and an audit entry records it
     And an accepted bundle had its seals and chains verified as received, across the withheld event from its retained header, and the API key redacted with its event's commitment key erased, both results recorded
     And accepted events form a foreign room
     And a bundle named by a URL is refused without network access, while one at a git ref already fetched into a local clone is read
 
     Examples:
-      | bundle                                               | outcome  |
-      | continues the foreign writer's chain under "owner-b" | accepted |
-      | forks the foreign writer's chain under "owner-b"     | refused  |
-      | claims a room of this person                         | refused  |
-      | claims a writer of this person                       | refused  |
+      | bundle                                          | outcome  |
+      | continues that writer chain under "principal-b" | accepted |
+      | forks that writer chain under "principal-b"     | refused  |
+      | claims a room of this node's principal          | refused  |
+      | claims a writer of this node's principal        | refused  |
 
   @REC-24 @P1 @I1 @I8 @I10 @pending
-  Scenario Outline: a home that moved to another node gets a new writer key and appends nothing under the old one
+  Scenario Outline: a home that moved to another node gets a new seat key and appends nothing under the old one
     Given an isolated Cairn home
-    And a writer key bound to the node identity read, from outside the home, on the node the home was created on
+    And a seat key bound to the node identity read, from outside the home, on the node the home was created on
     And <change>
     When the hook "SessionStart" runs and appends its first event after the start
-    Then Cairn mints a new writer key before that append
+    Then Cairn mints a new seat key before that append
     And an audit entry records the node identity change
-    And no event is appended under the old writer key
+    And no event is appended under the old seat key
 
     Examples:
       | change                                                    |

@@ -16,7 +16,8 @@ summary: >-
 On 6 October 2026 the stakeholder adopted the second version of
 Cairn's domain model ([docs/domain-model.md](../domain-model.md)). It
 came with the recommendations of its [proposal][v2] and the decisions
-of the three [blind reviews][blind] that followed. The model changes words the invariants use:
+of the three [blind reviews][blind] that followed. The model changes
+words the invariants use:
 
 - **Owner** now means only a room's owner. A principal, a person or a
   service account, signs principal acts with a device key its
@@ -150,4 +151,5 @@ change, and no requirement's traces change.
 [OWN]: ../srs/05c-owner-and-peer-requirements.md#513-owner-acts-own
 [SEC]: ../srs/06-security.md#62-security-requirements-sec
 [v2]: ../../plan/2610012322_cairn-for-agent-fleets/domain-model-v2.md
-[blind]: ../../plan/2610012322_cairn-for-agent-fleets/domain-model-review-blind.md
+[blind]:
+  ../../plan/2610012322_cairn-for-agent-fleets/domain-model-review-blind.md

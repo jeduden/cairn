@@ -27,7 +27,8 @@ and distrust services you cannot run yourself.
 
 ## Your journeys
 
-1. Start a room in a cloud sandbox from your laptop; watch it live.
+1. Start an agent in a cloud sandbox from your laptop; watch its room
+   live.
 2. Go offline on a train; keep working on the laptop's rooms; come
    back online and see both sides merged.
 3. Enrol the home server as a peer by key.

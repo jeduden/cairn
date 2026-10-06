@@ -29,8 +29,9 @@ be steered by it.
 1. A pull request arrives with a public room; read its story.
 2. Ask your own agent to review it, with the foreign room as untrusted
    data it may recall but never obey.
-3. Accept the change; the contribution's room stays linked to it.
-4. Reject a room that tries to inject instructions; see why.
+3. Merge the change on the forge; a landing link keeps the
+   contribution's room tied to it.
+4. Reject a foreign room that tries to inject instructions; see why.
 
 ## When you give up
 

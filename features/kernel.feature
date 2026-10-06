@@ -28,7 +28,7 @@ Feature: Compute kernel (CMP)
   Scenario: read-only recall built-ins return structured values
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a" containing the word "migration"
-    When Claude calls the MCP tool "kernel_exec" with code "hits = cairn.search(query='migration'); print(type(hits), hits[0]['seq'])"
+    When Claude calls the MCP tool "kernel_exec" with code "hits = cairn.search(query='migration'); print(type(hits), hits[0]['address'])"
     Then the printed output names a list and an address (writer, seq)
     And the built-ins "cairn.expand", "cairn.get", "cairn.landmarks", "json", "re", "math" and "time" are callable
     And every global name the kernel exposes, the interpreter's universal built-ins included, is on the kernel's allow-list
@@ -72,7 +72,7 @@ Feature: Compute kernel (CMP)
     And an agent run with a Claude Code transcript "run-a" containing an untrusted web result
     When Claude calls the MCP tool "kernel_exec" with code "r = cairn.search(query='web'); print(r * 10000)"
     Then the result is wrapped in the recall envelope
-    And the printed output is capped at 8,000 tokens with a truncation notice stating that variables persist
+    And the printed output is capped at 8,000 tokens with a truncation marker stating that variables persist
     And the envelope is tainted "untrusted" by the web event read during the execution
     And no value other than printed output is returned
 
@@ -81,9 +81,9 @@ Feature: Compute kernel (CMP)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a"
     And an agent run with a Claude Code transcript "run-b"
-    And the operator has quarantined w-1·7 with "cairn quarantine add --range w-1:7-7"
-    When Claude calls the MCP tool "kernel_exec" with code "print(cairn.get(seq='w-1:7'), cairn.search(query='x', scope='rooms'))"
-    Then the kernel returns exactly what the MCP tools "get" and "search" return for the same arguments
+    And the person has quarantined w-1·7 with "cairn quarantine add --range w-1:7-7"
+    When Claude calls the MCP tool "kernel_exec" with code "print(cairn.get(address='w-1:7'), cairn.search(query='x', scope='rooms'))"
+    Then the kernel returns exactly what the MCP tools "event_get" and "event_search" return for the same arguments
     And w-1·7, foreign rooms and rooms the run holds no seat in are absent
 
   @CMP-08 @P2 @I4 @pending

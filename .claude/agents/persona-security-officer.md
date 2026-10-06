@@ -26,8 +26,8 @@ between agents looks to you like a prompt-injection network.
 
 ## Your journeys
 
-1. Review a new feature for injection paths, especially chat and
-   anything another person or agent writes.
+1. Review a new feature for injection paths, especially posts and
+   anything another principal or agent writes.
 2. Verify a room's integrity after an incident.
 3. Check what crosses each network boundary, and that the defaults
    are closed.
@@ -35,8 +35,8 @@ between agents looks to you like a prompt-injection network.
 
 ## When you give up
 
-- Any content from a peer, co-author, tool or web page reaches the
-  model without the agent asking.
+- Any content from a peer, another principal, a tool or a web page
+  reaches the model without the agent asking.
 - A component opens a socket beyond its stated boundary.
 - Trust is decided from text instead of structure.
 - Erasure leaves hashes that confirm the erased content.

@@ -10,7 +10,7 @@ recalls exact history on demand through MCP tools, always wrapped as
 untrusted data. It does this without opening a new attack surface: no
 automatic path from untrusted content to the model, a daemonless core
 that never touches the network, every other component off until you
-start it, strict per-person isolation.
+start it, strict per-principal isolation.
 
 ## Status
 

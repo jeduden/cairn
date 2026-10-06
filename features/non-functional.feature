@@ -15,16 +15,16 @@ Feature: Non-functional requirements (NFR)
     Then the p95 wall-clock time is at most <budget>
 
     Examples:
-      | Event             | budget                                                                                                                |
-      | UserPromptSubmit  | 50 ms                                                                                                                 |
-      | SessionStart      | 150 ms                                                                                                                |
-      | PostToolUse       | 100 ms                                                                                                                |
-      | Stop              | 100 ms                                                                                                                |
-      | SubagentStop      | 100 ms                                                                                                                |
-      | Notification      | 100 ms                                                                                                                |
-      | PreCompact        | 2 s                                                                                                                   |
-      | SessionEnd        | 1 s                                                                                                                   |
-      | PermissionRequest | 50 ms beyond the owner's hold, which ends within the owner's hold window and at least 10 s before the harness timeout |
+      | Event             | budget                                                                                                                        |
+      | UserPromptSubmit  | 50 ms                                                                                                                         |
+      | SessionStart      | 150 ms                                                                                                                        |
+      | PostToolUse       | 100 ms                                                                                                                        |
+      | Stop              | 100 ms                                                                                                                        |
+      | SubagentStop      | 100 ms                                                                                                                        |
+      | Notification      | 100 ms                                                                                                                        |
+      | PreCompact        | 2 s                                                                                                                           |
+      | SessionEnd        | 1 s                                                                                                                           |
+      | PermissionRequest | 50 ms beyond the principal's hold, which ends within the principal's hold window and at least 10 s before the harness timeout |
 
   @NFR-02 @pending
   Scenario: a hook stops at its internal deadline and hands off the rest through a work marker
@@ -43,15 +43,15 @@ Feature: Non-functional requirements (NFR)
     Then the p95 latency excluding large payload transfer is at most <budget>
 
     Examples:
-      | tool   | budget |
-      | search | 200 ms |
-      | expand | 100 ms |
+      | tool         | budget |
+      | event_search | 200 ms |
+      | event_expand | 100 ms |
 
   @NFR-04 @pending
   Scenario: ingestion sustains 5,000 events per second on one core
     Given an isolated Cairn home
     And a synthetic transcript of 1M events
-    When the operator runs "cairn ingest --all" pinned to one core
+    When the person runs "cairn ingest --all" pinned to one core
     Then the command exits 0
     And the measured ingestion rate is at least 5,000 events/s
 
@@ -101,12 +101,12 @@ Feature: Non-functional requirements (NFR)
   Scenario: the core leaves no resident process and every user-run component stays within its footprint
     Given an isolated Cairn home
     And a synthetic store with 1M events on the reference hardware
-    When every hook runs once, the run ends, and the room-view, peer, publish and bridge components and ten run-component instances run idle
-    Then no Cairn process runs while no run is active except the components the user started
+    When every hook runs once, the run ends, and the room-view, peer, publish and bridge components and ten launcher instances run idle
+    Then no Cairn process runs while no run is active except the components the person started
     And each hook's peak RSS is at most 50 MiB and the store overhead is at most 1.5 times the stored text
     And each of the room-view, peer, publish and bridge components peaks at most 256 MiB RSS and idles at most 5% of one core
-    And the ten run-component instances together peak at most 256 MiB RSS and idle at most 5% of one core
-    And the run component adds at most 10 ms p95 to keystroke-to-echo latency
+    And the ten launcher instances together peak at most 256 MiB RSS and idle at most 5% of one core
+    And the launcher adds at most 10 ms p95 to keystroke-to-echo latency
 
   @NFR-10 @pending
   Scenario Outline: the core executable builds for each supported platform
@@ -124,7 +124,7 @@ Feature: Non-functional requirements (NFR)
   Scenario: the supported Claude Code versions are accepted and incompatible formats are loud
     Given recorded transcripts for the latest Claude Code release and the previous two minor versions
     And a transcript line with an unknown field and one with an unknown event type
-    When the operator runs "cairn ingest --all"
+    When the person runs "cairn ingest --all"
     Then every supported transcript ingests and unknown lines are stored as unparsed events
     And a transcript in an incompatible format makes the command exit 1 with an audit entry
 
@@ -142,10 +142,10 @@ Feature: Non-functional requirements (NFR)
     Then every changed non-test source file lies in the harness adapter crate
 
   @NFR-14 @pending
-  Scenario: every release ships its operator documentation
+  Scenario: every release ships its documentation
     Given a release artifact set
     When its documentation is listed
-    Then it contains the operator guide, threat model, configuration reference, MCP tool reference and upgrade notes
+    Then it contains the administration guide, threat model, configuration reference, MCP tool reference and upgrade notes
 
   @NFR-15 @pending
   Scenario Outline: the room surfaces meet their p95 targets on a 10M-event node and say when they miss
