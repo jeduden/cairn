@@ -33,7 +33,7 @@ first five minutes.
 2. An agent asks for permission; answer it from wherever you are.
 3. Two agents touch the same file; find out before they collide.
 4. An agent goes off course; stop it or steer it, and carry on.
-5. A room's work is done; hand its branch to review and land it.
+5. A room's runs are done; hand its branch to review and land it.
 
 ## When you give up
 
