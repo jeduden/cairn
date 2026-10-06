@@ -381,8 +381,8 @@ keeps or controls.
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room, so every seat key chains to a principal key.
 - **Access token**: A short-lived credential a principal mints to enroll a
-  device or peer, or to seat an ephemeral sandbox (PEER-05, PRV-10). "Token"
-  never stands alone: it is an access token or a model token.
+  device or peer, seat an ephemeral sandbox or carry an invite link (PEER-05,
+  PRV-10, LANE-18). "Token" is always an access token or a model token.
 - **Authenticator**: A hardware-backed key that gives presence proofs (OWN-11).
 - **CI key**: A key a principal enrolled to sign CI check results.
 

@@ -2,13 +2,13 @@
 title: "8. Data and storage"
 summary: >-
   Normative home layout, logical schema, canonical encoding (RFC 8785
-  + SHA-256) and the conservative token estimator.
+  + SHA-256) and the conservative model-token estimator.
 ---
 # 8. Data and storage
 
 Semantics in this section are normative. Table and column names are
 illustrative; the implementation MAY differ as long as every constraint marked
-**(N)** holds.
+**(N)** is met.
 
 ## 8.1 Home layout
 
@@ -20,26 +20,26 @@ $CAIRN_HOME/                          0700, owned by one OS user           (N)
 ├── logs/                             structured logs (optional)
 ├── store.db  (+ -wal, -shm)          the one store: record and projections, partitioned by writer  0600
 ├── payloads/<name>                   payloads, named per REC-09           0600
-└── work/                             work markers for deferred ingestion
+└── ingest/                           ingest markers for deferred ingestion
 ```
 
-A home holds one store, partitioned by writer, never by repository or
+A home contains one store, partitioned by writer, never by repository or
 room (N). Names in the home MUST NOT reveal a repository's path or
 identity (N).
 
 ## 8.2 Logical schema
 
-| Table                | Kind       | Key contents                                                                                                                                                                                                                                                                     | Constraints                                                                                                                                                                                                    |
-| -------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `meta`               | state      | schema version, home id                                                                                                                                                                                                                                                          | single row                                                                                                                                                                                                     |
-| `transcript_sources` | state      | path, generation, the harness's transcript id, run, parent run, agent ID, cursor offset, consumed-prefix hash, status                                                                                                                                                            | UNIQUE(path, generation) **(N)**                                                                                                                                                                               |
-| `events`             | **record** | writer, `seq`, run, transcript source, generation, transcript line, kind, provenance, origin, trust level, tool name, inline text or preview, payload reference and size, commitment (REC-17), token estimate, flags, transcript timestamp, `prev_hash`, `hash`, redaction count | (writer, `seq`) PRIMARY KEY, `seq` strictly increasing and gap-free per writer **(N)**; UNIQUE(transcript source, generation, transcript line) **(N)**; rows immutable except content removal by purge **(N)** |
-| `events_fts`         | projection | FTS5 over event text                                                                                                                                                                                                                                                             | rebuildable **(N)**                                                                                                                                                                                            |
-| `spans`              | projection | run, address range, span boundary kind                                                                                                                                                                                                                                           | rebuildable **(N)**                                                                                                                                                                                            |
-| `landmarks`          | projection | tier, address range, rendered text, trust                                                                                                                                                                                                                                        | rebuildable **(N)**                                                                                                                                                                                            |
-| `pins`               | projection | creating address, pin version, type, priority, room, text, creating event's commitment, author, stamps, active                                                                                                                                                                   | rebuildable from pin events (`operator`, `user`, and `assistant` for agents' run-seat pins), stamps and unstamps **(N)**                                                                                       |
-| `quarantine`         | projection | creating address, selector, active                                                                                                                                                                                                                                               | rebuildable from quarantine events **(N)**                                                                                                                                                                     |
-| `tombstones`         | projection | purge event address, purged range, counts, reason, commitments of removed events                                                                                                                                                                                                 | rebuildable **(N)**                                                                                                                                                                                            |
+| Table                | Kind       | Key contents                                                                                                                                                                                                                                                              | Constraints                                                                                                                                                                                                    |
+| -------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `meta`               | state      | schema version, home id                                                                                                                                                                                                                                                   | single row                                                                                                                                                                                                     |
+| `transcript_sources` | state      | path, generation, the harness's transcript id, run, parent run, agent ID, cursor offset, consumed-prefix hash, status                                                                                                                                                     | UNIQUE(path, generation) **(N)**                                                                                                                                                                               |
+| `events`             | **record** | writer, `seq`, run, transcript source, generation, transcript line, kind, provenance, origin, tool name, inline text or preview, payload reference and size, commitment (REC-17), model-token estimate, flags, transcript timestamp, `prev_hash`, `hash`, redaction count | (writer, `seq`) PRIMARY KEY, `seq` strictly increasing and gap-free per writer **(N)**; UNIQUE(transcript source, generation, transcript line) **(N)**; rows immutable except content removal by purge **(N)** |
+| `events_fts`         | projection | FTS5 over event text                                                                                                                                                                                                                                                      | rebuildable **(N)**                                                                                                                                                                                            |
+| `spans`              | projection | run, address range, span boundary kind                                                                                                                                                                                                                                    | rebuildable **(N)**                                                                                                                                                                                            |
+| `landmarks`          | projection | tier, address range, rendered text, taint                                                                                                                                                                                                                                 | rebuildable **(N)**                                                                                                                                                                                            |
+| `pins`               | projection | creating address, pin version, type, priority, room, text, creating event's commitment, author, stamps, active                                                                                                                                                            | rebuildable from pin events (`operator` for device-seat pins, `assistant` for agents' run-seat pins), stamps and unstamps **(N)**                                                                              |
+| `quarantine`         | projection | creating address, selector, active                                                                                                                                                                                                                                        | rebuildable from quarantine events **(N)**                                                                                                                                                                     |
+| `tombstones`         | projection | purge event address, purged range, counts, reason, commitments of removed events                                                                                                                                                                                          | rebuildable **(N)**                                                                                                                                                                                            |
 
 Purge replaces event content with nothing and keeps the row's address, `hash`,
 and `prev_hash`, so the chain stays verifiable and each writer's `seq` stays
@@ -52,9 +52,10 @@ Canonicalization Scheme (RFC 8785) over a documented field set, with SHA-256
 **(N)**. The field set and encoding version are recorded in `meta` so that
 future changes remain verifiable.
 
-## 8.4 Token estimation
+## 8.4 Model-token estimation
 
-Budgets (PIN-08, INJ-07, RCL-03, CMP-06) depend on token counts. Cairn MUST use
-a conservative estimator, calibrated in M0 against Claude's token counts, such
-that the estimate is greater than or equal to the true count for at least 99% of
-a representative sample **(N)**.
+Budgets (PIN-08, INJ-07, RCL-03, CMP-06) depend on model-token counts.
+Cairn MUST use a conservative estimator, calibrated in M0 against
+Claude's own model-token counts, such that the estimate is greater
+than or equal to the true count for at least 99% of a representative
+sample **(N)**.
