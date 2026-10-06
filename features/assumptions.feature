@@ -107,11 +107,11 @@ Feature: Assumptions register (ASM)
     And the other hooks ran up to their configured 10 s timeout
 
   @ASM-11 @pending
-  Scenario: context the harness adds is written as attachment records (S3)
+  Scenario: context the harness adds is written as attachment lines (S3)
     Given a recorded transcript for Claude Code "supported" from a working tree with a CLAUDE.md file, an MCP server and a skill
     When each line of the recording is read
-    Then the CLAUDE.md file, the MCP server instructions and the skill listing appear as "attachment" records
-    And each of those records carries "attachment.type" and "renderedRole"
+    Then the CLAUDE.md file, the MCP server instructions and the skill listing appear as "attachment" lines
+    And each of those lines carries "attachment.type" and "renderedRole"
 
   @ASM-12 @pending
   Scenario: one API message spans several lines, one content block each (S3)
@@ -128,7 +128,7 @@ Feature: Assumptions register (ASM)
     And its "sourceToolAssistantUUID" names the line carrying the Bash tool call
 
   @ASM-14 @pending
-  Scenario Outline: some record types carry no uuid or no timestamp (S3)
+  Scenario Outline: some transcript line types carry no uuid or no timestamp (S3)
     Given a recorded transcript for Claude Code "supported"
     When each line of the recording is read
     Then every line of type "<type>" carries <missing>

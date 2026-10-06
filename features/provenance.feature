@@ -33,7 +33,7 @@ Feature: Provenance and trust (PRV)
       | unparsed           |
 
   @PRV-02 @P0 @I2 @I8 @pending
-  Scenario Outline: the default trust policy trusts this node's unsigned trusted sources only on this node, and alike on all the principal's nodes what it signed through a device key it certified, the posts and pins its trust grant covers and the pin versions it stamped
+  Scenario Outline: the default trust policy trusts this node's unsigned trusted sources only on this node, and alike on all the principal's nodes the acts a device key it certified signed and the posts and pins from a device seat such a key certified, the posts and pins its trust grant covers and the pin versions it stamped
     Given an isolated Cairn home
     And deployment mode "<mode>"
     When an event with provenance "<provenance>" written by <writer> is ingested
@@ -41,7 +41,7 @@ Feature: Provenance and trust (PRV)
     And its trust level for this principal's agents on this node derives as "<trust>", and no trust level is stored with the event
     And "cairn verify" <verify>
     And the event shapes restore blocks, rule levels, permission grants, trust grants, delegation grants, trust levels and enrollments only if it is trusted and "cairn verify" reports nothing about it
-    And every event this principal signed through a device key it certified derives the same trust level on each of its nodes holding the same writer logs
+    And every principal act a device key this principal certified signed, and every post and pin written from a device seat such a key certified, derives the same trust level on each of its nodes holding the same writer logs
 
     Examples:
       | mode        | writer                                                                                                      | provenance       | trust     | verify                                                            |
@@ -60,7 +60,7 @@ Feature: Provenance and trust (PRV)
       | interactive | a writer of this node                                                                                       | unparsed         | untrusted | reports nothing                                                   |
       | interactive | a run seat's writer on this node                                                                            | post             | untrusted | reports nothing                                                   |
       | interactive | this principal's device seat on this node                                                                   | post             | trusted   | reports nothing                                                   |
-      | interactive | this principal's device seat on another of its nodes, signed by a device key it certified, within its scope | post             | trusted   | reports nothing                                                   |
+      | interactive | this principal's device seat on another of its nodes, certified by a device key it certified, within scope  | post             | trusted   | reports nothing                                                   |
       | interactive | a writer of this node, from a transcript the hook handlers did not watch                                    | user             | untrusted | reports nothing                                                   |
       | interactive | a device key on another node chaining within its scope to the principal key of this node's principal        | operator         | trusted   | reports nothing                                                   |
       | interactive | a device key on another node with no certificate from the principal key of this node's principal            | operator         | untrusted | reports nothing                                                   |
@@ -118,9 +118,9 @@ Feature: Provenance and trust (PRV)
       | unparsed         |
 
   @PRV-06 @P0 @I2 @pending
-  Scenario Outline: a landmark, kernel output, recall result or export record records the events it derives from and inherits their taint
+  Scenario Outline: a landmark, kernel output, recall result or export records the events it derives from and inherits their taint
     Given an isolated Cairn home
-    And a record containing an event with provenance "harness_meta" and one with provenance "web"
+    And this node's record holds an event with provenance "harness_meta" and one with provenance "web"
     When the <artifact> is derived from both events
     Then the <artifact> records the addresses of both events it derives from
     And the <artifact> has trust "untrusted"
@@ -132,7 +132,7 @@ Feature: Provenance and trust (PRV)
       | landmark      |
       | kernel output |
       | recall result |
-      | export record |
+      | export        |
 
   @PRV-07 @P1 @I5 @I6 @pending
   Scenario Outline: instruction-like untrusted content is flagged without blocking storage
@@ -161,7 +161,7 @@ Feature: Provenance and trust (PRV)
 
     Examples:
       | item                                                                            | provenance       | trust     |
-      | a "user" line carrying a prompt the person typed                                | user             | trusted   |
+      | a "user" line carrying a prompt typed at the harness's input                    | user             | trusted   |
       | a "user" line carrying only a Bash tool_result                                  | tool_result:Bash | untrusted |
       | a "user" line with isMeta true                                                  | harness_text     | untrusted |
       | a "user" line carrying "<local-command-stdout>" output                          | harness_text     | untrusted |
@@ -169,8 +169,8 @@ Feature: Provenance and trust (PRV)
       | an "mcp_instructions_delta" attachment from the MCP server "docs"               | mcp:docs         | untrusted |
       | a "skill_listing" attachment                                                    | harness_text     | untrusted |
       | a Bash tool_result whose output contains "<system-reminder>"                    | tool_result:Bash | untrusted |
-      | an "ai-title" record carrying a session title                                   | harness_text     | untrusted |
-      | a "last-prompt" record repeating a typed prompt                                 | harness_text     | untrusted |
+      | an "ai-title" transcript line carrying a harness session title                  | harness_text     | untrusted |
+      | a "last-prompt" transcript line repeating a typed prompt                        | harness_text     | untrusted |
 
   @PRV-09 @P0 @I2 @I8 @pending
   Scenario Outline: an event's writer comes from the key that verifiably signed it, never from a field

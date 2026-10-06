@@ -17,7 +17,7 @@ Feature: Administration and lifecycle (ADM)
   Scenario: install asks before every change and uninstall lists, offers and audits every artifact
     Given an isolated Cairn home
     And a Claude Code settings file with unrelated user entries
-    And "cairn install --scope user" showed a diff of every configuration change, was declined and left the settings file unchanged
+    And "cairn install --scope user" showed a diff of every harness configuration change, was declined and left the settings file unchanged
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
     And that install created the node's personal room as the first act of the principal's device seat, that seat's add there
     When the person runs "cairn uninstall" and keeps only the device key

@@ -186,7 +186,7 @@ Feature: Room view (VIEW)
     When the person opens the room view
     Then it opens on Setup with the ingest command and the number of transcripts the harness will delete within 7 days
     And it shows the capture status and a statement that nothing leaves the machine, and Cairn creates no room for the person to browse
-    And every configuration change it offers is shown as a diff with the CLI command that applies it
+    And every change to harness configuration or configuration it offers is shown as a diff with the CLI command that applies it
 
   @VIEW-19 @P2 @I6 @I10 @pending
   Scenario: a needs-changes verdict shows what changed since it

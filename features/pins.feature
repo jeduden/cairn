@@ -37,7 +37,7 @@ Feature: Pins (PIN)
     And a run working in room "L1"
     When the person runs "cairn pin add --type constraint --priority 1 'Never push directly to main; open a pull request.'"
     Then the command exits 0
-    And the pin stores that text verbatim with type "constraint", priority 1, room "L1", the address (writer, seq) of its creating event, as author the device seat of "alice", the node's principal, and that event's commitment
+    And the pin stores that text verbatim with type "constraint", priority 1, room "L1", the address (writer, seq) of its creating event, as the author of its first version, and so of the pin, the device seat of "alice", the node's principal, and that event's commitment
     And the pin stores no bare hash of its text
     And adding a pin whose text is 1,001 characters long exits 2 and leaves the qualifying pin count at 1
 

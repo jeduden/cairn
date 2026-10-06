@@ -44,8 +44,8 @@ Feature: Engineering quality (ENG)
   Scenario: structured logs pass through redaction
     Given an isolated Cairn home
     And a log field containing an AWS access key
-    When Cairn writes the log record
-    Then the record is JSON emitted through tracing
+    When Cairn writes the log line
+    Then the log line is JSON emitted through tracing
     And the key appears only as a "[REDACTED:" marker
 
   @ENG-06 @P0 @pending

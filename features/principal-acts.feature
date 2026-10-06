@@ -152,7 +152,7 @@ Feature: Principal acts (OWN)
   Scenario: a CLI verb writing a principal act refuses without a terminal
     Given an isolated Cairn home
     And a run on the node leaves a residual risk open with no recorded risk acceptance
-    When the person runs "cairn pin add" for a constraint pin that restores, a widening principal act, at a terminal
+    When the person runs "cairn pin add" for a constraint pin that restores, written from the person's device seat, which a device key certified, a widening principal act, at a terminal
     Then the verb refuses
     And the refusal names the open residual risks and the runs that leave them open
     And the same verb with standard input or output not a terminal refuses before any other check
@@ -191,7 +191,7 @@ Feature: Principal acts (OWN)
   Scenario: a paired phone is enrolled by a widening act and its device key is limited to its scope
     Given an isolated Cairn home
     And a paired phone whose device key "alice" certified with its scope by enrolling it, a widening principal act
-    When the paired phone, reaching its node over B2, tries to answer a held permission request with the harness's "allow for session"
+    When the paired phone, reaching its node over B2, tries to answer a held permission request with the harness's "allow-session"
     Then the answer is refused on the server
     And the phone can only read, allow once and deny held permission requests
     And each answer the phone gives is signed with its own device key and recorded on its device seat in her personal room, naming the room, whose writer the phone seals with that seat's key and the node it pairs with only holds
@@ -249,7 +249,7 @@ Feature: Principal acts (OWN)
   @OWN-22 @P1 @I2 @I6 @I9 @pending
   Scenario: an open residual risk refuses widening acts unless the principal accepted it
     Given an isolated Cairn home
-    And a run with no sandbox state record
+    And a run with no recorded sandbox state
     When "alice" writes a widening principal act
     Then the run counts as unsandboxed and is still recorded
     And the act is refused unless a recorded risk acceptance names each open risk, including that the agent can forge it

@@ -202,7 +202,7 @@ Feature: Security (SEC)
   Scenario: the threat model covers every boundary and compares Cairn with Zed Delta
     Given the repository at a minor release tag
     When the release checklist is inspected
-    Then a threat-model document exists in the repository with a review record naming the current minor release
+    Then a threat-model document exists in the repository with a recorded review naming the current minor release
     And it covers every row of the boundary register and the principals and components acting across each boundary
     And it compares Cairn with Zed Delta control by control on record signing, trust in other principals, central-service dependence and key custody
 
@@ -291,25 +291,25 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And the peer component configured to listen on "127.0.0.1:7400" with an enrolled peer
     When the peer component starts and the peers exchange data
-    Then it listens only on "127.0.0.1:7400", it listens on nothing when no address is configured, and it refuses a wildcard address
+    Then it listens only on "127.0.0.1:7400", it listens on nothing when no network address is configured, and it refuses a wildcard network address
     And every connection is encrypted and mutually authenticated with enrolled keys
     And the traffic carries only sealed ranges, in both directions whichever side dialled, and ephemeral signed presence hints
     And local discovery advertises only a random per-boot instance id and a port, never a principal, host or room name
 
   @SEC-25 @P2 @I2 @I6 @I8 @pending
-  Scenario Outline: the peer component receives only sealed, chained segments from known seat keys
+  Scenario Outline: the peer component receives only sealed, chained segments from seat keys that chain to a trusted principal key
     Given an isolated Cairn home
     And the peer component running with an enrolled peer
     When the peer offers a segment that <segment>
     Then the segment is <outcome>
 
     Examples:
-      | segment                                                     | outcome                                              |
-      | comes from an enrolled seat key with a valid seal and chain | received into this node's record as untrusted events |
-      | comes from a certified seat key with a valid seal and chain | received into this node's record as untrusted events |
-      | comes from a seat key neither enrolled nor certified        | refused and audited                                  |
-      | carries a broken seal                                       | refused and audited                                  |
-      | breaks its writer's chain                                   | refused and audited                                  |
+      | segment                                                                                               | outcome                                                                                                           |
+      | comes from a run seat key that chains to a trusted principal key, with a valid seal and chain         | received into this node's record, its events untrusted                                                            |
+      | comes from a device seat a device key of this node's principal certified, with a valid seal and chain | received, its principal acts, posts and pins trusted only as PRV-02 classifies them, never for coming from a peer |
+      | comes from a seat key that chains to no trusted principal key                                         | refused and audited                                                                                               |
+      | carries a broken seal                                                                                 | refused and audited                                                                                               |
+      | breaks its writer's chain                                                                             | refused and audited                                                                                               |
 
   @SEC-26 @P2 @I2 @I4 @pending
   Scenario: an export or publish is a reviewed, redacted and signed principal act
@@ -320,7 +320,7 @@ Feature: Security (SEC)
     And the secret, absolute path, user name, host name and email address are redacted, and an unresolved secret-scan hit fails the export closed
     And the bundle keeps the chained header of every withheld or redacted event and a signed manifest of included and withheld ranges
     And the bundle is a plain file whose chain verifies with no host, peering or account
-    And the publish component serves it read-only, bound only to the addresses its configuration names, none by default
+    And the publish component serves it read-only, bound only to the network addresses its configuration names, none by default
 
   @SEC-27 @P1 @I6 @I10 @pending
   Scenario: rotated and revoked keys leave the record verifiable
@@ -375,9 +375,9 @@ Feature: Security (SEC)
     And a signed purge receipt names the scope, the ranges, the copies erased and every known copy Cairn cannot erase
 
   @SEC-32 @P1 @I2 @I6 @pending
-  Scenario: the facilitator moderates within its appointment's limits and never instructs
+  Scenario: the facilitator moderates within its appointment's limits and reaches no agent as trusted without a trust grant
     Given an isolated Cairn home
-    And a room whose owner appointed a service account's device seat in the room, on that service account's own node, as the room's facilitator, an appointed moderator
+    And a room whose owner appointed a service account's device seat in the room, on that service account's own node, as the room's facilitator, an appointed moderator, by a widening principal act
     And the owner set the appointment rate, a room setting, to two moderation acts per hour
     When a post persuades the facilitator's program, acting through that node's CLI, to bar three seats, a moderator and the owner, and to mute the whole room
     Then the first two bars are recorded, each audited with the post behind it, which carries range links to the pin and to the marked range it names

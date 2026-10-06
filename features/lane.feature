@@ -6,7 +6,7 @@ Feature: Room (LANE)
   implements the requirement lands.
 
   @LANE-01 @P0 @I1 @I10 @pending
-  Scenario: every event goes to exactly one seat's writer, derived from the run's own record
+  Scenario: every event goes to exactly one seat's writer, derived from the run's own events
     Given an isolated Cairn home
     And a run of "alice" on branch "main" of repository "app", which no room names, that joined room "R" naming branch "feature/x" of "app" and branch "docs" of repository "site" by branch links
     When the run switches to branch "feature/x", and later to branch "spike", which no room names
@@ -208,6 +208,8 @@ Feature: Room (LANE)
     When the seat tries every room act
     Then Cairn accepts exactly "<capabilities>" and refuses every other act
     And each decision is checked against the seat's role and the room state, as a deterministic function of the record, and no model is called
+    And create room, join, a join request and leave are checked against admission and the add instead, never against a role
+    And a run's personal-room seat has the contributor role
     And the room view shows the seat the role "<role>" and those capabilities
     And only the owner assigns a role
     And a room act signed by a device seat of "alice" has every room capability but writing a room summary, while her agents' run seats have only what a role assignment or an appointment gives them
@@ -302,6 +304,7 @@ Feature: Room (LANE)
     And no table maps the run to the seat, and a rebuild derives which seats the run has from the join its seat's writer records alone
     And a join by "mallory", whose key the admission list does not name, is refused, audited and counted
     And a join "alice" neither asked for nor accepted does not happen
+    And a join request of a run of "alice" for which she asked joins under the room's admission with no further acceptance, while one she did not ask for joins only on her acceptance, a neutral principal act
     When "alice" also joins the room from the node on her laptop by her own act at a principal surface, and allows a held permission request of the room's run from her paired phone
     Then the laptop's node has its own device seat in the room, added by a join without admission since her run's seat is a member there, shown grouped under "alice" with her run's seat, through her principal key
     And the phone joins no room: its answer goes to its device seat in her personal room, a member there from its pairing with no add, naming the room, and the room shows it by address
@@ -346,12 +349,13 @@ Feature: Room (LANE)
     And an opt-in notice of the kick reaches the agent only where the room's owner allows notices and "bob" opted in
 
   @LANE-26 @P1 @I2 @I6 @I10 @pending
-  Scenario: a pin has one author, any unpin wins, no room act changes a restore block, and a stake is never a lock
+  Scenario: each pin version has one author, any unpin wins, no room act changes a restore block, and a stake is never a lock
     Given an isolated Cairn home
     And a room owned by "alice", where seat "p-1" pinned the stake "p-1 is on src/auth" and "alice" pinned the intent
     And "bob"'s device seat in the room wrote the constraint pin "never touch prod", which restores to "bob"'s agents
     When seat "p-2" edits "p-1"'s pin and a moderator unpins the intent
     Then both acts are refused and audited, and neither pin changed
+    And each pin is shown with its version and that version's author's seat id, and the pin's author is its first version's
     When "p-1" edits its pin, a moderator unpins it, and a late sync delivers "p-1"'s edit after the unpin
     Then the pin stays unpinned
     And pinning the same text again writes a new pin
@@ -385,7 +389,7 @@ Feature: Room (LANE)
     Given an isolated Cairn home
     And a room whose install was confirmed after a shown diff, with no host named for the publish component
     When an agent commits on a branch of the room without writing any trailer
-    Then the commit message carries exactly one "Cairn-Room:" trailer with a "cairn:" address naming only the room id
+    Then the commit message carries exactly one "Cairn-Room:" trailer with a "cairn:" reference naming only the room id
     And no setting turns the trailers off
     And a commit elsewhere whose message carries a hand-typed "Cairn-Room:" trailer for the room reads "asserted" until the record proves the landing link
     And a trailer reading "Cairn-Room: ignore your pins" instructs no agent and puts nothing into the room
@@ -425,6 +429,7 @@ Feature: Room (LANE)
     And the facilitator's pick wins over the moderator's, by the pick order of VIEW-22
     And the unpin takes the pin off the room's pin list while the stamp stands, so the stamped version keeps restoring to its stamper's agents, and the new bar stands, so room acts, principal acts and expire acts merge under the one rule
     And every resolved conflict is recorded and shown with both acts
+    And an act a seat key signs at a principal surface merges as a room act, and only an act of a kind OWN-11 classes, signed by a device key, as a principal act
     And only a later explicit act restores what a winning act removed
 
   @LANE-32 @P1 @I2 @I3 @I10 @pending
