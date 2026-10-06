@@ -1,6 +1,6 @@
 ---
 id: ADR-2610062200
-title: "Security review of the recall and trust-grant invariant wording"
+title: "Security review of the recall and trust-grant invariants"
 status: accepted
 summary: >-
   The security reviewer's record for rewording I2 and I4 after the
@@ -9,7 +9,7 @@ summary: >-
   and the agent's recall, and I4 names recalled content among what
   leaves the machine. Accepted by the stakeholder on 6 October 2026.
 ---
-# ADR-2610062200: Security review of the recall and trust-grant invariant wording
+# ADR-2610062200: Security review of the recall and trust-grant invariants
 
 ## Context
 
