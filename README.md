@@ -90,8 +90,8 @@ security review and a new major version, not a bug fix.
   paths, both of which the harness sends to its model, or through a B2 or B3
   component the node's principal turned on; whatever such a component brings
   in is untrusted (I2).
-- **I5 — Bad data can be removed from circulation without destroying
-  evidence.** Any event, span, run, writer or derived artifact can be
+- **I5 — Bad data can be removed from circulation without destroying the
+  record.** Any event, span, run, writer or derived artifact can be
   quarantined from recall immediately on the node that records the quarantine,
   while the record stays intact for forensics. A quarantine reaches another
   node only as a quarantine request that node's principal applies.
