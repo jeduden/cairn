@@ -1,7 +1,7 @@
 ---
 title: "13. Open questions and risks"
 summary: >-
-  Open questions OQ-01..37 with their resolution path, and the risk
+  Open questions OQ-01..38 with their resolution path, and the risk
   register with mitigations.
 ---
 # 13. Open questions and risks
@@ -42,6 +42,7 @@ summary: >-
 | OQ-35 | Which maintained, versioned rule set for common secret formats should SEC-08 adopt, and how are its versions pinned and updated? gitleaks's rule format is one candidate.                                                                                                                                                                                                                                                    | Security team; before M1                                                                                                                                                                                                                                                                                                                           |
 | OQ-36 | Done (stakeholder, 5 October 2026): a room links any number of branches in any number of repositories (LANE-01, LANE-02); people and agents create rooms, events go to one seat's writer, recall follows the agent's run and seats (RCL-05), and pins belong to rooms (PIN-10).                                                                                                                                              | Closed                                                                                                                                                                                                                                                                                                                                             |
 | OQ-37 | May Cairn run, push or merge code itself? Until this closes, ADM-13 holds: Cairn writes to no repository or working tree beyond its listed exceptions, and the forge lands and approves code (LANE-08). Retired NG8 ruled it out.                                                                                                                                                                                            | Stakeholder                                                                                                                                                                                                                                                                                                                                        |
+| OQ-38 | How does the web service reach browsers on other machines with a login (stage 3 of §1.4), and a service on a host the owner names (stage 4)? Each needs new I4 wording, approved by ADR with a security review, covering login, origin checks and what may leave the machine. Retired NG5 ruled both out.                                                                                                                    | Stakeholder; security review                                                                                                                                                                                                                                                                                                                       |
 
 ## 13.2 Risks
 
