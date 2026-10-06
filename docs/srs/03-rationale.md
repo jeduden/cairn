@@ -37,7 +37,7 @@ maps every individual concern to requirements.
    one unbounded FTS5 query froze the daemon for minutes (#596); missing auth
    headers silently dropped 21,279 events (#292); `doctor` rewrites
    `settings.json` with no read-only mode. → Daemonless design, bounded queries,
-   no-silent-failure rules, explicit configuration (I6, I7, I9).
+   no-silent-failure rules, explicit harness configuration changes (I6, I7, I9).
 7. **Published results are not controlled comparisons.** Memory benchmarks use
    different reader models and setups, and most context-management results come
    from non-Claude models. → All acceptance criteria are measured on our own
