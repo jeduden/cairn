@@ -25,13 +25,14 @@ summary: >-
   Agent SDK workers, inside sandboxes we operate.
 - **Primary, too:** developer workstations (Linux and macOS) running a fleet
   of harnesses, one worktree each.
-- **Later, with PEER:** ephemeral sandboxes whose `CAIRN_HOME` is reclaimed
-  keep their record only by sealing and offering segments to an enrolled peer
-  (PEER-05). Until then they are out of scope.
+- **Later, with PEER:** ephemeral sandboxes whose `CAIRN_HOME` is deleted
+  when they end keep their record only by sealing and offering segments
+  to an enrolled peer (PEER-05). Until then they are out of scope.
 - The model runs at the provider. Tool inputs and outputs, including anything
-  Cairn returns through recall, are sent to the model provider as ordinary
-  context. Cairn does not change this flow; its own components stay
-  inside the boundaries of §6.3 (I4).
+  Cairn returns through recall or writes to an agent through I2's closed
+  paths, are sent to the model provider as ordinary context. Cairn does
+  not change this flow; its own components stay inside the boundaries of
+  §6.3 (I4).
 - Runner workspaces, `~/.claude/`, and `CAIRN_HOME` live on durable volumes so
   runs can pause and resume.
 
@@ -74,7 +75,7 @@ requirements are re-planned.
 | CON-02 | The core ships as one executable per target that depends on no dynamic library beyond the operating system's own (on Linux, none at all), for linux/amd64, linux/arm64, darwin/arm64. The other components (room-view component, launcher, peer, publish, bridge) are roles with their own boundaries; whether they ship in one executable or several is not decided (OQ-32), and that packaging MUST NOT change any boundary. |
 | CON-03 | No runtime dependency on Python, Node.js, or a database server for any P0 feature. The page's TypeScript runs in a webview or a browser, never in a Node.js runtime.                                                                                                                                                                                                                                                           |
 | CON-04 | No network access, at build-verified level, in the core component. Every other component is confined, at build-verified level, to the one boundary the register assigns it, whether or not it shares an executable with the core (SEC-01, SEC-19, ENG-12, ENG-16).                                                                                                                                                             |
-| CON-05 | The record is append-only, one log per writer, closed into sealed segments. Derived state is rebuilt from the writer logs a node holds and the node's own key set. Payloads are kept apart from the events that reference them. Formats and storage engines are not decided here (OQ-32).                                                                                                                                      |
+| CON-05 | The record is append-only, one log per writer, closed into sealed segments. Every derived artifact is rebuilt from the writer logs a node holds and the node's own key set. Payloads are kept apart from the events that reference them. Formats and storage engines are not decided here (OQ-32).                                                                                                                             |
 | CON-06 | No feature at any boundary may depend on a central or third-party service. Every node can serve what it holds, and self-hosting is the normal case.                                                                                                                                                                                                                                                                            |
 
 ## 2.5 Personas
@@ -90,7 +91,7 @@ team U8; Claude U9.
 | --- | ----------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | U1  | Platform engineer       | `persona-platform-engineer`       | Runs Cairn for many developers on self-hosted runners and Agent SDK workers; primary stakeholder | Isolation, every failure counted, explicit reversible installs, bounded disk, memory and cost                | A failure is silent, one principal's state touches another's, config changes unasked, use is unbounded |
 | U2  | Fleet developer         | `persona-fleet-developer`         | Five to ten agents on one machine, one worktree each, steered all day                            | See who needs them and why; answer from anywhere; keep their speed                                           | Setup is slow or changes config; a new step per agent; the tool slows them                             |
-| U3  | Multi-machine developer | `persona-multi-machine-developer` | Agents on a laptop, a home server and reclaimed cloud sandboxes; often offline                   | One view across nodes; partitions that merge; no vendor relay; sandbox history that survives                 | A central service; a partition loses or duplicates events; sandbox history vanishes                    |
+| U3  | Multi-machine developer | `persona-multi-machine-developer` | Agents on a laptop, a home server and short-lived cloud sandboxes; often offline                 | One view across nodes; partitions that merge; no vendor relay; sandbox history that survives                 | A central service; a partition loses or duplicates events; sandbox history vanishes                    |
 | U4  | Returning owner         | `persona-returning-owner`         | Comes back after hours or days and asks what the agents did                                      | Catch up and room summaries that point into the record; ranked waiting items; proof nothing was lost; search | Catch up or a room summary replaces the record; gaps are silent; catching up beats reading git log     |
 | U5  | Reviewer                | `persona-reviewer`                | Decides whether a room's branches may land                                                       | Diff, why and evidence in one place; claim versus own check versus CI; the forge's review shown beside them  | Commit authors approve their own branches; done with nothing that checked it; landing link lost        |
 | U6  | Live collaborator       | `persona-live-collaborator`       | Joins someone else's room live to help, pair or take over                                        | See it live; help without derailing; know their rights; take over on handover                                | Watch-only; words lost or reaching the agent unseen; joining needs a service                           |

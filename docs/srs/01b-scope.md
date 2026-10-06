@@ -1,8 +1,8 @@
 ---
 title: "1.4 Scope"
 summary: >-
-  Scope by context layer: Cairn implements the record, pinned context,
-  working view and compute layers; durable memory is out of scope.
+  Scope by context layer: Cairn implements the record, pin, recall and
+  kernel layers; long-term memory is out of scope.
   Claude first, room summaries from the facilitator, and a web
   service as a target interface, paced in four stages.
 ---
@@ -10,13 +10,13 @@ summary: >-
 
 Cairn implements layers 1–4 of the agent context architecture:
 
-| Layer | Name           | In Cairn v1                                                 |
-| ----- | -------------- | ----------------------------------------------------------- |
-| 1     | Record         | Append-only, provenance-tagged event log of every agent run |
-| 2     | Pinned context | Qualifying pins, restored verbatim after every compaction   |
-| 3     | Working view   | Pull-only recall, landmark index, restore blocks            |
-| 4     | Compute        | Hermetic kernel with read-only access to the record         |
-| 5     | Durable memory | **Not in scope.** Export interface only (§5.9)              |
+| Layer | Name             | In Cairn v1                                                 |
+| ----- | ---------------- | ----------------------------------------------------------- |
+| 1     | Record           | Append-only, provenance-tagged event log of every agent run |
+| 2     | Pins             | Qualifying pins, restored verbatim after every compaction   |
+| 3     | Recall           | Pull-only recall, landmark index, restore blocks            |
+| 4     | Kernel           | Hermetic kernel with read-only access to the record         |
+| 5     | Long-term memory | **Not in scope.** Export interface only (§5.9)              |
 
 Cairn serves Claude first. Version 1 supports Claude Code and the Claude
 Agent SDK; other harnesses come later, and the design MUST NOT preclude
@@ -25,9 +25,10 @@ them (ADR-08, OQ-16).
 Room summaries are in scope. When a run joins a room with much
 content, its agent makes a summary request for a room summary of the
 size it wants (LANE-33). The room's facilitator, a service account,
-writes it through its device seat on its own node; the program that
-writes it is not a Cairn component, and the core makes no model calls
-(I4). A room summary is untrusted and never replaces the record (I1, I2).
+writes it through its own node's CLI (`cairn room-summary write`),
+signed with its device seat there; the program that writes it is not a
+Cairn component, and the core makes no model calls (I4). A room
+summary is untrusted and never replaces the record (I1, I2).
 
 A web service is a target interface, paced in four stages. Each stage
 stays a client of the record under VIEW-03, and every capability it
