@@ -55,33 +55,36 @@ network boundary (I4).
 | Room-view component (B1) | `cairn ui`: serves the room view on loopback, or on a local endpoint only the same OS user can reach; off until the principal starts it.                                                                                                                                                                                                      |
 | Launcher (B1)            | `cairn launch`: through each harness adapter's run part, starts, hosts and controls runs, pauses them at the harness prompt and records sandbox state (OWN-22); carries into the harness input only text the core built; executes witness checks; the only component that starts another program (SEC-29); off until the principal starts it. |
 | Peer component (B2)      | `cairn peer`: replicates segments with peers the node's principal enrolled by key and serves paired phones; off until turned on.                                                                                                                                                                                                              |
-| Publish component (B3)   | Read-only publishing and the git carrier; off until turned on.                                                                                                                                                                                                                                                                                |
+| Publish component (B3)   | Read-only publishing and the git carrier, which the node's principal enables per remote and the room's owner per room (PEER-08); off until turned on.                                                                                                                                                                                         |
 | Bridge component (B3)    | Outbound exchange with hosts the node's principal names: the forge bridge, the CI carrier and the notification bridge (SEC-28); off until turned on.                                                                                                                                                                                          |
 
 The core's parts:
 
-| Part of the core      | Responsibility                                                                                                                                                                                                                                 |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cairn hook <event>`  | The hook handlers: read hook input from stdin, perform bounded processing within the hook budget, write hook output to stdout, always fail open (I9).                                                                                          |
-| `cairn mcp`           | The MCP server, one per run over stdio, exposing recall, landmarks, pins, room and kernel tools. Read-mostly.                                                                                                                                  |
-| `cairn kernel-worker` | The kernel worker, a child process of `cairn mcp` running the hermetic kernel under OS resource limits with a read-only store handle.                                                                                                          |
-| CLI                   | Install, verify, rebuild, quarantine, purge, backup creation and backup restore, migrate, counters, audit, doctor, and principal acts at a terminal (OWN-12).                                                                                  |
-| TUI                   | A reduced client of the room view on a terminal (VIEW-14).                                                                                                                                                                                     |
-| Core library          | All logic; no global state; every blocking operation takes a deadline, directly or through a cancellation signal a deadline fires.                                                                                                             |
-| Harness adapter       | The transcript and hook part of Cairn's code for one harness: parses transcript formats and hook I/O for Claude Code (and later other harnesses), opening no socket and starting no process. The adapter's run part sits in the launcher (B1). |
+| Part of the core      | Responsibility                                                                                                                                                                                                                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cairn hook <event>`  | The hook handlers: read hook input from stdin, perform bounded processing within the hook budget, write hook output to stdout, always fail open (I9).                                                                                                                                                     |
+| `cairn mcp`           | The MCP server, one per run over stdio, exposing recall, landmarks, pins, room and kernel tools. Read-mostly.                                                                                                                                                                                             |
+| `cairn kernel-worker` | The kernel worker, a child process of `cairn mcp` running the hermetic kernel under OS resource limits with a read-only store handle.                                                                                                                                                                     |
+| CLI                   | Install, verify, rebuild, quarantine, purge, backup creation and backup restore, migrate, counters, audit, doctor, and principal acts at a terminal (OWN-12).                                                                                                                                             |
+| TUI                   | A reduced client of the room view on a terminal (VIEW-14).                                                                                                                                                                                                                                                |
+| Core library          | All logic; no global state; every blocking operation takes a deadline, directly or through a cancellation signal a deadline fires.                                                                                                                                                                        |
+| Harness adapter       | Not a component: Cairn's code for one harness, split between the core and the launcher. Its transcript and hook part, in the core, parses transcript formats and hook I/O for Claude Code (and later other harnesses), opening no socket and starting no process; its run part sits in the launcher (B1). |
 
 ## 4.3 Event-sourced state
 
 The record is authoritative: everything else derives from it. Acts are
-themselves events in the record: principal acts, such as adding, editing or
+themselves events in the record. Principal acts, such as adding, editing or
 unpinning a device-seat pin of a type that restores, a stamp, a quarantine, its
-release and a purge's tombstone, as `operator` events on the device seat of the
-device that signs them, in the room they act on, or in the personal room, naming
-the room, when they act on no room or on one where the signing device has no
-seat (OWN-02); room acts in the writer of the seat that signs them (LANE-31);
-and expire acts on the device seat of the node that signs them. A purge under a
-retention policy is not an act: the node records it as a purge naming the
-policy, whose setting was the act. Every other table (FTS index, spans,
+release and a purge with its tombstone, are `operator` events on the device seat
+of the device that signs them, in the room they act on, which that device first
+joins without admission when its principal has a member seat
+there; only one that acts on no room, or on a room its principal has no seat in,
+such as rejecting a foreign room, goes to the personal room, naming the room
+(OWN-02). Expire acts are `operator` events on the device seat of the node that
+signs them, and room acts sit in the writer of the seat that signs them
+(LANE-31). A purge under a retention policy is not an act: the node records it
+naming the policy, whose setting was the act, and its tombstone is a structural
+event. Every other table (FTS index, spans,
 landmarks, active pins, quarantine set, statuses, queues, stats) is a derived
 artifact that `cairn rebuild` reproduces exactly from the writer logs the node
 holds and the node's own key set (I10). Purge, the only way content is
@@ -104,18 +107,18 @@ nothing retained confirms a guess at what was purged.
 4. Claude Code fires `SessionStart` with `source = compact`. Cairn returns the
    **restore block**: the qualifying pins (PIN-10, verbatim), the landmark
    index, and the recall hint.
-5. Later, Claude needs a detail that compaction dropped. It calls
+5. Later, the agent needs a detail that compaction dropped. It calls
    `cairn.event_search`, then `cairn.event_expand` on the returned address
    range, and receives the exact original inside an untrusted-data envelope.
 
 ### Aggregation over large history
 
-1. Claude calls `kernel_exec` with a script such as
+1. The agent calls `kernel_exec` with a script such as
    `hits = cairn.event_search("timeout", kind="tool_result")` followed by a
    loop that extracts and counts error codes.
 2. The worker binds results to the run's kernel variables; only the script's
-   explicit `print` output (capped) returns to Claude, tainted by the events it
-   derives from.
+   explicit `print` output (capped) returns to the agent, tainted by the events
+   it derives from.
 
 ## 4.5 Design decisions
 

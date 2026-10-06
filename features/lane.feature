@@ -262,7 +262,7 @@ Feature: Room (LANE)
     When "alice" revises C1 at a principal surface with the presence proof a widening act needs
     Then the new version applies to the room, to the restore blocks of "alice"'s agents in the room, and other principals' agents get it only as PIN-10 states
     And a revision whose presence proof fails changes nothing
-    When "alice"'s agent, through a harness skill, proposes a revision of C1 through "pin_propose"
+    When "alice"'s agent, through a harness skill, proposes a revision of C1 through "pin_candidate_propose"
     Then the proposal is stored as a pin candidate the agent suggested, with no author, never as a pin or a principal act, and the intent is unchanged
 
   @LANE-21 @P1 @I2 @I10 @pending

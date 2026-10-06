@@ -716,9 +716,11 @@ one kind (LANE-31).
     harness input.
   - **Peer component (B2):** replicates segments with peers and serves paired
     phones.
-  - **Publish component (B3):** read-only publishing and the git carrier.
+  - **Publish component (B3):** read-only publishing, and the **git carrier**,
+    which keeps segments in a namespaced location of the principal's remote.
   - **Bridge component (B3):** outbound exchange with hosts the node's principal
-    names: the forge bridge, the CI carrier and the notification bridge.
+    names: the **forge bridge** (reads pull requests and reviews), the **CI
+    carrier** (fetches CI attestations) and the **notification bridge**.
 - **Boundary**: One of B0 core, B1 machine, B2 peer and B3 public (I4).
   Unqualified, "boundary" means a network boundary; any other boundary is
   qualified, such as a span boundary or a crate boundary.
