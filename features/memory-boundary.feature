@@ -6,11 +6,11 @@ Feature: Boundary to durable memory (MEM)
   implements the requirement lands.
 
   @MEM-01 @P0 @I2 @pending
-  Scenario: record content is never promoted into durable memory
+  Scenario: record content is never promoted into long-term memory
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "memory-canary"
     When every hook runs over the whole transcript and the person runs "cairn rebuild"
-    Then no file outside the Cairn home record store contains the canary text
+    Then no file outside the Cairn home's store contains the canary text
     And no memory, summary or cross-room store under the Cairn home or HOME contains the canary text
 
   @MEM-02 @P1 @I2 @pending

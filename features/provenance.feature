@@ -189,22 +189,24 @@ Feature: Provenance and trust (PRV)
   Scenario Outline: an "operator" event from another node is trusted only through a key chain rooted in the principal key of this node's principal
     Given an isolated Cairn home
     And this principal's offline principal key certified the device key of its node on a laptop with scope "allow, deny, pin" and maximum rule level 2, and the device key of its paired phone with the scope "allow, deny"
-    And the laptop's device key certified a token key limited to an access token's rooms and expiry, which certified the device seat key and a run seat key of an ephemeral sandbox's node
+    And the laptop's device key certified a token key limited to an access token's rooms and expiry, which certified the device seat key and a run seat key of a token-key-only node in an ephemeral sandbox
     When an event <event> arrives from another node
     Then the event is <outcome>
-    And the sandbox's node, whose device seat its token key certified, signs no principal act and no expire act
+    And the token-key-only node, whose device seat its token key certified, signs no principal act and no expire act
+    And the paired phone may read, and allow or deny held permission requests, and nothing else
+    And a service account's principal key that a person, another service account or managed policy listing it certified counts as that service account's own principal, and an uncertified principal key counts as a person's
     And every revocation is a signed event that replicates like any other
     And a seat key the laptop's device key certified for a room chains principal key → device key → seat key
     And a recorded I2 security review of this requirement exists before it ships
 
     Examples:
-      | event                                                                                   | outcome                                                       |
-      | by the sandbox's run seat key, adding a constraint pin within its access token's rooms  | untrusted until a principal stamps it from one of its devices |
-      | by the laptop's device key, stamping a version of that pin                              | trusted                                                       |
-      | by the laptop's device key, an act outside its scope                                    | untrusted                                                     |
-      | by the laptop's device key, at rule level 3                                             | untrusted                                                     |
-      | by the sandbox's run seat key, not held before the access token was revoked             | refused and audited                                           |
-      | by a seat key the laptop's revoked device key certified, not held before the revocation | refused and audited                                           |
-      | by the laptop's revoked device key, covered by a seal held before the revocation        | accepted                                                      |
-      | by the phone's device key, allowing a held permission request                           | trusted                                                       |
-      | by the phone's device key, adding a pin                                                 | untrusted                                                     |
+      | event                                                                                              | outcome                                                       |
+      | by the token-key-only node's run seat key, adding a constraint pin within its access token's rooms | untrusted until a principal stamps it from one of its devices |
+      | by the laptop's device key, stamping a version of that pin                                         | trusted                                                       |
+      | by the laptop's device key, an act outside its scope                                               | untrusted                                                     |
+      | by the laptop's device key, at rule level 3                                                        | untrusted                                                     |
+      | by the token-key-only node's run seat key, not held before the access token was revoked            | refused and audited                                           |
+      | by a seat key the laptop's revoked device key certified, not held before the revocation            | refused and audited                                           |
+      | by the laptop's revoked device key, covered by a seal held before the revocation                   | accepted                                                      |
+      | by the phone's device key, allowing a held permission request                                      | trusted                                                       |
+      | by the phone's device key, adding a pin                                                            | untrusted                                                     |

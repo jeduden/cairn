@@ -96,7 +96,7 @@ Feature: Security (SEC)
     Then no stored text field, payload, or hook input contains an AWS access key or "ACME-12345678"
     And each secret is replaced by "[REDACTED:<rule>]", with no hash or other value derived from the secret
     And no stored event, segment, export or replicated structure carries a value from which the secret could be confirmed
-    And any correlation of the repeated AWS access key lives only in a node-local index under this node's own storage key
+    And any correlation of the repeated AWS access key lives only in a node-local index keyed under this node's own at-rest key
     When the person runs "cairn purge --run secrets"
     Then the correlation index contains no entry for the purged events
 
@@ -111,15 +111,15 @@ Feature: Security (SEC)
   @SEC-10 @P0 @I4 @pending
   Scenario: the core keeps only its own keys and the at-rest key, never exposed
     Given an isolated Cairn home
-    And the parent environment sets "ANTHROPIC_API_KEY", "GITHUB_TOKEN", a device key value and an at-rest encryption key value
+    And the parent environment sets "ANTHROPIC_API_KEY", "GITHUB_TOKEN", a device key value and an at-rest key value
     And no platform key store is available
     And encryption at rest is on, with its key named by a secret reference to a file only the person's OS user can read
     When the person runs "cairn status --json"
     And the person runs "cairn backup create"
     Then the device key was generated on the node into a file only the person's OS user can read, not taken from the environment
     And the status says the key is a file an unsandboxed agent of the same user could read
-    And the at-rest encryption key is read from its secret reference on each use, not from the environment
-    And no key or credential value appears in the store, a segment, derived state, a backup, an export, the audit log or any log output
+    And the at-rest key is read from its secret reference on each use, not from the environment
+    And no key or credential value appears in the store, a segment, a derived artifact, a backup, an export, the audit log or any log output
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
     And a run ingested by "cairn ingest --path" has a seat key that ingest minted, kept like the device key in a file only the person's OS user can read
     When a run's harness hands its run seat's private key to its MCP server at launch
@@ -249,7 +249,7 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a stored untrusted tool result containing HTML, a script, a Markdown link and a Markdown image
     When the person opens the room view
-    Then the content is shown as literal text with no element, script, link or image interpreted
+    Then the content is shown as literal text with no element, script, Markdown link or image interpreted
     And the Content-Security-Policy forbids every resource from outside the room view's own origin
     And the untrusted content is visibly marked
 
@@ -363,7 +363,7 @@ Feature: Security (SEC)
     Then the purge is sent as a signed tombstone event
     And the applying peer shows a tombstone and the suppressing peer shows a gap
     And that other principal can send the room's owner a signed purge request, a neutral principal act, for the events its own seats wrote
-    And the owner's answer to it is a principal act and is audited
+    And the owner's answer to it is a widening principal act and is audited
 
   @SEC-31 @P0 @I1 @I5 @I6 @pending
   Scenario: purging an event erases every copy this node holds and writes a signed purge receipt
@@ -379,7 +379,7 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a facilitator, a service account whose device seat in the room lives on its own node
     And a room where a principal whose device seat has the moderator role by role assignment appointed the facilitator's device seat an appointed moderator, and whose owner set the appointment rate, a room setting, to two moderation acts per hour
-    When a post persuades the facilitator's program, acting through that node's CLI and MCP tools, to bar three seats, a moderator and the owner, and to mute the whole room
+    When a post persuades the facilitator's program, acting through that node's CLI, to bar three seats, a moderator and the owner, and to mute the whole room
     Then the first two bars are recorded, each audited with its finding, which carries range links to the pin and the content flagged
     And each bar is shown in the room view and named by id in the error each barred seat's next call returns
     And a Needs you item reaches the owner, the appointer and the principal of each barred seat
@@ -389,4 +389,5 @@ Feature: Security (SEC)
     And the facilitator's unbar of one of its own bars is refused and audited, since an appointed moderator never unbars
     And each finding is in the facilitator's own words and points to the content it flagged by range link, quoting none of it
     And the facilitator's findings reach no agent as trusted text unless that agent's principal recorded a trust grant for the facilitator's principal key
+    And the facilitator's program writes room summaries only with "cairn room-summary write", signed with its device seat, and never acts through an MCP tool
     And a run seat appointed moderator is kept to the same limits

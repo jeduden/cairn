@@ -29,7 +29,7 @@ Feature: Engineering quality (ENG)
     When the static analyzers run
     Then no crate declares mutable global state
     And every public blocking operation takes a deadline, directly or through a cancellation signal a deadline fires
-    And no projection crate reads the wall clock or randomness
+    And no crate that computes derived artifacts reads the wall clock or randomness
 
   @ENG-04 @P0 @pending
   Scenario: errors keep their cause, are typed per counter, and panics stop at the entry points
@@ -80,7 +80,7 @@ Feature: Engineering quality (ENG)
       | property                                                                                                           |
       | within each writer's log, seq is strictly increasing and gap-free, so no two events share an address (writer, seq) |
       | ingest twice equals ingest once                                                                                    |
-      | rebuild reproduces projections exactly                                                                             |
+      | rebuild reproduces derived artifacts exactly                                                                       |
       | envelope encoding round-trips any byte sequence                                                                    |
       | sanitized fields never contain restore delimiters                                                                  |
 
@@ -144,7 +144,7 @@ Feature: Engineering quality (ENG)
     When CI reads the build-time reach evidence for the "<component>", dependencies and start-up code included
     Then the workflow gates on cargo clippy, cargo fmt, cargo-deny, cargo-audit, the page's strict TypeScript compile and lint, and the custom checks
     And every crate that parses untrusted content or decides trust forbids unsafe code
-    And a build-time check fails when projection code reads a clock or randomness
+    And a build-time check fails when code that computes derived artifacts reads a clock or randomness
     And a build-time check fails when restore content is built from anything but trusted text
     And CI fails when the evidence for the "<component>" is missing or shows that it <violation>
 

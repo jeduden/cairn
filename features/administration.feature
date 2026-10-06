@@ -35,7 +35,7 @@ Feature: Administration and lifecycle (ADM)
     And the output states that managed settings are in force and names the documented managed install path
 
   @ADM-04 @P0 @I6 @I7 @pending
-  Scenario Outline: configuration is validated strictly, managed policy overrides every layer, repository configuration only tightens, and a widening in the person's configuration waits for a recorded principal act
+  Scenario Outline: configuration is validated strictly, managed policy overrides every layer, repository configuration only tightens, and a loosening in the person's configuration waits for a recorded principal act
     Given an isolated Cairn home
     And <configuration>
     When an agent runs and the person starts "<component>"
@@ -60,24 +60,24 @@ Feature: Administration and lifecycle (ADM)
   @ADM-05 @P0 @I1 @pending
   Scenario: segment and schema migrations run forward after a verified backup and newer versions are refused
     Given an isolated Cairn home
-    And a home whose segments and derived state are at the previous version
+    And a home whose segments and derived artifacts are at the previous version
     And a segment whose format version is newer than this node supports
     When the person runs "cairn migrate"
     Then a verified backup with its audit chain exists from before the migration
-    And the segments and derived state report the current version
+    And the segments and derived artifacts report the current version
     And the newer segment is refused, named in the output and left unchanged
-    Given derived state whose schema version is newer than this node supports
+    Given derived artifacts whose schema version is newer than this node supports
     When the person runs "cairn status"
     Then the command exits 3
-    And the derived state is unchanged
+    And the derived artifacts are unchanged
 
   @ADM-06 @P0 @I1 @I6 @pending
   Scenario: a backup restore keeps every later removal and never reuses a writer's log
     Given an isolated Cairn home
-    And a home with sealed segments, an open segment, payloads, derived state and an audit log
+    And a home with sealed segments, an open segment, payloads, derived artifacts and an audit log
     And a backup taken by "cairn backup create", followed by a purge of run "run-a" and the unpin of a pin
     When the person runs "cairn backup restore" as a widening principal act
-    Then the backup contained every segment, the open segment up to a fresh seal, the payload store, derived state and the audit log with its chain, no seat or device key, and an audit entry recorded it
+    Then the backup contained every segment, the open segment up to a fresh seal, the payload store, derived artifacts and the audit log with its chain, no seat or device key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was reinstated
     And every event and payload outside run "run-a" recalled before the backup is recalled identically
     And run "run-a" stays purged and the unpinned pin stays unpinned
@@ -90,7 +90,7 @@ Feature: Administration and lifecycle (ADM)
     And an agent run with a Claude Code transcript "run-a" in room "room-a"
     When the person runs "cairn purge <scope>"
     Then the command exits 0
-    And the purged events are gone from the sealed segments, events, the FTS index, projections, the payload store and every copy of their content
+    And the purged events are gone from the sealed segments, events, the FTS index, derived artifacts, the payload store and every copy of their content
     And the commitment key and payload reference of every purged event are erased
     And a tombstone event per purged range carries only addresses, counts, reason and commitments
     And the database is compacted and "cairn verify" confirms every rewritten segment's seals
@@ -106,13 +106,13 @@ Feature: Administration and lifecycle (ADM)
       | --provenance web       |
 
   @ADM-08 @P0 @I10 @pending
-  Scenario: rebuild regenerates derived state byte-identically whatever order the logs arrived in
+  Scenario: rebuild regenerates derived artifacts byte-identically whatever order the logs arrived in
     Given an isolated Cairn home
     And a second isolated Cairn home with the same node keys, the two nodes holding the same writer logs with pins, quarantine and landmarks, received in opposite orders
     When the person runs "cairn rebuild" in each home
     Then the command exits 0 in each home
-    And "cairn verify" confirms every projection is byte-identical to its state before rebuild
-    And the derived state of the two homes is byte-identical
+    And "cairn verify" confirms every derived artifact is byte-identical to its state before rebuild
+    And the derived artifacts of the two homes are byte-identical
 
   @ADM-09 @P0 @I6 @I10 @pending
   Scenario Outline: verify exits non-zero on any integrity failure
@@ -128,7 +128,7 @@ Feature: Administration and lifecycle (ADM)
       | the transcript has lines not in the record | transcript source completeness |
       | an event row's hash has been altered       | hash chain                     |
       | a payload file's bytes have been altered   | payload integrity              |
-      | a landmark row has been altered            | projection consistency         |
+      | a landmark row has been altered            | derived artifact consistency   |
 
   @ADM-10 @P0 @I7 @pending
   Scenario: doctor is read-only and doctor --fix shows each change first

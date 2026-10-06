@@ -139,5 +139,5 @@ Feature: Pins (PIN)
     Examples:
       | reason                                               |
       | its device key's scope does not cover the pin's room |
-      | its certificate is revoked                           |
+      | its seat certificate is revoked                      |
       | its event has not arrived                            |

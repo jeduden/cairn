@@ -68,7 +68,7 @@ Feature: Landmarks (LMK)
   @LMK-06 @P2 @I2 @pending
   Scenario: natural-language headlines appear only on all-trusted spans
     Given an isolated Cairn home
-    And headline generation is enabled
+    And natural-language headlines are enabled
     And an agent run with a Claude Code transcript "trusted-and-web-spans"
     When the person runs "cairn landmark list --json"
     Then a span whose every event is trusted may carry a headline

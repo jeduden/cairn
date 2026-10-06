@@ -59,7 +59,7 @@ Feature: Record (REC)
     And the counter "events_unparsed" increases by 2
 
   @REC-06 @P0 @I1 @I10 @pending
-  Scenario: every event is addressed by its writer and a gap-free seq that writer alone assigns
+  Scenario: every event's address is its writer and a gap-free seq that writer alone assigns
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run" whose writer has appended seq 1 to 20 and purged seq 5-9
     And an append transaction of that writer that rolled back
@@ -70,14 +70,14 @@ Feature: Record (REC)
     And a local index position is never shown or accepted as an address
 
   @REC-07 @P0 @I1 @I6 @pending
-  Scenario Outline: a shrunk or rewritten transcript source starts a new generation without losing events
+  Scenario Outline: a shrunk or rewritten transcript source starts a new transcript generation without losing events
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
     And "main-run" has 40 lines and has been ingested
     When "main-run" is <change>
     And the person runs "cairn ingest --all"
-    Then "main-run" starts generation 2 and all 40 events of generation 1 remain in the record
-    And an audit entry records "new generation of transcript source main-run"
+    Then "main-run" starts transcript generation 2 and all 40 events of transcript generation 1 remain in the record
+    And an audit entry records "new transcript generation of main-run"
 
     Examples:
       | change                                |
@@ -91,7 +91,7 @@ Feature: Record (REC)
     And "main-run" has 40 lines and has been ingested
     And "cut-short" has 30 lines of which 20 were ingested before both transcript files were deleted
     When the person runs "cairn verify --json"
-    Then the report names "cut-short", and only it, as a transcript source that disappeared before it was fully ingested
+    Then the output names "cut-short", and only it, as a transcript source that disappeared before it was fully ingested
     And "cairn event expand" still returns all 40 events of "main-run"
 
   @REC-09 @P0 @I1 @pending
@@ -167,7 +167,7 @@ Feature: Record (REC)
     And every line of "sdk-run" is stored as an event of its run
 
   @REC-15 @P1 @I1 @I5 @pending
-  Scenario: retention policies purge content per provenance class, leaving tombstones
+  Scenario: retention policies purge content per room and provenance class, leaving tombstones
     Given an isolated Cairn home
     And a home whose record contains "web" payloads and "user" events that are 40 days old
     And the person's configuration sets "retention_policy.*.web" to 30 days
