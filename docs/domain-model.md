@@ -8,10 +8,11 @@ summary: >-
 
 Cairn speaks in a small, closed set of concepts. The requirements, the
 scenarios, the code, the documentation and every screen use them, and
-only them. The glossary in [§1.6](srs/01-introduction.md) holds each
-term's full definition; this document holds the closed list, the
-relations between the concepts, and the terms that are not Cairn
-concepts.
+only them. This document is the model's one source: the closed list
+of concepts, the relations between them, and the terms that are not
+Cairn concepts. Every other definition, the glossary in
+[§1.6](srs/01-introduction.md) included, says what this document
+says.
 
 ## Concepts
 
@@ -86,6 +87,9 @@ help text, logs and developer setup use the same words the SRS uses.
 ## Changing the model
 
 A new concept, a renamed one or a new relation is a stakeholder
-decision. It lands in this document and in the glossary before any
-requirement, name or screen uses it. The domain-model agent reports
-every use that runs ahead of the model.
+decision. It lands in this document before any requirement, name or
+screen uses it. The domain-model agent reviews every change to this
+document and every proposal to change it: it checks the model against
+itself and every definition elsewhere against the model, names the
+invariants whose wording would change, and lists every use the change
+makes stale. It also reports every use that runs ahead of the model.

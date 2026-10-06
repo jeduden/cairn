@@ -178,8 +178,9 @@ kinds:
   domain-model-agent:
     # The domain-model agent holds instructions only; the model itself
     # is docs/domain-model.md. Its name is pinned to its file, and its
-    # two sections, when it is consulted and how it reviews, cannot be
-    # dropped quietly.
+    # sections (when it is consulted, how it reviews a change, how it
+    # reviews a change to the model itself, and how it reports) cannot
+    # be dropped quietly.
     path-pattern: ".claude/agents/domain-model.md"
     schema:
       filename: "domain-model.md"
@@ -192,6 +193,8 @@ kinds:
         - heading: null
         - heading: "When you are consulted"
         - heading: "How you review"
+        - heading: "When the model changes"
+        - heading: "How you report"
   proto:
     # proto.md leads with directives and placeholder headings rather
     # than real content; the structural rules step aside for it.
