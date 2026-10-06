@@ -31,44 +31,49 @@ Feature: Provenance and trust (PRV)
       | unparsed           |
 
   @PRV-02 @P0 @I2 @I8 @pending
-  Scenario Outline: the default trust policy trusts only this node's "operator", "harness_meta" and structural events, "user" turns in the deployment mode "interactive", principal acts under a certified device key, and, for one principal's agents, the posts and pins its trust grant covers and the pin versions it stamped
+  Scenario Outline: the default trust policy trusts this node's unsigned trusted sources only on this node, and alike on all the principal's nodes what it signed through a device key it certified, the posts and pins its trust grant covers and the pin versions it stamped
     Given an isolated Cairn home
     And deployment mode "<mode>"
     When an event with provenance "<provenance>" written by <writer> is ingested
-    Then the event is stored with provenance "<provenance>" and trust "<trust>"
+    Then the event is stored with provenance "<provenance>"
+    And its trust level for this principal's agents on this node derives as "<trust>", and no trust level is stored with the event
     And "cairn verify" <verify>
     And the event shapes restore blocks, rule levels, permission grants, trust grants, delegation grants, trust levels and enrollments only if it is trusted and "cairn verify" reports nothing about it
+    And every event this principal signed through a device key it certified derives the same trust level on each of its nodes holding the same writer logs
 
     Examples:
-      | mode        | writer                                                                                               | provenance       | trust     | verify                                                    |
-      | automation  | a writer of this node                                                                                | operator         | trusted   | reports nothing                                           |
-      | automation  | a writer of this node                                                                                | harness_meta     | trusted   | reports nothing                                           |
-      | interactive | a writer of this node                                                                                | user             | trusted   | reports nothing                                           |
-      | automation  | a writer of this node                                                                                | user             | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                                | assistant        | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                                | tool_call        | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                                | tool_result:Bash | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                                | web              | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                                | mcp:github       | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                                | file             | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                                | subagent_result  | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                                | harness_text     | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                                | unparsed         | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                                | post             | untrusted | reports nothing                                           |
-      | interactive | a writer of this node, from a transcript the hook handlers did not watch                             | user             | untrusted | reports nothing                                           |
-      | interactive | a device key on another node chaining within its scope to the principal key of this node's principal | operator         | trusted   | reports nothing                                           |
-      | interactive | a device key on another node with no certificate from the principal key of this node's principal     | operator         | untrusted | reports nothing                                           |
-      | interactive | a writer of another node                                                                             | user             | untrusted | reports nothing                                           |
-      | interactive | a writer of another principal                                                                        | operator         | untrusted | reports nothing                                           |
-      | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance               | operator         | trusted   | reports it as a widening event that fails OWN-22          |
-      | automation  | a writer of this node, widening with a required presence check that does not verify                  | operator         | trusted   | reports it as a widening event whose presence check fails |
+      | mode        | writer                                                                                                      | provenance       | trust     | verify                                                    |
+      | automation  | a writer of this node                                                                                       | operator         | trusted   | reports nothing                                           |
+      | automation  | a writer of this node                                                                                       | harness_meta     | trusted   | reports nothing                                           |
+      | interactive | a writer of this node                                                                                       | user             | trusted   | reports nothing                                           |
+      | automation  | a writer of this node                                                                                       | user             | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                                       | assistant        | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                                       | tool_call        | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                                       | tool_result:Bash | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                                       | web              | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                                       | mcp:github       | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                                       | file             | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                                       | subagent_result  | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                                       | harness_text     | untrusted | reports nothing                                           |
+      | interactive | a writer of this node                                                                                       | unparsed         | untrusted | reports nothing                                           |
+      | interactive | a run seat's writer on this node                                                                            | post             | untrusted | reports nothing                                           |
+      | interactive | this principal's device seat on this node                                                                   | post             | trusted   | reports nothing                                           |
+      | interactive | this principal's device seat on another of its nodes, signed by a device key it certified, within its scope | post             | trusted   | reports nothing                                           |
+      | interactive | a writer of this node, from a transcript the hook handlers did not watch                                    | user             | untrusted | reports nothing                                           |
+      | interactive | a device key on another node chaining within its scope to the principal key of this node's principal        | operator         | trusted   | reports nothing                                           |
+      | interactive | a device key on another node with no certificate from the principal key of this node's principal            | operator         | untrusted | reports nothing                                           |
+      | automation  | a run seat's writer on another node of this principal                                                       | harness_meta     | untrusted | reports nothing                                           |
+      | interactive | a run seat's writer on another node of this principal                                                       | user             | untrusted | reports nothing                                           |
+      | interactive | a writer of another principal                                                                               | operator         | untrusted | reports nothing                                           |
+      | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance                      | operator         | trusted   | reports it as a widening event that fails OWN-22          |
+      | automation  | a writer of this node, widening with a required presence proof that does not verify                         | operator         | trusted   | reports it as a widening event whose presence proof fails |
 
   @PRV-03 @P0 @I2 @pending
   Scenario Outline: model-reproducible and harness-summarised text is untrusted
     Given an isolated Cairn home
     And deployment mode "interactive"
     When <item> is recorded
-    Then the event is stored with provenance "<provenance>" and trust "untrusted"
+    Then the event is stored with provenance "<provenance>" and its trust level is "untrusted"
 
     Examples:
       | item                                                               | provenance   |
@@ -82,11 +87,11 @@ Feature: Provenance and trust (PRV)
   Scenario: "automation" is the default deployment mode and "interactive" is an opt-in of the person's own configuration
     Given an isolated Cairn home
     And the person's configuration sets no deployment mode
-    And the repository's ".cairn.toml" sets "deployment.mode" to "interactive"
+    And the repository's ".cairn.toml" sets "node.deployment_mode" to "interactive"
     When a user prompt is ingested
     Then the deployment mode is "automation"
-    And the event is stored with provenance "user" and trust "untrusted"
-    And an audit entry records "rejected repository setting deployment.mode"
+    And the event is stored with provenance "user" and its trust level is "untrusted"
+    And an audit entry records "rejected repository setting node.deployment_mode"
 
   @PRV-05 @P0 @I2 @pending
   Scenario Outline: configuration cannot trust a provenance class beyond the default policy
@@ -94,7 +99,7 @@ Feature: Provenance and trust (PRV)
     And deployment mode "interactive"
     And the person's configuration sets the trust of "<provenance>" to "trusted"
     When an event with provenance "<provenance>" is ingested
-    Then the event is stored with provenance "<provenance>" and trust "untrusted"
+    Then the event is stored with provenance "<provenance>" and its trust level is "untrusted"
     And an audit entry records "rejected trust override for <provenance>"
 
     Examples:
@@ -149,7 +154,7 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And deployment mode "interactive"
     When <item> is recorded
-    Then the event is stored with provenance "<provenance>" and trust "<trust>"
+    Then the event is stored with provenance "<provenance>" and its trust level is "<trust>"
 
     Examples:
       | item                                                                            | provenance       | trust     |
@@ -184,21 +189,21 @@ Feature: Provenance and trust (PRV)
   Scenario Outline: an "operator" event from another node is trusted only through a key chain rooted in the principal key of this node's principal
     Given an isolated Cairn home
     And this principal's offline principal key certified a laptop device key with scope "allow, deny, pin" and maximum rule level 2, and a phone device key with the scope "allow, deny"
-    And the laptop key certified a token key limited to a token's rooms and expiry, which certified a sandbox seat key for an ephemeral sandbox
+    And the laptop key certified a token key limited to an access token's rooms and expiry, which certified the device seat key and a run seat key of an ephemeral sandbox's node
     When an event <event> arrives from another node
     Then the event is <outcome>
-    And the sandbox's node, holding only a token key, signs no principal act
+    And the sandbox's node, whose device seat its token key certified, signs no principal act and no expire act
     And every revocation is a signed event that replicates like any other
     And a seat key the laptop key certified for a room chains principal key → device key → seat key
     And a recorded I2 security review of this requirement exists before it ships
 
     Examples:
       | event                                                                          | outcome                                                       |
-      | by the sandbox seat key, adding a pin within its token's rooms                 | untrusted until a principal stamps it from one of its devices |
+      | by the sandbox's run seat key, adding a pin within its access token's rooms    | untrusted until a principal stamps it from one of its devices |
       | by the laptop key, stamping a version of that pin                              | trusted                                                       |
       | by the laptop key, an act outside its scope                                    | untrusted                                                     |
       | by the laptop key, at rule level 3                                             | untrusted                                                     |
-      | by the sandbox seat key, not held before the token was revoked                 | refused and audited                                           |
+      | by the sandbox's run seat key, not held before the access token was revoked    | refused and audited                                           |
       | by a seat key the revoked laptop key certified, not held before the revocation | refused and audited                                           |
       | by the revoked laptop key, covered by a seal held before the revocation        | accepted                                                      |
       | by the phone key, allowing a held permission request                           | trusted                                                       |

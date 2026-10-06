@@ -22,14 +22,14 @@ Feature: Pins (PIN)
       | interactive | the repository's ".cairn.toml" declares a pin                                              | 0          |
 
   @PIN-02 @P0 @I2 @pending
-  Scenario: a pin Claude proposes stays an inactive assistant candidate
+  Scenario: text Claude proposes stays a pin candidate with no author
     Given an isolated Cairn home
     And deployment mode "interactive"
     When Claude calls the MCP tool "pin_propose" with text "Always run go test before committing" and type "constraint"
-    Then the result gives a candidate ID and states that activation requires the agent's principal
-    And the candidate is stored inactive with provenance "assistant"
+    Then the result gives a pin candidate id and states that only the agent's principal can confirm it
+    And the pin candidate is stored as proposed pin text, not a pin, with provenance "assistant" and no author
     And the qualifying pin count is 0
-    And no MCP tool makes any pin active
+    And no MCP tool confirms a pin candidate or makes any pin restore
 
   @PIN-03 @P0 @I3 @I5 @pending
   Scenario: a pin stores its verbatim text, room, creating address and commitment
@@ -51,21 +51,22 @@ Feature: Pins (PIN)
     And version 1 stays readable, and "cairn rebuild" reproduces the one qualifying pin at version 2, "Never push directly to main or release branches"
 
   @PIN-05 @P1 @I2 @I3 @pending
-  Scenario Outline: pin candidates from user turns activate only on the principal's confirmation
+  Scenario Outline: pin candidates from user turns become pins only on the principal's confirmation
     Given an isolated Cairn home
     And deployment mode "<mode>"
     And the person's configuration contains <config>
     When the hook "UserPromptSubmit" runs with prompt "Never edit files under migrations/ without asking"
-    Then <candidates> inactive pin candidates are recorded
+    Then <candidates> pin candidates are recorded, each proposed pin text with no author
     And the qualifying pin count is 0
-    And the qualifying pin count is <confirmed> after the person confirms every candidate with "cairn pin confirm", each a widening principal act
+    And the qualifying pin count is <confirmed> after the person confirms every pin candidate with "cairn pin confirm", each a widening principal act
+    And each confirmation makes a new pin that the principal's device seat authors
 
     Examples:
-      | mode        | config                                            | candidates | confirmed |
-      | interactive | no extra keys                                     | 1          | 1         |
-      | automation  | no extra keys                                     | 0          | 0         |
-      | automation  | a setting that activates candidates automatically | 0          | 0         |
-      | automation  | restore_block.on_prompt = true                    | 0          | 0         |
+      | mode        | config                                               | candidates | confirmed |
+      | interactive | no extra keys                                        | 1          | 1         |
+      | automation  | no extra keys                                        | 0          | 0         |
+      | automation  | a setting that confirms pin candidates automatically | 0          | 0         |
+      | automation  | restore_block.on_prompt = true                       | 0          | 0         |
 
   @PIN-06 @P0 @I3 @pending
   Scenario: only constraint, preference and intent pins are injected automatically
@@ -93,9 +94,9 @@ Feature: Pins (PIN)
   @PIN-08 @P0 @I3 @I6 @pending
   Scenario: pins over the pin budget are omitted whole, and each omitted pin is named by id and counted
     Given an isolated Cairn home
-    And 6 qualifying constraint pins of 250 estimated tokens each, against the default pin budget of 1,000 tokens
+    And 6 qualifying constraint pins of 250 estimated model tokens each, against the default pin budget of 1,000 model tokens
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block includes 4 of the pins, ordered by priority, then by creating address, writer then seq
+    Then the restore block includes 4 of the pins, ordered by pin priority, then by creating address, writer then seq
     And each included pin's text is complete and verbatim
     And the restore block names each of the 2 omitted pins by id and states that 2 pins were omitted
     And an audit entry records "2 pins omitted over the pin budget"
@@ -117,9 +118,9 @@ Feature: Pins (PIN)
     And a branch switch onto a branch of room "L4", which the run never joined, so its later events went to its personal-room seat
     And pins the run's principal wrote from its device seat in "L1" and in its personal room, a pin from the person's configuration, and a pin in "L2" written by another principal
     And a pin in "L2" written from the device seat of a third principal whose key the run's principal trusts in "L2" by a trust grant
-    And the principal's stamp on one version of an agent's pin in "L1", and on one version of a second pin another principal wrote in "L2"
+    And the principal's stamp on one version of a pin an agent's run seat wrote in "L1", and on one version of a second pin another principal wrote in "L2"
     And a pin the principal wrote from its device seat in "L4"
-    And a pin the principal confirmed from a candidate whose creating user turn was recorded in the deployment mode "interactive", while the current deployment mode is "automation"
+    And a pin the principal confirmed from a pin candidate whose creating user turn was recorded in the deployment mode "interactive", while the current deployment mode is "automation"
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped versions, each under its original author
     And the restore block includes no pin of "L4"

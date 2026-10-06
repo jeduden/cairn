@@ -115,14 +115,15 @@ Feature: Security (SEC)
     And no platform key store is available
     And encryption at rest is on, with its key named by a secret reference to a file only the person's OS user can read
     When the person runs "cairn status --json"
-    And the person runs "cairn backup"
+    And the person runs "cairn backup create"
     Then the device key was generated on the node into a file only the person's OS user can read, not taken from the environment
     And the status says the key is a file an unsandboxed agent of the same user could read
     And the at-rest encryption key is read from its secret reference on each use, not from the environment
     And no key or credential value appears in the store, a segment, derived state, a backup, an export, the audit log or any log output
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
-    When a run's harness hands a seat's private key to its MCP server at launch
-    Then the key lives only in that server's memory for the run, and no file, log, event, backup or output carries it
+    And a run ingested by "cairn ingest --path" has a seat key that ingest minted, kept like the device key in a file only the person's OS user can read
+    When a run's harness hands its run seat's private key to its MCP server at launch
+    Then the key lives only in that server's memory for the run, which seals the run seat's writer with it, and no file, log, event, backup or output carries it
 
   @SEC-11 @P0 @I2 @I7 @pending
   Scenario Outline: repository configuration may only tighten security settings
@@ -137,7 +138,7 @@ Feature: Security (SEC)
       | restore_block.on_prompt          | true        |
       | restore_block.landmarks_on_start | true        |
       | recall.default_scope             | rooms       |
-      | deployment.mode                  | interactive |
+      | node.deployment_mode             | interactive |
       | flag.enabled                     | false       |
       | redaction.extra_patterns         | []          |
 
@@ -237,11 +238,11 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     When the person starts the room-view component
     Then it listens only on a loopback address, on a port chosen at launch
-    And its launch credential has at least 128 bits and is never sent to the server in a request line, nor placed in argv, an environment another UID can read, a log or a referrer
+    And its launch credential has at least 128 bits and is never sent to the server in an HTTP request line, nor placed in argv, an environment another UID can read, a log or a referrer
     And the credential is exchanged once for a login credential that only the room view's own origin, port included, can read or send
     And a page served from another loopback port cannot obtain or replay that login credential
-    And it permits enveloped reading and cut or neutral acts, and widening acts only with the widening-act confirmation, until the instance stops
-    And a request whose Host or Origin is not its own, and any cross-origin request, is rejected and audited
+    And it permits enveloped reading and cut or neutral principal acts, and widening ones only under OWN-11, until the instance stops
+    And an HTTP request whose Host or Origin is not its own, and any cross-origin HTTP request, is rejected and audited
 
   @SEC-21 @P1 @I2 @I4 @pending
   Scenario: the room view renders record content as inert text
@@ -265,23 +266,23 @@ Feature: Security (SEC)
       | B2 disabled                                 | the person starts the peer component                            | Cairn refuses to start it and audits the refusal   |
       | B3 disabled                                 | the person starts the bridge component                          | Cairn refuses to start it and audits the refusal   |
       | the launcher disabled                       | the person starts the launcher                                  | Cairn refuses to start it and audits the refusal   |
-      | a store quota                               | ingest exceeds the quota                                        | the quota is enforced                              |
-      | a pinned deployment mode                    | the person changes the deployment mode                          | the change is refused                              |
-      | a pinned state for every boundary           | the person turns on B2                                          | the change is refused                              |
+      | a storage quota                             | ingest exceeds the quota                                        | the quota is enforced                              |
+      | a fixed deployment mode                     | the person changes the deployment mode                          | the change is refused                              |
+      | a fixed state for every boundary            | the person turns on B2                                          | the change is refused                              |
       | a cap on an action class's rule level       | the principal sets a higher rule level for that class           | the rule level stays at the cap                    |
       | away policies disabled                      | the principal sets an away policy                               | the change is refused                              |
       | hook permission decisions disabled          | the hook "PermissionRequest" runs                               | Cairn makes no permission decision                 |
       | held requests disabled                      | the hook "PermissionRequest" would place a held request         | no held request is placed                          |
       | an authenticator required for widening acts | the principal confirms a widening act without the authenticator | the act is refused                                 |
       | risk acceptance forbidden                   | the principal accepts a residual risk                           | the acceptance is refused                          |
-      | a 30-day retention window for room "p"      | an event of "p" ages past 30 days                               | it is purged with a tombstone, audited and counted |
+      | a 30-day retention policy for room "p"      | an event of "p" ages past 30 days                               | it is purged with a tombstone, audited and counted |
 
   @SEC-23 @P1 @I7 @pending
   Scenario: the room view writes no configuration and points to the CLI instead
     Given an isolated Cairn home
     And the room view is open
-    When the person asks the room view to change the agent configuration, the Cairn configuration, the deployment mode or a boundary's state
-    Then no configuration, deployment mode or boundary state is written
+    When the person asks the room view to change the harness configuration, the Cairn configuration, the deployment mode or a boundary's state
+    Then no harness configuration, Cairn configuration, deployment mode or boundary state is written
     And the room view shows the diff and the CLI command that would make the change
     And running that command shows the diff before it applies the change
 
@@ -319,7 +320,7 @@ Feature: Security (SEC)
     And the secret, absolute path, user name, host name and email address are redacted, and an unresolved secret-scan hit fails the export closed
     And the bundle keeps the chained header of every withheld or redacted event and a signed manifest of included and withheld ranges
     And the bundle is a plain file whose chain verifies with no host, peering or account
-    And the public host serves it read-only, bound only to the addresses its configuration names, none by default
+    And the publish component serves it read-only, bound only to the addresses its configuration names, none by default
 
   @SEC-27 @P1 @I6 @I10 @pending
   Scenario: rotated and revoked keys leave the record verifiable
@@ -331,7 +332,7 @@ Feature: Security (SEC)
     And the events sealed before the revocation still verify
     And the others are refused under the revocation rule
     And a head receipt of every writer's chain head verifies on another node with no network
-    And a seat key minted because the home was restored onto another node starts a new seat and writer, linked to the old seat
+    And a seat key minted because a backup restore put the home on another node starts a new seat and writer, which names the old seat
 
   @SEC-28 @P2 @I2 @I4 @I6 @pending
   Scenario: outbound bridges run only in the bridge component, per enabled destination, and carry little
@@ -361,7 +362,7 @@ Feature: Security (SEC)
     When the room's owner purges a range, one peer applies it and the other suppresses the events
     Then the purge is sent as a signed tombstone event
     And the applying peer shows a tombstone and the suppressing peer shows a gap
-    And that other principal can send the room's owner a signed purge request for the events its own seats wrote
+    And that other principal can send the room's owner a signed purge request, a neutral principal act, for the events its own seats wrote
     And the owner's answer to it is a principal act and is audited
 
   @SEC-31 @P0 @I1 @I5 @I6 @pending
@@ -376,8 +377,9 @@ Feature: Security (SEC)
   @SEC-32 @P1 @I2 @I6 @pending
   Scenario: the facilitator moderates within its appointment's limits and never instructs
     Given an isolated Cairn home
-    And a room where a principal whose device seat has the moderator role by role assignment appointed the facilitator's device seat a moderator, with a rate of two moderation acts per hour
-    When a post persuades the facilitator to bar three seats, a moderator and the owner, and to mute the whole room
+    And a facilitator, a service account whose device seat in the room lives on its own node
+    And a room where a principal whose device seat has the moderator role by role assignment appointed the facilitator's device seat an appointed moderator, with a rate of two moderation acts per hour
+    When a post persuades the facilitator's program, acting through that node's CLI and MCP tools, to bar three seats, a moderator and the owner, and to mute the whole room
     Then the first two bars are recorded, each audited with its finding, which carries range links to the pin and the content flagged
     And each bar is shown in the room view and named by id in the error each barred seat's next call returns
     And a Needs you item reaches the owner, the appointer and the principal of each barred seat
@@ -386,5 +388,5 @@ Feature: Security (SEC)
     And the owner and the appointer can each undo each bar
     And the facilitator's unbar of one of its own bars is refused and audited, since an appointed moderator never unbars
     And each finding is in the facilitator's own words and points to the content it flagged by range link, quoting none of it
-    And the facilitator's findings reach no agent as instructions unless that agent's principal recorded a trust grant for the facilitator
+    And the facilitator's findings reach no agent as trusted text unless that agent's principal recorded a trust grant for the facilitator's principal key
     And a run seat appointed moderator is kept to the same limits

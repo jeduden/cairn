@@ -28,7 +28,7 @@ Feature: Engineering quality (ENG)
     Given the repository's code
     When the static analyzers run
     Then no crate declares mutable global state
-    And every public blocking operation takes a deadline, directly or through a cancellation token a deadline fires
+    And every public blocking operation takes a deadline, directly or through a cancellation signal a deadline fires
     And no projection crate reads the wall clock or randomness
 
   @ENG-04 @P0 @pending
@@ -49,9 +49,9 @@ Feature: Engineering quality (ENG)
     And the key appears only as a "[REDACTED:" marker
 
   @ENG-06 @P0 @pending
-  Scenario: the crash harness kills Cairn mid-operation and every invariant holds
+  Scenario: the crash-consistency test kills Cairn mid-operation and every invariant stays true
     Given an isolated Cairn home
-    When the crash harness kills Cairn at randomized points during ingestion, purge, migration and rebuild
+    When the crash-consistency test kills Cairn at randomized points during ingestion, purge, migration and rebuild
     Then after every kill "cairn verify" exits 0
     And a nightly run completes at least 10000 iterations
 
@@ -72,9 +72,9 @@ Feature: Engineering quality (ENG)
       | configuration parser |
 
   @ENG-08 @P0 @pending
-  Scenario Outline: property-based tests pin the record's core laws
+  Scenario Outline: property-based tests check the record's core laws
     Given randomly generated records
-    Then the property "<property>" holds for every one
+    Then the property "<property>" is true of every one
 
     Examples:
       | property                                                                                                           |
@@ -93,7 +93,7 @@ Feature: Engineering quality (ENG)
     And every unsafe block that shares memory between threads passes under Miri or ThreadSanitizer
 
   @ENG-10 @P0 @pending
-  Scenario: golden files pin the exact bytes of restore blocks and envelopes
+  Scenario: golden files fix the exact bytes of restore blocks and envelopes
     Given a fixture record
     When the restore block and a recall envelope are rendered
     Then both equal their committed golden files byte for byte

@@ -19,7 +19,7 @@ Feature: Administration and lifecycle (ADM)
     And a Claude Code settings file with unrelated user entries
     And "cairn install --scope user" showed a diff of every configuration change, was declined and left the settings file unchanged
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
-    And that install created the node's personal room as the first act of the principal's device seat
+    And that install created the node's personal room as the first act of the principal's device seat, that seat's add there
     When the person runs "cairn uninstall" and keeps only the device key
     Then the output lists the hook, plugin and MCP registrations, room-view credentials, launcher endpoints, seat and device keys, enrollments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
     And the settings file is byte-identical to the one before install
@@ -72,17 +72,17 @@ Feature: Administration and lifecycle (ADM)
     And the derived state is unchanged
 
   @ADM-06 @P0 @I1 @I6 @pending
-  Scenario: backup and restore keep every later removal and never reuse a writer's log
+  Scenario: a backup restore keeps every later removal and never reuses a writer's log
     Given an isolated Cairn home
     And a home with sealed segments, an open segment, payloads, derived state and an audit log
-    And a backup taken by "cairn backup", followed by a purge of run "run-a" and the unpin of a pin
-    When the person runs "cairn restore" as a widening principal act
-    Then the backup contained every segment sealed fresh, the payload store, derived state and the audit log with its chain, no seat or device key, and an audit entry recorded it
-    And "cairn verify" passed on the copy and its audit chain before anything was restored
+    And a backup taken by "cairn backup create", followed by a purge of run "run-a" and the unpin of a pin
+    When the person runs "cairn backup restore" as a widening principal act
+    Then the backup contained every segment, the open segment up to a fresh seal, the payload store, derived state and the audit log with its chain, no seat or device key, and an audit entry recorded it
+    And "cairn verify" passed on the copy and its audit chain before anything was reinstated
     And every event and payload outside run "run-a" recalled before the backup is recalled identically
     And run "run-a" stays purged and the unpinned pin stays unpinned
-    And each restored local seat is followed by a new seat and writer under a newly minted seat key, linked to the old seat and audited, and no restored writer's log gains an event or reuses a seq
-    And "cairn verify" exits 0 on the restored home
+    And each local seat the copy contains is followed by a new seat and writer under a newly minted seat key, which names the old seat, audited, and no reinstated writer's log gains an event or reuses a seq
+    And "cairn verify" exits 0 on the home after the backup restore
 
   @ADM-07 @P0 @I1 @I5 @pending
   Scenario Outline: purge removes a scope everywhere, erases its commitment keys and leaves a tombstone
@@ -165,7 +165,7 @@ Feature: Administration and lifecycle (ADM)
     Given an isolated Cairn home
     And a git repository with a working tree, refs, notes, configuration and hooks
     And the node's principal has enabled the git carrier
-    When an agent runs, the person confirms "cairn install --scope project" and every Cairn component does its work
+    When an agent runs, the person confirms "cairn install --scope project" and every Cairn component runs
     Then the only changed file in the working tree is the harness settings file that install wrote
     And the only new or changed refs lie in the namespaced location the node's principal enabled for the carrier, and every new object is reachable only from them
     And the only changed hook is the commit-message hook for room trailers that the confirmed install set up
@@ -185,7 +185,7 @@ Feature: Administration and lifecycle (ADM)
       | --author alice     |
 
   @ADM-15 @P1 @I6 @I9 @I1 @pending
-  Scenario Outline: disk quotas refuse and audit what exceeds them and never drop an accepted event
+  Scenario Outline: quotas refuse and audit what is received over them and never drop an accepted event
     Given an isolated Cairn home
     And managed policy sets every quota
     And the <quota> quota is reached
@@ -198,15 +198,15 @@ Feature: Administration and lifecycle (ADM)
       | received writer     | a peer offers another event of that writer          | the event is refused and an audit entry records it                          |
       | peer                | the peer offers another segment                     | the segment is refused and an audit entry records it                        |
       | worktree checkpoint | the hook "Stop" records another worktree checkpoint | the worktree checkpoint is refused and an audit entry records it            |
-      | local writer        | the run appends another event                       | the event is recorded, a failure counter rises and a Needs you item appears |
+      | node                | the run appends another event                       | the event is recorded, a failure counter rises and a Needs you item appears |
 
   @ADM-16 @P1 @I6 @pending
   Scenario Outline: status and doctor report the launcher and every other component outside the core, peer lag, open chains and boundaries
     Given an isolated Cairn home
-    And managed policy that permits the room-view and peer components, forbids the launcher and locks one boundary
-    And the room-view component is running, a bridge has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment
+    And managed policy that permits the room-view, peer and publish components, forbids the launcher and locks one boundary
+    And the room-view component is running, the bridge component has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment
     When the person runs "cairn <command>"
-    Then for the room-view component, the launcher, the peer component and the bridge the output shows whether policy permits it, whether it runs and its failure counters
+    Then for the room-view component, the launcher, the peer component, the publish component and the bridge component the output shows whether policy permits it, whether it runs and its failure counters
     And the output shows the peer's sync lag for each writer
     And the output names the writer chain that ended without a closed segment
     And the output shows each boundary's state and whether managed policy locks it

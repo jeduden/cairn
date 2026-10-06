@@ -21,7 +21,7 @@ Feature: Record (REC)
       | sets transcript.roots to ["~/runner-transcripts"] | ~/runner-transcripts |
 
   @REC-02 @P0 @I1 @pending
-  Scenario: a subagent is ingested as its own run, linked to its parent's run
+  Scenario: a subagent is ingested as its own run, tied to its parent's run by a parent link
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "parent-run"
     And a subagent transcript "explore-agent" of "parent-run" naming the agent "Explore"
@@ -149,7 +149,7 @@ Feature: Record (REC)
     When the hook "<hook>" runs with the session_id and transcript_path of "main-run"
     Then the hook handler exits 0 within its budget
     And the events ingested so far are a prefix of "main-run"
-    And a work marker records the remainder of "main-run"
+    And an ingest marker records the remainder of "main-run"
 
     Examples:
       | hook              |
@@ -167,14 +167,14 @@ Feature: Record (REC)
     And every line of "sdk-run" is stored as an event of its run
 
   @REC-15 @P1 @I1 @I5 @pending
-  Scenario: retention policies expire content per provenance class through tombstoned purges
+  Scenario: retention policies purge content per provenance class, leaving tombstones
     Given an isolated Cairn home
     And a home whose record contains "web" payloads and "user" events that are 40 days old
-    And the person's configuration sets "retention.*.web" to 30 days
+    And the person's configuration sets "retention_policy.*.web" to 30 days
     When the retention policy is applied
     Then the content of the "web" events is removed and a tombstone records each purged range with reason "retention"
     And the "user" events are kept and "cairn verify" exits 0
-    And with no retention configured, applying the default policy removes nothing
+    And with no retention policy configured, applying the default policy removes nothing
 
   @REC-16 @P2 @I1 @pending
   Scenario: a Claude Managed Agents event history can be ingested
@@ -202,16 +202,17 @@ Feature: Record (REC)
     And a second writer whose seal at seq 10 has one altered byte
     When the person runs "cairn verify"
     Then the command exits 3 and names the second writer's seal at seq 10 as a mismatch
-    And the first writer's seal, over its writer id, seq 20 and the chain head at seq 20, verifies against its public key
+    And the first writer's seal, over its writer id, seq 20 and the chain head at seq 20, verifies against the seat key that made it
     And events 21 to 30 of the first writer are shown and recalled as "unsigned"
 
   @REC-19 @P1 @I1 @I6 @pending
-  Scenario Outline: a writer seals after every appending hook and closes its segment at every stop and every 30 s
+  Scenario Outline: a run's MCP server seals its run seat's writer at each call it serves and when the run stops, and the open segment closes at every stop and every 30 s
     Given an isolated Cairn home
-    And an active run whose writer has appended events in "PostToolUse" hooks for 31 s
+    And an active run whose hook handlers have appended events to its run seat's writer in "PostToolUse" hooks for 31 s, while its MCP server served calls
     And another writer whose chain ended without a closed segment
     When the hook "<hook>" runs and appends events
-    Then the writer sealed its log at the end of every hook invocation that appended events, within the hook budgets
+    Then the run's MCP server sealed the run seat's writer with the run seat's key at each call it served, covering what the hook handlers had appended, within the hook budgets
+    And it seals that writer again when the run stops, and events after the newest seal are shown as "unsigned"
     And a segment was closed once 30 s had passed though no seal closed one, and the open segment is closed at "<hook>"
     And "cairn verify" and "cairn status" each report the other writer's chain as ended without a closed segment
 
@@ -229,7 +230,7 @@ Feature: Record (REC)
     Then the record gains an event with provenance "file" carrying the checked-out commit id, the branch and a payload diff against the previous worktree checkpoint
     And the diff covers the tracked change and the untracked file but not the ignored file, with the API key redacted
     And a worktree checkpoint taken for a rewrite of the branch head keeps the replaced head
-    And Cairn obtained the worktree state and git data within the core's boundary, with no program started and no connection opened, within the hook budget, leaving any rest to a work marker
+    And Cairn obtained the worktree state and git data within the core's boundary, with no program started and no connection opened, within the hook budget, leaving any rest to an ingest marker
 
     Examples:
       | moment                                        |
@@ -257,7 +258,7 @@ Feature: Record (REC)
     When the person runs "cairn ingest --path" on "pre-install" and on "elsewhere"
     Then every event of "pre-install" carries the "ingested" origin, freshness mark and trust mark with its transcript source and ingest position, shown on every surface, and none is shown as witnessed
     And the user prompt from "pre-install" has trust "untrusted"
-    And this node holds "elsewhere" as an ingested run in the principal's personal room, shown as "ingested", and every event of it has trust "untrusted"
+    And this node records "elsewhere" as an ingested run in the principal's personal room, shown as "ingested", and every event of it has trust "untrusted"
 
   @REC-23 @P2 @I2 @I4 @I6 @pending
   Scenario Outline: room bundles are imported only from local files and fetched git refs, verified, redacted and audited
@@ -283,7 +284,7 @@ Feature: Record (REC)
     And a seat key bound to the node identity read, from outside the home, on the node the home was created on
     And <change>
     When the hook "SessionStart" runs and appends its first event after the start
-    Then Cairn mints a new seat key before that append, starting a new seat and writer linked to the old seat
+    Then Cairn mints a new seat key before that append, starting a new seat and writer that names the old seat
     And an audit entry records the node identity change
     And no event is appended under the old seat key
 
@@ -291,14 +292,14 @@ Feature: Record (REC)
       | change                                                    |
       | the home is part of a cloned runner image on another node |
       | the home is a copied volume mounted on another node       |
-      | the home is restored from a snapshot on another node      |
+      | the home is recovered from a snapshot on another node     |
       | the node identity value is unavailable                    |
 
   @REC-25 @P1 @I1 @I10 @pending
-  Scenario: closed segments are merged as deferred work so a writer has at most 48 segments a day
+  Scenario: closed segments are merged later, outside every hook budget, so a writer has at most 48 segments a day
     Given an isolated Cairn home
     And a writer that closed 200 sealed segments during one day of activity
-    When deferred work runs outside every hook budget
+    When the deferred merge runs outside every hook budget
     Then the writer has at most 48 stored segments for that day
     And every address, commitment and chain head is unchanged
     And "cairn verify" checks every seal and exits 0

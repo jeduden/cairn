@@ -35,13 +35,13 @@ Feature: Recall (RCL)
       | query "deploy", until "2026-06-30"   | 10   |
 
   @RCL-03 @P0 @I1 @pending
-  Scenario: event expand returns exact post-redaction content under the token cap
+  Scenario: event expand returns exact post-redaction content under the model-token cap
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "large-payloads"
     When Claude calls the MCP tool "event_expand" with range "w-1:1-400"
     Then the result is wrapped in the recall envelope
     And the items carry the exact post-redaction content with payload references resolved
-    And the envelope is at most 8,000 tokens with "truncated" true and a "next_cursor"
+    And the envelope is at most 8,000 model tokens with "truncated" true and a "next_cursor"
     And calling "event_expand" with that cursor returns the following events without gap or overlap
 
   @RCL-04 @P0 @I2 @pending
@@ -59,16 +59,16 @@ Feature: Recall (RCL)
       | event_get    | address "w-1:7"                |
 
   @RCL-05 @P0 @I8 @pending
-  Scenario: recall defaults to the agent's current run and widening to its rooms is explicit and logged
+  Scenario: recall defaults to the agent's current run and extending it to its rooms is explicit and logged
     Given an isolated Cairn home
     And a run with seats in its personal room and in room "L1", whose writers this node holds beside those of other runs in "L1" on two worktrees, of room "L2" where the run has no seat, and of a foreign room
     When Claude calls the MCP tool "event_search" with query "deploy" and no scope
     Then every hit belongs to the calling run, across the writers of both its seats
-    And with scope "room" and room "L1" the hits come from every writer of "L1", and with scope "rooms" from every room the run has a seat in, and an audit entry logs each widening
+    And with scope "room" and room "L1" the hits come from every writer of "L1", and with scope "rooms" from every room the run has a seat in, and an audit entry logs each call whose recall scope extends past the run
     And no scope returns a hit from "L2" or from the foreign room
     When Claude calls the MCP tool "event_get" with address "w-2:5", an event of another run in "L1", and no scope
     Then the event is not returned, and the result says the address lies outside the current scope
-    And with scope "room" and room "L1" the event is returned, and an audit entry logs the widening
+    And with scope "room" and room "L1" the event is returned, and an audit entry logs the extended recall scope
 
   @RCL-06 @P0 @I5 @pending
   Scenario: quarantined events are never recalled and purged ranges return a tombstone

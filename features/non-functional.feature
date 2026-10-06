@@ -15,24 +15,24 @@ Feature: Non-functional requirements (NFR)
     Then the p95 wall-clock time is at most <budget>
 
     Examples:
-      | Event             | budget                                                                                                                        |
-      | UserPromptSubmit  | 50 ms                                                                                                                         |
-      | SessionStart      | 150 ms                                                                                                                        |
-      | PostToolUse       | 100 ms                                                                                                                        |
-      | Stop              | 100 ms                                                                                                                        |
-      | SubagentStop      | 100 ms                                                                                                                        |
-      | Notification      | 100 ms                                                                                                                        |
-      | PreCompact        | 2 s                                                                                                                           |
-      | SessionEnd        | 1 s                                                                                                                           |
-      | PermissionRequest | 50 ms beyond the principal's hold, which ends within the principal's hold window and at least 10 s before the harness timeout |
+      | Event             | budget                                                                                                                                      |
+      | UserPromptSubmit  | 50 ms                                                                                                                                       |
+      | SessionStart      | 150 ms                                                                                                                                      |
+      | PostToolUse       | 100 ms                                                                                                                                      |
+      | Stop              | 100 ms                                                                                                                                      |
+      | SubagentStop      | 100 ms                                                                                                                                      |
+      | Notification      | 100 ms                                                                                                                                      |
+      | PreCompact        | 2 s                                                                                                                                         |
+      | SessionEnd        | 1 s                                                                                                                                         |
+      | PermissionRequest | 50 ms of Cairn's own processing beyond the wait, which ends within the principal's hold window and at least 10 s before the harness timeout |
 
   @NFR-02 @pending
-  Scenario: a hook handler stops at its internal deadline and hands off the rest through a work marker
+  Scenario: a hook handler stops at its internal deadline and hands off the rest through an ingest marker
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "large-backlog"
     When the hook "SessionEnd" runs with a harness timeout of 1.5 s
     Then the hook handler exits 0 before its internal deadline, below the harness timeout
-    And a work marker records the unfinished ingestion
+    And an ingest marker records the unfinished ingestion
     And the next "cairn ingest --all" completes the ingestion from the marker
 
   @NFR-03 @pending
@@ -51,14 +51,14 @@ Feature: Non-functional requirements (NFR)
   Scenario: ingestion sustains 5,000 events per second on one core
     Given an isolated Cairn home
     And a synthetic transcript of 1M events
-    When the person runs "cairn ingest --all" pinned to one core
+    When the person runs "cairn ingest --all" bound to one CPU core
     Then the command exits 0
     And the measured ingestion rate is at least 5,000 events/s
 
   @NFR-05 @pending
   Scenario: a store scales to 10M events, 100 GiB of payloads and 50 concurrent runs
     Given an isolated Cairn home
-    And a synthetic store with 10M events, 100 GiB of payloads and one run above 10M tokens
+    And a synthetic store with 10M events, 100 GiB of payloads and one run above 10M model tokens
     When 50 runs, subagents included, ingest concurrently
     Then every event is stored and recallable by its address (writer, seq)
     And "cairn verify" exits 0
@@ -72,17 +72,17 @@ Feature: Non-functional requirements (NFR)
     And an audit entry records "<fault>"
 
     Examples:
-      | fault                           | exit | output                        |
-      | store query error               | 0    | empty output and no injection |
-      | landmark builder panic          | 0    | empty output and no injection |
-      | untrusted text reaching restore | 1    | no injection (fail closed)    |
-      | network access attempted        | 1    | no injection (fail closed)    |
-      | CAIRN_HOME of another UID       | 1    | no injection (fail closed)    |
+      | fault                                   | exit | output                        |
+      | store query error                       | 0    | empty output and no injection |
+      | landmark builder panic                  | 0    | empty output and no injection |
+      | untrusted text reaching a restore block | 1    | no injection (fail closed)    |
+      | network access attempted                | 1    | no injection (fail closed)    |
+      | CAIRN_HOME of another UID               | 1    | no injection (fail closed)    |
 
   @NFR-07 @pending
   Scenario: the store stays consistent when a process is killed at any point
     Given an isolated Cairn home
-    And the crash-consistency harness
+    And the crash-consistency test
     When it kills Cairn at randomized points during ingestion 10,000 times
     Then "cairn verify" exits 0 after every kill
     And at most the in-flight transaction is lost

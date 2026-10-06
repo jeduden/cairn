@@ -70,9 +70,9 @@ Feature: Restore and injection (INJ)
   Scenario: an over-budget restore block drops landmark detail deterministically
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "long-multi-tier"
-    And qualifying pins totalling 900 tokens
+    And qualifying pins totalling 900 model tokens
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block is at most 2,000 tokens
+    Then the restore block is at most 2,000 model tokens
     And landmark detail is removed finest tier first, the coarsest tier last
     And every pin the PIN-08 rule admits is still present verbatim
 
