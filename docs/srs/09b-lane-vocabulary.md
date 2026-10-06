@@ -23,13 +23,13 @@ proposal, §8.
 | **Blocked**   | cannot proceed without something other than a decision | `rate limit`, `error`                         |
 | **Ended**     | run ended, acknowledged                                | `by agent`, `by principal`, `crashed`         |
 
-| Freshness mark | Meaning                                                                          |
-| -------------- | -------------------------------------------------------------------------------- |
-| (none)         | live: events current on this node                                                |
-| `behind`       | on a writer whose log has not reached this node lately: "as of 14:02 on desktop" |
-| `unrecorded`   | the run is live but Cairn sees no hook events since a time                       |
-| `imported`     | ingested from a transcript Cairn did not watch (REC-22)                          |
-| `stuck?`       | computed where shown, never recorded: Working with no event past a threshold     |
+| Freshness mark | Meaning                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------- |
+| (none)         | live: events current on this node                                                                             |
+| `behind`       | on a writer whose log has not reached this node lately: "as of 14:02 on desktop"                              |
+| `unrecorded`   | the run is live but the hook handlers have seen no hook since a time                                          |
+| `ingested`     | an ingested run: from a transcript the hook handlers did not watch (REC-22)                                   |
+| `stuck?`       | a watchdog observation (OWN-09), computed where shown, never recorded: Working with no event past a threshold |
 
 ## 9.7.2 Room status
 
@@ -74,7 +74,9 @@ Queue classes, named Q1–Q4 so they never read as priorities P0–P2:
 with no resume, refused segment, overlap), **Q3 waiting on you** (a
 pull-request review the forge asks of you, an outcome awaiting a
 verdict, a role request, a directed post awaiting your endorsement
-(LANE-12), a parked held request, a quota crossed), **Q4 for your
+(LANE-12), a pin version you stamped that was edited or unpinned
+(LANE-32), your device-seat pin a moderator unpinned (LANE-26), a parked
+held request, a quota crossed), **Q4 for your
 record** (never alerts). Order: class; inside Q1, the number of agents
 blocked on the same answer, then causal order of raising; inside Q2
 and Q3, rooms in the focus set first, then causal order. The focus set
@@ -96,15 +98,16 @@ break), `broken` ✕ (a check failed), `refused` (a segment was refused),
 
 ## 9.7.6 Trust marks
 
-No mark on this node's own trusted events and on certified principal
-acts (the latter show a device glyph). `○` plus petname on anything
-untrusted from another principal, agent, node or bundle; a key with no
-petname shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined.
-`▬` from a seat that left or was kicked. `imported`. `new key`.
-"from a revoked node". Timeline rails: solid for the agent's
-principal, hollow for other principals, dotted for agents and the forge.
-Sandbox events are untrusted on every other node (PRV-02). Unsandboxed
-agents are one line on Health, not a mark on every tile.
+No mark on this node's own trusted events, on certified principal acts (the
+latter show a device glyph) and on pin versions the principal stamped, for its
+own agents (shown with the stamper, LANE-32). `○` plus petname on anything
+untrusted from another principal, agent, node or bundle; a key with no petname
+shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined. `▬` from a seat
+that is no longer a member: it left, was kicked or was barred. `ingested`. `new
+key`. "from a revoked node". Timeline rails: solid for the agent's principal,
+hollow for other principals, dotted for agents and the forge. Sandbox events are
+untrusted on every other node (PRV-02). Unsandboxed agents are one line on
+Health, not a mark on every tile.
 
 ## 9.7.7 Keymap
 
