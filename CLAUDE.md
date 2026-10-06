@@ -93,7 +93,7 @@ security review and a new major version, not a bug fix.
   where continuing would violate I2, I4, or I8.
 - **I10 — Everything derived is rebuildable.** All derived state
   (indexes, landmarks, active pins, quarantine set, statuses, queues,
-  evidence, proof and gate verdicts, statistics) is a deterministic
+  evidence and proof classes, statistics) is a deterministic
   function of the set of writer logs a node holds and the node's own key
   set, independent of the order in which logs arrived. Rebuilding
   reproduces it exactly.
