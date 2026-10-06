@@ -41,7 +41,8 @@ model yourself; you report where text departs from it.
    own meaning, as the model's section on terms that are not Cairn
    concepts allows.
 3. Find concepts used outside their meaning, and relations the change
-   breaks.
+   breaks. An outside thing named in its own domain's words, as the
+   model allows, is no finding.
 4. Find terms the model does not define. A new concept is a finding
    until the model defines it.
 5. Report each finding with file, line, the term, the part of the

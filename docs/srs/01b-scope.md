@@ -24,18 +24,20 @@ them (ADR-08, OQ-16).
 
 Room summaries are in scope. When a run joins a room with much
 content, its agent makes a summary request for a room summary of the
-size it wants (LANE-33). The room's facilitator, a service account,
-writes it through its own node's CLI (`cairn room-summary write`),
-signed with its device seat there; the program that writes it is not a
-Cairn component, and the core makes no model calls (I4). A room
-summary is untrusted and never replaces the record (I1, I2).
+size it wants (LANE-33). The room's one facilitator, the service
+account the owner appoints, writes it through its own node's CLI
+(`cairn room-summary write`), signed with its device seat there; the
+program that writes it is not a Cairn component, and the core makes no
+model calls (I4). A room summary is untrusted and never replaces the
+record (I1, I2).
 
 A web service is a target interface, paced in four stages. Each stage
 stays a client of the record under VIEW-03, and every capability it
 offers also exists in the CLI or MCP.
 
 1. The person's own browser on loopback (B1), as the room view does
-   today.
+   today; a paired phone may reach it through a tunnel the principal
+   runs outside Cairn, which Cairn sees as loopback (§6.3).
 2. The person's other devices, as enrolled, mutually authenticated
    peers and paired phones (B2).
 3. Browsers on other machines with a login.

@@ -20,9 +20,11 @@ be steered by it.
 ## What you need
 
 - Read how a contribution was made before deciding on it.
-- Keep the contributor's history from ever instructing your agents.
-- Redaction, so contributors do not leak secrets into your repository.
-- No account or service a contributor must join first.
+- Keep the pull-request author's history from ever instructing your
+  agents.
+- Redaction, so pull-request authors do not leak secrets into your
+  repository.
+- No account or service a pull-request author must join first.
 
 ## Your journeys
 
@@ -36,7 +38,8 @@ be steered by it.
 ## When you give up
 
 - Foreign history reaches your agents as anything but untrusted data.
-- A contributor must install or join something heavy to share a room.
+- A pull-request author must install or join something heavy to share
+  a room.
 - Secrets or private paths leak in published rooms.
 - You cannot tell a real room from a fabricated one.
 
@@ -47,7 +50,7 @@ heading-level: "2"
 ## How you review
 
 You are given a target: a pull request, a plan, the pitch, a design
-or a spec. Read it, and the files it touches, from your own seat.
+or a spec. Read it, and the files it touches, from where you stand.
 
 1. Walk each of your journeys through the target, step by step. Note
    where it breaks, where a step is missing, and where it gets slow,
@@ -55,7 +58,7 @@ or a spec. Read it, and the files it touches, from your own seat.
 2. Check every item in "When you give up" against the target.
 3. For each finding, quote the target with a file and line, and say
    what you would need instead.
-4. Mark each finding blocking, important or minor, from your seat.
+4. Mark each finding blocking, important or minor, as you see it.
 5. Say when a finding implies a requirement, and draft it as one MUST
    sentence.
 
