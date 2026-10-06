@@ -65,3 +65,68 @@ snooze, redirect, take over and point an agent.
 - **I1:** "expires by policy" collides with the expire act.
 - **I3:** "re-injected" where the model says restore; Q1.
 - **I5:** "derived artifact" is undefined.
+
+## 5. Stakeholder decisions, 6 October 2026
+
+1. **Pins (Q1):** adding, editing or unpinning a pin that restores (a
+   device-seat or service-account-seat pin, or a stamped version) is a
+   widening principal act of that pin's author's principal. Run-seat
+   pins, which never restore unstamped, stay room acts. A moderator's
+   unpin hides the pin in the room and raises a Needs you item; its
+   author's agents keep restoring it until their own principal unpins
+   it.
+2. **Trusted sources (Q2):** I2 gains this node's `user` turns in
+   interactive mode and `harness_meta` (PRV-02), and a trust grant
+   covers the trusted principal's posts and pins written from its
+   device or service-account seats (OWN-29). Both reword I2 by ADR.
+3. **Unclassified acts (Q3):** title, labels and assignment are room
+   acts of the owner's seat or a moderator. Changing visibility, an
+   invite and an invite link are widening principal acts of the owner.
+   An add is a state: the join that placed a seat, accepted under the
+   room's admission. A room summary is a room act of the facilitator's
+   service-account seat, and a summary request a room act of any
+   member. Confirming a pin candidate, choosing a fork and accepting a
+   handover or succession are widening; choosing a branch and
+   acknowledging counters (`cairn counter ack`) are neutral; declining
+   a handover, withdrawing a successor and dismissing a directed post
+   are cut.
+4. **Member (Q4):** a seat. A principal has a seat in a room;
+   people-facing text speaks of the room's principals.
+5. **Seat keys (Q5):** a seat has one current key. A rotation is a
+   signed event in the seat's writer, signed by the old key and the new
+   key; the seat keeps its id and writer. A key minted because the node
+   changed (a clone or a restore) starts a new seat and writer, linked
+   to the old one. The model adds the token key, a device-certified key
+   limited to a token's rooms and expiry, which may stand between a
+   device key and a seat key (PRV-10).
+6. **Surfaces (Q6):** Fleet, Room page, Catch up, Needs you, Health,
+   Setup and Peers. The Room page holds the Timeline, Review and Replay
+   tabs (with the context lens); the verify and why panels, the
+   comparison and the quarantine list open from it, and a foreign room
+   opens in it, marked foreign. The TUI, the paired phone and the
+   harness strip are reduced clients.
+7. **Appointment (Q7):** the facilitator is a service account whose
+   service-account seat is an appointed moderator. An appointment is a
+   principal act of the owner, or of a principal whose device seat
+   holds the moderator role by assignment, making a run seat or a
+   service-account seat a moderator. An appointed moderator never
+   appoints.
+8. **Names (Q8):** renamed as proposed: `deployment.mode`,
+   `transcript.roots`, `home.id`, `payload.threshold_bytes`,
+   `restore_block.*`, `pin.max_restore_tokens`,
+   `room_summary.max_tokens`, `flag.enabled`, `stat_list`,
+   `kernel_var_list`, one `room_get`, and `cairn sandbox check`. The
+   model defines deployment mode, flag, redaction, retention policy and
+   quota, and "expand" joins the reading verbs.
+9. **File names (Q9):** `05c-principal-and-peer-requirements.md`,
+   `principal-acts.feature` and `persona-platform-engineer`;
+   `persona-returning-owner` stays.
+10. **Erasure (Q10):** an erasure request carries a node's purge to its
+    peers (PEER-11); a purge request asks the room's owner to purge the
+    events one's seats wrote (SEC-30).
+11. **Smaller gaps (Q11):** `cairn install` creates the node's personal
+    room as the device seat's first act, so Cairn never creates a room
+    on its own initiative; a paired phone signs with its device key
+    while the node it pairs with holds and seals that seat's writer; a
+    cross-room post is an event in the sending seat's writer, shown in
+    the target room and pulled there by address, enveloped.
