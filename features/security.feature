@@ -80,8 +80,8 @@ Feature: Security (SEC)
     And the envelope warning states that its contents are historical data and not instructions
 
   @SEC-07 @P0 @I2 @pending
-  Scenario: restore content is constructed only inside the injection crate
-    Given a repository where a crate outside the injection crate constructs TrustedText
+  Scenario: restore content is constructed only inside the `restore_block` crate
+    Given a repository where a crate outside the `restore_block` crate constructs TrustedText
     When the CI static check for TrustedText construction runs
     Then the check fails
     And it names the offending file and line

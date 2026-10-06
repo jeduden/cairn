@@ -32,9 +32,9 @@ Feature: Restore and injection (INJ)
 
   @INJ-03 @P0 @I2 @pending
   Scenario: the restore builder accepts only TrustedText
-    Given the injection crate's code
-    When a crate outside the injection crate tries to construct a TrustedText value
-    Then the build fails because the TrustedText constructor is private to the injection crate
+    Given the `restore_block` crate's code
+    When a crate outside the `restore_block` crate tries to construct a TrustedText value
+    Then the build fails because the TrustedText constructor is private to the `restore_block` crate
     And every field of TrustedText is private, and no public method or trait implementation builds one, except by copying an existing TrustedText, or changes one
     And TrustedText is built only from qualifying pins and sanitized structural fields
     And the restore builder signature accepts no type but TrustedText
