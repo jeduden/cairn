@@ -14,6 +14,7 @@ Feature: Room (LANE)
     And that personal room was created by "alice"'s "cairn install" on the node, as the first act of her device seat there and that seat's add, and Cairn created no room on its own initiative
     And the events after the switch to "feature/x" went to the writer of the run's seat in "R", with no principal act
     And the events after the switch to "spike" went to its personal-room seat again
+    And while a role assignment gives the run's seat in "R" the viewer role, its events on "feature/x" go to its personal-room seat, and none is refused
     And each event belongs to exactly one seat's writer and names its run, and the run's history joins both writers
     And a room created by a principal, or by an agent for its principal, has an id of 128 random bits minted by the creating node, and its create room act is the first act of the creating seat's writer and that seat's add
     And a room has at most one intent, its conversation, seats and pins, and branches in any number of repositories, each named by a branch link
@@ -23,6 +24,7 @@ Feature: Room (LANE)
     And a run's seat in a room the run created routes its events exactly as a seat it joined
     And a principal act of "alice" on "R", signed by a device of hers with no seat in "R", is recorded on that device's seat in "R", which joins without admission since her run's seat is a member there
     And a principal act of "alice" rejecting a foreign room, in which she has no seat, goes to the signing device's seat in her personal room, naming that room
+    And a principal act of "alice" on "R" signed by her paired phone goes to the phone's device seat in her personal room, naming "R", and "R" shows it by address as it shows a cross-room post
 
   @LANE-02 @P0 @I1 @I6 @I8 @pending
   Scenario Outline: a repository's identity is independent of the local path
@@ -140,7 +142,7 @@ Feature: Room (LANE)
     Then the handover shows as "accepted" to both principals
     And "alice"'s seats have the moderator role and her agents' events stay accepted
     And her pin keeps "alice"'s device seat as its author and keeps restoring to her agents
-    And it reaches "bob"'s agents only as a version "bob" stamps, shown with "bob" as its stamper
+    And it reaches "bob"'s agents only through a version "bob" stamps, shown with "bob" as its stamper, or a trust grant of "bob" covering "alice"'s key
     And held requests stay with each agent's principal
     When "bob" offers the room to "erin", who declines it as a cut principal act
     Then the offer shows as "declined" to both principals and ownership stays with "bob"
@@ -150,8 +152,9 @@ Feature: Room (LANE)
     Then "frank" can no longer accept ownership by succession
     When "bob" names "carol" as successor, the naming stands past 7 days, and every seat of "bob" leaves the room
     Then ownership stays with "bob" until "carol" accepts it by succession, a widening principal act
-    And in a room every seat of whose owner has left with no successor named, ownership stays with the owner, and every change to its pins, an author's edit and a moderator's unpin included, is refused until the owner hands the room over, names a successor who accepts, or rejoins
+    And while every seat of "bob" has left and "carol" has not accepted, as in a room whose owner named no successor, ownership stays with "bob", and every change to the room's pins, an author's edit and a moderator's unpin included, is refused until a handover, a succession or "bob"'s rejoin
     And that owner, with no seat in the room, may still offer a handover or name a successor, each recorded on its device seat in its personal room, naming the room
+    And that owner may rejoin under the room's admission, which its own invite satisfies
 
   @LANE-12 @P2 @I6 @pending
   Scenario: only a directed post enters the Needs you queue of its agent's principal
@@ -192,7 +195,7 @@ Feature: Room (LANE)
     Then it opens in the Room page, marked foreign
     And the Room page states that every event, evidence class and proof class in it is asserted by the bundle's principal key
     And the commits show as a match for the bundle's principal key, verified offline inside the core, with no socket opened and no program started
-    And the seat key that does not chain is shown unbound, by its fingerprint
+    And the seat key that does not chain is shown as an unknown key, by its fingerprint
     And PRV-07 flags are computed locally, the bundle's flags are ignored, and invisible characters are shown in place
 
   @LANE-16 @P1 @I2 @I4 @I10 @pending
@@ -214,7 +217,7 @@ Feature: Room (LANE)
       | viewer                                                       | read, a role request and a summary request                                                                                                                                                 |
       | contributor                                                  | read and a summary request; post, link (a range, branch or criterion link) and present; pin, edit and unpin its own pins; work on any branch the room names, with or without an assignment |
       | moderator                                                    | a contributor's, plus unpin any pin but the intent, kick, bar, unbar, mute, unmute and pick, and set title, labels and assignments                                                         |
-      | the facilitator's device seat, appointed by the owner        | a moderator's within SEC-32's limits, plus posting findings against the pins and writing room summaries                                                                                    |
+      | the facilitator's device seat, appointed by the owner        | a moderator's within SEC-32's limits, plus writing room summaries                                                                                                                          |
       | moderator appointed to a run seat                            | a moderator's within SEC-32's limits                                                                                                                                                       |
       | muted by a moderator                                         | read                                                                                                                                                                                       |
       | contributor in a whole-room mute that leaves posting to it   | read and post                                                                                                                                                                              |
@@ -271,7 +274,7 @@ Feature: Room (LANE)
     And a room whose intent names criteria C1 and C2 and the path "internal/export/"
     When an agent adds a criterion link from its check's result to C1 of the intent's current version through "room_link" and edits "go.mod"
     Then the result names the intent version in force when its turn began
-    And the criterion link to C1 carries no evidence class: the result keeps its own, and the criterion link shows it was made by the agent's run seat
+    And the criterion link to C1 reads as a "claim" and carries no evidence class: the result keeps its own, and the criterion link shows it was made by the agent's run seat
     And a "room_link" naming another room's criterion is refused, and a result for another room traces to it only through a delegated task
     And no result is linked to C2 from event text
     And the edit to "go.mod" is marked "outside intent"
@@ -298,8 +301,8 @@ Feature: Room (LANE)
     And a join by "mallory", whose key the admission list does not name, is refused, audited and counted
     And a join "alice" neither asked for nor accepted does not happen
     When "alice" also joins the room from the node on her laptop by her own act at a principal surface, and allows a held permission request of the room's run from her paired phone
-    Then the laptop's node has its own device seat in the room, shown grouped under "alice" with her run's seat, through her principal key
-    And the phone joins no room: its answer goes to its device seat in her personal room, a member there from its pairing with no add, naming the room
+    Then the laptop's node has its own device seat in the room, added by a join without admission since her run's seat is a member there, shown grouped under "alice" with her run's seat, through her principal key
+    And the phone joins no room: its answer goes to its device seat in her personal room, a member there from its pairing with no add, naming the room, and the room shows it by address
     And the phone signs with its own device key and seals its device seat's writer with that seat's key, and the node it pairs with only holds the writer
     When a subagent of that run joins on "alice"'s acceptance
     Then it gets its own seat id, and its run is tied to its parent's run by a parent link
@@ -356,6 +359,8 @@ Feature: Room (LANE)
     When a moderator unpins "bob"'s constraint pin
     Then the unpin takes the pin off the room's pin list and raises a Needs you item for "bob"
     And the pin keeps restoring to every agent it restored to, "bob"'s and those whose principal's trust grant covers "bob", until "bob" unpins it as his widening principal act
+    When the device seat of a node of "bob" that has only a token key pins the constraint "deploy on Fridays only"
+    Then the pin changes only by room acts, is shown as unstamped, and restores to no agent until stamped
     When the run seat "p-3" pins the constraint "use the staging database"
     Then the pin is stored on the room's pin list with provenance "assistant", shown as unstamped, and restores to no agent until stamped
     When "alice" stamps version 1 of it and "p-3" then unpins it by a room act

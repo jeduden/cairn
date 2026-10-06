@@ -341,7 +341,7 @@ Feature: Security (SEC)
     When the bridge component runs and a held request and a pull-request review from the forge arrive
     Then every outbound bridge runs only in the bridge component, which is listed in the register, outbound only, and off for every destination not enabled
     And the pull-request review is received only as an untrusted event
-    And the notification carries only the room's petname, the queue class and a count, and no answer to it is accepted
+    And the notification carries only the room's petname, else its id, the queue class and a count, and no answer to it is accepted
     And every send and failure is counted and audited
 
   @SEC-29 @P1 @I4 @I2 @pending
@@ -380,14 +380,14 @@ Feature: Security (SEC)
     And a room whose owner appointed a service account's device seat in the room, on that service account's own node, as the room's facilitator, an appointed moderator
     And the owner set the appointment rate, a room setting, to two moderation acts per hour
     When a post persuades the facilitator's program, acting through that node's CLI, to bar three seats, a moderator and the owner, and to mute the whole room
-    Then the first two bars are recorded, each audited with its finding, which carries range links to the pin and the content flagged
+    Then the first two bars are recorded, each audited with the post behind it, which carries range links to the pin and the content flagged
     And each bar is shown in the room view and named by id in the error each barred seat's next call returns
     And a Needs you item reaches the owner, who appointed it, and the principal of each barred seat
     And the third bar is refused and counted
     And the acts on the moderator and the owner, and the room-wide mute, are refused and audited
     And the owner can undo each bar
     And the facilitator's unbar of one of its own bars is refused and audited, since an appointed moderator never unbars
-    And each finding is in the facilitator's own words and points to the content it flagged by range link, quoting none of it
-    And the facilitator's findings reach no agent as trusted text unless that agent's principal recorded a trust grant for the facilitator's principal key
+    And each such post is in the facilitator's own words and points to the content it flagged by range link, quoting none of it
+    And the facilitator's posts reach no agent as trusted text unless that agent's principal recorded a trust grant for the facilitator's principal key
     And the facilitator's program writes room summaries only with "cairn room-summary write", signed with its device seat, and never acts through an MCP tool
     And a run seat that a principal whose device seat has the moderator role by role assignment appointed moderator is kept to the same limits, and that appointer can undo each of its acts

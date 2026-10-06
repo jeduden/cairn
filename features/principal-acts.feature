@@ -22,13 +22,13 @@ Feature: Principal acts (OWN)
     Then the outcome is "<outcome>"
 
     Examples:
-      | surface                            | outcome                                                                                                                                                                                        |
-      | the room view under SEC-20         | recorded as an operator event on the signing node's device seat in the room it acts on, covered by its writer's seal                                                                           |
-      | the CLI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, covered by its writer's seal                                                                           |
-      | a paired phone within its scope    | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, whose writer the phone seals with that seat's key and the node only holds |
-      | the harness's own prompt           | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                |
-      | the terminal the launcher hosts    | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                |
-      | any other surface                  | refused and audited                                                                                                                                                                            |
+      | surface                            | outcome                                                                                                                                                                                                                   |
+      | the room view under SEC-20         | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
+      | the CLI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
+      | a paired phone within its scope    | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, which shows it by address, whose writer the phone seals with that seat's key and the node only holds |
+      | the harness's own prompt           | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                                           |
+      | the terminal the launcher hosts    | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                                           |
+      | any other surface                  | refused and audited                                                                                                                                                                                                       |
 
   @OWN-03 @P1 @I2 @pending
   Scenario: principal-typed text reaches an agent only through the harness's input interface
@@ -191,11 +191,12 @@ Feature: Principal acts (OWN)
   Scenario: a paired phone is enrolled by a widening act and its device key is limited to its scope
     Given an isolated Cairn home
     And a paired phone whose device key "alice" certified with its scope by enrolling it, a widening principal act
-    When the phone, reaching the room view through the principal's tunnel, tries to answer a held permission request with the harness's "allow for session"
-    Then the room-view component refuses it on the server
+    When the paired phone, reaching its node over B2, tries to answer a held permission request with the harness's "allow for session"
+    Then the answer is refused on the server
     And the phone can only read, allow once and deny held permission requests
     And each answer the phone gives is signed with its own device key and recorded on its device seat in her personal room, naming the room, whose writer the phone seals with that seat's key and the node it pairs with only holds
     And where an authenticator is required each allow carries the phone's own presence proof bound to that answer
+    And before B2 a phone reaching the room view through the principal's tunnel is a principal surface, not a paired phone, whose secret's scope the room-view component enforces on the server, and it sees the room view's own origin, port included
 
   @OWN-17 @P2 @I2 @I8 @pending
   Scenario: a principal act from another of the principal's devices takes effect only within its scope
@@ -205,7 +206,8 @@ Feature: Principal acts (OWN)
     Then the act does not take effect here
     And the phone is limited to reading and to allowing or denying held permission requests
     And the phone seals its device seat's writer with that seat's key, and this node only holds the writer
-    And principal acts from "alice"'s other nodes take effect only under PRV-10, within their device scope and maximum rule level
+    And the phone joins no room: its acts are recorded on its device seat in the personal room, naming the room, which shows them by address
+    And principal acts from "alice"'s other nodes take effect only under PRV-10, for the kinds of principal act, post and pin within their device scope and up to their maximum rule level
 
   @OWN-18 @P1 @I2 @pending
   Scenario: a command from an untrusted event runs only after the person confirms its exact text

@@ -10,12 +10,12 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "every-kind"
     And "every-kind" contains a user turn, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent result, lifecycle metadata, a system reminder and a malformed line
-    And a principal act, an expire act, a pin written from a device seat, a pin a run seat wrote, a post from another seat and a retention purge's tombstone are recorded in the run's room
+    And a principal act, an expire act, a pin written from a device seat, a pin a run seat wrote, a post from another seat, a room act of the run's seat and a retention purge's tombstone are recorded in the run's room
     And the Bash tool call of "every-kind" was ingested by an earlier ingest than its result
     When the person runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
     And the Bash result carries provenance "tool_result:Bash"
-    And the principal act, the expire act and the device-seat pin carry provenance "operator", the run-seat pin carries "assistant", and the tombstone is a structural event
+    And the principal act, the expire act and the device-seat pin carry provenance "operator", the run-seat pin and the run seat's room act carry "assistant", and the tombstone carries "structural"
     And every provenance class is one of:
       | user               |
       | assistant          |
@@ -29,6 +29,7 @@ Feature: Provenance and trust (PRV)
       | harness_text       |
       | operator           |
       | post               |
+      | structural         |
       | unparsed           |
 
   @PRV-02 @P0 @I2 @I8 @pending
@@ -124,6 +125,7 @@ Feature: Provenance and trust (PRV)
     Then the <artifact> records the addresses of both events it derives from
     And the <artifact> has trust "untrusted"
     And the <artifact> derived from the "harness_meta" event alone has trust "trusted"
+    And any sanitized structural field of the <artifact> is trusted though the <artifact> is untrusted
 
     Examples:
       | artifact      |

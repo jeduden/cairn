@@ -60,6 +60,7 @@ Feature: Pins (PIN)
     And the qualifying pin count is 0
     And the qualifying pin count is <confirmed> after the person confirms every pin candidate with "cairn pin-candidate confirm", each a widening principal act
     And each confirmation makes a new pin that the principal's device seat authors
+    And confirming an intent or criterion candidate instead makes a new version of the room's intent pin, authored by the owner's device seat
 
     Examples:
       | mode        | config                                               | candidates | confirmed |
@@ -120,10 +121,11 @@ Feature: Pins (PIN)
     And a pin in "L2" written from the device seat of a third principal whose key the run's principal trusts in "L2" by a trust grant
     And the principal's stamp on one version of a constraint pin an agent's run seat wrote in "L1", on one version of a second constraint pin another principal wrote in "L2", and on one version of a "fact" pin in "L1"
     And a pin the principal wrote from its device seat in "L4"
+    And a constraint pin in "L1" written from the device seat of a token-key-only node of the run's principal, unstamped
     And a pin the principal confirmed from a pin candidate whose creating user turn was recorded in the deployment mode "interactive", while the current deployment mode is "automation"
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped constraint versions, each under its original author
-    And the restore block includes no pin of "L4" and not the stamped "fact" version
+    And the restore block includes no pin of "L4", not the stamped "fact" version and not the token-key-only node's unstamped pin
     And the restore block names "L1", "L2" and the personal room by id
     And the other principal's unstamped pin is stated only by count, room id and key fingerprint, with no text, and an audit entry records it
 

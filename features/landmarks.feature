@@ -24,12 +24,12 @@ Feature: Landmarks (LMK)
     And an agent run with a Claude Code transcript "two-closed-spans"
     When the agent calls the MCP tool "landmark_list" with run "current"
     Then there is one landmark per closed span with its address range, turn range, event counts by kind, tool call counts, touched file paths and error indicator
-    And the landmark user-turn excerpt is <excerpt>
+    And no landmark carries <text>
 
     Examples:
-      | mode        | excerpt                                          |
-      | automation  | absent                                           |
-      | interactive | at most the first 80 characters of the user turn |
+      | mode        | text                                   |
+      | automation  | any character of the user turn         |
+      | interactive | any character of the trusted user turn |
 
   @LMK-03 @P0 @I2 @pending
   Scenario Outline: untrusted structural fields are sanitized to the allow-list
@@ -54,7 +54,7 @@ Feature: Landmarks (LMK)
     And the person runs "cairn quarantine add --range w-1:12-12"
     When the person runs "cairn landmark list --json"
     Then the event counts include the flagged event and the quarantined event w-1·12
-    And no tool name, file path or excerpt in any landmark comes from those events
+    And no tool name, file path or other text field in any landmark comes from those events
 
   @LMK-05 @P0 @I10 @pending
   Scenario: landmarks roll up into tiers of at most k blocks

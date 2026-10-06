@@ -17,12 +17,13 @@ Feature: Peer network (PEER)
     And the outcome is the same whether the peer component ships in the core's executable or its own
 
   @PEER-02 @P2 @I4 @pending
-  Scenario: a peer holds complete room copies and serves them only to nodes whose principal has a seat in the room
+  Scenario: a peer holds complete room copies and serves them only to nodes whose principal has a seat in the room or that hold it blind
     Given an isolated Cairn home
     And enrolled peers "a", "b" and "c", where the principals of "a" and "b" have seats in room "room-1" and the principal of "c" has none
     When "b" and "c" each ask "a" directly for the segments of "room-1"
     Then "a" serves its complete copy of "room-1" to "b"
     And "c" is refused every segment of "room-1"
+    And a blind peer that holds "room-1" is served its segments, encrypted (PEER-12)
     And no other peer and no third-party service took part in enrollment, discovery or relay
 
   @PEER-03 @P2 @I9 @I10 @pending
@@ -60,7 +61,7 @@ Feature: Peer network (PEER)
     Given an isolated Cairn home
     And the person mints, as a widening principal act, an access token for a sandbox carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the access token's rooms and expiry, read from an environment secret by recorded opt-in
     When a node in a sandbox starts with the access token before it reaches any peer
-    Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer address and git-carrier remote it may deliver to
+    Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address and git-carrier remote it may deliver to
     And a seat key it certifies for a room outside the access token's rooms, or after the access token's expiry, chains to no principal key and is refused
     And its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events, device-seat pins of provenance "operator" and run-seat pins of provenance "assistant", and says later pins may be missing
     And the node, holding only the token key, has a device seat its token key certified, which signs no principal acts and no expire acts, and every pin the node writes, from its device seat or a run seat, restores only once a principal stamps it from one of its devices
@@ -107,7 +108,7 @@ Feature: Peer network (PEER)
     Given an isolated Cairn home
     And a writer that sealed two different events at seq 42
     When both events reach the peer
-    Then both events are kept as evidence
+    Then both events are kept for forensics
     And the writer is marked "equivocated"
     And the room shows its integrity status as "equivocated"
     And the derived artifacts for that writer stop at the fork until the node's principal chooses which fork to keep as a widening principal act

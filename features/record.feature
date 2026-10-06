@@ -172,7 +172,7 @@ Feature: Record (REC)
     And a home whose record contains "web" payloads and "user" events that are 40 days old
     And the person's configuration sets "retention_policy.*.web" to 30 days
     When the retention policy is applied
-    Then the node purges the content of the "web" events, records each purge naming the policy "retention_policy.*.web", and leaves a tombstone, a structural event, with reason "retention" in each purged range
+    Then the node purges the content of the "web" events, records each purge naming the policy "retention_policy.*.web", and leaves a tombstone, a structural event with provenance "structural", with reason "retention" in each purged range
     And the "user" events are kept and "cairn verify" exits 0
     And with no retention policy configured, applying the default policy removes nothing
 
