@@ -49,23 +49,24 @@ security review and a new major version, not a bug fix.
   recorded.
 - **I2 — No automatic path from untrusted content to the model.** Content that
   originates outside the trusted sources (tool output, web, MCP servers,
-  files, assistant text, and anything another node or principal produced,
-  except what the agent's principal signed through a device key it certified)
-  reaches the model only inside an untrusted-data envelope when Claude
-  explicitly calls a recall tool, or through one of the closed paths below
-  that a principal act names. The trusted sources are this node's own
-  `operator`, `harness_meta` and structural events, its `user` turns while the
-  deployment mode is `interactive`, and, once PRV-10 ships, principal acts,
-  posts and pins signed through a device key the agent's principal certified,
-  within its scope, a pin version a principal stamped, for that principal's
-  own agents, and the posts and pins a trust grant of the agent's principal
-  covers. Cairn writes to an agent only through a closed set of paths. Without
-  a principal act: restore blocks of pins (INJ-01, INJ-02), opt-in notices
-  (INJ-10), and the fixed templates of OWN-04 and OWN-07, each built only from
-  trusted structural fields and ids. On a principal act recorded at that time:
-  through the harness's own input, only principal-typed text, a fixed template
-  that references ids, or a post a principal endorsed exactly as shown inside
-  the template of OWN-08. Under a delegation grant its principal recorded
+  files, the model's replies, and anything another node or principal produced,
+  except what the agent's principal signed through a device key it certified
+  or a trust grant of that principal covers) reaches the model only inside an
+  untrusted-data envelope when the agent explicitly calls a recall tool, or
+  through one of the closed paths below that a principal act names. The
+  trusted sources are this node's own `operator`, `harness_meta` and
+  structural events, its `user` turns while the deployment mode is
+  `interactive`, and, once PRV-10 ships, principal acts, posts and pins signed
+  through a device key the agent's principal certified, within its scope, a
+  pin version a principal stamped, for that principal's own agents, and the
+  posts and pins a trust grant of the agent's principal covers. Cairn writes
+  to an agent only through a closed set of paths. Without a principal act:
+  restore blocks of pins (INJ-01, INJ-02), opt-in notices (INJ-10), and the
+  fixed templates of OWN-04 and OWN-07, each built only from trusted
+  structural fields and ids. On a principal act recorded at that time: through
+  the harness's own input, only principal-typed text, a fixed template that
+  references ids, or a post a principal endorsed exactly as shown inside the
+  template of OWN-08. Under a delegation grant its principal recorded
   (OWN-23): a delegated task inside the fixed template of OWN-24. Once its
   requirements ship, a principal may also trust another principal by key for
   its own agents, in one room or everywhere; the pins that principal wrote
@@ -87,10 +88,11 @@ security review and a new major version, not a bug fix.
   public: read-only publishing and outbound exchange with hosts the node's
   principal names, off until turned on. Managed policy can disable B1, B2 and
   B3. No component sends telemetry or depends on a central or third-party
-  service. Data leaves the machine only as what Cairn writes to an agent
-  through I2's closed paths, which the harness sends to its model, or through
-  a B2 or B3 component the node's principal turned on; whatever such a
-  component brings in is untrusted (I2).
+  service. Data leaves the machine only as recalled content an agent receives
+  through a tool call, or as what Cairn writes to an agent through I2's closed
+  paths, both of which the harness sends to its model, or through a B2 or B3
+  component the node's principal turned on; whatever such a component brings
+  in is untrusted (I2).
 - **I5 — Bad data can be removed from circulation without destroying
   evidence.** Any event, span, run, writer or derived artifact can be
   quarantined from recall immediately on the node that records the quarantine,
@@ -129,7 +131,7 @@ What they mean for everyday code:
 - **I6** — every dropped, rejected, redacted or failed operation is audited and
   counted.
 - **I9** — hook handlers fail open unless that would break I2, I4 or I8.
-- **I10** — projection code reads no clock and no randomness.
+- **I10** — code that builds derived artifacts reads no clock or randomness.
 
 Where usefulness and safety conflict, pick safety; make convenience opt-in.
 
@@ -154,9 +156,8 @@ row: "- [{filename}]({filename}) — {summary}"
 - [SECURITY.md](SECURITY.md) — How to report a vulnerability in Cairn privately, the 90-day coordinated disclosure policy, which versions get fixes, and how to verify a release (ENG-24, ENG-20).
 <?/catalog?>
 
-The SRS sections under [docs/srs](docs/srs/index.md) each carry a
-one-line summary in the index there; open only the section a task
-touches.
+The SRS sections under [docs/srs](docs/srs/index.md) each carry a one-line
+summary in the index there; open only the section a task touches.
 
 ## Development Workflow
 
@@ -170,20 +171,19 @@ touches.
 
 ## Review
 
-Agents review and approve each other's pull requests (ENG-21). A pull
-request touching a path [CODEOWNERS](.github/CODEOWNERS) assigns —
-the SRS, the gates that enforce it, CI and its tooling, the
-supply-chain policy, the agent instructions, and the security-sensitive
-packages until a security reviewer is named — also waits for the
-stakeholder's approval. Keep such changes out of code pull requests.
+Agents review and approve each other's pull requests (ENG-21). A pull request
+touching a path [CODEOWNERS](.github/CODEOWNERS) assigns — the SRS, the gates
+that enforce it, CI and its tooling, the supply-chain policy, the agent
+instructions, and the security-sensitive packages until a security reviewer is
+named — also waits for the stakeholder's approval. Keep such changes out of code
+pull requests.
 
 ## Requirements and Scenarios
 
-The SRS is normative; the scenarios under `features/` make it
-executable. Every requirement id has exactly one scenario, tagged
-with the id, its priority and its traced invariants, and a gate test
-fails the build when the two drift. The mechanics are in
-[docs/development.md](docs/development.md).
+The SRS is normative; the scenarios under `features/` make it executable. Every
+requirement id has exactly one scenario, tagged with the id, its priority and
+its traced invariants, and a gate test fails the build when the two drift. The
+mechanics are in [docs/development.md](docs/development.md).
 
 - Implementing a requirement means making its scenario pass: drop `@pending`,
   make the steps concrete, bind them in `cmd/cairn/bdd_<section>_test.go`. Unit
@@ -199,9 +199,9 @@ fails the build when the two drift. The mechanics are in
 
 ## Domain Model
 
-Cairn's concepts, their relations and the terms that are not Cairn
-concepts live in [docs/domain-model.md](docs/domain-model.md). The
-domain-model agent reviews against that document. Consult it:
+Cairn's concepts, their relations and the terms that are not Cairn concepts live
+in [docs/domain-model.md](docs/domain-model.md). The domain-model agent reviews
+against that document. Consult it:
 
 - on every change to the model itself, and on every proposal to change it;
 - on every change to the SRS under `docs/srs` and to the scenarios;
