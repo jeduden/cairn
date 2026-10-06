@@ -17,15 +17,15 @@ Feature: Pins (PIN)
       | automation  | the person runs "cairn pin add"                                                            | 1          |
       | automation  | the person's configuration declares a pin and a widening principal act recorded its digest | 1          |
       | interactive | the person runs "cairn pin add"                                                            | 1          |
-      | automation  | a harness skill calls the MCP tool "pin_propose"                                           | 0          |
+      | automation  | a harness skill calls the MCP tool "pin_candidate_propose"                                 | 0          |
       | automation  | a person stamps a version of a constraint pin an agent wrote                               | 1          |
       | interactive | the repository's ".cairn.toml" declares a pin                                              | 0          |
 
   @PIN-02 @P0 @I2 @pending
-  Scenario: text Claude proposes stays a pin candidate with no author
+  Scenario: text an agent proposes stays a pin candidate with no author
     Given an isolated Cairn home
     And deployment mode "interactive"
-    When Claude calls the MCP tool "pin_propose" with text "Always run go test before committing" and type "constraint"
+    When the agent calls the MCP tool "pin_candidate_propose" with text "Always run go test before committing" and type "constraint"
     Then the result gives a pin candidate id and states that only the agent's principal can confirm it
     And the pin candidate is stored as proposed pin text, not a pin, with provenance "assistant" and no author
     And the qualifying pin count is 0
@@ -58,7 +58,7 @@ Feature: Pins (PIN)
     When the hook "UserPromptSubmit" runs with prompt "Never edit files under migrations/ without asking"
     Then <candidates> pin candidates are recorded, each proposed pin text with no author
     And the qualifying pin count is 0
-    And the qualifying pin count is <confirmed> after the person confirms every pin candidate with "cairn pin confirm", each a widening principal act
+    And the qualifying pin count is <confirmed> after the person confirms every pin candidate with "cairn pin-candidate confirm", each a widening principal act
     And each confirmation makes a new pin that the principal's device seat authors
 
     Examples:
@@ -137,7 +137,7 @@ Feature: Pins (PIN)
     And an audit entry records that the pin does not qualify on this node
 
     Examples:
-      | reason                                               |
-      | its device key's scope does not cover the pin's room |
-      | its seat certificate is revoked                      |
-      | its event has not arrived                            |
+      | reason                                                          |
+      | its seat certificate or token key does not cover the pin's room |
+      | its seat certificate is revoked                                 |
+      | its event has not arrived                                       |

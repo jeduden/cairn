@@ -122,10 +122,10 @@ Feature: Record (REC)
     And "main-run" contains a 2 MiB tool result with "quokka-early" in its first KiB and "quokka-late" beyond its first 1 MiB
     And "main-run" contains one user turn naming "wombat" once and another naming it five times
     When the person runs "cairn ingest --all"
-    And Claude calls the MCP tool "event_search" with query "quokka-early"
+    And the agent calls the MCP tool "event_search" with query "quokka-early"
     Then the tool result event is a hit
     And a search for "quokka-late" returns no hit, because indexing stops at the default 1 MiB cap
-    When Claude calls the MCP tool "event_search" with query "wombat"
+    When the agent calls the MCP tool "event_search" with query "wombat"
     Then the hits are ranked by score, the user turn naming "wombat" five times above the one naming it once
 
   @REC-12 @P0 @I10 @pending
@@ -172,7 +172,7 @@ Feature: Record (REC)
     And a home whose record contains "web" payloads and "user" events that are 40 days old
     And the person's configuration sets "retention_policy.*.web" to 30 days
     When the retention policy is applied
-    Then the node purges the content of the "web" events, records each purge naming the policy "retention_policy.*.web", and leaves a tombstone with reason "retention" in each purged range
+    Then the node purges the content of the "web" events, records each purge naming the policy "retention_policy.*.web", and leaves a tombstone, a structural event, with reason "retention" in each purged range
     And the "user" events are kept and "cairn verify" exits 0
     And with no retention policy configured, applying the default policy removes nothing
 
@@ -230,7 +230,7 @@ Feature: Record (REC)
     Then the record gains an event with provenance "file" carrying the checked-out commit id, the branch and a payload diff against the previous worktree checkpoint
     And the diff covers the tracked change and the untracked file but not the ignored file, with the API key redacted
     And a worktree checkpoint taken for a rewrite of the branch head keeps the replaced head
-    And Cairn obtained the worktree state and git data within the core's boundary, with no program started and no connection opened, within the hook budget, leaving any rest to an ingest marker
+    And Cairn obtained the worktree state and git data inside the core, with no socket opened and no program started, within the hook budget, leaving any rest to an ingest marker
 
     Examples:
       | moment                                        |

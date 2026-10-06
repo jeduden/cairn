@@ -35,7 +35,7 @@ Feature: Administration and lifecycle (ADM)
     And the output states that managed settings are in force and names the documented managed install path
 
   @ADM-04 @P0 @I6 @I7 @pending
-  Scenario Outline: configuration is validated strictly, managed policy overrides every layer, repository configuration only tightens, and a loosening in the person's configuration waits for a recorded principal act
+  Scenario Outline: configuration is validated strictly, managed policy overrides every layer, repository configuration only tightens, and a configuration change that needs a widening principal act waits for one
     Given an isolated Cairn home
     And <configuration>
     When an agent runs and the person starts "<component>"
@@ -164,7 +164,7 @@ Feature: Administration and lifecycle (ADM)
   Scenario: Cairn writes to no git repository beyond the confirmed settings file, the trailer hook and the carrier's location
     Given an isolated Cairn home
     And a git repository with a working tree, refs, notes, configuration and hooks
-    And the node's principal has enabled the git carrier
+    And the node's principal has enabled the git carrier for the repository's remote, and the room's owner for the room
     When an agent runs, the person confirms "cairn install --scope project" and every Cairn component runs
     Then the only changed file in the working tree is the harness settings file that install wrote
     And the only new or changed refs lie in the namespaced location the node's principal enabled for the carrier, and every new object is reachable only from them

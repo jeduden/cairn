@@ -14,13 +14,13 @@ Feature: Observability (OPS)
     And the counter "<counter>" increases by 1
 
     Examples:
-      | operation                                                                      | outcome   | counter          |
-      | the hook "PostToolUse" runs with a malformed JSON object                       | rejected  | hook_rejected    |
-      | the transcript contains an AWS secret key and is ingested                      | redacted  | redactions       |
-      | the hook "SessionStart" runs past its 150 ms budget                            | timed-out | hook_timeout     |
-      | Claude calls the MCP tool "event_expand" with a range above 8,000 model tokens | truncated | recall_truncated |
-      | the transcript contains an unparseable line and is ingested                    | dropped   | ingest_dropped   |
-      | the hook "PreCompact" runs with an unreadable transcript path                  | failed    | hook_failed      |
+      | operation                                                                         | outcome   | counter          |
+      | the hook "PostToolUse" runs with a malformed JSON object                          | rejected  | hook_rejected    |
+      | the transcript contains an AWS secret key and is ingested                         | redacted  | redactions       |
+      | the hook "SessionStart" runs past its 150 ms budget                               | timed-out | hook_timeout     |
+      | the agent calls the MCP tool "event_expand" with a range above 8,000 model tokens | truncated | recall_truncated |
+      | the transcript contains an unparseable line and is ingested                       | dropped   | ingest_dropped   |
+      | the hook "PreCompact" runs with an unreadable transcript path                     | failed    | hook_failed      |
 
   @OPS-02 @P0 @I6 @pending
   Scenario: the audit log is an append-only hash-chained JSONL file that rotates with chain continuation

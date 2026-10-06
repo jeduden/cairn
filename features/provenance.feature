@@ -10,11 +10,12 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "every-kind"
     And "every-kind" contains a user turn, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent result, lifecycle metadata, a system reminder and a malformed line
-    And a principal act and a post from another seat are recorded in the run's room
-    And the Bash tool call of "every-kind" was ingested in an earlier run than its result
+    And a principal act, an expire act, a pin written from a device seat, a pin a run seat wrote, a post from another seat and a retention purge's tombstone are recorded in the run's room
+    And the Bash tool call of "every-kind" was ingested by an earlier ingest than its result
     When the person runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
     And the Bash result carries provenance "tool_result:Bash"
+    And the principal act, the expire act and the device-seat pin carry provenance "operator", the run-seat pin carries "assistant", and the tombstone is a structural event
     And every provenance class is one of:
       | user               |
       | assistant          |
@@ -200,13 +201,14 @@ Feature: Provenance and trust (PRV)
     And a recorded I2 security review of this requirement exists before it ships
 
     Examples:
-      | event                                                                                              | outcome                                                       |
-      | by the token-key-only node's run seat key, adding a constraint pin within its access token's rooms | untrusted until a principal stamps it from one of its devices |
-      | by the laptop's device key, stamping a version of that pin                                         | trusted                                                       |
-      | by the laptop's device key, an act outside its scope                                               | untrusted                                                     |
-      | by the laptop's device key, at rule level 3                                                        | untrusted                                                     |
-      | by the token-key-only node's run seat key, not held before the access token was revoked            | refused and audited                                           |
-      | by a seat key the laptop's revoked device key certified, not held before the revocation            | refused and audited                                           |
-      | by the laptop's revoked device key, covered by a seal held before the revocation                   | accepted                                                      |
-      | by the phone's device key, allowing a held permission request                                      | trusted                                                       |
-      | by the phone's device key, adding a pin                                                            | untrusted                                                     |
+      | event                                                                                                 | outcome                                                       |
+      | by the token-key-only node's run seat key, adding a constraint pin within its access token's rooms    | untrusted until a principal stamps it from one of its devices |
+      | by the token-key-only node's device seat key, adding a constraint pin within its access token's rooms | untrusted until a principal stamps it from one of its devices |
+      | by the laptop's device key, stamping a version of that pin                                            | trusted                                                       |
+      | by the laptop's device key, an act outside its scope                                                  | untrusted                                                     |
+      | by the laptop's device key, at rule level 3                                                           | untrusted                                                     |
+      | by the token-key-only node's run seat key, not held before the access token was revoked               | refused and audited                                           |
+      | by a seat key the laptop's revoked device key certified, not held before the revocation               | refused and audited                                           |
+      | by the laptop's revoked device key, covered by a seal held before the revocation                      | accepted                                                      |
+      | by the phone's device key, allowing a held permission request                                         | trusted                                                       |
+      | by the phone's device key, adding a pin                                                               | untrusted                                                     |

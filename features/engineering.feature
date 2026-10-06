@@ -53,13 +53,13 @@ Feature: Engineering quality (ENG)
     Given an isolated Cairn home
     When the crash-consistency test kills Cairn at randomized points during ingestion, purge, migration and rebuild
     Then after every kill "cairn verify" exits 0
-    And a nightly run completes at least 10000 iterations
+    And each nightly job completes at least 10000 iterations
 
   @ENG-07 @P0 @pending
   Scenario Outline: coverage-guided fuzzing covers every parser with a committed corpus
     Given the cargo-fuzz target for the <surface>
     Then its seed corpus is committed under fuzz/corpus
-    And the nightly workflow fuzzes it
+    And the nightly fuzz job fuzzes it
 
     Examples:
       | surface              |

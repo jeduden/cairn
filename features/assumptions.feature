@@ -177,7 +177,7 @@ Feature: Assumptions register (ASM)
       | Codex app-server |
 
   @ASM-20 @pending
-  Scenario: a clone's root commit, HEAD, refs and trees are obtainable within the core's boundary (S11)
+  Scenario: a clone's root commit, HEAD, refs and trees are obtainable inside the core, with no socket and no program start (S11)
     Given a recorded git clone
     When Cairn reads the clone with process creation and the network forbidden
     Then it resolves the root commit, HEAD, every ref and the tree of every ref

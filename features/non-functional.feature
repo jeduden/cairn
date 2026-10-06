@@ -39,7 +39,7 @@ Feature: Non-functional requirements (NFR)
   Scenario Outline: MCP recall meets its p95 latency at 10M events
     Given an isolated Cairn home
     And a synthetic store with 10M events on the reference hardware
-    When Claude calls the MCP tool "<tool>" with representative arguments 1,000 times
+    When the agent calls the MCP tool "<tool>" with representative arguments 1,000 times
     Then the p95 latency excluding large payload transfer is at most <budget>
 
     Examples:
