@@ -19,5 +19,5 @@ Feature: Boundary to durable memory (MEM)
     And an agent run with a Claude Code transcript "mixed-provenance"
     When the person runs "cairn export --trusted-only"
     Then the command exits 0
-    And the JSONL output holds only trusted events, each with full provenance
+    And the JSONL output contains only trusted events, each with full provenance
     And the documented integration path for downstream memory systems is that export alone

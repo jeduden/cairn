@@ -33,7 +33,7 @@ Feature: Compute kernel (CMP)
     And the built-ins "cairn.expand", "cairn.get", "cairn.landmarks", "json", "re", "math" and "time" are callable
     And every global name the kernel exposes, the interpreter's universal built-ins included, is on the kernel's allow-list
     And a built-in added to the interpreter's universe is unavailable to kernel code
-    And the record holds the same number of events as before the execution
+    And the record contains the same number of events as before the execution
 
   @CMP-04 @P1 @I4 @pending
   Scenario Outline: the kernel has no access to host resources
@@ -84,7 +84,7 @@ Feature: Compute kernel (CMP)
     And the person has quarantined w-1·7 with "cairn quarantine add --range w-1:7-7"
     When Claude calls the MCP tool "kernel_exec" with code "print(cairn.get(address='w-1:7'), cairn.search(query='x', scope='rooms'))"
     Then the kernel returns exactly what the MCP tools "event_get" and "event_search" return for the same arguments
-    And w-1·7, foreign rooms and rooms the run holds no seat in are absent
+    And w-1·7, foreign rooms and rooms the run has no seat in are absent
 
   @CMP-08 @P2 @I4 @pending
   Scenario: the opt-in Python kernel is sandboxed, network-less and read-only

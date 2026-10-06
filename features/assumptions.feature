@@ -72,9 +72,9 @@ Feature: Assumptions register (ASM)
 
   @ASM-07 @pending
   Scenario Outline: a plugin bundling hooks and an MCP server loads on each target (S4)
-    Given the Cairn plugin bundling its hooks and the "cairn mcp" server
+    Given the Cairn plugin bundling its hook handlers and the "cairn mcp" server
     When it is installed on "<target>"
-    Then the recorded harness session shows every Cairn hook firing
+    Then the recorded harness session shows every hook Cairn registered firing
     And the recorded harness session lists the Cairn MCP tools
 
     Examples:
@@ -115,17 +115,17 @@ Feature: Assumptions register (ASM)
 
   @ASM-12 @pending
   Scenario: one API message spans several lines, one content block each (S3)
-    Given a recorded transcript for Claude Code "supported" with an assistant reply holding text and two tool calls
+    Given a recorded transcript for Claude Code "supported" with an assistant reply carrying text and two tool calls
     When each line of the recording is read
-    Then each assistant line holds exactly one content block
+    Then each assistant line carries exactly one content block
     And the reply's lines share one "message.id" and repeat its "usage"
 
   @ASM-13 @pending
   Scenario: a tool-result line repeats the output and names its call (S3)
     Given a recorded transcript for Claude Code "supported" with a Bash tool call and its result
     When each line of the recording is read
-    Then the result line holds the output in "message.content" and again in "toolUseResult"
-    And its "sourceToolAssistantUUID" names the line holding the Bash tool call
+    Then the result line carries the output in "message.content" and again in "toolUseResult"
+    And its "sourceToolAssistantUUID" names the line carrying the Bash tool call
 
   @ASM-14 @pending
   Scenario Outline: some record types carry no uuid or no timestamp (S3)
@@ -186,6 +186,6 @@ Feature: Assumptions register (ASM)
   @ASM-21 @pending
   Scenario: the harness hands a seat's private key to its own MCP server outside the model's context (S4)
     Given a recorded plugin launch of Claude Code "supported" with its MCP server
-    When the harness starts the MCP server for a run that holds a seat key
+    When the harness starts the MCP server for a run with a seat key
     Then the MCP server receives the key at launch through a channel the harness keeps out of the model's context
     And no transcript line, hook payload or tool result of the run carries the key

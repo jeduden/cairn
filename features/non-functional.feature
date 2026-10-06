@@ -7,7 +7,7 @@ Feature: Non-functional requirements (NFR)
   implements the requirement lands.
 
   @NFR-01 @pending
-  Scenario Outline: hooks meet their p95 wall-clock budgets on a 1M-event store under fleet load
+  Scenario Outline: hook handlers meet their p95 wall-clock budgets on a 1M-event store under fleet load
     Given an isolated Cairn home
     And a synthetic store with 1M events on the reference hardware
     And the room view is open and ten harnesses are writing
@@ -27,11 +27,11 @@ Feature: Non-functional requirements (NFR)
       | PermissionRequest | 50 ms beyond the principal's hold, which ends within the principal's hold window and at least 10 s before the harness timeout |
 
   @NFR-02 @pending
-  Scenario: a hook stops at its internal deadline and hands off the rest through a work marker
+  Scenario: a hook handler stops at its internal deadline and hands off the rest through a work marker
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "large-backlog"
     When the hook "SessionEnd" runs with a harness timeout of 1.5 s
-    Then the hook exits 0 before its internal deadline, below the harness timeout
+    Then the hook handler exits 0 before its internal deadline, below the harness timeout
     And a work marker records the unfinished ingestion
     And the next "cairn ingest --all" completes the ingestion from the marker
 
@@ -68,7 +68,7 @@ Feature: Non-functional requirements (NFR)
     Given an isolated Cairn home
     And an injected internal fault "<fault>"
     When the hook "SessionStart" runs with a valid payload
-    Then the hook exits <exit> with <output>
+    Then the hook handler exits <exit> with <output>
     And an audit entry records "<fault>"
 
     Examples:
@@ -77,7 +77,7 @@ Feature: Non-functional requirements (NFR)
       | landmark builder panic          | 0    | empty output and no injection |
       | untrusted text reaching restore | 1    | no injection (fail closed)    |
       | network access attempted        | 1    | no injection (fail closed)    |
-      | CAIRN_HOME owned by another UID | 1    | no injection (fail closed)    |
+      | CAIRN_HOME of another UID       | 1    | no injection (fail closed)    |
 
   @NFR-07 @pending
   Scenario: the store stays consistent when a process is killed at any point
@@ -93,7 +93,7 @@ Feature: Non-functional requirements (NFR)
     Given an isolated Cairn home
     And 50 writers each appending 10,000 events to one store
     When all writers run concurrently to completion
-    Then the store holds exactly 500,000 events
+    Then the store contains exactly 500,000 events
     And no two events share an address (writer, seq), and no seq is duplicated within a writer's log
     And "cairn verify" exits 0
 
@@ -103,7 +103,7 @@ Feature: Non-functional requirements (NFR)
     And a synthetic store with 1M events on the reference hardware
     When every hook runs once, the run ends, and the room-view, peer, publish and bridge components and ten launcher instances run idle
     Then no Cairn process runs while no run is active except the components the person started
-    And each hook's peak RSS is at most 50 MiB and the store overhead is at most 1.5 times the stored text
+    And each hook handler's peak RSS is at most 50 MiB and the store overhead is at most 1.5 times the stored text
     And each of the room-view, peer, publish and bridge components peaks at most 256 MiB RSS and idles at most 5% of one core
     And the ten launcher instances together peak at most 256 MiB RSS and idle at most 5% of one core
     And the launcher adds at most 10 ms p95 to keystroke-to-echo latency
@@ -136,10 +136,10 @@ Feature: Non-functional requirements (NFR)
     And no configuration file had to be written by hand
 
   @NFR-13 @pending
-  Scenario: a new transcript format version changes only the harness adapter crate
+  Scenario: a new transcript format version changes only the transcript and hook part of the harness adapter
     Given the change that added the most recent transcript format version
     When its changed files are listed
-    Then every changed non-test source file lies in the harness adapter crate
+    Then every changed non-test code file lies in that harness adapter's transcript and hook part, in the core
 
   @NFR-14 @pending
   Scenario: every release ships its documentation

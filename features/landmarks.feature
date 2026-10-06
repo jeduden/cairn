@@ -9,11 +9,11 @@ Feature: Landmarks (LMK)
   Scenario: spans start at every user turn, compaction, subagent start or end, and change of writer
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "turns-compaction-subagent"
-    And "turns-compaction-subagent" holds an isMeta "user" line and a "user" line of command output
+    And "turns-compaction-subagent" contains an isMeta "user" line and a "user" line of command output
     And midway the run joins room "L1", which names its current branch, so its later events go to the writer of its seat in "L1"
     When the person runs "cairn landmark list --json"
     Then a new span starts at each user turn, each compaction, each subagent start and end, and where the run's events move to its seat's writer in "L1"
-    And no span holds events of two writers
+    And no span contains events of two writers
     And neither the isMeta line nor the command output starts a span
     And after the person runs "cairn rebuild" the span boundaries are byte-identical
 
@@ -61,9 +61,9 @@ Feature: Landmarks (LMK)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "seventy-spans"
     When the person runs "cairn landmark list --json"
-    Then no tier holds more than 8 blocks
+    Then no tier contains more than 8 blocks
     And the newest block keeps full detail while older blocks collapse to one line each and merge into the next tier
-    And the index holds O(k log_k n) blocks for n = 70 spans
+    And the index contains O(k log_k n) blocks for n = 70 spans
 
   @LMK-06 @P2 @I2 @pending
   Scenario: natural-language headlines appear only on all-trusted spans

@@ -17,9 +17,9 @@ Feature: Security (SEC)
     And neither connects anywhere else
 
   @SEC-02 @P0 @I8 @pending
-  Scenario Outline: cairn refuses a home or store file with loose permissions or another OS user's ownership
+  Scenario Outline: cairn refuses a home or store file with loose permissions or belonging to another OS user
     Given an isolated Cairn home
-    And the store path "<path>" has mode "<mode>" and is owned by the OS user "<user>"
+    And the store path "<path>" has mode "<mode>" and belongs to the OS user "<user>"
     When the person runs "cairn status"
     Then the command exits 1
     And the error names "<path>" and the permission problem
@@ -61,14 +61,14 @@ Feature: Security (SEC)
   Scenario Outline: oversized or deeply nested hook input is refused and large transcript lines stream
     Given an isolated Cairn home
     When the hook "PostToolUse" runs with <input>
-    Then the hook exits 0 with no injection
+    Then the hook handler exits 0 with no injection
     And <outcome>
 
     Examples:
-      | input                                               | outcome                                                                |
-      | stdin of 1 MiB plus one byte                        | an audit entry records "hook input exceeds 1 MiB"                      |
-      | a JSON object nested 65 levels deep                 | an audit entry records "hook input nesting exceeds depth 64"           |
-      | a transcript line larger than the payload threshold | the line is streamed to the payload store without being held in memory |
+      | input                                               | outcome                                                                      |
+      | stdin of 1 MiB plus one byte                        | an audit entry records "hook input exceeds 1 MiB"                            |
+      | a JSON object nested 65 levels deep                 | an audit entry records "hook input nesting exceeds depth 64"                 |
+      | a transcript line larger than the payload threshold | the line is streamed to the payload store without being kept whole in memory |
 
   @SEC-06 @P0 @I2 @pending
   Scenario: recalled content cannot alter the envelope structure
@@ -81,7 +81,7 @@ Feature: Security (SEC)
 
   @SEC-07 @P0 @I2 @pending
   Scenario: restore content is constructed only inside the injection crate
-    Given a source tree where a crate outside the injection crate constructs TrustedText
+    Given a repository where a crate outside the injection crate constructs TrustedText
     When the CI static check for TrustedText construction runs
     Then the check fails
     And it names the offending file and line
@@ -91,14 +91,14 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a redaction pattern the person defined "ACME-[0-9]{8}"
     And an agent run with a Claude Code transcript "secrets"
-    And "secrets" holds a Bash result whose output carries an AWS access key in both "message.content" and "toolUseResult"
+    And "secrets" contains a Bash result whose output carries an AWS access key in both "message.content" and "toolUseResult"
     When the person runs "cairn ingest --all"
     Then no stored text field, payload, or hook input contains an AWS access key or "ACME-12345678"
     And each secret is replaced by "[REDACTED:<rule>]", with no hash or other value derived from the secret
     And no stored event, segment, export or replicated structure carries a value from which the secret could be confirmed
     And any correlation of the repeated AWS access key lives only in a node-local index under this node's own storage key
     When the person runs "cairn purge --run secrets"
-    Then the correlation index holds no entry for the purged events
+    Then the correlation index contains no entry for the purged events
 
   @SEC-09 @P1 @pending
   Scenario: the database and payload store can be encrypted at rest
@@ -109,7 +109,7 @@ Feature: Security (SEC)
     And the deployment documentation requires encrypted volumes when encryption is not enabled
 
   @SEC-10 @P0 @I4 @pending
-  Scenario: the core holds only its own keys and the at-rest key, never exposed
+  Scenario: the core keeps only its own keys and the at-rest key, never exposed
     Given an isolated Cairn home
     And the parent environment sets "ANTHROPIC_API_KEY", "GITHUB_TOKEN", a device key value and an at-rest encryption key value
     And no platform key store is available
@@ -145,8 +145,8 @@ Feature: Security (SEC)
   Scenario Outline: quarantine takes effect immediately on the recording node and is recorded
     Given an isolated Cairn home
     And a store whose events match the quarantine selector <selector>
-    When the person runs "cairn quarantine add <selector> --reason 'suspect source'"
-    Then an "operator" event records the quarantine with the reason "suspect source"
+    When the person runs "cairn quarantine add <selector> --reason 'suspect content'"
+    Then an "operator" event records the quarantine with the reason "suspect content"
     And the matched events are absent from every later recall, landmark and injection on this node
     And a quarantine that would remove a pin or trusted event from a restore block takes effect only as a confirmed widening principal act
     And releasing the quarantine is recorded as an "operator" event the same way
@@ -168,14 +168,14 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a store with an untrusted web tool result
     When Claude calls the MCP tool "event_search" with a query matching the untrusted result in run "r-1"
-    And the person runs "cairn sandbox check --run r-1 --json"
-    Then the recall-taint flag for "r-1" is set
+    And the person runs "cairn recall-taint show --run r-1 --json"
+    Then the output shows that "r-1" carries recall taint
     And the example PreToolUse policy hook requires approval for a configured sensitive action
 
   @SEC-14 @P0 @I5 @pending
   Scenario: purged content is not recoverable from the storage the purge freed
     Given an isolated Cairn home
-    And a run "r-1" with events holding the marker "zebra-purge-7" and payload files
+    And a run "r-1" with events containing the marker "zebra-purge-7" and payload files
     When the person runs "cairn purge --run r-1"
     Then the command exits 0
     And no byte sequence "zebra-purge-7" remains in any file under the Cairn home, free space inside those files included
@@ -184,7 +184,7 @@ Feature: Security (SEC)
 
   @SEC-15 @P0 @I4 @pending
   Scenario: no telemetry, remote crash reporting, or update check ships
-    Given the import graph and source of every component, whether the components ship in one executable or several
+    Given the import graph and code of every component, whether the components ship in one executable or several
     When the CI telemetry check runs
     Then no telemetry, crash-reporting, or update-check code or dependency is found
     And a full test suite run with each component under its boundary's sandbox records no connection opened or tried outside that boundary
@@ -193,7 +193,7 @@ Feature: Security (SEC)
   Scenario: a hook input that fails schema validation is rejected fail-open and audited
     Given an isolated Cairn home
     When the hook "SessionStart" runs with a payload whose "session_id" is a number
-    Then the hook exits 0 with empty output and no injection
+    Then the hook handler exits 0 with empty output and no injection
     And an audit entry records "hook input failed schema validation"
     And the counter "hook_input_rejected" increases by 1
 
@@ -271,7 +271,7 @@ Feature: Security (SEC)
       | a cap on an action class's rule level       | the principal sets a higher rule level for that class           | the rule level stays at the cap                    |
       | away policies disabled                      | the principal sets an away policy                               | the change is refused                              |
       | hook permission decisions disabled          | the hook "PermissionRequest" runs                               | Cairn makes no permission decision                 |
-      | holds disabled                              | the hook "PermissionRequest" would place a held request         | no hold is placed                                  |
+      | held requests disabled                      | the hook "PermissionRequest" would place a held request         | no held request is placed                          |
       | an authenticator required for widening acts | the principal confirms a widening act without the authenticator | the act is refused                                 |
       | risk acceptance forbidden                   | the principal accepts a residual risk                           | the acceptance is refused                          |
       | a 30-day retention window for room "p"      | an event of "p" ages past 30 days                               | it is purged with a tombstone, audited and counted |
@@ -296,24 +296,24 @@ Feature: Security (SEC)
     And local discovery advertises only a random per-boot instance id and a port, never a principal, host or room name
 
   @SEC-25 @P2 @I2 @I6 @I8 @pending
-  Scenario Outline: the peer component imports only sealed, chained segments from known seat keys
+  Scenario Outline: the peer component receives only sealed, chained segments from known seat keys
     Given an isolated Cairn home
     And the peer component running with an enrolled peer
     When the peer offers a segment that <segment>
     Then the segment is <outcome>
 
     Examples:
-      | segment                                                     | outcome                                           |
-      | comes from an enrolled seat key with a valid seal and chain | imported under the local home as untrusted events |
-      | comes from a certified seat key with a valid seal and chain | imported under the local home as untrusted events |
-      | comes from a seat key neither enrolled nor certified        | refused and audited                               |
-      | carries a broken seal                                       | refused and audited                               |
-      | breaks its writer's chain                                   | refused and audited                               |
+      | segment                                                     | outcome                                              |
+      | comes from an enrolled seat key with a valid seal and chain | received into this node's record as untrusted events |
+      | comes from a certified seat key with a valid seal and chain | received into this node's record as untrusted events |
+      | comes from a seat key neither enrolled nor certified        | refused and audited                                  |
+      | carries a broken seal                                       | refused and audited                                  |
+      | breaks its writer's chain                                   | refused and audited                                  |
 
   @SEC-26 @P2 @I2 @I4 @pending
   Scenario: an export or publish is a reviewed, redacted and signed principal act
     Given an isolated Cairn home
-    And a room holding a secret, an absolute path, a user name, a host name, an email address and a withheld range
+    And a room whose events contain a secret, an absolute path, a user name, a host name, an email address and a withheld range
     When the person runs "cairn export" and confirms the review step
     Then the review showed included and withheld content by class, and the export is audited
     And the secret, absolute path, user name, host name and email address are redacted, and an unresolved secret-scan hit fails the export closed
@@ -338,8 +338,8 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And the node's principal enabled one forge bridge destination and one notification bridge destination by a principal act
     When the bridge component runs and a held request and a pull-request review from the forge arrive
-    Then every outbound component runs only in the bridge component, which is listed in the register, outbound only, and off for every destination not enabled
-    And the pull-request review is imported only as an untrusted event
+    Then every outbound bridge runs only in the bridge component, which is listed in the register, outbound only, and off for every destination not enabled
+    And the pull-request review is received only as an untrusted event
     And the notification carries only the room's petname, the queue class and a count, and no answer to it is accepted
     And every send and failure is counted and audited
 
@@ -367,16 +367,16 @@ Feature: Security (SEC)
   @SEC-31 @P0 @I1 @I5 @I6 @pending
   Scenario: purging an event erases every copy this node holds and writes a signed purge receipt
     Given an isolated Cairn home
-    And an event whose content a steer sent, a recorded recall result names, and a worktree checkpoint, a payload, the index and a Cairn backup hold
+    And an event whose content a steer sent, a recorded recall result names, and a worktree checkpoint, a payload, the index and a Cairn backup contain
     When the person purges the event
     Then every copy in any writer's log, found by address or commitment, is erased or tombstoned, and the backup is erased or listed
-    And ingesting its source positions again from the harness transcript is refused with an audit entry
+    And ingesting its transcript positions again from the harness transcript is refused with an audit entry
     And a signed purge receipt names the scope, the ranges, the copies erased and every known copy Cairn cannot erase
 
   @SEC-32 @P1 @I2 @I6 @pending
   Scenario: the facilitator moderates within its appointment's limits and never instructs
     Given an isolated Cairn home
-    And a room where a principal whose device seat holds the moderator role by assignment appointed the facilitator's service-account seat a moderator, with a rate of two moderation acts per hour
+    And a room where a principal whose device seat has the moderator role by role assignment appointed the facilitator's device seat a moderator, with a rate of two moderation acts per hour
     When a post persuades the facilitator to bar three seats, a moderator and the owner, and to mute the whole room
     Then the first two bars are recorded, each audited with its finding, which carries range links to the pin and the content flagged
     And each bar is shown in the room view and named by id in the error each barred seat's next call returns
@@ -387,4 +387,4 @@ Feature: Security (SEC)
     And the facilitator's unbar of one of its own bars is refused and audited, since an appointed moderator never unbars
     And each finding is in the facilitator's own words and points to the content it flagged by range link, quoting none of it
     And the facilitator's findings reach no agent as instructions unless that agent's principal recorded a trust grant for the facilitator
-    And a run seat appointed moderator is held to the same limits
+    And a run seat appointed moderator is kept to the same limits

@@ -26,18 +26,18 @@ Feature: Record (REC)
     And an agent run with a Claude Code transcript "parent-run"
     And a subagent transcript "explore-agent" of "parent-run" naming the agent "Explore"
     When the person runs "cairn ingest --all"
-    Then the source "explore-agent" records "parent-run" as its parent run
-    And the source "explore-agent" records the agent identity "Explore"
+    Then the run ingested from "explore-agent" records "parent-run" as its parent run
+    And the run ingested from "explore-agent" records the agent identity "Explore"
 
   @REC-03 @P0 @I1 @I10 @pending
-  Scenario: re-ingesting a source creates no duplicate events
+  Scenario: re-ingesting a transcript source creates no duplicate events
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
-    And "main-run" holds 40 lines and has been ingested, then grows by 10 lines
+    And "main-run" has 40 lines and has been ingested, then grows by 10 lines
     When the person runs "cairn ingest --all"
     And the person runs "cairn ingest --all"
-    Then the record holds exactly 50 events, one per line of "main-run"
-    And the cursor of "main-run" holds its byte length and the SHA-256 of its consumed prefix
+    Then the record contains exactly 50 events, one per line of "main-run"
+    And the cursor of "main-run" stores its byte length and the SHA-256 of its consumed prefix
 
   @REC-04 @P0 @I1 @pending
   Scenario: events are attributed to the run of their transcript, not the hook payload
@@ -52,9 +52,9 @@ Feature: Record (REC)
   Scenario: unreadable transcript lines are kept as redacted unparsed events
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
-    And "main-run" holds a malformed JSON line and a line of unknown type "future_kind", each containing an API key
+    And "main-run" contains a malformed JSON line and a line of unknown type "future_kind", each containing an API key
     When the person runs "cairn ingest --all"
-    Then both lines are stored as events of kind "unparsed" holding the raw line with the API key redacted
+    Then both lines are stored as events of kind "unparsed" carrying the raw line with the API key redacted
     And no line of "main-run" is missing from the record
     And the counter "events_unparsed" increases by 2
 
@@ -63,21 +63,21 @@ Feature: Record (REC)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run" whose writer has appended seq 1 to 20 and purged seq 5-9
     And an append transaction of that writer that rolled back
-    When the person runs "cairn ingest --all" while the hook "PostToolUse" ingests "main-run" concurrently
+    When the person runs "cairn ingest --all" while the hook handler for "PostToolUse" ingests "main-run" concurrently
     Then every event carries the address (writer, seq) of the writer that appended it
     And that writer's new events continue from seq 21 with no gap and no repeat, and no seq is reused
     And each seq was assigned by its writer inside the append transaction that wrote its event
     And a local index position is never shown or accepted as an address
 
   @REC-07 @P0 @I1 @I6 @pending
-  Scenario Outline: a shrunk or rewritten source starts a new generation without losing events
+  Scenario Outline: a shrunk or rewritten transcript source starts a new generation without losing events
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
-    And "main-run" holds 40 lines and has been ingested
+    And "main-run" has 40 lines and has been ingested
     When "main-run" is <change>
     And the person runs "cairn ingest --all"
     Then "main-run" starts generation 2 and all 40 events of generation 1 remain in the record
-    And an audit entry records "new source generation for main-run"
+    And an audit entry records "new generation of transcript source main-run"
 
     Examples:
       | change                                |
@@ -85,42 +85,42 @@ Feature: Record (REC)
       | rewritten with a different first line |
 
   @REC-08 @P0 @I1 @I6 @pending
-  Scenario: the record outlives its sources and verify reports sources lost before full ingestion
+  Scenario: the record outlives its transcript sources and verify reports transcript sources lost before full ingestion
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
-    And "main-run" holds 40 lines and has been ingested
-    And "cut-short" holds 30 lines of which 20 were ingested before both transcript files were deleted
+    And "main-run" has 40 lines and has been ingested
+    And "cut-short" has 30 lines of which 20 were ingested before both transcript files were deleted
     When the person runs "cairn verify --json"
-    Then the report names "cut-short", and only it, as a source that disappeared before it was fully ingested
+    Then the report names "cut-short", and only it, as a transcript source that disappeared before it was fully ingested
     And "cairn event expand" still returns all 40 events of "main-run"
 
   @REC-09 @P0 @I1 @pending
   Scenario: content above the payload threshold goes to a payload store under a name that reveals nothing off the node
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
-    And "main-run" holds a Bash tool result of 20 KiB and one of 2 KiB, against the default 8 KiB threshold
+    And "main-run" contains a Bash tool result of 20 KiB and one of 2 KiB, against the default 8 KiB threshold
     When the person runs "cairn ingest --all"
-    Then the 20 KiB content is stored in the payload store under a name from which no one off this node can confirm a guess at the content, and its event holds a preview of at most 512 bytes, the payload reference and the commitment
+    Then the 20 KiB content is stored in the payload store under a name from which no one off this node can confirm a guess at the content, and its event carries a preview of at most 512 bytes, the payload reference and the commitment
     And the 2 KiB content is stored inline in its event
     And nothing in an export, room bundle or replicated structure lets a reader off this node confirm a guess at the content from a payload name
     And each payload was written to a temporary file, fsynced, then renamed into place
 
   @REC-10 @P0 @I10 @pending
-  Scenario: each writer's events form their own hash chain over a header that holds no content
+  Scenario: each writer's events form their own hash chain over a header that carries no content
     Given an isolated Cairn home
     And a record in which two writers have each appended 20 events, each having seen the other's log, the second writer's clock running an hour behind
     When the person runs "cairn verify"
     Then the command exits 0
     And each event's hash is a collision-resistant hash of prev_hash, its writer's previous event, followed by the canonical encoding of its header
-    And the header holds only the address, kind, provenance class, prev_hash, the heads of the other writers' logs the writer had seen, and the commitment
+    And the header contains only the address, kind, provenance class, prev_hash, the heads of the other writers' logs the writer had seen, and the commitment
     And events of the two writers are ordered by the heads each cites, never by wall-clock time
 
   @REC-11 @P0 @pending
   Scenario: event and payload text is full-text indexed up to the indexing cap, with ranked search
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
-    And "main-run" holds a 2 MiB tool result with "quokka-early" in its first KiB and "quokka-late" beyond its first 1 MiB
-    And "main-run" holds one user turn naming "wombat" once and another naming it five times
+    And "main-run" contains a 2 MiB tool result with "quokka-early" in its first KiB and "quokka-late" beyond its first 1 MiB
+    And "main-run" contains one user turn naming "wombat" once and another naming it five times
     When the person runs "cairn ingest --all"
     And Claude calls the MCP tool "event_search" with query "quokka-early"
     Then the tool result event is a hit
@@ -129,25 +129,25 @@ Feature: Record (REC)
     Then the hits are ranked by score, the user turn naming "wombat" five times above the one naming it once
 
   @REC-12 @P0 @I10 @pending
-  Scenario: events are appended in source order and seq alone defines order
+  Scenario: events are appended in transcript order and seq alone defines order
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
     And the timestamp of line 11 of "main-run" is earlier than that of line 10
     And line 12 of "main-run" carries no timestamp
     When the person runs "cairn ingest --all"
-    Then the events of "main-run" have seq in the order of their source lines
+    Then the events of "main-run" have seq in the order of their transcript lines
     And each event whose line carries a timestamp keeps it as metadata
-    And the event of line 12 carries no source timestamp
-    And a second fresh home that ingests "main-run" under the same writer id holds the same chain head hash
+    And the event of line 12 carries no transcript timestamp
+    And a second fresh home that ingests "main-run" under the same writer id derives the same chain head hash
     And "cairn event expand" returns line 10 before line 11
 
   @REC-13 @P1 @I9 @pending
-  Scenario Outline: tool-use, stop and permission hooks ingest incrementally within budget and mark the remainder
+  Scenario Outline: hook handlers for tool-use, stop and permission hooks ingest incrementally within budget and mark the remainder
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
-    And "main-run" holds 50,000 unread lines, more than one hook budget can ingest
+    And "main-run" has 50,000 unread lines, more than one hook budget can ingest
     When the hook "<hook>" runs with the session_id and transcript_path of "main-run"
-    Then the hook exits 0 within its budget
+    Then the hook handler exits 0 within its budget
     And the events ingested so far are a prefix of "main-run"
     And a work marker records the remainder of "main-run"
 
@@ -161,7 +161,7 @@ Feature: Record (REC)
   @REC-14 @P1 @I1 @pending
   Scenario: Claude Agent SDK transcripts are ingested from configurable roots
     Given an isolated Cairn home
-    And the person's configuration adds a root holding a Claude Agent SDK transcript "sdk-run"
+    And the person's configuration adds a transcript root containing a Claude Agent SDK transcript "sdk-run"
     When the person runs "cairn ingest --all"
     Then the command exits 0
     And every line of "sdk-run" is stored as an event of its run
@@ -169,7 +169,7 @@ Feature: Record (REC)
   @REC-15 @P1 @I1 @I5 @pending
   Scenario: retention policies expire content per provenance class through tombstoned purges
     Given an isolated Cairn home
-    And a home whose record holds "web" payloads and "user" events that are 40 days old
+    And a home whose record contains "web" payloads and "user" events that are 40 days old
     And the person's configuration sets "retention.*.web" to 30 days
     When the retention policy is applied
     Then the content of the "web" events is removed and a tombstone records each purged range with reason "retention"
@@ -177,7 +177,7 @@ Feature: Record (REC)
     And with no retention configured, applying the default policy removes nothing
 
   @REC-16 @P2 @I1 @pending
-  Scenario: a Claude Managed Agents event history can be imported
+  Scenario: a Claude Managed Agents event history can be ingested
     Given an isolated Cairn home
     And an exported Claude Managed Agents event history "managed-run"
     When the person runs "cairn ingest --path managed-run"
@@ -187,7 +187,7 @@ Feature: Record (REC)
   @REC-17 @P0 @I1 @I5 @I10 @pending
   Scenario: event content is reached only through a keyed commitment whose key is erased with it
     Given an isolated Cairn home
-    And a home whose record holds 40 events, of which seq 10-14 have since been purged
+    And a home whose record contains 40 events, of which seq 10-14 have since been purged
     When the person runs "cairn verify"
     Then the command exits 0
     And every event carries a commitment to its canonical content under a random per-event key of at least 256 bits, stored with the content and absent from its chained header
@@ -198,7 +198,7 @@ Feature: Record (REC)
   @REC-18 @P1 @I6 @I10 @pending
   Scenario: writer seals are verified and events past the newest seal show as unsigned
     Given an isolated Cairn home
-    And a writer whose log holds 30 events and is sealed at seq 20 with its seat key
+    And a writer whose log contains 30 events and is sealed at seq 20 with its seat key
     And a second writer whose seal at seq 10 has one altered byte
     When the person runs "cairn verify"
     Then the command exits 3 and names the second writer's seal at seq 10 as a mismatch
@@ -224,9 +224,9 @@ Feature: Record (REC)
   @REC-20 @P1 @I1 @pending
   Scenario Outline: worktree checkpoints record the commit, branch and redacted diff at every hand-off point
     Given an isolated Cairn home
-    And a run on a git worktree with a previous worktree checkpoint, a tracked change holding an API key, an untracked file and an ignored file
+    And a run on a git worktree with a previous worktree checkpoint, a tracked change containing an API key, an untracked file and an ignored file
     When <moment>
-    Then the record gains an event with provenance "file" holding the checked-out commit id, the branch and a payload diff against the previous worktree checkpoint
+    Then the record gains an event with provenance "file" carrying the checked-out commit id, the branch and a payload diff against the previous worktree checkpoint
     And the diff covers the tracked change and the untracked file but not the ignored file, with the API key redacted
     And a worktree checkpoint taken for a rewrite of the branch head keeps the replaced head
     And Cairn obtained the worktree state and git data within the core's boundary, with no program started and no connection opened, within the hook budget, leaving any rest to a work marker
@@ -241,7 +241,7 @@ Feature: Record (REC)
   @REC-21 @P1 @I6 @pending
   Scenario: a segment of an unsupported format version is refused, audited and left untouched
     Given an isolated Cairn home
-    And a writer log holding a segment of a format version this node supports and a segment of format version 99
+    And a writer log containing a segment of a format version this node supports and a segment of format version 99
     When the person runs "cairn rebuild"
     Then every segment this node wrote carries a format version
     And the supported segment is read
@@ -249,21 +249,21 @@ Feature: Record (REC)
     And the version 99 segment file is byte-identical to before
 
   @REC-22 @P1 @I1 @I2 @pending
-  Scenario: events from transcripts the hooks did not observe are marked imported and untrusted
+  Scenario: events from transcripts the hook handlers did not watch are marked ingested and untrusted
     Given an isolated Cairn home
     And deployment mode "interactive"
-    And a transcript "pre-install" under the configured transcript roots, written before Cairn's hooks were installed, holding a user prompt
+    And a transcript "pre-install" under the configured transcript roots, written before Cairn's hook handlers were installed, containing a user prompt
     And a transcript "elsewhere" from outside the configured transcript roots
     When the person runs "cairn ingest --path" on "pre-install" and on "elsewhere"
-    Then every event of "pre-install" carries an "imported" mark with its source and ingest position, shown on every surface, and none is shown as witnessed
+    Then every event of "pre-install" carries the "ingested" origin, freshness mark and trust mark with its transcript source and ingest position, shown on every surface, and none is shown as witnessed
     And the user prompt from "pre-install" has trust "untrusted"
-    And "elsewhere" is held as an imported run in the principal's personal room, shown as "imported", and every event of it has trust "untrusted"
+    And this node holds "elsewhere" as an ingested run in the principal's personal room, shown as "ingested", and every event of it has trust "untrusted"
 
   @REC-23 @P2 @I2 @I4 @I6 @pending
-  Scenario Outline: room bundles are imported only from local sources, verified, redacted and audited
+  Scenario Outline: room bundles are imported only from local files and fetched git refs, verified, redacted and audited
     Given an isolated Cairn home
     And this node holds a foreign room's writer chain under the principal key "principal-b"
-    And a room bundle in a local file that <bundle>, holding a withheld event and an event with an API key the redaction rules of this node's principal match
+    And a room bundle in a local file that <bundle>, carrying a withheld event and an event with an API key the redaction rules of this node's principal match
     When the person imports the bundle
     Then the import is <outcome> and an audit entry records it
     And an accepted bundle had its seals and chains verified as received, across the withheld event from its retained header, and the API key redacted with its event's commitment key erased, both results recorded
@@ -295,10 +295,10 @@ Feature: Record (REC)
       | the node identity value is unavailable                    |
 
   @REC-25 @P1 @I1 @I10 @pending
-  Scenario: closed segments are merged as deferred work so a writer holds at most 48 segments a day
+  Scenario: closed segments are merged as deferred work so a writer has at most 48 segments a day
     Given an isolated Cairn home
     And a writer that closed 200 sealed segments during one day of activity
     When deferred work runs outside every hook budget
-    Then the writer holds at most 48 stored segments for that day
+    Then the writer has at most 48 stored segments for that day
     And every address, commitment and chain head is unchanged
     And "cairn verify" checks every seal and exits 0

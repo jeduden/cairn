@@ -21,14 +21,14 @@ Feature: Administration and lifecycle (ADM)
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
     And that install created the node's personal room as the first act of the principal's device seat
     When the person runs "cairn uninstall" and keeps only the device key
-    Then the output lists the hooks, plugin and MCP registration, room-view credentials, launcher endpoints, seat and device keys, enrolments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
+    Then the output lists the hook, plugin and MCP registrations, room-view credentials, launcher endpoints, seat and device keys, enrollments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
   @ADM-03 @P0 @I7 @pending
   Scenario: managed settings are detected and never written
     Given an isolated Cairn home
-    And a managed settings file that registers the Cairn hooks
+    And a managed settings file that registers Cairn's hook handlers
     When the person runs "cairn install --scope user --yes"
     Then the command exits 1
     And the managed settings file is byte-identical to before
@@ -77,7 +77,7 @@ Feature: Administration and lifecycle (ADM)
     And a home with sealed segments, an open segment, payloads, derived state and an audit log
     And a backup taken by "cairn backup", followed by a purge of run "run-a" and the unpin of a pin
     When the person runs "cairn restore" as a widening principal act
-    Then the backup held every segment sealed fresh, the payload store, derived state and the audit log with its chain, no seat or device key, and an audit entry recorded it
+    Then the backup contained every segment sealed fresh, the payload store, derived state and the audit log with its chain, no seat or device key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was restored
     And every event and payload outside run "run-a" recalled before the backup is recalled identically
     And run "run-a" stays purged and the unpinned pin stays unpinned
@@ -92,7 +92,7 @@ Feature: Administration and lifecycle (ADM)
     Then the command exits 0
     And the purged events are gone from the sealed segments, events, the FTS index, projections, the payload store and every copy of their content
     And the commitment key and payload reference of every purged event are erased
-    And a tombstone event per purged range holds only addresses, counts, reason and commitments
+    And a tombstone event per purged range carries only addresses, counts, reason and commitments
     And the database is compacted and "cairn verify" confirms every rewritten segment's seals
 
     Examples:
@@ -108,7 +108,7 @@ Feature: Administration and lifecycle (ADM)
   @ADM-08 @P0 @I10 @pending
   Scenario: rebuild regenerates derived state byte-identically whatever order the logs arrived in
     Given an isolated Cairn home
-    And a second isolated Cairn home with the same node keys, the two holding the same writer logs with pins, quarantine and landmarks, received in opposite orders
+    And a second isolated Cairn home with the same node keys, the two nodes holding the same writer logs with pins, quarantine and landmarks, received in opposite orders
     When the person runs "cairn rebuild" in each home
     Then the command exits 0 in each home
     And "cairn verify" confirms every projection is byte-identical to its state before rebuild
@@ -124,11 +124,11 @@ Feature: Administration and lifecycle (ADM)
     And the output names the failed check "<check>"
 
     Examples:
-      | damage                                     | check                  |
-      | the transcript has lines not in the record | source completeness    |
-      | an event row's hash has been altered       | hash chain             |
-      | a payload file's bytes have been altered   | payload integrity      |
-      | a landmark row has been altered            | projection consistency |
+      | damage                                     | check                          |
+      | the transcript has lines not in the record | transcript source completeness |
+      | an event row's hash has been altered       | hash chain                     |
+      | a payload file's bytes have been altered   | payload integrity              |
+      | a landmark row has been altered            | projection consistency         |
 
   @ADM-10 @P0 @I7 @pending
   Scenario: doctor is read-only and doctor --fix shows each change first
@@ -195,7 +195,7 @@ Feature: Administration and lifecycle (ADM)
 
     Examples:
       | quota               | arrival                                             | outcome                                                                     |
-      | imported writer     | a peer offers another event of that writer          | the event is refused and an audit entry records it                          |
+      | received writer     | a peer offers another event of that writer          | the event is refused and an audit entry records it                          |
       | peer                | the peer offers another segment                     | the segment is refused and an audit entry records it                        |
       | worktree checkpoint | the hook "Stop" records another worktree checkpoint | the worktree checkpoint is refused and an audit entry records it            |
       | local writer        | the run appends another event                       | the event is recorded, a failure counter rises and a Needs you item appears |

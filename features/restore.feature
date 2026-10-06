@@ -6,22 +6,22 @@ Feature: Restore and injection (INJ)
   implements the requirement lands.
 
   @INJ-01 @P0 @I3 @pending
-  Scenario: a compaction restart returns pins, landmarks and the recall statement
+  Scenario: a compaction restart returns qualifying pins, the landmark index and the recall hint
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "compacted-run"
     And the person runs "cairn pin add --type constraint 'Never push directly to main; open a pull request.'"
     When the hook "SessionStart" runs with source "compact"
-    Then the additionalContext holds a restore block with the active pin verbatim
-    And the restore block holds the landmark index of the current run
-    And the restore block ends with the one-line statement that recall tools are available
+    Then the additionalContext carries a restore block with the qualifying pin verbatim
+    And the restore block includes the landmark index of the current run
+    And the restore block ends with the recall hint
 
   @INJ-02 @P0 @I3 @pending
-  Scenario Outline: a fresh start returns pins and the recall statement by default
+  Scenario Outline: a fresh start returns qualifying pins and the recall hint by default
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "prior-history"
     And the person runs "cairn pin add --type constraint 'Never push directly to main; open a pull request.'"
     When the hook "SessionStart" runs with source "<source>"
-    Then the restore block holds the active pin verbatim and the recall statement but no landmark index
+    Then the restore block includes the qualifying pin verbatim and the recall hint but no landmark index
     And with "restore_block.landmarks_on_start" set to true the same hook also returns the landmark index
 
     Examples:
@@ -32,11 +32,11 @@ Feature: Restore and injection (INJ)
 
   @INJ-03 @P0 @I2 @pending
   Scenario: the restore builder accepts only TrustedText
-    Given the injection crate source
+    Given the injection crate's code
     When a crate outside the injection crate tries to construct a TrustedText value
     Then the build fails because the TrustedText constructor is private to the injection crate
     And every field of TrustedText is private, and no public method or trait implementation builds one, except by copying an existing TrustedText, or changes one
-    And the only TrustedText sources are active pins and sanitized structural fields
+    And TrustedText is built only from qualifying pins and sanitized structural fields
     And the restore builder signature accepts no type but TrustedText
 
   @INJ-04 @P0 @I2 @pending
@@ -45,16 +45,16 @@ Feature: Restore and injection (INJ)
     And an agent run with a Claude Code transcript "prior-history"
     When the hook "UserPromptSubmit" runs with prompt "continue"
     Then the hook output carries no additionalContext
-    And with "restore_block.on_prompt" set to true the injection holds only TrustedText
+    And with "restore_block.on_prompt" set to true the injection contains only TrustedText
     And an audit entry records "UserPromptSubmit injection"
 
   @INJ-05 @P0 @I9 @pending
   Scenario: an ambiguous run gets pins only
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "parent-with-subagent"
-    And an active pin "Never push directly to main; open a pull request."
+    And a qualifying pin "Never push directly to main; open a pull request."
     When the hook "SessionStart" runs with source "compact" and the parent's session_id but no subagent fields
-    Then the restore block contains the active pin
+    Then the restore block contains the qualifying pin
     And the restore block contains no landmark index
     And the command exits 0
 
@@ -70,7 +70,7 @@ Feature: Restore and injection (INJ)
   Scenario: an over-budget restore block drops landmark detail deterministically
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "long-multi-tier"
-    And active pins totalling 900 tokens
+    And qualifying pins totalling 900 tokens
     When the hook "SessionStart" runs with source "compact"
     Then the restore block is at most 2,000 tokens
     And landmark detail is removed finest tier first, the coarsest tier last
@@ -98,11 +98,11 @@ Feature: Restore and injection (INJ)
   @INJ-10 @P1 @I2 @I6 @pending
   Scenario Outline: opt-in notices of waiting posts need the room owner's notice allowance and the agent's principal's notice opt-in, carry counts and addresses only, and are audited
     Given an isolated Cairn home
-    And a room holding 2 waiting posts from 2 writers, one containing "POST-CANARY-91c2"
+    And a room with 2 waiting posts from 2 writers, one containing "POST-CANARY-91c2"
     And opt-in notices of waiting posts for the room <setting>
     When the hook "<hook>" runs
-    Then the hook returns <notice>
-    And any opt-in notice is TrustedText holding only the count 2, short key fingerprints and the posts' recall addresses, without "POST-CANARY-91c2" or any other text an author chose
+    Then the hook handler returns <notice>
+    And any opt-in notice is TrustedText carrying only the count 2, short key fingerprints and the posts' recall addresses, without "POST-CANARY-91c2" or any other text an author chose
     And an audit entry records every opt-in notice returned
     And no opt-in notice starts or resumes a turn
 

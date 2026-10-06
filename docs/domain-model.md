@@ -556,8 +556,8 @@ to exactly one kind (LANE-31).
 - **Recall scope**: `run`, `room` or `rooms`, or a foreign room named in the
   call (RCL-05).
 - **Endorsement**: A principal act sending a post's displayed text to one of
-  the principal's own agents, inside a fixed template naming the post's
-  author and address (OWN-08).
+  the principal's own agents, inside a fixed template naming the post's author
+  and address (OWN-08).
 - **Trust grant**: A principal's widening act trusting another principal's key
   for its own agents, in one room or everywhere. It covers that principal's
   device-seat posts and pins only, never run seats, nor a service account that
@@ -583,9 +583,9 @@ to exactly one kind (LANE-31).
 - **Rule level**: For each action class (a kind of tool action, such as edits,
   commands or network use), one of: act without asking, act when told, ask
   first, hand off (OWN-10).
-- **Quota**: A limit on storage, events or spend, per room, node, imported
-  writer, peer or worktree checkpoint, that the node's principal or managed
-  policy sets (ADM-15).
+- **Quota**: A limit on storage, events or spend, per room, node, writer
+  received from a peer, peer or worktree checkpoint, that the node's principal
+  or managed policy sets (ADM-15).
 - **Away policy**: A principal's opt-in choice of what an unanswered held
   request does while it is on: keep going, pause or stop (OWN-07). Turning one
   on offers to write a head receipt (VIEW-10).

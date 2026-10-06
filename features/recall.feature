@@ -19,7 +19,7 @@ Feature: Recall (RCL)
     And an agent run with a Claude Code transcript "mixed-provenance"
     When Claude calls the MCP tool "event_search" with <args>
     Then the result is wrapped in the recall envelope
-    And the envelope holds at most <hits> items, each matching the filter, ranked by BM25 score
+    And the envelope contains at most <hits> items, each matching the filter, ranked by BM25 score
     And a relevant hit from a short run still ranks above the repeated hits of a long run
 
     Examples:
@@ -40,7 +40,7 @@ Feature: Recall (RCL)
     And an agent run with a Claude Code transcript "large-payloads"
     When Claude calls the MCP tool "event_expand" with range "w-1:1-400"
     Then the result is wrapped in the recall envelope
-    And the items hold the exact post-redaction content with payload references resolved
+    And the items carry the exact post-redaction content with payload references resolved
     And the envelope is at most 8,000 tokens with "truncated" true and a "next_cursor"
     And calling "event_expand" with that cursor returns the following events without gap or overlap
 
@@ -61,10 +61,10 @@ Feature: Recall (RCL)
   @RCL-05 @P0 @I8 @pending
   Scenario: recall defaults to the agent's current run and widening to its rooms is explicit and logged
     Given an isolated Cairn home
-    And a run holding seats in its personal room and in room "L1", whose writers this node holds beside those of other runs in "L1" on two worktrees, of room "L2" where the run holds no seat, and of a foreign room
+    And a run with seats in its personal room and in room "L1", whose writers this node holds beside those of other runs in "L1" on two worktrees, of room "L2" where the run has no seat, and of a foreign room
     When Claude calls the MCP tool "event_search" with query "deploy" and no scope
     Then every hit belongs to the calling run, across the writers of both its seats
-    And with scope "room" and room "L1" the hits come from every writer of "L1", and with scope "rooms" from every room the run holds a seat in, and an audit entry logs each widening
+    And with scope "room" and room "L1" the hits come from every writer of "L1", and with scope "rooms" from every room the run has a seat in, and an audit entry logs each widening
     And no scope returns a hit from "L2" or from the foreign room
     When Claude calls the MCP tool "event_get" with address "w-2:5", an event of another run in "L1", and no scope
     Then the event is not returned, and the result says the address lies outside the current scope
@@ -95,7 +95,7 @@ Feature: Recall (RCL)
     And an agent run with a Claude Code transcript "short-run"
     And an event address shown to a person or an agent in <form> form
     When Claude calls the MCP tool "<tool>" with that address
-    Then the result holds exactly the events the address names
+    Then the result contains exactly the events the address names
     And an address of a purged or quarantined event resolves to its tombstone or quarantine marker
     And "cairn event expand" given the same address in the same form returns the same events
 
@@ -110,7 +110,7 @@ Feature: Recall (RCL)
   @RCL-09 @P1 @I2 @I6 @pending
   Scenario Outline: every recalled item carries its writer, author, trust, origin and integrity status
     Given an isolated Cairn home
-    And a home whose record holds <item>
+    And a node whose record contains <item>
     When Claude recalls that item with the MCP tool "event_get"
     Then the item carries its writer, its author and its trust level
     And the item carries origin "<origin>" and integrity status "<status>"
@@ -119,7 +119,7 @@ Feature: Recall (RCL)
       | item                                                                   | origin    | status      |
       | a sealed event this node witnessed                                     | witnessed | verified    |
       | an event past its writer's newest seal                                 | witnessed | unsigned    |
-      | a sealed event imported from a transcript                              | imported  | verified    |
+      | a sealed event ingested from a transcript                              | ingested  | verified    |
       | a sealed event imported from a room bundle                             | bundle    | verified    |
       | a peer's event after a break in its writer's chain                     | peer      | unverified  |
       | a peer's event whose chain check fails                                 | peer      | broken      |
@@ -129,7 +129,7 @@ Feature: Recall (RCL)
   @RCL-10 @P2 @I2 @I8 @pending
   Scenario: a foreign room is recalled only by naming it in the call, enveloped, untrusted and tainting
     Given an isolated Cairn home
-    And a home holding a foreign room "vendor-room" imported from a room bundle
+    And a node holding a foreign room "vendor-room" imported from a room bundle
     When Claude calls the MCP tool "event_search" with query "deploy" and room "vendor-room"
     Then the hits come from "vendor-room", wrapped in the recall envelope, each with trust "untrusted"
     And an audit entry logs the call and the calling run is tainted under SEC-13
@@ -138,7 +138,7 @@ Feature: Recall (RCL)
   @RCL-11 @P2 @I6 @pending
   Scenario: recalling another seat's post is recorded and shown in the room view
     Given an isolated Cairn home
-    And a room owned by "owner-a" holding a post written by the seat "bob"
+    And a room owned by "owner-a" whose conversation has a post written by the seat "bob"
     When Claude on this node calls the MCP tool "event_get" with the post's address
     Then the writer of the calling run's seat gains the recall event, listing the post's address among the returned events
-    And the room view shows the recall, with its recall address, to "owner-a" and to "bob"
+    And the room view shows the recall, with its recall address, to "owner-a" and to the principal of the seat "bob"

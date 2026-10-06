@@ -48,7 +48,7 @@ Feature: Observability (OPS)
     And deployment mode "automation"
     When the person runs "cairn canary"
     Then the command exits 0
-    And the canary marker was written through a hook and recalled through the MCP tool "event_search"
+    And the canary marker was written through a hook handler and recalled through the MCP tool "event_search"
     Given the MCP recall path is broken
     When the person runs "cairn canary"
     Then the command exits 1

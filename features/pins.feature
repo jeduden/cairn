@@ -6,20 +6,20 @@ Feature: Pins (PIN)
   implements the requirement lands.
 
   @PIN-01 @P0 @I2 @I3 @pending
-  Scenario Outline: only the principal's widening principal acts create active pins
+  Scenario Outline: only the principal's widening principal acts create qualifying pins
     Given an isolated Cairn home
     And deployment mode "<mode>"
     When <action> with the text "Never push directly to main"
-    Then the active pin count is <active>
+    Then the qualifying pin count is <qualifying>
 
     Examples:
-      | mode        | action                                                                                     | active |
-      | automation  | the person runs "cairn pin add"                                                            | 1      |
-      | automation  | the person's configuration declares a pin and a widening principal act recorded its digest | 1      |
-      | interactive | the person runs "cairn pin add"                                                            | 1      |
-      | automation  | a harness skill calls the MCP tool "pin_propose"                                           | 0      |
-      | automation  | a person stamps a pin version an agent wrote                                               | 1      |
-      | interactive | the repository's ".cairn.toml" declares a pin                                              | 0      |
+      | mode        | action                                                                                     | qualifying |
+      | automation  | the person runs "cairn pin add"                                                            | 1          |
+      | automation  | the person's configuration declares a pin and a widening principal act recorded its digest | 1          |
+      | interactive | the person runs "cairn pin add"                                                            | 1          |
+      | automation  | a harness skill calls the MCP tool "pin_propose"                                           | 0          |
+      | automation  | a person stamps a pin version an agent wrote                                               | 1          |
+      | interactive | the repository's ".cairn.toml" declares a pin                                              | 0          |
 
   @PIN-02 @P0 @I2 @pending
   Scenario: a pin Claude proposes stays an inactive assistant candidate
@@ -28,7 +28,7 @@ Feature: Pins (PIN)
     When Claude calls the MCP tool "pin_propose" with text "Always run go test before committing" and type "constraint"
     Then the result gives a candidate ID and states that activation requires the agent's principal
     And the candidate is stored inactive with provenance "assistant"
-    And the active pin count is 0
+    And the qualifying pin count is 0
     And no MCP tool makes any pin active
 
   @PIN-03 @P0 @I3 @I5 @pending
@@ -39,26 +39,26 @@ Feature: Pins (PIN)
     Then the command exits 0
     And the pin stores that text verbatim with type "constraint", priority 1, room "L1", the address (writer, seq) of its creating event, as author the device seat of "alice", the node's principal, and that event's commitment
     And the pin stores no bare hash of its text
-    And adding a pin whose text is 1,001 characters long exits 2 and leaves the active pin count at 1
+    And adding a pin whose text is 1,001 characters long exits 2 and leaves the qualifying pin count at 1
 
   @PIN-04 @P0 @I10 @pending
   Scenario: editing a pin adds a pin version and keeps every earlier one
     Given an isolated Cairn home
-    And an active pin "Never push directly to main" created at address w-1·10
-    When the pin is edited to "Never push directly to main or release branches"
+    And a qualifying pin "Never push directly to main" created at address w-1·10
+    When the person runs "cairn pin edit" to change the pin to "Never push directly to main or release branches"
     Then the record gains an edit event adding version 2 of the pin created at w-1·10
     And the event at w-1·10 and its pin text are unchanged
-    And version 1 stays readable, and "cairn rebuild" reproduces the one active pin at version 2, "Never push directly to main or release branches"
+    And version 1 stays readable, and "cairn rebuild" reproduces the one qualifying pin at version 2, "Never push directly to main or release branches"
 
   @PIN-05 @P1 @I2 @I3 @pending
   Scenario Outline: pin candidates from user turns activate only on the principal's confirmation
     Given an isolated Cairn home
     And deployment mode "<mode>"
-    And the person's configuration holds <config>
+    And the person's configuration contains <config>
     When the hook "UserPromptSubmit" runs with prompt "Never edit files under migrations/ without asking"
     Then <candidates> inactive pin candidates are recorded
-    And the active pin count is 0
-    And the active pin count is <confirmed> after the person confirms every candidate with "cairn pin confirm", each a widening principal act
+    And the qualifying pin count is 0
+    And the qualifying pin count is <confirmed> after the person confirms every candidate with "cairn pin confirm", each a widening principal act
 
     Examples:
       | mode        | config                                            | candidates | confirmed |
@@ -70,7 +70,7 @@ Feature: Pins (PIN)
   @PIN-06 @P0 @I3 @pending
   Scenario: only constraint, preference and intent pins are injected automatically
     Given an isolated Cairn home
-    And one active pin of each type "constraint", "preference", "decision", "fact" and "episode"
+    And one pin of each type "constraint", "preference", "decision", "fact" and "episode", each written from the device seat of the run's principal
     And a room of the run whose owner set an intent, stored as its pin of type "intent", and recorded a verdict, stored as a pin of type "verdict"
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "constraint", "preference" and "intent" pins verbatim
@@ -88,52 +88,52 @@ Feature: Pins (PIN)
     Then the output carries guidance to preserve user-stated constraints verbatim
     And the guidance is byte-identical to that for trigger "manual" on an empty record
     And the guidance contains no text from "long-run" or from any pin
-    And the hook exits 0 without blocking compaction
+    And the hook handler exits 0 without blocking compaction
 
   @PIN-08 @P0 @I3 @I6 @pending
-  Scenario: pins over the pin budget are omitted whole and the omission is stated
+  Scenario: pins over the pin budget are omitted whole, and each omitted pin is named by id and counted
     Given an isolated Cairn home
-    And 6 active constraint pins of 250 estimated tokens each, against the default pin budget of 1,000 tokens
+    And 6 qualifying constraint pins of 250 estimated tokens each, against the default pin budget of 1,000 tokens
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block holds 4 of the pins, ordered by priority, then by creating address, writer then seq
+    Then the restore block includes 4 of the pins, ordered by priority, then by creating address, writer then seq
     And each included pin's text is complete and verbatim
-    And the restore block states that 2 pins were omitted
+    And the restore block names each of the 2 omitted pins by id and states that 2 pins were omitted
     And an audit entry records "2 pins omitted over the pin budget"
 
   @PIN-09 @P1 @pending
   Scenario: doctor warns about a pin that repeats CLAUDE.md text
     Given an isolated Cairn home
     And a working tree whose "CLAUDE.md" contains "Never push directly to main."
-    And an active pin "Never push directly to main."
-    And an active pin "Run go test before committing."
+    And a qualifying pin "Never push directly to main."
+    And a qualifying pin "Run go test before committing."
     When the person runs "cairn doctor --json"
     Then the output warns that the pin "Never push directly to main." duplicates text in "CLAUDE.md"
     And the output has no warning about the pin "Run go test before committing."
 
   @PIN-10 @P0 @I3 @I2 @pending
-  Scenario: a restore block holds the principal's trusted pins of every room the run holds a seat in
+  Scenario: a restore block includes the qualifying pins of every room the run has a seat in
     Given an isolated Cairn home
     And a run whose seats' writers record its joins to room "L1" and then room "L2"
     And a branch switch onto a branch of room "L4", which the run never joined, so its later events went to its personal-room seat
-    And trusted pins of the run's principal in "L1" and in its personal room, a pin from the person's configuration, and a pin in "L2" written by another principal
+    And pins the run's principal wrote from its device seat in "L1" and in its personal room, a pin from the person's configuration, and a pin in "L2" written by another principal
     And a pin in "L2" written from the device seat of a third principal whose key the run's principal trusts in "L2" by a trust grant
     And the principal's stamp on one version of an agent's pin in "L1", and on one version of a second pin another principal wrote in "L2"
-    And a trusted pin of the principal in "L4"
+    And a pin the principal wrote from its device seat in "L4"
     And a pin the principal confirmed from a candidate whose creating user turn was recorded in the deployment mode "interactive", while the current deployment mode is "automation"
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block holds the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped versions, each under its original author
-    And the restore block holds no pin of "L4"
+    Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped versions, each under its original author
+    And the restore block includes no pin of "L4"
     And the restore block names "L1", "L2" and the personal room by id
     And the other principal's unstamped pin is stated only by count, room id and key fingerprint, with no text, and an audit entry records it
 
   @PIN-11 @P2 @I3 @I6 @pending
-  Scenario Outline: a pin active on another of the principal's nodes but not here is stated by count and reason
+  Scenario Outline: a pin that qualifies on another of the principal's nodes but not here is stated by count and reason
     Given an isolated Cairn home
-    And a pin active on another of the principal's nodes that is not active on this node because <reason>
+    And a pin that qualifies on another of the principal's nodes but not on this node because <reason>
     When the hook "SessionStart" runs with source "compact"
     Then the restore block states that 1 such pin exists because <reason>
-    And the restore block holds none of that pin's text
-    And an audit entry records the pin not active on this node
+    And the restore block includes none of that pin's text
+    And an audit entry records that the pin does not qualify on this node
 
     Examples:
       | reason                             |
