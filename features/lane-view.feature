@@ -70,10 +70,10 @@ Feature: Room view (VIEW)
     When the person opens the room view
     Then each post carries the trust mark of §9.7.6 and the petname the person chose for its author's key, never the name the peer sent
     And the key with no petname is shown by its fingerprint and the new key is marked "new key"
-    And the hidden characters and the HTML comment render as visible placeholders with a count
+    And the invisible characters and the HTML comment render as visible placeholders with a count
 
   @VIEW-08 @P1 @I6 @I10 @pending
-  Scenario: Catch up is one deterministic projection of the record and a starting point
+  Scenario: Catch up is derived deterministically from the record and a starting point
     Given an isolated Cairn home
     And rooms with capture gaps, an unsynced writer, a tombstone, a voided branch link and finished runs since a starting point
     And a head receipt of chain heads outside CAIRN_HOME
@@ -119,7 +119,7 @@ Feature: Room view (VIEW)
     When the person opens the Timeline tab of its Room page, then the quarantine list from it, and asks for a forensic view of the quarantined content
     Then each gap is shown in place, never closed up
     And the quarantined content is shown only after that explicit forensic view
-    And the forensic view is recorded as an "operator" event
+    And the forensic view is recorded as a neutral principal act, an "operator" event
     And the tombstone reads "removed from this node", never "erased"
 
   @VIEW-12 @P1 @I1 @I10 @pending
@@ -133,11 +133,11 @@ Feature: Room view (VIEW)
     And events of the two writers appear in the same causal order on every replay
 
   @VIEW-13 @P2 @I10 @pending
-  Scenario: comparing two branches shows exposure beside outcome and picks no winner
+  Scenario: comparing two branches shows exposure beside results and picks no winner
     Given an isolated Cairn home
     And a room naming two branches for its intent, where the run on one of them read a flagged untrusted item
     When the person opens the comparison of the two branches from the room's Room page
-    Then exposure, outcome and evidence are shown side by side for each branch
+    Then exposure, results and evidence are shown side by side for each branch
     And the paths are aligned the same way on every comparison
     And no branch is marked the winner, and choosing a branch to compare is a neutral principal act of the room's owner
 
@@ -196,13 +196,13 @@ Feature: Room view (VIEW)
     Then it shows the diff and events since the branch heads that verdict was bound to
 
   @VIEW-20 @P1 @I6 @pending
-  Scenario: the room view shows every delegation by its link
+  Scenario: the room view shows every delegation by its delegation link or parent link
     Given an isolated Cairn home
     And a room where an agent delegated one task to a subagent and one to another agent of the same principal under a delegation grant
     When the person opens the room view
     Then the delegation to the other agent shows as a delegation link from the delegating run to the delegate's run, naming the delegation grant
     And the subagent's delegation shows as the parent link from its run to the delegating run, naming no grant
-    And each link shows the delegated task's address and its state
+    And the delegation link and the parent link each show the delegated task's address and its state
     And the delegate's spend under the grant shows against the grant's budget
 
   @VIEW-21 @P1 @I2 @I10 @pending

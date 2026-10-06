@@ -9,7 +9,7 @@ Feature: Principal acts (OWN)
   Scenario: only the run's principal can instruct it
     Given an isolated Cairn home
     And an agent's run started on "alice"'s node
-    When "bob" writes a principal act addressed to that run
+    When "bob" writes a principal act directed to that run
     Then the run's one principal is "alice"
     And the act from "bob" does not instruct the run
     And "bob"'s text reaches the run only as untrusted recall, a post "alice" endorses, a delegated task under "alice"'s acceptance grant (OWN-26), or a device-seat post or pin of "bob" a trust grant of "alice" covers (OWN-29)
@@ -87,18 +87,18 @@ Feature: Principal acts (OWN)
     And the held-request id resolves through "event_get" to the held request's recorded event
 
     Examples:
-      | policy                 | reply                                                                                  |
-      | keep going             | a deny with the fixed text "Held for your principal as <id>; continue with other work" |
-      | pause at the first ask | the agent pauses                                                                       |
-      | stop at the first ask  | the agent stops                                                                        |
+      | policy                 | reply                                                                                   |
+      | keep going             | a deny with the fixed text "Held for your principal as <id>; continue with other tasks" |
+      | pause at the first ask | the agent pauses                                                                        |
+      | stop at the first ask  | the agent stops                                                                         |
 
   @OWN-08 @P2 @I2 @I6 @pending
   Scenario: an endorsement sends exactly the confirmed text inside a fixed template
     Given an isolated Cairn home
-    And a post by "bob"'s device seat in the room, longer than its preview, with hidden characters
+    And a post by "bob"'s device seat in the room, longer than its preview, with invisible characters
     When "alice" expands it, edits it and endorses it to one of her own agents
     Then Endorse was enabled only after the post was expanded
-    And the agent receives exactly the confirmed text with hidden characters stripped and their count recorded
+    And the agent receives exactly the confirmed text with invisible characters stripped and their count recorded
     And the endorsement is a signed principal act naming the post's commitment, its author's seat key, the target agent, the original text and the sent text
     And "bob" is shown the edit as a diff
     And the text reaches the agent through the harness's input interface in a fixed template naming the seat key's short fingerprint and the post's address, with no petname
@@ -191,7 +191,7 @@ Feature: Principal acts (OWN)
   Scenario: a paired phone is enrolled by a widening act and its device key is limited to its scope
     Given an isolated Cairn home
     And a paired phone whose device key "alice" certified with its scope by enrolling it, a widening principal act
-    When the phone tries to answer a held permission request with the harness's "allow for session"
+    When the phone, reaching the room view through the principal's tunnel, tries to answer a held permission request with the harness's "allow for session"
     Then the room-view component refuses it on the server
     And the phone can only read, allow once and deny held permission requests
     And each answer the phone gives is signed with its own device key and recorded on its device seat in her personal room, naming the room, whose writer the phone seals with that seat's key and the node it pairs with only holds
@@ -203,16 +203,16 @@ Feature: Principal acts (OWN)
     And a paired phone of "alice"
     When the phone writes a principal act raising a rule level
     Then the act does not take effect here
-    And the phone's acts are limited to allowing or denying held permission requests
+    And the phone is limited to reading and to allowing or denying held permission requests
     And the phone seals its device seat's writer with that seat's key, and this node only holds the writer
     And principal acts from "alice"'s other nodes take effect only under PRV-10, within their device scope and maximum rule level
 
   @OWN-18 @P1 @I2 @pending
   Scenario: a command from an untrusted event runs only after the person confirms its exact text
     Given an isolated Cairn home
-    And an untrusted event carrying a command with hidden characters
+    And an untrusted event carrying a command with invisible characters
     When the person confirms the command for a witness check
-    Then the person was shown its exact text with hidden characters visible before confirming
+    Then the person was shown its exact text with invisible characters made visible before confirming
     And the act is recorded as their principal act
     And the witness check runs only through the launcher, started by "cairn check witness", outside any agent context, on a fresh checkout of the exact commit, with network and the principal's home denied
     And its command, exit status and tree hash are recorded

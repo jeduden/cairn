@@ -84,7 +84,7 @@ Feature: Peer network (PEER)
   @PEER-08 @P2 @I4 @pending
   Scenario: the git carrier carries encrypted segments, one entry per writer, on the node's principal's remote
     Given an isolated Cairn home
-    And a node of "alice" holding room "room-1", which she owns, where "alice" opted in to the git carrier with a remote of her own
+    And a node of "alice" holding room "room-1", which she owns, where "alice" enabled the git carrier with a remote of her own, a widening principal act
     And no peer is reachable
     When the publish component carries the sealed segments of room "room-1"
     Then each writer's segments go to one entry in the namespaced location of "alice"'s remote that "alice" enabled
@@ -108,7 +108,7 @@ Feature: Peer network (PEER)
     Then both events are kept as evidence
     And the writer is marked "equivocated"
     And the room shows its integrity status as "equivocated"
-    And derived state for that writer stops at the fork until the node's principal chooses which fork to keep as a widening principal act
+    And the derived artifacts for that writer stop at the fork until the node's principal chooses which fork to keep as a widening principal act
 
   @PEER-11 @P2 @I5 @I6 @pending
   Scenario: erasure and quarantine requests reach every peer signed, and each peer's state is shown
