@@ -15,7 +15,7 @@ Feature: Provenance and trust (PRV)
     When the person runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
     And the Bash result carries provenance "tool_result:Bash"
-    And the principal act, the expire act and the device-seat pin carry provenance "operator", the run-seat pin and the run seat's room act carry "assistant", and the tombstone carries "structural"
+    And the principal act, the expire act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", and the tombstone carries "structural"
     And every provenance class is one of:
       | user               |
       | assistant          |

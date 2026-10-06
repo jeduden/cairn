@@ -64,22 +64,22 @@ Feature: Room (LANE)
     And the fourth file is not listed, and "cairn rebuild" derives the same result
 
   @LANE-05 @P1 @I2 @I10 @pending
-  Scenario Outline: each result carries exactly one evidence class from structural events
+  Scenario Outline: each result carries exactly one evidence class from structural fields
     Given an isolated Cairn home
     And a room whose result rests on <evidence>
     When the room's results are derived
     Then the result carries the evidence class "<class>" and no other
     And the result's binding is "<binding>"
-    And the class is derived from structural events only, never from event text
+    And the class is derived from structural fields only, never from event text
 
     Examples:
-      | evidence                                                                                                                                | class         | binding |
-      | an assistant message stating the tests pass                                                                                             | claim         | —       |
-      | tool output alone                                                                                                                       | claim         | —       |
-      | a command, its exit status and its tree the hook handlers recorded on the node of the run that made the edits                           | own check     | bound   |
-      | a command the hook handlers recorded after edits made through a shell                                                                   | claim         | unbound |
-      | the check re-run through the launcher on a fresh checkout of the exact commit by a node whose principal authored no commit in the range | witness check | —       |
-      | a check result for the exact commit signed by an enrolled CI key and brought in by the CI carrier                                       | CI attested   | —       |
+      | evidence                                                                                                                                   | class         | binding |
+      | an assistant message stating the tests pass                                                                                                | claim         | —       |
+      | tool output alone                                                                                                                          | claim         | —       |
+      | a command, its exit status and its tree the hook handlers recorded on the node of the run that made the edits                              | own check     | bound   |
+      | a command the hook handlers recorded after edits made through a shell                                                                      | claim         | unbound |
+      | the check re-run through the launcher on a fresh checkout of the exact commit by a node whose git identity authored no commit in the range | witness check | —       |
+      | a check result for the exact commit signed by an enrolled CI key and brought in by the CI carrier                                          | CI attested   | —       |
 
   @LANE-06 @P1 @I6 @I10 @pending
   Scenario Outline: the rooms behind a landed commit carry one proof class
@@ -136,7 +136,7 @@ Feature: Room (LANE)
   @LANE-11 @P2 @I2 @I6 @I10 @pending
   Scenario: an accepted handover moves ownership and keeps the former owner's agents and pins working
     Given an isolated Cairn home
-    And a room owned by "alice" with a constraint pin from her device seat that restores to her agents
+    And a room owned by "alice" with an intent and a constraint pin from her device seat that restores to her agents
     And "alice" offers the room to "bob" as a widening principal act with a presence proof
     When "bob" accepts as a widening principal act with a presence proof
     Then the handover shows as "accepted" to both principals
@@ -144,6 +144,8 @@ Feature: Room (LANE)
     And her pin keeps "alice"'s device seat as its author and keeps restoring to her agents
     And it reaches "bob"'s agents only through a version "bob" stamps, shown with "bob" as its stamper, or a trust grant of "bob" covering "alice"'s key
     And held requests stay with each agent's principal
+    When "bob" revises the intent as a widening principal act
+    Then the revision adds a new version of the intent pin that "bob"'s device seat authors
     When "bob" offers the room to "erin", who declines it as a cut principal act
     Then the offer shows as "declined" to both principals and ownership stays with "bob"
     When "bob" offers the room to "dave", who leaves it unanswered for 7 days
@@ -170,10 +172,10 @@ Feature: Room (LANE)
   @LANE-13 @P1 @I6 @pending
   Scenario: an edit to a file another open room has edited raises a Needs you item on both rooms
     Given an isolated Cairn home
-    And two open rooms "a" and "b" owned by "alice" on one node, where room "a" has edited "notes.txt"
+    And two open rooms on one node, "a" owned by "alice" and "b" owned by "bob", where room "a" has edited "notes.txt"
     When room "b" edits "notes.txt"
     Then a Needs you item is raised on both rooms at that edit, naming the other room and "notes.txt"
-    And the item clears when "alice" acknowledges the overlap as a neutral principal act
+    And the item on room "a" clears when "alice" acknowledges the overlap as a neutral principal act, while the item on room "b" stays until "bob" acknowledges it for room "b"
     And a later edit of "notes.txt" raises no new item, while an edit of a file not yet acknowledged does
 
   @LANE-14 @P1 @I6 @pending
@@ -359,6 +361,7 @@ Feature: Room (LANE)
     When a moderator unpins "bob"'s constraint pin
     Then the unpin takes the pin off the room's pin list and raises a Needs you item for "bob"
     And the pin keeps restoring to every agent it restored to, "bob"'s and those whose principal's trust grant covers "bob", until "bob" unpins it as his widening principal act
+    And the same holds when "alice"'s device seat, as the owner, unpins "bob"'s constraint pin instead of a moderator
     When the device seat of a node of "bob" that has only a token key pins the constraint "deploy on Fridays only"
     Then the pin changes only by room acts, is shown as unstamped, and restores to no agent until stamped
     When the run seat "p-3" pins the constraint "use the staging database"

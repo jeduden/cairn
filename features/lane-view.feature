@@ -34,10 +34,10 @@ Feature: Room view (VIEW)
     And hook handlers, ingestion and recall keep working with the view stopped
 
   @VIEW-04 @P1 @I6 @I10 @pending
-  Scenario: statuses come from structural events only and unrecorded runs surface
+  Scenario: statuses come from structural fields only and unrecorded runs surface
     Given an isolated Cairn home
     And a room with one run whose transcript is longer than its ingested position
-    And a run the launcher started with no hook event, sitting only in its personal room
+    And a run the launcher started with no hook observation, sitting only in its personal room
     When the person opens Fleet and runs "cairn room list"
     Then every run shows exactly one status from the closed set of §9.7.1 with its freshness mark
     And the room shows one room status and the worst freshness mark of its runs, never Quiet

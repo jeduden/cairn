@@ -122,7 +122,7 @@ Feature: Peer network (PEER)
     And "a" erased or tombstoned every copy of the range it holds in any writer's log
     And each peer's state, applied, refused or unreachable, is audited, counted and shown
     And the view says "b" kept its copy
-    And a quarantine request travels to the peers the same way
+    And a quarantine request travels to the peers the same way, and a peer's principal applies it by a principal act of the class of the quarantine it applies
 
   @PEER-12 @P2 @I4 @I8 @pending
   Scenario: a blind peer stores and serves a room it cannot read

@@ -281,8 +281,8 @@ Feature: Security (SEC)
   Scenario: the room view writes no configuration and points to the CLI instead
     Given an isolated Cairn home
     And the room view is open
-    When the person asks the room view to change the harness configuration, the Cairn configuration, the deployment mode or a boundary's state
-    Then no harness configuration, Cairn configuration, deployment mode or boundary state is written
+    When the person asks the room view to change the harness configuration, the principal's configuration, the deployment mode or a boundary's state
+    Then nothing is written to the harness configuration, the principal's configuration, the deployment mode or a boundary's state
     And the room view shows the diff and the CLI command that would make the change
     And running that command shows the diff before it applies the change
 
@@ -380,14 +380,14 @@ Feature: Security (SEC)
     And a room whose owner appointed a service account's device seat in the room, on that service account's own node, as the room's facilitator, an appointed moderator
     And the owner set the appointment rate, a room setting, to two moderation acts per hour
     When a post persuades the facilitator's program, acting through that node's CLI, to bar three seats, a moderator and the owner, and to mute the whole room
-    Then the first two bars are recorded, each audited with the post behind it, which carries range links to the pin and the content flagged
+    Then the first two bars are recorded, each audited with the post behind it, which carries range links to the pin and to the marked range it names
     And each bar is shown in the room view and named by id in the error each barred seat's next call returns
     And a Needs you item reaches the owner, who appointed it, and the principal of each barred seat
     And the third bar is refused and counted
     And the acts on the moderator and the owner, and the room-wide mute, are refused and audited
     And the owner can undo each bar
     And the facilitator's unbar of one of its own bars is refused and audited, since an appointed moderator never unbars
-    And each such post is in the facilitator's own words and points to the content it flagged by range link, quoting none of it
+    And each such post is in the facilitator's own words and points by range link to the marked range it names, quoting none of it
     And the facilitator's posts reach no agent as trusted text unless that agent's principal recorded a trust grant for the facilitator's principal key
     And the facilitator's program writes room summaries only with "cairn room-summary write", signed with its device seat, and never acts through an MCP tool
     And a run seat that a principal whose device seat has the moderator role by role assignment appointed moderator is kept to the same limits, and that appointer can undo each of its acts

@@ -183,7 +183,7 @@ Feature: Principal acts (OWN)
     And Claude Code installed through plain hooks
     When the person runs "cairn install"
     Then it offers, as a shown diff, an opt-in routing every harness launch through the launcher with "cairn launch -- <harness>"
-    And it states the controls the installed path lacks, including mid-turn steer, interrupt, stop and terminal takeover
+    And it states what the installed path lacks, including the run controls mid-turn steer, interrupt and stop, and terminal takeover
     And each such control is shown unavailable with its reason and the launch path that offers it
     And no such control is simulated
 
@@ -216,7 +216,7 @@ Feature: Principal acts (OWN)
     When the person confirms the command for a witness check
     Then the person was shown its exact text with invisible characters made visible before confirming
     And the act is recorded as their principal act
-    And the witness check runs only through the launcher, started by "cairn check witness", outside any agent context, on a fresh checkout of the exact commit, with network and the principal's home denied
+    And the witness check runs only through the launcher, started by "cairn check witness", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit in the range, with network and the principal's home denied
     And its command, exit status and tree hash are recorded
 
   @OWN-19 @P1 @I1 @I4 @pending
@@ -227,6 +227,7 @@ Feature: Principal acts (OWN)
     Then the takeover runs only in the launcher on the harness's machine
     And the no-echo input is not stored
     And no takeover from another machine is offered
+    And what "alice" types in the takeover is the harness's own channel, never recorded as a principal act
 
   @OWN-20 @P1 @I2 @pending
   Scenario: hand-off raises an untrusted reason and hand-back sends only the note and worktree checkpoint address

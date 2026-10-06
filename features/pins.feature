@@ -60,7 +60,7 @@ Feature: Pins (PIN)
     And the qualifying pin count is 0
     And the qualifying pin count is <confirmed> after the person confirms every pin candidate with "cairn pin-candidate confirm", each a widening principal act
     And each confirmation makes a new pin that the principal's device seat authors
-    And confirming an intent or criterion candidate instead makes a new version of the room's intent pin, authored by the owner's device seat
+    And only the owner's confirmation turns an intent or criterion candidate into a pin, as a new version of the room's intent pin authored by the owner's device seat
 
     Examples:
       | mode        | config                                               | candidates | confirmed |
