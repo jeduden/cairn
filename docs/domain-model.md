@@ -7,20 +7,12 @@ summary: >-
 ---
 # Domain model
 
-Cairn speaks in a small, closed set of concepts. The requirements, the
-scenarios, the code, the documentation and every screen use them, and
-only them. This document is the model's one source: the closed list
-of concepts with their definitions, the relations between them, and
-the terms that are not Cairn concepts. The
-[specification](srs/index.md) defines no terms of its own; it links
-here, and any other text that defines a term says what this document
-says.
-
-Every word has one meaning. Where everyday English uses one word for
-several things, each sense gets its own qualified name: "link" is
-always a branch link, a range link or another named kind, and
-"request" is always a held request, a role request or another named
-kind.
+Cairn speaks in a small, closed set of concepts, which the requirements, the
+scenarios, the code, the documentation and every screen use, and only them. This
+document is their one source; the [specification](srs/index.md) defines no terms
+and links here. Every word has one meaning: where English uses one word for
+several things, each sense gets a qualified name, such as a branch link or a
+held request.
 
 These verbs each have one job:
 
@@ -44,7 +36,8 @@ These verbs each have one job:
   key: every device key, token key and seat key that chains to one principal key
   belongs to that principal. A service account its **certifier** (a person,
   another service account, or managed policy) certified is still its own
-  principal, counted by its own principal key. Only an agent's own principal
+  principal, counted by its own principal key. An uncertified principal key
+  counts as a person's, which no check can prove. Only an agent's own principal
   widens what reaches that agent (I2).
 - **Person**: A human principal. No one certifies a person's principal key. Only
   a person records a verdict.
@@ -54,9 +47,10 @@ These verbs each have one job:
   of its own agents, such as CI or runner agents.
 - **Managed policy**: Root-owned configuration an organisation sets on a
   machine. Cairn never overrides it (I7). It may turn off boundaries B1 to B3,
-  forbid risk acceptance and certify service accounts. The harness's own managed
-  settings, which Cairn also never writes (ADM-03), are harness configuration.
-  The only authority that is not a principal.
+  forbid risk acceptance and certify service accounts by listing their principal
+  keys. The harness's own managed settings, which Cairn also never writes
+  (ADM-03), are harness configuration. The only authority that is not a
+  principal.
 - **Agent**: A worker a harness runs for exactly one principal: the principal of
   the node that started it (OWN-01). It receives restore blocks and recalls
   history; an agent is never a principal.
@@ -81,17 +75,17 @@ These verbs each have one job:
   follows from the seat.
 - **Member**: A seat whose add stands, or a run's personal-room seat (Seat,
   Join); the seat's role says what it may do. A kicked, departed or barred seat
-  stays a seat but is no longer a member. A principal is never a member: it has
-  a seat in the room through any of its seats, and text for people speaks of the
-  room's principals.
+  stays a seat but is no longer a member. A principal is never a member; **the
+  room's principals** are those with a member seat: it has a seat in the room
+  through any of its seats, and text for people speaks of the room's principals.
 - **Owner**: The one principal who owns a room: its intent, roles, admission,
   appointments, successor and handover. Ownership changes only by handover or
-  succession (LANE-11); it stays with the owner after every seat of the owner's
-  principal has left the room. The owner stands beside the roles rather than
-  having one: a room act signed by its device seat in the room has every room
-  capability, while its agents' run seats have only what a role assignment or an
-  appointment gives them. "Owner" means nothing else, except in the persona name
-  "Returning owner".
+  succession (LANE-11); it stays with the owner after every seat of the owner
+  has left the room. The owner stands beside the roles rather than having one: a
+  room act signed by its device seat in the room has every room capability but
+  writing a room summary, while its agents' run seats have only what a role
+  assignment or an appointment gives them. "Owner" means nothing else, except in
+  the persona name "Returning owner".
 - **Pull-request author**: The outside party whose commits a foreign room's
   bundle describes, matched through their commit-signing identity (LANE-15). May
   have no seat at all.
@@ -100,14 +94,14 @@ These verbs each have one job:
 
 ### Harness facts
 
-The harness's own facts, which Cairn records and names but never
-keeps or controls.
+The harness's own facts, which Cairn records and names but never keeps or
+controls.
 
 - **Harness**: The external program that runs agents, such as Claude Code or the
   Agent SDK. It keeps their transcripts, compacts their context and reports to
   Cairn through hooks. Cairn records it and never manages it.
-- **Harness session**: The harness's own unit of work, which yields one
-  transcript. Named only when describing the harness, never as a Cairn unit.
+- **Harness session**: The harness's own unit, which yields one transcript.
+  Named only when describing the harness, never as a Cairn unit.
 - **Transcript**: The harness's file of what a harness session did. A
   **transcript source** is a transcript Cairn ingests. "Source" never stands
   alone: it is a transcript source or a trusted source, or the harness's
@@ -134,10 +128,11 @@ keeps or controls.
   optionally bound to a home id the runner environment supplies (SEC-03). The
   unit of isolation (I8).
 - **Node**: One home on one machine, container or sandbox, for one principal.
-  Its device key signs what it records; a node in an ephemeral sandbox may have
-  only a token key, which certifies its device seat in place of a device key.
-  The node's principal is the principal whose home it is.
-- **Device**: Anything with a device key: a node, or a paired phone.
+  Its device key signs its principal acts and expire acts; a node in an
+  ephemeral sandbox may have only a token key. The node's principal is the
+  principal whose home it is.
+- **Device**: A node or a paired phone. A device key certifies its device seats;
+  a token-key-only node's token key does so in its place.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
   denying held permission requests within its scope, reaching its node over B2.
   It signs with its own device key and seals its device seat's writer with that
@@ -154,7 +149,7 @@ keeps or controls.
   room goes there.
 - **Foreign room**: A room this node holds that its principal neither owns nor
   has a seat in, such as the room of an imported bundle or a peer's room.
-  Untrusted, and outside every widened recall scope unless named in the call. A
+  Untrusted, and outside every extended recall scope unless named in the call. A
   room the principal owns or has a seat in is never foreign.
 - **Principal's rooms**: The rooms a principal owns or has a seat in.
 - **Visibility**: Whether a room is private, shared with the room's principals,
@@ -173,9 +168,10 @@ keeps or controls.
 - **Writer**: One seat's append-only log on one node, named by the seat's first
   key. Its events are hash-chained; the **chain head** at a seq is the hash over
   every event up to it.
-- **Event**: One immutable entry in a writer: a message, tool call, tool result,
-  hook observation, worktree checkpoint, key rotation, tombstone, or an act (a
-  room act, a principal act or an expire act).
+- **Event**: One immutable entry in a writer: a message (a user turn or the
+  model's reply), tool call, tool result, **hook observation** (what a hook
+  reported), worktree checkpoint, key rotation, tombstone, or an act (a room
+  act, a principal act or an expire act).
 - **seq**: An event's position in its writer: strictly increasing, gap-free and
   never reused (REC-06).
 - **Address**: (writer, seq), shown as short `A2·4812`, range `A2·4812–5025` or
@@ -197,8 +193,8 @@ keeps or controls.
   random key kept with the content and erased with it; the only way the chain,
   seals and tombstones refer to content (REC-17).
 - **Provenance**: An event's class from a closed set, saying what produced its
-  content (§5.2). `operator` is the class of the events this node's principal
-  writes through a principal surface.
+  content (§5.2). `operator` is the class of the events a principal writes
+  through a principal surface.
 - **Origin**: How an event reached this node's record: `witnessed` (captured
   live by this node's hook handlers), `ingested` (read later from a transcript),
   `bundle` (read by import) or `peer` (received from a peer) (RCL-09).
@@ -216,7 +212,7 @@ keeps or controls.
   only, never in the text it carries.
 - **Capture**: This node's hook handlers recording its runs' events; turning it
   off is widening (OWN-11).
-- **Ingest marker**: What a hook handler leaves when its deadline ends its work,
+- **Ingest marker**: What a hook handler leaves when its deadline cuts it short,
   so the next hook handler or `cairn ingest` resumes it (NFR-02).
 - **Worktree checkpoint**: An event recording a worktree's commit, branch and
   redacted diff since the previous worktree checkpoint (REC-20). Always written
@@ -234,8 +230,9 @@ keeps or controls.
 - **Quarantine**: Recorded, reversible exclusion of an event, span, run, writer
   or derived artifact from recall and from restore blocks, without deletion
   (I5).
-- **Purge**: Deletion of content, leaving a tombstone (ADM-07). The only act
-  that destroys content (I1).
+- **Purge**: Deletion of content, leaving a **tombstone** in its place (ADM-07):
+  by a principal act, or by the node under a retention policy, recorded naming
+  the policy. The only way content is destroyed (I1).
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
   range, a quarantine marker for a quarantined address, or a truncation marker
   on capped kernel output (RCL-06, CMP-06).
@@ -261,12 +258,12 @@ keeps or controls.
   type and numbered pin versions. Information, never an instruction. It restores
   only under PIN-10, as a **qualifying pin**: a pin written from a device seat
   restores to its author's principal's agents, and to agents whose principal's
-  trust grant covers its author; any version restores to the agents of a
-  principal who stamped it. Adding, editing or unpinning a device-seat pin of a
-  type that restores is a widening principal act of its author's principal, and
-  a verdict is its own principal act (OWN-27); every other pin, a run seat's
-  included, which restores only once stamped, is changed by room acts. A room
-  act never changes any restore block (LANE-32).
+  trust grant covers its author; any version of a type that restores restores to
+  the agents of a principal who stamped it. Adding, editing or unpinning a
+  device-seat pin of a type that restores is a widening principal act of its
+  author's principal, and a verdict is its own principal act (OWN-27); every
+  other pin, a run seat's included, which restores only once stamped, is changed
+  by room acts. A room act never changes any restore block (LANE-32).
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers.
 - **Pin candidate**: Proposed pin text an agent suggested or Cairn detected; not
@@ -284,8 +281,8 @@ keeps or controls.
   and its versions stay in the record (I1). It stops the pin restoring, with two
   exceptions, each raising a Needs you item: a stamped version keeps restoring
   to its stamper's agents until the stamper unstamps it, and after a moderator's
-  unpin a device-seat pin keeps restoring to its author's principal's agents
-  until that principal unpins it.
+  unpin a device-seat pin keeps restoring to every agent it restored to until
+  its author's principal unpins it.
 - **Intent**: A room's lead pin, of type `intent`: a goal, its criteria and
   optionally the paths it is meant to change (LANE-20). Only the owner's
   principal act changes it.
@@ -297,13 +294,15 @@ keeps or controls.
 - **Assignment**: Room state asking a seat to work on a branch. It locks
   nothing.
 - **Post**: A message a seat writes to a room's conversation, with provenance
-  `post`. A post from a device seat is trusted for its author's principal's own
-  agents, and for agents whose principal's trust grant covers its author; every
-  other post is untrusted. A post may carry range links; a **comment** is a post
-  on a **marked range**, an address range a seat marks so posts and pins can
-  point to it. A seat's unsent post is a **draft**, ephemeral like a presence
-  hint (PEER-09). A **cross-room post** stays in the sending seat's writer; the
-  target room shows it, and its seats pull it by address, enveloped (LANE-29).
+  `post`, reaching an agent only by recall, endorsement or a trust grant
+  (OWN-29). A post from a device seat is trusted for its author's principal's
+  own agents, and for agents whose principal's trust grant covers its author;
+  every other post is untrusted. A post may carry range links; a **comment** is
+  a post on a **marked range**, an address range a seat marks so posts and pins
+  can point to it. A seat's unsent post is a **draft**, ephemeral like a
+  presence hint (PEER-09). A **cross-room post** stays in the sending seat's
+  writer; the target room shows it, and its seats pull it by address, enveloped
+  (LANE-29).
 - **Directed post**: A post addressed to one agent. It waits in that agent's
   principal's Needs you queue for an endorsement (LANE-12).
 - **Room summary**: A facilitator's summary of a room, always untrusted, linked
@@ -388,26 +387,27 @@ keeps or controls.
 
 ### Acts and roles
 
-Room state derives from three kinds of act only, and each act belongs
-to exactly one kind (LANE-31).
+Room state derives from three kinds of act only, and each act belongs to exactly
+one kind (LANE-31).
 
 - **Room act**: An act signed by a seat key. It is checked against the
-  capabilities of the seat's role. The room acts are create room, join, a join
-  request, leave, a role request, post, link, pin, edit, unpin, present, pick,
-  kick, bar, unbar, mute and unmute; set title, labels or an assignment; and
-  write a room summary or a summary request. A pin, edit or unpin room act never
-  changes any restore block: an author's own pin, edit and unpin act only on
-  pins that do not restore unstamped, and a moderator's unpin of any other pin
-  only takes it off the room's pin list. A link act adds one range link, branch
-  link or criterion link. Create room is the first act of the creating seat's
-  writer. Room governance is not I2 trust. So room acts never widen what reaches
-  an agent, and OWN-11's classes do not cover them.
+  capabilities of the seat's role and the room state. The room acts are create
+  room, join, a join request, leave, a role request, post, link, pin, edit,
+  unpin, present, pick, kick, bar, unbar, mute and unmute; set title, labels or
+  an assignment; and write a room summary or a summary request. A pin, edit or
+  unpin room act never changes any restore block: an author's own pin, edit and
+  unpin act only on pins that do not restore unstamped, and a moderator's unpin
+  of any other pin only takes it off the room's pin list. A link act adds one
+  range link, branch link or criterion link. Create room is the first act of the
+  creating seat's writer. Room governance is not I2 trust. So room acts never
+  widen what reaches an agent, and OWN-11's classes do not cover them.
 - **Principal act**: An act signed by a device key at a principal surface, in
   one of three classes (OWN-11).
   - **Cut:** deny, interrupt, pause, stop, cancel a delegation, end a permission
     grant, reject a foreign room, record a `needs changes` verdict, quarantine
-    untrusted content, withdraw a risk acceptance, revoke a trust grant, revoke
-    an appointment, unstamp a pin version, turn notices off, decline a handover,
+    untrusted content, withdraw a risk acceptance, revoke a trust grant, end a
+    delegation grant or an acceptance grant, turn an away policy off, revoke an
+    appointment, unstamp a pin version, turn notices off, decline a handover,
     withdraw as successor, and dismiss a directed post.
   - **Neutral:** mark a room ready or abandoned, acknowledge an overlap, record
     a `met` or `not met` verdict, accept a join, make a purge request, choose a
@@ -430,10 +430,10 @@ to exactly one kind (LANE-31).
 
   Any principal act that removes a pin from a restore block, or stops this node
   recording its own runs' events, is widening whatever verb carries it, except
-  an unstamp, which withdraws only the unstamper's own trust (LANE-32). An
-  unlisted principal act is widening. OWN-11 and OWN-12 follow this list, and a
-  gate fails when a requirement names a principal act this entry does not
-  classify.
+  an unstamp or a trust-grant revocation, which withdraws only the actor's own
+  trust (LANE-32, OWN-29). An unlisted principal act is widening. OWN-11 and
+  OWN-12 follow this list, and a gate fails when a requirement names a principal
+  act this entry does not classify.
 - **Expire act**: An act a node with a device key records, signed with that key,
   ending only an expiry its original act set: on a bar, a mute or a handover
   offer (LANE-25). The setter's node records it first; if that fails, a
@@ -459,7 +459,11 @@ to exactly one kind (LANE-31).
   moderator, nor outside its room, and it never appoints.
 - **Join**: The act that adds a seat to a room under its admission. A run joins
   only when its principal asks for the join or accepts it (LANE-23); a device
-  seat joins by its principal's own act at a principal surface.
+  seat joins by a join room act its principal takes at a principal surface. A
+  paired phone never joins: its acts go to its device seat in the personal room.
+  **Leave** is a seat's room act ending its own add.
+- **Retire a writer**: The principal act that seals a writer for the last time
+  (PEER-05).
 - **Kick**: Revokes a seat's current add. Only that seat's principal may add it
   again (LANE-25).
 - **Bar**: Names a principal key and keeps every key that chains to it out,
@@ -472,9 +476,9 @@ to exactly one kind (LANE-31).
   invite (a key and a role) and an invite link are widening principal acts of
   the owner.
 - **Successor**: A principal the owner names in advance, who accepts ownership
-  once every seat of the owner's principal has left the room. Until a successor
-  accepts or the owner hands over, a room whose owner left with none named keeps
-  its pins as they were (LANE-11).
+  once every seat of the owner has left the room. Until a successor accepts or
+  the owner hands over, a room whose owner left with none named keeps its pins
+  as they were (LANE-11).
 - **Handover**: Transfers ownership by an offer and an acceptance. Succession is
   the other path to ownership.
 - **Stamp**: A principal's act on one pin version, after being shown its exact
@@ -484,15 +488,18 @@ to exactly one kind (LANE-31).
   cut principal act (LANE-32).
 - **Focus set**: The rooms a principal marks to come first in Needs you, changed
   by a recorded neutral act, so every device shows one order.
+- **Active pin**: A pin on its room's pin list: neither unpinned nor a candidate
+  (I10). The qualifying pins are the active pins that restore to one agent.
 - **Room merge**: The one rule deriving all room state from the three act kinds,
   in causal order (LANE-31). It covers membership, roles, appointments, pins,
   pin versions and stamps. It covers mutes, presentations, picks, bars,
   handovers and their offers. It covers the successor, title, labels,
-  assignment, visibility, admission and the notice allowance. When acts
-  conflict, the more restrictive act wins, then the lower commitment; concurrent
-  picks resolve by **holder order** (facilitator, then moderator, then owner,
-  VIEW-22), and of two branch links naming one branch, the first in causal order
-  stands (LANE-01).
+  assignment, visibility, admission, the notice allowance and the **room
+  settings** (live drafts, typing, the appointment rate). When acts conflict,
+  the more restrictive act wins, then the lower commitment; concurrent picks
+  resolve by **pick order** (the facilitator's seat, then any other moderator,
+  then the owner, VIEW-22), and of two branch links naming one branch, the first
+  in causal order stands (LANE-01).
 - **Concurrent**: Said of two acts or events when neither is causally after the
   other.
 - **Room state**: Everything the room merge derives (LANE-31).
@@ -502,11 +509,11 @@ to exactly one kind (LANE-31).
 
 ### Git and forge
 
-- **Repository**: A git repository, identified by a bound root commit, the same
-  on every node holding a clone, shallow clones included (LANE-02), together
-  with its remotes. A repository may carry Cairn data: room trailers in commits
-  (LANE-28), bundles as git refs, and encrypted segments in a namespaced
-  location the node's principal enabled (PEER-08).
+- **Repository**: A git repository, identified by its **repository identity**, a
+  bound root commit, the same on every node holding a clone, shallow clones
+  included (LANE-02), together with its remotes. A repository may carry Cairn
+  data: room trailers in commits (LANE-28), bundles as git refs, and encrypted
+  segments in a namespaced location the node's principal enabled (PEER-08).
 - **Branch**: A git branch, identified by repository identity, remote URL and
   branch name. A branch with no remote has a provisional node-local identity,
   rebound when it is pushed.
@@ -519,17 +526,18 @@ to exactly one kind (LANE-31).
 - **Pull request**: The forge's review object for a branch, separate from the
   room.
 - **Check**: A command and its exit status, bound to a tree.
-- **Result**: An outcome of a room's work: a check passing or failing on a tree,
-  or a stated outcome. It names the intent version and carries one evidence
-  class.
+- **Result**: What a room's runs established: a check passing or failing on a
+  **tree** (git's snapshot of a commit's files), or a stated outcome. It names
+  the intent version and carries one evidence class.
 - **Evidence**: The checks, attestations or text a result rests on.
 - **Evidence class**: Of a result, ranked: `claim` (text only) < `own check` <
   `witness check` < `CI attested` (LANE-05).
-- **Own check**: A check a hook recorded on the room's own node, run on the
-  latest worktree checkpoint plus the recorded edits; otherwise it is marked
-  `unbound` and counts as a `claim`.
+- **Own check**: A check the hook handlers recorded on the node of the run that
+  made the edits, run on the latest worktree checkpoint plus the recorded edits;
+  otherwise it is marked `unbound` and counts as a `claim`.
 - **Witness check**: A check re-run through the launcher on a fresh checkout of
-  the exact commit, by a node whose principal authored no change in the range.
+  the exact commit, by a node whose principal authored no commit in the range (a
+  **commit author** is git's author of a commit, never a seat).
 - **CI attested**: A check result for the exact commit, signed by a CI key.
 - **Landing**: Git or the forge merging commits into a protected branch. Cairn
   never lands anything, and a landing is never a verdict.
@@ -544,13 +552,14 @@ to exactly one kind (LANE-31).
 - **Qualified links**: Every link is named by what it connects: a branch link
   (room to branch), a pull-request link (branch to its pull request), a
   criterion link (result to criterion), a range link (post or pin to an address
-  range), a parent link (subagent run to parent run), a delegation link, an
-  invite link, a landing link and a trailer link. "Link" never stands alone,
-  except as the name of the room act that adds one qualified link.
+  range), a parent link (subagent run to parent run), a delegation link
+  (delegating run to the delegate's run, under a grant), an invite link
+  (carrying an access token), a landing link and a trailer link. "Link" never
+  stands alone, except as the name of the room act that adds one qualified link.
 - **Comparison**: A side-by-side view of two branches: their exposure, outcome
   and evidence. It picks no winner.
-- **Outcome**: What a room's work has produced so far: the heads of the branches
-  it names, their results and evidence, as verdicts assess them.
+- **Outcome**: What a room's runs have produced so far: the heads of the
+  branches it names, their results and evidence, as verdicts assess them.
 - **Presentation**: What a seat put in the outcome window, such as a dev server,
   an artifact, a file or a diff, with the seat and branch.
 - **Verdict**: A person's `met`, `not met` or `needs changes` on one criterion:
@@ -597,12 +606,13 @@ to exactly one kind (LANE-31).
   address (OWN-08).
 - **Trust grant**: A principal's widening act trusting another principal's key
   for its own agents, in one room or everywhere. It covers that principal's
-  device-seat posts and pins only, never run seats, room summaries, nor a
-  service account that relays text others wrote (OWN-29).
+  device-seat posts and pins only, and its revocation is cut, never run seats,
+  room summaries, nor a service account that relays text others wrote (OWN-29).
 - **Delegation**: A task one agent hands another: its subagent, or, under a
   delegation grant, another agent of the same principal, an agent on another of
   its nodes, or another principal's agent (OWN-23 to OWN-26).
-- **Delegated task**: The text of a delegation, delivered in OWN-24's template.
+- **Delegated task**: The text of a delegation: a subagent's from its harness,
+  any other in OWN-24's template.
 - **Delegate report**: What a delegate returns, enveloped: through
   `delegation_get`, except a subagent's, which its harness returns (OWN-25).
 - **Delegation grant**: The delegating principal's widening act naming who may
@@ -628,7 +638,8 @@ to exactly one kind (LANE-31).
   on offers to write a head receipt (VIEW-10).
 - **Residual risk**: One of the risks §6.1 lists for an unconfined run.
 - **Sandbox state**: What confines a run, its policy digest, and which residual
-  risks it blocks, recorded from a source the agent cannot write (OWN-22).
+  risks it blocks, recorded from outside the sandbox, where the agent cannot
+  write (OWN-22).
 - **Risk acceptance**: The principal's act accepting the residual risks a run
   leaves open (OWN-22).
 - **Hand-off, hand-back**: An agent passes control to its principal as a held
@@ -653,7 +664,7 @@ to exactly one kind (LANE-31).
   all landed.
 - **Exposure**: Of a branch, the untrusted and flagged items its runs read and
   their recall taint (VIEW-13).
-- **Overlap**: Two open rooms' work editing one file, which raises a Needs you
+- **Overlap**: Runs in two open rooms editing one file, which raises a Needs you
   item on both rooms until the owner acknowledges it (LANE-13).
 - **Fork**: The two events one writer sealed at one seq, kept as evidence; the
   node's principal chooses which to keep (PEER-10).
@@ -710,21 +721,21 @@ to exactly one kind (LANE-31).
 
 - A principal owns any number of rooms and is the principal of every agent its
   nodes start. An agent's principal follows from its node.
-- A run has its personal-room seat from its first event, plus one run seat per
-  room it joined or created. Joining is explicit, never automatic.
-- A subagent's run is tied to its parent's run by a parent link. Ingest splits
-  one transcript by agent.
+- A run has its personal-room seat from its first event, plus a further run seat
+  per room it joined or created. Joining is explicit, never automatic.
+- Ingest splits one transcript by agent.
 - Every seat belongs to one principal and one room; every writer belongs to one
   seat, on one node.
 - Each event goes to exactly one seat's writer: the run seat of the room the run
-  works in at that moment (a room it joined that names its current branch), else
-  its personal-room seat. An event with no run goes to the principal's device
-  seat. A room act goes to the writer of the seat that signs it; a principal act
-  or an expire act, to the device seat of the device that signs it, in the room
-  it acts on. One that acts on no room, or on a room where its principal has no
-  seat, goes to that device seat in the personal room, naming the room.
+  works in at that moment (a room it joined or created that names its current
+  branch), else its personal-room seat. An event with no run goes to the
+  principal's device seat. A room act goes to the writer of the seat that signs
+  it; a principal act or an expire act, to the device seat of the device that
+  signs it, in the room it acts on. One that acts on no room, or on a room where
+  that device has no seat, goes to that device seat in the personal room, naming
+  the room.
 - A run's history spans its seats' writers, tied together by the run. Peers
-  exchange segments, so a room's seats see only work routed to them.
+  exchange segments, so a room's seats see only events routed to them.
 - Principals and agents create rooms; an agent's room is owned by its principal.
   Cairn never creates a room on its own initiative; a node's personal room comes
   from the principal's `cairn install`, and Cairn may suggest other rooms.
@@ -732,12 +743,6 @@ to exactly one kind (LANE-31).
   personal room of its author's principal on the node that wrote it.
 - A principal's seats are shown grouped under that principal and, for a person,
   under each device.
-- Only a principal widens what reaches its own agents; an agent never does, and
-  room acts never do.
-- A cross-room post belongs to the sending seat's room; the target room shows it
-  by address and never copies it into a writer of its own.
-- A room names branches in any number of repositories through branch links; a
-  branch with a pull request links to it.
 - Recall defaults to the agent's current run; it extends only to the principal's
   rooms the agent has a seat in, never to a foreign room unless the call names
   it.
@@ -745,10 +750,9 @@ to exactly one kind (LANE-31).
 
 ## Names follow the model
 
-A function, type, module, crate, CLI verb, MCP tool, configuration key
-or event is named after the concept it handles. Documentation, UX and
-UI copy, error and help text, logs and developer setup use the same
-words the SRS uses.
+Code, CLI verbs, MCP tools, configuration keys and events take the name of the
+concept they handle. Documentation, UI copy, errors, logs and setup use the
+SRS's words.
 
 - An MCP tool for a room act is `room_<act>`. Every other MCP tool is
   `<concept>_<verb>`, with the reading verbs `get`, `list`, `search` and
@@ -763,7 +767,7 @@ words the SRS uses.
 - The attested seat kinds are `run` and `device`; a device seat's principal is
   attested as a person or a service account.
 - Cairn defines no slash commands. A harness skill may call MCP tools or the
-  CLI; a skill's call is the agent's own act, never a principal act.
+  CLI; a skill's call is the agent's own tool call, never a principal act.
 
 ## Not Cairn concepts
 
@@ -789,18 +793,14 @@ words the SRS uses.
 | presence check; unqualified token; Needs you as a run or room status; work marker | Replaced by presence proof, access token or model token, Asking, and ingest marker.     | Nowhere outside history.                                                                                                                                                                                         |
 | hide                                                                              | Removed by the stakeholder.                                                             | Nowhere outside history.                                                                                                                                                                                         |
 
-"History" is the SRS change log, accepted ADRs and plan records, which
-keep the words of their time. Excluded words may also appear in files
-an outside tool writes and maintains, in that tool's meaning, such as
-frit's plan skills and the plan files in frit's format; the
-domain-model agent skips them.
+"History" is the SRS change log, accepted ADRs and plan records, which keep the
+words of their time. Excluded words may also appear in files an outside tool
+writes and maintains, in that tool's meaning, such as frit's plan skills and the
+plan files in frit's format; the domain-model agent skips them.
 
 ## Changing the model
 
-A new concept, a renamed one or a new relation is a stakeholder
-decision. It lands in this document before any requirement, name or
-screen uses it. The domain-model agent reviews every change to this
-document and every proposal to change it: it checks the model against
-itself and every definition elsewhere against the model, names the
-invariants whose wording would change, and lists every use the change
-makes stale. It also reports every use that runs ahead of the model.
+A new concept, a renamed one or a new relation is a stakeholder decision. It
+lands here before anything uses it. The domain-model agent reviews every change
+to this document and every proposal to change it. It names the invariants whose
+wording would change, and every use the change makes stale or that runs ahead.
