@@ -26,7 +26,7 @@ Feature: Record (REC)
     And an agent run with a Claude Code transcript "parent-run"
     And a subagent transcript "explore-agent" of "parent-run" naming the agent "Explore"
     When the person runs "cairn ingest --all"
-    Then the run ingested from "explore-agent" records "parent-run" as its parent run
+    Then the run ingested from "explore-agent" is tied to the run of "parent-run" by a parent link, not a delegation link
     And the run ingested from "explore-agent" records the agent identity "Explore"
 
   @REC-03 @P0 @I1 @I10 @pending
@@ -172,7 +172,7 @@ Feature: Record (REC)
     And a home whose record contains "web" payloads and "user" events that are 40 days old
     And the person's configuration sets "retention_policy.*.web" to 30 days
     When the retention policy is applied
-    Then the content of the "web" events is removed and a tombstone records each purged range with reason "retention"
+    Then the node purges the content of the "web" events, records each purge naming the policy "retention_policy.*.web", and leaves a tombstone with reason "retention" in each purged range
     And the "user" events are kept and "cairn verify" exits 0
     And with no retention policy configured, applying the default policy removes nothing
 
@@ -253,11 +253,11 @@ Feature: Record (REC)
   Scenario: events from transcripts the hook handlers did not watch are marked ingested and untrusted
     Given an isolated Cairn home
     And deployment mode "interactive"
-    And a transcript "pre-install" under the configured transcript roots, written before Cairn's hook handlers were installed, containing a user prompt
+    And a transcript "pre-install" under the configured transcript roots, written before Cairn's hook handlers were installed, containing a user turn
     And a transcript "elsewhere" from outside the configured transcript roots
     When the person runs "cairn ingest --path" on "pre-install" and on "elsewhere"
     Then every event of "pre-install" carries the "ingested" origin, freshness mark and trust mark with its transcript source and ingest position, shown on every surface, and none is shown as witnessed
-    And the user prompt from "pre-install" has trust "untrusted"
+    And the user turn from "pre-install" has trust "untrusted"
     And this node records "elsewhere" as an ingested run in the principal's personal room, shown as "ingested", and every event of it has trust "untrusted"
 
   @REC-23 @P2 @I2 @I4 @I6 @pending
@@ -268,7 +268,7 @@ Feature: Record (REC)
     When the person imports the bundle
     Then the import is <outcome> and an audit entry records it
     And an accepted bundle had its seals and chains verified as received, across the withheld event from its retained header, and the API key redacted with its event's commitment key erased, both results recorded
-    And accepted events form a foreign room
+    And accepted events form a foreign room, which this node's principal neither owns nor has a seat in
     And a bundle named by a URL is refused without network access, while one at a git ref already fetched into a local clone is read
 
     Examples:

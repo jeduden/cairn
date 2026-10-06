@@ -141,4 +141,4 @@ Feature: Recall (RCL)
     And a room owned by "owner-a" whose conversation has a post written by the seat "bob"
     When Claude on this node calls the MCP tool "event_get" with the post's address
     Then the writer of the calling run's seat gains the recall event, listing the post's address among the returned events
-    And the room view shows the recall, with its recall address, to "owner-a" and to the principal of the seat "bob"
+    And the room view shows the recall, with the recall event's address, to "owner-a" and to the principal of the seat "bob"

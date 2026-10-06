@@ -154,7 +154,7 @@ Feature: Administration and lifecycle (ADM)
   @ADM-12 @P1 @I2 @pending
   Scenario: export writes only trusted events with provenance as JSONL
     Given an isolated Cairn home
-    And an agent run with a Claude Code transcript "run-a" with user prompts and web tool results
+    And an agent run with a Claude Code transcript "run-a" with user turns and web tool results
     When the person runs "cairn export --trusted-only"
     Then the command exits 0
     And every exported JSONL line is a trusted event carrying its address (writer, seq), provenance and trust

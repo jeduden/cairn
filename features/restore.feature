@@ -102,7 +102,7 @@ Feature: Restore and injection (INJ)
     And opt-in notices of waiting posts for the room <setting>
     When the hook "<hook>" runs
     Then the hook handler returns <notice>
-    And any opt-in notice is TrustedText carrying only the count 2, short key fingerprints and the posts' recall addresses, without "POST-CANARY-91c2" or any other text an author chose
+    And any opt-in notice is TrustedText carrying only the count 2, short key fingerprints and the posts' addresses, without "POST-CANARY-91c2" or any other text an author chose
     And an audit entry records every opt-in notice returned
     And no opt-in notice starts or resumes a turn
 

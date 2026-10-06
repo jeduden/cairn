@@ -18,7 +18,7 @@ Feature: Pins (PIN)
       | automation  | the person's configuration declares a pin and a widening principal act recorded its digest | 1          |
       | interactive | the person runs "cairn pin add"                                                            | 1          |
       | automation  | a harness skill calls the MCP tool "pin_propose"                                           | 0          |
-      | automation  | a person stamps a pin version an agent wrote                                               | 1          |
+      | automation  | a person stamps a version of a constraint pin an agent wrote                               | 1          |
       | interactive | the repository's ".cairn.toml" declares a pin                                              | 0          |
 
   @PIN-02 @P0 @I2 @pending
@@ -114,16 +114,16 @@ Feature: Pins (PIN)
   @PIN-10 @P0 @I3 @I2 @pending
   Scenario: a restore block includes the qualifying pins of every room the run has a seat in
     Given an isolated Cairn home
-    And a run whose seats' writers record its joins to room "L1" and then room "L2"
-    And a branch switch onto a branch of room "L4", which the run never joined, so its later events went to its personal-room seat
-    And pins the run's principal wrote from its device seat in "L1" and in its personal room, a pin from the person's configuration, and a pin in "L2" written by another principal
+    And a run whose seats' writers record it joining room "L1" and then creating room "L2"
+    And a branch switch onto a branch of room "L4", which the run neither joined nor created, so its later events went to its personal-room seat
+    And pins the run's principal wrote from its device seat in "L1" and in its personal room, a pin from the person's configuration, and a pin in "L2" written from another principal's device seat
     And a pin in "L2" written from the device seat of a third principal whose key the run's principal trusts in "L2" by a trust grant
-    And the principal's stamp on one version of a pin an agent's run seat wrote in "L1", and on one version of a second pin another principal wrote in "L2"
+    And the principal's stamp on one version of a constraint pin an agent's run seat wrote in "L1", on one version of a second constraint pin another principal wrote in "L2", and on one version of a "fact" pin in "L1"
     And a pin the principal wrote from its device seat in "L4"
     And a pin the principal confirmed from a pin candidate whose creating user turn was recorded in the deployment mode "interactive", while the current deployment mode is "automation"
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped versions, each under its original author
-    And the restore block includes no pin of "L4"
+    Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped constraint versions, each under its original author
+    And the restore block includes no pin of "L4" and not the stamped "fact" version
     And the restore block names "L1", "L2" and the personal room by id
     And the other principal's unstamped pin is stated only by count, room id and key fingerprint, with no text, and an audit entry records it
 
@@ -137,7 +137,7 @@ Feature: Pins (PIN)
     And an audit entry records that the pin does not qualify on this node
 
     Examples:
-      | reason                             |
-      | its device key lacks the pin scope |
-      | its certificate is revoked         |
-      | its event has not arrived          |
+      | reason                                               |
+      | its device key's scope does not cover the pin's room |
+      | its certificate is revoked                           |
+      | its event has not arrived                            |

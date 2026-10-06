@@ -239,8 +239,8 @@ Feature: Security (SEC)
     When the person starts the room-view component
     Then it listens only on a loopback address, on a port chosen at launch
     And its launch credential has at least 128 bits and is never sent to the server in an HTTP request line, nor placed in argv, an environment another UID can read, a log or a referrer
-    And the credential is exchanged once for a login credential that only the room view's own origin, port included, can read or send
-    And a page served from another loopback port cannot obtain or replay that login credential
+    And the launch credential is exchanged once for a second credential, which authenticates the browser as a principal surface and which only the room view's own origin, port included, can read or send
+    And a page served from another loopback port cannot obtain or replay that second credential
     And it permits enveloped reading and cut or neutral principal acts, and widening ones only under OWN-11, until the instance stops
     And an HTTP request whose Host or Origin is not its own, and any cross-origin HTTP request, is rejected and audited
 
@@ -261,21 +261,21 @@ Feature: Security (SEC)
     Then <outcome>
 
     Examples:
-      | policy                                      | action                                                          | outcome                                            |
-      | B1 disabled                                 | the person starts the room-view component                       | Cairn refuses to start it and audits the refusal   |
-      | B2 disabled                                 | the person starts the peer component                            | Cairn refuses to start it and audits the refusal   |
-      | B3 disabled                                 | the person starts the bridge component                          | Cairn refuses to start it and audits the refusal   |
-      | the launcher disabled                       | the person starts the launcher                                  | Cairn refuses to start it and audits the refusal   |
-      | a storage quota                             | ingest exceeds the quota                                        | the quota is enforced                              |
-      | a fixed deployment mode                     | the person changes the deployment mode                          | the change is refused                              |
-      | a fixed state for every boundary            | the person turns on B2                                          | the change is refused                              |
-      | a cap on an action class's rule level       | the principal sets a higher rule level for that class           | the rule level stays at the cap                    |
-      | away policies disabled                      | the principal sets an away policy                               | the change is refused                              |
-      | hook permission decisions disabled          | the hook "PermissionRequest" runs                               | Cairn makes no permission decision                 |
-      | held requests disabled                      | the hook "PermissionRequest" would place a held request         | no held request is placed                          |
-      | an authenticator required for widening acts | the principal confirms a widening act without the authenticator | the act is refused                                 |
-      | risk acceptance forbidden                   | the principal accepts a residual risk                           | the acceptance is refused                          |
-      | a 30-day retention policy for room "p"      | an event of "p" ages past 30 days                               | it is purged with a tombstone, audited and counted |
+      | policy                                      | action                                                          | outcome                                                                                 |
+      | B1 disabled                                 | the person starts the room-view component                       | Cairn refuses to start it and audits the refusal                                        |
+      | B2 disabled                                 | the person starts the peer component                            | Cairn refuses to start it and audits the refusal                                        |
+      | B3 disabled                                 | the person starts the bridge component                          | Cairn refuses to start it and audits the refusal                                        |
+      | the launcher disabled                       | the person starts the launcher                                  | Cairn refuses to start it and audits the refusal                                        |
+      | a storage quota                             | ingest exceeds the quota                                        | the quota is enforced                                                                   |
+      | a fixed deployment mode                     | the person changes the deployment mode                          | the change is refused                                                                   |
+      | a fixed state for every boundary            | the person turns on B2                                          | the change is refused                                                                   |
+      | a cap on an action class's rule level       | the principal sets a higher rule level for that class           | the rule level stays at the cap                                                         |
+      | away policies disabled                      | the principal sets an away policy                               | the change is refused                                                                   |
+      | hook permission decisions disabled          | the hook "PermissionRequest" runs                               | Cairn makes no permission decision                                                      |
+      | held requests disabled                      | the hook "PermissionRequest" would place a held request         | no held request is placed                                                               |
+      | an authenticator required for widening acts | the principal confirms a widening act without the authenticator | the act is refused                                                                      |
+      | risk acceptance forbidden                   | the principal accepts a residual risk                           | the acceptance is refused                                                               |
+      | a 30-day retention policy for room "p"      | an event of "p" ages past 30 days                               | the node purges it, leaving a tombstone recorded naming the policy, audited and counted |
 
   @SEC-23 @P1 @I7 @pending
   Scenario: the room view writes no configuration and points to the CLI instead
@@ -378,7 +378,7 @@ Feature: Security (SEC)
   Scenario: the facilitator moderates within its appointment's limits and never instructs
     Given an isolated Cairn home
     And a facilitator, a service account whose device seat in the room lives on its own node
-    And a room where a principal whose device seat has the moderator role by role assignment appointed the facilitator's device seat an appointed moderator, with a rate of two moderation acts per hour
+    And a room where a principal whose device seat has the moderator role by role assignment appointed the facilitator's device seat an appointed moderator, and whose owner set the appointment rate, a room setting, to two moderation acts per hour
     When a post persuades the facilitator's program, acting through that node's CLI and MCP tools, to bar three seats, a moderator and the owner, and to mute the whole room
     Then the first two bars are recorded, each audited with its finding, which carries range links to the pin and the content flagged
     And each bar is shown in the room view and named by id in the error each barred seat's next call returns
