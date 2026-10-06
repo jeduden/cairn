@@ -20,8 +20,8 @@ and distrust services you cannot run yourself.
 ## What you need
 
 - One view of every room, wherever its agent runs.
-- Work that continues on each machine when the network splits, and
-  merges cleanly when it comes back.
+- Runs that keep going on each machine when the network splits, and
+  rooms that merge cleanly when it comes back.
 - No vendor relay or central service in the path.
 - Sandboxes whose history survives the sandbox.
 
@@ -29,7 +29,7 @@ and distrust services you cannot run yourself.
 
 1. Start an agent in a cloud sandbox from your laptop; watch its room
    live.
-2. Go offline on a train; keep working on the laptop's rooms; come
+2. Go offline on a train; keep going in the laptop's rooms; come
    back online and see both sides merged.
 3. Enroll the home server as a peer by key.
 4. A sandbox is reclaimed; its room's record is still complete.
@@ -37,7 +37,7 @@ and distrust services you cannot run yourself.
 ## When you give up
 
 - Anything requires a central service or an account with a vendor.
-- A partition loses work, duplicates it or needs manual repair.
+- A partition loses events, duplicates them or needs manual repair.
 - A sandbox's history vanishes with the sandbox.
 - Peering needs network setup you cannot do from a sandbox that can
   only dial out.

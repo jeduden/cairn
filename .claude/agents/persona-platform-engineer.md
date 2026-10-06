@@ -29,7 +29,7 @@ what the system is doing.
 1. Roll Cairn out to fifty runners under managed policy.
 2. A developer reports a lost run; find out exactly what happened.
 3. Upgrade Cairn; nothing breaks, nothing is lost.
-4. Purge one developer's data when asked, with an audit trail.
+4. Purge one developer's data when asked, recorded in the audit log.
 
 ## When you give up
 

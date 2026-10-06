@@ -1,7 +1,7 @@
 # Cairn
 
 A lossless, security-first context layer for long-running Claude
-agents, written in Go.
+agents, written in Rust.
 
 Long agent runs compact, and compaction forgets. Cairn keeps an
 append-only, provenance-tagged record of every agent run. It restores
@@ -14,7 +14,7 @@ start it, strict per-principal isolation.
 
 ## Status
 
-Pre-implementation. This repository holds:
+Pre-implementation. This repository contains:
 
 - the [Software Requirements Specification](docs/srs/index.md), the
   normative source;
@@ -124,7 +124,7 @@ mdsmith check .                                 # Markdown
 ```
 
 [docs/development.md](docs/development.md) has the full reference.
-[CLAUDE.md](CLAUDE.md) holds the working rules for agents and people
+[CLAUDE.md](CLAUDE.md) has the working rules for agents and people
 alike.
 
 ## Security

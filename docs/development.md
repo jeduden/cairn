@@ -12,7 +12,7 @@ rules in [CLAUDE.md](../CLAUDE.md).
 
 ## Build & test commands
 
-Requires Go 1.26. `go.mod` pins the exact toolchain (ENG-01), and the
+Requires Go 1.26. `go.mod` fixes the exact toolchain (ENG-01), and the
 `go` command fetches it on first use. Dev tools build from
 [tools/go.mod](../tools/go.mod), so their dependency trees never enter
 the module graph that ENG-18 counts.
@@ -143,8 +143,8 @@ of SEC-01; the network-deny sandbox half is ENG-12, still pending.
 
 ## CI, nightly and release
 
-Every workflow lives in `.github/workflows`. Every action is pinned
-by commit SHA with its version in a trailing comment, and dependabot
+Every workflow lives in `.github/workflows`. Every action is fixed
+to a commit SHA with its version in a trailing comment, and dependabot
 proposes the bumps after a seven-day cooldown.
 
 [ci.yml](../.github/workflows/ci.yml) runs on every push and pull
@@ -158,15 +158,16 @@ required check after a job, never after the workflow.
 
 [nightly.yml](../.github/workflows/nightly.yml) fuzzes every `Fuzz*`
 target in the tree for five minutes each (ENG-07). It discovers the
-targets, so a new one is fuzzed the night after it merges. The crash
-harness (ENG-06), the concurrency soak (ENG-09) and the live Claude
-Code contract test (ENG-17) join it as their plans land.
+targets, so a new one is fuzzed the night after it merges. The
+crash-consistency test (ENG-06), the concurrency soak (ENG-09) and
+the live Claude Code contract test (ENG-17) join it as their plans
+land.
 
 [review.yml](../.github/workflows/review.yml) reviews each pull
 request from a branch of this repository once its CI passes (ENG-21,
 ENG-28). It skips drafts, so a pull request is reviewed when it is
 marked ready, which reruns CI. The agent runs on the stakeholder's
-Claude subscription, not a per-token API key. It triggers on
+Claude subscription, not an API key billed per model token. It triggers on
 `workflow_run`, so GitHub runs it as `main` defines it, never as the
 pull request does. The review job runs an agent with read-only tools
 on the pull request's tree, following

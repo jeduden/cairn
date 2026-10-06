@@ -14,7 +14,7 @@ Cairn implements layers 1–4 of the agent context architecture:
 | ----- | -------------- | ----------------------------------------------------------- |
 | 1     | Record         | Append-only, provenance-tagged event log of every agent run |
 | 2     | Pinned context | Qualifying pins, restored verbatim after every compaction   |
-| 3     | Working view   | Pull-only recall, landmark index, post-compaction restore   |
+| 3     | Working view   | Pull-only recall, landmark index, restore blocks            |
 | 4     | Compute        | Hermetic kernel with read-only access to the record         |
 | 5     | Durable memory | **Not in scope.** Export interface only (§5.9)              |
 
@@ -24,9 +24,10 @@ them (ADR-08, OQ-16).
 
 Room summaries are in scope. When a run joins a room with much
 content, its agent makes a summary request for a room summary of the
-size it wants (LANE-33). The room's facilitator writes it through its
-device seat, outside the core, which makes no model calls (I4). A room
-summary is untrusted and never replaces the record (I1, I2).
+size it wants (LANE-33). The room's facilitator, a service account,
+writes it through its device seat on its own node; the program that
+writes it is not a Cairn component, and the core makes no model calls
+(I4). A room summary is untrusted and never replaces the record (I1, I2).
 
 A web service is a target interface, paced in four stages. Each stage
 stays a client of the record under VIEW-03, and every capability it
@@ -35,7 +36,7 @@ offers also exists in the CLI or MCP.
 1. The person's own browser on loopback (B1), as the room view does
    today.
 2. The person's other devices, as enrolled, mutually authenticated
-   peers (B2).
+   peers and paired phones (B2).
 3. Browsers on other machines with a login.
 4. A service on a host the principal names.
 

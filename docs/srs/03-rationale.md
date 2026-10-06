@@ -19,7 +19,7 @@ maps every individual concern to requirements.
    violations rose from 0% to 30% after compaction, up to 59% for some models.
    *Compaction Cliff*: Claude Code's `/compact` on Sonnet 4.6 kept 53% of safety
    rules after one round and 10% after five. *Constraint Pinning* restored 0%
-   violations at about 47 tokens per re-injection. → Verbatim pins (I3).
+   violations at about 47 model tokens per re-injection. → Verbatim pins (I3).
 3. **Automatic injection multiplies memory poisoning.** In a cross-run
    poisoning study, a design that injected memory at each agent run's start
    carried poisoned entries into later runs 64.7% of the time versus 17.4% for

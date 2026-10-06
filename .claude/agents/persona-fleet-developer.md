@@ -20,7 +20,7 @@ first five minutes.
 
 ## What you need
 
-- See at a glance which agent needs you and why.
+- See at a glance which agent is waiting on you and why.
 - Answer a held request, a permission request or a question, without
   hunting for the right terminal.
 - Trust that nothing an agent did is lost, even after compaction.
@@ -40,7 +40,7 @@ first five minutes.
 - Setup takes more than a few minutes, or changes your config
   silently.
 - The UI is a required step between you and your agents.
-- You must read walls of warnings to get work done.
+- You must read walls of warnings to get anything done.
 - It slows the agents or the terminal down.
 - Something an agent did cannot be found again.
 

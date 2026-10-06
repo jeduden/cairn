@@ -22,7 +22,7 @@ between agents looks to you like a prompt-injection network.
 - No network traffic you did not opt into, and none off the machine
   by default.
 - A tamper-evident record you can verify yourself.
-- Erasure that holds up legally, and redaction before storage.
+- Erasure that stands up legally, and redaction before storage.
 
 ## Your journeys
 
