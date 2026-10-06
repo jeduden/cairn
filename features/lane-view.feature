@@ -92,12 +92,13 @@ Feature: Room view (VIEW)
     And the typed text is matched as literal terms
     And recall events are left out of ranking
     And below the results it states what it covered and left out, naming the unsynced writer and the quarantined match
+    And a foreign room this node holds is searched only when "alice" names it in the search
 
     Examples:
-      | scope      |
-      | run        |
-      | room       |
-      | every room |
+      | scope |
+      | run   |
+      | room  |
+      | rooms |
 
   @VIEW-10 @P1 @I6 @I10 @pending
   Scenario: every room shows its integrity status and the view writes a head receipt outside the home
@@ -179,12 +180,12 @@ Feature: Room view (VIEW)
     And the terminal signal goes only to the terminal, never into hook output the harness adds to the model's context
 
   @VIEW-18 @P1 @I7 @pending
-  Scenario: with zero rooms the room view opens on Setup
+  Scenario: with no run recorded the room view opens on Setup
     Given an isolated Cairn home
-    And no rooms and harness transcripts due for deletion within 7 days
+    And no run recorded, so only the personal room, and harness transcripts due for deletion within 7 days
     When the person opens the room view
     Then it opens on Setup with the ingest command and the number of transcripts the harness will delete within 7 days
-    And it shows the recording status, a sample room to browse and a statement that nothing leaves the machine
+    And it shows the capture status, a sample room to browse and a statement that nothing leaves the machine
     And every configuration change it offers is shown as a diff with the CLI command that applies it
 
   @VIEW-19 @P2 @I6 @I10 @pending
@@ -195,20 +196,21 @@ Feature: Room view (VIEW)
     Then it shows the diff and events since the branch heads that verdict was bound to
 
   @VIEW-20 @P1 @I6 @pending
-  Scenario: the room view shows every delegation as a delegation link
+  Scenario: the room view shows every delegation by its link
     Given an isolated Cairn home
     And a room where an agent delegated one task to a subagent and one to another agent of the same principal under a delegation grant
     When the person opens the room view
-    Then each delegation shows as a delegation link from the delegating run to the delegate's run
-    And each delegation link shows the delegated task's address and its state
-    And only the delegation link to the other agent's run names a delegation grant, and that delegate's spend shows against its budget
+    Then the delegation to the other agent shows as a delegation link from the delegating run to the delegate's run, naming the delegation grant
+    And the subagent's delegation shows as the parent link from its run to the delegating run, naming no grant
+    And each link shows the delegated task's address and its state
+    And the delegate's spend under the grant shows against the grant's budget
 
   @VIEW-21 @P1 @I2 @I10 @pending
   Scenario: the room view puts the outcome beside the intent so a person can record a verdict
     Given an isolated Cairn home
-    And a room whose intent names C1, C2 and C3, with a result linked to C1 by a criterion link and an agent's claim linked to C2
+    And a room whose intent names C1, C2 and C3, with a result linked to C1 by a criterion link and a result of evidence class claim, an agent's statement, linked to C2
     When its agents go idle and the person opens the Review tab of the room's Room page
-    Then C1 shows the result and its evidence class, C2 shows a claim and C3 reads "no evidence"
+    Then C1 shows its result and that result's evidence class, C2 shows its result of class claim and C3 reads "no evidence"
     And every criterion reads "no verdict"
     And the view shows edits outside the intent, the agents' exposure and the diff since the last verdict
     And a Q3 item "outcome awaiting a verdict" is raised
@@ -224,4 +226,6 @@ Feature: Room view (VIEW)
     Then the window shows "p-1"'s dev server
     And a pick by a seat with only present is refused
     And the person viewing can follow "p-2" in their own view, with no capability, without changing the window
+    When the owner's device seat and the moderator concurrently pick different presentations
+    Then the moderator's pick stands, by pick order: the facilitator's seat, then any other moderator, then the owner
     And Cairn chooses no branch and records no verdict of its own

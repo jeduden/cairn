@@ -39,7 +39,7 @@ Feature: Peer network (PEER)
   Scenario: an event written on one connected peer reaches every connected peer within 5 s
     Given an isolated Cairn home
     And connected peers "a", "b" and "c", where "c" reaches "a" only through "b"
-    When a hook on "a" writes an event to a run seat's writer and the run's MCP server then serves a call
+    When the hook handlers on "a" append an event to a run seat's writer and the run's MCP server then serves a call
     Then that call seals the run seat's writer, covering what the hook handler appended, and the event is carried as part of a sealed range
     And an event after the newest seal stays unsigned and is not carried
     And it appears in the room view of "b" and of "c" within 5 s of being written
@@ -88,13 +88,13 @@ Feature: Peer network (PEER)
     And no peer is reachable
     When the publish component carries the sealed segments of room "room-1"
     Then each writer's segments go to one entry in the namespaced location of "alice"'s remote that "alice" enabled
-    And each segment is encrypted to the seat keys of the room's members
+    And each segment is encrypted to the device keys of the room's principals, a token-key-only node's token key in place of one, and never to a seat key
     And a reader of the remote sees only entry names, sizes and times, and the carrier says so
 
   @PEER-09 @P2 @I2 @I8 @pending
   Scenario: presence hints and typing hints are ephemeral and drafts stay private to their author
     Given an isolated Cairn home
-    And two connected seats in room "room-1", which allows typing hints but not live drafts
+    And two connected seats in room "room-1", whose room settings, set by its owner's principal act, allow typing hints but not live drafts
     When one seat types a draft
     Then the other's room view shows the typist's presence hint and typing hint, attributed only to the enrolled key that authenticated the connection
     And no presence hint or typing hint is stored in the record
@@ -127,7 +127,7 @@ Feature: Peer network (PEER)
     And a room where "alice" and "bob" have seats
     And a node of another principal, enrolled as a blind peer
     When the nodes of "alice" and "bob" sync the room's sealed ranges through the blind peer
-    Then the blind peer stores only ranges encrypted to the seat keys of the room's members
+    Then the blind peer stores only ranges encrypted to the device keys of the room's principals, never to a seat key
     And it verifies the seat key's signature over each range before storing it
     And it holds no event content, header field, commitment key or room metadata
     And it derives no room state and has no seat in the room

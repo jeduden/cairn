@@ -22,13 +22,13 @@ Feature: Principal acts (OWN)
     Then the outcome is "<outcome>"
 
     Examples:
-      | surface                            | outcome                                                                                                                                       |
-      | the room view under SEC-20         | recorded as an operator event on the device seat of the node that signs it, covered by its writer's seal                                      |
-      | the CLI at a terminal under OWN-12 | recorded as an operator event on the device seat of the node that signs it, covered by its writer's seal                                      |
-      | a paired phone within its scope    | signed with the phone's device key and recorded on its device seat, whose writer the phone seals with that seat's key and the node only holds |
-      | the harness's own prompt           | recorded as user or a harness_meta outcome, not a principal act                                                                               |
-      | the terminal the launcher hosts    | recorded as user or a harness_meta outcome, not a principal act                                                                               |
-      | any other surface                  | refused and audited                                                                                                                           |
+      | surface                            | outcome                                                                                                                                                                                         |
+      | the room view under SEC-20         | recorded as an operator event on the device seat of the node that signs it, covered by its writer's seal                                                                                        |
+      | the CLI at a terminal under OWN-12 | recorded as an operator event on the device seat of the node that signs it, covered by its writer's seal                                                                                        |
+      | a paired phone within its scope    | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it concerns, whose writer the phone seals with that seat's key and the node only holds |
+      | the harness's own prompt           | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                 |
+      | the terminal the launcher hosts    | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                 |
+      | any other surface                  | refused and audited                                                                                                                                                                             |
 
   @OWN-03 @P1 @I2 @pending
   Scenario: principal-typed text reaches an agent only through the harness's input interface
@@ -73,7 +73,7 @@ Feature: Principal acts (OWN)
       | no away policy is on and the hold window passes                          | it is not denied on the timeout                                        |
       | no principal surface is connected and the harness prompt is unanswerable | it is only mirrored, not held                                          |
       | the harness adapter cannot keep the harness's own prompt answerable      | it is only mirrored and the answer is left to the harness              |
-      | Cairn fails while the request is held                                    | the harness falls back to its own prompt and the action is not allowed |
+      | Cairn fails while the permission request is held                         | the harness falls back to its own prompt and the action is not allowed |
 
   @OWN-07 @P1 @I2 @I9 @pending
   Scenario Outline: an away policy only replies to the agent's own held request
@@ -115,11 +115,11 @@ Feature: Principal acts (OWN)
     And no text is sent to the agent
 
     Examples:
-      | arrival                |
-      | a post                 |
-      | an opt-in notice       |
-      | an agent's message     |
-      | a watchdog observation |
+      | arrival                      |
+      | a post no trust grant covers |
+      | an opt-in notice             |
+      | an agent's message           |
+      | a watchdog observation       |
 
   @OWN-10 @P1 @I2 @I7 @pending
   Scenario: each action class has one rule level that only tightens
@@ -188,13 +188,13 @@ Feature: Principal acts (OWN)
     And no such control is simulated
 
   @OWN-16 @P1 @I2 @I8 @pending
-  Scenario: a phone credential is minted by a widening act and limited to its scope
+  Scenario: a paired phone is enrolled by a widening act and its device key is limited to its scope
     Given an isolated Cairn home
-    And a phone credential minted by a widening principal act
+    And a paired phone whose device key "alice" certified with its scope by enrolling it, a widening principal act
     When the phone tries to answer a held permission request with the harness's "allow for session"
     Then the room-view component refuses it on the server
     And the phone can only read, allow once and deny held permission requests
-    And each answer the phone gives is signed with its own device key and recorded on its device seat, whose writer the phone seals with that seat's key and the node it pairs with only holds
+    And each answer the phone gives is signed with its own device key and recorded on its device seat in her personal room, naming the room, whose writer the phone seals with that seat's key and the node it pairs with only holds
     And where an authenticator is required each allow carries the phone's own presence proof bound to that answer
 
   @OWN-17 @P2 @I2 @I8 @pending
@@ -286,7 +286,7 @@ Feature: Principal acts (OWN)
     When the delegating agent calls "delegation_get" for that delegation
     Then the delegate report arrives inside the untrusted envelope
     And no text of the report entered the delegating agent's context before that call
-    And ending the delegation grant stops every delegate it covers, as a cut act
+    And ending the delegation grant, a cut principal act, stops every delegate it covers
 
   @OWN-26 @P2 @I2 @I8 @pending
   Scenario: another principal's agent takes a delegated task only under its principal's acceptance grant
@@ -308,7 +308,7 @@ Feature: Principal acts (OWN)
     And Cairn pre-filled no verdict, and the agent's statement stays a claim
     And after the edit the verdict reads stale
     And a verdict on the room as a whole, rather than on a criterion, is refused
-    And a verdict a service account tries to record is refused
+    And a verdict is refused from a service account, whose principal key a person, another service account or managed policy certified
     And the verdict approves nothing for landing, which stays with git and the forge
 
   @OWN-28 @P1 @I1 @I2 @pending
@@ -333,10 +333,11 @@ Feature: Principal acts (OWN)
     Then the trust grant is a widening principal act, shown in the room with its grantor, "carol"'s key and its scope
     And "carol"'s next post reaches "alice"'s agent through the harness's input in a fixed template naming her key fingerprint and the post's address
     And the post starts or resumes no turn and reaches "bob"'s agent only as untrusted recall
+    And a post from "alice"'s own device seat reaches her agent only by recall or her endorsement, never in the trust grant's template
     When "carol" pins the constraint "keep the public API stable" from her device seat
     Then the pin restores word for word to "alice"'s agent and reaches "bob"'s agent only through a tool call, enveloped
     And a trust grant naming a run seat's key, or a service account that relays third parties' text, is refused and audited
     And a trust grant naming the room's facilitator is recorded only after "alice" is shown that the facilitator reads untrusted room text, and covers its posts but never its room summaries
     And no role, membership or room setting makes any other principal trusted
-    When "alice" revokes the trust grant as a cut act
+    When "alice" revokes the trust grant as a cut principal act
     Then "carol"'s later posts reach "alice"'s agent only as untrusted recall, and her pin no longer restores to it
