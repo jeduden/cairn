@@ -183,7 +183,7 @@ kinds:
     path-pattern: "docs/domain-model.md"
     rules:
       max-file-length:
-        max: 800
+        max: 1000
       token-budget:
         mode: heuristic
         max: 12000

@@ -48,26 +48,27 @@ security review and a new major version, not a bug fix.
   originates outside the trusted sources (tool output, web, MCP servers,
   files, assistant text, and anything another node or principal produced,
   except what the agent's principal signed through a device key it certified)
-  reaches the model only when Claude explicitly calls a recall tool, and
-  always inside an untrusted-data envelope. The trusted sources are this
-  node's own `operator`, `harness_meta` and structural events, its `user`
-  turns while the deployment mode is `interactive`, and, once PRV-10 ships,
-  principal acts, posts and pins signed through a device key the agent's
-  principal certified, within its scope, and a pin version a principal
-  stamped, for that principal's own agents. Cairn writes to an agent only
-  through a closed set of paths. Without a principal act: restore blocks of
-  pins (INJ-01, INJ-02), opt-in notices (INJ-10), and the fixed templates of
-  OWN-04 and OWN-07, each built only from trusted structural fields and ids.
-  On a principal act recorded at that time: through the harness's own input,
-  only principal-typed text, a fixed template that references ids, or a post a
-  principal endorsed exactly as shown inside the template of OWN-08. Under a
-  delegation grant its principal recorded (OWN-23): a delegated task inside
-  the fixed template of OWN-24. Once its requirements ship, a principal may
-  also trust another principal by key for its own agents, in one room or
-  everywhere; the posts and pins that principal wrote from its device seats
-  then reach those agents as the trusting principal's own text would. Cairn
-  applies such grants and never grants trust itself. No other write to an
-  agent exists.
+  reaches the model only inside an untrusted-data envelope when Claude
+  explicitly calls a recall tool, or through one of the closed paths below
+  that a principal act names. The trusted sources are this node's own
+  `operator`, `harness_meta` and structural events, its `user` turns while the
+  deployment mode is `interactive`, and, once PRV-10 ships, principal acts,
+  posts and pins signed through a device key the agent's principal certified,
+  within its scope, a pin version a principal stamped, for that principal's
+  own agents, and the posts and pins a trust grant of the agent's principal
+  covers. Cairn writes to an agent only through a closed set of paths. Without
+  a principal act: restore blocks of pins (INJ-01, INJ-02), opt-in notices
+  (INJ-10), and the fixed templates of OWN-04 and OWN-07, each built only from
+  trusted structural fields and ids. On a principal act recorded at that time:
+  through the harness's own input, only principal-typed text, a fixed template
+  that references ids, or a post a principal endorsed exactly as shown inside
+  the template of OWN-08. Under a delegation grant its principal recorded
+  (OWN-23): a delegated task inside the fixed template of OWN-24. Once its
+  requirements ship, a principal may also trust another principal by key for
+  its own agents, in one room or everywhere; the pins that principal wrote
+  from its device seats then restore to those agents, and its posts reach them
+  inside the fixed template of OWN-29. Cairn applies such grants and never
+  grants trust itself. No other write to an agent exists.
 - **I3 — Constraints are never summarized.** Every pin that restores is stored
   verbatim and restored verbatim after every compaction, or named by id and
   count when the budget omits it.
@@ -83,9 +84,10 @@ security review and a new major version, not a bug fix.
   public: read-only publishing and outbound exchange with hosts the node's
   principal names, off until turned on. Managed policy can disable B1, B2 and
   B3. No component sends telemetry or depends on a central or third-party
-  service. Data leaves the machine only when Claude receives recalled content
-  through a tool call, or through a B2 or B3 component the node's principal
-  turned on; whatever such a component brings in is untrusted (I2).
+  service. Data leaves the machine only as what Cairn writes to an agent
+  through I2's closed paths, which the harness sends to its model, or through
+  a B2 or B3 component the node's principal turned on; whatever such a
+  component brings in is untrusted (I2).
 - **I5 — Bad data can be removed from circulation without destroying
   evidence.** Any event, span, run, writer or derived artifact can be
   quarantined from recall immediately on the node that records the quarantine,
@@ -101,17 +103,18 @@ security review and a new major version, not a bug fix.
   principal's home with strict permissions, and Cairn refuses to operate on a
   home that does not belong to the OS user running it. Content another
   principal wrote, or another node wrote outside what this principal signed
-  through a device key it certified, is held as theirs: attributed to its seat
+  through a device key it certified, is kept as theirs: attributed to its seat
   key, and untrusted unless this principal's own stamp or trust grant covers
-  it. It never widens what this principal's agents trust or recall on its own.
+  it. On its own it never makes this principal's agents trust it, nor extends
+  their recall.
 - **I9 — Cairn never degrades the agent.** A Cairn failure never blocks or
   slows the agent beyond defined budgets. Cairn fails open, except where
   continuing would violate I2, I4, or I8.
-- **I10 — Everything derived is rebuildable.** All derived state (indexes,
+- **I10 — Everything derived is rebuildable.** All derived artifacts (indexes,
   landmarks, active pins, quarantine set, statuses, queues, evidence and proof
-  classes, statistics) is a deterministic function of the set of writer logs a
-  node holds and the node's own key set, independent of the order in which
-  logs arrived. Rebuilding reproduces it exactly.
+  classes, statistics) are a deterministic function of the set of writer logs
+  a node holds and the node's own key set, independent of the order in which
+  logs arrived. Rebuilding reproduces them exactly.
 <?/include?>
 
 ## Development
