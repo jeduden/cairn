@@ -196,7 +196,7 @@ changes they control.
     beside each such session, rather than fought with checks an agent can
     pass.
 - **Where:**
-  [wording](../srs/05c-owner-and-peer-requirements.md#513-principal-acts-own);
+  [wording][own-wording];
   requirements [OWN-11][OWN], [OWN-12][OWN], [OWN-22][OWN].
 - **Review:** approved, 3 October 2026.
 
@@ -228,7 +228,7 @@ changes they control.
   - Orchestrators can fan work out to other sessions and machines without
     turning an injected instruction into an unbounded agent.
 - **Where:**
-  [wording](../srs/05c-owner-and-peer-requirements.md#513-principal-acts-own);
+  [wording][own-wording];
   requirements [OWN-23][OWN], [OWN-24][OWN], [OWN-25][OWN], [OWN-26][OWN].
 - **Review:** approved, 3 October 2026.
 
@@ -304,7 +304,8 @@ their requirements written before any grant is honoured.
 [PRV]: ../srs/05-functional-requirements.md#52-provenance-and-trust-prv
 [ADM]: ../srs/05-functional-requirements.md#58-administration-and-lifecycle-adm
 [LANE]: ../srs/05b-lane-requirements.md#511-room-lane
-[OWN]: ../srs/05c-owner-and-peer-requirements.md#513-principal-acts-own
-[PEER]: ../srs/05c-owner-and-peer-requirements.md#514-peer-network-peer
+[OWN]: ../srs/05c-principal-and-peer-requirements.md#513-principal-acts-own
+[PEER]: ../srs/05c-principal-and-peer-requirements.md#514-peer-network-peer
 [SEC]: ../srs/06-security.md#62-security-requirements-sec
 [ENG]: ../srs/10-engineering-quality.md#104-process
+[own-wording]: ../srs/05c-principal-and-peer-requirements.md

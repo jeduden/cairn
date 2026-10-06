@@ -68,13 +68,13 @@ func TestSplitPersonasReadsTheCell(t *testing.T) {
 
 func TestPersonaAgentsReadsSection25(t *testing.T) {
 	body := "| # | Persona | Agent | Who |\n|---|---|---|---|\n" +
-		"| U1 | Platform operator | `persona-platform-operator` | x |\n" +
+		"| U1 | Platform operator | `persona-platform-engineer` | x |\n" +
 		"| U9 | Agent | `persona-agent` | y |\n"
 
 	got, err := PersonaAgents([]byte(body))
 
 	require.NoError(t, err)
-	assert.Equal(t, map[string]string{"U1": "persona-platform-operator", "U9": "persona-agent"}, got)
+	assert.Equal(t, map[string]string{"U1": "persona-platform-engineer", "U9": "persona-agent"}, got)
 }
 
 func TestPersonaAgentsRejectsBadRows(t *testing.T) {

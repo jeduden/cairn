@@ -170,4 +170,4 @@ Columns: **ID** · **Pri** · **Requirement** · **Ver** (verification method)
 
 §5.11–§5.14 continue in
 [05b](05b-lane-requirements.md), [its view](05b-room-view-requirements.md)
-and [05c](05c-owner-and-peer-requirements.md).
+and [05c](05c-principal-and-peer-requirements.md).
