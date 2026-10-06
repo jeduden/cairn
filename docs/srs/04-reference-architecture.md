@@ -74,18 +74,18 @@ The core's parts:
 
 The record is authoritative: everything else derives from it. Acts are
 themselves events in the record. Principal acts, such as adding, editing or
-unpinning a device-seat pin of a type that restores, a stamp, a quarantine, its
-release and a purge, are `operator` events on the device seat of the device that
-signs them, in the room they act on, which that device first joins without
-admission when its principal has a member seat there. One that acts on no room
-or on a room its principal has no member seat in, such as rejecting a foreign
-room, or that a paired phone signs, goes to that device seat in the personal
-room, naming the room, and that room shows it by address as it shows a
-cross-room post (OWN-02, LANE-29). Expire acts are `operator` events on the
-device seat of the node that signs them. Room acts sit in the writer of the seat
-that signs them: a post with provenance `post`, every other room act with that
-seat's pin class, `operator` for a device seat and `assistant` for a run seat
-(LANE-31, PRV-01). A purge under a retention policy
+unpinning a pin of a type that restores written from a device seat a device key
+certified, a stamp, a quarantine, its release and a purge, are `operator` events
+on the device seat of the device that signs them, in the room they act on, which
+that device first joins without admission when its principal has a member seat
+there. One that acts on no room or on a room its principal has no member seat
+in, such as rejecting a foreign room, or that a paired phone signs, goes to that
+device seat in the personal room, naming the room, and that room shows it by
+address as it shows a cross-room post (OWN-02, LANE-29). Expire acts are
+`operator` events on the device seat of the node that signs them. Room acts sit
+in the writer of the seat that signs them: a post with provenance `post`, every
+other room act with that seat's pin class, `operator` for a device seat and
+`assistant` for a run seat (LANE-31, PRV-01). A purge under a retention policy
 is not an act: the node records it naming the policy, whose setting was the act.
 Every tombstone is a `structural` event (PRV-01). Every other table (FTS index,
 spans, landmarks, active pins, quarantine set, statuses, queues, stats) is a

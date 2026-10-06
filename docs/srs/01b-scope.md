@@ -26,7 +26,7 @@ Room summaries are in scope. When a run joins a room with much
 content, its agent makes a summary request for a room summary of the
 size it wants (LANE-33). The room's one facilitator, the service
 account the owner appoints, writes it through its own node's CLI
-(`cairn room-summary write`), signed with its device seat there; the
+(`cairn room-summary write`), signed with its device seat's key there; the
 program that writes it is not a Cairn component, and the core makes no
 model calls (I4). A room summary is untrusted and never replaces the
 record (I1, I2).
@@ -44,6 +44,8 @@ offers also exists in the CLI or MCP.
 3. Browsers on other machines with a login.
 4. A service on a host the principal names.
 
-Stages 1 and 2 fit I4 as written. Stages 3 and 4 need new I4 wording,
-approved by ADR with a security review, before any requirement asks
-for them (OQ-38).
+I4 binds Cairn's components, not the principal's own tunnel: in stage
+1 the room-view component listens only on loopback (B1), and in stage
+2 the peer component connects only to enrolled peers and paired phones
+(B2). Stages 3 and 4 need new I4 wording, approved by ADR with a
+security review, before any requirement asks for them (OQ-38).

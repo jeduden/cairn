@@ -28,7 +28,7 @@ maps every individual concern to requirements.
    (I5).
 4. **Code access to history beats serializing it.** Scroll without its
    persistent REPL lost 7.3 points, concentrated in tasks that combine evidence
-   from many records. → Kernel (§5.8).
+   from many parts of a history. → Kernel (§5.8).
 5. **Prompt-cache stability matters.** TokenPilot showed that context mutations
    shifting the prompt prefix break caching; stabilizing the prefix cut costs by
    56–87%. → Deterministic injection (INJ-06).
