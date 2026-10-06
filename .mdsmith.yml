@@ -136,7 +136,14 @@ kinds:
     # persona reviewer. Skills hold objective procedures; agents hold
     # subjective viewpoints. A subagent's file loads into its own
     # context, not the session's, so its caps are looser than a skill's.
+    # Every agent here reviews: it reads, and never writes, runs or
+    # fetches.
     path-pattern: ".claude/agents/*.md"
+    schema:
+      frontmatter:
+        name: '=~"^[a-z][a-z-]*$"'
+        description: nonEmpty
+        tools: '"Read, Grep, Glob"'
     rules:
       required-frontmatter:
         fields: [name, description]
@@ -155,10 +162,10 @@ kinds:
     # quietly: they are what requirement work tends to lose.
     path-pattern: ".claude/agents/persona-*.md"
     schema:
+      filename: "persona-*.md"
       frontmatter:
         name: '=~"^persona-[a-z-]+$"'
         description: nonEmpty
-        # Persona reviewers read; they never write, run or fetch.
         tools: '"Read, Grep, Glob"'
       closed: false
       sections:
@@ -167,6 +174,23 @@ kinds:
         - heading: "What you need"
         - heading: "Your journeys"
         - heading: "When you give up"
+        - heading: "How you review"
+  domain-model-agent:
+    # The domain-model agent holds instructions only; the model itself
+    # is docs/domain-model.md. Its name is pinned to its file, and its
+    # two sections, when it is consulted and how it reviews, cannot be
+    # dropped quietly.
+    path-pattern: ".claude/agents/domain-model.md"
+    schema:
+      filename: "domain-model.md"
+      frontmatter:
+        name: '"domain-model"'
+        description: nonEmpty
+        tools: '"Read, Grep, Glob"'
+      closed: true
+      sections:
+        - heading: null
+        - heading: "When you are consulted"
         - heading: "How you review"
   proto:
     # proto.md leads with directives and placeholder headings rather
@@ -239,6 +263,8 @@ kind-assignment:
     kinds: [agent]
   - glob: [".claude/agents/persona-*.md"]
     kinds: [persona]
+  - glob: [".claude/agents/domain-model.md"]
+    kinds: [domain-model-agent]
   - glob: ["**/proto.md"]
     kinds: [proto]
   - glob: ["plan/*.md", "plan/*/plan.md"]
@@ -260,7 +286,6 @@ overrides:
       paragraph-readability: false
       paragraph-structure: false
       max-file-length: false
-      cross-file-reference-integrity: false
       required-structure: false
       # Companion analyses such as requirement traces are wide
       # matrices, as research notes are.
