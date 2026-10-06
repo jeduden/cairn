@@ -12,7 +12,7 @@ func Cases() []Case {
 	var out []Case
 	for _, group := range [][]Case{
 		dependencyCases(), decisionCases(), repositoryCases(), reviewCases(),
-		gateCases(), personaCases(),
+		gateCases(), personaCases(), agentCases(),
 	} {
 		out = append(out, group...)
 	}
@@ -253,6 +253,30 @@ func personaCases() []Case {
 			Edit:   Edit{Op: Remove, File: ".claude/agents/persona-reviewer.md"},
 			Check:  GoTest("./internal/srs", "TestPersonasMatchTheAgents"),
 			Want:   "persona-reviewer",
+		},
+	}
+}
+
+// agentCases lists the drifts mdsmith's agent schemas catch: a reviewing
+// agent given a tool beyond reading, and the domain-model agent losing
+// one of its required sections.
+func agentCases() []Case {
+	return []Case{
+		{
+			Name:   "a reviewing agent granted a write tool",
+			Guards: "mdsmith check",
+			Edit: Edit{Op: Replace, File: ".claude/agents/persona-reviewer.md",
+				Old: "tools: Read, Grep, Glob", New: "tools: Read, Grep, Glob, Edit"},
+			Check: Mdsmith(),
+			Want:  "tools: got",
+		},
+		{
+			Name:   "the domain-model agent losing a required section",
+			Guards: "mdsmith check",
+			Edit: Edit{Op: Replace, File: ".claude/agents/domain-model.md",
+				Old: "## How you report", New: "## Reporting"},
+			Check: Mdsmith(),
+			Want:  "How you report",
 		},
 	}
 }
