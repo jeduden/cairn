@@ -18,31 +18,31 @@ security review and a new major version, not a bug fix.
   retention policy that principal or managed policy sets. Every exception is
   recorded.
 - **I2 — No automatic path from untrusted content to the model.** Content that
-  originates outside the trusted sources (tool output, web, MCP servers,
-  files, the model's replies, and anything another node or principal produced,
-  except what the agent's principal signed through a device key it certified
-  or a trust grant of that principal covers) reaches the model only inside an
-  untrusted-data envelope when the agent explicitly calls a recall tool, or
-  through one of the closed paths below that a principal act names. The
-  trusted sources are this node's own `operator`, `harness_meta` and
-  structural events, its `user` turns while the deployment mode is
+  originates outside the trusted sources (tool output, web, MCP servers, files,
+  the model's replies, and anything another node or principal produced, except
+  what the agent's principal signed through a device key it certified, a pin
+  version it stamped, or what a trust grant of that principal covers) reaches
+  the model only inside an untrusted-data envelope when the agent explicitly
+  calls a recall tool, or through one of the closed paths below that a principal
+  act names. The trusted sources are this node's own `operator`, `harness_meta`
+  and structural events, its `user` turns while the deployment mode is
   `interactive`, and, once PRV-10 ships, principal acts, posts and pins signed
-  through a device key the agent's principal certified, within its scope, a
-  pin version a principal stamped, for that principal's own agents, and the
-  posts and pins a trust grant of the agent's principal covers. Cairn writes
-  to an agent only through a closed set of paths. Without a principal act:
-  restore blocks of pins (INJ-01, INJ-02), opt-in notices (INJ-10), and the
-  fixed templates of OWN-04 and OWN-07, each built only from trusted
-  structural fields and ids. On a principal act recorded at that time: through
-  the harness's own input, only principal-typed text, a fixed template that
-  references ids, or a post a principal endorsed exactly as shown inside the
-  template of OWN-08. Under a delegation grant its principal recorded
-  (OWN-23): a delegated task inside the fixed template of OWN-24. Once its
-  requirements ship, a principal may also trust another principal by key for
-  its own agents, in one room or everywhere; the pins that principal wrote
-  from its device seats then restore to those agents, and its posts reach them
-  inside the fixed template of OWN-29. Cairn applies such grants and never
-  grants trust itself. No other write to an agent exists.
+  through a device key the agent's principal certified, within its scope, a pin
+  version a principal stamped, for that principal's own agents, and the posts
+  and pins a trust grant of the agent's principal covers. Cairn writes to an
+  agent only through a closed set of paths. Without a principal act: restore
+  blocks of pins (INJ-01, INJ-02), opt-in notices (INJ-10), and the fixed
+  templates of OWN-04 and OWN-07, each built only from trusted structural fields
+  and ids. On a principal act recorded at that time: through the harness's own
+  input, only principal-typed text, a fixed template that references ids, or a
+  post a principal endorsed exactly as shown inside the template of OWN-08.
+  Under a delegation grant its principal recorded (OWN-23): a delegated task
+  inside the fixed template of OWN-24. Once its requirements ship, a principal
+  may also trust another principal by key for its own agents, in one room or
+  everywhere; the pins that principal wrote from its device seats then restore
+  to those agents, and its posts reach them inside the fixed template of OWN-29.
+  Cairn applies such grants and never grants trust itself. No other write to an
+  agent exists.
 - **I3 — Constraints are never summarized.** Every pin that restores is stored
   verbatim and restored verbatim after every compaction, or named by id and
   count when the budget omits it.
@@ -70,10 +70,10 @@ security review and a new major version, not a bug fix.
   node only as a quarantine request that node's principal applies.
 - **I6 — No silent failures.** Every dropped, rejected, redacted, timed-out,
   or failed operation is counted, logged, and visible to the node's principal.
-- **I7 — Configuration changes only on explicit instruction.** Cairn changes
-  harness configuration only through explicit install and uninstall
-  operations, shows the change first, and never overrides managed policy or
-  the harness's managed settings.
+- **I7 — Harness configuration changes only on explicit instruction.** Cairn
+  changes harness configuration only through explicit install and uninstall
+  operations, shows the change first, and never overrides managed policy or the
+  harness's managed settings.
 - **I8 — Isolation follows the principal.** All local state is bound to one
   principal's home with strict permissions, and Cairn refuses to operate on a
   home that does not belong to the OS user running it. Content another
@@ -87,6 +87,6 @@ security review and a new major version, not a bug fix.
   continuing would violate I2, I4, or I8.
 - **I10 — Everything derived is rebuildable.** All derived artifacts (indexes,
   landmarks, active pins, quarantine set, statuses, queues, evidence and proof
-  classes, statistics) are a deterministic function of the set of writer logs
-  a node holds and the node's own key set, independent of the order in which
-  logs arrived. Rebuilding reproduces them exactly.
+  classes, stats) are a deterministic function of the set of writer logs a node
+  holds and the node's own key set, independent of the order in which logs
+  arrived. Rebuilding reproduces them exactly.
