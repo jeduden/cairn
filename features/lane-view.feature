@@ -60,7 +60,7 @@ Feature: Room view (VIEW)
     When the person opens that run in the room view
     Then the text is shown apart from derived lines and marked untrusted
     And it is marked as a "claim"
-    And no status, evidence or proof mark changes because of it
+    And no status, evidence class or proof class changes because of it
 
   @VIEW-07 @P1 @I2 @pending
   Scenario: items from outside the trusted sources carry a trust mark and the petname the person viewing chose
@@ -70,18 +70,18 @@ Feature: Room view (VIEW)
     When the person opens the room view
     Then each post carries the trust mark of §9.7.6 and the petname the person chose for its author's key, never the name the peer sent
     And the key with no petname is shown by its fingerprint and the new key is marked "new key"
-    And the hidden characters and the HTML comment render as visible tokens with a count
+    And the hidden characters and the HTML comment render as visible placeholders with a count
 
   @VIEW-08 @P1 @I6 @I10 @pending
   Scenario: Catch up is one deterministic projection of the record and a starting point
     Given an isolated Cairn home
-    And rooms with capture gaps, an unsynced writer, a tombstone, a voided branch link and finished work since a starting point
+    And rooms with capture gaps, an unsynced writer, a tombstone, a voided branch link and finished runs since a starting point
     And a head receipt of chain heads outside CAIRN_HOME
     When the person opens Catch up at that starting point
     Then it shows the starting point it used and where it came from, and links every line to its events
     And it lists capture gaps, uningested transcripts, risen failure counters and unsynced writers apart from quiet rooms
     And it checks each writer's chain head against the named head receipt and shows the result per writer
-    And its lines run integrity and capture gaps, Needs you, failures, then finished work, with its frontier per writer and no model-written line
+    And its lines run integrity and capture gaps, Needs you, failures, then finished runs, with the newest seq it covers per writer and no model-written line
 
   @VIEW-09 @P1 @I6 @I8 @pending
   Scenario Outline: the person's search uses the scope they select and states its coverage
@@ -138,7 +138,7 @@ Feature: Room view (VIEW)
     When the person opens the comparison of the two branches from the room's Room page
     Then exposure, outcome and evidence are shown side by side for each branch
     And the paths are aligned the same way on every comparison
-    And no branch is marked the winner until the room's owner chooses one as a neutral principal act
+    And no branch is marked the winner, and choosing a branch to compare is a neutral principal act of the room's owner
 
   @VIEW-14 @P1 @I6 @pending
   Scenario: every surface and reduced client uses the same words and a reduced client says what it left out
@@ -156,14 +156,14 @@ Feature: Room view (VIEW)
     Then the result is enveloped as structural and carries only the fields of the closed set
     And the waiting posts appear as addresses in range form, capped at 20 with a count of 5 left out
     And no field carries a title, label, branch name or petname
-    And the status line and banners the harness shows the person never enter the model's context
+    And the harness strip and the banners the harness shows the person never enter the model's context
 
   @VIEW-16 @P1 @I4 @I6 @pending
-  Scenario: each run shows its token use and an estimated cost from a local price table
+  Scenario: each run shows the model tokens it used and an estimated cost from a local price table
     Given an isolated Cairn home
-    And a run with recorded token use and a local price table
+    And a run whose model token use is recorded, and a local price table
     When the person opens the run in the room view
-    Then it shows the run's token use
+    Then it shows the model tokens the run used
     And it shows a cost labelled as an estimate
     And no price is fetched
 
@@ -197,11 +197,11 @@ Feature: Room view (VIEW)
   @VIEW-20 @P1 @I6 @pending
   Scenario: the room view shows every delegation as a delegation link
     Given an isolated Cairn home
-    And a room where an agent delegated one task to a subagent and one to another run under a delegation grant
+    And a room where an agent delegated one task to a subagent and one to another agent of the same principal under a delegation grant
     When the person opens the room view
-    Then each delegation shows as a delegation link from the delegating agent to its delegate
+    Then each delegation shows as a delegation link from the delegating run to the delegate's run
     And each delegation link shows the delegated task's address and its state
-    And only the delegation link to the other run names a delegation grant, and that delegate's spend shows against its budget
+    And only the delegation link to the other agent's run names a delegation grant, and that delegate's spend shows against its budget
 
   @VIEW-21 @P1 @I2 @I10 @pending
   Scenario: the room view puts the outcome beside the intent so a person can record a verdict

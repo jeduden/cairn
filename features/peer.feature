@@ -39,8 +39,9 @@ Feature: Peer network (PEER)
   Scenario: an event written on one connected peer reaches every connected peer within 5 s
     Given an isolated Cairn home
     And connected peers "a", "b" and "c", where "c" reaches "a" only through "b"
-    When a hook on "a" writes an event and ends
-    Then the event is sealed at the end of the hook and carried as part of a sealed range
+    When a hook on "a" writes an event to a run seat's writer and the run's MCP server then serves a call
+    Then that call seals the run seat's writer, covering what the hook handler appended, and the event is carried as part of a sealed range
+    And an event after the newest seal stays unsigned and is not carried
     And it appears in the room view of "b" and of "c" within 5 s of being written
     And it reaches "c" across at most one relay hop through an enrolled peer
 
@@ -48,23 +49,23 @@ Feature: Peer network (PEER)
   Scenario: an ephemeral node offers its sealed tail often and a retired writer's lost tail shows as a gap
     Given an isolated Cairn home
     And an ephemeral node connected to a peer and running an agent
-    When the run is active for 65 s, passes "Stop", "SubagentStop" and "SessionEnd", and the node's token expires
+    When the run is active for 65 s, passes "Stop", "SubagentStop" and "SessionEnd", and the node's access token expires
     Then the open segment was sealed and offered at each of those hooks and at least every 30 s, each sealed range as soon as it was sealed
     And the writer is marked retired
     And its later segments that continue its chain without a fork are accepted and marked delivered after retirement, and only a revocation would refuse them
     And a tail lost after the last seq received is shown as a gap, never as a quiet end or as "behind"
 
   @PEER-06 @P2 @I6 @I8 @pending
-  Scenario: enrollment verifies keys on both nodes and a token for a sandbox is scoped, carried and audited
+  Scenario: enrollment verifies keys on both nodes and an access token for a sandbox is scoped, carried and audited
     Given an isolated Cairn home
-    And the person mints, as a widening principal act, a token for a sandbox carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the token's rooms and expiry, read from an environment secret by recorded opt-in
-    When a node in a sandbox starts with the token before it reaches any peer
+    And the person mints, as a widening principal act, an access token for a sandbox carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the access token's rooms and expiry, read from an environment secret by recorded opt-in
+    When a node in a sandbox starts with the access token before it reaches any peer
     Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer address and git-carrier remote it may deliver to
-    And a seat key it certifies for a room outside the token's rooms, or after the token's expiry, chains to no principal key and is refused
-    And its restore block carries the room's qualifying pins (PIN-10) from the token as signed events of provenance "operator" and says later pins may be missing
-    And the node, holding only the token key, signs no principal acts, and a pin its runs write restores only once a principal stamps it from one of its devices
-    And "cairn status" names where the token is read from and no child process inherits the token in its environment
-    And the token's issue, use, rotation and revocation are audited, and the issuing node shows an unused token as "enrolled, never synced"
+    And a seat key it certifies for a room outside the access token's rooms, or after the access token's expiry, chains to no principal key and is refused
+    And its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events of provenance "operator" and says later pins may be missing
+    And the node, holding only the token key, has a device seat its token key certified, which signs no principal acts and no expire acts, and a pin its runs write restores only once a principal stamps it from one of its devices
+    And "cairn status" names where the access token is read from and no child process inherits the access token in its environment
+    And the access token's issue, use, rotation and revocation are audited, and the issuing node shows an unused access token as "enrolled, never synced"
     And discovery alone enrolls no peer, while enrolling one verifies the key on both nodes by matching words or a scanned code
 
   @PEER-07 @P2 @I2 @I8 @pending
