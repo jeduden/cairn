@@ -92,7 +92,7 @@ Feature: Record (REC)
     And "cut-short" holds 30 lines of which 20 were ingested before both transcript files were deleted
     When the person runs "cairn verify --json"
     Then the report names "cut-short", and only it, as a source that disappeared before it was fully ingested
-    And "cairn expand" still returns all 40 events of "main-run"
+    And "cairn event expand" still returns all 40 events of "main-run"
 
   @REC-09 @P0 @I1 @pending
   Scenario: content above the payload threshold goes to a payload store under a name that reveals nothing off the node
@@ -139,7 +139,7 @@ Feature: Record (REC)
     And each event whose line carries a timestamp keeps it as metadata
     And the event of line 12 carries no source timestamp
     And a second fresh home that ingests "main-run" under the same writer id holds the same chain head hash
-    And "cairn expand" returns line 10 before line 11
+    And "cairn event expand" returns line 10 before line 11
 
   @REC-13 @P1 @I9 @pending
   Scenario Outline: tool-use, stop and permission hooks ingest incrementally within budget and mark the remainder

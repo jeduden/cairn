@@ -109,5 +109,5 @@ CLAUDE.md and AGENTS.md carry it through their includes of
 [REC]: ../srs/05-functional-requirements.md#51-record-rec
 [LANE]: ../srs/05b-lane-requirements.md#511-room-lane
 [PEER]: ../srs/05c-owner-and-peer-requirements.md#514-peer-network-peer
-[OWN]: ../srs/05c-owner-and-peer-requirements.md#513-owner-acts-own
+[OWN]: ../srs/05c-owner-and-peer-requirements.md#513-principal-acts-own
 [SEC]: ../srs/06-security.md#62-security-requirements-sec

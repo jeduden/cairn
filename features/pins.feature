@@ -42,13 +42,13 @@ Feature: Pins (PIN)
     And adding a pin whose text is 1,001 characters long exits 2 and leaves the active pin count at 1
 
   @PIN-04 @P0 @I10 @pending
-  Scenario: changing a pin records a removal followed by an addition
+  Scenario: editing a pin adds a pin version and keeps every earlier one
     Given an isolated Cairn home
     And an active pin "Never push directly to main" created at address w-1·10
-    When the pin's text is changed to "Never push directly to main or release branches"
-    Then the record gains an unpin event for the pin created at w-1·10 followed by a pin event
+    When the pin is edited to "Never push directly to main or release branches"
+    Then the record gains an edit event adding version 2 of the pin created at w-1·10
     And the event at w-1·10 and its pin text are unchanged
-    And "cairn rebuild" reproduces the one active pin "Never push directly to main or release branches"
+    And version 1 stays readable, and "cairn rebuild" reproduces the one active pin at version 2, "Never push directly to main or release branches"
 
   @PIN-05 @P1 @I2 @I3 @pending
   Scenario Outline: pin candidates from user prompts activate only on trusted confirmation

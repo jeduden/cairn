@@ -97,7 +97,7 @@ Feature: Recall (RCL)
     When Claude calls the MCP tool "<tool>" with that address
     Then the result holds exactly the events the address names
     And an address of a purged or quarantined event resolves to its tombstone or quarantine marker
-    And "cairn expand" given the same address in the same form returns the same events
+    And "cairn event expand" given the same address in the same form returns the same events
 
     Examples:
       | form                                 | tool         |

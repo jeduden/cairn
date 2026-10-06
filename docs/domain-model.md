@@ -199,6 +199,10 @@ owns or controls.
 - **Gap marker**: What stands where content is missing: a tombstone
   for a purged range, a quarantine marker for a quarantined address,
   or a truncation marker on capped kernel output (RCL-06, CMP-06).
+- **Integrity status**: What a room or writer shows about its chain
+  and seals, one of §9.7.5's values: `verified`, `unsigned`,
+  `incomplete`, `unverified`, `broken`, `refused` and `equivocated`
+  (VIEW-10). The UI never says "secure".
 - **Receipt**: A signed statement about a node's record, made to be
   kept apart from the home and checked with no network. Always
   qualified: a **head receipt** holds every writer's chain head at a
@@ -220,7 +224,9 @@ owns or controls.
   What a stamp covers.
 - **Pin candidate**: An inactive pin an agent proposed or Cairn
   detected. It becomes active only through its principal's
-  confirmation or a stamp.
+  confirmation, which makes a pin the principal's device seat authors,
+  or a stamp. A pin an agent's run seat wrote becomes active only by a
+  stamp (LANE-32).
 - **Pin type**: One of `constraint`, `preference`, `decision`, `fact`,
   `episode`, `intent`, `verdict` and `stake`. Only `constraint`,
   `preference` and `intent` pins restore.
@@ -316,9 +322,10 @@ to exactly one kind (LANE-31).
     quarantine untrusted content, withdraw a risk acceptance, revoke a
     trust grant, revoke an appointment, unstamp a pin version, and
     turn notices off.
-  - **Neutral:** mark a room ready, acknowledge an overlap, record a
-    `met` or `not met` verdict, link a result to a criterion, accept a
-    join, and add a room to or remove it from the focus set.
+  - **Neutral:** mark a room ready or abandoned, acknowledge an
+    overlap, record a `met` or `not met` verdict, link a result to a
+    criterion, accept a join, and add a room to or remove it from the
+    focus set.
   - **Widening:** allow, answer a hand-off, reply, steer, send a
     correction, retry from a worktree checkpoint, set or revise an
     intent, resume, record a delegation grant or an acceptance grant,
@@ -398,8 +405,8 @@ to exactly one kind (LANE-31).
   the same on every node holding a clone, shallow clones included
   (LANE-02), together with its remotes. A repository may carry Cairn
   data: room trailers in commits (LANE-28), bundles as git refs, and
-  encrypted segments in a namespaced location the owner enabled
-  (PEER-08).
+  encrypted segments in a namespaced location the node's principal
+  enabled (PEER-08).
 - **Branch**: A git branch, identified by repository identity, remote
   URL and branch name. A branch with no remote has a provisional
   node-local identity, rebound when it is pushed.
@@ -545,14 +552,15 @@ to exactly one kind (LANE-31).
   - **Bridge component (B3):** outbound exchange with a forge, CI or a
     notification service the owner names.
 - **Boundary**: One of B0 core, B1 machine, B2 peer and B3 public
-  (I4). "Boundary" means only a network boundary.
+  (I4). Unqualified, "boundary" means a network boundary; any other
+  boundary is qualified, such as a span boundary or a crate boundary.
 - **Room view**: The local surfaces (browser, terminal UI and CLI)
   that show rooms. A client of the record, never its source. Its
   surfaces are a closed set:
   - **Fleet:** every live and recorded run of the principal's rooms,
     grouped by room.
   - **Catch up:** the one surface answering "what happened since a
-    boundary" (VIEW-08).
+    starting point" the principal picks (VIEW-08).
   - **Needs you:** the one queue of items waiting on a principal
     (VIEW-05).
   - **Health:** counters, failures and store locations (I6).
@@ -607,7 +615,11 @@ words the SRS uses.
 - An MCP tool for a room act is `room_<act>`. Every other MCP tool is
   `<concept>_<verb>`, with the reading verbs `get`, `list` and
   `search`.
-- A CLI command is `cairn <concept> <verb>`.
+- A CLI command that acts on a concept is `cairn <concept> <verb>`.
+  Node-wide utilities keep one verb: `install`, `uninstall`, `status`,
+  `doctor`, `verify`, `rebuild`, `backup`, `restore`, `migrate`,
+  `ingest`, `import`, `export`, `audit`, `canary`, `ui`, `why`,
+  `open`, `hook`, `mcp` and `kernel-worker`.
 - Flags name concepts: `--author`, `--seat`, `--writer`, `--run`,
   `--room`.
 - Configuration keys are `<concept>.<setting>`, the concept singular.

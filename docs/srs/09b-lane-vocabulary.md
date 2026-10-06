@@ -3,7 +3,7 @@ title: "9.7 Room vocabulary"
 summary: >-
   The one vocabulary every surface uses (VIEW-14): run status and
   freshness, room status, evidence and proof classes, the Needs you
-  order, integrity seals, trust marks and the keymap. Part of §9.
+  order, integrity status, trust marks and the keymap. Part of §9.
 ---
 # 9.7 Room vocabulary
 
@@ -34,8 +34,8 @@ proposal, §8.
 ## 9.7.2 Room status
 
 Rooms do not land; branches do, by git or the forge (LANE-08). First
-match wins, in this order: **Abandoned** and **Landed** (closed rooms
-only; Landed when every branch the room names has landed), **Needs
+match wins, in this order: **Abandoned** (the owner marked the room
+abandoned) and **Landed** (every branch the room names has landed), **Needs
 you**, **Failing** (a check failed on the head of a branch the room
 names, evidence `own check` or stronger), **Blocked**, **Running**,
 **Ready for review** (only after the principal act of OWN-21 marking
@@ -82,7 +82,7 @@ because age differs between nodes and reads a clock (I10); it is
 oldest first wherever clocks agree. Pull-request reviews the forge
 asks of the principal join the same queue.
 
-## 9.7.5 Integrity seals
+## 9.7.5 Integrity status
 
 `verified` ◆ (chains and seals check), `unsigned` (hash-chained,
 before REC-18 or past the newest seal), `incomplete` ◇ (a writer's
@@ -96,7 +96,7 @@ No mark on this node's own trusted events and on certified principal
 acts (the latter show a device glyph). `○` plus petname on anything
 untrusted from another principal, agent, node or bundle; a key with no
 petname shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined.
-`▬` removed. `imported`. `new key`. "from a removed seat",
+`▬` from a seat that left or was kicked. `imported`. `new key`.
 "from a revoked node". Timeline rails: solid for the agent's
 principal, hollow for other principals, dotted for agents and the forge.
 Sandbox events are untrusted on every other node (PRV-02). Unsandboxed

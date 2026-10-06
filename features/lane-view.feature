@@ -42,7 +42,7 @@ Feature: Room view (VIEW)
     Then every run shows exactly one status from the closed set of §9.7.1 with its freshness mark
     And the room shows one room status and the worst freshness mark of its runs, never Quiet
     And the launched run appears under its personal room on Fleet and in "cairn room list"
-    And text an agent wrote changes no status, and time-relative marks are computed in the viewer from an explicit boundary
+    And text an agent wrote changes no status, and time-relative marks are computed in the viewer from an explicit starting point
 
   @VIEW-05 @P1 @I6 @I10 @pending
   Scenario: the Needs you queue is deterministic and clears everywhere once answered
@@ -73,9 +73,9 @@ Feature: Room view (VIEW)
     And the hidden characters and the HTML comment render as visible tokens with a count
 
   @VIEW-08 @P1 @I6 @I10 @pending
-  Scenario: Catch up is one deterministic projection of the record and a boundary
+  Scenario: Catch up is one deterministic projection of the record and a starting point
     Given an isolated Cairn home
-    And rooms with capture gaps, an unsynced writer, a tombstone, a voided branch link and finished work since a boundary
+    And rooms with capture gaps, an unsynced writer, a tombstone, a voided branch link and finished work since a starting point
     And a head receipt of chain heads outside CAIRN_HOME
     When the person opens Catch up at that boundary
     Then it shows the boundary it used and where it came from, and links every line to its events
@@ -104,7 +104,7 @@ Feature: Room view (VIEW)
     Given an isolated Cairn home
     And a room whose writer's chain breaks at one event
     When the person opens the room and writes a head receipt to a path outside CAIRN_HOME
-    Then the room shows its seal from §9.7.5 at all times
+    Then the room shows its integrity status from §9.7.5 at all times
     And every later event of that writer is marked unverified wherever it is shown, including in recall results
     And the head receipt is shown as a short code carrying at least 80 bits of the heads' digest
     And the view states that verification proves the sealed record unchanged up to its newest seal, not the unsigned tail and not its content true

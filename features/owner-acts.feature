@@ -1,4 +1,4 @@
-Feature: Owner acts (OWN)
+Feature: Principal acts (OWN)
 
   Scenarios for SRS §5.13, one per requirement, tagged with its id,
   priority and traced invariants. A scenario still tagged @pending is

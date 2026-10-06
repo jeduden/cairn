@@ -79,12 +79,12 @@ Feature: Peer network (PEER)
       | was revoked, for events it sealed past its revocation | refused under the revocation rule |
 
   @PEER-08 @P2 @I4 @pending
-  Scenario: the git carrier carries encrypted segments, one entry per writer, on the owner's remote
+  Scenario: the git carrier carries encrypted segments, one entry per writer, on the node's principal's remote
     Given an isolated Cairn home
-    And room "room-1", owned by "alice", who opted in to the git carrier with her own remote
+    And a node of "alice" holding room "room-1", where "alice" opted in to the git carrier with a remote of their own
     And no peer is reachable
     When the publish component carries the sealed segments of room "room-1"
-    Then each writer's segments go to one entry in the namespaced location of "alice"'s remote that she enabled
+    Then each writer's segments go to one entry in the namespaced location of "alice"'s remote that "alice" enabled
     And each segment is encrypted to the enrolled keys of the room's members
     And a reader of the remote sees only entry names, sizes and times, and the carrier says so
 
