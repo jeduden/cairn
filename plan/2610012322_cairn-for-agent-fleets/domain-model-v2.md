@@ -500,7 +500,7 @@ for them.
 [51]: ../../docs/srs/05-functional-requirements.md#51-record-rec
 [511]: ../../docs/srs/05b-lane-requirements.md#511-room-lane
 [512]: ../../docs/srs/05b-room-view-requirements.md#512-room-view-view
-[513]: ../../docs/srs/05c-owner-and-peer-requirements.md#513-owner-acts-own
+[513]: ../../docs/srs/05c-owner-and-peer-requirements.md#513-principal-acts-own
 [53]: ../../docs/srs/05-functional-requirements.md#53-pins-pin
 [61]: ../../docs/srs/06-security.md#61-threat-model
 [62]: ../../docs/srs/06-security.md#62-security-requirements-sec
