@@ -22,13 +22,13 @@ Feature: Principal acts (OWN)
     Then the outcome is "<outcome>"
 
     Examples:
-      | surface                            | outcome                                                                                                                                                                                         |
-      | the room view under SEC-20         | recorded as an operator event on the device seat of the node that signs it, covered by its writer's seal                                                                                        |
-      | the CLI at a terminal under OWN-12 | recorded as an operator event on the device seat of the node that signs it, covered by its writer's seal                                                                                        |
-      | a paired phone within its scope    | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it concerns, whose writer the phone seals with that seat's key and the node only holds |
-      | the harness's own prompt           | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                 |
-      | the terminal the launcher hosts    | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                 |
-      | any other surface                  | refused and audited                                                                                                                                                                             |
+      | surface                            | outcome                                                                                                                                                                                        |
+      | the room view under SEC-20         | recorded as an operator event on the signing node's device seat in the room it acts on, covered by its writer's seal                                                                           |
+      | the CLI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, covered by its writer's seal                                                                           |
+      | a paired phone within its scope    | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, whose writer the phone seals with that seat's key and the node only holds |
+      | the harness's own prompt           | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                |
+      | the terminal the launcher hosts    | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                |
+      | any other surface                  | refused and audited                                                                                                                                                                            |
 
   @OWN-03 @P1 @I2 @pending
   Scenario: principal-typed text reaches an agent only through the harness's input interface
@@ -129,7 +129,7 @@ Feature: Principal acts (OWN)
     When a recall-tainted subagent of a parent run at that level tries a force push
     Then the repository file does not loosen the level
     And the sensitive class is raised one level for the tainted run
-    And the subagent has no looser level than the agent that started it
+    And the subagent, a delegate of the agent that started it, has no looser level than that agent
     And every rule change on record is a principal act
 
   @OWN-11 @P1 @I2 @I8 @pending
@@ -304,7 +304,7 @@ Feature: Principal acts (OWN)
     Given an isolated Cairn home
     And a room whose agent stated "C1 is done" and recorded a passing check linked to C1
     When "alice", a person with a seat in the room, records "met" on C1 and the agent then edits a file
-    Then the verdict is recorded as a "verdict" pin by "alice"'s own neutral principal act, bound to the intent version, the heads of every branch the room names and the results and evidence shown
+    Then the verdict is recorded as a "verdict" pin by "alice"'s own neutral principal act, on the signing device's seat in the room, bound to the intent version, the heads of every branch the room names and the results and evidence shown
     And Cairn pre-filled no verdict, and the agent's statement stays a claim
     And after the edit the verdict reads stale
     And a verdict on the room as a whole, rather than on a criterion, is refused

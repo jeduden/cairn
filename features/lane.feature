@@ -21,7 +21,8 @@ Feature: Room (LANE)
     And a branch belongs to the room whose branch link names it first in causal order, a branch link that would move it to another room is refused, and of two concurrent branch links naming one branch from two rooms the one with the lower commitment stands and the other is shown void
     And renaming a room leaves its id unchanged, and no table maps a run to a seat beyond its personal-room seat and the joins its seats' writers record
     And a run's seat in a room the run created routes its events exactly as a seat it joined
-    And a principal act of "alice" on "R", signed by a device that has no seat in "R", goes to that device's seat in her personal room, naming "R"
+    And a principal act of "alice" on "R", signed by a device of hers with no seat in "R", is recorded on that device's seat in "R", which joins without admission since her run's seat is a member there
+    And a principal act of "alice" rejecting a foreign room, in which she has no seat, goes to the signing device's seat in her personal room, naming that room
 
   @LANE-02 @P0 @I1 @I6 @I8 @pending
   Scenario Outline: a repository's identity is independent of the local path
@@ -150,7 +151,7 @@ Feature: Room (LANE)
     When "bob" names "carol" as successor, the naming stands past 7 days, and every seat of "bob" leaves the room
     Then ownership stays with "bob" until "carol" accepts it by succession, a widening principal act
     And in a room every seat of whose owner has left with no successor named, ownership stays with the owner, and every change to its pins, an author's edit and a moderator's unpin included, is refused until the owner hands the room over, names a successor who accepts, or rejoins
-    And that owner may still offer a handover or name a successor, each recorded on its device seat in its personal room, naming the room
+    And that owner, with no seat in the room, may still offer a handover or name a successor, each recorded on its device seat in its personal room, naming the room
 
   @LANE-12 @P2 @I6 @pending
   Scenario: only a directed post enters the Needs you queue of its agent's principal
@@ -176,7 +177,7 @@ Feature: Room (LANE)
   Scenario: every turn of an agent records its trigger and the model tokens it used
     Given an isolated Cairn home
     And an agent's run in a room
-    And a user turn from its principal, an endorsed directed post and a post nobody endorsed
+    And a user turn its principal's message started, an endorsed directed post and a post nobody endorsed
     When the agent takes its turns
     Then each turn records its trigger as harness_meta: the principal's user turn, or the principal act of the endorsement with the endorsed post's address
     And each turn records the model tokens it used, so spend is attributable per agent and per trigger
@@ -190,7 +191,7 @@ Feature: Room (LANE)
     When the person imports the bundle and opens the foreign room
     Then it opens in the Room page, marked foreign
     And the Room page states that every event, evidence class and proof class in it is asserted by the bundle's principal key
-    And the commits show as a match for the bundle's principal key, verified offline within the core's boundary, with no program started and no connection opened
+    And the commits show as a match for the bundle's principal key, verified offline inside the core, with no socket opened and no program started
     And the seat key that does not chain is shown unbound, by its fingerprint
     And PRV-07 flags are computed locally, the bundle's flags are ignored, and invisible characters are shown in place
 
@@ -213,7 +214,7 @@ Feature: Room (LANE)
       | viewer                                                       | read, a role request and a summary request                                                                                                                                                 |
       | contributor                                                  | read and a summary request; post, link (a range, branch or criterion link) and present; pin, edit and unpin its own pins; work on any branch the room names, with or without an assignment |
       | moderator                                                    | a contributor's, plus unpin any pin but the intent, kick, bar, unbar, mute, unmute and pick, and set title, labels and assignments                                                         |
-      | moderator appointed to the facilitator's device seat         | a moderator's within SEC-32's limits, plus posting findings against the pins and writing room summaries                                                                                    |
+      | the facilitator's device seat, appointed by the owner        | a moderator's within SEC-32's limits, plus posting findings against the pins and writing room summaries                                                                                    |
       | moderator appointed to a run seat                            | a moderator's within SEC-32's limits                                                                                                                                                       |
       | muted by a moderator                                         | read                                                                                                                                                                                       |
       | contributor in a whole-room mute that leaves posting to it   | read and post                                                                                                                                                                              |
@@ -270,7 +271,7 @@ Feature: Room (LANE)
     And a room whose intent names criteria C1 and C2 and the path "internal/export/"
     When an agent adds a criterion link from its check's result to C1 of the intent's current version through "room_link" and edits "go.mod"
     Then the result names the intent version in force when its turn began
-    And the criterion link to C1 carries no evidence class: the result keeps its own, and the link shows it was made by the agent's run seat
+    And the criterion link to C1 carries no evidence class: the result keeps its own, and the criterion link shows it was made by the agent's run seat
     And a "room_link" naming another room's criterion is refused, and a result for another room traces to it only through a delegated task
     And no result is linked to C2 from event text
     And the edit to "go.mod" is marked "outside intent"
@@ -386,9 +387,9 @@ Feature: Room (LANE)
     Given an isolated Cairn home
     And rooms "A", "B" and "C", an idle agent of "alice" in room "B", and "alice"'s trust grant for "carol"'s key scoped to room "B"
     When "carol"'s device seat in room "A" posts to room "B" a message telling agents to start on a task and to post to room "C"
-    Then the post is recorded as an event in the writer of "carol"'s seat in room "A", and no writer of room "B" holds a copy
+    Then the post is recorded as an event in the writer of "carol"'s seat in room "A", and no writer of room "B" contains a copy
     And room "B" shows it by address, untrusted, with its author's seat id and room "A"'s id, and the trust grant scoped to room "B" does not cover it
-    And the agent pulls it by address only through a recall tool call, inside the untrusted envelope
+    And the agent, with no seat in room "A", pulls that one post by address only through a recall tool call, inside the untrusted envelope, since recall extends to the cross-room posts room "B" shows
     And no turn is started or resumed, no delegated task is sent, and nothing reaches room "C"
     When a seat of room "B" passes it on to room "C"
     Then room "C" shows a new post, an event in the forwarder's writer under its seat id, that names the original's address
@@ -439,7 +440,7 @@ Feature: Room (LANE)
   @LANE-33 @P1 @I2 @I3 @I10 @pending
   Scenario: a facilitator's room summary reaches an agent only through room_summary_get, as data, and never touches a pin
     Given an isolated Cairn home
-    And a room whose facilitator is a service account whose device seat, on the service account's own node, the owner appointed moderator
+    And a room whose one facilitator is the service account whose device seat, on its own node, the owner appointed as the room's facilitator
     And a constraint pin by "alice" and an agent of "alice", who set "room_summary.max_model_tokens" to 500
     When the agent calls "room_summary_request" asking for 2000 model tokens
     Then the agent's run seat records a summary request to the facilitator, a room act, for 500 model tokens at most

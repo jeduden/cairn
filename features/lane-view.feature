@@ -79,7 +79,7 @@ Feature: Room view (VIEW)
     And a head receipt of chain heads outside CAIRN_HOME
     When the person opens Catch up at that starting point
     Then it shows the starting point it used and where it came from, and links every line to its events
-    And it lists capture gaps, uningested transcripts, risen failure counters and unsynced writers apart from quiet rooms
+    And it lists capture gaps, uningested transcripts, risen failure counters and unsynced writers apart from rooms with no activity
     And it checks each writer's chain head against the named head receipt and shows the result per writer
     And its lines run integrity and capture gaps, Needs you, failures, then finished runs, with the newest seq it covers per writer and no model-written line
 
@@ -116,7 +116,7 @@ Feature: Room view (VIEW)
   Scenario: gaps, quarantines and tombstones stay in place and forensic views are recorded
     Given an isolated Cairn home
     And a room with a missing segment, a quarantined range and a tombstone
-    When the person opens the Timeline tab of its Room page, then the quarantine list from it, and asks for a forensic view of the quarantined content
+    When the person opens the Timeline tab of its Room page, then the quarantine list from it, and opens from that list the forensic view of the quarantined content
     Then each gap is shown in place, never closed up
     And the quarantined content is shown only after that explicit forensic view
     And the forensic view is recorded as a neutral principal act, an "operator" event
@@ -137,7 +137,7 @@ Feature: Room view (VIEW)
     Given an isolated Cairn home
     And a room naming two branches for its intent, where the run on one of them read a flagged untrusted item
     When the person opens the comparison of the two branches from the room's Room page
-    Then exposure, results and evidence are shown side by side for each branch
+    Then each branch's exposure, results and evidence are shown side by side
     And the paths are aligned the same way on every comparison
     And no branch is marked the winner, and choosing a branch to compare is a neutral principal act of the room's owner
 
@@ -185,7 +185,7 @@ Feature: Room view (VIEW)
     And no run recorded, so only the personal room, and harness transcripts due for deletion within 7 days
     When the person opens the room view
     Then it opens on Setup with the ingest command and the number of transcripts the harness will delete within 7 days
-    And it shows the capture status, a sample room to browse and a statement that nothing leaves the machine
+    And it shows the capture status and a statement that nothing leaves the machine, and Cairn creates no room for the person to browse
     And every configuration change it offers is shown as a diff with the CLI command that applies it
 
   @VIEW-19 @P2 @I6 @I10 @pending
@@ -203,7 +203,7 @@ Feature: Room view (VIEW)
     Then the delegation to the other agent shows as a delegation link from the delegating run to the delegate's run, naming the delegation grant
     And the subagent's delegation shows as the parent link from its run to the delegating run, naming no grant
     And the delegation link and the parent link each show the delegated task's address and its state
-    And the delegate's spend under the grant shows against the grant's budget
+    And the other agent's spend as a delegate under the delegation grant shows against that grant's budget
 
   @VIEW-21 @P1 @I2 @I10 @pending
   Scenario: the room view puts the outcome beside the intent so a person can record a verdict
