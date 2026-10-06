@@ -16,12 +16,12 @@ Feature: Room view (VIEW)
     And every other run appears as a tile that opens full size
 
   @VIEW-02 @P1 @I9 @pending
-  Scenario: the room view shows an active run's lines within 2 s without slowing hooks
+  Scenario: the room view shows an active run's lines within 2 s without slowing hook handlers
     Given an isolated Cairn home
     And ten local runs in one room whose harness writes their transcripts
     When the person watches one active run in the room view
     Then each transcript line appears within 2 s of the harness writing it
-    And no hook exceeds its NFR-01 budget while the view reads
+    And no hook handler exceeds its NFR-01 budget while the view reads
 
   @VIEW-03 @P1 @I9 @I10 @pending
   Scenario: every room-view surface is an optional, read-only client of the core
@@ -29,9 +29,9 @@ Feature: Room view (VIEW)
     And a room with recorded runs
     When the room-view component serves the room view and is then stopped
     Then the view reads the record only through the core's read path and never writes to it
-    And the view holds no state the record cannot rebuild beyond conveniences for the person viewing
+    And the view keeps no state the record cannot rebuild beyond conveniences for the person viewing
     And every capability the view offers also exists in the CLI or MCP
-    And hooks, ingestion and recall keep working with the view stopped
+    And hook handlers, ingestion and recall keep working with the view stopped
 
   @VIEW-04 @P1 @I6 @I10 @pending
   Scenario: statuses come from structural events only and unrecorded runs surface
@@ -66,7 +66,7 @@ Feature: Room view (VIEW)
   Scenario: items from outside the trusted sources carry a trust mark and the petname the person viewing chose
     Given an isolated Cairn home
     And synced posts by a key the person gave a petname, a key with none, and a new key using a known name
-    And one post holding zero-width, bidirectional and tag characters and an HTML comment
+    And one post with zero-width, bidirectional and tag characters and an HTML comment
     When the person opens the room view
     Then each post carries the trust mark of §9.7.6 and the petname the person chose for its author's key, never the name the peer sent
     And the key with no petname is shown by its fingerprint and the new key is marked "new key"
@@ -153,9 +153,9 @@ Feature: Room view (VIEW)
     Given an isolated Cairn home
     And a room with a title, a key the person gave a petname, and 25 posts waiting for the caller's room
     When the agent calls "room_get" naming the room and no id
-    Then the result is enveloped as structural and holds only the fields of the closed set
+    Then the result is enveloped as structural and carries only the fields of the closed set
     And the waiting posts appear as addresses in range form, capped at 20 with a count of 5 left out
-    And no field holds a title, label, branch name or petname
+    And no field carries a title, label, branch name or petname
     And the status line and banners the harness shows the person never enter the model's context
 
   @VIEW-16 @P1 @I4 @I6 @pending
@@ -168,12 +168,13 @@ Feature: Room view (VIEW)
     And no price is fetched
 
   @VIEW-17 @P1 @I2 @I4 @I6 @pending
-  Scenario: notifications stay local, carry no room text and are counted when dropped
+  Scenario: notifications stay on the device, carry no room text and are counted when dropped
     Given an isolated Cairn home
-    And an open loopback tab of the room view and a terminal
+    And an open loopback tab of the room view and a terminal, with the notification bridge (SEC-28) off
     When a Needs you item opens while one notification is suppressed
-    Then the desktop notification is raised on the same device by the open loopback room view, with no vendor push service
+    Then the desktop notification is raised on the same device by the open loopback room view, and no vendor push service is used
     And it carries only the queue class, the room's petname, else its id, and a count
+    And it never reaches a model and accepts no answer
     And the suppressed notification is counted
     And the terminal signal goes only to the terminal, never into hook output the harness adds to the model's context
 
@@ -182,7 +183,7 @@ Feature: Room view (VIEW)
     Given an isolated Cairn home
     And no rooms and harness transcripts due for deletion within 7 days
     When the person opens the room view
-    Then it opens on Setup with the import command and the number of transcripts the harness will delete within 7 days
+    Then it opens on Setup with the ingest command and the number of transcripts the harness will delete within 7 days
     And it shows the recording status, a sample room to browse and a statement that nothing leaves the machine
     And every configuration change it offers is shown as a diff with the CLI command that applies it
 
@@ -199,8 +200,8 @@ Feature: Room view (VIEW)
     And a room where an agent delegated one task to a subagent and one to another run under a delegation grant
     When the person opens the room view
     Then each delegation shows as a delegation link from the delegating agent to its delegate
-    And each delegation link shows its delegation grant, the delegated task's address and its state
-    And the delegate's spend shows against the delegation grant's budget
+    And each delegation link shows the delegated task's address and its state
+    And only the delegation link to the other run names a delegation grant, and that delegate's spend shows against its budget
 
   @VIEW-21 @P1 @I2 @I10 @pending
   Scenario: the room view puts the outcome beside the intent so a person can record a verdict
@@ -216,11 +217,11 @@ Feature: Room view (VIEW)
   @VIEW-22 @P1 @I2 @I10 @pending
   Scenario: the outcome window follows the room's pick, else the latest presentation
     Given an isolated Cairn home
-    And a room with no facilitator, where seats "p-1" and "p-2" each hold the present capability
+    And a room with no facilitator, where seats "p-1" and "p-2" each have the present capability
     When "p-1" presents a dev server and then "p-2" presents a diff
     Then the outcome window shows "p-2"'s diff, as every node holding the record derives it
     When a moderator records a signed pick of "p-1"'s presentation
     Then the window shows "p-1"'s dev server
-    And a pick by a seat holding only present is refused
+    And a pick by a seat with only present is refused
     And the person viewing can follow "p-2" in their own view, with no capability, without changing the window
     And Cairn chooses no branch and records no verdict of its own

@@ -9,7 +9,7 @@ Feature: Peer network (PEER)
   Scenario: peering runs only in its own peer component, started by the person
     Given an isolated Cairn home
     And an ephemeral node in a sandbox whose environment carries the person's write-once peering setting
-    When the node starts and the core runs its hooks and "cairn status --json"
+    When the node starts and the core runs its hook handlers and "cairn status --json"
     Then no core process starts the peer component, in-process or as a child
     And the sandbox's own entrypoint starts the peer component on the strength of the person's setting
     And on a home with no such action of the person the peer component stays off
@@ -61,8 +61,9 @@ Feature: Peer network (PEER)
     When a node in a sandbox starts with the token before it reaches any peer
     Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer address and git-carrier remote it may deliver to
     And a seat key it certifies for a room outside the token's rooms, or after the token's expiry, chains to no principal key and is refused
-    And its restore block holds the room's active pins from the token as signed events of provenance "operator" and says later pins may be missing
-    And "cairn status" names the token's source and no child process inherits the token in its environment
+    And its restore block carries the room's qualifying pins (PIN-10) from the token as signed events of provenance "operator" and says later pins may be missing
+    And the node, holding only the token key, signs no principal acts, and a pin its runs write restores only once a principal stamps it from one of its devices
+    And "cairn status" names where the token is read from and no child process inherits the token in its environment
     And the token's issue, use, rotation and revocation are audited, and the issuing node shows an unused token as "enrolled, never synced"
     And discovery alone enrolls no peer, while enrolling one verifies the key on both nodes by matching words or a scanned code
 
@@ -128,7 +129,7 @@ Feature: Peer network (PEER)
     Then the blind peer stores only ranges encrypted to the seat keys of the room's members
     And it verifies the seat key's signature over each range before storing it
     And it holds no event content, header field, commitment key or room metadata
-    And it derives no room state and holds no seat in the room
+    And it derives no room state and has no seat in the room
     And every surface marks it as a blind peer
 
   @PEER-13 @P2 @I6 @I8 @pending

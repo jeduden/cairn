@@ -12,6 +12,7 @@ Feature: Principal acts (OWN)
     When "bob" writes a principal act addressed to that run
     Then the run's one principal is "alice"
     And the act from "bob" does not instruct the run
+    And "bob"'s work reaches the run only as untrusted recall, a post "alice" endorses, a delegated task under "alice"'s acceptance grant (OWN-26), or a device-seat post or pin of "bob" a trust grant of "alice" covers (OWN-29)
 
   @OWN-02 @P1 @I2 @I6 @pending
   Scenario Outline: a principal act is recorded only from an authenticated principal surface
@@ -36,7 +37,7 @@ Feature: Principal acts (OWN)
     And an untrusted event in the record
     When "alice" sends a steer naming that event's id
     Then the steer reaches the agent through the harness's own input interface
-    And no Cairn hook output carries the steer
+    And no output of a hook handler carries the steer
     And the text sent is principal-typed text or a fixed template that references ids
     And no field of the untrusted event is embedded in it
 
@@ -71,7 +72,7 @@ Feature: Principal acts (OWN)
       | situation                                                                | outcome                                                                |
       | no away policy is on and the hold window passes                          | it is not denied on the timeout                                        |
       | no principal surface is connected and the harness prompt is unanswerable | it is only mirrored, not held                                          |
-      | the adapter cannot keep the harness's own prompt answerable              | it is only mirrored and the answer is left to the harness              |
+      | the harness adapter cannot keep the harness's own prompt answerable      | it is only mirrored and the answer is left to the harness              |
       | Cairn fails while holding it                                             | the harness falls back to its own prompt and the action is not allowed |
 
   @OWN-07 @P1 @I2 @I9 @pending
@@ -94,7 +95,7 @@ Feature: Principal acts (OWN)
   @OWN-08 @P2 @I2 @I6 @pending
   Scenario: an endorsement sends exactly the confirmed text inside a fixed template
     Given an isolated Cairn home
-    And a post by "bob"'s device seat in the room, longer than its preview, holding hidden characters
+    And a post by "bob"'s device seat in the room, longer than its preview, with hidden characters
     When "alice" expands it, edits it and endorses it to one of her own agents
     Then Endorse was enabled only after the post was expanded
     And the agent receives exactly the confirmed text with hidden characters stripped and their count recorded
@@ -109,12 +110,12 @@ Feature: Principal acts (OWN)
   Scenario Outline: nothing but a current principal act starts, resumes or sends text to an agent
     Given an isolated Cairn home
     And an agent's idle run
-    When <source> arrives for the run
+    When <arrival> arrives for the run
     Then no turn is started or resumed
     And no text is sent to the agent
 
     Examples:
-      | source                 |
+      | arrival                |
       | a post                 |
       | an opt-in notice       |
       | an agent's message     |
@@ -128,7 +129,7 @@ Feature: Principal acts (OWN)
     When a recall-tainted subagent of a parent run at that level tries a force push
     Then the repository file does not loosen the level
     And the sensitive class is raised one level for the tainted run
-    And the subagent holds no looser level than the agent it works for
+    And the subagent has no looser level than the agent it works for
     And every rule change on record is a principal act
 
   @OWN-11 @P1 @I2 @I8 @pending
@@ -177,7 +178,7 @@ Feature: Principal acts (OWN)
     And no surface shows the run as stopped before the harness's acknowledgement is recorded
 
   @OWN-15 @P1 @I6 @I7 @pending
-  Scenario: a control the adapter cannot honour is shown unavailable and never simulated
+  Scenario: a control the harness adapter cannot honour is shown unavailable and never simulated
     Given an isolated Cairn home
     And Claude Code installed through plain hooks
     When the person runs "cairn install"
@@ -208,7 +209,7 @@ Feature: Principal acts (OWN)
   @OWN-18 @P1 @I2 @pending
   Scenario: a command from an untrusted event runs only after the person confirms its exact text
     Given an isolated Cairn home
-    And an untrusted event holding a command with hidden characters
+    And an untrusted event carrying a command with hidden characters
     When the person confirms the command for a witness check
     Then the person was shown its exact text with hidden characters visible before confirming
     And the act is recorded as their principal act
@@ -255,16 +256,16 @@ Feature: Principal acts (OWN)
   Scenario Outline: delegation beyond a subagent rests on a delegation grant in force
     Given an isolated Cairn home
     And an agent of "alice" in an active run
-    And <grant>
+    And <precondition>
     When the agent delegates a task to <target>
     Then the delegation is <outcome>
 
     Examples:
-      | grant                                                           | target                                | outcome                                         |
-      | no delegation grant                                             | its own subagent                      | recorded under OWN-24, with no delegation grant |
-      | no delegation grant                                             | a new run in another worktree         | refused, audited and shown                      |
-      | a delegation grant naming that worktree, a budget and an expiry | a new run in that worktree            | started through the launcher and recorded       |
-      | an expired delegation grant                                     | an existing run of the same principal | refused, audited and shown                      |
+      | precondition                                                    | target                                | outcome                                                            |
+      | no delegation grant                                             | its own subagent                      | recorded under OWN-24, with no delegation grant                    |
+      | no delegation grant                                             | a new run in another worktree         | refused, audited and shown                                         |
+      | a delegation grant naming that worktree, a budget and an expiry | a new run in that worktree            | started by the launcher, through its harness adapter, and recorded |
+      | an expired delegation grant                                     | an existing run of the same principal | refused, audited and shown                                         |
 
   @OWN-24 @P1 @I2 @pending
   Scenario: a delegate inherits the delegating agent's ceiling and taint
@@ -272,7 +273,7 @@ Feature: Principal acts (OWN)
     And an agent whose run is recall-tainted, delegating under a delegation grant whose maximum rule level is "ask first"
     When the delegate's run starts
     Then the delegation is recorded on both sides with the delegating agent, the delegation grant and the delegated task's address
-    And the delegate holds no rule level looser than the delegation grant's or the delegating agent's
+    And the delegate has no rule level looser than the delegation grant's or the delegating agent's
     And the delegate's run is recall-tainted
     And the delegated task reached the delegate through the harness's input inside the fixed template, marked as written by the delegating agent
     And a further delegation beyond the delegation grant's depth is refused

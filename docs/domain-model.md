@@ -556,8 +556,8 @@ to exactly one kind (LANE-31).
 - **Recall scope**: `run`, `room` or `rooms`, or a foreign room named in the
   call (RCL-05).
 - **Endorsement**: A principal act sending a post's displayed text to one of
-  the principal's own agents, inside a fixed template naming its source
-  (OWN-08).
+  the principal's own agents, inside a fixed template naming the post's
+  author and address (OWN-08).
 - **Trust grant**: A principal's widening act trusting another principal's key
   for its own agents, in one room or everywhere. It covers that principal's
   device-seat posts and pins only, never run seats, nor a service account that
