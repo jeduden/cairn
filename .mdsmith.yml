@@ -183,7 +183,7 @@ kinds:
     path-pattern: "docs/domain-model.md"
     rules:
       max-file-length:
-        max: 600
+        max: 800
   domain-model-agent:
     # The domain-model agent holds instructions only; the model itself
     # is docs/domain-model.md. Its name is pinned to its file, and its
