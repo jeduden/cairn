@@ -95,3 +95,41 @@ All three agree that each of these needs an ADR and a security review.
   S7, S14, S15, and the witness-run wording if v2 keeps LANE-05's rule.
 - 8 are new and need you: M12, M13, M14, M16, S4, S8, S9, S13, and the
   undefined terms v2 does not cover.
+
+## 6. Stakeholder decisions, 6 October 2026
+
+The eight new questions, decided one by one:
+
+1. **Span (M12):** a span never crosses writers. LMK-01 gains a
+   boundary: the run's events move to another seat's writer. Every
+   landmark keeps one address range, and a room's landmarks count only
+   that room's events.
+2. **Bound human (M13):** merged into Principal. Each principal is
+   known by one root key (a person's owner key, a service account's own
+   key); every device and seat key chains to it, and Cairn counts
+   principals by root key. LANE-05 reads "a node whose principal
+   authored no change".
+3. **Repository (M14):** a repository may carry Cairn data: commit
+   trailers (LANE-28), bundles as refs, and encrypted segments in a
+   namespaced location the owner enabled (PEER-08). The model says no
+   more; where state lives stays with I1, I8 and I10. The SRS is
+   unchanged.
+4. **Reject a foreign room (M16):** stays cut. The catch-all rule
+   narrows to acts that stop this node recording its own runs' events,
+   such as turning capture off, retiring a writer or pausing ingestion,
+   which stay widening.
+5. **Session (S4):** "session" may appear only as "harness session" or
+   inside a harness name (hooks, fields, record types such as a session
+   title, "allow for session") when describing the harness, never as a
+   Cairn unit.
+6. **Address parameters (S8):** `get(address)` and `expand(range)`,
+   where range takes any shown range form or two addresses; the
+   envelope field becomes `address`, and a tombstone carries `range`.
+7. **Ending a pin (S9):** the act is "unpin": the pin stops restoring
+   and its versions stay in the record. "End" and "remove" are
+   reworded; "removes from a restore block" stays as the effect several
+   acts share.
+8. **Notice (S13):** "notice" names only the pushed, opt-in room
+   notice. Recall returns a tombstone or a quarantine marker, kernel
+   output carries a truncation marker, the envelope's field becomes
+   `warning`, and §9.1 speaks of the harness's notification text.
