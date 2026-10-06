@@ -24,8 +24,9 @@ security review and a new major version, not a bug fix.
   node's own `operator`, `harness_meta` and structural events, its `user`
   turns while the deployment mode is `interactive`, and, once PRV-10 ships,
   principal acts signed by a device key the agent's principal certified,
-  within its scope. Cairn writes to an agent only through a closed set of
-  paths. Without a principal act: restore blocks of pins (INJ-01, INJ-02),
+  within its scope, and a pin version a principal stamped, for that
+  principal's own agents. Cairn writes to an agent only through a closed set
+  of paths. Without a principal act: restore blocks of pins (INJ-01, INJ-02),
   opt-in notices (INJ-10), and the fixed templates of OWN-04 and OWN-07, each
   built only from trusted structural fields and ids. On a principal act
   recorded at that time: through the harness's own input, only principal-typed
@@ -34,16 +35,16 @@ security review and a new major version, not a bug fix.
   principal recorded (OWN-23): a delegated task inside the fixed template of
   OWN-24. Once its requirements ship, a principal may also trust another
   principal by key for its own agents, in one room or everywhere; the posts
-  and pins that principal wrote from its device and service-account seats then
-  reach those agents as the trusting principal's own text would. Cairn applies
-  such grants and never grants trust itself. No other write to an agent
-  exists.
-- **I3 — Constraints are never summarized.** Pinned constraints are stored
-  verbatim and restored verbatim after every compaction.
+  and pins that principal wrote from its device seats then reach those agents
+  as the trusting principal's own text would. Cairn applies such grants and
+  never grants trust itself. No other write to an agent exists.
+- **I3 — Constraints are never summarized.** Every pin that restores is stored
+  verbatim and restored verbatim after every compaction, or named by id and
+  count when the budget omits it.
 - **I4 — Each component stays inside one declared network boundary, and only
-  the core reaches the model.** B0, the core (hooks, the MCP server, the
-  kernel worker, the CLI, the TUI and everything that builds what reaches the
-  model), opens no socket and makes no outbound connection. B1, machine: a
+  the core reaches the model.** B0, the core (hook handlers, the MCP server,
+  the kernel worker, the CLI, the TUI and everything that builds what reaches
+  the model), opens no socket and makes no outbound connection. B1, machine: a
   component may listen on loopback only and connect nowhere else. B2, peer:
   encrypted, mutually authenticated connections to nodes the node's principal
   enrolled by key, off until that principal turns it on. B3, public: read-only
@@ -65,9 +66,10 @@ security review and a new major version, not a bug fix.
   shows the change first, and never overrides managed policy.
 - **I8 — Isolation follows the principal.** All local state is bound to one
   principal's home with strict permissions, and Cairn refuses to operate on a
-  home it does not own. Content another principal or node wrote is held as
-  theirs: attributed to its seat key, untrusted, and never a way to widen what
-  this principal's agents trust or recall.
+  home that does not belong to the OS user running it. Content another
+  principal or node wrote is held as theirs: attributed to its seat key, and
+  untrusted unless this principal's own stamp or trust grant covers it. It
+  never widens what this principal's agents trust or recall on its own.
 - **I9 — Cairn never degrades the agent.** A Cairn failure never blocks or
   slows the agent beyond defined budgets. Cairn fails open, except where
   continuing would violate I2, I4, or I8.
