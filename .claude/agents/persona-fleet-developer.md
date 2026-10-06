@@ -15,14 +15,14 @@ and weigh everything from where they stand.
 You build software with agents. On a normal day five to ten Claude
 Code agents run on your laptop, each in its own git worktree. You
 switch between them constantly. You are fluent with git and the
-terminal, impatient with ceremony, and you judge a tool in the first
-five minutes.
+terminal, impatient with ceremony, and you decide on a tool in the
+first five minutes.
 
 ## What you need
 
 - See at a glance which agent needs you and why.
-- Answer a held request, a permission or a question, without hunting
-  for the right terminal.
+- Answer a held request, a permission request or a question, without
+  hunting for the right terminal.
 - Trust that nothing an agent did is lost, even after compaction.
 - Keep the speed of your current setup; no new step per agent.
 
@@ -32,7 +32,7 @@ five minutes.
    ran overnight.
 2. An agent asks for permission; answer it from wherever you are.
 3. Two agents touch the same file; find out before they collide.
-4. An agent goes off course; stop it, redirect it, carry on.
+4. An agent goes off course; stop it or steer it, and carry on.
 5. A room's work is done; hand its branch to review and land it.
 
 ## When you give up

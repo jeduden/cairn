@@ -31,7 +31,8 @@ between agents looks to you like a prompt-injection network.
 2. Verify a room's integrity after an incident.
 3. Check what crosses each network boundary, and that the defaults
    are closed.
-4. Handle an erasure request end to end.
+4. Carry a purge end to end: its purge receipt, and the erasure
+   request to every peer.
 
 ## When you give up
 

@@ -31,7 +31,7 @@ Feature: Provenance and trust (PRV)
       | unparsed           |
 
   @PRV-02 @P0 @I2 @I8 @pending
-  Scenario Outline: the default trust policy trusts only this node's "operator" events, harness metadata and interactive users, and principal acts under a certified device key
+  Scenario Outline: the default trust policy trusts only this node's "operator", "harness_meta" and structural events, "user" turns in the deployment mode "interactive", and principal acts under a certified device key
     Given an isolated Cairn home
     And deployment mode "<mode>"
     When an event with provenance "<provenance>" written by <writer> is ingested
@@ -79,14 +79,14 @@ Feature: Provenance and trust (PRV)
       | the restore block Cairn returned, written back into the transcript | harness_text |
 
   @PRV-04 @P0 @I2 @pending
-  Scenario: automation is the default mode and interactive is an opt-in of the person's own configuration
+  Scenario: "automation" is the default deployment mode and "interactive" is an opt-in of the person's own configuration
     Given an isolated Cairn home
-    And the person's configuration sets no mode
-    And the repository's ".cairn.toml" sets mode to "interactive"
+    And the person's configuration sets no deployment mode
+    And the repository's ".cairn.toml" sets "deployment.mode" to "interactive"
     When a user prompt is ingested
     Then the deployment mode is "automation"
     And the event is stored with provenance "user" and trust "untrusted"
-    And an audit entry records "rejected repository setting mode"
+    And an audit entry records "rejected repository setting deployment.mode"
 
   @PRV-05 @P0 @I2 @pending
   Scenario Outline: configuration cannot trust a provenance class beyond the default policy
@@ -183,8 +183,8 @@ Feature: Provenance and trust (PRV)
   @PRV-10 @P1 @I2 @I8 @pending
   Scenario Outline: an "operator" event from another node is trusted only through a key chain rooted in the principal key of this node's principal
     Given an isolated Cairn home
-    And this principal's offline principal key certified a laptop device key with scope "allow, deny, pin" and maximum rule level 2, delegated to certify seat keys for named rooms, and a phone key with the scope "allow, deny"
-    And the laptop key certified a sandbox token key limited to the token's rooms and expiry, which certified a sandbox seat key
+    And this principal's offline principal key certified a laptop device key with scope "allow, deny, pin" and maximum rule level 2, and a phone device key with the scope "allow, deny"
+    And the laptop key certified a token key limited to a token's rooms and expiry, which certified a sandbox seat key for an ephemeral sandbox
     When an "operator" event <event> arrives from another node
     Then the event is <outcome>
     And every revocation is a signed event that replicates like any other

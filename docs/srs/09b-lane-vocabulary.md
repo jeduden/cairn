@@ -29,22 +29,24 @@ proposal, §8.
 | `behind`       | on a writer whose log has not reached this node lately: "as of 14:02 on desktop" |
 | `unrecorded`   | the run is live but Cairn sees no hook events since a time                       |
 | `imported`     | ingested from a transcript Cairn did not watch (REC-22)                          |
-| `stuck?`       | viewer-side only: Working with no event past a threshold                         |
+| `stuck?`       | computed where shown, never recorded: Working with no event past a threshold     |
 
 ## 9.7.2 Room status
 
-Rooms do not land; branches do, by git or the forge (LANE-08). First
-match wins, in this order: **Abandoned** (the owner marked the room
-abandoned) and **Landed** (every branch the room names has landed), **Needs
-you**, **Failing** (a check failed on the head of a branch the room
-names, evidence `own check` or stronger), **Blocked**, **Running**,
-**Ready for review** (only after the principal act of OWN-21 marking
-the room ready), **Quiet** (never while a run is `unrecorded` or
-`behind`, VIEW-04). The pull-request states a forge reports (Draft, In
-review, Changes requested, Approved, Queued, Landing) live on the
-pull-request pill (P2, LANE-08), marked `asserted`, not in the room
-status; Cairn keeps no approval state of its own. Check states:
-Pending, Running, Passed, Failed, Stale, Unbound, Absent.
+Room status is a derived view, never state: no act sets it directly,
+though OWN-21's ready and abandoned marks feed it (LANE-09). Rooms do
+not land; branches do, by git or the forge (LANE-08). First match wins,
+in this order: **Abandoned** (the owner marked the room abandoned) and
+**Landed** (every branch the room names has landed), **Needs you**,
+**Failing** (a check failed on the head of a branch the room names,
+evidence `own check` or stronger), **Blocked**, **Running**, **Ready for
+review** (only after the principal act of OWN-21 marking the room
+ready), **Quiet** (never while a run is `unrecorded` or `behind`,
+VIEW-04). The pull-request states a forge reports (Draft, In review,
+Changes requested, Approved, Queued, Landing) live on the pull-request
+pill (P2, LANE-08), marked `asserted`, not in the room status; Cairn
+keeps no approval state of its own. Check states: Pending, Running,
+Passed, Failed, Stale, Unbound, Absent.
 
 ## 9.7.3 Evidence and proof classes
 
@@ -84,10 +86,12 @@ asks of the principal join the same queue.
 
 ## 9.7.5 Integrity status
 
-`verified` ◆ (chains and seals check), `unsigned` (hash-chained,
-before REC-18 or past the newest seal), `incomplete` ◇ (a writer's
-events are missing here), `unverified` (an event after a break),
-`broken` ✕ (a check failed), `refused` (a segment was refused),
+The integrity status of a room or a writer, shown on every surface and
+in the envelope's `integrity` field (§9.3), is one of seven values
+(VIEW-10): `verified` ◆ (chains and seals check), `unsigned`
+(hash-chained, before REC-18 or past the newest seal), `incomplete` ◇ (a
+writer's events are missing here), `unverified` (an event after a
+break), `broken` ✕ (a check failed), `refused` (a segment was refused),
 `equivocated` (PEER-10). The UI never says "secure".
 
 ## 9.7.6 Trust marks
@@ -107,47 +111,46 @@ agents are one line on Health, not a mark on every tile.
 One map, no key bound to two actions. Typing in a composer or text
 field sends text, not shortcuts.
 
-| Key                   | Action                                | Key             | Action                                          |
-| --------------------- | ------------------------------------- | --------------- | ----------------------------------------------- |
-| `?`                   | all shortcuts                         | `a` / `A`       | allow once / allow for session                  |
-| `/`                   | search and filter                     | `d`             | deny                                            |
-| `⌘K` / `Ctrl+K`       | command palette                       | `r`             | reply                                           |
-| `⌘G` / `Ctrl+G`       | go to address                         | `e` / `E`       | endorse / edit and send                         |
-| `g i`                 | Needs you                             | `z`             | snooze                                          |
-| `g f`                 | Fleet                                 | `x`             | dismiss, Q3, Q4 and overlap items               |
-| `g c`                 | Catch up                              | `y`             | copy address                                    |
-| `g q` / `g v`         | quarantine list / verify panel        | `o`             | open the room at this item                      |
-| `g h` / `g p`         | Health / Peers                        | `n` / `N`       | next / previous item that needs you             |
-| `1` / `2` / `3`       | room tabs: Timeline / Review / Replay | `m`             | point an agent at this address                  |
-| `j` / `k`             | next / previous row, item or file     | `q`             | quarantine selection                            |
-| `Enter`               | open                                  | `⌘S` / `Ctrl+S` | save search                                     |
-| `Space`               | preview or peek                       | `+` / `-`       | more / less context around a hit                |
-| `Esc`                 | close sheet                           | `w` / `b`       | why panel / blame gutter                        |
-| `I`                   | interrupt (run pane)                  | `W`             | witness check                                   |
-| `p`                   | pause / resume                        | `c` / `C`       | post on the selection / verdict sheet           |
-| `S`                   | stop (opens the stop sheet)           | `P`             | pick what the outcome window shows              |
-| `f`                   | fork room from here                   | `l`             | branch and pull-request links                   |
-| `t`                   | take over / release (launcher only)   | `V` / `s`       | compare versions / since my verdict             |
-| `h`                   | hand back                             | `(` / `)`       | previous / next post with a range link          |
-| `Q`                   | turn an away policy on / off          | `<` / `>`       | down / up the stack                             |
-| `F`                   | follow a seat                         | `Ctrl+T`        | add the room to or remove it from the focus set |
-| `Shift+Space`         | replay play / pause                   | `←` / `→`       | replay previous / next event                    |
-| `Shift+←` / `Shift+→` | replay previous / next span           | `,` / `.`       | replay previous / next turn                     |
-| `[` / `]`             | replay previous / next edit           | `{` / `}`       | replay previous / next error                    |
-| `;` / `:`             | replay next / previous held request   | `v`             | replay context lens                             |
-| `L`                   | replay jump to live                   | `Home` / `End`  | replay start / end                              |
+| Key                   | Action                                                          | Key             | Action                                                            |
+| --------------------- | --------------------------------------------------------------- | --------------- | ----------------------------------------------------------------- |
+| `?`                   | all shortcuts                                                   | `a` / `A`       | allow once / allow for session                                    |
+| `/`                   | search and filter                                               | `d`             | deny                                                              |
+| `⌘K` / `Ctrl+K`       | command palette                                                 | `r`             | reply                                                             |
+| `⌘G` / `Ctrl+G`       | go to address                                                   | `e` / `E`       | endorse / edit, then endorse                                      |
+| `g i`                 | Needs you                                                       | `Home` / `End`  | replay start / end                                                |
+| `g f`                 | Fleet                                                           | `x`             | dismiss, Q3, Q4 and overlap items                                 |
+| `g c`                 | Catch up                                                        | `y`             | copy address                                                      |
+| `g q` / `g v`         | quarantine list / verify panel                                  | `o`             | open the Room page at this item                                   |
+| `g h` / `g p`         | Health / Peers                                                  | `n` / `N`       | next / previous item that needs you                               |
+| `1` / `2` / `3`       | Room page tabs: Timeline / Review / Replay                      | `m`             | steer an agent with a fixed template naming this address (OWN-03) |
+| `j` / `k`             | next / previous row, item or file                               | `q`             | quarantine selection                                              |
+| `Enter`               | open                                                            | `⌘S` / `Ctrl+S` | save search                                                       |
+| `Space`               | preview or peek                                                 | `+` / `-`       | more / less context around a hit                                  |
+| `Esc`                 | close sheet                                                     | `w` / `b`       | why panel / blame gutter                                          |
+| `I`                   | interrupt (run pane)                                            | `W`             | witness check                                                     |
+| `p`                   | pause / resume                                                  | `c` / `C`       | post on the selection / verdict sheet                             |
+| `S`                   | stop (opens the stop sheet)                                     | `P`             | pick what the outcome window shows                                |
+| `F`                   | follow a seat                                                   | `l`             | branch and pull-request links                                     |
+| `t`                   | type at the harness in the launcher's terminal / leave (OWN-02) | `V` / `s`       | compare versions / since my verdict                               |
+| `h`                   | hand back                                                       | `(` / `)`       | previous / next post with a range link                            |
+| `Q`                   | turn an away policy on / off                                    | `<` / `>`       | down / up the stack                                               |
+| `L`                   | replay jump to live                                             | `Ctrl+T`        | add the room to or remove it from the focus set                   |
+| `Shift+Space`         | replay play / pause                                             | `←` / `→`       | replay previous / next event                                      |
+| `Shift+←` / `Shift+→` | replay previous / next span                                     | `,` / `.`       | replay previous / next turn                                       |
+| `[` / `]`             | replay previous / next edit                                     | `{` / `}`       | replay previous / next error                                      |
+| `;` / `:`             | replay next / previous held request                             | `v`             | replay context lens                                               |
 
-Interrupt moved from `Esc Esc` to `I`, so no key repeats into a
-second act. Composer: `Enter` steer, `Ctrl+Enter` queue for the next
-turn, `Shift+Enter` redirect. Clashes resolved: `x` (dismiss, expand,
-mark seen) is dismiss only, with context on `+`/`-`; `e` (snooze,
-endorse, next error) is endorse, snooze moves to `z`, errors to
-`{`/`}`; `]`/`[` (next room, next edit, stack) are edits, rooms move
-to `n`/`N`, the stack to `<`/`>`; `a` (allow, next held request) is
-allow, replay held requests move to `;`/`:`; `r` (reply, verdict,
-replay) is reply, the verdict sheet moves to `C`, replay to tab `3`;
-`c` (copy, post on the selection) is post, copy moves to `y`; `p`
-(pause, previous post with a range link, point agent) is pause; `.`
-(next turn, follow) is next turn, follow moves to `F`; `Space`
-(select, peek, play) is peek, play moves to `Shift+Space`; `Shift+A`
-(adopt) is gone with Adopt.
+Interrupt moved from `Esc Esc` to `I`, so no key repeats into a second
+act. Composer: `Enter` steer, `Ctrl+Enter` queue the steer for the next
+turn, `Shift+Enter` interrupt, then steer. Clashes resolved: `x`
+(dismiss, expand, mark seen) is dismiss only, with context on `+`/`-`;
+`e` (endorse, next error) is endorse, errors move to `{`/`}`; `]`/`[`
+(next room, next edit, stack) are edits, rooms move to `n`/`N`, the
+stack to `<`/`>`; `a` (allow, next held request) is allow, replay held
+requests move to `;`/`:`; `r` (reply, verdict, replay) is reply, the
+verdict sheet moves to `C`, replay to tab `3`; `c` (copy, post on the
+selection) is post, copy moves to `y`; `p` (pause, previous post with a
+range link, steer with an address) is pause, steering with an address
+moves to `m`; `.` (next turn, follow) is next turn, follow moves to `F`;
+`Space` (select, peek, play) is peek, play moves to `Shift+Space`;
+`Shift+A` (adopt) is gone with Adopt.

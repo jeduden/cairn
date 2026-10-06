@@ -18,8 +18,8 @@ what is waiting for you, and whether anything went wrong.
 
 ## What you need
 
-- A summary per room and across rooms, every line pointing to the
-  exact events.
+- A room summary per room and Catch up across rooms, every line
+  pointing to the exact events.
 - What is waiting for you, ranked.
 - Proof that nothing was lost or altered while you were away.
 - Fast search when you remember a detail but not where it was.
@@ -27,14 +27,15 @@ what is waiting for you, and whether anything went wrong.
 ## Your journeys
 
 1. Open Cairn; read what happened across all rooms in two minutes.
-2. Drill from a summary line to the exact tool call behind it.
+2. Drill from a Catch up line to the exact tool call behind it.
 3. Find the decision an agent made on Saturday by searching for a
    word you remember.
 4. Check a room's integrity before its branch lands.
 
 ## When you give up
 
-- The summary replaces the record instead of pointing into it.
+- Catch up or a room summary replaces the record instead of pointing
+  into it.
 - You cannot find something you know happened.
 - Gaps, missing segments or failed captures are silent.
 - Catching up takes longer than reading the git log.

@@ -6,20 +6,20 @@ Feature: Pins (PIN)
   implements the requirement lands.
 
   @PIN-01 @P0 @I2 @I3 @pending
-  Scenario Outline: only trusted actions create active pins
+  Scenario Outline: only the principal's widening principal acts create active pins
     Given an isolated Cairn home
     And deployment mode "<mode>"
     When <action> with the text "Never push directly to main"
     Then the active pin count is <active>
 
     Examples:
-      | mode        | action                                           | active |
-      | automation  | the person runs "cairn pin add"                  | 1      |
-      | automation  | the person's configuration declares a pin        | 1      |
-      | interactive | the person runs "cairn pin add"                  | 1      |
-      | automation  | a harness skill calls the MCP tool "pin_propose" | 0      |
-      | automation  | a person stamps a pin version an agent wrote     | 1      |
-      | interactive | the repository's ".cairn.toml" declares a pin    | 0      |
+      | mode        | action                                                                                     | active |
+      | automation  | the person runs "cairn pin add"                                                            | 1      |
+      | automation  | the person's configuration declares a pin and a widening principal act recorded its digest | 1      |
+      | interactive | the person runs "cairn pin add"                                                            | 1      |
+      | automation  | a harness skill calls the MCP tool "pin_propose"                                           | 0      |
+      | automation  | a person stamps a pin version an agent wrote                                               | 1      |
+      | interactive | the repository's ".cairn.toml" declares a pin                                              | 0      |
 
   @PIN-02 @P0 @I2 @pending
   Scenario: a pin Claude proposes stays an inactive assistant candidate
@@ -51,21 +51,21 @@ Feature: Pins (PIN)
     And version 1 stays readable, and "cairn rebuild" reproduces the one active pin at version 2, "Never push directly to main or release branches"
 
   @PIN-05 @P1 @I2 @I3 @pending
-  Scenario Outline: pin candidates from user prompts activate only on trusted confirmation
+  Scenario Outline: pin candidates from user turns activate only on the principal's confirmation
     Given an isolated Cairn home
     And deployment mode "<mode>"
     And the person's configuration holds <config>
     When the hook "UserPromptSubmit" runs with prompt "Never edit files under migrations/ without asking"
     Then <candidates> inactive pin candidates are recorded
     And the active pin count is 0
-    And the active pin count is <confirmed> after the person runs "cairn pin confirm" on every candidate
+    And the active pin count is <confirmed> after the person confirms every candidate with "cairn pin confirm", each a widening principal act
 
     Examples:
-      | mode        | config                    | candidates | confirmed |
-      | interactive | no extra keys             | 1          | 1         |
-      | automation  | no extra keys             | 0          | 0         |
-      | automation  | pins.auto_activate = true | 0          | 0         |
-      | automation  | inject.on_prompt = true   | 0          | 0         |
+      | mode        | config                                            | candidates | confirmed |
+      | interactive | no extra keys                                     | 1          | 1         |
+      | automation  | no extra keys                                     | 0          | 0         |
+      | automation  | a setting that activates candidates automatically | 0          | 0         |
+      | automation  | restore_block.on_prompt = true                    | 0          | 0         |
 
   @PIN-06 @P0 @I3 @pending
   Scenario: only constraint, preference and intent pins are injected automatically
@@ -116,11 +116,12 @@ Feature: Pins (PIN)
     And a run whose seats' writers record its joins to room "L1" and then room "L2"
     And a branch switch onto a branch of room "L4", which the run never joined, so its later events went to its personal-room seat
     And trusted pins of the run's principal in "L1" and in its personal room, a pin from the person's configuration, and a pin in "L2" written by another principal
+    And a pin in "L2" written from the device seat of a third principal whose key the run's principal trusts in "L2" by a trust grant
     And the principal's stamp on one version of an agent's pin in "L1", and on one version of a second pin another principal wrote in "L2"
     And a trusted pin of the principal in "L4"
-    And a pin the principal confirmed from a candidate whose creating user turn was recorded in interactive mode, while the current mode is "automation"
+    And a pin the principal confirmed from a candidate whose creating user turn was recorded in the deployment mode "interactive", while the current deployment mode is "automation"
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block holds the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the interactive-mode pin, and both stamped versions, each under its original author
+    Then the restore block holds the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped versions, each under its original author
     And the restore block holds no pin of "L4"
     And the restore block names "L1", "L2" and the personal room by id
     And the other principal's unstamped pin is stated only by count, room id and key fingerprint, with no text, and an audit entry records it

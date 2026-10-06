@@ -21,7 +21,7 @@ agents' principal is the room's owner, not you.
 - See the room live: conversation, edits, results, as they happen.
 - Say something that helps without derailing the owner's agents.
 - Know clearly what you can and cannot do in someone else's room.
-- Take over when the owner hands the room to you.
+- Accept ownership when the owner hands the room over to you.
 
 ## Your journeys
 

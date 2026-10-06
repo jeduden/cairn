@@ -98,7 +98,7 @@ Feature: Non-functional requirements (NFR)
     And "cairn verify" exits 0
 
   @NFR-09 @pending
-  Scenario: the core leaves no resident process and every user-run component stays within its footprint
+  Scenario: the core leaves no resident process and the launcher and every other component outside the core stay within their footprint
     Given an isolated Cairn home
     And a synthetic store with 1M events on the reference hardware
     When every hook runs once, the run ends, and the room-view, peer, publish and bridge components and ten launcher instances run idle
@@ -148,12 +148,12 @@ Feature: Non-functional requirements (NFR)
     Then it contains the administration guide, threat model, configuration reference, MCP tool reference and upgrade notes
 
   @NFR-15 @pending
-  Scenario Outline: the room surfaces meet their p95 targets on a 10M-event node and say when they miss
+  Scenario Outline: the room view's surfaces meet their p95 targets on a 10M-event node and say when they miss
     Given an isolated Cairn home
     And a node holding 10M events across 50 rooms on the reference hardware
     When "<action>" is measured 1,000 times
     Then the p95 time is at most <budget>
-    And any run that misses its target says so on screen
+    And any surface that misses its target says so on screen
 
     Examples:
       | action                                     | budget |

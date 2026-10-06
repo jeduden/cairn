@@ -21,12 +21,13 @@ Feature: Principal acts (OWN)
     Then the outcome is "<outcome>"
 
     Examples:
-      | surface                            | outcome                                                                                         |
-      | the room view under SEC-20         | recorded as an operator event on the recording node's device seat, covered by its writer's seal |
-      | the CLI at a terminal under OWN-12 | recorded as an operator event on the recording node's device seat, covered by its writer's seal |
-      | the harness's own prompt           | recorded as user or a harness_meta outcome, not a principal act                                 |
-      | the terminal the launcher hosts    | recorded as user or a harness_meta outcome, not a principal act                                 |
-      | any other surface                  | refused and audited                                                                             |
+      | surface                            | outcome                                                                                                                 |
+      | the room view under SEC-20         | recorded as an operator event on the device seat of the node that signs it, covered by its writer's seal                |
+      | the CLI at a terminal under OWN-12 | recorded as an operator event on the device seat of the node that signs it, covered by its writer's seal                |
+      | a paired phone within its scope    | signed with the phone's device key and recorded on its device seat, whose writer the node it pairs with holds and seals |
+      | the harness's own prompt           | recorded as user or a harness_meta outcome, not a principal act                                                         |
+      | the terminal the launcher hosts    | recorded as user or a harness_meta outcome, not a principal act                                                         |
+      | any other surface                  | refused and audited                                                                                                     |
 
   @OWN-03 @P1 @I2 @pending
   Scenario: principal-typed text reaches an agent only through the harness's input interface
@@ -100,7 +101,7 @@ Feature: Principal acts (OWN)
     And the endorsement is a signed principal act naming the post's commitment, its author's seat key, the target agent, the original text and the sent text
     And "bob" is shown the edit as a diff
     And the text reaches the agent through the harness's input interface in a fixed template naming the seat key's short fingerprint and the post's address, with no petname
-    When "bob" is given the moderator role and the room's settings are changed to the most open values
+    When "bob"'s device seat is given the moderator role and the room's settings are changed to the most open values
     Then "bob"'s later posts still reach "alice"'s agents only as untrusted recall or by endorsement
     And only a trust grant "alice" records for "bob"'s key under OWN-29 makes "bob"'s posts trusted for her agents
 
@@ -150,12 +151,14 @@ Feature: Principal acts (OWN)
   Scenario: a CLI verb writing a principal act refuses without a terminal
     Given an isolated Cairn home
     And a run on the node leaves a residual risk open with no recorded risk acceptance
-    When the person runs a widening principal-act verb at a terminal
+    When the person runs "cairn pin add" for a constraint pin that restores, a widening principal act, at a terminal
     Then the verb refuses
     And the refusal names the open residual risks and the runs that leave them open
     And the same verb with standard input or output not a terminal refuses before any other check
+    When the person runs "cairn counter ack" at a terminal
+    Then the acknowledgement is recorded as a neutral principal act with nothing more asked
     When the person runs "cairn room mute" on a seat at a terminal
-    Then the mute is signed with the seat key of the person's device seat in that room, carries no OWN-11 class and names the room it acted in
+    Then the mute, a room act, is signed with the seat key of the person's device seat in that room, carries no OWN-11 class and names the room it acted in
 
   @OWN-13 @P1 @I2 @pending
   Scenario: a steer arriving after its turn ended is not applied without confirmation
@@ -190,6 +193,7 @@ Feature: Principal acts (OWN)
     When the phone tries to answer a held permission request with the harness's "allow for session"
     Then the room-view component refuses it on the server
     And the phone can only read, allow once and deny held permission requests
+    And each answer the phone gives is signed with its own device key and recorded on its device seat, whose writer the node it pairs with holds and seals
     And where an authenticator is required each allow carries the phone's own presence check bound to that answer
 
   @OWN-17 @P2 @I2 @I8 @pending
@@ -285,7 +289,7 @@ Feature: Principal acts (OWN)
   @OWN-26 @P2 @I2 @I8 @pending
   Scenario: another principal's agent takes work only under their acceptance grant
     Given an isolated Cairn home
-    And a room shared by principals "alice" and "bob"
+    And a room where "alice" and "bob" each have a seat
     And "bob" has recorded an acceptance grant naming "alice", a target agent, a maximum rule level, a budget and an expiry
     And "alice" has recorded a delegation grant naming that target
     When an agent of "alice" delegates a task to that target
@@ -326,9 +330,11 @@ Feature: Principal acts (OWN)
     When "alice" records a trust grant naming "carol"'s principal key for this room
     Then the trust grant is a widening principal act, shown in the room with its grantor, "carol"'s key and its scope
     And "carol"'s next post reaches "alice"'s agent through the harness's input in a fixed template naming her key fingerprint and the post's address
-    And it starts or resumes no turn, does not restore, and reaches "bob"'s agent only as untrusted recall
+    And the post starts or resumes no turn and reaches "bob"'s agent only as untrusted recall
+    When "carol" pins the constraint "keep the public API stable" from her device seat
+    Then the pin restores word for word to "alice"'s agent and reaches "bob"'s agent only through a tool call, enveloped
     And a trust grant naming a run seat's key, or a service account that relays third parties' text, is refused and audited
     And a trust grant naming the room's facilitator is recorded only after "alice" is shown that the facilitator reads untrusted room text
     And no role, membership or room setting makes any other principal trusted
     When "alice" revokes the trust grant as a cut act
-    Then "carol"'s later posts reach "alice"'s agent only as untrusted recall
+    Then "carol"'s later posts reach "alice"'s agent only as untrusted recall, and her pin no longer restores to it

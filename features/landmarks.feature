@@ -6,7 +6,7 @@ Feature: Landmarks (LMK)
   implements the requirement lands.
 
   @LMK-01 @P0 @I10 @pending
-  Scenario: spans start at every user turn, compaction, subagent boundary and change of writer
+  Scenario: spans start at every user turn, compaction, subagent start or end, and change of writer
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "turns-compaction-subagent"
     And "turns-compaction-subagent" holds an isMeta "user" line and a "user" line of command output

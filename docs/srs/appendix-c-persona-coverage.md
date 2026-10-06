@@ -9,7 +9,7 @@ summary: >-
 
 Every requirement serves at least one persona of §2.5; personas are listed
 in order of how directly the requirement serves them. The persona agents
-under `.claude/agents/` review every change from these seats, so a
+under `.claude/agents/` review every change from these perspectives, so a
 requirement no persona would miss is a candidate for removal.
 
 | Requirements                                                                                                                                                                                                                                                                                                                                                                   | Personas       |

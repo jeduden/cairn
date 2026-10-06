@@ -22,7 +22,7 @@ Feature: Restore and injection (INJ)
     And the person runs "cairn pin add --type constraint 'Never push directly to main; open a pull request.'"
     When the hook "SessionStart" runs with source "<source>"
     Then the restore block holds the active pin verbatim and the recall statement but no landmark index
-    And with "inject.on_start.landmarks" set to true the same hook also returns the landmark index
+    And with "restore_block.landmarks_on_start" set to true the same hook also returns the landmark index
 
     Examples:
       | source  |
@@ -45,7 +45,7 @@ Feature: Restore and injection (INJ)
     And an agent run with a Claude Code transcript "prior-history"
     When the hook "UserPromptSubmit" runs with prompt "continue"
     Then the hook output carries no additionalContext
-    And with "inject.on_prompt" set to true the injection holds only TrustedText
+    And with "restore_block.on_prompt" set to true the injection holds only TrustedText
     And an audit entry records "UserPromptSubmit injection"
 
   @INJ-05 @P0 @I9 @pending

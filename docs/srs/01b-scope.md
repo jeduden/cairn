@@ -22,10 +22,11 @@ Cairn serves Claude first. Version 1 supports Claude Code and the Claude
 Agent SDK; other harnesses come later, and the design MUST NOT preclude
 them (ADR-08, OQ-16).
 
-Room summaries are in scope. An agent joining a room with much content
-asks for a summary of the size it wants (LANE-33). The room's
-facilitator writes it, outside the core, which makes no model calls
-(I4). A summary is untrusted and never replaces the record (I1, I2).
+Room summaries are in scope. When a run joins a room with much
+content, its agent asks for a room summary of the size it wants
+(LANE-33). The room's facilitator writes it, outside the core, which
+makes no model calls (I4). A room summary is untrusted and never
+replaces the record (I1, I2).
 
 A web service is a target interface, paced in four stages. Each stage
 stays a client of the record under VIEW-03, and every capability it

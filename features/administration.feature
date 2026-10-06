@@ -19,6 +19,7 @@ Feature: Administration and lifecycle (ADM)
     And a Claude Code settings file with unrelated user entries
     And "cairn install --scope user" showed a diff of every configuration change, was declined and left the settings file unchanged
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
+    And that install created the node's personal room as the first act of the principal's device seat
     When the person runs "cairn uninstall" and keeps only the device key
     Then the output lists the hooks, plugin and MCP registration, room-view credentials, launcher endpoints, seat and device keys, enrolments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
     And the settings file is byte-identical to the one before install
@@ -54,7 +55,7 @@ Feature: Administration and lifecycle (ADM)
       | the person's config.toml containing "recal.max_k = 10"                                             | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
       | the person's config.toml containing "recall.max_k = 'ten'"                                         | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
       | the person's config.toml containing "recall.max_k = 500"                                           | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
-      | the person's config.toml containing "payload_threshold_bytes = -1"                                 | cairn status            | exits 2, and the error names the key "payload_threshold_bytes" and the problem "out of range" |
+      | the person's config.toml containing "payload.threshold_bytes = -1"                                 | cairn status            | exits 2, and the error names the key "payload.threshold_bytes" and the problem "out of range" |
 
   @ADM-05 @P0 @I1 @pending
   Scenario: segment and schema migrations run forward after a verified backup and newer versions are refused
@@ -80,7 +81,7 @@ Feature: Administration and lifecycle (ADM)
     And "cairn verify" passed on the copy and its audit chain before anything was restored
     And every event and payload outside run "run-a" recalled before the backup is recalled identically
     And run "run-a" stays purged and the unpinned pin stays unpinned
-    And each restored local writer is followed by a new audited writer, and no restored writer's log gains an event or reuses a seq
+    And each restored local seat is followed by a new seat and writer under a newly minted seat key, linked to the old seat and audited, and no restored writer's log gains an event or reuses a seq
     And "cairn verify" exits 0 on the restored home
 
   @ADM-07 @P0 @I1 @I5 @pending
@@ -140,14 +141,14 @@ Feature: Administration and lifecycle (ADM)
     And the store file has mode 0600
 
   @ADM-11 @P0 @I6 @pending
-  Scenario: status shows locations, sizes, schema, mode and failure counters
+  Scenario: status shows locations, sizes, schema, deployment mode and failure counters
     Given an isolated Cairn home
     And deployment mode "automation"
     And an agent run with a Claude Code transcript "run-a"
     And the counter "hook_timeout" is 2
     When the person runs "cairn status --json"
     Then the command exits 0
-    And the output shows the store location, its size, the schema version and mode "automation"
+    And the output shows the store location, its size, the schema version and the deployment mode "automation"
     And the output shows the counter "hook_timeout" with value 2
 
   @ADM-12 @P1 @I2 @pending
@@ -200,7 +201,7 @@ Feature: Administration and lifecycle (ADM)
       | local writer        | the run appends another event                       | the event is recorded, a failure counter rises and a Needs you item appears |
 
   @ADM-16 @P1 @I6 @pending
-  Scenario Outline: status and doctor report every user-run component, peer lag, open chains and boundaries
+  Scenario Outline: status and doctor report the launcher and every other component outside the core, peer lag, open chains and boundaries
     Given an isolated Cairn home
     And managed policy that permits the room-view and peer components, forbids the launcher and locks one boundary
     And the room-view component is running, a bridge has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment

@@ -133,13 +133,13 @@ Feature: Security (SEC)
     And an audit entry records "repository configuration attempted to loosen <key>", and a counter counts it
 
     Examples:
-      | key                       | value       |
-      | inject.on_prompt          | true        |
-      | inject.on_start.landmarks | true        |
-      | recall.default_scope      | rooms       |
-      | mode                      | interactive |
-      | flagging.enabled          | false       |
-      | redaction.extra_patterns  | []          |
+      | key                              | value       |
+      | restore_block.on_prompt          | true        |
+      | restore_block.landmarks_on_start | true        |
+      | recall.default_scope             | rooms       |
+      | deployment.mode                  | interactive |
+      | flag.enabled                     | false       |
+      | redaction.extra_patterns         | []          |
 
   @SEC-12 @P0 @I5 @pending
   Scenario Outline: quarantine takes effect immediately on the recording node and is recorded
@@ -168,7 +168,7 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a store with an untrusted web tool result
     When Claude calls the MCP tool "event_search" with a query matching the untrusted result in run "r-1"
-    And the person runs "cairn policy check --run r-1 --json"
+    And the person runs "cairn sandbox check --run r-1 --json"
     Then the recall-taint flag for "r-1" is set
     And the example PreToolUse policy hook requires approval for a configured sensitive action
 
@@ -324,12 +324,14 @@ Feature: Security (SEC)
   @SEC-27 @P1 @I6 @I10 @pending
   Scenario: rotated and revoked keys leave the record verifiable
     Given an isolated Cairn home
-    And a seat key that was rotated and then revoked by signed events
-    When events sealed by that key arrive, some before its revocation and some after
+    And a seat key that was rotated by a signed event in its seat's writer, signed by the old key and the new key, and whose new key was then revoked by a signed event
+    When events sealed by the revoked key arrive, some before its revocation and some after
     Then the rotation and revocation appear as signed events
+    And the seat keeps its seat id and its writer across the rotation, and what the old key sealed still verifies
     And the events sealed before the revocation still verify
     And the others are refused under the revocation rule
     And a head receipt of every writer's chain head verifies on another node with no network
+    And a seat key minted because the home was restored onto another node starts a new seat and writer, linked to the old seat
 
   @SEC-28 @P2 @I2 @I4 @I6 @pending
   Scenario: outbound bridges run only in the bridge component, per enabled destination, and carry little
@@ -353,13 +355,13 @@ Feature: Security (SEC)
     And on a home where the person never started it, the launcher is off
 
   @SEC-30 @P2 @I5 @I6 @pending
-  Scenario: a purge travels as a signed tombstone and another principal can send an erasure request
+  Scenario: a purge travels as a signed tombstone and another principal with a seat can send a purge request
     Given an isolated Cairn home
-    And a room shared with two enrolled peers and a seat of another principal
+    And a room shared with two enrolled peers, in which another principal has a seat
     When the room's owner purges a range, one peer applies it and the other suppresses the events
     Then the purge is sent as a signed tombstone event
     And the applying peer shows a tombstone and the suppressing peer shows a gap
-    And that other principal can send the owner a signed erasure request for the events of its own seat's writer
+    And that other principal can send the room's owner a signed purge request for the events its own seats wrote
     And the owner's answer to it is a principal act and is audited
 
   @SEC-31 @P0 @I1 @I5 @I6 @pending
@@ -374,15 +376,15 @@ Feature: Security (SEC)
   @SEC-32 @P1 @I2 @I6 @pending
   Scenario: the facilitator moderates within its appointment's limits and never instructs
     Given an isolated Cairn home
-    And a room where a moderator appointed a facilitator, with a rate of two moderation acts per hour
+    And a room where a principal whose device seat holds the moderator role by assignment appointed the facilitator's service-account seat a moderator, with a rate of two moderation acts per hour
     When a post persuades the facilitator to bar three seats, a moderator and the owner, and to mute the whole room
-    Then the first two bars are recorded, each audited with its finding, which links the pin and the content flagged
+    Then the first two bars are recorded, each audited with its finding, which carries range links to the pin and the content flagged
     And each bar is shown in the room view and named by id in the error each barred seat's next call returns
     And a Needs you item reaches the owner, the appointer and the principal of each barred seat
     And the third bar is refused and counted
     And the acts on the moderator and the owner, and the room-wide mute, are refused and audited
     And the owner and the appointer can each undo each bar
     And the facilitator's unbar of one of its own bars is refused and audited, since an appointed moderator never unbars
-    And each finding is in the facilitator's own words and links the content it flagged by recall address, quoting none of it
+    And each finding is in the facilitator's own words and points to the content it flagged by range link, quoting none of it
     And the facilitator's findings reach no agent as instructions unless that agent's principal recorded a trust grant for the facilitator
     And a run seat appointed moderator is held to the same limits

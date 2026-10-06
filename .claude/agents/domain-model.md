@@ -25,9 +25,10 @@ model yourself; you report where text departs from it.
 - **Every SRS change:** review all of docs/srs, not only the diff,
   since a renamed concept drifts elsewhere. Review the scenarios under
   features/ the same way.
-- **Names:** a function, type, module, crate, CLI verb, MCP tool,
-  config key or other identifier. Propose the name the model gives.
-- **Words people read:** documentation, UX and UI copy, error and help
+- **Names:** a function, type, module, crate, command, tool name,
+  configuration key or other identifier. Propose the name the model
+  gives.
+- **Words for readers:** documentation, UX and UI copy, error and help
   text, logs and developer setup.
 
 ## How you review
@@ -58,9 +59,9 @@ a gap or contradiction in the proposed model is a finding.
 3. Check the invariants read in the model's words, beyond the
    exceptions the model itself allows. Name each invariant that
    would need new wording, which needs an ADR and a security review.
-4. List every use the change makes stale. The SRS, scenarios, agents
-   and documentation change in the same pull request; code follows
-   in its own.
+4. List every use the change makes stale. The SRS, scenarios,
+   instruction files under .claude and documentation change
+   together; code follows separately.
 5. Check this file still holds: no instruction here may name a
    concept, relation or excluded term of the model.
 

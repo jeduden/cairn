@@ -26,7 +26,7 @@ what the system is doing.
 
 ## Your journeys
 
-1. Roll Cairn out to fifty runners with managed settings.
+1. Roll Cairn out to fifty runners under managed policy.
 2. A developer reports a lost run; find out exactly what happened.
 3. Upgrade Cairn; nothing breaks, nothing is lost.
 4. Purge one developer's data when asked, with an audit trail.

@@ -17,8 +17,8 @@ Feature: Record (REC)
 
     Examples:
       | roots                                             | root                 |
-      | leaves transcript_roots unset                     | ~/.claude/projects   |
-      | sets transcript_roots to ["~/runner-transcripts"] | ~/runner-transcripts |
+      | leaves transcript.roots unset                     | ~/.claude/projects   |
+      | sets transcript.roots to ["~/runner-transcripts"] | ~/runner-transcripts |
 
   @REC-02 @P0 @I1 @pending
   Scenario: a subagent is ingested as its own run, linked to its parent's run
@@ -278,12 +278,12 @@ Feature: Record (REC)
       | claims a writer of this node's principal        | refused  |
 
   @REC-24 @P1 @I1 @I8 @I10 @pending
-  Scenario Outline: a home that moved to another node gets a new seat key and appends nothing under the old one
+  Scenario Outline: a home that moved to another node starts a new seat and writer under a new seat key and appends nothing under the old one
     Given an isolated Cairn home
     And a seat key bound to the node identity read, from outside the home, on the node the home was created on
     And <change>
     When the hook "SessionStart" runs and appends its first event after the start
-    Then Cairn mints a new seat key before that append
+    Then Cairn mints a new seat key before that append, starting a new seat and writer linked to the old seat
     And an audit entry records the node identity change
     And no event is appended under the old seat key
 

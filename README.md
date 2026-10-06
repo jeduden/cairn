@@ -4,7 +4,7 @@ A lossless, security-first context layer for long-running Claude
 agents, written in Go.
 
 Long agent runs compact, and compaction forgets. Cairn keeps an
-append-only, provenance-tagged record of every agent run. It re-injects
+append-only, provenance-tagged record of every agent run. It restores
 the constraints you pinned, verbatim, after every compaction. Claude
 recalls exact history on demand through MCP tools, always wrapped as
 untrusted data. It does this without opening a new attack surface: no

@@ -10,7 +10,7 @@ Feature: Compute kernel (CMP)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a"
     When the MCP server "cairn mcp" is asked to list its tools
-    Then the tool list contains "kernel_exec", "kernel_vars" and "kernel_reset"
+    Then the tool list contains "kernel_exec", "kernel_var_list" and "kernel_reset"
     And each kernel tool is backed by the Starlark interpreter
 
   @CMP-02 @P1 @pending
@@ -21,7 +21,7 @@ Feature: Compute kernel (CMP)
     And Claude calls the MCP tool "kernel_exec" with code "print(x + 1)"
     Then the printed output is "42"
     When Claude calls the MCP tool "kernel_reset" with no arguments
-    And Claude calls the MCP tool "kernel_vars" with no arguments
+    And Claude calls the MCP tool "kernel_var_list" with no arguments
     Then the namespace lists no variables
 
   @CMP-03 @P1 @pending

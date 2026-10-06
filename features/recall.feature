@@ -10,7 +10,7 @@ Feature: Recall (RCL)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "short-run"
     When Claude lists the tools of the MCP server started by "cairn mcp"
-    Then the tool list is "event_search", "event_expand", "event_get", "landmark_list", "pin_list" and "record_stats"
+    Then the tool list is "event_search", "event_expand", "event_get", "landmark_list", "pin_list" and "stat_list"
     And each tool declares the parameters specified in SRS section 9.2
 
   @RCL-02 @P0 @pending
@@ -59,7 +59,7 @@ Feature: Recall (RCL)
       | event_get    | address "w-1:7"                |
 
   @RCL-05 @P0 @I8 @pending
-  Scenario: recall defaults to the agent's own run and widening to its rooms is explicit and logged
+  Scenario: recall defaults to the agent's current run and widening to its rooms is explicit and logged
     Given an isolated Cairn home
     And a run holding seats in its personal room and in room "L1", whose writers this node holds beside those of other runs in "L1" on two worktrees, of room "L2" where the run holds no seat, and of a foreign room
     When Claude calls the MCP tool "event_search" with query "deploy" and no scope
@@ -108,21 +108,23 @@ Feature: Recall (RCL)
       | ASCII input range, such as "w-1:3-9" | event_expand |
 
   @RCL-09 @P1 @I2 @I6 @pending
-  Scenario Outline: every recalled item carries its writer, author, trust, origin and chain status
+  Scenario Outline: every recalled item carries its writer, author, trust, origin and integrity status
     Given an isolated Cairn home
     And a home whose record holds <item>
     When Claude recalls that item with the MCP tool "event_get"
     Then the item carries its writer, its author and its trust level
-    And the item carries origin "<origin>" and chain status "<status>"
+    And the item carries origin "<origin>" and integrity status "<status>"
 
     Examples:
-      | item                                               | origin    | status     |
-      | a sealed event this node witnessed                 | witnessed | verified   |
-      | an event past its writer's newest seal             | witnessed | unsigned   |
-      | a sealed event imported from a transcript          | imported  | verified   |
-      | a sealed event imported from a room bundle         | bundle    | verified   |
-      | a peer's event after a break in its writer's chain | peer      | unverified |
-      | a peer's event whose chain check fails             | peer      | broken     |
+      | item                                                                   | origin    | status      |
+      | a sealed event this node witnessed                                     | witnessed | verified    |
+      | an event past its writer's newest seal                                 | witnessed | unsigned    |
+      | a sealed event imported from a transcript                              | imported  | verified    |
+      | a sealed event imported from a room bundle                             | bundle    | verified    |
+      | a peer's event after a break in its writer's chain                     | peer      | unverified  |
+      | a peer's event whose chain check fails                                 | peer      | broken      |
+      | a peer's event whose writer's earlier events are missing here          | peer      | incomplete  |
+      | a peer's event at a seq its writer sealed twice with different content | peer      | equivocated |
 
   @RCL-10 @P2 @I2 @I8 @pending
   Scenario: a foreign room is recalled only by naming it in the call, enveloped, untrusted and tainting

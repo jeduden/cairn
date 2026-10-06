@@ -26,19 +26,19 @@ Feature: Observability (OPS)
   Scenario: the audit log is an append-only hash-chained JSONL file that rotates with chain continuation
     Given an isolated Cairn home
     And an audit log that has reached its rotation size
-    When the person runs "cairn ack"
+    When the person runs "cairn counter ack"
     Then the file "audit/audit-000002.jsonl" is created with mode 0600
     And its first entry's previous hash equals the hash of the last entry in "audit/audit-000001.jsonl"
     And every entry is RFC 8785 canonical JSON whose SHA-256 chain verifies with "cairn verify"
 
   @OPS-03 @P0 @I6 @pending
-  Scenario: doctor fails while a failure counter has risen since the last ack
+  Scenario: doctor fails while a failure counter has risen since the counters were last acknowledged
     Given an isolated Cairn home
-    And the person has run "cairn ack"
+    And the person has acknowledged the counters with "cairn counter ack", a neutral principal act
     When the hook "PostToolUse" runs with a malformed JSON object
     And the person runs "cairn doctor"
     Then the command exits 1
-    When the person runs "cairn ack"
+    When the person runs "cairn counter ack"
     And the person runs "cairn doctor"
     Then the command exits 0
 
@@ -62,7 +62,7 @@ Feature: Observability (OPS)
     And the process opened no network connection
 
   @OPS-06 @P1 @I6 @pending
-  Scenario Outline: every failure of a user-run component reaches the home's audit log and a named counter
+  Scenario Outline: every failure of a component outside the core reaches the home's audit log and a named counter
     Given an isolated Cairn home
     And "<component>" is running
     When an operation of "<component>" is <outcome>

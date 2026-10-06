@@ -17,7 +17,7 @@ Feature: Peer network (PEER)
     And the outcome is the same whether the peer component ships in the core's executable or its own
 
   @PEER-02 @P2 @I4 @pending
-  Scenario: a peer holds complete room copies and serves them only to the room's members
+  Scenario: a peer holds complete room copies and serves them only to nodes whose principal has a seat in the room
     Given an isolated Cairn home
     And enrolled peers "a", "b" and "c", where the principals of "a" and "b" have seats in room "room-1" and the principal of "c" has none
     When "b" and "c" each ask "a" directly for the segments of "room-1"
@@ -48,18 +48,19 @@ Feature: Peer network (PEER)
   Scenario: an ephemeral node offers its sealed tail often and a retired writer's lost tail shows as a gap
     Given an isolated Cairn home
     And an ephemeral node connected to a peer and running an agent
-    When the run is active for 65 s, passes "Stop", "SubagentStop" and "SessionEnd", and the node's enrolment token expires
+    When the run is active for 65 s, passes "Stop", "SubagentStop" and "SessionEnd", and the node's token expires
     Then the open segment was sealed and offered at each of those hooks and at least every 30 s, each sealed range as soon as it was sealed
     And the writer is marked retired
     And its later segments that continue its chain without a fork are accepted and marked delivered after retirement, and only a revocation would refuse them
     And a tail lost after the last seq received is shown as a gap, never as a quiet end or as "behind"
 
   @PEER-06 @P2 @I6 @I8 @pending
-  Scenario: enrollment verifies keys on both nodes and a sandbox token is scoped, carried and audited
+  Scenario: enrollment verifies keys on both nodes and a token for a sandbox is scoped, carried and audited
     Given an isolated Cairn home
-    And the person mints, as a widening principal act, a sandbox enrolment token carrying repository "r"'s identity and continuing room "room-1" with an expiry, read from an environment secret by recorded opt-in
+    And the person mints, as a widening principal act, a token for a sandbox carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the token's rooms and expiry, read from an environment secret by recorded opt-in
     When a node in a sandbox starts with the token before it reaches any peer
-    Then the node certifies its own seat keys from the token's bound identity, room scope and expiry, and knows every peer address and git-carrier remote it may deliver to
+    Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer address and git-carrier remote it may deliver to
+    And a seat key it certifies for a room outside the token's rooms, or after the token's expiry, chains to no principal key and is refused
     And its restore block holds the room's active pins from the token as signed events of provenance "operator" and says later pins may be missing
     And "cairn status" names the token's source and no child process inherits the token in its environment
     And the token's issue, use, rotation and revocation are audited, and the issuing node shows an unused token as "enrolled, never synced"
@@ -81,11 +82,11 @@ Feature: Peer network (PEER)
   @PEER-08 @P2 @I4 @pending
   Scenario: the git carrier carries encrypted segments, one entry per writer, on the node's principal's remote
     Given an isolated Cairn home
-    And a node of "alice" holding room "room-1", where "alice" opted in to the git carrier with a remote of their own
+    And a node of "alice" holding room "room-1", which she owns, where "alice" opted in to the git carrier with a remote of her own
     And no peer is reachable
     When the publish component carries the sealed segments of room "room-1"
     Then each writer's segments go to one entry in the namespaced location of "alice"'s remote that "alice" enabled
-    And each segment is encrypted to the enrolled keys of the room's members
+    And each segment is encrypted to the seat keys of the room's members
     And a reader of the remote sees only entry names, sizes and times, and the carrier says so
 
   @PEER-09 @P2 @I2 @I8 @pending
@@ -104,13 +105,14 @@ Feature: Peer network (PEER)
     When both events reach the peer
     Then both events are kept as evidence
     And the writer is marked "equivocated"
-    And derived state for that writer stops at the fork until the node's principal chooses which fork to keep as a principal act
+    And the room shows its integrity status as "equivocated"
+    And derived state for that writer stops at the fork until the node's principal chooses which fork to keep as a widening principal act
 
   @PEER-11 @P2 @I5 @I6 @pending
   Scenario: erasure and quarantine requests reach every peer signed, and each peer's state is shown
     Given an isolated Cairn home
     And room "room-1" held by enrolled peers "a", "b" and "c"
-    When the person purges a range of "room-1", and "a" applies the erasure request, "b" refuses it and "c" is unreachable
+    When the node's principal purges a range of "room-1", so the node sends its purge to its peers as an erasure request, and the principal of "a" applies it by a widening principal act, "b" refuses it and "c" is unreachable
     Then the erasure request was sent to every enrolled peer holding the room as a signed event of provenance "operator"
     And "a" erased or tombstoned every copy of the range it holds in any writer's log
     And each peer's state, applied, refused or unreachable, is audited, counted and shown
@@ -123,17 +125,17 @@ Feature: Peer network (PEER)
     And a room where "alice" and "bob" have seats
     And a node of another principal, enrolled as a blind peer
     When the nodes of "alice" and "bob" sync the room's sealed ranges through the blind peer
-    Then the blind peer stores only ranges encrypted to the members' keys
+    Then the blind peer stores only ranges encrypted to the seat keys of the room's members
     And it verifies the seat key's signature over each range before storing it
     And it holds no event content, header field, commitment key or room metadata
-    And it derives no room state and counts as no member
+    And it derives no room state and holds no seat in the room
     And every surface marks it as a blind peer
 
   @PEER-13 @P2 @I6 @I8 @pending
   Scenario: a bar takes effect at once on its node and stops future segments
     Given an isolated Cairn home
     And a room owned by "alice", shared between her node and the nodes of "bob" and "carol"
-    When a moderator on "alice"'s node bars "bob"'s principal key while "carol"'s node is unreachable
+    When a moderator's seat on "alice"'s node bars "bob"'s principal key while "carol"'s node is unreachable
     Then the bar takes effect on "alice"'s node at once
     And "alice"'s peer component sends no further segments of the room to any key the bar covers
     And "carol"'s node, until it receives the bar, shows the gap in the moderator's writer beside the room's membership

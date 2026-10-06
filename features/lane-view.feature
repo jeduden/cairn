@@ -29,7 +29,7 @@ Feature: Room view (VIEW)
     And a room with recorded runs
     When the room-view component serves the room view and is then stopped
     Then the view reads the record only through the core's read path and never writes to it
-    And the view holds no state the record cannot rebuild beyond per-viewer conveniences
+    And the view holds no state the record cannot rebuild beyond conveniences for the person viewing
     And every capability the view offers also exists in the CLI or MCP
     And hooks, ingestion and recall keep working with the view stopped
 
@@ -42,7 +42,7 @@ Feature: Room view (VIEW)
     Then every run shows exactly one status from the closed set of §9.7.1 with its freshness mark
     And the room shows one room status and the worst freshness mark of its runs, never Quiet
     And the launched run appears under its personal room on Fleet and in "cairn room list"
-    And text an agent wrote changes no status, and time-relative marks are computed in the viewer from an explicit starting point
+    And text an agent wrote changes no status, and time-relative marks are computed in the room view from an explicit starting point
 
   @VIEW-05 @P1 @I6 @I10 @pending
   Scenario: the Needs you queue is deterministic and clears everywhere once answered
@@ -63,7 +63,7 @@ Feature: Room view (VIEW)
     And no status, evidence or proof mark changes because of it
 
   @VIEW-07 @P1 @I2 @pending
-  Scenario: items from outside the trusted sources carry a trust mark and the viewer's petname
+  Scenario: items from outside the trusted sources carry a trust mark and the petname the person viewing chose
     Given an isolated Cairn home
     And synced posts by a key the person gave a petname, a key with none, and a new key using a known name
     And one post holding zero-width, bidirectional and tag characters and an HTML comment
@@ -77,8 +77,8 @@ Feature: Room view (VIEW)
     Given an isolated Cairn home
     And rooms with capture gaps, an unsynced writer, a tombstone, a voided branch link and finished work since a starting point
     And a head receipt of chain heads outside CAIRN_HOME
-    When the person opens Catch up at that boundary
-    Then it shows the boundary it used and where it came from, and links every line to its events
+    When the person opens Catch up at that starting point
+    Then it shows the starting point it used and where it came from, and links every line to its events
     And it lists capture gaps, uningested transcripts, risen failure counters and unsynced writers apart from quiet rooms
     And it checks each writer's chain head against the named head receipt and shows the result per writer
     And its lines run integrity and capture gaps, Needs you, failures, then finished work, with its frontier per writer and no model-written line
@@ -100,12 +100,12 @@ Feature: Room view (VIEW)
       | every room |
 
   @VIEW-10 @P1 @I6 @I10 @pending
-  Scenario: every room shows its integrity seal and the view writes a head receipt outside the home
+  Scenario: every room shows its integrity status and the view writes a head receipt outside the home
     Given an isolated Cairn home
     And a room whose writer's chain breaks at one event
-    When the person opens the room and writes a head receipt to a path outside CAIRN_HOME
-    Then the room shows its integrity status from §9.7.5 at all times
-    And every later event of that writer is marked unverified wherever it is shown, including in recall results
+    When the person opens the room's Room page and, from its verify panel, writes a head receipt to a path outside CAIRN_HOME
+    Then the room shows its integrity status at all times, one of §9.7.5's seven values, here "broken"
+    And every later event of that writer is marked "unverified" wherever it is shown, including in recall results
     And the head receipt is shown as a short code carrying at least 80 bits of the heads' digest
     And the view states that verification proves the sealed record unchanged up to its newest seal, not the unsigned tail and not its content true
     When the person turns an away policy on
@@ -115,7 +115,7 @@ Feature: Room view (VIEW)
   Scenario: gaps, quarantines and tombstones stay in place and forensic views are recorded
     Given an isolated Cairn home
     And a room with a missing segment, a quarantined range and a tombstone
-    When the person opens its timeline and asks for a forensic view of the quarantined content
+    When the person opens the Timeline tab of its Room page, then the quarantine list from it, and asks for a forensic view of the quarantined content
     Then each gap is shown in place, never closed up
     And the quarantined content is shown only after that explicit forensic view
     And the forensic view is recorded as an "operator" event
@@ -125,7 +125,7 @@ Feature: Room view (VIEW)
   Scenario: replay reconstructs any event from the record alone
     Given an isolated Cairn home
     And a room with two writers, edits, tool calls and a recall
-    When the person replays the room to one event
+    When the person replays the room to one event on the Replay tab of its Room page
     Then the conversation, worktree and results at that event come from the record alone and nothing is re-executed
     And the worktree states its fidelity as "exact", "approximate" or "unavailable", and why
     And the context lens marks itself a reconstruction and shows recalled content inside its envelope
@@ -135,24 +135,24 @@ Feature: Room view (VIEW)
   Scenario: comparing two branches shows exposure beside outcome and picks no winner
     Given an isolated Cairn home
     And a room naming two branches for its intent, where the run on one of them read a flagged untrusted item
-    When the person compares the two branches
+    When the person opens the comparison of the two branches from the room's Room page
     Then exposure, outcome and evidence are shown side by side for each branch
     And the paths are aligned the same way on every comparison
-    And no branch is marked the winner until the room's owner chooses one as a principal act
+    And no branch is marked the winner until the room's owner chooses one as a neutral principal act
 
   @VIEW-14 @P1 @I6 @pending
-  Scenario: every surface uses the same words and a reduced surface says what it left out
+  Scenario: every surface and reduced client uses the same words and a reduced client says what it left out
     Given an isolated Cairn home
     And a room with runs in several statuses and open Needs you items
-    When the person views the room in the room view, the TUI, the CLI and the harness strip
-    Then every surface shows the same status words, marks, room ids and Needs you order
-    And each reduced surface says what it left out and where to see it
+    When the person views the room on its Room page in the browser, and in the TUI, the CLI, a paired phone and the harness strip
+    Then the Room page and every reduced client show the same status words, marks, room ids and Needs you order
+    And the TUI, the CLI, the paired phone and the harness strip, as reduced clients, each say what they left out and on which surface to see it
 
   @VIEW-15 @P1 @I2 @pending
-  Scenario: room_show returns only a closed structural set
+  Scenario: room_get without an id returns only a closed structural set
     Given an isolated Cairn home
     And a room with a title, a key the person gave a petname, and 25 posts waiting for the caller's room
-    When the agent calls "room_show"
+    When the agent calls "room_get" naming the room and no id
     Then the result is enveloped as structural and holds only the fields of the closed set
     And the waiting posts appear as addresses in range form, capped at 20 with a count of 5 left out
     And no field holds a title, label, branch name or petname
@@ -190,7 +190,7 @@ Feature: Room view (VIEW)
   Scenario: a needs-changes verdict shows what changed since it
     Given an isolated Cairn home
     And a room where "alice" recorded a "needs changes" verdict on C2, after which an agent edited two files
-    When the person opens the verdict in the room
+    When the person opens the verdict on the Review tab of the room's Room page
     Then it shows the diff and events since the branch heads that verdict was bound to
 
   @VIEW-20 @P1 @I6 @pending
@@ -206,7 +206,7 @@ Feature: Room view (VIEW)
   Scenario: the room view puts the outcome beside the intent so a person can record a verdict
     Given an isolated Cairn home
     And a room whose intent names C1, C2 and C3, with a result linked to C1 by a criterion link and an agent's claim linked to C2
-    When its agents go idle and the person opens the room view
+    When its agents go idle and the person opens the Review tab of the room's Room page
     Then C1 shows the result and its evidence class, C2 shows a claim and C3 reads "no evidence"
     And every criterion reads "no verdict"
     And the view shows edits outside the intent, the agents' exposure and the diff since the last verdict
@@ -222,5 +222,5 @@ Feature: Room view (VIEW)
     When a moderator records a signed pick of "p-1"'s presentation
     Then the window shows "p-1"'s dev server
     And a pick by a seat holding only present is refused
-    And a viewer with no capability can follow "p-2" in their own view without changing the window
+    And the person viewing can follow "p-2" in their own view, with no capability, without changing the window
     And Cairn chooses no branch and records no verdict of its own

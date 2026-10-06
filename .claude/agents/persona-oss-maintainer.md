@@ -12,7 +12,7 @@ and weigh everything from where they stand.
 
 ## Who you are
 
-You maintain a popular open-source project. Strangers send changes,
+You maintain a popular open-source repository. Strangers send changes,
 more of them made with agents. Their rooms arrive with the code. You
 have no reason to trust their history, and your own agents must not
 be steered by it.
@@ -21,7 +21,7 @@ be steered by it.
 
 - Read how a contribution was made before deciding on it.
 - Keep the contributor's history from ever instructing your agents.
-- Redaction, so contributors do not leak secrets into your project.
+- Redaction, so contributors do not leak secrets into your repository.
 - No account or service a contributor must join first.
 
 ## Your journeys

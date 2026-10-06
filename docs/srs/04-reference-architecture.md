@@ -45,32 +45,47 @@ context. It is not binding; §5–§10 are.
 
 ## 4.2 Components
 
+The components are the closed set of the
+[domain model](../domain-model.md#concepts) and §6.3, each inside one
+network boundary (I4).
+
 | Component                | Responsibility                                                                                                                                                 |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cairn hook <event>`     | Reads hook input from stdin, performs bounded work within the hook budget, writes hook output to stdout, always exits in a fail-open manner (I9).              |
-| `cairn mcp`              | Per-run MCP server over stdio exposing recall, landmarks, pins, and kernel tools. Read-mostly.                                                                 |
-| `cairn kernel-worker`    | Child process of `cairn mcp` running the hermetic kernel under OS resource limits with a read-only store handle.                                               |
-| Admin CLI                | Install, verify, rebuild, quarantine, purge, backup, migrate, stats, audit, doctor.                                                                            |
-| Core library             | All logic; no global state; every blocking operation takes a deadline, directly or through a cancellation token a deadline fires.                              |
-| Harness adapter          | Isolates transcript formats and hook I/O for Claude Code (and later other harnesses).                                                                          |
+| Core (B0)                | The hooks, the MCP server, the kernel worker, the CLI and the TUI, and everything that builds what reaches the model; opens no socket and starts no program.   |
 | Room-view component (B1) | `cairn ui`: serves the room view on loopback; off until the principal starts it.                                                                               |
 | Launcher (B1)            | `cairn launch`: starts and hosts runs and executes witness checks; the only component that starts another program (SEC-29); off until the principal starts it. |
 | Peer component (B2)      | `cairn peer`: replicates segments with peers the node's principal enrolled by key; off until turned on.                                                        |
 | Publish component (B3)   | Read-only publishing and the git carrier; off until turned on.                                                                                                 |
-| Bridge component (B3)    | Outbound exchange with a forge, CI or a notification service the node's principal names (SEC-28); off until turned on.                                         |
+| Bridge component (B3)    | Outbound exchange with hosts the node's principal names: the forge bridge, the CI carrier and the notification bridge (SEC-28); off until turned on.           |
+
+The core's parts:
+
+| Part of the core      | Responsibility                                                                                                                                  |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cairn hook <event>`  | The hook handlers: read hook input from stdin, perform bounded work within the hook budget, write hook output to stdout, always fail open (I9). |
+| `cairn mcp`           | The MCP server, one per run over stdio, exposing recall, landmarks, pins, room and kernel tools. Read-mostly.                                   |
+| `cairn kernel-worker` | The kernel worker, a child process of `cairn mcp` running the hermetic kernel under OS resource limits with a read-only store handle.           |
+| CLI                   | Install, verify, rebuild, quarantine, purge, backup, migrate, counters, audit, doctor, and principal acts at a terminal (OWN-12).               |
+| TUI                   | A reduced client of the room view on a terminal (VIEW-14).                                                                                      |
+| Core library          | All logic; no global state; every blocking operation takes a deadline, directly or through a cancellation token a deadline fires.               |
+| Harness adapter       | Isolates transcript formats and hook I/O for Claude Code (and later other harnesses).                                                           |
 
 ## 4.3 Event-sourced state
 
-The record is the only source of truth. Administrative actions — pinning,
-unpinning, quarantine, release, purge tombstones, retention passes — are
-themselves appended as events with provenance `operator`. Every other table (FTS
-index, spans, landmarks, active pins, quarantine set, counters) is a projection
-that `cairn rebuild` reproduces exactly from the writer logs the node holds
-(I10). Purge removes content but leaves a tombstone event carrying the
-removed addresses, counts, reason, the principal who purged, and the
-commitments of the removed events (REC-17, ADM-07),
-never a hash of the removed content, so rebuilds stay deterministic, purges
-stay auditable and nothing retained confirms a guess at what was purged.
+The record is the only source of truth. Acts are themselves events in
+the record: principal acts, such as adding or unpinning a pin that
+restores, a quarantine, its release and a purge's tombstone, as
+`operator` events on the device seat of the node that records them
+(OWN-02); room acts in the writer of the seat that signs them
+(LANE-31); and expire acts and the purges a retention policy makes, as
+the node records them. Every other table (FTS index, spans, landmarks,
+active pins, quarantine set, counters) is a projection that `cairn
+rebuild` reproduces exactly from the writer logs the node holds (I10).
+Purge removes content but leaves a tombstone event carrying the removed
+addresses, counts, reason, the principal who purged, and the
+commitments of the removed events (REC-17, ADM-07), never a hash of the
+removed content, so rebuilds stay deterministic, purges stay auditable
+and nothing retained confirms a guess at what was purged.
 
 ## 4.4 Key scenarios
 
@@ -104,7 +119,7 @@ stay auditable and nothing retained confirms a guess at what was purged.
 | ADR    | Decision                                                                                                                                                                                                                                                                                    | Alternatives considered                                                                      | Rationale                                                                                                                                                                                                                                                                                  |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | ADR-01 | **Daemonless core.** Hooks and per-run MCP processes open the store directly. The room-view component, the launcher, and the peer, publish and bridge components are optional, started by the principal, never on a hook or recall path, and their failure never touches an agent run (I9). | Long-running daemon on loopback (lcm)                                                        | Removes the port, token, stale-daemon, and wedged-daemon failure classes observed in lcm; zero idle footprint; simpler isolation (I8, I9).                                                                                                                                                 |
-| ADR-02 | **Event sourcing.** All derived state, including admin actions, is rebuilt from the writer logs a node holds.                                                                                                                                                                               | Mutable tables                                                                               | Makes verification, rollback, and forensic replay possible (I5, I10).                                                                                                                                                                                                                      |
+| ADR-02 | **Event sourcing.** All derived state, including the effect of every act, is rebuilt from the writer logs a node holds.                                                                                                                                                                     | Mutable tables                                                                               | Makes verification, rollback, and forensic replay possible (I5, I10).                                                                                                                                                                                                                      |
 | ADR-03 | **Pull-only recall.** Automatic injection accepts only the `TrustedText` type, which can be constructed only from pins and sanitized structural fields.                                                                                                                                     | Per-prompt memory hints (lcm, claude-mem)                                                    | Poisoning evidence (§3, item 3). Enforced by the type system, not convention (I2).                                                                                                                                                                                                         |
 | ADR-04 | **Hermetic Starlark kernel by default**; external Python kernel as optional P2.                                                                                                                                                                                                             | Python/Jupyter kernel as default                                                             | Starlark (Python dialect, implemented in Rust) has no filesystem or network unless the host provides it, is deterministic, supports step limits, and needs no Python runtime (CON-03). Risk: less capable than Python for Claude. Gate: spike S5 measures Claude's task success with each. |
 | ADR-05 | **BM25 over SQLite FTS5; no embeddings in v1.**                                                                                                                                                                                                                                             | Vector search, hybrid                                                                        | Deterministic, no model calls at ingest, no extra data leaving the machine; Scroll reached strong results with BM25.                                                                                                                                                                       |

@@ -19,16 +19,17 @@ not the narrative, and you have little time per change.
 ## What you need
 
 - The diff, why it changed, and what verified it, in one place.
-- To tell an agent's claim from an own check, a witness check and
-  the canonical CI.
+- To tell an agent's claim from an own check, a witness check and a
+  CI attested result.
 - To approve or request changes once, on the forge, and see it in
   the room.
-- The merge gate respected: not the author, required checks green.
+- The merge gate respected: not the pull-request author, required
+  checks green.
 
 ## Your journeys
 
-1. Open a room from the review queue; read the diff and the key
-   moments of the conversation behind it.
+1. Open a room from Needs you; read the diff and the key moments
+   of the conversation behind it.
 2. Check which results were verified, and by what.
 3. Ask for a change; see the agent's follow-up in the same room.
 4. Approve on the forge; watch it land through squash or a merge
@@ -36,9 +37,10 @@ not the narrative, and you have little time per change.
 
 ## When you give up
 
-- You must read the whole transcript to find why something changed.
+- You must read the whole record to find why something changed.
 - A result says done but nothing shows what checked it.
-- The author, or their agent, can approve their own branch.
+- The pull-request author, or their agent, can approve their own
+  branch.
 - The landed commit cannot be traced back to its room.
 - Review on the forge and in Cairn disagree, or must be done twice.
 
