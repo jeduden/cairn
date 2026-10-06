@@ -26,7 +26,7 @@ model yourself; you report where text departs from it.
   since a renamed concept drifts elsewhere. Review the scenarios under
   features/ the same way.
 - **Names:** a function, type, module, crate, CLI verb, MCP tool,
-  config key or event. Propose the name the model gives.
+  config key or other identifier. Propose the name the model gives.
 - **Words people read:** documentation, UX and UI copy, error and help
   text, logs and developer setup.
 

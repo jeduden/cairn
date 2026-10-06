@@ -33,7 +33,8 @@ MUST be evaluated against the recall tool-use metric (§11.1). `search`,
 `expand`, `get` and `landmarks` take `scope` (`run`, `room` or
 `rooms`, default `run`) and `room` (RCL-05, RCL-10); `expand` and
 `get` accept addresses (RCL-08) in every form shown and in the ASCII input
-form (§1.6, Address). Resolving an address outside the current scope, by
+form (Address, in the [domain model](../domain-model.md#concepts)).
+Resolving an address outside the current scope, by
 `get` as by `expand`, MUST require the explicit `scope`, or `room` for a
 foreign room, and MUST be logged as a widening (RCL-05, RCL-10).
 
@@ -202,14 +203,15 @@ compaction summaries.
 The verbs added in 2.0 come from plan 2610012322's proposal; every verb
 that writes an owner act passes OWN-12, and read-only verbs do not. Each
 verb and syntax has one row. Every argument that takes an address accepts
-each form the glossary lists (§1.6, Address), the ASCII input form included.
+each form the [domain model](../domain-model.md#concepts) lists under
+Address, the ASCII input form included.
 A `cairn room` verb that takes a room act or a join (join, leave,
 kick, bar, unbar, read-only, present, pick) signs it with the person's
 seat key in that room (LANE-23, LANE-24); one that takes an owner act
 (create, ready, invite, admit, role, appoint, unappoint, stamp,
 unstamp, handover, successor) signs it with the node's device key, as
 OWN-02 and LANE-31 require. Every writing `cairn room` verb
-passes OWN-12 in the class the glossary gives
+passes OWN-12 in the class the domain model gives
 it; a verb marked widening also needs the controlling terminal and,
 where required, a presence check (OWN-11). `answer` is the verb for held
 requests and `verdict` the verb for verdicts, so one word never means

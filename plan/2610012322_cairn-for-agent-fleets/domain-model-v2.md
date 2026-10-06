@@ -1,9 +1,8 @@
 # Cairn domain model v2 (proposed)
 
 A proposal for the stakeholder, dated 6 October 2026. It includes your
-[decisions 1][d1] to [19][d19] and would replace [docs/domain-model.md][model]
-and the glossary
-in [§1.6][16].
+[decisions 1][d1] to [19][d19] and would replace [docs/domain-model.md][model],
+which now also holds the [definitions][16] the SRS glossary held.
 
 Each entry gives a **name**, a definition, and why the concept exists or how
 it differs from its neighbours. Every word has one meaning. Where everyday
@@ -497,7 +496,7 @@ for them.
   - (b) The branch cannot be linked until it is pushed.
   - **Recommendation: (a).**
 
-[16]: ../../docs/srs/01-introduction.md#16-glossary
+[16]: ../../docs/domain-model.md#concepts
 [51]: ../../docs/srs/05-functional-requirements.md#51-record-rec
 [511]: ../../docs/srs/05b-lane-requirements.md#511-room-lane
 [512]: ../../docs/srs/05b-room-view-requirements.md#512-room-view-view

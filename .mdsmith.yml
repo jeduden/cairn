@@ -175,6 +175,15 @@ kinds:
         - heading: "Your journeys"
         - heading: "When you give up"
         - heading: "How you review"
+  domain-model:
+    # docs/domain-model.md is the model's one source: every concept
+    # with its definition, which the SRS links to instead of keeping a
+    # glossary. One concept per list item, so it runs longer than other
+    # docs.
+    path-pattern: "docs/domain-model.md"
+    rules:
+      max-file-length:
+        max: 600
   domain-model-agent:
     # The domain-model agent holds instructions only; the model itself
     # is docs/domain-model.md. Its name is pinned to its file, and its
@@ -256,6 +265,8 @@ kinds:
 kind-assignment:
   - glob: ["docs/**/*.md", "!docs/srs/*.md", "!docs/adr/*.md"]
     kinds: [doc]
+  - glob: ["docs/domain-model.md"]
+    kinds: [domain-model]
   - glob: ["docs/adr/*.md"]
     kinds: [adr]
   - glob: ["docs/srs/*.md"]
