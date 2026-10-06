@@ -238,8 +238,9 @@ owns or controls.
   and `intent` pins restore.
 - **Unpin**: The act that ends a pin. The pin stops restoring and its versions
   stay in the record (I1). A moderator's unpin of another principal's
-  restoring pin hides it in the room and raises a Needs you item; it keeps
-  restoring to that principal's agents until that principal unpins it.
+  restoring pin takes it off the room's pin list and raises a Needs you item;
+  it keeps restoring to that principal's agents until that principal unpins
+  it.
 - **Intent**: A room's lead pin, of type `intent`: a goal, its criteria and
   optionally the paths it is meant to change (LANE-20). Only the owner's
   principal act changes it.
@@ -379,7 +380,8 @@ to exactly one kind (LANE-31).
   - **Contributor:** read; post, link (a branch link included) and present;
     pin, edit and unpin its own pins; work on the room's branches it is given.
   - **Moderator:** a contributor's capabilities, plus unpin any pin but the
-    intent, kick, bar, unbar, mute, unmute and pick.
+    intent, kick, bar, unbar, mute, unmute, pick, and set title, labels and
+    assignments.
 - **Work**: A capability, not an act: a run's events go to its run seat while
   the run works on one of the room's branches.
 - **Appointment**: A principal act that makes a run seat or a service-account
@@ -540,8 +542,9 @@ to exactly one kind (LANE-31).
 - **Rule level**: For each action class (a kind of tool action, such as edits,
   commands or network use), one of: act without asking, act when told, ask
   first, hand off (OWN-10).
-- **Quota**: A per-room or per-node limit on storage, events or spend that the
-  node's principal or managed policy sets (ADM-15).
+- **Quota**: A limit on storage, events or spend, per room, node, imported
+  writer, peer or worktree checkpoint, that the node's principal or managed
+  policy sets (ADM-15).
 - **Away policy**: A principal's opt-in choice of what an unanswered held
   request does while it is on: keep going, pause or stop (OWN-07). Turning one
   on offers to write a head receipt (VIEW-10).

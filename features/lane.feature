@@ -348,7 +348,7 @@ Feature: Room (LANE)
     When "bob" edits his constraint pin in the room view
     Then the edit is recorded as "bob"'s widening principal act, never as a room act of his device seat
     When a moderator unpins "bob"'s constraint pin
-    Then the unpin hides the pin in the room and raises a Needs you item for "bob"
+    Then the unpin takes the pin off the room's pin list and raises a Needs you item for "bob"
     And the pin keeps restoring to "bob"'s agents until "bob" unpins it as his widening principal act
     When the run seat "p-3" pins "use the staging database"
     Then the pin is stored inactive with provenance "assistant" and shown as unstamped
