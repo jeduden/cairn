@@ -77,17 +77,19 @@ themselves events in the record: principal acts, such as adding, editing or
 unpinning a device-seat pin of a type that restores, a stamp, a quarantine, its
 release and a purge's tombstone, as `operator` events on the device seat of the
 device that signs them, in the room they act on, or in the personal room, naming
-the room, when they act on no room or on one where the principal has no seat
-(OWN-02); room acts in the writer of the seat that signs them (LANE-31); and
-expire acts and the purges a retention policy makes, as the node records them.
-Every other table (FTS index, spans, landmarks, active pins, quarantine set,
-statuses, queues, stats) is a projection that `cairn rebuild` reproduces exactly
-from the writer logs the node holds and the node's own key set (I10). Purge
-removes content but leaves a tombstone event carrying the removed addresses,
-counts, reason, the principal who purged, and the commitments of the removed
-events (REC-17, ADM-07), never a hash of the removed content, so rebuilds stay
-deterministic, purges stay auditable and nothing retained confirms a guess at
-what was purged.
+the room, when they act on no room or on one where the signing device has no
+seat (OWN-02); room acts in the writer of the seat that signs them (LANE-31);
+and expire acts on the device seat of the node that signs them. A purge under a
+retention policy is not an act: the node records it as a purge naming the
+policy, whose setting was the act. Every other table (FTS index, spans,
+landmarks, active pins, quarantine set, statuses, queues, stats) is a projection
+that `cairn rebuild` reproduces exactly from the writer logs the node holds and
+the node's own key set (I10). Purge, the only way content is destroyed, removes
+content but leaves a tombstone event carrying the removed addresses, counts,
+reason, the principal or retention policy that purged, and the commitments of
+the removed events (REC-17, ADM-07), never a hash of the removed content, so
+rebuilds stay deterministic, purges stay auditable and nothing retained confirms
+a guess at what was purged.
 
 ## 4.4 Key scenarios
 

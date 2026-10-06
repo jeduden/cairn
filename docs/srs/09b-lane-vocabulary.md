@@ -42,10 +42,11 @@ the room names has landed), **Asking** (a run waits on its principal),
 `own check` or stronger), **Blocked**, **Running**, **Ready for review** (only
 after the principal act of OWN-21 marking the room ready), **Quiet** (never
 while a run is `unrecorded` or `behind`, VIEW-04). The pull-request states a
-forge reports (Draft, In review, Changes requested, Approved, Queued, Landing)
-live on the pull-request pill (P2, LANE-08), marked `asserted`, not in the room
-status; Cairn keeps no approval state of its own. Check states: Pending,
-Running, Passed, Failed, Stale, Unbound, Absent.
+forge reports (Pre-review, In review, Changes requested, Approved, Queued,
+Merging) live on the pull-request pill (P2, LANE-08), marked `asserted`, not in
+the room status; Cairn keeps no approval state of its own. Check states:
+Pending, Executing, Passed, Failed, Stale, Unbound, Absent. No state shares a
+name with a room status, a draft or a landing.
 
 ## 9.7.3 Evidence and proof classes
 
@@ -108,7 +109,8 @@ a key with no petname shows its fingerprint. `⚑` flagged (PRV-07). `▒`
 quarantined. `▬` from a seat that is no longer a member: it left, was kicked or
 was barred. `ingested`. `new key`. "from a revoked device". Timeline rails:
 solid for the agent's principal, hollow for other principals, dotted for agents
-and the forge. Sandbox events are untrusted on every other node (PRV-02).
+and the forge. Events from a sandbox node's writers are untrusted on every
+other node (PRV-02).
 Unsandboxed agents are one line on Health, not a mark on every tile.
 
 ## 9.7.7 Keymap
