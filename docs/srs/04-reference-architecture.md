@@ -49,45 +49,45 @@ The components are the closed set of the
 [domain model](../domain-model.md#concepts) and §6.3, each inside one
 network boundary (I4).
 
-| Component                | Responsibility                                                                                                                                                                                                                                                                      |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Core (B0)                | The hook handlers, each harness adapter's transcript and hook part, the MCP server, the kernel worker, the CLI and the TUI, and everything that builds what reaches the model; opens no socket and starts no program.                                                               |
-| Room-view component (B1) | `cairn ui`: serves the room view on loopback; off until the principal starts it.                                                                                                                                                                                                    |
-| Launcher (B1)            | `cairn launch`: through each harness adapter's run part, starts, hosts and controls runs, holds them at the harness prompt and records sandbox state (OWN-22); executes witness checks; the only component that starts another program (SEC-29); off until the principal starts it. |
-| Peer component (B2)      | `cairn peer`: replicates segments with peers the node's principal enrolled by key; off until turned on.                                                                                                                                                                             |
-| Publish component (B3)   | Read-only publishing and the git carrier; off until turned on.                                                                                                                                                                                                                      |
-| Bridge component (B3)    | Outbound exchange with hosts the node's principal names: the forge bridge, the CI carrier and the notification bridge (SEC-28); off until turned on.                                                                                                                                |
+| Component                | Responsibility                                                                                                                                                                                                                                                                                                                                |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Core (B0)                | The hook handlers, each harness adapter's transcript and hook part, the MCP server, the kernel worker, the CLI and the TUI, and everything that builds what reaches the model; opens no socket and starts no program.                                                                                                                         |
+| Room-view component (B1) | `cairn ui`: serves the room view on loopback, or on a local endpoint only the same OS user can reach; off until the principal starts it.                                                                                                                                                                                                      |
+| Launcher (B1)            | `cairn launch`: through each harness adapter's run part, starts, hosts and controls runs, pauses them at the harness prompt and records sandbox state (OWN-22); carries into the harness input only text the core built; executes witness checks; the only component that starts another program (SEC-29); off until the principal starts it. |
+| Peer component (B2)      | `cairn peer`: replicates segments with peers the node's principal enrolled by key and serves paired phones; off until turned on.                                                                                                                                                                                                              |
+| Publish component (B3)   | Read-only publishing and the git carrier; off until turned on.                                                                                                                                                                                                                                                                                |
+| Bridge component (B3)    | Outbound exchange with hosts the node's principal names: the forge bridge, the CI carrier and the notification bridge (SEC-28); off until turned on.                                                                                                                                                                                          |
 
 The core's parts:
 
 | Part of the core      | Responsibility                                                                                                                                                                                                                                 |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cairn hook <event>`  | The hook handlers: read hook input from stdin, perform bounded work within the hook budget, write hook output to stdout, always fail open (I9).                                                                                                |
+| `cairn hook <event>`  | The hook handlers: read hook input from stdin, perform bounded processing within the hook budget, write hook output to stdout, always fail open (I9).                                                                                          |
 | `cairn mcp`           | The MCP server, one per run over stdio, exposing recall, landmarks, pins, room and kernel tools. Read-mostly.                                                                                                                                  |
 | `cairn kernel-worker` | The kernel worker, a child process of `cairn mcp` running the hermetic kernel under OS resource limits with a read-only store handle.                                                                                                          |
-| CLI                   | Install, verify, rebuild, quarantine, purge, backup, migrate, counters, audit, doctor, and principal acts at a terminal (OWN-12).                                                                                                              |
+| CLI                   | Install, verify, rebuild, quarantine, purge, backup creation and backup restore, migrate, counters, audit, doctor, and principal acts at a terminal (OWN-12).                                                                                  |
 | TUI                   | A reduced client of the room view on a terminal (VIEW-14).                                                                                                                                                                                     |
-| Core library          | All logic; no global state; every blocking operation takes a deadline, directly or through a cancellation token a deadline fires.                                                                                                              |
+| Core library          | All logic; no global state; every blocking operation takes a deadline, directly or through a cancellation signal a deadline fires.                                                                                                             |
 | Harness adapter       | The transcript and hook part of Cairn's code for one harness: parses transcript formats and hook I/O for Claude Code (and later other harnesses), opening no socket and starting no process. The adapter's run part sits in the launcher (B1). |
 
 ## 4.3 Event-sourced state
 
-The record is the only source of truth. Acts are themselves events in
-the record: principal acts, such as adding, editing or unpinning a
-device-seat pin, a stamp, a quarantine, its release and a purge's
-tombstone, as `operator` events on the device seat of the device that
-signs them, in the room they act on, or in the personal room, naming
-the room, when they act on no room or on one where the principal has no
-seat (OWN-02); room acts in the writer of the seat that signs them
-(LANE-31); and expire acts and the purges a retention policy makes, as
-the node records them. Every other table (FTS index, spans, landmarks,
-active pins, quarantine set, counters) is a projection that `cairn
-rebuild` reproduces exactly from the writer logs the node holds (I10).
-Purge removes content but leaves a tombstone event carrying the removed
-addresses, counts, reason, the principal who purged, and the
-commitments of the removed events (REC-17, ADM-07), never a hash of the
-removed content, so rebuilds stay deterministic, purges stay auditable
-and nothing retained confirms a guess at what was purged.
+The record is authoritative: everything else derives from it. Acts are
+themselves events in the record: principal acts, such as adding, editing or
+unpinning a device-seat pin of a type that restores, a stamp, a quarantine, its
+release and a purge's tombstone, as `operator` events on the device seat of the
+device that signs them, in the room they act on, or in the personal room, naming
+the room, when they act on no room or on one where the principal has no seat
+(OWN-02); room acts in the writer of the seat that signs them (LANE-31); and
+expire acts and the purges a retention policy makes, as the node records them.
+Every other table (FTS index, spans, landmarks, active pins, quarantine set,
+statuses, queues, stats) is a projection that `cairn rebuild` reproduces exactly
+from the writer logs the node holds and the node's own key set (I10). Purge
+removes content but leaves a tombstone event carrying the removed addresses,
+counts, reason, the principal who purged, and the commitments of the removed
+events (REC-17, ADM-07), never a hash of the removed content, so rebuilds stay
+deterministic, purges stay auditable and nothing retained confirms a guess at
+what was purged.
 
 ## 4.4 Key scenarios
 
@@ -120,7 +120,7 @@ and nothing retained confirms a guess at what was purged.
 
 | ADR    | Decision                                                                                                                                                                                                                                                                                          | Alternatives considered                                                                      | Rationale                                                                                                                                                                                                                                                                                  |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ADR-01 | **Daemonless core.** Hook handlers and per-run MCP servers open the store directly. The room-view component, the launcher, and the peer, publish and bridge components are optional, started by the principal, never on a hook or recall path, and their failure never touches an agent run (I9). | Long-running daemon on loopback (lcm)                                                        | Removes the port, token, stale-daemon, and wedged-daemon failure classes observed in lcm; zero idle footprint; simpler isolation (I8, I9).                                                                                                                                                 |
+| ADR-01 | **Daemonless core.** Hook handlers and per-run MCP servers open the store directly. The room-view component, the launcher, and the peer, publish and bridge components are optional, started by the principal, never on a hook or recall path, and their failure never touches an agent run (I9). | Long-running daemon on loopback (lcm)                                                        | Removes the port, daemon-credential, stale-daemon, and wedged-daemon failure classes observed in lcm; zero idle footprint; simpler isolation (I8, I9).                                                                                                                                     |
 | ADR-02 | **Event sourcing.** All derived state, including the effect of every act, is rebuilt from the writer logs a node holds.                                                                                                                                                                           | Mutable tables                                                                               | Makes verification, rollback, and forensic replay possible (I5, I10).                                                                                                                                                                                                                      |
 | ADR-03 | **Pull-only recall.** Automatic injection accepts only the `TrustedText` type, which can be constructed only from pins and sanitized structural fields.                                                                                                                                           | Per-prompt memory hints (lcm, claude-mem)                                                    | Poisoning evidence (§3, item 3). Enforced by the type system, not convention (I2).                                                                                                                                                                                                         |
 | ADR-04 | **Hermetic Starlark kernel by default**; external Python kernel as optional P2.                                                                                                                                                                                                                   | Python/Jupyter kernel as default                                                             | Starlark (Python dialect, implemented in Rust) has no filesystem or network unless the host provides it, is deterministic, supports step limits, and needs no Python runtime (CON-03). Risk: less capable than Python for Claude. Gate: spike S5 measures Claude's task success with each. |
