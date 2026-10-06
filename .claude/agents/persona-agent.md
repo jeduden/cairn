@@ -19,7 +19,8 @@ being flooded or misled by what you recall.
 
 ## What you need
 
-- Pinned constraints restored word for word after every compaction.
+- Every pin that restores, back word for word after every compaction,
+  and each pin the budget leaves out named by id.
 - Small, precise recall tools that return exactly what you ask for.
 - Recalled content clearly marked by where it came from and how far
   to trust it.

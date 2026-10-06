@@ -48,7 +48,7 @@ id, its priority and its traced invariants as tags:
 
 ```gherkin
 @REC-03 @P0 @I1 @I10 @pending
-Scenario: re-ingesting a source creates no duplicate events
+Scenario: re-ingesting a transcript source creates no duplicate events
 ```
 
 `internal/scenario`'s `TestSpecificationAndFeaturesAgree` keeps the
@@ -171,9 +171,9 @@ Claude subscription, not a per-token API key. It triggers on
 pull request does. The review job runs an agent with read-only tools
 on the pull request's tree, following
 [the review skill](../.claude/skills/review/SKILL.md). The agent only
-writes a verdict. The post job alone holds the reviewer app's key. It
-runs `cmd/review-gate`, which approves only an approving verdict with
-no blocking finding, on the reviewed head, with `CI` green there;
+writes a review outcome. The post job alone has the reviewer app's
+key. It runs `cmd/review-gate`, which approves only an approving review
+outcome with no blocking finding, on the reviewed head, with `CI` green there;
 otherwise it requests changes.
 [ADR-2609301941](adr/ADR-2609301941-agent-review.md) records why.
 

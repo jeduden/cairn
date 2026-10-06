@@ -31,7 +31,7 @@ and distrust services you cannot run yourself.
    live.
 2. Go offline on a train; keep working on the laptop's rooms; come
    back online and see both sides merged.
-3. Enrol the home server as a peer by key.
+3. Enroll the home server as a peer by key.
 4. A sandbox is reclaimed; its room's record is still complete.
 
 ## When you give up

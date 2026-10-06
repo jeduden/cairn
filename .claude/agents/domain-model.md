@@ -36,7 +36,10 @@ model yourself; you report where text departs from it.
 1. Read docs/domain-model.md, then the change, then the rest of what
    it touches.
 2. Search for every term the model excludes, and check each use
-   against where the model says it may still appear.
+   against where the model says it may still appear. Skip files an
+   outside tool writes and maintains, which use words in that tool's
+   own meaning, as the model's section on terms that are not Cairn
+   concepts allows.
 3. Find concepts used outside their meaning, and relations the change
    breaks.
 4. Find terms the model does not define. A new concept is a finding
