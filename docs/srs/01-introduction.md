@@ -15,7 +15,7 @@ defined in the [domain model](../domain-model.md).
 ## 1.1 Purpose
 
 This document specifies Cairn, a context layer that lets Claude agents work over
-unbounded histories — long research runs, long-running conversations, and
+unbounded histories — long research runs, long-running interactive work, and
 remote agents running for hours or days — without losing information to
 compaction and without turning stored history into a prompt-injection channel.
 

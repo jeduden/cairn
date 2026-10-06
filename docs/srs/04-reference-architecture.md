@@ -51,7 +51,7 @@ network boundary (I4).
 
 | Component                | Responsibility                                                                                                                                                                                                                                                                                                                                |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Core (B0)                | The hook handlers, each harness adapter's transcript and hook part, the MCP server, the kernel worker, the CLI and the TUI, and everything that builds what reaches the model; opens no socket and starts no program.                                                                                                                         |
+| Core (B0)                | The hook handlers, each harness adapter's transcript and hook part, the MCP server, the kernel worker, the CLI and the TUI, and everything that builds what reaches the model; opens no socket and starts no program but its kernel worker.                                                                                                   |
 | Room-view component (B1) | `cairn ui`: serves the room view on loopback, or on a local endpoint only the same OS user can reach; off until the principal starts it.                                                                                                                                                                                                      |
 | Launcher (B1)            | `cairn launch`: through each harness adapter's run part, starts, hosts and controls runs, pauses them at the harness prompt and records sandbox state (OWN-22); carries into the harness input only text the core built; executes witness checks; the only component that starts another program (SEC-29); off until the principal starts it. |
 | Peer component (B2)      | `cairn peer`: replicates segments with peers the node's principal enrolled by key and serves paired phones; off until turned on.                                                                                                                                                                                                              |
@@ -75,19 +75,21 @@ The core's parts:
 The record is authoritative: everything else derives from it. Acts are
 themselves events in the record. Principal acts, such as adding, editing or
 unpinning a device-seat pin of a type that restores, a stamp, a quarantine, its
-release and a purge with its tombstone, are `operator` events on the device seat
-of the device that signs them, in the room they act on, which that device first
-joins without admission when its principal has a member seat
-there; only one that acts on no room, or on a room its principal has no seat in,
-such as rejecting a foreign room, goes to the personal room, naming the room
-(OWN-02). Expire acts are `operator` events on the device seat of the node that
-signs them, and room acts sit in the writer of the seat that signs them
-(LANE-31). A purge under a retention policy is not an act: the node records it
-naming the policy, whose setting was the act, and its tombstone is a structural
-event. Every other table (FTS index, spans,
-landmarks, active pins, quarantine set, statuses, queues, stats) is a derived
-artifact that `cairn rebuild` reproduces exactly from the writer logs the node
-holds and the node's own key set (I10). Purge, the only way content is
+release and a purge, are `operator` events on the device seat of the device that
+signs them, in the room they act on, which that device first joins without
+admission when its principal has a member seat there. One that acts on no room
+or on a room its principal has no member seat in, such as rejecting a foreign
+room, or that a paired phone signs, goes to that device seat in the personal
+room, naming the room, and that room shows it by address as it shows a
+cross-room post (OWN-02, LANE-29). Expire acts are `operator` events on the
+device seat of the node that signs them. Room acts sit in the writer of the seat
+that signs them, with that seat's pin class: `operator` for a device seat,
+`assistant` for a run seat (LANE-31, PRV-01). A purge under a retention policy
+is not an act: the node records it naming the policy, whose setting was the act.
+Every tombstone is a `structural` event (PRV-01). Every other table (FTS index,
+spans, landmarks, active pins, quarantine set, statuses, queues, stats) is a
+derived artifact that `cairn rebuild` reproduces exactly from the writer logs
+the node holds and the node's own key set (I10). Purge, the only way content is
 destroyed, removes content but leaves a tombstone event carrying the removed
 addresses, counts, reason, the principal or retention policy that purged, and
 the commitments of the removed events (REC-17, ADM-07), never a hash of the

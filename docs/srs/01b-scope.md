@@ -36,8 +36,9 @@ stays a client of the record under VIEW-03, and every capability it
 offers also exists in the CLI or MCP.
 
 1. The person's own browser on loopback (B1), as the room view does
-   today; a paired phone may reach it through a tunnel the principal
-   runs outside Cairn, which Cairn sees as loopback (§6.3).
+   today. A phone reaches it only as a principal surface, through the
+   principal's own tunnel outside Cairn, which Cairn sees as loopback;
+   it is not a paired phone (§6.3).
 2. The person's other devices, as enrolled, mutually authenticated
    peers and paired phones (B2).
 3. Browsers on other machines with a login.
