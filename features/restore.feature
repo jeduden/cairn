@@ -102,7 +102,7 @@ Feature: Restore and injection (INJ)
     And waiting-post notices for the room <setting>
     When the hook "<hook>" runs
     Then the hook returns <notice>
-    And any notice is TrustedText holding only the count 2, short key fingerprints and the posts' recall addresses, without "POST-CANARY-91c2" or any other text a writer chose
+    And any notice is TrustedText holding only the count 2, short key fingerprints and the posts' recall addresses, without "POST-CANARY-91c2" or any other text an author chose
     And an audit entry records every notice returned
     And no notice starts or resumes a turn
 

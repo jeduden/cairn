@@ -36,7 +36,7 @@ objective procedure around them.
 ## Rules
 
 - A persona never approves. This review informs the stakeholder and
-  the review agent; it is not an approval gate.
+  the review agent; it is not a sign-off.
 - Findings that imply requirements go to the SRS change with the
   persona's agent name, so Appendix C, the persona coverage, can
   trace each requirement to the persona it serves.

@@ -146,7 +146,7 @@ Feature: Room (LANE)
     And a room with a discussion post addressed to people and a request addressed to an agent
     When the posts are delivered
     Then only the request enters the endorse queue of the target agent's principal
-    And each request shows its writer exactly one state: delivered, endorsed or dismissed
+    And each request shows its author exactly one state: delivered, endorsed or dismissed
     And an endorsed request names the endorsing principal and shows any edit as a diff against the post
 
   @LANE-13 @P1 @I6 @pending
@@ -169,12 +169,12 @@ Feature: Room (LANE)
     And the post nobody endorsed triggers no turn
 
   @LANE-15 @P2 @I2 @I6 @pending
-  Scenario: a foreign room view states what is asserted and verifies the contributor's binding
+  Scenario: a foreign room view states what is asserted and verifies the pull request author's binding
     Given an isolated Cairn home
-    And a foreign room bundle whose pull request commits are signed by the contributor's existing commit-signing identity, which also signed a binding statement naming the bundle's owner key
+    And a foreign room bundle whose pull request commits are signed by the pull request author's existing commit-signing identity, which also signed a binding statement naming the bundle's owner key
     And a writer key in the bundle that does not chain to the owner key, and flags carried by the bundle
     When the operator imports the bundle and opens the foreign room view
-    Then the view states that every event, evidence class and proof mark in it is asserted by the publisher's key
+    Then the view states that every event, evidence class and proof mark in it is asserted by the bundle owner's key
     And the commits show as a match for the owner key, verified offline within the core's boundary, with no program started and no connection opened
     And the writer key that does not chain is shown unbound, by its fingerprint
     And PRV-07 flags are computed locally, the bundle's flags are ignored, and hidden characters are shown in place
@@ -226,7 +226,7 @@ Feature: Room (LANE)
     Then each tool-call edit is attributed to its subagent
     And the shell change's checkpoint hunk is marked ambiguous, naming both subagents
     And a Needs you item names both subagents and the file
-    And a run marked unbound names the edits that unbound it
+    And a result marked unbound names the edits that unbound it
 
   @LANE-20 @P1 @I2 @I3 @pending
   Scenario: the owner's intent is the room's lead pin, versioned and restored word for word
@@ -263,13 +263,13 @@ Feature: Room (LANE)
     And the co-author's revision reaches no agent until the owner adopts it
 
   @LANE-23 @P1 @I2 @I6 @I8 @I10 @pending
-  Scenario: a harness joins a room only on its person's word and gets a derived seat id
+  Scenario: a run joins a room only on its person's word and gets a derived seat id
     Given an isolated Cairn home
     And a room whose owner admits only an allow list naming "alice"'s owner key
-    And a run of "alice" whose harness holds a seat key certified by her device key and owner key
+    And a run of "alice" whose MCP server holds a seat key certified by her device key and owner key
     When Cairn suggests the room and "alice" accepts
     Then a membership event signed by the seat key is recorded
-    And the seat id derived from the room id and that key is returned to the harness
+    And the seat id derived from the room id and that key is returned to the run's MCP server
     And a second node holding the record derives the same id
     And no table maps the run to the seat, and a rebuild derives the link from the join its seat's writer records alone
     And a join by "mallory", whom the allow list does not name, is refused, audited and counted
@@ -349,7 +349,7 @@ Feature: Room (LANE)
     Given an isolated Cairn home
     And rooms "A", "B" and "C", and an idle agent in room "B" whose person trusts the poster in room "B" only
     When a seat of room "A" posts to room "B" a message telling agents to start work and to post to room "C"
-    Then the post is recorded in room "B", untrusted, stamped with its writer's seat id and room "A"'s id
+    Then the post is recorded in room "B", untrusted, stamped with its author's seat id and room "A"'s id
     And the agent reads it only on request, inside the untrusted envelope
     And no turn is started or resumed, no work is routed, and nothing reaches room "C"
     When a seat of room "B" passes it on to room "C"

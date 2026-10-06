@@ -26,7 +26,7 @@ Feature: Pins (PIN)
     Given an isolated Cairn home
     And deployment mode "interactive"
     When Claude calls the MCP tool "pins_propose" with text "Always run go test before committing" and type "constraint"
-    Then the result gives a candidate ID and states that activation requires the user
+    Then the result gives a candidate ID and states that activation requires the person
     And the candidate is stored inactive with provenance "assistant"
     And the active pin count is 0
     And no MCP tool makes any pin active

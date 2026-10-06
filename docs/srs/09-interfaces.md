@@ -45,7 +45,7 @@ foreign room, and MUST be logged as a widening (RCL-05, RCL-10).
 | `landmarks`     | P0  | `scope` (default `run`), `room`, `tier`                                                                                                                                                                                                                                                                                                             | Landmark blocks with address ranges                                                | 4,000 tokens                               |
 | `pins_list`     | P0  | —                                                                                                                                                                                                                                                                                                                                                   | Active pins and pending candidates (candidates marked)                             | —                                          |
 | `stats`         | P0  | —                                                                                                                                                                                                                                                                                                                                                   | Event counts, runs, compactions and recall counts within the caller's recall scope | —                                          |
-| `pins_propose`  | P1  | `text`, `type`, `reason`                                                                                                                                                                                                                                                                                                                            | Candidate ID; states that activation requires the user                             | 1,000 characters                           |
+| `pins_propose`  | P1  | `text`, `type`, `reason`                                                                                                                                                                                                                                                                                                                            | Candidate ID; states that activation requires the person                           | 1,000 characters                           |
 | `kernel_exec`   | P1  | `code`                                                                                                                                                                                                                                                                                                                                              | Envelope with printed output, error, variables changed                             | CMP-05, CMP-06                             |
 | `kernel_vars`   | P1  | —                                                                                                                                                                                                                                                                                                                                                   | Names, types, and sizes of namespace variables                                     | —                                          |
 | `kernel_reset`  | P1  | —                                                                                                                                                                                                                                                                                                                                                   | Confirmation                                                                       | —                                          |
@@ -66,10 +66,10 @@ foreign room, and MUST be logged as a widening (RCL-05, RCL-10).
 
 A room tool acts in the named room, or the room the run is working in
 (LANE-01) when `room` is omitted, under the seat id the run holds there.
-No tool takes or returns a key: the harness hands its seat key to
-its own MCP server at launch, outside the model's context (ASM-21), the
-server holds it in memory only (SEC-10), and it names the id and signs
-each act (LANE-24). A refused act MUST return an explicit
+No tool takes or returns a key: the run's seat key is handed to
+Cairn's MCP server for that run at launch, outside the model's context
+(ASM-21), the server holds it in memory only (SEC-10), and it names
+the id and signs each act (LANE-24). A refused act MUST return an explicit
 error naming its reason class and, when another act caused it, that
 act's id (LANE-24, LANE-25).
 
@@ -107,7 +107,7 @@ ordered by score (search) or `seq` (expand).
 
 ```text
 <cairn-restore v="1">
-Pinned constraints (verbatim, set by the user):
+Pinned constraints (verbatim, set by the person):
 1. Never push directly to main; open a pull request.
 2. Do not modify files under migrations/ without explicit approval.
 
@@ -157,7 +157,7 @@ compaction summaries.
 | `cairn export --bundle\|--report\|--trusted-only`                               | bundles, readable reports and the trusted-only JSONL export (ADM-12); every export is an owner act under SEC-26                                                    |
 | `cairn import <file\|ref>`                                                      | import a room bundle (REC-23)                                                                                                                                      |
 | `cairn canary`                                                                  | End-to-end check                                                                                                                                                   |
-| `cairn rooms [--needs] [--json]`                                                | Fleet; TUI on a terminal; each running harness names its worktree path and controlling terminal                                                                    |
+| `cairn rooms [--needs] [--json]`                                                | Fleet; TUI on a terminal; each live run names its worktree path and controlling terminal                                                                           |
 | `cairn room create <title>`                                                     | create a room the person owns, a neutral owner act (LANE-01)                                                                                                       |
 | `cairn room show <room> [--at <address>]`                                       | room timeline                                                                                                                                                      |
 | `cairn room ready <room>`                                                       | mark ready (OWN-21)                                                                                                                                                |
@@ -182,7 +182,7 @@ compaction summaries.
 | `cairn trust revoke <grant>`                                                    | revoke a trust grant (OWN-29)                                                                                                                                      |
 | `cairn needs [--follow]`                                                        | Needs you queue; each held request names its room, worktree path and the harness's controlling terminal                                                            |
 | `cairn answer <id> allow\|allow-session\|deny\|reply`                           | answer a held request (OWN-12)                                                                                                                                     |
-| `cairn steer\|interrupt\|pause\|resume\|stop <harness>`                         | owner controls the adapter honours                                                                                                                                 |
+| `cairn steer\|interrupt\|pause\|resume\|stop <run>`                             | owner controls the adapter honours                                                                                                                                 |
 | `cairn endorse <post>` (P2)                                                     | endorse a post                                                                                                                                                     |
 | `cairn intent set\|revise\|show <room>`                                         | set or revise the intent, or show its versions (LANE-20)                                                                                                           |
 | `cairn verdict <room> <criterion> met\|not-met\|needs-changes`                  | record a verdict (OWN-27)                                                                                                                                          |

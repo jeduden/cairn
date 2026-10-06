@@ -89,7 +89,7 @@ Feature: Peer network (PEER)
     And a reader of the remote sees only entry names, sizes and times, and the carrier says so
 
   @PEER-09 @P2 @I2 @I8 @pending
-  Scenario: presence and typing hints are ephemeral and drafts stay private to their writer
+  Scenario: presence and typing hints are ephemeral and drafts stay private to their author
     Given an isolated Cairn home
     And two connected seats in room "room-1", which allows typing hints but not live drafts
     When one seat types a draft
@@ -104,7 +104,7 @@ Feature: Peer network (PEER)
     When both events reach the peer
     Then both events are kept as evidence
     And the writer is marked "equivocated"
-    And derived state for that writer stops at the fork until the owner chooses a branch as an owner act
+    And derived state for that writer stops at the fork until the owner chooses which fork to keep as an owner act
 
   @PEER-11 @P2 @I5 @I6 @pending
   Scenario: purges and quarantines reach every peer as signed requests and each peer's state is shown

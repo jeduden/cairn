@@ -1,7 +1,7 @@
 ---
 title: "9.7 Room vocabulary"
 summary: >-
-  The one vocabulary every surface uses (VIEW-14): harness status and
+  The one vocabulary every surface uses (VIEW-14): run status and
   freshness, room status, evidence and proof classes, the Needs you
   order, integrity seals, trust marks and the keymap. Part of §9.
 ---
@@ -11,7 +11,7 @@ One vocabulary for every surface (VIEW-14): status words, marks, queue
 order and keys. The reasons behind each choice are in plan 2610012322's
 proposal, §8.
 
-## 9.7.1 Harness status and freshness
+## 9.7.1 Run status and freshness
 
 | Status        | Meaning                                                | Sub-labels                                    |
 | ------------- | ------------------------------------------------------ | --------------------------------------------- |
@@ -27,7 +27,7 @@ proposal, §8.
 | -------------- | -------------------------------------------------------------------------------- |
 | (none)         | live: events current on this node                                                |
 | `behind`       | on a writer whose log has not reached this node lately: "as of 14:02 on desktop" |
-| `unrecorded`   | the harness runs but Cairn sees no hook events since a time                      |
+| `unrecorded`   | the run is live but Cairn sees no hook events since a time                       |
 | `imported`     | ingested from a transcript Cairn did not watch (REC-22)                          |
 | `stuck?`       | viewer-side only: Working with no event past a threshold                         |
 
@@ -37,7 +37,7 @@ First match wins, in this order: **Abandoned** and **Landed** (closed
 rooms only), **Needs you**, **Failing** (a check failed on the head,
 evidence `own run` or stronger), **Blocked**, **Running**, **Ready for
 review** (only after the owner act of OWN-21), **Quiet** (never while
-a harness is `unrecorded` or `behind`, VIEW-04). The pull-request
+a run is `unrecorded` or `behind`, VIEW-04). The pull-request
 states a forge reports (Draft, In review, Changes requested, Approved,
 Queued, Landing) live on the pull-request pill (P2, LANE-08), marked
 `asserted`, not in the room status; Cairn keeps no approval state of
@@ -118,7 +118,7 @@ field sends text, not shortcuts.
 | `Enter`               | open                                     | `⌘S` / `Ctrl+S` | save search                         |
 | `Space`               | preview or peek                          | `+` / `-`       | more / less context around a hit    |
 | `Esc`                 | close sheet                              | `w` / `b`       | why panel / blame gutter            |
-| `I`                   | interrupt (harness pane)                 | `W`             | witness run                         |
+| `I`                   | interrupt (run pane)                     | `W`             | witness run                         |
 | `p`                   | pause / resume                           | `c` / `C`       | comment / verdict sheet             |
 | `S`                   | stop (opens the stop sheet)              | `P`             | pick what the outcome window shows  |
 | `f`                   | fork room from here                      | `l`             | branch and pull-request links       |

@@ -6,19 +6,19 @@ Feature: Room view (VIEW)
   implements the requirement lands.
 
   @VIEW-01 @P1 @I1 @I6 @pending
-  Scenario: the room view shows every harness of the person's rooms grouped by room
+  Scenario: the room view shows every run of the person's rooms grouped by room
     Given an isolated Cairn home
-    And two rooms with one live and one recorded harness each
-    When the person opens the room view and selects one harness
-    Then every harness appears grouped under its room
-    And the selected harness shows its prompts, tool calls, permission requests, output and each edit as a diff
+    And two rooms with one live and one recorded run each
+    When the person opens the room view and selects one run
+    Then every run appears grouped under its room
+    And the selected run shows its prompts, tool calls, permission requests, output and each edit as a diff
     And each tool run shows its result and evidence class, and each event shows its actor
-    And every other harness appears as a tile that opens full size
+    And every other run appears as a tile that opens full size
 
   @VIEW-02 @P1 @I9 @pending
   Scenario: the room view shows an active run's lines within 2 s without slowing hooks
     Given an isolated Cairn home
-    And ten local harnesses writing transcripts in one room
+    And ten local runs writing transcripts in one room
     When the person watches one active run in the room view
     Then each transcript line appears within 2 s of the harness writing it
     And no hook exceeds its NFR-01 budget while the view reads
@@ -26,7 +26,7 @@ Feature: Room view (VIEW)
   @VIEW-03 @P1 @I9 @I10 @pending
   Scenario: every room-view surface is an optional, read-only client of the core
     Given an isolated Cairn home
-    And a room with recorded harnesses
+    And a room with recorded runs
     When the room view runs and is then stopped
     Then the view reads the record only through the core's read path and never writes to it
     And the view holds no state the record cannot rebuild beyond per-viewer conveniences
@@ -36,11 +36,11 @@ Feature: Room view (VIEW)
   @VIEW-04 @P1 @I6 @I10 @pending
   Scenario: statuses come from structural events only and unrecorded runs surface
     Given an isolated Cairn home
-    And a room with one harness whose transcript is longer than its ingested position
+    And a room with one run whose transcript is longer than its ingested position
     And a run-component launch with no hook event, sitting only in its personal room
     When the person opens Fleet and runs "cairn rooms"
-    Then every harness shows exactly one status from the closed set of §9.7.1 with its freshness mark
-    And the room shows one room status and the worst freshness mark of its harnesses, never Quiet
+    Then every run shows exactly one status from the closed set of §9.7.1 with its freshness mark
+    And the room shows one room status and the worst freshness mark of its runs, never Quiet
     And that run appears under its personal room on Fleet and in "cairn rooms"
     And text an agent wrote changes no status, and time-relative marks are computed in the viewer from an explicit boundary
 
@@ -56,8 +56,8 @@ Feature: Room view (VIEW)
   @VIEW-06 @P1 @I2 @I6 @pending
   Scenario: written text is shown apart, marked untrusted and never sets a status
     Given an isolated Cairn home
-    And a harness whose agent wrote "all tests pass" in its output
-    When the person opens that harness in the room view
+    And a run whose agent wrote "all tests pass" in its output
+    When the person opens that run in the room view
     Then the text is shown apart from derived lines and marked untrusted
     And it is marked as a "claim"
     And no status, evidence or proof mark changes because of it
@@ -141,7 +141,7 @@ Feature: Room view (VIEW)
   @VIEW-14 @P1 @I6 @pending
   Scenario: every surface uses the same words and a reduced surface says what it left out
     Given an isolated Cairn home
-    And a room with harnesses in several statuses and open Needs you items
+    And a room with runs in several statuses and open Needs you items
     When the person views the room in the room view, the TUI, the CLI and the harness strip
     Then every surface shows the same status words, marks, room ids and Needs you order
     And each reduced surface says what it left out and where to see it
@@ -157,11 +157,11 @@ Feature: Room view (VIEW)
     And the status line and banners shown to the human never enter the model's context
 
   @VIEW-16 @P1 @I4 @I6 @pending
-  Scenario: each harness shows its token use and an estimated cost from a local price table
+  Scenario: each run shows its token use and an estimated cost from a local price table
     Given an isolated Cairn home
-    And a harness with recorded token use and a local price table
-    When the person opens the harness in the room view
-    Then it shows the harness's token use
+    And a run with recorded token use and a local price table
+    When the person opens the run in the room view
+    Then it shows the run's token use
     And it shows a cost labelled as an estimate
     And no price is fetched
 
@@ -203,9 +203,9 @@ Feature: Room view (VIEW)
   @VIEW-21 @P1 @I2 @I10 @pending
   Scenario: the room view puts the outcome beside the intent so a person can record a verdict
     Given an isolated Cairn home
-    And a room whose intent names C1, C2 and C3, with a run linked to C1 and an agent's claim linked to C2
+    And a room whose intent names C1, C2 and C3, with a result linked to C1 and an agent's claim linked to C2
     When its agents go idle and the person opens the room view
-    Then C1 shows the run and its evidence class, C2 shows a claim and C3 reads "no evidence"
+    Then C1 shows the result and its evidence class, C2 shows a claim and C3 reads "no evidence"
     And every criterion reads "no verdict"
     And the view shows edits outside the intent, the agents' exposure and the diff since the last verdict
     And a Q3 item "outcome awaiting a verdict" is raised

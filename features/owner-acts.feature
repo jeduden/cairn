@@ -169,7 +169,7 @@ Feature: Owner acts (OWN)
     And an agent's active run with completed, in-flight and waiting effects
     When the owner asks to stop it
     Then the view lists the completed effects, what is in flight and what is waiting, with whether and how each can be undone
-    And no surface shows the harness as stopped before its acknowledgement is recorded
+    And no surface shows the run as stopped before the harness's acknowledgement is recorded
 
   @OWN-15 @P1 @I6 @I7 @pending
   Scenario: a control the adapter cannot honour is shown unavailable and never simulated

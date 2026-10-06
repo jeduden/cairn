@@ -78,7 +78,7 @@ row: "- [{title}]({filename}) — {summary}"
 - [7. Non-functional requirements](07-non-functional-requirements.md) — Normative non-functional requirements NFR-01..15: latency, throughput, scale, availability, durability, concurrency, footprint, portability, compatibility, usability, maintainability, documentation.
 - [8. Data and storage](08-data-and-storage.md) — Normative home layout, logical schema, canonical encoding (RFC 8785 + SHA-256) and the conservative token estimator.
 - [9. Interfaces](09-interfaces.md) — Normative interfaces: the hook contract, the MCP tools, the recall envelope, the restore block, the CLI with its exit codes, and the configuration keys repository configuration may only tighten.
-- [9.7 Room vocabulary](09b-lane-vocabulary.md) — The one vocabulary every surface uses (VIEW-14): harness status and freshness, room status, evidence and proof classes, the Needs you order, integrity seals, trust marks and the keymap. Part of §9.
+- [9.7 Room vocabulary](09b-lane-vocabulary.md) — The one vocabulary every surface uses (VIEW-14): run status and freshness, room status, evidence and proof classes, the Needs you order, integrity seals, trust marks and the keymap. Part of §9.
 - [10. Engineering quality (ENG)](10-engineering-quality.md) — Engineering quality requirements ENG-01..29: code organisation, testing, static analysis, supply chain, and process.
 - [11. Verification and acceptance](11-verification-and-acceptance.md) — The evaluation plan with baselines and acceptance targets, and the definition of done for v1.0.
 - [12. Delivery plan](12-delivery-plan.md) — Milestone M0 spikes S1–S12 and milestones M1–M9 with their scope and exit criteria.
