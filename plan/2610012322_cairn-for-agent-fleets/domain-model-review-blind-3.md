@@ -61,3 +61,49 @@ current.
 - I3: "pins that restore" instead of "pinned constraints".
 - I4: "hook handlers".
 - I8: "own" and trust-grant exceptions to "untrusted".
+
+## 4. Stakeholder decisions, 6 October 2026
+
+1. **Stamps stick (Q1):** a room act never changes any restore block.
+   An edit adds an unstamped version while the stamped version keeps
+   restoring to the stamper's agents; an unpin, by the author or a
+   moderator, takes the pin off the room's pin list, and the stamped
+   version keeps restoring until the stamper unstamps it, a cut
+   principal act. Either raises a Needs you item for the stamper.
+2. **I2 and I3 (Q2):** I2's trusted sources gain a pin version a
+   principal stamped, for that principal's own agents; I3 reads "every
+   pin that restores is stored verbatim and restored verbatim after
+   every compaction, or named by id and count when the budget omits
+   it". Both by ADR.
+3. **One seat kind for acting without a run (Q3):** the service-account
+   seat goes; every principal acts without a run through a device seat,
+   one per device, and the facilitator acts through its device seat.
+4. **Rooms without a seat (Q4):** a principal act on a room where the
+   principal has no seat goes to its device seat in its personal room,
+   naming the room; a foreign room is one its principal neither owns
+   nor has a seat in.
+5. **Member (Q5):** a seat whose add stands, or a run's personal-room
+   seat; a kicked, departed or barred seat stays a seat but is no
+   longer a member.
+6. **Import (Q6):** "import" means reading a bundle; an unwatched
+   transcript is ingested, an ingested run with origin `ingested`;
+   peer segments are received. Origins: `witnessed`, `ingested`,
+   `bundle`, `peer`.
+7. **Notification (Q7):** a signal to a person on the same device or
+   through the notification bridge; it carries only the room's petname,
+   the queue class and a count, never room text, never reaches a model
+   and never accepts answers.
+8. **Trust level (Q8):** per event, for one principal's agents, from
+   provenance, writer, the deployment mode recorded with the event, and
+   that principal's stamps and trust grants as its writer logs carry
+   them; every node of that principal holding the same logs derives the
+   same level.
+9. **Adapter and sandbox keys (Q9):** a harness adapter is the
+   harness-specific code for one harness, its transcript and hook part
+   in the core and its part that starts, hosts and controls runs in the
+   launcher. A node holding only a token key signs no principal acts;
+   its runs' pins restore only once a principal stamps them from one of
+   its devices.
+10. **Outside tools (Q10):** excluded words may appear in files an
+    outside tool writes and owns, in that tool's meaning, such as
+    frit's plan skills; the domain-model agent skips them.
