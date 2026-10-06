@@ -107,3 +107,60 @@ report, publisher (SEC-26), appointed moderator.
 - I7: managed policy and managed settings; "agent configuration".
 - I8: "another node wrote" against the principal's other devices (Q1).
 - I10: "statistics" (fixable in the model alone).
+
+## 5. Stakeholder decisions, 6 October 2026
+
+The stakeholder decided Q1 to Q4 and asked for the recommended option
+on every other question, so Q5 to Q17 take the recommendation.
+
+1. **Trust (Q1):** unsigned trusted sources (this node's `operator`,
+   `harness_meta` and structural events, its interactive `user` turns)
+   count only on the node that recorded them; the principal's signed
+   acts, device-seat pins, stamps and trust grants count alike on
+   every node. I2 and I8 change by ADR.
+2. **Creating seat (Q2):** an add is the act that placed a seat, its
+   create room act or a join accepted under the room's admission;
+   `cairn install`'s create is the device seat's add in the personal
+   room; any seat joins, a run on its principal's ask or acceptance.
+3. **Owner (Q3):** a room act signed by a device seat of the room's
+   owner has every room capability; the owner's agents' run seats get
+   only what role assignment or an appointment gives them; title and
+   labels are set by the owner's device seat or a moderator.
+4. **Seats without a device (Q4):** a token key certifies a
+   token-key-only node's device seat, which signs no principal or
+   expire acts; the facilitator is a service account with its own
+   node; a paired phone seals its own writer; a run's MCP server seals
+   its run seat's writer, and ingest keeps an ingested run's seat key
+   like any non-run seat key.
+5. **Second senses (Q5):** work is only the capability; "backup
+   restore" (`cairn backup create|restore`); presence proof; model
+   token and access token; widening only for acts; "holds" only for
+   nodes; the run and room status Needs you becomes Asking.
+6. **Invariants (Q6), by ADR:** I1 names managed policy's retention;
+   I4 says only the core builds what reaches the model, B1 allows a
+   same-user local endpoint, B2 reaches paired phones; I7 says harness
+   configuration.
+7. **Agent-written pins (Q7):** a pin candidate is proposed text, not a
+   pin; confirmation makes a new pin of the principal's device seat; a
+   run seat's pin restores only once stamped.
+8. **Acts of no kind (Q8):** the role request and the join request are
+   room acts; the purge request is a neutral principal act.
+9. **Has a seat in (Q9):** through a seat that is a member; an agent
+   has a seat through its run's seats.
+10. **Verdict pins (Q10):** widening covers device-seat pins of a type
+    that restores; a verdict is its own principal act (OWN-27).
+11. **Owner leaves (Q11):** every seat of the owner's principal has
+    left; ownership stays, and the owner may still hand over or name a
+    successor, which ends LANE-11's freeze.
+12. **Room state (Q12):** visibility, admission, successor and the
+    notice allowance are room state.
+13. **Work (Q13):** on any branch the room names; an assignment only
+    asks.
+14. **Certifier (Q14):** a person, another service account or managed
+    policy certifies a service account.
+15. **Own posts (Q15):** a principal's own device-seat posts are
+    trusted for its own agents.
+16. **Links (Q16):** the link room act adds range, branch and criterion
+    links; a trust grant never covers a room summary.
+17. **Configuration keys (Q17):** the concept in snake case:
+    `node.deployment_mode`, `retention_policy.*`.

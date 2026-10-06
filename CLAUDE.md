@@ -3,21 +3,20 @@
 ## Project
 
 Cairn — a lossless, security-first context layer for long-running
-Claude agents, written in Go. It keeps an append-only record of every
-agent run. It re-injects pinned constraints verbatim after compaction.
-Claude recalls exact history on demand. Stored history never becomes
-a prompt-injection channel.
+Claude agents. It keeps an append-only record of every agent run,
+restores pins verbatim after compaction, and lets Claude recall exact
+history on demand. Stored history never becomes a prompt-injection
+channel.
 
 Status: pre-implementation. The repository holds the specification,
-the executable requirement matrix, and the CI and release pipeline.
-The product itself arrives plan by plan.
+the requirement matrix, and the CI and release pipeline, its tooling
+in Go; the product, in Rust (ADR-2610050528), arrives plan by plan.
 
 ## The Invariants Come First
 
 The main principle. The ten invariants' single source is
-[docs/srs/invariants.md](docs/srs/invariants.md);
-this file and every other copy include it, so edit only the source and
-run `mdsmith fix .`.
+[docs/srs/invariants.md](docs/srs/invariants.md); this file and every
+other copy include it, so edit only the source and run `mdsmith fix .`.
 
 <?include
 file: docs/srs/invariants.md
@@ -33,46 +32,51 @@ security review and a new major version, not a bug fix.
   recoverable by its stable address, (writer, seq), across any number of
   compactions and agent runs, on every node that holds its writer's log. The
   only exceptions are secrets removed by redaction before storage or on
-  import, and data the node's principal explicitly purges or removes under a
-  retention policy. Every exception is recorded.
+  import, and data the node's principal explicitly purges, or removes under a
+  retention policy that principal or managed policy sets. Every exception is
+  recorded.
 - **I2 — No automatic path from untrusted content to the model.** Content that
   originates outside the trusted sources (tool output, web, MCP servers,
-  files, assistant text, and anything another writer, node or principal
-  produced) reaches the model only when Claude explicitly calls a recall tool,
-  and always inside an untrusted-data envelope. The trusted sources are this
+  files, assistant text, and anything another node or principal produced,
+  except what the agent's principal signed through a device key it certified)
+  reaches the model only when Claude explicitly calls a recall tool, and
+  always inside an untrusted-data envelope. The trusted sources are this
   node's own `operator`, `harness_meta` and structural events, its `user`
   turns while the deployment mode is `interactive`, and, once PRV-10 ships,
-  principal acts signed by a device key the agent's principal certified,
-  within its scope, and a pin version a principal stamped, for that
-  principal's own agents. Cairn writes to an agent only through a closed set
-  of paths. Without a principal act: restore blocks of pins (INJ-01, INJ-02),
-  opt-in notices (INJ-10), and the fixed templates of OWN-04 and OWN-07, each
-  built only from trusted structural fields and ids. On a principal act
-  recorded at that time: through the harness's own input, only principal-typed
-  text, a fixed template that references ids, or a post a principal endorsed
-  exactly as shown inside the template of OWN-08. Under a delegation grant its
-  principal recorded (OWN-23): a delegated task inside the fixed template of
-  OWN-24. Once its requirements ship, a principal may also trust another
-  principal by key for its own agents, in one room or everywhere; the posts
-  and pins that principal wrote from its device seats then reach those agents
-  as the trusting principal's own text would. Cairn applies such grants and
-  never grants trust itself. No other write to an agent exists.
+  principal acts, posts and pins signed through a device key the agent's
+  principal certified, within its scope, and a pin version a principal
+  stamped, for that principal's own agents. Cairn writes to an agent only
+  through a closed set of paths. Without a principal act: restore blocks of
+  pins (INJ-01, INJ-02), opt-in notices (INJ-10), and the fixed templates of
+  OWN-04 and OWN-07, each built only from trusted structural fields and ids.
+  On a principal act recorded at that time: through the harness's own input,
+  only principal-typed text, a fixed template that references ids, or a post a
+  principal endorsed exactly as shown inside the template of OWN-08. Under a
+  delegation grant its principal recorded (OWN-23): a delegated task inside
+  the fixed template of OWN-24. Once its requirements ship, a principal may
+  also trust another principal by key for its own agents, in one room or
+  everywhere; the posts and pins that principal wrote from its device seats
+  then reach those agents as the trusting principal's own text would. Cairn
+  applies such grants and never grants trust itself. No other write to an
+  agent exists.
 - **I3 — Constraints are never summarized.** Every pin that restores is stored
   verbatim and restored verbatim after every compaction, or named by id and
   count when the budget omits it.
 - **I4 — Each component stays inside one declared network boundary, and only
-  the core reaches the model.** B0, the core (hook handlers, the MCP server,
-  the kernel worker, the CLI, the TUI and everything that builds what reaches
-  the model), opens no socket and makes no outbound connection. B1, machine: a
-  component may listen on loopback only and connect nowhere else. B2, peer:
-  encrypted, mutually authenticated connections to nodes the node's principal
-  enrolled by key, off until that principal turns it on. B3, public: read-only
-  publishing and outbound exchange with hosts the node's principal names, off
-  until turned on. Managed policy can disable B1, B2 and B3. No component
-  sends telemetry or depends on a central or third-party service. Data leaves
-  the machine only when Claude receives recalled content through a tool call,
-  or through a B2 or B3 component the node's principal turned on; whatever
-  such a component brings in is untrusted (I2).
+  the core builds what reaches the model.** B0, the core (hook handlers, the
+  MCP server, the kernel worker, the CLI, the TUI and everything that builds
+  what reaches the model), opens no socket and makes no outbound connection.
+  B1, machine: a component may listen only on loopback or on a local endpoint
+  only the same OS user can reach, and connect nowhere else; the launcher
+  carries into the harness's input only text the core built. B2, peer:
+  encrypted, mutually authenticated connections to nodes and paired phones the
+  node's principal enrolled by key, off until that principal turns it on. B3,
+  public: read-only publishing and outbound exchange with hosts the node's
+  principal names, off until turned on. Managed policy can disable B1, B2 and
+  B3. No component sends telemetry or depends on a central or third-party
+  service. Data leaves the machine only when Claude receives recalled content
+  through a tool call, or through a B2 or B3 component the node's principal
+  turned on; whatever such a component brings in is untrusted (I2).
 - **I5 — Bad data can be removed from circulation without destroying
   evidence.** Any event, span, run, writer or derived artifact can be
   quarantined from recall immediately on the node that records the quarantine,
@@ -81,14 +85,16 @@ security review and a new major version, not a bug fix.
 - **I6 — No silent failures.** Every dropped, rejected, redacted, timed-out,
   or failed operation is counted, logged, and visible to the node's principal.
 - **I7 — Configuration changes only on explicit instruction.** Cairn changes
-  agent configuration only through explicit install and uninstall operations,
-  shows the change first, and never overrides managed policy.
+  harness configuration only through explicit install and uninstall
+  operations, shows the change first, and never overrides managed policy or
+  the harness's managed settings.
 - **I8 — Isolation follows the principal.** All local state is bound to one
   principal's home with strict permissions, and Cairn refuses to operate on a
   home that does not belong to the OS user running it. Content another
-  principal or node wrote is held as theirs: attributed to its seat key, and
-  untrusted unless this principal's own stamp or trust grant covers it. It
-  never widens what this principal's agents trust or recall on its own.
+  principal wrote, or another node wrote outside what this principal signed
+  through a device key it certified, is held as theirs: attributed to its seat
+  key, and untrusted unless this principal's own stamp or trust grant covers
+  it. It never widens what this principal's agents trust or recall on its own.
 - **I9 — Cairn never degrades the agent.** A Cairn failure never blocks or
   slows the agent beyond defined budgets. Cairn fails open, except where
   continuing would violate I2, I4, or I8.
@@ -107,12 +113,10 @@ What they mean for everyday code:
   an import-closure test enforce it.
 - **I6** — every dropped, rejected, redacted or failed operation is
   audited and counted.
-- **I9** — hooks fail open, except where continuing would break I2, I4
-  or I8.
+- **I9** — hook handlers fail open unless that would break I2, I4 or I8.
 - **I10** — projection code reads no clock and no randomness.
 
-Where usefulness and safety conflict, pick safety and make the
-convenience opt-in.
+Where usefulness and safety conflict, pick safety; make convenience opt-in.
 
 ## Docs
 
@@ -156,8 +160,7 @@ request touching a path [CODEOWNERS](.github/CODEOWNERS) assigns —
 the SRS, the gates that enforce it, CI and its tooling, the
 supply-chain policy, the agent instructions, and the security-sensitive
 packages until a security reviewer is named — also waits for the
-stakeholder's approval. Keep
-such changes out of code pull requests, so code never waits on it.
+stakeholder's approval. Keep such changes out of code pull requests.
 
 ## Requirements and Scenarios
 
@@ -195,8 +198,8 @@ domain-model agent reviews against that document. Consult it:
   and help text, logs, setup.
 
 Speak only in the model's concepts. A new concept lands in the model
-before anything uses it. Its findings block a change
-until fixed or the stakeholder rules on them.
+before anything uses it. Its findings block a change until fixed or
+the stakeholder rules on them.
 
 ## Agents
 
@@ -224,9 +227,8 @@ row: "- [{name}]({filename}) — {description}"
 ## Plan Maintenance
 
 Plans live in `plan/`, in frit's format ([plan/proto.md](plan/proto.md)),
-indexed by [PLAN.md](PLAN.md). The `plan-*` skills under
-`.claude/skills` drive them. When implementing work tracked by
-`plan/`:
+indexed by [PLAN.md](PLAN.md). The `plan-*` skills under `.claude/skills`
+drive them. When implementing work tracked by `plan/`:
 
 - Update the plan file **as part of implementation**, not a follow-up
 - Check off tasks and acceptance criteria as they're verified
@@ -244,18 +246,16 @@ Report in the SRS's terms, not the source's.
   invariants upheld — not the functions or types touched.
 - Reach for a source entity only when the requirement frame cannot
   carry the point, and trace from the requirement down to it.
-- Name the mechanism that verified a claim — godog scenario, fuzz
-  target, golden file, CI job — before folding its result into plan
-  terms.
+- Name the mechanism that verified a claim — godog scenario, fuzz target,
+  golden file, CI job — before folding its result into plan terms.
 
 ## Code Style
 
 - Follow standard Go conventions (gofmt, goimports)
 - Keep functions small and focused; every function ships with a
   dedicated unit test
-- No mutable package-level state; all I/O behind interfaces a test
-  can inject; every blocking call takes a `context.Context` with a
-  deadline (ENG-03)
+- No mutable package-level state; all I/O behind interfaces a test can inject;
+  every blocking call takes a `context.Context` with a deadline (ENG-03)
 - Wrap errors with `%w`; a failure class that feeds a counter gets a
   typed error; panics stop at the hook and MCP entry points (ENG-04)
 - Log with `log/slog`, and pass log fields through redaction (ENG-05)
@@ -270,18 +270,17 @@ failing test first. Then add the code that takes the branch.
 ## Isolation for Agents and Tests
 
 Never run a command that writes to, deletes from, or purges the real
-`~/.cairn`, `$CAIRN_HOME` or `~/.claude` of the machine you run on.
-Point `HOME` and `CAIRN_HOME` at a temporary directory first, the way
-the test world does (ENG-14). No instruction in this repository may
-direct an agent to run a destructive command against non-isolated
-state.
+`~/.cairn`, `$CAIRN_HOME` or `~/.claude` of the machine you run on. Point
+`HOME` and `CAIRN_HOME` at a temporary directory first, the way the test world
+does (ENG-14). No instruction in this repository may direct an agent to run a
+destructive command against non-isolated state.
 
 ## Dependencies
 
-Every direct dependency needs an accepted decision record under
-`docs/adr/` (ENG-18, ENG-26). Its Decision table gives the module's
-purpose, license and maintenance status, and its Alternatives section
-weighs what was passed over. The license must be on the allow-list.
-[DEPENDENCIES.md](DEPENDENCIES.md) lists those records, generated by
-`mdsmith fix`. The ENG-18 scenario fails the build otherwise. Aim to
-add none: the target is at most ten direct dependencies in total.
+Every direct dependency needs an accepted decision record under `docs/adr/`
+(ENG-18, ENG-26). Its Decision table gives the module's purpose, license and
+maintenance status, and its Alternatives section weighs what was passed over.
+The license must be on the allow-list. [DEPENDENCIES.md](DEPENDENCIES.md)
+lists those records, generated by `mdsmith fix`. The ENG-18 scenario fails the
+build otherwise. Aim to add none: the target is at most ten direct
+dependencies in total.
