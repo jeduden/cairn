@@ -133,3 +133,47 @@ The eight new questions, decided one by one:
    notice. Recall returns a tombstone or a quarantine marker, kernel
    output carries a truncation marker, the envelope's field becomes
    `warning`, and §9.1 speaks of the harness's notification text.
+
+## 7. Undefined terms, decided 6 October 2026
+
+1. **Component:** defined as a role inside exactly one network
+   boundary (I4), a closed set the model and §6.3 list: core (B0); room
+   view and launcher (B1); peer (B2); publish and bridge (B3). A new
+   component is a model change and a §6.3 row.
+2. **Peer:** a relation, not a thing: a node this node enrolled by key
+   and exchanges sealed segments with through the peer component. A
+   blind peer is a kind of peer that holds ranges without a member's
+   key.
+3. **Receipt:** one concept, two kinds, always qualified: the head
+   receipt (every writer's chain head; tamper evidence, VIEW-10,
+   SEC-27) and the purge receipt (SEC-31).
+4. **Surfaces:** the room view's surfaces are a closed set in the
+   model: Fleet, Catch up, Needs you, Health, Setup and Peers. OWN-07's
+   "fleet default" becomes "the principal's default".
+5. **Focus set:** the rooms a principal marks to come first in Needs
+   you, changed by a recorded neutral act, so every device shows one
+   order.
+6. **Away mode:** dropped; it means an away policy is on. Turning one
+   on offers to write a head receipt (VIEW-10).
+7. **Room alias:** Petname widens to a name the viewer chose for a key
+   or a room; notifications carry the room's petname, else its id.
+8. **Child agent:** spelled out as "a subagent or a delegate" in OWN-10
+   and OWN-24; Delegate joins the model.
+9. **Acceptance grant:** its own concept, the receiving principal's
+   act (OWN-26); delegation to another principal's agent needs it and
+   a delegation grant.
+10. **Comment:** a post that links to a marked range; it leaves the act
+    list and stays a room-view verb. "Room board" becomes
+    "conversation".
+11. **Origin:** how an event reached this node's record: `witnessed`,
+    `imported`, `bundle` or `peer`, independent of provenance. The
+    value `foreign` becomes `bundle`.
+12. **Harness facts:** a group like the git facts: compaction, user
+    turn, transcript, hook and harness session, each the harness's,
+    never Cairn's.
+13. **Worktree and checkpoint:** worktree joins the git facts; the
+    worktree checkpoint (REC-20) is a Cairn concept, always written in
+    full.
+14. **Trust terms:** structural field and structural event are
+    defined; "trusted boundary" becomes "trusted sources" in the I2 ADR
+    that v2 already needs.
