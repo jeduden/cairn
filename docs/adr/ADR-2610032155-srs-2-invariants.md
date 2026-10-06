@@ -196,7 +196,7 @@ changes they control.
     beside each such session, rather than fought with checks an agent can
     pass.
 - **Where:**
-  [wording][own-wording];
+  [wording][OWN];
   requirements [OWN-11][OWN], [OWN-12][OWN], [OWN-22][OWN].
 - **Review:** approved, 3 October 2026.
 
@@ -228,7 +228,7 @@ changes they control.
   - Orchestrators can fan work out to other sessions and machines without
     turning an injected instruction into an unbounded agent.
 - **Where:**
-  [wording][own-wording];
+  [wording][OWN];
   requirements [OWN-23][OWN], [OWN-24][OWN], [OWN-25][OWN], [OWN-26][OWN].
 - **Review:** approved, 3 October 2026.
 
@@ -308,4 +308,3 @@ their requirements written before any grant is honoured.
 [PEER]: ../srs/05c-principal-and-peer-requirements.md#514-peer-network-peer
 [SEC]: ../srs/06-security.md#62-security-requirements-sec
 [ENG]: ../srs/10-engineering-quality.md#104-process
-[own-wording]: ../srs/05c-principal-and-peer-requirements.md
