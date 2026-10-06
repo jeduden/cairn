@@ -44,9 +44,9 @@ after the principal act of OWN-21 marking the room ready), **Quiet** (never
 while a run is `unrecorded` or `behind`, VIEW-04). The pull-request states a
 forge reports (Pre-review, In review, Changes requested, Approved, Queued,
 Merging) live on the pull-request pill (P2, LANE-08), marked `asserted`, not in
-the room status; Cairn keeps no approval state of its own. Check states:
-Pending, Executing, Passed, Failed, Stale, Unbound, Absent. No state shares a
-name with a room status, a draft or a landing.
+the room status; Cairn keeps no approval state of its own. A check's check
+state is one of Pending, Executing, Passed, Failed, Stale, Unbound and Absent.
+No check state shares a name with a room status, a draft or a landing.
 
 ## 9.7.3 Evidence and proof classes
 
@@ -68,23 +68,21 @@ name with a room status, a draft or a landing.
 
 ## 9.7.4 Needs you order
 
-Queue classes, named Q1–Q4 so they never read as priorities P0–P2:
-**Q1 blocking now** (held requests: permission, question, hand-off),
-**Q2 blocking the room** (failed required check, crash, rate limit
-with no resume, refused segment, overlap), **Q3 waiting on you** (a
-pull-request review the forge asks of you, an outcome awaiting a
-verdict, a role request, a directed post awaiting your endorsement
-(LANE-12), a pin version you stamped that was edited or unpinned
-(LANE-32), your device-seat pin a moderator unpinned (LANE-26), a parked
-held request, a quota crossed), **Q4 for your
-record** (never alerts). Order: class; inside Q1, the number of agents
-blocked on the same answer, then causal order of raising; inside Q2
-and Q3, rooms in the focus set first, then causal order. The focus set
-changes only by a recorded neutral principal act, so every device of
-the principal shows one order. Causal order, not wall-clock age,
-because age differs between nodes and reads a clock (I10); it is
-oldest first wherever clocks agree. Pull-request reviews the forge
-asks of the principal join the same queue.
+Queue classes, named Q1–Q4 so they never read as priorities P0–P2: **Q1 blocking
+now** (held requests: permission, question, hand-off), **Q2 blocking the room**
+(failed required check, crash, rate limit with no resume, refused segment,
+overlap), **Q3 waiting on you** (a pull-request review the forge asks of you, an
+outcome awaiting a verdict, a role request, a directed post awaiting your
+endorsement (LANE-12), a pin version you stamped that was edited or unpinned
+(LANE-32), your device-seat pin a moderator unpinned (LANE-26), a held request
+past its hold window under a keep-going away policy (OWN-07), a quota crossed),
+**Q4 for your record** (never alerts). Order: class; inside Q1, the number of
+agents blocked on the same answer, then causal order of raising; inside Q2 and
+Q3, rooms in the focus set first, then causal order. The focus set changes only
+by a recorded neutral principal act, so every device of the principal shows one
+order. Causal order, not wall-clock age, because age differs between nodes and
+reads a clock (I10); it is oldest first wherever clocks agree. Pull-request
+reviews the forge asks of the principal join the same queue.
 
 ## 9.7.5 Integrity status
 
@@ -109,9 +107,9 @@ a key with no petname shows its fingerprint. `⚑` flagged (PRV-07). `▒`
 quarantined. `▬` from a seat that is no longer a member: it left, was kicked or
 was barred. `ingested`. `new key`. "from a revoked device". Timeline rails:
 solid for the agent's principal, hollow for other principals, dotted for agents
-and the forge. Events from a sandbox node's writers are untrusted on every
-other node (PRV-02).
-Unsandboxed agents are one line on Health, not a mark on every tile.
+and the forge. Events from a token-key-only node's writers are untrusted on
+every other node (PRV-02). Unsandboxed agents are one line on Health, not a mark
+on every tile.
 
 ## 9.7.7 Keymap
 
@@ -160,4 +158,4 @@ selection) is post, copy moves to `y`; `p` (pause, previous post with a
 range link, steer with an address) is pause, steering with an address
 moves to `m`; `.` (next turn, follow) is next turn, follow moves to `F`;
 `Space` (select, peek, play) is peek, play moves to `Shift+Space`;
-`Shift+A` (adopt) is gone with Adopt.
+`Shift+A` is unbound, its earlier action removed.

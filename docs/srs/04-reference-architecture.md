@@ -82,14 +82,14 @@ seat (OWN-02); room acts in the writer of the seat that signs them (LANE-31);
 and expire acts on the device seat of the node that signs them. A purge under a
 retention policy is not an act: the node records it as a purge naming the
 policy, whose setting was the act. Every other table (FTS index, spans,
-landmarks, active pins, quarantine set, statuses, queues, stats) is a projection
-that `cairn rebuild` reproduces exactly from the writer logs the node holds and
-the node's own key set (I10). Purge, the only way content is destroyed, removes
-content but leaves a tombstone event carrying the removed addresses, counts,
-reason, the principal or retention policy that purged, and the commitments of
-the removed events (REC-17, ADM-07), never a hash of the removed content, so
-rebuilds stay deterministic, purges stay auditable and nothing retained confirms
-a guess at what was purged.
+landmarks, active pins, quarantine set, statuses, queues, stats) is a derived
+artifact that `cairn rebuild` reproduces exactly from the writer logs the node
+holds and the node's own key set (I10). Purge, the only way content is
+destroyed, removes content but leaves a tombstone event carrying the removed
+addresses, counts, reason, the principal or retention policy that purged, and
+the commitments of the removed events (REC-17, ADM-07), never a hash of the
+removed content, so rebuilds stay deterministic, purges stay auditable and
+nothing retained confirms a guess at what was purged.
 
 ## 4.4 Key scenarios
 
@@ -106,24 +106,23 @@ a guess at what was purged.
    index, and the recall hint.
 5. Later, Claude needs a detail that compaction dropped. It calls
    `cairn.event_search`, then `cairn.event_expand` on the returned address
-   range, and
-   receives the exact original inside an untrusted-data envelope.
+   range, and receives the exact original inside an untrusted-data envelope.
 
 ### Aggregation over large history
 
 1. Claude calls `kernel_exec` with a script such as
    `hits = cairn.event_search("timeout", kind="tool_result")` followed by a
    loop that extracts and counts error codes.
-2. The worker binds results to variables in the run's namespace; only the
-   script's explicit `print` output (capped) returns to Claude, tainted by the
-   events it derives from.
+2. The worker binds results to the run's kernel variables; only the script's
+   explicit `print` output (capped) returns to Claude, tainted by the events it
+   derives from.
 
 ## 4.5 Design decisions
 
 | ADR    | Decision                                                                                                                                                                                                                                                                                          | Alternatives considered                                                                      | Rationale                                                                                                                                                                                                                                                                                  |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | ADR-01 | **Daemonless core.** Hook handlers and per-run MCP servers open the store directly. The room-view component, the launcher, and the peer, publish and bridge components are optional, started by the principal, never on a hook or recall path, and their failure never touches an agent run (I9). | Long-running daemon on loopback (lcm)                                                        | Removes the port, daemon-credential, stale-daemon, and wedged-daemon failure classes observed in lcm; zero idle footprint; simpler isolation (I8, I9).                                                                                                                                     |
-| ADR-02 | **Event sourcing.** All derived state, including the effect of every act, is rebuilt from the writer logs a node holds.                                                                                                                                                                           | Mutable tables                                                                               | Makes verification, rollback, and forensic replay possible (I5, I10).                                                                                                                                                                                                                      |
+| ADR-02 | **Event sourcing.** Every derived artifact, including the effect of every act, is rebuilt from the writer logs a node holds.                                                                                                                                                                      | Mutable tables                                                                               | Makes verification, rollback, and forensic replay possible (I5, I10).                                                                                                                                                                                                                      |
 | ADR-03 | **Pull-only recall.** Automatic injection accepts only the `TrustedText` type, which can be constructed only from pins and sanitized structural fields.                                                                                                                                           | Per-prompt memory hints (lcm, claude-mem)                                                    | Poisoning evidence (§3, item 3). Enforced by the type system, not convention (I2).                                                                                                                                                                                                         |
 | ADR-04 | **Hermetic Starlark kernel by default**; external Python kernel as optional P2.                                                                                                                                                                                                                   | Python/Jupyter kernel as default                                                             | Starlark (Python dialect, implemented in Rust) has no filesystem or network unless the host provides it, is deterministic, supports step limits, and needs no Python runtime (CON-03). Risk: less capable than Python for Claude. Gate: spike S5 measures Claude's task success with each. |
 | ADR-05 | **BM25 over SQLite FTS5; no embeddings in v1.**                                                                                                                                                                                                                                                   | Vector search, hybrid                                                                        | Deterministic, no model calls at ingest, no extra data leaving the machine; Scroll reached strong results with BM25.                                                                                                                                                                       |
