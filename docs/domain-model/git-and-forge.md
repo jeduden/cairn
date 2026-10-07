@@ -15,7 +15,8 @@ summary: >-
   branch name. A branch with no remote has a provisional node-local identity,
   rebound when it is pushed.
 - **Commit**: A git commit.
-- **Worktree**: A git working tree on a node, where a run edits a branch.
+- **Worktree**: A git working tree on a node, where a run edits a branch; its
+  repository's **git directory** is git's own store of objects and refs.
 - **Forge**: The service that keeps remotes, pull requests, reviews and branch
   protection. It approves and lands; Cairn does neither, and its reports count
   as `asserted` (LANE-08).

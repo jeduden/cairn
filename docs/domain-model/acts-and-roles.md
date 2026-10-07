@@ -31,15 +31,15 @@ one kind (LANE-31).
   room act by OWN-02's surface mark. An act a seat key signs is a room act. Its
   classes:
   - **Cut:** deny, interrupt, pause, stop, cancel a delegation, end a permission
-    grant, reject a foreign room, decline a join request, revoke a CI key, stop
-    a publication, record a `needs changes` verdict, quarantine content without
-    removing anything from a restore block, withdraw a risk acceptance, revoke a
-    trust grant, end a delegation grant or an acceptance grant, turn an away
-    policy off, withdraw a named successor, revoke an appointment, unstamp a pin
-    version, turn notices off, decline a handover, withdraw as successor,
-    dismiss a directed post, revoke an access token, a seat key or a service
-    account's certificate, turn capture on, and turn off the peer component, a
-    bridge or the git carrier.
+    grant, reject a foreign room, decline a join request, tighten a rule level,
+    revoke a CI key, stop a publication, record a `needs changes` verdict,
+    quarantine content without removing anything from a restore block, withdraw
+    a risk acceptance, revoke a trust grant, end a delegation grant or an
+    acceptance grant, turn an away policy off, withdraw a named successor,
+    revoke an appointment, unstamp a pin version, turn notices off, decline a
+    handover, withdraw as successor, dismiss a directed post, revoke an access
+    token, a seat key or a service account's certificate, turn capture on, and
+    turn off the peer component, a bridge or the git carrier.
   - **Neutral:** mark a room ready or abandoned, acknowledge an overlap, record
     a `met` or `not met` verdict, accept or ask for a join, open the forensic
     view, make a purge request, choose a branch to compare, acknowledge
