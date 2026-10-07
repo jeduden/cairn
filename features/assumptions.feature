@@ -10,10 +10,10 @@ Feature: Assumptions register (ASM)
   recorded fixtures land.
 
   @ASM-01 @pending
-  Scenario Outline: hook payloads carry the documented input fields (S1)
-    Given a recorded hook payload for Claude Code "<version>"
-    When the hook "<Event>" runs with the recorded payload
-    Then the payload carries "session_id", "transcript_path", "cwd" and "hook_event_name"
+  Scenario Outline: hook inputs carry the documented fields (S1)
+    Given a recorded hook input for Claude Code "<version>"
+    When the hook "<Event>" runs with the recorded hook input
+    Then the hook input carries "session_id", "transcript_path", "cwd" and "hook_event_name"
     And it also carries <extra>
 
     Examples:
@@ -25,9 +25,9 @@ Feature: Assumptions register (ASM)
 
   @ASM-02 @pending
   Scenario Outline: additionalContext is honoured on SessionStart and UserPromptSubmit only (S1)
-    Given a recorded hook payload for Claude Code "<version>"
+    Given a recorded hook input for Claude Code "<version>"
     And a recorded harness response to a hook output carrying "additionalContext"
-    When the hook "<Event>" runs with the recorded payload
+    When the hook "<Event>" runs with the recorded hook input
     Then the recorded transcript <shows> the additional context in the model's context
 
     Examples:
@@ -64,9 +64,9 @@ Feature: Assumptions register (ASM)
 
   @ASM-06 @pending
   Scenario: subagent compaction hooks carry the parent's identity (S1)
-    Given a recorded hook payload for Claude Code "supported"
-    And the payload was captured during a subagent's compaction
-    When the hook "PreCompact" runs with the recorded payload
+    Given a recorded hook input for Claude Code "supported"
+    And the hook input was captured during a subagent's compaction
+    When the hook "PreCompact" runs with the recorded hook input
     Then its "session_id" and "transcript_path" are the parent's
     And it carries no subagent-specific field
 
@@ -92,7 +92,7 @@ Feature: Assumptions register (ASM)
 
   @ASM-09 @pending
   Scenario: whether a PreCompact hook exiting 2 blocks compaction is recorded (S6)
-    Given a recorded hook payload for Claude Code "supported"
+    Given a recorded hook input for Claude Code "supported"
     And a PreCompact hook that exits 2
     When compaction is triggered manually and at a full window
     Then the recorded transcript shows whether compaction was blocked or proceeded
@@ -100,7 +100,7 @@ Feature: Assumptions register (ASM)
 
   @ASM-10 @pending
   Scenario: hook timeouts are per hook but SessionEnd gets a short shared hook budget (S1)
-    Given a recorded hook payload for Claude Code "supported"
+    Given a recorded hook input for Claude Code "supported"
     And hooks configured with per-hook timeouts of 10 s
     When the hook "SessionEnd" runs with a handler that sleeps past 1.5 s
     Then the recorded harness terminated the handler after about 1.5 s
@@ -159,7 +159,7 @@ Feature: Assumptions register (ASM)
 
   @ASM-18 @pending
   Scenario: the harness prompt stays answerable during PermissionRequest and accepts no decision (S9)
-    Given a recorded hook payload for Claude Code "supported"
+    Given a recorded hook input for Claude Code "supported"
     When the hook "PermissionRequest" runs with a handler that waits and then returns no decision
     Then the recorded harness kept its own permission prompt answerable while the handler waited
     And the recorded harness accepted the handler's exit without a decision and left the choice to its prompt
@@ -188,4 +188,4 @@ Feature: Assumptions register (ASM)
     Given a recorded plugin launch of Claude Code "supported" with its MCP server
     When the harness starts the MCP server for a run with a run seat key
     Then the MCP server receives the key at launch through a channel the harness keeps out of the model's context
-    And no transcript line, hook payload or tool result of the run carries the key
+    And no transcript line, hook input or tool result of the run carries the key

@@ -27,9 +27,9 @@ Feature: Landmarks (LMK)
     And no landmark carries <text>
 
     Examples:
-      | mode        | text                                   |
-      | automation  | any character of the user turn         |
-      | interactive | any character of the trusted user turn |
+      | mode        | text                                      |
+      | automation  | any character of the "user" event         |
+      | interactive | any character of the trusted "user" event |
 
   @LMK-03 @P0 @I2 @pending
   Scenario Outline: structural fields untrusted input can influence are sanitized to the allow-list
@@ -57,13 +57,13 @@ Feature: Landmarks (LMK)
     And no tool name, file path or other text field in any landmark comes from those events
 
   @LMK-05 @P0 @I10 @pending
-  Scenario: landmarks roll up into tiers of at most k blocks
+  Scenario: landmarks roll up into tiers of at most k landmark blocks
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "seventy-spans"
     When the person runs "cairn landmark list --json"
-    Then no tier contains more than 8 blocks
-    And the newest block keeps full detail while older blocks collapse to one line each and merge into the next tier
-    And the index contains O(k log_k n) blocks for n = 70 spans
+    Then no tier contains more than 8 landmark blocks
+    And the newest landmark block keeps full detail while older landmark blocks collapse to one line each and merge into the next tier
+    And the landmark index contains O(k log_k n) landmark blocks for n = 70 spans
 
   @LMK-06 @P2 @I2 @pending
   Scenario: natural-language headlines appear only on all-trusted spans

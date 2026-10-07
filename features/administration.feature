@@ -90,7 +90,7 @@ Feature: Administration and lifecycle (ADM)
     And an agent run with a Claude Code transcript "run-a" in room "room-a"
     When the person runs "cairn purge <scope>"
     Then the command exits 0
-    And the purged events are gone from the sealed segments, events, the FTS index, derived artifacts, the payload store and every copy of their content
+    And the purged events are gone from the sealed segments, events, the search index, derived artifacts, the payload store and every copy of their content
     And the commitment key and payload reference of every purged event are erased
     And a tombstone event per purged range carries only addresses, counts, reason and commitments
     And the database is compacted and "cairn verify" confirms every rewritten segment's seals

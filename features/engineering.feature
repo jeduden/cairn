@@ -159,7 +159,7 @@ Feature: Engineering quality (ENG)
 
   @ENG-17 @P0 @pending
   Scenario: contract tests replay every supported Claude Code version
-    Given recorded hook payloads and transcripts for each supported Claude Code version
+    Given recorded hook inputs and transcripts for each supported Claude Code version
     When the contract suite replays them
     Then every one parses without an unparsed event
     And a nightly job drives real Claude Code through compaction, restore and recall

@@ -43,7 +43,8 @@ Feature: Provenance and trust (PRV)
     And "cairn verify" <verify>
     And the event shapes restore blocks, rule levels, permission grants, trust grants, delegation grants, trust levels and enrollments only if it is trusted and "cairn verify" reports nothing about it
     And every principal act a device key this principal certified signed, and every post and pin written from a device seat such a key certified, derives the same trust level on each of its nodes holding the same writer logs
-    And a "harness_meta" event or "user" turn that this node's CLI, MCP server or launcher recorded live, with origin "witnessed" but not recorded by its hook handlers, is untrusted
+    And in a foreign room, a post from a device seat of this principal and a post or pin a trust grant of this principal covers are untrusted, while a pin from its device seat and a pin version it stamped are trusted there as elsewhere
+    And a "harness_meta" event or "user" event that this node's CLI, MCP server or launcher recorded live, with origin "witnessed" but not recorded by its hook handlers, is untrusted
 
     Examples:
       | mode        | writer                                                                                                        | provenance       | trust     | verify                                                            |
@@ -64,7 +65,7 @@ Feature: Provenance and trust (PRV)
       | interactive | a run seat's writer on this node                                                                              | post             | untrusted | reports nothing                                                   |
       | interactive | a run seat's writer on this node, a pin version this principal stamped                                        | assistant        | trusted   | reports nothing                                                   |
       | automation  | a writer of this node, recorded live by its CLI                                                               | operator         | trusted   | reports nothing                                                   |
-      | interactive | this principal's device seat on this node                                                                     | post             | trusted   | reports nothing                                                   |
+      | interactive | this principal's device seat on this node, once PRV-10 ships                                                  | post             | trusted   | reports nothing                                                   |
       | interactive | this principal's device seat on another of its nodes, certified by a device key it certified, within scope    | post             | trusted   | reports nothing                                                   |
       | interactive | a writer of this node, from a transcript the hook handlers did not watch                                      | user             | untrusted | reports nothing                                                   |
       | automation  | a writer of this node, from a transcript the hook handlers did not watch                                      | harness_meta     | untrusted | reports nothing                                                   |

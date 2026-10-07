@@ -11,7 +11,7 @@ Feature: Non-functional requirements (NFR)
     Given an isolated Cairn home
     And a synthetic store with 1M events on the reference hardware
     And the room view is open and ten harnesses are writing
-    When the hook "<Event>" runs 1,000 times with a representative payload
+    When the hook "<Event>" runs 1,000 times with a representative hook input
     Then the p95 wall-clock time is at most <budget>
 
     Examples:
@@ -67,7 +67,7 @@ Feature: Non-functional requirements (NFR)
   Scenario Outline: an internal error fails open unless it touches I2, I4 or I8
     Given an isolated Cairn home
     And an injected internal fault "<fault>"
-    When the hook "SessionStart" runs with a valid payload
+    When the hook "SessionStart" runs with a valid hook input
     Then the hook handler exits <exit> with <output>
     And an audit entry records "<fault>"
 

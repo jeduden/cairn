@@ -40,7 +40,7 @@ Feature: Record (REC)
     And the cursor of "main-run" stores its byte length and the SHA-256 of its consumed prefix
 
   @REC-04 @P0 @I1 @pending
-  Scenario: events are attributed to the run of their transcript, not the hook payload
+  Scenario: events are attributed to the run of their transcript, not the hook input
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "parent-run"
     And a subagent transcript "explore-agent" of "parent-run" naming the agent "Explore"
@@ -54,7 +54,7 @@ Feature: Record (REC)
     And an agent run with a Claude Code transcript "main-run"
     And "main-run" contains a malformed JSON line and a line of unknown type "future_kind", each containing an API key
     When the person runs "cairn ingest --all"
-    Then both lines are stored as events of kind "unparsed" carrying the raw line with the API key redacted
+    Then both lines are stored as events with provenance "unparsed" carrying the raw line with the API key redacted
     And no line of "main-run" is missing from the record
     And the counter "events_unparsed" increases by 2
 
@@ -120,13 +120,13 @@ Feature: Record (REC)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
     And "main-run" contains a 2 MiB tool result with "quokka-early" in its first KiB and "quokka-late" beyond its first 1 MiB
-    And "main-run" contains one user turn naming "wombat" once and another naming it five times
+    And "main-run" contains one "user" event naming "wombat" once and another naming it five times
     When the person runs "cairn ingest --all"
     And the agent calls the MCP tool "event_search" with query "quokka-early"
     Then the tool result event is a hit
     And a search for "quokka-late" returns no hit, because indexing stops at the default 1 MiB cap
     When the agent calls the MCP tool "event_search" with query "wombat"
-    Then the hits are ranked by score, the user turn naming "wombat" five times above the one naming it once
+    Then the hits are ranked by score, the "user" event naming "wombat" five times above the one naming it once
 
   @REC-12 @P0 @I10 @pending
   Scenario: events are appended in transcript order and seq alone defines order
@@ -261,7 +261,7 @@ Feature: Record (REC)
     And a transcript "elsewhere" from outside the configured transcript roots
     When the person runs "cairn ingest --path" on "pre-install" and on "elsewhere"
     Then every event of "pre-install" carries the "ingested" origin, freshness mark and trust mark with its transcript source and ingest position, shown on every surface, and none is shown as witnessed
-    And the user turn and the "harness_meta" event from "pre-install" have trust "untrusted"
+    And the "user" event and the "harness_meta" event from "pre-install" have trust "untrusted"
     And this node records "elsewhere" as an ingested run in the principal's personal room, shown as "ingested", and every event of it has trust "untrusted"
 
   @REC-23 @P2 @I2 @I4 @I6 @pending

@@ -124,6 +124,7 @@ Feature: Recall (RCL)
       | a sealed event "cairn ingest" read past an ingest marker               | ingested  | verified    |
       | a sealed event imported from a room bundle                             | bundle    | verified    |
       | a sealed event in a segment the git carrier fetched                    | peer      | verified    |
+      | a sealed event of a paired phone's device seat                         | peer      | verified    |
       | a peer's event after a break in its writer's chain                     | peer      | unverified  |
       | a peer's event whose chain check fails                                 | peer      | broken      |
       | a peer's event whose writer's earlier events are missing here          | peer      | incomplete  |
