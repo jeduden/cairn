@@ -26,8 +26,8 @@ Feature: Principal acts (OWN)
       | the room view under SEC-20                | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
       | the CLI or TUI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
       | a paired phone within its scope           | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, which shows it by address, whose writer the phone seals with that seat's key and the node only holds |
-      | the harness's own prompt                  | recorded as a user turn or a harness_meta event, not a principal act                                                                                                                                                           |
-      | the terminal the launcher hosts           | recorded as a user turn or a harness_meta event, not a principal act                                                                                                                                                           |
+      | the harness's own prompt                  | recorded as a user turn or a harness_meta event recording only that input arrived, not a principal act                                                                                                                    |
+      | the terminal the launcher hosts           | recorded as a user turn or a harness_meta event recording only that input arrived, not a principal act                                                                                                                    |
       | any other surface                         | refused and audited                                                                                                                                                                                                       |
 
   @OWN-03 @P1 @I2 @pending
@@ -323,8 +323,8 @@ Feature: Principal acts (OWN)
     When "alice" sends the correction "keep the header row in every file" through "cairn correction send" and retries from an earlier worktree checkpoint with "--retry-from"
     Then the correction reaches the agent through the harness's input in the fixed template naming the verdict, C2 and the results it concerns
     And the retry starts a new run through the launcher in a new worktree at that worktree checkpoint, given the correction and the intent pin in force through its restore block
-    And the retry receives no content of the abandoned run except what it recalls
-    And the abandoned run and its branch stay on record, shown beside the retry
+    And the retry receives no content of the earlier run except what it recalls
+    And the earlier run and its branch stay on record, shown beside the retry
     And C2 reads "no verdict" until the next verdict
     When "alice" revises the intent from the same verdict
     Then a new version of the room's intent pin is recorded

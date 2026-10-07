@@ -383,7 +383,7 @@ Feature: Security (SEC)
     And a room whose owner appointed a service account's device seat in the room, on that service account's own node, as the room's facilitator, an appointed moderator, by a widening principal act
     And the owner set the appointment rate, a room setting, to two moderation acts per hour
     When a post persuades the facilitator's program, acting through that node's CLI, to bar the principal keys of three seats, a moderator and the owner, to make a list removal of a pin, and to mute the whole room
-    Then the first two bars are recorded, each audited with the post behind it, which names the pin by id and carries a range link to the marked range
+    Then the first two bars are recorded, each audited with the post behind it, which names the bar's target by id and carries a range link to the marked range
     And each bar is shown in the room view and named by id in the error each barred seat's next call returns
     And a Needs you item reaches the owner, who appointed it, and the principal of each barred seat
     And the third bar is refused and counted
