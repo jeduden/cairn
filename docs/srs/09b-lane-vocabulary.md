@@ -117,7 +117,9 @@ the stamper, LANE-32); and on posts and pins a trust grant of the principal
 covers outside a foreign room, written from device seats a device key of the
 principal the trust grant names certified, never a token-key-only node's (shown
 with the granted key's petname, OWN-29). In a foreign room only the principal's
-own device-seat pins and the versions it stamped go unmarked (RCL-10, PIN-10).
+own device-seat pins and the versions it stamped go unmarked, as in a restore
+block (PIN-10); in recall every item from a foreign room is marked untrusted
+(RCL-10).
 The free text of a cut or neutral principal act, such as a stated reason, shows
 `○` whatever its event's trust level, on this node's own `operator` events too
 (OWN-11).

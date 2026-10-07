@@ -46,6 +46,13 @@ round 21's ruling stands.
   model's sense; NFR-15 and NFR-05's ingest wording; M8's sync; `cairn
   ui --phone`; the README's "until you turn it on".
 
+The adversarial check found one problem, fixed: a budget cut in LANE-11
+had made "its stamp" ambiguous, now "the new owner's stamp" again.
+LANE-25 drops the undefined "grantor's node", which OWN-23 and OWN-26
+already name; RCL-10's scenario lists the foreign room's pin through
+`pin_list`; and "an error" and "what the tool returns" replace two
+phrases the model does not define.
+
 ## 3. Optional, not chased
 
 The CLI names `cairn bundle unpublish`, `cairn role assign|revoke` and

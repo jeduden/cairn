@@ -43,7 +43,7 @@ summary: >-
   **data**, **interfaces**, and **engineering quality** requirements.
 - §11–§13 cover **verification**, **delivery**, and **open issues**.
 - Appendix A traces every concern raised during research to the requirements
-  that address it; Appendix B lists the requirements serving each invariant;
+  that answer it; Appendix B lists the requirements serving each invariant;
   Appendix C lists the personas each requirement serves.
 
 ## Conventions
