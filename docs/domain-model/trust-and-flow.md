@@ -9,8 +9,8 @@ summary: >-
 - **Trust level**: `trusted` or `untrusted`, per event for one principal's
   agents on one node: derived by the trust policy from the event's provenance,
   origin, recorder and writer, the deployment mode recorded with the event, the
-  node's key set, and that principal's stamps and trust grants as its writer
-  logs carry them (I10).
+  node's key set, whether the event's room is foreign to that principal, and
+  that principal's stamps and trust grants as its writer logs carry them (I10).
 - **Trusted sources**: What I2 trusts: this node's `operator` and structural
   events, the `harness_meta` events its hook handlers recorded, and the `user`
   events they recorded while the deployment mode is `interactive`, all trusted
@@ -25,7 +25,8 @@ summary: >-
 - **Trust policy**: The rule that derives each event's trust level (PRV-02).
 - **Trust mark**: The sign beside an item saying where it came from and whether
   it is trusted, from §9.7.6's closed set (VIEW-07).
-- **Taint**: The trust level a derived artifact inherits: untrusted when any
+- **Taint**: The trust level a derived artifact, or an output built from events
+  (a recall result, kernel output, an export), inherits: untrusted when any
   event it derives from is untrusted, except for its sanitized structural
   fields.
 - **Recall taint**: A run's mark after it recalls untrusted content, which
@@ -78,7 +79,8 @@ summary: >-
   worktree checkpoint, that the node's principal or managed policy sets
   (ADM-15).
 - **Away policy**: A principal's opt-in choice of what an unanswered held
-  request does while it is on: keep going, pause or stop (OWN-07).
+  request does while it is on: keep going, pause or stop (OWN-07). Only that
+  principal act sets it, never a settings key.
 - **Residual risk**: One of the risks §6.1 lists for an unconfined run.
 - **Sandbox state**: What confines a run, its policy digest, and which residual
   risks it blocks, recorded from outside the sandbox, where the agent cannot
@@ -91,13 +93,14 @@ summary: >-
 - **Run controls**: Steer, interrupt, pause, resume and stop: principal acts on
   a run. **Terminal takeover**, the principal typing in the harness's terminal
   the launcher hosts, is the harness's own channel, never a principal act
-  (OWN-02, OWN-19); the launcher relays keystrokes unchanged, only from
-  its own terminal (I4).
-- **Fixed template**: Wording Cairn ships, filled only with ids, counts, key
-  fingerprints, addresses and the principal-typed, endorsed or delegated text,
-  or the text of a post a trust grant covers, its requirement names;
-  **principal-typed text** is text a principal typed at a principal surface for
-  that act.
+  (OWN-02, OWN-19): the person's keystrokes are the harness's own input from
+  that terminal, which the launcher hosts but never carries, so what the
+  launcher carries into the harness's input stays text the core built (I4).
+- **Fixed template**: Wording Cairn ships, filled only with ids, counts, version
+  numbers, key fingerprints, addresses and the principal-typed, endorsed or
+  delegated text, or the text of a post a trust grant covers, its requirement
+  names; **principal-typed text** is text a principal typed at a principal
+  surface for that act.
 - **Correction, retry**: After a verdict: principal-typed text in a fixed
   template, or a new run from a worktree checkpoint (OWN-28).
 - **Counter**: A count of dropped, rejected, redacted, truncated, coalesced,
@@ -121,12 +124,12 @@ summary: >-
 - **Exposure**: Of a branch, the untrusted and flagged items its runs read and
   their recall taint (VIEW-13).
 - **Overlap**: Runs in two open rooms editing one file, which raises a Needs you
-  item on both rooms until each room's owner acknowledges it for that room
+  item for each room's owner until that owner acknowledges it for that room
   (LANE-13).
 - **Fork**: Either of two events one writer sealed at one seq, both kept for
   forensics; the node's principal chooses which fork to keep (PEER-10).
-- **Presence hint**: An ephemeral sign that a seat is connected, or typing,
-  never stored in the record (PEER-09).
+- **Presence hint**: An ephemeral sign that a seat is connected, or typing (a
+  **typing hint**), never stored in the record (PEER-09).
 - **Watchdog observation**: Cairn's note, computed where shown and never
   recorded, that a run looks stuck, shown as the `stuck?` freshness mark; it
   never starts or resumes a turn (OWN-09).

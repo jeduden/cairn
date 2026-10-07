@@ -8,8 +8,9 @@ summary: >-
 
 - **Repository**: A git repository, identified by its **repository identity**, a
   bound root commit, the same on every node holding a clone, shallow clones
-  included (LANE-02), together with its remotes. It may carry room trailers,
-  bundles as git refs and the git carrier's segments.
+  included, else a provisional node-local identity bound later (LANE-02),
+  together with its remotes. It may carry room trailers, bundles as git refs and
+  the git carrier's segments.
 - **Branch**: A git branch, identified by repository identity, remote URL and
   branch name. A branch with no remote has a provisional node-local identity,
   rebound when it is pushed.
@@ -21,21 +22,22 @@ summary: >-
 - **Pull request**: The forge's review object for a branch.
 - **Check**: A command and its exit status, bound to a tree; its **check state**
   is one of §9.7.2's.
-- **Result**: What a room's runs established: a check passing or failing on a
+- **Result**: What a room's seats established: a check passing or failing on a
   **tree** (git's snapshot of a commit's files), or a claim stated in text. It
   names the intent version and carries one evidence class.
-- **Evidence**: The checks, attestations or text a result rests on.
+- **Evidence**: The checks, CI attestations or text a result rests on.
 - **Evidence class**: Of a result, ranked: `claim` (text only) < `own check` <
   `witness check` < `CI attested` (LANE-05).
 - **Own check**: A check the hook handlers recorded on the node of the run that
   made the edits, run on the latest worktree checkpoint plus the recorded edits;
-  otherwise it is marked `unbound` and counts as a `claim`. Its other marks,
-  such as `outside intent` and `from checkpoint`, are §9.7's.
+  otherwise its result is marked `unbound` and counts as a `claim`.
 - **Witness check**: A check re-run through the launcher on a fresh checkout of
   the exact commit, by a node whose **git identity** (the author and
-  commit-signing identities its git configuration sets) authored no commit in
-  the range (a **commit author** is git's author of a commit, never a seat).
-- **CI attested**: A check result for the exact commit, signed by a CI key.
+  commit-signing identities its git configuration sets) authored no commit on
+  the branch since it left its base (a **commit author** is git's author of a
+  commit, never a seat).
+- **CI attestation**: A check result for the exact commit, signed by a CI key;
+  its evidence class is `CI attested`.
 - **Landing**: Git or the forge merging commits into a protected branch. Cairn
   never lands anything, and a landing is never a verdict.
 - **Landing link**: The link from a landed commit to a room, carrying a proof

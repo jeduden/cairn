@@ -10,9 +10,9 @@ summary: >-
   node (`CAIRN_HOME`, default `~/.cairn`), belonging to one OS user and
   optionally bound to a **home id** (`home.id`) the runner environment supplies
   (SEC-03). The unit of isolation (I8).
-- **Node**: One home on one machine, container or sandbox, for one principal.
-  Its device key signs its principal's acts and expire acts once PRV-10 ships;
-  an **ephemeral node**, one in a short-lived environment such as a cloud
+- **Node**: One home on one machine, container or cloud sandbox, for one
+  principal. Its device key signs principal acts and expire acts once PRV-10
+  ships; an **ephemeral node**, one in a short-lived environment such as a cloud
   sandbox, may have only a token key, a **token-key-only node**. Its **node
   identity** is a value outside the home that a cloned image or a restored
   snapshot cannot carry over (REC-24). The node's principal is the principal
@@ -20,10 +20,9 @@ summary: >-
 - **Device**: A node or a paired phone. A device key certifies its device seats;
   a token-key-only node's token key does so in its place.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
-  denying held permission requests within its scope, reaching its node over B2.
-  It signs with its own device key and
-  seals its device seat's writer with that seat's key; the node it pairs with
-  holds the writer.
+  denying held permission requests within its device scope, reaching its node
+  over B2. It signs with its own device key and seals its device seat's writer
+  with that seat's key; the node it pairs with holds the writer.
 - **Sandbox**: A confinement around a run that blocks some residual risks
   (OWN-22). A node running inside a sandbox is still a node.
 - **Room**: Where an intent is worked on: at most one intent, a **conversation**

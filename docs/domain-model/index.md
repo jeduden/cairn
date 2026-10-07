@@ -20,9 +20,9 @@ These verbs each have one job:
 
 - A principal *owns* a room.
 - A seat *is a member of* a room as Member defines.
-- A principal *has a seat in* a room through any of its seats that is a member,
-  its agents' run seats included; an agent has a seat in a room through its
-  run's seats that are members.
+- A principal, an agent or a run *has a seat in* a room through any of its seats
+  that is a member, its agents' run seats included; an agent has a seat in a
+  room through its run's seats that are members.
 - A node *holds* writer logs, rooms and whatever else it stores. "Owns" is said
   of rooms and "holds" of nodes ("held request" is a name); "holds a room" never
   means owning a room or being a member of it.
@@ -64,21 +64,22 @@ row: "- [{title}]({filename}) — {summary}"
 - Every seat belongs to one principal and one room; every writer to one seat.
 - Each event goes to exactly one seat's writer. A run's event goes to its run
   seat in the room it works in at that moment, one it joined or created that
-  names its current branch, while that seat's role permits its events (LANE-10);
-  else to its personal-room seat. A room act goes to the writer of the seat that
-  signs it. A principal act or an expire act goes to the device seat of the
-  device that signs it, in the room it acts on; a node of a principal with a
-  member seat there first joins it without admission. One that acts on no room,
-  on a room its principal has no member seat in, or that a paired phone signs,
-  goes to that device seat in the personal room, naming the room, and that room
-  shows it by address as it shows a cross-room post (LANE-29). Any other event
-  with no run goes to the recording device's seat in its personal room.
+  names its current branch, while that seat's role has work (LANE-10); else to
+  its personal-room seat. A room act goes to the writer of the seat that signs
+  it. A principal act or an expire act goes to the device seat of the device
+  that signs it, or before PRV-10 ships records it, in the room it acts on; a
+  node of a principal with a member seat there first joins it without admission.
+  One that acts on no room, on a room its principal has no member seat in, or
+  that a paired phone signs, goes to that device seat in the personal room,
+  naming the room, and that room shows it by address as it shows a cross-room
+  post (LANE-29). Any other event with no run goes to the recording device's
+  seat in its personal room.
 - A run's history spans its seats' writers, tied together by the run. Peers
   exchange segments, so a room's seats see only events routed to them and the
   events it shows by address.
 - Principals and agents create rooms; an agent's room is owned by its principal.
   Cairn never creates a room on its own initiative; a node's personal room comes
-  from the principal's `cairn install`, and Cairn may suggest other rooms.
+  from the principal's `cairn install`, and Cairn may suggest joins.
 - A pin naming no room belongs to its author's principal's personal room on the
   node that wrote it.
 - Recall extends only to the principal's
@@ -104,8 +105,8 @@ errors and logs use the model's words.
   singular and in snake case (`node.deployment_mode`).
 - Layout words (tab, panel, pane, gutter, sheet, stack) name parts of a screen,
   never concepts.
-- A seat certificate names the seat kind, `run` or `device`, and whether a
-  device seat's principal key is certified as a service account's.
+- A seat certificate names the seat kind, `run` or `device`, and whether the
+  device seat's principal is a certified service account.
 - Cairn defines no slash commands. A harness skill may call MCP tools or the
   CLI; a skill's call is the agent's own tool call, never a principal act.
 
@@ -126,7 +127,7 @@ errors and logs use the model's words.
 | trusted boundary                                                                  | Replaced by trusted sources; "boundary" means a network boundary.                   | Nowhere else.                                                                                                            |
 | room board                                                                        | Replaced by conversation.                                                           | Nowhere else.                                                                                                            |
 | participant, player                                                               | Replaced by seat and member.                                                        | Nowhere else.                                                                                                            |
-| lane                                                                              | Renamed to room.                                                                    | The LANE and VIEW requirement ids and file names.                                                                        |
+| lane                                                                              | Renamed to room.                                                                    | LANE requirement ids and file names such as lane-view.feature.                                                           |
 | judge, approval gate                                                              | Removed by the stakeholder; a person records a verdict.                             | Nowhere else.                                                                                                            |
 | service-account seat                                                              | Replaced by device seat.                                                            | Nowhere else.                                                                                                            |
 | import of a transcript or a peer's segments; imported run                         | Only a bundle is imported.                                                          | Nowhere else.                                                                                                            |

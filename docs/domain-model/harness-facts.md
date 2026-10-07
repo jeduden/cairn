@@ -6,8 +6,8 @@ summary: >-
 ---
 # Harness facts
 
-The harness's own facts, which Cairn records and names but never keeps, and
-changes only in harness configuration, under I7.
+The harness's own facts, which Cairn records and names but never manages; of
+them, Cairn changes only harness configuration, under I7.
 
 - **Harness**: The external program that runs agents, such as Claude Code or the
   Agent SDK. It keeps their transcripts, compacts their context and reports to
@@ -30,7 +30,8 @@ changes only in harness configuration, under I7.
   reply, is a trusted source on the node whose hook handlers recorded it (I2,
   PRV-02).
 - **Compaction**: The harness replacing earlier context with a compaction
-  summary when the context window fills. Cairn neither performs nor controls it
-  (NG1); it records it and restores pins after it (I3). **Compaction guidance**
-  is fixed text Cairn ships that a `PreCompact` hook handler returns to the
-  harness for its compaction, never record content (PIN-07, I2).
+  summary when the context window fills or on request. Cairn neither performs
+  nor controls it (NG1); it records it and restores pins after it (I3).
+  **Compaction guidance** is fixed text Cairn ships that a `PreCompact` hook
+  handler returns to the harness for its compaction, never record content
+  (PIN-07, I2).

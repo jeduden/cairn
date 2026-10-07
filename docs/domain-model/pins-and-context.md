@@ -43,7 +43,8 @@ summary: >-
   own name, such as the **restore block limit** (INJ-07), CMP-05's wall-clock
   and memory limits, SEC-04's query deadline and the output caps (RCL-03,
   CMP-06). I3's budget is the pin budget, and I9's defined budgets are these
-  named budgets and limits (PIN-03, PIN-08).
+  named budgets and limits; the latency targets of NFR-01, NFR-03 and NFR-15 are
+  targets, not budgets.
 - **Pin type**: One of `constraint`, `preference`, `decision`, `fact`,
   `episode`, `intent`, `verdict` and `stake`. Only `constraint`, `preference`
   and `intent` pins restore.
@@ -54,14 +55,15 @@ summary: >-
   stamped version keeps restoring to its stamper's agents until the stamper
   unstamps it, raising a Needs you item.
 - **List removal**: A moderator's or the owner's room act taking another seat's
-  pin off the pin list without unpinning it. A device-seat pin it removes keeps
-  restoring to every agent it restored to until its author's principal unpins
-  it, raising a Needs you item.
+  pin off the pin list without unpinning it, never the intent. A device-seat pin
+  it removes keeps restoring to every agent it restored to until its author's
+  principal unpins it, raising a Needs you item.
 - **Intent**: A room's lead pin, of type `intent`: a goal, its criteria and
   optionally the paths it is meant to change (LANE-20). Only the owner's
   principal act changes it; a new owner's revision adds a version its device
   seat authors. The intent restores as the author of its newest version wrote
-  it, to that author's principal's agents.
+  it, to that author's principal's agents; after a handover, until the new owner
+  revises or stamps it, it restores only to its stampers' agents.
 - **Criterion**: One acceptance condition of an intent, with a stable id.
 - **Stake**: A pin of type `stake` stating what its author works on. Only its
   author, or for a device seat its author's principal, writes it, and it makes
@@ -93,14 +95,17 @@ summary: >-
   marks, and Cairn's ids (`room_get`, VIEW-15).
 - **Envelope warning**: The fixed sentence at the head of every envelope (field
   `warning`).
-- **Restore block**: Deterministic **trusted text** (`TrustedText`), which the
-  core's **restore builder** makes (INJ-03), built only from qualifying pins,
-  sanitized structural fields and fixed text Cairn ships, that Cairn injects
-  after compaction, at a run's start, resume or clear (INJ-02), and on a prompt
-  while `restore_block.on_prompt` is on (INJ-04): qualifying pins, their room
-  ids, omitted pins' ids and count, the count, room id and key fingerprint of
-  pins of a type that restores that do not qualify (PIN-10), a landmark index, a
-  recall hint and LANE-33's room summary pointer.
+- **Trusted text** (`TrustedText`): text the core's **restore builder** makes
+  (INJ-03) only from qualifying pins, sanitized structural fields, Cairn's ids
+  and fixed text Cairn ships: restore blocks, opt-in notices, compaction
+  guidance and the fixed templates I2 names, never a post's text.
+- **Restore block**: Deterministic trusted text, built only from qualifying
+  pins, sanitized structural fields and fixed text Cairn ships, that Cairn
+  injects after compaction, at a run's start, resume or clear (INJ-02), and on a
+  prompt while `restore_block.on_prompt` is on (INJ-04): qualifying pins, their
+  room ids, omitted pins' ids and count, the count, room id and key fingerprint
+  of pins of a type that restores that do not qualify (PIN-10), a landmark
+  index, a recall hint and LANE-33's room summary pointer.
 - **Landmark index**: The current run's landmarks, each with its address range,
   as a restore block lists them (INJ-01).
 - **Recall hint**: The one fixed line in a restore block saying that the recall
@@ -111,9 +116,9 @@ summary: >-
   owner's notice allowance and the agent's principal's notice opt-in both stand
   (INJ-10, LANE-30). The only meaning of "notice".
 - **Model**: The language model behind an agent, such as Claude; "the model"
-  means it wherever this document, or the domain-model agent's instructions, are
-  not speaking of this document. Its output in a turn is a **model reply**; a
-  **model token** is its unit of text for budgets.
+  means it wherever the domain model's files, or the domain-model agent's
+  instructions, are not speaking of the domain model. Its output in a turn is a
+  **model reply**; a **model token** is its unit of text for budgets.
 - **Working view**: Whatever is currently in the model's context window. Never
   part of the record, never authoritative.
 - **Held request**: A permission request, question or hand-off with a stable id,

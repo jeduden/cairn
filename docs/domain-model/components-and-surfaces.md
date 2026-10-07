@@ -9,9 +9,11 @@ summary: >-
 - **Component**: A part Cairn plays, inside exactly one network boundary (I4).
   The set is closed, listed here and in §6.3; how the components ship is open
   (OQ-32), and a new one is a model change and a §6.3 row.
-  - **Core (B0):** the hook handlers and the CLI, each harness adapter's
-    transcript and hook part among them, the MCP server, the kernel worker, the
-    TUI, and everything that builds what reaches the model.
+  - **Core (B0):** the **hook handlers** (answering hooks), the **CLI**
+      (`cairn`), each harness adapter's transcript and hook part among them, the
+      **MCP server** (the recall and room tools, one per run), the **kernel
+      worker** (running the kernel's executions), the **TUI** (the terminal room
+      view), and everything that builds what reaches the model.
   - The **harness adapter** is no component: Cairn's code for one harness, split
     between them, its transcript and hook part in the core (it parses, opens no
     socket, starts no process); its run part in the launcher, which starts,
@@ -22,8 +24,8 @@ summary: >-
   - **Launcher (B1):** `cairn launch`, which starts, hosts and controls runs
     through each harness adapter's run part, carrying the core's text into the
     harness input.
-  - **Peer component (B2):** replicates segments with peers and serves paired
-    phones.
+  - **Peer component (B2):** exchanges segments with peers (sync) and serves
+    paired phones.
   - **Publish component (B3):** read-only publishing, and the **git carrier**,
     which keeps segments in a namespaced location of the principal's remote.
   - **Bridge component (B3):** outbound exchange with hosts the node's principal
@@ -42,9 +44,9 @@ summary: >-
     room.
   - **Room page:** one room, with the tabs Timeline, Review and Replay, whose
     **context lens** shows what the model's context window held at an event; the
-    verify and why panels, the comparison and the quarantine list, with its
-    **forensic view** of quarantined content, open from it, and a foreign room
-    opens in it, marked foreign.
+    verify and why panels, the comparison and the **quarantine list** (the
+    room's quarantine set), with its **forensic view** of quarantined content,
+    open from it, and a foreign room opens in it, marked foreign.
   - **Catch up:** the one surface answering "what happened since a starting
     point" the principal picks (VIEW-08).
   - **Needs you:** the one queue of items waiting on a principal (VIEW-05).

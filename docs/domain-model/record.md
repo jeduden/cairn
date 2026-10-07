@@ -54,10 +54,11 @@ summary: >-
   harness's operation, never free text: turn triggers, model tokens, metadata
   lines and sandbox state (PRV-08); `operator` is the class of principal acts,
   expire acts and device-seat pins; posts are `post` and run-seat pins
-  `assistant`; every other room act takes its seat's **pin class**, `operator`
-  for a device seat and `assistant` for a run seat; a room summary is `summary`,
-  never trusted; hook observations, key rotations and tombstones are
-  `structural`.
+  `assistant`; every other room act but a room summary takes its seat's **pin
+  class**, `operator` for a device seat and `assistant` for a run seat; a room
+  summary is `summary`, never trusted; an erasure or quarantine request a
+  principal act sends is `operator`, one a retention policy sends `structural`;
+  hook observations, key rotations and tombstones are `structural`.
 - **Origin**: How an event reached this node's record: `witnessed` (recorded
   live on this node: by its hook handlers, its CLI, MCP server or launcher),
   `ingested` (read by `cairn ingest`, from a transcript the hook handlers did
@@ -97,8 +98,9 @@ summary: >-
   set, such as those I10 lists (the **search index** over event text among its
   indexes, and each principal's Needs you queue among its queues), room state
   and trust levels; I10's statuses are run statuses, but for their time-relative
-  freshness marks, and integrity statuses, and room status is computed where
-  shown; the **quarantine set** is what a node holds quarantined.
+  freshness marks, and integrity statuses, and room status and a check's state
+  are computed where shown; the **quarantine set** is what a node holds
+  quarantined.
 - **Redaction**: Removing secrets from content before it is stored or on import,
   recorded (I1, SEC-08).
 - **Retention policy**: A rule (`retention_policy.*`), set by the node's
