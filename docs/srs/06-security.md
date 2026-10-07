@@ -126,7 +126,7 @@ principal accepts those left open (OWN-22).
 
 Every Cairn component, process and protocol, with its boundary, or the reason it
 is rejected (SEC-19). The set is closed, as the
-[domain model](../domain-model.md#components-and-surfaces) lists it. No
+[domain model](../domain-model/components-and-surfaces.md) lists it. No
 packaging (OQ-32) may change a row.
 "Lock" means managed policy can disable the row (SEC-22).
 

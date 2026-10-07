@@ -14,7 +14,7 @@ summary: >-
 ## Context
 
 On 6 October 2026 the stakeholder adopted the second version of
-Cairn's domain model ([docs/domain-model.md](../domain-model.md)). It
+Cairn's domain model ([docs/domain-model.md](../domain-model/index.md)). It
 came with the recommendations of its [proposal][v2] and the decisions
 of the three [blind reviews][blind] that followed. The model changes
 words the invariants use:

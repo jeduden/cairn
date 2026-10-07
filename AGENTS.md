@@ -143,6 +143,7 @@ Where usefulness and safety conflict, pick safety; make convenience opt-in.
 <?catalog
 glob:
   - "docs/*.md"
+  - "docs/domain-model/index.md"
   - "docs/srs/index.md"
   - "SECURITY.md"
   - "DEPENDENCIES.md"
@@ -154,7 +155,7 @@ row: "- [{filename}]({filename}) — {summary}"
 - [CHANGELOG.md](CHANGELOG.md) — Release notes and upgrade notes per version, newest first (ENG-23).
 - [DEPENDENCIES.md](DEPENDENCIES.md) — Every direct Go dependency, listed through the decision record that justifies it (ENG-18, ENG-26). The ENG-18 scenario fails the build when go.mod and the dependency ADRs disagree or a license is off the allow-list.
 - [docs/development.md](docs/development.md) — Build and test commands, the executable requirement matrix (every SRS id has one tagged Gherkin scenario, pending until written), the coverage floors, and how CI, the nightly fuzz job and the reproducible, signed release pipeline work.
-- [docs/domain-model.md](docs/domain-model.md) — Cairn's domain model: the closed set of concepts with their definitions, how they relate, the terms that are not Cairn concepts, and how names in code, docs and UI follow the model. The SRS links here for every term, and the domain-model agent reviews against it.
+- [docs/domain-model/index.md](docs/domain-model/index.md) — Cairn's domain model: the closed set of concepts with their definitions, how they relate, the terms that are not Cairn concepts, and how names in code, docs and UI follow the model. The SRS links here for every term, and the domain-model agent reviews against it.
 - [docs/srs/index.md](docs/srs/index.md) — The Cairn Software Requirements Specification — the normative source for every requirement id a feature scenario is tagged with.
 - [SECURITY.md](SECURITY.md) — How to report a vulnerability in Cairn privately, the 90-day coordinated disclosure policy, which versions get fixes, and how to verify a release (ENG-24, ENG-20).
 <?/catalog?>
@@ -169,8 +170,7 @@ summary in the index there; open only the section a task touches.
 - Run `mdsmith check .` before committing; all Markdown must pass
 - Never modify `.mdsmith.yml` (linter configuration) without explicit user
   consent
-- Run `mdsmith merge-driver install` once per clone; see
-  [docs/development.md](docs/development.md) for why
+- Run `mdsmith merge-driver install` once per clone (development.md says why)
 
 ## Review
 
@@ -203,8 +203,8 @@ mechanics are in [docs/development.md](docs/development.md).
 ## Domain Model
 
 Cairn's concepts, their relations and the terms that are not Cairn concepts live
-in [docs/domain-model.md](docs/domain-model.md). The domain-model agent reviews
-against that document. Consult it:
+in [docs/domain-model/](docs/domain-model/index.md), a hub and one file per
+group. The domain-model agent reviews against them. Consult it:
 
 - on every change to the model itself, and on every proposal to change it;
 - on every change to the SRS under `docs/srs` and to the scenarios;
@@ -228,7 +228,7 @@ sort: path
 header: ""
 row: "- [{name}]({filename}) — {description}"
 ?>
-- [domain-model](.claude/agents/domain-model.md) — Guards Cairn's domain model as docs/domain-model.md defines it. Reviews every change to the model and every SRS change, and is consulted on names (functions, types, modules, CLI verbs, MCP tools, settings keys), documentation, UX and UI copy and developer experience. Reports every term used outside the model. Never approves.
+- [domain-model](.claude/agents/domain-model.md) — Guards Cairn's domain model as docs/domain-model/ defines it. Reviews every change to the model and every SRS change, and is consulted on names (functions, types, modules, CLI verbs, MCP tools, other identifiers), documentation, UX and UI copy and developer experience. Reports every term used outside the model. Never approves.
 - [persona-agent](.claude/agents/persona-agent.md) — Claude itself as a user of Cairn: an agent that needs its constraints back after compaction and exact recall of its own history. Reviews a pull request, plan, pitch, design or spec from this perspective and reports where it fails them. Never approves.
 - [persona-fleet-developer](.claude/agents/persona-fleet-developer.md) — A developer running five or more agents at once on one machine, each in its own worktree, and steering them through the day. Reviews a pull request, plan, pitch, design or spec from this perspective and reports where it fails them. Never approves.
 - [persona-live-collaborator](.claude/agents/persona-live-collaborator.md) — A teammate joining someone else's room live, to help, pair or take over, alongside agents that are not theirs. Reviews a pull request, plan, pitch, design or spec from this perspective and reports where it fails them. Never approves.

@@ -34,7 +34,7 @@ MUST be evaluated against the recall tool-use metric (§11.1). `event_search`,
 `rooms`, default `run`) and `room` (RCL-05, RCL-10); a `room` or `rooms` scope
 covers the cross-room posts those rooms show (LANE-29). `event_get` takes an
 address and `event_expand` a range or two addresses in one writer, each in any
-form the [domain model](../domain-model.md#concepts) lists under Address
+form the [domain model](../domain-model/record.md) lists under Address
 (RCL-08). Resolving an address outside the current scope, by `event_get` as by
 `event_expand`, MUST require the explicit `scope`, or `room` for a foreign room,
 and MUST be logged as extending recall (RCL-05, RCL-10).
@@ -273,7 +273,7 @@ its confirmation (OWN-18), so one word never means two acts. `cairn ui` starts
 the room-view component and `cairn launch` the launcher; every other command
 that starts a B1–B3 component names that component; SEC-01 applies however the
 components ship (OQ-32). Every address argument accepts each form the domain
-model lists under [Address](../domain-model.md#concepts), the ASCII input form
+model lists under [Address](../domain-model/record.md), the ASCII input form
 included. Every command MUST support `--json` output and MUST use documented
 exit codes (0 success, 1 failure, 2 usage error, 3 integrity failure).
 

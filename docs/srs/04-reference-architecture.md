@@ -48,8 +48,8 @@ context. It is not binding; §5–§10 are.
 ## 4.2 Components
 
 The components are the closed set of the
-[domain model](../domain-model.md#concepts) and §6.3, each inside one
-network boundary (I4).
+[domain model](../domain-model/components-and-surfaces.md)
+and §6.3, each inside one network boundary (I4).
 
 | Component                | Responsibility                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

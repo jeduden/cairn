@@ -10,7 +10,7 @@ summary: >-
 Section 1 spans four files: this one, [§1.3 Invariants](invariants.md),
 [§1.4 Scope](01b-scope.md) and [§1.5 Non-goals for v1](01c-non-goals.md).
 This specification defines no terms of its own: every term it uses is
-defined in the [domain model](../domain-model.md).
+defined in the [domain model](../domain-model/index.md).
 
 ## 1.1 Purpose
 

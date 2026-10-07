@@ -496,7 +496,7 @@ for them.
   - (b) The branch cannot be linked until it is pushed.
   - **Recommendation: (a).**
 
-[16]: ../../docs/domain-model.md#concepts
+[16]: ../../docs/domain-model/index.md
 [51]: ../../docs/srs/05-functional-requirements.md#51-record-rec
 [511]: ../../docs/srs/05b-lane-requirements.md#511-room-lane
 [512]: ../../docs/srs/05b-room-view-requirements.md#512-room-view-view
@@ -515,4 +515,4 @@ for them.
 [d4]: #d4-run-means-an-agent-run-only
 [d6]: #d6-link-stays-generic-always-qualified
 [inv]: ../../docs/srs/invariants.md
-[model]: ../../docs/domain-model.md
+[model]: ../../docs/domain-model/index.md

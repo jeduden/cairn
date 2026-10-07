@@ -13,7 +13,7 @@ summary: >-
 ## Context
 
 On 5 October 2026 the stakeholder fixed Cairn's domain model
-([docs/domain-model.md](../domain-model.md)): session and project are
+([docs/domain-model.md](../domain-model/index.md)): session and project are
 not Cairn concepts. A session belongs to the harness, and Cairn speaks
 of runs instead: one agent run as the harness reports it, on one node,
 holding a seat in its person's personal room and one per room it

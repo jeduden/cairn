@@ -176,20 +176,45 @@ kinds:
         - heading: "When you give up"
         - heading: "How you review"
   domain-model:
-    # docs/domain-model.md is the model's one source: every concept
-    # with its definition, which the SRS links to instead of keeping a
-    # glossary. One concept per list item, so it runs longer than other
-    # docs.
-    path-pattern: "docs/domain-model.md"
+    # docs/domain-model/index.md is the hub of the domain model: its
+    # intro, the catalog of concept files, and the parts that span every
+    # group. Its sections cannot be dropped quietly.
+    path-pattern: "docs/domain-model/index.md"
+    schema:
+      closed: true
+      sections:
+        - heading: null
+        - heading: "Concepts"
+        - heading: "Relations"
+        - heading: "Names follow the model"
+        - heading: "Not Cairn concepts"
+        - heading: "Changing the model"
     rules:
-      max-file-length:
-        max: 1000
       token-budget:
         mode: heuristic
-        max: 14000
+        max: 3000
+  domain-model-concepts:
+    # One group of the domain model's concepts per file, one concept per
+    # list item. Each carries the title, order and summary the hub's
+    # catalog reads, and holds no sub-sections.
+    path-pattern: "docs/domain-model/*.md"
+    schema:
+      frontmatter:
+        title: nonEmpty
+        order: nonEmpty
+        summary: nonEmpty
+      closed: true
+      sections:
+        - heading: null
+    rules:
+      max-file-length:
+        max: 250
+      token-budget:
+        mode: heuristic
+        max: 3000
   domain-model-agent:
     # The domain-model agent holds instructions only; the model itself
-    # is docs/domain-model.md. Its name is pinned to its file, and its
+    # is docs/domain-model/. Its name is pinned to its file, and its
     # sections (when it is consulted, how it reviews a change, how it
     # reviews a change to the model itself, and how it reports) cannot
     # be dropped quietly.
@@ -268,8 +293,10 @@ kinds:
 kind-assignment:
   - glob: ["docs/**/*.md", "!docs/srs/*.md", "!docs/adr/*.md"]
     kinds: [doc]
-  - glob: ["docs/domain-model.md"]
+  - glob: ["docs/domain-model/index.md"]
     kinds: [domain-model]
+  - glob: ["docs/domain-model/*.md", "!docs/domain-model/index.md"]
+    kinds: [domain-model-concepts]
   - glob: ["docs/adr/*.md"]
     kinds: [adr]
   - glob: ["docs/srs/*.md"]

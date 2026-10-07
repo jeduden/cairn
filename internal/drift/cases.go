@@ -12,7 +12,7 @@ func Cases() []Case {
 	var out []Case
 	for _, group := range [][]Case{
 		dependencyCases(), decisionCases(), repositoryCases(), reviewCases(),
-		gateCases(), personaCases(), agentCases(),
+		gateCases(), personaCases(), agentCases(), domainModelCases(),
 	} {
 		out = append(out, group...)
 	}
@@ -277,6 +277,30 @@ func agentCases() []Case {
 				Old: "## How you report", New: "## Reporting"},
 			Check: Mdsmith(),
 			Want:  "How you report",
+		},
+	}
+}
+
+// domainModelCases lists the drifts mdsmith's domain-model schemas catch:
+// the hub losing one of the sections that span every concept group, and a
+// concept file losing the summary the hub's catalog reads.
+func domainModelCases() []Case {
+	return []Case{
+		{
+			Name:   "the domain-model hub losing a required section",
+			Guards: "mdsmith check",
+			Edit: Edit{Op: Replace, File: "docs/domain-model/index.md",
+				Old: "## Not Cairn concepts", New: "## Excluded terms"},
+			Check: Mdsmith(),
+			Want:  "Not Cairn concepts",
+		},
+		{
+			Name:   "a domain-model concept file losing its summary",
+			Guards: "mdsmith check",
+			Edit: Edit{Op: Replace, File: "docs/domain-model/places.md",
+				Old: "summary: >-", New: "abstract: >-"},
+			Check: Mdsmith(),
+			Want:  "summary",
 		},
 	}
 }
