@@ -116,9 +116,9 @@ Feature: Pins (PIN)
     And the output has no warning about the pin "Run go test before committing."
 
   @PIN-10 @P0 @I3 @I2 @pending
-  Scenario: a restore block includes the qualifying pins of every room the run has a seat in
+  Scenario: a restore block includes the qualifying pins of every room the run has had a seat in during the run
     Given an isolated Cairn home
-    And a run whose seats' writers record it joining room "L1" and then creating room "L2"
+    And a run whose seats' writers record it joining room "L1", then creating room "L2", then leaving "L1"
     And a branch switch onto a branch of room "L4", which the run neither joined nor created, so its later events went to its personal-room seat
     And pins the run's principal wrote from its device seat in "L1" and in its personal room, a pin from the person's configuration, and a constraint pin in "L2" written from another principal's device seat
     And a pin in "L2" written from the device seat of a third principal whose key the run's principal trusts in "L2" by a trust grant

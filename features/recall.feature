@@ -120,7 +120,8 @@ Feature: Recall (RCL)
       | a sealed event this node witnessed                                     | witnessed | verified    |
       | a sealed principal act this node's CLI recorded                        | witnessed | verified    |
       | an event past its writer's newest seal                                 | witnessed | unsigned    |
-      | a sealed event ingested from a transcript                              | ingested  | verified    |
+      | a sealed event "cairn ingest" read from a transcript                   | ingested  | verified    |
+      | a sealed event "cairn ingest" read past an ingest marker               | ingested  | verified    |
       | a sealed event imported from a room bundle                             | bundle    | verified    |
       | a sealed event in a segment the git carrier fetched                    | peer      | verified    |
       | a peer's event after a break in its writer's chain                     | peer      | unverified  |

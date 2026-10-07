@@ -22,10 +22,10 @@ Feature: Room (LANE)
     And a branch belongs to the room whose branch link names it first in causal order, a branch link that would move it to another room is refused, and of two concurrent branch links naming one branch from two rooms the one with the lower commitment stands and the other is shown void
     And renaming a room leaves its id unchanged, and no table maps a run to a seat beyond its personal-room seat and the joins its seats' writers record
     And a run's seat in a room the run created routes its events exactly as a seat it joined
-    And an event with no run, recorded by a device of "alice", goes to that device's seat in her personal room
     And a principal act of "alice" on "R", signed by a node of hers with no seat in "R", is recorded on that node's device seat in "R", which joins without admission since her run's seat is a member there
     And a principal act of "alice" rejecting a foreign room, in which she has no seat, goes to the signing device's seat in her personal room, naming that room
     And a principal act of "alice" on "R" signed by her paired phone goes to the phone's device seat in her personal room, naming "R", and "R" shows it by address as it shows a cross-room post
+    And any other event with no run, recorded by a device of "alice", goes to that device's seat in her personal room
 
   @LANE-02 @P0 @I1 @I6 @I8 @pending
   Scenario Outline: a repository's identity is independent of the local path
@@ -143,10 +143,12 @@ Feature: Room (LANE)
     Then the handover shows as "accepted" to both principals
     And the handover records a moderator role assignment for "alice"'s seats, so they have the moderator role, and her agents' events stay accepted
     And her pin keeps "alice"'s device seat as its author and keeps restoring to her agents
+    And the intent restores as "alice" wrote its newest version, to her agents
     And it reaches "bob"'s agents only through a version "bob" stamps, shown with "bob" as its stamper, or a trust grant of "bob" covering "alice"'s key
     And held requests stay with each agent's principal
     When "bob" revises the intent as a widening principal act
     Then the revision adds a new version of the intent pin that "bob"'s device seat authors
+    And the intent now restores as "bob" wrote that version, to "bob"'s agents
     When "bob" offers the room to "erin", who declines it as a cut principal act
     Then the offer shows as "declined" to both principals and ownership stays with "bob"
     When "bob" offers the room to "dave", who leaves it unanswered for 7 days
@@ -208,30 +210,30 @@ Feature: Room (LANE)
   Scenario Outline: each room role carries exactly its capabilities, checked without a model
     Given an isolated Cairn home
     And a room owned by "alice", who assigned its roles
-    And a seat with the role "<role>"
+    And a seat that is "<seat>"
     When the seat tries every room act
     Then Cairn accepts exactly "<capabilities>" and refuses every other act
     And each decision is checked against the seat's role and the room state, as a deterministic function of the record, and no model is called
     And create room, join, a join request and leave are checked against admission and the add instead, never against a role
     And a run's personal-room seat, and its run seat in a room the run created, have the contributor role
-    And the room view shows the seat the role "<role>" and those capabilities
+    And the room view shows the seat its role and those capabilities
     And only the owner assigns a role, and an invite or invite link records the role it names as a role assignment
     And a seat with no role assignment or appointment, other than the owner's device seats, is a viewer
-    And a room act signed by a device seat of "alice" has every room capability but writing a room summary, editing and unpinning only pins its principal wrote from a device seat and making a list removal of any pin but the intent, while her agents' run seats have only their role and any appointment
+    And a room act signed by a device seat of "alice" has every room capability but writing a room summary, editing and unpinning only pins its principal wrote from a device seat of a type that does not restore, and making a list removal of any pin but the intent, while her agents' run seats have only their role and any appointment
     And an appointment of a run seat or another principal's device seat as moderator is accepted only as a principal act of the owner, or of a principal whose device seat has the moderator role by role assignment, and only the appointer or the owner revokes it
     And an appointment of the facilitator by any principal but the owner is refused and audited
     And an appointment an appointed moderator tries, and its kick, bar or mute aimed at the owner or another moderator, are refused and audited
 
     Examples:
-      | role                                                         | capabilities                                                                                                                                                                               |
-      | viewer                                                       | read, a role request and a summary request                                                                                                                                                 |
-      | contributor                                                  | read and a summary request; post, link (a range, branch or criterion link) and present; pin, edit and unpin its own pins; work on any branch the room names, with or without an assignment |
-      | moderator                                                    | a contributor's, plus a list removal of any pin but the intent, kick, bar, unbar, mute, unmute and pick, and set title, labels and assignments                                             |
-      | the facilitator's device seat, appointed by the owner        | a moderator's within SEC-32's limits, plus writing room summaries                                                                                                                          |
-      | moderator appointed to a run seat                            | a moderator's within SEC-32's limits                                                                                                                                                       |
-      | muted by a moderator                                         | read                                                                                                                                                                                       |
-      | contributor in a whole-room mute that leaves posting to it   | read and post                                                                                                                                                                              |
-      | contributor in a whole-room mute that leaves posting to none | read                                                                                                                                                                                       |
+      | seat                                                           | capabilities                                                                                                                                                                               |
+      | a viewer                                                       | read, a role request and a summary request                                                                                                                                                 |
+      | a contributor                                                  | read and a summary request; post, link (a range, branch or criterion link) and present; pin, edit and unpin its own pins; work on any branch the room names, with or without an assignment |
+      | a moderator                                                    | a contributor's, plus a list removal of any pin but the intent, kick, bar, unbar, mute, unmute and pick, and set title, labels and assignments                                             |
+      | the facilitator's device seat, appointed by the owner          | a moderator's within SEC-32's limits, plus writing room summaries                                                                                                                          |
+      | a moderator appointed to a run seat                            | a moderator's within SEC-32's limits                                                                                                                                                       |
+      | muted by a moderator                                           | read                                                                                                                                                                                       |
+      | a contributor in a whole-room mute that leaves posting to it   | read and post                                                                                                                                                                              |
+      | a contributor in a whole-room mute that leaves posting to none | read                                                                                                                                                                                       |
 
   @LANE-17 @P1 @I6 @I8 @pending
   Scenario: every room shows its visibility
@@ -355,6 +357,7 @@ Feature: Room (LANE)
     And the expire act is recorded by the setter's node, or while it has not, by a moderator's node, signed with that node's device key
     And in a room with no moderator, the owner's node records it, and duplicate expire acts count as one
     And an expire act naming a bar whose original act set no expiry ends nothing
+    And before PRV-10 ships, no act sets an expiry and no node records an expire act
     When two devices of "bob", under one principal key, concurrently record an add and a removal of his agent's seat
     Then the removal wins and the conflict is recorded and shown
     And no sequence of deliveries, reorderings or duplications of these acts re-admits "bob" or revives the removed membership
@@ -363,7 +366,7 @@ Feature: Room (LANE)
     And an opt-in notice of the kick reaches the agent only where the room's owner allows notices and "bob" opted in
 
   @LANE-26 @P1 @I2 @I6 @I10 @pending
-  Scenario: each pin version has one author, an unpin or a list removal wins, no room act changes a restore block, and a stake is never a lock
+  Scenario: each pin version has one author, an unpin or a list removal wins, no pin, edit, unpin or list removal room act changes a restore block, and a stake makes Cairn refuse no other seat's act
     Given an isolated Cairn home
     And a room owned by "alice", where seat "p-1" pinned the stake "p-1 is on src/auth" and "alice" pinned the intent
     And "bob"'s device seat in the room wrote the constraint pin "never touch prod", which restores to "bob"'s agents
@@ -394,7 +397,7 @@ Feature: Room (LANE)
     When "bob" confirms a "fact" pin candidate his agent suggested
     Then the confirmation is recorded as his own widening principal act, and the new pin's author is his device seat
     And a confirmation of a pin candidate from "bob"'s node that has only a token key is refused and audited
-    And a pin act from a device seat with the viewer role, a principal act included, is refused and audited, since that seat lacks the pin capability
+    And a pin, edit or unpin act from a device seat with the viewer role, a principal act included, is refused and audited, since that seat lacks the pin capability
 
   @LANE-27 @P1 @I2 @I3 @pending
   Scenario: pins are information, and only the agent's own principal's pins, those its trust grant covers and versions it stamped restore
@@ -437,7 +440,7 @@ Feature: Room (LANE)
     And no opt-in notice carries the room's title, a petname, pin text, a diff, a reason or the directed post's text
     And every opt-in notice is audited and none starts or resumes a turn
     When the agent compacts after one of its run's seats was kicked
-    Then its restore block names each room PIN-10 derives from its run's seats, with the run's seat id only where that seat is still a member
+    Then its restore block still names the kicked seat's room with that room's qualifying pins, naming each room its run has had a seat in during the run (PIN-10), with the run's seat id only where that seat is still a member
     And no room or seat id in it comes from the harness
 
   @LANE-31 @P1 @I6 @I8 @I10 @pending
@@ -470,7 +473,7 @@ Feature: Room (LANE)
     Then the pin leaves the room's pin list, version 1 keeps restoring to "alice"'s agents, and the unpin is audited and raises a Needs you item for "alice"
     When "alice" unstamps version 1 with "cairn pin unstamp", a cut principal act
     Then the pin no longer restores to her agents, and no other principal's stamp is touched
-    And no room act changes any restore block, and no act but a stamp makes an agent's pin restore
+    And no pin, edit, unpin or list removal room act changes any restore block, and no act but a stamp makes an agent's pin restore
     And a stamp on a version of a run seat's "fact" pin makes it restore to no agent, since only a type that restores restores
 
   @LANE-33 @P1 @I2 @I3 @I10 @pending
