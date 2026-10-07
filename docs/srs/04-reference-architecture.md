@@ -63,6 +63,8 @@ and §6.3, each inside one network boundary (I4).
 Each B1–B3 component's own entry point is started by the person, a service
 manager or an ephemeral node's entrypoint, and runs only while the act turning
 it on stands; starting `cairn ui` or `cairn launch` records no principal act.
+A configuration turning the room-view component or the launcher off needs no
+acceptance, and the CLI records it as the cut act turning it off.
 
 The core's parts:
 

@@ -39,6 +39,11 @@ the two in section 4.
   "for each room's owner"; "managed policy" in full; §6.3's component
   names; PRV-08's `harness_text`.
 
+The adversarial check put the expire act back into LANE-23, which a
+cross-reference to LANE-01 had dropped, and the model now cites SEC-01
+beside ADM-04 for turning the room-view component or the launcher off,
+since ADM-04 states only the acceptance that turns it on.
+
 ## 3. Optional, not chased
 
 A naming rule for crates (ENG-02), which a reviewer marks hard to revert
