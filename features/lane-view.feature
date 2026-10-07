@@ -71,7 +71,7 @@ Feature: Room view (VIEW)
     When the person opens the room view
     Then each post carries the trust mark of §9.7.6 and the petname the person chose for its author's key, never the name the peer sent
     And the key with no petname is shown by its fingerprint and the new key is marked "new key"
-    And the ingested "user" turn carries the trust mark of §9.7.6 too, since only the "user" turns this node's hook handlers witnessed while its deployment mode is "interactive" are trusted
+    And the ingested "user" turn carries the trust mark of §9.7.6 too, since only the "user" turns this node's hook handlers recorded while its deployment mode is "interactive" are trusted
     And the invisible characters and the HTML comment render as visible placeholders with a count
 
   @VIEW-08 @P1 @I6 @I10 @pending
@@ -129,7 +129,7 @@ Feature: Room view (VIEW)
     Given an isolated Cairn home
     And a room with two writers, edits, tool calls and a recall
     When the person replays the room to one event on the Replay tab of its Room page
-    Then the conversation, worktree and results at that event come from the record alone and nothing is re-executed
+    Then the room's events, its conversation included, the worktree and results at that event come from the record alone and nothing is re-executed
     And the worktree states its fidelity as "exact", "approximate" or "unavailable", and why
     And the context lens marks itself a reconstruction and shows recalled content inside its envelope
     And events of the two writers appear in the same causal order on every replay
