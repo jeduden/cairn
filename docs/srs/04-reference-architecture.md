@@ -79,7 +79,7 @@ themselves events in the record. Principal acts, such as adding, editing or
 unpinning a pin of a type that restores written from a device seat a device key
 certified, a stamp, a quarantine, its release and a purge, are `operator` events
 on the device seat of the device that signs them, in the room they act on, which
-that device first joins without admission when its principal has a member seat
+that node first joins without admission when its principal has a member seat
 there. One that acts on no room or on a room its principal has no member seat
 in, such as rejecting a foreign room, or that a paired phone signs, goes to that
 device seat in the personal room, naming the room, and that room shows it by

@@ -72,8 +72,8 @@ summary: >-
 ### Residual risks
 
 These risks remain while an agent runs unsandboxed as its principal's own
-OS user; no rule in Cairn removes them, only a sandbox that blocks them, and
-the node's principal accepts those left open (OWN-22).
+OS user; only a sandbox that blocks them removes them, and the node's
+principal accepts those left open (OWN-22).
 
 | #   | Residual risk                                                                                                                                             |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -155,7 +155,7 @@ not Cairn's processes, complete the register; SEC-19 does not assign them.
 | 20  | Forge bridge (read)                                                                      | bridge               | B3       | sends only to the forge host the node's principal names; read-only                                                                                                                                    | off        | yes      | P2  | SEC-28, LANE-08             |
 | 21  | CI carrier                                                                               | bridge               | B3       | outbound fetch of signed check attestations for an exact SHA                                                                                                                                          | off        | yes      | P2  | SEC-28, LANE-05             |
 | 22  | Notification bridge (self-hosted push, chat or email)                                    | bridge               | B3       | sends only to hosts the node's principal names; the room's petname (else its id), class and count only; accepts nothing                                                                               | off        | yes      | P2  | SEC-28                      |
-| 23  | Live co-editing sync                                                                     | peer component       | B2       | merge updates carried inside sealed segments; the conflict-free method waits for an ADR (NG9)                                                                                                         | off        | B2       | P2  | NG9, LANE-09                |
+| 23  | Sync of several seats editing one worktree                                               | peer component       | B2       | merge updates carried inside sealed segments; the conflict-free method waits for an ADR (NG9)                                                                                                         | off        | B2       | P2  | NG9, LANE-09                |
 | 24  | The harness's own model traffic                                                          | —                    | outside  | the harness to its provider; what Cairn writes to an agent through I2's closed paths travels here (I4)                                                                                                | —          | —        | —   | I4                          |
 | 25  | Harness started by the launcher                                                          | —                    | outside  | the harness's own reach, as if its principal started it; the launcher adds none                                                                                                                       | off        | launcher | P1  | SEC-29, I4                  |
 | 26  | Witness-check command                                                                    | launcher             | B1       | a program the launcher starts; fresh checkout; network and the principal's home denied by default, or the view says it cannot                                                                         | off        | launcher | P1  | OWN-18, SEC-29              |

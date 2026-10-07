@@ -77,14 +77,15 @@ endorsement (LANE-12), a pin version you stamped that was edited, unpinned or
 taken off the pin list (LANE-32), your device-seat pin a list removal took off
 the pin list (LANE-26), a held request past its hold window under a keep-going
 away policy (OWN-07), a quota crossed), **Q4 for your record** (never alerts).
-Dismissing a Q3 or Q4 item is a neutral principal act, and each room's owner
-acknowledges an overlap for its room (LANE-13). Order: class; inside Q1, the
-number of agents blocked on the same answer, then causal order of raising;
-inside Q2 and Q3, rooms in the focus set first, then causal order. The focus set
-changes only by a recorded neutral principal act, so every device of the
-principal shows one order. Causal order, not wall-clock age, because age differs
-between nodes and reads a clock (I10); it is oldest first wherever clocks agree.
-Pull-request reviews the forge asks of the principal join the same queue.
+Dismissing a directed post is a cut principal act, dismissing any other Q3 or Q4
+item a neutral one, and each room's owner acknowledges an overlap for its room
+(LANE-13). Order: class; inside Q1, the number of agents blocked on the same
+answer, then causal order of raising; inside Q2 and Q3, rooms in the focus set
+first, then causal order. The focus set changes only by a recorded neutral
+principal act, so every device of the principal shows one order. Causal order,
+not wall-clock age, because age differs between nodes and reads a clock (I10);
+it is oldest first wherever clocks agree. Pull-request reviews the forge asks of
+the principal join the same queue.
 
 ## 9.7.5 Integrity status
 
@@ -99,57 +100,58 @@ break), `broken` ✕ (a check failed), `refused` (a segment was refused),
 ## 9.7.6 Trust marks
 
 No mark, for the principal's own agents, on this node's own `operator` and
-structural events, its witnessed `harness_meta` events, and its witnessed `user`
-turns while the deployment mode is `interactive` (an ingested one is untrusted,
-REC-22); on principal acts a device key the principal certified signed, and
-posts and pins written from a device seat such a key certified, within that
-key's scope, from any of its nodes (shown with a device glyph); on pin versions
-the principal stamped (shown with the stamper, LANE-32); and on posts and pins a
-trust grant of the principal covers outside a foreign room, written from device
-seats a device key of the trusted principal certified, never a token-key-only
-node's (shown with the granted key's petname, OWN-29). `○` plus petname on
-anything untrusted from another principal, agent, node or bundle, a `user` turn
-another node recorded included; a key with no petname shows its fingerprint. `⚑`
-flagged (PRV-07). `▒` quarantined. `▬` from a seat that is no longer a member:
-it left, was kicked or was barred. `ingested`. `new key`. "from a revoked
-device". Timeline rails: solid for the agent's principal, hollow for other
-principals, dotted for agents and the forge. Events from a token-key-only node's
-writers are untrusted on every other node unless a principal stamped them
-(PRV-02). Unsandboxed agents are one line on Health, not a mark on every tile.
+structural events, the `harness_meta` events its hook handlers witnessed, and
+the `user` turns they witnessed while the deployment mode is `interactive` (an
+ingested one is untrusted, REC-22); on principal acts a device key the principal
+certified signed, and posts and pins written from a device seat such a key
+certified, within that key's scope, from any of its nodes (shown with a device
+glyph); on pin versions the principal stamped (shown with the stamper, LANE-32);
+and on posts and pins a trust grant of the principal covers outside a foreign
+room, written from device seats a device key of the trusted principal certified,
+never a token-key-only node's (shown with the granted key's petname, OWN-29).
+`○` plus petname on anything untrusted from another principal, agent, node or
+bundle, a `user` turn another node recorded included; a key with no petname
+shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined. `▬` from a seat
+that is no longer a member: it left, was kicked or was barred. `ingested`.
+`new key`. "from a revoked device". Timeline rails: solid for the agent's
+principal, hollow for other principals, dotted for agents and the forge. Events
+from a token-key-only node's writers are untrusted on every other node unless a
+principal stamped them (PRV-02). Unsandboxed agents are one line on Health, not
+a mark on every tile.
 
 ## 9.7.7 Keymap
 
 One map, no key bound to two actions. Typing in a composer or text
 field sends text, not shortcuts.
 
-| Key                   | Action                                                | Key             | Action                                                            |
-| --------------------- | ----------------------------------------------------- | --------------- | ----------------------------------------------------------------- |
-| `?`                   | all shortcuts                                         | `a` / `A`       | allow once / `allow-session`                                      |
-| `/`                   | search and filter                                     | `d`             | deny                                                              |
-| `⌘K` / `Ctrl+K`       | command palette                                       | `r`             | reply                                                             |
-| `⌘G` / `Ctrl+G`       | go to address                                         | `e` / `E`       | endorse / edit, then endorse                                      |
-| `g i`                 | Needs you                                             | `Home` / `End`  | replay start / end                                                |
-| `g f`                 | Fleet                                                 | `x`             | dismiss a Q3 or Q4 item; acknowledge an overlap                   |
-| `g c`                 | Catch up                                              | `y`             | copy address                                                      |
-| `g q` / `g v`         | quarantine list / verify panel                        | `o`             | open the Room page at this item                                   |
-| `g h` / `g p`         | Health / Peers                                        | `n` / `N`       | next / previous item that needs you                               |
-| `1` / `2` / `3`       | Room page tabs: Timeline / Review / Replay            | `m`             | steer an agent with a fixed template naming this address (OWN-03) |
-| `j` / `k`             | next / previous row, item or file                     | `q`             | quarantine selection                                              |
-| `Enter`               | open                                                  | `⌘S` / `Ctrl+S` | save search                                                       |
-| `Space`               | preview or peek                                       | `+` / `-`       | more / less context around a hit                                  |
-| `Esc`                 | close sheet                                           | `w` / `b`       | why panel / blame gutter                                          |
-| `I`                   | interrupt (run pane)                                  | `W`             | witness check                                                     |
-| `p`                   | pause / resume                                        | `c` / `C`       | post on the selection / verdict sheet                             |
-| `S`                   | stop (opens the stop sheet)                           | `P`             | pick what the outcome window shows                                |
-| `F`                   | follow a seat                                         | `l`             | branch and pull-request links                                     |
-| `t`                   | terminal takeover in the launcher's terminal (OWN-19) | `V` / `s`       | compare versions / since my verdict                               |
-| `h`                   | hand back                                             | `(` / `)`       | previous / next post with a range link                            |
-| `Q`                   | turn an away policy on / off                          | `<` / `>`       | down / up the stack                                               |
-| `L`                   | replay jump to live                                   | `Ctrl+T`        | add the room to or remove it from the focus set                   |
-| `Shift+Space`         | replay play / pause                                   | `←` / `→`       | replay previous / next event                                      |
-| `Shift+←` / `Shift+→` | replay previous / next span                           | `,` / `.`       | replay previous / next turn                                       |
-| `[` / `]`             | replay previous / next edit                           | `{` / `}`       | replay previous / next error                                      |
-| `;` / `:`             | replay next / previous held request                   | `v`             | replay context lens                                               |
+| Key                   | Action                                                | Key             | Action                                                                   |
+| --------------------- | ----------------------------------------------------- | --------------- | ------------------------------------------------------------------------ |
+| `?`                   | all shortcuts                                         | `a` / `A`       | allow once / `allow-session`                                             |
+| `/`                   | search and filter                                     | `d`             | deny                                                                     |
+| `⌘K` / `Ctrl+K`       | command palette                                       | `r`             | reply                                                                    |
+| `⌘G` / `Ctrl+G`       | go to address                                         | `e` / `E`       | endorse / edit, then endorse                                             |
+| `g i`                 | Needs you                                             | `Home` / `End`  | replay start / end                                                       |
+| `g f`                 | Fleet                                                 | `x`             | dismiss a Q3 or Q4 item (a directed post: a cut); acknowledge an overlap |
+| `g c`                 | Catch up                                              | `y`             | copy address                                                             |
+| `g q` / `g v`         | quarantine list / verify panel                        | `o`             | open the Room page at this item                                          |
+| `g h` / `g p`         | Health / Peers                                        | `n` / `N`       | next / previous item that needs you                                      |
+| `1` / `2` / `3`       | Room page tabs: Timeline / Review / Replay            | `m`             | steer an agent with a fixed template naming this address (OWN-03)        |
+| `j` / `k`             | next / previous row, item or file                     | `q`             | quarantine selection                                                     |
+| `Enter`               | open                                                  | `⌘S` / `Ctrl+S` | save search                                                              |
+| `Space`               | preview or peek                                       | `+` / `-`       | more / less context around a hit                                         |
+| `Esc`                 | close sheet                                           | `w` / `b`       | why panel / blame gutter                                                 |
+| `I`                   | interrupt (run pane)                                  | `W`             | witness check                                                            |
+| `p`                   | pause / resume                                        | `c` / `C`       | post on the selection / verdict sheet                                    |
+| `S`                   | stop (opens the stop sheet)                           | `P`             | pick what the outcome window shows                                       |
+| `F`                   | follow a seat                                         | `l`             | branch and pull-request links                                            |
+| `t`                   | terminal takeover in the launcher's terminal (OWN-19) | `V` / `s`       | compare versions / since my verdict                                      |
+| `h`                   | hand back                                             | `(` / `)`       | previous / next post with a range link                                   |
+| `Q`                   | turn an away policy on / off                          | `<` / `>`       | down / up the stack                                                      |
+| `L`                   | replay jump to live                                   | `Ctrl+T`        | add the room to or remove it from the focus set                          |
+| `Shift+Space`         | replay play / pause                                   | `←` / `→`       | replay previous / next event                                             |
+| `Shift+←` / `Shift+→` | replay previous / next span                           | `,` / `.`       | replay previous / next turn                                              |
+| `[` / `]`             | replay previous / next edit                           | `{` / `}`       | replay previous / next error                                             |
+| `;` / `:`             | replay next / previous held request                   | `v`             | replay context lens                                                      |
 
 Interrupt moved from `Esc Esc` to `I`, so no key repeats into a second
 act. Composer: `Enter` steer, `Ctrl+Enter` queue the steer for the next

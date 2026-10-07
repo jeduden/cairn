@@ -19,4 +19,4 @@ ruling other harnesses out (§1.4), room summaries are in scope
 | NG2 | Long-term semantic memory, fact extraction, or automatic promotion | Largest poisoning surface; belongs to a separate layer-5 system with its own policy                                                           |
 | NG3 | Embedding or vector search                                         | BM25 is deterministic, needs no model calls at ingest, and is sufficient for v1 (Scroll uses BM25)                                            |
 | NG4 | Peering in v1.0, and a shared mutable store at any version         | Sealed segments of each writer replicate between enrolled peers as P2 (PEER) after their own security review. OQ-07 closes with PEER.         |
-| NG9 | Live co-editing of one worktree by several seats in v1.0           | A run and its subagents sharing a worktree are in scope (LANE-19); a conflict-free method for several seats is chosen by ADR after PEER ships |
+| NG9 | Several seats editing one worktree in v1.0                         | A run and its subagents sharing a worktree are in scope (LANE-19); a conflict-free method for several seats is chosen by ADR after PEER ships |
