@@ -62,7 +62,7 @@ Every concern raised during research and review, mapped to Cairn's response.
 | #   | Concern                                                                   | Cairn's response                                                                               | Requirements           |
 | --- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------- |
 | D1  | The model runs at the provider, so recalled content leaves the network    | Stated in I4; redaction before storage; scope limits and quarantine bound what can be recalled | SEC-08, RCL-05, SEC-12 |
-| D2  | Short harness timeouts (`SessionEnd` ≈ 1.5 s)                             | Internal deadlines and ingest markers; crash-safe store                                        | NFR-01, NFR-02, NFR-07 |
+| D2  | Short harness timeouts (`SessionEnd` ≈ 1.5 s)                             | Hook budgets and ingest markers; crash-safe store                                              | NFR-01, NFR-02, NFR-07 |
 | D3  | Runner state must survive pause and resume                                | Home on durable volumes; verified in S4                                                        | §2.2, S4               |
 | D4  | Installation on runners without overriding the harness's managed settings | Plugin or runner-image installation; the harness's managed settings respected                  | ADM-01, ADM-03         |
 
