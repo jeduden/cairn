@@ -51,14 +51,14 @@ The components are the closed set of the
 [domain model](../domain-model/components-and-surfaces.md)
 and §6.3, each inside one network boundary (I4).
 
-| Component                | Responsibility                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Core (B0)                | The hook handlers and the CLI, each harness adapter's transcript and hook part among them, the MCP server, the kernel worker, the TUI, and everything that builds what reaches the model; opens no socket and starts no program but its kernel worker.                                                                                                                             |
-| Room-view component (B1) | `cairn ui`: serves the room view on loopback, or on a local endpoint only the same OS user can reach; off until the principal starts it.                                                                                                                                                                                                                                           |
-| Launcher (B1)            | `cairn launch`: through each harness adapter's run part, starts, hosts and controls runs, pauses them at the harness prompt and records sandbox state (OWN-22); carries into the harness input only text the core built; executes witness checks; the only component but the core, for its kernel worker, that starts another program (SEC-29); off until the principal starts it. |
-| Peer component (B2)      | `cairn peer-component on\|off`: replicates segments with peers the node's principal enrolled by key and serves paired phones; off until turned on.                                                                                                                                                                                                                                 |
-| Publish component (B3)   | Read-only publishing and the git carrier, which the node's principal enables per remote and the room's owner per room (PEER-08); off until turned on.                                                                                                                                                                                                                              |
-| Bridge component (B3)    | Outbound exchange with hosts the node's principal names: the forge bridge, the CI carrier and the notification bridge (SEC-28); off until turned on.                                                                                                                                                                                                                               |
+| Component                | Responsibility                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Core (B0)                | The hook handlers and the CLI, each harness adapter's transcript and hook part among them, the MCP server, the kernel worker, the TUI, the commit hook (LANE-28, run as the CLI), and everything that builds what reaches the model; opens no socket and starts no program but its kernel worker.                                                                                                                                                                                     |
+| Room-view component (B1) | `cairn ui`: serves the browser room view on loopback only (SEC-20); off until the principal starts it.                                                                                                                                                                                                                                                                                                                                                                                |
+| Launcher (B1)            | `cairn launch`: through each harness adapter's run part, starts, hosts and controls runs, pauses them at the harness prompt and records sandbox state (OWN-22); carries into the harness input only text the core built; any listener it opens is on loopback (SEC-20) or a local endpoint only the same OS user can reach; executes witness checks; the only component but the core, for its kernel worker, that starts another program (SEC-29); off until the principal starts it. |
+| Peer component (B2)      | `cairn peer-component on\|off`: replicates segments with peers the node's principal enrolled by key and serves paired phones; off until turned on.                                                                                                                                                                                                                                                                                                                                    |
+| Publish component (B3)   | Read-only publishing and the git carrier, which the node's principal enables per remote and the room's owner per room (PEER-08); off until turned on.                                                                                                                                                                                                                                                                                                                                 |
+| Bridge component (B3)    | Outbound exchange with hosts the node's principal names: the forge bridge, the CI bridge and the notification bridge (SEC-28); off until turned on.                                                                                                                                                                                                                                                                                                                                   |
 
 The core's parts:
 
@@ -86,24 +86,25 @@ principal has no member seat in, such as rejecting a foreign room, or that a
 paired phone signs, goes to that device seat in the personal room, naming the
 room, and that room shows it by address as it shows a cross-room post (OWN-02,
 LANE-29). Once PRV-10 ships, expire acts are `operator` events on the device
-seat of the node that signs them. Room acts sit in the writer of the seat that
+seat of the node that signs them. Room acts go to the writer of the seat that
 signs them: a post with provenance `post`, a room summary `summary`, never
 trusted (LANE-33), every other room act with that seat's pin class, `operator`
 for a device seat and `assistant` for a run seat (LANE-31, PRV-01). A purge
 under a retention policy is not an act: the node records it naming the policy,
-whose setting was the act, and an erasure request it sends peers is
-`structural`, where one a principal act sends is `operator`. Every tombstone is
-a `structural` event (PRV-01). Every other table (search index, spans,
-landmarks, active pins, quarantine set, run statuses but for their time-relative
-freshness marks, integrity statuses, queues, stats) is a derived artifact that
-`cairn rebuild` reproduces exactly from the writer logs the node holds and the
-node's own key set (I10). Purge, the only way content is destroyed, removes
-content but leaves a tombstone event carrying the removed addresses, counts,
-reason, the principal or retention policy that purged, and the commitments of
-the removed events (REC-17, ADM-07), never a hash of the removed content, so
-rebuilds stay deterministic, purges stay auditable and nothing retained confirms
-a guess at what was purged. Room status and a check's state are computed where
-shown, never stored.
+whose setting was the act (the principal's change to a retention policy is
+widening and applies only once its configuration is accepted, ADM-04), and an
+erasure request it sends peers is `structural`, where one a principal act sends
+is `operator`. Every tombstone is a `structural` event (PRV-01). Every other
+table (search index, spans, landmarks, active pins, quarantine set, run statuses
+but for their time-relative freshness marks, integrity statuses, queues, stats)
+is a derived artifact that `cairn rebuild` reproduces exactly from the writer
+logs the node holds and the node's own key set (I10). Purge, the only way stored
+content is destroyed, removes content but leaves a tombstone event carrying the
+removed addresses, counts, reason, the principal or retention policy that
+purged, and the commitments of the removed events (REC-17, ADM-07), never a hash
+of the removed content, so rebuilds stay deterministic, purges stay auditable
+and nothing retained confirms a guess at what was purged. Room status and a
+check's state are computed where shown, never stored.
 
 ## 4.4 Key scenarios
 

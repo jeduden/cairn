@@ -35,21 +35,23 @@ proposal, §8.
 
 Room status is computed where shown from room state, its runs' statuses and
 their freshness marks, never recorded: no act sets it directly, though OWN-21's
-ready and abandoned marks feed it (LANE-09). Rooms do not land; branches do, by
-git or the forge (LANE-08). First match wins, in this order: **Abandoned** (the
-owner marked the room abandoned) and **Landed** (the room names at least one
-branch, and every one has landed), **Asking** (a run waits on its principal),
-**Failing** (a check failed on the head of a branch the room names, evidence
-`own check` or stronger), **Blocked**, **Running**, **Ready for review** (only
-after the principal act of OWN-21 marking the room ready), **Quiet** (never
-while a run is `unrecorded` or `behind`, VIEW-04). The pull-request states a
-forge reports (Pre-review, In review, Changes requested, Approved, Queued,
-Merging) live on the pull-request pill (P2, LANE-08), marked `asserted`, not in
-the room status; Cairn keeps no approval state of its own. A check's check
-state, computed where shown, is one of Pending, Executing, Passed, Failed, Stale
-and Absent; a result resting on edits not fully recorded is marked `unbound`
-(LANE-05), a mark like `from checkpoint` and `outside intent`, not a check
-state. No check state shares a name with a room status, a draft or a landing.
+ready and abandoned marks feed it (LANE-09). Rooms do not land; branches do,
+merged by git or the forge into the repository's default branch or a branch the
+forge protects (LANE-06, LANE-08). First match wins, in this order:
+**Abandoned** (the owner marked the room abandoned) and **Landed** (the room
+names at least one branch, and every one has landed), **Asking** (a run waits on
+its principal), **Failing** (a check failed on the head of a branch the room
+names, evidence `own check` or stronger), **Blocked**, **Running**, **Ready for
+review** (only after the principal act of OWN-21 marking the room ready),
+**Quiet** (never while a run is `unrecorded` or `behind`, VIEW-04). The
+pull-request states a forge reports (Pre-review, In review, Changes requested,
+Approved, Queued, Merging) live on the pull-request pill (P2, LANE-08), marked
+`asserted`, not in the room status; Cairn keeps no approval state of its own. A
+check's check state, computed where shown, is one of Pending, Executing, Passed,
+Failed, Stale and Absent; a result resting on edits not fully recorded is marked
+`unbound` (LANE-05), a mark like `from checkpoint` and `outside intent`, not a
+check state. No check state shares a name with a room status, a draft or a
+landing.
 
 ## 9.7.3 Evidence and proof classes
 
@@ -73,18 +75,18 @@ state. No check state shares a name with a room status, a draft or a landing.
 
 Queue classes, named Q1–Q4 so they never read as priorities P0–P2: **Q1 blocking
 now** (held requests: permission, question, hand-off), **Q2 blocking the room**
-(failed required check, crash, rate limit with no resume, refused segment,
-overlap), **Q3 waiting on you** (a pull-request review the forge asks of you, an
-outcome awaiting a verdict, a role request, a directed post awaiting your
-endorsement (LANE-12), a pin version you stamped that was edited, unpinned or
-taken off the pin list (LANE-32), your device-seat pin a list removal took off
-the pin list (LANE-26), a held request past its hold window under a keep-going
-away policy (OWN-07), a quota crossed), **Q4 for your record** (never alerts).
-Dismissing a directed post is a cut principal act, dismissing any other Q3 or Q4
-item a neutral one, and each room's owner acknowledges an overlap for its room
-(LANE-13). Order: class; inside Q1, the number of agents blocked on the same
-answer, then causal order of raising; inside Q2 and Q3, rooms in the focus set
-first, then causal order. The focus set changes only by a recorded neutral
+(failed check the forge requires, crash, rate limit with no resume, refused
+segment, overlap), **Q3 waiting on you** (a pull-request review the forge asks
+of you, an outcome awaiting a verdict, a role request, a directed post awaiting
+your endorsement (LANE-12), a pin version you stamped that was edited, unpinned
+or taken off the pin list (LANE-32), your device-seat pin a list removal took
+off the pin list (LANE-26), a held request past its hold window under a
+keep-going away policy (OWN-07), a quota crossed), **Q4 for your record** (never
+alerts). Dismissing a directed post is a cut principal act, dismissing any other
+Q3 or Q4 item a neutral one, and each room's owner acknowledges an overlap for
+its room (LANE-13). Order: class; inside Q1, the number of agents blocked on the
+same answer, then causal order of raising; inside Q2 and Q3, rooms in the focus
+set first, then causal order. The focus set changes only by a recorded neutral
 principal act, so every device of the principal shows one order. Causal order,
 not wall-clock age, because age differs between nodes and reads a clock (I10);
 it is oldest first wherever clocks agree. Pull-request reviews the forge asks of

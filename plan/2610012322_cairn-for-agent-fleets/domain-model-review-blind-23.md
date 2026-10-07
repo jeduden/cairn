@@ -56,6 +56,12 @@ option, as the stakeholder asked, except the I4 question in section 4.
   addresses in the writer-label form; landmarks.feature "landmark list";
   the CI bridge throughout.
 
+While applying Q17, `room_list_removal` turned out never to succeed: a
+run seat is a moderator only by appointment, and SEC-32 refuses an
+appointed moderator a list removal. As T recommended, the tool is
+dropped from §9.2; a list removal goes through the CLI, as unbar and
+unmute do.
+
 ## 3. Optional, not chased
 
 Retry filed under `correction`; `cairn peer … status`; "Stale" for a

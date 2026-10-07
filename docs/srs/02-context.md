@@ -21,8 +21,8 @@ summary: >-
 
 ## 2.2 Deployment context
 
-- **Primary:** Claude Code runs executed by self-hosted runners, and Claude
-  Agent SDK workers, on ephemeral nodes we operate.
+- **Primary:** Claude Code harness sessions on self-hosted runners, and
+  Claude Agent SDK workers, on runner nodes we operate.
 - **Primary, too:** developer workstations (Linux and macOS) running a fleet
   of harnesses, one worktree each.
 - **Later, with PEER:** ephemeral nodes whose `CAIRN_HOME` is deleted
@@ -94,7 +94,7 @@ team U8; agents U9.
 | U3  | Multi-machine developer | `persona-multi-machine-developer` | Agents on a laptop, a home server and ephemeral nodes in the cloud; often offline                | One view across nodes; partitions that merge; no vendor relay; an ephemeral node's history that survives     | A central service; a partition loses or duplicates events; an ephemeral node's history vanishes              |
 | U4  | Returning owner         | `persona-returning-owner`         | Comes back after hours or days and asks what the agents did                                      | Catch up and room summaries that point into the record; ranked waiting items; proof nothing was lost; search | Catch up or a room summary replaces the record; missing ranges are silent; catching up beats reading git log |
 | U5  | Reviewer                | `persona-reviewer`                | Decides whether a room's branches may land                                                       | Diff, why and evidence in one place; claim versus own check versus CI; the forge's review shown beside them  | Commit authors approve their own branches; done with nothing that checked it; landing link lost              |
-| U6  | Live collaborator       | `persona-live-collaborator`       | Joins someone else's room live to help, pair or take over                                        | See it live; help without derailing; know their rights; take over on handover                                | Watch-only; words lost or reaching the agent unseen; joining needs a service                                 |
+| U6  | Live collaborator       | `persona-live-collaborator`       | Joins someone else's room live to help, pair or take over                                        | See it live; help without derailing; know their rights; take ownership by handover                           | Watch-only; words lost or reaching the agent unseen; joining needs a service                                 |
 | U7  | Open-source maintainer  | `persona-oss-maintainer`          | Receives outside contributions with their rooms from strangers                                   | Read how it was made; foreign history never instructs; redaction; no account to join                         | Foreign history reaches agents as more than data; secrets leak; fabrication undetectable                     |
 | U8  | Security officer        | `persona-security-officer`        | Signs off that Cairn adds no exfiltration or injection path and that the audit log is sound      | No automatic path to the model; no unasked traffic; verifiable record; erasure that is final                 | Any outside content reaches the model unasked; a socket beyond its boundary                                  |
 | U9  | Agent                   | `persona-agent`                   | An agent whose model is Claude, compacted many times in a long run                               | Pins back verbatim; small exact recall; provenance on everything recalled; no pushed text                    | Pins summarized or missing; recall floods or misleads; surprise text in context                              |
