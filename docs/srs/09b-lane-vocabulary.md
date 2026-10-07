@@ -101,7 +101,9 @@ in the envelope's `integrity` field (§9.3), is one of seven values
 (hash-chained, before REC-18 or past the newest seal), `incomplete` ◇ (a
 writer's events are missing here), `unverified` (an event after a
 break), `broken` ✕ (a chain or seal verification failed), `refused` (a
-segment was refused), `equivocated` (PEER-10). The UI never says "secure".
+segment was refused, which a structural event in this node's personal
+room and an audit entry record), `equivocated` (PEER-10). The UI never
+says "secure".
 
 ## 9.7.6 Trust marks
 

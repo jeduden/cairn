@@ -104,17 +104,19 @@ under a retention policy is not an act: the node records it naming the policy,
 whose setting was the act (the principal's change to a retention policy is
 widening and applies only once its configuration is accepted, ADM-04), and an
 erasure request it sends peers is `structural`, where one a principal act sends
-is `operator`. Every tombstone is a `structural` event (PRV-01). Every other
-table (search index, spans, landmarks, active pins, quarantine set, run statuses
-but for their time-relative freshness marks, integrity statuses, queues, stats)
-is a derived artifact that `cairn rebuild` reproduces exactly from the writer
-logs the node holds and the node's own key set (I10). Purge, the only way stored
-content is destroyed, removes content but leaves a tombstone event carrying the
-removed addresses, counts, reason, the principal or retention policy that
-purged, and the commitments of the removed events (REC-17, ADM-07), never a hash
-of the removed content, so rebuilds stay deterministic, purges stay auditable
-and nothing retained confirms a guess at what was purged. Room status and a
-check's state are computed where shown, never stored.
+is `operator`. Every tombstone, and every refusal of a segment, is a
+`structural` event (PRV-01, REC-21). Every other table (search index, spans,
+landmarks, active pins, quarantine set, room state, trust levels, run statuses
+but for their time-relative freshness marks, integrity statuses, queues,
+evidence and proof classes, stats) is a derived artifact that `cairn rebuild`
+reproduces exactly from the writer logs the node holds and the node's own key
+set (I10). Purge, the only way stored content is destroyed, removes content but
+leaves a tombstone event carrying the removed addresses, counts, reason, the
+principal or retention policy that purged, and the commitments of the removed
+events (REC-17, ADM-07), never a hash of the removed content, so rebuilds stay
+deterministic, purges stay auditable and nothing retained confirms a guess at
+what was purged. Room status and a check's state are computed where shown, never
+stored.
 
 ## 4.4 Key scenarios
 

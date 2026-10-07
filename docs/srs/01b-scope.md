@@ -44,10 +44,17 @@ exists in the CLI or MCP.
 2. The principal's other devices, as enrolled, mutually authenticated
    peers and paired phones (B2).
 
-I4 binds Cairn's components, not the principal's own tunnel: the
-room-view component listens only on loopback (B1), and the peer
-component connects only to enrolled peers and paired phones (B2).
-Whether the room view may reach browsers on other machines, or be
-served from a host the principal names, is an open question: each
-would need new I4 wording, approved by ADR with a security review,
-before any requirement asks for it (OQ-38).
+I4 binds what Cairn's components send, not what the principal's own
+tools carry: its tunnel, its `git push`, its copies. The room-view
+component listens only on loopback (B1), and the peer component
+connects only to enrolled peers and paired phones (B2). Whether the
+room view may reach browsers on other machines, or be served from a
+host the principal names, is an open question: each would need new I4
+wording, approved by ADR with a security review, before any
+requirement asks for it (OQ-38).
+
+A Cairn feature whose purpose is to reach off the machine through a
+carrier the principal runs has its own §6.3 row, is off by default and
+is turned on by a widening principal act (SEC-19). Room trailers are
+not such a feature: they are provenance in the repository, always on,
+and leave only with the principal's own push (LANE-28, §6.3).
