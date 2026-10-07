@@ -54,9 +54,9 @@ summary: >-
   at that seq (REC-18), made where that key lives: a witnessed run's run seat's,
   but the seat ingest starts, by its run's MCP server, covering what the hook
   handlers appended, an ingested run's by the core, a paired phone's device
-  seat's by the phone, and every other writer's by the core; how the core signs
-  and seals what the room-view component, the launcher and the bridge component
-  record rests on OQ-40. Events after the newest seal are unsigned.
+  seat's by the phone (OQ-39), and every other writer's by the core; how the
+  core signs and seals what the room-view component, the launcher and the bridge
+  component record rests on OQ-40. Events after the newest seal are unsigned.
 - **Commitment**: A keyed commitment to an event's content under a per-event
   random key, its **commitment key**, kept with the content and erased with it;
   the only way the chain, seals and tombstones refer to content (REC-17).
@@ -151,9 +151,10 @@ summary: >-
   run its capture did not record.
 - **Integrity status**: What a room or writer shows about its chain and seals,
   one of §9.7.5's values (VIEW-10). A refused segment is recorded as a
-  structural event in this node's device seat's personal-room writer, beside its
-  audit entry, so `refused` derives from the record (I10). The UI never says
-  "secure".
+  structural event in this node's device seat's personal-room writer once per
+  writer and reason, when first refused, beside its audit entry, so `refused`
+  derives from the record and a rebuild appends nothing (REC-21, I10). The UI
+  never says "secure".
 - **Receipt**: A signed statement about a node's record, made to be kept apart
   from the home and checked with no network. Always qualified: a **head
   receipt** lists every writer's chain head at a moment, the tamper evidence of

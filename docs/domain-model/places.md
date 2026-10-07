@@ -22,8 +22,9 @@ summary: >-
   with its own device key, or a token key, and its own device seat, that mints
   new seat keys and shares the carried-over personal room (REC-24). The node's
   principal is the principal whose home it is.
-- **Device**: A node or a paired phone. Its device key certifies its seats
-  (PRV-11); a token-key-only node's token key does so in its place.
+- **Device**: A node or a paired phone. A node's device key certifies the seats
+  it uses (PRV-11), a token-key-only node's token key in its place (PRV-10); a
+  paired phone's rests on OQ-39.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
   denying held permission requests within its device scope, reaching its node
   over B2. It signs with its own device key and seals its device seat's writer

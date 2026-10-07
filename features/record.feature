@@ -248,14 +248,18 @@ Feature: Record (REC)
       | the principal hands control back to the agent |
       | the branch head is rewritten by a rebase      |
 
-  @REC-21 @P1 @I6 @pending
-  Scenario: a segment of an unsupported format version is refused, audited and left untouched
+  @REC-21 @P1 @I6 @I10 @pending
+  Scenario: a segment of an unsupported format version is refused, audited, recorded once and left untouched
     Given an isolated Cairn home
     And a writer log containing a segment of a format version this node supports and a segment of format version 99
-    When the person runs "cairn rebuild"
+    When the person runs "cairn verify" twice
     Then every segment this node wrote carries a format version
     And the supported segment is read
-    And the version 99 segment is refused, a structural event in this node's device seat in its personal room records the refusal, and an audit entry records its unsupported format version
+    And the version 99 segment is refused each time, and an audit entry records each refusal with its unsupported format version
+    And exactly one structural event in this node's device seat in its personal room records the refusal, appended when the segment was first refused, carrying only the writer id, the refused seq range, the segment's digest and the typed reason "unsupported format version", never the segment's content or free text
+    And the second refusal of that writer for that reason is counted and audited, and appends no event
+    When the person runs "cairn rebuild"
+    Then the rebuild only reads the recorded refusal, derives the writer's integrity status "refused" from it and appends no event
     And the version 99 segment file is byte-identical to before
 
   @REC-22 @P1 @I1 @I2 @pending

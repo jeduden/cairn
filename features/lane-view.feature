@@ -191,7 +191,7 @@ Feature: Room view (VIEW)
     And no run recorded, so only the personal room, and harness transcripts due for deletion within 7 days
     When the person opens the room view
     Then it opens on Setup with the ingest command and the number of transcripts the harness will delete within 7 days
-    And it shows whether capture is on and a statement that no Cairn component sends anything off the machine while no B2 or B3 component is on, naming any that is, and that recalled content and what Cairn writes to an agent reach the model only as the harness sends them, and that commits on a room's branch carry its room trailers, which leave the machine with the person's own push, and Cairn creates no room for the person to browse
+    And it shows whether capture is on and a statement that no Cairn component sends anything off the machine while no B2 or B3 component is on, naming any that is, and that recalled content and what Cairn writes to an agent reach the model only as the harness sends them, and that commits on a room's branch carry its room trailer and any trailer links, which leave the machine with the person's own push, and Cairn creates no room for the person to browse
     And every change to harness configuration or configuration it offers is shown as a diff with the CLI command that applies it
 
   @VIEW-19 @P2 @I6 @I10 @pending

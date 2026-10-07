@@ -236,8 +236,9 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And a node whose device key no principal key has certified
     When a run's run seat starts in a room and the node's device seat starts in the same room
+    And the person runs "cairn verify --json"
     Then the device key has certified the run seat's key with a seat certificate scoped to that room and naming the seat kind "run"
     And the device key has certified the device seat's key with a seat certificate scoped to that room and naming the seat kind "device"
-    And the room view and "cairn room list" show and mark each seat's kind only from its seat certificate, never from a field in its events
+    And the output reports, for each seat, its seat certificate and the seat kind it names, taken only from that seat certificate, never from a field in its events
     And once a principal key certifies the device key, both seat certificates stay valid and each seat key chains principal key → device key → seat key
     And a recorded I2 security review of this requirement exists before it ships

@@ -53,8 +53,9 @@ host the principal names, is an open question: each would need new I4
 wording, approved by ADR with a security review, before any
 requirement asks for it (OQ-38).
 
-A Cairn feature whose purpose is to reach off the machine through a
-carrier the principal runs has its own §6.3 row, is off by default and
-is turned on by a widening principal act (SEC-19). Room trailers are
-not such a feature: they are provenance in the repository, always on,
-and leave only with the principal's own push (LANE-28, §6.3).
+A Cairn feature whose purpose is to reach off the machine through a tool the
+principal runs outside Cairn, such as its own tunnel, has its own §6.3 row, is
+off by default and is turned on by a widening principal act (SEC-19). A commit's
+room trailer and any trailer links are not such a feature: they name the room in
+the repository's own commits, always on, and leave only with the principal's own
+push (LANE-28, §6.3).

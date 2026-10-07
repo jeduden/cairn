@@ -70,7 +70,8 @@ summary: >-
   are trusted on that node as that node's trusted sources.
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room, naming the seat kind, `run` or `device`. The node's
-  device key makes one for every seat from the first release (PRV-11); once
+  device key makes one for every seat the node uses from the first release
+  (PRV-11); once
   PRV-10 ships every seat key chains to a principal key. A node's **key set** is
   the keys, certificates and revocations it holds (I10).
 - **Access token**: A short-lived credential a principal mints to enroll a

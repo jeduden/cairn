@@ -236,7 +236,7 @@ Feature: Security (SEC)
     And the check fails when a component's build-time reach evidence is missing, or when that evidence or a test of a component confined to its boundary shows more reach than its row grants
     And the check fails when a process exists that the register does not list
     And every B1, B2 and B3 component, the launcher included, stays off on the home until the person turns it on, the room-view component and the launcher only by accepting the configuration that turns it on, and the bridge component only by enabling a bridge for a host
-    And every Cairn feature whose purpose is to reach off the machine through a carrier the person runs has its own row, stays off by default and turns on only by a widening principal act
+    And every Cairn feature whose purpose is to reach off the machine through a tool the person runs outside Cairn, such as its own tunnel, has its own row, stays off by default and turns on only by a widening principal act
 
   @SEC-20 @P1 @I4 @I6 @I8 @pending
   Scenario: the room view binds to loopback and accepts only its own launch secret
