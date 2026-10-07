@@ -165,7 +165,7 @@ principal's own agents only (I2).
 | `restore_block.landmarks_on_start`                                                           | `false`                  | Yes, only to `false`                 |
 | `restore_block.on_prompt`                                                                    | `false`                  | Only to `false`                      |
 | `restore_block.max_model_tokens`                                                             | 2000                     | Only lower                           |
-| `pin.max_restore_model_tokens`                                                               | 1000                     | Only lower                           |
+| `pin_budget.max_model_tokens`                                                                | 1000                     | Only lower                           |
 | `room_summary.max_model_tokens` (the agent's principal's cap on `room_summary_get`, LANE-33) | 2000                     | Only lower                           |
 | `recall.max_k`                                                                               | 50                       | Only lower                           |
 | `redaction.extra_patterns`                                                                   | `[]`                     | Yes, add only                        |

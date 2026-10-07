@@ -118,6 +118,9 @@ covers outside a foreign room, written from device seats a device key of the
 principal the trust grant names certified, never a token-key-only node's (shown
 with the granted key's petname, OWN-29). In a foreign room only the principal's
 own device-seat pins and the versions it stamped go unmarked (RCL-10, PIN-10).
+The free text of a cut or neutral principal act, such as a stated reason, shows
+`○` whatever its event's trust level, on this node's own `operator` events too
+(OWN-11).
 `○` plus petname on anything untrusted from another principal, agent, node or
 bundle, a `user` event another node recorded included; a key with no petname
 shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined. `▬` from a seat

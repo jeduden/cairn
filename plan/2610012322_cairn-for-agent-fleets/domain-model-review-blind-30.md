@@ -55,6 +55,14 @@ budgets, unchanged and keeping their numbers: §5.14 (PEER) moved to
 06b-boundary-register.md, and §9.5's command-line interface to
 09a-command-line-interface.md.
 
+The adversarial check found two problems, both fixed: a PRV-02 example
+row set a cut act's whole event untrusted, now a step making only its
+free text untrusted; and PEER-05 no longer obliged anyone to record the
+expire act ending an access token, now the minting node MUST once its
+clock passes the expiry. LANE-29's "for the reader" and LANE-11's
+"always" came back; LANE-16 no longer lists what work covers, which the
+model defines, and LANE-11 drops a sentence LANE-31 already states.
+
 ## 3. Optional, not chased
 
 Entry-point verbs for the peer, publish and bridge components; a closed
