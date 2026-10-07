@@ -87,7 +87,7 @@ Feature: Compute kernel (CMP)
     And w-1·7, foreign rooms and rooms the run has no seat in are absent
 
   @CMP-08 @P2 @I4 @pending
-  Scenario: the opt-in Python kernel is sandboxed, network-less and read-only
+  Scenario: the opt-in Python kernel is confined, network-less and read-only
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a"
     And the external Python kernel is enabled in the person's configuration

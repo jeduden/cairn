@@ -142,12 +142,12 @@ Feature: Record (REC)
     And "cairn event expand" returns line 10 before line 11
 
   @REC-13 @P1 @I9 @pending
-  Scenario Outline: hook handlers for tool-use, stop and permission hooks ingest incrementally within budget and mark the remainder
+  Scenario Outline: hook handlers for tool-use, stop and permission hooks ingest incrementally within their hook budget and mark the remainder
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
     And "main-run" has 50,000 unread lines, more than one hook budget can ingest
     When the hook "<hook>" runs with the session_id and transcript_path of "main-run"
-    Then the hook handler exits 0 within its budget
+    Then the hook handler exits 0 within its hook budget
     And the events ingested so far are a prefix of "main-run"
     And an ingest marker records the remainder of "main-run"
 
@@ -206,18 +206,19 @@ Feature: Record (REC)
     And events 21 to 30 of the first writer are shown and recalled as "unsigned"
 
   @REC-19 @P1 @I1 @I6 @pending
-  Scenario Outline: a run's MCP server seals its run seat's writer at each call it serves and when the run stops, and the open segment closes at every stop and every 30 s
+  Scenario Outline: a witnessed run's MCP server seals its run seat's writer at each call it serves and when the run stops, and the open segment closes at every stop and every 30 s
     Given an isolated Cairn home
     And an active run whose hook handlers have appended events to its run seat's writer in "PostToolUse" hooks for 31 s, while its MCP server served calls
     And another writer whose chain ended without a closed segment
     And a paired phone whose device seat's writer this node holds
+    And an ingested run whose run seat's writer this node holds
     When the hook "<hook>" runs and appends events
     Then the run's MCP server sealed the run seat's writer with the run seat's key at each call it served, covering what the hook handlers had appended, within the hook budgets
     And it seals that writer again when the run stops, and events after the newest seal are shown as "unsigned"
     And a segment was closed once 30 s had passed though no seal closed one, and the open segment is closed at "<hook>"
     And "cairn verify" and "cairn status" each report the other writer's chain as ended without a closed segment
     And the paired phone sealed its device seat's writer with that seat's key after each append to it
-    And the core sealed every writer but a run seat's and the paired phone's, this node's device seat's writer included, after each append to it
+    And the core sealed every writer but the witnessed run's run seat's and the paired phone's, the ingested run's run seat's writer and this node's device seat's writer included, after each append to it
 
     Examples:
       | hook         |

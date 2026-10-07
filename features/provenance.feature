@@ -10,12 +10,12 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "every-kind"
     And "every-kind" contains a user turn, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent result, lifecycle metadata, a system reminder and a malformed line
-    And a principal act, an expire act, a pin written from a device seat, a pin a run seat wrote, a post from another seat, a room act of the run's seat and a retention purge's tombstone are recorded in the run's room
+    And a principal act, an expire act, a pin written from a device seat, a pin a run seat wrote, a post from another seat, a room act of the run's seat, a room summary the room's facilitator wrote and a retention purge's tombstone are recorded in the run's room
     And the Bash tool call of "every-kind" was ingested by an earlier ingest than its result
     When the person runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
     And the Bash result carries provenance "tool_result:Bash"
-    And the principal act, the expire act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", and the tombstone carries "structural"
+    And the principal act, the expire act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", the room summary carries "summary", and the tombstone carries "structural"
     And every provenance class is one of:
       | user               |
       | assistant          |
@@ -29,6 +29,7 @@ Feature: Provenance and trust (PRV)
       | harness_text       |
       | operator           |
       | post               |
+      | summary            |
       | structural         |
       | unparsed           |
 
@@ -49,7 +50,7 @@ Feature: Provenance and trust (PRV)
       | automation  | a writer of this node, witnessed by its hook handlers                                                         | harness_meta     | trusted   | reports nothing                                                   |
       | interactive | a writer of this node, witnessed by its hook handlers                                                         | harness_meta     | trusted   | reports nothing                                                   |
       | interactive | a writer of this node, witnessed by its hook handlers                                                         | user             | trusted   | reports nothing                                                   |
-      | automation  | a writer of this node                                                                                         | user             | untrusted | reports nothing                                                   |
+      | automation  | a writer of this node, witnessed by its hook handlers                                                         | user             | untrusted | reports nothing                                                   |
       | interactive | a writer of this node                                                                                         | assistant        | untrusted | reports nothing                                                   |
       | interactive | a writer of this node                                                                                         | tool_call        | untrusted | reports nothing                                                   |
       | interactive | a writer of this node                                                                                         | tool_result:Bash | untrusted | reports nothing                                                   |
@@ -73,6 +74,7 @@ Feature: Provenance and trust (PRV)
       | interactive | a writer of another principal                                                                                 | operator         | untrusted | reports nothing                                                   |
       | interactive | a device seat of a principal this principal trusts by a trust grant, certified by that principal's device key | post             | trusted   | reports nothing                                                   |
       | interactive | a token-key-only node's device seat of a principal this principal trusts by a trust grant                     | post             | untrusted | reports nothing                                                   |
+      | interactive | the facilitator's device seat, of a service account this principal trusts by a trust grant                    | summary          | untrusted | reports nothing                                                   |
       | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance                        | operator         | trusted   | reports it as a widening principal act that fails OWN-22          |
       | automation  | a writer of this node, widening with a required presence proof that does not verify                           | operator         | trusted   | reports it as a widening principal act whose presence proof fails |
 
@@ -122,6 +124,7 @@ Feature: Provenance and trust (PRV)
       | subagent_result  |
       | harness_text     |
       | post             |
+      | summary          |
       | unparsed         |
 
   @PRV-06 @P0 @I2 @pending
@@ -199,7 +202,7 @@ Feature: Provenance and trust (PRV)
   Scenario Outline: an "operator" event from another node is trusted only through a key chain rooted in the principal key of this node's principal
     Given an isolated Cairn home
     And this principal's offline principal key certified the device key of its node on a laptop with scope "allow, deny, pin" and maximum rule level 2, and the device key of its paired phone with the scope "allow, deny"
-    And the laptop's device key certified a token key limited to an access token's rooms and expiry, which certified the device seat key and a run seat key of a token-key-only node in an ephemeral sandbox
+    And the laptop's device key certified a token key limited to an access token's rooms and expiry, which certified the device seat key and a run seat key of a token-key-only ephemeral node
     When an event <event> arrives from another node
     Then the event is <outcome>
     And the token-key-only node, whose device seat its token key certified, signs no principal act and no expire act

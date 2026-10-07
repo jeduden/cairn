@@ -131,8 +131,9 @@ Feature: Recall (RCL)
   Scenario: a foreign room is recalled only by naming it in the call, enveloped, untrusted and tainting
     Given an isolated Cairn home
     And a node holding a foreign room "vendor-room" imported from a room bundle
+    And the node's principal holds a trust grant covering the bundle's principal key
     When the agent calls the MCP tool "event_search" with query "deploy" and room "vendor-room"
-    Then the hits come from "vendor-room", wrapped in the recall envelope, each with trust "untrusted"
+    Then the hits come from "vendor-room", wrapped in the recall envelope, each with trust "untrusted" though the trust grant covers its keys
     And an audit entry logs the call and the calling run is tainted under SEC-13
     And a following call without the room parameter, under any scope, returns no hit from "vendor-room"
 

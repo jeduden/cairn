@@ -99,7 +99,7 @@ Feature: Assumptions register (ASM)
     And the observed behaviour is written into the OQ-01 recommendation
 
   @ASM-10 @pending
-  Scenario: hook timeouts are per hook but SessionEnd gets a short shared budget (S1)
+  Scenario: hook timeouts are per hook but SessionEnd gets a short shared hook budget (S1)
     Given a recorded hook payload for Claude Code "supported"
     And hooks configured with per-hook timeouts of 10 s
     When the hook "SessionEnd" runs with a handler that sleeps past 1.5 s

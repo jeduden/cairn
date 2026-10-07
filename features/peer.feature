@@ -8,10 +8,10 @@ Feature: Peer network (PEER)
   @PEER-01 @P2 @I4 @I9 @pending
   Scenario: peering runs only in its own peer component, started by the person
     Given an isolated Cairn home
-    And an ephemeral node in a sandbox whose environment carries the person's write-once peering setting
+    And an ephemeral node whose environment carries the person's write-once peering setting
     When the node starts and the core runs its hook handlers and "cairn status --json"
     Then no core process starts the peer component, in-process or as a child
-    And the sandbox's own entrypoint starts the peer component on the strength of the person's setting
+    And the ephemeral node's own entrypoint starts the peer component on the strength of the person's setting
     And on a home with no such action of the person the peer component stays off
     And with the peer component absent or stopped the core behaves exactly as in standalone
     And the outcome is the same whether the peer component ships in the core's executable or its own
@@ -57,10 +57,10 @@ Feature: Peer network (PEER)
     And a tail lost after the last seq received is shown as a gap, never as a quiet end or as "behind"
 
   @PEER-06 @P2 @I6 @I8 @pending
-  Scenario: enrollment verifies keys on both nodes and an access token for a sandbox is scoped, carried and audited
+  Scenario: enrollment verifies keys on both nodes and an access token for an ephemeral node is scoped, carried and audited
     Given an isolated Cairn home
-    And the person mints, as a widening principal act, an access token for a sandbox carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the access token's rooms and expiry, read from an environment secret by recorded opt-in
-    When a node in a sandbox starts with the access token before it reaches any peer
+    And the person mints, as a widening principal act, an access token for an ephemeral node carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the access token's rooms and expiry, read from an environment secret by recorded opt-in
+    When an ephemeral node starts with the access token before it reaches any peer
     Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address and git-carrier remote it may deliver to
     And a seat key it certifies for a room outside the access token's rooms, or after the access token's expiry, chains to no principal key and is refused
     And its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events, device-seat pins of provenance "operator" and run-seat pins of provenance "assistant", and says later pins may be missing

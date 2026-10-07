@@ -125,9 +125,9 @@ Feature: Principal acts (OWN)
   Scenario: each action class has one rule level that only tightens
     Given an isolated Cairn home
     And "alice" set the class "force pushes" to "ask first"
-    And a repository file sets "force pushes" to "act without asking"
+    And a repository configuration sets "force pushes" to "act without asking"
     When a recall-tainted subagent of a parent run at that level tries a force push
-    Then the repository file does not loosen the level
+    Then the repository configuration does not loosen the level
     And the sensitive class is raised one level for the tainted run
     And the subagent, a delegate of the agent that started it, has no looser level than that agent
     And every rule change on record is a principal act
@@ -267,11 +267,11 @@ Feature: Principal acts (OWN)
     Then the delegation is <outcome>
 
     Examples:
-      | precondition                                                    | target                                | outcome                                                            |
-      | no delegation grant                                             | its own subagent                      | recorded under OWN-24, with no delegation grant                    |
-      | no delegation grant                                             | a new run in another worktree         | refused, audited and shown                                         |
-      | a delegation grant naming that worktree, a budget and an expiry | a new run in that worktree            | started by the launcher, through its harness adapter, and recorded |
-      | an expired delegation grant                                     | an existing run of the same principal | refused, audited and shown                                         |
+      | precondition                                                               | target                                | outcome                                                            |
+      | no delegation grant                                                        | its own subagent                      | recorded under OWN-24, with no delegation grant                    |
+      | no delegation grant                                                        | a new run in another worktree         | refused, audited and shown                                         |
+      | a delegation grant naming that worktree, a delegation budget and an expiry | a new run in that worktree            | started by the launcher, through its harness adapter, and recorded |
+      | an expired delegation grant                                                | an existing run of the same principal | refused, audited and shown                                         |
 
   @OWN-24 @P1 @I2 @pending
   Scenario: a delegate inherits the delegating agent's ceiling and taint
@@ -297,7 +297,7 @@ Feature: Principal acts (OWN)
   Scenario: another principal's agent takes a delegated task only under its principal's acceptance grant
     Given an isolated Cairn home
     And a room where "alice" and "bob" each have a seat
-    And "bob" has recorded an acceptance grant naming "alice", a target agent, a maximum rule level, a budget and an expiry
+    And "bob" has recorded an acceptance grant naming "alice", a target agent, a maximum rule level, a delegation budget and an expiry
     And "alice" has recorded a delegation grant naming that target
     When an agent of "alice" delegates a task to that target
     Then the delegated task reaches the target in the fixed template, marked as from "alice"'s agent
@@ -346,5 +346,6 @@ Feature: Principal acts (OWN)
     And it does not cover a post or pin "carol" writes from a token-key-only node
     And a trust grant naming the room's facilitator is recorded only after "alice" is shown that the facilitator reads untrusted room text, and covers its posts but never its room summaries
     And no role, membership or room setting makes any other principal trusted
+    And content of a foreign room holding "carol"'s posts stays untrusted for "alice"'s agent whatever trust grant covers "carol"'s key
     When "alice" revokes the trust grant as a cut principal act
     Then "carol"'s later posts reach "alice"'s agent only as untrusted recall, and her pin no longer restores to it

@@ -131,7 +131,7 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a repository ".cairn.toml" setting "<key>" to "<value>"
     When the person runs "cairn status --json"
-    Then the effective value of "<key>" is unchanged by the repository file
+    Then the effective value of "<key>" is unchanged by the repository configuration
     And an audit entry records "repository configuration attempted to loosen <key>", and a counter counts it
 
     Examples:

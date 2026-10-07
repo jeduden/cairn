@@ -21,7 +21,7 @@ Feature: Room view (VIEW)
     And ten local runs in one room whose harness writes their transcripts
     When the person watches one active run in the room view
     Then each transcript line appears within 2 s of the harness writing it
-    And no hook handler exceeds its NFR-01 budget while the view reads
+    And no hook handler exceeds its NFR-01 hook budget while the view reads
 
   @VIEW-03 @P1 @I9 @I10 @pending
   Scenario: every room-view surface is an optional, read-only client of the core
@@ -205,7 +205,7 @@ Feature: Room view (VIEW)
     Then the delegation to the other agent shows as a delegation link from the delegating run to the delegate's run, naming the delegation grant
     And the subagent's delegation shows as the parent link from its run to the delegating run, naming no grant
     And the delegation link and the parent link each show the delegated task's address and its state
-    And the other agent's spend as a delegate under the delegation grant shows against that grant's budget
+    And the other agent's spend as a delegate under the delegation grant shows against that grant's delegation budget
 
   @VIEW-21 @P1 @I2 @I10 @pending
   Scenario: the room view puts the outcome beside the intent so a person can record a verdict

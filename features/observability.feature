@@ -17,7 +17,7 @@ Feature: Observability (OPS)
       | operation                                                                         | outcome   | counter          |
       | the hook "PostToolUse" runs with a malformed JSON object                          | rejected  | hook_rejected    |
       | the transcript contains an AWS secret key and is ingested                         | redacted  | redactions       |
-      | the hook "SessionStart" runs past its 150 ms budget                               | timed-out | hook_timeout     |
+      | the hook "SessionStart" runs past its 150 ms hook budget                          | timed-out | hook_timeout     |
       | the agent calls the MCP tool "event_expand" with a range above 8,000 model tokens | truncated | recall_truncated |
       | the transcript contains an unparseable line and is ingested                       | dropped   | ingest_dropped   |
       | the hook "PreCompact" runs with an unreadable transcript path                     | failed    | hook_failed      |

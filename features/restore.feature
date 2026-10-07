@@ -68,7 +68,7 @@ Feature: Restore and injection (INJ)
     And neither contains a timestamp, an absolute path or a random identifier
 
   @INJ-07 @P0 @I9 @pending
-  Scenario: an over-budget restore block drops landmark detail deterministically
+  Scenario: a restore block over its total limit drops landmark detail deterministically
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "long-multi-tier"
     And qualifying pins totalling 900 model tokens
