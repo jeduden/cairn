@@ -177,7 +177,7 @@ Feature: Principal acts (OWN)
     Given an isolated Cairn home
     And an agent's active run with completed, in-flight and waiting effects
     When its principal "alice" asks to stop the run
-    Then the view lists the completed effects, what is in flight and what is waiting, with whether and how each can be undone
+    Then the room view lists the completed effects, what is in flight and what is waiting, with whether and how each can be undone
     And no surface shows the run as stopped before the harness's acknowledgement is recorded
 
   @OWN-15 @P1 @I6 @I7 @pending
@@ -199,7 +199,7 @@ Feature: Principal acts (OWN)
     And the phone can only read, allow once and deny held permission requests
     And each answer the phone gives is signed with its own device key and recorded on its device seat in her personal room, naming the room, whose writer the phone seals with that seat's key and the node it pairs with only holds
     And where an authenticator is required each allow carries the phone's own presence proof bound to that answer
-    And before B2 a phone reaching the room view through the principal's tunnel is a principal surface, not a paired phone, whose secret's scope the room-view component enforces on the server, and it sees the room view's own origin, port included
+    And without the peer component a phone reaching the room view through the principal's tunnel is a principal surface, not a paired phone, whose secret's scope the room-view component enforces on the server, and it sees the room view's own origin, port included
 
   @OWN-17 @P2 @I2 @I8 @pending
   Scenario: a principal act from another of the principal's devices takes effect only within its scope
@@ -326,6 +326,8 @@ Feature: Principal acts (OWN)
     When "alice" records "not met" on C1
     Then the new verdict supersedes the earlier one, which stays on record unedited
     And "alice" unpinning a verdict is recorded as her neutral principal act
+    When "alice" records "needs changes" on C1
+    Then that verdict too is recorded as her neutral principal act
 
   @OWN-28 @P1 @I1 @I2 @pending
   Scenario: a person course-corrects from the verdict
@@ -352,7 +354,7 @@ Feature: Principal acts (OWN)
     And a post from "alice"'s own device seat reaches her agent only by recall or her endorsement, never in the trust grant's template
     When "carol" pins the constraint "keep the public API stable" from her device seat
     Then the pin restores word for word to "alice"'s agent and reaches "bob"'s agent only through a tool call, enveloped
-    And a trust grant naming a run seat's key, or a service account its certificate marks as relaying text others wrote, is refused and audited, while one naming any other service account shows a warning
+    And a trust grant naming a run seat's key, or a service account its certificate or managed-policy listing marks as relaying text others wrote, or one a managed-policy listing names without that mark, is refused and audited, while one naming any other service account shows a warning
     And the trust grant does not cover a service account whose principal key "carol" certified
     And it does not cover a post or pin "carol" writes from a token-key-only node
     And a trust grant naming the room's facilitator is recorded only after "alice" is shown that the facilitator reads untrusted room text, and covers its posts but never its room summaries

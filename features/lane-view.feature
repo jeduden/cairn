@@ -21,18 +21,18 @@ Feature: Room view (VIEW)
     And ten local runs in one room whose harness writes their transcripts
     When the person watches one active run in the room view
     Then each transcript line appears within 2 s of the harness writing it
-    And no hook handler exceeds its hook budget (§9.1) while the view reads
+    And no hook handler exceeds its hook budget (§9.1) while the room view reads
 
   @VIEW-03 @P1 @I9 @I10 @pending
   Scenario: every room-view surface is an optional client of the core that writes only the acts taken at it
     Given an isolated Cairn home
     And a room with recorded runs
-    When the room-view component serves the room view, the person acknowledges counters in it, and the view is then stopped
-    Then the view reads the record only through the core's read path and writes to it only the room acts and principal acts taken at it
+    When the room-view component serves the room view, the person acknowledges counters in it, and the room view is then stopped
+    Then the room view reads the record only through the core's read path and writes to it only the room acts and principal acts taken at it
     And the counter acknowledgement is a principal act the room-view component recorded, marked with its principal surface
-    And the view keeps no state the record cannot rebuild beyond conveniences for the person viewing
-    And everything the view lets a person do also exists in the CLI or MCP
-    And hook handlers, ingestion and recall keep working with the view stopped
+    And the room view keeps no state the record cannot rebuild beyond conveniences for the person viewing
+    And everything the room view lets a person do also exists in the CLI or MCP
+    And hook handlers, ingestion and recall keep working with the room view stopped
 
   @VIEW-04 @P1 @I6 @I10 @pending
   Scenario: statuses come from structural fields only and unrecorded runs surface
@@ -104,16 +104,16 @@ Feature: Room view (VIEW)
       | rooms |
 
   @VIEW-10 @P1 @I6 @I10 @pending
-  Scenario: every room shows its integrity status and the view writes a head receipt outside the home
+  Scenario: every room shows its integrity status and the room view writes a head receipt outside the home
     Given an isolated Cairn home
     And a room whose writer's chain breaks at one event
     When the person opens the room's Room page and, from its verify panel, writes a head receipt to a path outside CAIRN_HOME
     Then the room shows its integrity status at all times, one of §9.7.5's seven values, here "broken"
     And every later event of that writer is marked "unverified" wherever it is shown, including in recall results
     And the head receipt is shown as a short code carrying at least 80 bits of the heads' digest
-    And the view states that verification proves the sealed record unchanged up to its newest seal, not the unsigned tail and not its content true
+    And the room view states that verification proves the sealed record unchanged up to its newest seal, not the unsigned tail and not its content true
     When the person turns an away policy on
-    Then the view offers to write a head receipt
+    Then the room view offers to write a head receipt
 
   @VIEW-11 @P1 @I1 @I5 @I6 @pending
   Scenario: missing ranges, quarantines and tombstones stay in place and forensic views are recorded
@@ -215,7 +215,7 @@ Feature: Room view (VIEW)
     When its agents go idle and the person opens the Review tab of the room's Room page
     Then C1 shows its result and that result's evidence class, C2 shows its result of class claim and C3 reads "no evidence"
     And every criterion reads "no verdict"
-    And the view shows edits outside the intent, each branch's exposure and the diff since the last verdict
+    And the room view shows edits outside the intent, each branch's exposure and the diff since the last verdict
     And a Q3 item "outcome awaiting a verdict" is raised
     And no verdict, score or suggestion derived by Cairn is shown
 

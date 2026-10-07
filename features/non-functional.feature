@@ -102,7 +102,7 @@ Feature: Non-functional requirements (NFR)
     Given an isolated Cairn home
     And a synthetic store with 1M events on the reference hardware
     When every hook runs once, the run ends, and the room-view, peer, publish and bridge components and ten launcher instances run idle
-    Then no Cairn process runs while no run is active except the components the person or a service manager started
+    Then no Cairn process runs while no run is active except the components the person, a service manager or an ephemeral node's entrypoint started
     And each hook handler's peak RSS is at most 50 MiB and the store overhead is at most 1.5 times the stored text
     And each of the room-view, peer, publish and bridge components peaks at most 256 MiB RSS and idles at most 5% of one core
     And the ten launcher instances together peak at most 256 MiB RSS and idle at most 5% of one core

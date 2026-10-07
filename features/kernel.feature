@@ -25,12 +25,14 @@ Feature: Compute kernel (CMP)
     Then the namespace lists no variables
 
   @CMP-03 @P1 @pending
-  Scenario: read-only recall built-ins return structured values
+  Scenario: read-only recall built-ins return structured values and leave out room summaries
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a" containing the word "migration"
+    And a room summary containing the word "migration" in a room the run has a seat in
     When the agent calls the MCP tool "kernel_exec" with code "hits = cairn.event_search(query='migration'); print(type(hits), hits[0]['address'])"
     Then the printed output names a list and an address (writer, seq)
     And the built-ins "cairn.event_expand", "cairn.event_get", "cairn.landmark_list", "json", "re", "math" and "time" are callable
+    And "cairn.event_search", "cairn.event_expand" and "cairn.event_get" return the room summary's "summary" event only as its address, never its text
     And every global name the kernel exposes, the interpreter's universal built-ins included, is on the kernel's allow-list
     And a built-in added to the interpreter's universe is unavailable to kernel code
     And the record contains the same number of events as before the execution

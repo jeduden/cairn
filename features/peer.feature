@@ -60,10 +60,10 @@ Feature: Peer network (PEER)
   @PEER-06 @P2 @I6 @I8 @pending
   Scenario: enrollment verifies keys on both nodes and an access token for an ephemeral node is scoped, carried and audited
     Given an isolated Cairn home
-    And the person mints, as a widening principal act, an access token for an ephemeral node carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the access token's rooms and expiry, read from an environment secret by a configuration setting under ADM-04
+    And the person mints, as a widening principal act, an access token for an ephemeral node carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the access token's rooms, the node's own personal room and the expiry, read from an environment secret by a configuration setting under ADM-04
     When an ephemeral node starts with the access token before it reaches any peer
     Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address and git-carrier remote it may deliver to
-    And a seat key it certifies for a room outside the access token's rooms, or after the access token's expiry, chains to no principal key and is refused
+    And a seat key it certifies for a room outside the access token's rooms other than the node's own personal room, or after the access token's expiry, chains to no principal key and is refused
     And its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events, device-seat pins of provenance "operator" and run-seat pins of provenance "assistant", and says later pins may be missing
     And the node, with only the token key, has a device seat its token key certified, which signs no principal acts and no expire acts, and every pin the node writes, from its device seat or a run seat, restores only once a principal stamps it from one of its devices whose device scope allows it, and no trust grant covers its posts or pins
     And "cairn status" names where the access token is read from and no child process inherits the access token in its environment
@@ -123,7 +123,7 @@ Feature: Peer network (PEER)
     Then the erasure request was sent to every enrolled peer holding the room as a signed event of provenance "operator"
     And "a" erased or tombstoned every copy of the range it holds in any writer's log
     And each peer's state, applied, refused or unreachable, is audited, counted and shown
-    And the view says "b" kept its copy
+    And the room view says "b" kept its copy
     And a quarantine request travels to the peers the same way, and a peer's principal applies it by a principal act of the class of the quarantine it applies
 
   @PEER-12 @P2 @I4 @I8 @pending
@@ -146,4 +146,4 @@ Feature: Peer network (PEER)
     Then the bar takes effect on "alice"'s node at once
     And "alice"'s peer component sends no further segments of the room to any key the bar covers
     And "carol"'s node, until it receives the bar, shows the missing range in the moderator's writer beside the room's membership
-    And the view says "bob" keeps what his node already holds
+    And the room view says "bob" keeps what his node already holds

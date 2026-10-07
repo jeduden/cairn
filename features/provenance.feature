@@ -205,7 +205,7 @@ Feature: Provenance and trust (PRV)
   Scenario Outline: an "operator" event from another node is trusted only through a key chain rooted in the principal key of this node's principal
     Given an isolated Cairn home
     And this principal's offline principal key certified the device key of its node on a laptop with scope "allow, deny, pin" and maximum rule level 2, and the device key of its paired phone with the scope "allow, deny"
-    And the laptop's device key certified a token key limited to an access token's rooms and expiry, which certified the device seat key and a run seat key of a token-key-only ephemeral node
+    And the laptop's device key certified a token key that certified the device seat key and a run seat key of a token-key-only ephemeral node, limited to an access token's rooms, that node's own personal room and the access token's expiry
     When an event <event> arrives from another node
     Then the event is <expected>
     And the token-key-only node, whose device seat its token key certified, signs no principal act and no expire act

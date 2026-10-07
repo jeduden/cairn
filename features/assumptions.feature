@@ -17,11 +17,11 @@ Feature: Assumptions register (ASM)
     And it also carries <extra>
 
     Examples:
-      | version   | Event            | extra                                         |
-      | supported | SessionStart     | "source" in startup, resume, clear or compact |
-      | supported | PreCompact       | "trigger" and "custom_instructions"           |
-      | supported | PostCompact      | "compact_summary"                             |
-      | supported | UserPromptSubmit | "prompt"                                      |
+      | version   | Event            | extra                                                                                                                                                                     |
+      | supported | SessionStart     | "source" in startup, resume, clear or compact, and on a resume the resumed harness session's "session_id" when it keeps that harness session, a new one when it forks one |
+      | supported | PreCompact       | "trigger" and "custom_instructions"                                                                                                                                       |
+      | supported | PostCompact      | "compact_summary"                                                                                                                                                         |
+      | supported | UserPromptSubmit | "prompt"                                                                                                                                                                  |
 
   @ASM-02 @pending
   Scenario Outline: additionalContext is honoured on SessionStart and UserPromptSubmit only (S1)

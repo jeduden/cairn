@@ -35,7 +35,7 @@ Feature: Administration and lifecycle (ADM)
     And the output states that the harness's managed settings are in force and names the documented managed install path
 
   @ADM-04 @P0 @I6 @I7 @pending
-  Scenario Outline: every settings layer is validated strictly, managed policy overrides the others, repository configuration only tightens, and a settings change that needs a widening principal act waits for one
+  Scenario Outline: every settings layer is validated strictly, managed policy overrides the others but never turns a component on, repository configuration only tightens, and a settings change that needs a widening principal act waits for one
     Given an isolated Cairn home
     And <settings>
     When an agent runs and the person starts "<component>"
@@ -43,19 +43,19 @@ Feature: Administration and lifecycle (ADM)
     And the core records every event of the run
 
     Examples:
-      | settings                                                                                                     | component               | result                                                                                        |
-      | a managed policy file at the documented system path that the person can write                                | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
-      | a managed policy file in a directory the person can write                                                    | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
-      | an unparsable managed policy file                                                                            | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
-      | a managed policy file with an unknown key                                                                    | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
-      | a repository ".cairn.toml" that turns on the room-view component and a widening act that recorded its digest | the room-view component | stays off, and an audit entry and a counter record the ignored key                            |
-      | the person's config.toml that turns on the room-view component with no widening act recording its digest     | the room-view component | stays off                                                                                     |
-      | the person's config.toml that turns on the room-view component and a widening act that recorded its digest   | the room-view component | starts                                                                                        |
-      | a managed policy that turns on the room-view component and the person's config.toml that turns it off        | the room-view component | starts                                                                                        |
-      | the person's config.toml containing "recal.max_k = 10"                                                       | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
-      | the person's config.toml containing "recall.max_k = 'ten'"                                                   | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
-      | the person's config.toml containing "recall.max_k = 500"                                                     | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
-      | the person's config.toml containing "payload.threshold_bytes = -1"                                           | cairn status            | exits 2, and the error names the key "payload.threshold_bytes" and the problem "out of range" |
+      | settings                                                                                                                                            | component               | result                                                                                        |
+      | a managed policy file at the documented system path that the person can write                                                                       | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
+      | a managed policy file in a directory the person can write                                                                                           | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
+      | an unparsable managed policy file                                                                                                                   | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
+      | a managed policy file with an unknown key                                                                                                           | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
+      | a repository ".cairn.toml" that turns on the room-view component and a widening act that recorded its digest                                        | the room-view component | stays off, and an audit entry and a counter record the ignored key                            |
+      | the person's config.toml that turns on the room-view component with no widening act recording its digest                                            | the room-view component | stays off                                                                                     |
+      | the person's config.toml that turns on the room-view component and a widening act that recorded its digest                                          | the room-view component | starts                                                                                        |
+      | a managed policy that turns off the room-view component and the person's config.toml that turns it on, with a widening act that recorded its digest | the room-view component | stays off                                                                                     |
+      | the person's config.toml containing "recal.max_k = 10"                                                                                              | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
+      | the person's config.toml containing "recall.max_k = 'ten'"                                                                                          | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
+      | the person's config.toml containing "recall.max_k = 500"                                                                                            | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
+      | the person's config.toml containing "payload.threshold_bytes = -1"                                                                                  | cairn status            | exits 2, and the error names the key "payload.threshold_bytes" and the problem "out of range" |
 
   @ADM-05 @P0 @I1 @pending
   Scenario: segment and schema migrations run forward after a verified backup and newer versions are refused

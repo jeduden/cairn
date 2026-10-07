@@ -13,7 +13,7 @@ Feature: Security (SEC)
     And no code any component can execute starts a program outside the launcher, save the core's own kernel worker
     And CI fails when a component's evidence is missing or shows a violation
     And no core process runs or starts a component behind B1 to B3
-    And each B1 to B3 component's own entry point, started by the person or a service manager, runs only while the act turning it on, which the CLI records, stands
+    And each B1 to B3 component's own entry point, started by the person, a service manager or an ephemeral node's entrypoint, runs only while the act turning it on, which the CLI records, stands: for the room-view component and the launcher, the acceptance of the configuration that turns it on
     And the room-view component listens only on loopback, and the launcher only on loopback or on a local endpoint only the same OS user can reach
     And neither connects anywhere else
 
@@ -124,6 +124,7 @@ Feature: Security (SEC)
     And no key or credential value appears in the store, a segment, a derived artifact, a backup, an export, the audit log or any log output
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
     And a run ingested by "cairn ingest --path" has a seat key that ingest minted, kept like the device key in a file only the person's OS user can read
+    And the seat "cairn ingest" starts beside a witnessed run's run seat has a seat key the core keeps the same way, and the core seals its writer
     When the harness hands the run-seat private keys of a harness session's main run and of its subagent's run to that harness session's MCP server at launch
     Then each key lives only in that server's memory, which seals each run seat's writer with its key, and no file, log, event, backup or output carries either
 
@@ -233,7 +234,7 @@ Feature: Security (SEC)
     Then every Cairn component, process and protocol is assigned to exactly one of B0, B1, B2 and B3
     And the check fails when a component's build-time reach evidence is missing, or when that evidence or a test of a component confined to its boundary shows more reach than its row grants
     And the check fails when a process exists that the register does not list
-    And every B1, B2 and B3 component, the launcher included, stays off on the home until the person turns it on
+    And every B1, B2 and B3 component, the launcher included, stays off on the home until the person turns it on, the room-view component and the launcher only by accepting the configuration that turns it on
 
   @SEC-20 @P1 @I4 @I6 @I8 @pending
   Scenario: the room view binds to loopback and accepts only its own per-launch credential
@@ -270,7 +271,7 @@ Feature: Security (SEC)
       | the launcher disabled                       | the person starts the launcher                                  | Cairn refuses to start it and audits the refusal                                        |
       | a storage quota                             | ingest exceeds the quota                                        | the quota is enforced                                                                   |
       | a fixed deployment mode                     | the person changes the deployment mode                          | the change is refused                                                                   |
-      | a fixed state for every boundary            | the person turns on B2                                          | the change is refused                                                                   |
+      | every boundary locked off                   | the person turns on B2                                          | the change is refused                                                                   |
       | a cap on an action class's rule level       | the principal sets a higher rule level for that class           | the rule level stays at the cap                                                         |
       | away policies disabled                      | the principal sets an away policy                               | the change is refused                                                                   |
       | hook permission decisions disabled          | the hook "PermissionRequest" runs                               | Cairn makes no permission decision                                                      |
