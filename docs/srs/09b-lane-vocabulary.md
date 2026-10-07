@@ -99,20 +99,22 @@ break), `broken` ✕ (a check failed), `refused` (a segment was refused),
 ## 9.7.6 Trust marks
 
 No mark, for the principal's own agents, on this node's own trusted events, its
-`harness_meta` events and `user` turns only when its hook handlers witnessed
-them (an ingested one is untrusted, REC-22); on principal acts a device key the
-principal certified signed, and posts and pins written from a device seat such a
-key certified, within that key's scope, from any of its nodes (shown with a
-device glyph); on pin versions the principal stamped (shown with the stamper,
-LANE-32); and on posts and pins a trust grant of the principal covers (shown
-with the granted key's petname, OWN-29). `○` plus petname on anything untrusted
-from another principal, agent, node or bundle, a `user` turn another node
-recorded included; a key with no petname shows its fingerprint. `⚑` flagged
-(PRV-07). `▒` quarantined. `▬` from a seat that is no longer a member: it left,
-was kicked or was barred. `ingested`. `new key`. "from a revoked device".
-Timeline rails: solid for the agent's principal, hollow for other principals,
-dotted for agents and the forge. Events from a token-key-only node's writers are
-untrusted on every other node (PRV-02). Unsandboxed agents are one line on
+witnessed `harness_meta` events and its witnessed `user` turns while
+`node.deployment_mode` is `interactive` (an ingested one is untrusted, REC-22);
+on principal acts a device key the principal certified signed, and posts and
+pins written from a device seat such a key certified, within that key's scope,
+from any of its nodes (shown with a device glyph); on pin versions the principal
+stamped (shown with the stamper, LANE-32); and on posts and pins a trust grant
+of the principal covers, written from device seats a device key of the trusted
+principal certified, never a token-key-only node's (shown with the granted key's
+petname, OWN-29). `○` plus petname on anything untrusted from another principal,
+agent, node or bundle, a `user` turn another node recorded included; a key with
+no petname shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined. `▬`
+from a seat that is no longer a member: it left, was kicked or was barred.
+`ingested`. `new key`. "from a revoked device". Timeline rails: solid for the
+agent's principal, hollow for other principals, dotted for agents and the forge.
+Events from a token-key-only node's writers are untrusted on every other node
+unless a principal stamped them (PRV-02). Unsandboxed agents are one line on
 Health, not a mark on every tile.
 
 ## 9.7.7 Keymap
@@ -127,7 +129,7 @@ field sends text, not shortcuts.
 | `⌘K` / `Ctrl+K`       | command palette                                       | `r`             | reply                                                             |
 | `⌘G` / `Ctrl+G`       | go to address                                         | `e` / `E`       | endorse / edit, then endorse                                      |
 | `g i`                 | Needs you                                             | `Home` / `End`  | replay start / end                                                |
-| `g f`                 | Fleet                                                 | `x`             | dismiss, Q3, Q4 and overlap items                                 |
+| `g f`                 | Fleet                                                 | `x`             | dismiss a Q3 or Q4 item; acknowledge an overlap                   |
 | `g c`                 | Catch up                                              | `y`             | copy address                                                      |
 | `g q` / `g v`         | quarantine list / verify panel                        | `o`             | open the Room page at this item                                   |
 | `g h` / `g p`         | Health / Peers                                        | `n` / `N`       | next / previous item that needs you                               |
@@ -152,14 +154,15 @@ field sends text, not shortcuts.
 Interrupt moved from `Esc Esc` to `I`, so no key repeats into a second
 act. Composer: `Enter` steer, `Ctrl+Enter` queue the steer for the next
 turn, `Shift+Enter` interrupt, then steer. Clashes resolved: `x`
-(dismiss, expand, mark seen) is dismiss only, with context on `+`/`-`;
-`e` (endorse, next error) is endorse, errors move to `{`/`}`; `]`/`[`
-(next room, next edit, stack) are edits, rooms move to `n`/`N`, the
-stack to `<`/`>`; `a` (allow, next held request) is allow, replay held
-requests move to `;`/`:`; `r` (reply, verdict, replay) is reply, the
-verdict sheet moves to `C`, replay to tab `3`; `c` (copy, post on the
-selection) is post, copy moves to `y`; `p` (pause, previous post with a
-range link, steer with an address) is pause, steering with an address
-moves to `m`; `.` (next turn, follow) is next turn, follow moves to `F`;
-`Space` (select, peek, play) is peek, play moves to `Shift+Space`;
-`Shift+A` is unbound, its earlier action removed.
+(dismiss, expand, mark seen) is dismiss, or acknowledge on an overlap,
+with context on `+`/`-`; `e` (endorse, next error) is endorse, errors
+move to `{`/`}`; `]`/`[` (next room, next edit, stack) are edits, rooms
+move to `n`/`N`, the stack to `<`/`>`; `a` (allow, next held request) is
+allow, replay held requests move to `;`/`:`; `r` (reply, verdict,
+replay) is reply, the verdict sheet moves to `C`, replay to tab `3`; `c`
+(copy, post on the selection) is post, copy moves to `y`; `p` (pause,
+previous post with a range link, steer with an address) is pause,
+steering with an address moves to `m`; `.` (next turn, follow) is next
+turn, follow moves to `F`; `Space` (select, peek, play) is peek, play
+moves to `Shift+Space`; `Shift+A` is unbound, its earlier action
+removed.
