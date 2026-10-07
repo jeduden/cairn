@@ -26,12 +26,12 @@ Feature: Record (REC)
     And an agent run with a Claude Code transcript "parent-run"
     And a subagent transcript "explore-agent" of "parent-run" naming the agent "Explore"
     And "parent-run" continues after a harness resume that kept its harness session
-    And a harness resume of "parent-run" that started a new harness session, with the transcript "new-session-run"
+    And a harness resume of "parent-run" that started a new harness session, with the transcript "new-harness-session-run"
     When the person runs "cairn ingest --all"
     Then the run ingested from "explore-agent" is tied to the run of "parent-run" by a parent link, not a delegation link
     And the run ingested from "explore-agent" records the harness's agent id "Explore"
     And the events "parent-run" gained after the harness resume that kept its harness session belong to the run of "parent-run"
-    And the events of "new-session-run" belong to a new run, not to the run of "parent-run"
+    And the events of "new-harness-session-run" belong to a new run, not to the run of "parent-run"
 
   @REC-03 @P0 @I1 @I10 @pending
   Scenario: re-ingesting a transcript source creates no duplicate events
@@ -41,7 +41,7 @@ Feature: Record (REC)
     When the person runs "cairn ingest --all"
     And the person runs "cairn ingest --all"
     Then the record contains exactly 50 events, one per line of "main-run"
-    And the cursor of "main-run" stores its byte length and the SHA-256 of its consumed prefix
+    And the ingest position of "main-run" stores its byte length and the SHA-256 of its consumed prefix
 
   @REC-04 @P0 @I1 @pending
   Scenario: events are attributed to the run of their transcript, not the hook input
@@ -219,7 +219,7 @@ Feature: Record (REC)
     When the hook "<hook>" runs and appends events
     Then the run's MCP server sealed each of its run seats' writers with that seat's key within 2 s of any unsealed append, covering what the hook handlers had appended
     And it seals those writers again when the run stops, and events after the newest seal are shown as "unsigned"
-    And what "cairn ingest" later appends for the run, whether or not its MCP server still runs, goes to a new run seat and writer in a run seat's room, whose key the core keeps like a device seat's key, never in the MCP server, and whose writer the core seals, naming that run seat, taking over its role and sharing its add, so a kick, leave or bar of either seat ends that one add for both
+    And what "cairn ingest" later appends for the run, whether or not its MCP server still runs, goes to a new run seat and writer in a run seat's room, whose key the core keeps like a device seat's key, never in the MCP server, and whose writer the core seals, naming that run seat, taking over its role and sharing its add where it has one, so a kick, leave or bar of either seat ends that one add for both, and the one beside the run's personal-room seat is a member as long as that seat is
     And a segment was closed once 30 s had passed though no hook closed one, and the open segment is closed at "<hook>" within the hook budgets
     And "cairn verify" and "cairn status" each report the other writer's chain as ended without a closed segment
     And the paired phone sealed its device seat's writer with that seat's key after each append to it

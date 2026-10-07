@@ -45,6 +45,7 @@ Feature: Provenance and trust (PRV)
     And every principal act a device key this principal certified signed, and every post and pin written from a device seat such a key certified, derives the same trust level on each of its nodes holding the same writer logs
     And in a foreign room, a post from a device seat of this principal and a post or pin a trust grant of this principal covers are untrusted, while a pin from its device seat and a pin version it stamped are trusted there as elsewhere
     And a "harness_meta" event or "user" event that this node's CLI, MCP server or launcher recorded live, with origin "witnessed" but not recorded by its hook handlers, is untrusted
+    And the free text a cut or neutral principal act carries, such as a stated reason, is recalled as untrusted, while the act's own "operator" event keeps its trust level and shapes what the act changes
 
     Examples:
       | mode        | writer                                                                                                               | provenance       | trust     | verify                                                            |

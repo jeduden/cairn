@@ -13,8 +13,8 @@ Feature: Security (SEC)
     And no code any component can execute starts a program outside the launcher, save the core's own kernel worker
     And CI fails when a component's evidence is missing or shows a violation
     And no core process runs or starts a component behind B1 to B3
-    And each B1 to B3 component's own entry point, started by the person, a service manager or an ephemeral node's entrypoint, runs only while the act turning it on, which the CLI records, stands: for the room-view component and the launcher, the acceptance of the configuration that turns it on
-    And a configuration turning the room-view component or the launcher off applies with no acceptance, the CLI records it as the cut act turning it off, and from then on that component's entry point does not run
+    And each B1 to B3 component's own entry point, started by the person, a service manager or an ephemeral node's entrypoint, runs only while the act turning it on, which the CLI records, stands: for the room-view component and the launcher, the acceptance of the configuration that turns it on, and for the bridge component, a bridge enabled for a host, while any stands
+    And a configuration turning the room-view component or the launcher off applies with no acceptance, from then on that component's entry point does not run, and "cairn configuration accept", at a terminal with nothing more asked, records it as the cut act turning it off
     And the room-view component listens only on loopback, and the launcher only on loopback or on a local endpoint only the same OS user can reach
     And neither connects anywhere else
 
@@ -175,7 +175,7 @@ Feature: Security (SEC)
     When the agent calls the MCP tool "event_search" with a query matching the untrusted result in run "r-1"
     And the person runs "cairn recall-taint show --run r-1 --json"
     Then the output shows that "r-1" carries recall taint
-    And the example PreToolUse policy hook requires approval for a configured sensitive action
+    And the example PreToolUse hook handler requires approval for an action of a class it configures as sensitive
 
   @SEC-14 @P0 @I5 @pending
   Scenario: purged content is not recoverable from the storage the purge freed
@@ -235,13 +235,13 @@ Feature: Security (SEC)
     Then every Cairn component, process and protocol is assigned to exactly one of B0, B1, B2 and B3
     And the check fails when a component's build-time reach evidence is missing, or when that evidence or a test of a component confined to its boundary shows more reach than its row grants
     And the check fails when a process exists that the register does not list
-    And every B1, B2 and B3 component, the launcher included, stays off on the home until the person turns it on, the room-view component and the launcher only by accepting the configuration that turns it on
+    And every B1, B2 and B3 component, the launcher included, stays off on the home until the person turns it on, the room-view component and the launcher only by accepting the configuration that turns it on, and the bridge component only by enabling a bridge for a host
 
   @SEC-20 @P1 @I4 @I6 @I8 @pending
   Scenario: the room view binds to loopback and accepts only its own per-launch credential
     Given an isolated Cairn home
     When the person starts the room-view component
-    Then it listens only on a loopback address, on a port chosen at launch
+    Then it listens only on a loopback network address, on a port chosen at launch
     And its launch credential has at least 128 bits and is never sent to the server in an HTTP request line, nor placed in argv, an environment another UID can read, a log or a referrer
     And the launch credential is exchanged once for a second credential, which authenticates the browser as a principal surface and which only the room view's own origin, port included, can read or send
     And a page served from another loopback port cannot obtain or replay that second credential
@@ -265,21 +265,21 @@ Feature: Security (SEC)
     Then <expected>
 
     Examples:
-      | policy                                      | action                                                          | expected                                                                                |
-      | B1 disabled                                 | the person starts the room-view component                       | Cairn refuses to start it and audits the refusal                                        |
-      | B2 disabled                                 | the person starts the peer component                            | Cairn refuses to start it and audits the refusal                                        |
-      | B3 disabled                                 | the person starts the bridge component                          | Cairn refuses to start it and audits the refusal                                        |
-      | the launcher disabled                       | the person starts the launcher                                  | Cairn refuses to start it and audits the refusal                                        |
-      | a storage quota                             | ingest exceeds the quota                                        | the quota is enforced                                                                   |
-      | a fixed deployment mode                     | the person changes the deployment mode                          | the change is refused                                                                   |
-      | every boundary locked off                   | the person turns on B2                                          | the change is refused                                                                   |
-      | a cap on an action class's rule level       | the principal sets a higher rule level for that class           | the rule level stays at the cap                                                         |
-      | away policies disabled                      | the principal sets an away policy                               | the change is refused                                                                   |
-      | hook permission decisions disabled          | the hook "PermissionRequest" runs                               | Cairn makes no permission decision                                                      |
-      | keeping held requests waiting disabled      | the hook "PermissionRequest" runs                               | the held request is recorded and only mirrored, and the agent is not kept waiting       |
-      | an authenticator required for widening acts | the principal confirms a widening act without the authenticator | the act is refused                                                                      |
-      | risk acceptance forbidden                   | the principal accepts a residual risk                           | the acceptance is refused                                                               |
-      | a 30-day retention policy for room "p"      | an event of "p" ages past 30 days                               | the node purges it, leaving a tombstone recorded naming the policy, audited and counted |
+      | policy                                      | action                                                                           | expected                                                                                |
+      | B1 disabled                                 | the person starts the room-view component                                        | Cairn refuses to start it and audits the refusal                                        |
+      | B2 disabled                                 | the person starts the peer component                                             | Cairn refuses to start it and audits the refusal                                        |
+      | B3 disabled                                 | the person enables a bridge for a host, which would turn the bridge component on | Cairn refuses to start the bridge component and audits the refusal                      |
+      | the launcher disabled                       | the person starts the launcher                                                   | Cairn refuses to start it and audits the refusal                                        |
+      | a storage quota                             | ingest exceeds the quota                                                         | the quota is enforced                                                                   |
+      | a fixed deployment mode                     | the person changes the deployment mode                                           | the change is refused                                                                   |
+      | every boundary locked off                   | the person turns on B2                                                           | the change is refused                                                                   |
+      | a cap on an action class's rule level       | the principal sets a higher rule level for that class                            | the rule level stays at the cap                                                         |
+      | away policies disabled                      | the principal sets an away policy                                                | the change is refused                                                                   |
+      | hook permission decisions disabled          | the hook "PermissionRequest" runs                                                | Cairn makes no permission decision                                                      |
+      | keeping held requests waiting disabled      | the hook "PermissionRequest" runs                                                | the held request is recorded and only mirrored, and the agent is not kept waiting       |
+      | an authenticator required for widening acts | the principal confirms a widening act without the authenticator                  | the act is refused                                                                      |
+      | risk acceptance forbidden                   | the principal accepts a residual risk                                            | the acceptance is refused                                                               |
+      | a 30-day retention policy for room "p"      | an event of "p" ages past 30 days                                                | the node purges it, leaving a tombstone recorded naming the policy, audited and counted |
 
   @SEC-23 @P1 @I7 @pending
   Scenario: the room view writes no configuration and points to the CLI instead
@@ -346,7 +346,7 @@ Feature: Security (SEC)
   Scenario: outbound bridges run only in the bridge component, per enabled destination, and carry little
     Given an isolated Cairn home
     And the node's principal enabled one forge bridge destination and one notification bridge destination by a principal act
-    When the bridge component runs and a held request and a pull-request review from the forge arrive
+    When the bridge component runs, as it does while any bridge stands enabled, and a held request and a pull-request review from the forge arrive
     Then every outbound bridge runs only in the bridge component, which is listed in the register, outbound only, and off for every destination not enabled
     And the pull-request review is recorded by the bridge component only as an untrusted event of origin "witnessed" and provenance "web"
     And the notification carries only the room's petname, else its id, the queue class and a count, and no answer to it is accepted
@@ -359,8 +359,9 @@ Feature: Security (SEC)
     When the person confirms a command and an agent asks to run an unconfirmed one
     Then only the confirmed command runs, and each process it starts has its own register row
     And build-time evidence shows no other component that starts a program, save the core starting its own kernel worker
-    And the launcher connects nowhere beyond loopback to the room-view component
-    And any listener it opens meets the room-view listener rules or is a local endpoint only the same OS user can reach, refusing a peer of another UID
+    And the launcher connects nowhere beyond loopback to the room-view component, and that loopback link carries no text for the model
+    And the launcher carries into the harness input only text the core built and recorded, read from the record
+    And any listener it opens meets the room-view listener rules or is a local endpoint only the same OS user can reach, refusing a connecting process of another UID
     And on a home where no act turned it on, the launcher is off
 
   @SEC-30 @P2 @I5 @I6 @pending

@@ -24,20 +24,20 @@ Feature: Room view (VIEW)
     And no hook handler exceeds its hook budget (§9.1) while the room view reads
 
   @VIEW-03 @P1 @I9 @I10 @pending
-  Scenario: every room-view surface is an optional client of the core that writes only the acts taken at it
+  Scenario: the room view is an optional client of the core that writes only the acts taken in it
     Given an isolated Cairn home
     And a room with recorded runs
     When the room-view component serves the room view, the person acknowledges counters in it, and the room view is then stopped
-    Then the room view reads the record only through the core's read path and writes to it only the room acts and principal acts taken at it
+    Then on every surface the room view reads the record only through the core's read path and writes to it only the room acts and principal acts taken in it
     And the counter acknowledgement is a principal act the room-view component recorded, marked with its principal surface
     And the room view keeps no state the record cannot rebuild beyond conveniences for the person viewing
     And everything the room view lets a person do also exists in the CLI or MCP
     And hook handlers, ingestion and recall keep working with the room view stopped
 
   @VIEW-04 @P1 @I6 @I10 @pending
-  Scenario: statuses come from structural fields only and unrecorded runs surface
+  Scenario: statuses come from structural fields only and unrecorded runs are shown
     Given an isolated Cairn home
-    And a room with one run whose transcript is longer than its ingested position
+    And a room with one run whose transcript is longer than its ingest position
     And a run the launcher started with no hook observation, with a seat only in its personal room
     When the person opens Fleet and runs "cairn room list"
     Then every run shows exactly one status from the closed set of §9.7.1 with its freshness mark
@@ -50,9 +50,9 @@ Feature: Room view (VIEW)
     Given an isolated Cairn home
     And a room with open items of classes Q1 and Q2 waiting on the person, one of them an overlap
     When the person answers one item in the CLI
-    Then every surface lists the open items in the order of §9.7.4, the same for the same record
+    Then every client lists the open items in the order of §9.7.4, the same for the same record
     And no Q1 or Q2 item can be dismissed, except the overlap item, which clears on acknowledgement
-    And the answered item clears on every other surface as soon as the answer's event arrives there
+    And the answered item clears in every other client as soon as the answer's event arrives there
 
   @VIEW-06 @P1 @I2 @I6 @pending
   Scenario: written text is shown apart, marked untrusted and never sets a status
@@ -69,10 +69,12 @@ Feature: Room view (VIEW)
     And synced posts by a key the person gave a petname, a key with none, and a new key using a known name
     And one post with zero-width, bidirectional and tag characters and an HTML comment
     And a "user" event this node ingested from a transcript its hook handlers did not watch
+    And a foreign room this node's principal rejected with a stated reason, a cut principal act
     When the person opens the room view
     Then each post carries the trust mark of §9.7.6 and the petname the person chose for its author's key, never the name the peer sent
     And the key with no petname is shown by its fingerprint and the new key is marked "new key"
     And the ingested "user" event carries the trust mark of §9.7.6 too, since only the "user" events this node's hook handlers recorded while its deployment mode is "interactive" are trusted
+    And the stated reason carries the trust mark of §9.7.6, though this node recorded the act, since the free text of a cut or neutral principal act is untrusted whatever its event's trust level
     And the invisible characters and the HTML comment render as visible placeholders with a count
 
   @VIEW-08 @P1 @I6 @I10 @pending

@@ -51,10 +51,11 @@ Feature: Peer network (PEER)
   Scenario: an ephemeral node offers its sealed tail often and a retired writer's lost tail shows as a missing range
     Given an isolated Cairn home
     And an ephemeral node connected to a peer and running an agent
-    When the run is active for 65 s, passes "Stop", "SubagentStop" and "SessionEnd", and the node's access token expires
+    When the run is active for 65 s, passes "Stop", "SubagentStop" and "SessionEnd", and the ephemeral node's access token expires
     Then the open segment was sealed and offered at each of those hooks and at least every 30 s, each sealed range as soon as it was sealed
-    And the writer is marked retired
-    And its later segments that continue its chain without a fork are accepted and marked delivered after retirement, and only a revocation would refuse them
+    And once its clock passes the expiry, the node that minted the access token records the expire act ending it, naming the writer's last accepted seq
+    And the writer is marked retired by that expire act, and no derivation reads a clock
+    And its segments past that seq that continue its chain without a fork are accepted and marked delivered after retirement, and only a revocation would refuse them
     And a tail lost after the last seq received is shown as a missing range, never as a quiet end or as "behind"
 
   @PEER-06 @P2 @I6 @I8 @pending

@@ -57,12 +57,12 @@ Feature: Engineering quality (ENG)
 
   @ENG-07 @P0 @pending
   Scenario Outline: coverage-guided fuzzing covers every parser with a committed corpus
-    Given the cargo-fuzz target for the <surface>
+    Given the cargo-fuzz target for the <input>
     Then its seed corpus is committed under fuzz/corpus
     And the nightly fuzz job fuzzes it
 
     Examples:
-      | surface                   |
+      | input                     |
       | transcript parser         |
       | hook input decoder        |
       | event_search query parser |
@@ -126,8 +126,8 @@ Feature: Engineering quality (ENG)
     Then the mutation score is at least 70%
 
   @ENG-14 @P0 @pending
-  Scenario: tests cannot touch the real home or Claude Code configuration
-    Given a test that resolves a path under the real user's home
+  Scenario: tests cannot touch the real `HOME` or Claude Code configuration
+    Given a test that resolves a path under the real `HOME`
     When the suite runs
     Then the isolation guard aborts that test
     And no agent instruction file in the repository directs a destructive command at non-isolated state

@@ -18,17 +18,17 @@ Feature: Principal acts (OWN)
   Scenario Outline: a principal act is recorded only from an authenticated principal surface
     Given an isolated Cairn home
     And an agent's active run
-    When a principal act arrives from <surface>
+    When a principal act arrives from <channel>
     Then the act is "<expected>"
 
     Examples:
-      | surface                                   | expected                                                                                                                                                                                                                                         |
+      | channel                                   | expected                                                                                                                                                                                                                                         |
       | the browser room view under SEC-20        | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal and marked with its principal surface |
       | the CLI or TUI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal and marked with its principal surface |
       | a paired phone within its scope           | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, which shows it by address, whose writer the phone seals with that seat's key and the node only holds                        |
       | the harness's own prompt                  | recorded as a user event or a harness_meta event recording only that input arrived, not a principal act                                                                                                                                          |
       | the terminal the launcher hosts           | recorded as a user event or a harness_meta event recording only that input arrived, not a principal act                                                                                                                                          |
-      | any other surface                         | refused and audited                                                                                                                                                                                                                              |
+      | anywhere else                             | refused and audited                                                                                                                                                                                                                              |
 
   @OWN-03 @P1 @I2 @pending
   Scenario: principal-typed text reaches an agent only through the harness's input interface
@@ -47,7 +47,7 @@ Feature: Principal acts (OWN)
     And rule levels and permission grants recorded as principal acts, covering an action
     When a hook reports a permission request for that action
     Then the hook output carries a decision of allow, ask, deny or defer, computed from the recorded rule levels and permission grants
-    And its reason comes from the fixed template set and references ids
+    And its reason comes from the fixed template set, references ids and is built as TrustedText
     And the hook output carries no principal-typed text and no field of the record
 
   @OWN-05 @P1 @I6 @I10 @pending
@@ -70,7 +70,7 @@ Feature: Principal acts (OWN)
 
     Examples:
       | situation                                                                | expected                                                               |
-      | no away policy is on and the hold window passes                          | it is not denied on the timeout                                        |
+      | no away policy is on and its hold window ends                            | it is not denied when its hold window ends                             |
       | no principal surface is connected and the harness prompt is unanswerable | it is only mirrored, not kept waiting                                  |
       | the harness adapter cannot keep the harness's own prompt answerable      | it is only mirrored and the answer is left to the harness              |
       | Cairn fails while the permission request is held                         | the harness falls back to its own prompt and the action is not allowed |
@@ -124,11 +124,11 @@ Feature: Principal acts (OWN)
   @OWN-10 @P1 @I2 @I7 @pending
   Scenario: each action class has one rule level that only tightens
     Given an isolated Cairn home
-    And "alice" set the class "force pushes" to "ask first"
+    And "alice" set the action class "force pushes", which SEC-13 configures as sensitive, to "ask first"
     And a repository configuration sets "force pushes" to "act without asking"
     When a recall-tainted subagent of a parent run at that level tries a force push
     Then the repository configuration does not loosen the level
-    And the sensitive class is tightened one level for the tainted run
+    And "force pushes" is tightened one level for the tainted run
     And the subagent, a delegate of the agent that started it, has no looser level than that agent
     And every rule level change on record is a principal act
 
@@ -141,12 +141,12 @@ Feature: Principal acts (OWN)
     Then the act is "<expected>"
 
     Examples:
-      | surface                        | risk state      | class                   | expected                                                               |
-      | authenticated                  | permits         | widening                | accepted                                                               |
-      | authenticated                  | does not permit | widening                | refused                                                                |
-      | authenticated                  | permits         | named by no requirement | treated as widening and accepted                                       |
-      | not backed by a presence proof | permits         | cut                     | recorded with a mark naming its principal surface, free text untrusted |
-      | not backed by a presence proof | permits         | neutral                 | recorded with a mark naming its principal surface, free text untrusted |
+      | surface       | risk state      | class                   | expected                                                                                                |
+      | authenticated | permits         | widening                | accepted                                                                                                |
+      | authenticated | does not permit | widening                | refused                                                                                                 |
+      | authenticated | permits         | named by no requirement | treated as widening and accepted                                                                        |
+      | authenticated | permits         | cut                     | recorded with a mark naming its principal surface, free text untrusted whatever its event's trust level |
+      | authenticated | permits         | neutral                 | recorded with a mark naming its principal surface, free text untrusted whatever its event's trust level |
 
   @OWN-12 @P1 @I2 @pending
   Scenario: a CLI verb writing a principal act refuses without a terminal
@@ -221,9 +221,10 @@ Feature: Principal acts (OWN)
     When the person runs "cairn witness-check start" on a result whose check runs that command, and confirms it
     Then the person was shown its exact text with invisible characters made visible before confirming
     And the act is recorded as their widening principal act
-    And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base, with network and the principal's home denied
+    And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base, with network, the OS user's home directory (`HOME`) and the principal's home denied
     And the launcher records its command by commitment, its exit status and the tree hash as a structural event
     And where the platform cannot deny the check network, Cairn refuses the witness check
+    And where the platform cannot deny `HOME` or the principal's home, the room view says which before confirmation
 
   @OWN-19 @P1 @I1 @I4 @pending
   Scenario: terminal takeover stays local and no-echo input is not stored
@@ -282,7 +283,7 @@ Feature: Principal acts (OWN)
       | an expired delegation grant                                                | an existing agent of the same principal | refused, audited and shown                                         |
 
   @OWN-24 @P1 @I2 @pending
-  Scenario: a delegate inherits its maximum rule level and taint from the delegating agent
+  Scenario: a delegate inherits its maximum rule level from the delegating agent and its recall taint from the delegating run
     Given an isolated Cairn home
     And an agent whose run is recall-tainted, delegating under a delegation grant whose maximum rule level is "ask first"
     When the delegate's run starts

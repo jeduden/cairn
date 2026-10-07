@@ -14,14 +14,16 @@ Feature: Administration and lifecycle (ADM)
     And the bundle carries the cairn core executable for each supported platform
 
   @ADM-02 @P0 @I7 @I6 @pending
-  Scenario: install asks before every change and uninstall lists, offers and audits every artifact
+  Scenario: install asks before every change, and uninstall needs a terminal, records turning capture off before it removes the hook registrations, and lists, offers and audits every artifact
     Given an isolated Cairn home
     And a Claude Code settings file with unrelated user entries
     And "cairn install --scope user" showed a diff of every harness configuration change, was declined and left the settings file unchanged
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
     And that install created the node's personal room as the first act of the principal's device seat, that seat's add there
-    When the person runs "cairn uninstall" and keeps only the device key
-    Then the output lists the hook, plugin and MCP registrations, room-view credentials, launcher endpoints, seat and device keys, enrollments, git-carrier refs and every other file Cairn wrote outside the store, each with an offer to remove it, and offers purge as the only removal of the store's content
+    And "cairn uninstall" run without a terminal refused and changed nothing
+    When the person runs "cairn uninstall" at a terminal and keeps only the device key
+    Then before it removed the hook registrations, it recorded the widening principal act turning capture off
+    And the output lists the hook, plugin and MCP registrations, room-view credentials, launcher endpoints, seat and device keys, enrollments, git-carrier refs and every other file Cairn wrote outside the store, each with an offer to remove it, and offers purge as the only removal of the store's content
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
