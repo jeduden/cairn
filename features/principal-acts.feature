@@ -19,10 +19,10 @@ Feature: Principal acts (OWN)
     Given an isolated Cairn home
     And an agent's active run
     When a principal act arrives from <surface>
-    Then the act is "<outcome>"
+    Then the act is "<expected>"
 
     Examples:
-      | surface                                   | outcome                                                                                                                                                                                                                   |
+      | surface                                   | expected                                                                                                                                                                                                                  |
       | the room view under SEC-20                | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
       | the CLI or TUI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
       | a paired phone within its scope           | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, which shows it by address, whose writer the phone seals with that seat's key and the node only holds |
@@ -66,10 +66,10 @@ Feature: Principal acts (OWN)
     And a permission request from an agent
     And <situation>
     When the permission request is raised
-    Then <outcome>
+    Then <expected>
 
     Examples:
-      | situation                                                                | outcome                                                                |
+      | situation                                                                | expected                                                               |
       | no away policy is on and the hold window passes                          | it is not denied on the timeout                                        |
       | no principal surface is connected and the harness prompt is unanswerable | it is only mirrored, not held                                          |
       | the harness adapter cannot keep the harness's own prompt answerable      | it is only mirrored and the answer is left to the harness              |
@@ -138,10 +138,10 @@ Feature: Principal acts (OWN)
     And a principal surface "<surface>"
     And OWN-22 "<risk state>" widening acts
     When "alice" writes a "<class>" principal act there
-    Then the act is "<outcome>"
+    Then the act is "<expected>"
 
     Examples:
-      | surface                        | risk state      | class    | outcome                                                      |
+      | surface                        | risk state      | class    | expected                                                     |
       | authenticated                  | permits         | widening | accepted                                                     |
       | authenticated                  | does not permit | widening | refused                                                      |
       | authenticated                  | permits         | unlisted | treated as widening and accepted                             |
@@ -264,10 +264,10 @@ Feature: Principal acts (OWN)
     And an agent of "alice" in an active run
     And <precondition>
     When the agent delegates a task to <target>
-    Then the delegation is <outcome>
+    Then the delegation is <expected>
 
     Examples:
-      | precondition                                                               | target                                | outcome                                                            |
+      | precondition                                                               | target                                | expected                                                           |
       | no delegation grant                                                        | its own subagent                      | recorded under OWN-24, with no delegation grant                    |
       | no delegation grant                                                        | a new run in another worktree         | refused, audited and shown                                         |
       | a delegation grant naming that worktree, a delegation budget and an expiry | a new run in that worktree            | started by the launcher, through its harness adapter, and recorded |

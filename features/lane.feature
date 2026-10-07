@@ -217,7 +217,7 @@ Feature: Room (LANE)
     And the room view shows the seat the role "<role>" and those capabilities
     And only the owner assigns a role, and an invite or invite link records the role it names as a role assignment
     And a seat with no role assignment or appointment, other than the owner's device seats, is a viewer
-    And a room act signed by a device seat of "alice" has every room capability but writing a room summary, editing and unpinning only pins it wrote, while her agents' run seats have only their role and any appointment
+    And a room act signed by a device seat of "alice" has every room capability but writing a room summary, editing and unpinning only pins it wrote and making a list removal of any pin but the intent, while her agents' run seats have only their role and any appointment
     And an appointment of a run seat or another principal's device seat as moderator is accepted only as a principal act of the owner, or of a principal whose device seat has the moderator role by role assignment, and only the appointer or the owner revokes it
     And an appointment of the facilitator by any principal but the owner is refused and audited
     And an appointment an appointed moderator tries, and its kick, bar or mute aimed at the owner or another moderator, are refused and audited
@@ -319,6 +319,10 @@ Feature: Room (LANE)
     Then it gets its own seat id, and its run is tied to its parent's run by a parent link
     When "alice"'s run leaves the room
     Then acts under its seat id are refused and the id stays in the room's history
+    When the run joins the room again on "alice"'s acceptance
+    Then it keeps its seat id and writer
+    When another run of "alice" joins the room on her acceptance
+    Then it gets its own seat id and writer
 
   @LANE-24 @P1 @I2 @I6 @I8 @pending
   Scenario: every room act is signed, verified, attributed and checked, and the key stays out of the model
@@ -384,6 +388,9 @@ Feature: Room (LANE)
     And the unpin is audited and raises a Needs you item for "alice"
     When the principal of "p-3"'s agent unpins another pin "p-3" wrote
     Then the unpin is recorded as that principal's neutral principal act
+    When "bob" confirms a "fact" pin candidate his agent suggested
+    Then the confirmation is recorded as his own widening principal act, and the new pin's author is his device seat
+    And a confirmation of a pin candidate from "bob"'s node that has only a token key is refused and audited
 
   @LANE-27 @P1 @I2 @I3 @pending
   Scenario: pins are information, and only the agent's own principal's pins, those its trust grant covers and versions it stamped restore
@@ -391,7 +398,7 @@ Feature: Room (LANE)
     And an agent of "alice" in a room with constraint pins written from device seats of "alice", "bob" and "carol" that their device keys certified, and a run seat's constraint pin whose version 1 "alice" stamped
     And "alice" recorded a trust grant for "carol"'s key and none for "bob"'s
     When the agent's run joins and later compacts
-    Then the join points the agent at the room's pins, intent first, by pin id and version, with no text
+    Then the join carries no pin text, the next restore block names the room, and "pin_list" with "room" lists its pins, intent first, by pin id and version
     And after compaction the restore block carries "alice"'s and "carol"'s pins and the stamped version word for word, and states "bob"'s pin only as PIN-10 does
     And the agent reads "bob"'s pin only through a tool, inside the untrusted envelope with its author's seat id and key fingerprint
 
@@ -432,12 +439,13 @@ Feature: Room (LANE)
   @LANE-31 @P1 @I6 @I8 @I10 @pending
   Scenario: concurrent room acts resolve by one rule, whatever order they arrive in
     Given an isolated Cairn home
-    And a room held on two nodes where, concurrently, a moderator kicks a seat while its principal adds it again, a moderator takes a pin off the pin list by a list removal while its author edits it, one moderator bars a key while another unbars an earlier bar on it, a moderator and the facilitator pick different presentations, a person stamps a pin version while its author unpins the pin, and an expire act for one bar arrives beside a new bar on the same key
+    And a room held on two nodes where, concurrently, a moderator kicks a seat while its principal adds it again, a moderator takes a pin off the pin list by a list removal while its author edits it, one moderator bars a key while another unbars an earlier bar on it, a moderator and the facilitator pick different presentations, a person stamps a pin version while its author unpins the pin, two seats link one branch, and an expire act for one bar arrives beside a new bar on the same key
     When each node receives the other's acts in every order, with duplicates
     Then both nodes derive the same membership, pins, stamps and bars, with no clock read
     And in each other pair the more restrictive act wins, and the edit of the removed pin is void
     And two equally restrictive concurrent acts on one object resolve to the act with the lower commitment
     And the facilitator's pick wins over the moderator's, by the pick order of VIEW-22
+    And of the two branch links naming one branch, the one with the lower commitment stands
     And the unpin takes the pin off the room's pin list while the stamp stands, so the stamped version keeps restoring to its stamper's agents, and the new bar stands, so room acts, principal acts and expire acts merge under the one rule
     And every resolved conflict is recorded and shown with both acts
     And an act a seat key signs at a principal surface merges as a room act, and only an act of a kind OWN-11 classes, signed by a device key, as a principal act

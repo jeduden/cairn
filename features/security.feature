@@ -47,10 +47,10 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a store with 1M events
     When the agent calls the MCP tool "event_search" with query "<query>"
-    Then the query is "<outcome>"
+    Then the query is "<expected>"
 
     Examples:
-      | query                     | outcome                                            |
+      | query                     | expected                                           |
       | foo OR bar NEAR(baz)      | matched as the literal terms, no FTS5 operator run |
       | 17 terms                  | rejected: more than 16 terms                       |
       | one term of 65 characters | rejected: term longer than 64 characters           |
@@ -62,10 +62,10 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     When the hook "PostToolUse" runs with <input>
     Then the hook handler exits 0 with no injection
-    And <outcome>
+    And <expected>
 
     Examples:
-      | input                                               | outcome                                                                      |
+      | input                                               | expected                                                                     |
       | stdin of 1 MiB plus one byte                        | an audit entry records "hook input exceeds 1 MiB"                            |
       | a JSON object nested 65 levels deep                 | an audit entry records "hook input nesting exceeds depth 64"                 |
       | a transcript line larger than the payload threshold | the line is streamed to the payload store without being kept whole in memory |
@@ -259,10 +259,10 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And managed policy sets <policy>
     When <action>
-    Then <outcome>
+    Then <expected>
 
     Examples:
-      | policy                                      | action                                                          | outcome                                                                                 |
+      | policy                                      | action                                                          | expected                                                                                |
       | B1 disabled                                 | the person starts the room-view component                       | Cairn refuses to start it and audits the refusal                                        |
       | B2 disabled                                 | the person starts the peer component                            | Cairn refuses to start it and audits the refusal                                        |
       | B3 disabled                                 | the person starts the bridge component                          | Cairn refuses to start it and audits the refusal                                        |
@@ -302,10 +302,10 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And the peer component running with an enrolled peer
     When the peer offers a segment that <segment>
-    Then the segment is <outcome>
+    Then the segment is <expected>
 
     Examples:
-      | segment                                                                                               | outcome                                                                                                           |
+      | segment                                                                                               | expected                                                                                                          |
       | comes from a run seat key that chains to a trusted principal key, with a valid seal and chain         | received into this node's record, its events untrusted                                                            |
       | comes from a device seat a device key of this node's principal certified, with a valid seal and chain | received, its principal acts, posts and pins trusted only as PRV-02 classifies them, never for coming from a peer |
       | comes from a seat key that chains to no trusted principal key                                         | refused and audited                                                                                               |
@@ -329,7 +329,7 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a seat key that was rotated by a signed event in its seat's writer, signed by the old key and the new key, and whose new key was then revoked by a signed event
     When events sealed by the revoked key arrive, some before its revocation and some after
-    Then the rotation and revocation appear as signed events, the revocation a cut principal act
+    Then the rotation and revocation appear as signed events, the revocation, which removes no pin from a restore block, a cut principal act
     And the seat keeps its seat id and its writer across the rotation, and what the old key sealed still verifies
     And the events sealed before the revocation still verify
     And the others are refused under the revocation rule
@@ -363,7 +363,7 @@ Feature: Security (SEC)
     And a room shared with two enrolled peers, in which another principal has a seat
     When the room's owner purges a range, one peer applies it and the other suppresses the events
     Then the purge is sent as a signed tombstone event
-    And the applying peer shows a tombstone and the suppressing peer shows a gap
+    And the applying peer shows a tombstone and the suppressing peer shows a missing range
     And that other principal can send the room's owner a signed purge request, a neutral principal act, for the events its own seats wrote
     And the owner's answer to it is a widening principal act and is audited
 
@@ -382,7 +382,7 @@ Feature: Security (SEC)
     And a room whose owner appointed a service account's device seat in the room, on that service account's own node, as the room's facilitator, an appointed moderator, by a widening principal act
     And the owner set the appointment rate, a room setting, to two moderation acts per hour
     When a post persuades the facilitator's program, acting through that node's CLI, to bar the principal keys of three seats, a moderator and the owner, to make a list removal of a pin, and to mute the whole room
-    Then the first two bars are recorded, each audited with the post behind it, which carries range links to the pin and to the marked range it names
+    Then the first two bars are recorded, each audited with the post behind it, which names the pin by id and carries a range link to the marked range
     And each bar is shown in the room view and named by id in the error each barred seat's next call returns
     And a Needs you item reaches the owner, who appointed it, and the principal of each barred seat
     And the third bar is refused and counted

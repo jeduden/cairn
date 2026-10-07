@@ -188,12 +188,12 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And a peer that declared the writers "w-peer-1" and "w-peer-2"
     When this node receives <item> from the peer
-    Then the item is <outcome>
+    Then the item is <expected>
     And an audit entry records each refusal
     And every stored event's writer is derived from the key that verifiably signed or wrote it, never from a field in the event or bundle
 
     Examples:
-      | item                                                        | outcome                |
+      | item                                                        | expected               |
       | a segment signed by "w-peer-1"                              | accepted as "w-peer-1" |
       | a segment signed by "w-peer-1" whose events name "w-peer-2" | accepted as "w-peer-1" |
       | an event claiming a writer of this node                     | refused                |
@@ -205,7 +205,7 @@ Feature: Provenance and trust (PRV)
     And this principal's offline principal key certified the device key of its node on a laptop with scope "allow, deny, pin" and maximum rule level 2, and the device key of its paired phone with the scope "allow, deny"
     And the laptop's device key certified a token key limited to an access token's rooms and expiry, which certified the device seat key and a run seat key of a token-key-only ephemeral node
     When an event <event> arrives from another node
-    Then the event is <outcome>
+    Then the event is <expected>
     And the token-key-only node, whose device seat its token key certified, signs no principal act and no expire act
     And the paired phone may read, and allow or deny held permission requests, and nothing else
     And a service account's principal key that a person, another service account or managed policy listing it certified counts as that service account's own principal, while only a principal key never certified counts as a person's, and a service account whose certificate is revoked stays a service account
@@ -215,7 +215,7 @@ Feature: Provenance and trust (PRV)
     And a recorded I2 security review of this requirement exists before it ships
 
     Examples:
-      | event                                                                                                                          | outcome                                                       |
+      | event                                                                                                                          | expected                                                      |
       | by the token-key-only node's run seat key, adding a constraint pin within its access token's rooms                             | untrusted until a principal stamps it from one of its devices |
       | by the token-key-only node's device seat key, adding a constraint pin within its access token's rooms                          | untrusted until a principal stamps it from one of its devices |
       | by the laptop's device key, stamping a version of that pin                                                                     | trusted                                                       |

@@ -10,11 +10,11 @@ Feature: Observability (OPS)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a"
     When <operation>
-    Then an audit entry records "<outcome>"
+    Then an audit entry records "<expected>"
     And the counter "<counter>" increases by 1
 
     Examples:
-      | operation                                                                         | outcome   | counter          |
+      | operation                                                                         | expected  | counter          |
       | the hook "PostToolUse" runs with a malformed JSON object                          | rejected  | hook_rejected    |
       | the transcript contains an AWS secret key and is ingested                         | redacted  | redactions       |
       | the hook "SessionStart" runs past its 150 ms hook budget                          | timed-out | hook_timeout     |
@@ -65,13 +65,13 @@ Feature: Observability (OPS)
   Scenario Outline: every failure of a component outside the core reaches the home's audit log and a named counter
     Given an isolated Cairn home
     And "<component>" is running
-    When an operation of "<component>" is <outcome>
-    Then the home's audit log records the operation as "<outcome>"
+    When an operation of "<component>" is <expected>
+    Then the home's audit log records the operation as "<expected>"
     And a named counter for it increases by 1
     And "cairn status" shows the failure outside any browser
 
     Examples:
-      | component           | outcome   |
+      | component           | expected  |
       | room-view component | rejected  |
       | room-view component | coalesced |
       | launcher            | timed-out |

@@ -47,14 +47,14 @@ Feature: Peer network (PEER)
     And it reaches "c" across at most one relay hop through an enrolled peer
 
   @PEER-05 @P2 @I1 @I6 @pending
-  Scenario: an ephemeral node offers its sealed tail often and a retired writer's lost tail shows as a gap
+  Scenario: an ephemeral node offers its sealed tail often and a retired writer's lost tail shows as a missing range
     Given an isolated Cairn home
     And an ephemeral node connected to a peer and running an agent
     When the run is active for 65 s, passes "Stop", "SubagentStop" and "SessionEnd", and the node's access token expires
     Then the open segment was sealed and offered at each of those hooks and at least every 30 s, each sealed range as soon as it was sealed
     And the writer is marked retired
     And its later segments that continue its chain without a fork are accepted and marked delivered after retirement, and only a revocation would refuse them
-    And a tail lost after the last seq received is shown as a gap, never as a quiet end or as "behind"
+    And a tail lost after the last seq received is shown as a missing range, never as a quiet end or as "behind"
 
   @PEER-06 @P2 @I6 @I8 @pending
   Scenario: enrollment verifies keys on both nodes and an access token for an ephemeral node is scoped, carried and audited
@@ -75,10 +75,10 @@ Feature: Peer network (PEER)
     Given an isolated Cairn home
     And a peer that trusts the principal key of "alice"
     When a relayed segment arrives whose seat key <key>
-    Then the segment is <outcome>
+    Then the segment is <expected>
 
     Examples:
-      | key                                                   | outcome                           |
+      | key                                                   | expected                          |
       | chains to the principal key of "alice"                | accepted                          |
       | chains to a principal key the peer does not trust     | refused                           |
       | was revoked, for events it sealed past its revocation | refused under the revocation rule |
@@ -144,5 +144,5 @@ Feature: Peer network (PEER)
     When a moderator's seat on "alice"'s node bars "bob"'s principal key while "carol"'s node is unreachable
     Then the bar takes effect on "alice"'s node at once
     And "alice"'s peer component sends no further segments of the room to any key the bar covers
-    And "carol"'s node, until it receives the bar, shows the gap in the moderator's writer beside the room's membership
+    And "carol"'s node, until it receives the bar, shows the missing range in the moderator's writer beside the room's membership
     And the view says "bob" keeps what his node already holds

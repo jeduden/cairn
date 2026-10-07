@@ -59,7 +59,8 @@ Feature: Pins (PIN)
     When the hook "UserPromptSubmit" runs with prompt "Never edit files under migrations/ without asking"
     Then <candidates> pin candidates are recorded, each proposed pin text with no author
     And the qualifying pin count is 0
-    And the qualifying pin count is <confirmed> after the person confirms every pin candidate with "cairn pin-candidate confirm", each a widening principal act
+    And the qualifying pin count is <confirmed> after the person confirms every pin candidate with "cairn pin-candidate confirm", each its own widening principal act
+    And a token-key-only node of the principal cannot confirm a pin candidate
     And each confirmation makes a new pin that the principal's device seat authors
     And only the owner's confirmation turns an intent or criterion candidate into a pin, as a new version of the room's intent pin authored by the owner's device seat
 
@@ -84,13 +85,13 @@ Feature: Pins (PIN)
     Then the command exits 2
 
   @PIN-07 @P1 @I2 @I3 @pending
-  Scenario: pre-compact guidance is static text free of record content
+  Scenario: compaction guidance is fixed text Cairn ships, free of record content
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "long-run"
     When the hook "PreCompact" runs with trigger "auto" for "long-run"
-    Then the output carries guidance to preserve user-stated constraints verbatim
-    And the guidance is byte-identical to that for trigger "manual" on an empty record
-    And the guidance contains no text from "long-run" or from any pin
+    Then the output carries compaction guidance to preserve user-stated constraints verbatim
+    And the compaction guidance is byte-identical to that for trigger "manual" on an empty record
+    And the compaction guidance contains no text from "long-run" or from any pin
     And the hook handler exits 0 without blocking compaction
 
   @PIN-08 @P0 @I3 @I6 @pending
@@ -118,7 +119,7 @@ Feature: Pins (PIN)
     Given an isolated Cairn home
     And a run whose seats' writers record it joining room "L1" and then creating room "L2"
     And a branch switch onto a branch of room "L4", which the run neither joined nor created, so its later events went to its personal-room seat
-    And pins the run's principal wrote from its device seat in "L1" and in its personal room, a pin from the person's configuration, and a pin in "L2" written from another principal's device seat
+    And pins the run's principal wrote from its device seat in "L1" and in its personal room, a pin from the person's configuration, and a constraint pin in "L2" written from another principal's device seat
     And a pin in "L2" written from the device seat of a third principal whose key the run's principal trusts in "L2" by a trust grant
     And the principal's stamp on one version of a constraint pin an agent's run seat wrote in "L1", on one version of a second constraint pin another principal wrote in "L2", and on one version of a "fact" pin in "L1"
     And a pin the principal wrote from its device seat in "L4"
@@ -129,7 +130,8 @@ Feature: Pins (PIN)
     Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped constraint versions, each under its original author
     And the restore block includes no pin of "L4", not the stamped "fact" version and neither token-key-only node's unstamped pin
     And the restore block names "L1", "L2" and the personal room by id
-    And the other principal's unstamped pin is stated only by count, room id and key fingerprint, with no text, and an audit entry records it
+    And the other principal's unstamped constraint pin and each token-key-only node's unstamped pin are stated only by count, room id and key fingerprint, with no text, and an audit entry records each
+    And no pin of a type that does not restore is counted
 
   @PIN-11 @P2 @I3 @I6 @pending
   Scenario Outline: a pin that qualifies on another of the principal's nodes but not here is stated by count and reason

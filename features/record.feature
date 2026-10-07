@@ -270,13 +270,13 @@ Feature: Record (REC)
     And this node holds the chain of a writer of a foreign room under the principal key "principal-b"
     And a room bundle in a local file that <bundle>, carrying a withheld event and an event with an API key the redaction rules of this node's principal match
     When the person imports the bundle
-    Then the import is <outcome> and an audit entry records it
+    Then the import is <expected> and an audit entry records it
     And an accepted bundle had its signature by the exporter's device key, chaining to the bundle's principal key, and its seals and chains verified as received, across the withheld event from its retained header, and the API key redacted with its event's commitment key erased, both results recorded
     And accepted events form a foreign room, which this node's principal neither owns nor has a seat in
     And a bundle named by a URL is refused without network access, while one at a git ref already fetched into a local clone is read
 
     Examples:
-      | bundle                                                             | outcome  |
+      | bundle                                                             | expected |
       | continues that writer chain under "principal-b"                    | accepted |
       | forks that writer chain under "principal-b"                        | refused  |
       | claims a room of this node's principal                             | refused  |

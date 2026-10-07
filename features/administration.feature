@@ -21,7 +21,7 @@ Feature: Administration and lifecycle (ADM)
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
     And that install created the node's personal room as the first act of the principal's device seat, that seat's add there
     When the person runs "cairn uninstall" and keeps only the device key
-    Then the output lists the hook, plugin and MCP registrations, room-view credentials, launcher endpoints, seat and device keys, enrollments, git-carrier refs and managed state Cairn wrote, each with an offer to remove it
+    Then the output lists the hook, plugin and MCP registrations, room-view credentials, launcher endpoints, seat and device keys, enrollments, git-carrier refs and every other file Cairn wrote, each with an offer to remove it
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
@@ -190,11 +190,11 @@ Feature: Administration and lifecycle (ADM)
     And managed policy sets every quota
     And the <quota> quota is reached
     When <arrival>
-    Then <outcome>
+    Then <expected>
     And every event accepted before is still stored and recallable
 
     Examples:
-      | quota               | arrival                                             | outcome                                                                     |
+      | quota               | arrival                                             | expected                                                                    |
       | received writer     | a peer offers another event of that writer          | the event is refused and an audit entry records it                          |
       | peer                | the peer offers another segment                     | the segment is refused and an audit entry records it                        |
       | worktree checkpoint | the hook "Stop" records another worktree checkpoint | the worktree checkpoint is refused and an audit entry records it            |

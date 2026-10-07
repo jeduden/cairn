@@ -42,7 +42,7 @@ Feature: Room view (VIEW)
     Then every run shows exactly one status from the closed set of §9.7.1 with its freshness mark
     And the room shows one room status and the worst freshness mark of its runs, never Quiet
     And the launched run appears under its personal room on Fleet and in "cairn room list"
-    And text an agent wrote changes no status, and time-relative marks are computed in the room view from an explicit starting point
+    And text an agent wrote changes no status, and time-relative freshness marks are computed in the room view from an explicit starting point
 
   @VIEW-05 @P1 @I6 @I10 @pending
   Scenario: the Needs you queue is deterministic and clears everywhere once answered
@@ -83,7 +83,7 @@ Feature: Room view (VIEW)
     Then it shows the starting point it used and where it came from, and links every line to its events
     And it lists capture gaps, uningested transcripts, risen failure counters and unsynced writers apart from rooms with no activity
     And it checks each writer's chain head against the named head receipt and shows the result per writer
-    And its lines run integrity and capture gaps, Needs you, failures, then finished runs, with the newest seq it covers per writer and no model-written line
+    And its lines run integrity status and capture gaps, Needs you, failures, then finished runs, with the newest seq it covers per writer and no model-written line
 
   @VIEW-09 @P1 @I6 @I8 @pending
   Scenario Outline: the person's search uses the scope they select and states its coverage
@@ -115,11 +115,11 @@ Feature: Room view (VIEW)
     Then the view offers to write a head receipt
 
   @VIEW-11 @P1 @I1 @I5 @I6 @pending
-  Scenario: gaps, quarantines and tombstones stay in place and forensic views are recorded
+  Scenario: missing ranges, quarantines and tombstones stay in place and forensic views are recorded
     Given an isolated Cairn home
-    And a room with a missing segment, a quarantined range and a tombstone
+    And a room with a missing range, a quarantined range and a tombstone
     When the person opens the Timeline tab of its Room page, then the quarantine list from it, and opens from that list the forensic view of the quarantined content
-    Then each gap is shown in place, never closed up
+    Then the missing range, the quarantine marker and the tombstone are shown in place, never closed up
     And the quarantined content is shown only after that explicit forensic view
     And the forensic view is recorded as a neutral principal act, an "operator" event
     And the tombstone reads "removed from this node", never "erased"
