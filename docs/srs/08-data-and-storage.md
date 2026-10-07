@@ -54,7 +54,8 @@ future changes remain verifiable.
 
 ## 8.4 Model-token estimation
 
-Budgets (PIN-08, INJ-07, RCL-03, CMP-06) depend on model-token counts.
+The pin budget (PIN-08) and the model-token caps of INJ-07, RCL-03 and
+CMP-06 depend on model-token counts.
 Cairn MUST use a conservative estimator, calibrated in M0 against
 Claude's own model-token counts, such that the estimate is greater
 than or equal to the true count for at least 99% of a representative

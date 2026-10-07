@@ -56,7 +56,7 @@ network boundary (I4).
 | Core (B0)                | The hook handlers, each harness adapter's transcript and hook part, the MCP server, the kernel worker, the CLI and the TUI, and everything that builds what reaches the model; opens no socket and starts no program but its kernel worker.                                                                                                   |
 | Room-view component (B1) | `cairn ui`: serves the room view on loopback, or on a local endpoint only the same OS user can reach; off until the principal starts it.                                                                                                                                                                                                      |
 | Launcher (B1)            | `cairn launch`: through each harness adapter's run part, starts, hosts and controls runs, pauses them at the harness prompt and records sandbox state (OWN-22); carries into the harness input only text the core built; executes witness checks; the only component that starts another program (SEC-29); off until the principal starts it. |
-| Peer component (B2)      | `cairn peer`: replicates segments with peers the node's principal enrolled by key and serves paired phones; off until turned on.                                                                                                                                                                                                              |
+| Peer component (B2)      | `cairn peer-component`: replicates segments with peers the node's principal enrolled by key and serves paired phones; off until turned on.                                                                                                                                                                                                    |
 | Publish component (B3)   | Read-only publishing and the git carrier, which the node's principal enables per remote and the room's owner per room (PEER-08); off until turned on.                                                                                                                                                                                         |
 | Bridge component (B3)    | Outbound exchange with hosts the node's principal names: the forge bridge, the CI carrier and the notification bridge (SEC-28); off until turned on.                                                                                                                                                                                          |
 
@@ -85,8 +85,9 @@ in, such as rejecting a foreign room, or that a paired phone signs, goes to that
 device seat in the personal room, naming the room, and that room shows it by
 address as it shows a cross-room post (OWN-02, LANE-29). Expire acts are
 `operator` events on the device seat of the node that signs them. Room acts sit
-in the writer of the seat that signs them: a post with provenance `post`, every
-other room act with that seat's pin class, `operator` for a device seat and
+in the writer of the seat that signs them: a post with provenance `post`, a
+room summary `summary`, never trusted (LANE-33), every other room act with that
+seat's pin class, `operator` for a device seat and
 `assistant` for a run seat (LANE-31, PRV-01). A purge under a retention policy
 is not an act: the node records it naming the policy, whose setting was the act.
 Every tombstone is a `structural` event (PRV-01). Every other table (FTS index,

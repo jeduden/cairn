@@ -98,24 +98,24 @@ break), `broken` ✕ (a check failed), `refused` (a segment was refused),
 
 ## 9.7.6 Trust marks
 
-No mark, for the principal's own agents, on this node's own trusted events, its
-witnessed `harness_meta` events and its witnessed `user` turns while
-`node.deployment_mode` is `interactive` (an ingested one is untrusted, REC-22);
-on principal acts a device key the principal certified signed, and posts and
-pins written from a device seat such a key certified, within that key's scope,
-from any of its nodes (shown with a device glyph); on pin versions the principal
-stamped (shown with the stamper, LANE-32); and on posts and pins a trust grant
-of the principal covers, written from device seats a device key of the trusted
-principal certified, never a token-key-only node's (shown with the granted key's
-petname, OWN-29). `○` plus petname on anything untrusted from another principal,
-agent, node or bundle, a `user` turn another node recorded included; a key with
-no petname shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined. `▬`
-from a seat that is no longer a member: it left, was kicked or was barred.
-`ingested`. `new key`. "from a revoked device". Timeline rails: solid for the
-agent's principal, hollow for other principals, dotted for agents and the forge.
-Events from a token-key-only node's writers are untrusted on every other node
-unless a principal stamped them (PRV-02). Unsandboxed agents are one line on
-Health, not a mark on every tile.
+No mark, for the principal's own agents, on this node's own `operator` and
+structural events, its witnessed `harness_meta` events, and its witnessed `user`
+turns while the deployment mode is `interactive` (an ingested one is untrusted,
+REC-22); on principal acts a device key the principal certified signed, and
+posts and pins written from a device seat such a key certified, within that
+key's scope, from any of its nodes (shown with a device glyph); on pin versions
+the principal stamped (shown with the stamper, LANE-32); and on posts and pins a
+trust grant of the principal covers outside a foreign room, written from device
+seats a device key of the trusted principal certified, never a token-key-only
+node's (shown with the granted key's petname, OWN-29). `○` plus petname on
+anything untrusted from another principal, agent, node or bundle, a `user` turn
+another node recorded included; a key with no petname shows its fingerprint. `⚑`
+flagged (PRV-07). `▒` quarantined. `▬` from a seat that is no longer a member:
+it left, was kicked or was barred. `ingested`. `new key`. "from a revoked
+device". Timeline rails: solid for the agent's principal, hollow for other
+principals, dotted for agents and the forge. Events from a token-key-only node's
+writers are untrusted on every other node unless a principal stamped them
+(PRV-02). Unsandboxed agents are one line on Health, not a mark on every tile.
 
 ## 9.7.7 Keymap
 
