@@ -71,7 +71,7 @@ Feature: Compute kernel (CMP)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a" containing an untrusted web result
     When the agent calls the MCP tool "kernel_exec" with code "r = cairn.event_search(query='web'); print(r * 10000)"
-    Then the result is wrapped in the recall envelope
+    Then the result is wrapped in the envelope
     And the printed output is capped at 8,000 model tokens with a truncation marker stating that variables persist
     And the envelope is tainted "untrusted" by the web event read during the execution
     And no value other than printed output is returned

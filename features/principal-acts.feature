@@ -215,10 +215,10 @@ Feature: Principal acts (OWN)
   Scenario: a command from an untrusted event runs only after the person confirms its exact text
     Given an isolated Cairn home
     And an untrusted event carrying a command with invisible characters
-    When the person confirms the command for a witness check
+    When the person runs "cairn witness-check start" with the command and confirms it
     Then the person was shown its exact text with invisible characters made visible before confirming
     And the act is recorded as their widening principal act
-    And the witness check runs only through the launcher, started by "cairn check witness", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit in the range, with network and the principal's home denied
+    And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit in the range, with network and the principal's home denied
     And its command, exit status and tree hash are recorded
 
   @OWN-19 @P1 @I1 @I4 @pending
@@ -289,7 +289,7 @@ Feature: Principal acts (OWN)
     Given an isolated Cairn home
     And a delegation to an agent other than a subagent, whose delegate has returned its report
     When the delegating agent calls "delegation_get" for that delegation
-    Then the delegate report arrives inside the untrusted envelope
+    Then the delegate report arrives inside the envelope
     And no text of the report entered the delegating agent's context before that call
     And ending the delegation grant, a cut principal act, stops every delegate it covers
 

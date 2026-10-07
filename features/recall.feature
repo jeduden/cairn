@@ -18,7 +18,7 @@ Feature: Recall (RCL)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "mixed-provenance"
     When the agent calls the MCP tool "event_search" with <args>
-    Then the result is wrapped in the recall envelope
+    Then the result is wrapped in the envelope
     And the envelope contains at most <hits> items, each matching the filter, ranked by BM25 score
     And a relevant hit from a short run still ranks above the repeated hits of a long run
 
@@ -39,7 +39,7 @@ Feature: Recall (RCL)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "large-payloads"
     When the agent calls the MCP tool "event_expand" with range "w-1:1-400"
-    Then the result is wrapped in the recall envelope
+    Then the result is wrapped in the envelope
     And the items carry the exact post-redaction content with payload references resolved
     And the envelope is at most 8,000 model tokens with "truncated" true and a "next_cursor"
     And calling "event_expand" with that cursor returns the following events without gap or overlap
@@ -49,7 +49,7 @@ Feature: Recall (RCL)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "mixed-provenance"
     When the agent calls the MCP tool "<tool>" with <args>
-    Then the result is wrapped in the recall envelope
+    Then the result is wrapped in the envelope
     And the envelope carries "cairn_envelope" 1 and the fixed envelope warning in its field "warning"
 
     Examples:
@@ -77,7 +77,7 @@ Feature: Recall (RCL)
     And the person runs "cairn quarantine add --range w-1:12-12"
     And the person runs "cairn purge --range w-1:30-40"
     When the agent calls the MCP tool "event_expand" with range "w-1:1-50"
-    Then the result is wrapped in the recall envelope
+    Then the result is wrapped in the envelope
     And no item has address w-1·12 and no item lies in w-1·30–40, which appears as a tombstone with reason "purged"
 
   @RCL-07 @P0 @I6 @pending
@@ -134,7 +134,7 @@ Feature: Recall (RCL)
     And a node holding a foreign room "vendor-room" imported from a room bundle
     And the node's principal has recorded a trust grant covering the bundle's principal key
     When the agent calls the MCP tool "event_search" with query "deploy" and room "vendor-room"
-    Then the hits come from "vendor-room", wrapped in the recall envelope, each with trust "untrusted" though the trust grant covers its keys
+    Then the hits come from "vendor-room", wrapped in the envelope, each with trust "untrusted" though the trust grant covers its keys
     And an audit entry logs the call and the calling run is tainted under SEC-13
     And a following call without the room parameter, under any scope, returns no hit from "vendor-room"
 

@@ -6,9 +6,9 @@ Feature: Peer network (PEER)
   implements the requirement lands.
 
   @PEER-01 @P2 @I4 @I9 @pending
-  Scenario: peering runs only in its own peer component, started by the person
+  Scenario: sync runs only in its own component, the peer component, started by the person
     Given an isolated Cairn home
-    And an ephemeral node whose environment carries the person's write-once peering setting
+    And an ephemeral node whose environment carries the person's write-once setting for the peer component
     When the node starts and the core runs its hook handlers and "cairn status --json"
     Then no core process starts the peer component, in-process or as a child
     And the ephemeral node's own entrypoint starts the peer component on the strength of the person's setting
@@ -64,7 +64,7 @@ Feature: Peer network (PEER)
     Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address and git-carrier remote it may deliver to
     And a seat key it certifies for a room outside the access token's rooms, or after the access token's expiry, chains to no principal key and is refused
     And its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events, device-seat pins of provenance "operator" and run-seat pins of provenance "assistant", and says later pins may be missing
-    And the node, holding only the token key, has a device seat its token key certified, which signs no principal acts and no expire acts, and every pin the node writes, from its device seat or a run seat, restores only once a principal stamps it from one of its devices, and no trust grant covers its posts or pins
+    And the node, holding only the token key, has a device seat its token key certified, which signs no principal acts and no expire acts, and every pin the node writes, from its device seat or a run seat, restores only once a principal stamps it from one of its devices whose device scope allows it, and no trust grant covers its posts or pins
     And "cairn status" names where the access token is read from and no child process inherits the access token in its environment
     And the access token's issue, use, rotation and revocation are audited, and the issuing node shows an unused access token as "enrolled, never synced"
     And revoking the access token with "cairn access-token revoke" is a cut principal act

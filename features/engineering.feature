@@ -95,7 +95,7 @@ Feature: Engineering quality (ENG)
   @ENG-10 @P0 @pending
   Scenario: golden files fix the exact bytes of restore blocks and envelopes
     Given a fixture record
-    When the restore block and a recall envelope are rendered
+    When the restore block and an envelope are rendered
     Then both equal their committed golden files byte for byte
 
   @ENG-11 @P0 @pending
