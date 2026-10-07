@@ -71,16 +71,16 @@ Feature: Peer network (PEER)
     And discovery alone enrolls no peer, while enrolling one verifies the key on both nodes by matching words or a scanned code
 
   @PEER-07 @P2 @I2 @I8 @pending
-  Scenario Outline: a relayed segment is accepted only when its seat key chains to a trusted principal key
+  Scenario Outline: a relayed segment is accepted only when its seat key chains to a principal key in its key set
     Given an isolated Cairn home
-    And a peer that trusts the principal key of "alice"
+    And a peer whose key set holds the principal key of "alice"
     When a relayed segment arrives whose seat key <key>
     Then the segment is <expected>
 
     Examples:
       | key                                                   | expected                          |
       | chains to the principal key of "alice"                | accepted                          |
-      | chains to a principal key the peer does not trust     | refused                           |
+      | chains to a principal key not in the peer's key set   | refused                           |
       | was revoked, for events it sealed past its revocation | refused under the revocation rule |
 
   @PEER-08 @P2 @I4 @pending

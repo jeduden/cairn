@@ -26,13 +26,13 @@ Feature: Administration and lifecycle (ADM)
     And an audit entry names the device key as left in place
 
   @ADM-03 @P0 @I7 @pending
-  Scenario: managed settings are detected and never written
+  Scenario: the harness's managed settings are detected and never written
     Given an isolated Cairn home
-    And a managed settings file that registers Cairn's hook handlers
+    And a file of the harness's managed settings that registers Cairn's hook handlers
     When the person runs "cairn install --scope user --yes"
     Then the command exits 1
-    And the managed settings file is byte-identical to before
-    And the output states that managed settings are in force and names the documented managed install path
+    And that file of the harness's managed settings is byte-identical to before
+    And the output states that the harness's managed settings are in force and names the documented managed install path
 
   @ADM-04 @P0 @I6 @I7 @pending
   Scenario Outline: configuration is validated strictly, managed policy overrides every layer, repository configuration only tightens, and a configuration change that needs a widening principal act waits for one

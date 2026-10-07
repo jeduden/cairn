@@ -41,12 +41,12 @@ Feature: Restore and injection (INJ)
     And the restore builder signature accepts no type but TrustedText
 
   @INJ-04 @P0 @I2 @pending
-  Scenario: prompt injection is off by default and audited when enabled
+  Scenario: a restore block on a prompt is off by default and audited when on
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "prior-history"
     When the hook "UserPromptSubmit" runs with prompt "continue"
     Then the hook output carries no additionalContext
-    And with "restore_block.on_prompt" set to true the injection contains only TrustedText
+    And with "restore_block.on_prompt" set to true the hook output carries a restore block built only from TrustedText
     And an audit entry records "UserPromptSubmit injection"
 
   @INJ-05 @P0 @I9 @pending

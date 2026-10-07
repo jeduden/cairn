@@ -20,6 +20,7 @@ Feature: Pins (PIN)
       | automation  | a harness skill calls the MCP tool "pin_candidate_propose"                                 | 0          |
       | automation  | a person stamps a version of a constraint pin an agent wrote                               | 1          |
       | interactive | the repository's ".cairn.toml" declares a pin                                              | 0          |
+      | automation  | the person runs "cairn pin add --room L2" from its device seat, a viewer in "L2"           | 0          |
 
   @PIN-02 @P0 @I2 @pending
   Scenario: text an agent proposes stays a pin candidate with no author

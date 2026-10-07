@@ -284,7 +284,7 @@ Feature: Record (REC)
       | is signed by a device key that does not chain to its principal key | refused  |
 
   @REC-24 @P1 @I1 @I8 @I10 @pending
-  Scenario Outline: a home that moved to another node starts a new seat and writer under a new seat key and appends nothing under the old one
+  Scenario Outline: a home that moved to another machine starts a new seat and writer under a new seat key and appends nothing under the old one
     Given an isolated Cairn home
     And a seat key bound to the node identity read, from outside the home, on the node the home was created on
     And <change>
@@ -294,11 +294,11 @@ Feature: Record (REC)
     And no event is appended under the old seat key
 
     Examples:
-      | change                                                    |
-      | the home is part of a cloned runner image on another node |
-      | the home is a copied volume mounted on another node       |
-      | the home is recovered from a snapshot on another node     |
-      | the node identity value is unavailable                    |
+      | change                                                       |
+      | the home is part of a cloned runner image on another machine |
+      | the home is a copied volume mounted on another machine       |
+      | the home is recovered from a snapshot on another machine     |
+      | the node identity value is unavailable                       |
 
   @REC-25 @P1 @I1 @I10 @pending
   Scenario: closed segments are merged later, outside every hook budget, so a writer has at most 48 segments a day

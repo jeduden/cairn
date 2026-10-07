@@ -18,7 +18,7 @@ Feature: Landmarks (LMK)
     And after the person runs "cairn rebuild" the span boundaries are byte-identical
 
   @LMK-02 @P0 @I2 @pending
-  Scenario Outline: a closed span yields one landmark of structural fields only
+  Scenario Outline: a closed span yields one landmark of sanitized structural fields only
     Given an isolated Cairn home
     And deployment mode "<mode>"
     And an agent run with a Claude Code transcript "two-closed-spans"
@@ -32,7 +32,7 @@ Feature: Landmarks (LMK)
       | interactive | any character of the trusted user turn |
 
   @LMK-03 @P0 @I2 @pending
-  Scenario Outline: untrusted structural fields are sanitized to the allow-list
+  Scenario Outline: structural fields untrusted input can influence are sanitized to the allow-list
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "hostile-field-names"
     And the transcript has a <field> value "<value>"

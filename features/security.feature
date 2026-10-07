@@ -204,7 +204,7 @@ Feature: Security (SEC)
     Given the repository at a minor release tag
     When the release checklist is inspected
     Then a threat-model document exists in the repository with a recorded review naming the current minor release
-    And it covers every row of the boundary register and the principals and components acting across each boundary
+    And it covers every row of the boundary register and the threat sources acting across each boundary
     And it compares Cairn with Zed Delta control by control on record signing, trust in other principals, central-service dependence and key custody
 
   @SEC-18 @P0 @I8 @pending
@@ -298,7 +298,7 @@ Feature: Security (SEC)
     And local discovery advertises only a random per-boot instance id and a port, never a principal, host or room name
 
   @SEC-25 @P2 @I2 @I6 @I8 @pending
-  Scenario Outline: the peer component receives only sealed, chained segments from seat keys that chain to a trusted principal key
+  Scenario Outline: the peer component receives only sealed, chained segments from seat keys that chain to a principal key in its key set
     Given an isolated Cairn home
     And the peer component running with an enrolled peer
     When the peer offers a segment that <segment>
@@ -306,9 +306,9 @@ Feature: Security (SEC)
 
     Examples:
       | segment                                                                                               | expected                                                                                                          |
-      | comes from a run seat key that chains to a trusted principal key, with a valid seal and chain         | received into this node's record, its events untrusted                                                            |
+      | comes from a run seat key that chains to a principal key in its key set, with a valid seal and chain  | received into this node's record, its events untrusted                                                            |
       | comes from a device seat a device key of this node's principal certified, with a valid seal and chain | received, its principal acts, posts and pins trusted only as PRV-02 classifies them, never for coming from a peer |
-      | comes from a seat key that chains to no trusted principal key                                         | refused and audited                                                                                               |
+      | comes from a seat key that chains to no principal key in its key set                                  | refused and audited                                                                                               |
       | carries a broken seal                                                                                 | refused and audited                                                                                               |
       | breaks its writer's chain                                                                             | refused and audited                                                                                               |
 
@@ -334,7 +334,7 @@ Feature: Security (SEC)
     And the events sealed before the revocation still verify
     And the others are refused under the revocation rule
     And a head receipt of every writer's chain head verifies on another node with no network
-    And a seat key minted because a backup restore put the home on another node starts a new seat and writer, which names the old seat
+    And a seat key minted because a backup restore put the home on another machine starts a new seat and writer, which names the old seat
 
   @SEC-28 @P2 @I2 @I4 @I6 @pending
   Scenario: outbound bridges run only in the bridge component, per enabled destination, and carry little

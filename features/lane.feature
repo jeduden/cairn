@@ -217,7 +217,7 @@ Feature: Room (LANE)
     And the room view shows the seat the role "<role>" and those capabilities
     And only the owner assigns a role, and an invite or invite link records the role it names as a role assignment
     And a seat with no role assignment or appointment, other than the owner's device seats, is a viewer
-    And a room act signed by a device seat of "alice" has every room capability but writing a room summary, editing and unpinning only pins it wrote and making a list removal of any pin but the intent, while her agents' run seats have only their role and any appointment
+    And a room act signed by a device seat of "alice" has every room capability but writing a room summary, editing and unpinning only pins its principal wrote from a device seat and making a list removal of any pin but the intent, while her agents' run seats have only their role and any appointment
     And an appointment of a run seat or another principal's device seat as moderator is accepted only as a principal act of the owner, or of a principal whose device seat has the moderator role by role assignment, and only the appointer or the owner revokes it
     And an appointment of the facilitator by any principal but the owner is refused and audited
     And an appointment an appointed moderator tries, and its kick, bar or mute aimed at the owner or another moderator, are refused and audited
@@ -241,6 +241,7 @@ Feature: Room (LANE)
     Then each room shows its visibility on both surfaces
     And a shared room lists each of the room's principals by petname, with the role of each of its seats
     And changing a room's visibility is recorded as its owner's widening principal act, and refused from anyone else
+    And publishing the private room, or enrolling a blind peer for it, is refused and audited, since its visibility does not allow it
 
   @LANE-18 @P2 @I2 @I8 @pending
   Scenario: an invite link binds once and reveals nothing early
@@ -391,6 +392,7 @@ Feature: Room (LANE)
     When "bob" confirms a "fact" pin candidate his agent suggested
     Then the confirmation is recorded as his own widening principal act, and the new pin's author is his device seat
     And a confirmation of a pin candidate from "bob"'s node that has only a token key is refused and audited
+    And a pin act from a device seat with the viewer role, a principal act included, is refused and audited, since that seat lacks the pin capability
 
   @LANE-27 @P1 @I2 @I3 @pending
   Scenario: pins are information, and only the agent's own principal's pins, those its trust grant covers and versions it stamped restore

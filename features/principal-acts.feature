@@ -346,6 +346,6 @@ Feature: Principal acts (OWN)
     And it does not cover a post or pin "carol" writes from a token-key-only node
     And a trust grant naming the room's facilitator is recorded only after "alice" is shown that the facilitator reads untrusted room text, and covers its posts but never its room summaries
     And no role, membership or room setting makes any other principal trusted
-    And content of a foreign room holding "carol"'s posts stays untrusted for "alice"'s agent whatever trust grant covers "carol"'s key
+    And "carol"'s posts in a foreign room stay untrusted for "alice"'s agent whatever trust grant covers "carol"'s key
     When "alice" revokes the trust grant as a cut principal act
     Then "carol"'s later posts reach "alice"'s agent only as untrusted recall, and her pin no longer restores to it
