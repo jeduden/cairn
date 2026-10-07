@@ -340,6 +340,7 @@ Feature: Principal acts (OWN)
     When "carol" pins the constraint "keep the public API stable" from her device seat
     Then the pin restores word for word to "alice"'s agent and reaches "bob"'s agent only through a tool call, enveloped
     And a trust grant naming a run seat's key, or a service account that relays third parties' text, is refused and audited
+    And the trust grant does not cover a service account whose principal key "carol" certified
     And a trust grant naming the room's facilitator is recorded only after "alice" is shown that the facilitator reads untrusted room text, and covers its posts but never its room summaries
     And no role, membership or room setting makes any other principal trusted
     When "alice" revokes the trust grant as a cut principal act

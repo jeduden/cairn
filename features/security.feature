@@ -8,7 +8,7 @@ Feature: Security (SEC)
   @SEC-01 @P0 @I4 @pending
   Scenario: the core opens no socket and each B1 component listens only locally
     Given the build-time reach evidence of every component, whether the components ship in one executable or several
-    When CI reads that evidence per component and each boundary's sandbox suite runs
+    When CI reads that evidence per component and the suite runs each component confined to its boundary
     Then no code the core can execute, dependencies and start-up code included, opens a socket or an outbound connection
     And no code any component can execute starts a program outside the launcher, save the core's own kernel worker
     And CI fails when a component's evidence is missing or shows a violation
@@ -85,6 +85,7 @@ Feature: Security (SEC)
     When the CI static check for TrustedText construction runs
     Then the check fails
     And it names the offending file and line
+    And the check also fails when the `restore_block` crate builds a TrustedText from anything but qualifying pins, sanitized structural fields and fixed text Cairn ships
 
   @SEC-08 @P0 @I1 @pending
   Scenario: secrets are redacted before anything is written
@@ -101,11 +102,11 @@ Feature: Security (SEC)
     Then the correlation index contains no entry for the purged events
 
   @SEC-09 @P1 @pending
-  Scenario: the database and payload store can be encrypted at rest
+  Scenario: the store, its payload store included, can be encrypted at rest
     Given an isolated Cairn home
     And encryption at rest is enabled with a key from a secret reference
     When the person runs "cairn ingest --all"
-    Then the database and payload files contain no plaintext event content
+    Then the store's files, its payload store's included, contain no plaintext event content
     And the deployment documentation requires encrypted volumes when encryption is not enabled
 
   @SEC-10 @P0 @I4 @pending
@@ -188,7 +189,7 @@ Feature: Security (SEC)
     Given the import graph and code of every component, whether the components ship in one executable or several
     When the CI telemetry check runs
     Then no telemetry, crash-reporting, or update-check code or dependency is found
-    And the full test suite, with each component under its boundary's sandbox, records no connection opened or tried outside that boundary
+    And the full test suite, with each component confined to its boundary, records no connection opened or tried outside that boundary
 
   @SEC-16 @P0 @I6 @I9 @pending
   Scenario: a hook input that fails schema validation is rejected fail-open and audited
@@ -229,7 +230,7 @@ Feature: Security (SEC)
     And the boundary register kept in the repository
     When the CI boundary check runs
     Then every Cairn component, process and protocol is assigned to exactly one of B0, B1, B2 and B3
-    And the check fails when a component's build-time reach evidence is missing, or when that evidence or a test under its boundary's sandbox shows more reach than its row grants
+    And the check fails when a component's build-time reach evidence is missing, or when that evidence or a test of a component confined to its boundary shows more reach than its row grants
     And the check fails when a process exists that the register does not list
     And every B1, B2 and B3 component, the launcher included, stays off on the home until the person starts it
 
@@ -320,7 +321,8 @@ Feature: Security (SEC)
     And the secret, absolute path, user name, host name and email address are redacted, and an unresolved secret-scan hit fails the export closed
     And the bundle keeps the chained header of every withheld or redacted event and a signed manifest of included and withheld ranges
     And the bundle is a plain file whose chain verifies with no host, peering or account
-    And the publish component serves it read-only, bound only to the network addresses its configuration names, none by default
+    And the bundle is signed by the exporter's device key, which chains to the bundle's principal key, and the core handles no principal key
+    And the publish component's listener serves it read-only, bound only to the network addresses its configuration names, none by default
 
   @SEC-27 @P1 @I6 @I10 @pending
   Scenario: rotated and revoked keys leave the record verifiable
@@ -379,12 +381,12 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a room whose owner appointed a service account's device seat in the room, on that service account's own node, as the room's facilitator, an appointed moderator, by a widening principal act
     And the owner set the appointment rate, a room setting, to two moderation acts per hour
-    When a post persuades the facilitator's program, acting through that node's CLI, to bar three seats, a moderator and the owner, and to mute the whole room
+    When a post persuades the facilitator's program, acting through that node's CLI, to bar the principal keys of three seats, a moderator and the owner, to make a list removal of a pin, and to mute the whole room
     Then the first two bars are recorded, each audited with the post behind it, which carries range links to the pin and to the marked range it names
     And each bar is shown in the room view and named by id in the error each barred seat's next call returns
     And a Needs you item reaches the owner, who appointed it, and the principal of each barred seat
     And the third bar is refused and counted
-    And the acts on the moderator and the owner, and the room-wide mute, are refused and audited
+    And the acts on the moderator and the owner, the list removal and the room-wide mute are refused and audited
     And the owner can undo each bar
     And the facilitator's unbar of one of its own bars is refused and audited, since an appointed moderator never unbars
     And each such post is in the facilitator's own words and points by range link to the marked range it names, quoting none of it

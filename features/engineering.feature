@@ -105,13 +105,13 @@ Feature: Engineering quality (ENG)
     And the workspace as a whole is at least 80% covered
 
   @ENG-12 @P0 @pending
-  Scenario Outline: the end-to-end suite runs each component inside its boundary's sandbox
-    Given the end-to-end suite runs "<component>" inside a sandbox that <sandbox>
+  Scenario Outline: the end-to-end suite runs each component confined to its boundary
+    Given the end-to-end suite runs "<component>" confined to its boundary, which <confinement>
     When "<component>" opens a socket outside the boundary the register assigns it
     Then the suite fails naming the component and the caller
 
     Examples:
-      | component           | sandbox                       |
+      | component           | confinement                   |
       | core                | denies all network            |
       | room-view component | denies all but loopback       |
       | launcher            | denies all but loopback       |

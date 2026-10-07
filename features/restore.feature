@@ -14,6 +14,7 @@ Feature: Restore and injection (INJ)
     Then the additionalContext carries a restore block with the qualifying pin verbatim
     And the restore block includes the landmark index of the current run
     And the restore block ends with the recall hint
+    And every other byte of the restore block is fixed text Cairn ships
 
   @INJ-02 @P0 @I3 @pending
   Scenario Outline: a fresh start returns qualifying pins and the recall hint by default
@@ -36,7 +37,7 @@ Feature: Restore and injection (INJ)
     When a crate outside the `restore_block` crate tries to construct a TrustedText value
     Then the build fails because the TrustedText constructor is private to the `restore_block` crate
     And every field of TrustedText is private, and no public method or trait implementation builds one, except by copying an existing TrustedText, or changes one
-    And TrustedText is built only from qualifying pins and sanitized structural fields
+    And TrustedText is built only from qualifying pins, sanitized structural fields and fixed text Cairn ships
     And the restore builder signature accepts no type but TrustedText
 
   @INJ-04 @P0 @I2 @pending
@@ -59,7 +60,7 @@ Feature: Restore and injection (INJ)
     And the command exits 0
 
   @INJ-06 @P0 @I10 @pending
-  Scenario: identical record state yields a byte-identical restore block
+  Scenario: an identical record yields a byte-identical restore block
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "compacted-run"
     When the hook "SessionStart" runs with source "compact" twice, once before and once after the person runs "cairn rebuild"
@@ -102,7 +103,7 @@ Feature: Restore and injection (INJ)
     And opt-in notices of waiting posts for the room <setting>
     When the hook "<hook>" runs
     Then the hook handler returns <notice>
-    And any opt-in notice is TrustedText carrying only the count 2, short key fingerprints and the posts' addresses, without "POST-CANARY-91c2" or any other text an author chose
+    And any opt-in notice is TrustedText carrying only fixed text Cairn ships, the count 2, short key fingerprints and the posts' addresses, without "POST-CANARY-91c2" or any other text an author chose
     And an audit entry records every opt-in notice returned
     And no opt-in notice starts or resumes a turn
 

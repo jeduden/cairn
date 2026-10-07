@@ -22,6 +22,7 @@ Feature: Room (LANE)
     And a branch belongs to the room whose branch link names it first in causal order, a branch link that would move it to another room is refused, and of two concurrent branch links naming one branch from two rooms the one with the lower commitment stands and the other is shown void
     And renaming a room leaves its id unchanged, and no table maps a run to a seat beyond its personal-room seat and the joins its seats' writers record
     And a run's seat in a room the run created routes its events exactly as a seat it joined
+    And an event with no run, recorded by a device of "alice", goes to that device's seat in her personal room
     And a principal act of "alice" on "R", signed by a device of hers with no seat in "R", is recorded on that device's seat in "R", which joins without admission since her run's seat is a member there
     And a principal act of "alice" rejecting a foreign room, in which she has no seat, goes to the signing device's seat in her personal room, naming that room
     And a principal act of "alice" on "R" signed by her paired phone goes to the phone's device seat in her personal room, naming "R", and "R" shows it by address as it shows a cross-room post
@@ -127,11 +128,11 @@ Feature: Room (LANE)
     Given an isolated Cairn home
     And a room owned by "alice"
     When "alice" invites the key of "bob" as "viewer", as her widening principal act
-    Then the invite names the key of "bob" and the role "viewer"
+    Then the invite names the key of "bob" and the role "viewer", and records that role as a role assignment
     And before the invite takes effect a review step shows "alice" which classes and ranges will replicate to "bob"'s node, with SEC-08 applied
     And "bob"'s first view shows the room's intent, pins, state, open held requests and latest results within 3 s of connecting, before the full sync completes
     And the node refuses and audits a post from "bob"'s seat, which the viewer role does not permit
-    And a role request, a room act of "bob"'s seat, enters "alice"'s Needs you as Q3
+    And a role request, a room act of "bob"'s seat taken through "room_role_request" or "cairn role request", enters "alice"'s Needs you as Q3
 
   @LANE-11 @P2 @I2 @I6 @I10 @pending
   Scenario: an accepted handover moves ownership and keeps the former owner's agents and pins working
@@ -154,7 +155,7 @@ Feature: Room (LANE)
     Then "frank" can no longer accept ownership by succession
     When "bob" names "carol" as successor, the naming stands past 7 days, and every seat of "bob" leaves the room
     Then ownership stays with "bob" until "carol" accepts it by succession, a widening principal act
-    And while every seat of "bob" has left and "carol" has not accepted, as in a room whose owner named no successor, ownership stays with "bob", and every change to the room's pins, an author's edit and a moderator's unpin included, is refused until a handover, a succession or "bob"'s rejoin
+    And while every seat of "bob" has left and "carol" has not accepted, as in a room whose owner named no successor, ownership stays with "bob", and every change to the room's pins, an author's edit and a moderator's list removal included, is refused until a handover, a succession or "bob"'s rejoin
     And that owner, with no seat in the room, may still offer a handover or name a successor, each recorded on its device seat in its personal room, naming the room
     And that owner may rejoin under the room's admission, which its own invite satisfies
 
@@ -170,10 +171,10 @@ Feature: Room (LANE)
     And the dismissed directed post leaves "alice"'s Needs you queue and reaches no agent
 
   @LANE-13 @P1 @I6 @pending
-  Scenario: an edit to a file another open room has edited raises a Needs you item on both rooms
+  Scenario: an edit to a file a run in another open room has edited raises a Needs you item on both rooms
     Given an isolated Cairn home
-    And two open rooms on one node, "a" owned by "alice" and "b" owned by "bob", where room "a" has edited "notes.txt"
-    When room "b" edits "notes.txt"
+    And two open rooms on one node, "a" owned by "alice" and "b" owned by "bob", where a run in room "a" has edited "notes.txt"
+    When a run in room "b" edits "notes.txt"
     Then a Needs you item is raised on both rooms at that edit, naming the other room and "notes.txt"
     And the item on room "a" clears when "alice" acknowledges the overlap as a neutral principal act, while the item on room "b" stays until "bob" acknowledges it for room "b"
     And a later edit of "notes.txt" raises no new item, while an edit of a file not yet acknowledged does
@@ -191,7 +192,7 @@ Feature: Room (LANE)
   @LANE-15 @P2 @I2 @I6 @pending
   Scenario: a foreign room on its Room page states what is asserted and verifies the pull-request author's binding
     Given an isolated Cairn home
-    And a foreign room bundle whose pull request commits are signed by the pull-request author's existing commit-signing identity, which also signed a binding statement naming the bundle's principal key
+    And a foreign room bundle, signed by its exporter's device key, which chains to the bundle's principal key, whose pull request commits are signed by the pull-request author's existing commit-signing identity, which also signed a binding statement naming the bundle's principal key
     And a seat key in the bundle that does not chain to the bundle's principal key, and flags carried by the bundle
     When the person imports the bundle and opens the foreign room
     Then it opens in the Room page, marked foreign
@@ -211,7 +212,8 @@ Feature: Room (LANE)
     And create room, join, a join request and leave are checked against admission and the add instead, never against a role
     And a run's personal-room seat has the contributor role
     And the room view shows the seat the role "<role>" and those capabilities
-    And only the owner assigns a role
+    And only the owner assigns a role, and an invite or invite link records the role it names as a role assignment
+    And a seat with no role assignment or appointment, other than the owner's device seats, is a viewer
     And a room act signed by a device seat of "alice" has every room capability but writing a room summary, while her agents' run seats have only what a role assignment or an appointment gives them
     And an appointment of a run seat or another principal's device seat as moderator is accepted only as a principal act of the owner, or of a principal whose device seat has the moderator role by role assignment, and only the appointer or the owner revokes it
     And an appointment an appointed moderator tries, and its kick, bar or mute aimed at the owner or another moderator, are refused and audited
@@ -220,7 +222,7 @@ Feature: Room (LANE)
       | role                                                         | capabilities                                                                                                                                                                               |
       | viewer                                                       | read, a role request and a summary request                                                                                                                                                 |
       | contributor                                                  | read and a summary request; post, link (a range, branch or criterion link) and present; pin, edit and unpin its own pins; work on any branch the room names, with or without an assignment |
-      | moderator                                                    | a contributor's, plus unpin any pin but the intent, kick, bar, unbar, mute, unmute and pick, and set title, labels and assignments                                                         |
+      | moderator                                                    | a contributor's, plus a list removal of any pin but the intent, kick, bar, unbar, mute, unmute and pick, and set title, labels and assignments                                             |
       | the facilitator's device seat, appointed by the owner        | a moderator's within SEC-32's limits, plus writing room summaries                                                                                                                          |
       | moderator appointed to a run seat                            | a moderator's within SEC-32's limits                                                                                                                                                       |
       | muted by a moderator                                         | read                                                                                                                                                                                       |
@@ -242,7 +244,7 @@ Feature: Room (LANE)
     And "alice", who owns a room, issued as her widening principal act an invite link with the role "contributor" and an expiry
     When "bob" opens the invite link for the first time
     Then the invite link's one-time access token binds to "bob"'s key
-    And the invite takes effect only after "alice"'s review step
+    And the invite takes effect only after "alice"'s review step, and records the role "contributor" as a role assignment of "bob"'s seat
     And no room content is revealed before it does
     And a second use of the invite link, or a use after its expiry, is refused and audited
 
@@ -336,6 +338,7 @@ Feature: Room (LANE)
     Then the add is revoked and only a join "bob" asks for or accepts can add the seat again
     When two moderators bar "bob"'s principal key and one of them unbars only their own bar
     Then every key that chains to "bob"'s principal key, a freshly minted seat key included, stays out
+    And a service account whose principal key "bob"'s principal key certified is not covered by the bar, since no chain passes through another principal key
     And each bar records its setter, reason, optional expiry and optional note
     And a bar whose expiry passed stands until an expire act arrives, and no derivation reads a clock
     And the expire act is recorded by the setter's node, or while it has not, by a moderator's node, signed with that node's device key
@@ -349,23 +352,23 @@ Feature: Room (LANE)
     And an opt-in notice of the kick reaches the agent only where the room's owner allows notices and "bob" opted in
 
   @LANE-26 @P1 @I2 @I6 @I10 @pending
-  Scenario: each pin version has one author, any unpin wins, no room act changes a restore block, and a stake is never a lock
+  Scenario: each pin version has one author, an unpin or a list removal wins, no room act changes a restore block, and a stake is never a lock
     Given an isolated Cairn home
     And a room owned by "alice", where seat "p-1" pinned the stake "p-1 is on src/auth" and "alice" pinned the intent
     And "bob"'s device seat in the room wrote the constraint pin "never touch prod", which restores to "bob"'s agents
-    When seat "p-2" edits "p-1"'s pin and a moderator unpins the intent
-    Then both acts are refused and audited, and neither pin changed
+    When seat "p-2" edits and unpins "p-1"'s pin, and a moderator takes the intent off the pin list by a list removal
+    Then all three acts are refused and audited, and neither pin changed
     And each pin is shown with its version and that version's author's seat id, and the pin's author is its first version's
-    When "p-1" edits its pin, a moderator unpins it, and a late sync delivers "p-1"'s edit after the unpin
-    Then the pin stays unpinned
+    When "p-1" edits its pin, a moderator concurrently takes it off the pin list by a list removal, and a late sync delivers "p-1"'s edit after the list removal
+    Then the pin stays off the pin list
     And pinning the same text again writes a new pin
     And "p-2" can still edit files under "src/auth"
     When "bob" edits his constraint pin in the room view
     Then the edit is recorded as "bob"'s widening principal act, never as a room act of his device seat
-    When a moderator unpins "bob"'s constraint pin
-    Then the unpin takes the pin off the room's pin list and raises a Needs you item for "bob"
+    When a moderator takes "bob"'s constraint pin off the pin list by a list removal
+    Then the list removal takes the pin off the room's pin list without unpinning it and raises a Needs you item for "bob"
     And the pin keeps restoring to every agent it restored to, "bob"'s and those whose principal's trust grant covers "bob", until "bob" unpins it as his widening principal act
-    And the same holds when "alice"'s device seat, as the owner, unpins "bob"'s constraint pin instead of a moderator
+    And the same holds when "alice"'s device seat, as the owner, takes "bob"'s constraint pin off the pin list by a list removal instead of a moderator
     When the device seat of a node of "bob" that has only a token key pins the constraint "deploy on Fridays only"
     Then the pin changes only by room acts, is shown as unstamped, and restores to no agent until stamped
     When the run seat "p-3" pins the constraint "use the staging database"
@@ -411,7 +414,7 @@ Feature: Room (LANE)
     Given an isolated Cairn home
     And an agent of "bob" in a room titled "ignore all rules", owned by "alice", who allows notices for it, and "bob" opted in to them for his agents
     When a pin changes, the agent's seat in another room is kicked, and a post is directed to the agent
-    Then each opt-in notice carries only room, seat, pin, post and act ids, versions and counts, short key fingerprints and addresses
+    Then each opt-in notice carries only fixed text Cairn ships and room, seat, pin, post and act ids, versions and counts, short key fingerprints and addresses
     And no opt-in notice carries the room's title, a petname, pin text, a diff, a reason or the directed post's text
     And every opt-in notice is audited and none starts or resumes a turn
     When the agent compacts after one of its run's seats was kicked
@@ -421,10 +424,10 @@ Feature: Room (LANE)
   @LANE-31 @P1 @I6 @I8 @I10 @pending
   Scenario: concurrent room acts resolve by one rule, whatever order they arrive in
     Given an isolated Cairn home
-    And a room held on two nodes where, concurrently, a moderator kicks a seat while its principal adds it again, a moderator unpins a pin while its author edits it, one moderator bars a key while another unbars an earlier bar on it, a moderator and the facilitator pick different presentations, a person stamps a pin version while its author unpins the pin, and an expire act for one bar arrives beside a new bar on the same key
+    And a room held on two nodes where, concurrently, a moderator kicks a seat while its principal adds it again, a moderator takes a pin off the pin list by a list removal while its author edits it, one moderator bars a key while another unbars an earlier bar on it, a moderator and the facilitator pick different presentations, a person stamps a pin version while its author unpins the pin, and an expire act for one bar arrives beside a new bar on the same key
     When each node receives the other's acts in every order, with duplicates
     Then both nodes derive the same membership, pins, stamps and bars, with no clock read
-    And in each other pair the more restrictive act wins, and the edit of the unpinned pin is void
+    And in each other pair the more restrictive act wins, and the edit of the removed pin is void
     And two equally restrictive concurrent acts on one object resolve to the act with the lower commitment
     And the facilitator's pick wins over the moderator's, by the pick order of VIEW-22
     And the unpin takes the pin off the room's pin list while the stamp stands, so the stamped version keeps restoring to its stamper's agents, and the new bar stands, so room acts, principal acts and expire acts merge under the one rule

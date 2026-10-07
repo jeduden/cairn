@@ -215,6 +215,7 @@ Feature: Record (REC)
     And it seals that writer again when the run stops, and events after the newest seal are shown as "unsigned"
     And a segment was closed once 30 s had passed though no seal closed one, and the open segment is closed at "<hook>"
     And "cairn verify" and "cairn status" each report the other writer's chain as ended without a closed segment
+    And the core sealed every writer but a run seat's, this node's device seat's writer included, after each append to it
 
     Examples:
       | hook         |
@@ -253,30 +254,31 @@ Feature: Record (REC)
   Scenario: events from transcripts the hook handlers did not watch are marked ingested and untrusted
     Given an isolated Cairn home
     And deployment mode "interactive"
-    And a transcript "pre-install" under the configured transcript roots, written before Cairn's hook handlers were installed, containing a user turn
+    And a transcript "pre-install" under the configured transcript roots, written before Cairn's hook handlers were installed, containing a user turn and lifecycle metadata
     And a transcript "elsewhere" from outside the configured transcript roots
     When the person runs "cairn ingest --path" on "pre-install" and on "elsewhere"
     Then every event of "pre-install" carries the "ingested" origin, freshness mark and trust mark with its transcript source and ingest position, shown on every surface, and none is shown as witnessed
-    And the user turn from "pre-install" has trust "untrusted"
+    And the user turn and the "harness_meta" event from "pre-install" have trust "untrusted"
     And this node records "elsewhere" as an ingested run in the principal's personal room, shown as "ingested", and every event of it has trust "untrusted"
 
   @REC-23 @P2 @I2 @I4 @I6 @pending
   Scenario Outline: room bundles are imported only from local files and fetched git refs, verified, redacted and audited
     Given an isolated Cairn home
-    And this node holds a foreign room's writer chain under the principal key "principal-b"
+    And this node holds the chain of a writer of a foreign room under the principal key "principal-b"
     And a room bundle in a local file that <bundle>, carrying a withheld event and an event with an API key the redaction rules of this node's principal match
     When the person imports the bundle
     Then the import is <outcome> and an audit entry records it
-    And an accepted bundle had its seals and chains verified as received, across the withheld event from its retained header, and the API key redacted with its event's commitment key erased, both results recorded
+    And an accepted bundle had its signature by the exporter's device key, chaining to the bundle's principal key, and its seals and chains verified as received, across the withheld event from its retained header, and the API key redacted with its event's commitment key erased, both results recorded
     And accepted events form a foreign room, which this node's principal neither owns nor has a seat in
     And a bundle named by a URL is refused without network access, while one at a git ref already fetched into a local clone is read
 
     Examples:
-      | bundle                                          | outcome  |
-      | continues that writer chain under "principal-b" | accepted |
-      | forks that writer chain under "principal-b"     | refused  |
-      | claims a room of this node's principal          | refused  |
-      | claims a writer of this node's principal        | refused  |
+      | bundle                                                             | outcome  |
+      | continues that writer chain under "principal-b"                    | accepted |
+      | forks that writer chain under "principal-b"                        | refused  |
+      | claims a room of this node's principal                             | refused  |
+      | claims a writer of this node's principal                           | refused  |
+      | is signed by a device key that does not chain to its principal key | refused  |
 
   @REC-24 @P1 @I1 @I8 @I10 @pending
   Scenario Outline: a home that moved to another node starts a new seat and writer under a new seat key and appends nothing under the old one

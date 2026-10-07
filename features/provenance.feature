@@ -36,7 +36,7 @@ Feature: Provenance and trust (PRV)
   Scenario Outline: the default trust policy trusts this node's unsigned trusted sources only on this node, and alike on all the principal's nodes the acts a device key it certified signed and the posts and pins from a device seat such a key certified, the posts and pins its trust grant covers and the pin versions it stamped
     Given an isolated Cairn home
     And deployment mode "<mode>"
-    When an event with provenance "<provenance>" written by <writer> is ingested
+    When an event with provenance "<provenance>" written by <writer> is recorded
     Then the event is stored with provenance "<provenance>"
     And its trust level for this principal's agents on this node derives as "<trust>", and no trust level is stored with the event
     And "cairn verify" <verify>
@@ -46,8 +46,8 @@ Feature: Provenance and trust (PRV)
     Examples:
       | mode        | writer                                                                                                      | provenance       | trust     | verify                                                            |
       | automation  | a writer of this node                                                                                       | operator         | trusted   | reports nothing                                                   |
-      | automation  | a writer of this node                                                                                       | harness_meta     | trusted   | reports nothing                                                   |
-      | interactive | a writer of this node                                                                                       | user             | trusted   | reports nothing                                                   |
+      | automation  | a writer of this node, witnessed by its hook handlers                                                       | harness_meta     | trusted   | reports nothing                                                   |
+      | interactive | a writer of this node, witnessed by its hook handlers                                                       | user             | trusted   | reports nothing                                                   |
       | automation  | a writer of this node                                                                                       | user             | untrusted | reports nothing                                                   |
       | interactive | a writer of this node                                                                                       | assistant        | untrusted | reports nothing                                                   |
       | interactive | a writer of this node                                                                                       | tool_call        | untrusted | reports nothing                                                   |
@@ -62,6 +62,7 @@ Feature: Provenance and trust (PRV)
       | interactive | this principal's device seat on this node                                                                   | post             | trusted   | reports nothing                                                   |
       | interactive | this principal's device seat on another of its nodes, certified by a device key it certified, within scope  | post             | trusted   | reports nothing                                                   |
       | interactive | a writer of this node, from a transcript the hook handlers did not watch                                    | user             | untrusted | reports nothing                                                   |
+      | automation  | a writer of this node, from a transcript the hook handlers did not watch                                    | harness_meta     | untrusted | reports nothing                                                   |
       | interactive | a device key on another node chaining within its scope to the principal key of this node's principal        | operator         | trusted   | reports nothing                                                   |
       | interactive | a device key on another node with no certificate from the principal key of this node's principal            | operator         | untrusted | reports nothing                                                   |
       | automation  | a run seat's writer on another node of this principal                                                       | harness_meta     | untrusted | reports nothing                                                   |
@@ -90,7 +91,7 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And the person's configuration sets no deployment mode
     And the repository's ".cairn.toml" sets "node.deployment_mode" to "interactive"
-    When a user turn is ingested
+    When this node's hook handlers witness a user turn
     Then the deployment mode is "automation"
     And the event is stored with provenance "user" and its trust level is "untrusted"
     And an audit entry records "rejected repository setting node.deployment_mode"
@@ -120,7 +121,7 @@ Feature: Provenance and trust (PRV)
   @PRV-06 @P0 @I2 @pending
   Scenario Outline: a landmark, kernel output, recall result or export records the events it derives from and inherits their taint
     Given an isolated Cairn home
-    And this node's record holds an event with provenance "harness_meta" and one with provenance "web"
+    And this node's record holds an event with provenance "harness_meta" its hook handlers witnessed and one with provenance "web"
     When the <artifact> is derived from both events
     Then the <artifact> records the addresses of both events it derives from
     And the <artifact> has trust "untrusted"
@@ -200,6 +201,7 @@ Feature: Provenance and trust (PRV)
     And a service account's principal key that a person, another service account or managed policy listing it certified counts as that service account's own principal, and an uncertified principal key counts as a person's
     And every revocation is a signed event that replicates like any other
     And a seat key the laptop's device key certified for a room chains principal key → device key → seat key
+    And a device key certified by a service account's principal key that this principal's principal key certified does not chain to this principal's principal key, since a chain runs through device, token or seat certificates and never through another principal key
     And a recorded I2 security review of this requirement exists before it ships
 
     Examples:
