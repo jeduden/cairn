@@ -28,12 +28,12 @@ one kind (LANE-31).
 - **Principal act**: An act of a kind OWN-11 classes, taken at a principal
   surface. It is signed by a device key once PRV-10 ships (OWN-02); before then
   it is an `operator` event its device seat's seal covers, told apart from a
-  room act by the surface it is marked with (OWN-02). An act a seat key signs as
-  the act, beyond sealing its writer, is a room act. A widening act lets more
-  reach an agent, or more act or leave the node; a cut act only stops, narrows
-  or undoes a widening; a neutral act does neither, such as acknowledging
-  counters. Every change of visibility, admission or a room setting is widening,
-  whichever way it goes. Its classes:
+  room act by the principal surface it is marked with (OWN-02). An act a seat
+  key signs as the act, beyond sealing its writer, is a room act. A widening act
+  lets more reach an agent, or more act or leave the node; a cut act only stops,
+  narrows or undoes a widening; a neutral act does neither, such as
+  acknowledging counters. Every change of visibility, admission or a room
+  setting is widening, whichever way it goes. Its classes:
   - **Cut:** deny, interrupt, pause, stop, cancel a delegation, end a permission
     grant, reject a foreign room, decline a join request, tighten a rule level,
     revoke a role assignment, revoke a CI key, stop publishing a room, record a
@@ -59,33 +59,38 @@ one kind (LANE-31).
     acceptance grant, add, edit or unpin a pin of a type that restores written
     from a device seat a device key certified (before PRV-10 ships, this node's
     own device seat), confirm a pin candidate, change a room's visibility,
-    invite a principal key, issue an invite link, choose a fork, confirm a
-    command taken from an untrusted event (OWN-18), turn on the peer or publish
-    component (on an ephemeral node, PEER-01's environment setting instead),
-    accept a handover or succession, ask for a device seat's join to a room its
-    principal has no member seat in, ask for or accept a join, which sends the
-    run's events to a room other principals' nodes hold, endorse, loosen a rule
-    level, turn on or change an away policy other than turning it off,
-    quarantine that removes a pin or a landmark from a restore block, release a
-    quarantine, purge or apply an erasure request, export, bind a repository
-    identity by hand or rebind it, accept open residual risks (OWN-22), certify
-    a service account's principal key, assign a role, set a room's admission,
-    appoint a moderator or the facilitator, stamp a pin version, name a
-    successor, hand over a room, record a trust grant, allow notices for a room
-    or opt in to them, enable a bridge or the git carrier, set a room setting,
-    publish, apply a purge request, change a retention policy, accept
-    configuration (recording its digest), enroll a CI key, rotate a device key,
-    retire a writer, turn capture off or pause it, enroll or revoke a device,
-    peer or authenticator, mint or rotate an access token, start a witness
-    check, and a backup restore.
+    invite a principal key, issue an invite link, choose a fork, turn on the
+    peer or publish component, accept a handover or succession, ask for a device
+    seat's join to a room its principal has no member seat in, ask for or accept
+    a join, which sends the run's events to a room other principals' nodes hold,
+    endorse, loosen a rule level, turn on or change an away policy other than
+    turning it off, quarantine that removes a pin or a landmark from a restore
+    block, release a quarantine, purge or apply an erasure request, export, bind
+    a repository identity by hand or rebind it, accept open residual risks
+    (OWN-22), certify a service account's principal key, assign a role, set a
+    room's admission, appoint a moderator or the facilitator, stamp a pin
+    version, name a successor, hand over a room, record a trust grant, allow
+    notices for a room or opt in to them, enable a bridge or the git carrier,
+    set a room setting, publish, apply a purge request, change a retention
+    policy, accept configuration (recording its digest), enroll a CI key, rotate
+    a device key, retire a writer, turn capture off or pause it, enroll or
+    revoke a device, peer or authenticator, mint or rotate an access token,
+    start a witness check, which confirms the command taken from an untrusted
+    event (OWN-18), and a backup restore. Revoking a device or a peer stays
+    widening although it undoes an enrollment, since it can drop pins and stop
+    acts arriving.
 
   Any principal act that removes a pin from a restore block, or stops this node
-  recording its own runs' events, is widening whatever verb carries it. An
-  unstamp and a trust-grant revocation are the exceptions: each withdraws only
-  the acting principal's own trust (LANE-32, OWN-29). Applying a quarantine
-  request takes the class of the quarantine it applies. A principal act no
-  requirement names is widening. OWN-11 and OWN-12 follow this list, and a gate
-  fails when a requirement names a principal act this entry does not classify.
+  recording its own runs' events, is widening whatever verb carries it. On an
+  ephemeral node, PEER-01's environment setting, a structural event, stands in
+  for turning on its peer component and, for the git-carrier remotes its access
+  token names, its publish component; minting that access token is the widening
+  act. An unstamp and a trust-grant revocation are the exceptions: each
+  withdraws only the acting principal's own trust (LANE-32, OWN-29). Applying a
+  quarantine request takes the class of the quarantine it applies. A principal
+  act no requirement names is widening. OWN-11 and OWN-12 follow this list, and
+  a gate fails when a requirement names a principal act this entry does not
+  classify.
 - **Expire act**: Once PRV-10 ships, an act a node with a device key records,
   signed with that key, ending only an expiry its original act set: on a bar, a
   mute or a handover offer (LANE-25). Before PRV-10 ships no expiry can be set.
@@ -132,7 +137,8 @@ one kind (LANE-31).
 - **Kick**: Revokes a seat's current add. Only that seat's principal may add it
   again (LANE-25).
 - **Bar**: Names a principal key and keeps every key that chains to it out,
-  until an unbar or an expire act (LANE-25).
+  until an unbar or an expire act (LANE-25). Its setter where SEC-32
+  permits, the setter's appointer or the owner may unbar.
 - **Mute**: Withdraws every capability but read from one seat or from the whole
   room; a whole-room mute leaves posting to the roles the owner names (LANE-16).
 - **Present**: Puts a presentation in the outcome window.

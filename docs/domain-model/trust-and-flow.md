@@ -32,7 +32,7 @@ summary: >-
   fields.
 - **Recall taint**: A run's mark after it recalls untrusted content, or
   inherited from its delegating agent (OWN-24), which tightens its rule levels
-  (SEC-13).
+  (OWN-10, SEC-13).
 - **Principal surface**: An authenticated surface for principal acts: the
   browser room view under SEC-20, the CLI or TUI at a terminal, or a paired
   phone within its scope; before B2, a phone reaches the room view only as the
@@ -43,6 +43,13 @@ summary: >-
   enveloped content (§9.2), such as `event_search`, `room_get`,
   `room_summary_get` or `delegation_get`; each records a recall event (RCL-07).
   Pull-only, and it defaults to the agent's current run.
+- **Closed path**: One of the ways I2 lists by which Cairn writes to an agent
+  without the agent's recall: restore blocks, opt-in notices, compaction
+  guidance and OWN-04's and OWN-07's templates; on a principal act,
+  principal-typed text, a fixed template referencing ids or an endorsed post; a
+  delegated task under its grants; and what a trust grant covers. No other write
+  to an agent exists (I2), and data leaves the machine through them only as the
+  harness sends them to its model (I4).
 - **Recall scope**: `run`, `room` or `rooms`, or a foreign room named in the
   call (RCL-05). A wider scope is said to extend recall; "widening" belongs to
   acts.
@@ -70,7 +77,7 @@ summary: >-
   `subagent_result` (OWN-25).
 - **Delegation grant**: The delegating principal's widening act naming who may
   delegate, to which targets, at what rule level, within what **delegation
-  budget**, its cap in spend, how many delegates at once and how deep, and until
+  budget** (its cap in spend), how many delegates at once, how deep, and until
   when (OWN-23).
 - **Acceptance grant**: The receiving principal's widening act on its own node,
   naming the delegating principal, the targets, the maximum rule level, the
@@ -125,7 +132,7 @@ summary: >-
 - **Run status**: A run's one status from §9.7.1's closed set (one waiting on
   its principal is Asking, never Needs you), with its **freshness mark**, which
   says how current the run's events are on this node, whether hooks still arrive
-  (`unrecorded`), or that they came by ingest (`ingested`); `stuck?` is a
+  (`unrecorded`), or that it is an ingested run (`ingested`); `stuck?` is a
   watchdog observation (VIEW-04); time-relative freshness marks are computed
   where shown, never derived artifacts.
 - **Queue class**: One of Needs you's classes Q1 to Q4, which set its order

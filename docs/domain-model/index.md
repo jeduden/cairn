@@ -22,7 +22,7 @@ These verbs each have one job:
 - A seat *is a member of* a room as Member defines.
 - A principal, an agent or a run *has a seat in* a room through any of its seats
   that is a member, its agents' run seats included; an agent has a seat in a
-  room through its run's seats that are members.
+  room through its runs' seats that are members.
 - A node *holds* writer logs, rooms and whatever else it stores. "Owns" is said
   of rooms and "holds" of nodes ("held request" is a name); "holds a room" never
   means owning a room or being a member of it.
@@ -40,7 +40,7 @@ header: ""
 row: "- [{title}]({filename}) — {summary}"
 ?>
 - [Principals and agents](principals-and-agents.md) — Who acts in Cairn: principals, persons and service accounts, managed policy, agents, runs and subagents, the facilitator, authors, members, the owner and delegates.
-- [Harness facts](harness-facts.md) — The harness's own facts that Cairn records and names: the harness, its sessions and transcripts, hooks, turns and compaction.
+- [Harness facts](harness-facts.md) — The harness's own facts that Cairn records and names: the harness, harness sessions and transcripts, hooks, turns and compaction.
 - [Places](places.md) — Where Cairn's state lives and is shared: homes, nodes, devices and paired phones, sandboxes, rooms and their kinds, visibility, peers and blind peers.
 - [Record](record.md) — The record and what derives from it: writers, events, addresses, segments, seals, provenance and origin, spans and landmarks, quarantine and purge, receipts, backups, bundles and exports.
 - [Pins and context](pins-and-context.md) — What may reach a model: pins and their versions, types and budget, the intent, stakes, posts, room summaries, envelopes, restore blocks, opt-in notices and held requests.
@@ -99,9 +99,9 @@ row: "- [{title}]({filename}) — {summary}"
 Code, CLI verbs, MCP tools, settings keys, events, documentation, UI copy,
 errors and logs use the model's words.
 
-- An MCP tool for a room act is `room_<act>`. Every other MCP tool is
-  `<concept>_<verb>`, with the reading verbs `get`, `list`, `search` and
-  `expand`.
+- An MCP tool for a room act is `room_<act>`, but `room_create` for create room.
+  Every other MCP tool is `<concept>_<verb>`, with the reading verbs `get`,
+  `list`, `search` and `expand`.
 - A CLI command that acts on a concept is `cairn <concept> <verb>`. Node-wide
   utilities keep one verb: `install`, `uninstall`, `status`, `doctor`, `verify`,
   `rebuild`, `migrate`, `ingest`, `import`, `export`, `purge`, `audit`,

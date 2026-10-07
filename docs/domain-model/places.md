@@ -15,7 +15,11 @@ summary: >-
   ships; an **ephemeral node**, one in a short-lived cloud environment, may have
   only a token key, a **token-key-only node**. Its **node identity** is a value
   outside the home that a cloned image or a restored snapshot cannot carry over
-  (REC-24). The node's principal is the principal whose home it is.
+  (REC-24). A **node clone** is a copy of a home started where its node identity
+  differs (a cloned image, a copied volume or a restored snapshot): a new node,
+  with its own device key and device seat, that mints new seat keys and shares
+  the carried-over personal room (REC-24). The node's principal is the principal
+  whose home it is.
 - **Device**: A node or a paired phone. Once PRV-10 ships, a device key
   certifies its seats; a token-key-only node's token key does so in its place.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
@@ -29,9 +33,11 @@ summary: >-
   by a branch link. The unit Cairn shows and shares.
 - **Personal room**: A principal's private room on each of its nodes, created by
   the principal's `cairn install` as the first act of its device seat there, or
-  carried over to a node clone. Its create room act is the device seat's add
-  there. Every run has a seat in it from its first event, without a join, and
-  every event or pin that belongs to no other room goes there.
+  carried over to a node clone, which shares it. It stays private: no invite,
+  admission or visibility change applies to it (LANE-17). Its create room act is
+  the device seat's add there. Every run has a seat in it from its first event,
+  without a join, and every event or pin that belongs to no other room goes
+  there.
 - **Foreign room**: A room this node holds that its principal neither owns nor
   has a seat in, such as the room of an imported bundle or a peer's room.
   Untrusted in recall (RCL-10), whatever trust grant covers its keys, and
@@ -45,7 +51,7 @@ summary: >-
   principal act of the owner; a node's principal publishes a room, or enrolls a
   blind peer for it, only as its visibility allows.
 - **Peer**: Another node this node's principal enrolled by key and exchanges
-  sealed segments with through the peer component (B2). Being a peer never makes
+  sealed ranges with through the peer component (B2). Being a peer never makes
   content trusted (PRV-02). Exchanging segments until both hold the same is
   **sync**.
 - **Blind peer**: A peer that holds a room's segments without any key they are

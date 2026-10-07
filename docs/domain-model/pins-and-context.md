@@ -30,11 +30,11 @@ summary: >-
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers.
 - **Pin candidate**: Proposed pin text an agent suggested or Cairn detected; not
-  yet a pin, and with no pin author. The confirmation of its principal (of the
-  agent that suggested it or the node that detected it), a widening act, makes
-  it a new pin its device seat authors; for an intent or a criterion, only the
-  owner's confirmation, making a new version of the room's intent pin that the
-  owner's device seat authors.
+  yet a pin, and with no **pin author** (a pin's author, its first version's).
+  The confirmation of its principal (of the agent that suggested it or the node
+  that detected it), a widening act, makes it a new pin its device seat authors;
+  for an intent or a criterion, only the owner's confirmation, making a new
+  version of the room's intent pin that the owner's device seat authors.
 - **Configuration pin**: A pin the principal's configuration declares, authored
   by its device seat on that node (PIN-01).
 - **Pin priority**: An integer the pin's author sets with it, lower first, the
@@ -53,14 +53,14 @@ summary: >-
   `episode`, `intent`, `verdict` and `stake`. Only `constraint`, `preference`
   and `intent` pins restore.
 - **Unpin**: The act of a pin's author, or its author's principal, that ends the
-  pin, the intent excepted (Intent): it takes the pin off its room's **pin
-  list** (its pins neither unpinned nor taken off by a list removal, the intent
-  first) and stops it restoring, while its versions stay in the record (I1). A
-  stamped version keeps restoring to its stamper's agents until the stamper
-  unstamps it, raising a Needs you item.
-- **List removal**: A moderator's or the owner's room act taking another seat's
-  pin off the pin list without unpinning it, never the intent. A device-seat pin
-  it removes keeps restoring to every agent it restored to until its author's
+  pin; the intent only the owner's principal act unpins (Intent): it takes the
+  pin off its room's **pin list** (its pins neither unpinned nor taken off by a
+  list removal, the intent first) and stops it restoring, while its versions
+  stay in the record (I1). A stamped version keeps restoring to its stamper's
+  agents until the stamper unstamps it, raising a Needs you item.
+- **List removal**: A moderator's or the owner's room act taking a pin, never
+  the intent, off the pin list without unpinning it. A device-seat pin it
+  removes keeps restoring to every agent it restored to until its author's
   principal unpins it, raising a Needs you item.
 - **Intent**: A room's lead pin, of type `intent`: a goal, its criteria and
   optionally the paths it is meant to change (LANE-20). Only the owner's
@@ -129,10 +129,10 @@ summary: >-
 - **Working view**: Whatever is currently in the model's context window. Never
   part of the record, never authoritative.
 - **Held request**: A permission request, question or hand-off with a stable id,
-  answerable from any principal surface within its scope (OWN-05). The agent is
-  kept waiting no longer than its **hold window**, then its away policy, if one
-  is on, answers the agent; the held request stays open, and with no away policy
-  on, the agent keeps waiting at the harness's own prompt (OWN-06). A **reply**
+  answerable from any principal surface within its scope (OWN-05). Cairn holds
+  the agent no longer than its **hold window**, then its away policy, if one is
+  on, answers the agent; the held request stays open, and with no away policy
+  on, the harness's own prompt keeps the agent waiting (OWN-06). A **reply**
   answers a held question with principal-typed text.
 - **Qualified requests**: A permission request (the harness's, held as a held
   request), a role request (a viewer's room act asking for a wider role), a join

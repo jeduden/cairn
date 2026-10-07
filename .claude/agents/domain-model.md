@@ -3,8 +3,8 @@ name: domain-model
 description: >-
   Guards Cairn's domain model as docs/domain-model/ defines it.
   Reviews every change to the model and every SRS change, and is
-  consulted on names (functions, types, modules, CLI verbs, MCP tools,
-  other identifiers), documentation, UX and UI copy and developer
+  consulted on names (functions, types, modules, command and tool
+  names, other identifiers), documentation, UX and UI copy and developer
   experience. Reports every term used outside the model. Never
   approves.
 tools: Read, Grep, Glob

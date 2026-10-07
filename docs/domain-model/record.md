@@ -65,8 +65,9 @@ summary: >-
   class**, `operator` for a device seat and `assistant` for a run seat; a room
   summary is `summary`, never trusted; an erasure or quarantine request a
   principal act sends is `operator`, an erasure request a retention policy sends
-  `structural`; hook observations, key rotations and tombstones are
-  `structural`.
+  `structural`; hook observations, key rotations, tombstones and a witness
+  check's record (the command by commitment, its exit status and the tree hash,
+  OWN-18) are `structural`.
 - **Origin**: How an event reached this node's record: `witnessed` (recorded
   live on this node: by its hook handlers, its CLI, TUI, MCP server, launcher,
   room-view component or bridge component), `ingested` (read by `cairn ingest`,
@@ -77,10 +78,10 @@ summary: >-
   **recorder**, the part that recorded it (the hook handlers, the CLI, the TUI,
   the MCP server, the launcher or the bridge component, whose events take
   provenance `web`, always untrusted; the room-view component records a
-  principal act taken in the browser room view, marked with its surface, and how
-  it signs waits for a security review under SEC-10 and SEC-20), which the trust
-  policy reads; an event from a peer or a bundle records no recorder, only its
-  origin.
+  principal act taken in the browser room view, marked with its principal
+  surface, and how it signs waits for a security review under SEC-10 and
+  SEC-20), which the trust policy reads; an event from a peer or a bundle
+  records no recorder, only its origin.
 - **Span**: A contiguous range of one run's events in one writer. A new span
   starts at every user turn, compaction, subagent start or end, and whenever the
   run's events move to another seat's writer (LMK-01).
@@ -126,8 +127,8 @@ summary: >-
 - **Flag**: A mark Cairn sets on an event whose text matches an injection
   pattern (PRV-07); flagged text contributes only counts to landmarks (LMK-04).
 - **Quarantine**: Recorded, reversible exclusion of an event, span, run, writer
-  or derived artifact from recall, restore blocks and landmarks, on the node
-  that records it, without deletion (I5).
+  or derived artifact from recall, restore blocks and landmark text (LMK-04
+  keeps its counts), on the node that records it, without deletion (I5).
 - **Purge**: Deletion of content, appending a **tombstone** naming the purged
   range, which views show in its place (ADM-07): by a principal act, or by the
   node under a retention policy, recorded naming the policy. The only way stored
@@ -144,8 +145,9 @@ summary: >-
   receipt** lists every writer's chain head at a moment, the tamper evidence of
   VIEW-10 and SEC-27; a **purge receipt** states what a purge erased and what it
   could not (SEC-31).
-- **Backup**: A copy of a home's store and audit log, without any key (`cairn
-  backup create`, ADM-06); reading it back is a backup restore.
+- **Backup**: A copy of a home's store and audit log, with no seat, device,
+  token or at-rest key (ADM-06, SEC-10) (`cairn backup create`, ADM-06); reading
+  it back is a backup restore.
 - **At-rest key**: The key that encrypts the store when encryption at rest is on
   (SEC-09).
 - **Bundle**: A reviewed export of a room, signed by the device key of the

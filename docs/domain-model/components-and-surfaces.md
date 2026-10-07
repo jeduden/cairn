@@ -10,11 +10,14 @@ summary: >-
   The set is closed, listed here and in §6.3; how the components ship is open
   (OQ-32), and a new one is a model change and a §6.3 row.
   - **Core (B0):** the **hook handlers** (answering hooks), the **CLI**
-    (`cairn`), each harness adapter's transcript and hook part among them, the
-    **MCP server** (the MCP tools of §9.2, one per harness session, serving
-    its runs), the **kernel worker** (running the kernel's executions), the
-    **TUI** (the terminal room view), the **commit hook** (LANE-28, run as the
-    CLI), and everything that builds what reaches the model.
+    (`cairn`, but for `cairn ui`, `cairn launch` and each B1 to B3 component's
+    own entry point, which the person or a service manager starts and which runs
+    only while the act turning it on stands), each harness adapter's transcript
+    and hook part among them, the **MCP server** (the MCP tools of §9.2, one per
+    harness session, serving its runs), the **kernel worker** (running the
+    kernel's executions), the **TUI** (the terminal room view), the **commit
+    hook** (LANE-28, run as the CLI), and everything that builds what reaches
+    the model.
   - The **harness adapter** is no component: Cairn's code for one harness, split
     between the core and the launcher: its transcript and hook part in the core
     (it parses, opens no socket, starts no process); its run part in the

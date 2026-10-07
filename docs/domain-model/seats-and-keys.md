@@ -21,10 +21,10 @@ summary: >-
   memory of its harness session's MCP server, which keeps the run-seat keys of
   the main run and its subagents' runs and seals their writers (SEC-10); what
   `cairn ingest` appends, whether or not that server still runs, goes to a new
-  seat and writer the core seals, naming the run seat, in the same room, taking
-  over its add and role, so a kick, leave or bar of either seat ends it for both
-  (REC-19); an ingested run's seat key is kept like a device seat's key, and the
-  core seals its writer.
+  seat and writer the core seals, naming the run seat, in the same room, sharing
+  its add and taking over its role, so a kick, leave or bar of either seat ends
+  it for both (REC-19); an ingested run's seat key is kept like a device seat's
+  key, and the core seals its writer.
 - **Device seat**: A principal's seat for one device, a node or a paired phone.
   The one seat kind for acting without a run. A token-key-only node's device
   seat is certified by its token key, and that node signs no principal or expire
@@ -36,12 +36,12 @@ summary: >-
 - **Seat key**: A seat's one current key. It signs the seat's room acts and
   seals its writer. A rotation, signed by the old and the new key, keeps the
   seat's id and writer and goes to that seat's own writer (SEC-27). A key minted
-  because the node changed, a node clone or a backup restore (REC-24, ADM-06),
-  starts a new seat and writer that names the old one and inherits no add, role
-  or appointment: outside the personal room it joins as any seat does (LANE-23),
-  and roles and appointments are assigned again; a personal-room seat is a
-  member from its first event. The seat ingest starts takes over the add and
-  role instead (Run seat).
+  because the node identity changed, a node clone or a backup restore (REC-24,
+  ADM-06), starts a new seat and writer that names the old one and inherits no
+  add, role or appointment: outside the personal room it joins as any seat does
+  (LANE-23), and roles and appointments are assigned again; a personal-room seat
+  is a member from its first event. The seat ingest starts takes over the add
+  and role instead (Run seat).
 - **Device key**: A device's key, certified by a principal key's **device
   certificate**, with a **device scope** (the kinds of principal act it may
   sign, and of post and pin its seats may write) and a maximum rule level. It
@@ -54,7 +54,8 @@ summary: >-
   platform-protected key store and never held by a Cairn component (the
   principal's own key tooling signs with it), which certifies its device keys
   and may certify a service account's principal key by a **service-account
-  certificate** (PRV-10).
+  certificate**, which marks whether that account relays text others wrote
+  (PRV-10).
 - **Token key**: A key a device key certifies by a **token certificate**,
   limited to an access token's rooms, the rooms it may create, and its expiry,
   which may stand between a device key and a seat key for an ephemeral node
@@ -65,8 +66,7 @@ summary: >-
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room, so that once PRV-10 ships every seat key chains to
   a principal key. It names the seat kind, `run` or `device`, and whether the
-  device seat's principal is a certified service account, and a service-account
-  certificate whether that account relays text others wrote. A node's **key
+  device seat's principal is a certified service account. A node's **key
   set** is the keys, certificates and revocations it holds (I10).
 - **Access token**: A short-lived credential a principal mints to enroll a
   device or peer, certify an ephemeral node's seats or carry an invite link
