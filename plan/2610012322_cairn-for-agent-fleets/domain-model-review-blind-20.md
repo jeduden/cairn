@@ -59,9 +59,10 @@ names; I8's "seat key"; §3's "Kernel (§5.8)".
   so "trusted `user` turns" read literally also trusts the reply. The
   stakeholder approved "the `user` events they recorded", recorded in
   ADR-2610063300; the model's Turn and Trusted sources follow.
-- **I4, terminal takeover (open).** The launcher hosts the terminal a
-  person types in, yet I4 lets it carry into the harness's input only
-  text the core built. Four options wait for the stakeholder: read
-  takeover as passthrough (no invariant change), amend I4 by an ADR,
-  move takeover out of the launcher, or drop it. Every option closes the
-  path from the room view's `t` key over the launcher's socket.
+- **I4, terminal takeover.** The launcher hosts the terminal a person
+  types in, yet I4 lets it carry into the harness's input only text the
+  core built. Of four options, the recommended one applies: takeover is
+  passthrough, not carrying. The launcher relays the person's keystrokes
+  unchanged, only from its own terminal and never over its listener, so
+  the room view's `t` key cannot reach an agent (model, OWN-19, §9.7.7,
+  OWN-19's scenario). I4 keeps its words.

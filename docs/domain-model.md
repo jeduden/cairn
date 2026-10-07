@@ -793,7 +793,8 @@ one kind (LANE-31).
 - **Run controls**: Steer, interrupt, pause, resume and stop: principal acts on
   a run. **Terminal takeover**, the principal typing in the harness's terminal
   the launcher hosts, is the harness's own channel, never a principal act
-  (OWN-02, OWN-19).
+  (OWN-02, OWN-19); the launcher relays keystrokes unchanged, only from
+  its own terminal (I4).
 - **Fixed template**: Wording Cairn ships, filled only with ids, counts, key
   fingerprints, addresses and the principal-typed, endorsed or delegated text,
   or the text of a post a trust grant covers, its requirement names;

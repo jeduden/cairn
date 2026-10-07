@@ -230,6 +230,8 @@ Feature: Principal acts (OWN)
     And the no-echo input is not stored
     And no takeover from another machine is offered
     And what "alice" types in the takeover is the harness's own channel, never recorded as a principal act
+    And the launcher passes those keystrokes through unchanged, writing nothing of its own
+    And takeover input sent over the launcher's listener, from the room view or from a paired phone is refused and audited
 
   @OWN-20 @P1 @I2 @pending
   Scenario: hand-off raises an untrusted reason and hand-back sends only the note and worktree checkpoint address
