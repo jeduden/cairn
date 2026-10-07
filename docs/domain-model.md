@@ -121,7 +121,7 @@ changes.
   reply that ends it. A **user turn** is the turn the harness's user input
   starts: a person's message in `interactive` deployment mode, a pipeline's in
   `automation`. In interactive deployment mode it is a trusted source on the
-  node whose hook handlers witnessed it (I2, PRV-02).
+  node whose hook handlers recorded it (I2, PRV-02).
 - **Compaction**: The harness replacing earlier context with a compaction
   summary when the context window fills. Cairn neither performs nor controls it
   (NG1); it records it and restores pins after it (I3). **Compaction guidance**

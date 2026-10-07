@@ -43,15 +43,15 @@ Feature: Provenance and trust (PRV)
     And "cairn verify" <verify>
     And the event shapes restore blocks, rule levels, permission grants, trust grants, delegation grants, trust levels and enrollments only if it is trusted and "cairn verify" reports nothing about it
     And every principal act a device key this principal certified signed, and every post and pin written from a device seat such a key certified, derives the same trust level on each of its nodes holding the same writer logs
-    And a "harness_meta" event or "user" turn that this node's CLI, MCP server or launcher recorded live, with origin "witnessed" but not witnessed by its hook handlers, is untrusted
+    And a "harness_meta" event or "user" turn that this node's CLI, MCP server or launcher recorded live, with origin "witnessed" but not recorded by its hook handlers, is untrusted
 
     Examples:
       | mode        | writer                                                                                                        | provenance       | trust     | verify                                                            |
       | automation  | a writer of this node                                                                                         | operator         | trusted   | reports nothing                                                   |
-      | automation  | a writer of this node, witnessed by its hook handlers                                                         | harness_meta     | trusted   | reports nothing                                                   |
-      | interactive | a writer of this node, witnessed by its hook handlers                                                         | harness_meta     | trusted   | reports nothing                                                   |
-      | interactive | a writer of this node, witnessed by its hook handlers                                                         | user             | trusted   | reports nothing                                                   |
-      | automation  | a writer of this node, witnessed by its hook handlers                                                         | user             | untrusted | reports nothing                                                   |
+      | automation  | a writer of this node, recorded by its hook handlers                                                          | harness_meta     | trusted   | reports nothing                                                   |
+      | interactive | a writer of this node, recorded by its hook handlers                                                          | harness_meta     | trusted   | reports nothing                                                   |
+      | interactive | a writer of this node, recorded by its hook handlers                                                          | user             | trusted   | reports nothing                                                   |
+      | automation  | a writer of this node, recorded by its hook handlers                                                          | user             | untrusted | reports nothing                                                   |
       | interactive | a writer of this node                                                                                         | assistant        | untrusted | reports nothing                                                   |
       | interactive | a writer of this node                                                                                         | tool_call        | untrusted | reports nothing                                                   |
       | interactive | a writer of this node                                                                                         | tool_result:Bash | untrusted | reports nothing                                                   |
@@ -131,7 +131,7 @@ Feature: Provenance and trust (PRV)
   @PRV-06 @P0 @I2 @pending
   Scenario Outline: a landmark, kernel output, recall result or export records the events it derives from and inherits their taint
     Given an isolated Cairn home
-    And this node's record holds an event with provenance "harness_meta" its hook handlers witnessed and one with provenance "web"
+    And this node's record holds an event with provenance "harness_meta" its hook handlers recorded and one with provenance "web"
     When the <artifact> is derived from both events
     Then the <artifact> records the addresses of both events it derives from
     And the <artifact> has trust "untrusted"
@@ -215,15 +215,15 @@ Feature: Provenance and trust (PRV)
     And a recorded I2 security review of this requirement exists before it ships
 
     Examples:
-      | event                                                                                                                          | expected                                                      |
-      | by the token-key-only node's run seat key, adding a constraint pin within its access token's rooms                             | untrusted until a principal stamps it from one of its devices |
-      | by the token-key-only node's device seat key, adding a constraint pin within its access token's rooms                          | untrusted until a principal stamps it from one of its devices |
-      | by the laptop's device key, stamping a version of that pin                                                                     | trusted                                                       |
-      | by the device seat key of a token-key-only node of a principal this principal trusts by a trust grant, adding a constraint pin | untrusted until a principal stamps it from one of its devices |
-      | by the laptop's device key, an act outside its scope                                                                           | untrusted                                                     |
-      | by the laptop's device key, at rule level 3                                                                                    | untrusted                                                     |
-      | by the token-key-only node's run seat key, not held before the access token was revoked                                        | refused and audited                                           |
-      | by a seat key the laptop's revoked device key certified, not held before the revocation                                        | refused and audited                                           |
-      | by the laptop's revoked device key, covered by a seal held before the revocation                                               | accepted                                                      |
-      | by the phone's device key, allowing a held permission request                                                                  | trusted                                                       |
-      | by the phone's device key, adding a pin                                                                                        | untrusted                                                     |
+      | event                                                                                                                          | expected                                                                                   |
+      | by the token-key-only node's run seat key, adding a constraint pin within its access token's rooms                             | untrusted until a principal stamps it from one of its devices whose device scope allows it |
+      | by the token-key-only node's device seat key, adding a constraint pin within its access token's rooms                          | untrusted until a principal stamps it from one of its devices whose device scope allows it |
+      | by the laptop's device key, stamping a version of that pin                                                                     | trusted                                                                                    |
+      | by the device seat key of a token-key-only node of a principal this principal trusts by a trust grant, adding a constraint pin | untrusted until a principal stamps it from one of its devices whose device scope allows it |
+      | by the laptop's device key, an act outside its scope                                                                           | untrusted                                                                                  |
+      | by the laptop's device key, at rule level 3                                                                                    | untrusted                                                                                  |
+      | by the token-key-only node's run seat key, not held before the access token was revoked                                        | refused and audited                                                                        |
+      | by a seat key the laptop's revoked device key certified, not held before the revocation                                        | refused and audited                                                                        |
+      | by the laptop's revoked device key, covered by a seal held before the revocation                                               | accepted                                                                                   |
+      | by the phone's device key, allowing a held permission request                                                                  | trusted                                                                                    |
+      | by the phone's device key, adding a pin                                                                                        | untrusted                                                                                  |

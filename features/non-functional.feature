@@ -89,10 +89,10 @@ Feature: Non-functional requirements (NFR)
     And the next ingestion re-ingests the lost transaction
 
   @NFR-08 @pending
-  Scenario: concurrent writers never corrupt, lose, or duplicate events
+  Scenario: concurrent appends never corrupt, lose, or duplicate events
     Given an isolated Cairn home
     And 50 writers each appending 10,000 events to one store
-    When all writers run concurrently to completion
+    When all appends run concurrently to completion
     Then the store contains exactly 500,000 events
     And no two events share an address (writer, seq), and no seq is duplicated within a writer's log
     And "cairn verify" exits 0
