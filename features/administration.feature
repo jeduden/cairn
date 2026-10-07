@@ -21,7 +21,7 @@ Feature: Administration and lifecycle (ADM)
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
     And that install created the node's personal room as the first act of the principal's device seat, that seat's add there
     When the person runs "cairn uninstall" and keeps only the device key
-    Then the output lists the hook, plugin and MCP registrations, room-view credentials, launcher endpoints, seat and device keys, enrollments, git-carrier refs and every other file Cairn wrote, each with an offer to remove it
+    Then the output lists the hook, plugin and MCP registrations, room-view credentials, launcher endpoints, seat and device keys, enrollments, git-carrier refs and every other file Cairn wrote outside the store, each with an offer to remove it, and offers purge as the only removal of the store's content
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
@@ -163,14 +163,14 @@ Feature: Administration and lifecycle (ADM)
   @ADM-13 @P0 @I7 @pending
   Scenario: Cairn writes to no git repository beyond the confirmed settings file, the commit hook of LANE-28, the git carrier's location and the launcher's fresh checkouts
     Given an isolated Cairn home
-    And a git repository with a worktree, refs, notes, configuration and hooks
+    And a git repository with a worktree, refs, notes, git configuration and git hooks
     And the node's principal has enabled the git carrier for the repository's remote, and the room's owner for the room
     When an agent runs, the person confirms "cairn install --scope project", every Cairn component runs and the launcher runs a witness check
     Then the only changed file in the worktree is the harness settings file that install wrote
     And the only new or changed refs lie in the namespaced location the node's principal enabled for the git carrier, and every new object is reachable only from them
     And the only changed git hook is the commit hook for room trailers that the confirmed install set up
     And the witness check's fresh checkout lies outside the run's worktree and added no ref to the run's repository
-    And the repository's other refs, notes, configuration and hooks are byte-identical to before
+    And the repository's other refs, notes, git configuration and git hooks are byte-identical to before
 
   @ADM-14 @P1 @I1 @I5 @pending
   Scenario Outline: purge by seat or principal removes one principal's data with an audit trail on every node
@@ -195,11 +195,11 @@ Feature: Administration and lifecycle (ADM)
     And every event accepted before is still stored and recallable
 
     Examples:
-      | quota               | arrival                                             | expected                                                                    |
-      | received writer     | a peer offers another event of that writer          | the event is refused and an audit entry records it                          |
-      | peer                | the peer offers another segment                     | the segment is refused and an audit entry records it                        |
-      | worktree checkpoint | the hook "Stop" records another worktree checkpoint | the worktree checkpoint is refused and an audit entry records it            |
-      | node                | the run appends another event                       | the event is recorded, a failure counter rises and a Needs you item appears |
+      | quota               | arrival                                             | expected                                                                                  |
+      | received writer     | a peer offers another event of that writer          | the event is refused and an audit entry records it                                        |
+      | peer                | the peer offers another segment                     | the segment is refused and an audit entry records it                                      |
+      | worktree checkpoint | the hook "Stop" records another worktree checkpoint | the worktree checkpoint is recorded, a failure counter rises and a Needs you item appears |
+      | node                | the run appends another event                       | the event is recorded, a failure counter rises and a Needs you item appears               |
 
   @ADM-16 @P1 @I6 @pending
   Scenario Outline: status and doctor report the launcher and every other component outside the core, peer lag, open chains and boundaries
@@ -207,7 +207,7 @@ Feature: Administration and lifecycle (ADM)
     And managed policy that permits the room-view, peer and publish components, forbids the launcher and locks one boundary
     And the room-view component is running, the bridge component has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment
     When the person runs "cairn <command>"
-    Then for the room-view component, the launcher, the peer component, the publish component and the bridge component the output shows whether policy permits it, whether it runs and its failure counters
+    Then for the room-view component, the launcher, the peer component, the publish component and the bridge component the output shows whether managed policy permits it, whether it runs and its failure counters
     And the output shows the peer's sync lag for each writer
     And the output names the writer chain that ended without a closed segment
     And the output shows each boundary's state and whether managed policy locks it

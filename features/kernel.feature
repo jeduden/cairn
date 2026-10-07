@@ -35,7 +35,7 @@ Feature: Compute kernel (CMP)
     And "cairn.event_search", "cairn.event_expand" and "cairn.event_get" return the room summary's "summary" event only as its address, never its text
     And every global name the kernel exposes, the interpreter's universal built-ins included, is on the kernel's allow-list
     And a built-in added to the interpreter's universe is unavailable to kernel code
-    And the record contains the same number of events as before the execution
+    And the record gains one recall event for each "cairn." built-in call the execution made, and no event other than a recall event
 
   @CMP-04 @P1 @I4 @pending
   Scenario Outline: the kernel has no access to host resources

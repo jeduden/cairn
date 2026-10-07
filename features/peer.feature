@@ -101,7 +101,7 @@ Feature: Peer network (PEER)
     Given an isolated Cairn home
     And two connected seats in room "room-1", whose room settings, set by its owner's principal act, allow typing hints but not live drafts
     When one seat types a draft
-    Then the other's room view shows the typist's presence hint and typing hint, attributed only to the key that authenticated the connection, the peer's device key or a token-key-only node's token key
+    Then the other's room view shows the first seat's presence hint and typing hint, attributed only to the key that authenticated the connection, the peer's device key or a token-key-only node's token key
     And no presence hint or typing hint is stored in the record
     And the draft is not sent to the other seat
 

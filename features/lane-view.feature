@@ -83,7 +83,7 @@ Feature: Room view (VIEW)
     When the person opens Catch up at that starting point
     Then it shows the starting point it used and where it came from, and links every line to its events
     And it lists capture gaps, uningested transcripts, risen failure counters and unsynced writers apart from rooms with no activity
-    And it checks each writer's chain head against the named head receipt and shows per writer whether it holds
+    And it checks each writer's chain head against the named head receipt and shows per writer whether that head is still a prefix of its chain
     And its lines run integrity status and capture gaps, Needs you, failures, then finished runs, with the newest seq it covers per writer and no model-written line
 
   @VIEW-09 @P1 @I6 @I8 @pending

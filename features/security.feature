@@ -14,6 +14,7 @@ Feature: Security (SEC)
     And CI fails when a component's evidence is missing or shows a violation
     And no core process runs or starts a component behind B1 to B3
     And each B1 to B3 component's own entry point, started by the person, a service manager or an ephemeral node's entrypoint, runs only while the act turning it on, which the CLI records, stands: for the room-view component and the launcher, the acceptance of the configuration that turns it on
+    And a configuration turning the room-view component or the launcher off applies with no acceptance, the CLI records it as the cut act turning it off, and from then on that component's entry point does not run
     And the room-view component listens only on loopback, and the launcher only on loopback or on a local endpoint only the same OS user can reach
     And neither connects anywhere else
 
@@ -275,7 +276,7 @@ Feature: Security (SEC)
       | a cap on an action class's rule level       | the principal sets a higher rule level for that class           | the rule level stays at the cap                                                         |
       | away policies disabled                      | the principal sets an away policy                               | the change is refused                                                                   |
       | hook permission decisions disabled          | the hook "PermissionRequest" runs                               | Cairn makes no permission decision                                                      |
-      | held requests disabled                      | the hook "PermissionRequest" would place a held request         | no held request is placed                                                               |
+      | keeping held requests waiting disabled      | the hook "PermissionRequest" runs                               | the held request is recorded and only mirrored, and the agent is not kept waiting       |
       | an authenticator required for widening acts | the principal confirms a widening act without the authenticator | the act is refused                                                                      |
       | risk acceptance forbidden                   | the principal accepts a residual risk                           | the acceptance is refused                                                               |
       | a 30-day retention policy for room "p"      | an event of "p" ages past 30 days                               | the node purges it, leaving a tombstone recorded naming the policy, audited and counted |
@@ -325,6 +326,7 @@ Feature: Security (SEC)
     And the bundle is a plain file whose chain verifies with no host, account or sync
     And a trusted-only export with "cairn export --trusted-only" passes the same review step, redaction and audit, and signs its manifest of included and withheld ranges
     And the bundle is signed by the exporter's device key, which chains to the bundle's principal key, and the core handles no principal key
+    And a publish with "cairn bundle publish" passes the same review step, redaction and audit
     And the publish component's listener serves it read-only, bound only to the network addresses its configuration names, none by default
 
   @SEC-27 @P1 @I6 @I10 @pending
@@ -384,7 +386,7 @@ Feature: Security (SEC)
   Scenario: the facilitator moderates within its appointment's limits and reaches no agent as trusted without a trust grant
     Given an isolated Cairn home
     And a room whose owner appointed a service account's device seat in the room, on that service account's own node, as the room's facilitator, an appointed moderator, by a widening principal act
-    And the owner set the appointment rate, a room setting, to two moderation acts per hour
+    And the owner set the appointment rate, a room setting, to two kicks, bars or mutes per hour
     When a post persuades the facilitator's program, acting through that node's CLI, to bar the principal keys of three seats, a moderator and the owner, to make a list removal of a pin, and to mute the whole room
     Then the first two bars are recorded, each audited with the post behind it, which names the bar's target by id and carries a range link to the marked range
     And each bar is shown in the room view and named by id in the error each barred seat's next call returns

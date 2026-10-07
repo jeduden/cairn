@@ -26,12 +26,12 @@ Feature: Record (REC)
     And an agent run with a Claude Code transcript "parent-run"
     And a subagent transcript "explore-agent" of "parent-run" naming the agent "Explore"
     And "parent-run" continues after a harness resume that kept its harness session
-    And a harness resume of "parent-run" that forked a new harness session, with the transcript "forked-run"
+    And a harness resume of "parent-run" that started a new harness session, with the transcript "new-session-run"
     When the person runs "cairn ingest --all"
     Then the run ingested from "explore-agent" is tied to the run of "parent-run" by a parent link, not a delegation link
     And the run ingested from "explore-agent" records the harness's agent id "Explore"
     And the events "parent-run" gained after the harness resume that kept its harness session belong to the run of "parent-run"
-    And the events of "forked-run" belong to a new run, not to the run of "parent-run"
+    And the events of "new-session-run" belong to a new run, not to the run of "parent-run"
 
   @REC-03 @P0 @I1 @I10 @pending
   Scenario: re-ingesting a transcript source creates no duplicate events

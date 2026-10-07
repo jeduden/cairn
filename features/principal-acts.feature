@@ -162,6 +162,8 @@ Feature: Principal acts (OWN)
     Then each unpin is recorded as a neutral principal act with nothing more asked
     When the person runs "cairn room mute" on a seat at a terminal
     Then the mute, a room act, is signed with the seat key of the person's device seat in that room, carries no OWN-11 class and names the room it acted in
+    When the agent runs "cairn event search" for an untrusted event with its output not a terminal
+    Then the verb is a recall tool: it prints the record content inside the envelope, records a recall event and taints the calling run
 
   @OWN-13 @P1 @I2 @pending
   Scenario: a steer arriving after its turn ended is not applied without confirmation
@@ -326,6 +328,7 @@ Feature: Principal acts (OWN)
     When "alice" records "not met" on C1
     Then the new verdict supersedes the earlier one, which stays on record unedited
     And "alice" unpinning a verdict is recorded as her neutral principal act
+    And a list removal of the verdict, by the room's owner or a moderator, is refused
     When "alice" records "needs changes" on C1
     Then that verdict too is recorded as her neutral principal act
 

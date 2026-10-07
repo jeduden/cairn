@@ -102,7 +102,7 @@ Feature: Recall (RCL)
     Then the result contains exactly the events the address names
     And an address of a purged or quarantined event resolves to its tombstone or quarantine marker
     And "cairn event expand" given the same address in the same form returns the same events
-    And no two writers this node holds share a writer label, and each label's assignment is a structural event in the personal-room writer of the device seat that assigned it
+    And no two writers this node holds share a writer label, and each writer-label assignment is a structural event in the personal-room writer of the device seat that assigned it
 
     Examples:
       | form                                | tool         |

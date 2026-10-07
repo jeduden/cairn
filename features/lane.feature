@@ -182,11 +182,11 @@ Feature: Room (LANE)
     And the dismissed directed post leaves "alice"'s Needs you queue and reaches no agent
 
   @LANE-13 @P1 @I6 @pending
-  Scenario: an edit to a file a run in another open room has edited raises a Needs you item on both rooms
+  Scenario: an edit to a file a run in another open room has edited raises a Needs you item for each room's owner
     Given an isolated Cairn home
     And two open rooms on one node, "a" owned by "alice" and "b" owned by "bob", where a run in room "a" has edited "notes.txt"
     When a run in room "b" edits "notes.txt"
-    Then a Needs you item is raised on both rooms at that edit, naming the other room and "notes.txt"
+    Then a Needs you item is raised for each room's owner at that edit, naming the other room and "notes.txt"
     And the item on room "a" clears when "alice" acknowledges the overlap as a neutral principal act, while the item on room "b" stays until "bob" acknowledges it for room "b"
     And a later edit of "notes.txt" raises no new item, while an edit of a file not yet acknowledged does
 
@@ -229,11 +229,12 @@ Feature: Room (LANE)
     And create room, join, a join request and leave are checked against admission and the add instead, never against a role
     And a run's personal-room seat, and its run seat in a room the run created, have the contributor role
     And the room view shows the seat its role and those capabilities
+    And a device seat's own pins, for its pin capability, are every pin its principal wrote from a device seat within that seat's device scope
     And only the owner assigns a role, and an invite or invite link records the role it names as a role assignment for every seat that chains to the invited principal key and joins under it, run seats included
     And a seat with no role assignment or appointment, other than the owner's device seats, is a viewer, and a paired phone's personal-room seat has no role and reads only within its device scope
     And the seat "cairn ingest" starts, naming a run seat, has that run seat's role, with no role assignment of its own
     And a role assignment of the moderator role to a run seat is refused, since a run seat has the moderator role only by appointment
-    And a device seat of "alice", but a paired phone's, has every room capability, for room acts and the principal acts that need one, but writing a room summary, editing and unpinning only pins its principal wrote from a device seat that do not restore unstamped, and making a list removal of any pin but the intent, while her agents' run seats have only their role and any appointment
+    And a device seat of "alice", but a paired phone's, has every room capability, for room acts and the principal acts that need one, but writing a room summary, editing and unpinning only pins its principal wrote from a device seat that do not restore unstamped, and making a list removal of any pin but the intent or a verdict, while her agents' run seats have only their role and any appointment
     And an appointment of a run seat or another principal's device seat as moderator is accepted only as a principal act of the owner, or of a principal whose device seat has the moderator role by role assignment, and only the appointer or the owner revokes it
     And an appointment of the facilitator by any principal but the owner is refused and audited
     And an appointment an appointed moderator tries, and its kick, bar or mute aimed at the owner or another moderator, are refused and audited
@@ -242,7 +243,7 @@ Feature: Room (LANE)
       | seat                                                           | capabilities                                                                                                                                                                               |
       | a viewer                                                       | read, a role request and a summary request                                                                                                                                                 |
       | a contributor                                                  | read and a summary request; post, link (a range, branch or criterion link) and present; pin, edit and unpin its own pins; work on any branch the room names, with or without an assignment |
-      | a moderator                                                    | a contributor's, plus a list removal of any pin but the intent, kick, bar, unbar, mute, unmute and pick, and set title, labels and assignments                                             |
+      | a moderator                                                    | a contributor's, plus a list removal of any pin but the intent or a verdict, kick, bar, unbar, mute, unmute and pick, and set title, labels and assignments                                |
       | the facilitator's device seat, appointed by the owner          | a moderator's within SEC-32's limits, plus writing room summaries                                                                                                                          |
       | a run seat appointed moderator                                 | a moderator's within SEC-32's limits                                                                                                                                                       |
       | muted by a moderator                                           | read                                                                                                                                                                                       |
@@ -290,12 +291,12 @@ Feature: Room (LANE)
     And the revision is recorded as a new version of the intent pin, with its version number and its diff against the first version
     And a criterion may name a check's command, as C1 names "go test ./export", which makes that check expected on the room's branches
     And the restore block carries the second version word for word with its version, among the qualifying pins (PIN-10) and nowhere else
-    And C3 stays a pin candidate, proposed text that is not a pin and has no author, until "alice" confirms it, exactly as shown, by a widening principal act that records it in a new intent version her device seat authors
+    And C3 stays a pin candidate, proposed text that is not a pin and has no pin author, until "alice" confirms it, exactly as shown, by a widening principal act that records it in a new intent version her device seat authors
     When "alice" revises C1 at a principal surface with the presence proof a widening act needs
-    Then the new version applies to the room, to the restore blocks of "alice"'s agents in the room, and other principals' agents get it only as PIN-10 states
+    Then the new version applies to the room, to the restore blocks of "alice"'s agents in the room, and other principals' agents get it only as PIN-10 states, those of a principal whose trust grant covers "alice" included
     And a revision whose presence proof fails changes nothing
     When "alice"'s agent, through a harness skill, proposes a revision of C1 through "pin_candidate_propose"
-    Then the proposal is stored as a pin candidate the agent suggested, with no author, never as a pin or a principal act, and the intent is unchanged
+    Then the proposal is stored as a pin candidate the agent suggested, with no pin author, never as a pin or a principal act, and the intent is unchanged
 
   @LANE-21 @P1 @I2 @I10 @pending
   Scenario: every result traces to the intent it was produced under
@@ -334,7 +335,7 @@ Feature: Room (LANE)
     And a join request of a run of "alice" for which she asked, her widening principal act, joins under the room's admission with no further acceptance, while one she did not ask for joins only on her acceptance, a widening principal act
     When "alice" also joins the room from the node on her laptop by her own act at a principal surface, and allows a held permission request of the room's run from her paired phone
     Then the laptop's node has its own device seat in the room, added by a join without admission since her run's seat is a member there, shown grouped under "alice" with her run's seat, through her principal key
-    And a node of "alice" with no seat in the room that records a principal act on it first joins its own device seat there the same way, before that act
+    And a node of "alice" with no seat in the room that records a principal or expire act on it, a tombstone, an erasure request a retention policy sends, or a bridge's or the launcher's event about a branch it names first joins its own device seat there the same way, before recording it
     And asking for a device seat's join to a room in which "alice" has no member seat is recorded as her widening principal act
     And the phone joins no room: its answer goes to its device seat in her personal room, a member there from its pairing with no add, naming the room, and the room shows it by address
     And the phone signs with its own device key and seals its device seat's writer with that seat's key, and the node it pairs with only holds the writer
@@ -415,6 +416,7 @@ Feature: Room (LANE)
     And the unpin is audited and raises a Needs you item for "alice"
     When the principal of "p-3"'s agent unpins another pin "p-3" wrote
     Then the unpin is recorded as that principal's neutral principal act
+    And a verdict is recorded and unpinned only by its author's principal's neutral principal acts, never by a room act
     When "bob" confirms a "fact" pin candidate his agent suggested
     Then the confirmation is recorded as his own widening principal act, and the new pin's author is his device seat
     And a confirmation of a pin candidate from "bob"'s node that has only a token key is refused and audited
@@ -450,7 +452,7 @@ Feature: Room (LANE)
     And the agent, with no seat in room "A", pulls that one post by address only through a recall tool call, inside the envelope, since recall extends to the cross-room posts room "B" shows
     And no turn is started or resumed, no delegated task is sent, and nothing reaches room "C"
     When a seat of room "B" passes it on to room "C"
-    Then room "C" shows a new post, an event in the forwarder's writer under its seat id, that names the original's address
+    Then room "C" shows a new post, an event in the writer of the seat that passed it on, under its seat id, that names the original's address
 
   @LANE-30 @P1 @I2 @I6 @pending
   Scenario: opt-in notices carry only Cairn's ids, versions and counts
@@ -513,7 +515,7 @@ Feature: Room (LANE)
     And no room summary reaches the agent without a call to "room_summary_get", and none starts or resumes a turn
     And "alice"'s pin is unchanged and still restores word for word
     When the agent compacts
-    Then the restore block names the latest room summary by its id and version only, with none of its text
+    Then the restore block names the latest room summary by its id only, with none of its text
     And a second node holding the room's writer logs names the same latest room summary
     When "alice" records a trust grant for the facilitator's principal key
     Then the trust grant covers none of its room summaries, which stay untrusted, reach the agent only through "room_summary_get" inside the envelope, never restore and never start or resume a turn
