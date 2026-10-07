@@ -20,8 +20,10 @@ them, Cairn changes only harness configuration, under I7.
 - **Transcript**: The harness's file of what a harness session did. A
   **transcript source** is a transcript Cairn ingests (Ingest marker, `cairn
   ingest`); a rewritten prefix starts a new **transcript generation** (REC-07).
-  As a Cairn term, "source" is a transcript source or a trusted source; the
-  harness's `source` field and §6.1's threat sources keep their own sense.
+  The **transcript roots** (`transcript.roots`) are the directories ingest reads
+  transcripts from by default (REC-01, SEC-18). As a Cairn term, "source" is a
+  transcript source or a trusted source; the harness's `source` field and §6.1's
+  threat sources keep their own sense.
 - **Hook**: The harness's callback into Cairn, carrying its **hook input**, a
   JSON object (§9.1). The core's hook handlers answer it. Git's hooks are always
   qualified, as the commit hook.

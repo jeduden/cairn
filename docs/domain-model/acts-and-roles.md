@@ -35,12 +35,12 @@ exactly one kind (LANE-31).
   narrows or undoes a widening; a neutral act does neither, such as
   acknowledging counters. Every change of visibility, admission or a room
   setting is widening, whichever way it goes. Its classes:
-  - **Cut:** deny, interrupt, pause, stop, cancel a delegation, end a permission
-    grant, reject a foreign room, decline a join request, tighten a rule level,
-    revoke a role assignment, revoke a CI key, stop publishing a room,
-    quarantine content without removing anything from a restore block, withdraw
-    a risk acceptance, revoke a trust grant, end a delegation grant or an
-    acceptance grant, turn an away policy off, withdraw a named successor,
+  - **Cut:** deny, interrupt, pause or stop a run, cancel a delegation, end a
+    permission grant, reject a foreign room, decline a join request, tighten a
+    rule level, revoke a role assignment, revoke a CI key, stop publishing a
+    room, quarantine content without removing anything from a restore block,
+    withdraw a risk acceptance, revoke a trust grant, end a delegation grant or
+    an acceptance grant, turn an away policy off, withdraw a named successor,
     revoke an appointment, unstamp a pin version, turn notices off, decline a
     handover, withdraw as successor, dismiss a directed post, revoke an access
     token, a seat key or a service account's certificate, turn capture on, and
@@ -73,8 +73,9 @@ exactly one kind (LANE-31).
     account's principal key, assign a role, set a room's admission, appoint a
     moderator or the facilitator, stamp a pin version, name a successor, hand
     over a room, record a trust grant, allow notices for a room or opt in to
-    them, enable a bridge or the git carrier, set a room setting, publish, apply
-    a purge request, change a retention policy, accept configuration (recording
+    them, enable a bridge, which turns the bridge component on while any bridge
+    stands enabled, or the git carrier, set a room setting, publish, apply a
+    purge request, change a retention policy, accept configuration (recording
     its digest), enroll a CI key, rotate a device key, retire a writer, turn
     capture off or pause it, enroll or revoke a device, peer or authenticator,
     mint or rotate an access token, start a witness check, which confirms the
@@ -83,18 +84,21 @@ exactly one kind (LANE-31).
     since it can drop pins and stop acts arriving.
 
   Any principal act that removes a pin from a restore block, or stops this node
-  recording its own runs' events, is widening whatever verb carries it. On an
-  ephemeral node, PEER-01's environment setting, a structural event, stands in
-  for turning on its peer component and, for the git-carrier remotes its access
-  token names, its publish component; minting that access token is the widening
-  act. An unstamp and a trust-grant revocation are the exceptions: each
-  withdraws only the acting principal's own trust (LANE-32, OWN-29). Applying a
-  quarantine request takes the class of the quarantine it applies. A principal
-  act no requirement names is widening. OWN-11 and OWN-12 follow this list, and
-  every principal act a requirement names is classed here.
+  recording its own runs' events, is widening whatever verb carries it, so
+  `cairn uninstall` records the widening act turning capture off before it
+  removes the hook registrations (ADM-02). On an ephemeral node, PEER-01's
+  environment setting, a structural event, stands in for turning on its peer
+  component and, for the git-carrier remotes its access token names, its publish
+  component; minting that access token is the widening act. An unstamp and a
+  trust-grant revocation are the exceptions: each withdraws only the acting
+  principal's own trust (LANE-32, OWN-29). Applying a quarantine request takes
+  the class of the quarantine it applies. A principal act no requirement names
+  is widening. OWN-11 and OWN-12 follow this list, and every principal act a
+  requirement names is classed here.
 - **Expire act**: Once PRV-10 ships, an act a node with a device key records,
   signed with that key, ending only an expiry its original act set: on a bar, a
-  mute or a handover offer (LANE-25). Before PRV-10 ships no expiry can be set.
+  mute or a handover offer (LANE-25), or an access token's, which the node that
+  minted it records (PEER-05). Before PRV-10 ships no expiry can be set.
 - **Role**: A named set of room capabilities: viewer, contributor or moderator.
   The owner gives a seat its role by a **role assignment**. An invite or invite
   link records one for every seat that chains to the invited principal key and
@@ -129,18 +133,16 @@ exactly one kind (LANE-31).
   only the owner appoints. The appointer or the owner may revoke it.
 - **Join**: The act that adds a seat to a room under its admission, or without
   it for a device seat whose principal has a member seat there. A run joins only
-  when its principal asks for the join or accepts it (LANE-23); a device seat
-  joins by a join room act its principal takes at a principal surface, or its
-  node takes before recording there a principal or expire act, a tombstone, an
-  erasure request a retention policy sends, or a bridge's or the launcher's
-  event about a room's branch, without admission when its principal has a member
-  seat there. A paired phone never joins. An owner whose seats have all left
-  rejoins under admission, which its own invite satisfies. **Leave** is a seat's
-  room act ending its own add.
-- **Retire a writer**: Mark a writer retired, by a principal act or when the
-  access token whose token key certified its seat key expires. A peer still
-  accepts segments that continue its chain without a fork, marked delivered
-  after retirement; only a revocation refuses them (PEER-05).
+  when its principal asks for the join or accepts it (LANE-23). That covers the
+  branches the room names later by branch links, whose runs' events then go
+  there (LANE-01), so a branch link stays a room act. A device seat joins by a
+  join room act its principal takes at a principal surface. Its node also joins
+  it before recording there a principal or expire act, a tombstone, an erasure
+  request a retention policy sends, or a bridge's or the launcher's event about
+  a room's branch, without admission when its principal has a member seat there.
+  A paired phone never joins. An owner whose seats have all left rejoins under
+  admission, which its principal key always satisfies (Admission). **Leave** is
+  a seat's room act ending its own add.
 - **Kick**: Revokes a seat's current add. Only that seat's principal may add it
   again (LANE-25).
 - **Bar**: Names a principal key and keeps every key that chains to it out,
@@ -152,13 +154,15 @@ exactly one kind (LANE-31).
 - **Pick**: Chooses which presentation the outcome window shows.
 - **Admission**: Whether a room is invite only or admits a list of principal
   keys. An invite (a principal key and a role) and an invite link are widening
-  principal acts of the owner. An invite's, an export's or a publish's **review
-  step** shows the acting principal, before it takes effect, what will take
-  effect or leave, SEC-08 applied (LANE-10, SEC-26).
+  principal acts of the owner. The owner's principal key always satisfies its
+  room's admission, for its device and run seats alike. An invite's, an export's
+  or a publish's **review step** shows the acting principal, before it takes
+  effect, what will take effect or leave, SEC-08 applied (LANE-10, SEC-26).
 - **Successor**: A principal the owner names in advance, who accepts ownership
   once every seat of the owner has left the room; that acceptance is a
   **succession**. Until a handover, a succession or the owner's rejoin, a room
-  whose owner left keeps its pins as they were (LANE-11).
+  whose owner left keeps its pins as they were, but a stamper may still unstamp
+  (LANE-11, LANE-32).
 - **Handover**: Transfers ownership by an offer and an acceptance. Succession is
   the other path to ownership.
 - **Stamp**: The act of a principal with a seat in the room on one pin version,
@@ -187,8 +191,3 @@ exactly one kind (LANE-31).
 - **Concurrent**: Of two acts or events: neither causally after the other;
   **causal order** puts each after every act or event it saw.
 - **Room state**: Everything the room merge derives (LANE-31).
-- **Room status**: A room's one status from §9.7.2's closed set, such as
-  Running, Quiet or Ready for review. It is computed where shown from room
-  state, the heads, landings and check states of the branches it names, its
-  runs' statuses and their freshness marks. It is never recorded and never set
-  directly; OWN-21's ready and abandoned marks feed it.

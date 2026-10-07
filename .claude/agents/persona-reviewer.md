@@ -23,8 +23,8 @@ not the narrative, and you have little time per change.
   CI attested result.
 - To approve or request changes once, on the forge, and see it in
   the room.
-- The merge gate respected: not the pull-request author, required
-  checks green.
+- The merge gate respected: not a commit author of the branch,
+  required checks green.
 
 ## Your journeys
 
@@ -39,8 +39,7 @@ not the narrative, and you have little time per change.
 
 - You must read the whole record to find why something changed.
 - A result says done but nothing shows what checked it.
-- The pull-request author, or their agent, can approve their own
-  branch.
+- A commit author, or their agent, can approve their own branch.
 - The landed commit cannot be traced back to its room.
 - Review on the forge and in Cairn disagree, or must be done twice.
 

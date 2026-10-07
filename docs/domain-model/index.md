@@ -47,7 +47,7 @@ row: "- [{title}]({filename}) — {summary}"
 - [Seats and keys](seats-and-keys.md) — Seats and the keys behind them: run and device seats, room and seat ids, seat, device, principal and token keys, certificates, access tokens, authenticators and CI keys.
 - [Acts and roles](acts-and-roles.md) — The three act kinds and what they may do: room acts, principal acts and their classes, expire acts, roles, appointments, joins, moderation, handover, stamps and the room merge.
 - [Git and forge](git-and-forge.md) — Repositories, branches and commits, the forge, results with their evidence and proof classes, qualified links, comparisons, outcomes and verdicts.
-- [Trust and flow](trust-and-flow.md) — Trust and how content reaches an agent: trust levels and sources, recall, endorsement, trust grants, delegation, rule levels, away policies, fixed templates and run status.
+- [Trust and flow](trust-and-flow.md) — Trust and how content reaches an agent: trust levels and sources, recall, endorsement, trust grants, delegation, rule levels, away policies, fixed templates, run status and room status.
 - [Components and surfaces](components-and-surfaces.md) — Cairn's components inside their network boundaries, the room view's surfaces and the outcome window.
 <?/catalog?>
 
@@ -56,7 +56,8 @@ row: "- [{title}]({filename}) — {summary}"
 - A principal owns any number of rooms; an agent's principal follows from its
   node.
 - A run has its personal-room seat from its first event, plus a further run seat
-  per room it joined or created, and a new one for each seat key minted anew.
+  per room it joined or created, a new one for each seat key minted anew, and
+  the seat ingest starts beside any of them (Run seat).
 - A restore block carries the qualifying pins of every room its run has had a
   seat in during the run, its personal room included (PIN-10); a leave, kick or
   bar keeps them, but once the room is foreign only those Foreign room names.

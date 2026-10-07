@@ -17,6 +17,11 @@ summary: >-
   and held by any node, named by its **writer id**, derived from the seat's
   first key. Its events are hash-chained; the **chain head** at a seq is the
   hash over every event up to it.
+- **Retire a writer**: Mark a writer retired: by a principal act, or by the
+  expire act ending the access token whose token key certified its seat key.
+  Either names the writer's last accepted seq. A peer still accepts segments
+  past it that continue its chain without a fork, marked delivered after
+  retirement; only a revocation refuses them (PEER-05).
 - **Event**: One immutable entry in a writer, such as a message (the harness's
   user input or the model's reply), tool call, tool result, **hook observation**
   (what a hook reported), worktree checkpoint, key rotation, tombstone, or an
@@ -110,7 +115,8 @@ summary: >-
   **Ingest** is reading a transcript into the record, by the hook handlers
   incrementally (REC-13) or by `cairn ingest`; what `cairn ingest` appends takes
   origin `ingested` and is never recorded by the hook handlers, even past an
-  ingest marker.
+  ingest marker. A transcript source's **ingest position** is how far ingest has
+  read it: a byte offset and a hash of the consumed prefix (REC-03).
 - **Worktree checkpoint**: An event recording a worktree's commit, branch and
   redacted diff since the previous worktree checkpoint (REC-20).
 - **Derived artifact**: Anything computed from the record and the node's key
@@ -159,7 +165,10 @@ summary: >-
   agents, with full provenance, that downstream memory systems read (ADM-12,
   MEM-02); an export like a bundle (SEC-26).
 - **Export**: Writing a bundle, a rendering or a trusted-only export (`cairn
-  export`), a widening principal act under SEC-26.
+  export`), a widening principal act under SEC-26. To **publish** is to serve a
+  room's bundle read-only through the publish component, only as the room's
+  visibility allows; a widening principal act under SEC-26, and stopping it is
+  cut.
 - **Rendering**: A room rendered for people to read, with no keys or commitments
   (`cairn export --rendering`, SEC-26).
 - **Import**: Reading a bundle into this node's record (`cairn import`, REC-23).

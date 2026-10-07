@@ -2,7 +2,7 @@
 title: "Trust and flow"
 order: "09"
 summary: >-
-  Trust and how content reaches an agent: trust levels and sources, recall, endorsement, trust grants, delegation, rule levels, away policies, fixed templates and run status.
+  Trust and how content reaches an agent: trust levels and sources, recall, endorsement, trust grants, delegation, rule levels, away policies, fixed templates, run status and room status.
 ---
 # Trust and flow
 
@@ -11,7 +11,9 @@ summary: >-
   origin (whether recorded on this node, ingested or received), recorder and
   writer, the deployment mode recorded with the event, the node's key set,
   whether the event's room is foreign to that principal, and that principal's
-  stamps and trust grants as its writer logs carry them (I10).
+  stamps and trust grants as its writer logs carry them (I10). The free text a
+  cut or neutral principal act carries, such as a stated reason, is untrusted
+  whatever its event's trust level (OWN-11).
 - **Trusted sources**: I2's trusted sources as PRV-02 applies them, which RCL-10
   narrows in a foreign room: this node's `operator` and structural events, the
   `harness_meta` events its hook handlers recorded, and the `user` events they
@@ -21,7 +23,8 @@ summary: >-
   key certified, within that key's scope, a pin version its principal stamped,
   and for that agent the posts and pins a trust grant of its principal covers,
   none of them in a foreign room but the pins and stamps Foreign room names.
-  Everything else is untrusted.
+  Everything else is untrusted, and so is the free text a cut or neutral
+  principal act carries (OWN-11).
 - **Deployment mode**: `interactive` (a person types at the harness) or
   `automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`).
 - **Trust policy**: The rule that derives each event's trust level (PRV-02).
@@ -32,8 +35,8 @@ summary: >-
   export), inherits: untrusted when any event it derives from is untrusted,
   except for its sanitized structural fields.
 - **Recall taint**: A run's mark after it recalls untrusted content, or
-  inherited from its delegating agent (OWN-24), which tightens its rule levels
-  (OWN-10, SEC-13).
+  inherited from the delegating run (OWN-24), which tightens the rule levels of
+  the action classes SEC-13 configures as sensitive (OWN-10).
 - **Principal surface**: An authenticated surface for principal acts: the
   browser room view under SEC-20, the CLI or TUI at a terminal, or a paired
   phone within its scope; without the peer component, a phone reaches the room
@@ -46,7 +49,9 @@ summary: >-
   `room_summary_get`, `delegation_get` or `kernel_exec` with its built-ins
   (CMP-03), or a read-only CLI verb the agent runs whose output is not a
   terminal (OWN-12); each records a recall event (RCL-07). Pull-only, and it
-  defaults to the agent's current run.
+  defaults to the agent's current run. A recall tool that stops at its per-call
+  cap returns a **continuation cursor** (`next_cursor`); passed back as
+  `cursor`, it continues without gap or overlap (RCL-03).
 - **Closed path**: One of the ways I2 lists by which Cairn writes to an agent
   without the agent's recall: restore blocks, opt-in notices, compaction
   guidance and OWN-04's and OWN-07's templates; on a principal act,
@@ -140,6 +145,11 @@ summary: >-
   (`unrecorded`), or that it is an ingested run (`ingested`); `stuck?` is a
   watchdog observation (VIEW-04); time-relative freshness marks are computed
   where shown, never derived artifacts.
+- **Room status**: A room's one status from §9.7.2's closed set, such as
+  Running, Quiet or Ready for review. It is computed where shown from room
+  state, the heads, landings and check states of the branches it names, its
+  runs' statuses and their freshness marks. It is never recorded and never set
+  directly; OWN-21's ready and abandoned marks feed it.
 - **Queue class**: One of Needs you's classes Q1 to Q4, which set its order
   (§9.7.4, VIEW-05).
 - **Open room**: A room with no ready mark whose branch heads still stand

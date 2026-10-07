@@ -31,11 +31,11 @@ summary: >-
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers.
 - **Pin candidate**: Proposed pin text an agent suggested or Cairn detected; not
-  yet a pin, and with no **pin author** (a pin's author, its first version's).
-  The confirmation of its principal (of the agent that suggested it or the node
-  that detected it), a widening act, makes it a new pin its device seat authors;
-  for an intent or a criterion, only the owner's confirmation, making a new
-  version of the room's intent pin that the owner's device seat authors.
+  yet a pin, and with no pin author, the author of its first version. The
+  confirmation of its principal (of the agent that suggested it or the node that
+  detected it), a widening act, makes it a new pin its device seat authors; for
+  an intent or a criterion, only the owner's confirmation, making a new version
+  of the room's intent pin that the owner's device seat authors.
 - **Configuration pin**: A pin the principal's configuration declares, authored
   by its device seat on that node (PIN-01).
 - **Pin priority**: An integer the pin's author sets with it, lower first, the

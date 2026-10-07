@@ -65,10 +65,10 @@ summary: >-
   paired phone's personal-room seat, or a device seat a newly minted key started
   in the personal room, or the seat ingest starts while the run seat it names is
   a member (Seat, Seat key, Run seat); the seat's role says what it may do. A
-  kicked, departed or barred seat is no longer a member. A principal is never a
-  member; **the room's principals** are those with a member seat, and text for
-  people speaks of the room's principals. A personal-room seat can neither leave
-  nor be kicked.
+  seat that was kicked, left or was barred is no longer a member. A principal is
+  never a member; **the room's principals** are those with a member seat, and
+  text for people speaks of the room's principals. A personal-room seat can
+  neither leave nor be kicked.
 - **Owner**: The one principal who owns a room: its intent, roles, admission,
   appointments, successor and handover. Ownership changes only by handover or
   succession (LANE-11); it stays with the owner after all its seats leave. The
