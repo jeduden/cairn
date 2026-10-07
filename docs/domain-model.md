@@ -52,8 +52,8 @@ These verbs each have one job:
   boundaries B1 to B3, forbid risk acceptance and certify service accounts by
   listing their principal keys. The harness's own managed settings, which Cairn
   also never writes (ADM-03), are part of the **harness configuration**: the
-  harness's settings, hooks and MCP registrations (I7). The only rule-setter
-  that is not a principal.
+  harness's settings, hooks and MCP registrations (I7). Managed policy is the
+  only source of settings that is not a principal.
 - **Agent**: A worker a harness runs for exactly one principal: the principal of
   the node that started it (OWN-01). It receives restore blocks and recalls
   history; an agent is never a principal.
@@ -85,13 +85,14 @@ These verbs each have one job:
   owner stands beside the roles rather than having one: a room act signed by its
   device seat in the room has every room capability but writing a room summary,
   editing and unpinning only pins it wrote, while its agents' run seats have
-  only what a role assignment or an appointment gives them. "Owner" means
-  nothing else, except in the persona name "Returning owner" and where an
-  outside domain qualifies it, as a code owner.
+  only their role and any appointment. "Owner" means nothing else, except in the
+  persona name "Returning owner" and where an outside domain qualifies it, as a
+  code owner.
 - **Pull-request author**: The outside party whose commits a foreign room's
   bundle describes, matched through their commit-signing identity and a
   **binding statement** that identity signs, naming the bundle's principal key
-  (LANE-15). May have no seat at all.
+  (LANE-15). May have no seat at all, and is no principal unless its key is also
+  one.
 - **Delegate**: Any agent that receives a delegation, a subagent included
   (OWN-24). It keeps its own principal.
 
@@ -128,10 +129,11 @@ controls.
   optionally bound to a home id the runner environment supplies (SEC-03). The
   unit of isolation (I8).
 - **Node**: One home on one machine, container or sandbox, for one principal.
-  Its device key signs its principal acts and expire acts; a node in an
-  ephemeral sandbox may have only a token key. Its **node identity** is a value
-  outside the home that a cloned image or a restored snapshot cannot carry over
-  (REC-24). The node's principal is the principal whose home it is.
+  Its device key signs its principal acts and expire acts; an **ephemeral
+  node**, one in a short-lived environment such as a cloud sandbox, may have
+  only a token key. Its **node identity** is a value outside the home that a
+  cloned image or a restored snapshot cannot carry over (REC-24). The node's
+  principal is the principal whose home it is.
 - **Device**: A node or a paired phone. A device key certifies its device seats;
   a token-key-only node's token key does so in its place.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
@@ -151,8 +153,9 @@ controls.
   room goes there.
 - **Foreign room**: A room this node holds that its principal neither owns nor
   has a seat in, such as the room of an imported bundle or a peer's room.
-  Untrusted, and outside every extended recall scope unless named in the call. A
-  room the principal owns or has a seat in is never foreign.
+  Untrusted, whatever trust grant covers its keys, and outside every extended
+  recall scope unless named in the call. A room the principal owns or has a seat
+  in is never foreign.
 - **Principal's rooms**: The rooms a principal owns or has a seat in.
 - **Visibility**: Whether a room is private, shared with the room's principals,
   published or stored on blind peers (LANE-17). Changing it is a widening
@@ -194,10 +197,10 @@ controls.
   segment** is a writer's newest, still growing; it closes at the points REC-19
   names, and peers exchange its sealed prefix.
 - **Seal**: A seat key's signature over its writer id, a seq and the chain head
-  at that seq (REC-18), made where that key lives: a run seat's by its run's MCP
-  server, covering what the hook handlers appended, a paired phone's device
-  seat's by the phone, and every other writer's by the core. Events after the
-  newest seal are unsigned.
+  at that seq (REC-18), made where that key lives: a witnessed run's run seat's
+  by its run's MCP server, covering what the hook handlers appended, an ingested
+  run's by the core, a paired phone's device seat's by the phone, and every
+  other writer's by the core. Events after the newest seal are unsigned.
 - **Commitment**: A keyed commitment to an event's content under a per-event
   random key kept with the content and erased with it; the only way the chain,
   seals and tombstones refer to content (REC-17).
@@ -205,8 +208,8 @@ controls.
   content (§5.2). `operator` is the class of principal acts, expire acts and
   device-seat pins; posts are `post` and run-seat pins `assistant`; every other
   room act takes its seat's **pin class**, `operator` for a device seat and
-  `assistant` for a run seat; hook observations, key rotations and tombstones
-  are `structural`.
+  `assistant` for a run seat; a room summary is `summary`, never trusted; hook
+  observations, key rotations and tombstones are `structural`.
 - **Origin**: How an event reached this node's record: `witnessed` (recorded
   live on this node: by its hook handlers, its CLI, MCP server or launcher),
   `ingested` (read from a transcript the hook handlers did not watch), `bundle`
@@ -288,8 +291,9 @@ controls.
   that restores, written from a device seat a device key certified, is a
   widening principal act of its author's principal, and a verdict is its own
   principal act (OWN-27); every other pin, a token-key-only node's included, is
-  changed by room acts, and a run seat's or a token-key-only node's restores
-  only once stamped.
+  changed by room acts, but for its principal's neutral unpin of its own agent's
+  run-seat pin, and a run seat's or a token-key-only node's restores only once
+  stamped.
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers.
 - **Pin candidate**: Proposed pin text an agent suggested or Cairn detected; not
@@ -300,8 +304,9 @@ controls.
   owner's device seat authors.
 - **Configuration pin**: A pin the principal's configuration declares, authored
   by its device seat on that node (PIN-01).
-- **Pin priority**: The order in which pins fill the **pin budget** (PIN-03,
-  PIN-08).
+- **Pin priority**: The order in which pins fill the **pin budget**, the restore
+  block's share of model tokens; every other budget is named too (hook, step or
+  delegation budget), and I3's budget is the pin budget (PIN-03, PIN-08).
 - **Pin type**: One of `constraint`, `preference`, `decision`, `fact`,
   `episode`, `intent`, `verdict` and `stake`. Only `constraint`, `preference`
   and `intent` pins restore.
@@ -348,8 +353,9 @@ controls.
   `warning`).
 - **Restore block**: Deterministic trusted text, in a fixed template, Cairn
   injects after compaction and at a run's start, resume or clear (INJ-02):
-  qualifying pins, their room ids, omitted pins' ids and count, a landmark
-  index, a recall hint and LANE-33's room summary pointer.
+  qualifying pins, their room ids, omitted pins' ids and count, the count, room
+  id and key fingerprint of pins that do not qualify (PIN-10), a landmark index,
+  a recall hint and LANE-33's room summary pointer.
 - **Landmark index**: The current run's landmarks, each with its address range,
   as a restore block lists them (INJ-01).
 - **Recall hint**: The one fixed line in a restore block saying that the recall
@@ -411,17 +417,18 @@ controls.
   signs principal acts and expire acts.
 - **Principal key**: A principal's root key, kept offline or in a
   platform-protected key store, which certifies its device keys and may certify
-  a service account's principal key (PRV-10).
+  a service account's principal key by a **service-account certificate**
+  (PRV-10).
 - **Token key**: A key a device key certifies by a **token certificate**,
   limited to an access token's rooms and expiry, which may stand between a
-  device key and a seat key for an ephemeral sandbox (PRV-10). A node with only
+  device key and a seat key for an ephemeral node (PRV-10). A node with only
   a token key signs no principal acts; every pin it writes restores only once a
   principal stamps it from one of its devices.
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room, so every seat key chains to a principal key. A
   node's **key set** is the keys, certificates and revocations it holds (I10).
 - **Access token**: A short-lived credential a principal mints to enroll a
-  device or peer, seat an ephemeral sandbox or carry an invite link (PEER-05,
+  device or peer, seat an ephemeral node or carry an invite link (PEER-05,
   PRV-10, LANE-18). "Token" is always an access token, a model token or an
   access token's token key.
 - **Authenticator**: A hardware-backed key that gives presence proofs (OWN-11).
@@ -477,7 +484,7 @@ one kind (LANE-31).
     allow notices for a room or opt in to them, enable a bridge or the git
     carrier, set a room setting, publish, answer a purge request, accept
     configuration (recording its digest), enroll a CI key, rotate a device key,
-    retire a writer, turn capture off or pause ingestion, enroll or revoke a
+    retire a writer, turn capture off or pause it, enroll or revoke a
     device, peer or authenticator, mint or rotate an access token, start a
     witness check, and a backup restore.
 
@@ -493,9 +500,10 @@ one kind (LANE-31).
   offer (LANE-25).
 - **Role**: A named set of room capabilities: viewer, contributor or moderator.
   The owner gives a seat its role by a **role assignment**, which an invite or
-  invite link also records; a seat with none is a viewer, and a run's
-  personal-room seat, or its seat in a room it created, a contributor. Only the
-  facilitator's device seat writes a room summary, beside its appointment.
+  invite link also records; a seat with none, other than the owner's device
+  seats, is a viewer, and a run's personal-room seat, or its seat in a room it
+  created, a contributor. Only the facilitator's device seat writes a room
+  summary, beside its appointment.
   - **Viewer:** read, a role request and a summary request.
   - **Contributor:** read and a summary request; post, link and present; pin,
     edit and unpin its own pins; and work.
@@ -765,8 +773,9 @@ one kind (LANE-31).
   - **Publish component (B3):** read-only publishing, and the **git carrier**,
     which keeps segments in a namespaced location of the principal's remote.
   - **Bridge component (B3):** outbound exchange with hosts the node's principal
-    names: the **forge bridge** (reads pull requests and reviews), the **CI
-    carrier** (fetches CI attestations) and the **notification bridge**.
+    names, through three **bridges**: the **forge bridge** (reads pull requests
+    and reviews), the **CI carrier** (fetches CI attestations) and the
+    **notification bridge**.
 - **Boundary**: One of B0 core, B1 machine, B2 peer and B3 public (I4).
   Unqualified, "boundary" means a network boundary; any other boundary is
   qualified, such as a span boundary or a crate boundary.
@@ -803,15 +812,14 @@ one kind (LANE-31).
 - Each event goes to exactly one seat's writer. A run's event goes to its run
   seat in the room it works in at that moment, one it joined or created that
   names its current branch, while that seat's role permits its events (LANE-10);
-  else to its personal-room seat. An event with no run goes to the device seat
-  of the device that recorded it, in its personal room. A room act goes to the
-  writer of the seat that signs it. A principal act or an expire act goes to the
-  device seat of the device that signs it, in the room it acts on; a device of a
-  principal with a member seat there first joins it without admission. One that
-  acts on no room, on a room its principal has no member seat in, or that a
-  paired phone signs, goes to that device seat in the personal room, naming the
-  room, and that room shows it by address as it shows a cross-room post
-  (LANE-29).
+  else to its personal-room seat.  A room act goes to the writer of the seat
+  that signs it. A principal act or an expire act goes to the device seat of the
+  device that signs it, in the room it acts on; a device of a principal with a
+  member seat there first joins it without admission. One that acts on no room,
+  on a room its principal has no member seat in, or that a paired phone signs,
+  goes to that device seat in the personal room, naming the room, and that room
+  shows it by address as it shows a cross-room post (LANE-29). Any other event
+  with no run goes to the recording device's seat in its personal room.
 - A run's history spans its seats' writers, tied together by the run. Peers
   exchange segments, so a room's seats see only events routed to them and the
   events it shows by address.
@@ -842,8 +850,8 @@ errors and logs use the model's words.
   per room, the concept singular and in snake case (`node.deployment_mode`).
 - Layout words (tab, panel, pane, gutter, sheet, stack) name parts of a screen,
   never concepts.
-- The attested seat kinds are `run` and `device`; a device seat's principal is
-  attested as a person or a service account.
+- A seat certificate names the seat kind, `run` or `device`, and whether a
+  device seat's principal key is certified as a service account's.
 - Cairn defines no slash commands. A harness skill may call MCP tools or the
   CLI; a skill's call is the agent's own tool call, never a principal act.
 
