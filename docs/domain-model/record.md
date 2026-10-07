@@ -22,8 +22,8 @@ summary: >-
   (what a hook reported), worktree checkpoint, key rotation, tombstone, or an
   act (a room act, a principal act or an expire act), a **recall event** (one
   recall, RCL-07), a canary event, a backup event, a pin candidate, an erasure
-  or quarantine request, or an unparsed line. Its **event kind** is which of
-  these it is, recorded apart from its provenance.
+  or quarantine request, or an unparsed line. Its **event kind** is which kind
+  of entry it is, recorded apart from its provenance.
 - **seq**: An event's position in its writer: strictly increasing, gap-free and
   never reused (REC-06).
 - **Address**: (writer, seq), shown as short `A2·4812` (its writer label and
@@ -46,10 +46,11 @@ summary: >-
   peers exchange its sealed prefix. A closed segment or an open segment's sealed
   prefix is a **sealed range**.
 - **Seal**: A seat key's signature over its writer id, a seq and the chain head
-  at that seq (REC-18), made where that key lives: a witnessed run's run seat's
-  by its run's MCP server, covering what the hook handlers appended, an ingested
-  run's by the core, a paired phone's device seat's by the phone, and every
-  other writer's by the core. Events after the newest seal are unsigned.
+  at that seq (REC-18), made where that key lives: a witnessed run's run seat's,
+  but the seat ingest starts, by its run's MCP server, covering what the hook
+  handlers appended, an ingested run's by the core, a paired phone's device
+  seat's by the phone, and every other writer's by the core. Events after the
+  newest seal are unsigned.
 - **Commitment**: A keyed commitment to an event's content under a per-event
   random key, its **commitment key**, kept with the content and erased with it;
   the only way the chain, seals and tombstones refer to content (REC-17).
@@ -73,15 +74,16 @@ summary: >-
   room-view component or bridge component), `ingested` (read by `cairn ingest`,
   from a transcript the hook handlers did not watch or past an ingest marker),
   `bundle` (read by import) or `peer` (received from a peer, a paired phone or
-  through the git carrier) (RCL-09). A **witnessed run** is one this node's hook
-  handlers watched. Independent of provenance. Each event also records its
-  **recorder**, the part that recorded it (the hook handlers, the CLI, the TUI,
-  the MCP server, the launcher or the bridge component, whose events take
-  provenance `web`, always untrusted; the room-view component records a
-  principal act taken in the browser room view, marked with its principal
-  surface, and how it signs waits for a security review under SEC-10 and
-  SEC-20), which the trust policy reads; an event from a peer or a bundle
-  records no recorder, only its origin.
+  through the git carrier) (RCL-09); the trust policy reads only whether an
+  event was recorded on this node, ingested or received, and `bundle` beside
+  `peer` is a display mark. A **witnessed run** is one this node's hook handlers
+  watched. Independent of provenance. Each event also records its **recorder**,
+  the part that recorded it (the hook handlers, the CLI, the TUI, the MCP
+  server, the launcher or the bridge component, whose events take provenance
+  `web`, always untrusted; the room-view component records a principal act taken
+  in the browser room view, marked with its principal surface, and how it signs
+  waits for a security review under SEC-10 and SEC-20), which the trust policy
+  reads; an event from a peer or a bundle records no recorder, only its origin.
 - **Span**: A contiguous range of one run's events in one writer. A new span
   starts at every user turn, compaction, subagent start or end, and whenever the
   run's events move to another seat's writer (LMK-01).
@@ -118,8 +120,8 @@ summary: >-
   freshness marks, and integrity statuses. Results with their evidence classes
   are derived artifacts; room status and a check's state are computed where
   shown; the **quarantine set** is what a node holds quarantined.
-- **Redaction**: Removing secrets from content before it is stored or on import,
-  recorded (I1, SEC-08).
+- **Redaction**: Removing secrets from content before it is stored, on import,
+  or from what an export, publish or invite review sends, recorded (I1, SEC-08).
 - **Retention policy**: A rule (`retention_policy.*`), set by the node's
   principal or managed policy, that purges content per room and provenance class
   after a time (I1, SEC-22); the principal's change to one is widening and

@@ -36,23 +36,23 @@ one kind (LANE-31).
   setting is widening, whichever way it goes. Its classes:
   - **Cut:** deny, interrupt, pause, stop, cancel a delegation, end a permission
     grant, reject a foreign room, decline a join request, tighten a rule level,
-    revoke a role assignment, revoke a CI key, stop publishing a room, record a
-    `needs changes` verdict, quarantine content without removing anything from a
-    restore block, withdraw a risk acceptance, revoke a trust grant, end a
-    delegation grant or an acceptance grant, turn an away policy off, withdraw a
-    named successor, revoke an appointment, unstamp a pin version, turn notices
-    off, decline a handover, withdraw as successor, dismiss a directed post,
-    revoke an access token, a seat key or a service account's certificate, turn
-    capture on, and turn off the peer component, the publish component, a bridge
-    or the git carrier.
+    revoke a role assignment, revoke a CI key, stop publishing a room,
+    quarantine content without removing anything from a restore block, withdraw
+    a risk acceptance, revoke a trust grant, end a delegation grant or an
+    acceptance grant, turn an away policy off, withdraw a named successor,
+    revoke an appointment, unstamp a pin version, turn notices off, decline a
+    handover, withdraw as successor, dismiss a directed post, revoke an access
+    token, a seat key or a service account's certificate, turn capture on, and
+    turn off the room-view component, the launcher, the peer component, the
+    publish component, a bridge or the git carrier.
   - **Neutral:** mark a room ready (the owner or a principal whose device seat
     in the room is a moderator) or abandoned (the owner), acknowledge an
-    overlap, record a `met` or `not met` verdict, unpin a verdict, open the
-    forensic view, make a purge request, refuse a quarantine request, an erasure
-    request or a purge request, choose a branch to compare, acknowledge
-    counters, dismiss a Q3 or Q4 item other than a directed post, unpin a pin
-    its own agent's run seat wrote, and add a room to or remove it from the
-    focus set.
+    overlap, record a `met`, `not met` or `needs changes` verdict, unpin a
+    verdict, open the forensic view, make a purge request, refuse a quarantine
+    request, an erasure request or a purge request, choose a branch to compare,
+    acknowledge counters, dismiss a Q3 or Q4 item other than a directed post,
+    unpin a pin its own agent's run seat wrote, and add a room to or remove it
+    from the focus set.
   - **Widening:** allow, answer a hand-off (a hand-back), reply, steer, confirm
     a steer for a later turn (OWN-13), send a correction, retry from a worktree
     checkpoint, set or revise an intent, resume, record a delegation grant or an
@@ -60,25 +60,26 @@ one kind (LANE-31).
     from a device seat a device key certified (before PRV-10 ships, this node's
     own device seat), confirm a pin candidate, change a room's visibility,
     invite a principal key, issue an invite link, choose a fork, turn on the
-    peer or publish component, accept a handover or succession, ask for a device
-    seat's join to a room its principal has no member seat in, ask for or accept
-    a join, which sends the run's events to a room other principals' nodes hold,
-    endorse, loosen a rule level, turn on or change an away policy other than
-    turning it off, quarantine that removes a pin or a landmark from a restore
-    block, release a quarantine, purge or apply an erasure request, export, bind
-    a repository identity by hand or rebind it, accept open residual risks
-    (OWN-22), certify a service account's principal key, assign a role, set a
-    room's admission, appoint a moderator or the facilitator, stamp a pin
-    version, name a successor, hand over a room, record a trust grant, allow
-    notices for a room or opt in to them, enable a bridge or the git carrier,
-    set a room setting, publish, apply a purge request, change a retention
-    policy, accept configuration (recording its digest), enroll a CI key, rotate
-    a device key, retire a writer, turn capture off or pause it, enroll or
-    revoke a device, peer or authenticator, mint or rotate an access token,
-    start a witness check, which confirms the command taken from an untrusted
-    event (OWN-18), and a backup restore. Revoking a device or a peer stays
-    widening although it undoes an enrollment, since it can drop pins and stop
-    acts arriving.
+    room-view component or the launcher by accepting the configuration that
+    turns it on (ADM-04), turn on the peer or publish component, accept a
+    handover or succession, ask for a device seat's join to a room its principal
+    has no member seat in, ask for or accept a join, which sends the run's
+    events to a room other principals' nodes hold, endorse, loosen a rule level,
+    turn on or change an away policy other than turning it off, quarantine that
+    removes a pin or a landmark from a restore block, release a quarantine,
+    purge or apply an erasure request, export, bind a repository identity by
+    hand or rebind it, accept open residual risks (OWN-22), certify a service
+    account's principal key, assign a role, set a room's admission, appoint a
+    moderator or the facilitator, stamp a pin version, name a successor, hand
+    over a room, record a trust grant, allow notices for a room or opt in to
+    them, enable a bridge or the git carrier, set a room setting, publish, apply
+    a purge request, change a retention policy, accept configuration (recording
+    its digest), enroll a CI key, rotate a device key, retire a writer, turn
+    capture off or pause it, enroll or revoke a device, peer or authenticator,
+    mint or rotate an access token, start a witness check, which confirms the
+    command taken from an untrusted event (OWN-18), and a backup restore.
+    Revoking a device or a peer stays widening although it undoes an enrollment,
+    since it can drop pins and stop acts arriving.
 
   Any principal act that removes a pin from a restore block, or stops this node
   recording its own runs' events, is widening whatever verb carries it. On an
@@ -89,8 +90,7 @@ one kind (LANE-31).
   withdraws only the acting principal's own trust (LANE-32, OWN-29). Applying a
   quarantine request takes the class of the quarantine it applies. A principal
   act no requirement names is widening. OWN-11 and OWN-12 follow this list, and
-  a gate fails when a requirement names a principal act this entry does not
-  classify.
+  every principal act a requirement names is classed here.
 - **Expire act**: Once PRV-10 ships, an act a node with a device key records,
   signed with that key, ending only an expiry its original act set: on a bar, a
   mute or a handover offer (LANE-25). Before PRV-10 ships no expiry can be set.
@@ -145,7 +145,9 @@ one kind (LANE-31).
 - **Pick**: Chooses which presentation the outcome window shows.
 - **Admission**: Whether a room is invite only or admits a list of principal
   keys. An invite (a principal key and a role) and an invite link are widening
-  principal acts of the owner.
+  principal acts of the owner. An invite's or an export's **review step** shows
+  the acting principal, before it takes effect, what will take effect or leave,
+  SEC-08 applied (LANE-10, SEC-26).
 - **Successor**: A principal the owner names in advance, who accepts ownership
   once every seat of the owner has left the room; that acceptance is a
   **succession**. Until a handover, a succession or the owner's rejoin, a room
@@ -179,5 +181,6 @@ one kind (LANE-31).
 - **Room state**: Everything the room merge derives (LANE-31).
 - **Room status**: A room's one status from §9.7.2's closed set, such as
   Running, Quiet or Ready for review. It is computed where shown from room
-  state, its runs' statuses and their freshness marks. It is never recorded and
-  never set directly; OWN-21's ready and abandoned marks feed it.
+  state, the heads, landings and check states of the branches it names, its
+  runs' statuses and their freshness marks. It is never recorded and never set
+  directly; OWN-21's ready and abandoned marks feed it.

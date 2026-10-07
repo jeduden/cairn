@@ -11,20 +11,23 @@ summary: >-
   (OQ-32), and a new one is a model change and a §6.3 row.
   - **Core (B0):** the **hook handlers** (answering hooks), the **CLI**
     (`cairn`, but for `cairn ui`, `cairn launch` and each B1 to B3 component's
-    own entry point, which the person or a service manager starts and which runs
-    only while the act turning it on stands), each harness adapter's transcript
-    and hook part among them, the **MCP server** (the MCP tools of §9.2, one per
-    harness session, serving its runs), the **kernel worker** (running the
-    kernel's executions), the **TUI** (the terminal room view), the **commit
-    hook** (LANE-28, run as the CLI), and everything that builds what reaches
-    the model.
+    own entry point, which the person, a service manager or an ephemeral node's
+    entrypoint starts and which runs only while the act turning it on stands:
+    for the room-view component and the launcher, the configuration acceptance
+    that turns it on, ADM-04), each harness adapter's transcript and hook part
+    among them, the **MCP server** (the MCP tools of §9.2, one per harness
+    session, serving its runs), the **kernel worker** (running the kernel's
+    executions), the **TUI** (the terminal room view), the **commit hook**
+    (LANE-28, run as the CLI), and everything that builds what reaches the
+    model.
   - The **harness adapter** is no component: Cairn's code for one harness, split
     between the core and the launcher: its transcript and hook part in the core
     (it parses, opens no socket, starts no process); its run part in the
     launcher, which starts, hosts and controls runs, pauses them at the harness
     prompt, records sandbox state and carries in only text the core built.
   - **Room-view component (B1):** serves the browser room view on loopback only
-    (SEC-20).
+    (SEC-20), and records the principal acts taken in it, marked with their
+    principal surface (VIEW-03).
   - **Launcher (B1):** `cairn launch`, which starts, hosts and controls runs
     through each harness adapter's run part, carrying the core's text into the
     harness input, and runs witness checks; the only component that starts
@@ -49,10 +52,10 @@ summary: >-
   - **Fleet:** every live and recorded run of the principal's rooms, grouped by
     room.
   - **Room page:** one room, with the tabs Timeline, Review and Replay, the
-    Replay tab's **context lens** showing what the model's context window held
-    at an event; the verify and why panels, the comparison and the **quarantine
-    list** (the room's quarantine set), with its **forensic view** of
-    quarantined content, open from it, and a foreign room opens in it, marked
+    Replay tab's **context lens** showing what the model's context window
+    contained at an event; the verify and why panels, the comparison and the
+    **quarantine list** (the room's quarantine set), with its **forensic view**
+    of quarantined content, open from it, and a foreign room opens in it, marked
     foreign.
   - **Catch up:** the one surface answering "what happened since a starting
     point" the principal picks (VIEW-08).

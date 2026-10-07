@@ -27,9 +27,11 @@ summary: >-
 - **Managed policy**: Settings belonging to root that an organisation sets on a
   machine. Cairn never overrides it (I7). Among its powers, it may turn off
   boundaries B1 to B3, forbid risk acceptance and certify service accounts by
-  listing their principal keys. The harness's own managed settings, which Cairn
-  also never writes (ADM-03), are part of the **harness configuration**: the
-  harness's settings, hooks and MCP registrations (I7). Managed policy alone
+  listing their principal keys, each listing marking, as a service-account
+  certificate does, whether that account relays text others wrote; a listing
+  without the mark counts as relaying. The harness's own managed settings, which
+  Cairn also never writes (ADM-03), are part of the **harness configuration**:
+  the harness's settings, hooks and MCP registrations (I7). Managed policy alone
   overrides the principal's settings; repository configuration only tightens
   them.
 - **Agent**: A worker a harness runs for exactly one principal: the principal of
@@ -38,10 +40,11 @@ summary: >-
 - **Run**: One agent's execution within one harness session, on one node, keyed
   by the harness session and the harness's agent id: a harness session's
   transcripts contain its main agent's run and one per subagent, a **harness
-  resume** continues the run and a **harness clear** starts a new one. It has
-  run seats and carries its recall taint (SEC-13), sandbox state (OWN-22), seat
-  keys (SEC-10), kernel namespace (CMP-02) and spans (LMK-01). As a noun, "run"
-  has no other meaning.
+  resume** that keeps its harness session continues the run, while one that
+  forks a new harness session, like a **harness clear**, starts a new one. It
+  has run seats and carries its recall taint (SEC-13), sandbox state (OWN-22),
+  seat keys (SEC-10), kernel namespace (CMP-02) and spans (LMK-01). As a noun,
+  "run" has no other meaning.
 - **Subagent**: An agent the harness started for another agent. It has its own
   run, tied to its parent's run by a parent link, with its own seats and
   writers. It takes a delegated task without a delegation grant.

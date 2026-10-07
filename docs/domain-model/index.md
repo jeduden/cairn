@@ -24,8 +24,8 @@ These verbs each have one job:
   that is a member, its agents' run seats included; an agent has a seat in a
   room through its runs' seats that are members.
 - A node *holds* writer logs, rooms and whatever else it stores. "Owns" is said
-  of rooms and "holds" of nodes ("held request" is a name); "holds a room" never
-  means owning a room or being a member of it.
+  of rooms and "holds" of nodes ("held request" and "hold window" are names);
+  "holds a room" never means owning a room or being a member of it.
 
 ## Concepts
 
@@ -67,27 +67,28 @@ row: "- [{title}]({filename}) — {summary}"
   names the branch of the run's latest preceding event naming its branch, while
   that seat is a member and has work (its role, no mute), per the room state
   this node holds when it records the event (LANE-01, LANE-16); else to its
-  personal-room seat. A room act goes to the writer of the seat that signs it. A
-  principal act or an expire act goes to the device seat of the device that
-  signs it, or before PRV-10 ships records it, in the room it acts on; a node of
-  a principal with a member seat there first joins it without admission. One
-  that acts on no room, on a room its principal has no member seat in, or that a
-  paired phone signs, goes to that device seat in the personal room, naming the
-  room, and that room shows it by address as it shows a cross-room post
-  (LANE-29). A seat key's rotation goes to that seat's own writer (SEC-27). A
-  tombstone, an erasure request a retention policy sends, and a bridge's or the
-  launcher's event about a room's branch go to the recording device's seat in
-  the room they name, joined as for a principal act, else to that device seat in
-  the personal room, naming the room. Any other event with no run goes to the
-  recording device's seat in the personal room of its node, or for a paired
-  phone, of the node it pairs with.
+  personal-room seat; what `cairn ingest` appends goes instead to the seat
+  ingest starts beside that run seat (Run seat). A room act goes to the writer
+  of the seat that signs it. A principal act or an expire act goes to the device
+  seat of the device that signs it, or before PRV-10 ships records it, in the
+  room it acts on; a node of a principal with a member seat there first joins it
+  without admission. One that acts on no room, on a room its principal has no
+  member seat in, or that a paired phone signs, goes to that device seat in the
+  personal room, naming the room, and that room shows it by address as it shows
+  a cross-room post (LANE-29). A seat key's rotation goes to that seat's own
+  writer (SEC-27). A tombstone, an erasure request a retention policy sends, and
+  a bridge's or the launcher's event about a room's branch go to the recording
+  device's seat in the room they name, joined as for a principal act, else to
+  that device seat in the personal room, naming the room. Any other event with
+  no run goes to the recording device's seat in the personal room of its node,
+  or for a paired phone, of the node it pairs with.
 - A run's history spans its seats' writers, tied together by the run. Peers
   exchange segments, so a room contains only the events routed to its seats and
   shows others by address (LANE-01).
 - Principals and agents create rooms; an agent's room is owned by its principal.
   Cairn never creates a room on its own initiative; a node's personal room comes
   from the principal's `cairn install`, or is carried over to a node clone, and
-  Cairn may suggest joins.
+  Cairn may suggest a room or a join.
 - A pin naming no room belongs to its author's principal's personal room on the
   node that wrote it.
 - Recall extends only to the principal's

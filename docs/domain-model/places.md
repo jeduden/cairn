@@ -17,9 +17,9 @@ summary: >-
   outside the home that a cloned image or a restored snapshot cannot carry over
   (REC-24). A **node clone** is a copy of a home started where its node identity
   differs (a cloned image, a copied volume or a restored snapshot): a new node,
-  with its own device key and device seat, that mints new seat keys and shares
-  the carried-over personal room (REC-24). The node's principal is the principal
-  whose home it is.
+  with its own device key, or a token key, and its own device seat, that mints
+  new seat keys and shares the carried-over personal room (REC-24). The node's
+  principal is the principal whose home it is.
 - **Device**: A node or a paired phone. Once PRV-10 ships, a device key
   certifies its seats; a token-key-only node's token key does so in its place.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
@@ -39,12 +39,12 @@ summary: >-
   without a join, and every event or pin that belongs to no other room goes
   there.
 - **Foreign room**: A room this node holds that its principal neither owns nor
-  has a seat in, such as the room of an imported bundle or a peer's room.
-  Untrusted in recall (RCL-10), whatever trust grant covers its keys, and
-  outside every extended recall scope unless named in the call; only its
-  principal's own device-seat pins and the versions it stamped keep restoring,
-  to runs that had a seat in it. A room the principal owns or has a seat in is
-  never foreign.
+  has a seat in, such as the room of an imported bundle, a peer's room, or a
+  room every seat of its principal has left. Untrusted in recall (RCL-10),
+  whatever trust grant covers its keys, and outside every extended recall scope
+  unless named in the call; only its principal's own device-seat pins and the
+  versions it stamped keep restoring, to runs that had a seat in it. A room the
+  principal owns or has a seat in is never foreign.
 - **Principal's rooms**: The rooms a principal owns or has a seat in.
 - **Visibility**: Whether a room is private, shared with the room's principals,
   published or stored on blind peers (LANE-17). Changing it is a widening

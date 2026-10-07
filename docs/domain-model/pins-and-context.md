@@ -73,7 +73,9 @@ summary: >-
   author, or for a device seat its author's principal, edits it; it is unpinned
   as Unpin says, and it makes Cairn refuse no other seat's act.
 - **Title, labels**: Room state the owner's device seat or a moderator sets: a
-  display name and tags. They never reach a model.
+  display name and tags. They reach a model only enveloped, through recall,
+  never in trusted text, an opt-in notice or an envelope marked structural
+  (LANE-30, VIEW-15).
 - **Assignment**: Room state asking a seat to work on a branch. It makes Cairn
   refuse no seat's act; a role assignment is always named so.
 - **Post**: Text a seat writes to a room's conversation, with provenance `post`,
@@ -87,10 +89,10 @@ summary: >-
   principal's Needs you queue for an endorsement (LANE-12).
 - **Room summary**: A facilitator's summary of a room, always untrusted, linked
   by address to the events it covers, read only through `room_summary_get`, a
-  recall tool that writes no room summary, `event_search` leaving out `summary`
-  events; a summary request is `room_summary_request` (LANE-33). A restore
-  block's **room summary pointer** names the latest room summary by id and
-  version.
+  recall tool that writes no room summary; every other recall tool, the kernel's
+  built-ins included, leaves `summary` events out, returning only their address;
+  a summary request is `room_summary_request` (LANE-33). A restore block's
+  **room summary pointer** names the latest room summary by id and version.
 - **Compaction summary**: The harness's summary at compaction, recorded as
   untrusted `harness_text`, never restored.
 - **Envelope**: The **untrusted-data envelope** of I2, the one name beside
@@ -108,11 +110,11 @@ summary: >-
   pins, sanitized structural fields and fixed text Cairn ships, that Cairn
   injects after compaction, at a run's start or harness resume (INJ-02), and on
   a prompt while `restore_block.on_prompt` is on (INJ-04), carrying among other
-  things qualifying pins, their room ids and the run's seat ids, omitted pins'
-  ids and count, the count, room id and key fingerprint of pins of a type that
-  restores that do not qualify (PIN-10), PIN-11's count and reason, PEER-06's
-  note that later pins may be missing, a landmark index, a recall hint and
-  LANE-33's room summary pointer.
+  things qualifying pins, their room ids and the run's seat ids where each is
+  still a member, omitted pins' ids and count, the count, room id and key
+  fingerprint of pins of a type that restores that do not qualify (PIN-10),
+  PIN-11's count and reason, PEER-06's note that later pins may be missing, a
+  landmark index, a recall hint and LANE-33's room summary pointer.
 - **Landmark index**: The current run's landmarks, each with its address range,
   as a restore block lists them (INJ-01).
 - **Recall hint**: The one fixed line in a restore block saying that the recall
@@ -129,15 +131,15 @@ summary: >-
 - **Working view**: Whatever is currently in the model's context window. Never
   part of the record, never authoritative.
 - **Held request**: A permission request, question or hand-off with a stable id,
-  answerable from any principal surface within its scope (OWN-05). Cairn holds
-  the agent no longer than its **hold window**, then its away policy, if one is
-  on, answers the agent; the held request stays open, and with no away policy
-  on, the harness's own prompt keeps the agent waiting (OWN-06). A **reply**
-  answers a held question with principal-typed text.
-- **Qualified requests**: A permission request (the harness's, held as a held
-  request), a role request (a viewer's room act asking for a wider role), a join
-  request (a room act of a run's personal-room seat naming the room; it needs
-  its principal's acceptance unless that principal asked for the join), an
+  answerable from any principal surface within its scope (OWN-05). Cairn keeps
+  the agent waiting no longer than its **hold window**, then its away policy, if
+  one is on, answers the agent; the held request stays open, and with no away
+  policy on, the harness's own prompt keeps the agent waiting (OWN-06). A
+  **reply** answers a held question with principal-typed text.
+- **Qualified requests**: A permission request (the harness's, recorded as a
+  held request), a role request (a viewer's room act asking for a wider role), a
+  join request (a room act of a run's personal-room seat naming the room; it
+  needs its principal's acceptance unless that principal asked for the join), an
   erasure request (a node sends its purge to its peers, PEER-11), a purge
   request (a neutral principal act asking the room's owner to purge what its
   seats wrote, SEC-30), a quarantine request (to peers), and a summary request

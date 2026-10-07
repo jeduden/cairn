@@ -22,11 +22,11 @@ summary: >-
   protection. It approves and lands; Cairn does neither, and its **forge
   reports** count as `asserted` (LANE-08).
 - **Pull request**: The forge's review object for a branch.
-- **Check**: A command run, or expected to run, on a tree, with its exit status
-  once it ends; its **check state** is one of §9.7.2's. A check is expected when
-  one of the intent's criteria names its command (LANE-20); a check the forge
-  reports, one of its **required checks** included, is a forge report,
-  `asserted`, not a result.
+- **Check**: A command executed, or expected to execute, on a tree, with its
+  exit status once it ends; its **check state** is one of §9.7.2's. A check is
+  expected when one of the intent's criteria names its command (LANE-20); a
+  check the forge reports, one of its **required checks** included, is a forge
+  report, `asserted`, not a result.
 - **Result**: What a room's seats established: a check passing or failing on a
   **tree** (git's snapshot of a commit's files), or a claim stated in text. It
   names the intent version and carries one evidence class; it is derived from
@@ -56,9 +56,10 @@ summary: >-
 - **Proof class**: Of a landing link. Proven: `same commit`, `same patch`, `same
   tree`. Not proven: `likely`, `asserted`, and `not proven` with a reason
   (LANE-06). `asserted` is also the mark on forge reports and room trailers.
-- **Room trailer**: The `Cairn-Room:` line on a commit made on a room's branch.
-  Each `Cairn-Link:` line is a trailer link. It counts as `asserted` until
-  proven (LANE-28).
+- **Room trailer**: The `Cairn-Room:` line in a commit message, naming a room;
+  Cairn adds one to every commit on a room's branch (LANE-28). Each
+  `Cairn-Link:` line is a trailer link. It counts as `asserted` until proven
+  (LANE-28).
 - **Qualified links**: Every link is named by what it connects: a branch link
   (room to branch), a pull-request link (branch to its pull request, derived by
   Cairn from forge bridge events), a criterion link (result to criterion), a

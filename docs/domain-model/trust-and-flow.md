@@ -8,9 +8,10 @@ summary: >-
 
 - **Trust level**: `trusted` or `untrusted`, per event for one principal's
   agents on one node: derived by the trust policy from the event's provenance,
-  origin, recorder and writer, the deployment mode recorded with the event, the
-  node's key set, whether the event's room is foreign to that principal, and
-  that principal's stamps and trust grants as its writer logs carry them (I10).
+  origin (whether recorded on this node, ingested or received), recorder and
+  writer, the deployment mode recorded with the event, the node's key set,
+  whether the event's room is foreign to that principal, and that principal's
+  stamps and trust grants as its writer logs carry them (I10).
 - **Trusted sources**: I2's trusted sources as PRV-02 applies them, which RCL-10
   narrows in a foreign room: this node's `operator` and structural events, the
   `harness_meta` events its hook handlers recorded, and the `user` events they
@@ -35,8 +36,9 @@ summary: >-
   (OWN-10, SEC-13).
 - **Principal surface**: An authenticated surface for principal acts: the
   browser room view under SEC-20, the CLI or TUI at a terminal, or a paired
-  phone within its scope; before B2, a phone reaches the room view only as the
-  browser room view, through the principal's own tunnel (§6.3 row 11).
+  phone within its scope; without the peer component, a phone reaches the room
+  view only as the browser room view, through the principal's own tunnel (§6.3
+  row 11).
 - **Presence proof**: A hardware-backed, user-verified proof of a person's
   presence, bound to one widening act (OWN-11).
 - **Recall**: An agent's call to a **recall tool**, any MCP tool that returns
@@ -137,8 +139,9 @@ summary: >-
   where shown, never derived artifacts.
 - **Queue class**: One of Needs you's classes Q1 to Q4, which set its order
   (§9.7.4, VIEW-05).
-- **Open room**: A room not marked ready or abandoned that names no branch, or
-  names one that has not landed.
+- **Open room**: A room with no ready mark whose branch heads still stand
+  (OWN-21) and no abandoned mark, that names no branch or names one that has not
+  landed.
 - **Exposure**: Of a branch, the untrusted and flagged items its runs read and
   their recall taint (VIEW-13).
 - **Overlap**: Runs in two open rooms editing one file, which raises a Needs you
