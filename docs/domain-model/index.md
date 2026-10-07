@@ -75,8 +75,8 @@ row: "- [{title}]({filename}) — {summary}"
   post (LANE-29). Any other event with no run goes to the recording device's
   seat in its personal room.
 - A run's history spans its seats' writers, tied together by the run. Peers
-  exchange segments, so a room's seats see only events routed to them and the
-  events it shows by address.
+  exchange segments, so a room holds only the events routed to its seats and
+  shows others by address (LANE-01).
 - Principals and agents create rooms; an agent's room is owned by its principal.
   Cairn never creates a room on its own initiative; a node's personal room comes
   from the principal's `cairn install`, and Cairn may suggest joins.
@@ -101,10 +101,11 @@ errors and logs use the model's words.
 - An option that selects a concept is named for it: `--author`, `--seat`,
   `--writer`, `--run`, `--room`.
 - A **settings key** names one setting in a settings layer:
-  `<concept>.<setting>`, or `<concept>.<room>.<setting>` per room, the concept
-  singular and in snake case (`node.deployment_mode`).
-- Layout words (tab, panel, pane, gutter, sheet, stack) name parts of a screen,
-  never concepts.
+  `<concept>.<setting>`, or `<concept>.<room>.<setting>` or
+  `<concept>.<room>.<qualifier>` per room, the concept singular and in snake
+  case (`node.deployment_mode`).
+- Layout words (such as tab, panel, pane, gutter, sheet, stack, tile, pill,
+  rail, composer and command palette) name parts of a screen, never concepts.
 - A seat certificate names the seat kind, `run` or `device`, and whether the
   device seat's principal is a certified service account.
 - Cairn defines no slash commands. A harness skill may call MCP tools or the

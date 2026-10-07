@@ -24,11 +24,14 @@ summary: >-
   which of these it is, recorded apart from its provenance.
 - **seq**: An event's position in its writer: strictly increasing, gap-free and
   never reused (REC-06).
-- **Address**: (writer, seq), shown as short `A2·4812`, range `A2·4812–5025` or
-  full `cairn:room/<room>/w/<writer>/<seq>`. Every shown form is accepted
-  wherever an address is taken, and so is one ASCII input form, `<writer>:<seq>`
-  or `<writer>:<from>-<to>` (for example `w-1:12`, `w-1:30-40`) (RCL-08). An
-  address range lies in one writer. The only meaning of "address".
+- **Address**: (writer, seq), shown as short `A2·4812` (its writer label and
+  seq), range `A2·4812–5025` or full `cairn:room/<room>/w/<writer>/<seq>`. Every
+  shown form is accepted wherever an address is taken, and so is one ASCII input
+  form, `<label>:<seq>` or `<label>:<from>-<to>` (for example `A2:12`,
+  `A2:30-40`), with the writer id accepted in place of the label (RCL-08). A
+  **writer label** is a writer's short display alias, unique per node and room,
+  assigned in first-seen order. An address range lies in one writer. The only
+  meaning of "address".
 - **Payload**: The full content of a large event, stored outside the event in
   the store's **payload store**, under a name that confirms no guess at its
   content (REC-09).
@@ -57,28 +60,33 @@ summary: >-
   `assistant`; every other room act but a room summary takes its seat's **pin
   class**, `operator` for a device seat and `assistant` for a run seat; a room
   summary is `summary`, never trusted; an erasure or quarantine request a
-  principal act sends is `operator`, one a retention policy sends `structural`;
-  hook observations, key rotations and tombstones are `structural`.
+  principal act sends is `operator`, an erasure request a retention policy sends
+  `structural`; hook observations, key rotations and tombstones are
+  `structural`.
 - **Origin**: How an event reached this node's record: `witnessed` (recorded
-  live on this node: by its hook handlers, its CLI, MCP server or launcher),
-  `ingested` (read by `cairn ingest`, from a transcript the hook handlers did
-  not watch or past an ingest marker), `bundle` (read by import) or `peer`
-  (received from a peer, a paired phone or through the git carrier) (RCL-09). A
-  **witnessed run** is one this node's hook handlers watched. Independent of
-  provenance. Each event also records its **recorder**, the part that recorded
-  it (the hook handlers, the CLI, the MCP server or the launcher), which the
-  trust policy reads.
+  live on this node: by its hook handlers, its CLI, TUI, MCP server or
+  launcher), `ingested` (read by `cairn ingest`, from a transcript the hook
+  handlers did not watch or past an ingest marker), `bundle` (read by import) or
+  `peer` (received from a peer, a paired phone or through the git carrier)
+  (RCL-09). A **witnessed run** is one this node's hook handlers watched.
+  Independent of provenance. Each event also records its **recorder**, the part
+  that recorded it (the hook handlers, the CLI, the TUI, the MCP server or the
+  launcher; a principal act from the browser room view is recorded by the CLI),
+  which the trust policy reads; an event from a peer or a bundle records no
+  recorder, only its origin.
 - **Span**: A contiguous range of one run's events in one writer. A new span
   starts at every user turn, compaction, subagent start or end, and whenever the
   run's events move to another seat's writer (LMK-01).
 - **Landmark**: A structural headline over one span, bound to its address range
-  (LMK-02). Landmarks roll up into **tiers** of at most `k` **landmark blocks**,
-  each a run of landmarks; a full tier collapses its older landmark blocks to
-  one line each into the next tier (LMK-05).
+  (LMK-02). LMK-06 may add a **natural-language headline** to a span whose every
+  event is trusted; it is no structural field and never reaches a restore block.
+  Landmarks roll up into **tiers** of at most `k` **landmark blocks**, each a
+  run of landmarks; a full tier collapses its older landmark blocks to one line
+  each, listing one address range per writer, into the next tier (LMK-05).
 - **Structural field**: A field Cairn derives from an event's shape, never from
   its text: ids, kinds, counts, tool names, key fingerprints, addresses, version
   numbers, sanitized paths and exit status, sanitized under LMK-03. Sanitized,
-  it is trusted whatever the event's trust level (INJ-03).
+  it is trusted whatever the event's trust level (PRV-06, LMK-03).
 - **Structural event**: An event of provenance `structural`, whose meaning lies
   only in structural fields. A hook observation keeps only a hook's structural
   fields; content a hook carries is recorded under its own class. An act's
@@ -98,22 +106,23 @@ summary: >-
   set, such as those I10 lists (the **search index** over event text among its
   indexes, and each principal's Needs you queue among its queues), room state
   and trust levels; I10's statuses are run statuses, but for their time-relative
-  freshness marks, and integrity statuses, and room status and a check's state
-  are computed where shown; the **quarantine set** is what a node holds
-  quarantined.
+  freshness marks, and integrity statuses, results with their evidence classes
+  are derived artifacts, and room status and a check's state are computed where
+  shown; the **quarantine set** is what a node holds quarantined.
 - **Redaction**: Removing secrets from content before it is stored or on import,
   recorded (I1, SEC-08).
 - **Retention policy**: A rule (`retention_policy.*`), set by the node's
   principal or managed policy, that purges content per room and provenance class
-  after a time (I1, SEC-22).
+  after a time (I1, SEC-22); the principal's change to one is widening and
+  applies only once its configuration is accepted (ADM-04).
 - **Flag**: A mark Cairn sets on an event whose text matches an injection
-  pattern (PRV-07); flagged text contributes only counts.
+  pattern (PRV-07); flagged text contributes only counts to landmarks (LMK-04).
 - **Quarantine**: Recorded, reversible exclusion of an event, span, run, writer
-  or derived artifact from recall and from restore blocks, without deletion
-  (I5).
+  or derived artifact from recall, restore blocks and landmarks, on the node
+  that records it, without deletion (I5).
 - **Purge**: Deletion of content, leaving a **tombstone** in its place (ADM-07):
   by a principal act, or by the node under a retention policy, recorded naming
-  the policy. The only way content is destroyed (I1).
+  the policy. The only way stored content is destroyed (I1).
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
   range, a quarantine marker for a quarantined address, or a truncation marker
   on capped kernel output. A **missing range** is part of a writer this node

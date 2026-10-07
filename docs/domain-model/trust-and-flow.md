@@ -11,15 +11,16 @@ summary: >-
   origin, recorder and writer, the deployment mode recorded with the event, the
   node's key set, whether the event's room is foreign to that principal, and
   that principal's stamps and trust grants as its writer logs carry them (I10).
-- **Trusted sources**: What I2 trusts: this node's `operator` and structural
-  events, the `harness_meta` events its hook handlers recorded, and the `user`
-  events they recorded while the deployment mode is `interactive`, all trusted
-  only on this node; and, once PRV-10 ships, principal acts signed by a device
-  key the agent's principal certified, posts and pins written from a device seat
-  such a key certified, within that key's scope, a pin version its principal
-  stamped, and for that agent the posts and pins a trust grant of its principal
-  covers, none of them in a foreign room but the pins and stamps Foreign room
-  names. Everything else is untrusted.
+- **Trusted sources**: I2's trusted sources as PRV-02 applies them, which RCL-10
+  narrows in a foreign room: this node's `operator` and structural events, the
+  `harness_meta` events its hook handlers recorded, and the `user` events they
+  recorded while the deployment mode is `interactive`, all trusted only on this
+  node; and, once PRV-10 ships, principal acts signed by a device key the
+  agent's principal certified, posts and pins written from a device seat such a
+  key certified, within that key's scope, a pin version its principal stamped,
+  and for that agent the posts and pins a trust grant of its principal covers,
+  none of them in a foreign room but the pins and stamps Foreign room names.
+  Everything else is untrusted.
 - **Deployment mode**: `interactive` (a person types at the harness) or
   `automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`).
 - **Trust policy**: The rule that derives each event's trust level (PRV-02).
@@ -45,7 +46,7 @@ summary: >-
 - **Endorsement**: The principal act of a principal with a seat in the room,
   sending a post's text, exactly as the principal confirmed it after any edit,
   to one of the principal's own agents, inside a fixed template naming the
-  post's author and address (OWN-08).
+  author's seat key fingerprint and the post's address (OWN-08).
 - **Trust grant**: A principal's widening act trusting another principal's key
   for its own agents, in one room or everywhere. It covers that principal's
   posts and pins written from device seats a device key certified, never run
@@ -61,7 +62,8 @@ summary: >-
   `delegation_get`, except a subagent's, which its harness returns (OWN-25).
 - **Delegation grant**: The delegating principal's widening act naming who may
   delegate, to which targets, at what rule level, within what **delegation
-  budget**, its cap in model tokens or spend, and until when (OWN-23).
+  budget**, its cap in spend, how many delegates at once and how deep, and until
+  when (OWN-23).
 - **Acceptance grant**: The receiving principal's widening act on its own node,
   naming the delegating principal, the targets, the maximum rule level, the
   delegation budget and the expiry (OWN-26). Delegation to another principal's

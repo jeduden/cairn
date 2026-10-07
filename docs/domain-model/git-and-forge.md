@@ -21,11 +21,15 @@ summary: >-
   protection. It approves and lands; Cairn does neither, and its reports count
   as `asserted` (LANE-08).
 - **Pull request**: The forge's review object for a branch.
-- **Check**: A command and its exit status, bound to a tree; its **check state**
-  is one of §9.7.2's.
+- **Check**: A command run, or expected to run, on a tree, with its exit status
+  once it ends; its **check state** is one of §9.7.2's. A check is expected when
+  one of the intent's criteria names it; the forge's **required checks** show as
+  `asserted`.
 - **Result**: What a room's seats established: a check passing or failing on a
   **tree** (git's snapshot of a commit's files), or a claim stated in text. It
-  names the intent version and carries one evidence class.
+  names the intent version and carries one evidence class; it is derived from
+  the events it rests on and addressed by the event recording its exit status or
+  its claim's text.
 - **Evidence**: The checks, CI attestations or text a result rests on.
 - **Evidence class**: Of a result, ranked: `claim` (text only) < `own check` <
   `witness check` < `CI attested` (LANE-05).
@@ -37,15 +41,16 @@ summary: >-
   commit-signing identities its git configuration sets) authored no commit on
   the branch since it left its base (a **commit author** is git's author of a
   commit, never a seat).
-- **CI attestation**: A check result for the exact commit, signed by a CI key;
-  its evidence class is `CI attested`.
-- **Landing**: Git or the forge merging commits into a protected branch. Cairn
-  never lands anything, and a landing is never a verdict.
+- **CI attestation**: A check's exit status for the exact commit, signed by a CI
+  key; its evidence class is `CI attested`.
+- **Landing**: Git or the forge merging commits into the repository's default
+  branch or a branch the forge protects. Cairn never lands anything, and a
+  landing is never a verdict.
 - **Landing link**: The link from a landed commit to a room, carrying a proof
   class, derived by Cairn.
 - **Proof class**: Of a landing link. Proven: `same commit`, `same patch`, `same
   tree`. Not proven: `likely`, `asserted`, and `not proven` with a reason
-  (LANE-06).
+  (LANE-06). `asserted` is also the mark on forge reports and room trailers.
 - **Room trailer**: The `Cairn-Room:` line on a commit made on a room's branch.
   Each `Cairn-Link:` line is a trailer link. It counts as `asserted` until
   proven (LANE-28).
@@ -61,8 +66,9 @@ summary: >-
   results and evidence. It picks no winner.
 - **Outcome**: What a room's runs have produced so far: the heads of the
   branches it names, their results and evidence, as verdicts assess them.
-- **Presentation**: What a seat put in the outcome window, such as a dev server,
-  an artifact, a file or a diff, with the seat and branch.
+- **Presentation**: What a seat put in the outcome window, such as a dev
+  server's address (inert text the person opens in their own browser), a build
+  artifact, a file or a diff, with the seat and branch.
 - **Verdict**: A person's `met`, `not met` or `needs changes` on one criterion:
   a `verdict` pin, recorded as a principal act (OWN-27) by any person whose
   device seat in the room has the pin capability, bound to the intent version,

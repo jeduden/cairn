@@ -14,15 +14,17 @@ them, Cairn changes only harness configuration, under I7.
   Cairn through hooks. Cairn records it, changes its configuration only under I7
   and never manages its transcripts or compaction; of Cairn's components, only
   the launcher starts and controls runs in it.
-- **Harness session**: The harness's own unit, which yields one transcript.
-  Named only when describing the harness, never as a Cairn unit.
+- **Harness session**: The harness's own unit, which yields one transcript, plus
+  one per subagent where the harness writes them apart (ASM-03). Named only when
+  describing the harness, never as a Cairn unit.
 - **Transcript**: The harness's file of what a harness session did. A
   **transcript source** is a transcript Cairn ingests (Ingest marker, `cairn
   ingest`); a rewritten prefix starts a new **transcript generation** (REC-07).
   As a Cairn term, "source" is a transcript source or a trusted source; the
   harness's `source` field and §6.1's threat sources keep their own sense.
 - **Hook**: The harness's callback into Cairn, carrying its **hook input**, a
-  JSON object (§9.1). The core's hook handlers answer it.
+  JSON object (§9.1). The core's hook handlers answer it. Git's hooks are always
+  qualified, as the commit hook.
 - **Turn**: One exchange between the harness and the model, from an input to the
   model reply that ends it. A **user turn** is the turn the harness's user input
   starts: a person's message in `interactive` deployment mode, a pipeline's in

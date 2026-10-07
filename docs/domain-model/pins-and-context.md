@@ -13,16 +13,17 @@ summary: >-
   intent (Intent). Information, never an instruction. It restores only under
   PIN-10, to runs that have had a seat in its room during the run, as a
   **qualifying pin**: a pin of a type that restores written from a device seat a
-  device key certified restores to its author's principal's agents, the intent
-  as its newest version's author wrote it (before PRV-10 ships, a pin from this
-  node's own device seat to this node's agents), and to agents whose principal's
-  trust grant covers its author's principal; any version of a type that restores
-  restores to the agents of a principal who stamped it. Adding, editing or
-  unpinning a pin of a type that restores, written from a device seat a device
-  key certified (before PRV-10 ships, this node's own device seat), is a
-  widening principal act of its author's principal, and a verdict and a pin
-  candidate's confirmation are their own principal acts (OWN-27, PIN-05); each,
-  but a neutral unpin, still needs its seat's pin capability; every other pin, a
+  device key certified, within that key's device scope, its creating event or
+  stamp trusted on this node, restores to its author's principal's agents, the
+  intent as Intent says (before PRV-10 ships, a pin from this node's own device
+  seat to this node's agents), and to agents whose principal's trust grant
+  covers its author's principal; any version of a type that restores restores to
+  the agents of a principal who stamped it. Adding, editing or unpinning a pin
+  of a type that restores, written from a device seat a device key certified
+  (before PRV-10 ships, this node's own device seat), is a widening principal
+  act of its author's principal, and a verdict and a pin candidate's
+  confirmation are their own principal acts (OWN-27, PIN-05); each, but a
+  neutral unpin, still needs its seat's pin capability; every other pin, a
   token-key-only node's included, is changed by room acts, but for its
   principal's neutral unpin of its own agent's run-seat pin, and a run seat's or
   a token-key-only node's restores only once stamped.
@@ -66,8 +67,8 @@ summary: >-
   revises or stamps it, it restores only to its stampers' agents.
 - **Criterion**: One acceptance condition of an intent, with a stable id.
 - **Stake**: A pin of type `stake` stating what its author works on. Only its
-  author, or for a device seat its author's principal, writes it, and it makes
-  Cairn refuse no other seat's act.
+  author, or for a device seat its author's principal, edits or unpins it, and
+  it makes Cairn refuse no other seat's act.
 - **Title, labels**: Room state the owner's device seat or a moderator sets: a
   display name and tags. They never reach a model.
 - **Assignment**: Room state asking a seat to work on a branch. It makes Cairn
@@ -96,16 +97,18 @@ summary: >-
 - **Envelope warning**: The fixed sentence at the head of every envelope (field
   `warning`).
 - **Trusted text** (`TrustedText`): text the core's **restore builder** makes
-  (INJ-03) only from qualifying pins, sanitized structural fields, Cairn's ids
-  and fixed text Cairn ships: restore blocks, opt-in notices, compaction
-  guidance and the fixed templates I2 names, never a post's text.
+  (INJ-03) only from qualifying pins, sanitized structural fields and fixed text
+  Cairn ships: restore blocks, opt-in notices, compaction guidance and the fixed
+  templates of OWN-04 and OWN-07, never a post's text.
 - **Restore block**: Deterministic trusted text, built only from qualifying
   pins, sanitized structural fields and fixed text Cairn ships, that Cairn
   injects after compaction, at a run's start, resume or clear (INJ-02), and on a
-  prompt while `restore_block.on_prompt` is on (INJ-04): qualifying pins, their
-  room ids, omitted pins' ids and count, the count, room id and key fingerprint
-  of pins of a type that restores that do not qualify (PIN-10), a landmark
-  index, a recall hint and LANE-33's room summary pointer.
+  prompt while `restore_block.on_prompt` is on (INJ-04), carrying among other
+  things qualifying pins, their room ids and the run's seat ids, omitted pins'
+  ids and count, the count, room id and key fingerprint of pins of a type that
+  restores that do not qualify (PIN-10), PIN-11's count and reason, PEER-06's
+  note that later pins may be missing, a landmark index, a recall hint and
+  LANE-33's room summary pointer.
 - **Landmark index**: The current run's landmarks, each with its address range,
   as a restore block lists them (INJ-01).
 - **Recall hint**: The one fixed line in a restore block saying that the recall
@@ -122,9 +125,10 @@ summary: >-
 - **Working view**: Whatever is currently in the model's context window. Never
   part of the record, never authoritative.
 - **Held request**: A permission request, question or hand-off with a stable id,
-  answerable from any principal surface within its scope (OWN-05), held no
-  longer than its **hold window** before its away policy, if one is on, applies;
-  with none on, it stays held (OWN-06). A **reply** answers a held question with
+  answerable from any principal surface within its scope (OWN-05). The agent is
+  kept waiting no longer than its **hold window**, then its away policy, if one
+  is on, answers the agent; the held request stays open, and with no away policy
+  on the agent keeps waiting (OWN-06). A **reply** answers a held question with
   principal-typed text.
 - **Qualified requests**: A permission request (the harness's, held as a held
   request), a role request (a viewer's room act asking for a wider role), a join

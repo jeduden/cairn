@@ -68,11 +68,12 @@ Layout words beyond the list; "presence hint" beside "typing hint";
 
 - **I4, terminal takeover.** Unchanged; the model now says why the
   person's keystrokes are not text the launcher carries.
-- **I2, the foreign-room limit.** X and T found that the model's Trusted
-  sources and PRV-02 trust nothing in a foreign room but its principal's
-  own device-seat pins and stamped versions, while I2 lists those sources
-  without the limit. The recommended fix adds to I2's trusted sources
-  "none of them in a foreign room but that principal's own device-seat
-  pins and the pin versions it stamped". It only narrows trust, but the
-  edit to the invariant waits for the stakeholder's review in an ADR. The
-  model rule, narrower than I2, binds meanwhile.
+- **I2, the foreign-room limit.** X and T found that the model's Trusted sources
+  and PRV-02 trust nothing in a foreign room but its principal's own device-seat
+  pins and stamped versions, while I2 lists those sources without the limit. The
+  recommended fix adds to I2's trusted sources "none of them in a foreign room
+  but that principal's own device-seat pins and the pin versions it stamped". It
+  only narrows trust, but the edit to the invariant waits for the stakeholder's
+  review in an ADR. The model rule, narrower than I2, binds meanwhile. Round 23
+  settled it without an ADR: the model reads I2's trusted sources as PRV-02
+  applies them, which RCL-10 narrows in a foreign room.
