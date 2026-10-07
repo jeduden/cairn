@@ -43,10 +43,10 @@ security review and a new major version, not a bug fix.
   delegation grant its principal recorded (OWN-23): a delegated task inside the
   fixed template of OWN-24. Once its requirements ship, a principal may also
   trust another principal by key for its own agents, in one room or everywhere;
-  the pins that principal wrote from its device seats then restore to those
-  agents, and its posts reach them inside the fixed template of OWN-29. Cairn
-  applies such grants and never grants trust itself. No other write to an agent
-  exists.
+  the pins that principal wrote from device seats a device key of its certified
+  then restore to those agents, and its posts reach them inside the fixed
+  template of OWN-29. Cairn applies such grants and never grants trust itself.
+  No other write to an agent exists.
 - **I3 — Constraints are never summarized.** Every pin that restores is stored
   verbatim and restored verbatim after every compaction, or named by id and
   count when the budget omits it.
