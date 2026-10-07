@@ -31,7 +31,7 @@ summary: >-
     SDK hosting documentation.
 13. lossless-claude/lcm issues and pull requests #292, #431, #517, #533, #563,
     #596, #600.
-14. anthropics/claude-code issue #91910 (subagent compaction hook payloads).
+14. anthropics/claude-code issue #91910 (subagent compaction hook inputs).
 15. RFC 2119, RFC 8174 (requirement keywords); RFC 8785 (JSON Canonicalization
     Scheme).
 16. OWASP Top 10 for Agentic Applications 2026, ASI06 Memory and Context

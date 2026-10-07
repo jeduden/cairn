@@ -38,7 +38,7 @@ Every concern raised during research and review, mapped to Cairn's response.
 | B7  | Per-prompt search cost and stalls grow with the store                     | No per-prompt search by default; latency budgets at 1M–10M events; bounded queries                                                                                                                    | INJ-04, NFR-01, NFR-03, SEC-04 |
 | B8  | Structural fields (file names, MCP tool names) as an injection vector     | Allow-list sanitization                                                                                                                                                                               | LMK-03                         |
 | B9  | Repository configuration could downgrade security                         | A repository's `.cairn.toml` can only tighten the principal's configuration                                                                                                                           | SEC-11                         |
-| B10 | Prompts on runners may carry external content (e.g. issue text)           | `automation` deployment mode by default treats user turns as untrusted                                                                                                                                | PRV-04                         |
+| B10 | Prompts on runners may carry external content (e.g. issue text)           | `automation` deployment mode by default treats `user` events as untrusted                                                                                                                             | PRV-04                         |
 
 ## C. Context-management research
 

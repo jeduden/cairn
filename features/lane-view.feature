@@ -67,11 +67,11 @@ Feature: Room view (VIEW)
     Given an isolated Cairn home
     And synced posts by a key the person gave a petname, a key with none, and a new key using a known name
     And one post with zero-width, bidirectional and tag characters and an HTML comment
-    And a "user" turn this node ingested from a transcript its hook handlers did not watch
+    And a "user" event this node ingested from a transcript its hook handlers did not watch
     When the person opens the room view
     Then each post carries the trust mark of §9.7.6 and the petname the person chose for its author's key, never the name the peer sent
     And the key with no petname is shown by its fingerprint and the new key is marked "new key"
-    And the ingested "user" turn carries the trust mark of §9.7.6 too, since only the "user" turns this node's hook handlers recorded while its deployment mode is "interactive" are trusted
+    And the ingested "user" event carries the trust mark of §9.7.6 too, since only the "user" events this node's hook handlers recorded while its deployment mode is "interactive" are trusted
     And the invisible characters and the HTML comment render as visible placeholders with a count
 
   @VIEW-08 @P1 @I6 @I10 @pending

@@ -219,7 +219,7 @@ Feature: Room (LANE)
     And the room view shows the seat its role and those capabilities
     And only the owner assigns a role, and an invite or invite link records the role it names as a role assignment
     And a seat with no role assignment or appointment, other than the owner's device seats, is a viewer
-    And a room act signed by a device seat of "alice" has every room capability but writing a room summary, editing and unpinning only pins its principal wrote from a device seat of a type that does not restore, and making a list removal of any pin but the intent, while her agents' run seats have only their role and any appointment
+    And a device seat of "alice", but a paired phone's, has every room capability, for room acts and the principal acts that need one, but writing a room summary, editing and unpinning only pins its principal wrote from a device seat that do not restore unstamped, and making a list removal of any pin but the intent, while her agents' run seats have only their role and any appointment
     And an appointment of a run seat or another principal's device seat as moderator is accepted only as a principal act of the owner, or of a principal whose device seat has the moderator role by role assignment, and only the appointer or the owner revokes it
     And an appointment of the facilitator by any principal but the owner is refused and audited
     And an appointment an appointed moderator tries, and its kick, bar or mute aimed at the owner or another moderator, are refused and audited
