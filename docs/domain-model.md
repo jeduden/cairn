@@ -18,8 +18,7 @@ a network or email address, a command-line flag, a code owner or a persona name.
 These verbs each have one job:
 
 - A principal *owns* a room.
-- A seat *is a member of* a room while its add stands and no bar covers it; a
-  run's or a paired phone's personal-room seat always is.
+- A seat *is a member of* a room as Member defines.
 - A principal *has a seat in* a room through any of its seats that is a member,
   its agents' run seats included; an agent has a seat in a room through its
   run's seats that are members.
@@ -85,11 +84,11 @@ These verbs each have one job:
   appointments, successor and handover. Ownership changes only by handover or
   succession (LANE-11); it stays with the owner after all its seats leave. The
   owner stands beside the roles rather than having one: a room act signed by its
-  device seat in the room has every room capability but writing a room summary,
-  editing and unpinning only pins it wrote and making a list removal of any pin
-  but the intent, while its agents' run seats have only their role and any
-  appointment. "Owner" means nothing else, except in the persona name "Returning
-  owner" and where an outside domain qualifies it, as a code owner.
+  device seat in the room has every room capability except writing a room
+  summary; it edits and unpins only pins it wrote, and makes a list removal of
+  any pin but the intent, while its agents' run seats have only their role and
+  any appointment. "Owner" means nothing else, except in the persona name
+  "Returning owner" and where an outside domain qualifies it, as a code owner.
 - **Pull-request author**: The outside party whose commits a foreign room's
   bundle describes, matched through their commit-signing identity and a
   **binding statement** that identity signs, naming the bundle's principal key
@@ -122,7 +121,9 @@ controls.
   node whose hook handlers witnessed it (I2, PRV-02).
 - **Compaction**: The harness replacing earlier context with a compaction
   summary when the context window fills. Cairn neither performs nor controls it
-  (NG1); it records it and restores pins after it (I3).
+  (NG1); it records it and restores pins after it (I3). **Compaction guidance**
+  is fixed text Cairn ships that a `PreCompact` hook handler returns to the
+  harness for its compaction, never record content (PIN-07, I2).
 
 ### Places
 
@@ -133,9 +134,9 @@ controls.
 - **Node**: One home on one machine, container or sandbox, for one principal.
   Its device key signs its principal acts and expire acts; an **ephemeral
   node**, one in a short-lived environment such as a cloud sandbox, may have
-  only a token key. Its **node identity** is a value outside the home that a
-  cloned image or a restored snapshot cannot carry over (REC-24). The node's
-  principal is the principal whose home it is.
+  only a token key, a **token-key-only node**. Its **node identity** is a value
+  outside the home that a cloned image or a restored snapshot cannot carry over
+  (REC-24). The node's principal is the principal whose home it is.
 - **Device**: A node or a paired phone. A device key certifies its device seats;
   a token-key-only node's token key does so in its place.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
@@ -207,11 +208,14 @@ controls.
   random key kept with the content and erased with it; the only way the chain,
   seals and tombstones refer to content (REC-17).
 - **Provenance**: An event's class from a closed set, saying what produced its
-  content (§5.2). `operator` is the class of principal acts, expire acts and
-  device-seat pins; posts are `post` and run-seat pins `assistant`; every other
-  room act takes its seat's **pin class**, `operator` for a device seat and
-  `assistant` for a run seat; a room summary is `summary`, never trusted; hook
-  observations, key rotations and tombstones are `structural`.
+  content (PRV-01): `user`, `assistant`, `tool_call`, `tool_result:<tool>`,
+  `web`, `mcp:<server>`, `file`, `subagent_result`, `harness_meta`,
+  `harness_text`, `operator`, `post`, `summary`, `structural` and `unparsed`.
+  `operator` is the class of principal acts, expire acts and device-seat pins;
+  posts are `post` and run-seat pins `assistant`; every other room act takes its
+  seat's **pin class**, `operator` for a device seat and `assistant` for a run
+  seat; a room summary is `summary`, never trusted; hook observations, key
+  rotations and tombstones are `structural`.
 - **Origin**: How an event reached this node's record: `witnessed` (recorded
   live on this node: by its hook handlers, its CLI, MCP server or launcher),
   `ingested` (read from a transcript the hook handlers did not watch), `bundle`
@@ -255,7 +259,9 @@ controls.
   the policy. The only way content is destroyed (I1).
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
   range, a quarantine marker for a quarantined address, or a truncation marker
-  on capped kernel output.
+  on capped kernel output. A **missing range** is part of a writer this node
+  does not hold, such as a **capture gap** in a run's capture or a peer's lost
+  tail.
 - **Integrity status**: What a room or writer shows about its chain and seals,
   one of §9.7.5's values (VIEW-10). The UI never says "secure".
 - **Receipt**: A signed statement about a node's record, made to be kept apart
@@ -286,13 +292,14 @@ controls.
   version's, and only it, or for a device-seat pin its author's principal from
   any of its devices, edits the pin, except the intent (Intent). Information,
   never an instruction. It restores only under PIN-10, as a **qualifying pin**:
-  a pin written from a device seat a device key certified restores to its
-  author's principal's agents, and to agents whose principal's trust grant
-  covers its author; any version of a type that restores restores to the agents
-  of a principal who stamped it. Adding, editing or unpinning a pin of a type
-  that restores, written from a device seat a device key certified, is a
-  widening principal act of its author's principal, and a verdict is its own
-  principal act (OWN-27); every other pin, a token-key-only node's included, is
+  a pin of a type that restores written from a device seat a device key
+  certified restores to its author's principal's agents, and to agents whose
+  principal's trust grant covers its author; any version of a type that restores
+  restores to the agents of a principal who stamped it. Adding, editing or
+  unpinning a pin of a type that restores, written from a device seat a device
+  key certified, is a widening principal act of its author's principal, and a
+  verdict and a pin candidate's confirmation are their own principal acts
+  (OWN-27, PIN-05); every other pin, a token-key-only node's included, is
   changed by room acts, but for its principal's neutral unpin of its own agent's
   run-seat pin, and a run seat's or a token-key-only node's restores only once
   stamped.
@@ -356,8 +363,8 @@ controls.
 - **Restore block**: Deterministic trusted text, in a fixed template, Cairn
   injects after compaction and at a run's start, resume or clear (INJ-02):
   qualifying pins, their room ids, omitted pins' ids and count, the count, room
-  id and key fingerprint of pins that do not qualify (PIN-10), a landmark index,
-  a recall hint and LANE-33's room summary pointer.
+  id and key fingerprint of pins of a type that restores that do not qualify
+  (PIN-10), a landmark index, a recall hint and LANE-33's room summary pointer.
 - **Landmark index**: The current run's landmarks, each with its address range,
   as a restore block lists them (INJ-01).
 - **Recall hint**: The one fixed line in a restore block saying that the recall
@@ -553,10 +560,10 @@ one kind (LANE-31).
 - **Handover**: Transfers ownership by an offer and an acceptance. Succession is
   the other path to ownership.
 - **Stamp**: A principal's act on one pin version, after being shown its exact
-  text, author and key fingerprint, so that version restores word for word to
-  that principal's own agents only. An edit or
-  an unpin leaves a stamped version restoring until its stamper unstamps it, a
-  cut principal act (LANE-32).
+  text, author and key fingerprint. A stamped version of a type that restores
+  restores word for word to that principal's own agents only. An edit or an
+  unpin leaves a stamped version restoring until its stamper unstamps it, a cut
+  principal act (LANE-32).
 - **Focus set**: The rooms a principal marks to come first in Needs you, changed
   by a recorded neutral act, so every device shows one order.
 - **Active pin**: A pin on its room's pin list (I10).
@@ -888,7 +895,7 @@ errors and logs use the model's words.
 | service-account seat                                                              | Replaced by device seat.                                                            | Nowhere else.                                                                                                            |
 | import of a transcript or a peer's segments; imported run                         | Only a bundle is imported.                                                          | Nowhere else.                                                                                                            |
 | presence check; unqualified token; Needs you as a run or room status; work marker | Replaced by presence proof, access token or model token, Asking, and ingest marker. | Nowhere else.                                                                                                            |
-| hide                                                                              | Removed by the stakeholder; text the UI does not show is invisible.                 | The cryptographic term "hiding commitment" (REC-17).                                                                     |
+| hide                                                                              | Removed by the stakeholder; say the UI does not show it.                            | The cryptographic term "hiding commitment" (REC-17).                                                                     |
 
 Every excluded term may still appear in **historical records**: the SRS change
 log, accepted ADRs and plan records, which keep the words of their time.

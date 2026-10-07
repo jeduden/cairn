@@ -63,19 +63,20 @@ security review and a new major version, not a bug fix.
   principal covers. Cairn writes to an agent only through a closed set of paths.
   Without a principal act: restore blocks (INJ-01, INJ-02), built only from
   qualifying pins, trusted structural fields and fixed text Cairn ships; and
-  opt-in notices (INJ-10) and the fixed templates of OWN-04 and OWN-07, each
-  built only from fixed text Cairn ships, trusted structural fields and ids. On
-  a principal act recorded at that time: through the harness's own input, only
-  principal-typed text, a fixed template that references ids, or a post a
-  principal endorsed exactly as shown inside the template of OWN-08. Under a
-  delegation grant its principal recorded (OWN-23), and, for an agent of another
-  principal, an acceptance grant that agent's principal recorded (OWN-26): a
-  delegated task inside the fixed template of OWN-24. Once its requirements
-  ship, a principal may also trust another principal by key for its own agents,
-  in one room or everywhere; the pins that principal wrote from device seats one
-  of its device keys certified then restore to those agents, and its posts reach
-  them inside the fixed template of OWN-29. Cairn applies such grants and never
-  grants trust itself. No other write to an agent exists.
+  opt-in notices (INJ-10), compaction guidance (PIN-07) and the fixed templates
+  of OWN-04 and OWN-07, each built only from fixed text Cairn ships, trusted
+  structural fields and ids. On a principal act recorded at that time: through
+  the harness's own input, only principal-typed text, a fixed template that
+  references ids, or a post a principal endorsed exactly as shown inside the
+  template of OWN-08. Under a delegation grant its principal recorded (OWN-23),
+  and, for an agent of another principal, an acceptance grant that agent's
+  principal recorded (OWN-26): a delegated task inside the fixed template of
+  OWN-24. Once its requirements ship, a principal may also trust another
+  principal by key for its own agents, in one room or everywhere; the pins that
+  principal wrote from device seats one of its device keys certified then
+  restore to those agents, and its posts reach them inside the fixed template of
+  OWN-29. Cairn applies such grants and never grants trust itself. No other
+  write to an agent exists.
 - **I3 — Constraints are never summarized.** Every pin that restores is stored
   verbatim and restored verbatim after every compaction, or named by id and
   count when the budget omits it.
@@ -131,8 +132,7 @@ What they mean for everyday code:
   always enveloped.
 - **I4** — no `net`, `net/http` or `os/exec` in the core; depguard and an
   import-closure test enforce it.
-- **I6** — every dropped, rejected, redacted or failed operation is audited and
-  counted.
+- **I6** — audit and count each dropped, rejected, redacted or failed operation.
 - **I9** — hook handlers fail open unless that would break I2, I4 or I8.
 - **I10** — code that builds derived artifacts reads no clock or randomness.
 
