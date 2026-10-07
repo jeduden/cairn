@@ -334,7 +334,7 @@ Feature: Security (SEC)
     And the events sealed before the revocation still verify
     And the others are refused under the revocation rule
     And a head receipt of every writer's chain head verifies on another node with no network
-    And a seat key minted because a backup restore put the home on another machine starts a new seat and writer, which names the old seat
+    And a seat key minted because a backup restore put the home on another machine starts a new seat and writer, which names the old seat, inherits no add, role or appointment and joins as any seat does
 
   @SEC-28 @P2 @I2 @I4 @I6 @pending
   Scenario: outbound bridges run only in the bridge component, per enabled destination, and carry little

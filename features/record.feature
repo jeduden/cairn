@@ -290,6 +290,7 @@ Feature: Record (REC)
     And <change>
     When the hook "SessionStart" runs and appends its first event after the start
     Then Cairn mints a new seat key before that append, starting a new seat and writer that names the old seat
+    And the new seat inherits no add, role or appointment of the old seat, and joins a room only as any seat does
     And an audit entry records the node identity change
     And no event is appended under the old seat key
 

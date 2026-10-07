@@ -81,7 +81,7 @@ Feature: Administration and lifecycle (ADM)
     And "cairn verify" passed on the copy and its audit chain before anything was reinstated
     And every event and payload outside run "run-a" recalled before the backup is recalled identically
     And run "run-a" stays purged and the unpinned pin stays unpinned
-    And each local seat the copy contains is followed by a new seat and writer under a newly minted seat key, which names the old seat, audited, and no reinstated writer's log gains an event or reuses a seq
+    And each local seat the copy contains is followed by a new seat and writer under a newly minted seat key, which names the old seat and inherits no add, role or appointment of it, audited, and no reinstated writer's log gains an event or reuses a seq
     And "cairn verify" exits 0 on the home after the backup restore
 
   @ADM-07 @P0 @I1 @I5 @pending

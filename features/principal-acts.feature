@@ -141,12 +141,12 @@ Feature: Principal acts (OWN)
     Then the act is "<expected>"
 
     Examples:
-      | surface                        | risk state      | class    | expected                                                     |
-      | authenticated                  | permits         | widening | accepted                                                     |
-      | authenticated                  | does not permit | widening | refused                                                      |
-      | authenticated                  | permits         | unlisted | treated as widening and accepted                             |
-      | not backed by a presence proof | permits         | cut      | recorded with a mark naming its surface, free text untrusted |
-      | not backed by a presence proof | permits         | neutral  | recorded with a mark naming its surface, free text untrusted |
+      | surface                        | risk state      | class                   | expected                                                     |
+      | authenticated                  | permits         | widening                | accepted                                                     |
+      | authenticated                  | does not permit | widening                | refused                                                      |
+      | authenticated                  | permits         | named by no requirement | treated as widening and accepted                             |
+      | not backed by a presence proof | permits         | cut                     | recorded with a mark naming its surface, free text untrusted |
+      | not backed by a presence proof | permits         | neutral                 | recorded with a mark naming its surface, free text untrusted |
 
   @OWN-12 @P1 @I2 @pending
   Scenario: a CLI verb writing a principal act refuses without a terminal
@@ -217,7 +217,7 @@ Feature: Principal acts (OWN)
     And an untrusted event carrying a command with invisible characters
     When the person confirms the command for a witness check
     Then the person was shown its exact text with invisible characters made visible before confirming
-    And the act is recorded as their principal act
+    And the act is recorded as their widening principal act
     And the witness check runs only through the launcher, started by "cairn check witness", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit in the range, with network and the principal's home denied
     And its command, exit status and tree hash are recorded
 
@@ -308,7 +308,7 @@ Feature: Principal acts (OWN)
   Scenario: only a person records a verdict, and it goes stale when what it was bound to changes
     Given an isolated Cairn home
     And a room whose agent stated "C1 is done" and recorded a passing check linked to C1
-    When "alice", a person with a seat in the room, records "met" on C1 and the agent then edits a file
+    When "alice", a person whose device seat in the room has the pin capability, records "met" on C1 and the agent then edits a file
     Then the verdict is recorded as a "verdict" pin by "alice"'s own neutral principal act, on the signing device's seat in the room, bound to the intent version, the heads of every branch the room names and the results and evidence shown
     And Cairn pre-filled no verdict, and the agent's statement stays a claim
     And after the edit the verdict reads stale
