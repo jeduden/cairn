@@ -186,7 +186,7 @@ kinds:
         max: 1000
       token-budget:
         mode: heuristic
-        max: 12000
+        max: 14000
   domain-model-agent:
     # The domain-model agent holds instructions only; the model itself
     # is docs/domain-model.md. Its name is pinned to its file, and its
