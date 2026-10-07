@@ -27,7 +27,7 @@ Feature: Pins (PIN)
     Given an isolated Cairn home
     And deployment mode "interactive"
     When the agent calls the MCP tool "pin_candidate_propose" with text "Always run go test before committing" and type "constraint"
-    Then the result gives a pin candidate id and states that only the agent's principal can confirm it
+    Then what the tool returns gives a pin candidate id and states that only the agent's principal can confirm it
     And the pin candidate is stored as proposed pin text, not a pin, with provenance "assistant" and no pin author
     And the qualifying pin count is 0
     And no MCP tool confirms a pin candidate or makes any pin restore
@@ -58,7 +58,7 @@ Feature: Pins (PIN)
     And deployment mode "<mode>"
     And the person's configuration contains <config>
     When the hook "UserPromptSubmit" runs with prompt "Never edit files under migrations/ without asking"
-    Then <candidates> pin candidates are recorded, each proposed pin text with no pin author
+    Then <candidates> pin candidates are derived, each over its creating "user" event, holding its text by address, with no provenance of its own and no pin author
     And the qualifying pin count is 0
     And the qualifying pin count is <confirmed> after the person confirms every pin candidate with "cairn pin-candidate confirm", each its own widening principal act
     And a token-key-only node of the principal cannot confirm a pin candidate

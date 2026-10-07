@@ -83,7 +83,7 @@ Feature: Principal acts (OWN)
     When the hold window ends
     Then the agent's held request gets the answer "<answer>"
     And no turn is started or resumed
-    And a later allow reaches only the requesting run as the fixed template "Held request <id> was approved by your principal" with a permission grant for the identical action
+    And a later allow reaches only the requesting run as the fixed template "Held request <id> was allowed by your principal" with a permission grant for the identical action
     And the held-request id resolves through "event_get" to the held request's recorded event
 
     Examples:
@@ -201,7 +201,7 @@ Feature: Principal acts (OWN)
     And the phone can only read, allow once and deny held permission requests
     And each answer the phone gives is signed with its own device key and recorded on its device seat in her personal room, naming the room, whose writer the phone seals with that seat's key and the node it pairs with only holds
     And where an authenticator is required each allow carries the phone's own presence proof bound to that answer
-    And without the peer component a phone reaching the room view through the principal's tunnel is a principal surface, not a paired phone, whose secret's scope the room-view component enforces on the server, and it sees the room view's own origin, port included
+    And without the peer component a browser on the principal's phone reaching the room view through the principal's tunnel is a principal surface, not a paired phone, whose secret's scope the room-view component enforces on the server, and it sees the room view's own origin, port included
 
   @OWN-17 @P2 @I2 @I8 @pending
   Scenario: a principal act from another of the principal's devices takes effect only within its scope
@@ -221,6 +221,8 @@ Feature: Principal acts (OWN)
     When the person runs "cairn witness-check start" on a result whose check runs that command, and confirms it
     Then the person was shown its exact text with invisible characters made visible before confirming
     And the act is recorded as their widening principal act
+    And until that confirmation the command reached no terminal and the launcher did not run it
+    And the confirmation sends the command to no agent, since what reaches an agent stays under I2 and OWN-03
     And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base, with network, the OS user's home directory (`HOME`) and the principal's home denied
     And the launcher records its command by commitment, its exit status and the tree hash as a structural event
     And where the platform cannot deny the check network, Cairn refuses the witness check
@@ -276,11 +278,11 @@ Feature: Principal acts (OWN)
     Then the delegation is <expected>
 
     Examples:
-      | precondition                                                               | target                                  | expected                                                           |
-      | no delegation grant                                                        | its own subagent                        | recorded under OWN-24, with no delegation grant                    |
-      | no delegation grant                                                        | a new run in another worktree           | refused, audited and shown                                         |
-      | a delegation grant naming that worktree, a delegation budget and an expiry | a new run in that worktree              | started by the launcher, through its harness adapter, and recorded |
-      | an expired delegation grant                                                | an existing agent of the same principal | refused, audited and shown                                         |
+      | precondition                                                               | target                                  | expected                                                                                                                                |
+      | no delegation grant                                                        | its own subagent                        | recorded under OWN-24, with no delegation grant                                                                                         |
+      | no delegation grant                                                        | a new run in another worktree           | refused, audited and shown                                                                                                              |
+      | a delegation grant naming that worktree, a delegation budget and an expiry | a new run in that worktree              | started by the launcher, through its harness adapter, and recorded                                                                      |
+      | a delegation grant past its expiry                                         | an existing agent of the same principal | refused by the delegating node at use time, audited and shown, while "alice"'s node, once PRV-10 ships, ends the grant by an expire act |
 
   @OWN-24 @P1 @I2 @pending
   Scenario: a delegate inherits its maximum rule level from the delegating agent and its recall taint from the delegating run
@@ -314,6 +316,7 @@ Feature: Principal acts (OWN)
     Then the delegated task reaches the target in the fixed template, marked as from "alice"'s agent
     And the target keeps "bob" as its one principal
     And the same delegation without the acceptance grant is refused and audited
+    And once the acceptance grant's expiry passes, the delegating node refuses the same delegation at use time, and, once PRV-10 ships, "bob"'s node ends the acceptance grant by an expire act
 
   @OWN-27 @P1 @I2 @I10 @pending
   Scenario: only a person records a verdict, and it goes stale when what it was bound to changes

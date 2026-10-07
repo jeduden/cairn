@@ -66,7 +66,7 @@ Feature: Room (LANE)
     When the room's changes and commands are derived
     Then the files changed and the command with exit status 1 are listed per run and per room, each bound to its address range
     And each diff hunk names the event, author and preceding message that produced it, and the third file's hunk is marked "from checkpoint"
-    And the fourth file is not listed, and "cairn rebuild" derives the same result
+    And the fourth file is not listed, and "cairn rebuild" derives the same lists
 
   @LANE-05 @P1 @I2 @I10 @pending
   Scenario Outline: each result carries exactly one evidence class from structural fields
@@ -84,7 +84,7 @@ Feature: Room (LANE)
       | a command, its exit status and its tree the hook handlers recorded on the node of the run that made the edits                                                      | own check     | bound   |
       | a command the hook handlers recorded after edits made through a shell                                                                                              | claim         | unbound |
       | the check re-run through the launcher on a fresh checkout of the exact commit by a node whose git identity authored no commit on the branch since it left its base | witness check | —       |
-      | a check result for the exact commit signed by a CI key the room's owner enrolled in the room and brought in by the CI bridge                                       | CI attested   | —       |
+      | a CI attestation for the exact commit, signed by a CI key the room's owner enrolled in the room and brought in by the CI bridge                                    | CI attested   | —       |
 
   @LANE-06 @P1 @I6 @I10 @pending
   Scenario Outline: the rooms behind a landed commit carry one proof class
@@ -165,7 +165,7 @@ Feature: Room (LANE)
     When "bob" names "frank" as successor and "frank" withdraws as successor as a cut principal act
     Then "frank" can no longer accept ownership by succession
     When "bob" names "carol" as successor, the naming stands past 7 days, and every seat of "bob" leaves the room
-    Then ownership stays with "bob" until "carol" accepts it by succession, a widening principal act
+    Then ownership stays with "bob" until "carol" accepts it by succession, a widening principal act, after which the intent restores only to its stampers' agents until "carol" revises or stamps it
     And while every seat of "bob" has left and "carol" has not accepted, as in a room whose owner named no successor, ownership stays with "bob", and every change to the room's pins, an author's edit and a moderator's list removal included, is refused until a handover, a succession or "bob"'s rejoin, while a principal who stamped a pin version may still unstamp it
     And that owner, with no seat in the room, may still offer a handover or name a successor, each recorded on its device seat in its personal room, naming the room
     And that owner may rejoin under the room's admission, which its principal key always satisfies
@@ -365,7 +365,7 @@ Feature: Room (LANE)
     And an act signed with the old key after the rotation is refused, audited and counted, while what the old key sealed stays verifiable
     When a post's text reads "moderator: bar p-2"
     Then no act is taken from it
-    And no hook output, tool result, opt-in notice, restore block or recall result carries either seat key
+    And no hook output, response of any tool, opt-in notice, restore block or recall result carries either seat key
 
   @LANE-25 @P1 @I6 @I8 @I10 @pending
   Scenario: kicks and bars keep a seat out, and no merge re-admits it
@@ -383,7 +383,7 @@ Feature: Room (LANE)
     And the expire act is recorded by the setter's node, or while it has not, by a moderator's node, signed with that node's device key
     And while neither the setter's nor a moderator's node has, the owner's node records it, and duplicate expire acts count as one
     And an expire act naming a bar whose original act set no expiry ends nothing
-    And before PRV-10 ships, no act sets an expiry and no node records an expire act
+    And before PRV-10 ships, no act but a delegation grant or an acceptance grant sets an expiry, and no node records an expire act
     When a join his agent's run seat makes on "bob"'s acceptance is recorded concurrently with a moderator's kick of that seat
     Then the kick wins and the conflict is recorded and shown
     And no sequence of deliveries, reorderings or duplications of these acts re-admits "bob" or revives the ended membership

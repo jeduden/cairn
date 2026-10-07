@@ -59,7 +59,7 @@ Feature: Non-functional requirements (NFR)
   Scenario: a store scales to 10M events, 100 GiB of payloads and 50 concurrent runs
     Given an isolated Cairn home
     And a synthetic store with 10M events, 100 GiB of payloads and one run above 10M model tokens
-    When 50 runs, subagents included, ingest concurrently
+    When 50 runs, subagents included, write concurrently and are ingested
     Then every event is stored and recallable by its address (writer, seq)
     And "cairn verify" exits 0
 
@@ -112,7 +112,7 @@ Feature: Non-functional requirements (NFR)
   Scenario Outline: the core executable builds for each supported platform
     Given the release build
     When it builds the cairn core executable for "<platform>"
-    Then the result is one executable that links <linking>
+    Then the build yields one executable that links <linking>
 
     Examples:
       | platform     | linking                                          |
@@ -156,10 +156,10 @@ Feature: Non-functional requirements (NFR)
     And any surface that misses its target says so on screen
 
     Examples:
-      | action                                     | target |
-      | an ingested event appears in the room view | 1 s    |
-      | Catch up paints                            | 1 s    |
-      | search shows its first hits                | 300 ms |
-      | a hit opens in context                     | 150 ms |
-      | replay steps from one event to the next    | 50 ms  |
-      | replay rebuilds a worktree                 | 500 ms |
+      | action                                                     | target |
+      | an event the hook handlers record appears in the room view | 1 s    |
+      | Catch up paints                                            | 1 s    |
+      | search shows its first hits                                | 300 ms |
+      | a hit opens in context                                     | 150 ms |
+      | replay steps from one event to the next                    | 50 ms  |
+      | replay rebuilds a worktree                                 | 500 ms |

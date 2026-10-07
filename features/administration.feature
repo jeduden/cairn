@@ -41,11 +41,11 @@ Feature: Administration and lifecycle (ADM)
     Given an isolated Cairn home
     And <settings>
     When an agent runs and the person starts "<component>"
-    Then "<component>" <result>
+    Then "<component>" <expected>
     And the core records every event of the run
 
     Examples:
-      | settings                                                                                                                                            | component               | result                                                                                        |
+      | settings                                                                                                                                            | component               | expected                                                                                      |
       | a managed policy file at the documented system path that the person can write                                                                       | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
       | a managed policy file in a directory the person can write                                                                                           | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
       | an unparsable managed policy file                                                                                                                   | the room-view component | refuses to start, and an audit entry and a counter record why                                 |

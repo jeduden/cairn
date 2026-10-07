@@ -269,5 +269,5 @@ Feature: Engineering quality (ENG)
     Given the repository checkout
     When a change to an invariant or to a requirement marked for I2 review is proposed
     Then it lands only with an accepted ADR that records a named human security reviewer's approval
-    And until that ADR is accepted, every component that crosses B0 is built only as a prototype
+    And until that ADR is accepted, every B1, B2 or B3 component is built only as a prototype
     And evidence from the release build proves no release artifact or tagged release contains prototype code

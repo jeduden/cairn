@@ -42,7 +42,7 @@ Feature: Compute kernel (CMP)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a"
     When the agent calls the MCP tool "kernel_exec" with code "<code>"
-    Then the result reports an error naming "<resource>" as unavailable
+    Then the tool returns an error naming "<resource>" as unavailable
     And no file, socket, process or environment variable was touched by the worker
 
     Examples:
@@ -58,7 +58,7 @@ Feature: Compute kernel (CMP)
     And an agent run with a Claude Code transcript "run-a"
     And the agent has set the kernel variable "kept" with "kernel_exec"
     When the agent calls the MCP tool "kernel_exec" with code "<code>"
-    Then the result is an error stating the <limit> limit was exceeded and the namespace was lost
+    Then the tool returns an error stating the <limit> limit was exceeded and the namespace was lost
     And the "cairn kernel-worker" child process has been restarted
     And an audit entry records "kernel <limit> limit exceeded"
 
@@ -71,9 +71,9 @@ Feature: Compute kernel (CMP)
   @CMP-06 @P1 @I2 @pending
   Scenario: only printed output returns to the agent, capped, enveloped and tainted
     Given an isolated Cairn home
-    And an agent run with a Claude Code transcript "run-a" containing an untrusted web result
+    And an agent run with a Claude Code transcript "run-a" containing an untrusted "web" event
     When the agent calls the MCP tool "kernel_exec" with code "r = cairn.event_search(query='web'); print(r * 10000)"
-    Then the result is wrapped in the envelope
+    Then the recall result is wrapped in the envelope
     And the printed output is capped at 8,000 model tokens with a truncation marker stating that variables persist
     And the envelope is tainted "untrusted" by the web event read during the execution
     And no value other than printed output is returned
@@ -94,7 +94,7 @@ Feature: Compute kernel (CMP)
     And an agent run with a Claude Code transcript "run-a"
     And the external Python kernel is enabled in the person's configuration
     When the agent calls the MCP tool "kernel_exec" with code "import socket; socket.create_connection(('example.com', 80))"
-    Then the result reports that the network is unavailable
+    Then what the tool returns reports that the network is unavailable
     And a write to the store from the Python worker is rejected
     And the record is unchanged
 

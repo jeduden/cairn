@@ -9,12 +9,12 @@ Feature: Provenance and trust (PRV)
   Scenario: every event carries its writer and exactly one provenance class from the closed set
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "every-kind"
-    And "every-kind" contains a user turn, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent result, lifecycle metadata, a system reminder and a malformed line
+    And "every-kind" contains a user turn, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent's delegate report, lifecycle metadata, a system reminder and a malformed line
     And a principal act, an expire act, a pin written from a device seat, a pin a run seat wrote, a post from another seat, a room act of the run's seat and a room summary the room's facilitator wrote are recorded in the run's room, and a retention purge's tombstone naming that room's content on the recording device's seat there
-    And the Bash tool call of "every-kind" was ingested by an earlier ingest than its result
+    And the Bash tool call of "every-kind" was ingested by an earlier ingest than its tool result
     When the person runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
-    And the Bash result carries provenance "tool_result:Bash"
+    And the Bash tool result carries provenance "tool_result:Bash"
     And the principal act, the expire act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", the room summary carries "summary", and the tombstone carries "structural"
     And every provenance class is one of:
       | user               |
@@ -151,9 +151,9 @@ Feature: Provenance and trust (PRV)
   Scenario Outline: instruction-like untrusted content is flagged without blocking storage
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "web-run"
-    And "web-run" contains a WebFetch result carrying <content>
+    And "web-run" contains a WebFetch tool result carrying <content>
     When the person runs "cairn ingest --all"
-    Then the WebFetch result is stored as a "web" event flagged "instruction_like"
+    Then the WebFetch tool result is stored as a "web" event flagged "instruction_like"
     And its hit from the MCP tool "event_search" carries the flag, and no landmark contains its text
     And "cairn audit --flagged" lists its address (writer, seq)
 
@@ -205,7 +205,7 @@ Feature: Provenance and trust (PRV)
   @PRV-10 @P1 @I2 @I8 @pending
   Scenario Outline: an "operator" event from another node is trusted only through a key chain rooted in the principal key of this node's principal
     Given an isolated Cairn home
-    And this principal's offline principal key certified the device key of its node on a laptop with scope "allow, deny, pin" and maximum rule level 2, and the device key of its paired phone with the scope "allow, deny"
+    And this principal's offline principal key certified the device key of its node on a laptop with scope "allow, deny, pin" and maximum rule level "act when told", and the device key of its paired phone with the scope "allow, deny"
     And the laptop's device key certified a token key that certified the device seat key and a run seat key of a token-key-only ephemeral node, limited to an access token's rooms, that node's own personal room and the access token's expiry
     When an event <event> arrives from another node
     Then the event is <expected>
@@ -224,7 +224,7 @@ Feature: Provenance and trust (PRV)
       | by the laptop's device key, stamping a version of that pin                                                                     | trusted                                                                                    |
       | by the device seat key of a token-key-only node of a principal this principal trusts by a trust grant, adding a constraint pin | untrusted until a principal stamps it from one of its devices whose device scope allows it |
       | by the laptop's device key, an act outside its scope                                                                           | untrusted                                                                                  |
-      | by the laptop's device key, at rule level 3                                                                                    | untrusted                                                                                  |
+      | by the laptop's device key, setting an action class to "act without asking"                                                    | untrusted                                                                                  |
       | by the token-key-only node's run seat key, not held before the access token was revoked                                        | refused and audited                                                                        |
       | by a seat key the laptop's revoked device key certified, not held before the revocation                                        | refused and audited                                                                        |
       | by the laptop's revoked device key, covered by a seal held before the revocation                                               | accepted                                                                                   |

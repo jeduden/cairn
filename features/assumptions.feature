@@ -40,7 +40,7 @@ Feature: Assumptions register (ASM)
   Scenario: transcripts are one JSONL file per harness session with subagents nested (S3)
     Given a recorded "~/.claude/projects" tree for Claude Code "supported"
     When the transcript discovery walks the tree
-    Then each harness session is one JSONL file under "~/.claude/projects/<project-slug>/"
+    Then each harness session yields one JSONL transcript under "~/.claude/projects/<project-slug>/"
     And each subagent transcript lies under "<session_id>/subagents/"
 
   @ASM-04 @pending
@@ -122,9 +122,9 @@ Feature: Assumptions register (ASM)
 
   @ASM-13 @pending
   Scenario: a tool-result line repeats the output and names its call (S3)
-    Given a recorded transcript for Claude Code "supported" with a Bash tool call and its result
+    Given a recorded transcript for Claude Code "supported" with a Bash tool call and its tool result
     When each line of the recording is read
-    Then the result line carries the output in "message.content" and again in "toolUseResult"
+    Then the tool-result line carries the output in "message.content" and again in "toolUseResult"
     And its "sourceToolAssistantUUID" names the line carrying the Bash tool call
 
   @ASM-14 @pending
@@ -189,4 +189,4 @@ Feature: Assumptions register (ASM)
     When the harness session's main run starts a subagent
     Then one MCP server serves both runs and keeps the run-seat keys of the main run and the subagent's run
     And each key reached it through a channel the harness keeps out of the model's context
-    And no transcript line, hook input or tool result of either run carries a key
+    And no transcript line, hook input or tool result of either run carries a private key
