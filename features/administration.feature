@@ -203,7 +203,7 @@ Feature: Administration and lifecycle (ADM)
     Examples:
       | quota               | arrival                                             | expected                                                                                  |
       | received writer     | a peer offers another event of that writer          | the event is refused and an audit entry records it                                        |
-      | peer                | the peer offers another segment                     | the segment is refused and an audit entry records it                                      |
+      | peer                | the peer offers another segment                     | the segment is refused, and a structural event and an audit entry record the refusal      |
       | worktree checkpoint | the hook "Stop" records another worktree checkpoint | the worktree checkpoint is recorded, a failure counter rises and a Needs you item appears |
       | node                | the run appends another event                       | the event is recorded, a failure counter rises and a Needs you item appears               |
 

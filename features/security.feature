@@ -236,6 +236,7 @@ Feature: Security (SEC)
     And the check fails when a component's build-time reach evidence is missing, or when that evidence or a test of a component confined to its boundary shows more reach than its row grants
     And the check fails when a process exists that the register does not list
     And every B1, B2 and B3 component, the launcher included, stays off on the home until the person turns it on, the room-view component and the launcher only by accepting the configuration that turns it on, and the bridge component only by enabling a bridge for a host
+    And every Cairn feature whose purpose is to reach off the machine through a carrier the person runs has its own row, stays off by default and turns on only by a widening principal act
 
   @SEC-20 @P1 @I4 @I6 @I8 @pending
   Scenario: the room view binds to loopback and accepts only its own launch secret
@@ -311,9 +312,9 @@ Feature: Security (SEC)
       | segment                                                                                               | expected                                                                                                          |
       | comes from a run seat key that chains to a principal key in its key set, with a valid seal and chain  | received into this node's record, its events untrusted                                                            |
       | comes from a device seat a device key of this node's principal certified, with a valid seal and chain | received, its principal acts, posts and pins trusted only as PRV-02 classifies them, never for coming from a peer |
-      | comes from a seat key that chains to no principal key in its key set                                  | refused and audited                                                                                               |
-      | carries a broken seal                                                                                 | refused and audited                                                                                               |
-      | breaks its writer's chain                                                                             | refused and audited                                                                                               |
+      | comes from a seat key that chains to no principal key in its key set                                  | refused, recorded as a structural event and audited                                                               |
+      | carries a broken seal                                                                                 | refused, recorded as a structural event and audited                                                               |
+      | breaks its writer's chain                                                                             | refused, recorded as a structural event and audited                                                               |
 
   @SEC-26 @P2 @I2 @I4 @pending
   Scenario: an export or publish is a reviewed, redacted and signed principal act

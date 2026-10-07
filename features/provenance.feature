@@ -192,7 +192,7 @@ Feature: Provenance and trust (PRV)
     And a peer that declared the writers "w-peer-1" and "w-peer-2"
     When this node receives <item> from the peer
     Then the item is <expected>
-    And an audit entry records each refusal
+    And an audit entry records each refusal, and a structural event each refused segment
     And every stored event's writer is derived from the key that verifiably signed or wrote it, never from a field in the event or bundle
 
     Examples:
@@ -230,3 +230,14 @@ Feature: Provenance and trust (PRV)
       | by the laptop's revoked device key, covered by a seal held before the revocation                                               | accepted                                                                                   |
       | by the phone's device key, allowing a held permission request                                                                  | trusted                                                                                    |
       | by the phone's device key, adding a pin                                                                                        | untrusted                                                                                  |
+
+  @PRV-11 @P0 @I2 @I8 @pending
+  Scenario: the node's device key certifies each seat key with a seat certificate naming its seat kind
+    Given an isolated Cairn home
+    And a node whose device key no principal key has certified
+    When a run's run seat starts in a room and the node's device seat starts in the same room
+    Then the device key has certified the run seat's key with a seat certificate scoped to that room and naming the seat kind "run"
+    And the device key has certified the device seat's key with a seat certificate scoped to that room and naming the seat kind "device"
+    And the room view and "cairn room list" show and mark each seat's kind only from its seat certificate, never from a field in its events
+    And once a principal key certifies the device key, both seat certificates stay valid and each seat key chains principal key → device key → seat key
+    And a recorded I2 security review of this requirement exists before it ships

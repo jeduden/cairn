@@ -255,7 +255,7 @@ Feature: Record (REC)
     When the person runs "cairn rebuild"
     Then every segment this node wrote carries a format version
     And the supported segment is read
-    And the version 99 segment is refused and an audit entry records its unsupported format version
+    And the version 99 segment is refused, a structural event in this node's device seat in its personal room records the refusal, and an audit entry records its unsupported format version
     And the version 99 segment file is byte-identical to before
 
   @REC-22 @P1 @I1 @I2 @pending
