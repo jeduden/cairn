@@ -59,7 +59,8 @@ summary: >-
   another of its nodes, or another principal's agent (OWN-23 to OWN-26).
 - **Delegated task**: The text of a delegation: a subagent's from its harness,
   any other in OWN-24's template.
-- **Delegate report**: What a delegate returns, enveloped: through
+- **Delegate report**: What a delegate returns, recorded on the delegating side
+  so it stays in the delegating run's recall scope (OWN-24), enveloped: through
   `delegation_get`, except a subagent's, which its harness returns as untrusted
   `subagent_result` (OWN-25).
 - **Delegation grant**: The delegating principal's widening act naming who may

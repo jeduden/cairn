@@ -59,7 +59,7 @@ summary: >-
   follows from the seat.
 - **Member**: A seat whose add stands and that no bar covers, or a run's or a
   paired phone's personal-room seat, or a device seat a newly minted key started
-  in the personal room (Seat, Join); the seat's role says what it may do. A
+  in the personal room (Seat, Seat key); the seat's role says what it may do. A
   kicked, departed or barred seat is no longer a member. A principal is never a
   member; **the room's principals** are those with a member seat, and text for
   people speaks of the room's principals. A personal-room seat can neither leave

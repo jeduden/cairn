@@ -28,11 +28,12 @@ one kind (LANE-31).
 - **Principal act**: An act of a kind OWN-11 classes, taken at a principal
   surface. It is signed by a device key once PRV-10 ships (OWN-02); before then
   it is an `operator` event its device seat's seal covers, told apart from a
-  room act by the surface it is marked with (OWN-02). An act a seat key signs is
-  a room act. A widening act lets more reach an agent, or more act or leave the
-  node; a cut act only stops, narrows or undoes a widening; a neutral act does
-  neither, such as accepting or asking for a join, which adds only pins already
-  trusted for its principal while recall stays enveloped. Its classes:
+  room act by the surface it is marked with (OWN-02). An act a seat key signs as
+  the act, beyond sealing its writer, is a room act. A widening act lets more
+  reach an agent, or more act or leave the node; a cut act only stops, narrows
+  or undoes a widening; a neutral act does neither, such as acknowledging
+  counters. Every change of visibility, admission or a room setting is widening,
+  whichever way it goes. Its classes:
   - **Cut:** deny, interrupt, pause, stop, cancel a delegation, end a permission
     grant, reject a foreign room, decline a join request, tighten a rule level,
     revoke a role assignment, revoke a CI key, stop publishing a room, record a
@@ -43,12 +44,14 @@ one kind (LANE-31).
     off, decline a handover, withdraw as successor, dismiss a directed post,
     revoke an access token, a seat key or a service account's certificate, turn
     capture on, and turn off the peer component, a bridge or the git carrier.
-  - **Neutral:** mark a room ready or abandoned, acknowledge an overlap, record
-    a `met` or `not met` verdict, accept or ask for a join, open the forensic
-    view, make a purge request, refuse a quarantine request, an erasure request
-    or a purge request, choose a branch to compare, acknowledge counters,
-    dismiss a Q3 or Q4 item other than a directed post, unpin a pin its own
-    agent's run seat wrote, and add a room to or remove it from the focus set.
+  - **Neutral:** mark a room ready (the owner or a principal whose device seat
+    in the room is a moderator) or abandoned (the owner), acknowledge an
+    overlap, record a `met` or `not met` verdict, unpin a verdict, open the
+    forensic view, make a purge request, refuse a quarantine request, an erasure
+    request or a purge request, choose a branch to compare, acknowledge
+    counters, dismiss a Q3 or Q4 item other than a directed post, unpin a pin
+    its own agent's run seat wrote, and add a room to or remove it from the
+    focus set.
   - **Widening:** allow, answer a hand-off (a hand-back), reply, steer, confirm
     a steer for a later turn (OWN-13), send a correction, retry from a worktree
     checkpoint, set or revise an intent, resume, record a delegation grant or an
@@ -57,19 +60,21 @@ one kind (LANE-31).
     own device seat), confirm a pin candidate, change a room's visibility,
     invite a principal key, issue an invite link, choose a fork, confirm a
     command taken from an untrusted event (OWN-18), turn on the peer component,
-    accept a handover or succession, endorse, loosen a rule level, turn on or
-    change an away policy other than turning it off, quarantine that removes a
-    pin or a landmark from a restore block, release a quarantine, purge or apply
-    an erasure request, export, bind or rebind a repository identity, accept
-    open residual risks (OWN-22), certify a service account's principal key,
-    assign a role, set a room's admission, appoint a moderator or the
-    facilitator, stamp a pin version, name a successor, hand over a room, record
-    a trust grant, allow notices for a room or opt in to them, enable a bridge
-    or the git carrier, set a room setting, publish, apply a purge request,
-    change a retention policy, accept configuration (recording its digest),
-    enroll a CI key, rotate a device key, retire a writer, turn capture off or
-    pause it, enroll or revoke a device, peer or authenticator, mint or rotate
-    an access token, start a witness check, and a backup restore.
+    accept a handover or succession, ask for or accept a join, which sends the
+    run's events to a room other principals' nodes hold, endorse, loosen a rule
+    level, turn on or change an away policy other than turning it off,
+    quarantine that removes a pin or a landmark from a restore block, release a
+    quarantine, purge or apply an erasure request, export, bind a repository
+    identity by hand or rebind it, accept open residual risks (OWN-22), certify
+    a service account's principal key, assign a role, set a room's admission,
+    appoint a moderator or the facilitator, stamp a pin version, name a
+    successor, hand over a room, record a trust grant, allow notices for a room
+    or opt in to them, enable a bridge or the git carrier, set a room setting,
+    publish, apply a purge request, change a retention policy, accept
+    configuration (recording its digest), enroll a CI key, rotate a device key,
+    retire a writer, turn capture off or pause it, enroll or revoke a device,
+    peer or authenticator, mint or rotate an access token, start a witness
+    check, and a backup restore.
 
   Any principal act that removes a pin from a restore block, or stops this node
   recording its own runs' events, is widening whatever verb carries it. An
@@ -102,10 +107,9 @@ one kind (LANE-31).
   the three roles list, plus writing a room summary, which only the
   facilitator's appointment carries.
 - **Work**: A capability, not an act: to edit, execute commands, write worktree
-  checkpoints and commit (LANE-16); a run's events go to its run seat while the
-  run works on any branch the room names and its role has work; an assignment
-  only asks. As a capability, "work" means nothing else; what one agent hands
-  another is a delegated task.
+  checkpoints and commit (LANE-16); a run's events go to its run seat as
+  Relations says; an assignment only asks. As a capability, "work" means nothing
+  else; what one agent hands another is a delegated task.
 - **Appointment**: A principal act that makes a run seat or a device seat of a
   principal other than the owner an **appointed moderator**, a moderator within
   SEC-32's limits. The owner may appoint, and so may a principal whose device
@@ -149,16 +153,16 @@ one kind (LANE-31).
 - **Room merge**: The one rule deriving all room state from the three act kinds,
   in causal order (LANE-31). It covers membership, roles, appointments, pins,
   pin versions and stamps. It covers mutes, presentations, picks, bars,
-  handovers and their offers. It covers the successor, title, labels,
-  assignment, visibility, admission, the notice allowance and the **room
-  settings** (whether drafts show live, whether typing shows, the roles a
-  whole-room mute leaves posting to, and the **appointment rate**: how many
-  kicks, bars and mutes an appointed moderator may set per period, PEER-09,
-  SEC-32). When acts conflict, the more restrictive act wins, then the lower
-  commitment. Concurrent picks resolve by **pick order** (the facilitator's
-  seat, then any other moderator, then the owner, VIEW-22). Of two branch links
-  naming one branch, the first in causal order stands, concurrent ones by the
-  lower commitment (LANE-01).
+  handovers and their offers, and OWN-21's ready and abandoned marks. It covers
+  the successor, title, labels, assignment, visibility, admission, the notice
+  allowance and the **room settings** (whether drafts show live, whether typing
+  shows, the roles a whole-room mute leaves posting to, and the **appointment
+  rate**: how many kicks, bars and mutes an appointed moderator may set per
+  period, PEER-09, SEC-32). When acts conflict, the more restrictive act wins,
+  then the lower commitment. Concurrent picks resolve by **pick order** (the
+  facilitator's seat, then any other moderator, then the owner, VIEW-22). Of two
+  branch links naming one branch, the first in causal order stands, concurrent
+  ones by the lower commitment (LANE-01).
 - **Concurrent**: Of two acts or events: neither causally after the other;
   **causal order** puts each after every act or event it saw.
 - **Room state**: Everything the room merge derives (LANE-31).

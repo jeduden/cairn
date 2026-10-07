@@ -47,7 +47,8 @@ summary: >-
   **restore block limit** (INJ-07), CMP-05's wall-clock and memory limits,
   SEC-04's query deadline and the output caps (RCL-03, CMP-06). I3's budget is
   the pin budget, and I9's defined budgets are these named budgets and limits;
-  the latency targets of NFR-01, NFR-03 and NFR-15 are targets, not budgets.
+  the latency targets of NFR-01, NFR-03 and NFR-15 are targets, not budgets, and
+  the harness's own limit on a hook is the **harness timeout**, never a budget.
 - **Pin type**: One of `constraint`, `preference`, `decision`, `fact`,
   `episode`, `intent`, `verdict` and `stake`. Only `constraint`, `preference`
   and `intent` pins restore.
@@ -130,8 +131,8 @@ summary: >-
   answerable from any principal surface within its scope (OWN-05). The agent is
   kept waiting no longer than its **hold window**, then its away policy, if one
   is on, answers the agent; the held request stays open, and with no away policy
-  on the agent keeps waiting (OWN-06). A **reply** answers a held question with
-  principal-typed text.
+  on, the agent keeps waiting at the harness's own prompt (OWN-06). A **reply**
+  answers a held question with principal-typed text.
 - **Qualified requests**: A permission request (the harness's, held as a held
   request), a role request (a viewer's room act asking for a wider role), a join
   request (a room act of a run's personal-room seat naming the room; it needs

@@ -8,9 +8,10 @@ summary: >-
 
 - **Repository**: A git repository, identified by its **repository identity**, a
   bound root commit, the same on every node holding a clone, shallow clones
-  included, else a provisional node-local identity bound later (LANE-02). It has
-  remotes and may carry room trailers, bundles as git refs and the git carrier's
-  segments.
+  included, else a provisional node-local identity bound later (LANE-02). The
+  first bind is a structural event Cairn records at the first hook event;
+  binding by hand or rebinding is a widening principal act. It has remotes and
+  may carry room trailers, bundles as git refs and the git carrier's segments.
 - **Branch**: A git branch, identified by repository identity, remote URL and
   branch name. A branch with no remote has a provisional node-local identity,
   rebound when it is pushed.
@@ -44,7 +45,8 @@ summary: >-
   author of a commit, never a seat). Where the platform cannot deny network,
   Cairn refuses the witness check (OWN-18).
 - **CI attestation**: A check's exit status for the exact commit, signed by a CI
-  key; a result resting on one is `CI attested`.
+  key the room's owner enrolled, recorded in the room so every principal sees
+  the same class (LANE-22); a result resting on one is `CI attested`.
 - **Landing**: Git or the forge merging commits into the repository's default
   branch or a branch the forge protects. Cairn never lands anything, and a
   landing is never a verdict. A branch lands when its head lands.
@@ -77,5 +79,6 @@ summary: >-
   a `verdict` pin, recorded as a principal act (OWN-27) by any person whose
   device seat in the room has the pin capability, bound to the intent version,
   the heads of every branch the room names, and the results and evidence shown.
-  It goes stale when any of them changes. Cairn never derives one; service
-  accounts contribute evidence instead.
+  It goes stale when any of them changes. It is never edited: a newer verdict on
+  the same criterion supersedes it, and unpinning one is neutral. Cairn never
+  derives one; service accounts contribute evidence instead.

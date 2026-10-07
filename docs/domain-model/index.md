@@ -64,20 +64,21 @@ row: "- [{title}]({filename}) — {summary}"
 - Every seat belongs to one principal and one room; every writer to one seat.
 - Each event goes to exactly one seat's writer. A run's event goes to its run
   seat in the room it works in at that moment, one it joined or created that
-  names its current branch, while that seat's role has work (LANE-01, LANE-16);
-  else to its personal-room seat. A room act goes to the writer of the seat that
-  signs it. A principal act or an expire act goes to the device seat of the
-  device that signs it, or before PRV-10 ships records it, in the room it acts
-  on; a node of a principal with a member seat there first joins it without
-  admission. One that acts on no room, on a room its principal has no member
-  seat in, or that a paired phone signs, goes to that device seat in the
-  personal room, naming the room, and that room shows it by address as it shows
-  a cross-room post (LANE-29). A tombstone, an erasure request a retention
-  policy sends, and a bridge's or the launcher's event about a room's branch go
-  to the recording device's seat in the room they name, joined as for a
-  principal act. Any other event with no run goes to the recording device's seat
-  in the personal room of its node, or for a paired phone, of the node it pairs
-  with.
+  names the branch of the run's latest preceding event naming its branch, while
+  that seat is a member and has work (its role, no mute), per the room state
+  this node holds when it records the event (LANE-01, LANE-16); else to its
+  personal-room seat. A room act goes to the writer of the seat that signs it. A
+  principal act or an expire act goes to the device seat of the device that
+  signs it, or before PRV-10 ships records it, in the room it acts on; a node of
+  a principal with a member seat there first joins it without admission. One
+  that acts on no room, on a room its principal has no member seat in, or that a
+  paired phone signs, goes to that device seat in the personal room, naming the
+  room, and that room shows it by address as it shows a cross-room post
+  (LANE-29). A tombstone, an erasure request a retention policy sends, and a
+  bridge's or the launcher's event about a room's branch go to the recording
+  device's seat in the room they name, joined as for a principal act. Any other
+  event with no run goes to the recording device's seat in the personal room of
+  its node, or for a paired phone, of the node it pairs with.
 - A run's history spans its seats' writers, tied together by the run. Peers
   exchange segments, so a room holds only the events routed to its seats and
   shows others by address (LANE-01).

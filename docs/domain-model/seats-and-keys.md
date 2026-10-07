@@ -34,10 +34,10 @@ summary: >-
   seals its writer. A rotation, signed by the old and the new key, keeps the
   seat's id and writer (SEC-27). A key minted because the node changed, a clone
   or a backup restore (REC-24, ADM-06), starts a new seat and writer that names
-  the old one and inherits no add, role or appointment, unlike the seat ingest
-  starts (Run seat): outside the personal room it joins as any seat does
-  (LANE-23), and roles and appointments are assigned again; a personal-room seat
-  is a member from its first event.
+  the old one and inherits no add, role or appointment, while the seat ingest
+  starts takes over the add and role (Run seat): outside the personal room it
+  joins as any seat does (LANE-23), and roles and appointments are assigned
+  again; a personal-room seat is a member from its first event.
 - **Device key**: A device's key, certified by a principal key's **device
   certificate**, with a **device scope** (the kinds of principal act it may
   sign, and of post and pin its seats may write) and a maximum rule level. It

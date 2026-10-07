@@ -43,7 +43,8 @@ summary: >-
   layout, though a writer's closed segments may be merged (REC-25) or rewritten
   by a purge (ADM-07) without changing any address. The **open segment** is a
   writer's newest, still growing; it closes at the points REC-19 names, and
-  peers exchange its sealed prefix.
+  peers exchange its sealed prefix. A closed segment or an open segment's sealed
+  prefix is a **sealed range**.
 - **Seal**: A seat key's signature over its writer id, a seq and the chain head
   at that seq (REC-18), made where that key lives: a witnessed run's run seat's
   by its run's MCP server, covering what the hook handlers appended, an ingested
@@ -141,8 +142,8 @@ summary: >-
   receipt** lists every writer's chain head at a moment, the tamper evidence of
   VIEW-10 and SEC-27; a **purge receipt** states what a purge erased and what it
   could not (SEC-31).
-- **Backup**: A copy of a home's store and audit log, without seat or device
-  keys (`cairn backup create`, ADM-06); reading it back is a backup restore.
+- **Backup**: A copy of a home's store and audit log, without any key (`cairn
+  backup create`, ADM-06); reading it back is a backup restore.
 - **At-rest key**: The key that encrypts the store when encryption at rest is on
   (SEC-09).
 - **Bundle**: A reviewed export of a room, signed by the device key of the
