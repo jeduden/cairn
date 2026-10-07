@@ -121,7 +121,7 @@ Feature: Room (LANE)
     Then both nodes derive the same title by the room merge rule of LANE-31
     And the losing title stays visible in the room's history
     And the contributor's label is refused and audited, since only the owner's device seat or a moderator sets the title, labels or an assignment
-    And no act sets the room's status, which stays derived
+    And no act sets the room's status, which is computed where shown and never recorded
 
   @LANE-10 @P2 @I2 @I6 @pending
   Scenario: an invite names key and role, is reviewed before it takes effect, and roles are enforced
@@ -297,6 +297,7 @@ Feature: Room (LANE)
     When "bob" records "not met" on C1, "alice" records "met" on C1 and "carol" posts a revised criterion
     Then every principal with a seat in the room sees both verdicts on C1 side by side, each with its author's petname and role, or owner for "alice"
     And neither verdict replaces the other
+    And a verdict of a person whose device seat in the room has the viewer role is refused and audited, since that seat lacks the pin capability
     And "carol"'s revision reaches no agent until "alice" revises the intent to it
 
   @LANE-23 @P1 @I2 @I6 @I8 @I10 @pending
@@ -314,6 +315,7 @@ Feature: Room (LANE)
     And a join request of a run of "alice" for which she asked joins under the room's admission with no further acceptance, while one she did not ask for joins only on her acceptance, a neutral principal act
     When "alice" also joins the room from the node on her laptop by her own act at a principal surface, and allows a held permission request of the room's run from her paired phone
     Then the laptop's node has its own device seat in the room, added by a join without admission since her run's seat is a member there, shown grouped under "alice" with her run's seat, through her principal key
+    And a node of "alice" with no seat in the room that records a principal act on it first joins its own device seat there the same way, before that act
     And the phone joins no room: its answer goes to its device seat in her personal room, a member there from its pairing with no add, naming the room, and the room shows it by address
     And the phone signs with its own device key and seals its device seat's writer with that seat's key, and the node it pairs with only holds the writer
     When a subagent of that run joins on "alice"'s acceptance

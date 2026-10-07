@@ -141,7 +141,7 @@ Feature: Room view (VIEW)
     When the person opens the comparison of the two branches from the room's Room page
     Then each branch's exposure, results and evidence are shown side by side
     And the paths are aligned the same way on every comparison
-    And no branch is marked the winner, and choosing a branch to compare is a neutral principal act of the room's owner
+    And no branch is marked the winner, and choosing a branch to compare is a neutral principal act of a principal with a seat in the room
 
   @VIEW-14 @P1 @I6 @pending
   Scenario: every surface and reduced client uses the same words and a reduced client says what it left out
