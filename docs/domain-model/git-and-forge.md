@@ -50,9 +50,9 @@ summary: >-
 - **Landing**: Git or the forge merging commits into the repository's default
   branch or a branch the forge protects. Cairn never lands anything, and a
   landing is never a verdict. A branch lands when its head lands.
-- **Landing link**: The link from a landed commit to a room, carrying a proof
-  class, derived by Cairn from the record alone: the clone facts it reads
-  (landed commits, patch ids, trees) are recorded as structural events.
+- **Landing link**: The qualified link from a landed commit to a room, carrying
+  a proof class, derived by Cairn from the record alone: the clone facts it
+  reads (landed commits, patch ids, trees) are recorded as structural events.
 - **Proof class**: Of a landing link. Proven: `same commit`, `same patch`, `same
   tree`. Not proven: `likely`, `asserted`, and `not proven` with a reason
   (LANE-06). `asserted` is also the mark on forge reports and room trailers.

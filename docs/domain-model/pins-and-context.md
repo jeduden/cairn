@@ -7,27 +7,27 @@ summary: >-
 # Pins and context
 
 - **Pin**: Verbatim text in exactly one room, with a pin type and numbered pin
-  versions, each with one author (a seat); the pin's author is its first
-  version's, and only it, or for a device-seat pin its author's principal from
-  any of its devices whose device scope allows it, edits the pin, except the
-  intent (Intent). Information, never an instruction. It restores only under
-  PIN-10, to runs that have had a seat in its room during the run, as a
-  **qualifying pin**, its creating event or stamp trusted on this node: a pin of
-  a type that restores written from a device seat a device key certified, within
-  that key's device scope, restores to its author's principal's agents, the
-  intent as Intent says (before PRV-10 ships, a pin from this node's own device
-  seat to this node's agents), and to agents whose principal's trust grant
-  covers its author's principal; any version of a type that restores restores to
-  the agents of a principal who stamped it. Adding, editing or unpinning a pin
-  of a type that restores, written from a device seat a device key certified
-  (before PRV-10 ships, this node's own device seat), is a widening principal
-  act of its author's principal, and a verdict and a pin candidate's
-  confirmation are their own principal acts (OWN-27, PIN-05); each, but a
-  neutral unpin, still needs its seat's pin capability; every other pin, a
-  token-key-only node's included, is changed by room acts, but for a verdict,
-  recorded and unpinned by neutral principal acts (OWN-27), and its principal's
-  neutral unpin of its own agent's run-seat pin, and a run seat's or a
-  token-key-only node's restores only once stamped.
+  versions, each with one author (a seat); the pin's author, its **pin author**,
+  is its first version's, and only it, or for a device-seat pin its author's
+  principal from any of its devices whose device scope allows it, edits the pin,
+  except the intent (Intent). Information, never an instruction. It restores
+  only under PIN-10, to runs that have had a seat in its room during the run, as
+  a **qualifying pin**, its creating event or stamp trusted on this node: a pin
+  of a type that restores written from a device seat a device key certified,
+  within that key's device scope, restores to its author's principal's agents,
+  the intent as Intent says (before PRV-10 ships, a pin from this node's own
+  device seat to this node's agents), and to agents whose principal's trust
+  grant covers its author's principal outside a foreign room; any version of a
+  type that restores restores to the agents of a principal who stamped it.
+  Adding, editing or unpinning a pin of a type that restores, written from a
+  device seat a device key certified (before PRV-10 ships, this node's own
+  device seat), is a widening principal act of its author's principal, and a
+  verdict and a pin candidate's confirmation are their own principal acts
+  (OWN-27, PIN-05); each, but a neutral unpin, still needs its seat's pin
+  capability; every other pin, a token-key-only node's included, is changed by
+  room acts, but for a verdict, recorded and unpinned by neutral principal acts
+  (OWN-27), and its principal's neutral unpin of its own agent's run-seat pin,
+  and a run seat's or a token-key-only node's restores only once stamped.
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers.
 - **Pin candidate**: Proposed pin text an agent suggested (an `assistant` event,
@@ -64,16 +64,18 @@ summary: >-
   whose stamped version keeps restoring to its agents until it unstamps it.
 - **List removal**: A moderator's or the owner's room act taking a pin, never
   the intent or a verdict, off the pin list without unpinning it. It raises a
-  Needs you item for the pin's author's principal; a device-seat pin it removes
-  keeps restoring to every agent it restored to until that principal unpins it.
+  Needs you item for each stamper, whose stamped version keeps restoring to its
+  agents until it unstamps it (LANE-32); a device-seat pin it removes also
+  raises one for its author's principal and keeps restoring to every agent it
+  restored to until that principal unpins it (LANE-26).
 - **Intent**: A room's lead pin, of type `intent`: a goal, its criteria and
   optionally the paths it is meant to change (LANE-20). Only the owner's
   principal act changes it; a new owner's revision adds a version its device
   seat authors. The intent restores as the author of its newest version wrote
   it, to that author's principal's agents and to agents whose principal's trust
-  grant covers that author's principal; after a change of ownership, a handover
-  or a succession, until the new owner revises or stamps it, it restores only to
-  its stampers' agents.
+  grant covers that author's principal outside a foreign room; after a change of
+  ownership, a handover or a succession, until the new owner revises or stamps
+  it, it restores only to its stampers' agents.
 - **Criterion**: One acceptance condition of an intent, with a stable id.
 - **Stake**: A pin of type `stake` stating what its author works on. Only its
   author, or for a device seat its author's principal, edits it; it is unpinned
@@ -109,10 +111,11 @@ summary: >-
   marks, and Cairn's ids (`room_get`, VIEW-15).
 - **Envelope warning**: The fixed sentence at the head of every envelope (field
   `warning`).
-- **Trusted text** (`TrustedText`): text the core's **restore builder** makes
-  (INJ-03) only from qualifying pins, sanitized structural fields and fixed text
-  Cairn ships: restore blocks, opt-in notices, compaction guidance and the fixed
-  templates of OWN-04 and OWN-07, never a post's text.
+- **Trusted text** (`TrustedText`): text only the core's restore-block code
+  constructs, the only text the **restore builder** accepts (INJ-03), built only
+  from qualifying pins, sanitized structural fields and fixed text Cairn ships:
+  restore blocks, opt-in notices, compaction guidance and the fixed templates of
+  OWN-04 and OWN-07, never a post's text.
 - **Restore block**: Deterministic trusted text, built only from qualifying
   pins, sanitized structural fields and fixed text Cairn ships, that Cairn
   injects after compaction, at a run's start or harness resume (INJ-02), and on

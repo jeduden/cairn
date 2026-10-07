@@ -122,11 +122,11 @@ summary: >-
   redacted diff since the previous worktree checkpoint (REC-20).
 - **Derived artifact**: Anything computed from the record and the node's key
   set, such as those I10 lists (the **search index** over event text among its
-  indexes, and each principal's Needs you queue among its queues), room state
-  and trust levels; I10's statuses are run statuses, but for their time-relative
-  freshness marks, and integrity statuses. Results with their evidence classes
-  are derived artifacts; room status and a check's state are computed where
-  shown; the **quarantine set** is what a node holds quarantined.
+  indexes, and the node's principal's Needs you queue among its queues), room
+  state and trust levels; I10's statuses are run statuses, but for their
+  time-relative freshness marks, and integrity statuses. Results with their
+  evidence classes are derived artifacts; room status and a check's state are
+  computed where shown; the **quarantine set** is what a node holds quarantined.
 - **Redaction**: Removing secrets from content before it is stored, on import,
   or from what an export's, a publish's or an invite's review step sends,
   recorded (I1, SEC-08).

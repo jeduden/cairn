@@ -47,7 +47,7 @@ row: "- [{title}]({filename}) — {summary}"
 - [Seats and keys](seats-and-keys.md) — Seats and the keys behind them: run and device seats, room and seat ids, seat, device, principal and token keys, certificates, access tokens, authenticators and CI keys.
 - [Acts and roles](acts-and-roles.md) — The three act kinds and what they may do: room acts, principal acts and their classes, expire acts, roles, appointments, joins, moderation, handover, stamps and the room merge.
 - [Git and forge](git-and-forge.md) — Repositories, branches and commits, the forge, results with their evidence and proof classes, qualified links, comparisons, outcomes and verdicts.
-- [Trust and flow](trust-and-flow.md) — Trust and how content reaches an agent: trust levels and sources, recall, endorsement, trust grants, delegation, rule levels, away policies, fixed templates, run status and room status.
+- [Trust and flow](trust-and-flow.md) — Trust and how content reaches an agent: trust levels and sources, recall, endorsement, trust grants, delegation, rule levels, away policies, fixed templates, sandbox state and risk acceptance, quotas and spend, counters, canary and stats, run status and room status, the Needs you queue and focus set, overlap, forks, presence hints and petnames.
 - [Components and surfaces](components-and-surfaces.md) — Cairn's components inside their network boundaries, the room view's surfaces and the outcome window.
 <?/catalog?>
 
@@ -88,8 +88,8 @@ row: "- [{title}]({filename}) — {summary}"
   shows others by address (LANE-01).
 - Principals and agents create rooms; an agent's room is owned by its principal.
   Cairn never creates a room on its own initiative; a node's personal room comes
-  from the principal's `cairn install`, or is carried over to a node clone, and
-  Cairn may suggest a room or a join.
+  from the principal installing Cairn there (Personal room), or is carried over
+  to a node clone, and Cairn may suggest a room or a join.
 - A pin naming no room belongs to its author's principal's personal room on the
   node that wrote it.
 - Recall extends only to the principal's

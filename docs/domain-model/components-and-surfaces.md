@@ -30,7 +30,11 @@ summary: >-
     prompt, records sandbox state and carries in only text the core built.
   - **Room-view component (B1):** serves the browser room view on loopback only
     (SEC-20), and records the principal acts taken in it, marked with their
-    principal surface (VIEW-03).
+    principal surface (VIEW-03). A **room-view secret** makes the browser room
+    view a principal surface (SEC-20): a **launch secret** it mints per launch,
+    exchanged once for an **origin secret** only its own origin, port included,
+    can read or send, which lasts until the component stops; a phone-scoped one
+    serves a browser on the principal's phone (OWN-16).
   - **Launcher (B1):** `cairn launch`, which starts, hosts and controls runs
     through each harness adapter's run part, carrying into the harness input
     only text the core built and recorded, read from the record, never text from

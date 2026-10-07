@@ -6,10 +6,12 @@ summary: >-
 ---
 # Places
 
-- **Home**: The directory containing all of one principal's Cairn state on a
-  node (`CAIRN_HOME`, default `~/.cairn`), belonging to one OS user and
-  optionally bound to a **home id** (`home.id`) that the environment must supply
-  to open it (SEC-03). The unit of isolation (I8).
+- **Home**: The directory with one principal's Cairn state on a node
+  (`CAIRN_HOME`, default `~/.cairn`), to which the keys SEC-10 keeps in a
+  platform key store, named per home, or only in an MCP server's memory are
+  bound, belonging to one OS user and optionally bound to a **home id**
+  (`home.id`) that the environment must supply to open it (SEC-03). The unit of
+  isolation (I8).
 - **Node**: One home on one machine, container or cloud environment, for one
   principal. Its device key signs principal acts and expire acts once PRV-10
   ships; an **ephemeral node**, one in a short-lived cloud environment, may have
@@ -31,13 +33,14 @@ summary: >-
 - **Room**: Where an intent is worked on: at most one intent, a **conversation**
   (its ordered posts), seats, pins, and branches in any repositories, each named
   by a branch link. The unit Cairn shows and shares.
-- **Personal room**: A principal's private room on each of its nodes, created by
-  the principal's `cairn install` as the first act of its device seat there, or
-  carried over to a node clone, which shares it. It stays private: no invite,
-  admission or visibility change applies to it (LANE-17). Its create room act is
-  the device seat's add there. Every run its node records has a seat in it from
-  its first event, without a join, and every event or pin that belongs to no
-  other room goes there.
+- **Personal room**: A principal's private room on each of its nodes, created as
+  the first act of its device seat there when the principal installs Cairn on
+  the node, by `cairn install`, the plugin or the managed install path, recorded
+  at Cairn's first start there, or carried over to a node clone, which shares
+  it. It stays private: no invite, admission or visibility change applies to it
+  (LANE-17). Its create room act is the device seat's add there. Every run its
+  node records has a seat in it from its first event, without a join, and every
+  event or pin that belongs to no other room goes there.
 - **Foreign room**: A room this node holds, other than only as a blind peer,
   that its principal neither owns nor has a seat in, such as the room of an
   imported bundle or a room every seat of its principal has left or lost to a

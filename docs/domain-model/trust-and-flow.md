@@ -2,7 +2,7 @@
 title: "Trust and flow"
 order: "09"
 summary: >-
-  Trust and how content reaches an agent: trust levels and sources, recall, endorsement, trust grants, delegation, rule levels, away policies, fixed templates, run status and room status.
+  Trust and how content reaches an agent: trust levels and sources, recall, endorsement, trust grants, delegation, rule levels, away policies, fixed templates, sandbox state and risk acceptance, quotas and spend, counters, canary and stats, run status and room status, the Needs you queue and focus set, overlap, forks, presence hints and petnames.
 ---
 # Trust and flow
 
@@ -105,10 +105,11 @@ summary: >-
   commands or network use), one of, loosest to tightest: act without asking, act
   when told, ask first, hand off (OWN-10). A maximum rule level is the loosest
   allowed.
-- **Quota**: A limit on storage, events or **spend** (what runs cost in model
-  tokens or money), per room, node, writer received from a peer, peer or
-  worktree checkpoint, that the node's principal or managed policy sets
-  (ADM-15).
+- **Quota**: A limit on storage or events, per room, node, writer received from
+  a peer, peer or worktree checkpoint, that the node's principal or managed
+  policy sets (ADM-15).
+- **Spend**: What runs cost in model tokens or money; no quota limits it until
+  OQ-26 closes.
 - **Away policy**: A principal's opt-in choice of what an unanswered held
   request does while it is on: keep going, pause or stop (OWN-07). Only that
   principal act sets it, never a settings key.

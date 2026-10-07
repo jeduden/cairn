@@ -25,7 +25,7 @@ summary: >-
   server still runs, goes to the one seat and writer ingest starts beside that
   run seat, which every later `cairn ingest` extends and the core seals, naming
   the run seat, in the same room, sharing its add, where it has one, and taking
-  over its role, so a kick, leave or bar of either seat ends it for both
+  over its role, so a kick or leave of either seat ends that one add for both
   (REC-19); that seat is a run seat whose key the core keeps like a device
   seat's key; an ingested run's seat key is kept like a device seat's key, and
   the core seals its writer.
