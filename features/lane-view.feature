@@ -29,9 +29,9 @@ Feature: Room view (VIEW)
     And a room with recorded runs
     When the room-view component serves the room view, the person acknowledges counters in it, and the view is then stopped
     Then the view reads the record only through the core's read path and writes to it only the room acts and principal acts taken at it
-    And the counter acknowledgement is a principal act the room-view component recorded, marked with its surface
+    And the counter acknowledgement is a principal act the room-view component recorded, marked with its principal surface
     And the view keeps no state the record cannot rebuild beyond conveniences for the person viewing
-    And every capability the view offers also exists in the CLI or MCP
+    And everything the view lets a person do also exists in the CLI or MCP
     And hook handlers, ingestion and recall keep working with the view stopped
 
   @VIEW-04 @P1 @I6 @I10 @pending
@@ -83,7 +83,7 @@ Feature: Room view (VIEW)
     When the person opens Catch up at that starting point
     Then it shows the starting point it used and where it came from, and links every line to its events
     And it lists capture gaps, uningested transcripts, risen failure counters and unsynced writers apart from rooms with no activity
-    And it checks each writer's chain head against the named head receipt and shows the result per writer
+    And it checks each writer's chain head against the named head receipt and shows per writer whether it holds
     And its lines run integrity status and capture gaps, Needs you, failures, then finished runs, with the newest seq it covers per writer and no model-written line
 
   @VIEW-09 @P1 @I6 @I8 @pending

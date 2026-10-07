@@ -12,6 +12,9 @@ Feature: Recall (RCL)
     When the agent lists the tools of the MCP server started by "cairn mcp"
     Then the tool list includes "event_search", "event_expand", "event_get", "landmark_list", "pin_list" and "stat_list", among the other tools SRS section 9.2 specifies
     And each tool declares the parameters specified in SRS section 9.2
+    When the agent calls each of those six tools
+    Then each returns its content in the envelope, "stat_list" its counts in an envelope marked structural
+    And each call is recorded as a recall event
 
   @RCL-02 @P0 @pending
   Scenario Outline: event search honours its filters and caps hits at k
@@ -67,7 +70,7 @@ Feature: Recall (RCL)
     And with scope "room" and room "L1" the hits come from every writer of "L1" and from the cross-room post "L1" shows, and with scope "rooms" from every room the run has a seat in, and an audit entry logs each call whose recall scope extends past the run
     And no scope returns any other hit from "L2", or any hit from the foreign room
     When the agent calls the MCP tool "event_get" with address "A2:5", an event of another run in "L1", and no scope
-    Then the event is not returned, and the result says the address lies outside the current scope
+    Then the event is not returned, and the error says the address lies outside the current scope
     And with scope "room" and room "L1" the event is returned, and an audit entry logs the extended recall scope
     And "delegation_get" with no scope returns the delegate report of a delegation the run made, recorded on the delegating side, and logs no extended recall scope
 

@@ -22,13 +22,13 @@ Feature: Principal acts (OWN)
     Then the act is "<expected>"
 
     Examples:
-      | surface                                   | expected                                                                                                                                                                                                                               |
-      | the room view under SEC-20                | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal and marked with its surface |
-      | the CLI or TUI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal and marked with its surface |
-      | a paired phone within its scope           | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, which shows it by address, whose writer the phone seals with that seat's key and the node only holds              |
-      | the harness's own prompt                  | recorded as a user event or a harness_meta event recording only that input arrived, not a principal act                                                                                                                                |
-      | the terminal the launcher hosts           | recorded as a user event or a harness_meta event recording only that input arrived, not a principal act                                                                                                                                |
-      | any other surface                         | refused and audited                                                                                                                                                                                                                    |
+      | surface                                   | expected                                                                                                                                                                                                                                         |
+      | the browser room view under SEC-20        | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal and marked with its principal surface |
+      | the CLI or TUI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal and marked with its principal surface |
+      | a paired phone within its scope           | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, which shows it by address, whose writer the phone seals with that seat's key and the node only holds                        |
+      | the harness's own prompt                  | recorded as a user event or a harness_meta event recording only that input arrived, not a principal act                                                                                                                                          |
+      | the terminal the launcher hosts           | recorded as a user event or a harness_meta event recording only that input arrived, not a principal act                                                                                                                                          |
+      | any other surface                         | refused and audited                                                                                                                                                                                                                              |
 
   @OWN-03 @P1 @I2 @pending
   Scenario: principal-typed text reaches an agent only through the harness's input interface
@@ -141,12 +141,12 @@ Feature: Principal acts (OWN)
     Then the act is "<expected>"
 
     Examples:
-      | surface                        | risk state      | class                   | expected                                                     |
-      | authenticated                  | permits         | widening                | accepted                                                     |
-      | authenticated                  | does not permit | widening                | refused                                                      |
-      | authenticated                  | permits         | named by no requirement | treated as widening and accepted                             |
-      | not backed by a presence proof | permits         | cut                     | recorded with a mark naming its surface, free text untrusted |
-      | not backed by a presence proof | permits         | neutral                 | recorded with a mark naming its surface, free text untrusted |
+      | surface                        | risk state      | class                   | expected                                                               |
+      | authenticated                  | permits         | widening                | accepted                                                               |
+      | authenticated                  | does not permit | widening                | refused                                                                |
+      | authenticated                  | permits         | named by no requirement | treated as widening and accepted                                       |
+      | not backed by a presence proof | permits         | cut                     | recorded with a mark naming its principal surface, free text untrusted |
+      | not backed by a presence proof | permits         | neutral                 | recorded with a mark naming its principal surface, free text untrusted |
 
   @OWN-12 @P1 @I2 @pending
   Scenario: a CLI verb writing a principal act refuses without a terminal
@@ -220,7 +220,7 @@ Feature: Principal acts (OWN)
     Then the person was shown its exact text with invisible characters made visible before confirming
     And the act is recorded as their widening principal act
     And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base, with network and the principal's home denied
-    And its command, exit status and tree hash are recorded
+    And the launcher records its command by commitment, its exit status and the tree hash as a structural event
     And where the platform cannot deny the check network, Cairn refuses the witness check
 
   @OWN-19 @P1 @I1 @I4 @pending
@@ -280,7 +280,7 @@ Feature: Principal acts (OWN)
       | an expired delegation grant                                                | an existing agent of the same principal | refused, audited and shown                                         |
 
   @OWN-24 @P1 @I2 @pending
-  Scenario: a delegate inherits the delegating agent's ceiling and taint
+  Scenario: a delegate inherits its maximum rule level and taint from the delegating agent
     Given an isolated Cairn home
     And an agent whose run is recall-tainted, delegating under a delegation grant whose maximum rule level is "ask first"
     When the delegate's run starts

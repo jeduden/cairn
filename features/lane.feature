@@ -19,7 +19,7 @@ Feature: Room (LANE)
     And a room created by a principal, or by an agent for its principal, has an id of 128 random bits minted by the creating node, and its create room act is the first act of the creating seat's writer and that seat's add
     And a room has at most one intent, its conversation, seats and pins, and branches in any number of repositories, each named by a branch link
     And a branch with no remote gets a provisional, node-local identity, rebound when it is pushed, without rewriting the record
-    And a branch belongs to the room whose branch link names it first in causal order, a branch link that would move it to another room is refused, and of two concurrent branch links naming one branch from two rooms the one with the lower commitment stands and the other is shown void
+    And a branch belongs to the room whose branch link names it first in causal order, a branch link that would move it to another room is void and shown, and of two concurrent branch links naming one branch from two rooms the one with the lower commitment stands and the other is shown void
     And renaming a room leaves its id unchanged, and no table maps a run to a seat: its seats derive only from its personal-room seat, the create room and join acts its seats' writers record, and the seats naming one of its seats
     And a run's seat in a room the run created routes its events exactly as a seat it joined
     And a principal act of "alice" on "R", signed by a node of hers with no seat in "R", is recorded on that node's device seat in "R", which joins without admission since her run's seat is a member there
@@ -257,6 +257,7 @@ Feature: Room (LANE)
     Then each room shows its visibility on both surfaces
     And a shared room lists each of the room's principals by petname, with the role of each of its seats
     And changing a room's visibility is recorded as its owner's widening principal act, and refused from anyone else
+    And an invite, an admission change or a visibility change for the person's personal room is refused, and it stays private
     And publishing the private room, or enrolling a blind peer for it, is refused and audited, since its visibility does not allow it
 
   @LANE-18 @P2 @I2 @I8 @pending
@@ -302,6 +303,7 @@ Feature: Room (LANE)
     And a room whose intent names criteria C1 and C2 and the path "internal/export/"
     When an agent adds a criterion link from its check's result to C1 of the intent's current version through "room_link" and edits "go.mod"
     Then the result names the intent version in force when its turn began
+    And a result no turn produced, such as one resting on a CI attestation, names the intent version in force at its recording event, in causal order
     And the criterion link to C1 shows it was made by the agent's run seat and carries no evidence class, and the result keeps its own
     And a "room_link" naming another room's criterion is refused, and a result for another room traces to it only through a delegated task
     And no result is linked to C2 from event text
@@ -429,7 +431,7 @@ Feature: Room (LANE)
     And the agent reads "bob"'s pin only through a tool, inside the envelope with its author's seat id and key fingerprint
 
   @LANE-28 @P1 @I2 @I7 @I10 @pending
-  Scenario: every commit made in a room carries its room trailer, written for the agent
+  Scenario: every commit on a branch a room names carries its room trailer, written for the agent
     Given an isolated Cairn home
     And a node whose install was confirmed after a shown diff, with no host named for the publish component
     When an agent commits on a branch of the room without writing any trailer

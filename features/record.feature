@@ -228,7 +228,7 @@ Feature: Record (REC)
       | SessionEnd   |
 
   @REC-20 @P1 @I1 @pending
-  Scenario Outline: worktree checkpoints record the commit, branch and redacted diff at every hand-off point
+  Scenario Outline: worktree checkpoints record the commit, branch and redacted diff at every Stop, SessionEnd, hand-back and branch-head rewrite
     Given an isolated Cairn home
     And a run on a git worktree with a previous worktree checkpoint, a tracked change containing an API key, an untracked file and an ignored file
     When <moment>
@@ -274,7 +274,7 @@ Feature: Record (REC)
     And a room bundle in a local file that <bundle>, carrying a withheld event and an event with an API key the redaction rules of this node's principal match
     When the person imports the bundle
     Then the import is <expected> and an audit entry records it
-    And an accepted bundle had its signature by the exporter's device key, chaining to the bundle's principal key, and its seals and chains verified as received, across the withheld event from its retained header, and the API key redacted with its event's commitment key erased, both results recorded
+    And an accepted bundle had its signature by the exporter's device key, chaining to the bundle's principal key, and its seals and chains verified as received, across the withheld event from its retained header, and the API key redacted with its event's commitment key erased, both verifications recorded
     And accepted events form a foreign room, which this node's principal neither owns nor has a seat in
     And a bundle named by a URL is refused without network access, while one at a git ref already fetched into a local clone is read
 
@@ -287,15 +287,16 @@ Feature: Record (REC)
       | is signed by a device key that does not chain to its principal key | refused  |
 
   @REC-24 @P1 @I1 @I8 @I10 @pending
-  Scenario Outline: a home that moved to another machine starts a new seat and writer under a new seat key and appends nothing under the old one
+  Scenario Outline: a home whose node identity changed mints a new device key and new seat keys, keeps the personal room's id and appends nothing under an old key
     Given an isolated Cairn home
-    And a seat key bound to the node identity read, from outside the home, on the node the home was created on
+    And a device key and a seat key bound to the node identity read, from outside the home, on the node the home was created on
     And <change>
     When the hook "SessionStart" runs and appends its first event after the start
-    Then Cairn mints a new seat key before that append, starting a new seat and writer that names the old seat
+    Then Cairn mints a new device key and a new seat key before that append, the new seat key starting a new seat and writer that names the old seat
     And the new seat inherits no add, role or appointment of the old seat, and, outside the personal room, joins a room only as any seat does, while a personal-room seat, a device seat's included, is a member from its first event
+    And the personal room keeps its room id
     And an audit entry records the node identity change
-    And no event is appended under the old seat key
+    And no event is appended under the old device key or the old seat key
 
     Examples:
       | change                                                       |

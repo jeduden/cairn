@@ -13,6 +13,7 @@ Feature: Security (SEC)
     And no code any component can execute starts a program outside the launcher, save the core's own kernel worker
     And CI fails when a component's evidence is missing or shows a violation
     And no core process runs or starts a component behind B1 to B3
+    And each B1 to B3 component's own entry point, started by the person or a service manager, runs only while the act turning it on, which the CLI records, stands
     And the room-view component listens only on loopback, and the launcher only on loopback or on a local endpoint only the same OS user can reach
     And neither connects anywhere else
 
@@ -43,7 +44,7 @@ Feature: Security (SEC)
     And no store file is opened
 
   @SEC-04 @P0 @I9 @pending
-  Scenario Outline: the query compiler treats caller text as literal terms within bounds
+  Scenario Outline: the code that builds a search query treats caller text as literal terms within bounds
     Given an isolated Cairn home
     And a store with 1M events
     When the agent calls the MCP tool "event_search" with query "<query>"
@@ -151,7 +152,7 @@ Feature: Security (SEC)
     Then an "operator" event records the quarantine with the reason "suspect content"
     And the matched events are absent from every later recall, landmark and injection on this node
     And a quarantine that would remove a pin or a landmark from a restore block takes effect only as a confirmed widening principal act
-    And releasing the quarantine is recorded as an "operator" event the same way
+    And releasing the quarantine, a widening principal act, is recorded as an "operator" event the same way
     And enrolled peers receive the quarantine only as a quarantine request
 
     Examples:
@@ -232,7 +233,7 @@ Feature: Security (SEC)
     Then every Cairn component, process and protocol is assigned to exactly one of B0, B1, B2 and B3
     And the check fails when a component's build-time reach evidence is missing, or when that evidence or a test of a component confined to its boundary shows more reach than its row grants
     And the check fails when a process exists that the register does not list
-    And every B1, B2 and B3 component, the launcher included, stays off on the home until the person starts it
+    And every B1, B2 and B3 component, the launcher included, stays off on the home until the person turns it on
 
   @SEC-20 @P1 @I4 @I6 @I8 @pending
   Scenario: the room view binds to loopback and accepts only its own per-launch credential
@@ -336,6 +337,7 @@ Feature: Security (SEC)
     And the others are refused under the revocation rule
     And a head receipt of every writer's chain head verifies on another node with no network
     And a seat key minted because a backup restore put the home on another machine starts a new seat and writer, which names the old seat, inherits no add, role or appointment and, outside the personal room, joins as any seat does
+    And a node clone mints a new device key, or uses a token key, besides its new seat keys
 
   @SEC-28 @P2 @I2 @I4 @I6 @pending
   Scenario: outbound bridges run only in the bridge component, per enabled destination, and carry little
@@ -350,13 +352,13 @@ Feature: Security (SEC)
   @SEC-29 @P1 @I4 @I2 @pending
   Scenario: the launcher alone starts programs, save the core's kernel worker, and only confirmed ones
     Given an isolated Cairn home
-    And the person started the launcher
+    And the act turning the launcher on stands and its entry point runs
     When the person confirms a command and an agent asks to run an unconfirmed one
     Then only the confirmed command runs, and each process it starts has its own register row
     And build-time evidence shows no other component that starts a program, save the core starting its own kernel worker
     And the launcher connects nowhere beyond loopback to the room-view component
     And any listener it opens meets the room-view listener rules or is a local endpoint only the same OS user can reach, refusing a peer of another UID
-    And on a home where the person never started it, the launcher is off
+    And on a home where no act turned it on, the launcher is off
 
   @SEC-30 @P2 @I5 @I6 @pending
   Scenario: a purge travels as an erasure request naming its tombstone and another principal with a seat can send a purge request

@@ -62,14 +62,14 @@ Feature: Engineering quality (ENG)
     And the nightly fuzz job fuzzes it
 
     Examples:
-      | surface              |
-      | transcript parser    |
-      | hook input decoder   |
-      | query compiler       |
-      | envelope encoder     |
-      | field sanitizer      |
-      | redactor             |
-      | configuration parser |
+      | surface                   |
+      | transcript parser         |
+      | hook input decoder        |
+      | event_search query parser |
+      | envelope encoder          |
+      | field sanitizer           |
+      | redactor                  |
+      | configuration parser      |
 
   @ENG-08 @P0 @pending
   Scenario Outline: property-based tests check the record's core laws

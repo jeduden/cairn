@@ -43,19 +43,19 @@ Feature: Administration and lifecycle (ADM)
     And the core records every event of the run
 
     Examples:
-      | settings                                                                                           | component               | result                                                                                        |
-      | a managed policy file at the documented system path that the person can write                      | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
-      | a managed policy file in a directory the person can write                                          | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
-      | an unparsable managed policy file                                                                  | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
-      | a managed policy file with an unknown key                                                          | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
-      | a repository ".cairn.toml" that turns on the room view and a widening act that recorded its digest | the room-view component | stays off, and an audit entry and a counter record the ignored key                            |
-      | the person's config.toml that turns on the room view with no widening act recording its digest     | the room-view component | stays off                                                                                     |
-      | the person's config.toml that turns on the room view and a widening act that recorded its digest   | the room-view component | starts                                                                                        |
-      | a managed policy that turns on the room view and the person's config.toml that turns it off        | the room-view component | starts                                                                                        |
-      | the person's config.toml containing "recal.max_k = 10"                                             | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
-      | the person's config.toml containing "recall.max_k = 'ten'"                                         | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
-      | the person's config.toml containing "recall.max_k = 500"                                           | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
-      | the person's config.toml containing "payload.threshold_bytes = -1"                                 | cairn status            | exits 2, and the error names the key "payload.threshold_bytes" and the problem "out of range" |
+      | settings                                                                                                     | component               | result                                                                                        |
+      | a managed policy file at the documented system path that the person can write                                | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
+      | a managed policy file in a directory the person can write                                                    | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
+      | an unparsable managed policy file                                                                            | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
+      | a managed policy file with an unknown key                                                                    | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
+      | a repository ".cairn.toml" that turns on the room-view component and a widening act that recorded its digest | the room-view component | stays off, and an audit entry and a counter record the ignored key                            |
+      | the person's config.toml that turns on the room-view component with no widening act recording its digest     | the room-view component | stays off                                                                                     |
+      | the person's config.toml that turns on the room-view component and a widening act that recorded its digest   | the room-view component | starts                                                                                        |
+      | a managed policy that turns on the room-view component and the person's config.toml that turns it off        | the room-view component | starts                                                                                        |
+      | the person's config.toml containing "recal.max_k = 10"                                                       | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
+      | the person's config.toml containing "recall.max_k = 'ten'"                                                   | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
+      | the person's config.toml containing "recall.max_k = 500"                                                     | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
+      | the person's config.toml containing "payload.threshold_bytes = -1"                                           | cairn status            | exits 2, and the error names the key "payload.threshold_bytes" and the problem "out of range" |
 
   @ADM-05 @P0 @I1 @pending
   Scenario: segment and schema migrations run forward after a verified backup and newer versions are refused
@@ -77,7 +77,7 @@ Feature: Administration and lifecycle (ADM)
     And a home with sealed segments, an open segment, payloads, derived artifacts and an audit log
     And a backup taken by "cairn backup create", followed by a purge of run "run-a" and the unpin of a pin
     When the person runs "cairn backup restore" as a widening principal act
-    Then the backup contained every segment, the open segment up to a fresh seal, the payload store, derived artifacts and the audit log with its chain, no seat or device key, and an audit entry recorded it
+    Then the backup contained every segment, the open segment up to a fresh seal, the payload store, derived artifacts and the audit log with its chain, no seat, device, token or at-rest key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was reinstated
     And every event and payload outside run "run-a" recalled before the backup is recalled identically
     And run "run-a" stays purged and the unpinned pin stays unpinned
