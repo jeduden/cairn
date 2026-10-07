@@ -53,15 +53,15 @@ dismiss verbs; "secure purge"; "granted roles"; OQ-33's wording;
 VIEW-16's "cost"; SEC-32's "claims"; T27's "steers"; ENG-02 crate
 names; I8's "seat key"; §3's "Kernel (§5.8)".
 
-## 4. Invariants (open for the stakeholder)
+## 4. Invariants
 
 - **I2, "`user` turns".** A turn runs to the model reply that ends it,
-  so "trusted `user` turns" read literally also trusts the reply.
-  Proposed: "the `user` events they recorded". The model's Turn and
-  Trusted sources follow I2 until the stakeholder rules.
-- **I4, terminal takeover.** The launcher hosts the terminal a person
-  types in, yet I4 lets it carry into the harness's input only text the
-  core built. Proposed: add "and the person's own keystrokes in the
-  terminal it hosts"; or route takeover outside the launcher.
-
-Both need an ADR and a security review; neither is applied.
+  so "trusted `user` turns" read literally also trusts the reply. The
+  stakeholder approved "the `user` events they recorded", recorded in
+  ADR-2610063300; the model's Turn and Trusted sources follow.
+- **I4, terminal takeover (open).** The launcher hosts the terminal a
+  person types in, yet I4 lets it carry into the harness's input only
+  text the core built. Four options wait for the stakeholder: read
+  takeover as passthrough (no invariant change), amend I4 by an ADR,
+  move takeover out of the launcher, or drop it. Every option closes the
+  path from the room view's `t` key over the launcher's socket.

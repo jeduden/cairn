@@ -120,8 +120,9 @@ changes only in harness configuration, under I7.
 - **Turn**: One exchange between the harness and the model, from an input to the
   model reply that ends it. A **user turn** is the turn the harness's user input
   starts: a person's message in `interactive` deployment mode, a pipeline's in
-  `automation`. In interactive deployment mode it is a trusted source on the
-  node whose hook handlers recorded it (I2, PRV-02).
+  `automation`. In interactive deployment mode its `user` event, never the model
+  reply, is a trusted source on the node whose hook handlers recorded it (I2,
+  PRV-02).
 - **Compaction**: The harness replacing earlier context with a compaction
   summary when the context window fills. Cairn neither performs nor controls it
   (NG1); it records it and restores pins after it (I3). **Compaction guidance**
@@ -715,7 +716,7 @@ one kind (LANE-31).
   logs carry them (I10).
 - **Trusted sources**: What I2 trusts: this node's `operator` and structural
   events, the `harness_meta` events its hook handlers recorded, and the `user`
-  turns they recorded while the deployment mode is `interactive`, all trusted
+  events they recorded while the deployment mode is `interactive`, all trusted
   only on this node; once PRV-10 ships, principal acts signed by a device key
   the agent's principal certified, and posts and pins written from a device seat
   such a key certified, within that key's scope; for that agent, the posts and

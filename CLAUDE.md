@@ -43,7 +43,7 @@ security review and a new major version, not a bug fix.
   recall tool, or through one of the closed paths below that a principal act
   names. The trusted sources are this node's own `operator` and structural
   events, the `harness_meta` events its hook handlers recorded, and the `user`
-  turns they recorded while the deployment mode is `interactive`, and, once
+  events they recorded while the deployment mode is `interactive`, and, once
   PRV-10 ships, principal acts signed by a device key the agent's principal
   certified and posts and pins written from a device seat such a key certified,
   within that key's scope, a pin version a principal stamped, for that
