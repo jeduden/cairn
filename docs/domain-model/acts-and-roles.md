@@ -61,21 +61,23 @@ one kind (LANE-31).
     own device seat), confirm a pin candidate, change a room's visibility,
     invite a principal key, issue an invite link, choose a fork, confirm a
     command taken from an untrusted event (OWN-18), turn on the peer or publish
-    component, accept a handover or succession, ask for or accept a join, which
-    sends the run's events to a room other principals' nodes hold, endorse,
-    loosen a rule level, turn on or change an away policy other than turning it
-    off, quarantine that removes a pin or a landmark from a restore block,
-    release a quarantine, purge or apply an erasure request, export, bind a
-    repository identity by hand or rebind it, accept open residual risks
-    (OWN-22), certify a service account's principal key, assign a role, set a
-    room's admission, appoint a moderator or the facilitator, stamp a pin
-    version, name a successor, hand over a room, record a trust grant, allow
-    notices for a room or opt in to them, enable a bridge or the git carrier,
-    set a room setting, publish, apply a purge request, change a retention
-    policy, accept configuration (recording its digest), enroll a CI key, rotate
-    a device key, retire a writer, turn capture off or pause it, enroll or
-    revoke a device, peer or authenticator, mint or rotate an access token,
-    start a witness check, and a backup restore.
+    component (on an ephemeral node, PEER-01's environment setting instead),
+    accept a handover or succession, ask for a device seat's join to a room its
+    principal has no member seat in, ask for or accept a join, which sends the
+    run's events to a room other principals' nodes hold, endorse, loosen a rule
+    level, turn on or change an away policy other than turning it off,
+    quarantine that removes a pin or a landmark from a restore block, release a
+    quarantine, purge or apply an erasure request, export, bind a repository
+    identity by hand or rebind it, accept open residual risks (OWN-22), certify
+    a service account's principal key, assign a role, set a room's admission,
+    appoint a moderator or the facilitator, stamp a pin version, name a
+    successor, hand over a room, record a trust grant, allow notices for a room
+    or opt in to them, enable a bridge or the git carrier, set a room setting,
+    publish, apply a purge request, change a retention policy, accept
+    configuration (recording its digest), enroll a CI key, rotate a device key,
+    retire a writer, turn capture off or pause it, enroll or revoke a device,
+    peer or authenticator, mint or rotate an access token, start a witness
+    check, and a backup restore.
 
   Any principal act that removes a pin from a restore block, or stops this node
   recording its own runs' events, is widening whatever verb carries it. An
@@ -92,7 +94,8 @@ one kind (LANE-31).
   link records one for every seat that chains to the invited principal key and
   joins under it, run seats included, though a run seat an invite names
   moderator is a contributor. A paired phone's personal-room seat has no role
-  and reads within its device scope. A seat with none, other than the owner's
+  and reads within its device scope. The seat ingest starts takes over the role
+  of the run seat it names (REC-19). A seat with none, other than the owner's
   device seats, is a viewer; a run's personal-room seat, or its seat in a room
   it created, is a contributor. A handover records a moderator role assignment
   for the former owner's device seats (LANE-11). A run seat is a moderator only
@@ -154,7 +157,8 @@ one kind (LANE-31).
 - **Room merge**: The one rule deriving all room state from the three act kinds,
   in causal order (LANE-31). It covers membership, roles, appointments, pins,
   pin versions and stamps. It covers mutes, presentations, picks, bars,
-  handovers and their offers, and OWN-21's ready and abandoned marks. It covers
+  handovers and their offers, OWN-21's ready and abandoned marks, the CI keys
+  enrolled in the room and whether the git carrier is enabled for it. It covers
   the successor, title, labels, assignment, visibility, admission, the notice
   allowance and the **room settings** (whether drafts show live, whether typing
   shows, the roles a whole-room mute leaves posting to, and the **appointment

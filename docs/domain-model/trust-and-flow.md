@@ -39,8 +39,10 @@ summary: >-
   browser room view, through the principal's own tunnel (§6.3 row 11).
 - **Presence proof**: A hardware-backed, user-verified proof of a person's
   presence, bound to one widening act (OWN-11).
-- **Recall**: An agent's tool call that returns enveloped content. Pull-only,
-  and it defaults to the agent's current run.
+- **Recall**: An agent's call to a **recall tool**, any MCP tool that returns
+  enveloped content (§9.2), such as `event_search`, `room_get`,
+  `room_summary_get` or `delegation_get`; each records a recall event (RCL-07).
+  Pull-only, and it defaults to the agent's current run.
 - **Recall scope**: `run`, `room` or `rooms`, or a foreign room named in the
   call (RCL-05). A wider scope is said to extend recall; "widening" belongs to
   acts.
@@ -52,8 +54,11 @@ summary: >-
   for its own agents, in one room or everywhere. It covers that principal's
   posts and pins written from device seats a device key of that principal
   certified, never a cross-room post shown in another room, run seats,
-  token-key-only nodes, room summaries, nor a service account that relays text
-  others wrote (OWN-29), and never in a foreign room; its revocation is cut.
+  token-key-only nodes, room summaries, nor a service account its certificate
+  marks as relaying text others wrote, refused, while any other service
+  account's grant shows a warning (OWN-29); never in a foreign room; and a post
+  it covers reaches only the grantor's agents whose run has a seat in the post's
+  room. Its revocation is cut.
 - **Delegation**: One agent handing another a delegated task: its subagent, or,
   under a delegation grant, another agent of the same principal, an agent on
   another of its nodes, or another principal's agent (OWN-23 to OWN-26).

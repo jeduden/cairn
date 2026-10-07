@@ -14,14 +14,17 @@ summary: >-
   the personal room from its first event, each with no add; every other seat
   keeps its place while its **add** stands: the act that placed it, its create
   room act, a join its principal asked for or accepted that the room's admission
-  admitted, or a device seat's join without admission (LANE-25).
+  admitted, a device seat's join without admission, or for the seat ingest
+  starts, the add of the run seat it names, one add standing for both (LANE-25,
+  REC-19).
 - **Run seat**: A run's seat. A witnessed run's run-seat key lives only in the
-  memory of its harness session's MCP server, which holds the run-seat keys of
+  memory of its harness session's MCP server, which keeps the run-seat keys of
   the main run and its subagents' runs and seals their writers (SEC-10); what
   `cairn ingest` appends, whether or not that server still runs, goes to a new
   seat and writer the core seals, naming the run seat, in the same room, taking
-  over its add and role (REC-19); an ingested run's seat key is kept like a
-  device seat's key, and the core seals its writer.
+  over its add and role, so a kick, leave or bar of either seat ends it for both
+  (REC-19); an ingested run's seat key is kept like a device seat's key, and the
+  core seals its writer.
 - **Device seat**: A principal's seat for one device, a node or a paired phone.
   The one seat kind for acting without a run. A token-key-only node's device
   seat is certified by its token key, and that node signs no principal or expire
@@ -32,12 +35,13 @@ summary: >-
   Nobody chooses it.
 - **Seat key**: A seat's one current key. It signs the seat's room acts and
   seals its writer. A rotation, signed by the old and the new key, keeps the
-  seat's id and writer (SEC-27). A key minted because the node changed, a clone
-  or a backup restore (REC-24, ADM-06), starts a new seat and writer that names
-  the old one and inherits no add, role or appointment, while the seat ingest
-  starts takes over the add and role (Run seat): outside the personal room it
-  joins as any seat does (LANE-23), and roles and appointments are assigned
-  again; a personal-room seat is a member from its first event.
+  seat's id and writer and goes to that seat's own writer (SEC-27). A key minted
+  because the node changed, a node clone or a backup restore (REC-24, ADM-06),
+  starts a new seat and writer that names the old one and inherits no add, role
+  or appointment: outside the personal room it joins as any seat does (LANE-23),
+  and roles and appointments are assigned again; a personal-room seat is a
+  member from its first event. The seat ingest starts takes over the add and
+  role instead (Run seat).
 - **Device key**: A device's key, certified by a principal key's **device
   certificate**, with a **device scope** (the kinds of principal act it may
   sign, and of post and pin its seats may write) and a maximum rule level. It
@@ -60,11 +64,14 @@ summary: >-
   that node as that node's trusted sources.
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room, so that once PRV-10 ships every seat key chains to
-  a principal key. A node's **key set** is the keys, certificates and
-  revocations it holds (I10).
+  a principal key. It names the seat kind, `run` or `device`, and whether the
+  device seat's principal is a certified service account, and a service-account
+  certificate whether that account relays text others wrote. A node's **key
+  set** is the keys, certificates and revocations it holds (I10).
 - **Access token**: A short-lived credential a principal mints to enroll a
   device or peer, certify an ephemeral node's seats or carry an invite link
   (PEER-06, PRV-10, LANE-18). "Token" is always an access token, a model token,
   an access token's token key, a token certificate or a token-key-only node.
 - **Authenticator**: A hardware-backed key that gives presence proofs (OWN-11).
-- **CI key**: A key a principal enrolled to sign CI attestations.
+- **CI key**: A key the room's owner enrolled in the room to sign CI
+  attestations.

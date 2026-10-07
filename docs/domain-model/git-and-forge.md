@@ -7,7 +7,7 @@ summary: >-
 # Git and forge
 
 - **Repository**: A git repository, identified by its **repository identity**, a
-  bound root commit, the same on every node holding a clone, shallow clones
+  bound root commit, the same on every node with a git clone, shallow clones
   included, else a provisional node-local identity bound later (LANE-02). The
   first bind is a structural event Cairn records at the first hook event;
   binding by hand or rebinding is a widening principal act. It has remotes and
@@ -19,8 +19,8 @@ summary: >-
 - **Worktree**: A git working tree on a node, where a run edits a branch; its
   repository's **git directory** is git's own store of objects and refs.
 - **Forge**: The service that keeps remotes, pull requests, reviews and branch
-  protection. It approves and lands; Cairn does neither, and its reports count
-  as `asserted` (LANE-08).
+  protection. It approves and lands; Cairn does neither, and its **forge
+  reports** count as `asserted` (LANE-08).
 - **Pull request**: The forge's review object for a branch.
 - **Check**: A command run, or expected to run, on a tree, with its exit status
   once it ends; its **check state** is one of §9.7.2's. A check is expected when

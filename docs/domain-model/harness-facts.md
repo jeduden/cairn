@@ -26,11 +26,14 @@ them, Cairn changes only harness configuration, under I7.
   JSON object (§9.1). The core's hook handlers answer it. Git's hooks are always
   qualified, as the commit hook.
 - **Turn**: One exchange between the harness and the model, from an input to the
-  model reply that ends it. A **user turn** is the turn the harness's user input
-  starts: a person's message in `interactive` deployment mode, a pipeline's in
-  `automation`. In interactive deployment mode its `user` event, never the model
-  reply, is a trusted source on the node whose hook handlers recorded it (I2,
-  PRV-02).
+  model reply that ends it. A **user turn** is the turn text typed at the
+  harness's own input starts (its prompt, or the terminal the launcher hosts): a
+  person's message in `interactive` deployment mode, a pipeline's in
+  `automation`. A line the launcher carried in is no user turn: the launcher
+  records the carried text's commitment as its turn trigger, and ingest marks
+  the matching line untrusted (LANE-14). In interactive deployment mode its
+  `user` event, never the model reply, is a trusted source on the node whose
+  hook handlers recorded it (I2, PRV-02).
 - **Compaction**: The harness replacing earlier context with a compaction
   summary when the context window fills or on request. Cairn neither performs
   nor controls it (NG1); it records it and restores pins after it (I3).

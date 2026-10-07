@@ -11,7 +11,7 @@ summary: >-
   **configuration** sit beside it: the principal's settings (§9.6), which a
   repository's `.cairn.toml`, its **repository configuration**, may only tighten
   (ADM-04). Managed policy, configuration and repository configuration are the
-  three **settings layers**. The **store** is the home's files holding the
+  three **settings layers**. The **store** is the home's files containing the
   record, its derived artifacts and payloads (§8.1).
 - **Writer**: One seat's append-only log, written on one node or paired phone
   and held by any node, named by its **writer id**, derived from the seat's
@@ -68,17 +68,19 @@ summary: >-
   `structural`; hook observations, key rotations and tombstones are
   `structural`.
 - **Origin**: How an event reached this node's record: `witnessed` (recorded
-  live on this node: by its hook handlers, its CLI, TUI, MCP server, launcher or
-  bridge component), `ingested` (read by `cairn ingest`, from a transcript the
-  hook handlers did not watch or past an ingest marker), `bundle` (read by
-  import) or `peer` (received from a peer, a paired phone or through the git
-  carrier) (RCL-09). A **witnessed run** is one this node's hook handlers
-  watched. Independent of provenance. Each event also records its **recorder**,
-  the part that recorded it (the hook handlers, the CLI, the TUI, the MCP
-  server, the launcher or the bridge component, whose events take provenance
-  `web`, always untrusted; a principal act from the browser room view is
-  recorded by the CLI), which the trust policy reads; an event from a peer or a
-  bundle records no recorder, only its origin.
+  live on this node: by its hook handlers, its CLI, TUI, MCP server, launcher,
+  room-view component or bridge component), `ingested` (read by `cairn ingest`,
+  from a transcript the hook handlers did not watch or past an ingest marker),
+  `bundle` (read by import) or `peer` (received from a peer, a paired phone or
+  through the git carrier) (RCL-09). A **witnessed run** is one this node's hook
+  handlers watched. Independent of provenance. Each event also records its
+  **recorder**, the part that recorded it (the hook handlers, the CLI, the TUI,
+  the MCP server, the launcher or the bridge component, whose events take
+  provenance `web`, always untrusted; the room-view component records a
+  principal act taken in the browser room view, marked with its surface, and how
+  it signs waits for a security review under SEC-10 and SEC-20), which the trust
+  policy reads; an event from a peer or a bundle records no recorder, only its
+  origin.
 - **Span**: A contiguous range of one run's events in one writer. A new span
   starts at every user turn, compaction, subagent start or end, and whenever the
   run's events move to another seat's writer (LMK-01).
@@ -100,12 +102,12 @@ summary: >-
   act keeps its own class.
 - **Capture**: This node's hook handlers recording its runs' events; turning it
   off is widening (OWN-11).
-- **Ingest marker**: What a hook handler leaves when its deadline cuts it short,
-  so the next hook handler or `cairn ingest` resumes it (NFR-02). **Ingest** is
-  reading a transcript into the record, by the hook handlers incrementally
-  (REC-13) or by `cairn ingest`; what `cairn ingest` appends takes origin
-  `ingested` and is never recorded by the hook handlers, even past an ingest
-  marker.
+- **Ingest marker**: What a hook handler leaves when its hook budget cuts it
+  short, so the next hook handler or `cairn ingest` resumes it (NFR-02).
+  **Ingest** is reading a transcript into the record, by the hook handlers
+  incrementally (REC-13) or by `cairn ingest`; what `cairn ingest` appends takes
+  origin `ingested` and is never recorded by the hook handlers, even past an
+  ingest marker.
 - **Worktree checkpoint**: An event recording a worktree's commit, branch and
   redacted diff since the previous worktree checkpoint (REC-20).
 - **Derived artifact**: Anything computed from the record and the node's key

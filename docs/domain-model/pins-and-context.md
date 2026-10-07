@@ -86,10 +86,11 @@ summary: >-
 - **Directed post**: A post directed to one agent. It waits in that agent's
   principal's Needs you queue for an endorsement (LANE-12).
 - **Room summary**: A facilitator's summary of a room, always untrusted, linked
-  by address to the events it covers, read only through `room_summary_get`,
-  which never writes; a summary request is `room_summary_request` (LANE-33). A
-  restore block's **room summary pointer** names the latest room summary by id
-  and version.
+  by address to the events it covers, read only through `room_summary_get`, a
+  recall tool that writes no room summary, `event_search` leaving out `summary`
+  events; a summary request is `room_summary_request` (LANE-33). A restore
+  block's **room summary pointer** names the latest room summary by id and
+  version.
 - **Compaction summary**: The harness's summary at compaction, recorded as
   untrusted `harness_text`, never restored.
 - **Envelope**: The **untrusted-data envelope** of I2, the one name beside

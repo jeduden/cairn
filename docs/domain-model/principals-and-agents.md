@@ -37,7 +37,7 @@ summary: >-
   recalls history; an agent is never a principal.
 - **Run**: One agent's execution within one harness session, on one node, keyed
   by the harness session and the harness's agent id: a harness session's
-  transcripts hold its main agent's run and one per subagent, a **harness
+  transcripts contain its main agent's run and one per subagent, a **harness
   resume** continues the run and a **harness clear** starts a new one. It has
   run seats and carries its recall taint (SEC-13), sandbox state (OWN-22), seat
   keys (SEC-10), kernel namespace (CMP-02) and spans (LMK-01). As a noun, "run"
@@ -59,7 +59,8 @@ summary: >-
   follows from the seat.
 - **Member**: A seat whose add stands and that no bar covers, or a run's or a
   paired phone's personal-room seat, or a device seat a newly minted key started
-  in the personal room (Seat, Seat key); the seat's role says what it may do. A
+  in the personal room, or the seat ingest starts while the run seat it names is
+  a member (Seat, Seat key, Run seat); the seat's role says what it may do. A
   kicked, departed or barred seat is no longer a member. A principal is never a
   member; **the room's principals** are those with a member seat, and text for
   people speaks of the room's principals. A personal-room seat can neither leave

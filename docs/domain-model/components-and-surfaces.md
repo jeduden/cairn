@@ -11,7 +11,7 @@ summary: >-
   (OQ-32), and a new one is a model change and a §6.3 row.
   - **Core (B0):** the **hook handlers** (answering hooks), the **CLI**
     (`cairn`), each harness adapter's transcript and hook part among them, the
-    **MCP server** (the recall and room tools, one per harness session, serving
+    **MCP server** (the MCP tools of §9.2, one per harness session, serving
     its runs), the **kernel worker** (running the kernel's executions), the
     **TUI** (the terminal room view), the **commit hook** (LANE-28, run as the
     CLI), and everything that builds what reaches the model.
@@ -32,9 +32,9 @@ summary: >-
     the **git carrier**, which keeps segments in a namespaced location of the
     principal's remote.
   - **Bridge component (B3):** outbound exchange with hosts the node's principal
-    names, through three **bridges**: the **forge bridge** (reads pull requests
-    and reviews), the **CI bridge** (fetches CI attestations) and the
-    **notification bridge**.
+    names, through three **bridges**: the **forge bridge** (reads pull requests,
+    reviews and the checks the forge reports), the **CI bridge** (fetches CI
+    attestations) and the **notification bridge**.
 - **Boundary**: One of B0 core, B1 machine, B2 peer and B3 public (I4).
   Unqualified, "boundary" means a network boundary; any other boundary is
   qualified, such as a span boundary or a crate boundary.

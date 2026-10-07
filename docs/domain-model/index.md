@@ -74,18 +74,20 @@ row: "- [{title}]({filename}) — {summary}"
   that acts on no room, on a room its principal has no member seat in, or that a
   paired phone signs, goes to that device seat in the personal room, naming the
   room, and that room shows it by address as it shows a cross-room post
-  (LANE-29). A tombstone, an erasure request a retention policy sends, and a
-  bridge's or the launcher's event about a room's branch go to the recording
-  device's seat in the room they name, joined as for a principal act. Any other
-  event with no run goes to the recording device's seat in the personal room of
-  its node, or for a paired phone, of the node it pairs with.
+  (LANE-29). A seat key's rotation goes to that seat's own writer (SEC-27). A
+  tombstone, an erasure request a retention policy sends, and a bridge's or the
+  launcher's event about a room's branch go to the recording device's seat in
+  the room they name, joined as for a principal act, else to that device seat in
+  the personal room, naming the room. Any other event with no run goes to the
+  recording device's seat in the personal room of its node, or for a paired
+  phone, of the node it pairs with.
 - A run's history spans its seats' writers, tied together by the run. Peers
-  exchange segments, so a room holds only the events routed to its seats and
+  exchange segments, so a room contains only the events routed to its seats and
   shows others by address (LANE-01).
 - Principals and agents create rooms; an agent's room is owned by its principal.
   Cairn never creates a room on its own initiative; a node's personal room comes
-  from the principal's `cairn install`, or is carried over to a clone, and Cairn
-  may suggest joins.
+  from the principal's `cairn install`, or is carried over to a node clone, and
+  Cairn may suggest joins.
 - A pin naming no room belongs to its author's principal's personal room on the
   node that wrote it.
 - Recall extends only to the principal's
@@ -113,8 +115,6 @@ errors and logs use the model's words.
   and settings keys, kebab case in CLI commands.
 - Layout words (such as tab, panel, pane, gutter, sheet, stack, tile, pill,
   rail, composer and command palette) name parts of a screen, never concepts.
-- A seat certificate names the seat kind, `run` or `device`, and whether the
-  device seat's principal is a certified service account.
 - Cairn defines no slash commands. A harness skill may call MCP tools or the
   CLI; a skill's call is the agent's own tool call, never a principal act.
 
