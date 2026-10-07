@@ -10,7 +10,7 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "every-kind"
     And "every-kind" contains a user turn, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent result, lifecycle metadata, a system reminder and a malformed line
-    And a principal act, an expire act, a pin written from a device seat, a pin a run seat wrote, a post from another seat, a room act of the run's seat, a room summary the room's facilitator wrote and a retention purge's tombstone are recorded in the run's room
+    And a principal act, an expire act, a pin written from a device seat, a pin a run seat wrote, a post from another seat, a room act of the run's seat and a room summary the room's facilitator wrote are recorded in the run's room, and a retention purge's tombstone naming that room's content on the recording device's seat there
     And the Bash tool call of "every-kind" was ingested by an earlier ingest than its result
     When the person runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class

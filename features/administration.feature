@@ -161,14 +161,15 @@ Feature: Administration and lifecycle (ADM)
     And no untrusted event appears in the export
 
   @ADM-13 @P0 @I7 @pending
-  Scenario: Cairn writes to no git repository beyond the confirmed settings file, the commit hook of LANE-28 and the git carrier's location
+  Scenario: Cairn writes to no git repository beyond the confirmed settings file, the commit hook of LANE-28, the git carrier's location and the launcher's fresh checkouts
     Given an isolated Cairn home
     And a git repository with a worktree, refs, notes, configuration and hooks
     And the node's principal has enabled the git carrier for the repository's remote, and the room's owner for the room
-    When an agent runs, the person confirms "cairn install --scope project" and every Cairn component runs
+    When an agent runs, the person confirms "cairn install --scope project", every Cairn component runs and the launcher runs a witness check
     Then the only changed file in the worktree is the harness settings file that install wrote
     And the only new or changed refs lie in the namespaced location the node's principal enabled for the git carrier, and every new object is reachable only from them
-    And the only changed hook is the commit-message hook for room trailers that the confirmed install set up
+    And the only changed git hook is the commit hook for room trailers that the confirmed install set up
+    And the witness check's fresh checkout lies outside the run's worktree and added no ref to the run's repository
     And the repository's other refs, notes, configuration and hooks are byte-identical to before
 
   @ADM-14 @P1 @I1 @I5 @pending

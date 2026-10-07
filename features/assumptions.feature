@@ -184,8 +184,9 @@ Feature: Assumptions register (ASM)
     And no process was started and no connection was opened
 
   @ASM-21 @pending
-  Scenario: the harness hands a run seat's private key to its own MCP server outside the model's context (S4)
+  Scenario: the harness session's MCP server holds its main run's and its subagents' run-seat keys outside the model's context (S4)
     Given a recorded plugin launch of Claude Code "supported" with its MCP server
-    When the harness starts the MCP server for a run with a run seat key
-    Then the MCP server receives the key at launch through a channel the harness keeps out of the model's context
-    And no transcript line, hook input or tool result of the run carries the key
+    When the harness session's main run starts a subagent
+    Then one MCP server serves both runs and holds the run-seat keys of the main run and the subagent's run
+    And each key reached it through a channel the harness keeps out of the model's context
+    And no transcript line, hook input or tool result of either run carries a key

@@ -71,5 +71,5 @@ Feature: Landmarks (LMK)
     And natural-language headlines are enabled
     And an agent run with a Claude Code transcript "trusted-and-web-spans"
     When the person runs "cairn landmark list --json"
-    Then a span whose every event is trusted may carry a headline
+    Then a span whose every event is trusted may carry a headline, the same on every rebuild, made by a template from its trusted fields with no model call
     And a span containing any untrusted event carries no headline

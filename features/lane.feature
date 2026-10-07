@@ -25,7 +25,8 @@ Feature: Room (LANE)
     And a principal act of "alice" on "R", signed by a node of hers with no seat in "R", is recorded on that node's device seat in "R", which joins without admission since her run's seat is a member there
     And a principal act of "alice" rejecting a foreign room, in which she has no seat, goes to the signing device's seat in her personal room, naming that room
     And a principal act of "alice" on "R" signed by her paired phone goes to the phone's device seat in her personal room, naming "R", and "R" shows it by address as it shows a cross-room post
-    And any other event with no run, recorded by a device of "alice", goes to that device's seat in her personal room
+    And a tombstone, an erasure request a retention policy sends, and a bridge's or the launcher's event about a branch "R" names, each recorded by a node of "alice", go to that node's device seat in "R", which joins as for a principal act
+    And any other event with no run, recorded by a node of "alice", goes to that node's device seat in her personal room there, and one her paired phone records to the phone's device seat in the personal room of the node it pairs with
 
   @LANE-02 @P0 @I1 @I6 @I8 @pending
   Scenario Outline: a repository's identity is independent of the local path
@@ -86,7 +87,8 @@ Feature: Room (LANE)
   Scenario Outline: the rooms behind a landed commit carry one proof class
     Given an isolated Cairn home
     And a room whose recorded change <relation> a landed commit
-    When the rooms behind the landed commit are derived from the record and the local clone
+    When the core records the clone facts it reads (landed commits, patch ids, trees) as structural events
+    And the rooms behind the landed commit are derived from the record alone
     Then the room is listed with proof class "<proof>"
     And the landing link carries the reason "<reason>"
     And the landing link counts as proven: <proven>
@@ -105,12 +107,13 @@ Feature: Room (LANE)
   @LANE-08 @P2 @I2 @I4 @I6 @pending
   Scenario: a configured forge governs landing, and each branch of the room carries a pull-request link
     Given an isolated Cairn home
-    And a room with a forge configured whose branch protection requires one review
+    And a room with a forge configured whose branch protection requires one review and one check
     And two branches the room names, one with a pull request carrying a forge approval, and a failed forge fetch
     When the room view is shown
     Then the forge's branch protection governs landing, and Cairn records no verdict of its own toward it
     And the room names both branches by branch links, and the branch with the pull request carries a pull-request link to it, shown apart from the room
     And the forge approval and the pull request's state, brought in as untrusted events through the forge bridge, are shown as "asserted" with their forge and time
+    And the required check the forge reports is shown as a forge report marked "asserted", never as a result
     And the failed fetch is counted and shown with its time
 
   @LANE-09 @P2 @I10 @pending
@@ -134,6 +137,8 @@ Feature: Room (LANE)
     And "bob"'s first view shows the room's intent, pins, state, open held requests and latest results within 3 s of connecting, before the full sync completes
     And the node refuses and audits a post from "bob"'s seat, which the viewer role does not permit
     And a role request, a room act of "bob"'s seat taken through "room_role_request" or "cairn role request", enters "alice"'s Needs you as Q3
+    When "alice" invites the principal key of "carol" as "moderator"
+    Then "carol"'s device seats that join under the invite get the moderator role, and her run seats get the contributor role, since a run seat is a moderator only by appointment
 
   @LANE-11 @P2 @I2 @I6 @I10 @pending
   Scenario: an accepted handover moves ownership and keeps the former owner's agents and pins working
@@ -275,6 +280,7 @@ Feature: Room (LANE)
     When "alice" revises C2 and the agent's context compacts
     Then the intent is stored as the room's lead pin, listed before every other pin, of type "intent", at the highest priority
     And the revision is recorded as a new version of the intent pin, with its version number and its diff against the first version
+    And a criterion may name a check's command, as C1 names "go test ./export", which makes that check expected on the room's branches
     And the restore block carries the second version word for word with its version, among the qualifying pins (PIN-10) and nowhere else
     And C3 stays a pin candidate, proposed text that is not a pin and has no author, until "alice" confirms it, exactly as shown, by a widening principal act that records it in a new intent version her device seat authors
     When "alice" revises C1 at a principal surface with the presence proof a widening act needs
@@ -308,10 +314,10 @@ Feature: Room (LANE)
   Scenario: a run joins a room only on its principal's word and gets a derived seat id
     Given an isolated Cairn home
     And a room owned by "bob" that admits only a list of principal keys naming "alice"'s principal key
-    And a run of "alice" whose MCP server keeps in memory a seat key certified by her device key, which her principal key certifies
+    And a run of "alice" whose harness session's MCP server keeps in memory a seat key certified by her device key, which her principal key certifies
     When Cairn suggests the room and "alice" accepts the join
     Then a join signed by the seat key is recorded as a room act, the seat's add
-    And the seat id derived from the room id and that key is returned to the run's MCP server
+    And the seat id derived from the room id and that key is returned to that MCP server
     And a second node holding the record derives the same id
     And no table maps the run to the seat, and a rebuild derives which seats the run has from the join its seat's writer records alone
     And a join by "mallory", whose principal key the admission list does not name, is refused, audited and counted
@@ -360,9 +366,9 @@ Feature: Room (LANE)
     And while neither the setter's nor a moderator's node has, the owner's node records it, and duplicate expire acts count as one
     And an expire act naming a bar whose original act set no expiry ends nothing
     And before PRV-10 ships, no act sets an expiry and no node records an expire act
-    When two devices of "bob", under one principal key, concurrently record an add and a removal of his agent's run seat
-    Then the removal wins and the conflict is recorded and shown
-    And no sequence of deliveries, reorderings or duplications of these acts re-admits "bob" or revives the removed membership
+    When a join his agent's run seat makes on "bob"'s acceptance is recorded concurrently with a moderator's kick of that seat
+    Then the kick wins and the conflict is recorded and shown
+    And no sequence of deliveries, reorderings or duplications of these acts re-admits "bob" or revives the ended membership
     And a device seat a newly minted key started in "alice"'s personal room after a clone of her node is a member there from its first event, with no add
     And a kick, bar or mute aimed at a seat of the owner or a key that chains to the owner's principal key is refused and audited
     And the kicked and barred seats each get an explicit error naming the act's id on their next post, and read its reason through a tool
@@ -425,10 +431,10 @@ Feature: Room (LANE)
   @LANE-29 @P1 @I2 @pending
   Scenario: a cross-room post stays in its sender's writer, arrives as data and goes no further
     Given an isolated Cairn home
-    And rooms "A", "B" and "C", an idle agent of "alice" in room "B", and "alice"'s trust grant for "carol"'s key scoped to room "B"
+    And rooms "A", "B" and "C", an idle agent of "alice" in room "B", and "alice"'s trust grants for "carol"'s key, one scoped to room "B" and one everywhere
     When "carol"'s device seat in room "A" posts to room "B" a post telling agents to start on a task and to post to room "C"
     Then the post is recorded as an event in the writer of "carol"'s seat in room "A", and no writer of room "B" contains a copy
-    And room "B" shows it by address, untrusted, with its author's seat id and room "A"'s id, and the trust grant scoped to room "B" does not cover it
+    And room "B" shows it by address, untrusted, with its author's seat id and room "A"'s id, and neither trust grant covers it
     And the agent, with no seat in room "A", pulls that one post by address only through a recall tool call, inside the envelope, since recall extends to the cross-room posts room "B" shows
     And no turn is started or resumed, no delegated task is sent, and nothing reaches room "C"
     When a seat of room "B" passes it on to room "C"

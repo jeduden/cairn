@@ -14,7 +14,7 @@ Feature: Restore and injection (INJ)
     Then the additionalContext carries a restore block with the qualifying pin verbatim
     And the restore block includes the landmark index of the current run
     And the restore block ends with the recall hint
-    And every other byte of the restore block is fixed text Cairn ships
+    And every other byte of the restore block is fixed text Cairn ships or sanitized structural fields
 
   @INJ-02 @P0 @I3 @pending
   Scenario Outline: a fresh start returns qualifying pins and the recall hint by default

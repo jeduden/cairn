@@ -123,8 +123,8 @@ Feature: Security (SEC)
     And no key or credential value appears in the store, a segment, a derived artifact, a backup, an export, the audit log or any log output
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
     And a run ingested by "cairn ingest --path" has a seat key that ingest minted, kept like the device key in a file only the person's OS user can read
-    When a run's harness hands its run seat's private key to its MCP server at launch
-    Then the key lives only in that server's memory for the run, which seals the run seat's writer with it, and no file, log, event, backup or output carries it
+    When the harness hands the run-seat private keys of a harness session's main run and of its subagent's run to that session's MCP server at launch
+    Then each key lives only in that server's memory, which seals each run seat's writer with its key, and no file, log, event, backup or output carries either
 
   @SEC-11 @P0 @I2 @I7 @pending
   Scenario Outline: repository configuration may only tighten security settings
@@ -343,7 +343,7 @@ Feature: Security (SEC)
     And the node's principal enabled one forge bridge destination and one notification bridge destination by a principal act
     When the bridge component runs and a held request and a pull-request review from the forge arrive
     Then every outbound bridge runs only in the bridge component, which is listed in the register, outbound only, and off for every destination not enabled
-    And the pull-request review is received only as an untrusted event
+    And the pull-request review is recorded by the bridge component only as an untrusted event of origin "witnessed" and provenance "web"
     And the notification carries only the room's petname, else its id, the queue class and a count, and no answer to it is accepted
     And every send and failure is counted and audited
 

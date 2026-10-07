@@ -38,7 +38,7 @@ Feature: Principal acts (OWN)
     When "alice" sends a steer naming that event's id
     Then the steer reaches the agent through the harness's own input interface
     And no output of a hook handler carries the steer
-    And the text sent is principal-typed text or a fixed template that references ids
+    And the text sent is principal-typed text or a fixed template its requirement names
     And no field of the untrusted event is embedded in it
 
   @OWN-04 @P1 @I2 @pending
@@ -128,7 +128,7 @@ Feature: Principal acts (OWN)
     And a repository configuration sets "force pushes" to "act without asking"
     When a recall-tainted subagent of a parent run at that level tries a force push
     Then the repository configuration does not loosen the level
-    And the sensitive class is raised one level for the tainted run
+    And the sensitive class is tightened one level for the tainted run
     And the subagent, a delegate of the agent that started it, has no looser level than that agent
     And every rule level change on record is a principal act
 
@@ -170,6 +170,7 @@ Feature: Principal acts (OWN)
     When the steer arrives after that turn ended
     Then the steer is not applied to another turn
     And "alice" is asked to confirm before it is applied
+    And her confirmation is recorded as a widening principal act
 
   @OWN-14 @P1 @I6 @pending
   Scenario: a stop lists effects first and shows stopped only on acknowledgement
@@ -204,7 +205,7 @@ Feature: Principal acts (OWN)
   Scenario: a principal act from another of the principal's devices takes effect only within its scope
     Given an isolated Cairn home
     And a paired phone of "alice"
-    When the phone writes a principal act raising a rule level
+    When the phone writes a principal act loosening a rule level
     Then the act does not take effect here
     And the phone is limited to reading and to allowing or denying held permission requests
     And the phone seals its device seat's writer with that seat's key, and this node only holds the writer
@@ -215,11 +216,12 @@ Feature: Principal acts (OWN)
   Scenario: a command from an untrusted event runs only after the person confirms its exact text
     Given an isolated Cairn home
     And an untrusted event carrying a command with invisible characters
-    When the person runs "cairn witness-check start" with the command and confirms it
+    When the person runs "cairn witness-check start" on a result whose check runs that command, and confirms it
     Then the person was shown its exact text with invisible characters made visible before confirming
     And the act is recorded as their widening principal act
     And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base, with network and the principal's home denied
     And its command, exit status and tree hash are recorded
+    And where the platform cannot deny the check network, Cairn refuses the witness check
 
   @OWN-19 @P1 @I1 @I4 @pending
   Scenario: terminal takeover stays local and no-echo input is not stored
@@ -309,7 +311,7 @@ Feature: Principal acts (OWN)
   @OWN-27 @P1 @I2 @I10 @pending
   Scenario: only a person records a verdict, and it goes stale when what it was bound to changes
     Given an isolated Cairn home
-    And a room whose agent stated "C1 is done" and recorded a passing check linked to C1
+    And a room whose agent stated "C1 is done" and recorded a passing check's result linked to C1
     When "alice", a person whose device seat in the room has the pin capability, records "met" on C1 and the agent then edits a file
     Then the verdict is recorded as a "verdict" pin by "alice"'s own neutral principal act, on the signing device's seat in the room, bound to the intent version, the heads of every branch the room names and the results and evidence shown
     And Cairn pre-filled no verdict, and the agent's statement stays a claim
@@ -349,5 +351,6 @@ Feature: Principal acts (OWN)
     And a trust grant naming the room's facilitator is recorded only after "alice" is shown that the facilitator reads untrusted room text, and covers its posts but never its room summaries
     And no role, membership or room setting makes any other principal trusted
     And "carol"'s posts in a foreign room stay untrusted for "alice"'s agent whatever trust grant covers "carol"'s key
+    And a cross-room post "carol" sends from another room, shown in this room, reaches "alice"'s agent only as untrusted recall
     When "alice" revokes the trust grant as a cut principal act
     Then "carol"'s later posts reach "alice"'s agent only as untrusted recall, and her pin no longer restores to it
