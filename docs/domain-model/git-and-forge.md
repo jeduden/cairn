@@ -79,6 +79,7 @@ summary: >-
   a `verdict` pin, recorded as a principal act (OWN-27) by any person whose
   device seat in the room has the pin capability, bound to the intent version,
   the heads of every branch the room names, and the results and evidence shown.
-  It goes stale when any of them changes. It is never edited: a newer verdict on
-  the same criterion supersedes it, and unpinning one is neutral. Cairn never
-  derives one; service accounts contribute evidence instead.
+  It goes stale when any of them changes. It is never edited: a newer verdict of
+  the same person on the same criterion supersedes it, and unpinning one is
+  neutral. Cairn never derives one; service accounts contribute evidence
+  instead.

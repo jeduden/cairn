@@ -43,7 +43,8 @@ one kind (LANE-31).
     named successor, revoke an appointment, unstamp a pin version, turn notices
     off, decline a handover, withdraw as successor, dismiss a directed post,
     revoke an access token, a seat key or a service account's certificate, turn
-    capture on, and turn off the peer component, a bridge or the git carrier.
+    capture on, and turn off the peer component, the publish component, a bridge
+    or the git carrier.
   - **Neutral:** mark a room ready (the owner or a principal whose device seat
     in the room is a moderator) or abandoned (the owner), acknowledge an
     overlap, record a `met` or `not met` verdict, unpin a verdict, open the
@@ -59,22 +60,22 @@ one kind (LANE-31).
     from a device seat a device key certified (before PRV-10 ships, this node's
     own device seat), confirm a pin candidate, change a room's visibility,
     invite a principal key, issue an invite link, choose a fork, confirm a
-    command taken from an untrusted event (OWN-18), turn on the peer component,
-    accept a handover or succession, ask for or accept a join, which sends the
-    run's events to a room other principals' nodes hold, endorse, loosen a rule
-    level, turn on or change an away policy other than turning it off,
-    quarantine that removes a pin or a landmark from a restore block, release a
-    quarantine, purge or apply an erasure request, export, bind a repository
-    identity by hand or rebind it, accept open residual risks (OWN-22), certify
-    a service account's principal key, assign a role, set a room's admission,
-    appoint a moderator or the facilitator, stamp a pin version, name a
-    successor, hand over a room, record a trust grant, allow notices for a room
-    or opt in to them, enable a bridge or the git carrier, set a room setting,
-    publish, apply a purge request, change a retention policy, accept
-    configuration (recording its digest), enroll a CI key, rotate a device key,
-    retire a writer, turn capture off or pause it, enroll or revoke a device,
-    peer or authenticator, mint or rotate an access token, start a witness
-    check, and a backup restore.
+    command taken from an untrusted event (OWN-18), turn on the peer or publish
+    component, accept a handover or succession, ask for or accept a join, which
+    sends the run's events to a room other principals' nodes hold, endorse,
+    loosen a rule level, turn on or change an away policy other than turning it
+    off, quarantine that removes a pin or a landmark from a restore block,
+    release a quarantine, purge or apply an erasure request, export, bind a
+    repository identity by hand or rebind it, accept open residual risks
+    (OWN-22), certify a service account's principal key, assign a role, set a
+    room's admission, appoint a moderator or the facilitator, stamp a pin
+    version, name a successor, hand over a room, record a trust grant, allow
+    notices for a room or opt in to them, enable a bridge or the git carrier,
+    set a room setting, publish, apply a purge request, change a retention
+    policy, accept configuration (recording its digest), enroll a CI key, rotate
+    a device key, retire a writer, turn capture off or pause it, enroll or
+    revoke a device, peer or authenticator, mint or rotate an access token,
+    start a witness check, and a backup restore.
 
   Any principal act that removes a pin from a restore block, or stops this node
   recording its own runs' events, is widening whatever verb carries it. An
