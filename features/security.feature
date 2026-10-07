@@ -47,7 +47,7 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a store with 1M events
     When the agent calls the MCP tool "event_search" with query "<query>"
-    Then the search outcome is "<outcome>"
+    Then the query is "<outcome>"
 
     Examples:
       | query                     | outcome                                            |
@@ -158,7 +158,7 @@ Feature: Security (SEC)
       | selector                     |
       | --range w-1:100-200          |
       | --run r-1                    |
-      | --author alice               |
+      | --author s-1                 |
       | --room room-1                |
       | --writer w-1                 |
       | --provenance web             |

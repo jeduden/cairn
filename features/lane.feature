@@ -23,7 +23,7 @@ Feature: Room (LANE)
     And renaming a room leaves its id unchanged, and no table maps a run to a seat beyond its personal-room seat and the joins its seats' writers record
     And a run's seat in a room the run created routes its events exactly as a seat it joined
     And an event with no run, recorded by a device of "alice", goes to that device's seat in her personal room
-    And a principal act of "alice" on "R", signed by a device of hers with no seat in "R", is recorded on that device's seat in "R", which joins without admission since her run's seat is a member there
+    And a principal act of "alice" on "R", signed by a node of hers with no seat in "R", is recorded on that node's device seat in "R", which joins without admission since her run's seat is a member there
     And a principal act of "alice" rejecting a foreign room, in which she has no seat, goes to the signing device's seat in her personal room, naming that room
     And a principal act of "alice" on "R" signed by her paired phone goes to the phone's device seat in her personal room, naming "R", and "R" shows it by address as it shows a cross-room post
 
@@ -141,7 +141,7 @@ Feature: Room (LANE)
     And "alice" offers the room to "bob" as a widening principal act with a presence proof
     When "bob" accepts as a widening principal act with a presence proof
     Then the handover shows as "accepted" to both principals
-    And "alice"'s seats have the moderator role and her agents' events stay accepted
+    And the handover records a moderator role assignment for "alice"'s seats, so they have the moderator role, and her agents' events stay accepted
     And her pin keeps "alice"'s device seat as its author and keeps restoring to her agents
     And it reaches "bob"'s agents only through a version "bob" stamps, shown with "bob" as its stamper, or a trust grant of "bob" covering "alice"'s key
     And held requests stay with each agent's principal
@@ -183,9 +183,9 @@ Feature: Room (LANE)
   Scenario: every turn of an agent records its trigger and the model tokens it used
     Given an isolated Cairn home
     And an agent's run in a room
-    And a user turn its principal's message started, an endorsed directed post and a post nobody endorsed
+    And its principal's message arriving as the harness's user input, an endorsed directed post and a post nobody endorsed
     When the agent takes its turns
-    Then each turn records its trigger as harness_meta: the user turn, or the principal act of the endorsement with the endorsed post's address
+    Then each turn records its trigger as harness_meta: the harness's user input, or the principal act of the endorsement with the endorsed post's address
     And each turn records the model tokens it used, so spend is attributable per agent and per trigger
     And the post nobody endorsed triggers no turn
 
@@ -290,11 +290,11 @@ Feature: Room (LANE)
     And the edit to "go.mod" is marked "outside intent"
 
   @LANE-22 @P2 @I2 @I10 @pending
-  Scenario: several people record verdicts on one outcome and only the owner changes the intent
+  Scenario: several people record verdicts on one criterion and only the owner changes the intent
     Given an isolated Cairn home
     And a room owned by "alice" and shared with "bob" and "carol", whose device seats each have the contributor role
     When "bob" records "not met" on C1, "alice" records "met" on C1 and "carol" posts a revised criterion
-    Then every principal with a seat in the room sees both verdicts on C1 side by side, each with its author's petname and role
+    Then every principal with a seat in the room sees both verdicts on C1 side by side, each with its author's petname and role, or owner for "alice"
     And neither verdict replaces the other
     And "carol"'s revision reaches no agent until "alice" revises the intent to it
 

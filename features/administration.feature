@@ -100,7 +100,7 @@ Feature: Administration and lifecycle (ADM)
       | --room room-a          |
       | --run run-a            |
       | --writer writer-a      |
-      | --author alice         |
+      | --author s-1           |
       | --range writer-a:10-20 |
       | --before 2026-01-01    |
       | --provenance web       |
@@ -172,7 +172,7 @@ Feature: Administration and lifecycle (ADM)
     And the repository's other refs, notes, configuration and hooks are byte-identical to before
 
   @ADM-14 @P1 @I1 @I5 @pending
-  Scenario Outline: purge by seat key or author removes one principal's data with an audit trail on every node
+  Scenario Outline: purge by seat key or principal removes one principal's data with an audit trail on every node
     Given an isolated Cairn home
     And two nodes that both hold the events of the principal "alice" written under the seat key "alice-key"
     When the person runs "cairn purge <scope>" on each node
@@ -182,7 +182,7 @@ Feature: Administration and lifecycle (ADM)
     Examples:
       | scope              |
       | --writer alice-key |
-      | --author alice     |
+      | --principal alice  |
 
   @ADM-15 @P1 @I6 @I9 @I1 @pending
   Scenario Outline: quotas refuse and audit what is received over them and never drop an accepted event

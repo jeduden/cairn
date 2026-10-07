@@ -14,7 +14,7 @@ Feature: Peer network (PEER)
     And the ephemeral node's own entrypoint starts the peer component on the strength of the person's setting
     And on a home with no such action of the person the peer component stays off
     And with the peer component absent or stopped the core behaves exactly as in standalone
-    And the outcome is the same whether the peer component ships in the core's executable or its own
+    And all of the above holds whether the peer component ships in the core's executable or its own
 
   @PEER-02 @P2 @I4 @pending
   Scenario: a peer holds complete room copies and serves them only to nodes whose principal has a seat in the room or that hold it blind

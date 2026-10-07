@@ -19,15 +19,15 @@ Feature: Principal acts (OWN)
     Given an isolated Cairn home
     And an agent's active run
     When a principal act arrives from <surface>
-    Then the outcome is "<outcome>"
+    Then the act is "<outcome>"
 
     Examples:
       | surface                                   | outcome                                                                                                                                                                                                                   |
       | the room view under SEC-20                | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
       | the CLI or TUI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
       | a paired phone within its scope           | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, which shows it by address, whose writer the phone seals with that seat's key and the node only holds |
-      | the harness's own prompt                  | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                                           |
-      | the terminal the launcher hosts           | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                                           |
+      | the harness's own prompt                  | recorded as a user turn or a harness_meta event, not a principal act                                                                                                                                                           |
+      | the terminal the launcher hosts           | recorded as a user turn or a harness_meta event, not a principal act                                                                                                                                                           |
       | any other surface                         | refused and audited                                                                                                                                                                                                       |
 
   @OWN-03 @P1 @I2 @pending
@@ -76,18 +76,18 @@ Feature: Principal acts (OWN)
       | Cairn fails while the permission request is held                         | the harness falls back to its own prompt and the action is not allowed |
 
   @OWN-07 @P1 @I2 @I9 @pending
-  Scenario Outline: an away policy only replies to the agent's own held request
+  Scenario Outline: an away policy only answers the agent's own held request
     Given an isolated Cairn home
     And "alice" turned on the away policy "<policy>" for the room as a principal act
     And her agent's permission request is held past the hold window
     When the hold window ends
-    Then the agent's held request gets the reply "<reply>"
+    Then the agent's held request gets the answer "<answer>"
     And no turn is started or resumed
     And a later approval reaches only the requesting run as the fixed template "Held request <id> was approved by your principal" with a permission grant for the identical action
     And the held-request id resolves through "event_get" to the held request's recorded event
 
     Examples:
-      | policy                 | reply                                                                                   |
+      | policy                 | answer                                                                                  |
       | keep going             | a deny with the fixed text "Held for your principal as <id>; continue with other tasks" |
       | pause at the first ask | the agent pauses                                                                        |
       | stop at the first ask  | the agent stops                                                                         |
