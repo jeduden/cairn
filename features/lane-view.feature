@@ -179,7 +179,7 @@ Feature: Room view (VIEW)
     And it carries only the queue class, the room's petname, else its id, and a count
     And it never reaches a model and accepts no answer
     And the suppressed notification is counted
-    And the terminal signal goes only to the terminal, never into hook output the harness adds to the model's context
+    And the terminal notification goes only to the terminal, never into hook output the harness adds to the model's context
 
   @VIEW-18 @P1 @I7 @pending
   Scenario: with no run recorded the room view opens on Setup
