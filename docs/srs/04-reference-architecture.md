@@ -107,14 +107,15 @@ nothing retained confirms a guess at what was purged.
 1. Context approaches its limit; Claude Code fires `PreCompact`.
 2. The hook handler, `cairn hook PreCompact`, ingests the transcript up to
    now (bounded), closes the current span, updates landmarks, and returns
-   compaction guidance if supported (PIN-07).
+   compaction guidance if supported: fixed text Cairn ships, never record
+   content (PIN-07, I2).
 3. Claude Code compacts. `PostCompact` fires; Cairn records `compact_summary` as
    a `harness_text` event.
 4. Claude Code fires `SessionStart` with `source = compact`. Cairn returns the
    **restore block**: the qualifying pins (PIN-10, verbatim), the landmark
    index, and the recall hint.
 5. Later, the agent needs a detail that compaction dropped. It calls
-   `cairn.event_search`, then `cairn.event_expand` on the returned address
+   `event_search`, then `event_expand` on the returned address
    range, and receives the exact original inside an untrusted-data envelope.
 
 ### Aggregation over large history

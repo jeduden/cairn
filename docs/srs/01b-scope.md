@@ -3,8 +3,9 @@ title: "1.4 Scope"
 summary: >-
   Scope by context layer: Cairn implements the record, pin, recall and
   kernel layers; long-term memory is out of scope.
-  Claude first, room summaries from the facilitator, and a web
-  service as a target interface, paced in four stages.
+  Claude first, room summaries from the facilitator, and the room
+  view on loopback (B1), then on enrolled devices (B2), with any
+  wider reach an open question (OQ-38).
 ---
 # 1.4 Scope
 
@@ -31,21 +32,21 @@ program that writes it is not a Cairn component, and the core makes no
 model calls (I4). A room summary is untrusted and never replaces the
 record (I1, I2).
 
-A web service is a target interface, paced in four stages. Each stage
-stays a client of the record under VIEW-03, and every capability it
-offers also exists in the CLI or MCP.
+The room view reaches the principal in two steps. It stays a client of
+the record under VIEW-03, and every capability it offers also exists
+in the CLI or MCP.
 
-1. The person's own browser on loopback (B1), as the room view does
-   today. A phone reaches it only as a principal surface, through the
-   principal's own tunnel outside Cairn, which Cairn sees as loopback;
-   it is not a paired phone (§6.3).
-2. The person's other devices, as enrolled, mutually authenticated
+1. The browser room view on loopback (B1). Before B2, a phone reaches
+   it only as a principal surface, through the principal's own tunnel
+   outside Cairn, which Cairn sees as loopback; it is not a paired
+   phone (§6.3).
+2. The principal's other devices, as enrolled, mutually authenticated
    peers and paired phones (B2).
-3. Browsers on other machines with a login.
-4. A service on a host the principal names.
 
-I4 binds Cairn's components, not the principal's own tunnel: in stage
-1 the room-view component listens only on loopback (B1), and in stage
-2 the peer component connects only to enrolled peers and paired phones
-(B2). Stages 3 and 4 need new I4 wording, approved by ADR with a
-security review, before any requirement asks for them (OQ-38).
+I4 binds Cairn's components, not the principal's own tunnel: the
+room-view component listens only on loopback (B1), and the peer
+component connects only to enrolled peers and paired phones (B2).
+Whether the room view may reach browsers on other machines, or be
+served from a host the principal names, is an open question: each
+would need new I4 wording, approved by ADR with a security review,
+before any requirement asks for it (OQ-38).

@@ -115,9 +115,9 @@ shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined. `▬` from a s
 that is no longer a member: it left, was kicked or was barred. `ingested`.
 `new key`. "from a revoked device". Timeline rails: solid for the agent's
 principal, hollow for other principals, dotted for agents and the forge. Events
-from a token-key-only node's writers are untrusted on every other node unless a
-principal stamped them (PRV-02). Unsandboxed agents are one line on Health, not
-a mark on every tile.
+from a token-key-only node's writers are untrusted on every other node, and its
+pins restore only once a principal stamps a version (PRV-02). Unsandboxed agents
+are one line on Health, not a mark on every tile.
 
 ## 9.7.7 Keymap
 
