@@ -101,8 +101,8 @@ segment was refused), `equivocated` (PEER-10). The UI never says "secure".
 ## 9.7.6 Trust marks
 
 No mark, for the principal's own agents, on this node's own `operator` and
-structural events, the `harness_meta` events its hook handlers witnessed, and
-the `user` turns they witnessed while the deployment mode is `interactive` (an
+structural events, the `harness_meta` events its hook handlers recorded, and
+the `user` turns they recorded while the deployment mode is `interactive` (an
 ingested one is untrusted, REC-22); on principal acts a device key the principal
 certified signed, and posts and pins written from a device seat such a key
 certified, within that key's scope, from any of its nodes (shown with a device
