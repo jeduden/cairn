@@ -83,22 +83,22 @@ that node first joins without admission when its principal has a member seat
 there. One that acts on no room or on a room its principal has no member seat
 in, such as rejecting a foreign room, or that a paired phone signs, goes to that
 device seat in the personal room, naming the room, and that room shows it by
-address as it shows a cross-room post (OWN-02, LANE-29). Expire acts are
-`operator` events on the device seat of the node that signs them. Room acts sit
-in the writer of the seat that signs them: a post with provenance `post`, a room
-summary `summary`, never trusted (LANE-33), every other room act with that
-seat's pin class, `operator` for a device seat and `assistant` for a run seat
-(LANE-31, PRV-01). A purge under a retention policy is not an act: the node
-records it naming the policy, whose setting was the act. Every tombstone is a
-`structural` event (PRV-01). Every other table (FTS index, spans, landmarks,
-active pins, quarantine set, run and integrity statuses, queues, stats) is a
-derived artifact that `cairn rebuild` reproduces exactly from the writer logs
-the node holds and the node's own key set (I10). Purge, the only way content is
-destroyed, removes content but leaves a tombstone event carrying the removed
-addresses, counts, reason, the principal or retention policy that purged, and
-the commitments of the removed events (REC-17, ADM-07), never a hash of the
-removed content, so rebuilds stay deterministic, purges stay auditable and
-nothing retained confirms a guess at what was purged.
+address as it shows a cross-room post (OWN-02, LANE-29). Once PRV-10 ships,
+expire acts are `operator` events on the device seat of the node that signs
+them. Room acts sit in the writer of the seat that signs them: a post with
+provenance `post`, a room summary `summary`, never trusted (LANE-33), every
+other room act with that seat's pin class, `operator` for a device seat and
+`assistant` for a run seat (LANE-31, PRV-01). A purge under a retention policy
+is not an act: the node records it naming the policy, whose setting was the act.
+Every tombstone is a `structural` event (PRV-01). Every other table (FTS index,
+spans, landmarks, active pins, quarantine set, run and integrity statuses,
+queues, stats) is a derived artifact that `cairn rebuild` reproduces exactly
+from the writer logs the node holds and the node's own key set (I10). Purge, the
+only way content is destroyed, removes content but leaves a tombstone event
+carrying the removed addresses, counts, reason, the principal or retention
+policy that purged, and the commitments of the removed events (REC-17, ADM-07),
+never a hash of the removed content, so rebuilds stay deterministic, purges stay
+auditable and nothing retained confirms a guess at what was purged.
 
 ## 4.4 Key scenarios
 

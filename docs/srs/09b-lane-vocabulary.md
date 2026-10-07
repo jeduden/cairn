@@ -34,20 +34,20 @@ proposal, §8.
 ## 9.7.2 Room status
 
 Room status is computed where shown from room state, its runs' statuses and
-their freshness marks, never recorded: no act sets it directly, though
-OWN-21's ready and abandoned marks feed it (LANE-09). Rooms do not land;
-branches do, by git or the forge (LANE-08). First match wins, in this order:
-**Abandoned** (the owner marked the room abandoned) and **Landed** (every branch
-the room names has landed), **Asking** (a run waits on its principal),
+their freshness marks, never recorded: no act sets it directly, though OWN-21's
+ready and abandoned marks feed it (LANE-09). Rooms do not land; branches do, by
+git or the forge (LANE-08). First match wins, in this order: **Abandoned** (the
+owner marked the room abandoned) and **Landed** (the room names at least one
+branch, and every one has landed), **Asking** (a run waits on its principal),
 **Failing** (a check failed on the head of a branch the room names, evidence
 `own check` or stronger), **Blocked**, **Running**, **Ready for review** (only
 after the principal act of OWN-21 marking the room ready), **Quiet** (never
 while a run is `unrecorded` or `behind`, VIEW-04). The pull-request states a
 forge reports (Pre-review, In review, Changes requested, Approved, Queued,
 Merging) live on the pull-request pill (P2, LANE-08), marked `asserted`, not in
-the room status; Cairn keeps no approval state of its own. A check's check
-state is one of Pending, Executing, Passed, Failed, Stale, Unbound and Absent.
-No check state shares a name with a room status, a draft or a landing.
+the room status; Cairn keeps no approval state of its own. A check's check state
+is one of Pending, Executing, Passed, Failed, Stale, Unbound and Absent. No
+check state shares a name with a room status, a draft or a landing.
 
 ## 9.7.3 Evidence and proof classes
 
