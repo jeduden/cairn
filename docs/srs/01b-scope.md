@@ -33,8 +33,8 @@ and the core makes no model calls (I4). A room summary is untrusted
 and never replaces the record (I1, I2).
 
 The room view reaches the principal in two steps. It stays a client of
-the record under VIEW-03, and every capability it offers also exists
-in the CLI or MCP.
+the record under VIEW-03, and everything it lets a person do also
+exists in the CLI or MCP.
 
 1. The browser room view on loopback (B1). Before B2, a phone reaches
    it only as a principal surface, through the principal's own tunnel

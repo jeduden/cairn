@@ -90,7 +90,7 @@ set first, then causal order. The focus set changes only by a recorded neutral
 principal act, so every device of the principal shows one order. Causal order,
 not wall-clock age, because age differs between nodes and reads a clock (I10);
 it is oldest first wherever clocks agree. Pull-request reviews the forge asks of
-the principal join the same queue.
+the principal enter the same queue.
 
 ## 9.7.5 Integrity status
 
@@ -107,16 +107,16 @@ segment was refused), `equivocated` (PEER-10). The UI never says "secure".
 No mark, for the principal's own agents, on this node's own `operator` and
 structural events, the `harness_meta` events its hook handlers recorded, and the
 `user` events they recorded while the deployment mode is `interactive` (an
-ingested one, or one matching text the launcher carried in, is untrusted,
-REC-22, LANE-14); on principal acts a device key the principal certified signed,
-and posts and pins written from a device seat such a key certified, within that
-key's scope, from any of its nodes (shown with a device glyph); on pin versions
-the principal stamped (shown with the stamper, LANE-32); and on posts and pins a
-trust grant of the principal covers outside a foreign room, written from device
-seats a device key of the principal the trust grant names certified, never a
-token-key-only node's (shown with the granted key's petname, OWN-29). In a
-foreign room only the principal's own device-seat pins and the versions it
-stamped go unmarked (RCL-10, PIN-10).
+ingested one is untrusted, REC-22, and a line the launcher carried in is
+untrusted `harness_text`, never a `user` event, LANE-14); on principal acts a
+device key the principal certified signed, and posts and pins written from a
+device seat such a key certified, within that key's scope, from any of its nodes
+(shown with a device glyph); on pin versions the principal stamped (shown with
+the stamper, LANE-32); and on posts and pins a trust grant of the principal
+covers outside a foreign room, written from device seats a device key of the
+principal the trust grant names certified, never a token-key-only node's (shown
+with the granted key's petname, OWN-29). In a foreign room only the principal's
+own device-seat pins and the versions it stamped go unmarked (RCL-10, PIN-10).
 `○` plus petname on anything untrusted from another principal, agent, node or
 bundle, a `user` event another node recorded included; a key with no petname
 shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined. `▬` from a seat
