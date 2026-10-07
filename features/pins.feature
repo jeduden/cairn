@@ -45,10 +45,10 @@ Feature: Pins (PIN)
   @PIN-04 @P0 @I10 @pending
   Scenario: editing a pin adds a pin version and keeps every earlier one
     Given an isolated Cairn home
-    And a qualifying pin "Never push directly to main" created at address w-1·10
+    And a qualifying pin "Never push directly to main" created at address A1·10
     When the person runs "cairn pin edit" to change the pin to "Never push directly to main or release branches"
-    Then the record gains an edit event adding version 2 of the pin created at w-1·10
-    And the event at w-1·10 and its pin text are unchanged
+    Then the record gains an edit event adding version 2 of the pin created at A1·10
+    And the event at A1·10 and its pin text are unchanged
     And version 2's author is the seat that ran the edit, version 1 keeps its own author, and the pin's author stays version 1's
     And version 1 stays readable, and "cairn rebuild" reproduces the one qualifying pin at version 2, "Never push directly to main or release branches"
 

@@ -71,7 +71,7 @@ Feature: Principal acts (OWN)
     Examples:
       | situation                                                                | expected                                                               |
       | no away policy is on and the hold window passes                          | it is not denied on the timeout                                        |
-      | no principal surface is connected and the harness prompt is unanswerable | it is only mirrored, not held                                          |
+      | no principal surface is connected and the harness prompt is unanswerable | it is only mirrored, not kept waiting                                  |
       | the harness adapter cannot keep the harness's own prompt answerable      | it is only mirrored and the answer is left to the harness              |
       | Cairn fails while the permission request is held                         | the harness falls back to its own prompt and the action is not allowed |
 

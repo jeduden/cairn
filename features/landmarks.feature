@@ -51,9 +51,9 @@ Feature: Landmarks (LMK)
   Scenario: flagged and quarantined events count but contribute no text
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "flagged-and-quarantined"
-    And the person runs "cairn quarantine add --range w-1:12-12"
+    And the person runs "cairn quarantine add --range A1:12-12"
     When the person runs "cairn landmark list --json"
-    Then the event counts include the flagged event and the quarantined event w-1·12
+    Then the event counts include the flagged event and the quarantined event A1·12
     And no tool name, file path or other text field in any landmark comes from those events
 
   @LMK-05 @P0 @I10 @pending
@@ -63,7 +63,7 @@ Feature: Landmarks (LMK)
     When the person runs "cairn landmark list --json"
     Then no tier contains more than 8 landmark blocks
     And the newest landmark block keeps full detail while older landmark blocks collapse to one line each and merge into the next tier
-    And the landmark index contains O(k log_k n) landmark blocks for n = 70 spans
+    And the landmark list contains O(k log_k n) landmark blocks for n = 70 spans
 
   @LMK-06 @P2 @I2 @pending
   Scenario: natural-language headlines appear only on all-trusted spans

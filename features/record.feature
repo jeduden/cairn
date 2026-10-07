@@ -215,7 +215,7 @@ Feature: Record (REC)
     When the hook "<hook>" runs and appends events
     Then the run's MCP server sealed the run seat's writer with the run seat's key at each call it served, covering what the hook handlers had appended, within the hook budgets
     And it seals that writer again when the run stops, and events after the newest seal are shown as "unsigned"
-    And what "cairn ingest" later appends for the run, after its MCP server has ended, goes to a new seat and writer naming the run seat, which the core seals
+    And what "cairn ingest" later appends for the run, after its MCP server has ended, goes to a new seat and writer in the run seat's room, naming the run seat and taking over its add and role, which the core seals
     And a segment was closed once 30 s had passed though no hook closed one, and the open segment is closed at "<hook>"
     And "cairn verify" and "cairn status" each report the other writer's chain as ended without a closed segment
     And the paired phone sealed its device seat's writer with that seat's key after each append to it
@@ -293,7 +293,7 @@ Feature: Record (REC)
     And <change>
     When the hook "SessionStart" runs and appends its first event after the start
     Then Cairn mints a new seat key before that append, starting a new seat and writer that names the old seat
-    And the new seat inherits no add, role or appointment of the old seat, and, outside the personal room, joins a room only as any seat does
+    And the new seat inherits no add, role or appointment of the old seat, and, outside the personal room, joins a room only as any seat does, while a personal-room seat, a device seat's included, is a member from its first event
     And an audit entry records the node identity change
     And no event is appended under the old seat key
 

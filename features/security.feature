@@ -13,7 +13,7 @@ Feature: Security (SEC)
     And no code any component can execute starts a program outside the launcher, save the core's own kernel worker
     And CI fails when a component's evidence is missing or shows a violation
     And no core process runs or starts a component behind B1 to B3
-    And the room-view component and the launcher listen only on loopback or on a local endpoint only the same OS user can reach
+    And the room-view component listens only on loopback, and the launcher only on loopback or on a local endpoint only the same OS user can reach
     And neither connects anywhere else
 
   @SEC-02 @P0 @I8 @pending
@@ -156,7 +156,7 @@ Feature: Security (SEC)
 
     Examples:
       | selector                     |
-      | --range w-1:100-200          |
+      | --range A1:100-200           |
       | --run r-1                    |
       | --author s-1                 |
       | --room room-1                |
@@ -366,7 +366,7 @@ Feature: Security (SEC)
     Then the purge is sent as a signed erasure request naming its tombstone
     And the applying peer shows a tombstone and the suppressing peer shows a missing range
     And that other principal can send the room's owner a signed purge request, a neutral principal act, for the events its own seats wrote
-    And the owner's answer to it is a widening principal act and is audited
+    And the owner applying it is a widening principal act and refusing it a neutral one, either audited
 
   @SEC-31 @P0 @I1 @I5 @I6 @pending
   Scenario: purging an event erases every copy this node holds and writes a signed purge receipt
@@ -393,5 +393,5 @@ Feature: Security (SEC)
     And each such post is in the facilitator's own words and points by range link to the marked range it names, quoting none of it
     And the facilitator's posts reach no agent as trusted unless that agent's principal recorded a trust grant for the facilitator's principal key
     And the facilitator's program writes room summaries only with "cairn room-summary write", signed with its device seat, and never acts through an MCP tool
-    And a run seat that a principal whose device seat has the moderator role by role assignment appointed moderator is kept to the same limits, and that appointer can undo each of its acts
+    And a run seat that a principal whose device seat has the moderator role by role assignment appointed moderator is kept to the same limits, and that appointer can undo each of its bars and mutes, while a seat it kicked only that seat's own principal adds again
     And that appointer's appointment of a facilitator is refused, since only the owner appoints the facilitator

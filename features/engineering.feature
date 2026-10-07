@@ -149,13 +149,13 @@ Feature: Engineering quality (ENG)
     And CI fails when the evidence for the "<component>" is missing or shows that it <violation>
 
     Examples:
-      | component           | violation                                                                 |
-      | core                | opens any socket, or starts a program other than its own kernel worker    |
-      | launcher            | makes an outbound connection or listens beyond loopback                   |
-      | room-view component | starts a program, makes an outbound connection or listens beyond loopback |
-      | peer component      | starts a program or reaches beyond its register rows                      |
-      | publish component   | starts a program or reaches beyond its register rows                      |
-      | bridge component    | starts a program, listens, or reaches beyond its register rows            |
+      | component           | violation                                                                                                      |
+      | core                | opens any socket, or starts a program other than its own kernel worker                                         |
+      | launcher            | makes an off-machine connection or listens beyond loopback or a local endpoint only the same OS user can reach |
+      | room-view component | starts a program, makes an off-machine connection or listens beyond loopback                                   |
+      | peer component      | starts a program or reaches beyond its register rows                                                           |
+      | publish component   | starts a program or reaches beyond its register rows                                                           |
+      | bridge component    | starts a program, listens, or reaches beyond its register rows                                                 |
 
   @ENG-17 @P0 @pending
   Scenario: contract tests replay every supported Claude Code version

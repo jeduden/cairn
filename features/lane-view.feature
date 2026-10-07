@@ -37,7 +37,7 @@ Feature: Room view (VIEW)
   Scenario: statuses come from structural fields only and unrecorded runs surface
     Given an isolated Cairn home
     And a room with one run whose transcript is longer than its ingested position
-    And a run the launcher started with no hook observation, sitting only in its personal room
+    And a run the launcher started with no hook observation, with a seat only in its personal room
     When the person opens Fleet and runs "cairn room list"
     Then every run shows exactly one status from the closed set of §9.7.1 with its freshness mark
     And the room shows one room status and the worst freshness mark of its runs, never Quiet
@@ -222,10 +222,10 @@ Feature: Room view (VIEW)
   Scenario: the outcome window follows the room's pick, else the latest presentation
     Given an isolated Cairn home
     And a room with no facilitator, where seats "p-1" and "p-2" each have the present capability
-    When "p-1" presents a dev server and then "p-2" presents a diff
+    When "p-1" presents a dev server's address and then "p-2" presents a diff
     Then the outcome window shows "p-2"'s diff, as every node holding the record derives it
     When a moderator records a signed pick of "p-1"'s presentation
-    Then the window shows "p-1"'s dev server
+    Then the window shows "p-1"'s dev server's address as inert text the person opens in their own browser, and nothing loads in the room view's origin
     And a pick by a seat with only present is refused
     And the person viewing can follow "p-2" in their own view, with no capability, without changing the window
     When the owner's device seat and the moderator concurrently pick different presentations

@@ -38,7 +38,7 @@ Feature: Recall (RCL)
   Scenario: event expand returns exact post-redaction content under the model-token cap
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "large-payloads"
-    When the agent calls the MCP tool "event_expand" with range "w-1:1-400"
+    When the agent calls the MCP tool "event_expand" with range "A1:1-400"
     Then the result is wrapped in the envelope
     And the items carry the exact post-redaction content with payload references resolved
     And the envelope is at most 8,000 model tokens with "truncated" true and a "next_cursor"
@@ -53,10 +53,10 @@ Feature: Recall (RCL)
     And the envelope carries "cairn_envelope" 1 and the fixed envelope warning in its field "warning"
 
     Examples:
-      | tool         | args                           |
-      | event_search | query "deploy"                 |
-      | event_expand | range from "w-1:1" to "w-1:20" |
-      | event_get    | address "w-1:7"                |
+      | tool         | args                         |
+      | event_search | query "deploy"               |
+      | event_expand | range from "A1:1" to "A1:20" |
+      | event_get    | address "A1:7"               |
 
   @RCL-05 @P0 @I8 @pending
   Scenario: recall defaults to the agent's current run and extending it to its rooms is explicit and logged
@@ -66,7 +66,7 @@ Feature: Recall (RCL)
     Then every hit belongs to the calling run, across the writers of both its seats
     And with scope "room" and room "L1" the hits come from every writer of "L1" and from the cross-room post "L1" shows, and with scope "rooms" from every room the run has a seat in, and an audit entry logs each call whose recall scope extends past the run
     And no scope returns any other hit from "L2", or any hit from the foreign room
-    When the agent calls the MCP tool "event_get" with address "w-2:5", an event of another run in "L1", and no scope
+    When the agent calls the MCP tool "event_get" with address "A2:5", an event of another run in "L1", and no scope
     Then the event is not returned, and the result says the address lies outside the current scope
     And with scope "room" and room "L1" the event is returned, and an audit entry logs the extended recall scope
 
@@ -74,11 +74,11 @@ Feature: Recall (RCL)
   Scenario: quarantined events are never recalled and purged ranges return a tombstone
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "poisoned-web"
-    And the person runs "cairn quarantine add --range w-1:12-12"
-    And the person runs "cairn purge --range w-1:30-40"
-    When the agent calls the MCP tool "event_expand" with range "w-1:1-50"
+    And the person runs "cairn quarantine add --range A1:12-12"
+    And the person runs "cairn purge --range A1:30-40"
+    When the agent calls the MCP tool "event_expand" with range "A1:1-50"
     Then the result is wrapped in the envelope
-    And no item has address w-1·12 and no item lies in w-1·30–40, which appears as a tombstone with reason "purged"
+    And no item has address A1·12 and no item lies in A1·30–40, which appears as a tombstone with reason "purged"
 
   @RCL-07 @P0 @I6 @pending
   Scenario: every recall call is appended to the record
@@ -100,12 +100,12 @@ Feature: Recall (RCL)
     And "cairn event expand" given the same address in the same form returns the same events
 
     Examples:
-      | form                                 | tool         |
-      | short                                | event_get    |
-      | range                                | event_expand |
-      | full                                 | event_get    |
-      | ASCII input, such as "w-1:7"         | event_get    |
-      | ASCII input range, such as "w-1:3-9" | event_expand |
+      | form                                | tool         |
+      | short                               | event_get    |
+      | range                               | event_expand |
+      | full                                | event_get    |
+      | ASCII input, such as "A1:7"         | event_get    |
+      | ASCII input range, such as "A1:3-9" | event_expand |
 
   @RCL-09 @P1 @I2 @I6 @pending
   Scenario Outline: every recalled item carries its writer, author, trust, origin and integrity status

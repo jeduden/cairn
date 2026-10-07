@@ -80,7 +80,7 @@ Feature: Room (LANE)
       | a command, its exit status and its tree the hook handlers recorded on the node of the run that made the edits                                                      | own check     | bound   |
       | a command the hook handlers recorded after edits made through a shell                                                                                              | claim         | unbound |
       | the check re-run through the launcher on a fresh checkout of the exact commit by a node whose git identity authored no commit on the branch since it left its base | witness check | —       |
-      | a check result for the exact commit signed by an enrolled CI key and brought in by the CI carrier                                                                  | CI attested   | —       |
+      | a check result for the exact commit signed by an enrolled CI key and brought in by the CI bridge                                                                   | CI attested   | —       |
 
   @LANE-06 @P1 @I6 @I10 @pending
   Scenario Outline: the rooms behind a landed commit carry one proof class
@@ -91,6 +91,7 @@ Feature: Room (LANE)
     And the landing link carries the reason "<reason>"
     And the landing link counts as proven: <proven>
     And no process is started to read git objects
+    And a commit merged only into a branch that is neither the repository's default branch nor one the forge protects is no landed commit
 
     Examples:
       | relation                            | proof       | reason            | proven |
@@ -128,8 +129,8 @@ Feature: Room (LANE)
     Given an isolated Cairn home
     And a room owned by "alice"
     When "alice" invites the principal key of "bob" as "viewer", as her widening principal act
-    Then the invite names the principal key of "bob" and the role "viewer", and records that role as a role assignment
-    And before the invite takes effect a review step shows "alice" which classes and ranges will replicate to "bob"'s node, with SEC-08 applied
+    Then the invite names the principal key of "bob" and the role "viewer", and records that role as a role assignment for every seat that chains to "bob"'s principal key and joins under the invite, his run seats included
+    And before the invite takes effect a review step shows "alice" which classes and ranges will replicate to "bob"'s node, with SEC-08 applied, and that the role covers "bob"'s run seats too
     And "bob"'s first view shows the room's intent, pins, state, open held requests and latest results within 3 s of connecting, before the full sync completes
     And the node refuses and audits a post from "bob"'s seat, which the viewer role does not permit
     And a role request, a room act of "bob"'s seat taken through "room_role_request" or "cairn role request", enters "alice"'s Needs you as Q3
@@ -141,7 +142,7 @@ Feature: Room (LANE)
     And "alice" offers the room to "bob" as a widening principal act with a presence proof
     When "bob" accepts as a widening principal act with a presence proof
     Then the handover shows as "accepted" to both principals
-    And the handover records a moderator role assignment for "alice"'s seats, so they have the moderator role, and her agents' events stay accepted
+    And the handover records a moderator role assignment for "alice"'s device seats, so they have the moderator role, and her agents' events stay accepted
     And her pin keeps "alice"'s device seat as its author and keeps restoring to her agents
     And her pin reaches "bob"'s agents only through a version "bob" stamps, shown with "bob" as its stamper, or a trust grant of "bob" covering "alice"'s key
     And until "bob" revises or stamps the intent, it restores only to the agents of the principals who stamped one of its versions
@@ -217,8 +218,9 @@ Feature: Room (LANE)
     And create room, join, a join request and leave are checked against admission and the add instead, never against a role
     And a run's personal-room seat, and its run seat in a room the run created, have the contributor role
     And the room view shows the seat its role and those capabilities
-    And only the owner assigns a role, and an invite or invite link records the role it names as a role assignment
-    And a seat with no role assignment or appointment, other than the owner's device seats, is a viewer
+    And only the owner assigns a role, and an invite or invite link records the role it names as a role assignment for every seat that chains to the invited principal key and joins under it, run seats included
+    And a seat with no role assignment or appointment, other than the owner's device seats, is a viewer, and a paired phone's personal-room seat has no role and reads only within its device scope
+    And a role assignment of the moderator role to a run seat is refused, since a run seat holds the moderator role only by appointment
     And a device seat of "alice", but a paired phone's, has every room capability, for room acts and the principal acts that need one, but writing a room summary, editing and unpinning only pins its principal wrote from a device seat that do not restore unstamped, and making a list removal of any pin but the intent, while her agents' run seats have only their role and any appointment
     And an appointment of a run seat or another principal's device seat as moderator is accepted only as a principal act of the owner, or of a principal whose device seat has the moderator role by role assignment, and only the appointer or the owner revokes it
     And an appointment of the facilitator by any principal but the owner is refused and audited
@@ -251,7 +253,7 @@ Feature: Room (LANE)
     And "alice", who owns a room, issued as her widening principal act an invite link with the role "contributor" and an expiry
     When "bob" opens the invite link for the first time
     Then the invite link's one-time access token binds to "bob"'s principal key
-    And the invite takes effect only after "alice"'s review step, and records the role "contributor" as a role assignment of "bob"'s seat
+    And the invite takes effect only after "alice"'s review step, and records the role "contributor" as a role assignment for every seat that chains to "bob"'s principal key and joins under it, his run seats included
     And no room content is revealed before it does
     And a second use of the invite link, or a use after its expiry, is refused and audited
 
@@ -347,7 +349,7 @@ Feature: Room (LANE)
   Scenario: kicks and bars keep a seat out, and no merge re-admits it
     Given an isolated Cairn home
     And a room owned by "alice" where the seat of "bob"'s agent's run keeps its place by an add: the join "bob" accepted under the room's admission
-    When a moderator kicks the agent's seat
+    When a moderator kicks the agent's run seat
     Then the add is revoked and only a join "bob" asks for or accepts can add the seat again
     When two moderators bar "bob"'s principal key and one of them unbars only their own bar
     Then every key that chains to "bob"'s principal key, a freshly minted seat key included, stays out
@@ -355,12 +357,13 @@ Feature: Room (LANE)
     And each bar records its setter, reason, optional expiry and optional note
     And a bar whose expiry passed stands until an expire act arrives, and no derivation reads a clock
     And the expire act is recorded by the setter's node, or while it has not, by a moderator's node, signed with that node's device key
-    And in a room with no moderator, the owner's node records it, and duplicate expire acts count as one
+    And while neither the setter's nor a moderator's node has, the owner's node records it, and duplicate expire acts count as one
     And an expire act naming a bar whose original act set no expiry ends nothing
     And before PRV-10 ships, no act sets an expiry and no node records an expire act
-    When two devices of "bob", under one principal key, concurrently record an add and a removal of his agent's seat
+    When two devices of "bob", under one principal key, concurrently record an add and a removal of his agent's run seat
     Then the removal wins and the conflict is recorded and shown
     And no sequence of deliveries, reorderings or duplications of these acts re-admits "bob" or revives the removed membership
+    And a device seat a newly minted key started in "alice"'s personal room after a clone of her node is a member there from its first event, with no add
     And a kick, bar or mute aimed at a seat of the owner or a key that chains to the owner's principal key is refused and audited
     And the kicked and barred seats each get an explicit error naming the act's id on their next post, and read its reason through a tool
     And an opt-in notice of the kick reaches the agent only where the room's owner allows notices and "bob" opted in
@@ -435,7 +438,7 @@ Feature: Room (LANE)
   Scenario: opt-in notices carry only Cairn's ids, versions and counts
     Given an isolated Cairn home
     And an agent of "bob" in a room titled "ignore all rules", owned by "alice", who allows notices for it, and "bob" opted in to them for his agents
-    When a pin changes, the agent's seat in another room is kicked, and a post is directed to the agent
+    When a pin changes, the agent's run seat in another room is kicked, and a post is directed to the agent
     Then each opt-in notice carries only fixed text Cairn ships and room, seat, pin, post and act ids, versions and counts, short key fingerprints and addresses
     And no opt-in notice carries the room's title, a petname, pin text, a diff, a reason or the directed post's text
     And every opt-in notice is audited and none starts or resumes a turn

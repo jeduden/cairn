@@ -81,10 +81,10 @@ Feature: Compute kernel (CMP)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a"
     And an agent run with a Claude Code transcript "run-b"
-    And the person has quarantined w-1·7 with "cairn quarantine add --range w-1:7-7"
-    When the agent calls the MCP tool "kernel_exec" with code "print(cairn.event_get(address='w-1:7'), cairn.event_search(query='x', scope='rooms'))"
+    And the person has quarantined A1·7 with "cairn quarantine add --range A1:7-7"
+    When the agent calls the MCP tool "kernel_exec" with code "print(cairn.event_get(address='A1:7'), cairn.event_search(query='x', scope='rooms'))"
     Then the kernel returns exactly what the MCP tools "event_get" and "event_search" return for the same arguments
-    And w-1·7, foreign rooms and rooms the run has no seat in are absent
+    And A1·7, foreign rooms and rooms the run has no seat in are absent
 
   @CMP-08 @P2 @I4 @pending
   Scenario: the opt-in Python kernel is confined, network-less and read-only
