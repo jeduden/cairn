@@ -3,8 +3,7 @@
 <!-- Included content comes from CLAUDE.md. Edit that
      file first, then run `mdsmith fix .` to propagate. -->
 
-Instructions for AI coding agents (Codex, Copilot,
-Claude).
+Instructions for AI coding agents (Codex, Copilot, Claude).
 
 <?include
 file: CLAUDE.md
@@ -91,12 +90,12 @@ security review and a new major version, not a bug fix.
   principal enrolled by key, off until that principal turns it on. B3, public:
   read-only publishing and outbound exchange with hosts the node's principal
   names, off until turned on. Managed policy can disable B1, B2 and B3. No
-  component sends telemetry or depends on a central or third-party service. Data
-  leaves the machine only as recalled content an agent receives through a tool
-  call, or as what Cairn writes to an agent through I2's closed paths, both of
-  which the harness sends to its model, or through a B2 or B3 component the
-  node's principal turned on; whatever such a component brings in is trusted
-  only as I2 allows.
+  component sends telemetry or depends on a central or third-party service.
+  Cairn's components send data off the machine only as recalled content an agent
+  receives through a tool call, or as what Cairn writes to an agent through I2's
+  closed paths, both of which the harness sends to its model, or through a B2 or
+  B3 component the node's principal turned on; whatever such a component brings
+  in is trusted only as I2 allows.
 - **I5 — Bad data can be removed from circulation without destroying the
   record.** Any event, span, run, writer or derived artifact can be
   quarantined from recall immediately on the node that records the quarantine,
@@ -120,10 +119,11 @@ security review and a new major version, not a bug fix.
   slows the agent beyond defined budgets. Cairn fails open, except where
   continuing would violate I2, I4, or I8.
 - **I10 — Everything derived is rebuildable.** All derived artifacts (indexes,
-  landmarks, active pins, quarantine set, statuses, queues, evidence and proof
-  classes, stats) are a deterministic function of the set of writer logs a node
-  holds and the node's own key set, independent of the order in which logs
-  arrived. Rebuilding reproduces them exactly.
+  landmarks, active pins, quarantine set, room state, trust levels, run and
+  integrity statuses, queues, evidence and proof classes, stats) are a
+  deterministic function of the set of writer logs a node holds and the node's
+  own key set, independent of the order in which logs arrived. Rebuilding
+  reproduces them exactly.
 <?/include?>
 
 What they mean for everyday code:
