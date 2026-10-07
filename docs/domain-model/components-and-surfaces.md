@@ -34,9 +34,9 @@ summary: >-
   - **Launcher (B1):** `cairn launch`, which starts, hosts and controls runs
     through each harness adapter's run part, carrying into the harness input
     only text the core built and recorded, read from the record, never text from
-    the room-view component, whose loopback link to it carries no text for the
-    model; and runs witness checks; the only component that starts programs, but
-    for the core's own kernel worker (CMP-05).
+    the room-view component, whose loopback connection to it carries no text for
+    the model; and runs witness checks; the only component that starts programs,
+    but for the core's own kernel worker (CMP-05).
   - **Peer component (B2):** exchanges segments with peers (sync) and serves
     paired phones; on a paired phone it is Cairn's only code, with the room
     view's reduced client inside it.

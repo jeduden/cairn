@@ -37,11 +37,11 @@ summary: >-
 - **Recall taint**: A run's mark after it recalls untrusted content, or
   inherited from the delegating run (OWN-24), which tightens the rule levels of
   the action classes SEC-13 configures as sensitive (OWN-10).
-- **Principal surface**: An authenticated surface for principal acts: the
-  browser room view under SEC-20, the CLI or TUI at a terminal, or a paired
-  phone within its scope; without the peer component, a phone reaches the room
-  view only as the browser room view, through the principal's own tunnel (§6.3
-  row 11).
+- **Principal surface**: An authenticated client where principal acts are taken:
+  the browser room view under SEC-20, the CLI or TUI at a terminal, or a paired
+  phone within its scope; without the peer component, a browser on the
+  principal's phone reaches the room view only as the browser room view, through
+  the principal's own tunnel (§6.3 row 11).
 - **Presence proof**: A hardware-backed, user-verified proof of a person's
   presence, bound to one widening act (OWN-11).
 - **Recall**: An agent's call to a **recall tool**: an MCP tool that returns
@@ -54,11 +54,12 @@ summary: >-
   `cursor`, it continues without gap or overlap (RCL-03).
 - **Closed path**: One of the ways I2 lists by which Cairn writes to an agent
   without the agent's recall: restore blocks, opt-in notices, compaction
-  guidance and OWN-04's and OWN-07's templates; on a principal act,
-  principal-typed text, a fixed template referencing ids or an endorsed post; a
-  delegated task under its grants; and what a trust grant covers. No other write
-  to an agent exists (I2), and data leaves the machine through them only as the
-  harness sends them to its model (I4).
+  guidance and OWN-04's and OWN-07's templates; on a principal act recorded at
+  that time, through the harness's own input, principal-typed text, a fixed
+  template referencing ids or an endorsed post; a delegated task under its
+  grants; and what a trust grant covers. No other write to an agent exists (I2),
+  and data leaves the machine through them only as the harness sends them to its
+  model (I4).
 - **Recall scope**: `run`, `room` or `rooms`, or a foreign room named in the
   call (RCL-05). A wider scope is said to extend recall; "widening" belongs to
   acts.
@@ -70,11 +71,11 @@ summary: >-
   for its own agents, in one room or everywhere. It covers that principal's
   posts and pins written from device seats a device key of that principal
   certified, never a cross-room post shown in another room, run seats,
-  token-key-only nodes, room summaries, nor a service account its certificate or
-  managed-policy listing marks as relaying text others wrote, an unmarked
-  listing counting so, refused, while a grant naming any other service account
-  shows a warning (OWN-29); never in a foreign room; and a post it covers
-  reaches only the grantor's agents whose run has a seat in the post's room. Its
+  token-key-only nodes or room summaries; never in a foreign room; and a post it
+  covers reaches only the grantor's agents whose run has a seat in the post's
+  room. A grant naming a service account whose certificate or managed-policy
+  listing marks it as relaying text others wrote, or whose listing is unmarked,
+  is refused; one naming any other service account shows a warning (OWN-29). Its
   revocation is cut.
 - **Delegation**: One agent handing another a delegated task: its subagent, or,
   under a delegation grant, another agent of the same principal, an agent on
@@ -88,11 +89,13 @@ summary: >-
 - **Delegation grant**: The delegating principal's widening act naming who may
   delegate, to which targets, at what rule level, within what **delegation
   budget** (its cap in spend), how many delegates at once, how deep, and until
-  when (OWN-23).
+  when (OWN-23); past that expiry the delegating node refuses a delegation under
+  it, and its expire act ends it.
 - **Acceptance grant**: The receiving principal's widening act on its own node,
   naming the delegating principal, the targets, the maximum rule level, the
-  delegation budget and the expiry (OWN-26). Delegation to another principal's
-  agent needs both a delegation grant and an acceptance grant.
+  delegation budget and the expiry (OWN-26), which ends it as a delegation
+  grant's does. Delegation to another principal's agent needs both a delegation
+  grant and an acceptance grant.
 - **Permission grant**: The grant that lets an approved action pass again when
   the harness next raises it at its permission prompt (OWN-07). Separate from
   trust and delegation grants.
@@ -152,6 +155,8 @@ summary: >-
   directly; OWN-21's ready and abandoned marks feed it.
 - **Queue class**: One of Needs you's classes Q1 to Q4, which set its order
   (§9.7.4, VIEW-05).
+- **Focus set**: The rooms a principal marks to come first in Needs you, changed
+  by a recorded neutral principal act, so every device shows one order.
 - **Open room**: A room with no ready mark whose branch heads still stand
   (OWN-21) and no abandoned mark, that names no branch or names one that has not
   landed.

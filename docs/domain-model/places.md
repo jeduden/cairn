@@ -35,17 +35,18 @@ summary: >-
   the principal's `cairn install` as the first act of its device seat there, or
   carried over to a node clone, which shares it. It stays private: no invite,
   admission or visibility change applies to it (LANE-17). Its create room act is
-  the device seat's add there. Every run has a seat in it from its first event,
-  without a join, and every event or pin that belongs to no other room goes
-  there.
+  the device seat's add there. Every run its node records has a seat in it from
+  its first event, without a join, and every event or pin that belongs to no
+  other room goes there.
 - **Foreign room**: A room this node holds, other than only as a blind peer,
   that its principal neither owns nor has a seat in, such as the room of an
   imported bundle or a room every seat of its principal has left or lost to a
-  kick or a bar. Untrusted in recall (RCL-10), whatever trust grant covers its
-  keys, and outside every extended recall scope unless named in the call; only
-  its principal's own device-seat pins and the versions it stamped keep
-  restoring, to runs that had a seat in it. A room the principal owns or has a
-  seat in is never foreign.
+  kick or a bar. Recall marks every item it returns from it untrusted, whatever
+  the item's trust level or trust grant covers its keys (RCL-10), and leaves it
+  outside every extended recall scope unless named in the call; only its
+  principal's own device-seat pins and the versions it stamped stay trusted and
+  keep restoring, to runs that had a seat in it. A room the principal owns or
+  has a seat in is never foreign.
 - **Principal's rooms**: The rooms a principal owns or has a seat in.
 - **Visibility**: Whether a room is private, shared with the room's principals,
   published or stored on blind peers (LANE-17). Changing it is a widening
@@ -53,8 +54,8 @@ summary: >-
   blind peer for it, only as its visibility allows.
 - **Peer**: Another node this node's principal enrolled by key and exchanges
   sealed ranges with through the peer component (B2). Being a peer never makes
-  content trusted (PRV-02). Exchanging segments until both hold the same is
+  content trusted (PRV-02). Exchanging the sealed ranges each may receive is
   **sync**.
 - **Blind peer**: A peer that holds a room's segments without any key they are
-  encrypted to (PEER-08), so it stores and serves them encrypted and reads none
-  of them (PEER-12); a room it holds only so is never foreign to it.
+  encrypted to, so it stores and serves them encrypted and reads none of them
+  (PEER-12); a room it holds only so is never foreign to it.

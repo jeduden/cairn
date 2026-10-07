@@ -26,9 +26,9 @@ summary: >-
   user input or the model's reply), tool call, tool result, **hook observation**
   (what a hook reported), worktree checkpoint, key rotation, tombstone, or an
   act (a room act, a principal act or an expire act), a **recall event** (one
-  recall, RCL-07), a canary event, a backup event, a pin candidate, an erasure
-  or quarantine request, or an unparsed line. Its **event kind** is which kind
-  of entry it is, recorded apart from its provenance.
+  recall, RCL-07), a canary event, a backup event, an agent's pin candidate, an
+  erasure or quarantine request, or an unparsed line. Its **event kind** is
+  which kind of entry it is, recorded apart from its provenance.
 - **seq**: An event's position in its writer: strictly increasing, gap-free and
   never reused (REC-06).
 - **Address**: (writer, seq), shown as short `A2·4812` (its writer label and
@@ -65,15 +65,15 @@ summary: >-
   `harness_text`, `operator`, `post`, `summary`, `structural` and `unparsed`.
   `harness_meta` is what the harness reports, or the launcher records, about the
   harness's operation, never free text: turn triggers, model tokens, metadata
-  lines that carry no free text and sandbox state (PRV-08); `operator` is the
-  class of principal acts, expire acts and device-seat pins; posts are `post`
-  and run-seat pins `assistant`; every other room act but a room summary takes
-  its seat's **pin class**, `operator` for a device seat and `assistant` for a
-  run seat; a room summary is `summary`, never trusted; an erasure or quarantine
-  request a principal act sends is `operator`, an erasure request a retention
-  policy sends `structural`; hook observations, key rotations, tombstones and a
-  witness check's record (the command by commitment, its exit status and the
-  tree hash, OWN-18) are `structural`.
+  lines that carry no free text and sandbox state (PRV-08, OWN-22); `operator`
+  is the class of principal acts, expire acts and device-seat pins; posts are
+  `post` and run-seat pins `assistant`; every other room act but a room summary
+  takes its seat's **pin class**, `operator` for a device seat and `assistant`
+  for a run seat; a room summary is `summary`, never trusted; an erasure or
+  quarantine request a principal act sends is `operator`, an erasure request a
+  retention policy sends `structural`; hook observations, key rotations,
+  tombstones and a witness check's record (the command by commitment, its exit
+  status and the tree hash, OWN-18) are `structural`.
 - **Origin**: How an event reached this node's record: `witnessed` (recorded
   live on this node: by its hook handlers, its CLI, TUI, MCP server, launcher,
   room-view component or bridge component), `ingested` (appended by `cairn
@@ -84,11 +84,12 @@ summary: >-
   `peer` is a display mark. A **witnessed run** is one this node's hook handlers
   watched. Independent of provenance. Each event also records its **recorder**,
   the part that recorded it (the hook handlers, the CLI, the TUI, the MCP
-  server, the launcher or the bridge component, whose events take provenance
-  `web`, always untrusted; the room-view component records a principal act taken
-  in the browser room view, marked with its principal surface, and how it signs
-  waits for a security review under SEC-10 and SEC-20), which the trust policy
-  reads; an event from a peer or a bundle records no recorder, only its origin.
+  server, the launcher, the room-view component, or the bridge component, whose
+  events take provenance `web`, always untrusted; the room-view component
+  records a principal act taken in the browser room view, marked with its
+  principal surface, and how it signs waits for a security review under SEC-10
+  and SEC-20), which the trust policy reads; an event from a peer or a bundle
+  records no recorder, only its origin.
 - **Span**: A contiguous range of one run's events in one writer. A new span
   starts at every user turn, compaction, subagent start or end, and whenever the
   run's events move to another seat's writer (LMK-01).
@@ -127,7 +128,8 @@ summary: >-
   are derived artifacts; room status and a check's state are computed where
   shown; the **quarantine set** is what a node holds quarantined.
 - **Redaction**: Removing secrets from content before it is stored, on import,
-  or from what an export, publish or invite review sends, recorded (I1, SEC-08).
+  or from what an export's, a publish's or an invite's review step sends,
+  recorded (I1, SEC-08).
 - **Retention policy**: A rule (`retention_policy.*`), set by the node's
   principal or managed policy, that purges content per room and provenance class
   after a time (I1, SEC-22); the principal's change to one is widening and

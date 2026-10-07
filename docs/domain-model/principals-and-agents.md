@@ -72,11 +72,11 @@ summary: >-
 - **Owner**: The one principal who owns a room: its intent, roles, admission,
   appointments, successor and handover. Ownership changes only by handover or
   succession (LANE-11); it stays with the owner after all its seats leave. The
-  owner stands beside the roles rather than having one: its device seat in the
-  room, but a paired phone's, has every room capability, for room acts and the
-  principal acts that need one, except writing a room summary; its room acts
-  edit and unpin only pins its principal wrote from a device seat that do not
-  restore unstamped, and make a list removal of any pin but the intent or a
+  owner stands beside the roles rather than having one: each of its device seats
+  in the room, but a paired phone's, has every room capability, for room acts
+  and the principal acts that need one, except writing a room summary; its room
+  acts edit and unpin only pins its principal wrote from a device seat that do
+  not restore unstamped, and make a list removal of any pin but the intent or a
   verdict, while its agents' run seats have only their role and any appointment.
   No one may kick, bar or mute the owner or any key that chains to its principal
   key (LANE-25). "Owner" means nothing else, except in the persona name

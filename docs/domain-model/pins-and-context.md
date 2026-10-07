@@ -30,8 +30,10 @@ summary: >-
   token-key-only node's restores only once stamped.
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers.
-- **Pin candidate**: Proposed pin text an agent suggested or Cairn detected; not
-  yet a pin, and with no pin author, the author of its first version. The
+- **Pin candidate**: Proposed pin text an agent suggested (an `assistant` event,
+  PIN-02) or Cairn detected (a derived artifact over its creating `user` event,
+  holding its text by address, with no provenance of its own, I10); not yet a
+  pin, so it has no pin author (a pin's author being its first version's). The
   confirmation of its principal (of the agent that suggested it or the node that
   detected it), a widening act, makes it a new pin its device seat authors; for
   an intent or a criterion, only the owner's confirmation, making a new version
@@ -43,13 +45,14 @@ summary: >-
   in that order, then by their creating events' addresses (PIN-08).
 - **Budget**: The **pin budget** is the restore block's share of model tokens;
   every other budget is named too: the **hook budget** (a hook handler's time
-  limit, §9.1, NFR-02), the **step budget** (a kernel execution's step limit,
-  CMP-05) or the delegation budget; a limit keeps its own name, such as the
-  **restore block limit** (INJ-07), CMP-05's wall-clock and memory limits,
-  SEC-04's query deadline and the output caps (RCL-03, CMP-06). I3's budget is
-  the pin budget, and I9's defined budgets are these named budgets and limits;
-  the latency targets of NFR-01, NFR-03 and NFR-15 are targets, not budgets, and
-  the harness's own limit on a hook is the **harness timeout**, never a budget.
+  limit, §9.1, NFR-02), the **step budget** (how many steps a kernel execution
+  may take, CMP-05) or the delegation budget; a limit keeps its own name, such
+  as the **restore block limit** (INJ-07), CMP-05's wall-clock and memory
+  limits, SEC-04's query deadline and the output caps (RCL-03, CMP-06). I3's
+  budget is the pin budget, and I9's defined budgets are these named budgets and
+  limits; the latency targets of NFR-01, NFR-03 and NFR-15 are targets, not
+  budgets, and the harness's own limit on a hook is the **harness timeout**,
+  never a budget.
 - **Pin type**: One of `constraint`, `preference`, `decision`, `fact`,
   `episode`, `intent`, `verdict` and `stake`. Only `constraint`, `preference`
   and `intent` pins restore.
@@ -57,19 +60,20 @@ summary: >-
   pin; the intent only the owner's principal act unpins (Intent): it takes the
   pin off its room's **pin list** (its pins neither unpinned nor taken off by a
   list removal, the intent first) and stops it restoring, while its versions
-  stay in the record (I1). A stamped version keeps restoring to its stamper's
-  agents until the stamper unstamps it, raising a Needs you item.
+  stay in the record (I1). The unpin raises a Needs you item for each stamper,
+  whose stamped version keeps restoring to its agents until it unstamps it.
 - **List removal**: A moderator's or the owner's room act taking a pin, never
-  the intent or a verdict, off the pin list without unpinning it. A device-seat
-  pin it removes keeps restoring to every agent it restored to until its
-  author's principal unpins it, raising a Needs you item.
+  the intent or a verdict, off the pin list without unpinning it. It raises a
+  Needs you item for the pin's author's principal; a device-seat pin it removes
+  keeps restoring to every agent it restored to until that principal unpins it.
 - **Intent**: A room's lead pin, of type `intent`: a goal, its criteria and
   optionally the paths it is meant to change (LANE-20). Only the owner's
   principal act changes it; a new owner's revision adds a version its device
   seat authors. The intent restores as the author of its newest version wrote
   it, to that author's principal's agents and to agents whose principal's trust
-  grant covers that author's principal; after a handover, until the new owner
-  revises or stamps it, it restores only to its stampers' agents.
+  grant covers that author's principal; after a change of ownership, a handover
+  or a succession, until the new owner revises or stamps it, it restores only to
+  its stampers' agents.
 - **Criterion**: One acceptance condition of an intent, with a stable id.
 - **Stake**: A pin of type `stake` stating what its author works on. Only its
   author, or for a device seat its author's principal, edits it; it is unpinned

@@ -68,7 +68,7 @@ summary: >-
   delegation grant), an invite link (which connects nothing: it carries an
   access token), a landing link and a trailer link (commit to a pin, post or
   marked range). "Link" never stands alone, except as the name of the room act
-  that adds one qualified link.
+  that adds one range link, branch link or criterion link.
 - **Comparison**: A side-by-side view of two branches: each one's exposure,
   results and evidence. It picks no winner.
 - **Outcome**: What a room's runs have produced so far: the heads of the
@@ -77,10 +77,10 @@ summary: >-
   server's URL (inert text the person opens in their own browser), a build
   artifact, a file or a diff, with the seat and branch.
 - **Verdict**: A person's `met`, `not met` or `needs changes` on one criterion:
-  a `verdict` pin, recorded as a principal act (OWN-27) by any person whose
-  device seat in the room has the pin capability, bound to the intent version,
-  the heads of every branch the room names, and the results and evidence shown.
-  It goes stale when any of them changes. It is never edited: a newer verdict of
-  the same person on the same criterion supersedes it, and unpinning one is
-  neutral. Cairn never derives one; service accounts contribute evidence
-  instead.
+  a `verdict` pin, recorded as a neutral principal act (OWN-27) by any person
+  whose device seat in the room has the pin capability, bound to the intent
+  version, the heads of every branch the room names, and the results and
+  evidence shown. It goes stale when any of them changes. It is never edited: a
+  newer verdict of the same person on the same criterion supersedes it, and
+  unpinning one is neutral. Cairn never derives one; service accounts contribute
+  evidence instead.

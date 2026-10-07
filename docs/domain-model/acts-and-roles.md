@@ -46,14 +46,14 @@ exactly one kind (LANE-31).
     token, a seat key or a service account's certificate, turn capture on, and
     turn off the room-view component, the launcher, the peer component, the
     publish component, a bridge or the git carrier.
-  - **Neutral:** mark a room ready (the owner or a principal whose device seat
-    in the room is a moderator) or abandoned (the owner), acknowledge an
-    overlap, record a `met`, `not met` or `needs changes` verdict, unpin a
-    verdict, open the forensic view, make a purge request, refuse a quarantine
-    request, an erasure request or a purge request, choose a branch to compare,
-    acknowledge counters, dismiss a Q3 or Q4 item other than a directed post,
-    unpin a pin its own agent's run seat wrote, and add a room to or remove it
-    from the focus set.
+  - **Neutral:** mark a room ready, its **ready mark** (the owner or a principal
+    whose device seat in the room is a moderator), or abandoned, its **abandoned
+    mark** (the owner), acknowledge an overlap, record a `met`, `not met` or
+    `needs changes` verdict, unpin a verdict, open the forensic view, make a
+    purge request, refuse a quarantine request, an erasure request or a purge
+    request, choose a branch to compare, acknowledge counters, dismiss a Q3 or
+    Q4 item other than a directed post, unpin a pin its own agent's run seat
+    wrote, and add a room to or remove it from the focus set.
   - **Widening:** allow, answer a hand-off (a hand-back), reply, steer, confirm
     a steer for a later turn (OWN-13), send a correction, retry from a worktree
     checkpoint, set or revise an intent, resume, record a delegation grant or an
@@ -96,9 +96,13 @@ exactly one kind (LANE-31).
   is widening. OWN-11 and OWN-12 follow this list, and every principal act a
   requirement names is classed here.
 - **Expire act**: Once PRV-10 ships, an act a node with a device key records,
-  signed with that key, ending only an expiry its original act set: on a bar, a
-  mute or a handover offer (LANE-25), or an access token's, which the node that
-  minted it records (PEER-05). Before PRV-10 ships no expiry can be set.
+  signed with that key, ending only an expiry its original act set. It ends a
+  bar, a mute or a handover offer (LANE-25). It ends an access token, recorded
+  by the node that minted it (PEER-05). It ends a delegation grant or an
+  acceptance grant, recorded by the node of the principal that recorded the
+  grant (OWN-23, OWN-26). Before PRV-10 ships no expiry can be set but a
+  grant's, which then takes effect only as a refused delegation (Delegation
+  grant).
 - **Role**: A named set of room capabilities: viewer, contributor or moderator.
   The owner gives a seat its role by a **role assignment**. An invite or invite
   link records one for every seat that chains to the invited principal key and
@@ -170,8 +174,6 @@ exactly one kind (LANE-31).
   version of a type that restores restores word for word to that principal's own
   agents only. An edit, an unpin or a list removal leaves a stamped version
   restoring until its stamper unstamps it, a cut principal act (LANE-32).
-- **Focus set**: The rooms a principal marks to come first in Needs you, changed
-  by a recorded neutral act, so every device shows one order.
 - **Active pin**: A pin on its room's pin list (I10).
 - **Room merge**: The one rule deriving all room state from the three act kinds,
   in causal order (LANE-31). Seats that are members with no add, and the seat
