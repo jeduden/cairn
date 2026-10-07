@@ -8,22 +8,22 @@ summary: >-
 
 - **Principal**: A person or a service account. It has a principal key, signs
   principal acts with a device key at a principal surface once PRV-10 ships,
-  each recorded on a device seat, and is the principal of every agent its nodes
-  start. Cairn counts principals by principal key: every device key, token key
-  and seat key that chains to one principal key through device, token or seat
-  certificates belongs to that principal; a chain never passes through another
-  principal key. A certified service account is still its own principal; its
-  **certifier** is whoever certified it. A principal key never certified counts
-  as a person's, which nothing can prove; a service account whose certificate is
-  revoked stays a service account. Only an agent's own principal widens what
-  reaches that agent (I2).
+  each recorded on a device seat, and is the principal of every agent whose runs
+  its nodes record. Cairn counts principals by principal key: every device key,
+  token key and seat key that chains to one principal key through device, token
+  or seat certificates belongs to that principal; a chain never passes through
+  another principal key. A certified service account is still its own principal;
+  its **certifier** is whoever certified it. A principal key never certified
+  counts as a person's, which nothing can prove; a service account whose
+  certificate is revoked stays a service account. Only an agent's own principal
+  widens what reaches that agent (I2).
 - **Person**: A human principal. No one certifies a person's principal key. Only
   a person records a verdict.
 - **Service account**: A non-human principal with its own principal key,
-  certified, and revocable, by a person, another service account or managed
-  policy, and managed policy revokes one by no longer listing it; none starts
-  uncertified. It can own rooms, have seats and be the principal of its own
-  agents, such as CI or runner agents.
+  certified by a person, another service account or managed policy, and
+  revocable only by its certifier: managed policy revokes one it lists by no
+  longer listing it; none starts uncertified. It can own rooms, have seats and
+  be the principal of its own agents, such as CI or runner agents.
 - **Managed policy**: Settings belonging to root that an organisation sets on a
   machine. Cairn never overrides it (I7). Among its powers, it may turn off
   boundaries B1 to B3, forbid risk acceptance and certify service accounts by
@@ -37,10 +37,11 @@ summary: >-
   recalls history; an agent is never a principal.
 - **Run**: One agent's execution within one harness session, on one node, keyed
   by the harness session and the harness's agent id: a harness session's
-  transcripts hold its main agent's run and one per subagent, a resume continues
-  the run and a clear starts a new one. It has run seats and carries its recall
-  taint (SEC-13), sandbox state (OWN-22), seat keys (SEC-10), kernel namespace
-  (CMP-02) and spans (LMK-01). As a noun, "run" has no other meaning.
+  transcripts hold its main agent's run and one per subagent, a **harness
+  resume** continues the run and a **harness clear** starts a new one. It has
+  run seats and carries its recall taint (SEC-13), sandbox state (OWN-22), seat
+  keys (SEC-10), kernel namespace (CMP-02) and spans (LMK-01). As a noun, "run"
+  has no other meaning.
 - **Subagent**: An agent the harness started for another agent. It has its own
   run, tied to its parent's run by a parent link, with its own seats and
   writers. It takes a delegated task without a delegation grant.

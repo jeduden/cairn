@@ -8,9 +8,9 @@ summary: >-
 
 - **Repository**: A git repository, identified by its **repository identity**, a
   bound root commit, the same on every node holding a clone, shallow clones
-  included, else a provisional node-local identity bound later (LANE-02),
-  together with its remotes. It may carry room trailers, bundles as git refs and
-  the git carrier's segments.
+  included, else a provisional node-local identity bound later (LANE-02). It has
+  remotes and may carry room trailers, bundles as git refs and the git carrier's
+  segments.
 - **Branch**: A git branch, identified by repository identity, remote URL and
   branch name. A branch with no remote has a provisional node-local identity,
   rebound when it is pushed.
@@ -23,31 +23,34 @@ summary: >-
 - **Pull request**: The forge's review object for a branch.
 - **Check**: A command run, or expected to run, on a tree, with its exit status
   once it ends; its **check state** is one of §9.7.2's. A check is expected when
-  one of the intent's criteria names it; the forge's **required checks** show as
-  `asserted`.
+  one of the intent's criteria names its command (LANE-20); a check the forge
+  reports, one of its **required checks** included, is a forge report,
+  `asserted`, not a result.
 - **Result**: What a room's seats established: a check passing or failing on a
   **tree** (git's snapshot of a commit's files), or a claim stated in text. It
   names the intent version and carries one evidence class; it is derived from
   the events it rests on and addressed by the event recording its exit status or
   its claim's text.
 - **Evidence**: The checks, CI attestations or text a result rests on.
-- **Evidence class**: Of a result, ranked: `claim` (text only) < `own check` <
-  `witness check` < `CI attested` (LANE-05).
+- **Evidence class**: Of a result, ranked: `claim` (text, or tool output alone)
+  < `own check` < `witness check` < `CI attested` (LANE-05).
 - **Own check**: A check the hook handlers recorded on the node of the run that
   made the edits, run on the latest worktree checkpoint plus the recorded edits;
   otherwise its result is marked `unbound` and counts as a `claim`.
 - **Witness check**: A check re-run through the launcher on a fresh checkout of
-  the exact commit, by a node whose **git identity** (the author and
-  commit-signing identities its git configuration sets) authored no commit on
-  the branch since it left its base (a **commit author** is git's author of a
-  commit, never a seat).
+  the exact commit, with network denied, by a node whose **git identity** (the
+  author and commit-signing identities its git configuration sets) authored no
+  commit on the branch since it left its base (a **commit author** is git's
+  author of a commit, never a seat). Where the platform cannot deny network,
+  Cairn refuses the witness check (OWN-18).
 - **CI attestation**: A check's exit status for the exact commit, signed by a CI
-  key; its evidence class is `CI attested`.
+  key; a result resting on one is `CI attested`.
 - **Landing**: Git or the forge merging commits into the repository's default
   branch or a branch the forge protects. Cairn never lands anything, and a
-  landing is never a verdict.
+  landing is never a verdict. A branch lands when its head lands.
 - **Landing link**: The link from a landed commit to a room, carrying a proof
-  class, derived by Cairn.
+  class, derived by Cairn from the record alone: the clone facts it reads
+  (landed commits, patch ids, trees) are recorded as structural events.
 - **Proof class**: Of a landing link. Proven: `same commit`, `same patch`, `same
   tree`. Not proven: `likely`, `asserted`, and `not proven` with a reason
   (LANE-06). `asserted` is also the mark on forge reports and room trailers.
@@ -55,19 +58,20 @@ summary: >-
   Each `Cairn-Link:` line is a trailer link. It counts as `asserted` until
   proven (LANE-28).
 - **Qualified links**: Every link is named by what it connects: a branch link
-  (room to branch), a pull-request link (branch to its pull request), a
-  criterion link (result to criterion), a range link (post or pin to an address
-  range), a parent link (subagent run to parent run), a delegation link
-  (delegating run to the delegate's run, under a delegation grant), an invite
-  link (carrying an access token), a landing link and a trailer link. "Link"
-  never stands alone, except as the name of the room act that adds one qualified
-  link.
+  (room to branch), a pull-request link (branch to its pull request, derived by
+  Cairn from forge bridge events), a criterion link (result to criterion), a
+  range link (post or pin to an address range), a parent link (subagent run to
+  parent run), a delegation link (delegating run to the delegate's run, under a
+  delegation grant), an invite link (which connects nothing: it carries an
+  access token), a landing link and a trailer link (commit to a pin, post or
+  marked range). "Link" never stands alone, except as the name of the room act
+  that adds one qualified link.
 - **Comparison**: A side-by-side view of two branches: each one's exposure,
   results and evidence. It picks no winner.
 - **Outcome**: What a room's runs have produced so far: the heads of the
   branches it names, their results and evidence, as verdicts assess them.
 - **Presentation**: What a seat put in the outcome window, such as a dev
-  server's address (inert text the person opens in their own browser), a build
+  server's URL (inert text the person opens in their own browser), a build
   artifact, a file or a diff, with the seat and branch.
 - **Verdict**: A person's `met`, `not met` or `needs changes` on one criterion:
   a `verdict` pin, recorded as a principal act (OWN-27) by any person whose

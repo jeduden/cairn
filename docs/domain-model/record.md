@@ -20,8 +20,10 @@ summary: >-
 - **Event**: One immutable entry in a writer, such as a message (the harness's
   user input or the model's reply), tool call, tool result, **hook observation**
   (what a hook reported), worktree checkpoint, key rotation, tombstone, or an
-  act (a room act, a principal act or an expire act). Its **event kind** is
-  which of these it is, recorded apart from its provenance.
+  act (a room act, a principal act or an expire act), a **recall event** (one
+  recall, RCL-07), a canary event, a backup event, a pin candidate, an erasure
+  or quarantine request, or an unparsed line. Its **event kind** is which of
+  these it is, recorded apart from its provenance.
 - **seq**: An event's position in its writer: strictly increasing, gap-free and
   never reused (REC-06).
 - **Address**: (writer, seq), shown as short `A2·4812` (its writer label and
@@ -29,9 +31,10 @@ summary: >-
   shown form is accepted wherever an address is taken, and so is one ASCII input
   form, `<label>:<seq>` or `<label>:<from>-<to>` (for example `A2:12`,
   `A2:30-40`), with the writer id accepted in place of the label (RCL-08). A
-  **writer label** is a writer's short display alias, unique per node and room,
-  assigned in first-seen order. An address range lies in one writer. The only
-  meaning of "address".
+  **writer label** is a writer's short display alias, unique per node, each
+  assignment recorded as a structural event in the assigning device seat's
+  personal-room writer. An address range lies in one writer. The only meaning of
+  "address".
 - **Payload**: The full content of a large event, stored outside the event in
   the store's **payload store**, under a name that confirms no guess at its
   content (REC-09).
@@ -64,25 +67,27 @@ summary: >-
   `structural`; hook observations, key rotations and tombstones are
   `structural`.
 - **Origin**: How an event reached this node's record: `witnessed` (recorded
-  live on this node: by its hook handlers, its CLI, TUI, MCP server or
-  launcher), `ingested` (read by `cairn ingest`, from a transcript the hook
-  handlers did not watch or past an ingest marker), `bundle` (read by import) or
-  `peer` (received from a peer, a paired phone or through the git carrier)
-  (RCL-09). A **witnessed run** is one this node's hook handlers watched.
-  Independent of provenance. Each event also records its **recorder**, the part
-  that recorded it (the hook handlers, the CLI, the TUI, the MCP server or the
-  launcher; a principal act from the browser room view is recorded by the CLI),
-  which the trust policy reads; an event from a peer or a bundle records no
-  recorder, only its origin.
+  live on this node: by its hook handlers, its CLI, TUI, MCP server, launcher or
+  bridge component), `ingested` (read by `cairn ingest`, from a transcript the
+  hook handlers did not watch or past an ingest marker), `bundle` (read by
+  import) or `peer` (received from a peer, a paired phone or through the git
+  carrier) (RCL-09). A **witnessed run** is one this node's hook handlers
+  watched. Independent of provenance. Each event also records its **recorder**,
+  the part that recorded it (the hook handlers, the CLI, the TUI, the MCP
+  server, the launcher or the bridge component, whose events take provenance
+  `web`, always untrusted; a principal act from the browser room view is
+  recorded by the CLI), which the trust policy reads; an event from a peer or a
+  bundle records no recorder, only its origin.
 - **Span**: A contiguous range of one run's events in one writer. A new span
   starts at every user turn, compaction, subagent start or end, and whenever the
   run's events move to another seat's writer (LMK-01).
 - **Landmark**: A structural headline over one span, bound to its address range
   (LMK-02). LMK-06 may add a **natural-language headline** to a span whose every
-  event is trusted; it is no structural field and never reaches a restore block.
-  Landmarks roll up into **tiers** of at most `k` **landmark blocks**, each a
-  run of landmarks; a full tier collapses its older landmark blocks to one line
-  each, listing one address range per writer, into the next tier (LMK-05).
+  event is trusted, made only by a deterministic template over trusted fields;
+  it is no structural field and never reaches a restore block. Landmarks roll up
+  into **tiers** of at most `k` **landmark blocks**, each a sequence of
+  landmarks; a full tier collapses its older landmark blocks to one line each,
+  listing one address range per writer, into the next tier (LMK-05).
 - **Structural field**: A field Cairn derives from an event's shape, never from
   its text: ids, kinds, counts, tool names, key fingerprints, addresses, version
   numbers, sanitized paths and exit status, sanitized under LMK-03. Sanitized,
@@ -106,8 +111,8 @@ summary: >-
   set, such as those I10 lists (the **search index** over event text among its
   indexes, and each principal's Needs you queue among its queues), room state
   and trust levels; I10's statuses are run statuses, but for their time-relative
-  freshness marks, and integrity statuses, results with their evidence classes
-  are derived artifacts, and room status and a check's state are computed where
+  freshness marks, and integrity statuses. Results with their evidence classes
+  are derived artifacts; room status and a check's state are computed where
   shown; the **quarantine set** is what a node holds quarantined.
 - **Redaction**: Removing secrets from content before it is stored or on import,
   recorded (I1, SEC-08).
@@ -120,14 +125,15 @@ summary: >-
 - **Quarantine**: Recorded, reversible exclusion of an event, span, run, writer
   or derived artifact from recall, restore blocks and landmarks, on the node
   that records it, without deletion (I5).
-- **Purge**: Deletion of content, leaving a **tombstone** in its place (ADM-07):
-  by a principal act, or by the node under a retention policy, recorded naming
-  the policy. The only way stored content is destroyed (I1).
+- **Purge**: Deletion of content, appending a **tombstone** naming the purged
+  range, which views show in its place (ADM-07): by a principal act, or by the
+  node under a retention policy, recorded naming the policy. The only way stored
+  content is destroyed (I1).
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
-  range, a quarantine marker for a quarantined address, or a truncation marker
-  on capped kernel output. A **missing range** is part of a writer this node
-  does not hold, such as a peer's lost tail; a **capture gap** is part of a run
-  its capture did not record.
+  range, a **quarantine marker** for a quarantined address, or a **truncation
+  marker** on capped kernel output. A **missing range** is part of a writer this
+  node does not hold, such as a peer's lost tail; a **capture gap** is part of a
+  run its capture did not record.
 - **Integrity status**: What a room or writer shows about its chain and seals,
   one of §9.7.5's values (VIEW-10). The UI never says "secure".
 - **Receipt**: A signed statement about a node's record, made to be kept apart

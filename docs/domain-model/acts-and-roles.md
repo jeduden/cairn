@@ -30,12 +30,12 @@ one kind (LANE-31).
   it is an `operator` event its device seat's seal covers, told apart from a
   room act by the surface it is marked with (OWN-02). An act a seat key signs is
   a room act. A widening act lets more reach an agent, or more act or leave the
-  node; a cut act only stops or narrows; a neutral act does neither, such as a
-  join, which adds only pins already trusted for its principal while recall
-  stays enveloped. Its classes:
+  node; a cut act only stops, narrows or undoes a widening; a neutral act does
+  neither, such as accepting or asking for a join, which adds only pins already
+  trusted for its principal while recall stays enveloped. Its classes:
   - **Cut:** deny, interrupt, pause, stop, cancel a delegation, end a permission
     grant, reject a foreign room, decline a join request, tighten a rule level,
-    revoke a role assignment, revoke a CI key, stop a publication, record a
+    revoke a role assignment, revoke a CI key, stop publishing a room, record a
     `needs changes` verdict, quarantine content without removing anything from a
     restore block, withdraw a risk acceptance, revoke a trust grant, end a
     delegation grant or an acceptance grant, turn an away policy off, withdraw a
@@ -49,27 +49,27 @@ one kind (LANE-31).
     or a purge request, choose a branch to compare, acknowledge counters,
     dismiss a Q3 or Q4 item other than a directed post, unpin a pin its own
     agent's run seat wrote, and add a room to or remove it from the focus set.
-  - **Widening:** allow, answer a hand-off (a hand-back), reply, steer, send a
-    correction, retry from a worktree checkpoint, set or revise an intent,
-    resume, record a delegation grant or an acceptance grant, add, edit or unpin
-    a pin of a type that restores written from a device seat a device key
-    certified (before PRV-10 ships, this node's own device seat), confirm a pin
-    candidate, change a room's visibility, invite a principal key, issue an
-    invite link, choose a fork, confirm a command taken from an untrusted event
-    (OWN-18), turn on the peer component, accept a handover or succession,
-    endorse, loosen a rule level, turn on or change an away policy other than
-    turning it off, quarantine that removes a pin or a landmark from a restore
-    block, release a quarantine, purge or apply an erasure request, export, bind
-    or rebind a repository identity, accept open residual risks (OWN-22),
-    certify a service account's principal key, assign a role, set a room's
-    admission, appoint a moderator or the facilitator, stamp a pin version, name
-    a successor, hand over a room, record a trust grant, allow notices for a
-    room or opt in to them, enable a bridge or the git carrier, set a room
-    setting, publish, apply a purge request, change a retention policy, accept
-    configuration (recording its digest), enroll a CI key, rotate a device key,
-    retire a writer, turn capture off or pause it, enroll or revoke a device,
-    peer or authenticator, mint or rotate an access token, start a witness
-    check, and a backup restore.
+  - **Widening:** allow, answer a hand-off (a hand-back), reply, steer, confirm
+    a steer for a later turn (OWN-13), send a correction, retry from a worktree
+    checkpoint, set or revise an intent, resume, record a delegation grant or an
+    acceptance grant, add, edit or unpin a pin of a type that restores written
+    from a device seat a device key certified (before PRV-10 ships, this node's
+    own device seat), confirm a pin candidate, change a room's visibility,
+    invite a principal key, issue an invite link, choose a fork, confirm a
+    command taken from an untrusted event (OWN-18), turn on the peer component,
+    accept a handover or succession, endorse, loosen a rule level, turn on or
+    change an away policy other than turning it off, quarantine that removes a
+    pin or a landmark from a restore block, release a quarantine, purge or apply
+    an erasure request, export, bind or rebind a repository identity, accept
+    open residual risks (OWN-22), certify a service account's principal key,
+    assign a role, set a room's admission, appoint a moderator or the
+    facilitator, stamp a pin version, name a successor, hand over a room, record
+    a trust grant, allow notices for a room or opt in to them, enable a bridge
+    or the git carrier, set a room setting, publish, apply a purge request,
+    change a retention policy, accept configuration (recording its digest),
+    enroll a CI key, rotate a device key, retire a writer, turn capture off or
+    pause it, enroll or revoke a device, peer or authenticator, mint or rotate
+    an access token, start a witness check, and a backup restore.
 
   Any principal act that removes a pin from a restore block, or stops this node
   recording its own runs' events, is widening whatever verb carries it. An
@@ -84,21 +84,23 @@ one kind (LANE-31).
 - **Role**: A named set of room capabilities: viewer, contributor or moderator.
   The owner gives a seat its role by a **role assignment**. An invite or invite
   link records one for every seat that chains to the invited principal key and
-  joins under it, run seats included. A paired phone's personal-room seat has no
-  role and reads within its device scope. A seat with none, other than the
-  owner's device seats, is a viewer; a run's personal-room seat, or its seat in
-  a room it created, is a contributor. A handover records a moderator role
-  assignment for the former owner's device seats (LANE-11). A run seat is a
-  moderator only by appointment. Only the facilitator's device seat writes a
-  room summary, beside its appointment.
+  joins under it, run seats included, though a run seat an invite names
+  moderator is a contributor. A paired phone's personal-room seat has no role
+  and reads within its device scope. A seat with none, other than the owner's
+  device seats, is a viewer; a run's personal-room seat, or its seat in a room
+  it created, is a contributor. A handover records a moderator role assignment
+  for the former owner's device seats (LANE-11). A run seat is a moderator only
+  by appointment. Only the facilitator's device seat writes a room summary,
+  beside its appointment.
   - **Viewer:** read, a role request and a summary request.
   - **Contributor:** read and a summary request; post, link and present; pin,
     edit and unpin its own pins, its **pin capability**; and work.
   - **Moderator:** a contributor's capabilities, plus a list removal of any pin
     but the intent, kick, bar, unbar, mute, unmute, pick, and set title, labels
     and assignments.
-- **Capability**: What a role lets a seat do. The closed set is what the three
-  roles list (LANE-16).
+- **Capability**: What a role lets a seat do. The closed set LANE-16 lists: what
+  the three roles list, plus writing a room summary, which only the
+  facilitator's appointment carries.
 - **Work**: A capability, not an act: to edit, execute commands, write worktree
   checkpoints and commit (LANE-16); a run's events go to its run seat while the
   run works on any branch the room names and its role has work; an assignment

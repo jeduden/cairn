@@ -64,22 +64,27 @@ row: "- [{title}]({filename}) — {summary}"
 - Every seat belongs to one principal and one room; every writer to one seat.
 - Each event goes to exactly one seat's writer. A run's event goes to its run
   seat in the room it works in at that moment, one it joined or created that
-  names its current branch, while that seat's role has work (LANE-10); else to
-  its personal-room seat. A room act goes to the writer of the seat that signs
-  it. A principal act or an expire act goes to the device seat of the device
-  that signs it, or before PRV-10 ships records it, in the room it acts on; a
-  node of a principal with a member seat there first joins it without admission.
-  One that acts on no room, on a room its principal has no member seat in, or
-  that a paired phone signs, goes to that device seat in the personal room,
-  naming the room, and that room shows it by address as it shows a cross-room
-  post (LANE-29). Any other event with no run goes to the recording device's
-  seat in its personal room.
+  names its current branch, while that seat's role has work (LANE-01, LANE-16);
+  else to its personal-room seat. A room act goes to the writer of the seat that
+  signs it. A principal act or an expire act goes to the device seat of the
+  device that signs it, or before PRV-10 ships records it, in the room it acts
+  on; a node of a principal with a member seat there first joins it without
+  admission. One that acts on no room, on a room its principal has no member
+  seat in, or that a paired phone signs, goes to that device seat in the
+  personal room, naming the room, and that room shows it by address as it shows
+  a cross-room post (LANE-29). A tombstone, an erasure request a retention
+  policy sends, and a bridge's or the launcher's event about a room's branch go
+  to the recording device's seat in the room they name, joined as for a
+  principal act. Any other event with no run goes to the recording device's seat
+  in the personal room of its node, or for a paired phone, of the node it pairs
+  with.
 - A run's history spans its seats' writers, tied together by the run. Peers
   exchange segments, so a room holds only the events routed to its seats and
   shows others by address (LANE-01).
 - Principals and agents create rooms; an agent's room is owned by its principal.
   Cairn never creates a room on its own initiative; a node's personal room comes
-  from the principal's `cairn install`, and Cairn may suggest joins.
+  from the principal's `cairn install`, or is carried over to a clone, and Cairn
+  may suggest joins.
 - A pin naming no room belongs to its author's principal's personal room on the
   node that wrote it.
 - Recall extends only to the principal's
@@ -103,7 +108,8 @@ errors and logs use the model's words.
 - A **settings key** names one setting in a settings layer:
   `<concept>.<setting>`, or `<concept>.<room>.<setting>` or
   `<concept>.<room>.<qualifier>` per room, the concept singular and in snake
-  case (`node.deployment_mode`).
+  case (`node.deployment_mode`). A multi-word concept is snake case in MCP tools
+  and settings keys, kebab case in CLI commands.
 - Layout words (such as tab, panel, pane, gutter, sheet, stack, tile, pill,
   rail, composer and command palette) name parts of a screen, never concepts.
 - A seat certificate names the seat kind, `run` or `device`, and whether the
@@ -116,7 +122,7 @@ errors and logs use the model's words.
 | Term                                                                              | Why                                                                                 | Where else it may appear                                                                                                 |
 | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | session                                                                           | It belongs to the harness; Cairn speaks of runs.                                    | As "harness session", or inside a harness's own names, such as `SessionStart`, `session_id` and `allow-session`.         |
-| project                                                                           | A room links repositories; nothing is scoped to a project.                          | The harness's `~/.claude/projects` path, the harness settings scope `--scope project`, and Cairn's own software project. |
+| project                                                                           | A room names branches in repositories; nothing is scoped to a project.              | The harness's `~/.claude/projects` path, the harness settings scope `--scope project`, and Cairn's own software project. |
 | tenant                                                                            | Replaced by principal.                                                              | Nowhere else.                                                                                                            |
 | operator, as a role or a person                                                   | The role is moderator; the person running a node is the node's principal.           | Only as the `operator` provenance class.                                                                                 |
 | owner act, owner key, owner surface                                               | Replaced by principal act, principal key and principal surface.                     | Nowhere else.                                                                                                            |

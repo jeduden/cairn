@@ -11,25 +11,26 @@ summary: >-
   (OQ-32), and a new one is a model change and a §6.3 row.
   - **Core (B0):** the **hook handlers** (answering hooks), the **CLI**
     (`cairn`), each harness adapter's transcript and hook part among them, the
-    **MCP server** (the recall and room tools, one per run), the **kernel
-    worker** (running the kernel's executions), the **TUI** (the terminal room
-    view), the **commit hook** (LANE-28, run as the CLI), and everything that
-    builds what reaches the model.
+    **MCP server** (the recall and room tools, one per harness session, serving
+    its runs), the **kernel worker** (running the kernel's executions), the
+    **TUI** (the terminal room view), the **commit hook** (LANE-28, run as the
+    CLI), and everything that builds what reaches the model.
   - The **harness adapter** is no component: Cairn's code for one harness, split
-    between them, its transcript and hook part in the core (it parses, opens no
-    socket, starts no process); its run part in the launcher, which starts,
-    hosts and controls runs, pauses them at the harness prompt, records sandbox
-    state and carries in only text the core built.
+    between the core and the launcher: its transcript and hook part in the core
+    (it parses, opens no socket, starts no process); its run part in the
+    launcher, which starts, hosts and controls runs, pauses them at the harness
+    prompt, records sandbox state and carries in only text the core built.
   - **Room-view component (B1):** serves the browser room view on loopback only
     (SEC-20).
   - **Launcher (B1):** `cairn launch`, which starts, hosts and controls runs
     through each harness adapter's run part, carrying the core's text into the
     harness input, and runs witness checks; the only component that starts
-    programs.
+    programs, but for the core's own kernel worker (CMP-05).
   - **Peer component (B2):** exchanges segments with peers (sync) and serves
     paired phones.
-  - **Publish component (B3):** read-only publishing, and the **git carrier**,
-    which keeps segments in a namespaced location of the principal's remote.
+  - **Publish component (B3):** read-only publishing and the segment exchange of
+    the **git carrier**, which keeps segments in a namespaced location of the
+    principal's remote.
   - **Bridge component (B3):** outbound exchange with hosts the node's principal
     names, through three **bridges**: the **forge bridge** (reads pull requests
     and reviews), the **CI bridge** (fetches CI attestations) and the
@@ -58,4 +59,4 @@ summary: >-
       a diff (I7, SEC-23).
   - **Peers:** enrolled peers and their state.
 - **Outcome window**: The part of the Room page beside a room's conversation
-  that shows one presentation (VIEW-22).
+  that shows one presentation (VIEW-22), never the outcome itself.

@@ -8,7 +8,7 @@ summary: >-
 
 - **Home**: The directory containing all of one principal's Cairn state on a
   node (`CAIRN_HOME`, default `~/.cairn`), belonging to one OS user and
-  optionally bound to a **home id** (`home.id`) the runner environment supplies
+  optionally bound to a **home id** (`home.id`) the environment supplies
   (SEC-03). The unit of isolation (I8).
 - **Node**: One home on one machine, container or cloud environment, for one
   principal. Its device key signs principal acts and expire acts once PRV-10
@@ -16,8 +16,9 @@ summary: >-
   only a token key, a **token-key-only node**. Its **node identity** is a value
   outside the home that a cloned image or a restored snapshot cannot carry over
   (REC-24). The node's principal is the principal whose home it is.
-- **Device**: A node or a paired phone. A device key certifies its device seats;
-  a token-key-only node's token key does so in its place.
+- **Device**: A node or a paired phone. Once PRV-10 ships, a device key
+  certifies its device seats; a token-key-only node's token key does so in its
+  place.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
   denying held permission requests within its device scope, reaching its node
   over B2. It signs with its own device key and seals its device seat's writer
@@ -27,9 +28,9 @@ summary: >-
 - **Room**: Where an intent is worked on: at most one intent, a **conversation**
   (its ordered posts), seats, pins, and branches in any repositories, each named
   by a branch link. The unit Cairn shows and shares.
-- **Personal room**: A principal's private room on each of its nodes, or carried
-  over to a clone, created by the principal's `cairn install` as the first act
-  of its device seat there. Its create room act is the device seat's add there.
+- **Personal room**: A principal's private room on each of its nodes, created by
+  the principal's `cairn install` as the first act of its device seat there, or
+  carried over to a clone. Its create room act is the device seat's add there.
   Every run has a seat in it from its first event, without a join, and every
   event or pin that belongs to no other room goes there.
 - **Foreign room**: A room this node holds that its principal neither owns nor

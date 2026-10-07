@@ -12,9 +12,9 @@ summary: >-
   any of its devices whose device scope allows it, edits the pin, except the
   intent (Intent). Information, never an instruction. It restores only under
   PIN-10, to runs that have had a seat in its room during the run, as a
-  **qualifying pin**: a pin of a type that restores written from a device seat a
-  device key certified, within that key's device scope, its creating event or
-  stamp trusted on this node, restores to its author's principal's agents, the
+  **qualifying pin**, its creating event or stamp trusted on this node: a pin of
+  a type that restores written from a device seat a device key certified, within
+  that key's device scope, restores to its author's principal's agents, the
   intent as Intent says (before PRV-10 ships, a pin from this node's own device
   seat to this node's agents), and to agents whose principal's trust grant
   covers its author's principal; any version of a type that restores restores to
@@ -37,15 +37,17 @@ summary: >-
   owner's device seat authors.
 - **Configuration pin**: A pin the principal's configuration declares, authored
   by its device seat on that node (PIN-01).
-- **Pin priority**: The order in which pins fill the **pin budget**, the restore
-  block's share of model tokens; every other budget is named too: the **hook
-  budget** (a hook handler's time limit, NFR-01), the **step budget** (a kernel
-  execution's step limit, CMP-05) or the delegation budget; a limit keeps its
-  own name, such as the **restore block limit** (INJ-07), CMP-05's wall-clock
-  and memory limits, SEC-04's query deadline and the output caps (RCL-03,
-  CMP-06). I3's budget is the pin budget, and I9's defined budgets are these
-  named budgets and limits; the latency targets of NFR-01, NFR-03 and NFR-15 are
-  targets, not budgets.
+- **Pin priority**: An integer the pin's author sets with it, lower first, the
+  intent before every other pin (LANE-20); qualifying pins fill the pin budget
+  in that order, then by their creating events' addresses (PIN-08).
+- **Budget**: The **pin budget** is the restore block's share of model tokens;
+  every other budget is named too: the **hook budget** (a hook handler's time
+  limit, §9.1, NFR-02), the **step budget** (a kernel execution's step limit,
+  CMP-05) or the delegation budget; a limit keeps its own name, such as the
+  **restore block limit** (INJ-07), CMP-05's wall-clock and memory limits,
+  SEC-04's query deadline and the output caps (RCL-03, CMP-06). I3's budget is
+  the pin budget, and I9's defined budgets are these named budgets and limits;
+  the latency targets of NFR-01, NFR-03 and NFR-15 are targets, not budgets.
 - **Pin type**: One of `constraint`, `preference`, `decision`, `fact`,
   `episode`, `intent`, `verdict` and `stake`. Only `constraint`, `preference`
   and `intent` pins restore.
@@ -67,8 +69,8 @@ summary: >-
   revises or stamps it, it restores only to its stampers' agents.
 - **Criterion**: One acceptance condition of an intent, with a stable id.
 - **Stake**: A pin of type `stake` stating what its author works on. Only its
-  author, or for a device seat its author's principal, edits or unpins it, and
-  it makes Cairn refuse no other seat's act.
+  author, or for a device seat its author's principal, edits it; it is unpinned
+  as Unpin says, and it makes Cairn refuse no other seat's act.
 - **Title, labels**: Room state the owner's device seat or a moderator sets: a
   display name and tags. They never reach a model.
 - **Assignment**: Room state asking a seat to work on a branch. It makes Cairn
@@ -102,8 +104,8 @@ summary: >-
   templates of OWN-04 and OWN-07, never a post's text.
 - **Restore block**: Deterministic trusted text, built only from qualifying
   pins, sanitized structural fields and fixed text Cairn ships, that Cairn
-  injects after compaction, at a run's start, resume or clear (INJ-02), and on a
-  prompt while `restore_block.on_prompt` is on (INJ-04), carrying among other
+  injects after compaction, at a run's start or harness resume (INJ-02), and on
+  a prompt while `restore_block.on_prompt` is on (INJ-04), carrying among other
   things qualifying pins, their room ids and the run's seat ids, omitted pins'
   ids and count, the count, room id and key fingerprint of pins of a type that
   restores that do not qualify (PIN-10), PIN-11's count and reason, PEER-06's

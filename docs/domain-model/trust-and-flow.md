@@ -30,8 +30,9 @@ summary: >-
   (a recall result, kernel output, an export), inherits: untrusted when any
   event it derives from is untrusted, except for its sanitized structural
   fields.
-- **Recall taint**: A run's mark after it recalls untrusted content, which
-  tightens its rule levels (SEC-13).
+- **Recall taint**: A run's mark after it recalls untrusted content, or
+  inherited from its delegating agent (OWN-24), which tightens its rule levels
+  (SEC-13).
 - **Principal surface**: An authenticated surface for principal acts: the
   browser room view under SEC-20, the CLI or TUI at a terminal, or a paired
   phone within its scope; before B2, a phone reaches the room view only as the
@@ -49,17 +50,18 @@ summary: >-
   author's seat key fingerprint and the post's address (OWN-08).
 - **Trust grant**: A principal's widening act trusting another principal's key
   for its own agents, in one room or everywhere. It covers that principal's
-  posts and pins written from device seats a device key certified, never run
-  seats, token-key-only nodes, room summaries, nor a service account that relays
-  text others wrote (OWN-29), and never in a foreign room; its revocation is
-  cut.
+  posts and pins written from device seats a device key of that principal
+  certified, never a cross-room post shown in another room, run seats,
+  token-key-only nodes, room summaries, nor a service account that relays text
+  others wrote (OWN-29), and never in a foreign room; its revocation is cut.
 - **Delegation**: One agent handing another a delegated task: its subagent, or,
   under a delegation grant, another agent of the same principal, an agent on
   another of its nodes, or another principal's agent (OWN-23 to OWN-26).
 - **Delegated task**: The text of a delegation: a subagent's from its harness,
   any other in OWN-24's template.
 - **Delegate report**: What a delegate returns, enveloped: through
-  `delegation_get`, except a subagent's, which its harness returns (OWN-25).
+  `delegation_get`, except a subagent's, which its harness returns as untrusted
+  `subagent_result` (OWN-25).
 - **Delegation grant**: The delegating principal's widening act naming who may
   delegate, to which targets, at what rule level, within what **delegation
   budget**, its cap in spend, how many delegates at once and how deep, and until
@@ -74,8 +76,9 @@ summary: >-
 - **Notice allowance, notice opt-in**: The owner's per-room allowance and the
   agent's principal's opt-in. An opt-in notice needs both.
 - **Rule level**: For each action class (a kind of tool action, such as edits,
-  commands or network use), one of: act without asking, act when told, ask
-  first, hand off (OWN-10).
+  commands or network use), one of, loosest to tightest: act without asking, act
+  when told, ask first, hand off (OWN-10). A maximum rule level is the loosest
+  allowed.
 - **Quota**: A limit on storage, events or **spend** (what runs cost in model
   tokens or money), per room, node, writer received from a peer, peer or
   worktree checkpoint, that the node's principal or managed policy sets

@@ -9,17 +9,19 @@ summary: >-
 - **Seat**: One run's or one device's place in one room, its **seat kind** `run`
   or `device`; a seat key minted anew starts another (Seat key). The unit of
   membership, signing and authorship. A run's personal-room seat exists from its
-  first event, and a paired phone's device seat in the personal room of the node
-  it pairs with from its pairing, each with no add; every other seat keeps its
-  place while its **add** stands: the act that placed it, its create room act, a
-  join its principal asked for or accepted that the room's admission admitted,
-  or a device seat's join without admission (LANE-25).
+  first event, a paired phone's device seat in the personal room of the node it
+  pairs with from its pairing, and a device seat a newly minted key starts in
+  the personal room from its first event, each with no add; every other seat
+  keeps its place while its **add** stands: the act that placed it, its create
+  room act, a join its principal asked for or accepted that the room's admission
+  admitted, or a device seat's join without admission (LANE-25).
 - **Run seat**: A run's seat. A witnessed run's run-seat key lives only in the
-  memory of that run's MCP server, which seals its writer (SEC-10); what `cairn
-  ingest` appends after that server has ended goes to a new seat and writer the
-  core seals, naming the run seat, in the same room, taking over its add and
-  role (REC-19); an ingested run's seat key is kept like a device seat's key,
-  and the core seals its writer.
+  memory of its harness session's MCP server, which holds the run-seat keys of
+  the main run and its subagents' runs and seals their writers (SEC-10); what
+  `cairn ingest` appends, whether or not that server still runs, goes to a new
+  seat and writer the core seals, naming the run seat, in the same room, taking
+  over its add and role (REC-19); an ingested run's seat key is kept like a
+  device seat's key, and the core seals its writer.
 - **Device seat**: A principal's seat for one device, a node or a paired phone.
   The one seat kind for acting without a run. A token-key-only node's device
   seat is certified by its token key, and that node signs no principal or expire
@@ -31,11 +33,11 @@ summary: >-
 - **Seat key**: A seat's one current key. It signs the seat's room acts and
   seals its writer. A rotation, signed by the old and the new key, keeps the
   seat's id and writer (SEC-27). A key minted because the node changed, a clone
-  or a backup restore (REC-24, ADM-06), starts a new seat and writer, as ingest
-  after a run's MCP server ended does (Run seat); the new seat names the old one
-  and inherits no add, role or appointment: outside the personal room it joins
-  as any seat does (LANE-23), and roles and appointments are assigned again; a
-  personal-room seat is a member from its first event.
+  or a backup restore (REC-24, ADM-06), starts a new seat and writer that names
+  the old one and inherits no add, role or appointment, unlike the seat ingest
+  starts (Run seat): outside the personal room it joins as any seat does
+  (LANE-23), and roles and appointments are assigned again; a personal-room seat
+  is a member from its first event.
 - **Device key**: A device's key, certified by a principal key's **device
   certificate**, with a **device scope** (the kinds of principal act it may
   sign, and of post and pin its seats may write) and a maximum rule level. It
@@ -62,7 +64,7 @@ summary: >-
   revocations it holds (I10).
 - **Access token**: A short-lived credential a principal mints to enroll a
   device or peer, certify an ephemeral node's seats or carry an invite link
-  (PEER-05, PRV-10, LANE-18). "Token" is always an access token, a model token,
+  (PEER-06, PRV-10, LANE-18). "Token" is always an access token, a model token,
   an access token's token key, a token certificate or a token-key-only node.
 - **Authenticator**: A hardware-backed key that gives presence proofs (OWN-11).
 - **CI key**: A key a principal enrolled to sign CI attestations.
