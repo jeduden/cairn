@@ -302,7 +302,7 @@ their requirements written before any grant is honoured.
 [PIN]: ../srs/05-functional-requirements.md#53-pins-pin
 [REC]: ../srs/05-functional-requirements.md#51-record-rec
 [PRV]: ../srs/05-functional-requirements.md#52-provenance-and-trust-prv
-[ADM]: ../srs/05-functional-requirements.md#58-administration-and-lifecycle-adm
+[ADM]: ../srs/05a-administration-requirements.md
 [LANE]: ../srs/05b-lane-requirements.md#511-room-lane
 [OWN]: ../srs/05c-principal-and-peer-requirements.md#513-principal-acts-own
 [PEER]: ../srs/05c-principal-and-peer-requirements.md#514-peer-network-peer

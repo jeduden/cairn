@@ -33,9 +33,10 @@ proposal, §8.
 
 ## 9.7.2 Room status
 
-Room status is computed where shown from room state, its runs' statuses and
-their freshness marks, never recorded: no act sets it directly, though OWN-21's
-ready and abandoned marks feed it (LANE-09). Rooms do not land; branches do,
+Room status is computed where shown from room state, the heads, landings and
+check states of the branches it names, its runs' statuses and their freshness
+marks, never recorded: no act sets it directly, though OWN-21's ready and
+abandoned marks feed it (LANE-09). Rooms do not land; branches do,
 merged by git or the forge into the repository's default branch or a branch the
 forge protects (LANE-06, LANE-08). First match wins, in this order:
 **Abandoned** (the owner marked the room abandoned) and **Landed** (the room

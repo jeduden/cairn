@@ -36,10 +36,10 @@ The room view reaches the principal in two steps. It stays a client of
 the record under VIEW-03, and everything it lets a person do also
 exists in the CLI or MCP.
 
-1. The browser room view on loopback (B1). Before B2, a phone reaches
-   it only as a principal surface, through the principal's own tunnel
-   outside Cairn, which Cairn sees as loopback; it is not a paired
-   phone (§6.3).
+1. The browser room view on loopback (B1). Without the peer component, a
+   phone reaches it only as a principal surface, through the principal's
+   own tunnel outside Cairn, which Cairn sees as loopback; it is not a
+   paired phone (§6.3).
 2. The principal's other devices, as enrolled, mutually authenticated
    peers and paired phones (B2).
 

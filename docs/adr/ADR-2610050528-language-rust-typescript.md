@@ -29,8 +29,8 @@ a node. The stakeholder chose Rust and TypeScript on 5 October 2026.
 ## Decision
 
 - **Rust for every process.** The hooks, the MCP server, the CLI, the
-  TUI, the kernel worker, the app's backend, the run component and the
-  peer component are Rust, built around one core library. The library
+  TUI, the kernel worker, the app's backend, the launcher and the peer
+  component are Rust, built around one core library. The library
   links into the Tauri shell on all five platforms, so a phone
   verifies, syncs and signs with the node's code. The same library
   runs in Cairn's own server for the browser.
@@ -38,7 +38,7 @@ a node. The stakeholder chose Rust and TypeScript on 5 October 2026.
   draws the view model the core computes (VIEW-04, VIEW-05, VIEW-14)
   and holds no logic of its own.
 - **Memory safety (HC-23 in the [frame][frame]).** Every crate that
-  parses content from outside the trusted boundary, or decides trust,
+  parses content from outside the trusted sources, or decides trust,
   carries `#![forbid(unsafe_code)]`. `unsafe` lives only in listed
   shims (SQLite, libghostty-vt, pty and platform calls), each with its
   fuzz target.

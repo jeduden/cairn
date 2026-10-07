@@ -40,6 +40,14 @@ Each question takes its recommended option.
   drop "trusted boundary", "owner-run", "Results open" and "run
   component".
 
+Applying the round pushed 05-functional-requirements.md past its token
+budget with nothing left to cut but normative text. Sections 5.8 to 5.10
+(ADM, MEM, OPS) moved, unchanged and keeping their numbers, to
+05a-administration-requirements.md, as 05b and 05c split off before.
+The adversarial check also restored ADM-05's "under ADM-06" and RCL-04's
+"(§9.3)", and kept a dev server's URL out of the proposed app-shell ADR's
+webview.
+
 ## 3. Optional, not chased
 
 OWN-18's narrowing to terminals only; `cairn notice` beside "opt-in
