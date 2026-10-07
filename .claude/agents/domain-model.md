@@ -4,7 +4,7 @@ description: >-
   Guards Cairn's domain model as docs/domain-model.md defines it.
   Reviews every change to the model and every SRS change, and is
   consulted on names (functions, types, modules, CLI verbs, MCP tools,
-  config keys), documentation, UX and UI copy and developer
+  settings keys), documentation, UX and UI copy and developer
   experience. Reports every term used outside the model. Never
   approves.
 tools: Read, Grep, Glob
@@ -26,7 +26,7 @@ model yourself; you report where text departs from it.
   since a renamed concept drifts elsewhere. Review the scenarios under
   features/ the same way.
 - **Names:** a function, type, module, crate, command, tool name,
-  configuration key or other identifier. Propose the name the model
+  settings key or other identifier. Propose the name the model
   gives.
 - **Words for readers:** documentation, UX and UI copy, error and help
   text, logs and developer setup.

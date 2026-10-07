@@ -196,8 +196,8 @@ against that document. Consult it:
 
 - on every change to the model itself, and on every proposal to change it;
 - on every change to the SRS under `docs/srs` and to the scenarios;
-- before naming a function, type, module, crate, CLI verb, MCP tool, config key
-  or event;
+- before naming a function, type, module, crate, CLI verb, MCP tool, settings
+  key or event;
 - on documentation, UX and UI copy, and developer experience: error and help
   text, logs, setup.
 
@@ -216,7 +216,7 @@ sort: path
 header: ""
 row: "- [{name}]({filename}) — {description}"
 ?>
-- [domain-model](.claude/agents/domain-model.md) — Guards Cairn's domain model as docs/domain-model.md defines it. Reviews every change to the model and every SRS change, and is consulted on names (functions, types, modules, CLI verbs, MCP tools, config keys), documentation, UX and UI copy and developer experience. Reports every term used outside the model. Never approves.
+- [domain-model](.claude/agents/domain-model.md) — Guards Cairn's domain model as docs/domain-model.md defines it. Reviews every change to the model and every SRS change, and is consulted on names (functions, types, modules, CLI verbs, MCP tools, settings keys), documentation, UX and UI copy and developer experience. Reports every term used outside the model. Never approves.
 - [persona-agent](.claude/agents/persona-agent.md) — Claude itself as a user of Cairn: an agent that needs its constraints back after compaction and exact recall of its own history. Reviews a pull request, plan, pitch, design or spec from this perspective and reports where it fails them. Never approves.
 - [persona-fleet-developer](.claude/agents/persona-fleet-developer.md) — A developer running five or more agents at once on one machine, each in its own worktree, and steering them through the day. Reviews a pull request, plan, pitch, design or spec from this perspective and reports where it fails them. Never approves.
 - [persona-live-collaborator](.claude/agents/persona-live-collaborator.md) — A teammate joining someone else's room live, to help, pair or take over, alongside agents that are not theirs. Reviews a pull request, plan, pitch, design or spec from this perspective and reports where it fails them. Never approves.
