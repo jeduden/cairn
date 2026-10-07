@@ -9,7 +9,7 @@ Feature: Administration and lifecycle (ADM)
   Scenario: the plugin registers the hooks and the MCP server with the core executable
     Given an isolated Cairn home
     When the Claude Code plugin bundle is built
-    Then the plugin manifest registers every hook of the hook contract as "cairn hook <event>"
+    Then the plugin manifest registers every hook of the hook contract as "cairn hook <hook>"
     And the plugin manifest registers the MCP server "cairn mcp"
     And the bundle carries the cairn core executable for each supported platform
 
@@ -35,15 +35,15 @@ Feature: Administration and lifecycle (ADM)
     And the output states that the harness's managed settings are in force and names the documented managed install path
 
   @ADM-04 @P0 @I6 @I7 @pending
-  Scenario Outline: configuration is validated strictly, managed policy overrides every layer, repository configuration only tightens, and a configuration change that needs a widening principal act waits for one
+  Scenario Outline: every settings layer is validated strictly, managed policy overrides the others, repository configuration only tightens, and a settings change that needs a widening principal act waits for one
     Given an isolated Cairn home
-    And <configuration>
+    And <settings>
     When an agent runs and the person starts "<component>"
     Then "<component>" <result>
     And the core records every event of the run
 
     Examples:
-      | configuration                                                                                      | component               | result                                                                                        |
+      | settings                                                                                           | component               | result                                                                                        |
       | a managed policy file at the documented system path that the person can write                      | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
       | a managed policy file in a directory the person can write                                          | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
       | an unparsable managed policy file                                                                  | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
@@ -51,7 +51,7 @@ Feature: Administration and lifecycle (ADM)
       | a repository ".cairn.toml" that turns on the room view and a widening act that recorded its digest | the room-view component | stays off, and an audit entry and a counter record the ignored key                            |
       | the person's config.toml that turns on the room view with no widening act recording its digest     | the room-view component | stays off                                                                                     |
       | the person's config.toml that turns on the room view and a widening act that recorded its digest   | the room-view component | starts                                                                                        |
-      | a managed policy that turns on the room view and the person's config that turns it off             | the room-view component | starts                                                                                        |
+      | a managed policy that turns on the room view and the person's config.toml that turns it off        | the room-view component | starts                                                                                        |
       | the person's config.toml containing "recal.max_k = 10"                                             | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
       | the person's config.toml containing "recall.max_k = 'ten'"                                         | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
       | the person's config.toml containing "recall.max_k = 500"                                           | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |

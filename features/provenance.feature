@@ -34,7 +34,7 @@ Feature: Provenance and trust (PRV)
       | unparsed           |
 
   @PRV-02 @P0 @I2 @I8 @pending
-  Scenario Outline: the default trust policy trusts this node's unsigned trusted sources only on this node, and alike on all the principal's nodes the acts a device key it certified signed and the posts and pins from a device seat such a key certified, the posts and pins its trust grant covers and the pin versions it stamped
+  Scenario Outline: the default trust policy trusts this node's unsigned trusted sources only on this node, and alike on all the principal's nodes the acts a device key it certified signed and the posts and pins from a device seat such a key certified (once PRV-10 ships), the posts and pins its trust grant covers and the pin versions it stamped
     Given an isolated Cairn home
     And deployment mode "<mode>"
     When an event with provenance "<provenance>" written by <writer> is recorded
@@ -106,13 +106,13 @@ Feature: Provenance and trust (PRV)
     And an audit entry records "rejected repository setting node.deployment_mode"
 
   @PRV-05 @P0 @I2 @pending
-  Scenario Outline: configuration cannot trust a provenance class beyond the default policy
+  Scenario Outline: no settings layer can trust a provenance class beyond the default policy
     Given an isolated Cairn home
     And deployment mode "interactive"
-    And the person's configuration sets the trust of "<provenance>" to "trusted"
+    And managed policy, the person's configuration and the repository's ".cairn.toml" each set the trust of "<provenance>" to "trusted"
     When an event with provenance "<provenance>" is ingested
     Then the event is stored with provenance "<provenance>" and its trust level is "untrusted"
-    And an audit entry records "rejected trust override for <provenance>"
+    And an audit entry for each settings layer records "rejected trust override for <provenance>"
 
     Examples:
       | provenance       |

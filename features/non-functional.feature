@@ -145,7 +145,7 @@ Feature: Non-functional requirements (NFR)
   Scenario: every release ships its documentation
     Given a release artifact set
     When its documentation is listed
-    Then it contains the administration guide, threat model, configuration reference, MCP tool reference and upgrade notes
+    Then it contains the administration guide, threat model, settings reference, MCP tool reference and upgrade notes
 
   @NFR-15 @pending
   Scenario Outline: the room view's surfaces meet their p95 targets on a 10M-event node and say when they miss
