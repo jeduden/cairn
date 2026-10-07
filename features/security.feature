@@ -329,7 +329,7 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a seat key that was rotated by a signed event in its seat's writer, signed by the old key and the new key, and whose new key was then revoked by a signed event
     When events sealed by the revoked key arrive, some before its revocation and some after
-    Then the rotation and revocation appear as signed events
+    Then the rotation and revocation appear as signed events, the revocation a cut principal act
     And the seat keeps its seat id and its writer across the rotation, and what the old key sealed still verifies
     And the events sealed before the revocation still verify
     And the others are refused under the revocation rule
@@ -393,3 +393,4 @@ Feature: Security (SEC)
     And the facilitator's posts reach no agent as trusted text unless that agent's principal recorded a trust grant for the facilitator's principal key
     And the facilitator's program writes room summaries only with "cairn room-summary write", signed with its device seat, and never acts through an MCP tool
     And a run seat that a principal whose device seat has the moderator role by role assignment appointed moderator is kept to the same limits, and that appointer can undo each of its acts
+    And that appointer's appointment of a facilitator is refused, since only the owner appoints the facilitator

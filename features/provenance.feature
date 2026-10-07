@@ -44,39 +44,45 @@ Feature: Provenance and trust (PRV)
     And every principal act a device key this principal certified signed, and every post and pin written from a device seat such a key certified, derives the same trust level on each of its nodes holding the same writer logs
 
     Examples:
-      | mode        | writer                                                                                                      | provenance       | trust     | verify                                                            |
-      | automation  | a writer of this node                                                                                       | operator         | trusted   | reports nothing                                                   |
-      | automation  | a writer of this node, witnessed by its hook handlers                                                       | harness_meta     | trusted   | reports nothing                                                   |
-      | interactive | a writer of this node, witnessed by its hook handlers                                                       | user             | trusted   | reports nothing                                                   |
-      | automation  | a writer of this node                                                                                       | user             | untrusted | reports nothing                                                   |
-      | interactive | a writer of this node                                                                                       | assistant        | untrusted | reports nothing                                                   |
-      | interactive | a writer of this node                                                                                       | tool_call        | untrusted | reports nothing                                                   |
-      | interactive | a writer of this node                                                                                       | tool_result:Bash | untrusted | reports nothing                                                   |
-      | interactive | a writer of this node                                                                                       | web              | untrusted | reports nothing                                                   |
-      | interactive | a writer of this node                                                                                       | mcp:github       | untrusted | reports nothing                                                   |
-      | interactive | a writer of this node                                                                                       | file             | untrusted | reports nothing                                                   |
-      | interactive | a writer of this node                                                                                       | subagent_result  | untrusted | reports nothing                                                   |
-      | interactive | a writer of this node                                                                                       | harness_text     | untrusted | reports nothing                                                   |
-      | interactive | a writer of this node                                                                                       | unparsed         | untrusted | reports nothing                                                   |
-      | interactive | a run seat's writer on this node                                                                            | post             | untrusted | reports nothing                                                   |
-      | interactive | this principal's device seat on this node                                                                   | post             | trusted   | reports nothing                                                   |
-      | interactive | this principal's device seat on another of its nodes, certified by a device key it certified, within scope  | post             | trusted   | reports nothing                                                   |
-      | interactive | a writer of this node, from a transcript the hook handlers did not watch                                    | user             | untrusted | reports nothing                                                   |
-      | automation  | a writer of this node, from a transcript the hook handlers did not watch                                    | harness_meta     | untrusted | reports nothing                                                   |
-      | interactive | a device key on another node chaining within its scope to the principal key of this node's principal        | operator         | trusted   | reports nothing                                                   |
-      | interactive | a device key on another node with no certificate from the principal key of this node's principal            | operator         | untrusted | reports nothing                                                   |
-      | automation  | a run seat's writer on another node of this principal                                                       | harness_meta     | untrusted | reports nothing                                                   |
-      | interactive | a run seat's writer on another node of this principal                                                       | user             | untrusted | reports nothing                                                   |
-      | interactive | a writer of another principal                                                                               | operator         | untrusted | reports nothing                                                   |
-      | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance                      | operator         | trusted   | reports it as a widening principal act that fails OWN-22          |
-      | automation  | a writer of this node, widening with a required presence proof that does not verify                         | operator         | trusted   | reports it as a widening principal act whose presence proof fails |
+      | mode        | writer                                                                                                        | provenance       | trust     | verify                                                            |
+      | automation  | a writer of this node                                                                                         | operator         | trusted   | reports nothing                                                   |
+      | automation  | a writer of this node, witnessed by its hook handlers                                                         | harness_meta     | trusted   | reports nothing                                                   |
+      | interactive | a writer of this node, witnessed by its hook handlers                                                         | harness_meta     | trusted   | reports nothing                                                   |
+      | interactive | a writer of this node, witnessed by its hook handlers                                                         | user             | trusted   | reports nothing                                                   |
+      | automation  | a writer of this node                                                                                         | user             | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                         | assistant        | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                         | tool_call        | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                         | tool_result:Bash | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                         | web              | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                         | mcp:github       | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                         | file             | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                         | subagent_result  | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                         | harness_text     | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                         | unparsed         | untrusted | reports nothing                                                   |
+      | interactive | a run seat's writer on this node                                                                              | post             | untrusted | reports nothing                                                   |
+      | interactive | a run seat's writer on this node, a pin version this principal stamped                                        | assistant        | trusted   | reports nothing                                                   |
+      | automation  | a writer of this node, recorded live by its CLI                                                               | operator         | trusted   | reports nothing                                                   |
+      | interactive | this principal's device seat on this node                                                                     | post             | trusted   | reports nothing                                                   |
+      | interactive | this principal's device seat on another of its nodes, certified by a device key it certified, within scope    | post             | trusted   | reports nothing                                                   |
+      | interactive | a writer of this node, from a transcript the hook handlers did not watch                                      | user             | untrusted | reports nothing                                                   |
+      | automation  | a writer of this node, from a transcript the hook handlers did not watch                                      | harness_meta     | untrusted | reports nothing                                                   |
+      | interactive | a device key on another node chaining within its scope to the principal key of this node's principal          | operator         | trusted   | reports nothing                                                   |
+      | interactive | a device key on another node with no certificate from the principal key of this node's principal              | operator         | untrusted | reports nothing                                                   |
+      | automation  | a run seat's writer on another node of this principal                                                         | harness_meta     | untrusted | reports nothing                                                   |
+      | interactive | a run seat's writer on another node of this principal                                                         | user             | untrusted | reports nothing                                                   |
+      | interactive | a writer of another principal                                                                                 | operator         | untrusted | reports nothing                                                   |
+      | interactive | a device seat of a principal this principal trusts by a trust grant, certified by that principal's device key | post             | trusted   | reports nothing                                                   |
+      | interactive | a token-key-only node's device seat of a principal this principal trusts by a trust grant                     | post             | untrusted | reports nothing                                                   |
+      | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance                        | operator         | trusted   | reports it as a widening principal act that fails OWN-22          |
+      | automation  | a writer of this node, widening with a required presence proof that does not verify                           | operator         | trusted   | reports it as a widening principal act whose presence proof fails |
 
   @PRV-03 @P0 @I2 @pending
-  Scenario Outline: model-reproducible and harness-summarised text is untrusted
+  Scenario Outline: model-reproducible text no principal stamped, and harness-summarised text, is untrusted
     Given an isolated Cairn home
     And deployment mode "interactive"
     When <item> is recorded
     Then the event is stored with provenance "<provenance>" and its trust level is "untrusted"
+    And a version of a constraint pin an agent's run seat wrote, with provenance "assistant", stays "untrusted" until this principal stamps it, and is then "trusted" for this principal's agents only
 
     Examples:
       | item                                                               | provenance   |
@@ -205,14 +211,15 @@ Feature: Provenance and trust (PRV)
     And a recorded I2 security review of this requirement exists before it ships
 
     Examples:
-      | event                                                                                                 | outcome                                                       |
-      | by the token-key-only node's run seat key, adding a constraint pin within its access token's rooms    | untrusted until a principal stamps it from one of its devices |
-      | by the token-key-only node's device seat key, adding a constraint pin within its access token's rooms | untrusted until a principal stamps it from one of its devices |
-      | by the laptop's device key, stamping a version of that pin                                            | trusted                                                       |
-      | by the laptop's device key, an act outside its scope                                                  | untrusted                                                     |
-      | by the laptop's device key, at rule level 3                                                           | untrusted                                                     |
-      | by the token-key-only node's run seat key, not held before the access token was revoked               | refused and audited                                           |
-      | by a seat key the laptop's revoked device key certified, not held before the revocation               | refused and audited                                           |
-      | by the laptop's revoked device key, covered by a seal held before the revocation                      | accepted                                                      |
-      | by the phone's device key, allowing a held permission request                                         | trusted                                                       |
-      | by the phone's device key, adding a pin                                                               | untrusted                                                     |
+      | event                                                                                                                          | outcome                                                       |
+      | by the token-key-only node's run seat key, adding a constraint pin within its access token's rooms                             | untrusted until a principal stamps it from one of its devices |
+      | by the token-key-only node's device seat key, adding a constraint pin within its access token's rooms                          | untrusted until a principal stamps it from one of its devices |
+      | by the laptop's device key, stamping a version of that pin                                                                     | trusted                                                       |
+      | by the device seat key of a token-key-only node of a principal this principal trusts by a trust grant, adding a constraint pin | untrusted until a principal stamps it from one of its devices |
+      | by the laptop's device key, an act outside its scope                                                                           | untrusted                                                     |
+      | by the laptop's device key, at rule level 3                                                                                    | untrusted                                                     |
+      | by the token-key-only node's run seat key, not held before the access token was revoked                                        | refused and audited                                           |
+      | by a seat key the laptop's revoked device key certified, not held before the revocation                                        | refused and audited                                           |
+      | by the laptop's revoked device key, covered by a seal held before the revocation                                               | accepted                                                      |
+      | by the phone's device key, allowing a held permission request                                                                  | trusted                                                       |
+      | by the phone's device key, adding a pin                                                                                        | untrusted                                                     |

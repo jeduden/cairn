@@ -210,12 +210,13 @@ Feature: Room (LANE)
     Then Cairn accepts exactly "<capabilities>" and refuses every other act
     And each decision is checked against the seat's role and the room state, as a deterministic function of the record, and no model is called
     And create room, join, a join request and leave are checked against admission and the add instead, never against a role
-    And a run's personal-room seat has the contributor role
+    And a run's personal-room seat, and its run seat in a room the run created, have the contributor role
     And the room view shows the seat the role "<role>" and those capabilities
     And only the owner assigns a role, and an invite or invite link records the role it names as a role assignment
     And a seat with no role assignment or appointment, other than the owner's device seats, is a viewer
-    And a room act signed by a device seat of "alice" has every room capability but writing a room summary, while her agents' run seats have only what a role assignment or an appointment gives them
+    And a room act signed by a device seat of "alice" has every room capability but writing a room summary, editing and unpinning only pins it wrote, while her agents' run seats have only what a role assignment or an appointment gives them
     And an appointment of a run seat or another principal's device seat as moderator is accepted only as a principal act of the owner, or of a principal whose device seat has the moderator role by role assignment, and only the appointer or the owner revokes it
+    And an appointment of the facilitator by any principal but the owner is refused and audited
     And an appointment an appointed moderator tries, and its kick, bar or mute aimed at the owner or another moderator, are refused and audited
 
     Examples:
@@ -365,22 +366,26 @@ Feature: Room (LANE)
     And "p-2" can still edit files under "src/auth"
     When "bob" edits his constraint pin in the room view
     Then the edit is recorded as "bob"'s widening principal act, never as a room act of his device seat
+    When "bob" edits the same pin again from another of his devices
+    Then the new version's author is that device's device seat, while the pin's author stays its first version's
     When a moderator takes "bob"'s constraint pin off the pin list by a list removal
     Then the list removal takes the pin off the room's pin list without unpinning it and raises a Needs you item for "bob"
     And the pin keeps restoring to every agent it restored to, "bob"'s and those whose principal's trust grant covers "bob", until "bob" unpins it as his widening principal act
     And the same holds when "alice"'s device seat, as the owner, takes "bob"'s constraint pin off the pin list by a list removal instead of a moderator
     When the device seat of a node of "bob" that has only a token key pins the constraint "deploy on Fridays only"
-    Then the pin changes only by room acts, is shown as unstamped, and restores to no agent until stamped
+    Then the pin changes only by room acts, is shown as unstamped, and restores to no agent until stamped, even where a trust grant covers "bob"
     When the run seat "p-3" pins the constraint "use the staging database"
     Then the pin is stored on the room's pin list with provenance "assistant", shown as unstamped, and restores to no agent until stamped
     When "alice" stamps version 1 of it and "p-3" then unpins it by a room act
     Then the pin leaves the room's pin list, and version 1 keeps restoring to "alice"'s agents until she unstamps it
     And the unpin is audited and raises a Needs you item for "alice"
+    When the principal of "p-3"'s agent unpins another pin "p-3" wrote
+    Then the unpin is recorded as that principal's neutral principal act
 
   @LANE-27 @P1 @I2 @I3 @pending
   Scenario: pins are information, and only the agent's own principal's pins, those its trust grant covers and versions it stamped restore
     Given an isolated Cairn home
-    And an agent of "alice" in a room with constraint pins written from the device seats of "alice", "bob" and "carol", and a run seat's constraint pin whose version 1 "alice" stamped
+    And an agent of "alice" in a room with constraint pins written from device seats of "alice", "bob" and "carol" that their device keys certified, and a run seat's constraint pin whose version 1 "alice" stamped
     And "alice" recorded a trust grant for "carol"'s key and none for "bob"'s
     When the agent's run joins and later compacts
     Then the join points the agent at the room's pins, intent first, by pin id and version, with no text

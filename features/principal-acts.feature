@@ -12,7 +12,7 @@ Feature: Principal acts (OWN)
     When "bob" writes a principal act directed to that run
     Then the run's one principal is "alice"
     And the act from "bob" does not instruct the run
-    And "bob"'s text reaches the run only as untrusted recall, a post "alice" endorses, a delegated task under "alice"'s acceptance grant (OWN-26), or a device-seat post or pin of "bob" a trust grant of "alice" covers (OWN-29)
+    And "bob"'s text reaches the run only as untrusted recall, a post "alice" endorses, a pin version "alice" stamped, a delegated task under "alice"'s acceptance grant (OWN-26), or a post or pin "bob" wrote from a device seat his device key certified that a trust grant of "alice" covers (OWN-29)
 
   @OWN-02 @P1 @I2 @I6 @pending
   Scenario Outline: a principal act is recorded only from an authenticated principal surface
@@ -22,13 +22,13 @@ Feature: Principal acts (OWN)
     Then the outcome is "<outcome>"
 
     Examples:
-      | surface                            | outcome                                                                                                                                                                                                                   |
-      | the room view under SEC-20         | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
-      | the CLI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
-      | a paired phone within its scope    | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, which shows it by address, whose writer the phone seals with that seat's key and the node only holds |
-      | the harness's own prompt           | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                                           |
-      | the terminal the launcher hosts    | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                                           |
-      | any other surface                  | refused and audited                                                                                                                                                                                                       |
+      | surface                                   | outcome                                                                                                                                                                                                                   |
+      | the room view under SEC-20                | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
+      | the CLI or TUI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal                |
+      | a paired phone within its scope           | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, which shows it by address, whose writer the phone seals with that seat's key and the node only holds |
+      | the harness's own prompt                  | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                                           |
+      | the terminal the launcher hosts           | recorded as user or a harness_meta outcome, not a principal act                                                                                                                                                           |
+      | any other surface                         | refused and audited                                                                                                                                                                                                       |
 
   @OWN-03 @P1 @I2 @pending
   Scenario: principal-typed text reaches an agent only through the harness's input interface
@@ -158,6 +158,8 @@ Feature: Principal acts (OWN)
     And the same verb with standard input or output not a terminal refuses before any other check
     When the person runs "cairn counter ack" at a terminal
     Then the acknowledgement is recorded as a neutral principal act with nothing more asked
+    When the person runs "cairn pin unpin" at a terminal on a pin her own agent's run seat wrote
+    Then the unpin is recorded as a neutral principal act with nothing more asked
     When the person runs "cairn room mute" on a seat at a terminal
     Then the mute, a room act, is signed with the seat key of the person's device seat in that room, carries no OWN-11 class and names the room it acted in
 
@@ -341,6 +343,7 @@ Feature: Principal acts (OWN)
     Then the pin restores word for word to "alice"'s agent and reaches "bob"'s agent only through a tool call, enveloped
     And a trust grant naming a run seat's key, or a service account that relays third parties' text, is refused and audited
     And the trust grant does not cover a service account whose principal key "carol" certified
+    And it does not cover a post or pin "carol" writes from a token-key-only node
     And a trust grant naming the room's facilitator is recorded only after "alice" is shown that the facilitator reads untrusted room text, and covers its posts but never its room summaries
     And no role, membership or room setting makes any other principal trusted
     When "alice" revokes the trust grant as a cut principal act

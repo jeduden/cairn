@@ -48,6 +48,7 @@ Feature: Pins (PIN)
     When the person runs "cairn pin edit" to change the pin to "Never push directly to main or release branches"
     Then the record gains an edit event adding version 2 of the pin created at w-1·10
     And the event at w-1·10 and its pin text are unchanged
+    And version 2's author is the seat that ran the edit, version 1 keeps its own author, and the pin's author stays version 1's
     And version 1 stays readable, and "cairn rebuild" reproduces the one qualifying pin at version 2, "Never push directly to main or release branches"
 
   @PIN-05 @P1 @I2 @I3 @pending
@@ -122,10 +123,11 @@ Feature: Pins (PIN)
     And the principal's stamp on one version of a constraint pin an agent's run seat wrote in "L1", on one version of a second constraint pin another principal wrote in "L2", and on one version of a "fact" pin in "L1"
     And a pin the principal wrote from its device seat in "L4"
     And a constraint pin in "L1" written from the device seat of a token-key-only node of the run's principal, unstamped
+    And a constraint pin in "L2" written from the device seat of a token-key-only node of the third principal, unstamped
     And a pin the principal confirmed from a pin candidate whose creating user turn was recorded in the deployment mode "interactive", while the current deployment mode is "automation"
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped constraint versions, each under its original author
-    And the restore block includes no pin of "L4", not the stamped "fact" version and not the token-key-only node's unstamped pin
+    And the restore block includes no pin of "L4", not the stamped "fact" version and neither token-key-only node's unstamped pin
     And the restore block names "L1", "L2" and the personal room by id
     And the other principal's unstamped pin is stated only by count, room id and key fingerprint, with no text, and an audit entry records it
 

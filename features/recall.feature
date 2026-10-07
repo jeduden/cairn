@@ -118,6 +118,7 @@ Feature: Recall (RCL)
     Examples:
       | item                                                                   | origin    | status      |
       | a sealed event this node witnessed                                     | witnessed | verified    |
+      | a sealed principal act this node's CLI recorded                        | witnessed | verified    |
       | an event past its writer's newest seal                                 | witnessed | unsigned    |
       | a sealed event ingested from a transcript                              | ingested  | verified    |
       | a sealed event imported from a room bundle                             | bundle    | verified    |

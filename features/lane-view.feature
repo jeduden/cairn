@@ -71,7 +71,7 @@ Feature: Room view (VIEW)
     When the person opens the room view
     Then each post carries the trust mark of §9.7.6 and the petname the person chose for its author's key, never the name the peer sent
     And the key with no petname is shown by its fingerprint and the new key is marked "new key"
-    And the ingested "user" turn carries the trust mark of §9.7.6 too, since only the turns this node's hook handlers witnessed are trusted
+    And the ingested "user" turn carries the trust mark of §9.7.6 too, since only the "user" turns this node witnessed while its deployment mode is "interactive" are trusted
     And the invisible characters and the HTML comment render as visible placeholders with a count
 
   @VIEW-08 @P1 @I6 @I10 @pending
