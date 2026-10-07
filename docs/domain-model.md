@@ -31,16 +31,16 @@ These verbs each have one job:
 ### Principals and agents
 
 - **Principal**: A person or a service account. It has a principal key, signs
-  principal acts with a device key at a principal surface, each recorded on a
-  device seat, and is the principal of every agent its nodes start. Cairn counts
-  principals by principal key: every device key, token key and seat key that
-  chains to one principal key through device, token or seat certificates belongs
-  to that principal; a chain never passes through another principal key. A
-  certified service account is still its own principal; its **certifier** is
-  whoever certified it. A principal key never certified counts as a person's,
-  which nothing can prove; a service account whose certificate is revoked stays
-  a service account. Only an agent's own principal widens what reaches that
-  agent (I2).
+  principal acts with a device key at a principal surface once PRV-10 ships,
+  each recorded on a device seat, and is the principal of every agent its nodes
+  start. Cairn counts principals by principal key: every device key, token key
+  and seat key that chains to one principal key through device, token or seat
+  certificates belongs to that principal; a chain never passes through another
+  principal key. A certified service account is still its own principal; its
+  **certifier** is whoever certified it. A principal key never certified counts
+  as a person's, which nothing can prove; a service account whose certificate is
+  revoked stays a service account. Only an agent's own principal widens what
+  reaches that agent (I2).
 - **Person**: A human principal. No one certifies a person's principal key. Only
   a person records a verdict.
 - **Service account**: A non-human principal with its own principal key,
@@ -69,10 +69,10 @@ These verbs each have one job:
   watch, with origin `ingested`, and untrusted (REC-22). A principal's own
   transcripts from outside `transcript.roots` land in its personal room.
 - **Facilitator**: The service account, at most one per room, whose device seat,
-  on its own node, the owner appoints as the room's facilitator, an appointed
-  moderator (SEC-32); its program, not a Cairn component, acts through that
-  node's CLI (`cairn room-summary write`). It posts and writes room summaries,
-  answering summary requests (LANE-33).
+  on its own node, the owner appoints as the room's facilitator, making that
+  device seat an appointed moderator (SEC-32); its program, not a Cairn
+  component, acts through that node's CLI (`cairn room-summary write`). It posts
+  and writes room summaries, answering summary requests (LANE-33).
 - **Author**: The seat that wrote an event or a pin. The author's principal
   follows from the seat.
 - **Member**: A seat whose add stands and that no bar covers, or a run's or a
@@ -106,8 +106,8 @@ changes.
 - **Harness**: The external program that runs agents, such as Claude Code or the
   Agent SDK. It keeps their transcripts, compacts their context and reports to
   Cairn through hooks. Cairn records it, changes its configuration only under I7
-  and never manages its transcripts or compaction; only the launcher starts and
-  controls runs in it.
+  and never manages its transcripts or compaction; of Cairn's components, only
+  the launcher starts and controls runs in it.
 - **Harness session**: The harness's own unit, which yields one transcript.
   Named only when describing the harness, never as a Cairn unit.
 - **Transcript**: The harness's file of what a harness session did. A
@@ -135,11 +135,12 @@ changes.
   optionally bound to a home id the runner environment supplies (SEC-03). The
   unit of isolation (I8).
 - **Node**: One home on one machine, container or sandbox, for one principal.
-  Its device key signs its principal acts and expire acts; an **ephemeral
-  node**, one in a short-lived environment such as a cloud sandbox, may have
-  only a token key, a **token-key-only node**. Its **node identity** is a value
-  outside the home that a cloned image or a restored snapshot cannot carry over
-  (REC-24). The node's principal is the principal whose home it is.
+  Its device key signs its principal's acts and expire acts once PRV-10 ships;
+  an **ephemeral node**, one in a short-lived environment such as a cloud
+  sandbox, may have only a token key, a **token-key-only node**. Its **node
+  identity** is a value outside the home that a cloned image or a restored
+  snapshot cannot carry over (REC-24). The node's principal is the principal
+  whose home it is.
 - **Device**: A node or a paired phone. A device key certifies its device seats;
   a token-key-only node's token key does so in its place.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
@@ -182,13 +183,14 @@ changes.
   repository's `.cairn.toml`, its **repository configuration**, may only tighten
   (ADM-04). The **store** is the home's files holding the record, its derived
   artifacts and payloads (§8.1).
-- **Writer**: One seat's append-only log on one node, named by the seat's first
-  key. Its events are hash-chained; the **chain head** at a seq is the hash over
-  every event up to it.
+- **Writer**: One seat's append-only log, written on one node, named by its
+  **writer id**, derived from the seat's first key. Its events are hash-chained;
+  the **chain head** at a seq is the hash over every event up to it.
 - **Event**: One immutable entry in a writer, such as a message (the harness's
   user input or the model's reply), tool call, tool result, **hook observation**
   (what a hook reported), worktree checkpoint, key rotation, tombstone, or an
-  act (a room act, a principal act or an expire act).
+  act (a room act, a principal act or an expire act). Its **event kind** is
+  which of these it is, recorded apart from its provenance.
 - **seq**: An event's position in its writer: strictly increasing, gap-free and
   never reused (REC-06).
 - **Address**: (writer, seq), shown as short `A2·4812`, range `A2·4812–5025` or
@@ -215,6 +217,8 @@ changes.
   content (PRV-01): `user`, `assistant`, `tool_call`, `tool_result:<tool>`,
   `web`, `mcp:<server>`, `file`, `subagent_result`, `harness_meta`,
   `harness_text`, `operator`, `post`, `summary`, `structural` and `unparsed`.
+  `harness_meta` is what the harness reports about its own operation, never free
+  text: turn triggers, model tokens, metadata lines and sandbox state (PRV-08);
   `operator` is the class of principal acts, expire acts and device-seat pins;
   posts are `post` and run-seat pins `assistant`; every other room act takes its
   seat's **pin class**, `operator` for a device seat and `assistant` for a run
@@ -247,8 +251,10 @@ changes.
 - **Worktree checkpoint**: An event recording a worktree's commit, branch and
   redacted diff since the previous worktree checkpoint (REC-20).
 - **Derived artifact**: Anything computed from the record and the node's key
-  set, such as those I10 lists, room state and trust levels; the **quarantine
-  set** is what a node holds quarantined.
+  set, such as those I10 lists, room state and trust levels; I10's statuses are
+  run statuses, but for their time-relative freshness marks, and integrity
+  statuses, and room status is computed where shown; the **quarantine set** is
+  what a node holds quarantined.
 - **Redaction**: Removing secrets from content before it is stored or on import,
   recorded (I1, SEC-08).
 - **Retention policy**: A rule (`retention_policy.*`), set by the node's
@@ -265,8 +271,8 @@ changes.
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
   range, a quarantine marker for a quarantined address, or a truncation marker
   on capped kernel output. A **missing range** is part of a writer this node
-  does not hold, such as a **capture gap** in a run's capture or a peer's lost
-  tail.
+  does not hold, such as a peer's lost tail; a **capture gap** is part of a run
+  its capture did not record.
 - **Integrity status**: What a room or writer shows about its chain and seals,
   one of §9.7.5's values (VIEW-10). The UI never says "secure".
 - **Receipt**: A signed statement about a node's record, made to be kept apart
@@ -281,6 +287,9 @@ changes.
 - **Bundle**: A reviewed export of a room, signed by the device key of the
   device that exported it, its **exporter**, which chains to the **bundle's
   principal key**, carried as a file or a git ref.
+- **Trusted-only export**: The JSONL of the events trusted for the principal's
+  agents, with full provenance, that downstream memory systems read (ADM-12,
+  MEM-02); an export like a bundle (SEC-26).
 - **Rendering**: A room rendered for people to read, with no keys or commitments
   (`cairn export --rendering`, SEC-26).
 - **Import**: Reading a bundle into this node's record (`cairn import`, REC-23).
@@ -295,19 +304,20 @@ changes.
 - **Pin**: Verbatim text in exactly one room, with a pin type and numbered pin
   versions, each with one author (a seat); the pin's author is its first
   version's, and only it, or for a device-seat pin its author's principal from
-  any of its devices, edits the pin, except the intent (Intent). Information,
-  never an instruction. It restores only under PIN-10, to runs with a seat in
-  its room, as a **qualifying pin**: a pin of a type that restores written from
-  a device seat a device key certified restores to its author's principal's
-  agents, and to agents whose principal's trust grant covers its author; any
-  version of a type that restores restores to the agents of a principal who
-  stamped it. Adding, editing or unpinning a pin of a type that restores,
-  written from a device seat a device key certified, is a widening principal act
-  of its author's principal, and a verdict and a pin candidate's confirmation
-  are their own principal acts (OWN-27, PIN-05); each still needs its seat's pin
-  capability; every other pin, a token-key-only node's included, is changed by
-  room acts, but for its principal's neutral unpin of its own agent's run-seat
-  pin, and a run seat's or a token-key-only node's restores only once stamped.
+  any of its devices whose device scope allows it, edits the pin, except the
+  intent (Intent). Information, never an instruction. It restores only under
+  PIN-10, to runs with a seat in its room, as a **qualifying pin**: a pin of a
+  type that restores written from a device seat a device key certified restores
+  to its author's principal's agents, and to agents whose principal's trust
+  grant covers its author; any version of a type that restores restores to the
+  agents of a principal who stamped it. Adding, editing or unpinning a pin of a
+  type that restores, written from a device seat a device key certified, is a
+  widening principal act of its author's principal, and a verdict and a pin
+  candidate's confirmation are their own principal acts (OWN-27, PIN-05); each,
+  but a neutral unpin, still needs its seat's pin capability; every other pin, a
+  token-key-only node's included, is changed by room acts, but for its
+  principal's neutral unpin of its own agent's run-seat pin, and a run seat's or
+  a token-key-only node's restores only once stamped.
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers.
 - **Pin candidate**: Proposed pin text an agent suggested or Cairn detected; not
@@ -319,9 +329,10 @@ changes.
 - **Configuration pin**: A pin the principal's configuration declares, authored
   by its device seat on that node (PIN-01).
 - **Pin priority**: The order in which pins fill the **pin budget**, the restore
-  block's share of model tokens; every other budget is named too (hook, step or
-  delegation budget), I3's budget is the pin budget, and I9's defined budgets
-  are these named ones (PIN-03, PIN-08).
+  block's share of model tokens; every other budget is named too: the **hook
+  budget** (a hook handler's time limit, NFR-01), the **step budget** (a kernel
+  execution's step limit, CMP-05) or the delegation budget. I3's budget is the
+  pin budget, and I9's defined budgets are these named ones (PIN-03, PIN-08).
 - **Pin type**: One of `constraint`, `preference`, `decision`, `fact`,
   `episode`, `intent`, `verdict` and `stake`. Only `constraint`, `preference`
   and `intent` pins restore.
@@ -361,7 +372,8 @@ changes.
   which never writes; a summary request is `room_summary_request` (LANE-33).
 - **Compaction summary**: The harness's summary at compaction, recorded as
   untrusted `harness_text`, never restored.
-- **Envelope**: The wrapper that marks recalled content as untrusted historical
+- **Envelope**: The **untrusted-data envelope** of I2, the one name beside
+  "envelope": the wrapper that marks recalled content as untrusted historical
   data; the only way recalled content reaches a model. An envelope **marked
   structural** carries only structural fields, §9.7's closed status words and
   marks, and Cairn's ids (`room_get`, VIEW-15).
@@ -435,7 +447,7 @@ changes.
 - **Device key**: A device's key, certified by a principal key's **device
   certificate**, with a **device scope** (the kinds of principal act it may
   sign, and of post and pin its seats may write) and a maximum rule level. It
-  signs principal acts and expire acts.
+  signs principal acts and expire acts once PRV-10 ships.
 - **Principal key**: A principal's root key, kept offline or in a
   platform-protected key store, which certifies its device keys and may certify
   a service account's principal key by a **service-account certificate**
@@ -444,8 +456,9 @@ changes.
   limited to an access token's rooms and expiry, which may stand between a
   device key and a seat key for an ephemeral node (PRV-10). A node with only a
   token key signs no principal or expire acts; every pin it writes restores only
-  once a principal stamps it from one of its devices, though its own events are
-  trusted on that node as this node's trusted sources.
+  once a principal stamps it from one of its devices whose device scope allows
+  it, though its own events are trusted on that node as this node's trusted
+  sources.
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room, so every seat key chains to a principal key. A
   node's **key set** is the keys, certificates and revocations it holds (I10).
@@ -531,7 +544,7 @@ one kind (LANE-31).
   room summary, beside its appointment.
   - **Viewer:** read, a role request and a summary request.
   - **Contributor:** read and a summary request; post, link and present; pin,
-    edit and unpin its own pins; and work.
+    edit and unpin its own pins, its **pin capability**; and work.
   - **Moderator:** a contributor's capabilities, plus a list removal of any pin
     but the intent, kick, bar, unbar, mute, unmute, pick, and set title, labels
     and assignments.
@@ -584,12 +597,14 @@ one kind (LANE-31).
   pin versions and stamps. It covers mutes, presentations, picks, bars,
   handovers and their offers. It covers the successor, title, labels,
   assignment, visibility, admission, the notice allowance and the **room
-  settings** (live drafts, typing, the appointment rate). When acts conflict,
-  the more restrictive act wins, then the lower commitment. Concurrent picks
-  resolve by **pick order** (the facilitator's seat, then any other moderator,
-  then the owner, VIEW-22). Of two branch links naming one branch, the first in
-  causal order stands, concurrent ones by the lower commitment (LANE-01).
-- **Concurrent**: Of two acts or events: neither causally after the other.
+  settings** (whether drafts show live, whether typing shows, and the rate of
+  appointments, PEER-09, SEC-32). When acts conflict, the more restrictive act
+  wins, then the lower commitment. Concurrent picks resolve by **pick order**
+  (the facilitator's seat, then any other moderator, then the owner, VIEW-22).
+  Of two branch links naming one branch, the first in causal order stands,
+  concurrent ones by the lower commitment (LANE-01).
+- **Concurrent**: Of two acts or events: neither causally after the other;
+  **causal order** puts each after every act or event it saw.
 - **Room state**: Everything the room merge derives (LANE-31).
 - **Room status**: A room's one status from §9.7.2's closed set, such as
   Running, Quiet or Ready for review. It is computed where shown from room
@@ -666,13 +681,13 @@ one kind (LANE-31).
   origin and writer, the deployment mode recorded with the event, and that
   principal's stamps and trust grants as its writer logs carry them (I10).
 - **Trusted sources**: What I2 trusts: this node's `operator` and structural
-  events, the `harness_meta` events its hook handlers witnessed, and the `user`
-  turns they witnessed while the deployment mode is `interactive`, all trusted
-  only on this node; principal acts signed by a device key the agent's principal
-  certified, and posts and pins written from a device seat such a key certified,
-  within that key's scope; for that agent, the posts and pins a trust grant of
-  its principal covers; and a pin version its principal stamped. Everything else
-  is untrusted.
+  events, the `harness_meta` events its hook handlers recorded, and the `user`
+  turns they recorded while the deployment mode is `interactive`, all trusted
+  only on this node; once PRV-10 ships, principal acts signed by a device key
+  the agent's principal certified, and posts and pins written from a device seat
+  such a key certified, within that key's scope; for that agent, the posts and
+  pins a trust grant of its principal covers; and a pin version its principal
+  stamped. Everything else is untrusted.
 - **Deployment mode**: `interactive` (a person types at the harness) or
   `automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`).
 - **Trust policy**: The rule that derives each event's trust level (PRV-02).
@@ -761,8 +776,9 @@ one kind (LANE-31).
   events, runs, compactions or recalls, read through `stat_list` (RCL-01).
 - **Run status**: A run's one status from §9.7.1's closed set (one waiting on
   its principal is Asking, never Needs you), with its **freshness mark**, which
-  says how current the run's events are on this node (VIEW-04); time-relative
-  freshness marks are computed where shown, never derived artifacts.
+  says how current the run's events are on this node, or that they came by
+  ingest (`ingested`) (VIEW-04); time-relative freshness marks are computed
+  where shown, never derived artifacts.
 - **Queue class**: One of Needs you's classes Q1 to Q4, which set its order
   (§9.7.4, VIEW-05).
 - **Open room**: A room not marked ready or abandoned whose branches have not
@@ -919,8 +935,8 @@ Every excluded term may still appear in **historical records**: the SRS change
 log, accepted ADRs and plan records, which keep the words of their time.
 Excluded words may also appear in files an outside tool writes and maintains, in
 that tool's meaning. Examples are frit's plan skills and plan files, and the
-repository's own engineering tooling, such as ENG-28's review gate. The
-domain-model agent skips them.
+repository's own engineering tooling, such as ENG-28's review gate and the
+requirement naming its fields. The domain-model agent skips them.
 
 ## Changing the model
 
