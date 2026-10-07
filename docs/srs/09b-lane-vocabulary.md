@@ -33,7 +33,8 @@ proposal, §8.
 
 ## 9.7.2 Room status
 
-Room status is a derived view, never state: no act sets it directly, though
+Room status is computed where shown from room state, its runs' statuses and
+their freshness marks, never recorded: no act sets it directly, though
 OWN-21's ready and abandoned marks feed it (LANE-09). Rooms do not land;
 branches do, by git or the forge (LANE-08). First match wins, in this order:
 **Abandoned** (the owner marked the room abandoned) and **Landed** (every branch
@@ -94,8 +95,8 @@ in the envelope's `integrity` field (§9.3), is one of seven values
 (VIEW-10): `verified` ◆ (chains and seals check), `unsigned`
 (hash-chained, before REC-18 or past the newest seal), `incomplete` ◇ (a
 writer's events are missing here), `unverified` (an event after a
-break), `broken` ✕ (a check failed), `refused` (a segment was refused),
-`equivocated` (PEER-10). The UI never says "secure".
+break), `broken` ✕ (a chain or seal verification failed), `refused` (a
+segment was refused), `equivocated` (PEER-10). The UI never says "secure".
 
 ## 9.7.6 Trust marks
 
