@@ -30,10 +30,10 @@ them, Cairn changes only harness configuration, under I7.
   harness's own input starts (its prompt, or the terminal the launcher hosts): a
   person's message in `interactive` deployment mode, a pipeline's in
   `automation`. A line the launcher carried in is no user turn: the launcher
-  records the carried text's commitment as its turn trigger, and ingest marks
-  the matching line untrusted (LANE-14). In interactive deployment mode its
-  `user` event, never the model reply, is a trusted source on the node whose
-  hook handlers recorded it (I2, PRV-02).
+  records the carried text's commitment as its turn trigger, and ingest records
+  the matching line as untrusted `harness_text` (LANE-14). In interactive
+  deployment mode its `user` event, never the model reply, is a trusted source
+  on the node whose hook handlers recorded it (I2, PRV-02).
 - **Compaction**: The harness replacing earlier context with a compaction
   summary when the context window fills or on request. Cairn neither performs
   nor controls it (NG1); it records it and restores pins after it (I3).
