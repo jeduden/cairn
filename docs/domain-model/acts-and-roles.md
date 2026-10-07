@@ -27,14 +27,14 @@ exactly one kind (LANE-31).
   such as a trust grant, an endorsement or a stamp do, and OWN-11's classes do
   not cover them.
 - **Principal act**: An act of a kind OWN-11 classes, taken at a principal
-  surface. It is signed by a device key once PRV-10 ships (OWN-02); before then
-  it is an `operator` event its device seat's seal covers, told apart from a
-  room act by the principal surface it is marked with (OWN-02). An act a seat
-  key signs as the act, beyond sealing its writer, is a room act. A widening act
-  lets more reach an agent, or more act or leave the node; a cut act only stops,
-  narrows or undoes a widening; a neutral act does neither, such as
-  acknowledging counters. Every change of visibility, admission or a room
-  setting is widening, whichever way it goes. Its classes:
+  surface. It is signed by a device key once PRV-10 ships; before then it is an
+  `operator` event its device seat's seal covers, told apart from a room act by
+  the principal surface it is marked with (OWN-02). An act a seat key signs as
+  the act, beyond sealing its writer, is a room act. A widening act lets more
+  reach an agent, or more act or leave the node; a cut act only stops, narrows
+  or undoes a widening; a neutral act does neither, such as acknowledging
+  counters. Every change of visibility, admission or a room setting is widening,
+  whichever way it goes. Its classes:
   - **Cut:** deny, interrupt, pause or stop a run, cancel a delegation, end a
     permission grant, reject a foreign room, decline a join request, tighten a
     rule level, revoke a role assignment, revoke a CI key, stop publishing a
@@ -179,18 +179,18 @@ exactly one kind (LANE-31).
 - **Room merge**: The one rule deriving all room state from the three act kinds,
   in causal order (LANE-31). Seats that are members with no add, and the seat
   ingest starts, stand beside it. It covers membership, roles, appointments,
-  pins, pin versions and stamps. It covers mutes, presentations, picks, bars,
-  handovers and their offers, OWN-21's ready and abandoned marks, the CI keys
-  enrolled in the room and whether the git carrier is enabled for it. It covers
-  the successor, title, labels, assignment, visibility, admission, the notice
-  allowance and the **room settings** (whether drafts show live, whether typing
-  shows, the roles a whole-room mute leaves posting to, and the **appointment
-  rate**: how many kicks, bars and mutes an appointed moderator may set per
-  period, PEER-09, SEC-32). When acts conflict, the more restrictive act wins,
-  then the lower commitment. Concurrent picks resolve by **pick order** (the
-  facilitator's seat, then any other moderator, then the owner, VIEW-22). Of two
-  branch links naming one branch, the first in causal order stands, concurrent
-  ones by the lower commitment (LANE-01).
+  pins, pin versions, stamps, mutes, presentations, picks, bars, handovers and
+  their offers, OWN-21's ready and abandoned marks, the CI keys enrolled in the
+  room and whether the git carrier is enabled for it. It covers the successor,
+  title, labels, assignment, visibility, admission, the notice allowance and the
+  **room settings** (whether drafts show live, whether typing shows, the roles a
+  whole-room mute leaves posting to, and the **appointment rate**: how many
+  kicks, bars and mutes an appointed moderator may set per period, PEER-09,
+  SEC-32). When acts conflict, the more restrictive act wins, then the lower
+  commitment. Concurrent picks resolve by **pick order** (the facilitator's
+  seat, then any other moderator, then the owner, VIEW-22). Of two branch links
+  naming one branch, the first in causal order stands, concurrent ones by the
+  lower commitment (LANE-01). Acts with no member seat: open (OQ-41).
 - **Concurrent**: Of two acts or events: neither causally after the other;
   **causal order** puts each after every act or event it saw.
 - **Room state**: Everything the room merge derives (LANE-31).

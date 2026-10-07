@@ -7,17 +7,18 @@ summary: >-
 # Seats and keys
 
 - **Seat**: One run's or one device's place in one room, its **seat kind** `run`
-  or `device`, fixed when the seat starts; a seat key minted on a node identity
-  change, a node clone or a backup restore starts another (Seat key). The unit
-  of membership, signing and authorship. A run's personal-room seat exists from
-  its first event, a paired phone's device seat in the personal room of the node
-  it pairs with from its pairing, and a device seat a newly minted key starts in
-  the personal room from its first event, each with no add; every other seat
-  keeps its place while its **add** stands: the act that placed it, its create
-  room act, a join its principal asked for or accepted that the room's admission
-  admitted, or a device seat's join without admission; the seat ingest starts
-  keeps its place while the run seat it names does, sharing that seat's add, one
-  for both, where it has one (LANE-25, REC-19).
+  or `device`, named by its seat certificate, made when the seat starts
+  (PRV-11), the only source Cairn shows a seat's kind from; a seat key minted on
+  a node identity change, a node clone or a backup restore starts another (Seat
+  key). The unit of membership, signing and authorship. A run's personal-room
+  seat exists from its first event, a paired phone's device seat in the personal
+  room of the node it pairs with from its pairing, and a device seat a newly
+  minted key starts in the personal room from its first event, each with no add;
+  every other seat keeps its place while its **add** stands: the act that placed
+  it, its create room act, a join its principal asked for or accepted that the
+  room's admission admitted, or a device seat's join without admission; the seat
+  ingest starts keeps its place while the run seat it names does, sharing that
+  seat's add, one for both, where it has one (LANE-25, REC-19).
 - **Run seat**: A run's seat. A witnessed run's run-seat key, but for the seat
   ingest starts, lives only in the memory of its harness session's MCP server,
   which keeps the run-seat keys of the main run and its subagents' runs and
@@ -52,8 +53,8 @@ summary: >-
   signs principal acts and expire acts once PRV-10 ships, and a room's segments
   the git carrier carries or a blind peer holds are encrypted to its principals'
   device keys, or a token-key-only node's token key (PEER-08, PEER-12). Before
-  PRV-10 ships no key certifies a device seat, and its pins qualify only on its
-  own node.
+  PRV-10 ships no principal key certifies a device key, so a device seat's pins
+  qualify only on its own node.
 - **Principal key**: A principal's root key, kept offline or in a
   platform-protected key store and never kept by a Cairn component (the
   principal's own key tooling signs with it), which certifies its device keys
@@ -68,9 +69,10 @@ summary: >-
   from one of its devices whose device scope allows it, though its own events
   are trusted on that node as that node's trusted sources.
 - **Seat certificate**: A device key's or token key's signature over a seat key,
-  scoped to the seat's room, so that once PRV-10 ships every seat key chains to
-  a principal key. It names the seat kind, `run` or `device`. A node's **key
-  set** is the keys, certificates and revocations it holds (I10).
+  scoped to the seat's room, naming the seat kind, `run` or `device`. The node's
+  device key makes one for every seat from the first release (PRV-11); once
+  PRV-10 ships every seat key chains to a principal key. A node's **key set** is
+  the keys, certificates and revocations it holds (I10).
 - **Access token**: A short-lived credential a principal mints to enroll a
   device or peer, certify an ephemeral node's seats or carry an invite link
   (PEER-06, PRV-10, LANE-18). "Token" is always an access token, a model token,

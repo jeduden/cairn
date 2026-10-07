@@ -76,7 +76,8 @@ row: "- [{title}]({filename}) — {summary}"
   there first joins it without admission. One that acts on no room, on a room
   its principal has no member seat in, or that a paired phone signs, goes to
   that device seat in the personal room, naming the room, and that room shows it
-  by address as it shows a cross-room post (LANE-29). A seat key's rotation goes
+  by address as it shows a cross-room post (LANE-29); for a room with no member
+  seat, the room merge counting it rests on OQ-41. A seat key's rotation goes
   to that seat's own writer (SEC-27). A tombstone, an erasure request a
   retention policy sends, and a bridge's or the launcher's event about a room's
   branch go to the recording device's seat in the room they name, joined as for

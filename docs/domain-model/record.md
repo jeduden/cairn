@@ -54,8 +54,9 @@ summary: >-
   at that seq (REC-18), made where that key lives: a witnessed run's run seat's,
   but the seat ingest starts, by its run's MCP server, covering what the hook
   handlers appended, an ingested run's by the core, a paired phone's device
-  seat's by the phone, and every other writer's by the core. Events after the
-  newest seal are unsigned.
+  seat's by the phone, and every other writer's by the core; how the core signs
+  and seals what the room-view component, the launcher and the bridge component
+  record rests on OQ-40. Events after the newest seal are unsigned.
 - **Commitment**: A keyed commitment to an event's content under a per-event
   random key, its **commitment key**, kept with the content and erased with it;
   the only way the chain, seals and tombstones refer to content (REC-17).
@@ -87,9 +88,9 @@ summary: >-
   server, the launcher, the room-view component, or the bridge component, whose
   events take provenance `web`, always untrusted; the room-view component
   records a principal act taken in the browser room view, marked with its
-  principal surface, and how it signs waits for a security review under SEC-10
-  and SEC-20), which the trust policy reads; an event from a peer or a bundle
-  records no recorder, only its origin.
+  principal surface, and how it is signed rests on OQ-40), which the trust
+  policy reads; an event from a peer or a bundle records no recorder, only its
+  origin.
 - **Span**: A contiguous range of one run's events in one writer. A new span
   starts at every user turn, compaction, subagent start or end, and whenever the
   run's events move to another seat's writer (LMK-01).
@@ -121,12 +122,12 @@ summary: >-
 - **Worktree checkpoint**: An event recording a worktree's commit, branch and
   redacted diff since the previous worktree checkpoint (REC-20).
 - **Derived artifact**: Anything computed from the record and the node's key
-  set, such as those I10 lists (the **search index** over event text among its
-  indexes, and the node's principal's Needs you queue among its queues), room
-  state and trust levels; I10's statuses are run statuses, but for their
-  time-relative freshness marks, and integrity statuses. Results with their
-  evidence classes are derived artifacts; room status and a check's state are
-  computed where shown; the **quarantine set** is what a node holds quarantined.
+  set, such as those I10 lists: the **search index** over event text among its
+  indexes, the node's principal's Needs you queue among its queues, room state,
+  trust levels, and run and integrity statuses. Results with their evidence
+  classes are derived artifacts; room status, a check's state and a run status's
+  time-relative freshness marks are computed where shown; the **quarantine set**
+  is what a node holds quarantined.
 - **Redaction**: Removing secrets from content before it is stored, on import,
   or from what an export's, a publish's or an invite's review step sends,
   recorded (I1, SEC-08).
@@ -149,7 +150,10 @@ summary: >-
   node does not hold, such as a peer's lost tail; a **capture gap** is part of a
   run its capture did not record.
 - **Integrity status**: What a room or writer shows about its chain and seals,
-  one of §9.7.5's values (VIEW-10). The UI never says "secure".
+  one of §9.7.5's values (VIEW-10). A refused segment is recorded as a
+  structural event in this node's device seat's personal-room writer, beside its
+  audit entry, so `refused` derives from the record (I10). The UI never says
+  "secure".
 - **Receipt**: A signed statement about a node's record, made to be kept apart
   from the home and checked with no network. Always qualified: a **head
   receipt** lists every writer's chain head at a moment, the tamper evidence of

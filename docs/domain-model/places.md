@@ -22,12 +22,13 @@ summary: >-
   with its own device key, or a token key, and its own device seat, that mints
   new seat keys and shares the carried-over personal room (REC-24). The node's
   principal is the principal whose home it is.
-- **Device**: A node or a paired phone. Once PRV-10 ships, a device key
-  certifies its seats; a token-key-only node's token key does so in its place.
+- **Device**: A node or a paired phone. Its device key certifies its seats
+  (PRV-11); a token-key-only node's token key does so in its place.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
   denying held permission requests within its device scope, reaching its node
   over B2. It signs with its own device key and seals its device seat's writer
-  with that seat's key; the node it pairs with holds the writer.
+  with that seat's key; the node it pairs with holds the writer. Where its keys
+  and writer live under I8 rests on OQ-39.
 - **Sandbox**: A confinement around a run that blocks some residual risks
   (OWN-22).
 - **Room**: Where an intent is worked on: at most one intent, a **conversation**
@@ -40,7 +41,9 @@ summary: >-
   it. It stays private: no invite, admission or visibility change applies to it
   (LANE-17). Its create room act is the device seat's add there. Every run its
   node records has a seat in it from its first event, without a join, and every
-  event or pin that belongs to no other room goes there.
+  event or pin that belongs to no other room goes there. Whether a room counts
+  an act recorded here for it, by a principal with no member seat in it, rests
+  on OQ-41.
 - **Foreign room**: A room this node holds, other than only as a blind peer,
   that its principal neither owns nor has a seat in, such as the room of an
   imported bundle or a room every seat of its principal has left or lost to a
