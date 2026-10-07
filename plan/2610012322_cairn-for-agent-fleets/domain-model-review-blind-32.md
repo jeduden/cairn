@@ -37,6 +37,12 @@ reviewers mark hard to revert.
   recall event; OWN-10's rule level change "the principal makes";
   CMP-08's kernel worker inside the core.
 
+The adversarial check found no unsafe cut. LANE-01 points to ADM-02
+for the install paths, for its token budget; 09a says "turn off" for
+the git carrier and bridges, so "disable" stays managed policy's power;
+and OQ-26 says quotas limit only storage and events until it closes.
+The stakeholder stopped the review rounds after this one.
+
 ## 3. Optional, not chased
 
 One verb for each successor withdrawal (`cairn successor withdraw` now

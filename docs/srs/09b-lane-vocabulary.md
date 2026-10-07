@@ -13,7 +13,7 @@ proposal, §8.
 
 ## 9.7.1 Run status and freshness
 
-| Status       | Meaning                                                | Sub-labels                                  |
+| Status       | Meaning                                                | Detail                                      |
 | ------------ | ------------------------------------------------------ | ------------------------------------------- |
 | **Starting** | launched, no first event yet                           | —                                           |
 | **Working**  | a turn is running                                      | —                                           |

@@ -62,7 +62,9 @@ and §6.3, each inside one network boundary (I4).
 
 Each B1–B3 component's own entry point is started by the person, a service
 manager or an ephemeral node's entrypoint, and runs only while the act turning
-it on stands; starting `cairn ui` or `cairn launch` records no principal act.
+it on stands; starting `cairn ui` or `cairn launch` records no principal act,
+but `cairn ui --phone` records the widening act issuing the phone-scoped
+room-view secret (OWN-16).
 A configuration turning the room-view component or the launcher off needs no
 acceptance and stops it as soon as it applies; `cairn configuration accept`
 records the cut act turning it off.
