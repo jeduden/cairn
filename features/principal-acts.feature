@@ -26,8 +26,8 @@ Feature: Principal acts (OWN)
       | the room view under SEC-20                | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal and marked with its surface |
       | the CLI or TUI at a terminal under OWN-12 | recorded as an operator event on the signing node's device seat in the room it acts on, or in the personal room naming the room where its principal has no member seat there, covered by its writer's seal and marked with its surface |
       | a paired phone within its scope           | signed with the phone's device key and recorded on its device seat in the personal room, naming the room it acts on, which shows it by address, whose writer the phone seals with that seat's key and the node only holds              |
-      | the harness's own prompt                  | recorded as a user turn or a harness_meta event recording only that input arrived, not a principal act                                                                                                                                 |
-      | the terminal the launcher hosts           | recorded as a user turn or a harness_meta event recording only that input arrived, not a principal act                                                                                                                                 |
+      | the harness's own prompt                  | recorded as a user event or a harness_meta event recording only that input arrived, not a principal act                                                                                                                                |
+      | the terminal the launcher hosts           | recorded as a user event or a harness_meta event recording only that input arrived, not a principal act                                                                                                                                |
       | any other surface                         | refused and audited                                                                                                                                                                                                                    |
 
   @OWN-03 @P1 @I2 @pending
@@ -152,7 +152,7 @@ Feature: Principal acts (OWN)
   Scenario: a CLI verb writing a principal act refuses without a terminal
     Given an isolated Cairn home
     And a run on the node leaves a residual risk open with no recorded risk acceptance
-    When the person runs "cairn pin add" for a constraint pin that restores, written from the person's device seat, which a device key certified, a widening principal act, at a terminal
+    When the person runs "cairn pin add" for a constraint pin that restores, written from the person's device seat a device key certified (before PRV-10 ships, this node's own device seat), a widening principal act, at a terminal
     Then the verb refuses
     And the refusal names the open residual risks and the runs that leave them open
     And the same verb with standard input or output not a terminal refuses before any other check

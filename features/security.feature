@@ -194,7 +194,7 @@ Feature: Security (SEC)
   @SEC-16 @P0 @I6 @I9 @pending
   Scenario: a hook input that fails schema validation is rejected fail-open and audited
     Given an isolated Cairn home
-    When the hook "SessionStart" runs with a payload whose "session_id" is a number
+    When the hook "SessionStart" runs with a hook input whose "session_id" is a number
     Then the hook handler exits 0 with empty output and no injection
     And an audit entry records "hook input failed schema validation"
     And the counter "hook_input_rejected" increases by 1
