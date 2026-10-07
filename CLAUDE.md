@@ -49,22 +49,22 @@ security review and a new major version, not a bug fix.
   within that key's scope, a pin version a principal stamped, for that
   principal's own agents, and the posts and pins a trust grant of the agent's
   principal covers. Cairn writes to an agent only through a closed set of paths.
-  Without a principal act: restore blocks (INJ-01, INJ-02), built only from
-  qualifying pins, trusted structural fields and fixed text Cairn ships; and
-  opt-in notices (INJ-10), compaction guidance (PIN-07) and the fixed templates
-  of OWN-04 and OWN-07, each built only from fixed text Cairn ships, trusted
-  structural fields and ids. On a principal act recorded at that time: through
-  the harness's own input, only principal-typed text, a fixed template that
-  references ids, or a post a principal endorsed exactly as shown inside the
-  template of OWN-08. Under a delegation grant its principal recorded (OWN-23),
-  and, for an agent of another principal, an acceptance grant that agent's
-  principal recorded (OWN-26): a delegated task inside the fixed template of
-  OWN-24. Once its requirements ship, a principal may also trust another
-  principal by key for its own agents, in one room or everywhere; the pins that
-  principal wrote from device seats one of its device keys certified then
-  restore to those agents, and its posts reach them inside the fixed template of
-  OWN-29. Cairn applies such grants and never grants trust itself. No other
-  write to an agent exists.
+  Without a principal act: restore blocks (INJ-01, INJ-02, INJ-04), built only
+  from qualifying pins, trusted structural fields and fixed text Cairn ships;
+  and opt-in notices (INJ-10), compaction guidance (PIN-07) and the fixed
+  templates of OWN-04 and OWN-07, each built only from fixed text Cairn ships,
+  trusted structural fields and ids. On a principal act recorded at that time:
+  through the harness's own input, only principal-typed text, a fixed template
+  that references ids, or a post a principal endorsed exactly as shown inside
+  the template of OWN-08. Under a delegation grant its principal recorded
+  (OWN-23), and, for an agent of another principal, an acceptance grant that
+  agent's principal recorded (OWN-26): a delegated task inside the fixed
+  template of OWN-24. Once its requirements ship, a principal may also trust
+  another principal by key for its own agents, in one room or everywhere; the
+  pins that principal wrote from device seats one of its device keys certified
+  then restore to those agents, and its posts reach them inside the fixed
+  template of OWN-29. Cairn applies such grants and never grants trust itself.
+  No other write to an agent exists.
 - **I3 — Constraints are never summarized.** Every pin that restores is stored
   verbatim and restored verbatim after every compaction, or named by id and
   count when the budget omits it.

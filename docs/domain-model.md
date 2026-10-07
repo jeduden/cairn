@@ -52,9 +52,9 @@ These verbs each have one job:
   boundaries B1 to B3, forbid risk acceptance and certify service accounts by
   listing their principal keys. The harness's own managed settings, which Cairn
   also never writes (ADM-03), are part of the **harness configuration**: the
-  harness's settings, hooks and MCP registrations (I7). Managed policy is the
-  only source of settings that overrides the principal's; repository
-  configuration only tightens them.
+  harness's settings, hooks and MCP registrations (I7). Managed policy alone
+  overrides the principal's settings; repository configuration only tightens
+  them.
 - **Agent**: A worker a harness runs for exactly one principal: the principal of
   the node that started it (OWN-01). It receives restore blocks and recalls
   history; an agent is never a principal.
@@ -85,10 +85,11 @@ These verbs each have one job:
   succession (LANE-11); it stays with the owner after all its seats leave. The
   owner stands beside the roles rather than having one: a room act signed by its
   device seat in the room has every room capability except writing a room
-  summary; it edits and unpins only pins it wrote, and makes a list removal of
-  any pin but the intent, while its agents' run seats have only their role and
-  any appointment. "Owner" means nothing else, except in the persona name
-  "Returning owner" and where an outside domain qualifies it, as a code owner.
+  summary; it edits and unpins only pins its principal wrote from a device seat,
+  and makes a list removal of any pin but the intent, while its agents' run
+  seats have only their role and any appointment. "Owner" means nothing else,
+  except in the persona name "Returning owner" and where an outside domain
+  qualifies it, as a code owner.
 - **Pull-request author**: The outside party whose commits a foreign room's
   bundle describes, matched through their commit-signing identity and a
   **binding statement** that identity signs, naming the bundle's principal key
@@ -162,7 +163,8 @@ controls.
 - **Principal's rooms**: The rooms a principal owns or has a seat in.
 - **Visibility**: Whether a room is private, shared with the room's principals,
   published or stored on blind peers (LANE-17). Changing it is a widening
-  principal act of the owner.
+  principal act of the owner; a node's principal publishes a room, or enrolls a
+  blind peer for it, only as its visibility allows.
 - **Peer**: Another node this node enrolled by key and exchanges sealed segments
   with through the peer component (B2). Being a peer never makes content trusted
   (PRV-02). Exchanging segments until both hold the same is **sync**.
@@ -196,9 +198,9 @@ controls.
   the store's **payload store**, under a name that confirms no guess at its
   content (REC-09).
 - **Segment**: A range of one writer, sealed as a unit when it closes; what
-  peers exchange. A unit of the record, not a storage layout. The **open
-  segment** is a writer's newest, still growing; it closes at the points REC-19
-  names, and peers exchange its sealed prefix.
+  peers and the git carrier exchange. A unit of the record, not a storage
+  layout. The **open segment** is a writer's newest, still growing; it closes at
+  the points REC-19 names, and peers exchange its sealed prefix.
 - **Seal**: A seat key's signature over its writer id, a seq and the chain head
   at that seq (REC-18), made where that key lives: a witnessed run's run seat's
   by its run's MCP server, covering what the hook handlers appended, an ingested
@@ -219,8 +221,9 @@ controls.
 - **Origin**: How an event reached this node's record: `witnessed` (recorded
   live on this node: by its hook handlers, its CLI, MCP server or launcher),
   `ingested` (read from a transcript the hook handlers did not watch), `bundle`
-  (read by import) or `peer` (received from a peer) (RCL-09). Independent of
-  provenance.
+  (read by import) or `peer` (received from a peer or through the git carrier)
+  (RCL-09). A **witnessed run** is one this node's hook handlers watched.
+  Independent of provenance.
 - **Span**: A contiguous range of one run's events in one writer. A new span
   starts at every user turn, compaction, subagent start or end, and whenever the
   run's events move to another seat's writer (LMK-01).
@@ -273,9 +276,9 @@ controls.
   backup create`, ADM-06); reading it back is a backup restore.
 - **At-rest key**: The key that encrypts the store when encryption at rest is on
   (SEC-09).
-- **Bundle**: A reviewed export of a room, signed by its exporter's device key,
-  which chains to the **bundle's principal key**, carried as a file or a git
-  ref.
+- **Bundle**: A reviewed export of a room, signed by the device key of the
+  device that exported it, its **exporter**, which chains to the **bundle's
+  principal key**, carried as a file or a git ref.
 - **Rendering**: A room rendered for people to read, with no keys or commitments
   (`cairn export --rendering`, SEC-26).
 - **Import**: Reading a bundle into this node's record (`cairn import`, REC-23).
@@ -299,10 +302,10 @@ controls.
   unpinning a pin of a type that restores, written from a device seat a device
   key certified, is a widening principal act of its author's principal, and a
   verdict and a pin candidate's confirmation are their own principal acts
-  (OWN-27, PIN-05); every other pin, a token-key-only node's included, is
-  changed by room acts, but for its principal's neutral unpin of its own agent's
-  run-seat pin, and a run seat's or a token-key-only node's restores only once
-  stamped.
+  (OWN-27, PIN-05); each still needs its seat's pin capability; every other pin,
+  a token-key-only node's included, is changed by room acts, but for its
+  principal's neutral unpin of its own agent's run-seat pin, and a run seat's or
+  a token-key-only node's restores only once stamped.
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers.
 - **Pin candidate**: Proposed pin text an agent suggested or Cairn detected; not
@@ -315,7 +318,8 @@ controls.
   by its device seat on that node (PIN-01).
 - **Pin priority**: The order in which pins fill the **pin budget**, the restore
   block's share of model tokens; every other budget is named too (hook, step or
-  delegation budget), and I3's budget is the pin budget (PIN-03, PIN-08).
+  delegation budget), I3's budget is the pin budget, and I9's defined budgets
+  are these named ones (PIN-03, PIN-08).
 - **Pin type**: One of `constraint`, `preference`, `decision`, `fact`,
   `episode`, `intent`, `verdict` and `stake`. Only `constraint`, `preference`
   and `intent` pins restore.
@@ -335,7 +339,8 @@ controls.
   seat authors.
 - **Criterion**: One acceptance condition of an intent, with a stable id.
 - **Stake**: A pin of type `stake` stating what its author works on. Only its
-  author writes it, and it locks nothing.
+  author, or for a device seat its author's principal, writes it, and it locks
+  nothing.
 - **Title, labels**: Room state the owner's device seat or a moderator sets: a
   display name and tags. They never reach a model.
 - **Assignment**: Room state asking a seat to work on a branch. It locks
@@ -347,7 +352,7 @@ controls.
   ephemeral like a presence hint (PEER-09). A **cross-room post** stays in the
   sending seat's writer; the target room shows it, and its seats pull it by
   address, enveloped (LANE-29).
-- **Directed post**: A post addressed to one agent. It waits in that agent's
+- **Directed post**: A post directed to one agent. It waits in that agent's
   principal's Needs you queue for an endorsement (LANE-12).
 - **Room summary**: A facilitator's summary of a room, always untrusted, linked
   by address to the events it covers, read only through `room_summary_get`,
@@ -361,10 +366,11 @@ controls.
 - **Envelope warning**: The fixed sentence at the head of every envelope (field
   `warning`).
 - **Restore block**: Deterministic trusted text, in a fixed template, Cairn
-  injects after compaction and at a run's start, resume or clear (INJ-02):
-  qualifying pins, their room ids, omitted pins' ids and count, the count, room
-  id and key fingerprint of pins of a type that restores that do not qualify
-  (PIN-10), a landmark index, a recall hint and LANE-33's room summary pointer.
+  injects after compaction, at a run's start, resume or clear (INJ-02), and on a
+  prompt while `restore_block.on_prompt` is on (INJ-04): qualifying pins, their
+  room ids, omitted pins' ids and count, the count, room id and key fingerprint
+  of pins of a type that restores that do not qualify (PIN-10), a landmark
+  index, a recall hint and LANE-33's room summary pointer.
 - **Landmark index**: The current run's landmarks, each with its address range,
   as a restore block lists them (INJ-01).
 - **Recall hint**: The one fixed line in a restore block saying that the recall
@@ -433,16 +439,17 @@ controls.
   (PRV-10).
 - **Token key**: A key a device key certifies by a **token certificate**,
   limited to an access token's rooms and expiry, which may stand between a
-  device key and a seat key for an ephemeral node (PRV-10). A node with only
-  a token key signs no principal acts; every pin it writes restores only once a
-  principal stamps it from one of its devices.
+  device key and a seat key for an ephemeral node (PRV-10). A node with only a
+  token key signs no principal acts; every pin it writes restores only once a
+  principal stamps it from one of its devices, though its own events are trusted
+  on that node as this node's trusted sources.
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room, so every seat key chains to a principal key. A
   node's **key set** is the keys, certificates and revocations it holds (I10).
 - **Access token**: A short-lived credential a principal mints to enroll a
   device or peer, seat an ephemeral node or carry an invite link (PEER-05,
-  PRV-10, LANE-18). "Token" is always an access token, a model token or an
-  access token's token key.
+  PRV-10, LANE-18). "Token" is always an access token, a model token, an access
+  token's token key, a token certificate or a token-key-only node.
 - **Authenticator**: A hardware-backed key that gives presence proofs (OWN-11).
 - **CI key**: A key a principal enrolled to sign CI check results.
 
@@ -536,10 +543,11 @@ one kind (LANE-31).
 - **Join**: The act that adds a seat to a room under its admission, or without
   it for a device seat whose principal has a member seat there. A run joins only
   when its principal asks for the join or accepts it (LANE-23); a device seat
-  joins by a join room act its principal takes at a principal surface, without
-  admission when its principal has a member seat there. A paired phone never
-  joins. An owner whose seats have all left rejoins under admission, which its
-  own invite satisfies. **Leave** is a seat's room act ending its own add.
+  joins by a join room act its principal takes at a principal surface, or its
+  node takes before recording a principal or expire act there, without admission
+  when its principal has a member seat there. A paired phone never joins. An
+  owner whose seats have all left rejoins under admission, which its own invite
+  satisfies. **Leave** is a seat's room act ending its own add.
 - **Retire a writer**: Seal a writer for the last time, by a principal act or
   when the access token behind its seat key expires (PEER-05).
 - **Kick**: Revokes a seat's current add. Only that seat's principal may add it
@@ -698,12 +706,12 @@ one kind (LANE-31).
 - **Delegate report**: What a delegate returns, enveloped: through
   `delegation_get`, except a subagent's, which its harness returns (OWN-25).
 - **Delegation grant**: The delegating principal's widening act naming who may
-  delegate, to which targets, at what rule level, within what budget and until
-  when (OWN-23).
+  delegate, to which targets, at what rule level, within what delegation budget
+  and until when (OWN-23).
 - **Acceptance grant**: The receiving principal's widening act on its own node,
   naming the delegating principal, the targets, the maximum rule level, the
-  budget and the expiry (OWN-26). Delegation to another principal's agent needs
-  both a delegation grant and an acceptance grant.
+  delegation budget and the expiry (OWN-26). Delegation to another principal's
+  agent needs both a delegation grant and an acceptance grant.
 - **Permission grant**: The grant that lets an approved action pass again when
   the harness next raises it at its permission prompt (OWN-07). Separate from
   trust and delegation grants.
@@ -747,7 +755,8 @@ one kind (LANE-31).
   events, runs, compactions or recalls, read through `stat_list` (RCL-01).
 - **Run status**: A run's one status from §9.7.1's closed set (one waiting on
   its principal is Asking, never Needs you), with its **freshness mark**, which
-  says how current the run's events are on this node (VIEW-04).
+  says how current the run's events are on this node (VIEW-04); time-relative
+  freshness marks are computed where shown, never derived artifacts.
 - **Queue class**: One of Needs you's classes Q1 to Q4, which set its order
   (§9.7.4, VIEW-05).
 - **Open room**: A room not marked ready or abandoned whose branches have not
@@ -813,7 +822,8 @@ one kind (LANE-31).
     point" the principal picks (VIEW-08).
   - **Needs you:** the one queue of items waiting on a principal (VIEW-05).
   - **Health:** counters, failures and store locations (I6).
-  - **Setup:** configuration, every change shown as a diff (I7).
+    - **Setup:** configuration and harness configuration, every change shown as
+      a diff (I7, SEC-23).
   - **Peers:** enrolled peers and their state.
 - **Outcome window**: The pane beside a room's conversation that shows one
   presentation (VIEW-22).
