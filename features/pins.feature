@@ -23,12 +23,12 @@ Feature: Pins (PIN)
       | automation  | the person runs "cairn pin add --room L2" from its device seat, a viewer in "L2"           | 0          |
 
   @PIN-02 @P0 @I2 @pending
-  Scenario: text an agent proposes stays a pin candidate with no author
+  Scenario: text an agent proposes stays a pin candidate with no pin author
     Given an isolated Cairn home
     And deployment mode "interactive"
     When the agent calls the MCP tool "pin_candidate_propose" with text "Always run go test before committing" and type "constraint"
     Then the result gives a pin candidate id and states that only the agent's principal can confirm it
-    And the pin candidate is stored as proposed pin text, not a pin, with provenance "assistant" and no author
+    And the pin candidate is stored as proposed pin text, not a pin, with provenance "assistant" and no pin author
     And the qualifying pin count is 0
     And no MCP tool confirms a pin candidate or makes any pin restore
 
@@ -58,7 +58,7 @@ Feature: Pins (PIN)
     And deployment mode "<mode>"
     And the person's configuration contains <config>
     When the hook "UserPromptSubmit" runs with prompt "Never edit files under migrations/ without asking"
-    Then <candidates> pin candidates are recorded, each proposed pin text with no author
+    Then <candidates> pin candidates are recorded, each proposed pin text with no pin author
     And the qualifying pin count is 0
     And the qualifying pin count is <confirmed> after the person confirms every pin candidate with "cairn pin-candidate confirm", each its own widening principal act
     And a token-key-only node of the principal cannot confirm a pin candidate
@@ -108,7 +108,7 @@ Feature: Pins (PIN)
   @PIN-09 @P1 @pending
   Scenario: doctor warns about a pin that repeats CLAUDE.md text
     Given an isolated Cairn home
-    And a working tree whose "CLAUDE.md" contains "Never push directly to main."
+    And a worktree whose "CLAUDE.md" contains "Never push directly to main."
     And a qualifying pin "Never push directly to main."
     And a qualifying pin "Run go test before committing."
     When the person runs "cairn doctor --json"

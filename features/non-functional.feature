@@ -7,15 +7,15 @@ Feature: Non-functional requirements (NFR)
   implements the requirement lands.
 
   @NFR-01 @pending
-  Scenario Outline: hook handlers meet their p95 wall-clock budgets on a 1M-event store under fleet load
+  Scenario Outline: hook handlers meet their p95 wall-clock targets on a 1M-event store under fleet load
     Given an isolated Cairn home
     And a synthetic store with 1M events on the reference hardware
     And the room view is open and ten harnesses are writing
     When the hook "<Event>" runs 1,000 times with a representative hook input
-    Then the p95 wall-clock time is at most <budget>
+    Then the p95 wall-clock time is at most <target>
 
     Examples:
-      | Event             | budget                                                                                                                                      |
+      | Event             | target                                                                                                                                      |
       | UserPromptSubmit  | 50 ms                                                                                                                                       |
       | SessionStart      | 150 ms                                                                                                                                      |
       | PostToolUse       | 100 ms                                                                                                                                      |
@@ -40,10 +40,10 @@ Feature: Non-functional requirements (NFR)
     Given an isolated Cairn home
     And a synthetic store with 10M events on the reference hardware
     When the agent calls the MCP tool "<tool>" with representative arguments 1,000 times
-    Then the p95 latency excluding large payload transfer is at most <budget>
+    Then the p95 latency excluding large payload transfer is at most <target>
 
     Examples:
-      | tool         | budget |
+      | tool         | target |
       | event_search | 200 ms |
       | event_expand | 100 ms |
 
@@ -152,11 +152,11 @@ Feature: Non-functional requirements (NFR)
     Given an isolated Cairn home
     And a node holding 10M events across 50 rooms on the reference hardware
     When "<action>" is measured 1,000 times
-    Then the p95 time is at most <budget>
+    Then the p95 time is at most <target>
     And any surface that misses its target says so on screen
 
     Examples:
-      | action                                     | budget |
+      | action                                     | target |
       | an ingested event appears in the room view | 1 s    |
       | Catch up paints                            | 1 s    |
       | search shows its first results             | 300 ms |

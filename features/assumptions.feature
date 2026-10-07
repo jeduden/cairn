@@ -86,7 +86,7 @@ Feature: Assumptions register (ASM)
   @ASM-08 @pending
   Scenario: self-hosted runners seed ~/.claude into each harness session under one user account (S4)
     Given a recorded self-hosted runner harness session for Claude Code "supported"
-    When the harness session's home and the user account of its process are inspected
+    When the harness session's HOME directory and the user account of its process are inspected
     Then the harness session's "~/.claude/" was seeded from the runner host's "~/.claude/"
     And every harness session on the runner ran as the same one user account
 
@@ -108,7 +108,7 @@ Feature: Assumptions register (ASM)
 
   @ASM-11 @pending
   Scenario: context the harness adds is written as attachment lines (S3)
-    Given a recorded transcript for Claude Code "supported" from a working tree with a CLAUDE.md file, an MCP server and a skill
+    Given a recorded transcript for Claude Code "supported" from a worktree with a CLAUDE.md file, an MCP server and a skill
     When each line of the recording is read
     Then the CLAUDE.md file, the MCP server instructions and the skill listing appear as "attachment" lines
     And each of those lines carries "attachment.type" and "renderedRole"

@@ -59,7 +59,7 @@ Feature: Peer network (PEER)
   @PEER-06 @P2 @I6 @I8 @pending
   Scenario: enrollment verifies keys on both nodes and an access token for an ephemeral node is scoped, carried and audited
     Given an isolated Cairn home
-    And the person mints, as a widening principal act, an access token for an ephemeral node carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the access token's rooms and expiry, read from an environment secret by recorded opt-in
+    And the person mints, as a widening principal act, an access token for an ephemeral node carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the access token's rooms and expiry, read from an environment secret by a configuration setting under ADM-04
     When an ephemeral node starts with the access token before it reaches any peer
     Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address and git-carrier remote it may deliver to
     And a seat key it certifies for a room outside the access token's rooms, or after the access token's expiry, chains to no principal key and is refused
@@ -92,7 +92,7 @@ Feature: Peer network (PEER)
     When the publish component carries the sealed segments of room "room-1"
     Then each writer's segments go to one entry in the namespaced location of "alice"'s remote that "alice" enabled
     And each segment is encrypted to the device keys of the room's principals, a token-key-only node's token key in place of one, and never to a seat key
-    And a reader of the remote sees only entry names, sizes and times, and the carrier says so
+    And a reader of the remote sees only entry names, sizes and times, and the git carrier says so
     And no segment of room "room-2" goes to the remote
 
   @PEER-09 @P2 @I2 @I8 @pending
@@ -100,7 +100,7 @@ Feature: Peer network (PEER)
     Given an isolated Cairn home
     And two connected seats in room "room-1", whose room settings, set by its owner's principal act, allow typing hints but not live drafts
     When one seat types a draft
-    Then the other's room view shows the typist's presence hint and typing hint, attributed only to the enrolled key that authenticated the connection
+    Then the other's room view shows the typist's presence hint and typing hint, attributed only to the key that authenticated the connection, the peer's device key or a token-key-only node's token key
     And no presence hint or typing hint is stored in the record
     And the draft is not sent to the other seat
 

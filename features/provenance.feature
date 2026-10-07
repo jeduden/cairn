@@ -130,13 +130,13 @@ Feature: Provenance and trust (PRV)
       | unparsed         |
 
   @PRV-06 @P0 @I2 @pending
-  Scenario Outline: a landmark, kernel output, recall result or export records the events it derives from and inherits their taint
+  Scenario Outline: a landmark, or kernel output, a recall result or an export built from events, records the events it comes from and inherits their taint
     Given an isolated Cairn home
     And this node's record holds an event with provenance "harness_meta" its hook handlers recorded and one with provenance "web"
-    When the <artifact> is derived from both events
-    Then the <artifact> records the addresses of both events it derives from
+    When the <artifact> is made from both events
+    Then the <artifact> records the addresses of both events it comes from
     And the <artifact> has trust "untrusted"
-    And the <artifact> derived from the "harness_meta" event alone has trust "trusted"
+    And the <artifact> made from the "harness_meta" event alone has trust "trusted"
     And any sanitized structural field of the <artifact> is trusted though the <artifact> is untrusted
 
     Examples:

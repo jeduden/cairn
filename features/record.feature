@@ -27,7 +27,7 @@ Feature: Record (REC)
     And a subagent transcript "explore-agent" of "parent-run" naming the agent "Explore"
     When the person runs "cairn ingest --all"
     Then the run ingested from "explore-agent" is tied to the run of "parent-run" by a parent link, not a delegation link
-    And the run ingested from "explore-agent" records the agent identity "Explore"
+    And the run ingested from "explore-agent" records the harness's agent id "Explore"
 
   @REC-03 @P0 @I1 @I10 @pending
   Scenario: re-ingesting a transcript source creates no duplicate events
@@ -215,7 +215,8 @@ Feature: Record (REC)
     When the hook "<hook>" runs and appends events
     Then the run's MCP server sealed the run seat's writer with the run seat's key at each call it served, covering what the hook handlers had appended, within the hook budgets
     And it seals that writer again when the run stops, and events after the newest seal are shown as "unsigned"
-    And a segment was closed once 30 s had passed though no seal closed one, and the open segment is closed at "<hook>"
+    And what "cairn ingest" later appends for the run, after its MCP server has ended, goes to a new seat and writer naming the run seat, which the core seals
+    And a segment was closed once 30 s had passed though no hook closed one, and the open segment is closed at "<hook>"
     And "cairn verify" and "cairn status" each report the other writer's chain as ended without a closed segment
     And the paired phone sealed its device seat's writer with that seat's key after each append to it
     And the core sealed every writer but the witnessed run's run seat's and the paired phone's, the ingested run's run seat's writer and this node's device seat's writer included, after each append to it
@@ -254,15 +255,17 @@ Feature: Record (REC)
     And the version 99 segment file is byte-identical to before
 
   @REC-22 @P1 @I1 @I2 @pending
-  Scenario: events from transcripts the hook handlers did not watch are marked ingested and untrusted
+  Scenario: events from transcripts the hook handlers did not watch, or read past an ingest marker, are marked ingested and untrusted
     Given an isolated Cairn home
     And deployment mode "interactive"
     And a transcript "pre-install" under the configured transcript roots, written before Cairn's hook handlers were installed, containing a user turn and lifecycle metadata
     And a transcript "elsewhere" from outside the configured transcript roots
-    When the person runs "cairn ingest --path" on "pre-install" and on "elsewhere"
+    And a watched transcript "cut-short" whose hook handler left an ingest marker
+    When the person runs "cairn ingest --path" on "pre-install", on "elsewhere" and on "cut-short"
     Then every event of "pre-install" carries the "ingested" origin, freshness mark and trust mark with its transcript source and ingest position, shown on every surface, and none is shown as witnessed
     And the "user" event and the "harness_meta" event from "pre-install" have trust "untrusted"
     And this node records "elsewhere" as an ingested run in the principal's personal room, shown as "ingested", and every event of it has trust "untrusted"
+    And every event "cairn ingest" read past the ingest marker of "cut-short" carries the "ingested" origin and has trust "untrusted"
 
   @REC-23 @P2 @I2 @I4 @I6 @pending
   Scenario Outline: room bundles are imported only from local files and fetched git refs, verified, redacted and audited
@@ -290,7 +293,7 @@ Feature: Record (REC)
     And <change>
     When the hook "SessionStart" runs and appends its first event after the start
     Then Cairn mints a new seat key before that append, starting a new seat and writer that names the old seat
-    And the new seat inherits no add, role or appointment of the old seat, and joins a room only as any seat does
+    And the new seat inherits no add, role or appointment of the old seat, and, outside the personal room, joins a room only as any seat does
     And an audit entry records the node identity change
     And no event is appended under the old seat key
 

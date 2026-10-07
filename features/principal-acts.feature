@@ -44,7 +44,7 @@ Feature: Principal acts (OWN)
   @OWN-04 @P1 @I2 @pending
   Scenario: hook output carries only a computed permission decision with a templated reason
     Given an isolated Cairn home
-    And rules and permission grants recorded as principal acts, covering an action
+    And rule levels and permission grants recorded as principal acts, covering an action
     When a hook reports a permission request for that action
     Then the hook output carries a decision of allow, ask, deny or defer, computed from the recorded rule levels and permission grants
     And its reason comes from the fixed template set and references ids
@@ -115,11 +115,11 @@ Feature: Principal acts (OWN)
     And no text is sent to the agent
 
     Examples:
-      | arrival                      |
-      | a post no trust grant covers |
-      | an opt-in notice             |
-      | an agent's message           |
-      | a watchdog observation       |
+      | arrival                        |
+      | a post no trust grant covers   |
+      | an opt-in notice               |
+      | an agent's post or model reply |
+      | a watchdog observation         |
 
   @OWN-10 @P1 @I2 @I7 @pending
   Scenario: each action class has one rule level that only tightens
@@ -130,7 +130,7 @@ Feature: Principal acts (OWN)
     Then the repository configuration does not loosen the level
     And the sensitive class is raised one level for the tainted run
     And the subagent, a delegate of the agent that started it, has no looser level than that agent
-    And every rule change on record is a principal act
+    And every rule level change on record is a principal act
 
   @OWN-11 @P1 @I2 @I8 @pending
   Scenario Outline: a principal act is accepted according to its class
@@ -218,7 +218,7 @@ Feature: Principal acts (OWN)
     When the person runs "cairn witness-check start" with the command and confirms it
     Then the person was shown its exact text with invisible characters made visible before confirming
     And the act is recorded as their widening principal act
-    And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit in the range, with network and the principal's home denied
+    And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base, with network and the principal's home denied
     And its command, exit status and tree hash are recorded
 
   @OWN-19 @P1 @I1 @I4 @pending
@@ -230,7 +230,7 @@ Feature: Principal acts (OWN)
     And the no-echo input is not stored
     And no takeover from another machine is offered
     And what "alice" types in the takeover is the harness's own channel, never recorded as a principal act
-    And the launcher passes those keystrokes through unchanged, writing nothing of its own
+    And those keystrokes are the harness's own input from the terminal the launcher hosts, which the launcher never carries or changes, and it writes nothing of its own
     And takeover input sent over the launcher's listener, from the room view or from a paired phone is refused and audited
 
   @OWN-20 @P1 @I2 @pending
@@ -269,11 +269,11 @@ Feature: Principal acts (OWN)
     Then the delegation is <expected>
 
     Examples:
-      | precondition                                                               | target                                | expected                                                           |
-      | no delegation grant                                                        | its own subagent                      | recorded under OWN-24, with no delegation grant                    |
-      | no delegation grant                                                        | a new run in another worktree         | refused, audited and shown                                         |
-      | a delegation grant naming that worktree, a delegation budget and an expiry | a new run in that worktree            | started by the launcher, through its harness adapter, and recorded |
-      | an expired delegation grant                                                | an existing run of the same principal | refused, audited and shown                                         |
+      | precondition                                                               | target                                  | expected                                                           |
+      | no delegation grant                                                        | its own subagent                        | recorded under OWN-24, with no delegation grant                    |
+      | no delegation grant                                                        | a new run in another worktree           | refused, audited and shown                                         |
+      | a delegation grant naming that worktree, a delegation budget and an expiry | a new run in that worktree              | started by the launcher, through its harness adapter, and recorded |
+      | an expired delegation grant                                                | an existing agent of the same principal | refused, audited and shown                                         |
 
   @OWN-24 @P1 @I2 @pending
   Scenario: a delegate inherits the delegating agent's ceiling and taint
@@ -335,7 +335,7 @@ Feature: Principal acts (OWN)
   @OWN-29 @P1 @I2 @I6 @I8 @pending
   Scenario: a principal's trust grant makes another principal's posts trusted for its own agents only
     Given an isolated Cairn home
-    And a room where "alice" and "bob" each have an agent, and "carol" posts from her device seat
+    And a room where agents of "alice" and "bob" have seats, and "carol" posts from her device seat
     When "alice" records a trust grant naming "carol"'s principal key for this room
     Then the trust grant is a widening principal act, shown in the room with its grantor, "carol"'s key and its scope
     And "carol"'s next post reaches "alice"'s agent through the harness's input in a fixed template naming her key fingerprint and the post's address

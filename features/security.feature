@@ -118,7 +118,7 @@ Feature: Security (SEC)
     When the person runs "cairn status --json"
     And the person runs "cairn backup create"
     Then the device key was generated on the node into a file only the person's OS user can read, not taken from the environment
-    And the status says the key is a file an unsandboxed agent of the same user could read
+    And the status says the key is a file an unsandboxed agent of the same OS user could read
     And the at-rest key is read from its secret reference on each use, not from the environment
     And no key or credential value appears in the store, a segment, a derived artifact, a backup, an export, the audit log or any log output
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
@@ -150,7 +150,7 @@ Feature: Security (SEC)
     When the person runs "cairn quarantine add <selector> --reason 'suspect content'"
     Then an "operator" event records the quarantine with the reason "suspect content"
     And the matched events are absent from every later recall, landmark and injection on this node
-    And a quarantine that would remove a pin or trusted event from a restore block takes effect only as a confirmed widening principal act
+    And a quarantine that would remove a pin or a landmark from a restore block takes effect only as a confirmed widening principal act
     And releasing the quarantine is recorded as an "operator" event the same way
     And enrolled peers receive the quarantine only as a quarantine request
 
@@ -208,7 +208,7 @@ Feature: Security (SEC)
     And it compares Cairn with Zed Delta control by control on record signing, trust in other principals, central-service dependence and key custody
 
   @SEC-18 @P0 @I8 @pending
-  Scenario Outline: paths outside the allowed roots are rejected and audited, and the run's own repository is read-only
+  Scenario Outline: paths outside the allowed roots are rejected and audited, and the run's worktree and its repository's git directory are read-only
     Given an isolated Cairn home
     And the transcript roots are "~/.claude/projects"
     And a run whose hook "cwd" is "~/src/app/pkg", inside a repository whose top level is "~/src/app"
@@ -293,7 +293,7 @@ Feature: Security (SEC)
     And the peer component configured to listen on "127.0.0.1:7400" with an enrolled peer
     When the peer component starts and the peers exchange data
     Then it listens only on "127.0.0.1:7400", it listens on nothing when no network address is configured, and it refuses a wildcard network address
-    And every connection is encrypted and mutually authenticated with enrolled keys
+    And every connection is encrypted and mutually authenticated with each peer's device key, or a token-key-only node's token key
     And the traffic carries only sealed ranges, in both directions whichever side dialled, and ephemeral signed presence hints
     And local discovery advertises only a random per-boot instance id and a port, never a principal, host or room name
 
@@ -335,7 +335,7 @@ Feature: Security (SEC)
     And the events sealed before the revocation still verify
     And the others are refused under the revocation rule
     And a head receipt of every writer's chain head verifies on another node with no network
-    And a seat key minted because a backup restore put the home on another machine starts a new seat and writer, which names the old seat, inherits no add, role or appointment and joins as any seat does
+    And a seat key minted because a backup restore put the home on another machine starts a new seat and writer, which names the old seat, inherits no add, role or appointment and, outside the personal room, joins as any seat does
 
   @SEC-28 @P2 @I2 @I4 @I6 @pending
   Scenario: outbound bridges run only in the bridge component, per enabled destination, and carry little
@@ -359,11 +359,11 @@ Feature: Security (SEC)
     And on a home where the person never started it, the launcher is off
 
   @SEC-30 @P2 @I5 @I6 @pending
-  Scenario: a purge travels as a signed tombstone and another principal with a seat can send a purge request
+  Scenario: a purge travels as an erasure request naming its tombstone and another principal with a seat can send a purge request
     Given an isolated Cairn home
     And a room shared with two enrolled peers, in which another principal has a seat
     When the room's owner purges a range, one peer applies it and the other suppresses the events
-    Then the purge is sent as a signed tombstone event
+    Then the purge is sent as a signed erasure request naming its tombstone
     And the applying peer shows a tombstone and the suppressing peer shows a missing range
     And that other principal can send the room's owner a signed purge request, a neutral principal act, for the events its own seats wrote
     And the owner's answer to it is a widening principal act and is audited
@@ -391,7 +391,7 @@ Feature: Security (SEC)
     And the owner can undo each bar
     And the facilitator's unbar of one of its own bars is refused and audited, since an appointed moderator never unbars
     And each such post is in the facilitator's own words and points by range link to the marked range it names, quoting none of it
-    And the facilitator's posts reach no agent as trusted text unless that agent's principal recorded a trust grant for the facilitator's principal key
+    And the facilitator's posts reach no agent as trusted unless that agent's principal recorded a trust grant for the facilitator's principal key
     And the facilitator's program writes room summaries only with "cairn room-summary write", signed with its device seat, and never acts through an MCP tool
     And a run seat that a principal whose device seat has the moderator role by role assignment appointed moderator is kept to the same limits, and that appointer can undo each of its acts
     And that appointer's appointment of a facilitator is refused, since only the owner appoints the facilitator

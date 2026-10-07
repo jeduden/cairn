@@ -214,7 +214,7 @@ Feature: Room view (VIEW)
     When its agents go idle and the person opens the Review tab of the room's Room page
     Then C1 shows its result and that result's evidence class, C2 shows its result of class claim and C3 reads "no evidence"
     And every criterion reads "no verdict"
-    And the view shows edits outside the intent, the agents' exposure and the diff since the last verdict
+    And the view shows edits outside the intent, each branch's exposure and the diff since the last verdict
     And a Q3 item "outcome awaiting a verdict" is raised
     And no verdict, score or suggestion derived by Cairn is shown
 

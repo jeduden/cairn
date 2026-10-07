@@ -49,7 +49,7 @@ Feature: Room (LANE)
     And a subagent event whose text claims to come from the person "alice"
     And a constraint pin "alice" added through "cairn pin add" as her widening principal act
     When both events are recorded
-    Then the subagent event names as its author the subagent's run seat, with its subagent identity
+    Then the subagent event names as its author the subagent's run seat, with the harness's agent id
     And the pin event names as its author "alice"'s device seat, whose principal is "alice"
     And no author is taken from event content
 
@@ -74,13 +74,13 @@ Feature: Room (LANE)
     And the class is derived from structural fields only, never from event text
 
     Examples:
-      | evidence                                                                                                                                   | class         | binding |
-      | an assistant message stating the tests pass                                                                                                | claim         | —       |
-      | tool output alone                                                                                                                          | claim         | —       |
-      | a command, its exit status and its tree the hook handlers recorded on the node of the run that made the edits                              | own check     | bound   |
-      | a command the hook handlers recorded after edits made through a shell                                                                      | claim         | unbound |
-      | the check re-run through the launcher on a fresh checkout of the exact commit by a node whose git identity authored no commit in the range | witness check | —       |
-      | a check result for the exact commit signed by an enrolled CI key and brought in by the CI carrier                                          | CI attested   | —       |
+      | evidence                                                                                                                                                           | class         | binding |
+      | an assistant message stating the tests pass                                                                                                                        | claim         | —       |
+      | tool output alone                                                                                                                                                  | claim         | —       |
+      | a command, its exit status and its tree the hook handlers recorded on the node of the run that made the edits                                                      | own check     | bound   |
+      | a command the hook handlers recorded after edits made through a shell                                                                                              | claim         | unbound |
+      | the check re-run through the launcher on a fresh checkout of the exact commit by a node whose git identity authored no commit on the branch since it left its base | witness check | —       |
+      | a check result for the exact commit signed by an enrolled CI key and brought in by the CI carrier                                                                  | CI attested   | —       |
 
   @LANE-06 @P1 @I6 @I10 @pending
   Scenario Outline: the rooms behind a landed commit carry one proof class
@@ -127,8 +127,8 @@ Feature: Room (LANE)
   Scenario: an invite names key and role, is reviewed before it takes effect, and roles are enforced
     Given an isolated Cairn home
     And a room owned by "alice"
-    When "alice" invites the key of "bob" as "viewer", as her widening principal act
-    Then the invite names the key of "bob" and the role "viewer", and records that role as a role assignment
+    When "alice" invites the principal key of "bob" as "viewer", as her widening principal act
+    Then the invite names the principal key of "bob" and the role "viewer", and records that role as a role assignment
     And before the invite takes effect a review step shows "alice" which classes and ranges will replicate to "bob"'s node, with SEC-08 applied
     And "bob"'s first view shows the room's intent, pins, state, open held requests and latest results within 3 s of connecting, before the full sync completes
     And the node refuses and audits a post from "bob"'s seat, which the viewer role does not permit
@@ -143,8 +143,8 @@ Feature: Room (LANE)
     Then the handover shows as "accepted" to both principals
     And the handover records a moderator role assignment for "alice"'s seats, so they have the moderator role, and her agents' events stay accepted
     And her pin keeps "alice"'s device seat as its author and keeps restoring to her agents
-    And the intent restores as "alice" wrote its newest version, to her agents
-    And it reaches "bob"'s agents only through a version "bob" stamps, shown with "bob" as its stamper, or a trust grant of "bob" covering "alice"'s key
+    And her pin reaches "bob"'s agents only through a version "bob" stamps, shown with "bob" as its stamper, or a trust grant of "bob" covering "alice"'s key
+    And until "bob" revises or stamps the intent, it restores only to the agents of the principals who stamped one of its versions
     And held requests stay with each agent's principal
     When "bob" revises the intent as a widening principal act
     Then the revision adds a new version of the intent pin that "bob"'s device seat authors
@@ -250,7 +250,7 @@ Feature: Room (LANE)
     Given an isolated Cairn home
     And "alice", who owns a room, issued as her widening principal act an invite link with the role "contributor" and an expiry
     When "bob" opens the invite link for the first time
-    Then the invite link's one-time access token binds to "bob"'s key
+    Then the invite link's one-time access token binds to "bob"'s principal key
     And the invite takes effect only after "alice"'s review step, and records the role "contributor" as a role assignment of "bob"'s seat
     And no room content is revealed before it does
     And a second use of the invite link, or a use after its expiry, is refused and audited
@@ -287,7 +287,7 @@ Feature: Room (LANE)
     And a room whose intent names criteria C1 and C2 and the path "internal/export/"
     When an agent adds a criterion link from its check's result to C1 of the intent's current version through "room_link" and edits "go.mod"
     Then the result names the intent version in force when its turn began
-    And the criterion link to C1 reads as a "claim" and carries no evidence class: the result keeps its own, and the criterion link shows it was made by the agent's run seat
+    And the criterion link to C1 shows it was made by the agent's run seat and carries no evidence class, and the result keeps its own
     And a "room_link" naming another room's criterion is refused, and a result for another room traces to it only through a delegated task
     And no result is linked to C2 from event text
     And the edit to "go.mod" is marked "outside intent"
@@ -305,14 +305,14 @@ Feature: Room (LANE)
   @LANE-23 @P1 @I2 @I6 @I8 @I10 @pending
   Scenario: a run joins a room only on its principal's word and gets a derived seat id
     Given an isolated Cairn home
-    And a room owned by "bob" that admits only a list of keys naming "alice"'s principal key
+    And a room owned by "bob" that admits only a list of principal keys naming "alice"'s principal key
     And a run of "alice" whose MCP server keeps in memory a seat key certified by her device key, which her principal key certifies
     When Cairn suggests the room and "alice" accepts the join
     Then a join signed by the seat key is recorded as a room act, the seat's add
     And the seat id derived from the room id and that key is returned to the run's MCP server
     And a second node holding the record derives the same id
     And no table maps the run to the seat, and a rebuild derives which seats the run has from the join its seat's writer records alone
-    And a join by "mallory", whose key the admission list does not name, is refused, audited and counted
+    And a join by "mallory", whose principal key the admission list does not name, is refused, audited and counted
     And a join "alice" neither asked for nor accepted does not happen
     And a join request of a run of "alice" for which she asked joins under the room's admission with no further acceptance, while one she did not ask for joins only on her acceptance, a neutral principal act
     When "alice" also joins the room from the node on her laptop by her own act at a principal surface, and allows a held permission request of the room's run from her paired phone
@@ -412,7 +412,7 @@ Feature: Room (LANE)
   @LANE-28 @P1 @I2 @I7 @I10 @pending
   Scenario: every commit made in a room carries its room trailer, written for the agent
     Given an isolated Cairn home
-    And a room whose install was confirmed after a shown diff, with no host named for the publish component
+    And a node whose install was confirmed after a shown diff, with no host named for the publish component
     When an agent commits on a branch of the room without writing any trailer
     Then the commit message carries exactly one "Cairn-Room:" trailer with a "cairn:" reference naming only the room id
     And no setting turns the trailers off

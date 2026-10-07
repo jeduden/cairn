@@ -93,7 +93,7 @@ Feature: Administration and lifecycle (ADM)
     And the purged events are gone from the sealed segments, events, the search index, derived artifacts, the payload store and every copy of their content
     And the commitment key and payload reference of every purged event are erased
     And a tombstone event per purged range carries only addresses, counts, reason and commitments
-    And the database is compacted and "cairn verify" confirms every rewritten segment's seals
+    And the store is vacuumed and "cairn verify" confirms every rewritten segment's seals
 
     Examples:
       | scope                  |
@@ -108,7 +108,7 @@ Feature: Administration and lifecycle (ADM)
   @ADM-08 @P0 @I10 @pending
   Scenario: rebuild regenerates derived artifacts byte-identically whatever order the logs arrived in
     Given an isolated Cairn home
-    And a second isolated Cairn home with the same node keys, the two nodes holding the same writer logs with pins, quarantine and landmarks, received in opposite orders
+    And a second isolated Cairn home with the same key set, the two nodes holding the same writer logs with pins, quarantine and landmarks, received in opposite orders
     When the person runs "cairn rebuild" in each home
     Then the command exits 0 in each home
     And "cairn verify" confirms every derived artifact is byte-identical to its state before rebuild
@@ -161,28 +161,28 @@ Feature: Administration and lifecycle (ADM)
     And no untrusted event appears in the export
 
   @ADM-13 @P0 @I7 @pending
-  Scenario: Cairn writes to no git repository beyond the confirmed settings file, the trailer hook and the carrier's location
+  Scenario: Cairn writes to no git repository beyond the confirmed settings file, the commit hook of LANE-28 and the git carrier's location
     Given an isolated Cairn home
-    And a git repository with a working tree, refs, notes, configuration and hooks
+    And a git repository with a worktree, refs, notes, configuration and hooks
     And the node's principal has enabled the git carrier for the repository's remote, and the room's owner for the room
     When an agent runs, the person confirms "cairn install --scope project" and every Cairn component runs
-    Then the only changed file in the working tree is the harness settings file that install wrote
-    And the only new or changed refs lie in the namespaced location the node's principal enabled for the carrier, and every new object is reachable only from them
+    Then the only changed file in the worktree is the harness settings file that install wrote
+    And the only new or changed refs lie in the namespaced location the node's principal enabled for the git carrier, and every new object is reachable only from them
     And the only changed hook is the commit-message hook for room trailers that the confirmed install set up
     And the repository's other refs, notes, configuration and hooks are byte-identical to before
 
   @ADM-14 @P1 @I1 @I5 @pending
-  Scenario Outline: purge by seat key or principal removes one principal's data with an audit trail on every node
+  Scenario Outline: purge by seat or principal removes one principal's data with an audit trail on every node
     Given an isolated Cairn home
-    And two nodes that both hold the events of the principal "alice" written under the seat key "alice-key"
+    And two nodes that both hold the events that the seat "s-alice" of the principal "alice" wrote
     When the person runs "cairn purge <scope>" on each node
     Then neither node holds an event of the selected scope
     And each node's audit log records the purge with its scope and ranges
 
     Examples:
-      | scope              |
-      | --writer alice-key |
-      | --principal alice  |
+      | scope             |
+      | --seat s-alice    |
+      | --principal alice |
 
   @ADM-15 @P1 @I6 @I9 @I1 @pending
   Scenario Outline: quotas refuse and audit what is received over them and never drop an accepted event

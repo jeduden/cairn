@@ -21,7 +21,7 @@ Feature: Engineering quality (ENG)
     When a crate depends on a crate its direction forbids
     Then the architecture check fails naming both crates
     And every library crate has exactly one declared responsibility
-    And the page's TypeScript package imports nothing of the core but its generated types
+    And the browser room view client's TypeScript package imports nothing of the core but its generated types
 
   @ENG-03 @P0 @pending
   Scenario: no mutable global state, injectable I/O and deadlines everywhere
@@ -142,7 +142,7 @@ Feature: Engineering quality (ENG)
   Scenario Outline: CI gates on the static checks and on build-time reach evidence per component
     Given the CI workflow
     When CI reads the build-time reach evidence for the "<component>", dependencies and start-up code included
-    Then the workflow gates on cargo clippy, cargo fmt, cargo-deny, cargo-audit, the page's strict TypeScript compile and lint, and the custom checks
+    Then the workflow gates on cargo clippy, cargo fmt, cargo-deny, cargo-audit, the browser room view client's strict TypeScript compile and lint, and the custom checks
     And every crate that parses untrusted content or decides trust forbids unsafe code
     And a build-time check fails when code that computes derived artifacts reads a clock or randomness
     And a build-time check fails when restore content is built from anything but trusted text
@@ -196,7 +196,7 @@ Feature: Engineering quality (ENG)
     And commits must be signed
     And every pull request needs an approval from a reviewer other than its author
     And CODEOWNERS names the stakeholder on the requirement text and on every path that enforces it
-    And CODEOWNERS names no owner on any other path
+    And CODEOWNERS names no code owner on any other path
     And changes to security-sensitive crates need two approvals, one from the designated security reviewer
 
   @ENG-22 @P0 @pending
