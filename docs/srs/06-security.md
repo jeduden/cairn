@@ -23,7 +23,7 @@ summary: >-
 
 ### Threat sources
 
-| Threat source                                      | Capability                                                                                                          | In scope                                                    |
+| Threat source                                      | Can do                                                                                                              | In scope                                                    |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Third party behind external content                | Controls text the agent reads: web pages, repositories, issues, dependency READMEs, file names                      | Yes — primary threat                                        |
 | Malicious or compromised MCP server                | Controls its tool results and tool names                                                                            | Yes                                                         |

@@ -142,7 +142,7 @@ field sends text, not shortcuts.
 | `g c`                 | Catch up                                                        | `y`             | copy address                                                             |
 | `g q` / `g v`         | quarantine list / verify panel                                  | `o`             | open the Room page at this item                                          |
 | `g h` / `g p`         | Health / Peers                                                  | `n` / `N`       | next / previous item that needs you                                      |
-| `1` / `2` / `3`       | Room page tabs: Timeline / Review / Replay                      | `m`             | steer an agent with a fixed template naming this address (OWN-03)        |
+| `1` / `2` / `3`       | Room page tabs: Timeline / Review / Replay                      | `m`             | steer an agent; the principal-typed steer names this address (OWN-03)    |
 | `j` / `k`             | next / previous row, item or file                               | `q`             | quarantine selection                                                     |
 | `Enter`               | open                                                            | `⌘S` / `Ctrl+S` | save search                                                              |
 | `Space`               | preview or peek                                                 | `+` / `-`       | more / less context around a hit                                         |
