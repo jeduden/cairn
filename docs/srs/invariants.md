@@ -25,26 +25,28 @@ security review and a new major version, not a bug fix.
   principal stamped, or what a trust grant of that principal covers) reaches the
   model only inside an untrusted-data envelope when the agent explicitly calls a
   recall tool, or through one of the closed paths below that a principal act
-  names. The trusted sources are this node's own `operator`, `harness_meta` and
-  structural events, its `user` turns while the deployment mode is
-  `interactive`, and, once PRV-10 ships, principal acts signed by a device key
-  the agent's principal certified and posts and pins written from a device seat
-  such a key certified, within that key's scope, a pin version a principal
-  stamped, for that principal's own agents, and the posts and pins a trust grant
-  of the agent's principal covers. Cairn writes to an agent only through a
-  closed set of paths. Without a principal act: restore blocks (INJ-01, INJ-02),
-  built only from qualifying pins and trusted structural fields; and opt-in
-  notices (INJ-10) and the fixed templates of OWN-04 and OWN-07, each built only
-  from trusted structural fields and ids. On a principal act recorded at that
-  time: through the harness's own input, only principal-typed text, a fixed
-  template that references ids, or a post a principal endorsed exactly as shown
-  inside the template of OWN-08. Under a delegation grant its principal recorded
-  (OWN-23): a delegated task inside the fixed template of OWN-24. Once its
-  requirements ship, a principal may also trust another principal by key for its
-  own agents, in one room or everywhere; the pins that principal wrote from its
-  device seats then restore to those agents, and its posts reach them inside the
-  fixed template of OWN-29. Cairn applies such grants and never grants trust
-  itself. No other write to an agent exists.
+  names. The trusted sources are this node's own `operator` and structural
+  events, the `harness_meta` events and `user` turns its hook handlers
+  witnessed, the turns while the deployment mode is `interactive`, and, once
+  PRV-10 ships, principal acts signed by a device key the agent's principal
+  certified and posts and pins written from a device seat such a key certified,
+  within that key's scope, a pin version a principal stamped, for that
+  principal's own agents, and the posts and pins a trust grant of the agent's
+  principal covers. Cairn writes to an agent only through a closed set of paths.
+  Without a principal act: restore blocks (INJ-01, INJ-02), built only from
+  qualifying pins, trusted structural fields and fixed text Cairn ships; and
+  opt-in notices (INJ-10) and the fixed templates of OWN-04 and OWN-07, each
+  built only from fixed text Cairn ships, trusted structural fields and ids. On
+  a principal act recorded at that time: through the harness's own input, only
+  principal-typed text, a fixed template that references ids, or a post a
+  principal endorsed exactly as shown inside the template of OWN-08. Under a
+  delegation grant its principal recorded (OWN-23): a delegated task inside the
+  fixed template of OWN-24. Once its requirements ship, a principal may also
+  trust another principal by key for its own agents, in one room or everywhere;
+  the pins that principal wrote from its device seats then restore to those
+  agents, and its posts reach them inside the fixed template of OWN-29. Cairn
+  applies such grants and never grants trust itself. No other write to an agent
+  exists.
 - **I3 — Constraints are never summarized.** Every pin that restores is stored
   verbatim and restored verbatim after every compaction, or named by id and
   count when the budget omits it.
