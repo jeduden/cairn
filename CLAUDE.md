@@ -193,7 +193,8 @@ mechanics are in [docs/development.md](docs/development.md).
 
 Cairn's concepts, their relations and the terms that are not Cairn concepts live
 in [docs/domain-model/](docs/domain-model/index.md), a hub and one file per
-group. The domain-model agent reviews against them. Consult it:
+group. The domain-model agent reviews the whole model. One specialist per file
+goes deep on it (`.claude/agents/domain-model-*.md`). Consult them:
 
 - on every change to the model itself, and on every proposal to change it;
 - on every change to the SRS under `docs/srs` and to the scenarios;
@@ -212,7 +213,7 @@ The subagents under `.claude/agents`, each one perspective:
 
 <?catalog
 glob:
-  - ".claude/agents/*.md"
+  - ".claude/agents/{domain-model,persona-*}.md"
 sort: path
 header: ""
 row: "- [{name}]({filename}) — {description}"
