@@ -40,10 +40,9 @@ security review and a new major version, not a bug fix.
 - **I1 — Nothing is lost.** Every event an agent saw or produced remains
   recoverable by its stable address, (writer, seq), across any number of
   compactions and agent runs, on every node that holds its writer's log. The
-  only exceptions are secrets removed by redaction before storage or on
-  import, and data the node's principal explicitly purges, or removes under a
-  retention policy that principal or managed policy sets. Every exception is
-  recorded.
+  only exceptions are secrets removed by redaction before storage or on import,
+  and data the node's principal explicitly purges, or removes under a retention
+  policy that principal or managed policy sets. Every exception is recorded.
 - **I2 — No automatic path from untrusted content to the model.** Content that
   originates outside the trusted sources (tool output, web, MCP servers, files,
   the model's replies, and anything another node or principal produced, except
@@ -67,13 +66,14 @@ security review and a new major version, not a bug fix.
   a principal act recorded at that time: through the harness's own input, only
   principal-typed text, a fixed template that references ids, or a post a
   principal endorsed exactly as shown inside the template of OWN-08. Under a
-  delegation grant its principal recorded (OWN-23): a delegated task inside the
-  fixed template of OWN-24. Once its requirements ship, a principal may also
-  trust another principal by key for its own agents, in one room or everywhere;
-  the pins that principal wrote from device seats a device key of its certified
-  then restore to those agents, and its posts reach them inside the fixed
-  template of OWN-29. Cairn applies such grants and never grants trust itself.
-  No other write to an agent exists.
+  delegation grant its principal recorded (OWN-23), and, for an agent of another
+  principal, an acceptance grant that agent's principal recorded (OWN-26): a
+  delegated task inside the fixed template of OWN-24. Once its requirements
+  ship, a principal may also trust another principal by key for its own agents,
+  in one room or everywhere; the pins that principal wrote from device seats one
+  of its device keys certified then restore to those agents, and its posts reach
+  them inside the fixed template of OWN-29. Cairn applies such grants and never
+  grants trust itself. No other write to an agent exists.
 - **I3 — Constraints are never summarized.** Every pin that restores is stored
   verbatim and restored verbatim after every compaction, or named by id and
   count when the budget omits it.

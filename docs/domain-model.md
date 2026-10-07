@@ -38,8 +38,9 @@ These verbs each have one job:
   chains to one principal key through device, token or seat certificates belongs
   to that principal; a chain never passes through another principal key. A
   certified service account is still its own principal; its **certifier** is
-  whoever certified it. An uncertified principal key counts as a person's, which
-  nothing can prove. Only an agent's own principal widens what reaches that
+  whoever certified it. A principal key never certified counts as a person's,
+  which nothing can prove; a service account whose certificate is revoked stays
+  a service account. Only an agent's own principal widens what reaches that
   agent (I2).
 - **Person**: A human principal. No one certifies a person's principal key. Only
   a person records a verdict.
@@ -53,7 +54,8 @@ These verbs each have one job:
   listing their principal keys. The harness's own managed settings, which Cairn
   also never writes (ADM-03), are part of the **harness configuration**: the
   harness's settings, hooks and MCP registrations (I7). Managed policy is the
-  only source of settings that is not a principal.
+  only source of settings that overrides the principal's; repository
+  configuration only tightens them.
 - **Agent**: A worker a harness runs for exactly one principal: the principal of
   the node that started it (OWN-01). It receives restore blocks and recalls
   history; an agent is never a principal.
@@ -84,10 +86,10 @@ These verbs each have one job:
   succession (LANE-11); it stays with the owner after all its seats leave. The
   owner stands beside the roles rather than having one: a room act signed by its
   device seat in the room has every room capability but writing a room summary,
-  editing and unpinning only pins it wrote, while its agents' run seats have
-  only their role and any appointment. "Owner" means nothing else, except in the
-  persona name "Returning owner" and where an outside domain qualifies it, as a
-  code owner.
+  editing and unpinning only pins it wrote and making a list removal of any pin
+  but the intent, while its agents' run seats have only their role and any
+  appointment. "Owner" means nothing else, except in the persona name "Returning
+  owner" and where an outside domain qualifies it, as a code owner.
 - **Pull-request author**: The outside party whose commits a foreign room's
   bundle describes, matched through their commit-signing identity and a
   **binding statement** that identity signs, naming the bundle's principal key
@@ -221,9 +223,9 @@ controls.
 - **Landmark**: A structural headline over one span, bound to its address range
   (LMK-02).
 - **Structural field**: A field Cairn derives from an event's shape, never from
-  its text: ids, kinds, counts, tool names, sanitized paths and exit status,
-  sanitized under LMK-03. Sanitized, it is trusted whatever the event's trust
-  level (INJ-03).
+  its text: ids, kinds, counts, tool names, key fingerprints, addresses, version
+  numbers, sanitized paths and exit status, sanitized under LMK-03. Sanitized,
+  it is trusted whatever the event's trust level (INJ-03).
 - **Structural event**: An event of provenance `structural`, whose meaning lies
   only in structural fields. A hook observation keeps only a hook's structural
   fields; content a hook carries is recorded under its own class. An act's
@@ -273,7 +275,7 @@ controls.
 - **Import**: Reading a bundle into this node's record (`cairn import`, REC-23).
   A transcript is ingested and a peer's segments are received; neither is
   imported.
-- **Kernel**: The hermetic compute environment in which Claude runs code over
+- **Kernel**: The hermetic compute environment in which an agent runs code over
   the record (CMP-01); each run's **kernel variables** live in its own
   namespace.
 
@@ -373,7 +375,8 @@ controls.
   derived view, never authoritative.
 - **Held request**: A permission request, question or hand-off with a stable id,
   answerable from any principal surface within its scope (OWN-05), held no
-  longer than its **hold window** before its away policy applies.
+  longer than its **hold window** before its away policy applies. A **reply**
+  answers a held question with principal-typed text.
 - **Qualified requests**: A permission request (the harness's, held as a held
   request), a role request (a viewer's room act asking for a wider role), a join
   request (a room act of a run's personal-room seat naming the room; it needs
@@ -404,6 +407,8 @@ controls.
   The one seat kind for acting without a run. A token-key-only node's device
   seat is certified by its token key, and that node signs no principal or expire
   acts.
+- **Room id**: 128 random bits its create room act fixes, never chosen
+  (LANE-01).
 - **Seat id**: A seat's id, derived from the room id and the seat's first key.
   Nobody chooses it.
 - **Seat key**: A seat's one current key. It signs the seat's room acts and
@@ -467,8 +472,9 @@ one kind (LANE-31).
   - **Neutral:** mark a room ready or abandoned, acknowledge an overlap, record
     a `met` or `not met` verdict, accept or ask for a join, open the forensic
     view, make a purge request, choose a branch to compare, acknowledge
-    counters, dismiss a Q3 or Q4 item, unpin a pin its own agent's run seat
-    wrote, and add a room to or remove it from the focus set.
+    counters, dismiss a Q3 or Q4 item other than a directed post, unpin a pin
+    its own agent's run seat wrote, and add a room to or remove it from the
+    focus set.
   - **Widening:** allow, answer a hand-off (a hand-back), reply, steer, send a
     correction, retry from a worktree checkpoint, set or revise an intent,
     resume, record a delegation grant or an acceptance grant, add, edit or unpin
@@ -502,8 +508,9 @@ one kind (LANE-31).
   The owner gives a seat its role by a **role assignment**, which an invite or
   invite link also records; a seat with none, other than the owner's device
   seats, is a viewer, and a run's personal-room seat, or its seat in a room it
-  created, a contributor. Only the facilitator's device seat writes a room
-  summary, beside its appointment.
+  created, a contributor. A handover records a moderator role assignment for the
+  former owner's seats (LANE-11). Only the facilitator's device seat writes a
+  room summary, beside its appointment.
   - **Viewer:** read, a role request and a summary request.
   - **Contributor:** read and a summary request; post, link and present; pin,
     edit and unpin its own pins; and work.
@@ -519,12 +526,13 @@ one kind (LANE-31).
   The owner may appoint, and so may a principal whose device seat has the
   moderator role by role assignment, except the facilitator, whom only the owner
   appoints. The appointer or the owner may revoke it.
-- **Join**: The act that adds a seat to a room under its admission. A run joins
-  only when its principal asks for the join or accepts it (LANE-23); a device
-  seat joins by a join room act its principal takes at a principal surface,
-  without admission when its principal has a member seat there. A paired phone
-  never joins. An owner whose seats have all left rejoins under admission, which
-  its own invite satisfies. **Leave** is a seat's room act ending its own add.
+- **Join**: The act that adds a seat to a room under its admission, or without
+  it for a device seat whose principal has a member seat there. A run joins only
+  when its principal asks for the join or accepts it (LANE-23); a device seat
+  joins by a join room act its principal takes at a principal surface, without
+  admission when its principal has a member seat there. A paired phone never
+  joins. An owner whose seats have all left rejoins under admission, which its
+  own invite satisfies. **Leave** is a seat's room act ending its own add.
 - **Retire a writer**: Seal a writer for the last time, by a principal act or
   when the access token behind its seat key expires (PEER-05).
 - **Kick**: Revokes a seat's current add. Only that seat's principal may add it
@@ -586,14 +594,15 @@ one kind (LANE-31).
 - **Check**: A command and its exit status, bound to a tree; its **check state**
   is one of §9.7.2's.
 - **Result**: What a room's runs established: a check passing or failing on a
-  **tree** (git's snapshot of a commit's files), or a stated outcome. It names
-  the intent version and carries one evidence class.
+  **tree** (git's snapshot of a commit's files), or a claim stated in text. It
+  names the intent version and carries one evidence class.
 - **Evidence**: The checks, attestations or text a result rests on.
 - **Evidence class**: Of a result, ranked: `claim` (text only) < `own check` <
   `witness check` < `CI attested` (LANE-05).
 - **Own check**: A check the hook handlers recorded on the node of the run that
   made the edits, run on the latest worktree checkpoint plus the recorded edits;
-  otherwise it is marked `unbound` and counts as a `claim`.
+  otherwise it is marked `unbound` and counts as a `claim`. Its other marks,
+  such as `outside intent` and `from checkpoint`, are §9.7's.
 - **Witness check**: A check re-run through the launcher on a fresh checkout of
   the exact commit, by a node whose **git identity** (the author and
   commit-signing identities its git configuration sets) authored no commit in
@@ -637,12 +646,13 @@ one kind (LANE-31).
   origin and writer, the deployment mode recorded with the event, and that
   principal's stamps and trust grants as its writer logs carry them (I10).
 - **Trusted sources**: What I2 trusts: this node's `operator` and structural
-  events, its witnessed `harness_meta` events, and its witnessed `user` turns
-  while the deployment mode is `interactive`, all trusted only on this node;
-  principal acts signed by a device key the agent's principal certified, and
-  posts and pins written from a device seat such a key certified, within that
-  key's scope; for that agent, the posts and pins a trust grant of its principal
-  covers; and a pin version its principal stamped. Everything else is untrusted.
+  events, the `harness_meta` events its hook handlers witnessed, and the `user`
+  turns they witnessed while the deployment mode is `interactive`, all trusted
+  only on this node; principal acts signed by a device key the agent's principal
+  certified, and posts and pins written from a device seat such a key certified,
+  within that key's scope; for that agent, the posts and pins a trust grant of
+  its principal covers; and a pin version its principal stamped. Everything else
+  is untrusted.
 - **Deployment mode**: `interactive` (a person types at the harness) or
   `automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`).
 - **Trust policy**: The rule that derives each event's trust level (PRV-02).
@@ -671,7 +681,8 @@ one kind (LANE-31).
   for its own agents, in one room or everywhere. It covers that principal's
   posts and pins written from device seats a device key certified, never run
   seats, token-key-only nodes, room summaries, nor a service account that relays
-  text others wrote (OWN-29); its revocation is cut.
+  text others wrote (OWN-29), and never in a foreign room; its revocation is
+  cut.
 - **Delegation**: One agent handing another a delegated task: its subagent, or,
   under a delegation grant, another agent of the same principal, an agent on
   another of its nodes, or another principal's agent (OWN-23 to OWN-26).
@@ -812,9 +823,9 @@ one kind (LANE-31).
 - Each event goes to exactly one seat's writer. A run's event goes to its run
   seat in the room it works in at that moment, one it joined or created that
   names its current branch, while that seat's role permits its events (LANE-10);
-  else to its personal-room seat.  A room act goes to the writer of the seat
-  that signs it. A principal act or an expire act goes to the device seat of the
-  device that signs it, in the room it acts on; a device of a principal with a
+  else to its personal-room seat. A room act goes to the writer of the seat that
+  signs it. A principal act or an expire act goes to the device seat of the
+  device that signs it, in the room it acts on; a node of a principal with a
   member seat there first joins it without admission. One that acts on no room,
   on a room its principal has no member seat in, or that a paired phone signs,
   goes to that device seat in the personal room, naming the room, and that room
