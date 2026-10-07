@@ -13,15 +13,15 @@ proposal, §8.
 
 ## 9.7.1 Run status and freshness
 
-| Status       | Meaning                                                | Sub-labels                                    |
-| ------------ | ------------------------------------------------------ | --------------------------------------------- |
-| **Starting** | launched, no first event yet                           | —                                             |
-| **Working**  | a turn is running                                      | —                                             |
-| **Asking**   | waiting on its principal                               | `permission`, `question`, `hand-off`          |
-| **Idle**     | turn ended, nothing pending                            | `claims done` when the agent says so (a mark) |
-| **Paused**   | paused by its principal at a safe point, acknowledged  | —                                             |
-| **Blocked**  | cannot proceed without something other than a decision | `rate limit`, `error`                         |
-| **Ended**    | run ended, acknowledged                                | `by agent`, `by principal`, `crashed`         |
+| Status       | Meaning                                                | Sub-labels                                  |
+| ------------ | ------------------------------------------------------ | ------------------------------------------- |
+| **Starting** | launched, no first event yet                           | —                                           |
+| **Working**  | a turn is running                                      | —                                           |
+| **Asking**   | waiting on its principal                               | `permission`, `question`, `hand-off`        |
+| **Idle**     | turn ended, nothing pending                            | `says done` when the agent says so (a mark) |
+| **Paused**   | paused by its principal at a safe point, acknowledged  | —                                           |
+| **Blocked**  | cannot proceed without something other than a decision | `rate limit`, `error`                       |
+| **Ended**    | run ended, acknowledged                                | `by agent`, `by principal`, `crashed`       |
 
 | Freshness mark | Meaning                                                                                                       |
 | -------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -50,8 +50,8 @@ Approved, Queued, Merging) live on the pull-request pill (P2, LANE-08), marked
 check's check state, computed where shown, is one of Pending, Executing, Passed,
 Failed, Stale and Absent; a result resting on edits not fully recorded is marked
 `unbound` (LANE-05), a mark like `from checkpoint` and `outside intent`, not a
-check state. No check state shares a name with a room status, a draft or a
-landing.
+check state. No check state shares a name with a room status, a draft pull
+request or a landing.
 
 ## 9.7.3 Evidence and proof classes
 
@@ -105,17 +105,17 @@ segment was refused), `equivocated` (PEER-10). The UI never says "secure".
 ## 9.7.6 Trust marks
 
 No mark, for the principal's own agents, on this node's own `operator` and
-structural events, the `harness_meta` events its hook handlers recorded, and
-the `user` events they recorded while the deployment mode is `interactive` (an
+structural events, the `harness_meta` events its hook handlers recorded, and the
+`user` events they recorded while the deployment mode is `interactive` (an
 ingested one is untrusted, REC-22); on principal acts a device key the principal
 certified signed, and posts and pins written from a device seat such a key
 certified, within that key's scope, from any of its nodes (shown with a device
 glyph); on pin versions the principal stamped (shown with the stamper, LANE-32);
 and on posts and pins a trust grant of the principal covers outside a foreign
-room, written from device seats a device key of the trusted principal certified,
-never a token-key-only node's (shown with the granted key's petname, OWN-29).
-In a foreign room only the principal's own device-seat pins and the versions it
-stamped go unmarked (RCL-10, PIN-10).
+room, written from device seats a device key of the principal the trust grant
+names certified, never a token-key-only node's (shown with the granted key's
+petname, OWN-29). In a foreign room only the principal's own device-seat pins
+and the versions it stamped go unmarked (RCL-10, PIN-10).
 `○` plus petname on anything untrusted from another principal, agent, node or
 bundle, a `user` event another node recorded included; a key with no petname
 shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined. `▬` from a seat
