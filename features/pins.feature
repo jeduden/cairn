@@ -90,7 +90,7 @@ Feature: Pins (PIN)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "long-run"
     When the hook "PreCompact" runs with trigger "auto" for "long-run"
-    Then the output carries compaction guidance to preserve user-stated constraints verbatim
+    Then the output carries compaction guidance to preserve constraints stated in trusted "user" events verbatim
     And the compaction guidance is byte-identical to that for trigger "manual" on an empty record
     And the compaction guidance contains no text from "long-run" or from any pin
     And the hook handler exits 0 without blocking compaction
@@ -127,7 +127,7 @@ Feature: Pins (PIN)
     And a constraint pin in "L1" written from the device seat of a token-key-only node of the run's principal, unstamped
     And a constraint pin in "L2" written from the device seat of a token-key-only node of the third principal, unstamped
     And a pin the principal confirmed from a pin candidate whose creating "user" event was recorded in the deployment mode "interactive", while the current deployment mode is "automation"
-    And a room "L5" the run joined, holding a constraint pin the principal wrote from its device seat, the principal's stamp on one version of a constraint pin another principal wrote, and a constraint pin written from the device seat of the third principal, whose key the run's principal also trusts everywhere by a second trust grant, before every seat of the principal in "L5" was kicked, so that "L5" is now a foreign room
+    And a room "L5" the run joined, with a constraint pin in it that the principal wrote from its device seat, the principal's stamp on one version of a constraint pin another principal wrote, and a constraint pin written from the device seat of the third principal, whose key the run's principal also trusts everywhere by a second trust grant, before every seat of the principal in "L5" was kicked, so that "L5" is now a foreign room
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped constraint versions, each under its original author
     And the restore block includes no pin of "L4", not the stamped "fact" version and neither token-key-only node's unstamped pin

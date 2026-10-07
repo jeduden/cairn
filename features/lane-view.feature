@@ -24,11 +24,12 @@ Feature: Room view (VIEW)
     And no hook handler exceeds its hook budget (§9.1) while the view reads
 
   @VIEW-03 @P1 @I9 @I10 @pending
-  Scenario: every room-view surface is an optional, read-only client of the core
+  Scenario: every room-view surface is an optional client of the core that writes only the acts taken at it
     Given an isolated Cairn home
     And a room with recorded runs
-    When the room-view component serves the room view and is then stopped
-    Then the view reads the record only through the core's read path and never writes to it
+    When the room-view component serves the room view, the person acknowledges counters in it, and the view is then stopped
+    Then the view reads the record only through the core's read path and writes to it only the room acts and principal acts taken at it
+    And the counter acknowledgement is a principal act the room-view component recorded, marked with its surface
     And the view keeps no state the record cannot rebuild beyond conveniences for the person viewing
     And every capability the view offers also exists in the CLI or MCP
     And hook handlers, ingestion and recall keep working with the view stopped

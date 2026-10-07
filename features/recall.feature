@@ -6,11 +6,11 @@ Feature: Recall (RCL)
   implements the requirement lands.
 
   @RCL-01 @P0 @I1 @pending
-  Scenario: the mcp server lists exactly the six recall tools
+  Scenario: the MCP server's tool list includes the six P0 recall tools
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "short-run"
     When the agent lists the tools of the MCP server started by "cairn mcp"
-    Then the tool list is "event_search", "event_expand", "event_get", "landmark_list", "pin_list" and "stat_list"
+    Then the tool list includes "event_search", "event_expand", "event_get", "landmark_list", "pin_list" and "stat_list", among the other tools SRS section 9.2 specifies
     And each tool declares the parameters specified in SRS section 9.2
 
   @RCL-02 @P0 @pending

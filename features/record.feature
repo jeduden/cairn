@@ -215,7 +215,7 @@ Feature: Record (REC)
     When the hook "<hook>" runs and appends events
     Then the run's MCP server sealed each of its run seats' writers with that seat's key within 2 s of any unsealed append, covering what the hook handlers had appended
     And it seals those writers again when the run stops, and events after the newest seal are shown as "unsigned"
-    And what "cairn ingest" later appends for the run, whether or not its MCP server still runs, goes to a new seat and writer in a run seat's room, naming that run seat and taking over its add and role, which the core seals
+    And what "cairn ingest" later appends for the run, whether or not its MCP server still runs, goes to a new seat and writer in a run seat's room, which the core seals, naming that run seat, taking over its role and sharing its add, so a kick, leave or bar of either seat ends that one add for both
     And a segment was closed once 30 s had passed though no hook closed one, and the open segment is closed at "<hook>" within the hook budgets
     And "cairn verify" and "cairn status" each report the other writer's chain as ended without a closed segment
     And the paired phone sealed its device seat's writer with that seat's key after each append to it

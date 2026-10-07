@@ -145,11 +145,11 @@ Feature: Administration and lifecycle (ADM)
     Given an isolated Cairn home
     And deployment mode "automation"
     And an agent run with a Claude Code transcript "run-a"
-    And the counter "hook_timeout" is 2
+    And the counter "hook_budget_exceeded" is 2
     When the person runs "cairn status --json"
     Then the command exits 0
     And the output shows the store location, its size, the schema version and the deployment mode "automation"
-    And the output shows the counter "hook_timeout" with value 2
+    And the output shows the counter "hook_budget_exceeded" with value 2
 
   @ADM-12 @P1 @I2 @pending
   Scenario: export writes only trusted events with provenance as JSONL

@@ -12,9 +12,10 @@ Feature: Peer network (PEER)
     When the node starts and the core runs its hook handlers and "cairn status --json"
     Then no core process starts the peer component, in-process or as a child
     And the ephemeral node's own entrypoint starts the peer component on the strength of the person's setting
+    And the setting is recorded as a structural event, not a principal act, and audited
     And on a home with no such action of the person the peer component stays off
     And with the peer component absent or stopped the core behaves exactly as in standalone
-    And all of the above holds whether the peer component ships in the core's executable or its own
+    And all of the above is true whether the peer component ships in the core's executable or its own
 
   @PEER-02 @P2 @I4 @pending
   Scenario: a peer holds complete room copies and serves them only to nodes whose principal has a seat in the room or that hold it blind
@@ -64,7 +65,7 @@ Feature: Peer network (PEER)
     Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address and git-carrier remote it may deliver to
     And a seat key it certifies for a room outside the access token's rooms, or after the access token's expiry, chains to no principal key and is refused
     And its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events, device-seat pins of provenance "operator" and run-seat pins of provenance "assistant", and says later pins may be missing
-    And the node, holding only the token key, has a device seat its token key certified, which signs no principal acts and no expire acts, and every pin the node writes, from its device seat or a run seat, restores only once a principal stamps it from one of its devices whose device scope allows it, and no trust grant covers its posts or pins
+    And the node, with only the token key, has a device seat its token key certified, which signs no principal acts and no expire acts, and every pin the node writes, from its device seat or a run seat, restores only once a principal stamps it from one of its devices whose device scope allows it, and no trust grant covers its posts or pins
     And "cairn status" names where the access token is read from and no child process inherits the access token in its environment
     And the access token's issue, use, rotation and revocation are audited, and the issuing node shows an unused access token as "enrolled, never synced"
     And revoking the access token with "cairn access-token revoke" is a cut principal act
@@ -73,7 +74,7 @@ Feature: Peer network (PEER)
   @PEER-07 @P2 @I2 @I8 @pending
   Scenario Outline: a relayed segment is accepted only when its seat key chains to a principal key in its key set
     Given an isolated Cairn home
-    And a peer whose key set holds the principal key of "alice"
+    And a peer with the principal key of "alice" in its key set
     When a relayed segment arrives whose seat key <key>
     Then the segment is <expected>
 

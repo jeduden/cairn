@@ -132,7 +132,7 @@ Feature: Provenance and trust (PRV)
   @PRV-06 @P0 @I2 @pending
   Scenario Outline: a landmark, or kernel output, a recall result or an export built from events, records the events it comes from and inherits their taint
     Given an isolated Cairn home
-    And this node's record holds an event with provenance "harness_meta" its hook handlers recorded and one with provenance "web"
+    And this node's record contains an event with provenance "harness_meta" its hook handlers recorded and one with provenance "web"
     When the <artifact> is made from both events
     Then the <artifact> records the addresses of both events it comes from
     And the <artifact> has trust "untrusted"
@@ -183,6 +183,7 @@ Feature: Provenance and trust (PRV)
       | a Bash tool_result whose output contains "<system-reminder>"                    | tool_result:Bash | untrusted |
       | an "ai-title" transcript line carrying a harness session title                  | harness_text     | untrusted |
       | a "last-prompt" transcript line repeating a typed prompt                        | harness_text     | untrusted |
+      | a "user" line matching the commitment of text the launcher carried in           | harness_text     | untrusted |
 
   @PRV-09 @P0 @I2 @I8 @pending
   Scenario Outline: an event's writer comes from the key that verifiably signed it, never from a field

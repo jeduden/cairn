@@ -27,11 +27,11 @@ Feature: Non-functional requirements (NFR)
       | PermissionRequest | 50 ms of Cairn's own processing beyond the wait, which ends within the principal's hold window and at least 10 s before the harness timeout |
 
   @NFR-02 @pending
-  Scenario: a hook handler stops at its internal deadline and hands off the rest through an ingest marker
+  Scenario: a hook handler stops within its hook budget and hands off the rest through an ingest marker
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "large-backlog"
     When the hook "SessionEnd" runs with a harness timeout of 1.5 s
-    Then the hook handler exits 0 before its internal deadline, below the harness timeout
+    Then the hook handler exits 0 within its hook budget, below the harness timeout
     And an ingest marker records the unfinished ingestion
     And the next "cairn ingest --all" completes the ingestion from the marker
 

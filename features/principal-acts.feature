@@ -348,11 +348,11 @@ Feature: Principal acts (OWN)
     When "alice" records a trust grant naming "carol"'s principal key for this room
     Then the trust grant is a widening principal act, shown in the room with its grantor, "carol"'s key and its scope
     And "carol"'s next post reaches "alice"'s agent through the harness's input in a fixed template naming her key fingerprint and the post's address
-    And the post starts or resumes no turn and reaches "bob"'s agent only as untrusted recall
+    And the post starts or resumes no turn, reaches no agent of "alice" whose run has no seat in the room, and reaches "bob"'s agent only as untrusted recall
     And a post from "alice"'s own device seat reaches her agent only by recall or her endorsement, never in the trust grant's template
     When "carol" pins the constraint "keep the public API stable" from her device seat
     Then the pin restores word for word to "alice"'s agent and reaches "bob"'s agent only through a tool call, enveloped
-    And a trust grant naming a run seat's key, or a service account that relays third parties' text, is refused and audited
+    And a trust grant naming a run seat's key, or a service account its certificate marks as relaying text others wrote, is refused and audited, while one naming any other service account shows a warning
     And the trust grant does not cover a service account whose principal key "carol" certified
     And it does not cover a post or pin "carol" writes from a token-key-only node
     And a trust grant naming the room's facilitator is recorded only after "alice" is shown that the facilitator reads untrusted room text, and covers its posts but never its room summaries
