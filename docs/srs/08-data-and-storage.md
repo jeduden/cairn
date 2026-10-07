@@ -18,14 +18,14 @@ $CAIRN_HOME/                          0700, belonging to one OS user       (N)
 ├── home.json                         home id binding (home.id, SEC-03)    0600
 ├── audit/audit-NNNNNN.jsonl          hash-chained audit log               0600
 ├── logs/                             structured logs (optional)
-├── store.db  (+ -wal, -shm)          the one store: record and derived artifacts, partitioned by writer  0600
-├── payloads/<name>                   payloads, named per REC-09           0600
+├── store.db  (+ -wal, -shm)          the store: record and derived artifacts, partitioned by writer  0600
+├── payloads/<name>                   the store's payload store, named per REC-09  0600
 └── ingest/                           ingest markers for deferred ingestion
 ```
 
-A home contains one store, partitioned by writer, never by repository or
-room (N). Names in the home MUST NOT reveal a repository's path or
-identity (N).
+A home contains one store, `store.db` with its payload store, partitioned by
+writer, never by repository or room (N). Names in the home MUST NOT reveal a
+repository's path or identity (N).
 
 ## 8.2 Logical schema
 

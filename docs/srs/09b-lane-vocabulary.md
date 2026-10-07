@@ -73,18 +73,18 @@ now** (held requests: permission, question, hand-off), **Q2 blocking the room**
 (failed required check, crash, rate limit with no resume, refused segment,
 overlap), **Q3 waiting on you** (a pull-request review the forge asks of you, an
 outcome awaiting a verdict, a role request, a directed post awaiting your
-endorsement (LANE-12), a pin version you stamped that was edited or unpinned
-(LANE-32), your device-seat pin a moderator or the owner unpinned (LANE-26), a
-held request past its hold window under a keep-going away policy (OWN-07), a
-quota crossed), **Q4 for your record** (never alerts). Dismissing a Q3 or Q4
-item is a neutral principal act, and each room's owner acknowledges an overlap
-for its room (LANE-13). Order: class; inside Q1, the number of agents blocked on
-the same answer, then causal order of raising; inside Q2 and Q3, rooms in the
-focus set first, then causal order. The focus set changes only by a recorded
-neutral principal act, so every device of the principal shows one order. Causal
-order, not wall-clock age, because age differs between nodes and reads a clock
-(I10); it is oldest first wherever clocks agree. Pull-request reviews the forge
-asks of the principal join the same queue.
+endorsement (LANE-12), a pin version you stamped that was edited, unpinned or
+taken off the pin list (LANE-32), your device-seat pin a list removal took off
+the pin list (LANE-26), a held request past its hold window under a keep-going
+away policy (OWN-07), a quota crossed), **Q4 for your record** (never alerts).
+Dismissing a Q3 or Q4 item is a neutral principal act, and each room's owner
+acknowledges an overlap for its room (LANE-13). Order: class; inside Q1, the
+number of agents blocked on the same answer, then causal order of raising;
+inside Q2 and Q3, rooms in the focus set first, then causal order. The focus set
+changes only by a recorded neutral principal act, so every device of the
+principal shows one order. Causal order, not wall-clock age, because age differs
+between nodes and reads a clock (I10); it is oldest first wherever clocks agree.
+Pull-request reviews the forge asks of the principal join the same queue.
 
 ## 9.7.5 Integrity status
 
@@ -98,20 +98,22 @@ break), `broken` ✕ (a check failed), `refused` (a segment was refused),
 
 ## 9.7.6 Trust marks
 
-No mark, for the principal's own agents, on this node's own trusted events; on
-principal acts a device key the principal certified signed, and posts and pins
-written from a device seat such a key certified, within that key's scope, from
-any of its nodes (shown with a device glyph); on pin versions the principal
-stamped (shown with the stamper, LANE-32); and on posts and pins a trust grant
-of the principal covers (shown with the granted key's petname, OWN-29). `○` plus
-petname on anything untrusted from another principal, agent, node or bundle, a
-`user` turn another node recorded included; a key with no petname shows its
-fingerprint. `⚑` flagged (PRV-07). `▒` quarantined. `▬` from a seat that is no
-longer a member: it left, was kicked or was barred. `ingested`. `new key`. "from
-a revoked device". Timeline rails: solid for the agent's principal, hollow for
-other principals, dotted for agents and the forge. Events from a token-key-only
-node's writers are untrusted on every other node (PRV-02). Unsandboxed agents
-are one line on Health, not a mark on every tile.
+No mark, for the principal's own agents, on this node's own trusted events, its
+`harness_meta` events and `user` turns only when its hook handlers witnessed
+them (an ingested one is untrusted, REC-22); on principal acts a device key the
+principal certified signed, and posts and pins written from a device seat such a
+key certified, within that key's scope, from any of its nodes (shown with a
+device glyph); on pin versions the principal stamped (shown with the stamper,
+LANE-32); and on posts and pins a trust grant of the principal covers (shown
+with the granted key's petname, OWN-29). `○` plus petname on anything untrusted
+from another principal, agent, node or bundle, a `user` turn another node
+recorded included; a key with no petname shows its fingerprint. `⚑` flagged
+(PRV-07). `▒` quarantined. `▬` from a seat that is no longer a member: it left,
+was kicked or was barred. `ingested`. `new key`. "from a revoked device".
+Timeline rails: solid for the agent's principal, hollow for other principals,
+dotted for agents and the forge. Events from a token-key-only node's writers are
+untrusted on every other node (PRV-02). Unsandboxed agents are one line on
+Health, not a mark on every tile.
 
 ## 9.7.7 Keymap
 

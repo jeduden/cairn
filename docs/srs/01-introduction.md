@@ -30,7 +30,7 @@ leaves the machine. Every component beyond the core is opt-in, bounded and
 reviewed.
 
 Existing tools treat memory as a convenience feature and add security
-afterwards. Cairn treats the memory store as security-critical infrastructure
-from the first line of code. Where usefulness and safety conflict, Cairn chooses
+afterwards. Cairn treats the store as security-critical infrastructure from
+the first line of code. Where usefulness and safety conflict, Cairn chooses
 the design that keeps the agent safe and makes the convenience opt-in, never the
 reverse.
