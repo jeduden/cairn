@@ -16,7 +16,8 @@ summary: >-
   its **certifier** is whoever certified it. A principal key never certified
   counts as a person's, which nothing can prove; a service account whose
   certificate is revoked stays a service account. Only an agent's own principal
-  widens what reaches that agent (I2).
+  widens what reaches that agent (I2); a room owner's notice allowance only lets
+  through the opt-in notices an agent's principal opted it in to.
 - **Person**: A human principal. No one certifies a person's principal key. Only
   a person records a verdict.
 - **Service account**: A non-human principal with its own principal key,
@@ -41,7 +42,7 @@ summary: >-
   by the harness session and the harness's agent id: a harness session's
   transcripts contain its main agent's run and one per subagent, a **harness
   resume** that keeps its harness session continues the run, while one that
-  forks a new harness session, like a **harness clear**, starts a new one. It
+  starts a new harness session, like a **harness clear**, starts a new one. It
   has run seats and carries its recall taint (SEC-13), sandbox state (OWN-22),
   seat keys (SEC-10), kernel namespace (CMP-02) and spans (LMK-01). As a noun,
   "run" has no other meaning.
@@ -75,11 +76,11 @@ summary: >-
   room, but a paired phone's, has every room capability, for room acts and the
   principal acts that need one, except writing a room summary; its room acts
   edit and unpin only pins its principal wrote from a device seat that do not
-  restore unstamped, and make a list removal of any pin but the intent, while
-  its agents' run seats have only their role and any appointment. No one may
-  kick, bar or mute the owner or any key that chains to its principal key
-  (LANE-25). "Owner" means nothing else, except in the persona name "Returning
-  owner" and where an outside domain qualifies it, as a code owner.
+  restore unstamped, and make a list removal of any pin but the intent or a
+  verdict, while its agents' run seats have only their role and any appointment.
+  No one may kick, bar or mute the owner or any key that chains to its principal
+  key (LANE-25). "Owner" means nothing else, except in the persona name
+  "Returning owner" and where an outside domain qualifies it, as a code owner.
 - **Pull-request author**: The outside party whose commits a foreign room's
   bundle describes, matched through their commit-signing identity and a
   **binding statement** that identity signs, naming the bundle's principal key

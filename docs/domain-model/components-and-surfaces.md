@@ -14,12 +14,13 @@ summary: >-
     own entry point, which the person, a service manager or an ephemeral node's
     entrypoint starts and which runs only while the act turning it on stands:
     for the room-view component and the launcher, the configuration acceptance
-    that turns it on, ADM-04), each harness adapter's transcript and hook part
-    among them, the **MCP server** (the MCP tools of §9.2, one per harness
-    session, serving its runs), the **kernel worker** (running the kernel's
-    executions), the **TUI** (the terminal room view), the **commit hook**
-    (LANE-28, run as the CLI), and everything that builds what reaches the
-    model.
+    that turns it on, until a configuration turning it off applies, which needs
+    no acceptance and which the CLI records as the cut act turning it off,
+    ADM-04), each harness adapter's transcript and hook part among them, the
+    **MCP server** (the MCP tools of §9.2, one per harness session, serving its
+    runs), the **kernel worker** (running the kernel's executions), the **TUI**
+    (the terminal room view), the **commit hook** (LANE-28, run as the CLI), and
+    everything that builds what reaches the model.
   - The **harness adapter** is no component: Cairn's code for one harness, split
     between the core and the launcher: its transcript and hook part in the core
     (it parses, opens no socket, starts no process); its run part in the

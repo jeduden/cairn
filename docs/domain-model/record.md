@@ -32,9 +32,9 @@ summary: >-
   form, `<label>:<seq>` or `<label>:<from>-<to>` (for example `A2:12`,
   `A2:30-40`), with the writer id accepted in place of the label (RCL-08). A
   **writer label** is a writer's short display alias, unique per node, each
-  assignment recorded as a structural event in the assigning device seat's
-  personal-room writer. An address range lies in one writer. The only meaning of
-  "address".
+  **writer-label assignment** recorded as a structural event in the assigning
+  device seat's personal-room writer. An address range lies in one writer;
+  "range" on its own means an address range. The only meaning of "address".
 - **Payload**: The full content of a large event, stored outside the event in
   the store's **payload store**, under a name that confirms no guess at its
   content (REC-09).
@@ -60,19 +60,19 @@ summary: >-
   `harness_text`, `operator`, `post`, `summary`, `structural` and `unparsed`.
   `harness_meta` is what the harness reports, or the launcher records, about the
   harness's operation, never free text: turn triggers, model tokens, metadata
-  lines and sandbox state (PRV-08); `operator` is the class of principal acts,
-  expire acts and device-seat pins; posts are `post` and run-seat pins
-  `assistant`; every other room act but a room summary takes its seat's **pin
-  class**, `operator` for a device seat and `assistant` for a run seat; a room
-  summary is `summary`, never trusted; an erasure or quarantine request a
-  principal act sends is `operator`, an erasure request a retention policy sends
-  `structural`; hook observations, key rotations, tombstones and a witness
-  check's record (the command by commitment, its exit status and the tree hash,
-  OWN-18) are `structural`.
+  lines that carry no free text and sandbox state (PRV-08); `operator` is the
+  class of principal acts, expire acts and device-seat pins; posts are `post`
+  and run-seat pins `assistant`; every other room act but a room summary takes
+  its seat's **pin class**, `operator` for a device seat and `assistant` for a
+  run seat; a room summary is `summary`, never trusted; an erasure or quarantine
+  request a principal act sends is `operator`, an erasure request a retention
+  policy sends `structural`; hook observations, key rotations, tombstones and a
+  witness check's record (the command by commitment, its exit status and the
+  tree hash, OWN-18) are `structural`.
 - **Origin**: How an event reached this node's record: `witnessed` (recorded
   live on this node: by its hook handlers, its CLI, TUI, MCP server, launcher,
-  room-view component or bridge component), `ingested` (read by `cairn ingest`,
-  from a transcript the hook handlers did not watch or past an ingest marker),
+  room-view component or bridge component), `ingested` (appended by `cairn
+  ingest`, whatever transcript it reads, past an ingest marker included),
   `bundle` (read by import) or `peer` (received from a peer, a paired phone or
   through the git carrier) (RCL-09); the trust policy reads only whether an
   event was recorded on this node, ingested or received, and `bundle` beside

@@ -6,8 +6,9 @@ summary: >-
 ---
 # Acts and roles
 
-Room state derives from three kinds of act only, and each act belongs to exactly
-one kind (LANE-31).
+Room state derives from three kinds of act only. Seats that are members with no
+add, and the seat ingest starts, stand beside them (Seat). Each act belongs to
+exactly one kind (LANE-31).
 
 - **Room act**: An act signed by a seat key, wherever it is taken. It is checked
   against the capabilities of the seat's role and the room state; create room,
@@ -108,10 +109,12 @@ one kind (LANE-31).
   beside its appointment.
   - **Viewer:** read, a role request and a summary request.
   - **Contributor:** read and a summary request; post, link and present; pin,
-    edit and unpin its own pins, its **pin capability**; and work.
+    edit and unpin its own pins, its **pin capability**, a device seat's own
+    pins being every pin its principal wrote from a device seat within that
+    seat's device scope; and work.
   - **Moderator:** a contributor's capabilities, plus a list removal of any pin
-    but the intent, kick, bar, unbar, mute, unmute, pick, and set title, labels
-    and assignments.
+    but the intent or a verdict, kick, bar, unbar, mute, unmute, pick, and set
+    title, labels and assignments.
 - **Capability**: What a role lets a seat do. The closed set LANE-16 lists: what
   the three roles list, plus writing a room summary, which only the
   facilitator's appointment carries.
@@ -128,12 +131,16 @@ one kind (LANE-31).
   it for a device seat whose principal has a member seat there. A run joins only
   when its principal asks for the join or accepts it (LANE-23); a device seat
   joins by a join room act its principal takes at a principal surface, or its
-  node takes before recording a principal or expire act there, without admission
-  when its principal has a member seat there. A paired phone never joins. An
-  owner whose seats have all left rejoins under admission, which its own invite
-  satisfies. **Leave** is a seat's room act ending its own add.
-- **Retire a writer**: Seal a writer for the last time, by a principal act or
-  when the access token behind its seat key expires (PEER-05).
+  node takes before recording there a principal or expire act, a tombstone, an
+  erasure request a retention policy sends, or a bridge's or the launcher's
+  event about a room's branch, without admission when its principal has a member
+  seat there. A paired phone never joins. An owner whose seats have all left
+  rejoins under admission, which its own invite satisfies. **Leave** is a seat's
+  room act ending its own add.
+- **Retire a writer**: Mark a writer retired, by a principal act or when the
+  access token whose token key certified its seat key expires. A peer still
+  accepts segments that continue its chain without a fork, marked delivered
+  after retirement; only a revocation refuses them (PEER-05).
 - **Kick**: Revokes a seat's current add. Only that seat's principal may add it
   again (LANE-25).
 - **Bar**: Names a principal key and keeps every key that chains to it out,
@@ -145,9 +152,9 @@ one kind (LANE-31).
 - **Pick**: Chooses which presentation the outcome window shows.
 - **Admission**: Whether a room is invite only or admits a list of principal
   keys. An invite (a principal key and a role) and an invite link are widening
-  principal acts of the owner. An invite's or an export's **review step** shows
-  the acting principal, before it takes effect, what will take effect or leave,
-  SEC-08 applied (LANE-10, SEC-26).
+  principal acts of the owner. An invite's, an export's or a publish's **review
+  step** shows the acting principal, before it takes effect, what will take
+  effect or leave, SEC-08 applied (LANE-10, SEC-26).
 - **Successor**: A principal the owner names in advance, who accepts ownership
   once every seat of the owner has left the room; that acceptance is a
   **succession**. Until a handover, a succession or the owner's rejoin, a room
@@ -163,8 +170,9 @@ one kind (LANE-31).
   by a recorded neutral act, so every device shows one order.
 - **Active pin**: A pin on its room's pin list (I10).
 - **Room merge**: The one rule deriving all room state from the three act kinds,
-  in causal order (LANE-31). It covers membership, roles, appointments, pins,
-  pin versions and stamps. It covers mutes, presentations, picks, bars,
+  in causal order (LANE-31). Seats that are members with no add, and the seat
+  ingest starts, stand beside it. It covers membership, roles, appointments,
+  pins, pin versions and stamps. It covers mutes, presentations, picks, bars,
   handovers and their offers, OWN-21's ready and abandoned marks, the CI keys
   enrolled in the room and whether the git carrier is enabled for it. It covers
   the successor, title, labels, assignment, visibility, admission, the notice

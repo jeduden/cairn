@@ -24,9 +24,10 @@ summary: >-
   act of its author's principal, and a verdict and a pin candidate's
   confirmation are their own principal acts (OWN-27, PIN-05); each, but a
   neutral unpin, still needs its seat's pin capability; every other pin, a
-  token-key-only node's included, is changed by room acts, but for its
-  principal's neutral unpin of its own agent's run-seat pin, and a run seat's or
-  a token-key-only node's restores only once stamped.
+  token-key-only node's included, is changed by room acts, but for a verdict,
+  recorded and unpinned by neutral principal acts (OWN-27), and its principal's
+  neutral unpin of its own agent's run-seat pin, and a run seat's or a
+  token-key-only node's restores only once stamped.
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers.
 - **Pin candidate**: Proposed pin text an agent suggested or Cairn detected; not
@@ -59,14 +60,15 @@ summary: >-
   stay in the record (I1). A stamped version keeps restoring to its stamper's
   agents until the stamper unstamps it, raising a Needs you item.
 - **List removal**: A moderator's or the owner's room act taking a pin, never
-  the intent, off the pin list without unpinning it. A device-seat pin it
-  removes keeps restoring to every agent it restored to until its author's
-  principal unpins it, raising a Needs you item.
+  the intent or a verdict, off the pin list without unpinning it. A device-seat
+  pin it removes keeps restoring to every agent it restored to until its
+  author's principal unpins it, raising a Needs you item.
 - **Intent**: A room's lead pin, of type `intent`: a goal, its criteria and
   optionally the paths it is meant to change (LANE-20). Only the owner's
   principal act changes it; a new owner's revision adds a version its device
   seat authors. The intent restores as the author of its newest version wrote
-  it, to that author's principal's agents; after a handover, until the new owner
+  it, to that author's principal's agents and to agents whose principal's trust
+  grant covers that author's principal; after a handover, until the new owner
   revises or stamps it, it restores only to its stampers' agents.
 - **Criterion**: One acceptance condition of an intent, with a stable id.
 - **Stake**: A pin of type `stake` stating what its author works on. Only its
@@ -88,11 +90,12 @@ summary: >-
 - **Directed post**: A post directed to one agent. It waits in that agent's
   principal's Needs you queue for an endorsement (LANE-12).
 - **Room summary**: A facilitator's summary of a room, always untrusted, linked
-  by address to the events it covers, read only through `room_summary_get`, a
-  recall tool that writes no room summary; every other recall tool, the kernel's
-  built-ins included, leaves `summary` events out, returning only their address;
-  a summary request is `room_summary_request` (LANE-33). A restore block's
-  **room summary pointer** names the latest room summary by id and version.
+  by address to the events it covers, which an agent reads solely through
+  `room_summary_get`, a recall tool that writes no room summary; every other
+  recall tool, the kernel's built-ins included, leaves `summary` events out,
+  returning only their address; a summary request is `room_summary_request`
+  (LANE-33). A restore block's **room summary pointer** names the latest room
+  summary, in causal order, by its id.
 - **Compaction summary**: The harness's summary at compaction, recorded as
   untrusted `harness_text`, never restored.
 - **Envelope**: The **untrusted-data envelope** of I2, the one name beside
@@ -135,7 +138,8 @@ summary: >-
   the agent waiting no longer than its **hold window**, then its away policy, if
   one is on, answers the agent; the held request stays open, and with no away
   policy on, the harness's own prompt keeps the agent waiting (OWN-06). A
-  **reply** answers a held question with principal-typed text.
+  **reply** answers a held request that is a question, with principal-typed
+  text.
 - **Qualified requests**: A permission request (the harness's, recorded as a
   held request), a role request (a viewer's room act asking for a wider role), a
   join request (a room act of a run's personal-room seat naming the room; it
