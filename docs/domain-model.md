@@ -101,11 +101,13 @@ These verbs each have one job:
 ### Harness facts
 
 The harness's own facts, which Cairn records and names but never keeps or
-controls.
+changes.
 
 - **Harness**: The external program that runs agents, such as Claude Code or the
   Agent SDK. It keeps their transcripts, compacts their context and reports to
-  Cairn through hooks. Cairn records it and never manages it.
+  Cairn through hooks. Cairn records it, changes its configuration only under I7
+  and never manages its transcripts or compaction; only the launcher starts and
+  controls runs in it.
 - **Harness session**: The harness's own unit, which yields one transcript.
   Named only when describing the harness, never as a Cairn unit.
 - **Transcript**: The harness's file of what a harness session did. A
@@ -294,24 +296,24 @@ controls.
   versions, each with one author (a seat); the pin's author is its first
   version's, and only it, or for a device-seat pin its author's principal from
   any of its devices, edits the pin, except the intent (Intent). Information,
-  never an instruction. It restores only under PIN-10, as a **qualifying pin**:
-  a pin of a type that restores written from a device seat a device key
-  certified restores to its author's principal's agents, and to agents whose
-  principal's trust grant covers its author; any version of a type that restores
-  restores to the agents of a principal who stamped it. Adding, editing or
-  unpinning a pin of a type that restores, written from a device seat a device
-  key certified, is a widening principal act of its author's principal, and a
-  verdict and a pin candidate's confirmation are their own principal acts
-  (OWN-27, PIN-05); each still needs its seat's pin capability; every other pin,
-  a token-key-only node's included, is changed by room acts, but for its
-  principal's neutral unpin of its own agent's run-seat pin, and a run seat's or
-  a token-key-only node's restores only once stamped.
+  never an instruction. It restores only under PIN-10, to runs with a seat in
+  its room, as a **qualifying pin**: a pin of a type that restores written from
+  a device seat a device key certified restores to its author's principal's
+  agents, and to agents whose principal's trust grant covers its author; any
+  version of a type that restores restores to the agents of a principal who
+  stamped it. Adding, editing or unpinning a pin of a type that restores,
+  written from a device seat a device key certified, is a widening principal act
+  of its author's principal, and a verdict and a pin candidate's confirmation
+  are their own principal acts (OWN-27, PIN-05); each still needs its seat's pin
+  capability; every other pin, a token-key-only node's included, is changed by
+  room acts, but for its principal's neutral unpin of its own agent's run-seat
+  pin, and a run seat's or a token-key-only node's restores only once stamped.
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers.
 - **Pin candidate**: Proposed pin text an agent suggested or Cairn detected; not
-  yet a pin, and with no author. The confirmation of its **principal** (of the
-  agent that suggested it or the node that detected it), a widening act, makes
-  it a new pin its device seat authors; for an intent or a criterion, only the
+  yet a pin, and with no author. The confirmation of its principal (of the agent
+  that suggested it or the node that detected it), a widening act, makes it a
+  new pin its device seat authors; for an intent or a criterion, only the
   owner's confirmation, making a new version of the room's intent pin that the
   owner's device seat authors.
 - **Configuration pin**: A pin the principal's configuration declares, authored
@@ -361,8 +363,8 @@ controls.
   untrusted `harness_text`, never restored.
 - **Envelope**: The wrapper that marks recalled content as untrusted historical
   data; the only way recalled content reaches a model. An envelope **marked
-  structural** carries only structural fields and Cairn's ids (`room_get`,
-  VIEW-15).
+  structural** carries only structural fields, §9.7's closed status words and
+  marks, and Cairn's ids (`room_get`, VIEW-15).
 - **Envelope warning**: The fixed sentence at the head of every envelope (field
   `warning`).
 - **Restore block**: Deterministic trusted text, in a fixed template, Cairn
@@ -384,8 +386,8 @@ controls.
   means it wherever this document, or the domain-model agent's instructions, are
   not speaking of this document. A **model token** is its unit of text for
   budgets.
-- **Working view**: Whatever is currently in the model's context window. A
-  derived view, never authoritative.
+- **Working view**: Whatever is currently in the model's context window. Never
+  part of the record, never authoritative.
 - **Held request**: A permission request, question or hand-off with a stable id,
   answerable from any principal surface within its scope (OWN-05), held no
   longer than its **hold window** before its away policy applies. A **reply**
@@ -406,13 +408,13 @@ controls.
 
 ### Seats and keys
 
-- **Seat**: One run or one device in one room. The unit of membership, signing
-  and authorship. A run's personal-room seat exists from its first event, and a
-  paired phone's device seat there from its pairing, each with no add; every
-  other seat keeps its place while its **add** stands: the act that placed it,
-  its create room act, a join its principal asked for or accepted that the
-  room's admission admitted, or a device seat's join without admission
-  (LANE-25).
+- **Seat**: One run's or one device's place in one room; a seat key minted anew
+  starts another (Seat key). The unit of membership, signing and authorship. A
+  run's personal-room seat exists from its first event, and a paired phone's
+  device seat there from its pairing, each with no add; every other seat keeps
+  its place while its **add** stands: the act that placed it, its create room
+  act, a join its principal asked for or accepted that the room's admission
+  admitted, or a device seat's join without admission (LANE-25).
 - **Run seat**: A run's seat. Its key lives only in the memory of that run's MCP
   server, which seals its writer (SEC-10); an ingested run's seat key is kept
   like a device seat's key, and the core seals its writer.
@@ -428,7 +430,8 @@ controls.
   seals its writer. A rotation, signed by the old and the new key, keeps the
   seat's id and writer (SEC-27). A key minted because the node changed, a clone
   or a backup restore (REC-24, ADM-06), starts a new seat and writer, which
-  names the old one.
+  names the old one and inherits no add, role or appointment: it joins as any
+  seat does (LANE-23), and roles and appointments are assigned again.
 - **Device key**: A device's key, certified by a principal key's **device
   certificate**, with a **device scope** (the kinds of principal act it may
   sign, and of post and pin its seats may write) and a maximum rule level. It
@@ -440,9 +443,9 @@ controls.
 - **Token key**: A key a device key certifies by a **token certificate**,
   limited to an access token's rooms and expiry, which may stand between a
   device key and a seat key for an ephemeral node (PRV-10). A node with only a
-  token key signs no principal acts; every pin it writes restores only once a
-  principal stamps it from one of its devices, though its own events are trusted
-  on that node as this node's trusted sources.
+  token key signs no principal or expire acts; every pin it writes restores only
+  once a principal stamps it from one of its devices, though its own events are
+  trusted on that node as this node's trusted sources.
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room, so every seat key chains to a principal key. A
   node's **key set** is the keys, certificates and revocations it holds (I10).
@@ -494,27 +497,28 @@ one kind (LANE-31).
     resume, record a delegation grant or an acceptance grant, add, edit or unpin
     a pin of a type that restores written from a device seat a device key
     certified, confirm a pin candidate, change a room's visibility, invite a
-    key, issue an invite link, choose a fork, accept a handover or succession,
-    endorse, change a rule level or an away policy, quarantine that removes a
-    pin or a trusted event from a restore block, release a quarantine, purge or
-    answer an erasure request, export, bind a repository identity, accept open
-    residual risks (OWN-22), certify a service account's principal key, assign a
-    role, set a room's admission, appoint a moderator or the facilitator, stamp
-    a pin version, name a successor, hand over a room, record a trust grant,
-    allow notices for a room or opt in to them, enable a bridge or the git
-    carrier, set a room setting, publish, answer a purge request, accept
-    configuration (recording its digest), enroll a CI key, rotate a device key,
-    retire a writer, turn capture off or pause it, enroll or revoke a
-    device, peer or authenticator, mint or rotate an access token, start a
+    key, issue an invite link, choose a fork, confirm a command taken from an
+    untrusted event (OWN-18), turn on the peer component, accept a handover or
+    succession, endorse, change a rule level or an away policy, quarantine that
+    removes a pin or a trusted event from a restore block, release a quarantine,
+    purge or answer an erasure request, export, bind a repository identity,
+    accept open residual risks (OWN-22), certify a service account's principal
+    key, assign a role, set a room's admission, appoint a moderator or the
+    facilitator, stamp a pin version, name a successor, hand over a room, record
+    a trust grant, allow notices for a room or opt in to them, enable a bridge
+    or the git carrier, set a room setting, publish, answer a purge request,
+    accept configuration (recording its digest), enroll a CI key, rotate a
+    device key, retire a writer, turn capture off or pause it, enroll or revoke
+    a device, peer or authenticator, mint or rotate an access token, start a
     witness check, and a backup restore.
 
   Any principal act that removes a pin from a restore block, or stops this node
-  recording its own runs' events, is widening whatever verb carries it, except
-  an unstamp or a trust-grant revocation, which withdraws only the acting
-  principal's own trust (LANE-32, OWN-29). Applying a quarantine request takes
-  the class of the quarantine it applies. An unlisted principal act is widening.
-  OWN-11 and OWN-12 follow this list, and a gate fails when a requirement names
-  a principal act this entry does not classify.
+  recording its own runs' events, is widening whatever verb carries it. An
+  unstamp and a trust-grant revocation are the exceptions: each withdraws only
+  the acting principal's own trust (LANE-32, OWN-29). Applying a quarantine
+  request takes the class of the quarantine it applies. A principal act no
+  requirement names is widening. OWN-11 and OWN-12 follow this list, and a gate
+  fails when a requirement names a principal act this entry does not classify.
 - **Expire act**: An act a node with a device key records, signed with that key,
   ending only an expiry its original act set: on a bar, a mute or a handover
   offer (LANE-25).
@@ -567,11 +571,11 @@ one kind (LANE-31).
   (LANE-11).
 - **Handover**: Transfers ownership by an offer and an acceptance. Succession is
   the other path to ownership.
-- **Stamp**: A principal's act on one pin version, after being shown its exact
-  text, author and key fingerprint. A stamped version of a type that restores
-  restores word for word to that principal's own agents only. An edit or an
-  unpin leaves a stamped version restoring until its stamper unstamps it, a cut
-  principal act (LANE-32).
+- **Stamp**: The act of a principal with a seat in the room on one pin version,
+  after being shown its exact text, author and key fingerprint. A stamped
+  version of a type that restores restores word for word to that principal's own
+  agents only. An edit or an unpin leaves a stamped version restoring until its
+  stamper unstamps it, a cut principal act (LANE-32).
 - **Focus set**: The rooms a principal marks to come first in Needs you, changed
   by a recorded neutral act, so every device shows one order.
 - **Active pin**: A pin on its room's pin list (I10).
@@ -587,9 +591,10 @@ one kind (LANE-31).
   causal order stands, concurrent ones by the lower commitment (LANE-01).
 - **Concurrent**: Of two acts or events: neither causally after the other.
 - **Room state**: Everything the room merge derives (LANE-31).
-- **Room status**: A derived view of a room: Running, Quiet, Ready for review
-  and the rest of §9.7.2. Never set directly; OWN-21's ready and abandoned marks
-  feed it.
+- **Room status**: A room's one status from §9.7.2's closed set, such as
+  Running, Quiet or Ready for review. It is computed where shown from room
+  state, its runs' statuses and their freshness marks. It is never recorded and
+  never set directly; OWN-21's ready and abandoned marks feed it.
 
 ### Git and forge
 
@@ -648,11 +653,11 @@ one kind (LANE-31).
 - **Presentation**: What a seat put in the outcome window, such as a dev server,
   an artifact, a file or a diff, with the seat and branch.
 - **Verdict**: A person's `met`, `not met` or `needs changes` on one criterion:
-  a `verdict` pin, recorded by any person with a seat in the room as a principal
-  act (OWN-27), bound to the intent version, the heads of every branch the room
-  names, and the results and evidence shown. It goes stale when any of them
-  changes. Cairn never derives one; service accounts contribute evidence
-  instead.
+  a `verdict` pin, recorded as a principal act (OWN-27) by any person whose
+  device seat in the room has the pin capability, bound to the intent version,
+  the heads of every branch the room names, and the results and evidence shown.
+  It goes stale when any of them changes. Cairn never derives one; service
+  accounts contribute evidence instead.
 
 ### Trust and flow
 
@@ -689,9 +694,10 @@ one kind (LANE-31).
 - **Recall scope**: `run`, `room` or `rooms`, or a foreign room named in the
   call (RCL-05). A wider scope is said to extend recall; "widening" belongs to
   acts.
-- **Endorsement**: A principal act sending a post's text, exactly as the
-  principal confirmed it after any edit, to one of the principal's own agents,
-  inside a fixed template naming the post's author and address (OWN-08).
+- **Endorsement**: The principal act of a principal with a seat in the room,
+  sending a post's text, exactly as the principal confirmed it after any edit,
+  to one of the principal's own agents, inside a fixed template naming the
+  post's author and address (OWN-08).
 - **Trust grant**: A principal's widening act trusting another principal's key
   for its own agents, in one room or everywhere. It covers that principal's
   posts and pins written from device seats a device key certified, never run
@@ -833,7 +839,9 @@ one kind (LANE-31).
 - A principal owns any number of rooms; an agent's principal follows from its
   node.
 - A run has its personal-room seat from its first event, plus a further run seat
-  per room it joined or created.
+  per room it joined or created, and a new one for each seat key minted anew.
+- A restore block carries the qualifying pins of every room its run has a seat
+  in, its personal room included (PIN-10).
 - Ingest splits one transcript by agent.
 - Every seat belongs to one principal and one room; every writer to one seat, on
   one node.
