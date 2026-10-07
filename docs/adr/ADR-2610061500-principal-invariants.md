@@ -147,7 +147,7 @@ AGENTS.md carry it through their includes of
 change, and no requirement's traces change.
 
 [LANE]: ../srs/05b-lane-requirements.md#511-room-lane
-[PEER]: ../srs/05c-principal-and-peer-requirements.md#514-peer-network-peer
+[PEER]: ../srs/05d-peer-requirements.md#514-peer-network-peer
 [OWN]: ../srs/05c-principal-and-peer-requirements.md#513-principal-acts-own
 [SEC]: ../srs/06-security.md#62-security-requirements-sec
 [v2]: ../../plan/2610012322_cairn-for-agent-fleets/domain-model-v2.md

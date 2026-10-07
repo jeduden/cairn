@@ -27,7 +27,7 @@ approval. The reviewer is the stakeholder, @jeduden.
 The reviewer approves or declines each change below. The status moves to
 accepted only when every change reads approved or withdrawn. The threat model
 ([§6.1](../srs/06-security.md#61-threat-model)) and the boundary register
-([§6.3](../srs/06-security.md#63-boundary-register)) are reviewed with the
+([§6.3](../srs/06b-boundary-register.md)) are reviewed with the
 changes they control.
 
 | #   | Change                                                    | Review                                                                       |
@@ -162,7 +162,7 @@ changes they control.
   remain open for the tech re-evaluation (OQ-32).
 - **What changes:**
   - Each component's reach is a row in the [boundary
-    register](../srs/06-security.md#63-boundary-register), and CI fails on
+    register](../srs/06b-boundary-register.md), and CI fails on
     more.
 - **Where:** [wording](../srs/02-context.md#24-constraints); requirements
   [SEC-01][SEC], [SEC-19][SEC], [ENG-16][ENG].
@@ -305,6 +305,6 @@ their requirements written before any grant is honoured.
 [ADM]: ../srs/05a-administration-requirements.md
 [LANE]: ../srs/05b-lane-requirements.md#511-room-lane
 [OWN]: ../srs/05c-principal-and-peer-requirements.md#513-principal-acts-own
-[PEER]: ../srs/05c-principal-and-peer-requirements.md#514-peer-network-peer
+[PEER]: ../srs/05d-peer-requirements.md#514-peer-network-peer
 [SEC]: ../srs/06-security.md#62-security-requirements-sec
 [ENG]: ../srs/10-engineering-quality.md#104-process
