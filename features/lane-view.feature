@@ -159,7 +159,8 @@ Feature: Room view (VIEW)
     Given an isolated Cairn home
     And a room with a title, a key the person gave a petname, and 25 posts waiting for the caller's room
     When the agent calls "room_get" naming the room and no id
-    Then what the tool returns is enveloped as structural and carries only the fields of the closed set
+    Then the tool's response is enveloped as structural and carries only the fields of the closed set
+    And the call, a recall tool call, records a recall event
     And the waiting posts appear as addresses in range form, capped at 20 with a count of 5 left out
     And no field carries a title, label, branch name or petname
     And the harness strip and the banners the harness shows the person never enter the model's context
@@ -190,7 +191,7 @@ Feature: Room view (VIEW)
     And no run recorded, so only the personal room, and harness transcripts due for deletion within 7 days
     When the person opens the room view
     Then it opens on Setup with the ingest command and the number of transcripts the harness will delete within 7 days
-    And it shows the capture status and a statement that no Cairn component sends anything off the machine while no B2 or B3 component is on, naming any that is, and that recalled content and what Cairn writes to an agent reach the model only as the harness sends them, and Cairn creates no room for the person to browse
+    And it shows whether capture is on and a statement that no Cairn component sends anything off the machine while no B2 or B3 component is on, naming any that is, and that recalled content and what Cairn writes to an agent reach the model only as the harness sends them, and Cairn creates no room for the person to browse
     And every change to harness configuration or configuration it offers is shown as a diff with the CLI command that applies it
 
   @VIEW-19 @P2 @I6 @I10 @pending

@@ -11,7 +11,7 @@ Feature: Room (LANE)
     And a run of "alice" on branch "main" of repository "app", which no room names, that joined room "R" naming branch "feature/x" of "app" and branch "docs" of repository "site" by branch links
     When the run switches to branch "feature/x", and later to branch "spike", which no room names
     Then the events before the first switch went to the run's personal-room seat, with no Cairn command and no room created
-    And that personal room was created by "alice"'s "cairn install" on the node, as the first act of her device seat there and that seat's add, and Cairn created no room on its own initiative
+    And that personal room was created when "alice" installed Cairn on the node, by "cairn install", the plugin or the managed install path, as the first act of her device seat there, recorded at Cairn's first start there, and that seat's add, and Cairn created no room on its own initiative
     And the events after the switch to "feature/x" went to the writer of the run's seat in "R", with no principal act
     And the events after the switch to "spike" went to its personal-room seat again
     And while a role assignment gives the run's seat in "R" the viewer role, or a mute covers it, in the room state this node holds when it records each event, its events on "feature/x" go to its personal-room seat, and none is refused

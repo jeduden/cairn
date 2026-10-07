@@ -134,6 +134,7 @@ Feature: Non-functional requirements (NFR)
     When a new person follows the documented plugin install
     Then "cairn doctor" exits 0 within 5 minutes of starting
     And no configuration file had to be written by hand
+    And the node's personal room exists, created by the principal's device seat at Cairn's first start after the plugin install
 
   @NFR-13 @pending
   Scenario: a new transcript format version changes only the transcript and hook part of the harness adapter

@@ -8,11 +8,11 @@ Feature: Peer network (PEER)
   @PEER-01 @P2 @I4 @I9 @pending
   Scenario: sync runs only in the peer component, and only while the act turning it on stands
     Given an isolated Cairn home
-    And an ephemeral node whose environment carries the person's write-once setting for the peer component, and whose access token, minted by the person's widening principal act, names a git-carrier remote
+    And an ephemeral node whose environment carries the person's write-once environment variable for the peer component, and whose access token, minted by the person's widening principal act, names a git-carrier remote
     When the node starts and the core runs its hook handlers and "cairn status --json"
     Then no core process starts the peer component, in-process or as a child
-    And the ephemeral node's own entrypoint starts the peer component, and the publish component for the git-carrier remote its access token names, on the strength of the person's setting
-    And the setting is recorded as a structural event, not a principal act, and audited
+    And the ephemeral node's own entrypoint starts the peer component, and the publish component for the git-carrier remote its access token names, on the strength of the person's environment variable
+    And the environment variable is recorded as a structural event, not a principal act, and audited
     And on a home where the CLI recorded no act turning it on, the peer component stays off, even when the person or a service manager starts its own entry point
     And with the peer component absent or stopped the core behaves exactly as with no peer component
     And all of the above is true whether the peer component ships in the core's executable or its own

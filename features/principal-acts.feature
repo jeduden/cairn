@@ -130,23 +130,23 @@ Feature: Principal acts (OWN)
     Then the repository configuration does not loosen the level
     And "force pushes" is tightened one level for the tainted run
     And the subagent, a delegate of the agent that started it, has no looser level than that agent
-    And every rule level change on record is a principal act
+    And every rule level change "alice" made is on record as a principal act
 
   @OWN-11 @P1 @I2 @I8 @pending
   Scenario Outline: a principal act is accepted according to its class
     Given an isolated Cairn home
-    And a principal surface "<surface>"
+    And a principal surface "<principal surface>"
     And OWN-22 "<risk state>" widening acts
     When "alice" writes a "<class>" principal act there
     Then the act is "<expected>"
 
     Examples:
-      | surface       | risk state      | class                   | expected                                                                                                |
-      | authenticated | permits         | widening                | accepted                                                                                                |
-      | authenticated | does not permit | widening                | refused                                                                                                 |
-      | authenticated | permits         | named by no requirement | treated as widening and accepted                                                                        |
-      | authenticated | permits         | cut                     | recorded with a mark naming its principal surface, free text untrusted whatever its event's trust level |
-      | authenticated | permits         | neutral                 | recorded with a mark naming its principal surface, free text untrusted whatever its event's trust level |
+      | principal surface | risk state      | class                   | expected                                                                                                |
+      | authenticated     | permits         | widening                | accepted                                                                                                |
+      | authenticated     | does not permit | widening                | refused                                                                                                 |
+      | authenticated     | permits         | named by no requirement | treated as widening and accepted                                                                        |
+      | authenticated     | permits         | cut                     | recorded with a mark naming its principal surface, free text untrusted whatever its event's trust level |
+      | authenticated     | permits         | neutral                 | recorded with a mark naming its principal surface, free text untrusted whatever its event's trust level |
 
   @OWN-12 @P1 @I2 @pending
   Scenario: a CLI verb writing a principal act refuses without a terminal
@@ -201,7 +201,7 @@ Feature: Principal acts (OWN)
     And the phone can only read, allow once and deny held permission requests
     And each answer the phone gives is signed with its own device key and recorded on its device seat in her personal room, naming the room, whose writer the phone seals with that seat's key and the node it pairs with only holds
     And where an authenticator is required each allow carries the phone's own presence proof bound to that answer
-    And without the peer component a browser on the principal's phone reaching the room view through the principal's tunnel is a principal surface, not a paired phone, whose secret's scope the room-view component enforces on the server, and it sees the room view's own origin, port included
+    And without the peer component a browser on the principal's phone reaching the room view through the principal's tunnel is a principal surface, not a paired phone, through a phone-scoped room-view secret that "cairn ui --phone" issued at a terminal as a widening principal act, whose scope the room-view component enforces on the server, and it sees the room view's own origin, port included
 
   @OWN-17 @P2 @I2 @I8 @pending
   Scenario: a principal act from another of the principal's devices takes effect only within its scope

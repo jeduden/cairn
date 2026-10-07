@@ -14,23 +14,27 @@ Feature: Administration and lifecycle (ADM)
     And the bundle carries the cairn core executable for each supported platform
 
   @ADM-02 @P0 @I7 @I6 @pending
-  Scenario: install asks before every change, and uninstall needs a terminal, records turning capture off before it removes the hook registrations, and lists, offers and audits every artifact
+  Scenario: install asks before every change, and uninstall needs a terminal, changes nothing when turning capture off is refused, records turning capture off before it removes the hook registrations, and lists, offers and audits every artifact
     Given an isolated Cairn home
     And a Claude Code settings file with unrelated user entries
     And "cairn install --scope user" showed a diff of every harness configuration change, was declined and left the settings file unchanged
     And "cairn install --scope user --yes" has run and every Cairn component has created its artifacts
-    And that install created the node's personal room as the first act of the principal's device seat, that seat's add there
+    And at Cairn's first start after that install, the principal's device seat recorded the create room act of the node's personal room as its first act, that seat's add there
     And "cairn uninstall" run without a terminal refused and changed nothing
+    And "cairn uninstall" run at a terminal while a run on the node left a residual risk open that no risk acceptance covered changed nothing, named the open residual risks and the runs that left them open, recorded an audit entry of the refusal and pointed to the harness's own plugin removal
+    And every run on the node now blocks the residual risks
     When the person runs "cairn uninstall" at a terminal and keeps only the device key
     Then before it removed the hook registrations, it recorded the widening principal act turning capture off
-    And the output lists the hook, plugin and MCP registrations, room-view credentials, launcher endpoints, seat and device keys, enrollments, git-carrier refs and every other file Cairn wrote outside the store, each with an offer to remove it, and offers purge as the only removal of the store's content
+    And the output lists the hook, plugin and MCP registrations, room-view secrets, launcher endpoints, seat and device keys, enrollments, git-carrier refs and every other file Cairn wrote outside the store, each with an offer to remove it, and offers purge as the only removal of the store's content
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
   @ADM-03 @P0 @I7 @pending
-  Scenario: the harness's managed settings are detected and never written
+  Scenario: the harness's managed settings are detected and never written, and the managed install path creates the personal room
     Given an isolated Cairn home
     And a file of the harness's managed settings that registers Cairn's hook handlers
+    When an agent runs, so that Cairn first starts through those hook handlers
+    Then the node's personal room exists, its create room act the first act of the principal's device seat, recorded at Cairn's first start
     When the person runs "cairn install --scope user --yes"
     Then the command exits 1
     And that file of the harness's managed settings is byte-identical to before
@@ -206,13 +210,13 @@ Feature: Administration and lifecycle (ADM)
   @ADM-16 @P1 @I6 @pending
   Scenario Outline: status and doctor report the launcher and every other component outside the core, peer lag, open chains and boundaries
     Given an isolated Cairn home
-    And managed policy that permits the room-view, peer and publish components, forbids the launcher and locks one boundary
+    And managed policy that permits the room-view, peer and publish components, disables the launcher and one boundary
     And the room-view component is running, the bridge component has failed twice, a peer lags behind one writer and a writer chain ended without a closed segment
     When the person runs "cairn <command>"
     Then for the room-view component, the launcher, the peer component, the publish component and the bridge component the output shows whether managed policy permits it, whether it runs and its failure counters
     And the output shows the peer's sync lag for each writer
     And the output names the writer chain that ended without a closed segment
-    And the output shows each boundary's state and whether managed policy locks it
+    And the output shows each boundary's state and whether managed policy disables it
 
     Examples:
       | command |

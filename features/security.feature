@@ -238,13 +238,13 @@ Feature: Security (SEC)
     And every B1, B2 and B3 component, the launcher included, stays off on the home until the person turns it on, the room-view component and the launcher only by accepting the configuration that turns it on, and the bridge component only by enabling a bridge for a host
 
   @SEC-20 @P1 @I4 @I6 @I8 @pending
-  Scenario: the room view binds to loopback and accepts only its own per-launch credential
+  Scenario: the room view binds to loopback and accepts only its own launch secret
     Given an isolated Cairn home
     When the person starts the room-view component
     Then it listens only on a loopback network address, on a port chosen at launch
-    And its launch credential has at least 128 bits and is never sent to the server in an HTTP request line, nor placed in argv, an environment another UID can read, a log or a referrer
-    And the launch credential is exchanged once for a second credential, which authenticates the browser as a principal surface and which only the room view's own origin, port included, can read or send
-    And a page served from another loopback port cannot obtain or replay that second credential
+    And its launch secret has at least 128 bits and is never sent to the server in an HTTP request line, nor placed in argv, an environment another UID can read, a log or a referrer
+    And the launch secret is exchanged once for an origin secret, which authenticates the browser as a principal surface and which only the room view's own origin, port included, can read or send
+    And a page served from another loopback port cannot obtain or replay that origin secret
     And it permits enveloped reading and cut or neutral principal acts, and widening ones only under OWN-11, until the instance stops
     And an HTTP request whose Host or Origin is not its own, and any cross-origin HTTP request, is rejected and audited
 
@@ -272,7 +272,7 @@ Feature: Security (SEC)
       | the launcher disabled                       | the person starts the launcher                                                   | Cairn refuses to start it and audits the refusal                                        |
       | a storage quota                             | ingest exceeds the quota                                                         | the quota is enforced                                                                   |
       | a fixed deployment mode                     | the person changes the deployment mode                                           | the change is refused                                                                   |
-      | every boundary locked off                   | the person turns on B2                                                           | the change is refused                                                                   |
+      | every boundary disabled                     | the person turns on the peer component                                           | the change is refused                                                                   |
       | a cap on an action class's rule level       | the principal sets a higher rule level for that class                            | the rule level stays at the cap                                                         |
       | away policies disabled                      | the principal sets an away policy                                                | the change is refused                                                                   |
       | hook permission decisions disabled          | the hook "PermissionRequest" runs                                                | Cairn makes no permission decision                                                      |
