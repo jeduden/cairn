@@ -136,8 +136,9 @@ errors and logs use the model's words.
 
 Every excluded term may still appear in **historical records**: the SRS change
 log, accepted ADRs and plan records, which keep the words of their time.
-Excluded words may also appear in files an outside tool writes and maintains, in
-that tool's meaning. Examples are frit's plan skills and plan files, and the
+Excluded words, and words the model defines, such as `verdict`, may also appear
+in that tool's meaning in files an outside tool writes and maintains, or that
+name its fields. Examples are frit's plan skills and plan files, and the
 repository's own engineering tooling, such as ENG-28's review gate and the
 requirement naming its fields. The domain-model agent skips them.
 
