@@ -21,7 +21,7 @@ Feature: Room view (VIEW)
     And ten local runs in one room whose harness writes their transcripts
     When the person watches one active run in the room view
     Then each transcript line appears within 2 s of the harness writing it
-    And no hook handler exceeds its NFR-01 hook budget while the view reads
+    And no hook handler exceeds its hook budget (§9.1) while the view reads
 
   @VIEW-03 @P1 @I9 @I10 @pending
   Scenario: every room-view surface is an optional, read-only client of the core
@@ -222,10 +222,10 @@ Feature: Room view (VIEW)
   Scenario: the outcome window follows the room's pick, else the latest presentation
     Given an isolated Cairn home
     And a room with no facilitator, where seats "p-1" and "p-2" each have the present capability
-    When "p-1" presents a dev server's address and then "p-2" presents a diff
+    When "p-1" presents a dev server's URL and then "p-2" presents a diff
     Then the outcome window shows "p-2"'s diff, as every node holding the record derives it
     When a moderator records a signed pick of "p-1"'s presentation
-    Then the window shows "p-1"'s dev server's address as inert text the person opens in their own browser, and nothing loads in the room view's origin
+    Then the window shows "p-1"'s dev server's URL as inert text the person opens in their own browser, and nothing loads in the room view's origin
     And a pick by a seat with only present is refused
     And the person viewing can follow "p-2" in their own view, with no capability, without changing the window
     When the owner's device seat and the moderator concurrently pick different presentations

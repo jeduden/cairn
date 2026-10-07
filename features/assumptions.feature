@@ -99,12 +99,12 @@ Feature: Assumptions register (ASM)
     And the observed behaviour is written into the OQ-01 recommendation
 
   @ASM-10 @pending
-  Scenario: hook timeouts are per hook but SessionEnd gets a short shared hook budget (S1)
+  Scenario: harness timeouts are per hook but SessionEnd gets a short shared harness timeout (S1)
     Given a recorded hook input for Claude Code "supported"
-    And hooks configured with per-hook timeouts of 10 s
+    And hooks configured with a harness timeout of 10 s each
     When the hook "SessionEnd" runs with a handler that sleeps past 1.5 s
     Then the recorded harness terminated the handler after about 1.5 s
-    And the other hooks ran up to their configured 10 s timeout
+    And the other hooks ran up to their configured 10 s harness timeout
 
   @ASM-11 @pending
   Scenario: context the harness adds is written as attachment lines (S3)

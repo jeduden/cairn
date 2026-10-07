@@ -22,7 +22,7 @@ Feature: Landmarks (LMK)
     Given an isolated Cairn home
     And deployment mode "<mode>"
     And an agent run with a Claude Code transcript "two-closed-spans"
-    When the agent calls the MCP tool "landmark_list" with run "current"
+    When the agent calls the MCP tool "landmark_list" with no scope
     Then there is one landmark per closed span with its address range, turn range, event counts by kind, tool call counts, touched file paths and error indicator
     And no landmark carries <text>
 

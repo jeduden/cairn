@@ -6,7 +6,7 @@ Feature: Room (LANE)
   implements the requirement lands.
 
   @LANE-01 @P0 @I1 @I10 @pending
-  Scenario: every event goes to exactly one seat's writer, derived from the run's own events
+  Scenario: every event goes to exactly one seat's writer, per the room state the recording node holds, and none is refused
     Given an isolated Cairn home
     And a run of "alice" on branch "main" of repository "app", which no room names, that joined room "R" naming branch "feature/x" of "app" and branch "docs" of repository "site" by branch links
     When the run switches to branch "feature/x", and later to branch "spike", which no room names
@@ -14,13 +14,13 @@ Feature: Room (LANE)
     And that personal room was created by "alice"'s "cairn install" on the node, as the first act of her device seat there and that seat's add, and Cairn created no room on its own initiative
     And the events after the switch to "feature/x" went to the writer of the run's seat in "R", with no principal act
     And the events after the switch to "spike" went to its personal-room seat again
-    And while a role assignment gives the run's seat in "R" the viewer role, its events on "feature/x" go to its personal-room seat, and none is refused
-    And each event belongs to exactly one seat's writer and names its run, and the run's history joins both writers
+    And while a role assignment gives the run's seat in "R" the viewer role, or a mute covers it, in the room state this node holds when it records each event, its events on "feature/x" go to its personal-room seat, and none is refused
+    And each event belongs to exactly one seat's writer and names its run, and the run's history spans both writers, tied together by the run
     And a room created by a principal, or by an agent for its principal, has an id of 128 random bits minted by the creating node, and its create room act is the first act of the creating seat's writer and that seat's add
     And a room has at most one intent, its conversation, seats and pins, and branches in any number of repositories, each named by a branch link
     And a branch with no remote gets a provisional, node-local identity, rebound when it is pushed, without rewriting the record
     And a branch belongs to the room whose branch link names it first in causal order, a branch link that would move it to another room is refused, and of two concurrent branch links naming one branch from two rooms the one with the lower commitment stands and the other is shown void
-    And renaming a room leaves its id unchanged, and no table maps a run to a seat beyond its personal-room seat and the joins its seats' writers record
+    And renaming a room leaves its id unchanged, and no table maps a run to a seat: its seats derive only from its personal-room seat, the create room and join acts its seats' writers record, and the seats naming one of its seats
     And a run's seat in a room the run created routes its events exactly as a seat it joined
     And a principal act of "alice" on "R", signed by a node of hers with no seat in "R", is recorded on that node's device seat in "R", which joins without admission since her run's seat is a member there
     And a principal act of "alice" rejecting a foreign room, in which she has no seat, goes to the signing device's seat in her personal room, naming that room
@@ -34,9 +34,10 @@ Feature: Room (LANE)
     And a repository clone that <clone>
     When the first hook event for the clone arrives
     Then the repository identity is <identity>
+    And a repository's first bind is a structural event Cairn records at the first hook event, never an "operator" event
     And no identity is minted from the local path
     And no name Cairn derives from the identity for its local state reveals anything about the identity off this node
-    And a later change in the identity the directory resolves to is audited, rewrites no room's branch links silently, rebinds only on the principal act "cairn repository bind", and scopes no Cairn state
+    And a later change in the identity the directory resolves to is audited, rewrites no room's branch links silently, rebinds only on the widening principal act "cairn repository bind", the same act that binds by hand, and scopes no Cairn state
 
     Examples:
       | clone                                                           | identity                           |
@@ -81,7 +82,7 @@ Feature: Room (LANE)
       | a command, its exit status and its tree the hook handlers recorded on the node of the run that made the edits                                                      | own check     | bound   |
       | a command the hook handlers recorded after edits made through a shell                                                                                              | claim         | unbound |
       | the check re-run through the launcher on a fresh checkout of the exact commit by a node whose git identity authored no commit on the branch since it left its base | witness check | —       |
-      | a check result for the exact commit signed by an enrolled CI key and brought in by the CI bridge                                                                   | CI attested   | —       |
+      | a check result for the exact commit signed by a CI key the room's owner enrolled in the room and brought in by the CI bridge                                       | CI attested   | —       |
 
   @LANE-06 @P1 @I6 @I10 @pending
   Scenario Outline: the rooms behind a landed commit carry one proof class
@@ -315,14 +316,14 @@ Feature: Room (LANE)
     Given an isolated Cairn home
     And a room owned by "bob" that admits only a list of principal keys naming "alice"'s principal key
     And a run of "alice" whose harness session's MCP server keeps in memory a seat key certified by her device key, which her principal key certifies
-    When Cairn suggests the room and "alice" accepts the join
+    When Cairn suggests the room and "alice" accepts the join as her widening principal act
     Then a join signed by the seat key is recorded as a room act, the seat's add
     And the seat id derived from the room id and that key is returned to that MCP server
     And a second node holding the record derives the same id
-    And no table maps the run to the seat, and a rebuild derives which seats the run has from the join its seat's writer records alone
+    And no table maps the run to the seat, and a rebuild derives which seats the run has from the record alone: its personal-room seat, the create room and join acts its seats' writers record, and the seats naming one of its seats
     And a join by "mallory", whose principal key the admission list does not name, is refused, audited and counted
     And a join "alice" neither asked for nor accepted does not happen
-    And a join request of a run of "alice" for which she asked joins under the room's admission with no further acceptance, while one she did not ask for joins only on her acceptance, a neutral principal act
+    And a join request of a run of "alice" for which she asked, her widening principal act, joins under the room's admission with no further acceptance, while one she did not ask for joins only on her acceptance, a widening principal act
     When "alice" also joins the room from the node on her laptop by her own act at a principal surface, and allows a held permission request of the room's run from her paired phone
     Then the laptop's node has its own device seat in the room, added by a join without admission since her run's seat is a member there, shown grouped under "alice" with her run's seat, through her principal key
     And a node of "alice" with no seat in the room that records a principal act on it first joins its own device seat there the same way, before that act

@@ -83,7 +83,7 @@ Feature: Principal acts (OWN)
     When the hold window ends
     Then the agent's held request gets the answer "<answer>"
     And no turn is started or resumed
-    And a later approval reaches only the requesting run as the fixed template "Held request <id> was approved by your principal" with a permission grant for the identical action
+    And a later allow reaches only the requesting run as the fixed template "Held request <id> was approved by your principal" with a permission grant for the identical action
     And the held-request id resolves through "event_get" to the held request's recorded event
 
     Examples:
@@ -158,8 +158,8 @@ Feature: Principal acts (OWN)
     And the same verb with standard input or output not a terminal refuses before any other check
     When the person runs "cairn counter ack" at a terminal
     Then the acknowledgement is recorded as a neutral principal act with nothing more asked
-    When the person runs "cairn pin unpin" at a terminal on a pin her own agent's run seat wrote
-    Then the unpin is recorded as a neutral principal act with nothing more asked
+    When the person runs "cairn pin unpin" at a terminal on a pin her own agent's run seat wrote, and on a verdict she recorded
+    Then each unpin is recorded as a neutral principal act with nothing more asked
     When the person runs "cairn room mute" on a seat at a terminal
     Then the mute, a room act, is signed with the seat key of the person's device seat in that room, carries no OWN-11 class and names the room it acted in
 
@@ -247,10 +247,12 @@ Feature: Principal acts (OWN)
   @OWN-21 @P1 @I6 @I10 @pending
   Scenario: Ready for review follows only a principal act and a later edit clears it
     Given an isolated Cairn home
-    And a room owned by "alice" whose branch is at head "h1"
+    And a room owned by "alice" whose branch is at head "h1", where "bob"'s device seat is a moderator and "carol"'s a contributor
     When "alice" runs "cairn room ready" and the agent then edits the worktree
     Then the room showed Ready for review only after the act was recorded with the branch head "h1"
     And after the edit the room returns to Running or Quiet until marked again
+    And a ready mark "bob" records makes the room show Ready for review too, while one "carol" records does not
+    And only a principal act of "alice" marking it abandoned makes the room show Abandoned
 
   @OWN-22 @P1 @I2 @I6 @I9 @pending
   Scenario: an open residual risk refuses widening acts unless the principal accepted it
@@ -287,6 +289,8 @@ Feature: Principal acts (OWN)
     And the delegate's run is recall-tainted
     And the delegated task reached the delegate through the harness's input inside the fixed template, marked as written by the delegating agent
     And a further delegation beyond the delegation grant's depth is refused
+    When the delegate returns its delegate report
+    Then the delegate report is recorded on the delegating side, within the delegating run's "run" recall scope
 
   @OWN-25 @P1 @I2 @I6 @pending
   Scenario: a delegate report is pulled, never pushed
@@ -319,6 +323,9 @@ Feature: Principal acts (OWN)
     And a verdict on the room as a whole, rather than on a criterion, is refused
     And a verdict is refused from a service account, whose principal key a person, another service account or managed policy certified
     And the verdict approves nothing for landing, which stays with git and the forge
+    When "alice" records "not met" on C1
+    Then the new verdict supersedes the earlier one, which stays on record unedited
+    And "alice" unpinning a verdict is recorded as her neutral principal act
 
   @OWN-28 @P1 @I1 @I2 @pending
   Scenario: a person course-corrects from the verdict

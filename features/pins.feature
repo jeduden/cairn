@@ -148,5 +148,5 @@ Feature: Pins (PIN)
     Examples:
       | reason                                                          |
       | its seat certificate or token key does not cover the pin's room |
-      | its seat certificate is revoked                                 |
+      | a certificate it chains through is revoked                      |
       | its event has not arrived                                       |

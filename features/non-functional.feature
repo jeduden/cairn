@@ -123,7 +123,7 @@ Feature: Non-functional requirements (NFR)
   @NFR-11 @pending
   Scenario: the supported Claude Code versions are accepted and incompatible formats are loud
     Given recorded transcripts for the latest Claude Code release and the previous two minor versions
-    And a transcript line with an unknown field and one with an unknown event type
+    And a transcript line with an unknown field and one with an unknown line type
     When the person runs "cairn ingest --all"
     Then every supported transcript ingests and unknown lines are stored as unparsed events
     And a transcript in an incompatible format makes the command exit 1 with an audit entry

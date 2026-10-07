@@ -69,6 +69,7 @@ Feature: Recall (RCL)
     When the agent calls the MCP tool "event_get" with address "A2:5", an event of another run in "L1", and no scope
     Then the event is not returned, and the result says the address lies outside the current scope
     And with scope "room" and room "L1" the event is returned, and an audit entry logs the extended recall scope
+    And "delegation_get" with no scope returns the delegate report of a delegation the run made, recorded on the delegating side, and logs no extended recall scope
 
   @RCL-06 @P0 @I5 @pending
   Scenario: quarantined events are never recalled and purged ranges return a tombstone
@@ -98,6 +99,7 @@ Feature: Recall (RCL)
     Then the result contains exactly the events the address names
     And an address of a purged or quarantined event resolves to its tombstone or quarantine marker
     And "cairn event expand" given the same address in the same form returns the same events
+    And no two writers this node holds share a writer label, and each label's assignment is a structural event in the personal-room writer of the device seat that assigned it
 
     Examples:
       | form                                | tool         |

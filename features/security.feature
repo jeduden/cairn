@@ -123,7 +123,7 @@ Feature: Security (SEC)
     And no key or credential value appears in the store, a segment, a derived artifact, a backup, an export, the audit log or any log output
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
     And a run ingested by "cairn ingest --path" has a seat key that ingest minted, kept like the device key in a file only the person's OS user can read
-    When the harness hands the run-seat private keys of a harness session's main run and of its subagent's run to that session's MCP server at launch
+    When the harness hands the run-seat private keys of a harness session's main run and of its subagent's run to that harness session's MCP server at launch
     Then each key lives only in that server's memory, which seals each run seat's writer with its key, and no file, log, event, backup or output carries either
 
   @SEC-11 @P0 @I2 @I7 @pending
