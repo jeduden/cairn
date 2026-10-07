@@ -27,10 +27,10 @@ Room summaries are in scope. When a run joins a room with much
 content, its agent makes a summary request for a room summary of the
 size it wants (LANE-33). The room's one facilitator, the service
 account the owner appoints, writes it through its own node's CLI
-(`cairn room-summary write`), signed with its device seat's key there; the
-program that writes it is not a Cairn component, and the core makes no
-model calls (I4). A room summary is untrusted and never replaces the
-record (I1, I2).
+(`cairn room-summary write`), signed with its device seat's key there;
+the program that writes it is neither a Cairn component nor an agent,
+and the core makes no model calls (I4). A room summary is untrusted
+and never replaces the record (I1, I2).
 
 The room view reaches the principal in two steps. It stays a client of
 the record under VIEW-03, and every capability it offers also exists
