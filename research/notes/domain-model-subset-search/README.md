@@ -52,49 +52,44 @@ They are kept as history; the selection search does not use them.
    review per candidate, record and attribute the findings, commit. The
    best candidates get a strong review to confirm.
 
-## Results so far
+## Results
 
-Strong evaluations ran three blind reviewers, one per lens, on the
-session's default model. Probes ran one reviewer covering all three
-lenses on a faster model; they find fewer issues and confirm nothing.
+The stakeholder stopped the search on 8 October 2026. Strong reviews ran
+three blind reviewers, one per lens; probes ran one reviewer covering all
+three lenses on a faster model, which finds fewer issues and confirms
+nothing. The repair phase (v1 to v6) is history; these are the
+selection results on the original text.
 
-| Version | Candidate    | Features | Needs fix | Minor | Review |
-| ------- | ------------ | -------- | --------- | ----- | ------ |
-| v0      | g0-core      | 0        | 23        | 18    | strong |
-| v0      | g0-lowrisk   | 11       | 25        | 17    | strong |
-| v0      | g0-all       | 45       | 22        | 16    | strong |
-| v1      | g1-core      | 0        | 10        | 8     | strong |
-| v1      | g1-all       | 45       | 9         | 18    | strong |
-| v2      | g2-core      | 0        | 5         | 17    | strong |
-| v2      | g2-local     | 27       | 3         | 3     | probe  |
-| v2      | g2-localplus | 29       | 3         | 6     | probe  |
-| v2      | g2-localpeer | 31       | 1         | 6     | probe  |
-| v2      | g2-nobrv     | 44       | 1         | 7     | probe  |
-| v3      | g3-core      | 0        | 10        | 10    | strong |
-| v3      | g3-nobrv     | 44       | 13        | 15    | strong |
-| v3      | g3-all       | 45       | 9         | 13    | strong |
+| Candidate                       | Features | Needs fix | On core | On features |
+| ------------------------------- | -------- | --------- | ------- | ----------- |
+| v0-all-r2 (all features)        | 47       | 9         | 5       | 4           |
+| v0-ga2-4 plus browser-room-view | 46       | 6         | 2       | 4           |
+| v0-ga2-4 plus store-protection  | 46       | 9         | 2       | 7           |
+| v0-ga2-4                        | 45       | 8         | 4       | 4           |
+| v0-ga1-5                        | 39       | 11        | 3       | 8           |
 
-What the runs show:
-
-- Repairs cut the core's needs-fix findings from 23 to 5 by v2. The v3
-  repairs added concepts (lineage acceptance, predecessor rules), and
-  the core rose back to 10. Adding text to fix a finding tends to
-  create new findings.
-- The single-lens probes looked clean where the strong reviews were
-  not: g2-nobrv had 1 needs-fix finding on probe, while g3-nobrv had
-  13 under strong review. Only a strong review can confirm a clean
-  candidate.
-- Most findings sit in concepts a single node never needs: node clone,
-  predecessors and seat-key revocation. Version 4 therefore makes the
-  core minimal by moving these into two new optional features,
-  `node-clone` and `key-revocation`. It also repairs nine recurring core
-  defects (`repair-v4-rulings.md`). Without those features, the core
-  invariants read exactly as in the repository.
-- Blame per evaluation (`python3 ga.py blame`) is highest for
-  browser-room-view, principal-keys, work-rooms and shared-rooms.
-
-Next: confirm the v4 core with a strong review, repair it until it has
-no needs-fix findings, then grow it batch by batch.
+- **Selection buys nothing measurable.** Every combination reviewed
+  strongly, from 39 to 47 features, lands at 6 to 11 needs-fix findings,
+  about the noise of one strong review. The full model sits in the middle,
+  so the largest subset with the fewest findings is, within that noise,
+  the whole model.
+- **What selection cannot remove.** About five needs-fix findings sit in
+  core text, which every combination includes. The rest spread thinly
+  over features; principal-keys is the one blamed in most reviews, for
+  ownership, admission and bars that rest on principal keys nothing
+  certifies before PRV-10.
+- **Reviewer attention saturates.** A review reports a roughly fixed
+  number of findings and spreads them over the text in front of it: the
+  core alone drew 21 core findings, the same core inside 39 features 3.
+  Totals compare candidates of similar size only.
+- **The first-round reviews are stale.** g0 (22 needs-fix for all
+  features, 4 on browser-room-view) used an earlier eval brief, before the
+  settled decisions were added; the ledger marks them `stale` and
+  `ga_round.py` skips them. The GA's early preference for leaving out
+  browser-room-view came from them.
+- **Open checks, stopped unfinished.** All features but principal-keys
+  and its ten dependents (`genomes/v0-nopk.json`), and a second strong
+  review of all 47 (`genomes/v0-all-r3.json`) to measure the noise.
 
 ## Running it
 
