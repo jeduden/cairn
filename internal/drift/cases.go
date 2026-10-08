@@ -312,8 +312,11 @@ func ledgerCases() []Case {
 		{
 			Name:   "a closed finding's sentence trimmed from the model",
 			Guards: "TestFindingLedgerIsCarried",
-			Edit: Edit{Op: Replace, File: "docs/domain-model/components-and-surfaces.md",
-				Old: "What shows rooms to a person: the browser, through the", New: "What shows rooms to a person: the"},
+			Edit: Edit{
+				Op: Replace, File: "docs/domain-model/components-and-surfaces.md",
+				Old: "What shows rooms to a person: the browser, through the",
+				New: "What shows rooms to a person: the",
+			},
 			Check: GoTest("./internal/ledger", "TestFindingLedgerIsCarried"),
 			Want:  "closed findings no longer carried in the text",
 		},
