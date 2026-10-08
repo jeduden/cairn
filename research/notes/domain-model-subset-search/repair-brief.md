@@ -23,6 +23,10 @@ includes that feature, and nothing changes for candidates without it:
   concept instead, or leave the finding unrepaired and say why.
 - If a finding is wrong (the candidate already holds), skip it and say why.
 
+Edit a copy of this folder, never the repository's own (see the latest
+rulings for how), so a half-edited version never lands in a commit. The
+annotated sources end in `.md.ann`.
+
 After editing, run `python3 GA/check_annotation.py --no-orig` (balance and
 ids only) until it prints OK, then assemble each named candidate
 (`python3 GA/assemble.py GA/genomes/<name>.json GA/out/<name>`) and read the

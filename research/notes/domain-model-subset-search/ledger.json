@@ -605,5 +605,21 @@
    "security",
    "usefulness"
   ]
+ },
+ {
+  "name": "v5-core",
+  "features": [],
+  "needs_fix": 6,
+  "minor": 8,
+  "per_feature": {
+   "core": 5,
+   "unlocated": 1
+  },
+  "dangling": 0,
+  "lenses": [
+   "consistency",
+   "security",
+   "usefulness"
+  ]
  }
 ]
