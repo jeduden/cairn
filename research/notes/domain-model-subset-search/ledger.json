@@ -1003,5 +1003,67 @@
   "lenses": [
    "all"
   ]
+ },
+ {
+  "name": "v0-ga1-5-strong",
+  "features": [
+   "bridges",
+   "bundle-import",
+   "compute-kernel",
+   "conversation",
+   "delegation-grants",
+   "endorsement",
+   "export-bundles",
+   "facilitator",
+   "git-carrier",
+   "git-tracking",
+   "held-requests",
+   "intent-criteria",
+   "key-revocation",
+   "landmarks",
+   "launcher",
+   "moderation",
+   "needs-you",
+   "node-clone",
+   "notices",
+   "ownership-transfer",
+   "paired-phone",
+   "peer-sync",
+   "presence-proof",
+   "presentations",
+   "principal-keys",
+   "publishing",
+   "purge-retention",
+   "results-and-verdicts",
+   "room-status",
+   "room-view-surfaces",
+   "rule-levels",
+   "sandbox-risk",
+   "segment-exchange",
+   "service-accounts",
+   "shared-rooms",
+   "stamps",
+   "trust-grants",
+   "witness-check",
+   "work-rooms"
+  ],
+  "needs_fix": 11,
+  "minor": 16,
+  "per_feature": {
+   "core": 3,
+   "principal-keys": 2,
+   "held-requests": 1,
+   "delegation-grants": 1,
+   "conversation": 1,
+   "service-accounts": 1,
+   "segment-exchange": 1,
+   "node-clone": 1
+  },
+  "dangling": 1,
+  "lenses": [
+   "consistency",
+   "security",
+   "usefulness"
+  ]
  }
 ]

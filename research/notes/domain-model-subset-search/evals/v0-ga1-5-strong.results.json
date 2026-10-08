@@ -1,0 +1,209 @@
+[
+ {
+  "cand": "v0-ga1-5-strong",
+  "lens": "consistency",
+  "findings": [
+   {
+    "type": "security",
+    "quote": "An act signed by a seat key, wherever it is taken.",
+    "problem": "Device-seat room acts may be taken anywhere, and the facilitator shows the CLI taking them with no person at a terminal. An agent can therefore run `cairn` from its own shell (the run-seat key sits only in the MCP server, so the CLI signs as the device seat) and turn its model reply into a device-seat pin, which is `operator` and trusted on this node, or into a device-seat post. Once PRV-10 ships, such a post is a trusted source, and a trust grant pushes it into another principal's agents through OWN-29's template. Untrusted content then reaches a model outside I2's closed paths, and it also lands in the trusted-only export.",
+    "fix": "Add: \"A device seat's room act is taken only at a principal surface, or by the facilitator's program for its own device seat; an agent's tool call, a CLI call included, never signs with a device seat's key.\"",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "Cairn counts principals by principal key: every device key and seat key that chains to one principal key",
+    "problem": "Principals are counted only through chains to a principal key, yet before PRV-10 no principal key certifies a device key, so no seat chains to anything. The candidate still describes pre-PRV-10 behavior and leaves rules that need a seat's principal with nothing to go on: admission and invite (lists of principal keys), bar ('every key that chains to it'), protecting the owner from kick, bar and mute, and a device seat joining without admission.",
+    "fix": "State the pre-PRV-10 rule, e.g. \"Before PRV-10 ships, a seat's principal is known only on the node whose device key certified it; admission, invites and bars, which name principal keys, apply once PRV-10 ships.\"",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "whether the git carrier is enabled for it",
+    "problem": "Git-carrier enablement is room state, so it is shared by every node of the room's principals, but no rule says who may enable it. Nor does it say whether a member's node then pushes the room's segments to its own remote without that node's principal turning on the publish component. I4 allows B3 exchange only through a component the node's principal turned on.",
+    "fix": "Add: \"A node carries a room's segments through the git carrier only while its own principal has turned on the publish component and enabled the git carrier for that room.\"",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "naming one branch, the first in causal order stands, concurrent ones by the",
+    "problem": "This rule sits inside the per-room merge, but event routing sends a run's event to 'the room ... that names the branch' as if only one room can. If a run has joined two rooms whose branch links name the same branch, its event has no single target, and the room trailer has no single room to name.",
+    "fix": "Say \"Of two branch links naming one branch, in one room or in two rooms this node holds, the first in causal order stands ...\".",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "and reads within its device scope",
+    "problem": "Device scope is defined only as the kinds of principal act a key may sign and the kinds of post and pin its seats may write. It says nothing about reading, so what a paired phone may read, and therefore what B2 sends to it, has no rule.",
+    "fix": "Add reading to the definition: \"a device scope (the rooms its device may read, the kinds of principal act it may sign, ...)\", or say what a paired phone reads.",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "Either names the writer's last accepted seq.",
+    "problem": "'Either' points back to two ways of retiring a writer, but only one is given (a principal act). The next sentence then leans on 'a revocation' without saying whether a revocation also retires the writer or which seq it stops at.",
+    "fix": "Name both paths, e.g. \"Mark a writer retired, by a principal act or by revoking its seat key; either names the writer's last accepted seq.\", or replace \"Either\" with \"It\".",
+    "severity": "minor"
+   },
+   {
+    "type": "undefined",
+    "quote": "reject a foreign room, decline a join request",
+    "problem": "'Reject a foreign room' is listed as a cut principal act and appears nowhere else. Its effect (stop holding the room, refuse its segments, quarantine it, or only stop showing it) is never stated, and an effect that deletes anything would collide with I1.",
+    "fix": "Define it under Foreign room, e.g. \"Rejecting a foreign room, a cut act, quarantines it and refuses its further segments; nothing is deleted.\"",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "under a delegation grant, another agent of the same principal, an agent on",
+    "problem": "The phrase reads either as a list (any other agent of the principal, plus agents on its other nodes) or as an apposition (only agents on another node). Two implementers would disagree on whether a delegation grant can target an agent on the same node.",
+    "fix": "Write \"under a delegation grant, another agent of the same principal, on this node or another of its nodes\".",
+    "severity": "minor"
+   },
+   {
+    "type": "undefined",
+    "quote": "a service manager or an ephemeral node's",
+    "problem": "'Ephemeral node' is used like a kind of node, but the candidate defines no such kind. Node, node clone and node identity are the only node concepts.",
+    "fix": "Say \"a container's entrypoint\", or define \"ephemeral node\" under Node.",
+    "severity": "minor"
+   }
+  ]
+ },
+ {
+  "cand": "v0-ga1-5-strong",
+  "lens": "security",
+  "findings": [
+   {
+    "type": "security",
+    "quote": "the harness next raises it at its permission prompt (OWN-07). Separate from",
+    "problem": "A permission grant answers a later permission prompt with no principal act recorded at that time. But I2, Trusted text and Closed path list only restore blocks, opt-in notices, compaction guidance and OWN-04's templates as writes without a principal act, so whatever Cairn returns for the agent at that prompt is either a write outside the closed set or impossible.",
+    "fix": "Add the permission grant's fixed template to I2's writes without a principal act, to Trusted text and to Closed path, or say that an answer under a permission grant carries no text to the agent.",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "security",
+    "quote": "under a delegation grant, another agent of the same principal, an agent on",
+    "problem": "I2 lets a delegated task reach an agent only under a grant its own principal recorded, but the only check the candidate states runs on the delegating node (refusal past expiry). Before PRV-10 a grant is an operator event trusted only on its own node, and no principal key certifies device keys, so the delegate's node cannot tell its principal's grant from a peer's.",
+    "fix": "\"an agent on another of its nodes once PRV-10 ships; the delegate's node delivers the task only under a grant signed by a device key its principal certified that names this delegate as a target\".",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "security",
+    "quote": "posts and pins written from device seats a device key of that principal",
+    "problem": "Trusted sources trust a principal's own posts and pins only within the writing key's device scope, and Pin keeps that limit, but Trust grant and I2's trust-grant clause leave it out. A post outside a key's scope is untrusted for its author's own agents yet reaches a grantee's agents inside OWN-29's template.",
+    "fix": "\"posts and pins written, within that key's device scope, from device seats a device key of that principal certified\", and add the same limit to I2's and Trusted sources' trust-grant clauses.",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "security",
+    "quote": "Once PRV-10 ships, an act a node with a device key records,",
+    "problem": "Any node may record the expire act, and the room merge cannot check the time it claims (I10 rules out reading a clock). A muted principal's node still has a member seat, so it can join its device seat without admission and end its own mute at once. Any colluding member can end a bar the same way. Only the delegation grant's expire act is limited to its principal's node.",
+    "fix": "\"an act recorded by a node of the principal whose act set the expiry, or of the owner, signed with that node's device key\".",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "repository's `.cairn.toml`, its **repository configuration**, may only tighten",
+    "problem": "\"Tighten\" is never defined in this model's act classes. A cloned repository's file is untrusted content, yet it could turn capture off, lower the pin budget or turn restore_block.on_prompt off, or set retention, all while claiming to tighten. The candidate classes each of these as widening.",
+    "fix": "\"may only tighten: make only a change a cut principal act could make, never one this model classes widening (turning capture off, removing a pin from a restore block, a retention policy)\".",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "security",
+    "quote": "certified by a person, another service account or managed policy, and",
+    "problem": "Any key holder can issue a service-account certificate for someone else's principal key, and only that certifier can revoke it. A stranger whose certificate reaches the key set through a peer or bundle therefore turns a person into a service account: the victim can no longer record verdicts, and trust grants naming the victim are refused once the certificate marks it as relaying.",
+    "fix": "Add: \"A service-account certificate counts only when the certified principal key countersigns it, or when managed policy on this node lists that key.\"",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "A grant naming a service account whose certificate or managed-policy",
+    "problem": "The relaying refusal applies only when the grant is recorded. Nothing says whether a recorded grant stops covering a key that a later certificate or listing marks as relaying, so the result depends on arrival order. A managed-policy listing is neither in the record nor in the key set, so re-checking it would make trust levels depend on more than I10 allows.",
+    "fix": "\"A grant covers a service account only while no certificate or recorded listing in the key set marks it as relaying or leaves it unmarked; a managed-policy listing counts once it is recorded.\"",
+    "severity": "minor"
+   },
+   {
+    "type": "security",
+    "quote": "sending seat's writer; the target room shows it, and its seats pull it by",
+    "problem": "Nothing limits which seat may make a target room show its cross-room post. A seat barred or muted there, or one whose principal has no seat there, can still put text in the room and extend its agents' recall. That bypasses Bar and Mute and goes against I8's rule that content from another principal never extends recall on its own.",
+    "fix": "\"the target room shows it only while the sending seat's principal has a member seat there that no bar or mute covers\".",
+    "severity": "minor"
+   },
+   {
+    "type": "contradiction",
+    "quote": "dismiss a directed post, revoke a seat key or a service account's certificate, turn capture on",
+    "problem": "Revoking a device is widening \"since it can drop pins\", and any act that removes a pin from a restore block is widening, yet revoking a seat key is classed cut. Before PRV-10 a device seat's restoring pins are operator events that this key's seals cover, and the candidate never says whether they still qualify after revocation.",
+    "fix": "Class revoking a device seat's key as widening, or add: \"a seat-key revocation never drops a pin that key sealed from a restore block\".",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "A seat's unsent post is a **draft**,",
+    "problem": "Redaction covers only content before storage, on import and in review-step sends. A draft is never stored, yet the owner's room setting can show it live on other principals' nodes, so a secret typed into a draft leaves the writer's node unredacted, under another principal's setting.",
+    "fix": "\"A draft shows live only after redaction, and only while the writing seat's principal allows it.\"",
+    "severity": "minor"
+   }
+  ]
+ },
+ {
+  "cand": "v0-ga1-5-strong",
+  "lens": "usefulness",
+  "findings": [
+   {
+    "type": "useless",
+    "quote": "What shows rooms to a person: the TUI, the CLI, the paired phone and the",
+    "problem": "Every room view client is listed as a reduced client that says what it leaves out, and no full client remains. So no client has to show Fleet, the Room page, Catch up or Needs you, and the journey where a person sees what agents did depends on no client at all.",
+    "fix": "\"What shows rooms to a person: the TUI, which shows every surface, and the CLI, the paired phone and the harness strip (...) as reduced clients that say what they leave out (VIEW-14).\"",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "Either names the writer's last accepted seq.",
+    "problem": "\"Either\" points to a second way to retire a writer, but the candidate gives none. The cut act \"revoke a seat key\", which this entry says refuses later segments, has no stated effect: it names no seq, and nothing says whether the revoked seat's pins stop qualifying or which seat a still-running run's events go to next. Peers and rebuilds cannot agree which of the writer's segments to refuse.",
+    "fix": "\"Mark a writer retired: by a principal act, or by revoking its seat key, which for a live run starts a new seat as a newly minted key does. Either names the writer's last accepted seq; acts past a revocation's seq count for nothing.\"",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "new seat keys and shares the carried-over personal room (REC-24).",
+    "problem": "A clone is a new node with its own device seat. Before PRV-10, a device seat's pins qualify and its `operator` events are trusted only on its own node. So the constraint pins and stamps the principal recorded before cloning stop restoring on every cloned image or restored snapshot. The candidate never says whether the predecessor's device-seat events in the carried-over personal room count as the clone's own, so implementers will differ and the constraints journey breaks on clones.",
+    "fix": "Add: \"The `operator` and structural events of its predecessor's device seats in the carried-over personal room count as this node's own, so their pins and stamps keep qualifying on the clone.\"",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "undefined",
+    "quote": "own entry point, which the person, a service manager or an ephemeral node's",
+    "problem": "The text uses \"ephemeral node\" as a kind of node, but the candidate never defines it. Node defines only a node and a node clone.",
+    "fix": "\"which the person, a service manager or a node's own entrypoint (such as a container's) starts\".",
+    "severity": "minor"
+   },
+   {
+    "type": "useless",
+    "quote": "presence, bound to one widening act (OWN-11).",
+    "problem": "Nothing in the candidate requires, checks or reads a presence proof: no act needs one. Enrolling an authenticator (a widening act) therefore changes nothing, and neither Authenticator nor Presence proof is used anywhere.",
+    "fix": "Say which acts need one, e.g. \"..., bound to one widening act; once its principal has enrolled an authenticator, a principal surface takes no widening act without one (OWN-11).\"",
+    "severity": "minor"
+   },
+   {
+    "type": "useless",
+    "quote": "The principal's act accepting the residual risks a run",
+    "problem": "No rule says what an open, unaccepted residual risk blocks or what accepting it unlocks. So the widening act, its withdrawal and managed policy's power to forbid it have no effect within the candidate.",
+    "fix": "Add: \"; until a run's open residual risks are accepted, Cairn refuses the widening acts they expose on that run (OWN-22).\"",
+    "severity": "minor"
+   },
+   {
+    "type": "useless",
+    "quote": "bundle describes, matched through their commit-signing identity and a",
+    "problem": "Nothing in the candidate reads the pull-request author match: no surface shows it, and no trust, link or landing rule uses it. The pull-request author and the binding statement have no use here.",
+    "fix": "Give it a use, e.g. in Room page: \"a foreign room opens in it, marked foreign, showing whether its bundle's principal key is bound to the pull-request author\".",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "permission grant, reject a foreign room, decline a join request, tighten a",
+    "problem": "\"Reject a foreign room\" is classed as a cut act, but the candidate never says what it does: stop receiving the room's segments, stop holding it, or drop it from named recall. I1 forbids it from destroying content, so implementers will build different effects.",
+    "fix": "Define it in Foreign room: \"Rejecting one, a cut act, stops this node receiving its segments; what it already holds stays in the record (I1).\"",
+    "severity": "minor"
+   }
+  ]
+ }
+]
