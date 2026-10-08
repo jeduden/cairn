@@ -65,7 +65,8 @@ summary: >-
   like any pin (Quarantine). Managed policy and repository configuration
   declare none.⟦f:key-revocation⟧ Accepting a configuration, even an unchanged one, records anew
   from the node's current device seat each of its pins whose creating event or
-  restoring version a seat with a revoked key wrote, so it qualifies again.⟦/f⟧⟦f:access-tokens⟧ On
+  restoring version a seat with a revoked key, or any other seat that is not
+  one of this node's own device seats, wrote, so it qualifies again.⟦/f⟧⟦f:access-tokens⟧ On
   a token-key-only node, the configuration whose digest its access token names
   adds pins that qualify there, minting that token being the widening act that
   accepts it (Principal act).⟦/f⟧
@@ -124,7 +125,8 @@ summary: >-
   reaching an agent only by recall⟦f:endorsement⟧, endorsement⟦/f⟧⟦f:trust-grants⟧ or a trust grant (OWN-29)⟦/f⟧. A
   post may carry range links; a **comment** is a post on a **marked range**, the
   address range a range link names.⟦f:peer-sync⟧ A seat's unsent post is a **draft**,
-  ephemeral like a presence hint (PEER-09).⟦/f⟧⟦f:work-rooms⟧ A **cross-room post** stays in the
+  ephemeral like a presence hint (PEER-09); a principal's drafts show live only
+  while that principal's own opt-in stands.⟦/f⟧⟦f:work-rooms⟧ A **cross-room post** stays in the
   sending seat's writer; the target room shows it while a member seat there
   that may post belongs to the sending seat's run, for a run seat, or to its
   principal, for a device seat, and its seats pull it by

@@ -52,7 +52,8 @@ summary: >-
   the same class (LANE-22); a ⟦f:results-and-verdicts⟧result⟦/f⟧ resting on one is `CI attested`.⟦/f⟧
 ⟦f:work-rooms⟧- **Landing**: Git⟦f:bridges⟧ or the forge⟦/f⟧ merging ⟦f:git-tracking⟧commits⟦/f⟧ into the ⟦f:git-tracking⟧repository's default
   branch⟦/f⟧⟦f:bridges⟧ or a ⟦f:git-tracking⟧branch⟦/f⟧ the forge protects⟦/f⟧. Cairn never lands anything⟦f:results-and-verdicts⟧, and a
-  landing is never a verdict⟦/f⟧. A ⟦f:git-tracking⟧branch⟦/f⟧ lands when its head lands.⟦/f⟧
+  landing is never a verdict⟦/f⟧. A ⟦f:git-tracking⟧branch⟦/f⟧ lands when its head lands, or when a
+  landing link of a proven class names its head.⟦/f⟧
 ⟦f:work-rooms⟧- **Landing link**: The qualified link from a landed ⟦f:git-tracking⟧commit⟦/f⟧ to a room, carrying
   a proof class, derived by Cairn from the record alone: the clone facts it
   reads (landed ⟦f:git-tracking⟧commits⟦/f⟧, patch ids, trees) are recorded as structural events.⟦/f⟧

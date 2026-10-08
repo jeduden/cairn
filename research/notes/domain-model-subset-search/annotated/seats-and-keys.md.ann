@@ -86,7 +86,10 @@ summary: >-
   PRV-10 ships no principal key certifies a device key, so its device scope is
   every kind of principal act⟦f:conversation⟧, post⟦/f⟧ and pin⟦f:rule-levels⟧, with no maximum rule level⟦/f⟧, and a
   device seat's pins qualify only on its own node⟦f:node-clone⟧ and on nodes whose device
-  seats have it among their predecessors, however far back⟦/f⟧ (Pin)⟦/f⟧.
+  seats have it among their predecessors, however far back⟦/f⟧ (Pin)⟦/f⟧.⟦f:principal-keys⟧ A
+  rotation, signed by the old and the new key, keeps the node's device seats,
+  their certificates and their pins as this node's own; only the new key
+  certifies seats from then on.⟦/f⟧
 ⟦f:principal-keys⟧- **Principal key**: A principal's root key, kept offline or in a
   platform-protected key store and never kept by a Cairn component (the
   principal's own key tooling signs with it), which certifies its device keys⟦f:service-accounts⟧
