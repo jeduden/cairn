@@ -8,7 +8,8 @@ summary: >-
 
 - **Pin**: Verbatim text in exactly one room, with a pin type and numbered pin
   versions, each with one author (a seat); the pin's author, its **pin author**,
-  is its first version's, and only it, or for a device-seat pin its author's
+  is its first version's, and only it, a run seat that replaced it in the same
+  run, or for a device-seat pin its author's
   principal⟦f:principal-keys⟧ from any of its devices whose device scope allows it⟦/f⟧, edits the pin⟦f:intent-criteria⟧,
   except the intent (Intent)⟦/f⟧. Information, never an instruction to Cairn; a restore
   block frames the qualifying pins for the agent as its principal's
@@ -27,8 +28,8 @@ summary: >-
   device-seat pin qualifies⟦f:stamps⟧ unstamped⟦/f⟧ only while its creating event and the version
   that restores are principal acts⟦f:access-tokens⟧, or, for a configuration pin on a
   token-key-only node, the structural event standing in for accepting its
-  configuration (Principal act)⟦/f⟧; a device seat's room act that pins, or edits, a
-  pin of a type that restores is refused and counted (I6)⟦f:access-tokens⟧, but on a
+  configuration (Principal act)⟦/f⟧; a device seat's room act that pins, edits or
+  unpins a pin of a type that restores is refused and counted (I6)⟦f:access-tokens⟧, but on a
   token-key-only node⟦/f⟧.⟦f:key-revocation⟧ A pin qualifies only while neither its creating event
   nor the version that restores was written by a seat whose key is revoked.⟦/f⟧
   Adding, editing or unpinning a pin of a type that restores, written from one
@@ -57,8 +58,9 @@ summary: >-
   of the room's intent pin that the owner's device seat authors⟦/f⟧.⟦/f⟧
 - **Configuration pin**: A pin the principal's configuration declares, added,
   edited or unpinned only by the widening act accepting that configuration
-  (Record), authored by its device seat on that node (PIN-01); any other act on
-  one is refused and counted (I6). Managed policy and repository configuration
+  (Record), authored by its device seat on that node (PIN-01); any other pin,
+  edit or unpin act on one is refused and counted (I6), and it is quarantined
+  like any pin (Quarantine). Managed policy and repository configuration
   declare none.⟦f:key-revocation⟧ Accepting a configuration, even an unchanged one, records anew
   from the node's current device seat each of its pins whose creating event or
   restoring version a seat with a revoked key wrote, so it qualifies again.⟦/f⟧⟦f:access-tokens⟧ On
@@ -81,8 +83,10 @@ summary: >-
   never a budget.
 - **Pin type**: One of `constraint`, `preference`, `decision`, `fact`,
   `episode`⟦f:intent-criteria⟧, `intent`⟦/f⟧⟦f:results-and-verdicts⟧, `verdict`⟦/f⟧⟦f:work-rooms⟧ and `stake`⟦/f⟧. Only `constraint` and `preference`
-  pins⟦f:intent-criteria⟧, and `intent` pins,⟦/f⟧ restore.
-- **Unpin**: The act of a pin's author, or its author's principal, that ends the
+  pins⟦f:intent-criteria⟧, and `intent` pins,⟦/f⟧ restore. A run seat may pin a `constraint` or
+  `preference` pin too, but its pins never qualify⟦f:stamps⟧ unstamped⟦/f⟧ (Pin).
+- **Unpin**: The act of a pin's author, a run seat that replaced it in the same
+  run, or its author's principal, that ends the
   pin⟦f:intent-criteria⟧; the intent only the owner's principal act unpins (Intent)⟦/f⟧: it takes the
   pin off its room's **pin list**⟦f:moderation⟧ (its pins neither unpinned nor taken off by a
   list removal⟦f:intent-criteria⟧, the intent first⟦/f⟧)⟦/f⟧ and stops it restoring, while its versions
@@ -144,7 +148,8 @@ summary: >-
   `warning`).
 - **Trusted text** (`TrustedText`): text only the core's restore-block code
   constructs, the only text the **restore builder** accepts (INJ-03), built only
-  from qualifying pins, sanitized structural fields and fixed text Cairn ships:
+  from qualifying pins, the structural fields a closed path carries (Structural
+  field) and fixed text Cairn ships:
   restore blocks⟦f:notices⟧, opt-in notices⟦/f⟧⟦f:held-requests⟧, OWN-04's⟦f:away-policy⟧ and
   OWN-07's⟦/f⟧ templates⟦/f⟧ and compaction guidance⟦f:conversation⟧, never a post's text⟦/f⟧.
 - **Restore block**: Deterministic trusted text, built only from qualifying
