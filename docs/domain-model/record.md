@@ -169,7 +169,9 @@ summary: >-
   could not (SEC-31).
 - **Backup**: A copy of a home's store and audit log, with no seat, device,
   token or at-rest key (ADM-06, SEC-10) (`cairn backup create`, ADM-06); reading
-  it back is a backup restore.
+  it back is a backup restore. Creating one records no principal act, only an
+  audited event (§9.5), and a copy the principal takes off the machine is its
+  own tool, outside Cairn's components (I4).
 - **At-rest key**: The key that encrypts the store when encryption at rest is on
   (SEC-09).
 - **Bundle**: A reviewed export of a room, signed by the device key of the
