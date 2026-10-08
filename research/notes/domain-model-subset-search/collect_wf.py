@@ -3,7 +3,7 @@ usage: collect_wf.py <workflow-output-file>"""
 import json, os, sys, subprocess
 from collections import defaultdict
 GA=os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0,GA); import ga
-d=json.load(open(sys.argv[1])); res=d.get('result',d)
+d=json.load(open(sys.argv[1])); res=d.get('result',d) if isinstance(d,dict) else d
 by=defaultdict(list); bad=[]
 for r in res:
     if r is None: continue

@@ -1,18 +1,18 @@
 export const meta = {
   name: 'ga-select',
-  description: 'One selection-only GA generation over the unchanged domain model: breed, review, record, commit',
+  description: 'One selection-only GA generation over the unchanged domain model: breed, review, record (in a scratch copy)',
   phases: [
     { title: 'Breed', detail: 'Thompson-sampled GA picks k genomes; assemble them' },
     { title: 'Review', detail: 'one blind probe review per candidate' },
     { title: 'Record', detail: 'attribute findings to features; update the ledger' },
-    { title: 'Commit', detail: 'copy the genomes, findings and ledger back; commit; push' },
   ],
 }
-// args: { ga, work, repo, branch, gen, k, trailer }
+// args: { ga, work, repo, gen, k }
+// The caller copies work/genomes, work/evals and work/ledger.json back and commits.
 //   ga: absolute path of this folder; work: a scratch path for this run's copy.
 // The text never changes: annotated/ is the original model (version 0) with
 // feature spans, so only genomes are bred and reviewed.
-const { ga, work, repo, branch, gen, k, trailer } = args
+const { ga, work, repo, gen, k } = args
 const tag = `v0-ga${gen}`
 const env = `CAIRN_REPO=${repo}`
 
@@ -55,21 +55,5 @@ const rec = await agent(
 )
 log(rec.summary)
 
-phase('Commit')
-const commit = await agent(
-  `Run, stopping at the first failure and reporting it:
-cp ${work}/genomes/${tag}-*.json ${ga}/genomes/ && cp ${work}/evals/${tag}* ${ga}/evals/ && cp ${work}/ledger.json ${ga}/
-cd ${ga} && ${env} python3 check_annotation.py | tail -1   (must print OK: the text is unchanged)
-cd ${repo} && git add ${ga}, then git commit -F <a message file> whose message is the block between the two ---- lines, then git push -u origin ${branch}, retrying up to 4 times with 2, 4, 8, 16 s waits on network errors.
-----
-research: selection GA generation ${gen}
-
-${rec.summary.split('\n').slice(0, 12).join('\n')}
-
-${trailer}
-----
-Return a summary with the commit sha.`,
-  { label: 'commit', phase: 'Commit', schema: TEXT, model: 'haiku' },
-)
-return { tag, cands: bred.cands, surrogate: bred.surrogate, record: rec.summary, commit: commit.summary,
+return { tag, cands: bred.cands, surrogate: bred.surrogate, record: rec.summary,
   needsFix: reviews.map(r => ({ cand: r.cand, nf: r.findings ? r.findings.filter(f => f.severity === 'needs-fix').length : null })) }

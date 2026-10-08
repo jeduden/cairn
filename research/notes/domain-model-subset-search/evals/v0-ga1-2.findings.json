@@ -1,0 +1,38 @@
+[
+ {
+  "type": "security",
+  "quote": "posts and pins written from device seats a device key of that principal",
+  "problem": "A trust grant covers the granted principal's posts and pins from any device seat a device key certified, but states no device-scope limit. The principal's own pins and I2's own-principal clause are bounded 'within that key's scope'. A seat on a narrowly scoped or stolen device key could therefore have an out-of-scope pin restore to a trusting principal's agents, though it would not restore to its own principal's.",
+  "fix": "Add 'within that key's device scope' to the coverage: 'posts and pins written from device seats a device key of that principal certified, within that key's device scope'. Do the same in the trust-grant clause of the Pin and Intent entries.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "- **Principal surface**: An authenticated client where principal acts are taken:",
+  "problem": "I2's principal-act paths (stamp, trust grant, endorsement, steer) rest on telling a principal act from an agent's own tool call. The CLI is the same program, run by the same OS user, in the terminal the launcher hosts. The model does not say what authenticates a surface or that a principal act from a process the harness started is refused. Presence proof is 'bound to one widening act', but nothing says a widening act must carry one.",
+  "fix": "State the rule: a principal act is accepted only from a CLI or TUI whose input is a terminal no harness tool call holds, or from a paired phone, and a widening act needs a presence proof (OWN-11). Otherwise cite the requirement that fixes it.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "undefined",
+  "quote": "which the person, a service manager or an ephemeral node's",
+  "problem": "'Ephemeral node' reads as a kind of node, but the candidate defines no such kind. Node is one home on a machine, container or cloud environment, and the node clone entry covers copies.",
+  "fix": "Say 'or a container's entrypoint', or define the ephemeral node under Node.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "undefined",
+  "quote": "Either names the writer's last accepted seq. A peer still accepts segments",
+  "problem": "'Either' has no antecedent: the entry names a single act, 'by a principal act'. It is also unstated which principal may retire which writer, and who names the last accepted seq. Two implementers could let any principal retire any writer, or only the writer's own principal.",
+  "fix": "Rewrite as 'Mark a writer retired by a principal act of the writer's own principal, naming the writer's last accepted seq.'",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

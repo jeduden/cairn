@@ -1,0 +1,56 @@
+[
+ {
+  "type": "undefined",
+  "quote": "own entry point, which the person, a service manager or an ephemeral node's",
+  "problem": "\"Ephemeral node\" is used as a Cairn term but never defined; Node is defined only as one home on one machine, container or cloud environment, with no notion of an ephemeral one.",
+  "fix": "Replace with \"a cloud environment's entrypoint\", or define ephemeral node under Node.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "Either names the writer's last accepted seq.",
+  "problem": "\"Either\" has no antecedent: only a principal act is given as a way to retire a writer, yet the next sentence says only a revocation refuses later segments. It is unclear what else retires a writer and whether a revocation also names a last accepted seq.",
+  "fix": "Write \"Retirement by a principal act and a revocation each name the writer's last accepted seq.\"",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "Whatever is currently in the model's context window. Never",
+  "problem": "Working view is defined but nothing in the candidate creates, reaches or uses it; the Replay tab's context lens speaks of the context window at an event, not of this concept.",
+  "fix": "Drop the Working view entry, or tie it to the context lens by name.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "A signal to a person: in-page, desktop or terminal on the",
+  "problem": "No component is named to raise a same-device desktop notification. The core opens no socket and, with the kernel worker as the one exception, only the launcher starts programs, so the candidate's own boundaries leave no component that can do it, and the definition cites no requirement.",
+  "fix": "Name the component that raises same-device notifications and its boundary, or limit them to the TUI's terminal and the paired phone.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "matched through their commit-signing identity and a",
+  "problem": "A match against the binding statement is defined but nothing states what the match changes. An implementer could treat a matched bundle as more trusted, which I8 forbids for another principal's content.",
+  "fix": "Add \"The match only attributes the bundle's room for display in the import review; it grants no trust (I8).\"",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "It takes a delegated task without a delegation grant.",
+  "problem": "The provenance and trust of the task text a subagent receives from its parent are not stated. The text is the parent model's output, but a user turn is defined only as text typed at the harness's own input. Implementers could record it as a trusted `user` event, which trusted-only exports and headline templates would then pass on.",
+  "fix": "State that a subagent's received task text is never a `user` event and is untrusted, like the parent's tool call it came from.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]
