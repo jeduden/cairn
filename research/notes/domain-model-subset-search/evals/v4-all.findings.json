@@ -1,0 +1,200 @@
+[
+ {
+  "type": "gap",
+  "quote": "create room act covers the branches the room names later by branch links its",
+  "problem": "The join covers only branch links the room names \"later\". Nothing says what happens to branch links that already exist when a run joins, whether its own principal's seats added them or another principal's did. Read literally, a run that joins a room already naming its branch never sends its events there. Read loosely, the join silently accepts other principals' existing links. Event routing and what leaves the node both depend on which reading is used.",
+  "fix": "Say \"covers the branches the room names, at the join and later, by branch links its principal's seats add, and by those another principal's seat added or adds once the run's principal accepts each\".",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "(Record), authored by its device seat on that node (PIN-01); any other act on",
+  "problem": "\"Any other act on one is refused\" also catches a stamp, a list removal and a quarantine. Yet List removal lets the owner or a moderator remove any pin but the intent or a verdict, Stamp covers any pin version, and I5 says any event can be quarantined. Both cannot hold for a configuration pin.",
+  "fix": "Narrow it to \"any other pin, edit or unpin act on one is refused and counted (I6)\", so stamps, list removals and quarantine still apply.",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "device seat's pin or edit room act on a pin of a type that restores is refused",
+  "problem": "Acts and roles refuses every device seat's pin or edit room act on a restoring pin type. Pin makes an exception for token-key-only nodes, whose pins are changed only by room acts and restore once stamped. The unconditional rule leaves those nodes with no way to pin a constraint at all.",
+  "fix": "Add \"but on a token-key-only node\" after \"is refused and counted (Pin)\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "principal's remote; enabling it for a room is a widening principal act of",
+  "problem": "The git carrier may be enabled \"only as the room's visibility allows\", but none of the four visibility values (private, shared, published, blind peers) says it allows the git carrier. Implementers will differ on whether a private room may put its encrypted segments on the principal's remote, since private means held only on the owner's own nodes.",
+  "fix": "In Visibility, name which values allow the git carrier, for example \"the git carrier only for a room shared or stored on blind peers\", or say outright that private rooms may use it.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "declare none. Accepting a configuration, even an unchanged one, records anew",
+  "problem": "Accepting an unchanged configuration re-records pins whose writer's key was revoked, which makes them qualify again and so widens. But a change that \"only cuts and removes no pin\", and an empty change arguably is one, makes the acceptance a cut act. The same act can therefore be read as cut or as widening.",
+  "fix": "In Record and Principal act's Cut list, say an acceptance is cut only if it also adds or re-records no pin. Otherwise it is widening.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "Reading a bundle into this node's record (`cairn import`, REC-23).",
+  "problem": "Importing a bundle is a principal action that REC-23 names and that brings a foreign room into the record. It is missing from the Cut, Neutral and Widening lists, even though the candidate says every principal act a requirement names is classed there.",
+  "fix": "Add \"import a bundle\" to the Widening list, or to whichever class is intended.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "type that restores restores to the agents of a principal who stamped it.",
+  "problem": "Several versions of one pin can qualify for the same agent at once: an earlier stamped version plus the newest unstamped device-seat version, or a stamped version plus one a trust grant covers. No rule says whether one version or several of the same pin go into that agent's restore block.",
+  "fix": "Add \"at most one version of a pin restores to an agent: its principal's stamped version if any, else the newest qualifying version\", or whichever rule is intended.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "raises one for its author's principal and keeps restoring to every agent it",
+  "problem": "\"Every agent it restored to\" leaves open whether new runs of the author's principal's agents still get the list-removed pin. If they do not, a moderator's room act narrows the restore blocks of another principal's agents. That would contradict \"a list removal only takes a pin off the pin list\".",
+  "fix": "Say \"keeps restoring to every agent it would restore to, new runs included, until that principal unpins it\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "utilities keep one word: `install`, `uninstall`, `status`, `doctor`, `verify`,",
+  "problem": "The naming rule lists the one-word utilities but leaves out `cairn launch`, which is not `cairn <concept> <verb>` either. It also lists `ui` as a CLI command, while Components says `cairn ui` is no part of the CLI.",
+  "fix": "Add `launch` to the list and mark `ui` and `launch` as component entry points rather than CLI commands.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "quarantines carried over hold from then, while the releases and configuration",
+  "problem": "I5 says a quarantine reaches another node only as a quarantine request that node's principal applies. A node clone is a new node, yet the earlier node's quarantines hold on it from its first start, without any request being applied.",
+  "fix": "Have Node say the clone's principal is taken to have applied the carried-over quarantines at its first start, or add that exception to I5.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "serves the browser room view on loopback only",
+  "problem": "The launcher and the hook handlers refuse and count calls from a process the harness or a run's tool process started, and a CLI or TUI call from inside a run counts as recall and comes back enveloped. The room-view component has no such rule, and nothing says it serves nothing without the origin secret. An agent on the same OS user, often allowed loopback for its dev servers, can fetch the room view over loopback. That gives it unenveloped room content, room summaries outside room_summary_get, and the forensic view of quarantined content, breaking I2 and I5.",
+  "fix": "Add: \"It refuses and counts any connection from a process the harness or a run's tool process started, directly or through descendants, as the launcher does, and serves nothing to a client without the origin secret.\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "personal room at Cairn's first start there (Personal room), or any seat's,",
+  "problem": "A run seat can create a room with no principal act, and create room needs no capability. Every later change of visibility or admission is widening, but the model never says what visibility and admission a newly created room starts with. An implementer who lets the create act set them lets an agent open a room to other principals' keys. Its own events, routed to a room it created, then sync to their nodes with no widening act.",
+  "fix": "Add to Room act or Visibility: \"A created room starts private and invite only; a create room act sets neither, and only the owner's widening principal act changes them.\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "listing is unmarked, or that no standing certificate or listing covers, is",
+  "problem": "The relay check runs only when a grant is recorded. Nothing says what happens to a standing grant when the service account's certificate or listing is later revoked, removed or re-marked as relaying, or when a key first counted as a person's is later certified as a relaying service account. Under such a grant, relayed untrusted text keeps restoring as pins and keeps reaching agents in OWN-29's template.",
+  "fix": "Add: \"A standing grant stops covering a principal from the point any of these refusal conditions comes to hold for it, and the grantor gets a Needs you item.\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "principal or managed policy, that purges content per room and provenance class",
+  "problem": "A retention policy may purge `operator` and `structural` events by age. Those classes hold key revocations, trust-grant revocations, bars, quarantines, unstamps, managed-policy listings and refused-segment records. The model never says whether an act's effect survives purging its content. Purging one could silently undo a cut and change the key set and derived room state, against I5 and I10.",
+  "fix": "Add: \"A purge never erases an act's structural fields, so every act keeps its effect on room state, the key set and the quarantine set after its free text is purged.\"",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "It is checked against the capabilities of the seat's role and the",
+  "problem": "The room merge discards some acts: those lacking capability or membership, those past a revocation or retirement seq, and those that lose a conflict. Nothing says these are counted or shown. For refused segments the candidate records a structural event, so I6 and I10 both hold. For discarded acts, one implementer drops them silently and another counts them again on every rebuild.",
+  "fix": "Add: \"An act the room merge discards is shown on Health by a derived count over the record, so a rebuild reproduces it and appends nothing (I6, I10).\"",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "(whether drafts show live, whether typing shows, the roles a",
+  "problem": "Whether drafts show live is a room setting the owner controls. Yet a draft is another principal's unsent text, and that principal's node sends it to the room's other principals. So the owner's act widens what leaves another principal's node, and the drafting principal never acts.",
+  "fix": "Add: \"A principal's drafts show live only while that principal's own opt-in also stands.\"",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "Reading a bundle into this node's record (`cairn import`, REC-23).",
+  "problem": "The candidate says every principal act a requirement names is classed, but import, backup creation and ingest from outside transcript.roots appear in no class. So it is undefined whether they need a principal surface. If they don't, an agent's own CLI call from inside a run can pull an attacker's bundle into the record or write the whole store to a file outside any envelope.",
+  "fix": "Class them: \"import a bundle, create a backup, ingest a transcript from outside transcript.roots\" as widening principal acts.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "A seat certified by this node's device key or token key, or by the device key of",
+  "problem": "Whether a pin qualifies depends on whether its seat counts as one of \"this node's own device seats\", which means certified by this node's device key. Rotating a device key is listed as a widening act, but no rule says whether seats the old key certified, and the pins they wrote, still count as this node's own afterwards. One implementer keeps the principal's constraints restoring; another drops all of them after a routine rotation.",
+  "fix": "Add to Device key: \"A rotation, signed by the old and the new key, keeps the node's device seats, their certificates and their pins as this node's own; only the new key certifies seats from then on.\"",
+  "severity": "needs-fix",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "What a room's runs have produced so far: the heads of the",
+  "problem": "Outcome is defined, but nothing in the candidate shows it, derives it, acts on it or cites a requirement for it. The only other mention says the outcome window never shows it, and the Review tab is never described, so the concept has no use here.",
+  "fix": "Give it a home, for example \"Room page: \u2026 the Review tab showing the room's outcome\", or drop Outcome from the candidate.",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "Replay tab's **context lens** showing the working view at an event, what",
+  "problem": "The context lens must show what the model's context window held, yet the working view is never part of the record. No rule records what Cairn itself wrote to the agent (restore blocks, opt-in notices, templates, compaction guidance). A restore block rebuilt later can differ from the one injected, because stamps and revocations arrive afterwards. So neither the lens nor a person can reliably see what Cairn told an agent.",
+  "fix": "Add to Restore block (and Closed path): \"Each write through a closed path is recorded as a structural event in the run's writer, naming by id and commitment the pin versions and template it carried.\"",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "landing is never a verdict. A branch lands when its head lands.",
+  "problem": "Room status, Open room and Overlap depend on whether a branch has landed. With squash or rebase merges the head commit itself never lands; only a commit with the same patch or the same tree does. The candidate never says whether a landing link with a proven class counts as the branch landing, so such rooms may stay open forever and keep raising overlap items.",
+  "fix": "\"A branch lands when its head lands, or when a landing link of a proven class (same commit, same patch, same tree) names its head.\"",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "from the node's current device seat each of its pins whose creating event or",
+  "problem": "A node clone's carried-over configuration pins were written by the earlier node's device seat, so they do not qualify until lineage acceptance. Accepting the configuration anew re-records only pins written by a seat whose key is revoked. Implementers will differ on whether accepting on the clone re-adds those pins, so constraints may be missing after a clone or backup restore even though the configuration was accepted there.",
+  "fix": "Extend the rule to \"\u2026each of its pins whose creating event or restoring version a seat with a revoked key, or a seat that is not one of this node's own device seats, wrote, so it qualifies again.\"",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ }
+]
