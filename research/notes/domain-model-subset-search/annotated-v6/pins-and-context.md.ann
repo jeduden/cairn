@@ -1,0 +1,205 @@
+---
+title: "Pins and context"
+order: "05"
+summary: >-
+  What may reach a model: pins and their versions, types and budget⟦f:intent-criteria⟧, the intent⟦/f⟧⟦f:work-rooms⟧, stakes⟦/f⟧⟦f:conversation⟧, posts⟦/f⟧⟦f:facilitator⟧, room summaries⟦/f⟧, envelopes, restore blocks⟦f:notices⟧, opt-in notices⟦/f⟧⟦f:held-requests⟧ and held requests⟦/f⟧.
+---
+# Pins and context
+
+- **Pin**: Verbatim text in exactly one room, with a pin type and numbered pin
+  versions, each with one author (a seat); the pin's author, its **pin author**,
+  is its first version's, and only it, a run seat that replaced it in the same
+  run, or for a device-seat pin its author's
+  principal⟦f:principal-keys⟧ from any of its devices whose device scope allows it⟦/f⟧, edits the pin⟦f:intent-criteria⟧,
+  except the intent (Intent)⟦/f⟧. Information, never an instruction to Cairn; a restore
+  block frames the qualifying pins for the agent as its principal's
+  constraints. It restores
+  only under PIN-10, to runs that have had a seat in its room during the run, as
+  a **qualifying pin**, its creating event⟦f:stamps⟧ or stamp⟦/f⟧ trusted on this node: a pin
+  of a type that restores written from one of this node's own device seats⟦f:node-clone⟧, or
+  from one of their predecessors, however far back (Node),⟦/f⟧ restores to this
+  node's agents⟦f:access-tokens⟧ unless a token key certified that seat and it is no
+  configuration pin (Configuration pin)⟦/f⟧⟦f:principal-keys⟧, and once PRV-10 ships one written from a device seat a
+  device key certified, within that key's device scope, restores to its
+  author's principal's agents⟦/f⟧⟦f:intent-criteria⟧, the intent as Intent says⟦/f⟧⟦f:trust-grants⟧, and to agents whose principal's trust
+  grant covers its author's principal outside a foreign room⟦f:principal-keys⟧, within the device
+  scope of the device key that certified its author⟦/f⟧⟦/f⟧⟦f:stamps⟧; any version of a
+  type that restores restores to the agents of a principal who stamped it⟦/f⟧. A
+  device-seat pin qualifies⟦f:stamps⟧ unstamped⟦/f⟧ only while its creating event and the version
+  that restores are principal acts⟦f:access-tokens⟧, or, for a configuration pin on a
+  token-key-only node, the structural event standing in for accepting its
+  configuration (Principal act)⟦/f⟧; a device seat's room act that pins, edits or
+  unpins a pin of a type that restores is refused and counted (I6)⟦f:access-tokens⟧, but on a
+  token-key-only node⟦/f⟧.⟦f:key-revocation⟧ A pin qualifies only while neither its creating event
+  nor the version that restores was written by a seat whose key is revoked.⟦/f⟧
+  Adding, editing or unpinning a pin of a type that restores, written from one
+  of this node's own device seats⟦f:node-clone⟧ or their predecessors, however far back⟦/f⟧⟦f:access-tokens⟧, that
+  no token key certified⟦/f⟧⟦f:principal-keys⟧, or, once PRV-10 ships, from a device seat a device key
+  certified⟦/f⟧, is a widening principal act of its author's principal, but for a
+  configuration pin (Configuration pin)⟦f:pin-candidates⟧, and ⟦f:results-and-verdicts⟧a
+  verdict and ⟦/f⟧a pin candidate's confirmation are their own principal acts
+  (⟦f:results-and-verdicts⟧OWN-27, ⟦/f⟧PIN-05)⟦/f⟧; each, but a neutral unpin, still needs its seat's pin
+  capability; every other pin⟦f:access-tokens⟧, a token-key-only node's included,⟦/f⟧ is changed by
+  room acts, but for ⟦f:results-and-verdicts⟧a verdict, recorded and unpinned by neutral principal acts
+  (OWN-27), and ⟦/f⟧its principal's neutral unpin of its own agent's run-seat pin⟦f:stamps⟧,
+  and a run seat's⟦f:access-tokens⟧ or a token-key-only node's⟦/f⟧ restores only once stamped⟦/f⟧.
+- **Pin version**: One immutable text of a pin, with its pin priority; each
+  edit adds one⟦f:stamps⟧, unstamped⟦/f⟧.⟦f:stamps⟧
+  A stamp covers one version; stamping a later version of the same pin replaces
+  that principal's earlier stamp on it. At most one version of a pin restores
+  to an agent: its principal's stamped version if any, else the newest
+  qualifying version.⟦/f⟧
+⟦f:pin-candidates⟧- **Pin candidate**: Proposed pin text an agent suggested (an `assistant` event,
+  PIN-02) or Cairn detected (a derived artifact over its creating `user` event,
+  holding its text by address, with no provenance of its own, I10); not yet a
+  pin, so it has no pin author (a pin's author being its first version's). The
+  confirmation of its principal (of the agent that suggested it or the node that
+  detected it), a widening act taken only after the principal is shown its
+  exact text, pin type and priority, makes it a new pin its device seat authors⟦f:intent-criteria⟧; for
+  an intent or a criterion, only the owner's confirmation, making a new version
+  of the room's intent pin that the owner's device seat authors⟦/f⟧.⟦/f⟧
+- **Configuration pin**: A pin the principal's configuration declares, added,
+  edited or unpinned only by the widening act accepting that configuration
+  (Record), authored by its device seat on that node (PIN-01); any other pin,
+  edit or unpin act on one is refused and counted (I6), and it is quarantined
+  like any pin (Quarantine). Managed policy and repository configuration
+  declare none.⟦f:key-revocation⟧ Accepting a configuration, even an unchanged one, records anew
+  from the node's current device seat each of its pins whose creating event or
+  restoring version a seat with a revoked key, or any other seat that is not
+  one of this node's own device seats, wrote, so it qualifies again.⟦/f⟧⟦f:access-tokens⟧ On
+  a token-key-only node, the configuration whose digest its access token names
+  adds pins that qualify there, minting that token being the widening act that
+  accepts it (Principal act).⟦/f⟧
+- **Pin priority**: An integer each pin version carries, set by that
+  version's author, lower first⟦f:intent-criteria⟧, the
+  intent before every other pin (LANE-20)⟦/f⟧; qualifying pins fill the pin budget
+  in that order, then by their creating events' addresses (PIN-08).
+- **Budget**: The **pin budget** is the restore block's share of model tokens;
+  every other budget is named too: the **hook budget** (a hook handler's time
+  limit, §9.1, NFR-02)⟦f:compute-kernel⟧, the **step budget** (how many steps a kernel execution
+  may take, CMP-05)⟦/f⟧⟦f:delegation-grants⟧ or the delegation budget⟦/f⟧; a limit keeps its own name, such
+  as the **restore block limit** (INJ-07)⟦f:compute-kernel⟧, CMP-05's wall-clock and memory
+  limits⟦/f⟧, SEC-04's query deadline and the output caps (RCL-03⟦f:compute-kernel⟧, CMP-06⟦/f⟧). I3's
+  budget is the pin budget, and I9's defined budgets are these named budgets and
+  limits; the latency targets of NFR-01, NFR-03 and NFR-15 are targets, not
+  budgets, and the harness's own limit on a hook is the **harness timeout**,
+  never a budget.
+- **Pin type**: One of `constraint`, `preference`, `decision`, `fact`,
+  `episode`⟦f:intent-criteria⟧, `intent`⟦/f⟧⟦f:results-and-verdicts⟧, `verdict`⟦/f⟧⟦f:work-rooms⟧ and `stake`⟦/f⟧. Only `constraint` and `preference`
+  pins⟦f:intent-criteria⟧, and `intent` pins,⟦/f⟧ restore. A run seat may pin a `constraint` or
+  `preference` pin too, but its pins never qualify⟦f:stamps⟧ unstamped⟦/f⟧ (Pin).
+- **Unpin**: The act of a pin's author, a run seat that replaced it in the same
+  run, or its author's principal, that ends the
+  pin⟦f:intent-criteria⟧; the intent only the owner's principal act unpins (Intent)⟦/f⟧: it takes the
+  pin off its room's **pin list**⟦f:moderation⟧ (its pins neither unpinned nor taken off by a
+  list removal⟦f:intent-criteria⟧, the intent first⟦/f⟧)⟦/f⟧ and stops it restoring, while its versions
+  stay in the record (I1).⟦f:stamps⟧⟦f:needs-you⟧ The unpin raises a Needs you item for each stamper,
+  whose stamped version keeps restoring to its agents until it unstamps it.⟦/f⟧⟦/f⟧
+⟦f:moderation⟧- **List removal**: A moderator's or the owner's room act taking a pin⟦f:intent-criteria⟧, never
+  the intent⟦f:results-and-verdicts⟧ or a verdict⟦/f⟧,⟦/f⟧ off the pin list without unpinning it.⟦f:needs-you⟧ It raises a
+  Needs you item⟦f:stamps⟧ for each stamper, whose stamped version keeps restoring to its
+  agents until it unstamps it (LANE-32)⟦/f⟧; a device-seat pin it removes also
+  raises one for its author's principal and keeps restoring to every agent it
+  would restore to, new runs included, until that principal unpins it
+  (LANE-26).⟦/f⟧⟦/f⟧
+⟦f:intent-criteria⟧- **Intent**: A room's lead pin, of type `intent`: a goal, its criteria and
+  optionally the paths it is meant to change (LANE-20). Only the owner's
+  principal act changes it⟦f:ownership-transfer⟧; a new owner's revision adds a version its device
+  seat authors⟦/f⟧. The intent restores as the author of its newest version wrote
+  it, to the agents a pin of that author restores to (Pin)⟦f:trust-grants⟧ and to agents whose principal's trust
+  grant covers that author's principal outside a foreign room⟦f:principal-keys⟧, within the device
+  scope of the device key that certified that author⟦/f⟧⟦/f⟧⟦f:ownership-transfer⟧⟦f:stamps⟧; after a change of
+  ownership, a handover or a succession, until the new owner revises or stamps
+  it, it restores only to its stampers' agents⟦/f⟧⟦/f⟧.⟦/f⟧
+⟦f:intent-criteria⟧- **Criterion**: One acceptance condition of an intent, with a stable id.⟦/f⟧
+⟦f:work-rooms⟧- **Stake**: A pin of type `stake` stating what its author works on. Only its
+  author, a run seat that replaced it in the same run, or for a device seat its
+  author's principal, edits it; it is unpinned
+  as Unpin says, and it makes Cairn refuse no other seat's act.⟦/f⟧
+⟦f:work-rooms⟧- **Title, labels**: Room state the owner's device seat⟦f:moderation⟧ or a moderator⟦/f⟧ sets: a
+  display name and tags. They reach a model only enveloped, through recall,
+  never in trusted text⟦f:notices⟧, an opt-in notice⟦/f⟧ or an envelope marked structural
+  (⟦f:notices⟧LANE-30, ⟦/f⟧VIEW-15).⟦/f⟧
+⟦f:work-rooms⟧- **Assignment**: ⟦f:git-tracking⟧Room state asking a seat to work on a branch.⟦/f⟧ It makes Cairn
+  refuse no seat's act; a role assignment is always named so.⟦/f⟧
+⟦f:conversation⟧- **Post**: Text a seat writes to a room's conversation, with provenance `post`,
+  reaching an agent only by recall⟦f:endorsement⟧, endorsement⟦/f⟧⟦f:trust-grants⟧ or a trust grant (OWN-29)⟦/f⟧. A
+  post may carry range links; a **comment** is a post on a **marked range**, the
+  address range a range link names.⟦f:peer-sync⟧ A seat's unsent post is a **draft**,
+  ephemeral like a presence hint (PEER-09); a principal's drafts show live only
+  while that principal's own opt-in stands.⟦/f⟧⟦f:work-rooms⟧ A **cross-room post** stays in the
+  sending seat's writer; the target room shows it while a member seat there
+  that may post belongs to the sending seat's run, for a run seat, or to its
+  principal, for a device seat, and its seats pull it by
+  address, enveloped (LANE-29).⟦/f⟧⟦/f⟧
+⟦f:endorsement⟧⟦f:conversation⟧- **Directed post**: ⟦f:needs-you⟧A post directed to one agent. It waits in that agent's
+  principal's Needs you queue for an endorsement (LANE-12).⟦/f⟧⟦/f⟧⟦/f⟧
+⟦f:facilitator⟧- **Room summary**: A facilitator's summary of a room, always untrusted, linked
+  by address to the events it covers, which an agent reads solely through
+  `room_summary_get`, a recall tool that writes no room summary; every other
+  recall tool⟦f:compute-kernel⟧, the kernel's built-ins included,⟦/f⟧ and every CLI or TUI call that
+  is recall leaves `summary` events out,
+  returning only their address; a summary request is `room_summary_request`
+  (LANE-33). A restore block's **room summary pointer** names the latest room
+  summary, in causal order, concurrent ones by the lower commitment, by its
+  id.⟦/f⟧
+- **Compaction summary**: The harness's summary at compaction, recorded as
+  untrusted `harness_text`, never restored.
+- **Envelope**: The **untrusted-data envelope** of I2, the one name beside
+  "envelope": the wrapper that marks recalled content as untrusted historical
+  data; the only way recalled content reaches a model. An envelope **marked
+  structural** carries only structural fields, §9.7's closed status words and
+  marks, and Cairn's ids (`room_get`, VIEW-15).
+- **Envelope warning**: The fixed sentence at the head of every envelope (field
+  `warning`).
+- **Trusted text** (`TrustedText`): text only the core's restore-block code
+  constructs, the only text the **restore builder** accepts (INJ-03), built only
+  from qualifying pins, the structural fields a closed path carries (Structural
+  field) and fixed text Cairn ships:
+  restore blocks⟦f:notices⟧, opt-in notices⟦/f⟧⟦f:held-requests⟧, OWN-04's⟦f:away-policy⟧ and
+  OWN-07's⟦/f⟧ templates⟦/f⟧ and compaction guidance⟦f:conversation⟧, never a post's text⟦/f⟧.
+- **Restore block**: Deterministic trusted text, built only from qualifying
+  pins, the structural fields a closed path carries and fixed text Cairn ships, that Cairn
+  injects after compaction, at a run's start or harness resume (INJ-02), and on
+  a prompt while `restore_block.on_prompt` is on (INJ-04), carrying among other
+  things qualifying pins, their room ids and the run's seat ids where each is
+  still a member, omitted pins' ids and count, the count, room id and key
+  fingerprint of pins of a type that restores that do not qualify (PIN-10),
+  ⟦f:principal-keys⟧PIN-11's count and reason, ⟦/f⟧⟦f:access-tokens⟧PEER-06's note that later pins may be missing, ⟦/f⟧⟦f:landmarks⟧a
+  landmark index, ⟦/f⟧a recall hint⟦f:facilitator⟧ and LANE-33's room summary pointer⟦/f⟧.
+⟦f:landmarks⟧- **Landmark index**: The current run's landmarks, each with its address range,
+  as a restore block lists them, built there only from the structural fields a
+  closed path carries (INJ-01, Structural field).⟦/f⟧
+- **Recall hint**: The one fixed line in a restore block saying that the recall
+  tools reach the full history (INJ-01).
+⟦f:notices⟧- **Opt-in notice**: Trusted text built only from fixed text Cairn ships and
+  Cairn's own ids, version numbers, counts, key fingerprints and addresses,
+  saying ⟦f:conversation⟧posts⟦f:delegation-grants⟧ or a delegate report⟦/f⟧ wait, or ⟦/f⟧a room changed. Sent only while the
+  owner's notice allowance and the agent's principal's notice opt-in both stand
+  (INJ-10, LANE-30). The only meaning of "notice".⟦/f⟧
+- **Model**: The language model behind an agent, such as Claude; "the model"
+  means it wherever the domain model's files, or the domain-model agent's
+  instructions, are not speaking of the domain model. Its output in a turn is a
+  **model reply**; a **model token** is its unit of text for budgets.
+- **Working view**: Whatever is currently in the model's context window. Never
+  part of the record, never authoritative.
+⟦f:held-requests⟧- **Held request**: A permission request, question or hand-off with a stable id,
+  answerable from any principal surface within its scope (OWN-05). Cairn keeps
+  the agent waiting no longer than its **hold window**⟦f:away-policy⟧, then its away policy, if
+  one is on, answers the agent⟦/f⟧; the held request stays open, and ⟦f:away-policy⟧with no away
+  policy on, ⟦/f⟧the harness's own prompt keeps the agent waiting (OWN-06). A
+  **reply** answers a held request that is a question, with text the
+  principal typed at a principal surface for it.⟦/f⟧
+- **Qualified requests**: A permission request (the harness's⟦f:held-requests⟧, recorded as a
+  held request⟦/f⟧)⟦f:work-rooms⟧, a role request (a viewer's room act asking for a wider role), a
+  join request (a room act of a run's personal-room seat naming the room; it
+  needs its principal's acceptance unless that principal asked for the join)⟦/f⟧⟦f:purge-retention⟧⟦f:peer-sync⟧, an
+  erasure request (a node sends its purge to its peers, PEER-11)⟦/f⟧⟦/f⟧⟦f:purge-retention⟧⟦f:shared-rooms⟧, a purge
+  request (a neutral principal act asking the room's owner to purge what its
+  seats wrote, SEC-30)⟦/f⟧⟦/f⟧⟦f:peer-sync⟧, a quarantine request (to peers)⟦/f⟧⟦f:facilitator⟧, and a summary request
+  (to the facilitator)⟦/f⟧. "Request" never stands alone.
+⟦f:needs-you⟧- **Notification**: A signal to a person: in the room view, desktop or terminal
+  on the same device⟦f:bridges⟧, or through the notification bridge to a service the node's
+  principal names⟦/f⟧. It carries only the room's ⟦f:room-view-surfaces⟧petname, else its ⟦/f⟧id, the queue
+  class and a count, never room text; it never reaches a model and never accepts
+  answers.⟦/f⟧
