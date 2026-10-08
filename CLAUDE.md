@@ -8,8 +8,8 @@ compaction, and lets Claude recall exact history on demand. Stored history never
 becomes a prompt-injection channel.
 
 Status: pre-implementation. The repository holds the specification, the
-requirement matrix, and the CI and release pipeline, its tooling in Go; the
-product, in Rust (ADR-2610050528), arrives plan by plan.
+requirement matrix, and the CI and release pipeline, its tooling in Go. The
+product arrives plan by plan; ADR-2610050528 proposes its language.
 
 ## The Invariants Come First
 

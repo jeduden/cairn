@@ -1,7 +1,7 @@
 # Cairn
 
 A lossless, security-first context layer for long-running Claude
-agents, written in Rust.
+agents.
 
 Long agent runs compact, and compaction forgets. Cairn keeps an
 append-only, provenance-tagged record of every agent run. It restores
