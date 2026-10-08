@@ -46,14 +46,16 @@ summary: >-
   recalls history; an agent is never a principal. It is identified by its node,
   its harness and the harness's agent id across harness sessions; where the
   harness gives no stable agent id, each run is its own agent. Its later runs
-  inherit its rooms for recall (the `rooms` scope) and its directed posts, never
-  a seat, add or role: a new run joins only as Join says (REC-02).
+  inherit its rooms for recall (the `rooms` scope), for restore and for its
+  directed posts, never a seat, add or role: a new run joins only as Join says
+  (REC-02, PIN-10).
 - **Run**: One agent's execution within one harness session, on one node, keyed
   by the harness session and the harness's agent id: a harness session's
   transcripts contain its main agent's run and one per subagent, a **harness
   resume** that keeps its harness session continues the run, while a harness
   resume that starts a new harness session, or a **harness clear**, starts a new
-  run. It has run seats and carries its recall taint (SEC-13), sandbox state
+  run, of the same agent only where the harness gives a stable agent id. It has
+  run seats and carries its recall taint (SEC-13), sandbox state
   (OWN-22), seat keys (SEC-10), kernel namespace (CMP-02) and spans (LMK-01). As
   a noun, "run" has no other meaning.
 - **Subagent**: An agent the harness started for another agent. It has its own
@@ -92,7 +94,8 @@ summary: >-
   and the principal acts that need one, except writing a room summary; its room
   acts edit and unpin only pins its principal wrote from a device seat that do
   not restore unstamped, and make a list removal of any pin but the intent or a
-  verdict, while its agents' run seats have only their role and any appointment.
+  verdict, while its agents' run seats have only their role and any appointment;
+  its act joining its own run assigns that seat contributor (LANE-16).
   Once PRV-10 ships, no one may kick, bar or mute the owner or any key that
   chains to its principal key (LANE-25). "Owner" means nothing else, except in
   the persona name "Returning owner" and where an outside domain qualifies it,

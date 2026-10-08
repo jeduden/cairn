@@ -59,7 +59,8 @@ row: "- [{title}]({filename}) — {summary}"
   per room it joined or created, a new one for each seat key minted anew, and
   the seat ingest starts beside any of them (Run seat).
 - A restore block carries the qualifying pins of every room its run has had a
-  seat in during the run, its personal room included (PIN-10); a leave, kick or
+  seat in during the run, its personal room included, and of every room its
+  agent's earlier runs had a seat in (PIN-10, REC-02); a leave, kick or
   bar keeps them, but once the room is foreign only those Foreign room names.
 - Ingest splits one transcript by run.
 - Every seat belongs to one principal and one room; every writer to one seat.
@@ -77,7 +78,9 @@ row: "- [{title}]({filename}) — {summary}"
   its principal has no member seat in, or that a paired phone signs, goes to
   that device seat in the personal room, naming the room, and that room shows it
   by address as it shows a cross-room post (LANE-29); for a room with no member
-  seat, the room merge counting it rests on OQ-41. A seat key's rotation goes
+  seat, the room merge counting it rests on OQ-41, as does how a device key's or
+  access token's revocation reaches another principal's node. A seat key's
+  rotation goes
   to that seat's own writer (SEC-27). A tombstone, an erasure request a
   retention policy sends, and a bridge's or the launcher's event about a room's
   branch go to the recording device's seat in the room they name, joined as for

@@ -333,7 +333,7 @@ Feature: Room (LANE)
     And a second node holding the record derives the same id
     And no table maps the run to the seat, and a rebuild derives which seats the run has from the record alone: its personal-room seat, the create room and join acts its seats' writers record, and the seats naming one of its seats
     And a join by "mallory", whose principal key the admission list does not name, is refused, audited and counted
-    And a run of "bob" joins on his acceptance though the admission list does not name his principal key, since the owner's principal key always satisfies its room's admission, for its device and run seats alike
+    And a run of "bob" joins on his acceptance though the admission list does not name his principal key, since the owner's principal key always satisfies its room's admission, for its device and run seats alike, and that acceptance, saying so, records a contributor role assignment for the seat that run joins with
     And a join "alice" neither asked for nor accepted does not happen
     And before PRV-10 ships, the room admits no seat of a principal other than its owner, so the same join of "alice"'s run is refused and audited
     And a join request of a run of "alice" for which she asked, her widening principal act, joins under the room's admission with no further acceptance, while one she did not ask for joins only on her acceptance, a widening principal act

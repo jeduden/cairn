@@ -11,7 +11,8 @@ summary: >-
   is its first version's, and only it, or for a device-seat pin its author's
   principal from any of its devices whose device scope allows it, edits the pin,
   except the intent (Intent). Information, never an instruction. It restores
-  only under PIN-10, to runs that have had a seat in its room during the run, as
+  only under PIN-10, to runs that have had a seat in its room during the run, or
+  whose agent's earlier runs had one (REC-02), as
   a **qualifying pin**: a pin of a type that restores written from a device seat
   a device key certified, within that key's device scope, restores, by its
   newest version whose own event is trusted on this node, to its author's

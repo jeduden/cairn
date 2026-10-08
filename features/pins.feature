@@ -138,6 +138,7 @@ Feature: Pins (PIN)
     And the restore block names "L1", "L2", "L5" and the personal room by id
     And the other principal's unstamped constraint pin, the third principal's pin in "L5" and each token-key-only node's unstamped pin are stated only by count, room id and key fingerprint, with no text, and an audit entry records each
     And no pin of a type that does not restore is counted
+    And a later run of the same agent, by the harness's stable agent id, with no seat in "L1", "L2" or "L5", gets the same pins of those rooms in its restore block
 
   @PIN-11 @P2 @I3 @I6 @pending
   Scenario Outline: a pin that qualifies on another of the principal's nodes but not here is stated by count and reason

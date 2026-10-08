@@ -42,12 +42,14 @@ summary: >-
 - **Own check**: A check the hook handlers recorded on the node of the run that
   made the edits, run on the latest worktree checkpoint plus the recorded edits;
   otherwise its result is marked `unbound` and counts as a `claim`.
-- **Witness check**: A check re-run through the launcher on a fresh checkout of
-  the exact commit, with network denied, by a node whose **git identity** (the
-  author and commit-signing identities its git configuration sets) authored no
-  commit on the branch since it left its base (a **commit author** is git's
-  author of a commit, never a seat). Where the platform cannot deny network,
-  Cairn refuses the witness check (OWN-18).
+- **Witness check**: A check re-run through the launcher, outside any agent
+  context, on a fresh checkout of the exact commit, with network, the OS user's
+  home directory (`HOME`) and the principal's home (its platform key-store
+  entries included) denied, by a node whose **git identity** (the author and
+  commit-signing identities its git configuration sets) authored no commit on
+  the branch since it left its base (a **commit author** is git's author of a
+  commit, never a seat). Unless the platform can deny all three, Cairn refuses
+  the witness check before confirmation and says which it cannot deny (OWN-18).
 - **CI attestation**: A check's exit status for the exact commit, signed by a CI
   key the room's owner enrolled, recorded in the room so every principal sees
   the same class (LANE-22); a result resting on one is `CI attested`.

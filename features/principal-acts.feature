@@ -225,10 +225,10 @@ Feature: Principal acts (OWN)
     And the act is recorded as their widening principal act
     And until that confirmation the command reached no terminal and the launcher did not run it
     And the confirmation sends the command to no agent, since what reaches an agent stays under I2 and OWN-03
-    And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base, with network, the OS user's home directory (`HOME`) and the principal's home denied
+    And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base, with network, the OS user's home directory (`HOME`) and the principal's home (its platform key-store entries included) denied
     And the launcher records its command by commitment, its exit status and the tree hash as a structural event
-    And where the platform cannot deny the check network, Cairn refuses the witness check
-    And where the platform cannot deny `HOME` or the principal's home, the room view says which before confirmation
+    And unless the platform can deny the check network, `HOME` and the principal's home with its key-store entries, Cairn refuses the witness check before confirmation
+    And the refusal says which of them the platform cannot deny
 
   @OWN-19 @P1 @I1 @I4 @pending
   Scenario: terminal takeover stays local and no-echo input is not stored
@@ -344,7 +344,7 @@ Feature: Principal acts (OWN)
     And a room owned by "alice", where she recorded "needs changes" on C2
     When "alice" sends the correction "keep the header row in every file" through "cairn correction send" and retries from an earlier worktree checkpoint with "--worktree-checkpoint"
     Then the correction reaches the agent through the harness's input in the fixed template naming the verdict, C2 and the results it concerns
-    And the retry starts a new run through the launcher in a new worktree at that worktree checkpoint, given the correction and the intent pin in force through its restore block
+    And the retry starts a new run through the launcher in a new worktree at that worktree checkpoint, joined to the room since the retry is its principal's ask for that join, given the correction and the intent pin in force through its restore block
     And the retry receives no content of the earlier run except what it recalls
     And the earlier run and its branch stay on record, shown beside the retry
     And C2 reads "no verdict" until the next verdict

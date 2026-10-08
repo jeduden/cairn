@@ -145,7 +145,8 @@ summary: >-
   names; **principal-typed text** is text a principal typed at a principal
   surface for that act.
 - **Correction, retry**: After a verdict: principal-typed text in a fixed
-  template, or a new run from a worktree checkpoint (OWN-28).
+  template, or a new run from a worktree checkpoint, whose join to the room the
+  retry itself asks for (OWN-28, LANE-23).
 - **Counter**: A count of dropped, rejected, redacted, truncated, coalesced,
   timed-out or failed operations of one kind, each also written to the **audit
   log**, the node's append-only log of Cairn's own operations (OPS-01), shown on

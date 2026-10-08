@@ -144,7 +144,7 @@
     },
     {
      "file": "docs/domain-model/principals-and-agents.md",
-     "quote": "Its later runs inherit its rooms for recall (the `rooms` scope) and its directed posts, never a seat, add or role"
+     "quote": "Its later runs inherit its rooms for recall (the `rooms` scope), for restore and for its directed posts, never a seat, add or role"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
@@ -407,7 +407,7 @@
     },
     {
      "file": "docs/srs/05b-lane-requirements.md",
-     "quote": "a cut principal act, or a newer version takes its place under PIN-10."
+     "quote": "a cut principal act, or PIN-10 restores a newer one instead."
     }
    ]
   },
@@ -490,7 +490,7 @@
     },
     {
      "file": "docs/srs/05b-lane-requirements.md",
-     "quote": "derived from its seat's first key and 128 random bits the creating node mints, never chosen; any other create room act naming it MUST be void and shown"
+     "quote": "derive from its create room act's seat's first key and 128 random bits the creating node mints, never chosen; any other create room act naming it MUST be void and shown"
     }
    ]
   },
@@ -531,22 +531,88 @@
   {
    "id": "DM-AA",
    "title": "A revocation that acts on no room never reaches another principal's node that holds a shared room",
-   "status": "open"
+   "status": "deferred",
+   "oq": "OQ-41",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/domain-model/index.md",
+     "quote": "as does how a device key's or access token's revocation reaches another principal's node"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "and how a revocation of a device key or an access token, which acts on no room, reaches another principal's node that holds a room the revoking principal shares"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "Revocations MUST be signed events that replicate like any other (open for another principal's node: OQ-41)."
+    }
+   ]
   },
   {
    "id": "DM-AB",
    "title": "A witness check runs others' code on the principal's node where the home and its keys cannot be denied",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "Unless the platform can deny all three, Cairn refuses the witness check before confirmation and says which it cannot deny (OWN-18)."
+    },
+    {
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "Unless the platform can deny it all three, Cairn MUST refuse the witness check before confirmation and say which it cannot deny."
+    },
+    {
+     "file": "docs/srs/06b-boundary-register.md",
+     "quote": "or Cairn refuses the check and says which it cannot deny"
+    }
+   ]
   },
   {
    "id": "DM-AC",
    "title": "A later run of an agent restores only its personal room's pins until it joins again; a retry's intent restore needs a join nothing gives",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "inherit its rooms for recall (the `rooms` scope), for restore and for its directed posts, never a seat, add or role"
+    },
+    {
+     "file": "docs/domain-model/index.md",
+     "quote": "and of every room its agent's earlier runs had a seat in (PIN-10, REC-02)"
+    },
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "whose join to the room the retry itself asks for (OWN-28, LANE-23)"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "and of every room its agent's earlier runs had a seat in (REC-02), name those rooms"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "an agent's later runs inherit its rooms for recall (RCL-05), for restore (PIN-10) and for its directed posts (LANE-12)"
+    },
+    {
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "the retry being its principal's ask for that run's join to the room (LANE-23)"
+    }
+   ]
   },
   {
    "id": "DM-AD",
    "title": "A run seat of the owner's own agent that joins a room has no role, so it is a viewer with no work",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "its act joining its own run assigns that seat contributor (LANE-16)"
+    },
+    {
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "the owner's act joining its own run MUST assign that seat contributor."
+    }
+   ]
   }
  ]
 }
