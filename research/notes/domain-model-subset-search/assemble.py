@@ -65,7 +65,7 @@ def closure(texts, removed_terms, core_terms):
     """Removed bold terms still mentioned in the kept text (dangling references)."""
     found=[]
     body='\n'.join(texts.values())
-    IGNORE={'review step','leave','repository','reply','assignment','result','overlap','span','stat','outcome','publish','pick','tree','states'}
+    IGNORE={'review step','leave','repository','person','reply','assignment','result','overlap','span','stat','outcome','publish','pick','tree','states'}
     for term in sorted(set(removed_terms)):
         if term.lower() in core_terms or term.lower().strip('`') in IGNORE: continue
         t=re.sub(r'`', '', term)
