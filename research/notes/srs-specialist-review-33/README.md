@@ -30,3 +30,6 @@ settled the core.
 - `p2.txt` and `p3.txt`: working lists of the needs-fix findings and
   the questions, for the verify pass.
 - `ids.txt`: the agent id of each reviewer, which `extract.py` reads.
+- `gen_specialists.py`: wrote the eleven specialist agents
+  (`.claude/agents/domain-model-*.md`) this review used, one per model
+  file.

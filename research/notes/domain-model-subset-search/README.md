@@ -87,9 +87,13 @@ selection results on the original text.
   settled decisions were added; the ledger marks them `stale` and
   `ga_round.py` skips them. The GA's early preference for leaving out
   browser-room-view came from them.
-- **Open checks, stopped unfinished.** All features but principal-keys
-  and its ten dependents (`genomes/v0-nopk.json`), and a second strong
-  review of all 47 (`genomes/v0-all-r3.json`) to measure the noise.
+- **Two checks, stopped after two of three lenses.** Counting only the
+  consistency and security lenses, a second review of all 47 features
+  (`v0-all-r3-partial`) found 11 needs-fix findings where the first
+  (`v0-all-r2`) found 7: the noise of one strong review on one
+  candidate. All features but principal-keys and its ten dependents
+  (`v0-nopk-partial`, 36 features) found 12, so dropping that cluster does
+  not lower the findings either.
 
 ## Running it
 
