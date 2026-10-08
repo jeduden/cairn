@@ -1,0 +1,32 @@
+{
+  "findings": [
+    {
+      "type": "useless",
+      "quote": "- **Presence hint**: An ephemeral sign that a seat is connected, or typing (a",
+      "problem": "A presence hint is a live sign between connected seats, but the candidate has no live peer channel: the only cross-node exchange is the git carrier's segment exchange, and the other components (B0, B1, B3 publish and bridges) carry no presence. Nothing can create or deliver a presence hint, a typing hint or a live draft, so they and the room settings 'whether drafts show live' and 'whether typing shows' that the room merge derives have no use.",
+      "fix": "Drop presence hint, typing hint, the draft's live display and the two room settings, or name the component that carries them.",
+      "severity": "needs-fix"
+    },
+    {
+      "type": "undefined",
+      "quote": "node only as a quarantine request that node's principal applies.",
+      "problem": "I5, the event list and the provenance rule rely on a 'quarantine request' and an 'erasure request' (one a retention policy sends), but neither is defined. Neither is in the Qualified requests list, and neither the sending nor the applying of one appears in the cut, neutral or widening act classes, so two implementers would classify and apply them differently.",
+      "fix": "Add quarantine request and erasure request to Qualified requests with who sends and who applies each, and class 'send/apply a quarantine request' and 'apply an erasure request' among the principal acts.",
+      "severity": "needs-fix"
+    },
+    {
+      "type": "gap",
+      "quote": "lower commitment (LANE-01). Acts with no member seat: open (OQ-41).",
+      "problem": "The room merge leaves undefined whether it counts an act recorded in the personal room by a principal with no member seat in the room (for example a kicked or barred principal's act, or an unstamp). I10 requires room state to be a deterministic function of the logs, so two nodes or implementers can derive different room state from the same logs.",
+      "fix": "State one rule, for example that the room merge counts no act from a principal with no member seat except those the model names (unstamp, trust-grant revocation, decline), and delete the open marker.",
+      "severity": "minor"
+    },
+    {
+      "type": "gap",
+      "quote": "- **Quota**: A limit on storage or events, per room, node or worktree checkpoint, that the node's principal or managed",
+      "problem": "A quota limits events and storage, yet no sentence says what happens at the limit. I1 allows loss only through redaction, purge or retention policy. An implementer could drop or truncate events or checkpoint diffs at the quota, which breaks I1, while another stops capture or purges.",
+      "fix": "Add that at its limit Cairn refuses or stops new work with a counter and never drops or truncates a recorded event; only purge or a retention policy frees space.",
+      "severity": "minor"
+    }
+  ]
+}
