@@ -1,0 +1,225 @@
+===== pins-and-context#1 | docs/srs/05-functional-requirements.md:62 | kind= needs-fix | inv= False | htr= False
+TERM: qualifying pin
+QUOTE: Qualifying pins MUST come only from a principal (`cairn pin add` at a principal surface, its configuration or its stamp), never a harness skill's call.
+BREAKS: Pin entry: qualifying pins also come from the owner's intent principal act (LANE-20, `cairn intent set|revise`; PIN-06's scenario refuses `cairn pin add --type intent`) and from a pin candidate's confirmation (PIN-05, LANE-26); read as exhaustive, PIN-01 excludes both
+FIX: SRS PIN-01: "…only from a principal (a pin or intent it sets at a principal surface, a pin candidate it confirms, its configuration or its stamp), never a harness skill's call."; optionally add the two rows to features/pins.feature PIN-01 Examples
+===== pins-and-context#2 | docs/srs/05-functional-requirements.md:66 | kind= needs-fix | inv= False | htr= False
+TERM: pin candidate
+QUOTE: never by configuration in `automation` deployment mode
+BREAKS: Pin candidate entry and LANE-26: only its principal's confirmation, its own widening principal act, makes it a pin; the mode qualifier implies configuration may confirm in interactive mode; scenario row features/pins.feature:72 tests only automation, where no candidate is detected, so it proves nothing
+FIX: SRS PIN-05: "never by configuration" (drop "in `automation` deployment mode"); features/pins.feature PIN-05: add row "| interactive | a setting that confirms pin candidates automatically | 1 | 1 |" (count 0 before manual confirmation already asserted)
+===== pins-and-context#3 | docs/srs/05d-peer-requirements.md:22 | kind= needs-fix | inv= False | htr= True
+TERM: qualifying pin
+QUOTE: An access token that names a room to continue MUST carry that room's qualifying pins (PIN-10) as signed events keeping their provenance (`operator` for a device seat's pin, `assistant` for a run seat's)
+BREAKS: Pin entry / LANE-32: a run seat's pin qualifies only through a stamp, and a pin restores its newest version; carrying only the pins' own events omits the stamps and edits that make them qualify (same in features/peer.feature:68)
+FIX: SRS PEER-06: "…MUST carry that room's qualifying pins (PIN-10) as the signed events they rest on: each pin's creating and edit events, keeping their provenance (`operator` for a device seat's pin, `assistant` for a run seat's), and every stamp that makes a version qualify…"; mirror in features/peer.feature:68
+===== pins-and-context#4 | docs/srs/09-interfaces.md:57 | kind= needs-fix | inv= False | htr= False
+TERM: directed post
+QUOTE: `text`, `room` (optional target room, LANE-29); writes a `post`, always untrusted (PRV-01)
+BREAKS: Directed post entry / LANE-12 need a post directed to one agent, but neither `room_post` nor `cairn room post` (09a-command-line-interface.md:56) can direct one, contrary to VIEW-03's rule that everything the room view does exists in the CLI or MCP
+FIX: SRS §9.2 `room_post`: add "`seat` (optional: directs the post to that run seat's agent, LANE-12)"; §9.5: "`cairn room post <room> [--seat <seat>]`" (stakeholder to confirm the parameter name)
+===== pins-and-context#5 | features/lane.feature:515-516 | kind= needs-fix | inv= False | htr= False
+TERM: summary request / room summary
+QUOTE: Then the agent's run seat records a summary request to the facilitator, a room act, for 500 model tokens at most
+BREAKS: LANE-33, §9.2 (09-interfaces.md:73-74) and §9.6 cap only `room_summary_get` by `room_summary.max_model_tokens`; the scenario asserts a cap on `room_summary_request` that no requirement states
+FIX: SRS §9.2 `room_summary_request`: "`size` (model tokens wanted, capped by `room_summary.max_model_tokens`)" and §9.6: "cap on `room_summary_request` and `room_summary_get`"; or change the scenario to assert the cap on `room_summary_get`
+===== pins-and-context#6 | docs/srs/05-functional-requirements.md:124 | kind= needs-fix | inv= False | htr= False
+TERM: step budget
+QUOTE: Exceeding a limit MUST return an error, restart the worker, and state that the namespace was lost.
+BREAKS: Budget entry: the step budget is a named budget and limits keep their own names; CMP-05 folds the step budget into "a limit", and features/kernel.feature:56-69 yields "the step budget limit was exceeded" / "kernel step budget limit exceeded"
+FIX: SRS CMP-05: "Exceeding the step budget or either limit MUST…"; kernel.feature CMP-05: column "bound" with "step budget", "10 s wall-clock limit", "512 MiB memory limit"; steps "stating the <bound> was exceeded" and audit "kernel <bound> exceeded"
+===== pins-and-context#7 | docs/srs/08-data-and-storage.md:57 | kind= needs-fix | inv= False | htr= False
+TERM: restore block limit
+QUOTE: The pin budget (PIN-08) and the model-token caps of INJ-07, RCL-03 and
+BREAKS: Budget entry names INJ-07's bound the restore block limit, distinct from the output caps of RCL-03 and CMP-06
+FIX: SRS §8.4: "The pin budget (PIN-08), the restore block limit (INJ-07) and the output caps of RCL-03 and CMP-06 depend on model-token counts."
+===== pins-and-context#8 | docs/srs/03-rationale.md:13 | kind= needs-fix | inv= False | htr= False
+TERM: working view
+QUOTE: **Keep the record separate from the view.**
+BREAKS: Working view entry; unqualified "the view" reads as the room view, a different concept
+FIX: SRS §3: "**Keep the record separate from the working view.**"
+===== pins-and-context#9 | features/engineering.feature:11, 13 | kind= needs-fix | inv= False | htr= False
+TERM: pin (and stamp)
+QUOTE: Scenario: the toolchain is pinned and release builds are static, trimmed and stamped
+BREAKS: Pin entry and the hub's 'every word one meaning': "pinned"/"pins the Go toolchain" use the Cairn word in another sense, which ENG-01's own text avoids ("fixed to an exact version"); "stamped" is the acts-and-roles specialist's
+FIX: features/engineering.feature: title "the toolchain is fixed to an exact version and release builds are static, trimmed and carry VCS information", step "Then \"go.mod\" fixes the Go toolchain with a toolchain directive"; update the binding at cmd/cairn/bdd_engineering_test.go:40 in the same change
+===== pins-and-context#10 | features/provenance.feature:85 | kind= needs-fix | inv= False | htr= False
+TERM: model reply / compaction summary
+QUOTE: Scenario Outline: model-reproducible text no principal stamped, and harness-summarised text, is untrusted
+BREAKS: Model entry (model reply) and Compaction summary entry (recorded as `harness_text`); the coined phrases replace model terms, and "harness-summarised" misdescribes examples that are no summaries (system reminder, restore block written back)
+FIX: features/provenance.feature: "Scenario Outline: model replies and tool calls no principal stamped, and harness_text, are untrusted"
+===== pins-and-context#11 | docs/srs/05b-lane-requirements.md:36 | kind= question | inv= False | htr= False
+TERM: working view
+QUOTE: MUST NOT enter any model's context
+BREAKS: Working view entry ('whatever is currently in the model's context window') is used nowhere in the SRS or scenarios; the same meaning appears as 'the model's context' / 'an agent's context' (also 05b-room-view-requirements.md:52,54; 05b-lane-requirements.md:42; 05c-principal-and-peer-requirements.md:41; 06-security.md:19,100; 09-interfaces.md:87)
+FIX: Stakeholder to rule: either the SRS says "working view" at these places, or the model's Working view entry states that "the model's context" is the harness's phrase for it
+===== pins-and-context#12 | docs/srs/05-functional-requirements.md:109 | kind= question | inv= False | htr= True
+TERM: qualifying pin
+QUOTE: If Cairn cannot determine unambiguously which run a hook belongs to, it MUST inject qualifying pins only.
+BREAKS: Pin entry / PIN-10 define qualifying pins per run (rooms the run has had a seat in during the run); with the run ambiguous the set is undefined, and pins of a room only another candidate run had a seat in would breach PIN-10 (scenario features/restore.feature:52-60 does not decide it)
+FIX: Stakeholder to rule, then SRS INJ-05, e.g. "…it MUST inject only the qualifying pins of rooms every candidate run has had a seat in, at least its personal room"
+===== pins-and-context#13 | docs/srs/03-rationale.md:31 | kind= other-specialist | inv= False | htr= False
+TERM: kernel
+QUOTE: → Kernel (§5.8).
+BREAKS: Wrong section reference: the kernel is §5.7 (CMP); §5.8 is Administration. Belongs to the record.md specialist (Kernel)
+FIX: SRS §3: "→ Kernel (§5.7)."
+===== places#1 | /home/user/cairn/docs/srs/05b-lane-requirements.md:27 | kind= needs-fix | inv= False | htr= False
+TERM: foreign room
+QUOTE: A foreign room MUST open in the Room page, marked foreign, which MUST state that every event, evidence class and proof class in it is asserted by the bundle's principal key, and MUST show whether the pull request's commits in the local clone are signed by the pull-request author's existing commit-signing identity
+BREAKS: Foreign room (places.md:48-56) also covers a room every seat of its principal has left or lost to a kick or a bar; such a room has no bundle or bundle's principal key, so LANE-15 narrows the concept to bundle-derived rooms and cannot be met for the other kind (used in PIN-10 and RCL-10 scenarios and the hub restore relation)
+FIX: SRS LANE-15: "A foreign room MUST open in the Room page, marked foreign; one read from a bundle MUST state that every event, evidence class and proof class in it is asserted by the bundle's principal key, and MUST show whether ..."
+===== places#2 | /home/user/cairn/docs/srs/06-security.md:70 | kind= needs-fix | inv= False | htr= False
+TERM: sandbox
+QUOTE: LANE-23, LANE-24, SEC-10, and a sandbox (SEC-19)
+BREAKS: Sandbox is defined under OWN-22 (places.md:33-34); SEC-19 is the boundary register and says nothing about sandboxes, so the control cites the wrong requirement
+FIX: SRS 06-security.md T29: "and a sandbox (OWN-22)"
+===== places#3 | /home/user/cairn/docs/srs/05c-principal-and-peer-requirements.md:27 | kind= needs-fix | inv= False | htr= True
+TERM: device
+QUOTE: only if the authenticator is certified to enforce user verification on the device
+BREAKS: Device means a node or a paired phone (places.md:25); here it names the authenticator hardware, a second sense that can be read as user verification by the host node, loosening which authenticators qualify (T21)
+FIX: SRS OWN-11: "certified to enforce user verification on the authenticator itself"
+===== places#4 | /home/user/cairn/features/security.feature:371 | kind= needs-fix | inv= False | htr= False
+TERM: visibility (shared), peer
+QUOTE: And a room shared with two enrolled peers, in which another principal has a seat
+BREAKS: Visibility's 'shared' is sharing with the room's principals (places.md:58); peers are nodes, which hold rooms (hub verbs). Same at features/peer.feature:145: "a room owned by \"alice\", shared between her node and the nodes of \"bob\" and \"carol\""
+FIX: security.feature:371 "And a room two enrolled peers hold, in which another principal has a seat"; peer.feature:145 "And a room owned by \"alice\", held by her node and the nodes of \"bob\" and \"carol\""
+===== places#5 | /home/user/cairn/docs/srs/02-context.md:20, 99 | kind= needs-fix | inv= False | htr= False
+TERM: foreign room
+QUOTE: with foreign history never instructing their agents
+BREAKS: 'foreign' is defined only for rooms (Foreign room); 'foreign history' (also 'foreign history never instructs', 'Foreign history reaches agents as more than data' at :99, and .claude/agents/persona-oss-maintainer.md:40) is a term outside the model
+FIX: 02-context.md and persona-oss-maintainer.md: "a foreign room's history" in each place, kept in step per the §2.5 gate
+===== places#6 | /home/user/cairn/docs/domain-model/places.md:48-56 | kind= question | inv= False | htr= True
+TERM: foreign room
+QUOTE: A room this node holds, other than only as a blind peer, that its principal neither owns nor has a seat in
+BREAKS: A node that holds a cross-room post's sending writer only to show the post in a room of its principal meets this definition, so the sending room is foreign; RCL-05 (05-functional-requirements.md:82) both covers "the cross-room posts it shows" under the room scope and says a foreign room is reached "never through the room or rooms scope". LANE-29 (05b-lane:41) lets a seat pull the post "even without a seat in the sending room" while PEER-02 (05d:18) serves segments only to principals with a seat "and to no other (open: OQ-41)"; OQ-41's text covers only principal acts, not cross-room posts
+FIX: Ruling needed. Either model: "... other than only as a blind peer or only for the cross-room posts a room of its principal shows", or SRS RCL-05: the cross-room posts a room shows stay in that room's scope whatever their sending room; and fold cross-room-post serving into OQ-41 or PEER-02
+===== places#7 | /home/user/cairn/docs/domain-model/places.md:58-61 | kind= question | inv= False | htr= True
+TERM: visibility
+QUOTE: Whether a room is private, shared with the room's principals, published or stored on blind peers (LANE-17).
+BREAKS: Only publishing and blind-peer enrollment are gated by visibility (also LANE-17, 05b-lane:29); nothing says whether an invite, admission change or join into a non-personal private room is refused or makes it shared, PEER-02 serves segments to any peer whose principal has a seat and PEER-08's git carrier stores segments whatever the visibility, so a room can show 'private' while other principals hold it
+FIX: Ruling needed: either 'private'/'shared' are shown from the room's principals and never set, or private gates invites, admission and joins; model Visibility and LANE-17 then say which
+===== places#8 | /home/user/cairn/docs/domain-model/places.md:23, 41-42 | kind= question | inv= False | htr= False
+TERM: node clone, personal room
+QUOTE: that mints new seat keys and shares the carried-over personal room (REC-24)
+BREAKS: 'shares' here (and 'carried over to a node clone, which shares it') collides with Visibility's 'shared with the room's principals' for a room that 'stays private'; the hub verb for a node keeping a room is 'holds'
+FIX: Model: "...that mints new seat keys and holds the carried-over personal room, as the original node does" and "or carried over to a node clone, which holds it too"
+===== places#9 | /home/user/cairn/docs/srs/05d-peer-requirements.md:21 | kind= question | inv= False | htr= False
+TERM: ephemeral node
+QUOTE: A node marked ephemeral MUST seal and offer its open segment to a connected peer
+BREAKS: The model defines ephemeral node only as 'one in a short-lived cloud environment' (places.md:17); no requirement or model entry defines the mark PEER-05 conditions on, so the requirement cannot be decided
+FIX: Ruling needed on what makes a node ephemeral (e.g. its access token, PEER-06, or a setting); then model Node names it and PEER-05 reads "An ephemeral node MUST ..."
+===== places#10 | /home/user/cairn/docs/srs/05b-lane-requirements.md:15 | kind= other-specialist | inv= False | htr= False
+TERM: node clone vs git clone
+QUOTE: the same on every node holding a clone: ... A node whose clone contains the bound commit MUST use the bound identity. A node whose clone lacks it
+BREAKS: Unqualified 'clone' beside 'node' reads as the model's node clone (places.md:20-23); the model's Repository entry says 'git clone' (owned by the git-and-forge specialist)
+FIX: SRS LANE-02: "every node holding a git clone", "A node whose git clone ..." (twice)
+===== principals-and-agents#1 | docs/domain-model/principals-and-agents.md; docs/srs/05-functional-requirements.md:principals-and-agents.md:16-18, 24-26, 30-33; 05-functional-requirements.md:55 (PRV-10) | kind= question | inv= False | htr= True
+TERM: Managed policy / Service account / Person
+QUOTE: managed policy revokes one it lists by no longer listing it; none starts uncertified
+BREAKS: Service account and Person: a listing is a settings layer beside the record (record.md:11-14), not part of the key set (seats-and-keys.md:75-76), and no requirement records it. After delisting the key counts as never certified, so a person's, contradicting 'a service account whose certificate is revoked stays a service account' (model Principal, OWN-27). Nodes under different managed policies derive different verdict acceptance and trust-grant refusal, breaking LANE-22, LANE-31, PRV-02 ('deriving alike on all its nodes') and I10's inputs.
+FIX: Stakeholder rules. Recommended: PRV-10 and the model (Managed policy, Service account, plus seats-and-keys Key set) say each managed-policy listing and delisting is recorded as a signed certificate or revocation in the node's key set and replicates like one, so a delisted account stays a service account. Alternative: drop managed policy as a certifier (model, PRV-10, OWN-27, OWN-29, 09a row 61, provenance.feature:214, principal-acts.feature:330/364).
+===== principals-and-agents#2 | docs/domain-model/principals-and-agents.md; docs/srs/05b-lane-requirements.md:principals-and-agents.md:70-71; 05b-lane-requirements.md:35 (LANE-23); 09-interfaces.md:62 | kind= needs-fix | inv= False | htr= False
+TERM: Member
+QUOTE: A personal-room seat can neither leave nor be kicked.
+BREAKS: The Member rule has no requirement. LANE-23 makes every leave a room act after which acts under that id are refused, and room_leave takes any room. Before PRV-10, LANE-25's 'any key that chains to the owner's principal key' does not stop the owner's device seat kicking its run's personal-room seat. Either contradicts LANE-01 ('else to its personal-room seat, never refused').
+FIX: SRS LANE-23: add 'A personal-room seat MUST NOT leave or be kicked; Cairn MUST refuse and audit either act.' Add a step to the LANE-23 scenario in features/lane.feature, and note the refusal on room_leave in 09-interfaces.md.
+===== principals-and-agents#3 | docs/srs/invariants.md:42-44 | kind= needs-fix | inv= True | htr= False
+TERM: Principal (whose principal records the delegation grant)
+QUOTE: Under a delegation grant its principal recorded (OWN-23), and, for an agent of another principal, an acceptance grant that agent's principal recorded (OWN-26)
+BREAKS: I2 never names the delegating agent, so 'its principal' binds to the agent written to. For cross-principal delegation that makes the receiving principal record the delegation grant, contradicting OWN-23/OWN-26 (the delegating agent's principal records it) and the model's Delegation grant. Shared with the trust-and-flow specialist.
+FIX: invariants.md (then mdsmith fix for CLAUDE.md): 'Under a delegation grant the delegating agent's principal recorded (OWN-23), and, when the receiving agent has another principal, an acceptance grant that principal recorded (OWN-26): ...'. Needs an ADR and security review (ENG-29).
+===== principals-and-agents#4 | docs/domain-model/principals-and-agents.md:18-19 | kind= question | inv= False | htr= False
+TERM: Principal
+QUOTE: Only an agent's own principal widens what reaches that agent (I2)
+BREAKS: Under OWN-26 and I2, a delegated task reaches another principal's agent only under the delegating principal's delegation grant, a widening act of a different principal, together with the acceptance grant. 'Only' overstates I2.
+FIX: Model: 'Nothing widens what reaches an agent without its own principal's act (I2): another principal's delegation grant reaches it only beside its acceptance grant (OWN-26), and a room owner's notice allowance only lets through ...'
+===== principals-and-agents#5 | docs/srs/05b-lane-requirements.md; features/lane.feature:05b-lane-requirements.md:40 (LANE-28 Traces); lane.feature:441 | kind= question | inv= False | htr= False
+TERM: harness configuration (I7)
+QUOTE: set up only through an explicit install that shows the change first | T | I2, I4, I7, I10
+BREAKS: I7 and the model limit harness configuration to the harness's settings, hooks and MCP registrations; git's commit hook is not a harness hook (harness-facts Hook). LANE-28 serving I7 reads I7 as covering git configuration.
+FIX: Drop I7 from LANE-28's Traces and the scenario's @I7 tag, then regenerate Appendix B. Or, if I7 should cover the commit hook, widen I7 and the model's harness configuration by ADR.
+===== principals-and-agents#6 | docs/domain-model/principals-and-agents.md; docs/srs/05-functional-requirements.md; docs/srs/02-context.md:principals-and-agents.md:44-47; 05-functional-requirements.md:17 (REC-02); 02-context.md:49 (ASM-01) | kind= question | inv= False | htr= False
+TERM: harness clear / Run
+QUOTE: a harness resume that starts a new harness session, or a **harness clear**, starts a new run
+BREAKS: The model asserts that a harness clear starts a new run, but no requirement or assumption backs it. REC-02 and ASM-01 cover only resume. Run is keyed by harness session, so if a clear kept its session_id the model would contradict itself. The term is used nowhere in the SRS.
+FIX: Either ASM-01 adds 'a SessionStart with source = clear carries a new session_id' and REC-02 adds 'A harness clear MUST start a new run', with a step in REC-02's scenario; or drop 'or a harness clear' from Run.
+===== principals-and-agents#7 | docs/srs/09b-lane-vocabulary.md:133-134 | kind= needs-fix | inv= False | htr= False
+TERM: Principal
+QUOTE: Timeline rails: solid for the agent's principal, hollow for other principals, dotted for agents and the forge.
+BREAKS: A room's Timeline holds agents of several principals, so 'the agent's principal' names no single principal. §9.7.6 is otherwise framed from the viewing principal.
+FIX: 'Timeline rails: solid for the principal viewing, hollow for other principals, dotted for agents and the forge.'
+===== principals-and-agents#8 | docs/srs/02-context.md:37-38 | kind= needs-fix | inv= False | htr= False
+TERM: Run / harness resume
+QUOTE: so runs can pause and resume
+BREAKS: Pause and resume are run controls (principal acts). The durable-volume context means a harness resume, which continues a run only when it keeps its harness session (Run, REC-02).
+FIX: '... live on durable volumes so a harness session can be resumed (a harness resume, REC-02).'
+===== principals-and-agents#9 | docs/srs/03-rationale.md:31 | kind= other-specialist | inv= False | htr= False
+TERM: Kernel (cross-reference)
+QUOTE: → Kernel (§5.8).
+BREAKS: Not a term defect: the Compute kernel is §5.7 (05-functional-requirements.md:116), and §5.8 is Administration.
+FIX: '→ Kernel (§5.7).'
+===== record#1 | features/record.feature:145 | kind= needs-fix | inv= False | htr= False
+TERM: writer id; chain head; commitment
+QUOTE: And a second fresh home that ingests "main-run" under the same writer id derives the same chain head hash
+BREAKS: Writer: the writer id derives from the seat's first key, which is generated on and bound to one node (SEC-10, REC-24), so two homes never share it. Commitment and chain head: the chained header holds the commitment (REC-10), made under a random per-event commitment key (REC-17), so two ingests never yield the same chain head. The step cannot pass.
+FIX: features/record.feature:145 -> "And a second fresh home that ingests \"main-run\" assigns its lines the same seq order"
+===== record#2 | features/record.feature:226 | kind= needs-fix | inv= False | htr= False
+TERM: Seal; run seat ingest starts
+QUOTE: And the core sealed every writer but the witnessed run's run seats' and the paired phone's, the ingested run's run seat's writer and this node's device seat's writer included, after each append to it
+BREAKS: Seal: a witnessed run's run seats are sealed by its MCP server except the seat ingest starts, which the core seals. Line 222 of the same scenario says so ('whose writer the core seals'), but line 226 excludes every run seat of the witnessed run from the core's sealing.
+FIX: features/record.feature:226 -> "...every writer but the witnessed run's run seats' other than those \"cairn ingest\" started, and the paired phone's, ..."
+===== record#3 | features/administration.feature:205 | kind= needs-fix | inv= False | htr= False
+TERM: Segment; Integrity status (refused)
+QUOTE: | received writer     | a peer offers another event of that writer          | the event is refused and an audit entry records it                                        |
+BREAKS: Segment: peers exchange sealed ranges, not single events (PEER-03). ADM-15 requires 'recording each refused segment as REC-21 says', i.e. a structural event in the device seat's personal-room writer, from which `refused` derives. The row omits it, though line 206 includes it.
+FIX: features/administration.feature:205 -> "| received writer | a peer offers another segment of that writer | the segment is refused, and a structural event and an audit entry record the refusal |"
+===== record#4 | docs/srs/09-interfaces.md:122-123 | kind= needs-fix | inv= False | htr= True
+TERM: Integrity status
+QUOTE: `integrity` is the integrity status of the event's writer, one of §9.7.5's values
+BREAKS: Contradicts VIEW-10 (05b-room-view:47): 'A break MUST mark every later event of that writer `unverified` ... including in recall results'. Also contradicts REC-18 (events past the newest seal are `unsigned`) and the RCL-09 scenario (recall.feature:127, 133-134), where events of one broken writer show `unverified` or `broken` per event. Per-writer status cannot carry those values.
+FIX: docs/srs/09-interfaces.md:122-123 -> "`integrity` is the event's integrity status, one of §9.7.5's values" (with the model ruling in the next item)
+===== record#5 | docs/domain-model/record.md:152 | kind= question | inv= False | htr= False
+TERM: Integrity status
+QUOTE: **Integrity status**: What a room or writer shows about its chain and seals,
+BREAKS: Gap in the model: RCL-09 ('Every recalled item MUST carry ... its integrity status'), VIEW-10, REC-18 and §9.7.5's own value `unverified` ('an event after a break', 09b:102) give one integrity status per event. The definition, and 09b:98 'The integrity status of a room or a writer', cover only rooms and writers.
+FIX: record.md:152 -> "What a room, writer or event shows about its chain and seals"; docs/srs/09b-lane-vocabulary.md:98 -> "The integrity status of a room, a writer or an event"
+===== record#6 | docs/srs/05-functional-requirements.md:46 | kind= question | inv= False | htr= True
+TERM: Provenance (structural vs operator); key rotation
+QUOTE: Hook observations, key rotations and tombstones MUST carry `structural`
+BREAKS: Provenance: rotating a device key is a widening principal act (OWN-11, acts-and-roles Widening, 09a `cairn device-key rotate`), and OWN-02 records every principal act as `operator`. PRV-01 and record.md:75 ('hook observations, key rotations, tombstones ... are `structural`') give the same event a second class. The class is in the chained header (REC-10) and decides trust on the principal's other nodes.
+FIX: PRV-01 (05-functional:46) and record.md:75: "key rotations" -> "seat-key rotations" (a seat key's rotation goes to its own writer, SEC-27; a device-key rotation stays an `operator` principal act)
+===== record#7 | docs/srs/06-security.md:115 | kind= question | inv= False | htr= True
+TERM: recorder; Origin (witnessed)
+QUOTE: MUST refuse and audit a segment failing either, recording it as REC-21 says, and MUST store received events under the local home
+BREAKS: Origin and recorder (record.md:79-91) list the closed set of parts that record events, and the trust policy reads the recorder. SEC-25 has the peer component (B2) record the REC-21 structural event; ADM-15 and PRV-09 imply the same, and for the git carrier the publish component. Neither component is in the list, and OQ-40 (room-view component, launcher, bridge component) does not cover who signs and seals what they record.
+FIX: Either SEC-25: "... MUST refuse and audit a segment failing either and pass the refusal to the core, which records it as REC-21 says", or add the peer and publish components to record.md's recorder and witnessed lists and to OQ-40
+===== record#8 | docs/srs/06-security.md:109 | kind= question | inv= False | htr= False
+TERM: Receipt (head receipt, purge receipt)
+QUOTE: nor is a head or purge receipt, which carries only digests (VIEW-10)
+BREAKS: Receipt: SEC-31 (06-security:121) makes the purge receipt a signed statement of 'the scope, the ranges, the copies erased, and every copy Cairn knows of and cannot erase (harness transcript files, git-carrier refs, exported bundles, backups, and peers ...)', which is not only digests. The same words are at 06b-boundary-register.md:23. The model calls every receipt 'signed', which VIEW-10 and SEC-27 do not require for a head receipt.
+FIX: SEC-19 and 06b:23 -> "nor is a head receipt, which carries only digests (VIEW-10), or a purge receipt, which carries only ids, addresses, counts and the names of the copies it lists (SEC-31)", or give the purge receipt its own §6.3 row; record.md:158 -> state which receipts are signed
+===== record#9 | docs/srs/09-interfaces.md:27 | kind= question | inv= False | htr= False
+TERM: Ingest
+QUOTE: | `Notification`        | —                            | `session_id`, the harness's notification text                     | None; ingestion (REC-13)
+BREAKS: Ingest is reading a transcript into the record. REC-13 lists only PostToolUse, Stop, SubagentStop and PermissionRequest, and its scenario has the same four. The Notification row's inputs carry no `transcript_path`, so 'ingestion (REC-13)' cites a requirement that does not cover it, for an act that is not ingest.
+FIX: Either add `Notification` to REC-13 and its scenario Examples, or change the row to "None; records the notification text as `harness_text` (PRV-08)"
+===== record#10 | docs/srs/05d-peer-requirements.md:28 | kind= needs-fix | inv= False | htr= False
+TERM: sealed range vs address range
+QUOTE: MUST verify the seat key's signature over each encrypted range before storing it
+BREAKS: Address: "'range' on its own means an address range". A blind peer holds and verifies sealed ranges, and the same row uses 'address ranges' for the metadata it may learn. The same misuse is in the same row ('MUST encrypt every range sent afterwards', 'ranges a removed principal's nodes already received'), docs/srs/06b-boundary-register.md:58 ('stores and serves ranges encrypted to ...') and features/peer.feature:136-137 ('stores only ranges encrypted', 'over each range').
+FIX: Say "sealed range(s)" at each place: PEER-12 (05d:28) x3, 06b:58, peer.feature:136 and 137
+===== record#11 | docs/srs/05-functional-requirements.md:32 | kind= needs-fix | inv= False | htr= False
+TERM: commitment key
+QUOTE: a hiding, binding commitment to the canonical content under `k_e`, a random per-event secret of at least 256 bits†
+BREAKS: Commitment: the model names `k_e` the commitment key, and so do REC-23 and ADM-07. REC-17, the requirement the model cites for it, calls it only 'a random per-event secret', a second name for one concept.
+FIX: REC-17 -> "... under its commitment key `k_e`, a random per-event secret of at least 256 bits† ..."
+===== record#12 | docs/domain-model/record.md:44-45 | kind= question | inv= False | htr= False
+TERM: Payload
+QUOTE: under a name that confirms no guess at its content (REC-09)
+BREAKS: The cited REC-09 (and its scenario at record.feature:107) promises only that the name is one 'from which no one off this node can confirm a guess at the content'. The model promises more than the requirement, for all readers including the node itself.
+FIX: record.md:44-45 -> "under a name from which no one off this node can confirm a guess at its content (REC-09)"
+===== record#13 | docs/domain-model/record.md:138-139 | kind= question | inv= False | htr= False
+TERM: Flag
+QUOTE: **Flag**: A mark Cairn sets on an event whose text matches an injection pattern (PRV-07)
+BREAKS: The cited PRV-07 flags only untrusted events ('Cairn SHOULD flag ... untrusted events that contain instruction-like content'). The model's definition covers any event.
+FIX: record.md:138 -> "A mark Cairn sets on an untrusted event whose text matches an injection pattern (PRV-07)"

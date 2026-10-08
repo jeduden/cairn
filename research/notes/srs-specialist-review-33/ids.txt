@@ -1,0 +1,1 @@
+hub=aae5ab5a06bd50c2e acts-and-roles=a39988fbd63254553 components-and-surfaces=aa212ae5dcdd838bf git-and-forge=ad15ed190a92ec36b harness-facts=a77bf8d281e72b6e3 pins-and-context=ab0bead9e63f859d0 places=a30533ba34d9023ed principals-and-agents=a9459bde3813b5ec0 record=a9acf9a607ee51c67 seats-and-keys=a7ea36dd9853618f4 trust-and-flow=a4fd7548e5ec4384a whole=a70292df62634dd73

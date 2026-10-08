@@ -1,0 +1,3649 @@
+{
+  "clusters": [
+    {
+      "id": "C01",
+      "title": "I2 lets compaction guidance carry structural fields and ids; the model and PIN-07 allow only fixed text",
+      "rids": [
+        "harness-facts#8"
+      ],
+      "owners": [
+        "harness-facts",
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/srs/invariants.md:37-39",
+        "docs/domain-model/harness-facts.md:44-46",
+        "docs/srs/05-functional-requirements.md:68",
+        "docs/srs/09-interfaces.md:20",
+        "docs/srs/04-reference-architecture.md:128-129",
+        "docs/domain-model/index.md:36"
+      ],
+      "problem": "I2 groups compaction guidance (PIN-07) with opt-in notices and the OWN-04/OWN-07 templates, all 'built only from fixed text Cairn ships, trusted structural fields and ids'. The model's Compaction guidance, PIN-07, §9.1, §4.4 and the fifteenth-round decision all say compaction guidance is fixed text Cairn ships and nothing else. The invariant and the model therefore do not read the same.",
+      "proposed_fix": "Narrow I2 by ADR and security review (ENG-29): '... and compaction guidance (PIN-07), built only from fixed text Cairn ships; and opt-in notices (INJ-10) and the fixed templates of OWN-04 and OWN-07, each built only from fixed text Cairn ships, trusted structural fields and ids.' Then run `mdsmith fix .` so CLAUDE.md's include follows.",
+      "class": "stakeholder",
+      "conflict": "",
+      "options": [
+        "Narrow I2 as proposed (ADR, security review, mdsmith fix for CLAUDE.md); model and PIN-07 stay.",
+        "Keep I2 as the ceiling and record in the model's Compaction guidance entry that PIN-07 deliberately allows less than I2 does; no invariant change."
+      ],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/invariants.md",
+        "CLAUDE.md",
+        "docs/adr/ (new ADR)"
+      ]
+    },
+    {
+      "id": "C02",
+      "title": "I2's 'its principal recorded' binds a cross-principal delegation grant to the receiving agent's principal",
+      "rids": [
+        "principals-and-agents#3"
+      ],
+      "owners": [
+        "principals-and-agents",
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/srs/invariants.md:42-44",
+        "CLAUDE.md (I2 include)",
+        "docs/srs/05c-principal-and-peer-requirements.md:39",
+        "docs/srs/05c-principal-and-peer-requirements.md:42",
+        "docs/domain-model/trust-and-flow.md:89-96"
+      ],
+      "problem": "I2 says 'Under a delegation grant its principal recorded (OWN-23), and, for an agent of another principal, an acceptance grant that agent's principal recorded (OWN-26)'. I2 never names the delegating agent, so 'its principal' binds to the agent written to. For cross-principal delegation that has the receiving principal record the delegation grant, contradicting OWN-23, OWN-26 and the model's Delegation grant (the delegating principal's widening act).",
+      "proposed_fix": "Reword I2 by ADR and security review (ENG-29): 'Under a delegation grant the delegating agent's principal recorded (OWN-23), and, when the receiving agent has another principal, an acceptance grant that principal recorded (OWN-26): a delegated task inside the fixed template of OWN-24.' Then run `mdsmith fix .` for CLAUDE.md.",
+      "class": "stakeholder",
+      "conflict": "",
+      "options": [
+        "Reword I2 as proposed, under one ADR together with C01 if both go ahead."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/invariants.md",
+        "CLAUDE.md",
+        "docs/adr/ (new ADR)"
+      ]
+    },
+    {
+      "id": "C03",
+      "title": "A joined run seat defaults to viewer: two scenarios route events to it, and the owner's own run gets no work in its own room",
+      "rids": [
+        "acts-and-roles#1",
+        "acts-and-roles#2",
+        "acts-and-roles#7"
+      ],
+      "owners": [
+        "acts-and-roles",
+        "principals-and-agents",
+        "places"
+      ],
+      "locations": [
+        "features/lane.feature:11",
+        "features/lane.feature:15",
+        "features/lane.feature:17",
+        "features/landmarks.feature:13",
+        "docs/domain-model/acts-and-roles.md:113-115",
+        "docs/srs/05b-lane-requirements.md:28",
+        "docs/srs/05b-lane-requirements.md:14"
+      ],
+      "problem": "Role and LANE-16 make a seat with no role assignment or appointment a viewer (only a run's personal-room seat, or its seat in a room it created, is a contributor), and 'No role MAY follow from joining'. The LANE-01 and LMK-01 scenarios have a run join a room and then route its events to that seat, which a viewer with no work cannot receive; lane.feature:17 also implies the default is not viewer. The same rule leaves the owner's own run with no work in the owner's own room unless the owner assigns a role after every join, since the seat id exists only after the join.",
+      "proposed_fix": "Rule on the default role of the owner's own run seats, then fix both scenarios to match: state who owns R and L1 and, unless the default covers it, add an invite giving the seat the contributor role; lane.feature:17 reads 'while a later role assignment gives the run's seat in \"R\" the viewer role'.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "A seat of the owner's principal's run in a room that principal owns is a contributor (Role entry, LANE-16's 'Except ...' sentence); scenarios state that R and L1 are owned by \"alice\"'s principal; lane.feature:17 says 'a later role assignment'.",
+        "Keep the viewer default; let the owner invite its own principal key (LANE-18, model Role) and have lane.feature:11 and landmarks.feature:13 add 'whose owner invited \"alice\"'s principal key as contributor' / 'under an invite that gives its seat the contributor role'.",
+        "Keep the viewer default and no new act; scenarios add an explicit role assignment by the owner after the join."
+      ],
+      "hard_to_revert": true,
+      "touches": [
+        "features/lane.feature",
+        "features/landmarks.feature",
+        "docs/domain-model/acts-and-roles.md",
+        "docs/srs/05b-lane-requirements.md"
+      ]
+    },
+    {
+      "id": "C04",
+      "title": "LANE-19's 'concurrently' uses the model's causal word for overlap in time",
+      "rids": [
+        "acts-and-roles#3"
+      ],
+      "owners": [
+        "acts-and-roles",
+        "principals-and-agents"
+      ],
+      "locations": [
+        "docs/srs/05b-lane-requirements.md:31",
+        "features/lane.feature (LANE-19 scenario)"
+      ],
+      "problem": "The model defines Concurrent only for acts and events: neither causally after the other. Two subagents' edit events on one node are causally ordered through the writer heads each records (REC-10), so 'edit the same file concurrently' never fires as written. The requirement means overlap in time, and the window it should cover is a behaviour choice.",
+      "proposed_fix": "Reword LANE-19's trigger in time terms and mirror it in its scenario.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "'When two subagents that share the worktree both edit the same file while both run, Cairn MUST raise a Needs you item naming both.'",
+        "Bound the window by worktree checkpoints: '... both edit the same file between two worktree checkpoints ...'."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md",
+        "features/lane.feature"
+      ]
+    },
+    {
+      "id": "C05",
+      "title": "`cairn ui --phone` takes a widening principal act outside the CLI and TUI, and 'CLI' has two meanings",
+      "rids": [
+        "components-and-surfaces#1"
+      ],
+      "owners": [
+        "components-and-surfaces",
+        "trust-and-flow",
+        "hub"
+      ],
+      "locations": [
+        "docs/srs/05c-principal-and-peer-requirements.md:32",
+        "docs/srs/05c-principal-and-peer-requirements.md:18",
+        "docs/domain-model/components-and-surfaces.md:12-13",
+        "docs/domain-model/components-and-surfaces.md:31-33",
+        "docs/domain-model/trust-and-flow.md:40-41",
+        "docs/srs/09a-command-line-interface.md:80",
+        "docs/srs/04-reference-architecture.md:65-67",
+        "docs/srs/06b-boundary-register.md:39",
+        "features/principal-acts.feature:204",
+        "docs/domain-model/index.md:108-111"
+      ],
+      "problem": "OWN-16 makes issuing a phone-scoped room-view secret (`cairn ui --phone`) a widening principal act at a terminal. The model's Core says the CLI is `cairn` but for `cairn ui`, the Room-view component records only the browser room view's principal acts, and OWN-02 and Principal surface accept terminal acts only from the CLI or TUI, refusing any other. The hub's Names section meanwhile counts `ui` and `launch` among CLI commands, giving 'CLI' two meanings.",
+      "proposed_fix": "Choose where the act is taken; either way qualify the hub's Names list so `ui` and `launch` are commands of the room-view component and the launcher, not the core's CLI.",
+      "class": "decide",
+      "conflict": "The reviewer listed (a) first; (b) is put first here because it keeps OWN-02's closed set of principal surfaces inside the core (pick safety).",
+      "options": [
+        "(b) Move the issue into a core CLI verb named per the hub (`cairn <concept> <verb>`) that records the act; `cairn ui --phone` only reads it from the record. Edit OWN-16, §9.5 (09a:80), §4.2 (04:65-67) and principal-acts.feature:204.",
+        "(a) Add to the model's Room-view component 'and, at the terminal that starts it, the widening act issuing a phone-scoped room-view secret (OWN-16)'; add that entry point to OWN-02's surface list and to trust-and-flow.md's Principal surface; add it to §6.3 row 8's Reach (signing under OQ-40)."
+      ],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/05c-principal-and-peer-requirements.md",
+        "docs/srs/09a-command-line-interface.md",
+        "docs/srs/04-reference-architecture.md",
+        "docs/srs/06b-boundary-register.md",
+        "features/principal-acts.feature",
+        "docs/domain-model/components-and-surfaces.md",
+        "docs/domain-model/trust-and-flow.md",
+        "docs/domain-model/index.md"
+      ]
+    },
+    {
+      "id": "C06",
+      "title": "The peer and publish components record refusal events, but are neither recorders in the model nor covered by OQ-40",
+      "rids": [
+        "components-and-surfaces#2",
+        "record#7"
+      ],
+      "owners": [
+        "record",
+        "components-and-surfaces"
+      ],
+      "locations": [
+        "docs/srs/06-security.md:115",
+        "docs/srs/13-open-questions-and-risks.md:47",
+        "docs/srs/06b-boundary-register.md:25-26",
+        "docs/domain-model/record.md:79-91",
+        "docs/srs/05a-administration-requirements.md (ADM-15)",
+        "docs/srs/05-functional-requirements.md (PRV-09)"
+      ],
+      "problem": "SEC-25 has the peer component (B2) refuse a segment and record it 'as REC-21 says', a structural event in this node's device seat writer; ADM-15 and PRV-09 imply the same for the git carrier in the publish component. The model's recorder list (the closed set the trust policy reads) names neither component, REC-19 and SEC-10 leave sealing to the core, and OQ-40 and the §6.3 note ask who signs and seals only for the room-view component, the launcher and the bridge component.",
+      "proposed_fix": "Decide who writes the REC-21 event, then align SEC-25, ADM-15, PRV-09, record.md's recorder list, OQ-40 and the §6.3 note.",
+      "class": "decide",
+      "conflict": "Both reviewers offer the same two fixes in opposite order: components-and-surfaces#2 leads with widening OQ-40, record#7 with routing the refusal to the core.",
+      "options": [
+        "SEC-25 (and ADM-15, PRV-09 for the git carrier): '... MUST refuse and audit a segment failing either and pass the refusal to the core, which records it as REC-21 says'. The recorder list and OQ-40 stay as they are; the core stays the only sealer.",
+        "Add the peer and publish components to record.md's recorder and witnessed lists; widen OQ-40 to 'the room-view component, the launcher, and the peer, publish and bridge components'; name §6.3 rows 12 and 19 in the note at 06b:25-26."
+      ],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/06-security.md",
+        "docs/srs/05a-administration-requirements.md",
+        "docs/srs/05-functional-requirements.md",
+        "docs/srs/13-open-questions-and-risks.md",
+        "docs/srs/06b-boundary-register.md",
+        "docs/domain-model/record.md"
+      ]
+    },
+    {
+      "id": "C07",
+      "title": "CON-03 admits a webview client the model's Room view and §6.3 do not list",
+      "rids": [
+        "components-and-surfaces#3"
+      ],
+      "owners": [
+        "components-and-surfaces"
+      ],
+      "locations": [
+        "docs/srs/02-context.md:77",
+        "docs/domain-model/components-and-surfaces.md:57"
+      ],
+      "problem": "CON-03 says the browser room view client's TypeScript runs 'in a webview or a browser'. The model's Room view lists the browser served through the room-view component plus the reduced clients; a webview is in neither the model nor §6.3, and nothing says whether it reaches the record through the room-view component on loopback under SEC-20. This runs ahead of the still-proposed ADR-2610042341.",
+      "proposed_fix": "Either hold CON-03 back until the ADR's SRS changes land, or define when a webview counts as the browser.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "Drop 'a webview or' from CON-03 until ADR-2610042341 is accepted and its SRS changes land.",
+        "Add to components-and-surfaces.md Room view: 'a webview counts as the browser only when it loads the browser room view from the room-view component on loopback under SEC-20'."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/02-context.md",
+        "docs/domain-model/components-and-surfaces.md"
+      ]
+    },
+    {
+      "id": "C08",
+      "title": "'Branch head' is undefined, and two scenarios stale a ready mark and a verdict on an uncommitted edit",
+      "rids": [
+        "git-and-forge#1"
+      ],
+      "owners": [
+        "git-and-forge"
+      ],
+      "locations": [
+        "features/principal-acts.feature:256-258",
+        "features/principal-acts.feature:325-328",
+        "docs/domain-model/git-and-forge.md:52",
+        "docs/domain-model/git-and-forge.md:74-75",
+        "docs/domain-model/git-and-forge.md:82",
+        "docs/srs/05c-principal-and-peer-requirements.md:37",
+        "docs/srs/05c-principal-and-peer-requirements.md:43"
+      ],
+      "problem": "git-and-forge.md uses a branch's head without defining it. OWN-21 clears a ready mark only on 'a later change to any of those branch heads' and OWN-27 stales a verdict when 'any branch head, the intent version or the evidence it was bound to changes'. In git's sense a head is the tip commit, which an uncommitted edit does not change, yet the OWN-21 and OWN-27 scenarios clear and stale on an uncommitted edit.",
+      "proposed_fix": "Define head in the Branch entry and decide what OWN-21 and OWN-27 bind.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "Keep git's meaning ('its **head** is its tip commit; an uncommitted edit changes no head') and widen OWN-21 and OWN-27 to also clear or stale on a change to the tree of a worktree on a branch the room names (latest worktree checkpoint plus recorded edits, LANE-05); scenarios stay.",
+        "Keep git's meaning and OWN-21/OWN-27 as written; both scenarios make the agent commit the edit ('the agent then commits an edit')."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/git-and-forge.md",
+        "docs/srs/05c-principal-and-peer-requirements.md",
+        "features/principal-acts.feature"
+      ]
+    },
+    {
+      "id": "C09",
+      "title": "The model says Cairn never lands, while OQ-37 leaves that open",
+      "rids": [
+        "git-and-forge#4"
+      ],
+      "owners": [
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/domain-model/git-and-forge.md:22",
+        "docs/domain-model/git-and-forge.md:51",
+        "docs/srs/13-open-questions-and-risks.md:44"
+      ],
+      "problem": "git-and-forge.md states 'It approves and lands; Cairn does neither' and 'Cairn never lands anything' as permanent. OQ-37 ('May Cairn run, push or merge code itself? Until this closes, ADM-13 applies') leaves it open, so the model runs ahead of the SRS.",
+      "proposed_fix": "Hedge the model to OQ-37, or close OQ-37's merge part.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "Model, both places: 'Cairn lands nothing while OQ-37 is open (ADM-13)'.",
+        "Close OQ-37's merge part (Cairn never lands) and keep the model as is."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/git-and-forge.md",
+        "docs/srs/13-open-questions-and-risks.md"
+      ]
+    },
+    {
+      "id": "C10",
+      "title": "The Hook entry names hook input but not hook output or a hook's firing ('hook event'), which normative text relies on",
+      "rids": [
+        "harness-facts#1",
+        "harness-facts#2"
+      ],
+      "owners": [
+        "harness-facts",
+        "record",
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/domain-model/harness-facts.md:28-30",
+        "docs/srs/05c-principal-and-peer-requirements.md:19-20",
+        "docs/srs/05b-room-view-requirements.md:54",
+        "docs/srs/06b-boundary-register.md:37",
+        "docs/srs/04-reference-architecture.md:76",
+        "features/restore.feature:48-49",
+        "features/principal-acts.feature:45-51",
+        "features/lane-view.feature:186",
+        "features/engineering.feature:40",
+        "features/lane.feature:368",
+        "features/assumptions.feature:29",
+        "docs/srs/05b-lane-requirements.md:15",
+        "features/lane.feature:37",
+        "features/lane.feature:39",
+        "features/assumptions.feature:156",
+        "docs/srs/02-context.md:65",
+        "docs/domain-model/git-and-forge.md:12"
+      ],
+      "problem": "Hook defines hook input but nothing names what the handlers return, yet 'hook output' carries rules in OWN-03, OWN-04, VIEW-17, §6.3 row 6, §4.2 and six scenarios. 'Hook event' (LANE-02, ASM-17, three scenarios, git-and-forge.md:12) names one firing of a hook, while the hub gives 'event' one meaning, an entry in a writer. Whether harness-native words like these are outside terms or need model entries is unsettled.",
+      "proposed_fix": "Name hook output in the Hook entry and settle 'hook event'.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "Hook entry: '... the core's hook handlers answer it with their **hook output**, at most one JSON object (§9.1)'; reword 'hook event' everywhere: 'at the first hook', 'When the first hook for the clone fires', 'the time each hook fired', ASM-17 'within 1 s of the hook firing', git-and-forge.md:12 likewise.",
+        "Hook entry names both hook output and hook event ('one firing of a hook, the harness's own term'); no SRS change.",
+        "Treat both as harness-native outside terms under the hub's outside-thing rule and add them to the hub's examples."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/harness-facts.md",
+        "docs/srs/05b-lane-requirements.md",
+        "docs/srs/02-context.md",
+        "features/lane.feature",
+        "features/assumptions.feature",
+        "docs/domain-model/git-and-forge.md"
+      ]
+    },
+    {
+      "id": "C11",
+      "title": "PIN-07 gates compaction guidance on ASM-01/02, which do not cover PreCompact output",
+      "rids": [
+        "harness-facts#7"
+      ],
+      "owners": [
+        "harness-facts",
+        "pins-and-context"
+      ],
+      "locations": [
+        "docs/srs/05-functional-requirements.md:68",
+        "docs/srs/02-context.md:49-50",
+        "features/assumptions.feature:27-37",
+        "docs/srs/13-open-questions-and-risks.md (OQ-02)"
+      ],
+      "problem": "PIN-07 says 'If ASM-01/02 permit, the PreCompact hook handler SHOULD return compaction guidance'. Neither ASM-01 nor ASM-02, nor the ASM-02 scenario (no PreCompact row), says PreCompact output reaches the harness, and ASM-02's Affects lists only INJ-*. The open question is OQ-02 (spike S1).",
+      "proposed_fix": "Point PIN-07 at the right gate.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "PIN-07: 'If spike S1 finds that PreCompact output reaches the harness's compaction (OQ-02), the PreCompact hook handler SHOULD return compaction guidance ...'.",
+        "Add PreCompact to ASM-02 with PIN-07 in its Affects column and a row in the ASM-02 scenario of assumptions.feature."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05-functional-requirements.md",
+        "docs/srs/02-context.md",
+        "features/assumptions.feature"
+      ]
+    },
+    {
+      "id": "C12",
+      "title": "LANE-28 traces I7, but git's commit hook is not harness configuration",
+      "rids": [
+        "harness-facts#9",
+        "principals-and-agents#5"
+      ],
+      "owners": [
+        "harness-facts",
+        "principals-and-agents"
+      ],
+      "locations": [
+        "docs/srs/05b-lane-requirements.md:40",
+        "features/lane.feature:441",
+        "docs/srs/appendix-b-invariant-coverage.md:23"
+      ],
+      "problem": "LANE-28 traces I7 (Traces column, @I7 tag, Appendix B). I7 covers only harness configuration (the harness's settings, hooks and MCP registrations); the repository's commit hook is git's hook, not a harness hook, and ADM-02 lists them separately. So no invariant guarantees what LANE-28 relies on.",
+      "proposed_fix": "Drop the trace, or widen I7.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "Drop I7 from LANE-28's Traces and the scenario's @I7 tag (lane.feature:441); the Appendix B test then needs the row regenerated. LANE-28 still traces I2, I4, I10.",
+        "Widen I7 and the model's harness configuration to name the repository's commit hook (ADR and security review; stakeholder)."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md",
+        "features/lane.feature",
+        "docs/srs/appendix-b-invariant-coverage.md"
+      ]
+    },
+    {
+      "id": "C13",
+      "title": "Foreign room versus the run and room recall scopes: rooms that turned foreign and cross-room posts' sending rooms",
+      "rids": [
+        "hub#2",
+        "places#6"
+      ],
+      "owners": [
+        "places",
+        "trust-and-flow",
+        "hub"
+      ],
+      "locations": [
+        "docs/srs/05-functional-requirements.md:82",
+        "docs/srs/05-functional-requirements.md:87",
+        "docs/domain-model/places.md:48-56",
+        "docs/domain-model/index.md:96-98",
+        "docs/srs/05b-lane-requirements.md:41",
+        "docs/srs/05d-peer-requirements.md:18",
+        "docs/srs/13-open-questions-and-risks.md (OQ-41)"
+      ],
+      "problem": "RCL-05's default run scope reaches 'every writer of its seats', including a run seat's writer in a room that has since turned foreign, while RCL-10 reaches a foreign room only by naming it. RCL-05's room scope covers 'the cross-room posts it shows', but a node that holds the sending writer only to show the post meets the Foreign room definition, and RCL-05 bars foreign rooms from the room scope. LANE-29 lets a seat pull such a post without a seat in the sending room, while PEER-02 serves segments only to principals with a seat, and OQ-41 covers only principal acts.",
+      "proposed_fix": "Rule what an unnamed recall reaches of a foreign room, then align RCL-05, RCL-10, places.md Foreign room, hub relation 10 and PEER-02/OQ-41.",
+      "class": "decide",
+      "conflict": "hub#2 and places#6 each offer 'state the exception' or 'exclude'; places#6 adds a third option, narrowing the Foreign room definition.",
+      "options": [
+        "State the exceptions: the run scope keeps the calling run's own events and the room scope the cross-room posts a room of its principal shows, both marked untrusted; RCL-10: 'Recall MUST extend to a foreign room only through a room parameter naming it in that call, beyond the calling run's own events and the cross-room posts a room of its principal shows, which recall marks untrusted'; places.md Foreign room says the same; fold serving cross-room posts into OQ-41 or PEER-02.",
+        "Exclude: RCL-05's run scope drops writers of seats whose room has turned foreign, and a cross-room post from a foreign sending room is shown only when that room is named; places.md Foreign room says so.",
+        "Narrow the definition: Foreign room '... other than only as a blind peer or only for the cross-room posts a room of its principal shows', plus option 1's run-scope wording in RCL-10."
+      ],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/05-functional-requirements.md",
+        "docs/domain-model/places.md",
+        "docs/domain-model/index.md",
+        "docs/srs/05d-peer-requirements.md",
+        "docs/srs/13-open-questions-and-risks.md"
+      ]
+    },
+    {
+      "id": "C14",
+      "title": "No interface can write a directed post",
+      "rids": [
+        "pins-and-context#4"
+      ],
+      "owners": [
+        "pins-and-context",
+        "hub"
+      ],
+      "locations": [
+        "docs/srs/09-interfaces.md:57",
+        "docs/srs/09a-command-line-interface.md:56",
+        "docs/srs/05b-lane-requirements.md:24"
+      ],
+      "problem": "LANE-12 and the model's Directed post need a post directed to one agent, but neither `room_post` nor `cairn room post` can direct one. That breaks VIEW-03's rule that everything the room view does exists in the CLI or MCP.",
+      "proposed_fix": "Add a target parameter to `room_post` and `cairn room post`, named by the hub's option rule.",
+      "class": "decide",
+      "conflict": "The reviewer asks the stakeholder to confirm the parameter name.",
+      "options": [
+        "`seat` (optional: directs the post to that run seat's agent, LANE-12) on `room_post`; `cairn room post <room> [--seat <seat>]`.",
+        "`run` / `--run` naming the target run; Cairn resolves its seat in the room."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/09-interfaces.md",
+        "docs/srs/09a-command-line-interface.md"
+      ]
+    },
+    {
+      "id": "C15",
+      "title": "The LANE-33 scenario caps room_summary_request, which no requirement caps",
+      "rids": [
+        "pins-and-context#5"
+      ],
+      "owners": [
+        "pins-and-context"
+      ],
+      "locations": [
+        "features/lane.feature:515-516",
+        "docs/srs/09-interfaces.md:73-74",
+        "docs/srs/09-interfaces.md:175",
+        "docs/srs/05b-lane-requirements.md:45"
+      ],
+      "problem": "LANE-33, §9.2 and §9.6 cap only `room_summary_get` by `room_summary.max_model_tokens`. The scenario asks `room_summary_request` for 2000 model tokens and asserts the request is recorded 'for 500 model tokens at most', a cap no requirement states.",
+      "proposed_fix": "Make the SRS and the scenario agree.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "SRS §9.2 `room_summary_request`: '`size` (model tokens wanted, capped by `room_summary.max_model_tokens`)'; §9.6 key description: 'the agent's principal's cap on `room_summary_request` and `room_summary_get`'; LANE-33 to match.",
+        "Change the scenario to assert the cap on `room_summary_get` only."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/09-interfaces.md",
+        "docs/srs/05b-lane-requirements.md",
+        "features/lane.feature"
+      ]
+    },
+    {
+      "id": "C16",
+      "title": "Working view is defined but the SRS never uses it; it says 'the model's context' instead",
+      "rids": [
+        "pins-and-context#11"
+      ],
+      "owners": [
+        "pins-and-context"
+      ],
+      "locations": [
+        "docs/domain-model/pins-and-context.md:141",
+        "docs/srs/05b-lane-requirements.md:36",
+        "docs/srs/05b-lane-requirements.md:42",
+        "docs/srs/05b-room-view-requirements.md:52",
+        "docs/srs/05b-room-view-requirements.md:54",
+        "docs/srs/05c-principal-and-peer-requirements.md:41",
+        "docs/srs/06-security.md:19",
+        "docs/srs/06-security.md:100",
+        "docs/srs/09-interfaces.md:87"
+      ],
+      "problem": "The model's Working view ('whatever is currently in the model's context window') appears nowhere in the SRS or scenarios. The same meaning appears as 'the model's context' or 'an agent's context' in at least eight places. One concept therefore has two names.",
+      "proposed_fix": "Use one name.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "SRS says 'working view' at each listed place (e.g. LANE-24 'MUST NOT enter any working view').",
+        "Model's Working view entry states that 'the model's context' is the harness's phrase for it, and the SRS keeps that phrase."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md",
+        "docs/srs/05b-room-view-requirements.md",
+        "docs/srs/05c-principal-and-peer-requirements.md",
+        "docs/srs/06-security.md",
+        "docs/srs/09-interfaces.md",
+        "docs/domain-model/pins-and-context.md"
+      ]
+    },
+    {
+      "id": "C17",
+      "title": "INJ-05 injects 'qualifying pins only' when the run is ambiguous, but qualifying pins are defined per run",
+      "rids": [
+        "pins-and-context#12"
+      ],
+      "owners": [
+        "pins-and-context",
+        "principals-and-agents"
+      ],
+      "locations": [
+        "docs/srs/05-functional-requirements.md:109",
+        "features/restore.feature:52-60"
+      ],
+      "problem": "Pin and PIN-10 define a run's qualifying pins by the rooms the run has had a seat in. With the run ambiguous that set is undefined, and pins of a room only another candidate run had a seat in would breach PIN-10. The scenario does not decide it.",
+      "proposed_fix": "Rule which pins restore under ambiguity, then reword INJ-05 and its scenario.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "'... it MUST inject only the qualifying pins of rooms every candidate run has had a seat in, at least its personal room.'",
+        "Inject only the personal room's qualifying pins.",
+        "Inject no pins and state the ambiguity in the restore block (audited)."
+      ],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/05-functional-requirements.md",
+        "features/restore.feature"
+      ]
+    },
+    {
+      "id": "C18",
+      "title": "Visibility 'private' and 'shared' constrain nothing but publishing and blind peers",
+      "rids": [
+        "places#7"
+      ],
+      "owners": [
+        "places"
+      ],
+      "locations": [
+        "docs/domain-model/places.md:58-61",
+        "docs/srs/05b-lane-requirements.md:29",
+        "docs/srs/05d-peer-requirements.md:18",
+        "docs/srs/05d-peer-requirements.md (PEER-08)"
+      ],
+      "problem": "Only publishing and blind-peer enrollment check visibility. Nothing says whether an invite, admission change or join into a non-personal private room is refused or makes it shared; PEER-02 serves and PEER-08's git carrier stores segments whatever the visibility. A room can therefore show 'private' while other principals hold it.",
+      "proposed_fix": "Rule what private and shared mean, then edit the model's Visibility and LANE-17.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "'private' and 'shared' are derived from the room's principals and shown, never set; Visibility's settable values are published and stored on blind peers.",
+        "'private' gates invites, admission and joins of other principals (refused and audited while private), and PEER-02/PEER-08 serve and store per visibility."
+      ],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/domain-model/places.md",
+        "docs/srs/05b-lane-requirements.md",
+        "docs/srs/05d-peer-requirements.md"
+      ]
+    },
+    {
+      "id": "C19",
+      "title": "PEER-05 conditions on 'a node marked ephemeral', a mark nothing defines",
+      "rids": [
+        "places#9"
+      ],
+      "owners": [
+        "places",
+        "seats-and-keys"
+      ],
+      "locations": [
+        "docs/srs/05d-peer-requirements.md:21",
+        "docs/domain-model/places.md:17"
+      ],
+      "problem": "The model's ephemeral node is only 'one in a short-lived cloud environment'. No requirement or model entry defines the mark PEER-05 conditions on, so the requirement cannot be decided.",
+      "proposed_fix": "Rule what makes a node ephemeral; the model's Node names it and PEER-05 reads 'An ephemeral node MUST ...'.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "A node is ephemeral when its seats are certified by a token key under an access token (PEER-06).",
+        "A settings key (`node.ephemeral`) the node's principal or managed policy sets."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05d-peer-requirements.md",
+        "docs/domain-model/places.md"
+      ]
+    },
+    {
+      "id": "C20",
+      "title": "Managed policy certifies service accounts by listing them, outside the record and the key set",
+      "rids": [
+        "principals-and-agents#1"
+      ],
+      "owners": [
+        "principals-and-agents",
+        "seats-and-keys"
+      ],
+      "locations": [
+        "docs/domain-model/principals-and-agents.md:16-18",
+        "docs/domain-model/principals-and-agents.md:24-26",
+        "docs/domain-model/principals-and-agents.md:30-33",
+        "docs/srs/05-functional-requirements.md:55",
+        "docs/domain-model/seats-and-keys.md:75-76",
+        "docs/domain-model/record.md:11-14"
+      ],
+      "problem": "Managed policy 'revokes one it lists by no longer listing it', but a listing is a settings layer beside the record, not part of the key set, and no requirement records it. A delisted key then counts as never certified, a person's, contradicting 'a service account whose certificate is revoked stays a service account' (Principal, OWN-27). Nodes under different managed policies derive verdict acceptance and trust-grant refusal differently, breaking LANE-22, LANE-31, PRV-02 and I10's inputs.",
+      "proposed_fix": "Rule how a managed-policy listing enters the derivation.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "PRV-10 and the model (Managed policy, Service account, seats-and-keys Key set): each managed-policy listing and delisting is recorded as a signed certificate or revocation in the node's key set and replicates like one, so a delisted account stays a service account.",
+        "Drop managed policy as a certifier: model, PRV-10, OWN-27, OWN-29, 09a row 61, provenance.feature:214, principal-acts.feature:330 and :364."
+      ],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/domain-model/principals-and-agents.md",
+        "docs/domain-model/seats-and-keys.md",
+        "docs/srs/05-functional-requirements.md",
+        "docs/srs/05c-principal-and-peer-requirements.md",
+        "docs/srs/09a-command-line-interface.md",
+        "features/provenance.feature",
+        "features/principal-acts.feature"
+      ]
+    },
+    {
+      "id": "C21",
+      "title": "The model says a harness clear starts a new run; no requirement or assumption backs it",
+      "rids": [
+        "principals-and-agents#6"
+      ],
+      "owners": [
+        "principals-and-agents",
+        "harness-facts"
+      ],
+      "locations": [
+        "docs/domain-model/principals-and-agents.md:44-47",
+        "docs/srs/05-functional-requirements.md:17",
+        "docs/srs/02-context.md:49"
+      ],
+      "problem": "Run says 'a harness resume that starts a new harness session, or a harness clear, starts a new run'. REC-02 and ASM-01 cover only resume, and the term is used nowhere in the SRS. Run is keyed by harness session, so if a clear kept its session_id the model would contradict itself.",
+      "proposed_fix": "Back the clause with an assumption and a requirement, or drop it.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "ASM-01 adds 'a SessionStart with source = clear carries a new session_id'; REC-02 adds 'A harness clear MUST start a new run'; add a step to REC-02's scenario and an assumptions.feature row.",
+        "Drop 'or a harness clear' from the model's Run."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/principals-and-agents.md",
+        "docs/srs/05-functional-requirements.md",
+        "docs/srs/02-context.md",
+        "features/record.feature",
+        "features/assumptions.feature"
+      ]
+    },
+    {
+      "id": "C22",
+      "title": "Receipts: SEC-19 says a purge receipt carries only digests, and which receipts are signed is unsettled",
+      "rids": [
+        "record#8"
+      ],
+      "owners": [
+        "record"
+      ],
+      "locations": [
+        "docs/srs/06-security.md:109",
+        "docs/srs/06-security.md:121",
+        "docs/srs/06b-boundary-register.md:23",
+        "docs/domain-model/record.md:158-162"
+      ],
+      "problem": "SEC-19 and §6.3 say 'nor is a head or purge receipt, which carries only digests (VIEW-10)'. SEC-31 makes the purge receipt state the scope, ranges, copies erased and every copy Cairn cannot erase, which is not only digests. The model calls every receipt signed, which VIEW-10 and SEC-27 do not require of a head receipt.",
+      "proposed_fix": "Fix SEC-19's description and rule which receipts are signed.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "SEC-19 and 06b:23: 'nor is a head receipt, which carries only digests (VIEW-10), or a purge receipt, which carries only ids, addresses, counts and the names of the copies it lists (SEC-31)'; VIEW-10/SEC-27 require the head receipt to be signed, so the model stands.",
+        "Same SEC-19 wording; the model's Receipt narrows 'signed' to the purge receipt.",
+        "Give the purge receipt its own §6.3 row instead of the SEC-19 sentence."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/06-security.md",
+        "docs/srs/06b-boundary-register.md",
+        "docs/srs/05b-room-view-requirements.md",
+        "docs/domain-model/record.md"
+      ]
+    },
+    {
+      "id": "C23",
+      "title": "The Notification hook row cites ingestion under REC-13, which does not cover it",
+      "rids": [
+        "record#9"
+      ],
+      "owners": [
+        "record",
+        "harness-facts"
+      ],
+      "locations": [
+        "docs/srs/09-interfaces.md:27",
+        "docs/srs/05-functional-requirements.md (REC-13)",
+        "features/record.feature (REC-13 scenario)"
+      ],
+      "problem": "Ingest is reading a transcript into the record. REC-13 and its scenario list only PostToolUse, Stop, SubagentStop and PermissionRequest, and the Notification row's inputs carry no `transcript_path`. So 'ingestion (REC-13)' cites a requirement that does not cover an act that is not ingest.",
+      "proposed_fix": "Say what the Notification handler does.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "Row: 'None; records the notification text as `harness_text` (PRV-08)'.",
+        "Add Notification to REC-13 and its scenario's Examples."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/09-interfaces.md",
+        "docs/srs/05-functional-requirements.md",
+        "features/record.feature"
+      ]
+    },
+    {
+      "id": "C24",
+      "title": "A rotated seat key gets no seat certificate, and device-key rotation's effect on seat certificates is unsaid",
+      "rids": [
+        "seats-and-keys#7"
+      ],
+      "owners": [
+        "seats-and-keys"
+      ],
+      "locations": [
+        "docs/srs/06-security.md:117",
+        "docs/srs/05-functional-requirements.md:56"
+      ],
+      "problem": "SEC-27 keeps a seat's id and writer across a seat-key rotation, signed by the old and new keys. PRV-11 certifies seat keys only 'when the seat starts', and under the model a key chains only through device, token or seat certificates, never through a rotation event. Without a new certificate a LANE-25 bar may not cover the new key (T26) and SEC-25 or PEER-07 may refuse its segments.",
+      "proposed_fix": "Rule how a rotated seat key chains, and whether seat certificates survive a device-key rotation; the model's Seat key follows.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "SEC-27 adds 'the new seat key MUST carry a seat certificate from the node's device key, or its token key, naming the same room and seat kind; seat certificates a rotated device key made stay valid until revoked'.",
+        "The rotation event itself extends the old key's chain to the new key; the model's chaining rule adds rotation events."
+      ],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/06-security.md",
+        "docs/srs/05-functional-requirements.md",
+        "docs/domain-model/seats-and-keys.md"
+      ]
+    },
+    {
+      "id": "C25",
+      "title": "Device scope covers acts, posts and pins, but requirements use it to limit reading",
+      "rids": [
+        "seats-and-keys#8"
+      ],
+      "owners": [
+        "seats-and-keys",
+        "acts-and-roles"
+      ],
+      "locations": [
+        "docs/domain-model/seats-and-keys.md:50-52",
+        "docs/srs/05-functional-requirements.md:55",
+        "docs/srs/05c-principal-and-peer-requirements.md (OWN-16)",
+        "docs/srs/05b-lane-requirements.md:28",
+        "docs/domain-model/acts-and-roles.md:110-111"
+      ],
+      "problem": "The model's device scope is 'the kinds of principal act it may sign, and of post and pin its seats may write'. PRV-10, OWN-16, LANE-16 and the Role entry all use device scope to limit what a paired phone reads. Nothing defines what a paired phone may read.",
+      "proposed_fix": "Make the definition and its uses agree.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "Model: 'a device scope (what it may read, the kinds of principal act it may sign, and of post and pin its seats may write)'.",
+        "LANE-16 and Role drop 'within its device scope' after 'reading'; PRV-10/OWN-16 limit reading by their own words."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/seats-and-keys.md",
+        "docs/srs/05b-lane-requirements.md",
+        "docs/domain-model/acts-and-roles.md"
+      ]
+    },
+    {
+      "id": "C26",
+      "title": "PIN-11's reason 'its seat certificate or token key does not cover the pin's room' looks impossible",
+      "rids": [
+        "seats-and-keys#11"
+      ],
+      "owners": [
+        "seats-and-keys",
+        "pins-and-context"
+      ],
+      "locations": [
+        "docs/srs/05-functional-requirements.md:72",
+        "features/pins.feature:150"
+      ],
+      "problem": "A pin's room is always its author seat's room (LANE-01), and the seat certificate's scope is the same on every node (PRV-02), so a pin cannot qualify on another of the principal's nodes and fail here for that reason. A seat outside a token key's scope is refused outright (peer.feature:67). The example at pins.feature:150 looks impossible to set up.",
+      "proposed_fix": "State the case PIN-11 means, or drop it.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "PIN-11: '... because this node does not hold the seat certificate or token certificate it chains through, a certificate it chains through is revoked or its event has not arrived ...'; pins.feature:150 to match.",
+        "Drop that reason from PIN-11 and the pins.feature:150 example."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05-functional-requirements.md",
+        "features/pins.feature"
+      ]
+    },
+    {
+      "id": "C27",
+      "title": "`recall.default_scope` lets configuration change the default recall scope RCL-05 fixes",
+      "rids": [
+        "trust-and-flow#6"
+      ],
+      "owners": [
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/srs/09-interfaces.md:182",
+        "docs/srs/05a-administration-requirements.md:17",
+        "docs/srs/06-security.md:101",
+        "features/security.feature:144",
+        "docs/srs/05-functional-requirements.md:82"
+      ],
+      "problem": "Recall scope defaults to the current run and extends only by an explicit, logged call (RCL-05). The settings key `recall.default_scope` (repository configuration may set only `run`), ADM-04 ('loosens ... recall scope'), SEC-11 and security.feature:144 let the principal's configuration change that default.",
+      "proposed_fix": "Remove the loosening, or make RCL-05 allow it.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "Drop `recall.default_scope` from §9.6, and 'recall scope' from ADM-04's loosening list; SEC-11 and security.feature:144 to match.",
+        "Keep the key but fix it to `run` everywhere (and drop it from ADM-04).",
+        "Reword RCL-05 to allow a configured default, logged and shown on Health."
+      ],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/09-interfaces.md",
+        "docs/srs/05a-administration-requirements.md",
+        "docs/srs/06-security.md",
+        "features/security.feature",
+        "docs/srs/05-functional-requirements.md"
+      ]
+    },
+    {
+      "id": "C28",
+      "title": "§9.7.6 shows unsandboxed agents as one Health line; OWN-22 wants the risk acceptance beside each run on every surface",
+      "rids": [
+        "trust-and-flow#7"
+      ],
+      "owners": [
+        "trust-and-flow",
+        "places"
+      ],
+      "locations": [
+        "docs/srs/09b-lane-vocabulary.md:136-137",
+        "docs/srs/05c-principal-and-peer-requirements.md:38",
+        "features/principal-acts.feature:269"
+      ],
+      "problem": "§9.7.6 says 'Unsandboxed agents are one line on Health, not a mark on every tile'. OWN-22 and its scenario say 'The risk acceptance MUST be shown on every surface beside each run that relies on it'.",
+      "proposed_fix": "Choose one.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "§9.7.6: 'Unsandboxed agents are one line on Health, and each run that relies on a risk acceptance shows it beside the run (OWN-22)'.",
+        "Narrow OWN-22 and its scenario to the Health line."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/09b-lane-vocabulary.md",
+        "docs/srs/05c-principal-and-peer-requirements.md",
+        "features/principal-acts.feature"
+      ]
+    },
+    {
+      "id": "C29",
+      "title": "Room tools return room content with only a `room` parameter, not RCL-05's explicit, logged scope",
+      "rids": [
+        "trust-and-flow#8"
+      ],
+      "owners": [
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/srs/09-interfaces.md:50",
+        "docs/srs/09-interfaces.md:56",
+        "docs/srs/09-interfaces.md:74",
+        "docs/srs/05-functional-requirements.md:82"
+      ],
+      "problem": "RCL-05 requires an explicit `scope` parameter, logged, to extend recall past the run. `room_get` with `id`, `pin_list` with `room` and `room_summary_get` return room content given only `room`.",
+      "proposed_fix": "State in §9.2 how these tools relate to RCL-05.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "§9.2: naming `room` in `room_get`, `pin_list` and `room_summary_get` is an explicit extension under RCL-05, logged as a recall event (RCL-07), limited to the principal's rooms the agent has a seat in (a foreign room only under RCL-10).",
+        "These tools take RCL-05's `scope` parameter like the recall tools."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/09-interfaces.md",
+        "docs/srs/05-functional-requirements.md"
+      ]
+    },
+    {
+      "id": "C30",
+      "title": "The model's Sandbox state includes a policy digest no requirement mentions",
+      "rids": [
+        "trust-and-flow#12"
+      ],
+      "owners": [
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/domain-model/trust-and-flow.md:117-119",
+        "docs/srs/05c-principal-and-peer-requirements.md:38"
+      ],
+      "problem": "Sandbox state is 'What confines a run, its policy digest, and which residual risks it blocks' and cites OWN-22, which requires no policy digest; nothing in the SRS mentions one.",
+      "proposed_fix": "Align the model and OWN-22.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "Drop 'its policy digest' from the model's Sandbox state.",
+        "Add to OWN-22 that the sandbox state records the sandbox policy's digest."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/trust-and-flow.md",
+        "docs/srs/05c-principal-and-peer-requirements.md"
+      ]
+    },
+    {
+      "id": "C31",
+      "title": "'Origin' is used in the browser's sense beside the model's Origin of an event",
+      "rids": [
+        "whole#11"
+      ],
+      "owners": [
+        "hub",
+        "record",
+        "components-and-surfaces"
+      ],
+      "locations": [
+        "docs/domain-model/record.md:78",
+        "docs/domain-model/components-and-surfaces.md:35",
+        "docs/srs/06-security.md:56",
+        "docs/srs/06-security.md:110",
+        "docs/srs/06-security.md:111",
+        "docs/srs/05c-principal-and-peer-requirements.md:27",
+        "docs/srs/05c-principal-and-peer-requirements.md:32",
+        "docs/srs/05b-room-view-requirements.md:59",
+        "docs/srs/13-open-questions-and-risks.md:45",
+        "docs/domain-model/index.md:15"
+      ],
+      "problem": "The model defines Origin as how an event reached the record, yet components-and-surfaces.md:35 and the SRS (SEC-20, SEC-21, OWN-11, OWN-16, VIEW-22, T15, OQ-38 and their scenarios) use 'origin' unqualified in the browser's sense. The hub's list of outside things that keep their own names does not include it.",
+      "proposed_fix": "Qualify the browser's sense.",
+      "class": "decide",
+      "conflict": "",
+      "options": [
+        "Add 'a web origin' to the hub's outside-things list (index.md:15) and say 'web origin' in components-and-surfaces.md:35, the SRS rows listed and their scenarios.",
+        "State in record.md's Origin entry that the browser's origin keeps its own sense; no other text changes."
+      ],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/index.md",
+        "docs/domain-model/components-and-surfaces.md",
+        "docs/domain-model/record.md",
+        "docs/srs/06-security.md",
+        "docs/srs/05c-principal-and-peer-requirements.md",
+        "docs/srs/05b-room-view-requirements.md",
+        "docs/srs/13-open-questions-and-risks.md",
+        "features/security.feature",
+        "features/principal-acts.feature"
+      ]
+    },
+    {
+      "id": "C32",
+      "title": "LANE-01 sends every event to a run seat or personal-room seat, missing REC-19's seat that ingest starts",
+      "rids": [
+        "hub#1",
+        "whole#3"
+      ],
+      "owners": [
+        "hub",
+        "record"
+      ],
+      "locations": [
+        "docs/srs/05b-lane-requirements.md:14",
+        "docs/domain-model/index.md:70-72",
+        "docs/srs/05-functional-requirements.md:34"
+      ],
+      "problem": "Hub relation 6 and REC-19 send what `cairn ingest` appends for a witnessed run to the seat ingest starts beside that run seat. LANE-01's 'Each event MUST be written to exactly one seat's writer: ... else to its personal-room seat, never refused' has no such exception, so its MUST contradicts REC-19 for ingested appends.",
+      "proposed_fix": "LANE-01: after 'else to its personal-room seat, never refused' add '; what `cairn ingest` appends for a witnessed run goes instead to the seat ingest starts beside that run seat (REC-19)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md"
+      ]
+    },
+    {
+      "id": "C33",
+      "title": "LANE-15 treats every foreign room as one read from a bundle",
+      "rids": [
+        "places#1",
+        "whole#1"
+      ],
+      "owners": [
+        "places"
+      ],
+      "locations": [
+        "docs/srs/05b-lane-requirements.md:27"
+      ],
+      "problem": "Foreign room also covers a room every seat of its principal has left or lost to a kick or a bar, which PIN-10's and RCL-10's scenarios and the hub rely on. Such a room has no bundle's principal key and no pull request, so LANE-15's MUSTs cannot be met for it.",
+      "proposed_fix": "LANE-15: 'A foreign room MUST open in the Room page, marked foreign; one imported from a bundle MUST state that every event, evidence class and proof class in it is asserted by the bundle's principal key, and MUST show whether ...'.",
+      "class": "fix",
+      "conflict": "Wording only: places#1 says 'one read from a bundle', whole#1 'one imported from a bundle'; the latter matches the hub ('Only a bundle is imported') and Foreign room ('the room of an imported bundle').",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md"
+      ]
+    },
+    {
+      "id": "C34",
+      "title": "A provenance scenario speaks of 'unsigned' trusted sources",
+      "rids": [
+        "trust-and-flow#3",
+        "whole#4"
+      ],
+      "owners": [
+        "trust-and-flow",
+        "record"
+      ],
+      "locations": [
+        "features/provenance.feature:37"
+      ],
+      "problem": "Trusted sources has no 'unsigned' subset, and 'unsigned' (Seal, §9.7.5) means events after the newest seal; this node's operator, structural, harness_meta and user events are sealed. Here it means 'signed by no device key', a second sense.",
+      "proposed_fix": "Scenario title: 'the default trust policy trusts this node's own trusted sources only on this node, ...'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/provenance.feature"
+      ]
+    },
+    {
+      "id": "C35",
+      "title": "§3 points the kernel at §5.8; it is §5.7",
+      "rids": [
+        "pins-and-context#13",
+        "principals-and-agents#9"
+      ],
+      "owners": [
+        "record"
+      ],
+      "locations": [
+        "docs/srs/03-rationale.md:31"
+      ],
+      "problem": "The Compute kernel is §5.7 (CMP, 05-functional-requirements.md:116); §5.8 is Administration.",
+      "proposed_fix": "03-rationale.md:31: '→ Kernel (§5.7).'",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/03-rationale.md"
+      ]
+    },
+    {
+      "id": "C36",
+      "title": "'Concurrent' is used for things at the same time in NFRs, OWN-23, ENG-09, §12 and scenarios",
+      "rids": [
+        "acts-and-roles#4"
+      ],
+      "owners": [
+        "acts-and-roles"
+      ],
+      "locations": [
+        "docs/srs/07-non-functional-requirements.md:19",
+        "docs/srs/07-non-functional-requirements.md:22",
+        "docs/srs/07-non-functional-requirements.md:23",
+        "docs/srs/05c-principal-and-peer-requirements.md:39",
+        "docs/srs/10-engineering-quality.md:29",
+        "docs/srs/12-delivery-plan.md:48",
+        "features/non-functional.feature:59",
+        "features/non-functional.feature:62",
+        "features/non-functional.feature:92",
+        "features/non-functional.feature:95",
+        "features/engineering.feature:90",
+        "features/record.feature:70"
+      ],
+      "problem": "The model defines Concurrent only for acts and events, in the causal sense, and the hub gives every word one meaning. These places use it for runs, appends, instances, delegates and writers at the same time.",
+      "proposed_fix": "Use 'at once' or 'in parallel': '≥ 50 runs writing at once', 'Appends running in parallel MUST never corrupt ...', 'ten instances at once', OWN-23 'the maximum delegates at once', ENG-09 '50 writers appended in parallel', §12 'many agents at once'; the scenarios likewise.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/07-non-functional-requirements.md",
+        "docs/srs/05c-principal-and-peer-requirements.md",
+        "docs/srs/10-engineering-quality.md",
+        "docs/srs/12-delivery-plan.md",
+        "features/non-functional.feature",
+        "features/engineering.feature",
+        "features/record.feature"
+      ]
+    },
+    {
+      "id": "C37",
+      "title": "LANE-16 and LANE-17 ask the role of every seat, but the owner's device seats have none",
+      "rids": [
+        "acts-and-roles#5"
+      ],
+      "owners": [
+        "acts-and-roles",
+        "principals-and-agents"
+      ],
+      "locations": [
+        "docs/srs/05b-lane-requirements.md:29",
+        "docs/srs/05b-lane-requirements.md:28",
+        "features/lane.feature:260"
+      ],
+      "problem": "The owner's device seats stand beside the roles, and a paired phone's personal-room seat has none. LANE-17 shows 'the role of each of its seats' and LANE-16 'each seat its role and capabilities'; LANE-22 already says 'role, or owner'.",
+      "proposed_fix": "LANE-17: 'the role of each of its seats, or owner'; LANE-16: 'The room view MUST show each seat its role, or owner, and its capabilities'; lane.feature:260 to match.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md",
+        "features/lane.feature"
+      ]
+    },
+    {
+      "id": "C38",
+      "title": "Room merge's list of what room state covers omits branch links",
+      "rids": [
+        "acts-and-roles#6"
+      ],
+      "owners": [
+        "acts-and-roles",
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/domain-model/acts-and-roles.md:181-184",
+        "docs/domain-model/acts-and-roles.md:191-193"
+      ],
+      "problem": "The Room merge entry resolves branch links ('Of two branch links naming one branch, the first in causal order stands') and LANE-01 sends branch links to LANE-31, but the coverage list, which reads as closed, leaves them out.",
+      "proposed_fix": "acts-and-roles.md Room merge: '... bars, branch links, handovers and their offers, ...'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/acts-and-roles.md"
+      ]
+    },
+    {
+      "id": "C39",
+      "title": "Capability is defined as what a role grants, but ownership and appointments grant capabilities too",
+      "rids": [
+        "acts-and-roles#8"
+      ],
+      "owners": [
+        "acts-and-roles"
+      ],
+      "locations": [
+        "docs/domain-model/acts-and-roles.md:127"
+      ],
+      "problem": "The owner's device seats have every room capability without a role (Owner), and writing a room summary comes only from the facilitator's appointment.",
+      "proposed_fix": "acts-and-roles.md: 'Capability: What a role, an appointment or ownership lets a seat do.'",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/acts-and-roles.md"
+      ]
+    },
+    {
+      "id": "C40",
+      "title": "A security scenario title gives the room view the room-view component's job",
+      "rids": [
+        "components-and-surfaces#4"
+      ],
+      "owners": [
+        "components-and-surfaces"
+      ],
+      "locations": [
+        "features/security.feature:242"
+      ],
+      "problem": "Room view is a client of the record; listening on loopback and minting the launch secret belong to the room-view component (SEC-20). The steps already say 'the room-view component'.",
+      "proposed_fix": "security.feature:242: 'Scenario: the room-view component binds to loopback and accepts only its own launch secret'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/security.feature"
+      ]
+    },
+    {
+      "id": "C41",
+      "title": "'every boundary disabled' includes B0, which managed policy cannot disable",
+      "rids": [
+        "components-and-surfaces#5"
+      ],
+      "owners": [
+        "components-and-surfaces"
+      ],
+      "locations": [
+        "features/security.feature:276"
+      ],
+      "problem": "Boundary is one of B0 to B3; SEC-22 and I4 let managed policy disable only B1, B2, B3 and the launcher.",
+      "proposed_fix": "security.feature:276: '| B1, B2 and B3 disabled |'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/security.feature"
+      ]
+    },
+    {
+      "id": "C42",
+      "title": "An administration outline's `component` column holds a CLI command",
+      "rids": [
+        "components-and-surfaces#6"
+      ],
+      "owners": [
+        "components-and-surfaces"
+      ],
+      "locations": [
+        "features/administration.feature:47",
+        "features/administration.feature:48",
+        "features/administration.feature:52"
+      ],
+      "problem": "Component is a closed set (core, room-view component, launcher, peer, publish, bridge); `cairn status` is a CLI command inside the core.",
+      "proposed_fix": "Rename the column and placeholder `<component>` to `<started>` (or 'component or command') at lines 47, 48 and 52.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/administration.feature"
+      ]
+    },
+    {
+      "id": "C43",
+      "title": "'UI' is a second name for the browser room view and its surfaces",
+      "rids": [
+        "components-and-surfaces#7",
+        "components-and-surfaces#8",
+        "components-and-surfaces#9"
+      ],
+      "owners": [
+        "components-and-surfaces",
+        "record"
+      ],
+      "locations": [
+        "docs/srs/06-security.md:56",
+        "docs/srs/09b-lane-vocabulary.md:106-107",
+        "docs/srs/index.md:15",
+        "docs/domain-model/record.md:156-157"
+      ],
+      "problem": "Each concept has one name, and the model names the browser room view client, the room view's surfaces and the reduced clients. T15, §9.7.5's 'The UI never says \"secure\"' and the SRS metadata table call them 'the UI'. While bundling, the same sentence was found in record.md:156-157 (Integrity status); the hub's own 'hide' row also says 'say the UI does not show it'.",
+      "proposed_fix": "06-security.md:56 T15: 'Local web attack on the browser room view'; 09b:106-107 and record.md:156-157: 'No surface or reduced client says \"secure\".'; docs/srs/index.md:15: 'Rust; TypeScript for the browser room view client'. Optionally the hub's 'hide' row: 'say no surface shows it'. Leave the SRS change log (index.md:31) alone: it is a historical record.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/06-security.md",
+        "docs/srs/09b-lane-vocabulary.md",
+        "docs/srs/index.md",
+        "docs/domain-model/record.md"
+      ]
+    },
+    {
+      "id": "C44",
+      "title": "§12 says 'catch-up' for the Catch up surface",
+      "rids": [
+        "components-and-surfaces#10"
+      ],
+      "owners": [
+        "components-and-surfaces"
+      ],
+      "locations": [
+        "docs/srs/12-delivery-plan.md:50"
+      ],
+      "problem": "The surface is 'Catch up'; the kebab form belongs only to the CLI command (`cairn catch-up show`), per the hub's naming rule.",
+      "proposed_fix": "12-delivery-plan.md:50: '... passes Catch up, search-to-replay and room verify'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/12-delivery-plan.md"
+      ]
+    },
+    {
+      "id": "C45",
+      "title": "The model's tree is a commit's snapshot, which excludes every own check's uncommitted tree",
+      "rids": [
+        "git-and-forge#2"
+      ],
+      "owners": [
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/domain-model/git-and-forge.md:30-31",
+        "docs/domain-model/git-and-forge.md:38-39",
+        "docs/srs/05b-lane-requirements.md:18"
+      ],
+      "problem": "Own check runs 'on the latest worktree checkpoint plus the recorded edits' (LANE-05: 'the tree is the latest worktree checkpoint plus the edits recorded since'), which is no commit's snapshot. Read literally, Result excludes every own check.",
+      "proposed_fix": "Model: '**tree** (git's snapshot of a set of files: a commit's, or a worktree's latest worktree checkpoint plus the edits recorded since)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/git-and-forge.md"
+      ]
+    },
+    {
+      "id": "C46",
+      "title": "LANE-20 does not say a criterion naming a check's command makes that check expected",
+      "rids": [
+        "git-and-forge#3"
+      ],
+      "owners": [
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/srs/05b-lane-requirements.md:32",
+        "docs/domain-model/git-and-forge.md:26-27",
+        "features/lane.feature:293"
+      ],
+      "problem": "git-and-forge.md cites LANE-20 for 'A check is expected when one of the intent's criteria names its command', but LANE-20 only says 'a criterion MAY name a check's command'. Only the scenario asserts the rest, so the Pending and Absent check states have no normative trigger.",
+      "proposed_fix": "LANE-20: 'a criterion MAY name a check's command, which makes that check expected on each branch the room names'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md"
+      ]
+    },
+    {
+      "id": "C47",
+      "title": "A forge scenario title gives every branch of the room a pull-request link",
+      "rids": [
+        "git-and-forge#5"
+      ],
+      "owners": [
+        "git-and-forge"
+      ],
+      "locations": [
+        "features/lane.feature:111"
+      ],
+      "problem": "A pull-request link connects a branch to its pull request; LANE-08 and the scenario's own steps (114, 117) give one only to the branch that has a pull request.",
+      "proposed_fix": "lane.feature:111: '... and a branch with a pull request carries a pull-request link to it'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/lane.feature"
+      ]
+    },
+    {
+      "id": "C48",
+      "title": "Proof classes are attached to rooms and results instead of landing links",
+      "rids": [
+        "git-and-forge#6",
+        "git-and-forge#13"
+      ],
+      "owners": [
+        "git-and-forge",
+        "hub"
+      ],
+      "locations": [
+        "features/lane.feature:90",
+        "features/lane.feature:95",
+        "docs/domain-model/git-and-forge.md:5",
+        "docs/domain-model/index.md:49"
+      ],
+      "problem": "A proof class is 'Of a landing link' (LANE-06). A LANE-06 scenario gives the proof class to the room, and git-and-forge.md's summary, repeated in the hub catalog, gives it to results.",
+      "proposed_fix": "lane.feature:90 title: 'each room behind a landed commit is linked to it by a landing link with one proof class'; :95 'Then the room is listed through a landing link with proof class \"<proof>\"'. git-and-forge.md front matter summary: 'results with their evidence classes, landing links with their proof classes'; then `mdsmith fix` regenerates the hub catalog.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/lane.feature",
+        "docs/domain-model/git-and-forge.md",
+        "docs/domain-model/index.md"
+      ]
+    },
+    {
+      "id": "C49",
+      "title": "'Check' is used for LANE-16's role check, a refusal order and CI static analysis",
+      "rids": [
+        "git-and-forge#7"
+      ],
+      "owners": [
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/srs/05b-lane-requirements.md:38",
+        "features/principal-acts.feature:158",
+        "docs/srs/06-security.md:97",
+        "features/security.feature:87-90"
+      ],
+      "problem": "Check means a command executed on a tree. LANE-26 'refused by the check of LANE-16', the OWN-12 scenario 'refuses before any other check' and SEC-07 'a static check in CI' (and its scenario's 'the check fails') give it second meanings; the hub already renamed 'presence check' for the same reason.",
+      "proposed_fix": "LANE-26: 'MUST be refused under LANE-16 and audited'; OWN-12 scenario: 'refuses before anything else is checked'; SEC-07 and its scenario: 'CI static analysis ... fails'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md",
+        "features/principal-acts.feature",
+        "docs/srs/06-security.md",
+        "features/security.feature"
+      ]
+    },
+    {
+      "id": "C50",
+      "title": "'Evidence' is used for build-time reach analysis and for receipts' tamper evidence",
+      "rids": [
+        "git-and-forge#8",
+        "git-and-forge#14"
+      ],
+      "owners": [
+        "git-and-forge",
+        "record"
+      ],
+      "locations": [
+        "docs/srs/06-security.md:91",
+        "docs/srs/06-security.md:109",
+        "docs/srs/10-engineering-quality.md:41",
+        "features/security.feature:10-14",
+        "features/security.feature:236",
+        "features/security.feature:362",
+        "features/engineering.feature:142",
+        "docs/domain-model/record.md:160"
+      ],
+      "problem": "Evidence means the checks, CI attestations or text a result rests on. SEC-01, SEC-19, ENG-12 and their scenarios use it, unqualified ('that evidence'), for build-time reach analysis, and record.md's Receipt calls a head receipt 'the tamper evidence of VIEW-10 and SEC-27', a second meaning inside the model itself.",
+      "proposed_fix": "SEC-01, SEC-19, ENG-12 and their scenarios: 'build-time reach analysis' / 'that analysis'. record.md:160: 'a head receipt lists every writer's chain head at a moment, which shows tampering under VIEW-10 and SEC-27'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/06-security.md",
+        "docs/srs/10-engineering-quality.md",
+        "features/security.feature",
+        "features/engineering.feature",
+        "docs/domain-model/record.md"
+      ]
+    },
+    {
+      "id": "C51",
+      "title": "NFR-15 'rebuilds a worktree', which Cairn never writes",
+      "rids": [
+        "git-and-forge#9"
+      ],
+      "owners": [
+        "git-and-forge",
+        "record"
+      ],
+      "locations": [
+        "docs/srs/07-non-functional-requirements.md:29",
+        "features/non-functional.feature:166"
+      ],
+      "problem": "A worktree is a git working tree on a node, which ADM-13 bars Cairn from writing, and 'rebuild' is `cairn rebuild`'s word for derived artifacts. VIEW-12 reconstructs the worktree's state from the record.",
+      "proposed_fix": "NFR-15 and its scenario: 'reconstructs the worktree at an event within 500 ms† (VIEW-12)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/07-non-functional-requirements.md",
+        "features/non-functional.feature"
+      ]
+    },
+    {
+      "id": "C52",
+      "title": "The keymap's 'compare versions' gives the comparison's word to intent-version diffs",
+      "rids": [
+        "git-and-forge#10"
+      ],
+      "owners": [
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/srs/09b-lane-vocabulary.md:164"
+      ],
+      "problem": "'Compare' belongs to the comparison of two branches (VIEW-13). This key shows intent-version diffs (VIEW-21).",
+      "proposed_fix": "09b keymap: '`V` / `s` | intent version diffs / since my verdict'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/09b-lane-vocabulary.md"
+      ]
+    },
+    {
+      "id": "C53",
+      "title": "§2 names the evidence classes loosely",
+      "rids": [
+        "git-and-forge#11"
+      ],
+      "owners": [
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/srs/02-context.md:97"
+      ],
+      "problem": "'claim versus own check versus CI' says 'CI' instead of the class name `CI attested` and leaves out `witness check`.",
+      "proposed_fix": "02-context.md:97: 'claim versus own check, witness check and CI attested'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/02-context.md"
+      ]
+    },
+    {
+      "id": "C54",
+      "title": "Plain-English 'evidence', 'result', 'comparison', 'check' and 'tree' in non-normative prose and an assumptions scenario",
+      "rids": [
+        "git-and-forge#12"
+      ],
+      "owners": [
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/srs/03-rationale.md:30",
+        "docs/srs/03-rationale.md:41-42",
+        "docs/srs/02-context.md:47",
+        "docs/srs/04-reference-architecture.md:154",
+        "docs/srs/04-reference-architecture.md:158",
+        "docs/srs/11-verification-and-acceptance.md:12",
+        "docs/srs/appendix-a-concern-traceability.md:18",
+        "features/assumptions.feature:41-42",
+        "features/assumptions.feature:60",
+        "features/assumptions.feature:150-151"
+      ],
+      "problem": "These model words appear in their ordinary sense in rationale, architecture, verification and an assumptions scenario. The hub gives every word one meaning (index.md:13); the reviewer asks for a rule on how strictly to treat such prose (see instruction edits).",
+      "proposed_fix": "'facts from many parts', 'Published scores are not controlled experiments ... most context-management scores', 'Support so far', 'Poisoning findings', 'WAL tests', 'every measurement is reproducible', 'permission tests', '\"~/.claude/projects\" directory ... walks the directory'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/03-rationale.md",
+        "docs/srs/02-context.md",
+        "docs/srs/04-reference-architecture.md",
+        "docs/srs/11-verification-and-acceptance.md",
+        "docs/srs/appendix-a-concern-traceability.md",
+        "features/assumptions.feature"
+      ]
+    },
+    {
+      "id": "C55",
+      "title": "Turn reads as if each tool result starts a new turn",
+      "rids": [
+        "harness-facts#3"
+      ],
+      "owners": [
+        "harness-facts"
+      ],
+      "locations": [
+        "docs/domain-model/harness-facts.md:31-32",
+        "docs/srs/05b-lane-requirements.md:26"
+      ],
+      "problem": "'One exchange ... from an input to the model reply that ends it' lets each tool result start a turn, which LANE-14 forbids ('Nothing else MAY trigger a turn'). OWN-15's mid-turn steer, §9.7.1 Working/Idle and §9.4's 'turns 31-33 · Edit×6 Bash×4' assume a turn spans the tool loop.",
+      "proposed_fix": "Model: 'One exchange between the harness and the model, from the input that starts it, through every tool call and tool result within it, to the model reply after which the harness waits for new input; a tool result never starts a turn.'",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/harness-facts.md"
+      ]
+    },
+    {
+      "id": "C56",
+      "title": "LANE-14 requires a delegation grant for every delegation, so subagents' turns are forbidden",
+      "rids": [
+        "harness-facts#4"
+      ],
+      "owners": [
+        "harness-facts",
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/srs/05b-lane-requirements.md:26"
+      ],
+      "problem": "A subagent's turn is triggered by its delegation, which has no delegation grant (OWN-23); OWN-24 already says 'its delegation grant when one applies'.",
+      "proposed_fix": "LANE-14: 'or a delegation and its delegation grant, when one applies'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md"
+      ]
+    },
+    {
+      "id": "C57",
+      "title": "LANE-14 is cited for the harness_text classification, which is PRV-08",
+      "rids": [
+        "harness-facts#5",
+        "harness-facts#6"
+      ],
+      "owners": [
+        "harness-facts"
+      ],
+      "locations": [
+        "docs/domain-model/harness-facts.md:37-38",
+        "docs/srs/09b-lane-vocabulary.md:114-115"
+      ],
+      "problem": "LANE-14 only says ingest 'MUST mark untrusted'; recording the line as `harness_text`, never a `user` event, is PRV-08.",
+      "proposed_fix": "harness-facts.md:37-38 and §9.7.6 (09b:114-115): '(LANE-14, PRV-08)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/harness-facts.md",
+        "docs/srs/09b-lane-vocabulary.md"
+      ]
+    },
+    {
+      "id": "C58",
+      "title": "§6.3 row 24 omits recalled content from what the harness sends its provider",
+      "rids": [
+        "harness-facts#10"
+      ],
+      "owners": [
+        "components-and-surfaces",
+        "harness-facts"
+      ],
+      "locations": [
+        "docs/srs/06b-boundary-register.md:55"
+      ],
+      "problem": "I4, §2 and VIEW-18 say the harness sends its model both recalled content an agent receives through a tool call and what Cairn writes through I2's closed paths; row 24 names only the latter.",
+      "proposed_fix": "Row 24: 'carrying the recalled content agents receive through tool calls and what I2's closed paths write (I4)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/06b-boundary-register.md"
+      ]
+    },
+    {
+      "id": "C59",
+      "title": "RCL-07's scenario counts recalls with a 'counter'",
+      "rids": [
+        "hub#3"
+      ],
+      "owners": [
+        "trust-and-flow",
+        "hub"
+      ],
+      "locations": [
+        "features/recall.feature:94"
+      ],
+      "problem": "Counter and OPS-01 count only dropped, rejected, redacted, truncated, coalesced, timed-out or failed operations, shown on Health. A count of recalls is a stat read through `stat_list`, and no requirement names `recall_calls`.",
+      "proposed_fix": "recall.feature:94: 'And the count of recalls `stat_list` reports increases by 1'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/recall.feature"
+      ]
+    },
+    {
+      "id": "C60",
+      "title": "PIN-01 lists qualifying-pin sources too narrowly",
+      "rids": [
+        "pins-and-context#1"
+      ],
+      "owners": [
+        "pins-and-context"
+      ],
+      "locations": [
+        "docs/srs/05-functional-requirements.md:62",
+        "features/pins.feature (PIN-01 Examples)"
+      ],
+      "problem": "Qualifying pins also come from the owner's intent principal act (LANE-20, `cairn intent set|revise`) and from confirming a pin candidate (PIN-05, LANE-26); read as exhaustive, PIN-01 excludes both.",
+      "proposed_fix": "PIN-01: '... only from a principal (a pin or intent it sets at a principal surface, a pin candidate it confirms, its configuration or its stamp), never a harness skill's call.' Optionally add the two rows to the PIN-01 Examples.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05-functional-requirements.md",
+        "features/pins.feature"
+      ]
+    },
+    {
+      "id": "C61",
+      "title": "PIN-05's 'in automation deployment mode' implies configuration may confirm pin candidates in interactive mode",
+      "rids": [
+        "pins-and-context#2"
+      ],
+      "owners": [
+        "pins-and-context"
+      ],
+      "locations": [
+        "docs/srs/05-functional-requirements.md:66",
+        "features/pins.feature:72"
+      ],
+      "problem": "Only the principal's own widening act confirms a pin candidate (Pin candidate, LANE-26). The scenario row tests only automation mode, where no candidate is detected, so it proves nothing.",
+      "proposed_fix": "PIN-05: 'never by configuration'. pins.feature PIN-05: add row '| interactive | a setting that confirms pin candidates automatically | 1 | 1 |'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05-functional-requirements.md",
+        "features/pins.feature"
+      ]
+    },
+    {
+      "id": "C62",
+      "title": "PEER-06 carries a room's qualifying pins without the stamps and edits that make them qualify",
+      "rids": [
+        "pins-and-context#3"
+      ],
+      "owners": [
+        "pins-and-context",
+        "seats-and-keys"
+      ],
+      "locations": [
+        "docs/srs/05d-peer-requirements.md:22",
+        "features/peer.feature:68"
+      ],
+      "problem": "A run seat's pin qualifies only through a stamp, and a pin restores its newest version (Pin, LANE-32). Carrying only the pins' own events in the access token omits the stamps and edit events.",
+      "proposed_fix": "PEER-06: '... MUST carry that room's qualifying pins (PIN-10) as the signed events they rest on: each pin's creating and edit events, keeping their provenance (`operator` for a device seat's pin, `assistant` for a run seat's), and every stamp that makes a version qualify ...'; mirror in peer.feature:68.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/05d-peer-requirements.md",
+        "features/peer.feature"
+      ]
+    },
+    {
+      "id": "C63",
+      "title": "CMP-05 folds the step budget into 'a limit'",
+      "rids": [
+        "pins-and-context#6"
+      ],
+      "owners": [
+        "pins-and-context",
+        "record"
+      ],
+      "locations": [
+        "docs/srs/05-functional-requirements.md:124",
+        "features/kernel.feature:56-69"
+      ],
+      "problem": "The step budget is a named budget and the limits keep their own names; CMP-05 says 'Exceeding a limit', and the scenario yields 'the step budget limit was exceeded'.",
+      "proposed_fix": "CMP-05: 'Exceeding the step budget or either limit MUST ...'. kernel.feature CMP-05: column `bound` with 'step budget', '10 s wall-clock limit', '512 MiB memory limit'; steps 'stating the <bound> was exceeded' and audit 'kernel <bound> exceeded'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05-functional-requirements.md",
+        "features/kernel.feature"
+      ]
+    },
+    {
+      "id": "C64",
+      "title": "§8.4 groups the restore block limit with the output caps",
+      "rids": [
+        "pins-and-context#7"
+      ],
+      "owners": [
+        "pins-and-context"
+      ],
+      "locations": [
+        "docs/srs/08-data-and-storage.md:57"
+      ],
+      "problem": "Budget names INJ-07's bound the restore block limit, distinct from the output caps of RCL-03 and CMP-06.",
+      "proposed_fix": "§8.4: 'The pin budget (PIN-08), the restore block limit (INJ-07) and the output caps of RCL-03 and CMP-06 depend on model-token counts.'",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/08-data-and-storage.md"
+      ]
+    },
+    {
+      "id": "C65",
+      "title": "§3 says 'the view' for the working view",
+      "rids": [
+        "pins-and-context#8"
+      ],
+      "owners": [
+        "pins-and-context"
+      ],
+      "locations": [
+        "docs/srs/03-rationale.md:13"
+      ],
+      "problem": "Unqualified 'the view' reads as the room view, a different concept.",
+      "proposed_fix": "§3: '**Keep the record separate from the working view.**'",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/03-rationale.md"
+      ]
+    },
+    {
+      "id": "C66",
+      "title": "The bound ENG-01 scenario says 'pinned' and 'stamped' for the toolchain and release builds",
+      "rids": [
+        "pins-and-context#9"
+      ],
+      "owners": [
+        "pins-and-context",
+        "acts-and-roles"
+      ],
+      "locations": [
+        "features/engineering.feature:11",
+        "features/engineering.feature:13",
+        "cmd/cairn/bdd_engineering_test.go:40"
+      ],
+      "problem": "Pin and stamp are model words; ENG-01's own text avoids them ('fixed to an exact version'). This scenario is not @pending, so its step binding must change with it.",
+      "proposed_fix": "engineering.feature:11: 'Scenario: the toolchain is fixed to an exact version and release builds are static, trimmed and carry VCS information'; :13 'Then \"go.mod\" fixes the Go toolchain with a toolchain directive'; the step regex at cmd/cairn/bdd_engineering_test.go:40 in the same commit.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/engineering.feature",
+        "cmd/cairn/bdd_engineering_test.go"
+      ]
+    },
+    {
+      "id": "C67",
+      "title": "A provenance outline coins 'model-reproducible text' and 'harness-summarised text'",
+      "rids": [
+        "pins-and-context#10"
+      ],
+      "owners": [
+        "pins-and-context",
+        "record"
+      ],
+      "locations": [
+        "features/provenance.feature:85"
+      ],
+      "problem": "The phrases replace the model's model reply and `harness_text`, and 'harness-summarised' misdescribes examples that are no summaries (a system reminder, a restore block written back).",
+      "proposed_fix": "provenance.feature:85: 'Scenario Outline: model replies and tool calls no principal stamped, and harness_text, are untrusted'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/provenance.feature"
+      ]
+    },
+    {
+      "id": "C68",
+      "title": "T29 cites SEC-19 for the sandbox; it is OWN-22",
+      "rids": [
+        "places#2"
+      ],
+      "owners": [
+        "places"
+      ],
+      "locations": [
+        "docs/srs/06-security.md:70"
+      ],
+      "problem": "Sandbox is defined under OWN-22; SEC-19 is the boundary register.",
+      "proposed_fix": "T29: '... and a sandbox (OWN-22)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/06-security.md"
+      ]
+    },
+    {
+      "id": "C69",
+      "title": "OWN-11 says 'on the device' for the authenticator",
+      "rids": [
+        "places#3"
+      ],
+      "owners": [
+        "places"
+      ],
+      "locations": [
+        "docs/srs/05c-principal-and-peer-requirements.md:27"
+      ],
+      "problem": "Device means a node or a paired phone. Read that way, an authenticator could rely on the host node's user verification, loosening which authenticators qualify against T21.",
+      "proposed_fix": "OWN-11: 'certified to enforce user verification on the authenticator itself'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/05c-principal-and-peer-requirements.md"
+      ]
+    },
+    {
+      "id": "C70",
+      "title": "'Shared' and 'shares' are used for nodes holding a room",
+      "rids": [
+        "places#4",
+        "places#8"
+      ],
+      "owners": [
+        "places"
+      ],
+      "locations": [
+        "features/security.feature:371",
+        "features/peer.feature:145",
+        "docs/domain-model/places.md:23",
+        "docs/domain-model/places.md:41-42"
+      ],
+      "problem": "Visibility's 'shared' means shared with the room's principals; the hub's verb for a node keeping a room is 'holds'. Two scenarios and places.md's node clone wording use 'shared'/'shares' for nodes.",
+      "proposed_fix": "security.feature:371: 'And a room two enrolled peers hold, in which another principal has a seat'; peer.feature:145: 'And a room owned by \"alice\", held by her node and the nodes of \"bob\" and \"carol\"'; places.md: '... mints new seat keys and holds the carried-over personal room, as the original node does' and '... or carried over to a node clone, which holds it too'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/security.feature",
+        "features/peer.feature",
+        "docs/domain-model/places.md"
+      ]
+    },
+    {
+      "id": "C71",
+      "title": "'Foreign history' uses 'foreign' outside rooms",
+      "rids": [
+        "places#5"
+      ],
+      "owners": [
+        "places"
+      ],
+      "locations": [
+        "docs/srs/02-context.md:20",
+        "docs/srs/02-context.md:99",
+        ".claude/agents/persona-oss-maintainer.md:40"
+      ],
+      "problem": "Foreign is defined only for rooms. §2 and the OSS-maintainer persona, which the §2.5 gate keeps in step, say 'foreign history'.",
+      "proposed_fix": "'a foreign room's history' in each place, kept in step per the §2.5 gate. The persona file is under CODEOWNERS (agent instructions).",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/02-context.md",
+        ".claude/agents/persona-oss-maintainer.md"
+      ]
+    },
+    {
+      "id": "C72",
+      "title": "LANE-02 says 'clone' beside 'node' for a git clone",
+      "rids": [
+        "places#10"
+      ],
+      "owners": [
+        "git-and-forge",
+        "places"
+      ],
+      "locations": [
+        "docs/srs/05b-lane-requirements.md:15"
+      ],
+      "problem": "Unqualified 'clone' next to 'node' reads as the model's node clone; the model's Repository entry says 'git clone'.",
+      "proposed_fix": "LANE-02: 'every node holding a git clone', 'A node whose git clone ...' (twice).",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md"
+      ]
+    },
+    {
+      "id": "C73",
+      "title": "No requirement stops a personal-room seat leaving or being kicked",
+      "rids": [
+        "principals-and-agents#2"
+      ],
+      "owners": [
+        "principals-and-agents",
+        "acts-and-roles"
+      ],
+      "locations": [
+        "docs/domain-model/principals-and-agents.md:70-71",
+        "docs/srs/05b-lane-requirements.md:35",
+        "docs/srs/09-interfaces.md:62"
+      ],
+      "problem": "Member says a personal-room seat can neither leave nor be kicked, but LANE-23 makes every leave a room act and `room_leave` takes any room; before PRV-10, LANE-25 does not stop the owner's device seat kicking its run's personal-room seat. Either contradicts LANE-01's 'else to its personal-room seat, never refused'.",
+      "proposed_fix": "LANE-23: 'A personal-room seat MUST NOT leave or be kicked; Cairn MUST refuse and audit either act.' Add a step to the LANE-23 scenario in lane.feature, and note the refusal on `room_leave` in 09-interfaces.md.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md",
+        "features/lane.feature",
+        "docs/srs/09-interfaces.md"
+      ]
+    },
+    {
+      "id": "C74",
+      "title": "Principal says only an agent's own principal widens what reaches it, which cross-principal delegation contradicts",
+      "rids": [
+        "principals-and-agents#4"
+      ],
+      "owners": [
+        "principals-and-agents",
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/domain-model/principals-and-agents.md:18-19"
+      ],
+      "problem": "Under OWN-26 and I2 a delegated task reaches another principal's agent under the delegating principal's delegation grant, a widening act of a different principal, beside the acceptance grant. 'Only' overstates I2.",
+      "proposed_fix": "Model: 'Nothing widens what reaches an agent without its own principal's act (I2): another principal's delegation grant reaches it only beside its acceptance grant (OWN-26), and a room owner's notice allowance only lets through ...'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/principals-and-agents.md"
+      ]
+    },
+    {
+      "id": "C75",
+      "title": "Timeline rails speak of 'the agent's principal' in a room of several principals",
+      "rids": [
+        "principals-and-agents#7"
+      ],
+      "owners": [
+        "principals-and-agents"
+      ],
+      "locations": [
+        "docs/srs/09b-lane-vocabulary.md:133-134"
+      ],
+      "problem": "A room's Timeline holds agents of several principals, so 'the agent's principal' names no single principal; §9.7.6 is otherwise framed from the viewing principal.",
+      "proposed_fix": "'Timeline rails: solid for the principal viewing, hollow for other principals, dotted for agents and the forge.'",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/09b-lane-vocabulary.md"
+      ]
+    },
+    {
+      "id": "C76",
+      "title": "§2 says runs 'pause and resume' for a harness resume",
+      "rids": [
+        "principals-and-agents#8"
+      ],
+      "owners": [
+        "principals-and-agents"
+      ],
+      "locations": [
+        "docs/srs/02-context.md:37-38"
+      ],
+      "problem": "Pause and resume are run controls (principal acts). The durable-volume context means a harness resume, which continues a run only when it keeps its harness session (Run, REC-02).",
+      "proposed_fix": "'... live on durable volumes so a harness session can be resumed (a harness resume, REC-02).'",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/02-context.md"
+      ]
+    },
+    {
+      "id": "C77",
+      "title": "A record scenario expects two homes to share a writer id and chain head",
+      "rids": [
+        "record#1"
+      ],
+      "owners": [
+        "record",
+        "seats-and-keys"
+      ],
+      "locations": [
+        "features/record.feature:145"
+      ],
+      "problem": "A writer id derives from the seat's first key, generated on and bound to one node (SEC-10, REC-24), and the chained header holds a commitment under a random per-event commitment key (REC-17). Two ingests never share either, so the step cannot pass.",
+      "proposed_fix": "record.feature:145: 'And a second fresh home that ingests \"main-run\" assigns its lines the same seq order'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/record.feature"
+      ]
+    },
+    {
+      "id": "C78",
+      "title": "A record scenario excludes the seat ingest starts from the core's sealing",
+      "rids": [
+        "record#2"
+      ],
+      "owners": [
+        "record"
+      ],
+      "locations": [
+        "features/record.feature:226"
+      ],
+      "problem": "A witnessed run's run seats are sealed by its MCP server except the seat ingest starts, which the core seals; line 222 of the same scenario says so, line 226 contradicts it.",
+      "proposed_fix": "record.feature:226: '... every writer but the witnessed run's run seats' other than those \"cairn ingest\" started, and the paired phone's, ...'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/record.feature"
+      ]
+    },
+    {
+      "id": "C79",
+      "title": "An ADM-15 row refuses a single event where peers exchange segments, and omits the structural event",
+      "rids": [
+        "record#3"
+      ],
+      "owners": [
+        "record"
+      ],
+      "locations": [
+        "features/administration.feature:205"
+      ],
+      "problem": "Peers exchange sealed ranges, not single events (PEER-03), and ADM-15 records each refused segment as REC-21 says; line 206 includes that, line 205 does not.",
+      "proposed_fix": "administration.feature:205: '| received writer | a peer offers another segment of that writer | the segment is refused, and a structural event and an audit entry record the refusal |'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/administration.feature"
+      ]
+    },
+    {
+      "id": "C80",
+      "title": "Integrity status is defined per room or writer, but VIEW-10, REC-18 and RCL-09 give one per event",
+      "rids": [
+        "record#4",
+        "record#5"
+      ],
+      "owners": [
+        "record"
+      ],
+      "locations": [
+        "docs/srs/09-interfaces.md:122-123",
+        "docs/domain-model/record.md:152",
+        "docs/srs/09b-lane-vocabulary.md:98"
+      ],
+      "problem": "The envelope's `integrity` is 'the integrity status of the event's writer', and the model and §9.7.5 define integrity status for rooms and writers. VIEW-10 marks every later event of a broken writer `unverified`, REC-18 makes events past the newest seal `unsigned`, and the RCL-09 scenario shows different values per event of one writer.",
+      "proposed_fix": "09-interfaces.md:122-123: '`integrity` is the event's integrity status, one of §9.7.5's values'; record.md:152: 'What a room, writer or event shows about its chain and seals'; 09b:98: 'The integrity status of a room, a writer or an event'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/09-interfaces.md",
+        "docs/domain-model/record.md",
+        "docs/srs/09b-lane-vocabulary.md"
+      ]
+    },
+    {
+      "id": "C81",
+      "title": "PRV-01 classes every key rotation `structural`, but a device-key rotation is an `operator` principal act",
+      "rids": [
+        "record#6"
+      ],
+      "owners": [
+        "record",
+        "seats-and-keys",
+        "acts-and-roles"
+      ],
+      "locations": [
+        "docs/srs/05-functional-requirements.md:46",
+        "docs/domain-model/record.md:75"
+      ],
+      "problem": "Rotating a device key is a widening principal act (OWN-11, `cairn device-key rotate`), recorded as `operator` (OWN-02). PRV-01 and record.md:75 make 'key rotations' `structural`, a second class for the same event; the class sits in the chained header (REC-10) and decides trust on the principal's other nodes.",
+      "proposed_fix": "PRV-01 and record.md:75: 'key rotations' -> 'seat-key rotations' (a seat key's rotation goes to its own writer, SEC-27; a device-key rotation stays an `operator` principal act).",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/05-functional-requirements.md",
+        "docs/domain-model/record.md"
+      ]
+    },
+    {
+      "id": "C82",
+      "title": "PEER-12, §6.3 row 27 and a peer scenario say 'range' for a sealed range",
+      "rids": [
+        "record#10"
+      ],
+      "owners": [
+        "record"
+      ],
+      "locations": [
+        "docs/srs/05d-peer-requirements.md:28",
+        "docs/srs/06b-boundary-register.md:58",
+        "features/peer.feature:136-137"
+      ],
+      "problem": "'Range' on its own means an address range. A blind peer holds and verifies sealed ranges, and the same row uses 'address ranges' for the metadata it may learn.",
+      "proposed_fix": "'sealed range(s)' in PEER-12 (three times), 06b:58, peer.feature:136 and :137.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05d-peer-requirements.md",
+        "docs/srs/06b-boundary-register.md",
+        "features/peer.feature"
+      ]
+    },
+    {
+      "id": "C83",
+      "title": "REC-17 calls the commitment key only 'a random per-event secret'",
+      "rids": [
+        "record#11"
+      ],
+      "owners": [
+        "record"
+      ],
+      "locations": [
+        "docs/srs/05-functional-requirements.md:32"
+      ],
+      "problem": "The model, REC-23 and ADM-07 name `k_e` the commitment key; REC-17, the requirement the model cites for it, does not, a second name for one concept.",
+      "proposed_fix": "REC-17: '... under its commitment key `k_e`, a random per-event secret of at least 256 bits† ...'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05-functional-requirements.md"
+      ]
+    },
+    {
+      "id": "C84",
+      "title": "The model's Payload promises more about the payload's name than REC-09",
+      "rids": [
+        "record#12"
+      ],
+      "owners": [
+        "record"
+      ],
+      "locations": [
+        "docs/domain-model/record.md:44-45"
+      ],
+      "problem": "REC-09 and its scenario promise only a name 'from which no one off this node can confirm a guess at the content'; the model drops 'off this node'.",
+      "proposed_fix": "record.md:44-45: 'under a name from which no one off this node can confirm a guess at its content (REC-09)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/record.md"
+      ]
+    },
+    {
+      "id": "C85",
+      "title": "The model's Flag covers every event; PRV-07 flags only untrusted ones",
+      "rids": [
+        "record#13"
+      ],
+      "owners": [
+        "record"
+      ],
+      "locations": [
+        "docs/domain-model/record.md:138-139"
+      ],
+      "problem": "PRV-07: 'Cairn SHOULD flag ... untrusted events that contain instruction-like content'.",
+      "proposed_fix": "record.md:138: 'A mark Cairn sets on an untrusted event whose text matches an injection pattern (PRV-07)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/record.md"
+      ]
+    },
+    {
+      "id": "C86",
+      "title": "record.md calls one event 'a witness check's record'",
+      "rids": [
+        "record#14"
+      ],
+      "owners": [
+        "record",
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/domain-model/record.md:76"
+      ],
+      "problem": "Record means the set of writer logs a node holds; here it names one event, inside the file that defines it.",
+      "proposed_fix": "record.md:76: '... tombstones and the event recording a witness check (its command by commitment, its exit status and the tree hash, OWN-18) are `structural`'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/record.md"
+      ]
+    },
+    {
+      "id": "C87",
+      "title": "LANE-23 derives the seat id from 'that seat key', which changes after a rotation",
+      "rids": [
+        "seats-and-keys#1"
+      ],
+      "owners": [
+        "seats-and-keys"
+      ],
+      "locations": [
+        "docs/srs/05b-lane-requirements.md:35"
+      ],
+      "problem": "Seat id derives from the room id and the seat's first key, and a rotation keeps the seat's id (SEC-27, LANE-23's own 'MUST keep its seat id and writer'). 'That seat key' is the key the seat joins with, which after a rotation is the current one; it also leaves seats with no join (create room, personal room) underived.",
+      "proposed_fix": "LANE-23: 'The seat id MUST be derived from the room's id and the seat's first seat key.'",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": true,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md"
+      ]
+    },
+    {
+      "id": "C88",
+      "title": "LANE-23's seat-certificate chain to a principal key is unhedged before PRV-10",
+      "rids": [
+        "seats-and-keys#2"
+      ],
+      "owners": [
+        "seats-and-keys"
+      ],
+      "locations": [
+        "docs/srs/05b-lane-requirements.md:35"
+      ],
+      "problem": "Before PRV-10 ships no principal key certifies a device key (Device key), yet LANE-01 (P0, M1) already has a device seat join a room; such a join cannot meet LANE-23's 'certified by a seat certificate that chains to its principal key'.",
+      "proposed_fix": "LANE-23: 'certified by its seat certificate (PRV-11), which, once PRV-10 ships, chains to its principal key'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-lane-requirements.md"
+      ]
+    },
+    {
+      "id": "C89",
+      "title": "Room summaries are 'signed with that device seat' rather than its seat key",
+      "rids": [
+        "seats-and-keys#3"
+      ],
+      "owners": [
+        "seats-and-keys"
+      ],
+      "locations": [
+        "docs/srs/06-security.md:122",
+        "docs/srs/09a-command-line-interface.md:57",
+        "features/security.feature:402",
+        "features/lane.feature:517"
+      ],
+      "problem": "A seat signs nothing; a room summary is a room act signed with the seat key (LANE-31). 'Signed with that device seat' can be read as signed with the device key, which would make it a principal act. 01b-scope.md:30 has it right.",
+      "proposed_fix": "In all four places: 'signed with that device seat's seat key' (or '... its device seat's seat key').",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/06-security.md",
+        "docs/srs/09a-command-line-interface.md",
+        "features/security.feature",
+        "features/lane.feature"
+      ]
+    },
+    {
+      "id": "C90",
+      "title": "§6.3 rows 19 and 27 omit the token key segments may be encrypted to",
+      "rids": [
+        "seats-and-keys#4"
+      ],
+      "owners": [
+        "seats-and-keys"
+      ],
+      "locations": [
+        "docs/srs/06b-boundary-register.md:50",
+        "docs/srs/06b-boundary-register.md:58"
+      ],
+      "problem": "PEER-08 and PEER-12 allow encryption to a token-key-only node's token key, and row 15 says so; rows 19 and 27 name only device keys, understating who can read the segments.",
+      "proposed_fix": "06b rows 19 and 27: add ', or a token-key-only node's token key' after 'device keys'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/06b-boundary-register.md"
+      ]
+    },
+    {
+      "id": "C91",
+      "title": "A recall scenario labels a seat \"bob\", a principal's name elsewhere",
+      "rids": [
+        "seats-and-keys#5"
+      ],
+      "owners": [
+        "seats-and-keys"
+      ],
+      "locations": [
+        "features/recall.feature:153",
+        "features/recall.feature:156"
+      ],
+      "problem": "A seat is shown by its id, never a claimed name (LANE-23); every other scenario uses \"bob\" for a principal and labels seats p-1, s-1.",
+      "proposed_fix": "RCL-11 scenario: 'a post written by a device seat of \"bob\"' and 'to \"owner-a\" and to \"bob\"' (or label the seat \"p-1\").",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "features/recall.feature"
+      ]
+    },
+    {
+      "id": "C92",
+      "title": "`room_bar` takes a bare `key`",
+      "rids": [
+        "seats-and-keys#6"
+      ],
+      "owners": [
+        "seats-and-keys",
+        "hub"
+      ],
+      "locations": [
+        "docs/srs/09-interfaces.md:70"
+      ],
+      "problem": "An option that selects a concept is named for it, multi-word concepts in snake case for MCP tools; every other room-tool parameter is named for its concept, and a bare `key` does not say which key.",
+      "proposed_fix": "§9.2 `room_bar`: rename the parameter to `principal_key`.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/09-interfaces.md"
+      ]
+    },
+    {
+      "id": "C93",
+      "title": "seats-and-keys.md has the access token carry the invite link, the wrong way round",
+      "rids": [
+        "seats-and-keys#9"
+      ],
+      "owners": [
+        "seats-and-keys",
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/domain-model/seats-and-keys.md:77-79"
+      ],
+      "problem": "git-and-forge's Qualified links ('an invite link ... carries an access token') and LANE-18 ('an invite link carrying a one-time access token') reverse it.",
+      "proposed_fix": "seats-and-keys.md: '... certify an ephemeral node's seats, or travel in an invite link (PEER-06, PRV-10, LANE-18)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/seats-and-keys.md"
+      ]
+    },
+    {
+      "id": "C94",
+      "title": "Token key's limits cite PRV-10; PEER-06 states them",
+      "rids": [
+        "seats-and-keys#10"
+      ],
+      "owners": [
+        "seats-and-keys"
+      ],
+      "locations": [
+        "docs/domain-model/seats-and-keys.md:64-67"
+      ],
+      "problem": "PRV-10 says nothing about a token key's limits; PEER-06 states them.",
+      "proposed_fix": "seats-and-keys.md: cite '(PEER-06, PRV-10)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/seats-and-keys.md"
+      ]
+    },
+    {
+      "id": "C95",
+      "title": "The hub's 'a new one for each seat key minted anew' can be read as covering rotations",
+      "rids": [
+        "seats-and-keys#12"
+      ],
+      "owners": [
+        "hub",
+        "seats-and-keys"
+      ],
+      "locations": [
+        "docs/domain-model/index.md:58-60"
+      ],
+      "problem": "A rotation keeps the seat's id and writer (SEC-27); only a key minted on a node identity change, a node clone or a backup restore starts a new seat.",
+      "proposed_fix": "Hub: 'a new one for each seat key minted on a node identity change, a node clone or a backup restore (Seat key)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/index.md"
+      ]
+    },
+    {
+      "id": "C96",
+      "title": "OWN-28 uses 'correction' both for the act and as an umbrella over revision and retry",
+      "rids": [
+        "trust-and-flow#1"
+      ],
+      "owners": [
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/srs/05c-principal-and-peer-requirements.md:44"
+      ],
+      "problem": "Correction is principal-typed text in a fixed template; OWN-28 also calls intent revision and retry corrections.",
+      "proposed_fix": "OWN-28: 'each a principal act naming the verdict it answers: send a correction ...'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05c-principal-and-peer-requirements.md"
+      ]
+    },
+    {
+      "id": "C97",
+      "title": "OQ-14 says 'delegation' for one principal instructing another's agent",
+      "rids": [
+        "trust-and-flow#2"
+      ],
+      "owners": [
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/srs/13-open-questions-and-risks.md:25"
+      ],
+      "problem": "Delegation is one agent handing another a delegated task; the same row then uses the right sense for OWN-26.",
+      "proposed_fix": "OQ-14: 'Default: only the agent's own principal instructs it (OWN-01); requires its own I2 review.'",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/13-open-questions-and-risks.md"
+      ]
+    },
+    {
+      "id": "C98",
+      "title": "§11.1 says 'recall' for the classifier statistic",
+      "rids": [
+        "trust-and-flow#4"
+      ],
+      "owners": [
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/srs/11-verification-and-acceptance.md:26"
+      ],
+      "problem": "Recall is an agent's call to a recall tool.",
+      "proposed_fix": "§11.1: 'Precision ≥ 0.9†; share of malicious items flagged reported'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/11-verification-and-acceptance.md"
+      ]
+    },
+    {
+      "id": "C99",
+      "title": "ENG-29 omits OWN-26 from the requirements marked for I2 review",
+      "rids": [
+        "trust-and-flow#5"
+      ],
+      "owners": [
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/srs/10-engineering-quality.md:59",
+        "features/principal-acts.feature:309-319"
+      ],
+      "problem": "OWN-26 is marked for I2 review under ENG-29, but ENG-29 lists only PRV-10 and PRV-11, and the OWN-26 scenario lacks the review step the PRV-10 and PRV-11 scenarios carry.",
+      "proposed_fix": "ENG-29: '(PRV-10, PRV-11, OWN-26)'; OWN-26 scenario: add 'And a recorded I2 security review of this requirement exists before it ships'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/10-engineering-quality.md",
+        "features/principal-acts.feature"
+      ]
+    },
+    {
+      "id": "C100",
+      "title": "Counter says failures show on Health only until acknowledged; ADM-11 keeps them shown",
+      "rids": [
+        "trust-and-flow#9"
+      ],
+      "owners": [
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/domain-model/trust-and-flow.md:140-141",
+        "docs/srs/05a-administration-requirements.md:24",
+        "docs/srs/09a-command-line-interface.md:16"
+      ],
+      "problem": "ADM-11 and `cairn status` keep non-zero failure counters shown; OPS-03 uses acknowledgement only as `cairn doctor`'s baseline.",
+      "proposed_fix": "Model: 'shown on Health; `cairn doctor` fails while one has risen since the node's principal last acknowledged them (`cairn counter ack`, I6, OPS-03)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/trust-and-flow.md"
+      ]
+    },
+    {
+      "id": "C101",
+      "title": "Continuation cursor is promised for every capped recall tool, and RCL-03 lacks 'without gap or overlap'",
+      "rids": [
+        "trust-and-flow#10"
+      ],
+      "owners": [
+        "trust-and-flow",
+        "record"
+      ],
+      "locations": [
+        "docs/domain-model/trust-and-flow.md:52-54",
+        "docs/srs/05-functional-requirements.md:80"
+      ],
+      "problem": "`kernel_exec`, a recall tool, returns a truncation marker at its cap (CMP-06), and `landmark_list` has a cap but no cursor. RCL-03 does not state 'without gap or overlap'; only recall.feature:48 does.",
+      "proposed_fix": "Model: '`event_expand` or `event_get`, stopping at its per-call cap, returns a continuation cursor ...'; RCL-03: 'with a continuation cursor that continues without gap or overlap'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/trust-and-flow.md",
+        "docs/srs/05-functional-requirements.md"
+      ]
+    },
+    {
+      "id": "C102",
+      "title": "Focus set puts rooms first in Needs you; §9.7.4 orders by class first",
+      "rids": [
+        "trust-and-flow#11"
+      ],
+      "owners": [
+        "trust-and-flow",
+        "components-and-surfaces"
+      ],
+      "locations": [
+        "docs/domain-model/trust-and-flow.md:159-160"
+      ],
+      "problem": "§9.7.4 (09b:88-90) puts focus-set rooms first only inside Q2 and Q3.",
+      "proposed_fix": "Model: 'The rooms a principal marks to come first inside Needs you's Q2 and Q3 (§9.7.4)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/trust-and-flow.md"
+      ]
+    },
+    {
+      "id": "C103",
+      "title": "Quota omits that repository configuration may lower it",
+      "rids": [
+        "trust-and-flow#13"
+      ],
+      "owners": [
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/domain-model/trust-and-flow.md:108-110"
+      ],
+      "problem": "§9.6 lets repository configuration lower `quota.*`.",
+      "proposed_fix": "Model: '... that the node's principal or managed policy sets, and repository configuration may only lower (ADM-15, §9.6)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/trust-and-flow.md"
+      ]
+    },
+    {
+      "id": "C104",
+      "title": "Petname omits names a peer sent",
+      "rids": [
+        "trust-and-flow#14"
+      ],
+      "owners": [
+        "trust-and-flow"
+      ],
+      "locations": [
+        "docs/domain-model/trust-and-flow.md:176-178"
+      ],
+      "problem": "VIEW-07: 'never a name another principal or a peer sent'.",
+      "proposed_fix": "Model: 'never one another principal or a peer sent (VIEW-07)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/trust-and-flow.md"
+      ]
+    },
+    {
+      "id": "C105",
+      "title": "trust-and-flow.md's summary claims the Needs you queue, which components-and-surfaces.md defines",
+      "rids": [
+        "trust-and-flow#15"
+      ],
+      "owners": [
+        "trust-and-flow",
+        "hub"
+      ],
+      "locations": [
+        "docs/domain-model/trust-and-flow.md:5",
+        "docs/domain-model/index.md (catalog row)"
+      ],
+      "problem": "The summary, and the hub catalog row generated from it, point here for the Needs you queue; this file defines only queue classes and the focus set.",
+      "proposed_fix": "Front matter summary: 'Needs you's queue classes and the focus set'; then `mdsmith fix` regenerates the hub catalog.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/domain-model/trust-and-flow.md",
+        "docs/domain-model/index.md"
+      ]
+    },
+    {
+      "id": "C106",
+      "title": "PRV-02's trust-level inputs omit whether the event's room is foreign",
+      "rids": [
+        "whole#2"
+      ],
+      "owners": [
+        "trust-and-flow",
+        "places"
+      ],
+      "locations": [
+        "docs/srs/05-functional-requirements.md:47"
+      ],
+      "problem": "Trust level lists 'whether the event's room is foreign to that principal' among its inputs; PRV-02 omits it, though PRV-02's own foreign-room rule depends on it.",
+      "proposed_fix": "PRV-02: insert 'whether the event's room is foreign to that principal,' before 'the node's key set'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05-functional-requirements.md"
+      ]
+    },
+    {
+      "id": "C107",
+      "title": "§9.5 'publish ... to a host' reads as an outbound send",
+      "rids": [
+        "whole#5"
+      ],
+      "owners": [
+        "record",
+        "components-and-surfaces"
+      ],
+      "locations": [
+        "docs/srs/09a-command-line-interface.md:37"
+      ],
+      "problem": "To publish is to serve a room's bundle read-only through the publish component's inbound listener (§6.3 row 18); outbound exchange with hosts is the bridge component's.",
+      "proposed_fix": "§9.5 row: 'publish a room's bundle, served read-only by the publish component's listener (B3) at a host the node's principal names, ...'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/09a-command-line-interface.md"
+      ]
+    },
+    {
+      "id": "C108",
+      "title": "§9.7.4 says a pin version was edited or unpinned",
+      "rids": [
+        "whole#6"
+      ],
+      "owners": [
+        "pins-and-context"
+      ],
+      "locations": [
+        "docs/srs/09b-lane-vocabulary.md:82-83"
+      ],
+      "problem": "A pin version is one immutable text; edits, unpins and list removals act on the pin (Stamp, LANE-32).",
+      "proposed_fix": "§9.7.4: 'a pin whose version you stamped was edited, unpinned or taken off the pin list (LANE-32)'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/09b-lane-vocabulary.md"
+      ]
+    },
+    {
+      "id": "C109",
+      "title": "VIEW-21 gives agents the Idle run status",
+      "rids": [
+        "whole#7"
+      ],
+      "owners": [
+        "trust-and-flow",
+        "principals-and-agents"
+      ],
+      "locations": [
+        "docs/srs/05b-room-view-requirements.md",
+        "features/lane-view.feature:58",
+        "features/lane-view.feature:218"
+      ],
+      "problem": "Run status, Idle included, belongs to a run; agents carry no status. The scenario repeats it ('When its agents go idle').",
+      "proposed_fix": "VIEW-21: 'A room whose runs all show Idle while ...'; scenario: 'When its runs all show Idle and ...'.",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05b-room-view-requirements.md",
+        "features/lane-view.feature"
+      ]
+    },
+    {
+      "id": "C110",
+      "title": "OWN-27 says the room records no verdict; rooms record nothing",
+      "rids": [
+        "whole#8"
+      ],
+      "owners": [
+        "places",
+        "git-and-forge"
+      ],
+      "locations": [
+        "docs/srs/05c-principal-and-peer-requirements.md:43"
+      ],
+      "problem": "A room is a place, not an actor (nodes record), and Verdict says Cairn never derives one (VIEW-22).",
+      "proposed_fix": "OWN-27: 'Cairn records no verdict of its own (VIEW-22).'",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/05c-principal-and-peer-requirements.md"
+      ]
+    },
+    {
+      "id": "C111",
+      "title": "ENG-02's example crate `adapter-claudecode` drops the model's 'harness adapter'",
+      "rids": [
+        "whole#9"
+      ],
+      "owners": [
+        "components-and-surfaces",
+        "hub"
+      ],
+      "locations": [
+        "docs/srs/10-engineering-quality.md:17"
+      ],
+      "problem": "Crate names use the model's words, and 'adapter' alone is not one.",
+      "proposed_fix": "ENG-02: rename the example crate `harness_adapter_claude_code` (matching `restore_block`'s form).",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/10-engineering-quality.md"
+      ]
+    },
+    {
+      "id": "C112",
+      "title": "ADR-06 in §4.5 says `cairn install` edits 'settings', which reads as Cairn's configuration",
+      "rids": [
+        "whole#10"
+      ],
+      "owners": [
+        "principals-and-agents",
+        "record"
+      ],
+      "locations": [
+        "docs/srs/04-reference-architecture.md:157"
+      ],
+      "problem": "Configuration is the principal's settings (§9.6); the harness's settings are part of harness configuration.",
+      "proposed_fix": "§4.5 ADR-06: '`cairn install` edits the harness's settings only as a fallback.'",
+      "class": "fix",
+      "conflict": "",
+      "options": [],
+      "hard_to_revert": false,
+      "touches": [
+        "docs/srs/04-reference-architecture.md"
+      ]
+    }
+  ],
+  "cross_conflicts": [
+    {
+      "clusters": [
+        "C03",
+        "C25",
+        "C37"
+      ],
+      "location": "docs/srs/05b-lane-requirements.md:28 (LANE-16) and docs/domain-model/acts-and-roles.md:110-115 (Role)",
+      "note": "The role-default cluster rewrites LANE-16's 'Except the owner's device seats ... MUST be a viewer, but ... contributor role, and a paired phone's personal-room seat none, reading within its device scope' sentence and the matching Role sentences; the device-scope cluster's option 2 deletes 'within its device scope' from that same sentence and from Role; the owner-has-no-role fix edits LANE-16's last sentence. Compatible, but apply in one change to one merged sentence.",
+      "compatible": "yes: merge into one LANE-16 sentence and one Role sentence"
+    },
+    {
+      "clusters": [
+        "C01",
+        "C02",
+        "C74"
+      ],
+      "location": "docs/srs/invariants.md:37-44 (I2 closed paths) and docs/domain-model/principals-and-agents.md:18-19",
+      "note": "Both stakeholder clusters reword adjacent clauses of I2's closed-path list; do them under one ADR and one security review (ENG-29), then one `mdsmith fix .` for CLAUDE.md. The model's Principal entry fix must use the same delegation wording I2 ends up with.",
+      "compatible": "yes: one ADR, one security review; C74 follows C02's wording"
+    },
+    {
+      "clusters": [
+        "C13",
+        "C27",
+        "C29",
+        "C106"
+      ],
+      "location": "docs/srs/05-functional-requirements.md:82 (RCL-05), :87 (RCL-10), :47 (PRV-02)",
+      "note": "Three decide clusters edit RCL-05: the foreign-room one its last sentence (and RCL-10), recall.default_scope its option 3 the default sentence, the room-tools one the extension sentence. The PRV-02 fix adds 'whether the event's room is foreign' as an input; the foreign-room cluster's option 3 narrows what 'foreign' means there. Rule the three together and edit RCL-05 once.",
+      "compatible": "depends on options: C13 option 3 changes what 'foreign' means in C106's new PRV-02 input; rule C13, C27 and C29 together"
+    },
+    {
+      "clusters": [
+        "C80",
+        "C43"
+      ],
+      "location": "docs/domain-model/record.md:152-157 (Integrity status)",
+      "note": "The per-event integrity status fix rewrites the entry's first sentence; the 'UI' fix rewrites its last sentence ('The UI never says \"secure\"'). Compatible; same entry.",
+      "compatible": "yes"
+    },
+    {
+      "clusters": [
+        "C81",
+        "C86"
+      ],
+      "location": "docs/domain-model/record.md:75-76",
+      "note": "Both edit the one sentence listing what is `structural`: 'key rotations' -> 'seat-key rotations' and 'a witness check's record' -> 'the event recording a witness check'. Compatible; apply together.",
+      "compatible": "yes"
+    },
+    {
+      "clusters": [
+        "C82",
+        "C90"
+      ],
+      "location": "docs/srs/06b-boundary-register.md:58 (row 27)",
+      "note": "Same cell. Merged text: 'stores and serves sealed ranges encrypted to the device keys of the room's principals, or a token-key-only node's token key; reads no content'.",
+      "compatible": "yes: merged text given"
+    },
+    {
+      "clusters": [
+        "C87",
+        "C88",
+        "C73"
+      ],
+      "location": "docs/srs/05b-lane-requirements.md:35 (LANE-23)",
+      "note": "Three fixes edit different sentences of LANE-23 (seat id derivation, seat-certificate hedge, a new personal-room leave/kick refusal). Compatible; one change avoids merge churn in the wide table row.",
+      "compatible": "yes"
+    },
+    {
+      "clusters": [
+        "C05",
+        "C31",
+        "C69"
+      ],
+      "location": "docs/srs/05c-principal-and-peer-requirements.md:27 (OWN-11), :32 (OWN-16)",
+      "note": "The `cairn ui --phone` cluster's option (b) rewrites OWN-16's issuing sentence, which the 'origin' cluster's option 1 also edits ('web origin'); the authenticator fix and 'web origin' both edit OWN-11. Compatible if the origin rename is applied last.",
+      "compatible": "yes, if C31's rename is applied after C05 option (b) rewrites OWN-16"
+    },
+    {
+      "clusters": [
+        "C43",
+        "C31"
+      ],
+      "location": "docs/srs/06-security.md:56 (T15)",
+      "note": "'Local web attack on the UI' -> 'on the browser room view' in the threat column; 'web origin' in the description column. Compatible.",
+      "compatible": "yes"
+    },
+    {
+      "clusters": [
+        "C22",
+        "C50"
+      ],
+      "location": "docs/srs/06-security.md:109 (SEC-19)",
+      "note": "Different sentences of SEC-19: the receipts sentence and the CI 'build-time reach evidence' sentence. Compatible.",
+      "compatible": "yes"
+    },
+    {
+      "clusters": [
+        "C10",
+        "C72"
+      ],
+      "location": "docs/srs/05b-lane-requirements.md:15 (LANE-02)",
+      "note": "The hook-event cluster's option 1 rewrites 'at the first hook event'; the git-clone fix rewrites 'clone' twice in the same row. Compatible.",
+      "compatible": "yes"
+    },
+    {
+      "clusters": [
+        "C08",
+        "C45",
+        "C110"
+      ],
+      "location": "docs/srs/05c-principal-and-peer-requirements.md:37 (OWN-21), :43 (OWN-27) and docs/domain-model/git-and-forge.md (Branch, tree)",
+      "note": "The branch-head cluster's option 1 widens OWN-21/OWN-27 to the worktree's tree, which the tree-definition fix makes a defined term; the OWN-27 'Cairn records no verdict' fix edits another sentence of the same row. Compatible; option 1 relies on the tree fix landing first.",
+      "compatible": "yes; C08 option 1 needs C45 to land first"
+    },
+    {
+      "clusters": [
+        "C28",
+        "C30"
+      ],
+      "location": "docs/srs/05c-principal-and-peer-requirements.md:38 (OWN-22)",
+      "note": "The Health-line cluster's option 2 narrows OWN-22's display sentence; the policy-digest cluster's option 2 adds a clause to OWN-22. Different sentences; compatible.",
+      "compatible": "yes"
+    },
+    {
+      "clusters": [
+        "C16",
+        "C65"
+      ],
+      "location": "docs/srs/03-rationale.md:13 and the Working view entry",
+      "note": "The §3 fix uses the name 'working view'; it assumes the Working view entry keeps its name under either option of the working-view cluster.",
+      "compatible": "yes, while Working view keeps its name"
+    },
+    {
+      "clusters": [
+        "C48",
+        "C105"
+      ],
+      "location": "docs/domain-model/index.md catalog (generated)",
+      "note": "Both change a concept file's front-matter summary; one `mdsmith fix` regenerates the hub catalog for both.",
+      "compatible": "yes"
+    }
+  ],
+  "instruction_edits": [
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md"
+      ],
+      "section": "How you review, step 1",
+      "edit": "Replace 'then each concept file your file points to' with 'then every concept file whose concepts your file uses; the concept files seldom link to one another, so when in doubt read them all'.",
+      "rationale": "git-and-forge.md, record.md and places.md have no links to other model files; each reviewer read all of them anyway.",
+      "from": [
+        "git-and-forge",
+        "record",
+        "places"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md",
+        ".claude/agents/domain-model-hub.md",
+        ".claude/agents/domain-model.md"
+      ],
+      "section": "How you review (new first line)",
+      "edit": "Add: 'The caller's scope wins. When the caller names files, sections or a diff, search only inside them, even where a step below says to search the repository, and say what you left out.'",
+      "rationale": "The hub template's step 4 says 'search the whole repository'; this round was scoped to the SRS and scenarios.",
+      "from": [
+        "hub"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md",
+        ".claude/agents/domain-model-hub.md",
+        ".claude/agents/domain-model.md"
+      ],
+      "section": "How you review (skip list)",
+      "edit": "Add: 'Skip what the hub's section on terms that are not Cairn concepts exempts: historical records, the SRS change log and the Status row in docs/srs/index.md included, and files an outside tool writes and maintains.'",
+      "rationale": "The whole-model reviewer searched docs/srs/index.md's change log, which the hub already treats as a historical record.",
+      "from": [
+        "whole",
+        "hub"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md",
+        ".claude/agents/domain-model-hub.md",
+        ".claude/agents/domain-model.md"
+      ],
+      "section": "How you review (words that coincide with the model's)",
+      "edit": "Add: 'The hub gives every word one meaning. A word the model defines, used in its ordinary English or another domain's sense, is a finding wherever it appears in the SRS, the scenarios, the model or an instruction file, normative or not, unless the hub's rule on outside things qualifies it or the hub lists the use as allowed. Report every such use of one word as one grouped needs-fix finding, with each place and a plain replacement.'",
+      "rationale": "Asked by four reviewers (concurrent, check, evidence, result, tree, pinned, recall, idle, scope, account). The edit applies the hub's existing rule (index.md:13). Ask the stakeholder whether non-normative rationale prose (§3, §4 notes, §11) should get a laxer rule; C54 is the test case.",
+      "from": [
+        "acts-and-roles",
+        "git-and-forge",
+        "pins-and-context",
+        "whole"
+      ],
+      "needs_stakeholder_ruling": true
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md"
+      ],
+      "section": "How you report (kinds)",
+      "edit": "Replace 'Outside a change to your file, report a gap or contradiction inside it as a question for the stakeholder' with: 'Kinds: needs-fix is one obvious wording fix in any file, your own included, such as a citation naming the wrong requirement, or a sentence of your file saying more or less than the requirement it cites, with nothing new defined; question is a gap or contradiction that needs a ruling, where either side could move or something new must be defined; other-specialist is a fix that lands wholly in a file another specialist owns, which you name. A finding whose fix spans your file and another's is yours: file it once and name the other specialist in breaks.'",
+      "rationale": "record (items 11, 12) and seats-and-keys (item 10) filed plain own-file citation errors as questions; components-and-surfaces and places could not tell question from other-specialist for cross-file findings; principals-and-agents asked the same for invariant wording.",
+      "from": [
+        "record",
+        "seats-and-keys",
+        "components-and-surfaces",
+        "places",
+        "principals-and-agents"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md"
+      ],
+      "section": "How you report (which side moves)",
+      "edit": "Add: 'When the SRS contradicts your file: if the rest of the SRS and the scenarios carry your file's meaning, the departing text is needs-fix; if your file says more than, or other than, the requirement it cites and the SRS is right, your file is needs-fix; if either side could move, it is a question.'",
+      "rationale": "places used needs-fix where the model's meaning was clearly intended and question where either side could move; this makes that the rule.",
+      "from": [
+        "places"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md"
+      ],
+      "section": "How you review, step 6",
+      "edit": "Extend: 'A requirement's invariant trace (its Traces column, its scenario's tags and Appendix B) is in scope where it stretches an invariant your concepts serve, and so are the assumption rows, spikes and open questions (§2.3, §13) a requirement on your concepts is hedged on. A defect in an invariant's wording sets invariant: true, with kind needs-fix when the wording is unambiguous and question when it needs a ruling; either way it needs an ADR and a security review (ENG-29).'",
+      "rationale": "harness-facts reported the LANE-28 trace to I7 (C12) and PIN-07's wrong assumption gate (C11) without knowing they were in scope.",
+      "from": [
+        "harness-facts",
+        "principals-and-agents"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md"
+      ],
+      "section": "How you review (scenarios)",
+      "edit": "Add: 'A scenario that leaves out a precondition one of your concepts decides is needs-fix. Drift between a requirement and its scenario about one of your concepts is in scope even when no word is wrong, and so is a @pending scenario that skips a clause about one. For a scenario without @pending, name its step binding in cmd/cairn/bdd_<section>_test.go and any drift case under internal/drift that quotes it; the fix changes them in the same change.'",
+      "rationale": "Role defaults omitted in two scenarios (C03); ENG-29 vs its scenario (C99); ENG-01 is bound at cmd/cairn/bdd_engineering_test.go:40 (C66).",
+      "from": [
+        "pins-and-context",
+        "acts-and-roles",
+        "places",
+        "trust-and-flow"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md"
+      ],
+      "section": "How you review (unused concepts)",
+      "edit": "Add: 'A concept your file defines that no requirement or scenario uses, or that the SRS names in other words, is a question: the SRS takes the model's name, or the concept goes.'",
+      "rationale": "Working view (C16).",
+      "from": [
+        "pins-and-context"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md"
+      ],
+      "section": "How you review (delivery order)",
+      "edit": "Add: 'A rule hedged on delivery order (\"before <requirement id> ships\") follows the milestone order in docs/srs/12-delivery-plan.md; read it before calling an unhedged rule a defect.'",
+      "rationale": "seats-and-keys findings 2 and 7 turn on 'before PRV-10 ships'.",
+      "from": [
+        "seats-and-keys"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md",
+        ".claude/agents/domain-model-hub.md",
+        ".claude/agents/domain-model.md"
+      ],
+      "section": "How you review (what else to read)",
+      "edit": "Add: 'Proposed ADRs under docs/adr may be read for context, never as normative. plan/ and research/ need not be read.'",
+      "rationale": "components-and-surfaces read ADR-2610042341 (proposed) to judge CON-03 (C07).",
+      "from": [
+        "components-and-surfaces"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md",
+        ".claude/agents/domain-model-hub.md"
+      ],
+      "section": "How you report (finding fields)",
+      "edit": "Add: '`file` holds one repository-relative path and `line` the first line; list the further places of a grouped repeat in `also`, an array of \"path:line\" strings.'",
+      "rationale": "components-and-surfaces split one repeat into three findings; principals-and-agents packed several paths into `file`.",
+      "from": [
+        "components-and-surfaces",
+        "principals-and-agents"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md",
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-git-and-forge.md",
+        ".claude/agents/domain-model-harness-facts.md",
+        ".claude/agents/domain-model-pins-and-context.md",
+        ".claude/agents/domain-model-places.md",
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-record.md",
+        ".claude/agents/domain-model-seats-and-keys.md",
+        ".claude/agents/domain-model-trust-and-flow.md"
+      ],
+      "section": "How you review, step 3",
+      "edit": "Add after 'any word the hub excludes in its favour': 'that is, each row of the hub's table of terms that are not Cairn concepts whose replacement your file defines.'",
+      "rationale": "acts-and-roles could not tell which excluded terms point to its file. Optional companion edit to the hub (docs/domain-model/index.md, a model edit the domain-model agent reviews; no new concept): a 'Defined in' column. Mapping found this round — acts-and-roles: operator as a role, owner act, read only; components-and-surfaces: run component, trusted boundary ('boundary'), Needs you as a status, hide; git-and-forge: project, attempt, own run and witness run, judge, approval gate; harness-facts: session; pins-and-context: claim of work, unqualified token (model token); places: lane, room board, project; principals-and-agents: tenant, bound human, bot, co-author, actor, poster, child agent, participant and player (member), operator as a person, session (run); record: import of a transcript or a peer's segments, imported run, work marker, operator (provenance class); seats-and-keys: writer key, writer certificate, service-account seat, owner key, participant and player (seat), unqualified token (access token); trust-and-flow: owner surface, trusted boundary, away mode, room alias, presence check, Needs you as a run status (Asking).",
+      "from": [
+        "acts-and-roles"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-git-and-forge.md"
+      ],
+      "section": "Where to start",
+      "edit": "SRS: add docs/srs/05b-room-view-requirements.md, docs/srs/09a-command-line-interface.md, docs/srs/09b-lane-vocabulary.md. Scenarios: add features/lane-view.feature. Add an Invariants line, as every other specialist has, listing those the file's LANE and OWN rows trace.",
+      "rationale": "VIEW-13, VIEW-19, VIEW-21, VIEW-22, §9.7.2 and §9.7.3 carry many of its concepts.",
+      "from": [
+        "git-and-forge"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-record.md"
+      ],
+      "section": "Where to start",
+      "edit": "SRS: add docs/srs/08-data-and-storage.md, docs/srs/09-interfaces.md, docs/srs/09a-command-line-interface.md, docs/srs/09b-lane-vocabulary.md, docs/srs/05d-peer-requirements.md. Scenarios: add features/peer.feature, features/lane-view.feature.",
+      "rationale": "Store and payload store (§8), address forms and the envelope's integrity field (§9.2), export, import, purge, receipts and backup (§9.5), §9.7.5, segments and sealed ranges (PEER rows), VIEW-08/10/11.",
+      "from": [
+        "record"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-seats-and-keys.md"
+      ],
+      "section": "Where to start",
+      "edit": "SRS: add docs/srs/05c-principal-and-peer-requirements.md, docs/srs/09-interfaces.md, docs/srs/09a-command-line-interface.md, docs/srs/12-delivery-plan.md. Scenarios: add features/principal-acts.feature, features/pins.feature.",
+      "rationale": "OWN-11, OWN-16, OWN-17, OWN-29; key and token verbs and MCP parameters; the PRV-10 hedges.",
+      "from": [
+        "seats-and-keys"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-trust-and-flow.md"
+      ],
+      "section": "Where to start",
+      "edit": "SRS: add docs/srs/09-interfaces.md, docs/srs/09a-command-line-interface.md, docs/srs/09b-lane-vocabulary.md. Invariants: add I8.",
+      "rationale": "Run and room status, queue classes, trust marks, the focus set, the continuation cursor, recall.* and quota.* live there; RCL-05, RCL-10, OWN-26 and OWN-29 trace I8.",
+      "from": [
+        "trust-and-flow"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-places.md"
+      ],
+      "section": "Where to start",
+      "edit": "SRS: add docs/srs/05d-peer-requirements.md. Scenarios: add features/peer.feature, features/lane-view.feature, features/pins.feature.",
+      "rationale": "Peer, blind peer, sync and ephemeral node are defined against PEER rows; Foreign room and Personal room are used in lane-view and pins scenarios.",
+      "from": [
+        "places"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-harness-facts.md"
+      ],
+      "section": "Where to start",
+      "edit": "SRS: add docs/srs/09-interfaces.md, docs/srs/13-open-questions-and-risks.md, docs/srs/appendix-b-invariant-coverage.md.",
+      "rationale": "Derived from where this round's findings landed: §9.1's hook table, OQ-02 and the spikes, and the traces of C12.",
+      "from": [
+        "harness-facts"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-pins-and-context.md"
+      ],
+      "section": "Where to start",
+      "edit": "SRS: add docs/srs/09-interfaces.md, docs/srs/08-data-and-storage.md, docs/srs/05d-peer-requirements.md. Code: the step bindings in cmd/cairn/bdd_*_test.go.",
+      "rationale": "Derived from this round: room_post and room_summary_* (§9.2, §9.6), §8.4, PEER-06, and the ENG-01 binding.",
+      "from": [
+        "pins-and-context"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-components-and-surfaces.md"
+      ],
+      "section": "Where to start",
+      "edit": "SRS: add docs/srs/02-context.md, docs/srs/04-reference-architecture.md, docs/srs/09a-command-line-interface.md, docs/srs/12-delivery-plan.md.",
+      "rationale": "Derived from where this round's findings landed (CON-03, §4.2, §9.5, §12).",
+      "from": [
+        "components-and-surfaces"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-acts-and-roles.md"
+      ],
+      "section": "Where to start",
+      "edit": "SRS: add docs/srs/07-non-functional-requirements.md. Scenarios: add features/landmarks.feature.",
+      "rationale": "Derived from where this round's findings landed (C03, C36).",
+      "from": [
+        "acts-and-roles"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-principals-and-agents.md"
+      ],
+      "section": "Where to start",
+      "edit": "SRS: add docs/srs/02-context.md, docs/srs/09b-lane-vocabulary.md.",
+      "rationale": "Derived from where this round's findings landed (ASM-01, durable volumes, §9.7.6).",
+      "from": [
+        "principals-and-agents"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-components-and-surfaces.md",
+        ".claude/agents/domain-model-hub.md"
+      ],
+      "section": "How you report (who owns a meaning)",
+      "edit": "Add: 'The concept file that defines a concept owns its meaning; the hub owns only the form of names. Where the hub's naming section uses a concept's word in another sense, report it to the hub specialist as other-specialist.'",
+      "rationale": "The hub's Names section counts `ui` and `launch` among CLI commands while components-and-surfaces.md's Core excludes `cairn ui` from the CLI (C05).",
+      "from": [
+        "components-and-surfaces"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-harness-facts.md"
+      ],
+      "section": "How you review (an outside program's words)",
+      "edit": "Add: 'An outside program's own identifiers keep their names under the hub's rule on outside things. A word of an outside program written as prose that a requirement relies on normatively needs a model entry or a rewording: report it as a question.'",
+      "rationale": "Hook output and hook event (C10). Settle together with C10's ruling.",
+      "from": [
+        "harness-facts"
+      ],
+      "needs_stakeholder_ruling": true
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-git-and-forge.md"
+      ],
+      "section": "How you review (an outside domain's terms)",
+      "edit": "Add: 'An outside domain's own terms your file uses without defining them are outside things that domain qualifies. When a requirement binds behaviour to one, report as a question whether the model must define it.'",
+      "rationale": "git's head, base and remote URL; OWN-21's 'branch heads' (C08).",
+      "from": [
+        "git-and-forge"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-record.md"
+      ],
+      "section": "How you review (a thing used as an actor)",
+      "edit": "Add: 'Where the model or the SRS makes one of your concepts the subject of an act it cannot perform, raise it once as a grouped question until the stakeholder rules; do not skip it silently.'",
+      "rationale": "A writer is a log, yet REC-06 ('assigned only by that writer'), ENG-09 and the model's Fork ('one writer sealed') make it an actor; the record reviewer accepted it without reporting.",
+      "from": [
+        "record"
+      ],
+      "needs_stakeholder_ruling": true
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-principals-and-agents.md",
+        ".claude/agents/domain-model-hub.md"
+      ],
+      "section": "How you review (unstated conventions)",
+      "edit": "Add: 'Where text follows a convention the hub does not state, such as an informal stand-in for one of your concepts in scenario prose or a word in a requirement about the repository's own development process, report each convention once as a grouped question until the stakeholder rules.'",
+      "rationale": "Scenarios say 'the person' for the node's principal (SEC-19, PRV-04, PEER-01); ENG-21's 'a reviewer other than its author' sits beside Pull-request author. A ruling could add both to the hub's allowed uses.",
+      "from": [
+        "principals-and-agents"
+      ],
+      "needs_stakeholder_ruling": true
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-hub.md"
+      ],
+      "section": "How you review, step 3",
+      "edit": "Add: 'A requirement that contradicts a relation is your finding, whether the relation cites a requirement id or names a concept.'",
+      "rationale": "hub#1 (LANE-01 vs relation 6, which cites '(Run seat)').",
+      "from": [
+        "hub"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-hub.md"
+      ],
+      "section": "How you review, step 5",
+      "edit": "Widen to: 'Names: identifiers, commands, tool names and their parameters, settings keys, event names, the names requirements and scenarios give to counts, and crate and module names follow the hub's rules. The hub owns their form; the specialist of the concept a name carries owns its meaning.'",
+      "rationale": "recall_calls in a scenario (C59) and ENG-02's example crate (C111) fell between specialists.",
+      "from": [
+        "hub"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model-hub.md"
+      ],
+      "section": "How you review, step 4",
+      "edit": "Add: 'A third-party project's proper name cited as a source is an outside thing under the hub's rule, not a use of an excluded term.'",
+      "rationale": "'session-index README' at 02-context.md:53.",
+      "from": [
+        "hub"
+      ],
+      "needs_stakeholder_ruling": false
+    },
+    {
+      "target": [
+        ".claude/agents/domain-model.md"
+      ],
+      "section": "How you review",
+      "edit": "Add: 'In a standing review, also apply step 1 of \"When the model changes\" and report what it finds as a question.'",
+      "rationale": "The whole-model reviewer found C31 (origin) that way without being told to look.",
+      "from": [
+        "whole"
+      ],
+      "needs_stakeholder_ruling": false
+    }
+  ]
+}

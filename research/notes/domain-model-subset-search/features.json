@@ -1,0 +1,1210 @@
+{
+ "core": {
+  "id": "core",
+  "name": "Core: lossless record, verbatim pins, enveloped recall on one node",
+  "description": "One principal, one node, one personal room: hook capture into hash-chained sealed writers, provenance and trust policy, pins from the principal's device seat restored verbatim in restore blocks, pull-only enveloped recall, quarantine, counters and Health/Setup, the B0 core only.",
+  "entries": [
+   "principals-and-agents: Principal",
+   "principals-and-agents: Person",
+   "principals-and-agents: Managed policy",
+   "principals-and-agents: Agent",
+   "principals-and-agents: Run",
+   "principals-and-agents: Subagent",
+   "principals-and-agents: Ingested run",
+   "principals-and-agents: Author",
+   "principals-and-agents: Member",
+   "principals-and-agents: Owner",
+   "harness-facts: Harness",
+   "harness-facts: Harness session",
+   "harness-facts: Transcript",
+   "harness-facts: Hook",
+   "harness-facts: Turn",
+   "harness-facts: Compaction",
+   "places: Home",
+   "places: Node",
+   "places: Device",
+   "places: Room",
+   "places: Personal room",
+   "places: Foreign room",
+   "places: Principal's rooms",
+   "record: Record",
+   "record: Writer",
+   "record: Event",
+   "record: seq",
+   "record: Address",
+   "record: Payload",
+   "record: Segment",
+   "record: Seal",
+   "record: Commitment",
+   "record: Provenance",
+   "record: Origin",
+   "record: Structural field",
+   "record: Structural event",
+   "record: Capture",
+   "record: Ingest marker",
+   "record: Derived artifact",
+   "record: Redaction",
+   "record: Flag",
+   "record: Quarantine",
+   "record: Gap marker",
+   "record: Integrity status",
+   "pins-and-context: Pin",
+   "pins-and-context: Pin version",
+   "pins-and-context: Configuration pin",
+   "pins-and-context: Pin priority",
+   "pins-and-context: Budget",
+   "pins-and-context: Pin type",
+   "pins-and-context: Unpin",
+   "pins-and-context: Compaction summary",
+   "pins-and-context: Envelope",
+   "pins-and-context: Envelope warning",
+   "pins-and-context: Trusted text",
+   "pins-and-context: Restore block",
+   "pins-and-context: Recall hint",
+   "pins-and-context: Model",
+   "pins-and-context: Working view",
+   "pins-and-context: Qualified requests",
+   "seats-and-keys: Seat",
+   "seats-and-keys: Run seat",
+   "seats-and-keys: Device seat",
+   "seats-and-keys: Room id",
+   "seats-and-keys: Seat id",
+   "seats-and-keys: Seat key",
+   "seats-and-keys: Device key",
+   "seats-and-keys: Seat certificate",
+   "acts-and-roles: Room act",
+   "acts-and-roles: Principal act",
+   "acts-and-roles: Cut:",
+   "acts-and-roles: Neutral:",
+   "acts-and-roles: Widening:",
+   "acts-and-roles: Role",
+   "acts-and-roles: Contributor:",
+   "acts-and-roles: Capability",
+   "acts-and-roles: Work",
+   "acts-and-roles: Active pin",
+   "acts-and-roles: Room merge",
+   "acts-and-roles: Concurrent",
+   "acts-and-roles: Room state",
+   "git-and-forge: Qualified links",
+   "trust-and-flow: Trust level",
+   "trust-and-flow: Trusted sources",
+   "trust-and-flow: Deployment mode",
+   "trust-and-flow: Trust policy",
+   "trust-and-flow: Trust mark",
+   "trust-and-flow: Taint",
+   "trust-and-flow: Principal surface",
+   "trust-and-flow: Recall",
+   "trust-and-flow: Closed path",
+   "trust-and-flow: Recall scope",
+   "trust-and-flow: Delegation",
+   "trust-and-flow: Delegated task",
+   "trust-and-flow: Fixed template",
+   "trust-and-flow: Counter",
+   "trust-and-flow: Canary",
+   "trust-and-flow: Run status",
+   "components-and-surfaces: Component",
+   "components-and-surfaces: Core (B0):",
+   "components-and-surfaces: harness adapter",
+   "components-and-surfaces: Boundary",
+   "components-and-surfaces: Room view",
+   "components-and-surfaces: Health:",
+   "components-and-surfaces: Setup:",
+   "hub-relation: A principal owns any number",
+   "hub-relation: A run has its personal-room",
+   "hub-relation: A restore block carries the",
+   "hub-relation: Ingest splits one transcript by",
+   "hub-relation: Every seat belongs to one",
+   "hub-relation: Each event goes to exactly",
+   "hub-relation: A run's history spans its",
+   "hub-relation: Principals and agents create rooms;",
+   "hub-relation: A pin naming no room",
+   "hub-relation: Recall extends only to the"
+  ],
+  "requires": [],
+  "requires_any": [],
+  "soft": [],
+  "value": 5,
+  "risk": 3,
+  "notes": "States I1-I10 for a single principal on a single node: I1 (address, writer, seq, redaction), I2 (trusted sources, envelope, recall, restore blocks, compaction guidance, fixed templates), I3 (pin, budget), I4 (B0 core only; B1-B3 absent), I5 (quarantine), I6 (counter, Health), I7 (harness configuration, Setup, managed policy), I8 (home), I9 (budgets, fail-open), I10 (derived artifacts, room merge, key set). The Cut/Neutral/Widening and Room act lists enumerate acts of optional features; with a feature absent those list items are simply unused.",
+  "justification": {
+   "principals-and-agents: Principal": "The party every invariant protects (I1, I2, I8); every agent, home and key belongs to exactly one.",
+   "principals-and-agents: Person": "A single-node install's principal is a person; no one certifies its key, and only a person records a verdict.",
+   "principals-and-agents: Managed policy": "I1, I4 and I7 name it; its item also defines harness configuration, the thing I7 governs.",
+   "principals-and-agents: Agent": "What restore blocks and recall serve; the reason Cairn exists.",
+   "principals-and-agents: Run": "The unit the record is keyed by and a restore block is built for (I1, I3).",
+   "principals-and-agents: Subagent": "The harness starts subagents; each has its own run and writer tied by a parent link, or their events are lost (I1).",
+   "principals-and-agents: Ingested run": "`cairn ingest` recovers what capture missed (I1, I9 fail-open); such runs must be named and untrusted (REC-22).",
+   "principals-and-agents: Author": "Every event and pin has one authoring seat; which pins qualify to restore depends on it (PIN-10, I3).",
+   "principals-and-agents: Member": "Whether a seat is a member decides where a run's events go and which pins restore (hub Relations).",
+   "principals-and-agents: Owner": "The principal owns its personal room; ownership gives its device seats every capability there.",
+   "harness-facts: Harness": "What Cairn records; I7 governs its configuration.",
+   "harness-facts: Harness session": "The harness unit that yields a transcript and keys a run.",
+   "harness-facts: Transcript": "The source ingest reads (REC-01, REC-03).",
+   "harness-facts: Hook": "How the harness reports to the core's hook handlers; capture rides on it.",
+   "harness-facts: Turn": "User turns are an I2 trusted source in interactive mode; spans and turn triggers follow turns.",
+   "harness-facts: Compaction": "What I3 restores after; compaction guidance is an I2 closed path.",
+   "places: Home": "I8's unit of isolation, bound to one OS user.",
+   "places: Node": "I1 and I10 are stated per node: one home on one machine.",
+   "places: Device": "A node is a device; its device key certifies its seats (PRV-11).",
+   "places: Room": "Every pin lives in exactly one room; the unit of seats and writers.",
+   "places: Personal room": "Where every run's events and roomless pins go; the one room a single-node install needs.",
+   "places: Foreign room": "Core Relations on restore and recall name it; it keeps rooms the principal has no seat in untrusted and out of extended recall (I8, RCL-10).",
+   "places: Principal's rooms": "Bounds recall (hub Relations; I8 'nor extends their recall').",
+   "record: Record": "The set of writer logs I1 and I10 speak of; holds the settings layers beside it.",
+   "record: Writer": "The append-only, hash-chained log I1's address names.",
+   "record: Event": "What I1 says is never lost.",
+   "record: seq": "Half of I1's stable address; gap-free and never reused.",
+   "record: Address": "I1's (writer, seq); what recall, restore blocks and gap markers point at.",
+   "record: Payload": "Large events are stored whole outside the event, or I1 fails for them (REC-09).",
+   "record: Segment": "The sealed unit of a writer; seals are made where segments close (REC-18, REC-19).",
+   "record: Seal": "A seat key's signature over the chain head: the record's tamper evidence.",
+   "record: Commitment": "The only way the chain refers to content, so redaction and erasure never break it (REC-17).",
+   "record: Provenance": "The class the trust policy reads to decide I2's trusted sources.",
+   "record: Origin": "Witnessed, ingested or received: I2's 'this node's own' depends on it.",
+   "record: Structural field": "Restore blocks are built only from these (I2).",
+   "record: Structural event": "One of I2's trusted sources.",
+   "record: Capture": "The hook handlers recording runs; I1 needs it, and turning it off is widening.",
+   "record: Ingest marker": "Lets a hook budget cut ingest short without loss (I1, I9).",
+   "record: Derived artifact": "I10's subject.",
+   "record: Redaction": "I1's first exception; a security-first record keeps no secrets (SEC-08).",
+   "record: Flag": "Marks injection-pattern text so derived text carries only its counts (PRV-07); supports I2.",
+   "record: Quarantine": "I5's subject.",
+   "record: Gap marker": "What stands where content is purged, quarantined, truncated or missing, so no loss is silent (I1, I6).",
+   "record: Integrity status": "Shows a writer's chain and seal state, making tampering visible (VIEW-10, I10).",
+   "pins-and-context: Pin": "What I3 restores verbatim.",
+   "pins-and-context: Pin version": "The immutable text stored and restored verbatim; edits add versions (I1, I3).",
+   "pins-and-context: Configuration pin": "PIN-01's baseline: the principal's declared constraints, authored by its own device seat and trusted on its node.",
+   "pins-and-context: Pin priority": "Orders pins into the pin budget (PIN-08); I3's omission rule needs an order.",
+   "pins-and-context: Budget": "I3's pin budget and I9's defined budgets.",
+   "pins-and-context: Pin type": "Decides which pins restore (constraint, preference, intent).",
+   "pins-and-context: Unpin": "Ends a pin's restoring while its versions stay (I1).",
+   "pins-and-context: Compaction summary": "The harness's summary is recorded untrusted and never restored (I2, I3).",
+   "pins-and-context: Envelope": "I2's untrusted-data envelope, the only way recalled content reaches a model.",
+   "pins-and-context: Envelope warning": "The fixed sentence that heads every envelope (I2).",
+   "pins-and-context: Trusted text": "The only text the restore builder accepts (INJ-03); I2's mechanism.",
+   "pins-and-context: Restore block": "I2's first closed path and I3's vehicle.",
+   "pins-and-context: Recall hint": "The restore block's fixed pointer to the recall tools (INJ-01).",
+   "pins-and-context: Model": "What I2 protects.",
+   "pins-and-context: Working view": "Names the context window, never authoritative; why the record is.",
+   "pins-and-context: Qualified requests": "Naming rule: 'request' never stands alone; costs nothing.",
+   "seats-and-keys: Seat": "The unit of membership, signing and authorship; every writer belongs to one.",
+   "seats-and-keys: Run seat": "Where a run's events go (hub Relations); its key seals the run's writer.",
+   "seats-and-keys: Device seat": "The seat for acting without a run: principal acts and device-seat pins.",
+   "seats-and-keys: Room id": "Names a room; part of every seat id and address form.",
+   "seats-and-keys: Seat id": "Derived from room id and first key; never chosen.",
+   "seats-and-keys: Seat key": "Signs room acts and seals the writer; the writer id derives from it.",
+   "seats-and-keys: Device key": "Certifies the node's seats from the first release (PRV-11).",
+   "seats-and-keys: Seat certificate": "Makes a seat's kind provable; defines the key set I10 reads.",
+   "acts-and-roles: Room act": "How pins and other room state change (LANE-31).",
+   "acts-and-roles: Principal act": "How the principal acts (device-seat pins, quarantine, capture); I2's 'on a principal act'.",
+   "acts-and-roles: Cut:": "OWN-11's classes tell widening from narrowing; every act is classed.",
+   "acts-and-roles: Neutral:": "OWN-11's classes tell widening from narrowing; every act is classed.",
+   "acts-and-roles: Widening:": "OWN-11's classes tell widening from narrowing; every act is classed.",
+   "acts-and-roles: Role": "What a seat may do; a run's personal-room seat is a contributor.",
+   "acts-and-roles: Contributor:": "Carries the pin capability and work for run seats.",
+   "acts-and-roles: Capability": "The closed set roles grant (LANE-16).",
+   "acts-and-roles: Work": "The capability event routing depends on (hub Relations).",
+   "acts-and-roles: Active pin": "I10 lists active pins.",
+   "acts-and-roles: Room merge": "Derives room state deterministically (I10).",
+   "acts-and-roles: Concurrent": "The causal order the room merge needs (I10).",
+   "acts-and-roles: Room state": "I10 lists it; the pin list derives from it.",
+   "git-and-forge: Qualified links": "Naming rule; its parent link ties a subagent's run to its parent's.",
+   "trust-and-flow: Trust level": "I2's trusted/untrusted, per event.",
+   "trust-and-flow: Trusted sources": "I2's list, as PRV-02 applies it.",
+   "trust-and-flow: Deployment mode": "I2 trusts user events only in interactive mode.",
+   "trust-and-flow: Trust policy": "The rule deriving trust levels (PRV-02, I10).",
+   "trust-and-flow: Trust mark": "Shows where an item came from and whether it is trusted (I8 attribution, VIEW-07).",
+   "trust-and-flow: Taint": "Recall results and other outputs inherit untrusted (I2).",
+   "trust-and-flow: Principal surface": "Where principal acts are taken: the CLI or TUI at a terminal.",
+   "trust-and-flow: Recall": "I2's pull-only path; 'exact recall on demand'.",
+   "trust-and-flow: Closed path": "I2's closed set of writes to an agent.",
+   "trust-and-flow: Recall scope": "Bounds recall (I8: nothing extends it on its own).",
+   "trust-and-flow: Delegation": "Names the harness's subagent hand-off the record captures (OWN-24).",
+   "trust-and-flow: Delegated task": "A subagent's task text is recorded under its own provenance.",
+   "trust-and-flow: Fixed template": "I2's only shape for a write on a principal act; defines principal-typed text.",
+   "trust-and-flow: Counter": "I6.",
+   "trust-and-flow: Canary": "Proves capture and recall end to end, so a silent break shows (I6, OPS-04).",
+   "trust-and-flow: Run status": "I10 lists run statuses; the `unrecorded` freshness mark shows hooks stopped arriving (I6).",
+   "components-and-surfaces: Component": "I4's closed set of parts.",
+   "components-and-surfaces: Core (B0):": "I4's B0: the hook handlers, CLI, MCP server, TUI; the only builder of what reaches the model.",
+   "components-and-surfaces: harness adapter": "The core's per-harness transcript and hook parsing.",
+   "components-and-surfaces: Boundary": "I4's network boundaries.",
+   "components-and-surfaces: Room view": "The client of the record that the CLI and TUI implement as reduced clients.",
+   "components-and-surfaces: Health:": "I6: failures visible to the node's principal.",
+   "components-and-surfaces: Setup:": "I7: every configuration change shown first.",
+   "hub-relation: A principal owns any number": "Ownership and an agent's principal following from its node (I8).",
+   "hub-relation: A run has its personal-room": "A run's seats, starting with its personal-room seat.",
+   "hub-relation: A restore block carries the": "PIN-10: which rooms' qualifying pins a restore block carries (I3).",
+   "hub-relation: Ingest splits one transcript by": "Ingest per run (I1).",
+   "hub-relation: Every seat belongs to one": "Seat-principal-room-writer structure behind every address.",
+   "hub-relation: Each event goes to exactly": "Event routing: every event in exactly one writer (I1, I10).",
+   "hub-relation: A run's history spans its": "A run's history across writers; recall by address.",
+   "hub-relation: Principals and agents create rooms;": "Cairn never creates a room on its own; the personal room comes from install.",
+   "hub-relation: A pin naming no room": "Roomless pins land in the personal room.",
+   "hub-relation: Recall extends only to the": "Recall scope bound (I8)."
+  }
+ },
+ "features": [
+  {
+   "id": "git-tracking",
+   "name": "Git tracking",
+   "description": "Repository identity, branches, commits, worktrees and worktree checkpoints recorded as events.",
+   "entries": [
+    "git-and-forge: Repository",
+    "git-and-forge: Branch",
+    "git-and-forge: Commit",
+    "git-and-forge: Worktree",
+    "record: Worktree checkpoint"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [],
+   "value": 4,
+   "risk": 2,
+   "notes": "No invariant names it directly; worktree checkpoints are events under I1, their diffs redacted (I1 redaction). Binding a repository identity by hand is a widening act."
+  },
+  {
+   "id": "work-rooms",
+   "name": "Work rooms",
+   "description": "Rooms beyond the personal room: create, join, leave, branch links routing a run's events by branch, visibility, title/labels/assignments/stakes, room trailers and landing links with proof classes.",
+   "entries": [
+    "acts-and-roles: Join",
+    "acts-and-roles: Viewer:",
+    "places: Visibility",
+    "pins-and-context: Title, labels",
+    "pins-and-context: Assignment",
+    "pins-and-context: Stake",
+    "git-and-forge: Landing",
+    "git-and-forge: Landing link",
+    "git-and-forge: Proof class",
+    "git-and-forge: Room trailer"
+   ],
+   "requires": [
+    "git-tracking"
+   ],
+   "requires_any": [],
+   "soft": [
+    "shared-rooms",
+    "bridges",
+    "results-and-verdicts",
+    "git-carrier",
+    "publishing",
+    "blind-peer"
+   ],
+   "value": 5,
+   "risk": 3,
+   "notes": "I10 lists room state and proof classes; I8 'nor extends their recall' bounds what joining does. Room trailers put room ids in commit messages (disclosure surface). Visibility changes are widening."
+  },
+  {
+   "id": "shared-rooms",
+   "name": "Shared rooms (multi-principal)",
+   "description": "Rooms with other principals' seats: admission, invites and invite links, bars by principal key.",
+   "entries": [
+    "acts-and-roles: Admission",
+    "acts-and-roles: Bar"
+   ],
+   "requires": [
+    "work-rooms",
+    "principal-keys"
+   ],
+   "requires_any": [
+    [
+     "peer-sync",
+     "git-carrier"
+    ]
+   ],
+   "soft": [
+    "access-tokens",
+    "moderation",
+    "ownership-transfer",
+    "trust-grants"
+   ],
+   "value": 4,
+   "risk": 5,
+   "notes": "I8 (content another principal wrote kept as theirs, attributed to its seat key, untrusted unless stamp or trust grant), I2 ('anything another node or principal produced'). Needs a transport for other principals' nodes to hold the room. Invite review step applies redaction (SEC-08)."
+  },
+  {
+   "id": "moderation",
+   "name": "Moderation and appointments",
+   "description": "The moderator role, kick, mute, list removal, and appointing a run seat or another principal's device seat as moderator within the appointment rate.",
+   "entries": [
+    "acts-and-roles: Moderator:",
+    "acts-and-roles: Kick",
+    "acts-and-roles: Mute",
+    "acts-and-roles: Appointment",
+    "pins-and-context: List removal"
+   ],
+   "requires": [
+    "work-rooms"
+   ],
+   "requires_any": [],
+   "soft": [
+    "conversation",
+    "stamps",
+    "needs-you",
+    "facilitator",
+    "shared-rooms"
+   ],
+   "value": 3,
+   "risk": 2,
+   "notes": "I10 room state (roles, appointments, mutes). Room acts are governance, not I2 trust. List removal never stops a stamped version restoring (LANE-32)."
+  },
+  {
+   "id": "facilitator",
+   "name": "Facilitator and room summaries",
+   "description": "A service account's device seat appointed as the room's facilitator, writing untrusted room summaries that agents read only through room_summary_get.",
+   "entries": [
+    "principals-and-agents: Facilitator",
+    "pins-and-context: Room summary"
+   ],
+   "requires": [
+    "moderation",
+    "service-accounts",
+    "conversation",
+    "shared-rooms"
+   ],
+   "requires_any": [],
+   "soft": [],
+   "value": 2,
+   "risk": 3,
+   "notes": "I2: a room summary (`summary` provenance) is never trusted; the restore block carries only its pointer by id. Trust grants never cover room summaries (OWN-29)."
+  },
+  {
+   "id": "ownership-transfer",
+   "name": "Handover and succession",
+   "description": "Transfer a room's ownership by offer and acceptance, or to a named successor once every owner seat has left.",
+   "entries": [
+    "acts-and-roles: Successor",
+    "acts-and-roles: Handover"
+   ],
+   "requires": [
+    "shared-rooms"
+   ],
+   "requires_any": [],
+   "soft": [
+    "principal-keys",
+    "stamps",
+    "intent-criteria"
+   ],
+   "value": 2,
+   "risk": 3,
+   "notes": "No invariant names it; changes which pins restore (intent restores only to stampers' agents until the new owner revises it). Handover offer expiry uses expire acts (PRV-10)."
+  },
+  {
+   "id": "stamps",
+   "name": "Stamps",
+   "description": "A principal stamps one pin version after seeing its exact text, author and key, so it restores verbatim to that principal's own agents (run-seat, token-key-only and other principals' pins).",
+   "entries": [
+    "acts-and-roles: Stamp"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "needs-you",
+    "shared-rooms",
+    "access-tokens"
+   ],
+   "value": 4,
+   "risk": 3,
+   "notes": "I2 ('a pin version that principal stamped'; 'a pin version a principal stamped, for that principal's own agents'), I8 ('unless this principal's own stamp ... covers it'). A human-reviewed widening path from untrusted pin text into restore blocks."
+  },
+  {
+   "id": "intent-criteria",
+   "name": "Intent and criteria",
+   "description": "A room's lead intent pin (goal, criteria, paths), changed only by the owner, restored to agents; criteria with stable ids.",
+   "entries": [
+    "pins-and-context: Intent",
+    "pins-and-context: Criterion"
+   ],
+   "requires": [
+    "work-rooms"
+   ],
+   "requires_any": [],
+   "soft": [
+    "ownership-transfer",
+    "trust-grants",
+    "results-and-verdicts",
+    "pin-candidates"
+   ],
+   "value": 4,
+   "risk": 2,
+   "notes": "I3 (intent is a type that restores, verbatim). I2: restores as its newest version's author wrote it, only to that author's principal's agents, stampers' agents or trust-grant holders."
+  },
+  {
+   "id": "pin-candidates",
+   "name": "Pin candidates",
+   "description": "Agent-suggested or Cairn-detected proposed pin text that the principal confirms into a device-seat pin.",
+   "entries": [
+    "pins-and-context: Pin candidate"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "intent-criteria"
+   ],
+   "value": 3,
+   "risk": 2,
+   "notes": "I2: an agent's suggestion is an untrusted `assistant` event; only the principal's widening confirmation makes a trusted pin. I10: a detected candidate is a derived artifact."
+  },
+  {
+   "id": "conversation",
+   "name": "Conversation and presence",
+   "description": "Posts, comments on marked ranges, drafts and cross-room posts, plus ephemeral presence and typing hints.",
+   "entries": [
+    "pins-and-context: Post",
+    "trust-and-flow: Presence hint"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "work-rooms",
+    "endorsement",
+    "trust-grants",
+    "peer-sync"
+   ],
+   "value": 4,
+   "risk": 2,
+   "notes": "I2 and I8 name 'posts ... written from a device seat'; posts reach an agent only by recall, endorsement or a trust grant. Presence hints are never stored (outside I1)."
+  },
+  {
+   "id": "endorsement",
+   "name": "Directed posts and endorsement",
+   "description": "A post directed to an agent waits in Needs you; its principal endorses it, sending the exact confirmed text into the agent's input inside OWN-08's template.",
+   "entries": [
+    "pins-and-context: Directed post",
+    "trust-and-flow: Endorsement"
+   ],
+   "requires": [
+    "conversation",
+    "needs-you",
+    "launcher"
+   ],
+   "requires_any": [],
+   "soft": [],
+   "value": 3,
+   "risk": 4,
+   "notes": "I2 ('a post a principal endorsed exactly as shown inside the template of OWN-08'). Delivered only through the harness's own input (OWN-03), hence the launcher."
+  },
+  {
+   "id": "notices",
+   "name": "Opt-in notices",
+   "description": "Trusted fixed-text notices that posts or a delegate report wait or a room changed, sent only while the owner's allowance and the principal's opt-in both stand.",
+   "entries": [
+    "pins-and-context: Opt-in notice",
+    "trust-and-flow: Notice allowance, notice opt-in"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "conversation",
+    "delegation-grants",
+    "work-rooms"
+   ],
+   "value": 2,
+   "risk": 2,
+   "notes": "I2 closed path 'opt-in notices (INJ-10)', built only from fixed text, structural fields and ids."
+  },
+  {
+   "id": "held-requests",
+   "name": "Held requests and hand-off",
+   "description": "Permission requests, questions and hand-offs held with stable ids, answerable from any principal surface within a hold window; permission grants; hand-back with a note and worktree checkpoint.",
+   "entries": [
+    "pins-and-context: Held request",
+    "trust-and-flow: Permission grant",
+    "trust-and-flow: Hand-off, hand-back"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "launcher",
+    "git-tracking",
+    "needs-you",
+    "away-policy",
+    "paired-phone"
+   ],
+   "value": 4,
+   "risk": 3,
+   "notes": "I2 closed path 'the fixed templates of OWN-04' (hook permission decisions) and principal-typed replies; I9 (the hold window is bounded; on failure the harness's own prompt answers). Replies and hand-back notes need the launcher (OWN-03), else shown unavailable (OWN-15)."
+  },
+  {
+   "id": "away-policy",
+   "name": "Away policy",
+   "description": "A principal's opt-in answer for unanswered held requests: keep going, pause or stop.",
+   "entries": [
+    "trust-and-flow: Away policy"
+   ],
+   "requires": [
+    "held-requests"
+   ],
+   "requires_any": [],
+   "soft": [
+    "launcher"
+   ],
+   "value": 3,
+   "risk": 4,
+   "notes": "I2 closed path 'the fixed templates of ... OWN-07'. Never starts or resumes a turn. A later allow reaches the agent through OWN-03 (launcher)."
+  },
+  {
+   "id": "rule-levels",
+   "name": "Rule levels and recall taint",
+   "description": "Per action class: act without asking, act when told, ask first or hand off; a run that recalled untrusted content gets sensitive classes tightened.",
+   "entries": [
+    "trust-and-flow: Rule level",
+    "trust-and-flow: Recall taint"
+   ],
+   "requires": [
+    "held-requests"
+   ],
+   "requires_any": [],
+   "soft": [
+    "delegation-grants",
+    "launcher"
+   ],
+   "value": 4,
+   "risk": 3,
+   "notes": "No invariant names it; it bounds what an agent does after untrusted content reached it by recall (I2's residual risk). Loosening is widening; repository configuration only tightens."
+  },
+  {
+   "id": "launcher",
+   "name": "Launcher and run controls",
+   "description": "B1 `cairn launch`: starts, hosts and controls runs, steer/interrupt/pause/resume/stop, terminal takeover, corrections and retries, carrying in only text the core built.",
+   "entries": [
+    "components-and-surfaces: Launcher (B1):",
+    "trust-and-flow: Run controls",
+    "trust-and-flow: Correction, retry"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "results-and-verdicts",
+    "git-tracking",
+    "witness-check",
+    "sandbox-risk",
+    "browser-room-view"
+   ],
+   "value": 4,
+   "risk": 4,
+   "notes": "I4 B1 ('the launcher carries into the harness's input only text the core built'), I2 ('through the harness's own input, only principal-typed text, a fixed template ..., or a post a principal endorsed'). The only component that starts programs. Corrections answer verdicts; retries start from worktree checkpoints."
+  },
+  {
+   "id": "sandbox-risk",
+   "name": "Sandbox state and risk acceptance",
+   "description": "Record what confines each run and which residual risks it leaves open; refuse widening acts until the principal accepts open risks.",
+   "entries": [
+    "places: Sandbox",
+    "trust-and-flow: Residual risk",
+    "trust-and-flow: Sandbox state",
+    "trust-and-flow: Risk acceptance"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "launcher"
+   ],
+   "value": 3,
+   "risk": 1,
+   "notes": "No invariant names it; it is a gate on every widening act (OWN-22) and managed policy may forbid risk acceptance. Dropping it removes that gate. Sandbox state is `harness_meta` recorded from outside the sandbox (launcher, OQ-40)."
+  },
+  {
+   "id": "presence-proof",
+   "name": "Presence proofs",
+   "description": "Hardware-backed authenticators giving user-verified presence proofs bound to one widening act.",
+   "entries": [
+    "trust-and-flow: Presence proof",
+    "seats-and-keys: Authenticator"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "browser-room-view",
+    "paired-phone"
+   ],
+   "value": 2,
+   "risk": 1,
+   "notes": "No invariant names it; it hardens principal acts (OWN-11, OWN-12) and paired-phone allows (OWN-16). Mitigation, not surface."
+  },
+  {
+   "id": "delegation-grants",
+   "name": "Delegation under grants",
+   "description": "Agents delegate tasks to other agents of the same principal under a delegation grant (targets, rule level, budget in spend, concurrency, depth, expiry); delegate reports return via delegation_get.",
+   "entries": [
+    "principals-and-agents: Delegate",
+    "trust-and-flow: Delegation grant",
+    "trust-and-flow: Delegate report",
+    "trust-and-flow: Spend"
+   ],
+   "requires": [
+    "launcher",
+    "rule-levels"
+   ],
+   "requires_any": [],
+   "soft": [
+    "notices",
+    "access-tokens",
+    "acceptance-grants"
+   ],
+   "value": 3,
+   "risk": 4,
+   "notes": "I2 ('Under a delegation grant its principal recorded (OWN-23) ... a delegated task inside the fixed template of OWN-24'). Delegates inherit recall taint and never get a looser rule level."
+  },
+  {
+   "id": "acceptance-grants",
+   "name": "Cross-principal delegation",
+   "description": "Delegation to another principal's agent, which needs that principal's acceptance grant on its own node.",
+   "entries": [
+    "trust-and-flow: Acceptance grant"
+   ],
+   "requires": [
+    "delegation-grants",
+    "principal-keys"
+   ],
+   "requires_any": [
+    [
+     "peer-sync",
+     "git-carrier"
+    ]
+   ],
+   "soft": [],
+   "value": 2,
+   "risk": 5,
+   "notes": "I2 ('for an agent of another principal, an acceptance grant that agent's principal recorded (OWN-26)'). OWN-26 must pass a recorded I2 security review."
+  },
+  {
+   "id": "trust-grants",
+   "name": "Trust grants",
+   "description": "A principal trusts another principal's key for its own agents, in one room or everywhere: that principal's device-seat pins restore and its posts arrive in OWN-29's template.",
+   "entries": [
+    "trust-and-flow: Trust grant"
+   ],
+   "requires": [
+    "principal-keys",
+    "shared-rooms"
+   ],
+   "requires_any": [],
+   "soft": [
+    "conversation",
+    "service-accounts",
+    "launcher"
+   ],
+   "value": 3,
+   "risk": 5,
+   "notes": "I2 ('what a trust grant of that principal covers'; 'Cairn applies such grants and never grants trust itself'), I8 ('unless this principal's own stamp or trust grant covers it'). Never in a foreign room; refuses relaying service accounts."
+  },
+  {
+   "id": "principal-keys",
+   "name": "Principal keys and expire acts (PRV-10)",
+   "description": "A principal key certifies device keys, so principal acts and device-seat pins from the principal's other devices are trusted within device scope; expire acts end bars, mutes, offers, tokens and grants.",
+   "entries": [
+    "seats-and-keys: Principal key",
+    "acts-and-roles: Expire act"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "moderation",
+    "ownership-transfer",
+    "access-tokens",
+    "delegation-grants",
+    "acceptance-grants"
+   ],
+   "value": 4,
+   "risk": 3,
+   "notes": "I2 and I8 ('acts signed by a device key it certified', 'once PRV-10 ships'), I10 (the node's key set). Enabler for multi-device trust, bundles and multi-principal features."
+  },
+  {
+   "id": "service-accounts",
+   "name": "Service accounts",
+   "description": "Non-human principals with their own principal key, certified by a person, another service account or managed policy, marked whether they relay others' text.",
+   "entries": [
+    "principals-and-agents: Service account"
+   ],
+   "requires": [
+    "principal-keys"
+   ],
+   "requires_any": [],
+   "soft": [
+    "trust-grants",
+    "ci-attestation"
+   ],
+   "value": 3,
+   "risk": 3,
+   "notes": "I8 (its own principal: its content is kept as its own). Managed policy may certify by listing; unmarked listings count as relaying."
+  },
+  {
+   "id": "access-tokens",
+   "name": "Access tokens and ephemeral nodes",
+   "description": "Short-lived access tokens to enroll devices or peers, carry invite links, and certify token-key-only ephemeral nodes' seats through token keys.",
+   "entries": [
+    "seats-and-keys: Access token",
+    "seats-and-keys: Token key"
+   ],
+   "requires": [
+    "principal-keys"
+   ],
+   "requires_any": [
+    [
+     "peer-sync",
+     "git-carrier"
+    ]
+   ],
+   "soft": [
+    "stamps",
+    "segment-exchange",
+    "shared-rooms",
+    "delegation-grants"
+   ],
+   "value": 3,
+   "risk": 4,
+   "notes": "I10 key set (token certificates). A token-key-only node signs no principal acts; its pins restore only once stamped (I2). Expiry by expire act retires its writers."
+  },
+  {
+   "id": "segment-exchange",
+   "name": "Segment exchange base",
+   "description": "Holding other nodes' writers: forks kept for forensics with the principal choosing one, and retiring a writer at a last accepted seq.",
+   "entries": [
+    "trust-and-flow: Fork",
+    "record: Retire a writer"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [],
+   "value": 1,
+   "risk": 2,
+   "notes": "I1 (both forks kept), I10 ('independent of the order in which logs arrived'). Base gene shared by peer sync and the git carrier; no value alone."
+  },
+  {
+   "id": "peer-sync",
+   "name": "Peer sync",
+   "description": "B2 peer component: encrypted, mutually authenticated sync of sealed ranges with peers enrolled by key; the Peers surface; serves paired phones.",
+   "entries": [
+    "components-and-surfaces: Peer component (B2):",
+    "components-and-surfaces: Peers:",
+    "places: Peer"
+   ],
+   "requires": [
+    "segment-exchange"
+   ],
+   "requires_any": [],
+   "soft": [
+    "principal-keys",
+    "purge-retention",
+    "paired-phone",
+    "blind-peer",
+    "store-protection"
+   ],
+   "value": 5,
+   "risk": 4,
+   "notes": "I4 B2 ('nodes and paired phones the node's principal enrolled by key, off until that principal turns it on'), I1 ('on every node that holds its writer's log'), I5 ('a quarantine reaches another node only as a quarantine request'), I8 (another node's content kept as theirs), I10 (order independence)."
+  },
+  {
+   "id": "blind-peer",
+   "name": "Blind peers",
+   "description": "A peer that stores and serves a room's segments encrypted to device keys it does not hold, reading none of them.",
+   "entries": [
+    "places: Blind peer"
+   ],
+   "requires": [
+    "peer-sync",
+    "work-rooms"
+   ],
+   "requires_any": [],
+   "soft": [],
+   "value": 2,
+   "risk": 2,
+   "notes": "I4 B2. Allowed only as the room's visibility allows; a room held only blind is never foreign there."
+  },
+  {
+   "id": "paired-phone",
+   "name": "Paired phone",
+   "description": "A homeless device over B2 that reads and allows or denies held permission requests within its device scope.",
+   "entries": [
+    "places: Paired phone"
+   ],
+   "requires": [
+    "peer-sync",
+    "held-requests"
+   ],
+   "requires_any": [],
+   "soft": [
+    "presence-proof",
+    "access-tokens"
+   ],
+   "value": 3,
+   "risk": 4,
+   "notes": "I4 B2 ('nodes and paired phones the node's principal enrolled by key'). Keys and writer location rest on OQ-39."
+  },
+  {
+   "id": "git-carrier",
+   "name": "Git carrier (B3 publish component)",
+   "description": "Segment exchange through a namespaced location of the principal's git remote, run by the B3 publish component, whose model item this gene carries.",
+   "entries": [
+    "components-and-surfaces: Publish component (B3):"
+   ],
+   "requires": [
+    "segment-exchange"
+   ],
+   "requires_any": [],
+   "soft": [
+    "work-rooms",
+    "publishing"
+   ],
+   "value": 3,
+   "risk": 3,
+   "notes": "I4 B3 ('outbound exchange with hosts the node's principal names, off until turned on'). Segments encrypted to the room's principals' device keys (PEER-08). Also hosts read-only publishing (see publishing)."
+  },
+  {
+   "id": "publishing",
+   "name": "Read-only publishing",
+   "description": "Serve a room's bundle read-only through the publish component, as its visibility allows; no list item of its own (defined in Export and Publish component).",
+   "entries": [],
+   "requires": [
+    "git-carrier",
+    "export-bundles",
+    "work-rooms"
+   ],
+   "requires_any": [],
+   "soft": [],
+   "value": 2,
+   "risk": 4,
+   "notes": "I4 B3 ('read-only publishing'). Requires git-carrier only because that gene carries the shared Publish component item. Publishing is widening with a review step (SEC-26)."
+  },
+  {
+   "id": "bridges",
+   "name": "Bridges (forge, CI, notification)",
+   "description": "B3 bridge component: the forge bridge reading pull requests, reviews and forge checks (asserted), the CI bridge fetching attestations, and the notification bridge.",
+   "entries": [
+    "components-and-surfaces: Bridge component (B3):",
+    "git-and-forge: Forge",
+    "git-and-forge: Pull request"
+   ],
+   "requires": [
+    "git-tracking"
+   ],
+   "requires_any": [],
+   "soft": [
+    "ci-attestation",
+    "needs-you",
+    "work-rooms"
+   ],
+   "value": 3,
+   "risk": 4,
+   "notes": "I4 B3 ('outbound exchange with hosts the node's principal names'); I2: bridge events take provenance `web`, always untrusted."
+  },
+  {
+   "id": "results-and-verdicts",
+   "name": "Results, comparisons and verdicts",
+   "description": "Checks and results with evidence classes, own checks, branch comparisons with exposure, outcomes, and a person's met/not met/needs changes verdict per criterion.",
+   "entries": [
+    "git-and-forge: Check",
+    "git-and-forge: Result",
+    "git-and-forge: Evidence",
+    "git-and-forge: Evidence class",
+    "git-and-forge: Own check",
+    "git-and-forge: Comparison",
+    "git-and-forge: Outcome",
+    "git-and-forge: Verdict",
+    "trust-and-flow: Exposure"
+   ],
+   "requires": [
+    "intent-criteria",
+    "work-rooms"
+   ],
+   "requires_any": [],
+   "soft": [
+    "witness-check",
+    "ci-attestation",
+    "room-view-surfaces",
+    "rule-levels",
+    "launcher"
+   ],
+   "value": 4,
+   "risk": 2,
+   "notes": "I10 ('evidence and proof classes'). Verdicts are neutral principal acts by persons only; Cairn never derives one."
+  },
+  {
+   "id": "witness-check",
+   "name": "Witness checks",
+   "description": "Re-run a check through the launcher on a fresh checkout of the exact commit, network denied, by a node whose git identity authored no commit on the branch.",
+   "entries": [
+    "git-and-forge: Witness check"
+   ],
+   "requires": [
+    "results-and-verdicts",
+    "launcher"
+   ],
+   "requires_any": [],
+   "soft": [],
+   "value": 3,
+   "risk": 3,
+   "notes": "I10 evidence classes; I4 (runs through the launcher, network denied; refused where it cannot be denied). Starting one confirms a command from an untrusted event (OWN-18)."
+  },
+  {
+   "id": "ci-attestation",
+   "name": "CI attestation",
+   "description": "CI keys the owner enrolls in a room sign a check's exit status for an exact commit; results resting on them are CI attested.",
+   "entries": [
+    "git-and-forge: CI attestation",
+    "seats-and-keys: CI key"
+   ],
+   "requires": [
+    "results-and-verdicts",
+    "bridges"
+   ],
+   "requires_any": [],
+   "soft": [
+    "service-accounts"
+   ],
+   "value": 3,
+   "risk": 3,
+   "notes": "I10 evidence classes. Enrolling a CI key is widening, revoking it cut."
+  },
+  {
+   "id": "presentations",
+   "name": "Outcome window and presentations",
+   "description": "Seats present a dev server URL, build artifact, file or diff in the Room page's outcome window; moderators pick which shows.",
+   "entries": [
+    "acts-and-roles: Present",
+    "acts-and-roles: Pick",
+    "git-and-forge: Presentation",
+    "components-and-surfaces: Outcome window"
+   ],
+   "requires": [
+    "work-rooms",
+    "room-view-surfaces"
+   ],
+   "requires_any": [],
+   "soft": [
+    "moderation",
+    "facilitator"
+   ],
+   "value": 2,
+   "risk": 2,
+   "notes": "No invariant names it; a presentation's URL is inert text never opened by Cairn."
+  },
+  {
+   "id": "needs-you",
+   "name": "Needs you queue",
+   "description": "One queue of items waiting on the principal, by queue class Q1-Q4, with a focus set ordering rooms and notifications carrying only petname or id, class and count.",
+   "entries": [
+    "components-and-surfaces: Needs you:",
+    "trust-and-flow: Queue class",
+    "trust-and-flow: Focus set",
+    "pins-and-context: Notification"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "bridges",
+    "room-view-surfaces",
+    "held-requests",
+    "stamps"
+   ],
+   "value": 4,
+   "risk": 1,
+   "notes": "I10 ('queues'). Notifications never reach a model nor accept answers."
+  },
+  {
+   "id": "room-view-surfaces",
+   "name": "Room view surfaces",
+   "description": "Fleet, Room page (Timeline, Review, Replay with context lens, verify/why, quarantine list and forensic view) and Catch up; petnames; the stuck? watchdog mark.",
+   "entries": [
+    "components-and-surfaces: Fleet:",
+    "components-and-surfaces: Room page:",
+    "components-and-surfaces: Catch up:",
+    "trust-and-flow: Petname",
+    "trust-and-flow: Watchdog observation"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "results-and-verdicts",
+    "needs-you",
+    "browser-room-view"
+   ],
+   "value": 4,
+   "risk": 1,
+   "notes": "I5 forensics (quarantine list, forensic view), I6 (visible to the principal). Shown in the TUI (B0) or the browser room view."
+  },
+  {
+   "id": "room-status",
+   "name": "Room status and overlap",
+   "description": "Room status computed where shown (Running, Quiet, Ready for review ...), open rooms, and overlap of runs in two open rooms editing one file.",
+   "entries": [
+    "trust-and-flow: Room status",
+    "trust-and-flow: Open room",
+    "trust-and-flow: Overlap"
+   ],
+   "requires": [
+    "work-rooms",
+    "needs-you"
+   ],
+   "requires_any": [],
+   "soft": [
+    "results-and-verdicts",
+    "room-view-surfaces"
+   ],
+   "value": 3,
+   "risk": 1,
+   "notes": "Never recorded or derived (outside I10's list); ready and abandoned marks are neutral principal acts."
+  },
+  {
+   "id": "browser-room-view",
+   "name": "Browser room view",
+   "description": "B1 room-view component serving the browser room view on loopback, authenticated by launch/origin secrets, recording principal acts taken there; phone-scoped secret.",
+   "entries": [
+    "components-and-surfaces: Room-view component (B1):"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "room-view-surfaces",
+    "presence-proof"
+   ],
+   "value": 3,
+   "risk": 3,
+   "notes": "I4 B1 ('listen only on loopback ...'). A principal surface (SEC-20)."
+  },
+  {
+   "id": "landmarks",
+   "name": "Spans, landmarks and stats",
+   "description": "Spans over a run's events, structural landmarks rolled into tiers, the restore block's landmark index, and stats via stat_list.",
+   "entries": [
+    "record: Span",
+    "record: Landmark",
+    "pins-and-context: Landmark index",
+    "trust-and-flow: Stat"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [],
+   "value": 4,
+   "risk": 1,
+   "notes": "I10 ('landmarks', 'stats'), I5 (a span can be quarantined), I2 (landmark index in restore blocks only from structural fields; natural-language headlines never reach a restore block)."
+  },
+  {
+   "id": "compute-kernel",
+   "name": "Compute kernel",
+   "description": "A hermetic kernel where an agent runs code over the record, with per-run kernel variables, step budget and output caps.",
+   "entries": [
+    "record: Kernel"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [],
+   "value": 3,
+   "risk": 3,
+   "notes": "I4 (the kernel worker is B0: no socket), I9 (step budget, wall-clock and memory limits), I2 (kernel output is tainted and enveloped; built-ins leave summaries out)."
+  },
+  {
+   "id": "purge-retention",
+   "name": "Purge and retention",
+   "description": "Delete content by principal act or under a retention policy, leaving a tombstone; purge and erasure requests.",
+   "entries": [
+    "record: Purge",
+    "record: Retention policy"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "peer-sync",
+    "store-protection"
+   ],
+   "value": 4,
+   "risk": 3,
+   "notes": "I1 ('data the node's principal explicitly purges, or removes under a retention policy that principal or managed policy sets. Every exception is recorded'). The only way stored content is destroyed."
+  },
+  {
+   "id": "store-protection",
+   "name": "Store protection",
+   "description": "Backups without keys, head and purge receipts kept apart from the home, encryption at rest, and storage/event quotas.",
+   "entries": [
+    "record: Receipt",
+    "record: Backup",
+    "record: At-rest key",
+    "trust-and-flow: Quota"
+   ],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "purge-retention",
+    "peer-sync"
+   ],
+   "value": 3,
+   "risk": 2,
+   "notes": "I8 (home bound with strict permissions; backups carry no keys), I6 (quota refusals counted), I9. Backup restore mints new seat keys (REC-24)."
+  },
+  {
+   "id": "export-bundles",
+   "name": "Export and bundles",
+   "description": "Reviewed `cairn export` of a room as a signed bundle (file or git ref), a rendering, or a trusted-only export for downstream memory systems.",
+   "entries": [
+    "record: Export",
+    "record: Rendering",
+    "record: Trusted-only export",
+    "record: Bundle"
+   ],
+   "requires": [
+    "principal-keys"
+   ],
+   "requires_any": [],
+   "soft": [
+    "git-carrier",
+    "publishing",
+    "work-rooms"
+   ],
+   "value": 3,
+   "risk": 4,
+   "notes": "Data leaves the home as a file (outside I4's network channels); export is widening with a review step applying redaction (SEC-26, SEC-08). Outputs carry taint."
+  },
+  {
+   "id": "bundle-import",
+   "name": "Bundle import",
+   "description": "Import another node's or principal's bundle into this record as a foreign room, matching pull-request authors through binding statements.",
+   "entries": [
+    "record: Import",
+    "principals-and-agents: Pull-request author"
+   ],
+   "requires": [
+    "export-bundles",
+    "git-tracking"
+   ],
+   "requires_any": [],
+   "soft": [
+    "shared-rooms"
+   ],
+   "value": 3,
+   "risk": 4,
+   "notes": "I1 ('secrets removed by redaction ... on import'), I8 (content another principal wrote kept as theirs), I2 (origin `bundle`, foreign room: untrusted)."
+  },
+  {
+   "id": "node-clone",
+   "name": "Node clones and predecessors",
+   "description": "Node identity, node clones and node identity changes, the carried-over personal room, a clone's device seats taking the earlier node's device seats as predecessors by lineage acceptance (however far back, up to a named seq), and a backup restore's predecessor rule.",
+   "entries": [],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "store-protection",
+    "access-tokens"
+   ],
+   "value": 2,
+   "risk": 4,
+   "notes": "I2 and I8: the `operator` and structural events a predecessor of this node's own device seats wrote count as this node's own (sentences in node-clone spans, so core I2 and I8 read as before E2/E3/E5). I1 (carried-over writers keep their addresses), I10 (the lineage acceptance and the backup restore name each predecessor's last seq). Only device seats are predecessors, never run seats. With store-protection, a backup restore takes predecessors without a separate lineage acceptance."
+  },
+  {
+   "id": "key-revocation",
+   "name": "Seat-key revocation",
+   "description": "Revoking a run seat's or device seat's key: the revocation names the seat's last accepted seq, the new seat it mints, the revoked seat's pins and versions not qualifying, configuration pins re-recorded after a revocation, and the revocation entries of the Cut and Widening lists.",
+   "entries": [],
+   "requires": [],
+   "requires_any": [],
+   "soft": [
+    "stamps",
+    "node-clone"
+   ],
+   "value": 2,
+   "risk": 3,
+   "notes": "I6 and I10 (revocations are in the key set; acts past the named seq count for nothing), I2 (a revoked seat's pins stop qualifying; revoking a device seat's key, or a run seat's when it stops a stamped version qualifying, is widening). Key rotation and the run seat replaced when its key is lost with its MCP server stay in core."
+  }
+ ]
+}

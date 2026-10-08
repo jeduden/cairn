@@ -1,0 +1,2868 @@
+[
+ {
+  "file": "acts-and-roles",
+  "n": 0,
+  "indent": 0,
+  "line": 13,
+  "head": "Room act",
+  "defines": [
+   "Room act"
+  ],
+  "chars": 1158
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 1,
+  "indent": 0,
+  "line": 29,
+  "head": "Principal act",
+  "defines": [
+   "Principal act"
+  ],
+  "chars": 647
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 2,
+  "indent": 2,
+  "line": 38,
+  "head": "Cut",
+  "defines": [
+   "Cut"
+  ],
+  "chars": 790
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 3,
+  "indent": 2,
+  "line": 49,
+  "head": "Neutral",
+  "defines": [
+   "Neutral",
+   "ready mark",
+   "abandoned mark"
+  ],
+  "chars": 581
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 4,
+  "indent": 2,
+  "line": 57,
+  "head": "Widening",
+  "defines": [
+   "Widening"
+  ],
+  "chars": 2086
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 5,
+  "indent": 0,
+  "line": 99,
+  "head": "Expire act",
+  "defines": [
+   "Expire act"
+  ],
+  "chars": 528
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 6,
+  "indent": 0,
+  "line": 107,
+  "head": "Role",
+  "defines": [
+   "Role",
+   "role assignment"
+  ],
+  "chars": 864
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 7,
+  "indent": 2,
+  "line": 119,
+  "head": "Viewer",
+  "defines": [
+   "Viewer"
+  ],
+  "chars": 57
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 8,
+  "indent": 2,
+  "line": 120,
+  "head": "Contributor",
+  "defines": [
+   "Contributor",
+   "pin capability"
+  ],
+  "chars": 251
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 9,
+  "indent": 2,
+  "line": 124,
+  "head": "Moderator",
+  "defines": [
+   "Moderator"
+  ],
+  "chars": 183
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 10,
+  "indent": 0,
+  "line": 127,
+  "head": "Capability",
+  "defines": [
+   "Capability"
+  ],
+  "chars": 181
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 11,
+  "indent": 0,
+  "line": 130,
+  "head": "Work",
+  "defines": [
+   "Work"
+  ],
+  "chars": 285
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 12,
+  "indent": 0,
+  "line": 134,
+  "head": "Appointment",
+  "defines": [
+   "Appointment",
+   "appointed moderator"
+  ],
+  "chars": 378
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 13,
+  "indent": 0,
+  "line": 139,
+  "head": "Join",
+  "defines": [
+   "Join",
+   "Leave"
+  ],
+  "chars": 891
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 14,
+  "indent": 0,
+  "line": 151,
+  "head": "Kick",
+  "defines": [
+   "Kick"
+  ],
+  "chars": 96
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 15,
+  "indent": 0,
+  "line": 153,
+  "head": "Bar",
+  "defines": [
+   "Bar"
+  ],
+  "chars": 198
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 16,
+  "indent": 0,
+  "line": 156,
+  "head": "Mute",
+  "defines": [
+   "Mute"
+  ],
+  "chars": 158
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 17,
+  "indent": 0,
+  "line": 158,
+  "head": "Present",
+  "defines": [
+   "Present"
+  ],
+  "chars": 57
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 18,
+  "indent": 0,
+  "line": 159,
+  "head": "Pick",
+  "defines": [
+   "Pick"
+  ],
+  "chars": 64
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 19,
+  "indent": 0,
+  "line": 160,
+  "head": "Admission",
+  "defines": [
+   "Admission",
+   "review step"
+  ],
+  "chars": 457
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 20,
+  "indent": 0,
+  "line": 166,
+  "head": "Successor",
+  "defines": [
+   "Successor",
+   "succession"
+  ],
+  "chars": 322
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 21,
+  "indent": 0,
+  "line": 171,
+  "head": "Handover",
+  "defines": [
+   "Handover"
+  ],
+  "chars": 109
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 22,
+  "indent": 0,
+  "line": 173,
+  "head": "Stamp",
+  "defines": [
+   "Stamp"
+  ],
+  "chars": 376
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 23,
+  "indent": 0,
+  "line": 178,
+  "head": "Active pin",
+  "defines": [
+   "Active pin"
+  ],
+  "chars": 53
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 24,
+  "indent": 0,
+  "line": 179,
+  "head": "Room merge",
+  "defines": [
+   "Room merge",
+   "room settings",
+   "appointment rate",
+   "pick order"
+  ],
+  "chars": 1140
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 25,
+  "indent": 0,
+  "line": 194,
+  "head": "Concurrent",
+  "defines": [
+   "Concurrent",
+   "causal order"
+  ],
+  "chars": 134
+ },
+ {
+  "file": "acts-and-roles",
+  "n": 26,
+  "indent": 0,
+  "line": 196,
+  "head": "Room state",
+  "defines": [
+   "Room state"
+  ],
+  "chars": 62
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 0,
+  "indent": 0,
+  "line": 9,
+  "head": "Component",
+  "defines": [
+   "Component"
+  ],
+  "chars": 211
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 1,
+  "indent": 2,
+  "line": 12,
+  "head": "Core (B0)",
+  "defines": [
+   "Core (B0)",
+   "hook handlers",
+   "CLI",
+   "MCP server",
+   "kernel worker",
+   "TUI",
+   "commit hook"
+  ],
+  "chars": 968
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 2,
+  "indent": 2,
+  "line": 26,
+  "head": "harness adapter",
+  "defines": [
+   "harness adapter"
+  ],
+  "chars": 370
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 3,
+  "indent": 2,
+  "line": 31,
+  "head": "Room-view component (B1)",
+  "defines": [
+   "Room-view component (B1)",
+   "room-view secret",
+   "launch secret",
+   "origin secret"
+  ],
+  "chars": 504
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 4,
+  "indent": 2,
+  "line": 38,
+  "head": "Launcher (B1)",
+  "defines": [
+   "Launcher (B1)"
+  ],
+  "chars": 425
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 5,
+  "indent": 2,
+  "line": 44,
+  "head": "Peer component (B2)",
+  "defines": [
+   "Peer component (B2)"
+  ],
+  "chars": 179
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 6,
+  "indent": 2,
+  "line": 47,
+  "head": "Publish component (B3)",
+  "defines": [
+   "Publish component (B3)",
+   "git carrier"
+  ],
+  "chars": 172
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 7,
+  "indent": 2,
+  "line": 50,
+  "head": "Bridge component (B3)",
+  "defines": [
+   "Bridge component (B3)",
+   "bridges",
+   "forge bridge",
+   "CI bridge",
+   "notification bridge"
+  ],
+  "chars": 275
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 8,
+  "indent": 0,
+  "line": 54,
+  "head": "Boundary",
+  "defines": [
+   "Boundary"
+  ],
+  "chars": 199
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 9,
+  "indent": 0,
+  "line": 57,
+  "head": "Room view",
+  "defines": [
+   "Room view",
+   "harness strip"
+  ],
+  "chars": 406
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 10,
+  "indent": 2,
+  "line": 63,
+  "head": "Fleet",
+  "defines": [
+   "Fleet"
+  ],
+  "chars": 83
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 11,
+  "indent": 2,
+  "line": 65,
+  "head": "Room page",
+  "defines": [
+   "Room page",
+   "context lens",
+   "quarantine list",
+   "forensic view"
+  ],
+  "chars": 378
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 12,
+  "indent": 2,
+  "line": 71,
+  "head": "Catch up",
+  "defines": [
+   "Catch up"
+  ],
+  "chars": 111
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 13,
+  "indent": 2,
+  "line": 73,
+  "head": "Needs you",
+  "defines": [
+   "Needs you"
+  ],
+  "chars": 73
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 14,
+  "indent": 2,
+  "line": 74,
+  "head": "Health",
+  "defines": [
+   "Health"
+  ],
+  "chars": 58
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 15,
+  "indent": 4,
+  "line": 75,
+  "head": "Setup",
+  "defines": [
+   "Setup"
+  ],
+  "chars": 96
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 16,
+  "indent": 2,
+  "line": 77,
+  "head": "Peers",
+  "defines": [
+   "Peers"
+  ],
+  "chars": 44
+ },
+ {
+  "file": "components-and-surfaces",
+  "n": 17,
+  "indent": 0,
+  "line": 78,
+  "head": "Outcome window",
+  "defines": [
+   "Outcome window"
+  ],
+  "chars": 141
+ },
+ {
+  "file": "git-and-forge",
+  "n": 0,
+  "indent": 0,
+  "line": 9,
+  "head": "Repository",
+  "defines": [
+   "Repository",
+   "repository identity"
+  ],
+  "chars": 457
+ },
+ {
+  "file": "git-and-forge",
+  "n": 1,
+  "indent": 0,
+  "line": 15,
+  "head": "Branch",
+  "defines": [
+   "Branch"
+  ],
+  "chars": 180
+ },
+ {
+  "file": "git-and-forge",
+  "n": 2,
+  "indent": 0,
+  "line": 18,
+  "head": "Commit",
+  "defines": [
+   "Commit"
+  ],
+  "chars": 27
+ },
+ {
+  "file": "git-and-forge",
+  "n": 3,
+  "indent": 0,
+  "line": 19,
+  "head": "Worktree",
+  "defines": [
+   "Worktree",
+   "git directory"
+  ],
+  "chars": 148
+ },
+ {
+  "file": "git-and-forge",
+  "n": 4,
+  "indent": 0,
+  "line": 21,
+  "head": "Forge",
+  "defines": [
+   "Forge",
+   "forge reports"
+  ],
+  "chars": 190
+ },
+ {
+  "file": "git-and-forge",
+  "n": 5,
+  "indent": 0,
+  "line": 24,
+  "head": "Pull request",
+  "defines": [
+   "Pull request"
+  ],
+  "chars": 59
+ },
+ {
+  "file": "git-and-forge",
+  "n": 6,
+  "indent": 0,
+  "line": 25,
+  "head": "Check",
+  "defines": [
+   "Check",
+   "check state",
+   "required checks"
+  ],
+  "chars": 338
+ },
+ {
+  "file": "git-and-forge",
+  "n": 7,
+  "indent": 0,
+  "line": 30,
+  "head": "Result",
+  "defines": [
+   "Result",
+   "tree"
+  ],
+  "chars": 328
+ },
+ {
+  "file": "git-and-forge",
+  "n": 8,
+  "indent": 0,
+  "line": 35,
+  "head": "Evidence",
+  "defines": [
+   "Evidence"
+  ],
+  "chars": 70
+ },
+ {
+  "file": "git-and-forge",
+  "n": 9,
+  "indent": 0,
+  "line": 36,
+  "head": "Evidence class",
+  "defines": [
+   "Evidence class"
+  ],
+  "chars": 138
+ },
+ {
+  "file": "git-and-forge",
+  "n": 10,
+  "indent": 0,
+  "line": 38,
+  "head": "Own check",
+  "defines": [
+   "Own check"
+  ],
+  "chars": 224
+ },
+ {
+  "file": "git-and-forge",
+  "n": 11,
+  "indent": 0,
+  "line": 41,
+  "head": "Witness check",
+  "defines": [
+   "Witness check",
+   "git identity",
+   "commit author"
+  ],
+  "chars": 424
+ },
+ {
+  "file": "git-and-forge",
+  "n": 12,
+  "indent": 0,
+  "line": 47,
+  "head": "CI attestation",
+  "defines": [
+   "CI attestation"
+  ],
+  "chars": 224
+ },
+ {
+  "file": "git-and-forge",
+  "n": 13,
+  "indent": 0,
+  "line": 50,
+  "head": "Landing",
+  "defines": [
+   "Landing"
+  ],
+  "chars": 214
+ },
+ {
+  "file": "git-and-forge",
+  "n": 14,
+  "indent": 0,
+  "line": 53,
+  "head": "Landing link",
+  "defines": [
+   "Landing link"
+  ],
+  "chars": 229
+ },
+ {
+  "file": "git-and-forge",
+  "n": 15,
+  "indent": 0,
+  "line": 56,
+  "head": "Proof class",
+  "defines": [
+   "Proof class"
+  ],
+  "chars": 227
+ },
+ {
+  "file": "git-and-forge",
+  "n": 16,
+  "indent": 0,
+  "line": 59,
+  "head": "Room trailer",
+  "defines": [
+   "Room trailer"
+  ],
+  "chars": 230
+ },
+ {
+  "file": "git-and-forge",
+  "n": 17,
+  "indent": 0,
+  "line": 63,
+  "head": "Qualified links",
+  "defines": [
+   "Qualified links"
+  ],
+  "chars": 667
+ },
+ {
+  "file": "git-and-forge",
+  "n": 18,
+  "indent": 0,
+  "line": 72,
+  "head": "Comparison",
+  "defines": [
+   "Comparison"
+  ],
+  "chars": 117
+ },
+ {
+  "file": "git-and-forge",
+  "n": 19,
+  "indent": 0,
+  "line": 74,
+  "head": "Outcome",
+  "defines": [
+   "Outcome"
+  ],
+  "chars": 144
+ },
+ {
+  "file": "git-and-forge",
+  "n": 20,
+  "indent": 0,
+  "line": 76,
+  "head": "Presentation",
+  "defines": [
+   "Presentation"
+  ],
+  "chars": 199
+ },
+ {
+  "file": "git-and-forge",
+  "n": 21,
+  "indent": 0,
+  "line": 79,
+  "head": "Verdict",
+  "defines": [
+   "Verdict"
+  ],
+  "chars": 549
+ },
+ {
+  "file": "harness-facts",
+  "n": 0,
+  "indent": 0,
+  "line": 12,
+  "head": "Harness",
+  "defines": [
+   "Harness"
+  ],
+  "chars": 358
+ },
+ {
+  "file": "harness-facts",
+  "n": 1,
+  "indent": 0,
+  "line": 17,
+  "head": "Harness session",
+  "defines": [
+   "Harness session"
+  ],
+  "chars": 206
+ },
+ {
+  "file": "harness-facts",
+  "n": 2,
+  "indent": 0,
+  "line": 20,
+  "head": "Transcript",
+  "defines": [
+   "Transcript",
+   "transcript source",
+   "transcript generation",
+   "transcript roots"
+  ],
+  "chars": 553
+ },
+ {
+  "file": "harness-facts",
+  "n": 3,
+  "indent": 0,
+  "line": 28,
+  "head": "Hook",
+  "defines": [
+   "Hook",
+   "hook input"
+  ],
+  "chars": 187
+ },
+ {
+  "file": "harness-facts",
+  "n": 4,
+  "indent": 0,
+  "line": 31,
+  "head": "Turn",
+  "defines": [
+   "Turn",
+   "user turn",
+   "turn trigger"
+  ],
+  "chars": 698
+ },
+ {
+  "file": "harness-facts",
+  "n": 5,
+  "indent": 0,
+  "line": 41,
+  "head": "Compaction",
+  "defines": [
+   "Compaction",
+   "Compaction guidance"
+  ],
+  "chars": 380
+ },
+ {
+  "file": "index",
+  "n": 0,
+  "indent": 0,
+  "line": 21,
+  "head": "A principal *owns* a room.",
+  "defines": [],
+  "chars": 28
+ },
+ {
+  "file": "index",
+  "n": 1,
+  "indent": 0,
+  "line": 22,
+  "head": "A seat *is a member of* a room as Memb",
+  "defines": [],
+  "chars": 51
+ },
+ {
+  "file": "index",
+  "n": 2,
+  "indent": 0,
+  "line": 23,
+  "head": "A principal, an agent or a run *has a ",
+  "defines": [],
+  "chars": 202
+ },
+ {
+  "file": "index",
+  "n": 3,
+  "indent": 0,
+  "line": 26,
+  "head": "A node *holds* writer logs, rooms and ",
+  "defines": [],
+  "chars": 221
+ },
+ {
+  "file": "index",
+  "n": 4,
+  "indent": 0,
+  "line": 42,
+  "head": "[Principals and agents](principals-and",
+  "defines": [],
+  "chars": 218
+ },
+ {
+  "file": "index",
+  "n": 5,
+  "indent": 0,
+  "line": 43,
+  "head": "[Harness facts](harness-facts.md) \u2014 Th",
+  "defines": [],
+  "chars": 167
+ },
+ {
+  "file": "index",
+  "n": 6,
+  "indent": 0,
+  "line": 44,
+  "head": "[Places](places.md) \u2014 Where Cairn's st",
+  "defines": [],
+  "chars": 174
+ },
+ {
+  "file": "index",
+  "n": 7,
+  "indent": 0,
+  "line": 45,
+  "head": "[Record](record.md) \u2014 The record and w",
+  "defines": [],
+  "chars": 211
+ },
+ {
+  "file": "index",
+  "n": 8,
+  "indent": 0,
+  "line": 46,
+  "head": "[Pins and context](pins-and-context.md",
+  "defines": [],
+  "chars": 214
+ },
+ {
+  "file": "index",
+  "n": 9,
+  "indent": 0,
+  "line": 47,
+  "head": "[Seats and keys](seats-and-keys.md) \u2014 ",
+  "defines": [],
+  "chars": 209
+ },
+ {
+  "file": "index",
+  "n": 10,
+  "indent": 0,
+  "line": 48,
+  "head": "[Acts and roles](acts-and-roles.md) \u2014 ",
+  "defines": [],
+  "chars": 216
+ },
+ {
+  "file": "index",
+  "n": 11,
+  "indent": 0,
+  "line": 49,
+  "head": "[Git and forge](git-and-forge.md) \u2014 Re",
+  "defines": [],
+  "chars": 184
+ },
+ {
+  "file": "index",
+  "n": 12,
+  "indent": 0,
+  "line": 50,
+  "head": "[Trust and flow](trust-and-flow.md) \u2014 ",
+  "defines": [],
+  "chars": 386
+ },
+ {
+  "file": "index",
+  "n": 13,
+  "indent": 0,
+  "line": 51,
+  "head": "[Components and surfaces](components-a",
+  "defines": [],
+  "chars": 158
+ },
+ {
+  "file": "index",
+  "n": 14,
+  "indent": 0,
+  "line": 56,
+  "head": "A principal owns any number of rooms; ",
+  "defines": [],
+  "chars": 83
+ },
+ {
+  "file": "index",
+  "n": 15,
+  "indent": 0,
+  "line": 58,
+  "head": "A run has its personal-room seat from ",
+  "defines": [],
+  "chars": 210
+ },
+ {
+  "file": "index",
+  "n": 16,
+  "indent": 0,
+  "line": 61,
+  "head": "A restore block carries the qualifying",
+  "defines": [],
+  "chars": 231
+ },
+ {
+  "file": "index",
+  "n": 17,
+  "indent": 0,
+  "line": 64,
+  "head": "Ingest splits one transcript by run.",
+  "defines": [],
+  "chars": 38
+ },
+ {
+  "file": "index",
+  "n": 18,
+  "indent": 0,
+  "line": 65,
+  "head": "Every seat belongs to one principal an",
+  "defines": [],
+  "chars": 77
+ },
+ {
+  "file": "index",
+  "n": 19,
+  "indent": 0,
+  "line": 66,
+  "head": "Each event goes to exactly one seat's ",
+  "defines": [],
+  "chars": 1601
+ },
+ {
+  "file": "index",
+  "n": 20,
+  "indent": 0,
+  "line": 87,
+  "head": "A run's history spans its seats' write",
+  "defines": [],
+  "chars": 188
+ },
+ {
+  "file": "index",
+  "n": 21,
+  "indent": 0,
+  "line": 90,
+  "head": "Principals and agents create rooms; an",
+  "defines": [],
+  "chars": 294
+ },
+ {
+  "file": "index",
+  "n": 22,
+  "indent": 0,
+  "line": 94,
+  "head": "A pin naming no room belongs to its au",
+  "defines": [],
+  "chars": 99
+ },
+ {
+  "file": "index",
+  "n": 23,
+  "indent": 0,
+  "line": 96,
+  "head": "Recall extends only to the principal's",
+  "defines": [],
+  "chars": 156
+ },
+ {
+  "file": "index",
+  "n": 24,
+  "indent": 0,
+  "line": 105,
+  "head": "An MCP tool for a room act is `room_<a",
+  "defines": [],
+  "chars": 185
+ },
+ {
+  "file": "index",
+  "n": 25,
+  "indent": 0,
+  "line": 108,
+  "head": "A CLI command that acts on a concept i",
+  "defines": [],
+  "chars": 302
+ },
+ {
+  "file": "index",
+  "n": 26,
+  "indent": 0,
+  "line": 112,
+  "head": "An option that selects a concept is na",
+  "defines": [],
+  "chars": 104
+ },
+ {
+  "file": "index",
+  "n": 27,
+  "indent": 0,
+  "line": 114,
+  "head": "settings key",
+  "defines": [
+   "settings key"
+  ],
+  "chars": 318
+ },
+ {
+  "file": "index",
+  "n": 28,
+  "indent": 0,
+  "line": 119,
+  "head": "Layout words (such as tab, panel, pane",
+  "defines": [],
+  "chars": 151
+ },
+ {
+  "file": "index",
+  "n": 29,
+  "indent": 0,
+  "line": 121,
+  "head": "Cairn defines no slash commands. A har",
+  "defines": [],
+  "chars": 149
+ },
+ {
+  "file": "pins-and-context",
+  "n": 0,
+  "indent": 0,
+  "line": 9,
+  "head": "Pin",
+  "defines": [
+   "Pin",
+   "pin author",
+   "qualifying pin"
+  ],
+  "chars": 1665
+ },
+ {
+  "file": "pins-and-context",
+  "n": 1,
+  "indent": 0,
+  "line": 31,
+  "head": "Pin version",
+  "defines": [
+   "Pin version"
+  ],
+  "chars": 99
+ },
+ {
+  "file": "pins-and-context",
+  "n": 2,
+  "indent": 0,
+  "line": 33,
+  "head": "Pin candidate",
+  "defines": [
+   "Pin candidate"
+  ],
+  "chars": 609
+ },
+ {
+  "file": "pins-and-context",
+  "n": 3,
+  "indent": 0,
+  "line": 41,
+  "head": "Configuration pin",
+  "defines": [
+   "Configuration pin"
+  ],
+  "chars": 121
+ },
+ {
+  "file": "pins-and-context",
+  "n": 4,
+  "indent": 0,
+  "line": 43,
+  "head": "Pin priority",
+  "defines": [
+   "Pin priority"
+  ],
+  "chars": 221
+ },
+ {
+  "file": "pins-and-context",
+  "n": 5,
+  "indent": 0,
+  "line": 46,
+  "head": "Budget",
+  "defines": [
+   "Budget",
+   "pin budget",
+   "hook budget",
+   "step budget",
+   "restore block limit",
+   "harness timeout"
+  ],
+  "chars": 699
+ },
+ {
+  "file": "pins-and-context",
+  "n": 6,
+  "indent": 0,
+  "line": 56,
+  "head": "Pin type",
+  "defines": [
+   "Pin type"
+  ],
+  "chars": 173
+ },
+ {
+  "file": "pins-and-context",
+  "n": 7,
+  "indent": 0,
+  "line": 59,
+  "head": "Unpin",
+  "defines": [
+   "Unpin",
+   "pin list"
+  ],
+  "chars": 461
+ },
+ {
+  "file": "pins-and-context",
+  "n": 8,
+  "indent": 0,
+  "line": 65,
+  "head": "List removal",
+  "defines": [
+   "List removal"
+  ],
+  "chars": 434
+ },
+ {
+  "file": "pins-and-context",
+  "n": 9,
+  "indent": 0,
+  "line": 71,
+  "head": "Intent",
+  "defines": [
+   "Intent"
+  ],
+  "chars": 577
+ },
+ {
+  "file": "pins-and-context",
+  "n": 10,
+  "indent": 0,
+  "line": 79,
+  "head": "Criterion",
+  "defines": [
+   "Criterion"
+  ],
+  "chars": 73
+ },
+ {
+  "file": "pins-and-context",
+  "n": 11,
+  "indent": 0,
+  "line": 80,
+  "head": "Stake",
+  "defines": [
+   "Stake"
+  ],
+  "chars": 217
+ },
+ {
+  "file": "pins-and-context",
+  "n": 12,
+  "indent": 0,
+  "line": 83,
+  "head": "Title, labels",
+  "defines": [
+   "Title, labels"
+  ],
+  "chars": 245
+ },
+ {
+  "file": "pins-and-context",
+  "n": 13,
+  "indent": 0,
+  "line": 87,
+  "head": "Assignment",
+  "defines": [
+   "Assignment"
+  ],
+  "chars": 138
+ },
+ {
+  "file": "pins-and-context",
+  "n": 14,
+  "indent": 0,
+  "line": 89,
+  "head": "Post",
+  "defines": [
+   "Post",
+   "comment",
+   "marked range",
+   "draft",
+   "cross-room post"
+  ],
+  "chars": 486
+ },
+ {
+  "file": "pins-and-context",
+  "n": 15,
+  "indent": 0,
+  "line": 96,
+  "head": "Directed post",
+  "defines": [
+   "Directed post"
+  ],
+  "chars": 133
+ },
+ {
+  "file": "pins-and-context",
+  "n": 16,
+  "indent": 0,
+  "line": 98,
+  "head": "Room summary",
+  "defines": [
+   "Room summary",
+   "room summary pointer"
+  ],
+  "chars": 488
+ },
+ {
+  "file": "pins-and-context",
+  "n": 17,
+  "indent": 0,
+  "line": 105,
+  "head": "Compaction summary",
+  "defines": [
+   "Compaction summary"
+  ],
+  "chars": 116
+ },
+ {
+  "file": "pins-and-context",
+  "n": 18,
+  "indent": 0,
+  "line": 107,
+  "head": "Envelope",
+  "defines": [
+   "Envelope",
+   "untrusted-data envelope",
+   "marked structural"
+  ],
+  "chars": 346
+ },
+ {
+  "file": "pins-and-context",
+  "n": 19,
+  "indent": 0,
+  "line": 112,
+  "head": "Envelope warning",
+  "defines": [
+   "Envelope warning"
+  ],
+  "chars": 91
+ },
+ {
+  "file": "pins-and-context",
+  "n": 20,
+  "indent": 0,
+  "line": 114,
+  "head": "Trusted text",
+  "defines": [
+   "Trusted text",
+   "restore builder"
+  ],
+  "chars": 351
+ },
+ {
+  "file": "pins-and-context",
+  "n": 21,
+  "indent": 0,
+  "line": 119,
+  "head": "Restore block",
+  "defines": [
+   "Restore block"
+  ],
+  "chars": 668
+ },
+ {
+  "file": "pins-and-context",
+  "n": 22,
+  "indent": 0,
+  "line": 128,
+  "head": "Landmark index",
+  "defines": [
+   "Landmark index"
+  ],
+  "chars": 119
+ },
+ {
+  "file": "pins-and-context",
+  "n": 23,
+  "indent": 0,
+  "line": 130,
+  "head": "Recall hint",
+  "defines": [
+   "Recall hint"
+  ],
+  "chars": 118
+ },
+ {
+  "file": "pins-and-context",
+  "n": 24,
+  "indent": 0,
+  "line": 132,
+  "head": "Opt-in notice",
+  "defines": [
+   "Opt-in notice"
+  ],
+  "chars": 356
+ },
+ {
+  "file": "pins-and-context",
+  "n": 25,
+  "indent": 0,
+  "line": 137,
+  "head": "Model",
+  "defines": [
+   "Model",
+   "model reply",
+   "model token"
+  ],
+  "chars": 294
+ },
+ {
+  "file": "pins-and-context",
+  "n": 26,
+  "indent": 0,
+  "line": 141,
+  "head": "Working view",
+  "defines": [
+   "Working view"
+  ],
+  "chars": 119
+ },
+ {
+  "file": "pins-and-context",
+  "n": 27,
+  "indent": 0,
+  "line": 143,
+  "head": "Held request",
+  "defines": [
+   "Held request",
+   "hold window",
+   "reply"
+  ],
+  "chars": 464
+ },
+ {
+  "file": "pins-and-context",
+  "n": 28,
+  "indent": 0,
+  "line": 150,
+  "head": "Qualified requests",
+  "defines": [
+   "Qualified requests"
+  ],
+  "chars": 585
+ },
+ {
+  "file": "pins-and-context",
+  "n": 29,
+  "indent": 0,
+  "line": 158,
+  "head": "Notification",
+  "defines": [
+   "Notification"
+  ],
+  "chars": 313
+ },
+ {
+  "file": "places",
+  "n": 0,
+  "indent": 0,
+  "line": 9,
+  "head": "Home",
+  "defines": [
+   "Home",
+   "home id"
+  ],
+  "chars": 378
+ },
+ {
+  "file": "places",
+  "n": 1,
+  "indent": 0,
+  "line": 15,
+  "head": "Node",
+  "defines": [
+   "Node",
+   "ephemeral node",
+   "token-key-only node",
+   "node identity",
+   "node clone"
+  ],
+  "chars": 742
+ },
+ {
+  "file": "places",
+  "n": 2,
+  "indent": 0,
+  "line": 25,
+  "head": "Device",
+  "defines": [
+   "Device"
+  ],
+  "chars": 187
+ },
+ {
+  "file": "places",
+  "n": 3,
+  "indent": 0,
+  "line": 28,
+  "head": "Paired phone",
+  "defines": [
+   "Paired phone"
+  ],
+  "chars": 352
+ },
+ {
+  "file": "places",
+  "n": 4,
+  "indent": 0,
+  "line": 33,
+  "head": "Sandbox",
+  "defines": [
+   "Sandbox"
+  ],
+  "chars": 83
+ },
+ {
+  "file": "places",
+  "n": 5,
+  "indent": 0,
+  "line": 35,
+  "head": "Room",
+  "defines": [
+   "Room",
+   "conversation"
+  ],
+  "chars": 210
+ },
+ {
+  "file": "places",
+  "n": 6,
+  "indent": 0,
+  "line": 38,
+  "head": "Personal room",
+  "defines": [
+   "Personal room"
+  ],
+  "chars": 708
+ },
+ {
+  "file": "places",
+  "n": 7,
+  "indent": 0,
+  "line": 48,
+  "head": "Foreign room",
+  "defines": [
+   "Foreign room"
+  ],
+  "chars": 639
+ },
+ {
+  "file": "places",
+  "n": 8,
+  "indent": 0,
+  "line": 57,
+  "head": "Principal's rooms",
+  "defines": [
+   "Principal's rooms"
+  ],
+  "chars": 69
+ },
+ {
+  "file": "places",
+  "n": 9,
+  "indent": 0,
+  "line": 58,
+  "head": "Visibility",
+  "defines": [
+   "Visibility"
+  ],
+  "chars": 279
+ },
+ {
+  "file": "places",
+  "n": 10,
+  "indent": 0,
+  "line": 62,
+  "head": "Peer",
+  "defines": [
+   "Peer",
+   "sync"
+  ],
+  "chars": 238
+ },
+ {
+  "file": "places",
+  "n": 11,
+  "indent": 0,
+  "line": 66,
+  "head": "Blind peer",
+  "defines": [
+   "Blind peer"
+  ],
+  "chars": 213
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 0,
+  "indent": 0,
+  "line": 9,
+  "head": "Principal",
+  "defines": [
+   "Principal",
+   "certifier"
+  ],
+  "chars": 910
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 1,
+  "indent": 0,
+  "line": 21,
+  "head": "Person",
+  "defines": [
+   "Person"
+  ],
+  "chars": 108
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 2,
+  "indent": 0,
+  "line": 23,
+  "head": "Service account",
+  "defines": [
+   "Service account"
+  ],
+  "chars": 359
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 3,
+  "indent": 0,
+  "line": 28,
+  "head": "Managed policy",
+  "defines": [
+   "Managed policy",
+   "harness configuration"
+  ],
+  "chars": 709
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 4,
+  "indent": 0,
+  "line": 38,
+  "head": "Agent",
+  "defines": [
+   "Agent"
+  ],
+  "chars": 200
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 5,
+  "indent": 0,
+  "line": 41,
+  "head": "Run",
+  "defines": [
+   "Run",
+   "harness resume",
+   "harness clear"
+  ],
+  "chars": 569
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 6,
+  "indent": 0,
+  "line": 49,
+  "head": "Subagent",
+  "defines": [
+   "Subagent"
+  ],
+  "chars": 212
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 7,
+  "indent": 0,
+  "line": 52,
+  "head": "Ingested run",
+  "defines": [
+   "Ingested run"
+  ],
+  "chars": 246
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 8,
+  "indent": 0,
+  "line": 56,
+  "head": "Facilitator",
+  "defines": [
+   "Facilitator"
+  ],
+  "chars": 386
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 9,
+  "indent": 0,
+  "line": 62,
+  "head": "Author",
+  "defines": [
+   "Author"
+  ],
+  "chars": 98
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 10,
+  "indent": 0,
+  "line": 64,
+  "head": "Member",
+  "defines": [
+   "Member",
+   "the room's principals"
+  ],
+  "chars": 574
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 11,
+  "indent": 0,
+  "line": 72,
+  "head": "Owner",
+  "defines": [
+   "Owner"
+  ],
+  "chars": 923
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 12,
+  "indent": 0,
+  "line": 84,
+  "head": "Pull-request author",
+  "defines": [
+   "Pull-request author",
+   "binding statement"
+  ],
+  "chars": 306
+ },
+ {
+  "file": "principals-and-agents",
+  "n": 13,
+  "indent": 0,
+  "line": 89,
+  "head": "Delegate",
+  "defines": [
+   "Delegate"
+  ],
+  "chars": 111
+ },
+ {
+  "file": "record",
+  "n": 0,
+  "indent": 0,
+  "line": 9,
+  "head": "Record",
+  "defines": [
+   "Record",
+   "configuration",
+   "repository configuration",
+   "settings layers",
+   "store"
+  ],
+  "chars": 508
+ },
+ {
+  "file": "record",
+  "n": 1,
+  "indent": 0,
+  "line": 16,
+  "head": "Writer",
+  "defines": [
+   "Writer",
+   "writer id",
+   "chain head"
+  ],
+  "chars": 258
+ },
+ {
+  "file": "record",
+  "n": 2,
+  "indent": 0,
+  "line": 20,
+  "head": "Retire a writer",
+  "defines": [
+   "Retire a writer"
+  ],
+  "chars": 350
+ },
+ {
+  "file": "record",
+  "n": 3,
+  "indent": 0,
+  "line": 25,
+  "head": "Event",
+  "defines": [
+   "Event",
+   "hook observation",
+   "recall event",
+   "event kind"
+  ],
+  "chars": 524
+ },
+ {
+  "file": "record",
+  "n": 4,
+  "indent": 0,
+  "line": 32,
+  "head": "seq",
+  "defines": [
+   "seq"
+  ],
+  "chars": 102
+ },
+ {
+  "file": "record",
+  "n": 5,
+  "indent": 0,
+  "line": 34,
+  "head": "Address",
+  "defines": [
+   "Address",
+   "writer label",
+   "writer-label assignment"
+  ],
+  "chars": 675
+ },
+ {
+  "file": "record",
+  "n": 6,
+  "indent": 0,
+  "line": 43,
+  "head": "Payload",
+  "defines": [
+   "Payload",
+   "payload store"
+  ],
+  "chars": 169
+ },
+ {
+  "file": "record",
+  "n": 7,
+  "indent": 0,
+  "line": 46,
+  "head": "Segment",
+  "defines": [
+   "Segment",
+   "open segment",
+   "sealed range"
+  ],
+  "chars": 484
+ },
+ {
+  "file": "record",
+  "n": 8,
+  "indent": 0,
+  "line": 53,
+  "head": "Seal",
+  "defines": [
+   "Seal"
+  ],
+  "chars": 538
+ },
+ {
+  "file": "record",
+  "n": 9,
+  "indent": 0,
+  "line": 60,
+  "head": "Commitment",
+  "defines": [
+   "Commitment",
+   "commitment key"
+  ],
+  "chars": 226
+ },
+ {
+  "file": "record",
+  "n": 10,
+  "indent": 0,
+  "line": 63,
+  "head": "Provenance",
+  "defines": [
+   "Provenance",
+   "pin class"
+  ],
+  "chars": 1108
+ },
+ {
+  "file": "record",
+  "n": 11,
+  "indent": 0,
+  "line": 78,
+  "head": "Origin",
+  "defines": [
+   "Origin",
+   "witnessed run",
+   "recorder"
+  ],
+  "chars": 1133
+ },
+ {
+  "file": "record",
+  "n": 12,
+  "indent": 0,
+  "line": 94,
+  "head": "Span",
+  "defines": [
+   "Span"
+  ],
+  "chars": 208
+ },
+ {
+  "file": "record",
+  "n": 13,
+  "indent": 0,
+  "line": 97,
+  "head": "Landmark",
+  "defines": [
+   "Landmark",
+   "natural-language headline",
+   "tiers",
+   "landmark blocks"
+  ],
+  "chars": 528
+ },
+ {
+  "file": "record",
+  "n": 14,
+  "indent": 0,
+  "line": 104,
+  "head": "Structural field",
+  "defines": [
+   "Structural field"
+  ],
+  "chars": 300
+ },
+ {
+  "file": "record",
+  "n": 15,
+  "indent": 0,
+  "line": 108,
+  "head": "Structural event",
+  "defines": [
+   "Structural event"
+  ],
+  "chars": 331
+ },
+ {
+  "file": "record",
+  "n": 16,
+  "indent": 0,
+  "line": 113,
+  "head": "Capture",
+  "defines": [
+   "Capture"
+  ],
+  "chars": 105
+ },
+ {
+  "file": "record",
+  "n": 17,
+  "indent": 0,
+  "line": 115,
+  "head": "Ingest marker",
+  "defines": [
+   "Ingest marker",
+   "Ingest",
+   "ingest position"
+  ],
+  "chars": 520
+ },
+ {
+  "file": "record",
+  "n": 18,
+  "indent": 0,
+  "line": 122,
+  "head": "Worktree checkpoint",
+  "defines": [
+   "Worktree checkpoint"
+  ],
+  "chars": 140
+ },
+ {
+  "file": "record",
+  "n": 19,
+  "indent": 0,
+  "line": 124,
+  "head": "Derived artifact",
+  "defines": [
+   "Derived artifact",
+   "search index",
+   "quarantine set"
+  ],
+  "chars": 497
+ },
+ {
+  "file": "record",
+  "n": 20,
+  "indent": 0,
+  "line": 131,
+  "head": "Redaction",
+  "defines": [
+   "Redaction"
+  ],
+  "chars": 173
+ },
+ {
+  "file": "record",
+  "n": 21,
+  "indent": 0,
+  "line": 134,
+  "head": "Retention policy",
+  "defines": [
+   "Retention policy"
+  ],
+  "chars": 282
+ },
+ {
+  "file": "record",
+  "n": 22,
+  "indent": 0,
+  "line": 138,
+  "head": "Flag",
+  "defines": [
+   "Flag"
+  ],
+  "chars": 151
+ },
+ {
+  "file": "record",
+  "n": 23,
+  "indent": 0,
+  "line": 140,
+  "head": "Quarantine",
+  "defines": [
+   "Quarantine"
+  ],
+  "chars": 224
+ },
+ {
+  "file": "record",
+  "n": 24,
+  "indent": 0,
+  "line": 143,
+  "head": "Purge",
+  "defines": [
+   "Purge",
+   "tombstone"
+  ],
+  "chars": 260
+ },
+ {
+  "file": "record",
+  "n": 25,
+  "indent": 0,
+  "line": 147,
+  "head": "Gap marker",
+  "defines": [
+   "Gap marker",
+   "quarantine marker",
+   "truncation marker",
+   "missing range",
+   "capture gap"
+  ],
+  "chars": 346
+ },
+ {
+  "file": "record",
+  "n": 26,
+  "indent": 0,
+  "line": 152,
+  "head": "Integrity status",
+  "defines": [
+   "Integrity status"
+  ],
+  "chars": 396
+ },
+ {
+  "file": "record",
+  "n": 27,
+  "indent": 0,
+  "line": 158,
+  "head": "Receipt",
+  "defines": [
+   "Receipt",
+   "head receipt",
+   "purge receipt"
+  ],
+  "chars": 325
+ },
+ {
+  "file": "record",
+  "n": 28,
+  "indent": 0,
+  "line": 163,
+  "head": "Backup",
+  "defines": [
+   "Backup"
+  ],
+  "chars": 183
+ },
+ {
+  "file": "record",
+  "n": 29,
+  "indent": 0,
+  "line": 166,
+  "head": "At-rest key",
+  "defines": [
+   "At-rest key"
+  ],
+  "chars": 90
+ },
+ {
+  "file": "record",
+  "n": 30,
+  "indent": 0,
+  "line": 168,
+  "head": "Bundle",
+  "defines": [
+   "Bundle",
+   "exporter",
+   "bundle's principal key"
+  ],
+  "chars": 197
+ },
+ {
+  "file": "record",
+  "n": 31,
+  "indent": 0,
+  "line": 171,
+  "head": "Trusted-only export",
+  "defines": [
+   "Trusted-only export"
+  ],
+  "chars": 196
+ },
+ {
+  "file": "record",
+  "n": 32,
+  "indent": 0,
+  "line": 174,
+  "head": "Export",
+  "defines": [
+   "Export",
+   "publish"
+  ],
+  "chars": 310
+ },
+ {
+  "file": "record",
+  "n": 33,
+  "indent": 0,
+  "line": 179,
+  "head": "Rendering",
+  "defines": [
+   "Rendering"
+  ],
+  "chars": 118
+ },
+ {
+  "file": "record",
+  "n": 34,
+  "indent": 0,
+  "line": 181,
+  "head": "Import",
+  "defines": [
+   "Import"
+  ],
+  "chars": 162
+ },
+ {
+  "file": "record",
+  "n": 35,
+  "indent": 0,
+  "line": 184,
+  "head": "Kernel",
+  "defines": [
+   "Kernel",
+   "kernel variables"
+  ],
+  "chars": 159
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 0,
+  "indent": 0,
+  "line": 9,
+  "head": "Seat",
+  "defines": [
+   "Seat",
+   "seat kind",
+   "add"
+  ],
+  "chars": 990
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 1,
+  "indent": 0,
+  "line": 22,
+  "head": "Run seat",
+  "defines": [
+   "Run seat"
+  ],
+  "chars": 794
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 2,
+  "indent": 0,
+  "line": 33,
+  "head": "Device seat",
+  "defines": [
+   "Device seat"
+  ],
+  "chars": 239
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 3,
+  "indent": 0,
+  "line": 37,
+  "head": "Room id",
+  "defines": [
+   "Room id"
+  ],
+  "chars": 81
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 4,
+  "indent": 0,
+  "line": 39,
+  "head": "Seat id",
+  "defines": [
+   "Seat id"
+  ],
+  "chars": 97
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 5,
+  "indent": 0,
+  "line": 41,
+  "head": "Seat key",
+  "defines": [
+   "Seat key"
+  ],
+  "chars": 675
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 6,
+  "indent": 0,
+  "line": 50,
+  "head": "Device key",
+  "defines": [
+   "Device key",
+   "device certificate",
+   "device scope"
+  ],
+  "chars": 565
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 7,
+  "indent": 0,
+  "line": 58,
+  "head": "Principal key",
+  "defines": [
+   "Principal key",
+   "service-account certificate"
+  ],
+  "chars": 367
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 8,
+  "indent": 0,
+  "line": 64,
+  "head": "Token key",
+  "defines": [
+   "Token key",
+   "token certificate"
+  ],
+  "chars": 521
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 9,
+  "indent": 0,
+  "line": 71,
+  "head": "Seat certificate",
+  "defines": [
+   "Seat certificate",
+   "key set"
+  ],
+  "chars": 381
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 10,
+  "indent": 0,
+  "line": 77,
+  "head": "Access token",
+  "defines": [
+   "Access token"
+  ],
+  "chars": 301
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 11,
+  "indent": 0,
+  "line": 81,
+  "head": "Authenticator",
+  "defines": [
+   "Authenticator"
+  ],
+  "chars": 79
+ },
+ {
+  "file": "seats-and-keys",
+  "n": 12,
+  "indent": 0,
+  "line": 82,
+  "head": "CI key",
+  "defines": [
+   "CI key"
+  ],
+  "chars": 82
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 0,
+  "indent": 0,
+  "line": 9,
+  "head": "Trust level",
+  "defines": [
+   "Trust level"
+  ],
+  "chars": 571
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 1,
+  "indent": 0,
+  "line": 17,
+  "head": "Trusted sources",
+  "defines": [
+   "Trusted sources"
+  ],
+  "chars": 794
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 2,
+  "indent": 0,
+  "line": 28,
+  "head": "Deployment mode",
+  "defines": [
+   "Deployment mode"
+  ],
+  "chars": 150
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 3,
+  "indent": 0,
+  "line": 30,
+  "head": "Trust policy",
+  "defines": [
+   "Trust policy"
+  ],
+  "chars": 76
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 4,
+  "indent": 0,
+  "line": 31,
+  "head": "Trust mark",
+  "defines": [
+   "Trust mark"
+  ],
+  "chars": 130
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 5,
+  "indent": 0,
+  "line": 33,
+  "head": "Taint",
+  "defines": [
+   "Taint"
+  ],
+  "chars": 276
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 6,
+  "indent": 0,
+  "line": 37,
+  "head": "Recall taint",
+  "defines": [
+   "Recall taint"
+  ],
+  "chars": 209
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 7,
+  "indent": 0,
+  "line": 40,
+  "head": "Principal surface",
+  "defines": [
+   "Principal surface"
+  ],
+  "chars": 348
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 8,
+  "indent": 0,
+  "line": 45,
+  "head": "Presence proof",
+  "defines": [
+   "Presence proof"
+  ],
+  "chars": 120
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 9,
+  "indent": 0,
+  "line": 47,
+  "head": "Recall",
+  "defines": [
+   "Recall",
+   "recall tool",
+   "continuation cursor"
+  ],
+  "chars": 561
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 10,
+  "indent": 0,
+  "line": 55,
+  "head": "Closed path",
+  "defines": [
+   "Closed path"
+  ],
+  "chars": 542
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 11,
+  "indent": 0,
+  "line": 63,
+  "head": "Recall scope",
+  "defines": [
+   "Recall scope"
+  ],
+  "chars": 159
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 12,
+  "indent": 0,
+  "line": 66,
+  "head": "Endorsement",
+  "defines": [
+   "Endorsement"
+  ],
+  "chars": 289
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 13,
+  "indent": 0,
+  "line": 70,
+  "head": "Trust grant",
+  "defines": [
+   "Trust grant"
+  ],
+  "chars": 699
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 14,
+  "indent": 0,
+  "line": 80,
+  "head": "Delegation",
+  "defines": [
+   "Delegation"
+  ],
+  "chars": 225
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 15,
+  "indent": 0,
+  "line": 83,
+  "head": "Delegated task",
+  "defines": [
+   "Delegated task"
+  ],
+  "chars": 110
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 16,
+  "indent": 0,
+  "line": 85,
+  "head": "Delegate report",
+  "defines": [
+   "Delegate report"
+  ],
+  "chars": 263
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 17,
+  "indent": 0,
+  "line": 89,
+  "head": "Delegation grant",
+  "defines": [
+   "Delegation grant",
+   "delegation budget"
+  ],
+  "chars": 339
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 18,
+  "indent": 0,
+  "line": 94,
+  "head": "Acceptance grant",
+  "defines": [
+   "Acceptance grant"
+  ],
+  "chars": 335
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 19,
+  "indent": 0,
+  "line": 99,
+  "head": "Permission grant",
+  "defines": [
+   "Permission grant"
+  ],
+  "chars": 183
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 20,
+  "indent": 0,
+  "line": 102,
+  "head": "Notice allowance, notice opt-in",
+  "defines": [
+   "Notice allowance, notice opt-in"
+  ],
+  "chars": 134
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 21,
+  "indent": 0,
+  "line": 104,
+  "head": "Rule level",
+  "defines": [
+   "Rule level"
+  ],
+  "chars": 243
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 22,
+  "indent": 0,
+  "line": 108,
+  "head": "Quota",
+  "defines": [
+   "Quota"
+  ],
+  "chars": 175
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 23,
+  "indent": 0,
+  "line": 111,
+  "head": "Spend",
+  "defines": [
+   "Spend"
+  ],
+  "chars": 92
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 24,
+  "indent": 0,
+  "line": 113,
+  "head": "Away policy",
+  "defines": [
+   "Away policy"
+  ],
+  "chars": 193
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 25,
+  "indent": 0,
+  "line": 116,
+  "head": "Residual risk",
+  "defines": [
+   "Residual risk"
+  ],
+  "chars": 71
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 26,
+  "indent": 0,
+  "line": 117,
+  "head": "Sandbox state",
+  "defines": [
+   "Sandbox state"
+  ],
+  "chars": 170
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 27,
+  "indent": 0,
+  "line": 120,
+  "head": "Risk acceptance",
+  "defines": [
+   "Risk acceptance"
+  ],
+  "chars": 99
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 28,
+  "indent": 0,
+  "line": 122,
+  "head": "Hand-off, hand-back",
+  "defines": [
+   "Hand-off, hand-back"
+  ],
+  "chars": 164
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 29,
+  "indent": 0,
+  "line": 125,
+  "head": "Run controls",
+  "defines": [
+   "Run controls",
+   "Terminal takeover"
+  ],
+  "chars": 448
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 30,
+  "indent": 0,
+  "line": 131,
+  "head": "Fixed template",
+  "defines": [
+   "Fixed template",
+   "principal-typed text"
+  ],
+  "chars": 325
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 31,
+  "indent": 0,
+  "line": 136,
+  "head": "Correction, retry",
+  "defines": [
+   "Correction, retry"
+  ],
+  "chars": 133
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 32,
+  "indent": 0,
+  "line": 138,
+  "head": "Counter",
+  "defines": [
+   "Counter",
+   "audit log"
+  ],
+  "chars": 293
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 33,
+  "indent": 0,
+  "line": 142,
+  "head": "Canary",
+  "defines": [
+   "Canary",
+   "canary event"
+  ],
+  "chars": 146
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 34,
+  "indent": 0,
+  "line": 144,
+  "head": "Stat",
+  "defines": [
+   "Stat"
+  ],
+  "chars": 147
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 35,
+  "indent": 0,
+  "line": 146,
+  "head": "Run status",
+  "defines": [
+   "Run status",
+   "freshness mark"
+  ],
+  "chars": 421
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 36,
+  "indent": 0,
+  "line": 152,
+  "head": "Room status",
+  "defines": [
+   "Room status"
+  ],
+  "chars": 350
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 37,
+  "indent": 0,
+  "line": 157,
+  "head": "Queue class",
+  "defines": [
+   "Queue class"
+  ],
+  "chars": 94
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 38,
+  "indent": 0,
+  "line": 159,
+  "head": "Focus set",
+  "defines": [
+   "Focus set"
+  ],
+  "chars": 150
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 39,
+  "indent": 0,
+  "line": 161,
+  "head": "Open room",
+  "defines": [
+   "Open room"
+  ],
+  "chars": 160
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 40,
+  "indent": 0,
+  "line": 164,
+  "head": "Exposure",
+  "defines": [
+   "Exposure"
+  ],
+  "chars": 108
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 41,
+  "indent": 0,
+  "line": 166,
+  "head": "Overlap",
+  "defines": [
+   "Overlap"
+  ],
+  "chars": 165
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 42,
+  "indent": 0,
+  "line": 169,
+  "head": "Fork",
+  "defines": [
+   "Fork"
+  ],
+  "chars": 146
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 43,
+  "indent": 0,
+  "line": 171,
+  "head": "Presence hint",
+  "defines": [
+   "Presence hint",
+   "typing hint"
+  ],
+  "chars": 133
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 44,
+  "indent": 0,
+  "line": 173,
+  "head": "Watchdog observation",
+  "defines": [
+   "Watchdog observation"
+  ],
+  "chars": 188
+ },
+ {
+  "file": "trust-and-flow",
+  "n": 45,
+  "indent": 0,
+  "line": 176,
+  "head": "Petname",
+  "defines": [
+   "Petname"
+  ],
+  "chars": 162
+ }
+]

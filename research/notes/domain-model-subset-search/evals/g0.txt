@@ -1,0 +1,9 @@
+g0-core consistency a888739b433970184
+g0-core security af4bc06b77ffbc49c
+g0-core usefulness adc81b210f0e9287f
+g0-all consistency a5c2ec3cf013e96d0
+g0-all security a2f37af25f7352b94
+g0-all usefulness a8e9ffaaceeb1e985
+g0-lowrisk consistency a791b85a1f14e2f62
+g0-lowrisk security ade63b1460c58d459
+g0-lowrisk usefulness a5272d3a390454329

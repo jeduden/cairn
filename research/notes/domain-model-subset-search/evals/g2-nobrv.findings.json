@@ -1,0 +1,74 @@
+[
+ {
+  "type": "gap",
+  "quote": "What a stamp covers.",
+  "problem": "The Pin version entry ends in this sentence fragment. No rule says whether a principal's stamp on a later version replaces its stamp on an earlier one. Since any stamped version restores to its stamper's agents, two versions of one pin could restore together, and two implementers would build different restore blocks (I3).",
+  "fix": "Replace the fragment with: \"A stamp covers one version; stamping a later version of the same pin replaces that principal's earlier stamp on it.\"",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "undefined",
+  "quote": "reject a foreign room, decline a join request, tighten a",
+  "problem": "\"Reject a foreign room\" is classed as a cut act, but nothing says what it does. A foreign room has no offered or pending state and no act accepts one. If rejecting stops a foreign room's device-seat or stamped pins from restoring, it is widening under the rule that removing a pin from a restore block is widening.",
+  "fix": "Define the act under Foreign room and state that it removes no pin from a restore block, or drop it from the Cut list.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "contradiction",
+  "quote": "Any other output Cairn gives an agent outside the closed paths,",
+  "problem": "I2 and Closed path say no write to an agent exists outside the closed set. Recall describes further output Cairn gives an agent \"outside the closed paths\": results of non-recall MCP tools and CLI calls from inside a run. The closed set never lists these.",
+  "fix": "Add to I2 and Closed path: \"responses to the agent's own non-recall tool calls, carrying only fixed text Cairn ships, sanitized structural fields and ids\".",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "contradiction",
+  "quote": "Information, never an instruction.",
+  "problem": "A pin is called \"never an instruction\", yet `constraint` pins exist to bind the agent and I3 restores them verbatim after compaction. The candidate never says how a restored pin is framed to the model. Implementers could build the restore block as binding constraints or as passive notes.",
+  "fix": "Say \"never an instruction to Cairn\", and state that the restore block presents qualifying pins to the agent as its principal's constraints.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "while the configuration acceptance turning it on stands, until a configuration",
+  "problem": "On an ephemeral node the launcher runs only while a configuration acceptance (a widening principal act) stands. A token-key-only node signs no principal acts. The listed stand-ins cover only capture-off on uninstall, the peer component and the publish component, so such a node has no way to accept configuration or turn on the launcher.",
+  "fix": "Add a stand-in for configuration acceptance on a token-key-only node, as PEER-01's environment variable does for the peer component. Alternatively state that a principal's device records the acceptance and it arrives with the home.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "and writer live under I8 rests on OQ-39.",
+  "problem": "I8 binds all local state to one principal's home. A paired phone is \"a device with no home\" that holds its own device key and seals its seat's writer with that seat's key. The candidate leaves open where those keys and the writer live, so the phone's key handling is undefined against I8.",
+  "fix": "State in Paired phone where its keys and writer live and how I8 applies to them, instead of deferring to OQ-39.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "Acts with no member seat: open (OQ-41).",
+  "problem": "The room merge is \"the one rule deriving all room state\". It leaves open whether a room counts an act recorded by a principal with no member seat, such as the unstamp a former member \"may still\" make. Different implementers would derive different room state from the same logs, which I10 forbids.",
+  "fix": "State the counting rule for such acts, for example that they count only as the acting principal's own cut or trust-withdrawing acts, in place of \"open\".",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "device that exported it, its **exporter**, which chains to the **bundle's",
+  "problem": "A bundle's exporter must chain to \"the bundle's principal key\". Device key says no principal key certifies a device key before PRV-10. Before then a bundle has no principal key to name, and a pull-request author's binding statement has nothing to name either.",
+  "fix": "Add \"once PRV-10 ships; before then the exporter's device key stands for it\" to the Bundle entry.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

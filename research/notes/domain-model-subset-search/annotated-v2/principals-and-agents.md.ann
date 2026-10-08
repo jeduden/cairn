@@ -1,0 +1,102 @@
+---
+title: "Principals and agents"
+order: "01"
+summary: >-
+  Who acts in Cairn: principals, persons⟦f:service-accounts⟧ and service accounts⟦/f⟧, managed policy, agents, runs and subagents⟦f:facilitator⟧, the facilitator⟦/f⟧, authors, members, the owner and delegates.
+---
+# Principals and agents
+
+- **Principal**: A person⟦f:service-accounts⟧ or a service account⟦/f⟧. It ⟦f:principal-keys⟧has a principal key, signs
+  principal acts with a device key at a principal surface once PRV-10 ships,
+  each recorded on a device seat, and ⟦/f⟧is the principal of every agent whose runs
+  its nodes record.⟦f:principal-keys⟧ Cairn counts principals by principal key: every device key⟦f:access-tokens⟧,
+  token key⟦/f⟧ and seat key that chains to one principal key through device⟦f:access-tokens⟧, token⟦/f⟧
+  or seat certificates belongs to that principal; a chain never passes through
+  another principal key.⟦/f⟧⟦f:service-accounts⟧ A certified service account is still its own principal;
+  its **certifier** is whoever certified it.⟦/f⟧⟦f:principal-keys⟧ A principal key never certified
+  counts as a person's, which nothing can prove⟦f:service-accounts⟧; a service account whose
+  certificate is revoked stays a service account⟦/f⟧.⟦/f⟧ Only an agent's own principal
+  widens what reaches that agent (I2)⟦f:notices⟧; a room owner's notice allowance only lets
+  through the opt-in notices an agent's principal opted it in to⟦/f⟧.
+- **Person**: A human principal.⟦f:principal-keys⟧ No one certifies a person's principal key.⟦/f⟧⟦f:results-and-verdicts⟧ Only
+  a person records a verdict.⟦/f⟧
+⟦f:service-accounts⟧- **Service account**: A non-human principal with its own ⟦f:principal-keys⟧principal key⟦/f⟧,
+  certified by a person, another service account or managed policy, and
+  revocable only by its certifier: managed policy revokes one it lists by no
+  longer listing it; none starts uncertified. It can own rooms, have seats and
+  be the principal of its own agents, such as CI or runner agents.⟦/f⟧
+- **Managed policy**: Settings belonging to root that an organisation sets on a
+  machine. Cairn never overrides it (I7). Among its powers, it may override
+  the principal's settings⟦f:browser-room-view⟧, disable the room-view component⟦/f⟧⟦f:launcher⟧, disable the launcher⟦/f⟧⟦f:peer-sync⟧, disable
+  the peer component⟦/f⟧⟦f:git-carrier⟧, disable the publish component⟦/f⟧⟦f:bridges⟧, disable the bridge component⟦/f⟧⟦f:sandbox-risk⟧, forbid risk acceptance⟦/f⟧⟦f:service-accounts⟧⟦f:principal-keys⟧ and certify
+  service accounts by listing their principal keys, each listing marking, as a
+  service-account certificate does, whether that account relays text others
+  wrote; a listing without the mark counts as relaying, and each listing and
+  each removal is recorded as a structural event that enters the node's key set
+  (I10)⟦/f⟧⟦/f⟧. The harness's own
+  managed settings, which Cairn also never writes (ADM-03), are part of the
+  **harness configuration**: the harness's settings, hooks and MCP registrations
+  (I7). Managed policy alone overrides the principal's settings, only with
+  changes a cut act could make⟦f:purge-retention⟧ or with a retention policy (I1)⟦/f⟧, and it declares no
+  pins; repository configuration may only make changes to them a cut act could
+  make (Record).
+- **Agent**: A worker a harness runs for exactly one principal: the principal of
+  the node that records its runs (OWN-01). It receives restore blocks and
+  recalls history; an agent is never a principal. Each harness session's main
+  agent and each subagent is its own agent, and a harness clear or a new harness
+  session starts a new agent.
+- **Run**: One agent's execution within one harness session, on one node, keyed
+  by the harness session and the harness's agent id: a harness session's
+  transcripts contain its main agent's run and one per subagent, a **harness
+  resume** that keeps its harness session continues the run, while a harness
+  resume that starts a new harness session, or a **harness clear**, starts a new
+  run. It has run seats and carries its ⟦f:rule-levels⟧recall taint (SEC-13), ⟦/f⟧⟦f:sandbox-risk⟧sandbox state
+  (OWN-22), ⟦/f⟧seat keys (SEC-10)⟦f:compute-kernel⟧, kernel namespace (CMP-02)⟦/f⟧⟦f:landmarks⟧ and spans (LMK-01)⟦/f⟧. As
+  a noun, "run" has no other meaning.
+- **Subagent**: An agent the harness started for another agent. It has its own
+  run, tied to its parent's run by a parent link, with its own seats and
+  writers. It takes a delegated task⟦f:delegation-grants⟧ without a delegation grant⟦/f⟧.⟦f:work-rooms⟧ Its run
+  joins each room other than the personal room that its parent run has a member
+  seat in, under the parent run's join or create room act there, from its first
+  event (LANE-23).⟦/f⟧
+- **Ingested run**: A run ingested from a transcript the hook handlers did not
+  watch, with origin `ingested`, whose events are untrusted (REC-22).
+  Transcripts the node's principal ingests from outside `transcript.roots` land
+  in its personal room.
+⟦f:facilitator⟧- **Facilitator**: The ⟦f:service-accounts⟧service account⟦/f⟧, at most one per room, whose device seat,
+  on its own node, the owner appoints as the room's facilitator, making that
+  device seat an ⟦f:moderation⟧appointed moderator⟦/f⟧ (SEC-32); its program, neither a Cairn
+  component nor an agent, acts through that node's CLI (`cairn room-summary
+  write`). It ⟦f:conversation⟧posts and ⟦/f⟧writes room summaries, answering summary requests
+  (LANE-33).⟦/f⟧
+- **Author**: The seat that wrote an event or a pin. The author's principal
+  follows from the seat.
+- **Member**: A seat whose add stands⟦f:shared-rooms⟧⟦f:principal-keys⟧ and that no bar covers⟦/f⟧⟦/f⟧, or a run's⟦f:paired-phone⟧ or a
+  paired phone's⟦/f⟧ personal-room seat, or a device seat a newly minted key started
+  in the personal room, each belonging to the personal room's principal, or the
+  seat ingest starts while the run seat it names is
+  a member (Seat, Seat key, Run seat); the seat's role says what it may do.⟦f:work-rooms⟧ A
+  seat that left⟦f:moderation⟧ or was kicked⟦/f⟧⟦f:shared-rooms⟧⟦f:principal-keys⟧, or that a bar covers⟦/f⟧⟦/f⟧, is not a member.⟦/f⟧ A
+  principal is never a member; **the room's principals** are those with a member
+  seat, and text for people speaks of the room's principals.⟦f:work-rooms⟧ A personal-room
+  seat can neither leave⟦f:moderation⟧ nor be kicked⟦/f⟧.⟦/f⟧
+- **Owner**: The one principal who owns a room⟦f:work-rooms⟧ and its ⟦f:intent-criteria⟧intent, ⟦/f⟧roles⟦f:shared-rooms⟧⟦f:principal-keys⟧, admission⟦/f⟧⟦/f⟧⟦f:moderation⟧,
+  appointments, room settings⟦/f⟧⟦f:ownership-transfer⟧, successor and handover⟦/f⟧⟦/f⟧: ⟦f:ownership-transfer⟧at first ⟦/f⟧the principal whose
+  seat created it.⟦f:work-rooms⟧ Ownership ⟦f:ownership-transfer⟧changes only by handover or
+  succession (LANE-11); it ⟦/f⟧stays with the owner after all its seats leave.⟦/f⟧ The
+  owner stands beside the roles rather than having one: each of its device seats
+  in the room⟦f:paired-phone⟧, but a paired phone's,⟦/f⟧ has every room capability, for room acts
+  and the principal acts that need one⟦f:facilitator⟧, except writing a room summary⟦/f⟧; its room
+  acts edit and unpin only pins its principal wrote from a device seat⟦f:stamps⟧ that do
+  not restore unstamped⟦/f⟧⟦f:moderation⟧, and make a list removal of any pin⟦f:intent-criteria⟧ but the intent⟦f:results-and-verdicts⟧ or a
+  verdict⟦/f⟧⟦/f⟧⟦/f⟧, while its agents' run seats have only their role⟦f:moderation⟧ and any appointment⟦/f⟧.
+  ⟦f:moderation⟧No one may kick⟦f:shared-rooms⟧⟦f:principal-keys⟧, bar⟦/f⟧⟦/f⟧ or mute the owner⟦f:principal-keys⟧ or any key that chains to its principal
+  key⟦/f⟧ (LANE-25). ⟦/f⟧"Owner" means nothing else, except in the persona name
+  "Returning owner" and where an outside domain qualifies it, as a code owner.
+⟦f:bundle-import⟧- **Pull-request author**: The outside party whose ⟦f:git-tracking⟧commits⟦/f⟧ a ⟦f:work-rooms⟧foreign room's
+  ⟦/f⟧⟦f:export-bundles⟧bundle⟦/f⟧ describes, matched through their commit-signing identity and a
+  **binding statement** that identity signs, naming the ⟦f:export-bundles⟧⟦f:principal-keys⟧bundle's principal key⟦/f⟧⟦/f⟧
+  (LANE-15). May have no seat at all, and is no principal unless its key is also
+  one. The room view names it beside the ⟦f:git-tracking⟧commits⟦/f⟧ it matched.⟦/f⟧
+- **Delegate**: Any agent that receives a delegation⟦f:delegation-grants⟧, a subagent included⟦/f⟧
+  (OWN-24). It keeps its own principal.
