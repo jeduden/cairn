@@ -1,0 +1,254 @@
+[
+ {
+  "type": "gap",
+  "quote": "PRV-10 ships no principal key certifies a device key, so a device seat's pins",
+  "problem": "Before PRV-10 nothing chains to a principal key. Yet admission (a list of principal keys), bars (\"every key that chains to it\"), the owner's protection and capabilities, and \"Cairn counts principals by principal key\" all depend on such chains. The candidate never says how a seat's principal is known before PRV-10, or that these rules wait for PRV-10, so nodes cannot agree which seats are the owner's or belong to an admitted principal.",
+  "fix": "Add: \"Before PRV-10 ships, a seat's principal is the principal of the node whose device key certified it, and other nodes know it only by that enrolled device key; admission, invites and bars of other principals' keys apply once PRV-10 ships.\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "token, a seat key or a service account's certificate, turn capture on, and",
+  "problem": "Revoking a seat key or an access token is classed as cut. The same section keeps revoking a device or peer widening \"since it can drop pins and stop acts arriving\". A seat-key revocation refuses that seat's later segments, which carry its pins and, before PRV-10, its principal acts. An access-token revocation stops a token-key-only node's acts. Both have exactly the effect given as the reason for widening.",
+  "fix": "Move \"revoke an access token, a seat key\" to Widening, beside revoking a device or peer, or state why these revocations cannot drop pins or stop acts arriving.",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "with its own device key, or a token key, and its own device seat, that mints",
+  "problem": "The trust policy reads whether an event was recorded on this node, and before PRV-10 a device seat's pins qualify only on its own node. The candidate never says whether events and pins carried over in a cloned home count as the new node's own. The same question applies to a backup restored where the node identity differs. Implementers will disagree on whether the clone trusts those events and whether its agents still get the shared personal room's pins back.",
+  "fix": "Add to Node clone: \"Carried-over events count as recorded by the original node: the clone trusts and restores them only as it would for another node of its principal\" (or state the opposite). Also say whether a backup restore under a different node identity is a node clone.",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "ingest starts, lives only in the memory of its harness session's MCP server,",
+  "problem": "A harness resume that keeps its harness session continues the run. If the MCP server process restarts, the run-seat keys it held only in memory are gone. Rotation needs the old key, and the new-seat rule covers only a node identity change, a node clone or a backup restore. Whether the resumed run keeps its seats, adds and roles, or must rejoin shared rooms, is undefined.",
+  "fix": "Add: \"A run-seat key lost when its MCP server stops is minted anew at the run's next event as a new seat naming the old one, sharing its add and taking over its role, as the seat ingest starts does.\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "A short-lived credential a principal mints to enroll a",
+  "problem": "An access token is short-lived and is ended by an expire act. But expire acts exist only once PRV-10 ships, and \"Before PRV-10 ships no expiry can be set but a grant's\". The candidate never says access tokens wait for PRV-10, so a token minted before then (to enroll a peer or carry an invite link) either never expires or breaks that rule.",
+  "fix": "State \"Access tokens exist once PRV-10 ships\", or add an access token's expiry to the exceptions allowed before PRV-10.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "type that restores restores to the agents of a principal who stamped it.",
+  "problem": "A stamped version keeps restoring to the stamper's agents after edits. Meanwhile a device-seat pin also restores in its current version to its author's principal's agents and to agents of principals who trust that author through a grant. One pin can therefore qualify for one agent in two versions with different text, and nothing says whether the restore block carries both or which one wins.",
+  "fix": "Add: \"When several versions of one pin qualify for an agent, its restore block carries only the newest qualifying version\" (or \"carries each one, marked by version number\").",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "A restore block's **room summary pointer** names the latest room",
+  "problem": "Causal order is partial. Two room summaries written concurrently, for example by an outgoing and an incoming facilitator, have no single latest one, yet the restore block must be deterministic.",
+  "fix": "\"names the latest room summary in causal order, concurrent ones by the lower commitment, by its id.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "naming one branch, the first in causal order stands, concurrent ones by the",
+  "problem": "This tie rule sits in the per-room merge, so it is unclear whether it also applies across rooms. If two rooms a run has seats in both name its branch, the routing rule (\"one it joined or created that names the branch\") and the room trailer have no single room to go to.",
+  "fix": "State whether more than one room may name the same branch. If so, say which room a run's events and room trailer go to, e.g. the room whose branch link is first in causal order, ties broken by the lower commitment.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "room and whether the git carrier is enabled for it.",
+  "problem": "Whether the git carrier is enabled for a room is room state, but no act, role or principal is named as able to set it, unlike CI keys, which the owner enrolls. It is also not bounded by the room's visibility, unlike publishing and blind peers.",
+  "fix": "\"whether the git carrier is enabled for it (a widening principal act of the owner, only as the room's visibility allows)\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "undefined",
+  "quote": "permission grant, reject a foreign room, decline a join request",
+  "problem": "\"Reject a foreign room\" is classed as a cut act but is defined nowhere. Nothing says what it stops: holding the room, recalling it, its pins restoring, or syncing it.",
+  "fix": "Define it, e.g. \"reject a foreign room (stop holding and syncing it; its record stays, quarantined from recall)\", or remove it.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "What shows rooms to a person: the TUI, the CLI, the paired phone and the",
+  "problem": "The sentence can be read as making all four clients reduced, so no client has to show every surface (Replay's context lens, the forensic view, Setup, Peers). Principal acts such as opening the forensic view can be taken only at the CLI, the TUI or a paired phone, so a surface or act could end up unreachable.",
+  "fix": "\"the TUI, which shows every surface, and the CLI, the paired phone and the harness strip as reduced clients that say what they leave out\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "Whether a room is private, shared with the room's principals,",
+  "problem": "Nothing says how visibility limits admission and invites. Because \"shared with the room's principals\" is its own visibility value, it is undefined whether a private room can admit other principals and whether their nodes then hold its segments.",
+  "fix": "Add: \"A private room's segments stay on its owner's nodes; inviting or admitting another principal needs visibility shared\" (or state that invites apply whatever the visibility).",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "certified by a person, another service account or managed policy, and",
+  "problem": "Any principal key can issue a service-account certificate over any other principal key without that key's consent, and the key then stays a service account even after revocation. So an outsider can make a person unable to record verdicts and, by marking it relaying, get every trust grant that names it refused.",
+  "fix": "certified by a person, another service account or managed policy, a certificate counting only once the certified principal key countersigns it, and",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "128 random bits its create room act fixes, never chosen",
+  "problem": "Nothing makes a room id unique to its create room act. Room ids are public through room trailers and addresses, so a crafted bundle or peer segment can carry a second create room act that fixes an existing room's id. The room merge has no rule for two create room acts, so who owns the room is contested, and a grindable lower commitment could settle it.",
+  "fix": "Room id: the hash of its create room act, which carries 128 random bits, so no other act can fix the same id (LANE-01).",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "token or at-rest key (ADM-06, SEC-10) (`cairn backup create`, ADM-06); reading",
+  "problem": "Creating a backup copies the whole store and audit log out of the home, including every room, other principals' writers and quarantined content. Yet it appears in none of the principal-act classes, although the list says it classes every named principal act, and exporting a single room is a widening act with a review step.",
+  "fix": "Add 'create a backup' to the Widening class beside 'a backup restore', so `cairn backup create` is a widening principal act.",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "principal act of the owner; a node's principal publishes a room, or enrolls a",
+  "problem": "The git carrier puts a room's encrypted segments on a remote host just as a blind peer does, and whether it is enabled for a room is room state. But the candidate says neither who may enable it for a room nor how it relates to visibility. A non-owner member could therefore carry a private or shared room's segments to a third-party remote, which visibility forbids for blind peers.",
+  "fix": "...a node's principal publishes a room, enrolls a blind peer for it or enables the git carrier for it only as its visibility allows; only the owner enables the git carrier for a room.",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "posts and pins written from device seats a device key of that principal",
+  "problem": "The own-principal path in I2 and Trusted sources says 'within that key's scope'; the trust grant does not. So a post or pin written outside its device key's scope (for example, from a key scoped to write no posts) still reaches the grantor's agents through OWN-29's template or a restore block.",
+  "fix": "posts and pins written from device seats a device key of that principal certified, within that key's device scope,",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "A grant naming a service account whose certificate or managed-policy",
+  "problem": "Whether a key is a service account, and whether it relays, depends on managed-policy listings. These are neither writer logs nor the key set, yet trust levels and verdict validity are derived artifacts under I10. Removing a listing changes them with no recorded event, so a rebuild or another node can derive different trust.",
+  "fix": "State that a managed-policy listing and its removal count in the node's key set, or are recorded as structural events, so trust derives from them under I10.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "confirmation of its principal (of the agent that suggested it or the node that",
+  "problem": "Confirmation turns model-reply text into a device-seat pin that restores verbatim after every compaction. A stamp requires 'being shown its exact text' and an endorsement sends text 'exactly as the principal confirmed it', but nothing requires the principal to see the exact text that becomes the pin.",
+  "fix": "The confirmation of its principal, after being shown the candidate's exact text, which becomes the pin unchanged, ...",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "It posts and writes room summaries, answering summary requests",
+  "problem": "Room summaries are never trusted and no trust grant covers them. But the same facilitator program also posts, and nothing marks a facilitator as relaying. If its certifier marked it non-relaying, summary text it posts as a post reaches a grantor's agents through OWN-29's template.",
+  "fix": "Add: 'A facilitator counts as relaying text others wrote, so a trust grant naming it is refused.'",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "branches the room names later by branch links, whose runs' events then go",
+  "problem": "A link is a room act that any contributor can take, including another principal's run seat. Through it, a joined run's events on the newly linked branch, which went to its personal room, now leave the node for the shared room. Another principal's room act thus widens what leaves this node, with no act by this node's principal.",
+  "fix": "...branches the room names later by branch links its own principal's seats add; another principal's branch link routes the run's events there only once its principal accepts it.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "A short-lived credential a principal mints to enroll a",
+  "problem": "Only an expire act ends an access token, and 'Before PRV-10 ships no expiry can be set but a grant's'. So an access token minted before PRV-10 (an invite link or a peer enrollment) never expires, and a leaked invite link admits until someone revokes it.",
+  "fix": "A credential a principal mints ..., short-lived once PRV-10 ships; before then it ends only by revocation or at its first use.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "A limit on storage or events, per room, node, writer received from",
+  "problem": "I1's only exceptions are redaction, purge and retention. A node, room or worktree-checkpoint quota applied to this node's own events can only stop recording them or drop them, which I1 does not allow, and the candidate never says what reaching a quota does.",
+  "fix": "Add: 'A quota refuses only what peers send and caps payloads; it never stops recording this node's own runs' events, and reaching it is counted.'",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "the exact commit, with network denied, by a node whose **git identity** (the",
+  "problem": "A witness check runs code from an untrusted commit through Cairn's own launcher with only network denied. That code can write the home's store and configuration and the harness configuration, the anchors I2, I7 and I8 rest on. Runs carry sandbox state and need risk acceptance; witness checks have neither.",
+  "fix": "...with network denied and no write access outside its fresh checkout, by a node whose git identity...",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "Whether a room is invite only or admits a list of principal",
+  "problem": "The candidate states no starting visibility or admission for a new room. Agents create rooms by a room act, and the run's events then go there without a join. If create room may carry an admission list or a visibility, a run seat sets what every later change needs the owner's widening act for, so other principals could join and receive the run's events.",
+  "fix": "Add: 'A room starts private and invite only; create room sets no visibility, admission or room setting.'",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "A limit on storage or events, per room, node, writer received from a",
+  "problem": "The candidate defines a quota on a node's or a room's own events but no rule for what happens when it is reached. If excess events are dropped or not recorded, that breaks I1, whose list of exceptions (redaction, purge, retention policy) is exhaustive and has no quota. If they are kept, a per-node or per-room event quota does nothing. Two implementers would build opposite behaviour, and one of them breaks the exact-recall journey.",
+  "fix": "Add: \"Reaching a quota never drops or refuses an event of this node's own runs: it raises a counter and a Needs you item; only segments received from a peer and payload storage may be refused past one\". Otherwise add quota-driven removal to I1's exceptions.",
+  "severity": "needs-fix",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "What shows rooms to a person: the TUI, the CLI, the paired phone and the",
+  "problem": "As written, every client (TUI, CLI, paired phone, harness strip) is a reduced client that may leave surfaces out, so no client has to show the full closed set of surfaces (Fleet, Room page with its Replay context lens, Catch up, Needs you). The 'a person sees what agents did' journey then depends on what each implementer chooses to omit.",
+  "fix": "Reword to \"the TUI, which shows every surface, and the CLI, the paired phone and the harness strip as reduced clients that say what they leave out (VIEW-14)\".",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "A short-lived credential a principal mints to enroll a",
+  "problem": "Expire act says that before PRV-10 ships no expiry can be set except a grant's. Yet access tokens for peer or device enrollment (PEER-06) and invite links (LANE-18) are not tied to PRV-10. So before PRV-10 an access token has no expiry and stays valid until revoked, which contradicts 'short-lived'.",
+  "fix": "In Expire act, change to \"Before PRV-10 ships no expiry can be set but a grant's or an access token's, each of which then takes effect only as a refusal by the node that set it\". Otherwise state that access tokens arrive with PRV-10.",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ }
+]
