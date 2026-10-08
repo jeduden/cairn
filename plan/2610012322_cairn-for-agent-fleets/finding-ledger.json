@@ -1,0 +1,85 @@
+{
+ "themes": [
+  {
+   "id": "DM-A",
+   "title": "An agent's own cairn call acts as the device seat or passes the terminal test",
+   "status": "open"
+  },
+  {
+   "id": "DM-B",
+   "title": "Ownership, admission and bars rest on principal-key chains that do not exist before PRV-10",
+   "status": "open"
+  },
+  {
+   "id": "DM-C",
+   "title": "Revoking a seat key or an access token is cut while revoking a device is widening",
+   "status": "open"
+  },
+  {
+   "id": "DM-D",
+   "title": "A run-seat key lost with its MCP server while the run continues",
+   "status": "open"
+  },
+  {
+   "id": "DM-E",
+   "title": "Which runs are one agent",
+   "status": "open"
+  },
+  {
+   "id": "DM-F",
+   "title": "Untrusted repository configuration may tighten; configuration pins without acceptance",
+   "status": "open"
+  },
+  {
+   "id": "DM-G",
+   "title": "Access tokens cannot expire before PRV-10",
+   "status": "open"
+  },
+  {
+   "id": "DM-H",
+   "title": "Which node records the expire act ending a bar, mute or handover offer",
+   "status": "open"
+  },
+  {
+   "id": "DM-I",
+   "title": "Pin-candidate confirmation without the exact text shown",
+   "status": "open"
+  },
+  {
+   "id": "DM-J",
+   "title": "No room view client must show every surface",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/components-and-surfaces.md",
+     "quote": "What shows rooms to a person: the browser, through the room-view component, and the TUI, the CLI, the paired phone"
+    }
+   ]
+  },
+  {
+   "id": "DM-K",
+   "title": "Which pin version restores, and whether its own event must be trusted",
+   "status": "open"
+  },
+  {
+   "id": "DM-L",
+   "title": "Service-account certificates without consent; managed-policy listings outside the key set",
+   "status": "open"
+  },
+  {
+   "id": "DM-M",
+   "title": "Two rooms naming one branch",
+   "status": "open"
+  },
+  {
+   "id": "DM-N",
+   "title": "Who enables the git carrier, on which remote, within which visibility",
+   "status": "open"
+  },
+  {
+   "id": "DM-O",
+   "title": "What happens at a quota; backup not classed as a principal act",
+   "status": "open"
+  }
+ ]
+}

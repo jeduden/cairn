@@ -52,5 +52,6 @@ func TestGuarded(t *testing.T) {
 	assert.Equal(t, []string{
 		"TestSpecificationAndFeaturesAgree", "TestAppendixBMatchesTheTraces",
 		"TestAppendixCCoversEveryRequirement", "TestPersonasMatchTheAgents",
+		"TestFindingLedgerIsCarried",
 	}, gateTests())
 }

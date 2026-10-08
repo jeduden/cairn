@@ -12,7 +12,7 @@ func Cases() []Case {
 	var out []Case
 	for _, group := range [][]Case{
 		dependencyCases(), decisionCases(), repositoryCases(), reviewCases(),
-		gateCases(), personaCases(), agentCases(), domainModelCases(),
+		gateCases(), personaCases(), agentCases(), domainModelCases(), ledgerCases(),
 	} {
 		out = append(out, group...)
 	}
@@ -301,6 +301,21 @@ func domainModelCases() []Case {
 				Old: "summary: >-", New: "abstract: >-"},
 			Check: Mdsmith(),
 			Want:  "summary",
+		},
+	}
+}
+
+// ledgerCases lists the drift the finding ledger's check exists to catch:
+// a closed domain-model finding whose closing sentence leaves the text.
+func ledgerCases() []Case {
+	return []Case{
+		{
+			Name:   "a closed finding's sentence trimmed from the model",
+			Guards: "TestFindingLedgerIsCarried",
+			Edit: Edit{Op: Replace, File: "docs/domain-model/components-and-surfaces.md",
+				Old: "What shows rooms to a person: the browser, through the", New: "What shows rooms to a person: the"},
+			Check: GoTest("./internal/ledger", "TestFindingLedgerIsCarried"),
+			Want:  "closed findings no longer carried in the text",
 		},
 	}
 }
