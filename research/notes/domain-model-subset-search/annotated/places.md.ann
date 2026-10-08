@@ -32,7 +32,8 @@ summary: >-
   node's, and afterwards every event of a predecessor past that seq; no pin among
   them qualifies. A run seat is never a predecessor. The carried-over personal room
   stays its principal's from the clone's first start (Relations); the
-  quarantines carried over hold from then, while the releases and configuration
+  quarantines carried over hold from then, its principal taken to have applied
+  them at its first start, while the releases and configuration
   acceptances the earlier node recorded take effect on the clone only once its
   lineage acceptance stands.⟦f:store-protection⟧ A backup restore, itself widening,
   takes its predecessors as Backup says instead.⟦/f⟧⟦/f⟧ The node's principal is the
@@ -51,7 +52,7 @@ summary: >-
   (OWN-22).⟦/f⟧
 - **Room**: ⟦f:intent-criteria⟧Where an intent is worked on: at most one intent, ⟦/f⟧⟦f:conversation⟧a **conversation**
   (its ordered posts), ⟦/f⟧seats and pins⟦f:work-rooms⟧⟦f:git-tracking⟧, and branches in any repositories, each named
-  by a branch link⟦/f⟧⟦/f⟧. The unit Cairn shows and shares.
+  by a branch link⟦/f⟧⟦/f⟧. The unit Cairn shows⟦f:segment-exchange⟧ and shares⟦/f⟧.
 - **Personal room**: A principal's private room on each of its nodes, created as
   the first act of its device seat there when the principal installs Cairn on
   the node, by `cairn install`, the plugin or the managed install path, recorded

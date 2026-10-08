@@ -48,5 +48,6 @@ them, Cairn changes only harness configuration, under I7.
   a compaction summary when the context window fills or when asked. Cairn neither performs
   nor controls it (NG1); it records it and restores pins after it (I3).
   **Compaction guidance** is the text a `PreCompact` hook handler returns to
-  the harness for its compaction, built only from fixed text Cairn ships,
-  trusted structural fields and ids, never pin or record text (PIN-07, I2).
+  the harness for its compaction, built only from fixed text Cairn ships and
+  the structural fields a closed path carries (Structural field), never pin or
+  record text (PIN-07, I2).

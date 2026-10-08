@@ -67,8 +67,9 @@ row: "- [{title}]({filename}) — {summary}"
   any node its home descends from by node clone⟦f:store-protection⟧ or backup restore⟦/f⟧, however far
   back, whether or not a lineage acceptance stands (Node),⟦/f⟧⟦f:paired-phone⟧ or a
   paired phone's device seat in the personal room of the node it pairs with,⟦/f⟧
-  belongs to this node's principal; any other seat belongs⟦f:principal-keys⟧, until PRV-10
-  ships,⟦/f⟧ to another principal, kept as theirs and untrusted (I8)⟦f:principal-keys⟧; once PRV-10
+  belongs to this node's principal; any other seat⟦f:principal-keys⟧, until PRV-10
+  ships,⟦/f⟧ is kept as another node's or principal's, attributed to its seat key
+  and untrusted (I8)⟦f:principal-keys⟧; once PRV-10
   ships, it belongs to the principal its key chains to (Principal), and is kept
   as theirs when that is another principal⟦/f⟧.
 - Each event goes to exactly one seat's writer. A run's event other than a
@@ -121,7 +122,9 @@ errors and logs use the model's words.
 - A CLI command that acts on a concept is `cairn <concept> <verb>`. Node-wide
   utilities keep one word: `install`, `uninstall`, `status`, `doctor`, `verify`,
   `rebuild`, `migrate`, `ingest`⟦f:bundle-import⟧⟦f:export-bundles⟧, `import`⟦/f⟧⟦/f⟧⟦f:export-bundles⟧, `export`⟦/f⟧⟦f:purge-retention⟧, `purge`⟦/f⟧, `audit`,
-  `canary`⟦f:browser-room-view⟧, `ui`⟦/f⟧⟦f:work-rooms⟧, `why`⟦/f⟧⟦f:browser-room-view⟧, `open`⟦/f⟧, `hook`, `mcp`⟦f:compute-kernel⟧ and `kernel-worker`⟦/f⟧.
+  `canary`⟦f:work-rooms⟧, `why`⟦/f⟧⟦f:browser-room-view⟧, `open`⟦/f⟧, `hook`, `mcp`⟦f:compute-kernel⟧ and `kernel-worker`⟦/f⟧.⟦f:launcher⟧
+  `cairn launch` is the launcher's entry point, not a CLI command.⟦/f⟧⟦f:browser-room-view⟧
+  `cairn ui` is the room-view component's entry point, not a CLI command.⟦/f⟧
 - An option that selects a concept is named for it: `--author`, `--seat`,
   `--writer`, `--run`, `--room`.
 - A **settings key** names one setting in a settings layer:

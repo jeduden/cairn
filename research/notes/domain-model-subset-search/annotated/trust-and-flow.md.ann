@@ -46,10 +46,12 @@ summary: >-
   started and the browser room view under SEC-20⟦/f⟧⟦f:paired-phone⟧, or a paired phone⟦f:principal-keys⟧ within its scope⟦/f⟧⟦/f⟧.
   A process the harness starts, such as a hook command, an MCP server or a
   status line, and every process descending from one, is never a principal
-  surface: a principal act or a device seat's room act from it is refused and
-  counted (I6). A CLI
-  or TUI call from inside a run is the agent's own tool call: never a principal
-  act and never a device seat's room act, and what it returns is recall,
+  surface: a principal act, a device seat's room act, an install or an
+  uninstall from it is refused and counted (I6). Install and uninstall run
+  only at a principal surface or through the harness's own plugin install or
+  the managed install path (I7). A CLI or TUI call from such a process, other
+  than Cairn's own hook handlers, MCP server and harness strip, is recall: never
+  a principal act and never a device seat's room act, and what it returns is
   enveloped, whatever its output (OWN-02, Recall).⟦f:browser-room-view⟧ A browser on the principal's
   phone⟦f:peer-sync⟧⟦f:paired-phone⟧, without the peer component,⟦/f⟧⟦/f⟧ reaches the room view only as the browser
   room view, through the principal's own tunnel, which is the principal's tool
@@ -59,11 +61,13 @@ summary: >-
 - **Recall**: An agent's call to a **recall tool**, which is any tool Cairn
   serves to an agent: every MCP tool (§9.2), such as `event_search`, `room_get`⟦f:facilitator⟧,
   `room_summary_get`⟦/f⟧⟦f:delegation-grants⟧, `delegation_get`⟦/f⟧⟦f:compute-kernel⟧, `kernel_exec` with its built-ins
-  (CMP-03)⟦/f⟧ or a `room_<act>` tool, and any CLI or TUI call from inside a run
+  (CMP-03)⟦/f⟧ or a `room_<act>` tool, and any CLI or TUI call from a process the
+  harness started but Cairn's own hook handlers, MCP server and harness strip
   (OWN-02, OWN-12). Everything Cairn returns to such a call is recall,
   whatever its output: enveloped, and recorded as a recall event (RCL-07).
   Each recall tool's name, description and schema, and the MCP server's
-  instructions, are fixed text Cairn ships, never record or pin text.
+  instructions, are fixed text Cairn ships, carrying nothing from the record:
+  serving them is no write to an agent.
   Pull-only, and it defaults to the agent's current run. A recall that returns a
   pin returns its range links. A recall tool that stops at its per-call
   cap returns a **continuation cursor** (`next_cursor`); passed back as
@@ -94,7 +98,9 @@ summary: >-
   fingerprints, addresses and that post's text⟦/f⟧⟦f:service-accounts⟧. A grant naming a service account whose certificate or managed-policy
   listing, standing or revoked, marks it as relaying text others wrote, whose
   listing is unmarked, or that no standing certificate or listing covers, is
-  refused; one naming any other service account shows a warning⟦/f⟧ (OWN-29). Its
+  refused; one naming any other service account shows a warning. A standing
+  grant stops covering a principal from the point any of these refusal
+  conditions comes to hold for it, shown to the grantor on ⟦f:needs-you⟧Needs you and ⟦/f⟧Health⟦/f⟧ (OWN-29). Its
   revocation is cut.⟦/f⟧
 - **Delegation**: One agent handing another a delegated task: its subagent⟦f:delegation-grants⟧, or,
   under a delegation grant, another agent of the same principal on this node⟦f:segment-exchange⟧ or

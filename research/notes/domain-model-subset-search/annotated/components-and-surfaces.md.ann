@@ -35,7 +35,9 @@ summary: >-
     widening act at a principal surface (`cairn ui --phone`). Started from a
     process the harness or a run's tool process started, directly or through
     descendants, `cairn ui` mints no room-view secret, a phone-scoped one
-    included.⟦/f⟧
+    included. The component refuses and counts any connection to it from such
+    a process (I6), and serves nothing to a client without the origin secret but
+    the launch secret's one exchange.⟦/f⟧
   ⟦f:launcher⟧- **Launcher (B1):** `cairn launch`, which starts, hosts and controls runs
     through each harness adapter's run part, carrying into the harness input
     only text the core built and recorded, read from the record⟦f:browser-room-view⟧, never text from
@@ -101,8 +103,8 @@ summary: >-
     same per room⟦/f⟧.
   - **Health:** counters, failures, store locations and each room's and
     writer's integrity status (I6, VIEW-10).
-    - **Setup:** configuration and harness configuration, every change shown as
-      a diff (I7, SEC-23).
+  - **Setup:** configuration and harness configuration, every change shown as
+    a diff (I7, SEC-23).
   ⟦f:peer-sync⟧- **Peers:** enrolled peers and their state.⟦/f⟧
 ⟦f:presentations⟧- **Outcome window**: The part⟦f:room-view-surfaces⟧ of the Room page⟦/f⟧⟦f:conversation⟧ beside a room's conversation⟦/f⟧
   that shows one presentation (VIEW-22)⟦f:results-and-verdicts⟧, never the outcome itself⟦/f⟧.⟦/f⟧
