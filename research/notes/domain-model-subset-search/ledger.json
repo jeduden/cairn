@@ -524,5 +524,20 @@
    "security",
    "usefulness"
   ]
+ },
+ {
+  "name": "v4-core",
+  "features": [],
+  "needs_fix": 5,
+  "minor": 14,
+  "per_feature": {
+   "core": 5
+  },
+  "dangling": 0,
+  "lenses": [
+   "consistency",
+   "security",
+   "usefulness"
+  ]
  }
 ]
