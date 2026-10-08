@@ -380,8 +380,8 @@ Feature: Room (LANE)
     And a service account whose principal key "bob"'s principal key certified is not covered by the bar, since no chain passes through another principal key
     And each bar records its setter, reason, optional expiry and optional note
     And a bar whose expiry passed stands until an expire act arrives, and no derivation reads a clock
-    And the expire act is recorded by the setter's node, or while it has not, by a moderator's node, signed with that node's device key
-    And while neither the setter's nor a moderator's node has, the owner's node records it, and duplicate expire acts count as one
+    And the expire act is recorded by the setter's node, or while it has not, by another node of the setter's principal or a node of the owner, signed with that node's device key
+    And an expire act a node of any other principal records, a moderator's or the barred principal's, ends nothing, and duplicate expire acts count as one
     And an expire act naming a bar whose original act set no expiry ends nothing
     And before PRV-10 ships, no act but a delegation grant or an acceptance grant sets an expiry, and no node records an expire act
     When a join his agent's run seat makes on "bob"'s acceptance is recorded concurrently with a moderator's kick of that seat

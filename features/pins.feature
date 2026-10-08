@@ -124,12 +124,14 @@ Feature: Pins (PIN)
     And a pin in "L2" written from the device seat of a third principal whose key the run's principal trusts in "L2" by a trust grant
     And the principal's stamp on one version of a constraint pin an agent's run seat wrote in "L1", on one version of a second constraint pin another principal wrote in "L2", and on one version of a "fact" pin in "L1"
     And a pin the principal wrote from its device seat in "L4"
+    And a constraint pin the principal wrote from its device seat in "L1" and then edited from that seat, each version's own event trusted on this node
     And a constraint pin in "L1" written from the device seat of a token-key-only node of the run's principal, unstamped
     And a constraint pin in "L2" written from the device seat of a token-key-only node of the third principal, unstamped
     And a pin the principal confirmed from a pin candidate whose creating "user" event was recorded in the deployment mode "interactive", while the current deployment mode is "automation"
     And a room "L5" the run joined, with a constraint pin in it that the principal wrote from its device seat, the principal's stamp on one version of a constraint pin another principal wrote, and a constraint pin written from the device seat of the third principal, whose key the run's principal also trusts everywhere by a second trust grant, before every seat of the principal in "L5" was kicked, so that "L5" is now a foreign room
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped constraint versions, each under its original author
+    And of the edited constraint pin the restore block includes only its newest version
     And the restore block includes no pin of "L4", not the stamped "fact" version and neither token-key-only node's unstamped pin
     And of the foreign room "L5" the restore block includes the principal's device-seat pin and the stamped version, and not the pin the trust grant covers
     And the restore block names "L1", "L2", "L5" and the personal room by id

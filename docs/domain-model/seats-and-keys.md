@@ -31,9 +31,12 @@ summary: >-
   seat's key; an ingested run's seat key is kept like a device seat's key, and
   the core seals its writer.
 - **Device seat**: A principal's seat for one device, a node or a paired phone.
-  The one seat kind for acting without a run. A token-key-only node's device
-  seat is certified by its token key, and that node signs no principal or expire
-  acts.
+  The one seat kind for acting without a run. Its room acts are taken only at a
+  principal surface, as principal acts are, but those its node takes on its own
+  (Personal room, Join) and the facilitator's, which its program takes through
+  its node's CLI (SEC-32); an agent's tool call acts only from its run seat
+  (OWN-12). A token-key-only node's device seat is certified by its token key,
+  and that node signs no principal or expire acts.
 - **Room id**: 128 random bits its create room act fixes, never chosen
   (LANE-01).
 - **Seat id**: A seat's id, derived from the room id and the seat's first key.

@@ -12,22 +12,23 @@ summary: >-
   principal from any of its devices whose device scope allows it, edits the pin,
   except the intent (Intent). Information, never an instruction. It restores
   only under PIN-10, to runs that have had a seat in its room during the run, as
-  a **qualifying pin**, its creating event or stamp trusted on this node: a pin
-  of a type that restores written from a device seat a device key certified,
-  within that key's device scope, restores to its author's principal's agents,
-  the intent as Intent says (before PRV-10 ships, a pin from this node's own
-  device seat to this node's agents), and to agents whose principal's trust
-  grant covers its author's principal outside a foreign room; any version of a
-  type that restores restores to the agents of a principal who stamped it.
-  Adding, editing or unpinning a pin of a type that restores, written from a
-  device seat a device key certified (before PRV-10 ships, this node's own
-  device seat), is a widening principal act of its author's principal, and a
-  verdict and a pin candidate's confirmation are their own principal acts
-  (OWN-27, PIN-05); each, but a neutral unpin, still needs its seat's pin
-  capability; every other pin, a token-key-only node's included, is changed by
-  room acts, but for a verdict, recorded and unpinned by neutral principal acts
-  (OWN-27), and its principal's neutral unpin of its own agent's run-seat pin,
-  and a run seat's or a token-key-only node's restores only once stamped.
+  a **qualifying pin**: a pin of a type that restores written from a device seat
+  a device key certified, within that key's device scope, restores, by its
+  newest version whose own event is trusted on this node, to its author's
+  principal's agents, the intent as Intent says (before PRV-10 ships, a pin from
+  this node's own device seat to this node's agents), and to agents whose
+  principal's trust grant covers its author's principal outside a foreign room;
+  any version of a type that restores restores to the agents of a principal who
+  stamped it, its stamp trusted on this node. Adding, editing or unpinning a pin
+  of a type that restores, written from a device seat a device key certified
+  (before PRV-10 ships, this node's own device seat), is a widening principal
+  act of its author's principal, and a verdict and a pin candidate's
+  confirmation are their own principal acts (OWN-27, PIN-05); each, but a
+  neutral unpin, still needs its seat's pin capability; every other pin, a
+  token-key-only node's included, is changed by room acts, but for a verdict,
+  recorded and unpinned by neutral principal acts (OWN-27), and its principal's
+  neutral unpin of its own agent's run-seat pin, and a run seat's or a
+  token-key-only node's restores only once stamped.
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers.
 - **Pin candidate**: Proposed pin text an agent suggested (an `assistant` event,
@@ -39,7 +40,9 @@ summary: >-
   an intent or a criterion, only the owner's confirmation, making a new version
   of the room's intent pin that the owner's device seat authors.
 - **Configuration pin**: A pin the principal's configuration declares, authored
-  by its device seat on that node (PIN-01).
+  by its device seat on that node (PIN-01), which takes effect only once the
+  principal's widening act accepting that configuration records its digest;
+  repository configuration declares none (ADM-04).
 - **Pin priority**: An integer the pin's author sets with it, lower first, the
   intent before every other pin (LANE-20); qualifying pins fill the pin budget
   in that order, then by their creating events' addresses (PIN-08).
@@ -72,10 +75,11 @@ summary: >-
   optionally the paths it is meant to change (LANE-20). Only the owner's
   principal act changes it; a new owner's revision adds a version its device
   seat authors. The intent restores as the author of its newest version wrote
-  it, to that author's principal's agents and to agents whose principal's trust
-  grant covers that author's principal outside a foreign room; after a change of
-  ownership, a handover or a succession, until the new owner revises or stamps
-  it, it restores only to its stampers' agents.
+  it, that version's own event trusted on this node, to that author's
+  principal's agents and to agents whose principal's trust grant covers that
+  author's principal outside a foreign room; after a change of ownership, a
+  handover or a succession, until the new owner revises or stamps it, it
+  restores only to its stampers' agents.
 - **Criterion**: One acceptance condition of an intent, with a stable id.
 - **Stake**: A pin of type `stake` stating what its author works on. Only its
   author, or for a device seat its author's principal, edits it; it is unpinned

@@ -10,22 +10,22 @@ Room state derives from three kinds of act only. Seats that are members with no
 add, and the seat ingest starts, stand beside them (Seat). Each act belongs to
 exactly one kind (LANE-31).
 
-- **Room act**: An act signed by a seat key, wherever it is taken. It is checked
-  against the capabilities of the seat's role and the room state; create room,
-  join, a join request and leave are checked against admission and the add
-  instead. The room acts are create room, join, a join request, leave, a role
-  request, post, link, pin, edit, unpin, list removal, present, pick, kick, bar,
-  unbar, mute and unmute; set title, labels or an assignment; and write a room
-  summary or a summary request. A leave, kick or bar never drops a room's
-  qualifying pins from a run's restore block, within the foreign-room limit of
-  Relations. A pin, edit or unpin room act never changes any restore block: an
-  author's own pin, edit and unpin act only on pins that do not restore
-  unstamped, and a list removal only takes a pin off the pin list. A link act
-  adds one range link, branch link or criterion link. Create room is the first
-  act of the creating seat's writer. Room acts are governance, not I2 trust: on
-  their own they never widen what reaches an agent, which only principal acts
-  such as a trust grant, an endorsement or a stamp do, and OWN-11's classes do
-  not cover them.
+- **Room act**: An act signed by a seat key, a device seat's taken only as
+  Device seat says. It is checked against the capabilities of the seat's role
+  and the room state; create room, join, a join request and leave are checked
+  against admission and the add instead. The room acts are create room, join, a
+  join request, leave, a role request, post, link, pin, edit, unpin, list
+  removal, present, pick, kick, bar, unbar, mute and unmute; set title, labels
+  or an assignment; and write a room summary or a summary request. A leave, kick
+  or bar never drops a room's qualifying pins from a run's restore block, within
+  the foreign-room limit of Relations. A pin, edit or unpin room act never
+  changes any restore block: an author's own pin, edit and unpin act only on
+  pins that do not restore unstamped, and a list removal only takes a pin off
+  the pin list. A link act adds one range link, branch link or criterion link.
+  Create room is the first act of the creating seat's writer. Room acts are
+  governance, not I2 trust: on their own they never widen what reaches an agent,
+  which only principal acts such as a trust grant, an endorsement or a stamp do,
+  and OWN-11's classes do not cover them.
 - **Principal act**: An act of a kind OWN-11 classes, taken at a principal
   surface. It is signed by a device key once PRV-10 ships; before then it is an
   `operator` event its device seat's seal covers, told apart from a room act by
@@ -43,9 +43,10 @@ exactly one kind (LANE-31).
     an acceptance grant, turn an away policy off, withdraw a named successor,
     revoke an appointment, unstamp a pin version, turn notices off, decline a
     handover, withdraw as successor, dismiss a directed post, revoke an access
-    token, a seat key or a service account's certificate, turn capture on, and
-    turn off the room-view component, the launcher, the peer component, the
-    publish component, a bridge or the git carrier.
+    token, a seat key or a service account's certificate unless that removes a
+    pin from a restore block or stops principal acts arriving (SEC-27, PEER-06),
+    turn capture on, and turn off the room-view component, the launcher, the
+    peer component, the publish component, a bridge or the git carrier.
   - **Neutral:** mark a room ready, its **ready mark** (the owner or a principal
     whose device seat in the room is a moderator), or abandoned, its **abandoned
     mark** (the owner), acknowledge an overlap, record a `met`, `not met` or
@@ -81,26 +82,22 @@ exactly one kind (LANE-31).
     a device, peer or authenticator, mint or rotate an access token, start a
     witness check, which confirms the command taken from an untrusted event
     (OWN-18), and a backup restore. Revoking a device or a peer stays widening
-    although it undoes an enrollment, since it can drop pins and stop acts
-    arriving.
+    although it undoes an enrollment, since it can drop pins and stop principal
+    acts arriving.
 
   Any principal act that removes a pin from a restore block, or stops this node
-  recording its own runs' events, is widening whatever verb carries it, so
-  `cairn uninstall` records the widening act turning capture off before it
-  removes the hook registrations (ADM-02). On an ephemeral node, PEER-01's
-  environment variable, a structural event, stands in for turning on its peer
-  component and, for the git-carrier remotes its access token names, its publish
-  component; minting that access token is the widening act. An unstamp and a
-  trust-grant revocation are the exceptions: each withdraws only the acting
-  principal's own trust (LANE-32, OWN-29). Applying a quarantine request takes
-  the class of the quarantine it applies. A principal act no requirement names
-  is widening. Every principal act a requirement names is classed here, and
-  OWN-11 follows.
+  recording its own runs' events, is widening whatever verb carries it (Capture,
+  Node). An unstamp and a trust-grant revocation are the exceptions: each
+  withdraws only the acting principal's own trust (LANE-32, OWN-29). Applying a
+  quarantine request takes the class of the quarantine it applies. A principal
+  act no requirement names is widening. Every principal act a requirement names
+  is classed here, and OWN-11 follows.
 - **Expire act**: Once PRV-10 ships, an act a node with a device key records,
   signed with that key, ending only an expiry its original act set. It ends a
-  bar, a mute or a handover offer (LANE-25). It ends an access token, recorded
-  by the node that minted it (PEER-05). It ends a delegation grant or an
-  acceptance grant, recorded by the node of the principal that recorded the
+  bar, a mute or a handover offer, recorded only by a node of the principal
+  whose act set it or of the room's owner (LANE-25). It ends an access token,
+  recorded by the node that minted it (PEER-05). It ends a delegation grant or
+  an acceptance grant, recorded by the node of the principal that recorded the
   grant (OWN-23, OWN-26). Before PRV-10 ships no expiry can be set but a
   grant's, which then takes effect only as a refused delegation (Delegation
   grant).
@@ -179,18 +176,17 @@ exactly one kind (LANE-31).
 - **Room merge**: The one rule deriving all room state from the three act kinds,
   in causal order (LANE-31). Seats that are members with no add, and the seat
   ingest starts, stand beside it. It covers membership, roles, appointments,
-  pins, pin versions, stamps, mutes, presentations, picks, bars, handovers and
-  their offers, OWN-21's ready and abandoned marks, the CI keys enrolled in the
-  room and whether the git carrier is enabled for it. It covers the successor,
-  title, labels, assignment, visibility, admission, the notice allowance and the
-  **room settings** (whether drafts show live, whether typing shows, the roles a
-  whole-room mute leaves posting to, and the **appointment rate**: how many
-  kicks, bars and mutes an appointed moderator may set per period, PEER-09,
-  SEC-32). When acts conflict, the more restrictive act wins, then the lower
-  commitment. Concurrent picks resolve by **pick order** (the facilitator's
-  seat, then any other moderator, then the owner, VIEW-22). Of two branch links
-  naming one branch, the first in causal order stands, concurrent ones by the
-  lower commitment (LANE-01). Acts with no member seat: open (OQ-41).
+  pins, pin versions, stamps, branch links (Branch), mutes, presentations,
+  picks, bars, handovers and their offers, OWN-21's ready and abandoned marks,
+  the CI keys enrolled in the room and whether the git carrier is enabled for
+  it. It covers the successor, title, labels, assignment, visibility, admission,
+  the notice allowance and the **room settings** (whether drafts show live,
+  whether typing shows, the roles a whole-room mute leaves posting to, and the
+  **appointment rate**: how many kicks, bars and mutes an appointed moderator
+  may set per period, PEER-09, SEC-32). When acts conflict, the more restrictive
+  act wins, then the lower commitment. Concurrent picks resolve by **pick
+  order** (the facilitator's seat, then any other moderator, then the owner,
+  VIEW-22). Acts with no member seat: open (OQ-41).
 - **Concurrent**: Of two acts or events: neither causally after the other;
   **causal order** puts each after every act or event it saw.
 - **Room state**: Everything the room merge derives (LANE-31).

@@ -14,7 +14,11 @@ summary: >-
   may carry room trailers, bundles as git refs and the git carrier's segments.
 - **Branch**: A git branch, identified by repository identity, remote URL and
   branch name. A branch with no remote has a provisional node-local identity,
-  rebound when it is pushed.
+  rebound when it is pushed. A branch belongs to the first room whose branch
+  link names it, across rooms, in causal order, concurrent ones by the lower
+  commitment (Room merge); no act moves it, and a branch link of any other room
+  naming it is void and shown (LANE-01). So only that room takes a run's events
+  on it, and the room trailer of each commit on it names that room (LANE-28).
 - **Commit**: A git commit.
 - **Worktree**: A git working tree on a node, where a run edits a branch; its
   repository's **git directory** is git's own store of objects and refs.

@@ -119,7 +119,8 @@ errors and logs use the model's words.
 - Layout words (such as tab, panel, pane, gutter, sheet, stack, tile, pill,
   rail, composer and command palette) name parts of a screen, never concepts.
 - Cairn defines no slash commands. A harness skill may call MCP tools or the
-  CLI; a skill's call is the agent's own tool call, never a principal act.
+  CLI; a skill's call is the agent's own tool call, never a principal act, and
+  acts only from its run seat (Device seat).
 
 ## Not Cairn concepts
 

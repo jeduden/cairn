@@ -69,7 +69,7 @@ Feature: Peer network (PEER)
     And the node, with only the token key, has a device seat its token key certified, which signs no principal acts and no expire acts, and every pin the node writes, from its device seat or a run seat, restores only once a principal stamps it from one of its devices whose device scope allows it, and no trust grant covers its posts or pins
     And "cairn status" names where the access token is read from and no child process inherits the access token in its environment
     And the access token's issue, use, rotation and revocation are audited, and the issuing node shows an unused access token as "enrolled, never synced"
-    And revoking the access token with "cairn access-token revoke" is a cut principal act
+    And revoking the access token with "cairn access-token revoke" is a cut principal act, since it removes no pin from a restore block
     And discovery alone enrolls no peer, while enrolling one verifies the key on both nodes by matching words or a scanned code
 
   @PEER-07 @P2 @I2 @I8 @pending

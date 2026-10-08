@@ -41,7 +41,11 @@ summary: >-
   the browser room view under SEC-20, the CLI or TUI at a terminal, or a paired
   phone within its scope; without the peer component, a browser on the
   principal's phone reaches the room view only as the browser room view, through
-  the principal's own tunnel (§6.3 row 11).
+  the principal's own tunnel (§6.3 row 11). An unsandboxed agent can still pass
+  the CLI's or TUI's terminal test, through a terminal it opens or a process it
+  did not start: that is §6.1's residual risk R7, and its writing the store or
+  signing outside Cairn's code is R3, which only a sandbox removes (Sandbox
+  state).
 - **Presence proof**: A hardware-backed, user-verified proof of a person's
   presence, bound to one widening act (OWN-11).
 - **Recall**: An agent's call to a **recall tool**: an MCP tool that returns
@@ -107,7 +111,9 @@ summary: >-
   allowed.
 - **Quota**: A limit on storage or events, per room, node, writer received from
   a peer, peer or worktree checkpoint, that the node's principal or managed
-  policy sets (ADM-15).
+  policy sets (ADM-15). Reaching one never drops or deletes an event: what is
+  received over it is refused and audited, and this node's own recording over it
+  goes on, counted and raised as a Needs you item (I1, I6).
 - **Spend**: What runs cost in model tokens or money; no quota limits it until
   OQ-26 closes.
 - **Away policy**: A principal's opt-in choice of what an unanswered held

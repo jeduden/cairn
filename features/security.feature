@@ -335,7 +335,8 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And a seat key that was rotated by a signed event in its seat's writer, signed by the old key and the new key, and whose new key was then revoked by a signed event
     When events sealed by the revoked key arrive, some before its revocation and some after
-    Then the rotation and revocation appear as signed events, the revocation, which removes no pin from a restore block, a cut principal act
+    Then the rotation and revocation appear as signed events, the revocation, which removes no pin from a restore block and stops no principal act arriving, a cut principal act
+    And revoking the key of a device seat whose writer carries principal acts is a widening principal act, since it stops principal acts arriving
     And the seat keeps its seat id and its writer across the rotation, and what the old key sealed still verifies
     And the events sealed before the revocation still verify
     And the others are refused under the revocation rule

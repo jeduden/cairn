@@ -162,6 +162,8 @@ Feature: Principal acts (OWN)
     Then each unpin is recorded as a neutral principal act with nothing more asked
     When the person runs "cairn room mute" on a seat at a terminal
     Then the mute, a room act, is signed with the seat key of the person's device seat in that room, carries no OWN-11 class and names the room it acted in
+    When the agent's tool call runs "cairn room post" with its standard input and output not a terminal
+    Then the verb refuses, so the agent never takes a room act as the person's device seat
     When the agent runs "cairn event search" for an untrusted event with its output not a terminal
     Then the verb is a recall tool: it prints the record content inside the envelope, records a recall event and taints the calling run
 

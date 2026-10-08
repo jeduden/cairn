@@ -9,7 +9,13 @@ summary: >-
 - **Record**: The set of writer logs a node holds. Every derived artifact
   derives from it and the node's own key set (I10); the audit log, counters and
   **configuration** sit beside it: the principal's settings (§9.6), which a
-  repository's `.cairn.toml`, its **repository configuration**, may only tighten
+  repository's `.cairn.toml`, its **repository configuration**, may only
+  tighten: set only the keys §9.6 marks settable there, in the direction it
+  names, such as lowering a limit or turning an injection path off, never
+  enabling injection, extending recall scope, changing the trust policy or the
+  deployment mode, or disabling redaction or flags (SEC-11). Repository
+  configuration declares no pin, and a key of it that would make a change ADM-04
+  takes only from accepted configuration is ignored, audited and counted
   (ADM-04). Managed policy, configuration and repository configuration are the
   three **settings layers**. The **store** is the home's files containing the
   record, its derived artifacts and payloads (§8.1).
@@ -111,7 +117,8 @@ summary: >-
   structural fields count as structural fields, never the text it carries; the
   act keeps its own class.
 - **Capture**: This node's hook handlers recording its runs' events; turning it
-  off is widening (OWN-11).
+  off is widening (OWN-11), so `cairn uninstall` records the widening act
+  turning capture off before it removes the hook registrations (ADM-02).
 - **Ingest marker**: What a hook handler leaves when its hook budget cuts it
   short, so the next hook handler or `cairn ingest` resumes it (NFR-02).
   **Ingest** is reading a transcript into the record, by the hook handlers

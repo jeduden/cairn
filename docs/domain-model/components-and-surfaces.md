@@ -45,8 +45,10 @@ summary: >-
     paired phones; on a paired phone it is Cairn's only code, with the room
     view's reduced client inside it.
   - **Publish component (B3):** read-only publishing and the segment exchange of
-    the **git carrier**, which keeps segments in a namespaced location of the
-    principal's remote.
+    the **git carrier**, which keeps a room's segments in a namespaced location
+    of a remote of the node's principal, only while that principal has enabled
+    it for that remote and the room's owner for that room, each a widening
+    principal act (PEER-08, ADM-13).
   - **Bridge component (B3):** outbound exchange with hosts the node's principal
     names, through three **bridges**: the **forge bridge** (reads pull requests,
     reviews and the checks the forge reports), the **CI bridge** (fetches CI
@@ -55,11 +57,11 @@ summary: >-
   Unqualified, "boundary" means a network boundary; any other boundary is
   qualified, such as a span boundary or a crate boundary.
 - **Room view**: What shows rooms to a person: the browser, through the
-  room-view component, and the TUI, the CLI, the paired phone and the **harness
-  strip** (a status line the harness shows) as reduced clients that say what
-  they leave out (VIEW-14). A client of the record. Its surfaces are a closed
-  set, and unqualified, "surface" means one of them; where principal acts are
-  taken is a principal surface:
+  room-view component, the one client that shows every surface, and the TUI, the
+  CLI, the paired phone and the **harness strip** (a status line the harness
+  shows) as reduced clients that say what they leave out (VIEW-14). A client of
+  the record. Its surfaces are a closed set, and unqualified, "surface" means
+  one of them; where principal acts are taken is a principal surface:
   - **Fleet:** every live and recorded run of the principal's rooms, grouped by
     room.
   - **Room page:** one room, with the tabs Timeline, Review and Replay, the

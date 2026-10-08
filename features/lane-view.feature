@@ -153,6 +153,7 @@ Feature: Room view (VIEW)
     When the person views the room on its Room page in the browser, and in the TUI, the CLI, a paired phone and the harness strip
     Then the Room page and every reduced client show the same status words, marks, room ids and Needs you order
     And the TUI, the CLI, the paired phone and the harness strip, as reduced clients, each say what they left out and on which surface to see it
+    And the browser room view shows every surface: Fleet, Room page, Catch up, Needs you, Health with its Setup part, and Peers
 
   @VIEW-15 @P1 @I2 @pending
   Scenario: room_get without an id returns only a closed structural set
