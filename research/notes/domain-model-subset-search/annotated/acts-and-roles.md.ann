@@ -59,7 +59,7 @@ exactly one kind (LANE-31).
     token (unless that removes a pin from a restore block), ⟦/f⟧⟦f:key-revocation⟧revoke a run seat's key⟦f:stamps⟧ (unless that stops a stamped version qualifying)⟦/f⟧, ⟦/f⟧⟦f:service-accounts⟧revoke
     a service account's certificate (unless that removes a pin from a restore
     block), ⟦/f⟧accept a configuration whose change only cuts and removes no pin
-    from a restore block⟦f:key-revocation⟧, re-recording no pin⟦/f⟧, turn capture on⟦f:browser-room-view⟧, turn
+    from a restore block⟦f:key-revocation⟧ and whose acceptance re-records no pin⟦/f⟧, turn capture on⟦f:browser-room-view⟧, turn
     off the room-view component⟦/f⟧⟦f:launcher⟧, turn off the launcher⟦/f⟧⟦f:peer-sync⟧, turn off the peer
     component⟦/f⟧⟦f:git-carrier⟧, turn off the publish component or the git carrier⟦/f⟧⟦f:bridges⟧, turn off a
     bridge⟦/f⟧.
@@ -89,7 +89,7 @@ exactly one kind (LANE-31).
     other than turning it off, ⟦/f⟧quarantine that removes a pin⟦f:landmarks⟧ or a landmark⟦/f⟧ from
     a restore block or changes which version of a pin restores, release a quarantine, ⟦f:purge-retention⟧purge⟦f:peer-sync⟧ or apply an erasure request⟦/f⟧,
     ⟦/f⟧⟦f:export-bundles⟧export, ⟦/f⟧⟦f:bundle-import⟧⟦f:export-bundles⟧import a bundle, ⟦/f⟧⟦/f⟧⟦f:store-protection⟧create a backup, ⟦/f⟧ingest a
-    transcript from outside `transcript.roots`,⟦f:git-tracking⟧bind a repository identity by hand or rebind it, ⟦/f⟧⟦f:sandbox-risk⟧accept open
+    transcript from outside `transcript.roots`, ⟦f:git-tracking⟧bind a repository identity by hand or rebind it, ⟦/f⟧⟦f:sandbox-risk⟧accept open
     residual risks (OWN-22), ⟦/f⟧⟦f:service-accounts⟧⟦f:principal-keys⟧certify a service account's principal key, ⟦/f⟧⟦/f⟧⟦f:work-rooms⟧assign a
     role, ⟦/f⟧⟦f:shared-rooms⟧set a room's admission, ⟦/f⟧⟦f:moderation⟧appoint a moderator⟦f:facilitator⟧ or the facilitator⟦/f⟧, ⟦/f⟧⟦f:stamps⟧stamp
     a pin version, ⟦/f⟧⟦f:ownership-transfer⟧name a successor, offer a handover, ⟦/f⟧⟦f:trust-grants⟧record a trust grant,

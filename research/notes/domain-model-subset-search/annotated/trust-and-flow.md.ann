@@ -62,7 +62,7 @@ summary: >-
   serves to an agent: every MCP tool (§9.2), such as `event_search`, `room_get`⟦f:facilitator⟧,
   `room_summary_get`⟦/f⟧⟦f:delegation-grants⟧, `delegation_get`⟦/f⟧⟦f:compute-kernel⟧, `kernel_exec` with its built-ins
   (CMP-03)⟦/f⟧ or a `room_<act>` tool, and any CLI or TUI call from a process the
-  harness started but Cairn's own hook handlers, MCP server and harness strip
+  harness started, other than Cairn's own hook handlers, MCP server and harness strip
   (OWN-02, OWN-12). Everything Cairn returns to such a call is recall,
   whatever its output: enveloped, and recorded as a recall event (RCL-07).
   Each recall tool's name, description and schema, and the MCP server's

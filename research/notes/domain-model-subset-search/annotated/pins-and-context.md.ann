@@ -113,7 +113,8 @@ summary: >-
   it, it restores only to its stampers' agents⟦/f⟧⟦/f⟧.⟦/f⟧
 ⟦f:intent-criteria⟧- **Criterion**: One acceptance condition of an intent, with a stable id.⟦/f⟧
 ⟦f:work-rooms⟧- **Stake**: A pin of type `stake` stating what its author works on. Only its
-  author, or for a device seat its author's principal, edits it; it is unpinned
+  author, a run seat that replaced it in the same run, or for a device seat its
+  author's principal, edits it; it is unpinned
   as Unpin says, and it makes Cairn refuse no other seat's act.⟦/f⟧
 ⟦f:work-rooms⟧- **Title, labels**: Room state the owner's device seat⟦f:moderation⟧ or a moderator⟦/f⟧ sets: a
   display name and tags. They reach a model only enveloped, through recall,
