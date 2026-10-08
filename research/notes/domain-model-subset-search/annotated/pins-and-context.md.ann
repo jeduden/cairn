@@ -136,8 +136,8 @@ summary: >-
 ⟦f:facilitator⟧- **Room summary**: A facilitator's summary of a room, always untrusted, linked
   by address to the events it covers, which an agent reads solely through
   `room_summary_get`, a recall tool that writes no room summary; every other
-  recall tool⟦f:compute-kernel⟧, the kernel's built-ins included,⟦/f⟧ and every CLI or TUI call from
-  inside a run leaves `summary` events out,
+  recall tool⟦f:compute-kernel⟧, the kernel's built-ins included,⟦/f⟧ and every CLI or TUI call that
+  is recall leaves `summary` events out,
   returning only their address; a summary request is `room_summary_request`
   (LANE-33). A restore block's **room summary pointer** names the latest room
   summary, in causal order, concurrent ones by the lower commitment, by its
