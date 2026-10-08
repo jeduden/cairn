@@ -2,14 +2,14 @@
 ledger, evolve genomes against that surrogate, and write the most promising,
 mutually distinct genomes for real review.
 
-usage: ga_round.py <tag> <k> [--since v4] [--seed N] [--gens 300] [--pop 60]
+usage: ga_round.py <tag> <k> [--since v4] [--only v0] [--seed N] [--gens 300] [--pop 60]
   <tag> names the text version and generation, such as v6-ga1; writes
   genomes/<tag>-<i>.json for i in 1..k and prints the surrogate. Genomes
   already reviewed on the same text version are not picked again.
 
 Surrogate: rate(f) = (needs-fix attributed to f + a) / (reviews including f + b)
 over ledger entries whose name starts with a version at or after --since
-(older text no longer exists). Probe reviews (one combined lens) count at
+(older text no longer exists), or only those of one version with --only. Probe reviews (one combined lens) count at
 PROBE_WEIGHT of a strong one, since they find fewer issues. Each pick is a
 Thompson sample: draw every feature's rate from its Gamma posterior, evolve
 against that draw (fitness = value - PENALTY * predicted needs-fix), and take
@@ -36,10 +36,11 @@ def version(name):
     return int(digits) if digits else -1
 
 
-def fit(since):
+def fit(since, only=None):
     hits, seen = {}, {}
     for e in ledger():
-        if version(e['name']) < since:
+        v = version(e['name'])
+        if (only is not None and v != only) or (only is None and v < since):
             continue
         w = PROBE_WEIGHT if e.get('lenses') == ['all'] else 1.0
         for f in e['features']:
@@ -103,7 +104,8 @@ def main():
     since = version(opt.get('--since', 'v4'))
     rng = random.Random(int(opt.get('--seed', '1')))
     gens, pop_n = int(opt.get('--gens', '300')), int(opt.get('--pop', '60'))
-    hits, seen = fit(since)
+    only = version(opt['--only']) if '--only' in opt else None
+    hits, seen = fit(since, only)
     mean = {f: (hits.get(f, 0.0) + A) / (seen.get(f, 0.0) + B) for f in FEATS}
     ver = version(tag)
     done = {frozenset(e['features']) - {'core'} for e in ledger()

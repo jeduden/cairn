@@ -6,12 +6,17 @@ model by dropping whole features, reviewed blind, scored, and repaired.
 The search stops when a candidate has no findings and adding any
 excluded feature brings findings back.
 
-Status: in progress. The stakeholder asked for it during the blind
-domain-model reviews of the cairn-for-agent-fleets plan. Nothing here is
-normative. The model in `docs/domain-model/` and the invariants in
-`docs/srs/invariants.md` are unchanged by this folder. A repair that
-would change an invariant's wording is logged in `invariant-edits.md`
-and needs its own decision record before it reaches the SRS.
+Status: in progress, selection only. The stakeholder asked for it during
+the blind domain-model reviews of the cairn-for-agent-fleets plan, and then
+ruled that the search selects feature combinations of the current model and
+never changes its text. `annotated/` is the original model with feature
+spans; `check_annotation.py` (run without `--no-orig`) proves it equals
+`docs/domain-model/` and `docs/srs/invariants.md` byte for byte. Nothing
+here is normative.
+
+Versions v1 to v6 (`annotated-v1/` … `annotated-v6/`, the repair rulings and
+`invariant-edits.md`) record an earlier phase that also repaired the text.
+They are kept as history; the selection search does not use them.
 
 ## Method
 
@@ -38,14 +43,14 @@ and needs its own decision record before it reaches the SRS.
 5. **Fitness.** `ga.py` keeps the ledger (`ledger.json`) and scores a
    candidate as value − 4 × needs-fix findings − 0.5 × dangling terms.
    It also does closure, blame, mutation and crossover.
-6. **Repair.** Findings that recur become rulings
-   (`repair-v1-rulings.md` … `repair-v4-rulings.md`) under
-   `repair-brief.md`. A repair agent writes the next version of the
-   annotated sources, snapshotted as `annotated-vN/`. A repair never
-   weakens an invariant. A finding it cannot fix that way stays open.
-7. **Growth.** `grow.py` writes one genome per feature added to a clean
-   base. Features are added in batches, and the attribution names the
-   feature that broke a batch.
+6. **Selection GA.** `ga_round.py` fits each feature's needs-fix rate per
+   review from the ledger (`--only v0`: reviews of the original text), then
+   breeds genomes by crossover and mutation, closed under `requires`. Each
+   pick is a Thompson sample: every rate is drawn from its posterior, so
+   rarely reviewed features get explored and well-measured ones settle.
+   `ga-select.js` runs one generation as a workflow: breed, one blind probe
+   review per candidate, record and attribute the findings, commit. The
+   best candidates get a strong review to confirm.
 
 ## Results so far
 
@@ -96,10 +101,10 @@ no needs-fix findings, then grow it batch by batch.
 From this folder, with Python 3 and nothing else:
 
 ```sh
-python3 check_annotation.py --no-orig          # spans balance, ids known
-python3 assemble.py genomes/v4-core.json out/v4-core
+python3 check_annotation.py                     # text unchanged, spans balance
+python3 assemble.py genomes/g0-core.json out/g0-core
 python3 ga.py rank                              # ledger by fitness
-python3 grow.py genomes/v4-core.json v5         # one genome per addition
+python3 ga_round.py v0-ga1 6 --only v0 --seed 1   # breed one generation
 ```
 
 `out/` is derived and ignored by git. Rebuild any candidate from its

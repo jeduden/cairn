@@ -1,1 +1,19 @@
-{"name": "g0-lowrisk", "features": ["conversation", "git-tracking", "landmarks", "needs-you", "notices", "pin-candidates", "presence-proof", "room-view-surfaces", "sandbox-risk", "segment-exchange", "store-protection"]}
+{
+ "name": "g0-lowrisk",
+ "features": [
+  "conversation",
+  "git-tracking",
+  "key-revocation",
+  "landmarks",
+  "needs-you",
+  "node-clone",
+  "notices",
+  "pin-candidates",
+  "presence-proof",
+  "room-view-surfaces",
+  "sandbox-risk",
+  "segment-exchange",
+  "store-protection"
+ ],
+ "note": "reviewed on the original text, when node-clone and key-revocation were part of core"
+}

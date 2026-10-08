@@ -1,7 +1,10 @@
 [
  {
   "name": "g0-core",
-  "features": [],
+  "features": [
+   "key-revocation",
+   "node-clone"
+  ],
   "needs_fix": 23,
   "minor": 18,
   "per_feature": {
@@ -31,10 +34,12 @@
    "git-tracking",
    "held-requests",
    "intent-criteria",
+   "key-revocation",
    "landmarks",
    "launcher",
    "moderation",
    "needs-you",
+   "node-clone",
    "notices",
    "ownership-transfer",
    "paired-phone",
@@ -78,8 +83,10 @@
   "features": [
    "conversation",
    "git-tracking",
+   "key-revocation",
    "landmarks",
    "needs-you",
+   "node-clone",
    "notices",
    "pin-candidates",
    "presence-proof",
@@ -91,9 +98,10 @@
   "needs_fix": 25,
   "minor": 17,
   "per_feature": {
-   "core": 20,
+   "core": 19,
    "segment-exchange": 2,
    "unlocated": 1,
+   "node-clone": 1,
    "store-protection": 1,
    "sandbox-risk": 1
   },
@@ -614,6 +622,72 @@
   "per_feature": {
    "core": 5,
    "unlocated": 1
+  },
+  "dangling": 0,
+  "lenses": [
+   "consistency",
+   "security",
+   "usefulness"
+  ]
+ },
+ {
+  "name": "v5-all",
+  "features": [
+   "git-tracking",
+   "work-rooms",
+   "shared-rooms",
+   "moderation",
+   "facilitator",
+   "ownership-transfer",
+   "stamps",
+   "intent-criteria",
+   "pin-candidates",
+   "conversation",
+   "endorsement",
+   "notices",
+   "held-requests",
+   "away-policy",
+   "rule-levels",
+   "launcher",
+   "sandbox-risk",
+   "presence-proof",
+   "delegation-grants",
+   "acceptance-grants",
+   "trust-grants",
+   "principal-keys",
+   "service-accounts",
+   "access-tokens",
+   "segment-exchange",
+   "peer-sync",
+   "blind-peer",
+   "paired-phone",
+   "git-carrier",
+   "publishing",
+   "bridges",
+   "results-and-verdicts",
+   "witness-check",
+   "ci-attestation",
+   "presentations",
+   "needs-you",
+   "room-view-surfaces",
+   "room-status",
+   "browser-room-view",
+   "landmarks",
+   "compute-kernel",
+   "purge-retention",
+   "store-protection",
+   "export-bundles",
+   "bundle-import",
+   "node-clone",
+   "key-revocation"
+  ],
+  "needs_fix": 8,
+  "minor": 11,
+  "per_feature": {
+   "key-revocation": 4,
+   "core": 2,
+   "export-bundles": 1,
+   "purge-retention": 1
   },
   "dangling": 0,
   "lenses": [

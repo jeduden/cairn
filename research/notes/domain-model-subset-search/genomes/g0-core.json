@@ -1,1 +1,8 @@
-{"name": "g0-core", "features": []}
+{
+ "name": "g0-core",
+ "features": [
+  "key-revocation",
+  "node-clone"
+ ],
+ "note": "reviewed on the original text, when node-clone and key-revocation were part of core"
+}

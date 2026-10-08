@@ -118,7 +118,8 @@
    "hub-relation: A run's history spans its",
    "hub-relation: Principals and agents create rooms;",
    "hub-relation: A pin naming no room",
-   "hub-relation: Recall extends only to the"
+   "hub-relation: Recall extends only to the",
+   "principals-and-agents: Delegate"
   ],
   "requires": [],
   "requires_any": [],
@@ -628,7 +629,6 @@
    "name": "Delegation under grants",
    "description": "Agents delegate tasks to other agents of the same principal under a delegation grant (targets, rule level, budget in spend, concurrency, depth, expiry); delegate reports return via delegation_get.",
    "entries": [
-    "principals-and-agents: Delegate",
     "trust-and-flow: Delegation grant",
     "trust-and-flow: Delegate report",
     "trust-and-flow: Spend"
