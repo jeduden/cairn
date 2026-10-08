@@ -1402,5 +1402,69 @@
   "lenses": [
    "all"
   ]
+ },
+ {
+  "name": "v0-ga2-4-strong",
+  "features": [
+   "acceptance-grants",
+   "access-tokens",
+   "away-policy",
+   "blind-peer",
+   "bridges",
+   "bundle-import",
+   "ci-attestation",
+   "compute-kernel",
+   "conversation",
+   "delegation-grants",
+   "endorsement",
+   "export-bundles",
+   "facilitator",
+   "git-carrier",
+   "git-tracking",
+   "held-requests",
+   "intent-criteria",
+   "key-revocation",
+   "landmarks",
+   "launcher",
+   "moderation",
+   "needs-you",
+   "node-clone",
+   "notices",
+   "ownership-transfer",
+   "paired-phone",
+   "peer-sync",
+   "pin-candidates",
+   "presence-proof",
+   "presentations",
+   "principal-keys",
+   "publishing",
+   "purge-retention",
+   "results-and-verdicts",
+   "room-status",
+   "room-view-surfaces",
+   "rule-levels",
+   "sandbox-risk",
+   "segment-exchange",
+   "service-accounts",
+   "shared-rooms",
+   "stamps",
+   "trust-grants",
+   "witness-check",
+   "work-rooms"
+  ],
+  "needs_fix": 8,
+  "minor": 21,
+  "per_feature": {
+   "delegation-grants": 1,
+   "principal-keys": 2,
+   "git-tracking": 1,
+   "core": 4
+  },
+  "dangling": 0,
+  "lenses": [
+   "consistency",
+   "security",
+   "usefulness"
+  ]
  }
 ]
