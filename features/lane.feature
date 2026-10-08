@@ -335,6 +335,7 @@ Feature: Room (LANE)
     And a join by "mallory", whose principal key the admission list does not name, is refused, audited and counted
     And a run of "bob" joins on his acceptance though the admission list does not name his principal key, since the owner's principal key always satisfies its room's admission, for its device and run seats alike
     And a join "alice" neither asked for nor accepted does not happen
+    And before PRV-10 ships, the room admits no seat of a principal other than its owner, so the same join of "alice"'s run is refused and audited
     And a join request of a run of "alice" for which she asked, her widening principal act, joins under the room's admission with no further acceptance, while one she did not ask for joins only on her acceptance, a widening principal act
     When a seat of the room later names another branch by a branch link, a room act, and "alice"'s run works on that branch
     Then while the run's seat in the room has work, the run's events on that branch go there with no further principal act

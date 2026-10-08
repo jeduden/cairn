@@ -55,6 +55,7 @@ Feature: Peer network (PEER)
     Then the open segment was sealed and offered at each of those hooks and at least every 30 s, each sealed range as soon as it was sealed
     And once its clock passes the expiry, the node that minted the access token records the expire act ending it, naming the writer's last accepted seq
     And the writer is marked retired by that expire act, and no derivation reads a clock
+    And before PRV-10 ships, the minting node instead refuses every later use of the expired access token
     And its segments past that seq that continue its chain without a fork are accepted and marked delivered after retirement, and only a revocation would refuse them
     And a tail lost after the last seq received is shown as a missing range, never as a quiet end or as "behind"
 

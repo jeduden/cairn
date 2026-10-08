@@ -32,6 +32,8 @@ Feature: Record (REC)
     And the run ingested from "explore-agent" records the harness's agent id "Explore"
     And the events "parent-run" gained after the harness resume that kept its harness session belong to the run of "parent-run"
     And the events of "new-harness-session-run" belong to a new run, not to the run of "parent-run"
+    And that new run belongs to the agent of "parent-run" only when the harness gives an agent id stable across harness sessions, else it is its own agent
+    And a later run of an agent reaches the agent's rooms through the "rooms" recall scope and its directed posts, but holds no seat, add or role there until it joins under LANE-23
 
   @REC-03 @P0 @I1 @I10 @pending
   Scenario: re-ingesting a transcript source creates no duplicate events

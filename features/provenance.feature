@@ -212,6 +212,7 @@ Feature: Provenance and trust (PRV)
     And the token-key-only node, whose device seat its token key certified, signs no principal act and no expire act
     And the paired phone may read, and allow or deny held permission requests, and nothing else
     And a service account's principal key that a person, another service account or managed policy listing it certified counts as that service account's own principal, while only a principal key never certified counts as a person's, and a service account whose certificate is revoked stays a service account
+    And a service-account certificate counts only once the certified principal key countersigns it, and each managed-policy listing and each removal of one is recorded as a structural event that enters the node's key set
     And every revocation is a signed event that replicates like any other
     And a seat key the laptop's device key certified for a room chains principal key → device key → seat key
     And a device key certified by a service account's principal key that this principal's principal key certified does not chain to this principal's principal key, since a chain runs through device, token or seat certificates and never through another principal key

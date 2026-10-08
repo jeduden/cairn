@@ -36,9 +36,10 @@ summary: >-
   holding its text by address, with no provenance of its own, I10); not yet a
   pin, so it has no pin author (a pin's author being its first version's). The
   confirmation of its principal (of the agent that suggested it or the node that
-  detected it), a widening act, makes it a new pin its device seat authors; for
-  an intent or a criterion, only the owner's confirmation, making a new version
-  of the room's intent pin that the owner's device seat authors.
+  detected it), a widening act taken only after that principal is shown its
+  exact text, pin type and priority, makes it a new pin its device seat authors;
+  for an intent or a criterion, only the owner's confirmation, making a new
+  version of the room's intent pin that the owner's device seat authors.
 - **Configuration pin**: A pin the principal's configuration declares, authored
   by its device seat on that node (PIN-01), which takes effect only once the
   principal's widening act accepting that configuration records its digest;

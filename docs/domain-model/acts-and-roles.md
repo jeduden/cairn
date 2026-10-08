@@ -98,9 +98,9 @@ exactly one kind (LANE-31).
   whose act set it or of the room's owner (LANE-25). It ends an access token,
   recorded by the node that minted it (PEER-05). It ends a delegation grant or
   an acceptance grant, recorded by the node of the principal that recorded the
-  grant (OWN-23, OWN-26). Before PRV-10 ships no expiry can be set but a
-  grant's, which then takes effect only as a refused delegation (Delegation
-  grant).
+  grant (OWN-23, OWN-26). Before PRV-10 ships no expiry can be set but a grant's
+  or an access token's, which then takes effect only as a refusal (Delegation
+  grant, Access token).
 - **Role**: A named set of room capabilities: viewer, contributor or moderator.
   The owner gives a seat its role by a **role assignment**. An invite or invite
   link records one for every seat that chains to the invited principal key and
@@ -147,19 +147,21 @@ exactly one kind (LANE-31).
   a seat's room act ending its own add.
 - **Kick**: Revokes a seat's current add. Only that seat's principal may add it
   again (LANE-25).
-- **Bar**: Names a principal key and keeps every key that chains to it out,
-  until an unbar or an expire act (LANE-25). Its setter where SEC-32
-  permits, the setter's appointer or the owner may unbar.
+- **Bar**: Once PRV-10 ships (Principal), names a principal key and keeps every
+  key that chains to it out, until an unbar or an expire act (LANE-25). Its
+  setter where SEC-32 permits, the setter's appointer or the owner may unbar.
 - **Mute**: Withdraws every capability but read from one seat or from the whole
   room; a whole-room mute leaves posting to the roles the owner names (LANE-16).
 - **Present**: Puts a presentation in the outcome window.
 - **Pick**: Chooses which presentation the outcome window shows.
 - **Admission**: Whether a room is invite only or admits a list of principal
-  keys. An invite (a principal key and a role) and an invite link are widening
-  principal acts of the owner. The owner's principal key always satisfies its
-  room's admission, for its device and run seats alike. An invite's, an export's
-  or a publish's **review step** shows the acting principal, before it takes
-  effect, what will take effect or leave, SEC-08 applied (LANE-10, SEC-26).
+  keys, once PRV-10 ships; until then a room admits no other principal's seat
+  (Principal). An invite (a principal key and a role) and an invite link are
+  widening principal acts of the owner. The owner's principal key always
+  satisfies its room's admission, for its device and run seats alike. An
+  invite's, an export's or a publish's **review step** shows the acting
+  principal, before it takes effect, what will take effect or leave, SEC-08
+  applied (LANE-10, SEC-26).
 - **Successor**: A principal the owner names in advance, who accepts ownership
   once every seat of the owner has left the room; that acceptance is a
   **succession**. Until a handover, a succession or the owner's rejoin, a room

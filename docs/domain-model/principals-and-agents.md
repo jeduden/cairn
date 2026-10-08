@@ -12,19 +12,25 @@ summary: >-
   its nodes record. Cairn counts principals by principal key: every device key,
   token key and seat key that chains to one principal key through device, token
   or seat certificates belongs to that principal; a chain never passes through
-  another principal key. A certified service account is still its own principal;
-  its **certifier** is whoever certified it. A principal key never certified
-  counts as a person's, which nothing can prove; a service account whose
-  certificate is revoked stays a service account. Only an agent's own principal
-  widens what reaches that agent (I2); a room owner's notice allowance only lets
-  through the opt-in notices an agent's principal opted it in to.
+  another principal key. No key chains to a principal key before PRV-10 ships,
+  so until then a room admits no seat of another principal, and admission,
+  invites, bars and the owner's protection, which name principal keys, apply
+  only once it ships (OQ-42). A certified service account is still its own
+  principal; its **certifier** is whoever certified it. A principal key never
+  certified counts as a person's, which nothing can prove; a service account
+  whose certificate is revoked stays a service account. Only an agent's own
+  principal widens what reaches that agent (I2); a room owner's notice allowance
+  only lets through the opt-in notices an agent's principal opted it in to.
 - **Person**: A human principal. No one certifies a person's principal key. Only
   a person records a verdict.
 - **Service account**: A non-human principal with its own principal key,
   certified by a person, another service account or managed policy, and
   revocable only by its certifier: managed policy revokes one it lists by no
-  longer listing it; none starts uncertified. It can own rooms, have seats and
-  be the principal of its own agents, such as CI or runner agents.
+  longer listing it; none starts uncertified. A service-account certificate
+  counts only once the certified principal key countersigns it, and each
+  managed-policy listing and each removal of one is recorded as a structural
+  event that enters the node's key set (PRV-10). It can own rooms, have seats
+  and be the principal of its own agents, such as CI or runner agents.
 - **Managed policy**: Settings belonging to root that an organisation sets on a
   machine. Cairn never overrides it (I7). Among its powers, it may disable
   boundaries B1 to B3 and the launcher, forbid risk acceptance and certify
@@ -37,7 +43,11 @@ summary: >-
   configuration only tightens them.
 - **Agent**: A worker a harness runs for exactly one principal: the principal of
   the node that records its runs (OWN-01). It receives restore blocks and
-  recalls history; an agent is never a principal.
+  recalls history; an agent is never a principal. It is identified by its node,
+  its harness and the harness's agent id across harness sessions; where the
+  harness gives no stable agent id, each run is its own agent. Its later runs
+  inherit its rooms for recall (the `rooms` scope) and its directed posts, never
+  a seat, add or role: a new run joins only as Join says (REC-02).
 - **Run**: One agent's execution within one harness session, on one node, keyed
   by the harness session and the harness's agent id: a harness session's
   transcripts contain its main agent's run and one per subagent, a **harness
@@ -78,9 +88,10 @@ summary: >-
   acts edit and unpin only pins its principal wrote from a device seat that do
   not restore unstamped, and make a list removal of any pin but the intent or a
   verdict, while its agents' run seats have only their role and any appointment.
-  No one may kick, bar or mute the owner or any key that chains to its principal
-  key (LANE-25). "Owner" means nothing else, except in the persona name
-  "Returning owner" and where an outside domain qualifies it, as a code owner.
+  Once PRV-10 ships, no one may kick, bar or mute the owner or any key that
+  chains to its principal key (LANE-25). "Owner" means nothing else, except in
+  the persona name "Returning owner" and where an outside domain qualifies it,
+  as a code owner.
 - **Pull-request author**: The outside party whose commits a foreign room's
   bundle describes, matched through their commit-signing identity and a
   **binding statement** that identity signs, naming the bundle's principal key

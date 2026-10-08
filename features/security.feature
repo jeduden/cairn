@@ -343,6 +343,7 @@ Feature: Security (SEC)
     And a head receipt of every writer's chain head verifies on another node with no network
     And a seat key minted because a backup restore put the home on another machine starts a new seat and writer, which names the old seat, inherits no add, role or appointment and, outside the personal room, joins as any seat does
     And a node clone mints a new device key, or uses a token key, besides its new seat keys
+    And a run whose run-seat key was lost with its MCP server on a harness resume continues on a new run seat that names the old one, inherits no add and joins its rooms again only as LANE-23 says
 
   @SEC-28 @P2 @I2 @I4 @I6 @pending
   Scenario: outbound bridges run only in the bridge component, per enabled destination, and carry little
