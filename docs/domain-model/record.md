@@ -50,12 +50,12 @@ summary: >-
   the store's **payload store**, under a name that confirms no guess at its
   content (REC-09).
 - **Segment**: A range of one writer, sealed as a unit when it closes; what
-  peers and the git carrier exchange. A unit of the record, not a storage
-  layout, though a writer's closed segments may be merged (REC-25) or rewritten
-  by a purge (ADM-07) without changing any address. The **open segment** is a
-  writer's newest, still growing; it closes at the points REC-19 names, and
-  peers exchange its sealed prefix. A closed segment or an open segment's sealed
-  prefix is a **sealed range**.
+  peers exchange. A unit of the record, not a storage layout, though a writer's
+  closed segments may be merged (REC-25) or rewritten by a purge (ADM-07)
+  without changing any address. The **open segment** is a writer's newest,
+  still growing; it closes at the points REC-19 names, and peers exchange its
+  sealed prefix. A closed segment or an open segment's sealed prefix is a
+  **sealed range**.
 - **Seal**: A seat key's signature over its writer id, a seq and the chain head
   at that seq (REC-18), made where that key lives: a witnessed run's run seat's,
   but the seat ingest starts, by its run's MCP server, covering what the hook
@@ -85,11 +85,11 @@ summary: >-
   live on this node: by its hook handlers, its CLI, TUI, MCP server, launcher,
   room-view component or bridge component), `ingested` (appended by `cairn
   ingest`, whatever transcript it reads, past an ingest marker included),
-  `bundle` (read by import) or `peer` (received from a peer, a paired phone or
-  through the git carrier) (RCL-09); the trust policy reads only whether an
-  event was recorded on this node, ingested or received, and `bundle` beside
-  `peer` is a display mark. A **witnessed run** is one this node's hook handlers
-  watched. Independent of provenance. Each event also records its **recorder**,
+  `bundle` (read by import) or `peer` (received from a peer or a paired phone)
+  (RCL-09); the trust policy reads only whether an event was recorded on this
+  node, ingested or received, and `bundle` beside `peer` is a display mark. A
+  **witnessed run** is one this node's hook handlers watched. Independent of
+  provenance. Each event also records its **recorder**,
   the part that recorded it (the hook handlers, the CLI, the TUI, the MCP
   server, the launcher, the room-view component, or the bridge component, whose
   events take provenance `web`, always untrusted; the room-view component

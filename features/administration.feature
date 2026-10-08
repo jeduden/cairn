@@ -25,7 +25,7 @@ Feature: Administration and lifecycle (ADM)
     And every run on the node now blocks the residual risks
     When the person runs "cairn uninstall" at a terminal and keeps only the device key
     Then before it removed the hook registrations, it recorded the widening principal act turning capture off
-    And the output lists the hook, plugin and MCP registrations, room-view secrets, launcher endpoints, seat and device keys, enrollments, git-carrier refs and every other file Cairn wrote outside the store, each with an offer to remove it, and offers purge as the only removal of the store's content
+    And the output lists the hook, plugin and MCP registrations, room-view secrets, launcher endpoints, seat and device keys, enrollments and every other file Cairn wrote outside the store, each with an offer to remove it, and offers purge as the only removal of the store's content
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
@@ -167,16 +167,15 @@ Feature: Administration and lifecycle (ADM)
     And no untrusted event appears in the export
 
   @ADM-13 @P0 @I7 @pending
-  Scenario: Cairn writes to no git repository beyond the confirmed settings file, the commit hook of LANE-28, the git carrier's location and the launcher's fresh checkouts
+  Scenario: Cairn writes to no git repository beyond the confirmed settings file, the commit hook of LANE-28 and the launcher's fresh checkouts
     Given an isolated Cairn home
     And a git repository with a worktree, refs, notes, git configuration and git hooks
-    And the node's principal has enabled the git carrier for the repository's remote, and the room's owner for the room
     When an agent runs, the person confirms "cairn install --scope project", every Cairn component runs and the launcher runs a witness check
     Then the only changed file in the worktree is the harness settings file that install wrote
-    And the only new or changed refs lie in the namespaced location the node's principal enabled for the git carrier, and every new object is reachable only from them
+    And no ref is new or changed, and no new object was written
     And the only changed git hook is the commit hook for room trailers that the confirmed install set up
     And the witness check's fresh checkout lies outside the run's worktree and added no ref to the run's repository
-    And the repository's other refs, notes, git configuration and git hooks are byte-identical to before
+    And the repository's notes, git configuration and other git hooks are byte-identical to before
 
   @ADM-14 @P1 @I1 @I5 @pending
   Scenario Outline: purge by seat or principal removes one principal's data with an audit trail on every node

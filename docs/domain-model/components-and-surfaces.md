@@ -44,11 +44,7 @@ summary: >-
   - **Peer component (B2):** exchanges segments with peers (sync) and serves
     paired phones; on a paired phone it is Cairn's only code, with the room
     view's reduced client inside it.
-  - **Publish component (B3):** read-only publishing and the segment exchange of
-    the **git carrier**, which keeps a room's segments in a namespaced location
-    of a remote of the node's principal, only while that principal has enabled
-    it for that remote and the room's owner for that room, each a widening
-    principal act (PEER-08, ADM-13).
+  - **Publish component (B3):** read-only publishing (SEC-26).
   - **Bridge component (B3):** outbound exchange with hosts the node's principal
     names, through three **bridges**: the **forge bridge** (reads pull requests,
     reviews and the checks the forge reports), the **CI bridge** (fetches CI

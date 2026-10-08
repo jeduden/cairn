@@ -8,10 +8,10 @@ Feature: Peer network (PEER)
   @PEER-01 @P2 @I4 @I9 @pending
   Scenario: sync runs only in the peer component, and only while the act turning it on stands
     Given an isolated Cairn home
-    And an ephemeral node whose environment carries the person's write-once environment variable for the peer component, and whose access token, minted by the person's widening principal act, names a git-carrier remote
+    And an ephemeral node whose environment carries the person's write-once environment variable for the peer component, and whose access token was minted by the person's widening principal act
     When the node starts and the core runs its hook handlers and "cairn status --json"
     Then no core process starts the peer component, in-process or as a child
-    And the ephemeral node's own entrypoint starts the peer component, and the publish component for the git-carrier remote its access token names, on the strength of the person's environment variable
+    And the ephemeral node's own entrypoint starts the peer component on the strength of the person's environment variable
     And the environment variable is recorded as a structural event, not a principal act, and audited
     And on a home where the CLI recorded no act turning it on, the peer component stays off, even when the person or a service manager starts its own entry point
     And with the peer component absent or stopped the core behaves exactly as with no peer component
@@ -64,7 +64,7 @@ Feature: Peer network (PEER)
     Given an isolated Cairn home
     And the person mints, as a widening principal act, an access token for an ephemeral node carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the access token's rooms, the node's own personal room and the expiry, read from an environment secret by a configuration setting under ADM-04
     When an ephemeral node starts with the access token before it reaches any peer
-    Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address and git-carrier remote it may deliver to
+    Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address it may deliver to
     And a seat key it certifies for a room outside the access token's rooms other than the node's own personal room, or after the access token's expiry, chains to no principal key and is refused
     And its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events, device-seat pins of provenance "operator" and run-seat pins of provenance "assistant", and says later pins may be missing
     And the node, with only the token key, has a device seat its token key certified, which signs no principal acts and no expire acts, and every pin the node writes, from its device seat or a run seat, restores only once a principal stamps it from one of its devices whose device scope allows it, and no trust grant covers its posts or pins
@@ -85,18 +85,6 @@ Feature: Peer network (PEER)
       | chains to the principal key of "alice"                | accepted                          |
       | chains to a principal key not in the peer's key set   | refused                           |
       | was revoked, for events it sealed past its revocation | refused under the revocation rule |
-
-  @PEER-08 @P2 @I4 @pending
-  Scenario: the git carrier carries encrypted segments, one entry per writer, on the node's principal's remote
-    Given an isolated Cairn home
-    And a node of "alice" holding room "room-1", which she owns, where "alice", as the node's principal, enabled the git carrier for a remote of her own and, as the room's owner, for room "room-1", each a widening principal act
-    And room "room-2" on that node, whose owner has not enabled the git carrier for it
-    And no peer is reachable
-    When the publish component carries the sealed segments of room "room-1"
-    Then each writer's segments go to one entry in the namespaced location of "alice"'s remote that "alice" enabled
-    And each segment is encrypted to the device keys of the room's principals, a token-key-only node's token key in place of one, and never to a seat key
-    And a reader of the remote sees only entry names, sizes and times, and the git carrier says so
-    And no segment of room "room-2" goes to the remote
 
   @PEER-09 @P2 @I2 @I8 @pending
   Scenario: presence hints and typing hints are ephemeral and drafts stay private to their author

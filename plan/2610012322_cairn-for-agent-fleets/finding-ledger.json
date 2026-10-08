@@ -310,8 +310,12 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/components-and-surfaces.md",
-     "quote": "only while that principal has enabled it for that remote and the room's owner for that room, each a widening principal act (PEER-08, ADM-13)"
+     "file": "docs/srs/index.md",
+     "quote": "PEER-08 retired, its id left unused: the git carrier is removed"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "except the harness settings file that `cairn install --scope project` writes after confirmation, the commit hook, and the launcher's fresh checkouts"
     }
    ]
   },
@@ -337,7 +341,17 @@
   {
    "id": "DM-P",
    "title": "Whether a room's visibility limits the git carrier, as it limits publishing and blind peers",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/index.md",
+     "quote": "the git carrier is removed, by the stakeholder's decision of 8 October 2026; Cairn writes no room segments to any git remote"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "except the harness settings file that `cairn install --scope project` writes after confirmation, the commit hook, and the launcher's fresh checkouts"
+    }
+   ]
   },
   {
    "id": "DM-Q",

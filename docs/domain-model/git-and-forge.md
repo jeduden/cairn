@@ -11,7 +11,7 @@ summary: >-
   included, else a provisional node-local identity bound later (LANE-02). The
   first bind is a structural event Cairn records at the first hook event;
   binding by hand or rebinding is a widening principal act. It has remotes and
-  may carry room trailers, bundles as git refs and the git carrier's segments.
+  may carry room trailers in its commits and bundles as git refs.
 - **Branch**: A git branch, identified by repository identity, remote URL and
   branch name. A branch with no remote has a provisional node-local identity,
   rebound when it is pushed. A branch belongs to the first room whose branch

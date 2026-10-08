@@ -27,7 +27,7 @@ summary: >-
   of harnesses, one worktree each.
 - **Later, with PEER:** ephemeral nodes whose `CAIRN_HOME` is deleted
   when they end keep their record only by sealing and offering segments
-  to an enrolled peer or through the git carrier (PEER-01, PEER-05).
+  to an enrolled peer (PEER-01, PEER-05).
   Until then they are out of scope.
 - The model runs at the provider. Tool inputs and outputs, including anything
   Cairn returns through recall or writes to an agent through I2's closed

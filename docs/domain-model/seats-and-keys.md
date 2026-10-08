@@ -58,10 +58,10 @@ summary: >-
   certificate**, with a **device scope** (the kinds of principal act it may
   sign, and of post and pin its seats may write) and a maximum rule level. It
   signs principal acts and expire acts once PRV-10 ships, and a room's segments
-  the git carrier carries or a blind peer holds are encrypted to its principals'
-  device keys, or a token-key-only node's token key (PEER-08, PEER-12). Before
-  PRV-10 ships no principal key certifies a device key, so a device seat's pins
-  qualify only on its own node.
+  a blind peer holds are encrypted to its principals' device keys, or a
+  token-key-only node's token key (PEER-12). Before PRV-10 ships no principal
+  key certifies a device key, so a device seat's pins qualify only on its own
+  node.
 - **Principal key**: A principal's root key, kept offline or in a
   platform-protected key store and never kept by a Cairn component (the
   principal's own key tooling signs with it), which certifies its device keys

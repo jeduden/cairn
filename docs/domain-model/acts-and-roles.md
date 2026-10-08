@@ -46,7 +46,7 @@ exactly one kind (LANE-31).
     token, a seat key or a service account's certificate unless that removes a
     pin from a restore block or stops principal acts arriving (SEC-27, PEER-06),
     turn capture on, and turn off the room-view component, the launcher, the
-    peer component, the publish component, a bridge or the git carrier.
+    peer component, the publish component or a bridge.
   - **Neutral:** mark a room ready, its **ready mark** (the owner or a principal
     whose device seat in the room is a moderator), or abandoned, its **abandoned
     mark** (the owner), acknowledge an overlap, record a `met`, `not met` or
@@ -75,8 +75,8 @@ exactly one kind (LANE-31).
     role, set a room's admission, appoint a moderator or the facilitator, stamp
     a pin version, name a successor, offer a handover, record a trust grant,
     allow notices for a room or opt in to them, enable a bridge, which turns the
-    bridge component on while any bridge stands enabled, or the git carrier, set
-    a room setting, publish, apply a purge request, change a retention policy,
+    bridge component on while any bridge stands enabled, set a room setting,
+    publish, apply a purge request, change a retention policy,
     accept configuration (recording its digest), enroll a CI key, rotate a
     device key, retire a writer, turn capture off or pause it, enroll or revoke
     a device, peer or authenticator, mint or rotate an access token, start a
@@ -179,16 +179,16 @@ exactly one kind (LANE-31).
   in causal order (LANE-31). Seats that are members with no add, and the seat
   ingest starts, stand beside it. It covers membership, roles, appointments,
   pins, pin versions, stamps, branch links (Branch), mutes, presentations,
-  picks, bars, handovers and their offers, OWN-21's ready and abandoned marks,
-  the CI keys enrolled in the room and whether the git carrier is enabled for
-  it. It covers the successor, title, labels, assignment, visibility, admission,
-  the notice allowance and the **room settings** (whether drafts show live,
-  whether typing shows, the roles a whole-room mute leaves posting to, and the
-  **appointment rate**: how many kicks, bars and mutes an appointed moderator
-  may set per period, PEER-09, SEC-32). When acts conflict, the more restrictive
-  act wins, then the lower commitment. Concurrent picks resolve by **pick
-  order** (the facilitator's seat, then any other moderator, then the owner,
-  VIEW-22). Acts with no member seat: open (OQ-41).
+  picks, bars, handovers and their offers, OWN-21's ready and abandoned marks
+  and the CI keys enrolled in the room. It covers the successor, title, labels,
+  assignment, visibility, admission, the notice allowance and the **room
+  settings** (whether drafts show live, whether typing shows, the roles a
+  whole-room mute leaves posting to, and the **appointment rate**: how many
+  kicks, bars and mutes an appointed moderator may set per period, PEER-09,
+  SEC-32). When acts conflict, the more restrictive act wins, then the lower
+  commitment. Concurrent picks resolve by **pick order** (the facilitator's
+  seat, then any other moderator, then the owner, VIEW-22). Acts with no member
+  seat: open (OQ-41).
 - **Concurrent**: Of two acts or events: neither causally after the other;
   **causal order** puts each after every act or event it saw.
 - **Room state**: Everything the room merge derives (LANE-31).
