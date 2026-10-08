@@ -13,16 +13,18 @@ summary: >-
   principal act accepting it records its digest, since the file can change
   outside any principal act; that acceptance adds, edits or unpins its
   configuration pins (ADM-04), and is widening unless the change only cuts and
-  removes no pin from a restore block (Principal act). A repository's
+  removes no pin from a restore block⟦f:key-revocation⟧ and the acceptance re-records no pin⟦/f⟧ (Principal act). A repository's
   `.cairn.toml`, its **repository configuration**, declares no pins and may make
   only changes a cut act could make, never removing a pin from a restore block,
-  which take effect without acceptance (ADM-04). Managed policy, configuration and repository configuration are the
+  turning off restore blocks or lowering the pin budget, which take effect
+  without acceptance (ADM-04).⟦f:git-tracking⟧ It applies only to runs whose working directory
+  lies in that repository, and only to settings keys scoped to those runs.⟦/f⟧ Managed policy, configuration and repository configuration are the
   three **settings layers**. A settings layer's cut-only change only narrows
   settings; quarantine happens only as a recorded principal act⟦f:key-revocation⟧, and so does
   key revocation⟦/f⟧. The **store** is the home's files containing the
   record, its derived artifacts and payloads (§8.1).
-- **Writer**: One seat's append-only log, written on one node⟦f:paired-phone⟧ or paired phone⟦/f⟧
-  and held by any node, named by its **writer id**, derived from the seat's
+- **Writer**: One seat's append-only log, written on one node⟦f:paired-phone⟧ or paired phone⟦/f⟧⟦f:segment-exchange⟧
+  and held by any node⟦/f⟧, named by its **writer id**, derived from the seat's
   first key. Its events are hash-chained; the **chain head** at a seq is the
   hash over every event up to it.
 ⟦f:segment-exchange⟧- **Retire a writer**: Mark a writer retired: by a principal act⟦f:access-tokens⟧⟦f:principal-keys⟧, or by the
@@ -122,7 +124,10 @@ summary: >-
 - **Structural field**: A field Cairn derives from an event's shape, never from
   its text: ids, kinds, counts, tool names, key fingerprints, addresses, version
   numbers, sanitized paths and exit status, sanitized under LMK-03. Sanitized,
-  it is trusted whatever the event's trust level (PRV-06, LMK-03).
+  it is trusted whatever the event's trust level (PRV-06, LMK-03). Of them, a
+  closed path carries only ids, kinds, counts, addresses, key fingerprints and
+  version numbers; tool names and paths, though sanitized, reach the model only
+  through recall.
 - **Structural event**: An event of provenance `structural`, whose meaning lies
   only in structural fields. A hook observation keeps only a hook's structural
   fields; content a hook carries is recorded under its own class. An act's
@@ -134,7 +139,8 @@ summary: >-
   the two is its **capture gap** (I1): once capture is back on, the hook
   handlers append a structural **capture-gap marker** naming both acts to the
   writer of each run that wrote meanwhile, then move its ingest position past
-  what it wrote.
+  what it wrote. The two acts also show the node-wide capture gap on Runs and
+  Health, covering the runs that began and ended within it.
 - **Ingest marker**: What a hook handler leaves when its hook budget cuts it
   short, so the next hook handler or `cairn ingest` resumes it (NFR-02).
   **Ingest** is reading a transcript into the record, by the hook handlers
@@ -165,10 +171,17 @@ summary: >-
 - **Quarantine**: Recorded, reversible exclusion of an event⟦f:landmarks⟧, span⟦/f⟧, run, writer
   or derived artifact from recall⟦f:export-bundles⟧, the trusted-only export⟦/f⟧ and restore blocks⟦f:landmarks⟧, and landmark text (LMK-04
   keeps its counts)⟦/f⟧, on the node that records it, without deletion (I5).
+  Quarantining a pin quarantines its creating event and every version event,
+  taking it out of every restore block, widening when it restored; a
+  quarantined version event counts for nothing: the newest version not
+  quarantined restores, and quarantining the version that restores is widening
+  (Principal act).
 ⟦f:purge-retention⟧- **Purge**: Deletion of content, appending a **tombstone** naming the purged
   range, which views show in its place (ADM-07): by a principal act, or by the
   node under a retention policy, recorded naming the policy. The only way stored
-  content is destroyed (I1).⟦/f⟧
+  content is destroyed (I1). A purge never erases an act's structural fields,
+  so every act keeps its effect on room state, the key set and the quarantine
+  set after its free text is purged.⟦/f⟧
 - **Gap marker**: What stands where content is missing: ⟦f:purge-retention⟧a tombstone for a purged
   range, ⟦/f⟧a capture-gap marker for a capture gap (Capture)⟦f:compute-kernel⟧, a **truncation
   marker** on capped kernel output⟦/f⟧ or a **quarantine marker** for a quarantined

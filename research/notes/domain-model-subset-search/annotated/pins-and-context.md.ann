@@ -46,7 +46,9 @@ summary: >-
 - **Pin version**: One immutable text of a pin, with its pin priority; each
   edit adds one⟦f:stamps⟧, unstamped⟦/f⟧.⟦f:stamps⟧
   A stamp covers one version; stamping a later version of the same pin replaces
-  that principal's earlier stamp on it.⟦/f⟧
+  that principal's earlier stamp on it. At most one version of a pin restores
+  to an agent: its principal's stamped version if any, else the newest
+  qualifying version.⟦/f⟧
 ⟦f:pin-candidates⟧- **Pin candidate**: Proposed pin text an agent suggested (an `assistant` event,
   PIN-02) or Cairn detected (a derived artifact over its creating `user` event,
   holding its text by address, with no provenance of its own, I10); not yet a
@@ -97,7 +99,8 @@ summary: >-
   Needs you item⟦f:stamps⟧ for each stamper, whose stamped version keeps restoring to its
   agents until it unstamps it (LANE-32)⟦/f⟧; a device-seat pin it removes also
   raises one for its author's principal and keeps restoring to every agent it
-  restored to until that principal unpins it (LANE-26).⟦/f⟧⟦/f⟧
+  would restore to, new runs included, until that principal unpins it
+  (LANE-26).⟦/f⟧⟦/f⟧
 ⟦f:intent-criteria⟧- **Intent**: A room's lead pin, of type `intent`: a goal, its criteria and
   optionally the paths it is meant to change (LANE-20). Only the owner's
   principal act changes it⟦f:ownership-transfer⟧; a new owner's revision adds a version its device
@@ -153,7 +156,7 @@ summary: >-
   restore blocks⟦f:notices⟧, opt-in notices⟦/f⟧⟦f:held-requests⟧, OWN-04's⟦f:away-policy⟧ and
   OWN-07's⟦/f⟧ templates⟦/f⟧ and compaction guidance⟦f:conversation⟧, never a post's text⟦/f⟧.
 - **Restore block**: Deterministic trusted text, built only from qualifying
-  pins, sanitized structural fields and fixed text Cairn ships, that Cairn
+  pins, the structural fields a closed path carries and fixed text Cairn ships, that Cairn
   injects after compaction, at a run's start or harness resume (INJ-02), and on
   a prompt while `restore_block.on_prompt` is on (INJ-04), carrying among other
   things qualifying pins, their room ids and the run's seat ids where each is
@@ -162,7 +165,8 @@ summary: >-
   ⟦f:principal-keys⟧PIN-11's count and reason, ⟦/f⟧⟦f:access-tokens⟧PEER-06's note that later pins may be missing, ⟦/f⟧⟦f:landmarks⟧a
   landmark index, ⟦/f⟧a recall hint⟦f:facilitator⟧ and LANE-33's room summary pointer⟦/f⟧.
 ⟦f:landmarks⟧- **Landmark index**: The current run's landmarks, each with its address range,
-  as a restore block lists them (INJ-01).⟦/f⟧
+  as a restore block lists them, built there only from the structural fields a
+  closed path carries (INJ-01, Structural field).⟦/f⟧
 - **Recall hint**: The one fixed line in a restore block saying that the recall
   tools reach the full history (INJ-01).
 ⟦f:notices⟧- **Opt-in notice**: Trusted text built only from fixed text Cairn ships and
