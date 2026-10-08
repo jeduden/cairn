@@ -76,7 +76,8 @@ summary: >-
 ⟦f:results-and-verdicts⟧- **Comparison**: A side-by-side view of two ⟦f:git-tracking⟧branches⟦/f⟧: each one's exposure,
   results and evidence. It picks no winner.⟦/f⟧
 ⟦f:results-and-verdicts⟧- **Outcome**: What a room's runs have produced so far: the heads of the
-  ⟦f:git-tracking⟧branches⟦/f⟧ it names, their results and evidence, as verdicts assess them.⟦/f⟧
+  ⟦f:git-tracking⟧branches⟦/f⟧ it names, their results and evidence, as verdicts assess them. The room view shows it⟦f:intent-criteria⟧
+  beside the intent in force⟦/f⟧ (VIEW-21).⟦/f⟧
 ⟦f:presentations⟧- **Presentation**: What a seat put in the outcome window, such as a dev
   server's URL (inert text the person opens in their own browser), a build
   artifact, a file or a diff, with the seat and ⟦f:git-tracking⟧branch⟦/f⟧. Every presentation is
