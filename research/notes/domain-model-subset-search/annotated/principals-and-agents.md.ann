@@ -2,7 +2,7 @@
 title: "Principals and agents"
 order: "01"
 summary: >-
-  Who acts in Cairn: principals, persons⟦f:service-accounts⟧ and service accounts⟦/f⟧, managed policy, agents, runs and subagents⟦f:facilitator⟧, the facilitator⟦/f⟧, authors, members⟦f:delegation-grants⟧, delegates⟦/f⟧ and the owner.
+  Who acts in Cairn: principals⟦f:service-accounts⟧, persons and service accounts⟦/f⟧, managed policy, agents, runs and subagents⟦f:facilitator⟧, the facilitator⟦/f⟧, authors, members⟦f:delegation-grants⟧, delegates⟦/f⟧ and the owner.
 ---
 # Principals and agents
 
@@ -18,8 +18,8 @@ summary: >-
   certificate is revoked stays a service account⟦/f⟧.⟦/f⟧ Only an agent's own principal
   widens what reaches that agent (I2)⟦f:notices⟧; a room owner's notice allowance only lets
   through the opt-in notices an agent's principal opted it in to⟦/f⟧.
-- **Person**: A human principal.⟦f:principal-keys⟧ No one certifies a person's principal key.⟦/f⟧⟦f:results-and-verdicts⟧ Only
-  a person records a verdict.⟦/f⟧
+⟦f:service-accounts⟧- **Person**: A human principal.⟦f:principal-keys⟧ No one certifies a person's principal key.⟦/f⟧⟦f:results-and-verdicts⟧ Only
+  a person records a verdict.⟦/f⟧⟦/f⟧
 ⟦f:service-accounts⟧- **Service account**: A non-human principal with its own ⟦f:principal-keys⟧principal key⟦/f⟧,
   certified by a person, another service account or managed policy, and
   revocable only by its certifier: managed policy revokes one it lists by no
@@ -86,7 +86,7 @@ summary: >-
   in the room⟦f:paired-phone⟧, but a paired phone's,⟦/f⟧ has every room capability, for room acts
   and the principal acts that need one⟦f:facilitator⟧, except writing a room summary⟦/f⟧; its room
   acts edit and unpin only pins its principal wrote from a device seat that do
-  not restore⟦f:stamps⟧ unstamped⟦/f⟧⟦f:moderation⟧, and make a list removal of any pin⟦f:intent-criteria⟧ but the intent⟦f:results-and-verdicts⟧ or a
+  not qualify⟦f:stamps⟧ unstamped⟦/f⟧⟦f:moderation⟧, and make a list removal of any pin⟦f:intent-criteria⟧ but the intent⟦f:results-and-verdicts⟧ or a
   verdict⟦/f⟧⟦/f⟧⟦/f⟧, while its agents' run seats have only their role⟦f:moderation⟧ and any appointment⟦/f⟧.
   ⟦f:moderation⟧No one may kick⟦f:shared-rooms⟧⟦f:principal-keys⟧, bar⟦/f⟧⟦/f⟧ or mute the owner⟦f:principal-keys⟧ or any key that chains to its principal
   key⟦/f⟧ (LANE-25). ⟦/f⟧"Owner" means nothing else, except in the persona name
