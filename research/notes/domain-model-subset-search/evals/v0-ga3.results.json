@@ -1,0 +1,275 @@
+[
+ {
+  "cand": "v0-ga3-1",
+  "lens": "all",
+  "model": "sonnet",
+  "findings": [
+   {
+    "type": "undefined",
+    "quote": "node only as a quarantine request that node's principal applies.",
+    "problem": "I5's only cross-node path depends on a quarantine request (and the Event and Provenance entries add an erasure request), but neither is defined: both are absent from the closed list of qualified requests, and no principal act class covers sending or applying one (only 'apply a purge request' is classed). Two implementers cannot agree on who sends one, what it carries or how it is applied.",
+    "fix": "Add 'quarantine request' and 'erasure request' to Qualified requests, with sender, addressee and the class (neutral or widening) of the principal act that sends and of the act that applies each.",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "undefined",
+    "quote": "Either names the writer's last accepted seq.",
+    "problem": "The Retire a writer definition ends with 'Either', which has no antecedent (it names only a principal act), and never says what retirement does: whether later events are refused, who may mark it, or how other nodes treat it. The act is classed widening yet has no stated effect.",
+    "fix": "Replace with a complete definition: 'Retire a writer: a principal act naming the writer's last accepted seq; events after it are refused and counted (I6)', or cite the requirement that fixes the effect.",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "Acts with no member seat: open (OQ-41).",
+    "problem": "The room merge, which I10 requires to be deterministic, has no rule for acts recorded for a room by a principal with no member seat in it. Three places leave it open, so two implementers derive different room state for such acts.",
+    "fix": "State one rule, for example that such acts are shown by address in the acting principal's personal room and never counted by the room merge, until OQ-41 closes.",
+    "severity": "minor"
+   },
+   {
+    "type": "contradiction",
+    "quote": "revoke a seat key or a service account's certificate, turn capture on, and",
+    "problem": "Revoking a seat key is classed a cut act, yet the model says any principal act that removes a pin from a restore block is widening, and that revoking a device stays widening because it can drop pins. Revoking a device seat's key can equally stop its pins qualifying.",
+    "fix": "Say that revoking a seat key never changes any restore block, or class the revocation of a device seat's key as widening like revoking a device.",
+    "severity": "minor"
+   },
+   {
+    "type": "contradiction",
+    "quote": "boundaries B1 to B3 and the launcher, forbid risk acceptance and certify",
+    "problem": "I4 and Boundary define only B0, B1 and B3 ('Managed policy can disable B1 and B3'), but managed policy and the Core component text speak of 'B1 to B3', implying a B2 that the model never defines.",
+    "fix": "Write 'B1 and B3' here and in 'each B1 to B3 component's own entry point', or define B2.",
+    "severity": "minor"
+   },
+   {
+    "type": "useless",
+    "quote": "An ephemeral sign that a seat is connected, or typing (a",
+    "problem": "Presence hints, typing hints and live drafts (and the room settings that toggle them) are never stored, so they need a live link between nodes. No component can carry one: the core opens no socket, B1 is local only, and B3 does outbound publishing and segment exchange. Nothing can create or reach them.",
+    "fix": "Name the component and boundary that carries presence hints, or drop presence hint, typing hint, draft and the two live-display room settings.",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "An integer the pin's author sets with it, lower first, the",
+    "problem": "Pin priority is set by the pin's author alone and orders the pin budget, but the model does not say whether it belongs to the pin or to a version, or whether a stamp covers it. An author whose pin the principal stamped or a trust grant covers can set priority 0 and push the principal's own constraints out of the verbatim restore, leaving only their id and count (I3).",
+    "fix": "Add: 'priority belongs to the pin version, so a stamp covers it, and qualifying pins the agent's own principal wrote order before those of other authors.'",
+    "severity": "minor"
+   }
+  ]
+ },
+ {
+  "cand": "v0-ga3-2",
+  "lens": "all",
+  "model": "sonnet",
+  "findings": [
+   {
+    "type": "gap",
+    "quote": "**Trusted-only export**: The JSONL of the events trusted for the principal's",
+    "problem": "Trust level is per event, but the free text of a cut or neutral principal act is untrusted even inside a trusted event. The export selects whole events by trust level, so that text can leave labelled trusted for downstream memory systems, and two implementers would either strip it or ship it.",
+    "fix": "Say the export carries the events trusted for the principal's agents with the free text of cut and neutral principal acts left out.",
+    "severity": "minor"
+   },
+   {
+    "type": "contradiction",
+    "quote": "**Access token**: A short-lived credential a principal mints to enroll a",
+    "problem": "An access token is short-lived, so it needs an expiry, yet the Expire act entry says that before PRV-10 ships no expiry can be set but a delegation or acceptance grant's. Peer enrollment and invite links would then have tokens with no expiry before PRV-10.",
+    "fix": "State that before PRV-10 ships an access token has no expiry and is single use or ends only by revocation, or add access tokens to the expiries that can be set before PRV-10.",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "Acts with no member seat: open (OQ-41).",
+    "problem": "The model says a stamper may still unstamp after the owner left, and routes principal acts on a room the principal has no member seat in to its personal room. Whether the room merge counts such an act is left open, so room state for exactly these acts differs between implementers (I10).",
+    "fix": "Add a one-line rule that the room merge counts a cut act recorded in the personal room naming the room, unstamp at least, or mark the unstamp case as depending on OQ-41.",
+    "severity": "minor"
+   },
+   {
+    "type": "security",
+    "quote": "and writer live under I8 rests on OQ-39.",
+    "problem": "A paired phone has no home, yet it holds a device key that signs principal acts and the key sealing its device seat's writer. I8 binds all local state to a principal's home, and this leaves the phone's key custody undefined.",
+    "fix": "State the minimum rule now, for example that the phone's keys stay in the phone's platform key store and never leave it, leaving only the writer's location to OQ-39.",
+    "severity": "minor"
+   },
+   {
+    "type": "useless",
+    "quote": "**Working view**: Whatever is currently in the model's context window. Never",
+    "problem": "Working view is defined but nothing else in the candidate mentions it. Nothing creates, reads or acts on it, and the Replay tab's context lens is defined without reference to it.",
+    "fix": "Remove the entry, or tie it to the context lens (the context lens shows the working view at an event).",
+    "severity": "minor"
+   }
+  ]
+ },
+ {
+  "cand": "v0-ga3-3",
+  "lens": "all",
+  "model": "sonnet",
+  "findings": [
+   {
+    "type": "useless",
+    "quote": "**Working view**: Whatever is currently in the model's context window. Never",
+    "problem": "Working view is defined but no other concept, act, surface or rule in the candidate creates, reads or refers to it (the Replay tab's context lens speaks of the context window directly).",
+    "fix": "Drop the Working view entry, or have the context lens name it (\"the context lens shows the Working view at an event\").",
+    "severity": "minor"
+   },
+   {
+    "type": "useless",
+    "quote": "**Pull-request author**: The outside party whose commits a foreign room's",
+    "problem": "Nothing in the candidate creates a binding statement, matches commits to an author, or shows a pull-request author anywhere (Import, Foreign room and the room view never mention it), so the concept and the binding statement cannot be reached or acted on.",
+    "fix": "Remove the entry, or add the import or room-view rule that uses the match and the binding statement.",
+    "severity": "minor"
+   },
+   {
+    "type": "contradiction",
+    "quote": "token, a seat key, turn capture on, and",
+    "problem": "Revoking a seat key is classed as a cut act, yet the candidate says any principal act that removes a pin from a restore block is widening whatever its verb, and revoking a device or peer is widening because it can drop pins and stop acts arriving. A device seat's certified pins qualify through its seat key chain, so revoking that key can drop them in the same way.",
+    "fix": "State that revoking a seat key never removes a pin from a restore block (so it stays cut), or class the revocation of a device seat's key as widening like a device revocation.",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "**Quota**: A limit on storage or events, per room, node, writer received from",
+    "problem": "The candidate says nothing about what happens when a quota is reached. I1 allows loss only by redaction, purge or retention policy, and Purge is said to be the only way stored content is destroyed, so an implementer cannot tell whether a quota refuses new local events, evicts, truncates or pauses capture, and the first three break I1.",
+    "fix": "Add: a quota only refuses events received from a peer or bundle or pauses capture with a counter and a capture gap; it never removes or drops an event this node recorded.",
+    "severity": "minor"
+   },
+   {
+    "type": "contradiction",
+    "quote": "A paired phone's personal-room seat has no role",
+    "problem": "The same paragraph says a seat with no role, other than the owner's device seats, is a viewer, and Owner excludes a paired phone from the owner's capabilities, so the phone seat is both role-less and, by the default rule, a viewer (with a role request). Two implementers will give it different capabilities.",
+    "fix": "Say \"A paired phone's personal-room seat is a viewer limited to its device scope\" or exempt it from the default-viewer sentence.",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "**Delegated task**: The text of a delegation: a subagent's from its harness,",
+    "problem": "A subagent's delegated task is model-written text from the parent run and arrives as the subagent's first input, but no provenance class is stated for it. The `user` events recorded in interactive mode are a trusted source, so recording it as the harness's user input would make parent-model text trusted outside I2's closed paths.",
+    "fix": "Add: a subagent's delegated task is recorded as untrusted `harness_text`, never as a `user` event, since it starts no user turn.",
+    "severity": "minor"
+   }
+  ]
+ },
+ {
+  "cand": "v0-ga3-4",
+  "lens": "all",
+  "model": "sonnet",
+  "findings": [
+   {
+    "type": "undefined",
+    "quote": "permission grant, reject a foreign room, decline a join request, tighten a",
+    "problem": "Rejecting a foreign room is classed as a cut act, but the model never says what it does (stop holding the room, drop its pins and stamps, quarantine it). If it stops the room's own device-seat pins or stamped versions restoring, it removes pins from a restore block and so would be widening by the model's own rule, which makes the class unverifiable.",
+    "fix": "Define the act in Foreign room, e.g. 'reject a foreign room: stop recalling it and show it as rejected; it removes nothing from a restore block', or move it to widening if it can.",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "Acts with no member seat: open (OQ-41).",
+    "problem": "The room merge is the one rule for all room state, yet it leaves open whether an act by a principal with no member seat counts. The model's own paths produce such acts: a stamper who left unstamping ('a stamper may still unstamp'), a named successor or handover recipient outside the room accepting, an owner acting after all its seats left. Two implementers derive different pin lists and ownership, against I10.",
+    "fix": "State a rule, e.g. 'An act by a principal with no member seat counts only if it is a cut act or the acceptance of a handover or succession; any other is shown by address and does not count.'",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "(its ordered posts), seats, pins, and branches in any repositories, each named",
+    "problem": "The conversation is 'ordered posts', but no order is given, and the room merge list covers neither posts nor the conversation. Concurrent posts from different writers can be ordered differently by two implementers, so the Timeline differs and a rebuild may not reproduce it (I10).",
+    "fix": "Write '(its posts in causal order, concurrent ones by the lower commitment)'.",
+    "severity": "minor"
+   },
+   {
+    "type": "undefined",
+    "quote": "the node, by `cairn install`, the plugin or the managed install path, recorded",
+    "problem": "'The plugin' and 'the managed install path' are install routes used as Cairn things but never defined, while I7 allows harness configuration changes only through explicit install and uninstall operations. It is unclear whether these routes are such operations and show the change first.",
+    "fix": "Say 'by `cairn install`, or by an install that I7 and managed policy allow', or define the plugin and managed install path as install forms of `cairn install`.",
+    "severity": "minor"
+   },
+   {
+    "type": "useless",
+    "quote": "Whatever is currently in the model's context window. Never",
+    "problem": "Working view is defined but nothing in the candidate creates it, reads it or acts on it; the context lens shows past windows reconstructed from the record, and no rule or relation mentions the working view.",
+    "fix": "Drop the Working view entry, or tie it to a use, e.g. 'the context lens shows the working view at an event'.",
+    "severity": "minor"
+   }
+  ]
+ },
+ {
+  "cand": "v0-ga3-5",
+  "lens": "all",
+  "model": "sonnet",
+  "findings": [
+   {
+    "type": "contradiction",
+    "quote": "forensics; the node's principal chooses which fork to keep (PEER-10).",
+    "problem": "\"Both kept for forensics\" and \"chooses which fork to keep\" cannot both hold literally; if choosing keeps one and drops the other, that is a loss I1 does not list among its exceptions.",
+    "fix": "Say the principal chooses which fork the node's derived artifacts follow, both forks staying in the record (I1).",
+    "severity": "minor"
+   },
+   {
+    "type": "security",
+    "quote": "- **Trusted-only export**: The JSONL of the events trusted for the principal's",
+    "problem": "Trust level and Trusted sources make the free text of a cut or neutral principal act untrusted even when its event is trusted, but the export is defined as whole trusted events, so those stated reasons would reach downstream memory systems as trusted.",
+    "fix": "Define it as the events trusted for the principal's agents, with the free text of cut and neutral principal acts left out.",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "bar, a mute or a handover offer (LANE-25). It ends an access token, recorded",
+    "problem": "Access tokens and grants name the node that records their expire act, but for a bar, a mute or a handover offer only \"a node with a device key\" is given, so the barred or muted principal's own node could record the act that ends its restriction.",
+    "fix": "Add \"recorded by the node of the principal that set it\" after the bar, mute and handover offer clause.",
+    "severity": "minor"
+   },
+   {
+    "type": "useless",
+    "quote": "- **Pull-request author**: The outside party whose commits a foreign room's",
+    "problem": "The concept and its binding statement are defined, but nothing in the candidate creates, consumes or acts on them, and no rule says what a match changes, so whether it confers any trust (I8) is unstated.",
+    "fix": "Drop the concept, or add that a match only attributes the bundle's commits and confers no trust.",
+    "severity": "minor"
+   },
+   {
+    "type": "useless",
+    "quote": "- **Working view**: Whatever is currently in the model's context window. Never",
+    "problem": "No other statement uses the working view; nothing creates, reads or acts on it, and the context lens that shows the context window at an event does not refer to it.",
+    "fix": "Drop the concept, or tie it to the context lens (\"the context lens shows the working view at an event\").",
+    "severity": "minor"
+   }
+  ]
+ },
+ {
+  "cand": "v0-ga3-6",
+  "lens": "all",
+  "model": "sonnet",
+  "findings": [
+   {
+    "type": "gap",
+    "quote": "and writer live under I8 rests on OQ-39.",
+    "problem": "A paired phone is a device with no home that holds its own device key and seals its own writer, yet I8 binds all local state to one principal's home. The candidate leaves open where the phone's keys live and how they are protected, so two implementers will build different custody and I8 is not upheld for this concept.",
+    "fix": "State the rule: the phone's keys live only in the phone's platform key store, its writer is held in the paired node's home, and the phone keeps no other Cairn state.",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "Acts with no member seat: open (OQ-41).",
+    "problem": "The room merge states no rule for acts recorded by a principal with no member seat in the room, although room state must be a deterministic function of the logs (I10). Two nodes could derive different room state from the same logs.",
+    "fix": "Say that the room merge does not count such an act and the room shows it only by address, as it shows a cross-room post.",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "permission grant, reject a foreign room, decline a join request, tighten a",
+    "problem": "Rejecting a foreign room is classed as a cut principal act, but no entry says what it does (stop recall, quarantine its writers, stop holding it, drop its pins from restore blocks). Its effect is unspecified, and whether it removes a pin from a restore block decides if it is cut or widening.",
+    "fix": "Define the act in the Foreign room entry, for example: rejecting a foreign room quarantines its writers on this node and removes nothing from any restore block.",
+    "severity": "minor"
+   },
+   {
+    "type": "security",
+    "quote": "posts and pins written from device seats a device key of that principal",
+    "problem": "Pins and posts of the principal's own agents are trusted only within the signing device key's device scope, but a trust grant covers the grantee's pins and posts without that limit. A narrowly scoped or compromised device of the grantee could then push restoring pins to the grantor's agents that the grantee's own scope would not allow.",
+    "fix": "Add 'within that key's device scope' after 'certified' in the Trust grant entry, and the same limit in I2's trust-grant clause.",
+    "severity": "minor"
+   },
+   {
+    "type": "useless",
+    "quote": "Whatever is currently in the model's context window. Never",
+    "problem": "Working view is defined but nothing in the candidate creates, shows, records or acts on it. The context lens shows what the window held at a past event, which is a different thing.",
+    "fix": "Drop the entry, or tie it to a use, for example 'the context lens shows the working view as it stood at an event'.",
+    "severity": "minor"
+   }
+  ]
+ }
+]

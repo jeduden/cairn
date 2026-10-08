@@ -1,0 +1,39 @@
+{
+  "findings": [
+    {
+      "type": "contradiction",
+      "quote": "forensics; the node's principal chooses which fork to keep (PEER-10).",
+      "problem": "\"Both kept for forensics\" and \"chooses which fork to keep\" cannot both hold literally; if choosing keeps one and drops the other, that is a loss I1 does not list among its exceptions.",
+      "fix": "Say the principal chooses which fork the node's derived artifacts follow, both forks staying in the record (I1).",
+      "severity": "minor"
+    },
+    {
+      "type": "security",
+      "quote": "- **Trusted-only export**: The JSONL of the events trusted for the principal's",
+      "problem": "Trust level and Trusted sources make the free text of a cut or neutral principal act untrusted even when its event is trusted, but the export is defined as whole trusted events, so those stated reasons would reach downstream memory systems as trusted.",
+      "fix": "Define it as the events trusted for the principal's agents, with the free text of cut and neutral principal acts left out.",
+      "severity": "minor"
+    },
+    {
+      "type": "gap",
+      "quote": "bar, a mute or a handover offer (LANE-25). It ends an access token, recorded",
+      "problem": "Access tokens and grants name the node that records their expire act, but for a bar, a mute or a handover offer only \"a node with a device key\" is given, so the barred or muted principal's own node could record the act that ends its restriction.",
+      "fix": "Add \"recorded by the node of the principal that set it\" after the bar, mute and handover offer clause.",
+      "severity": "minor"
+    },
+    {
+      "type": "useless",
+      "quote": "- **Pull-request author**: The outside party whose commits a foreign room's",
+      "problem": "The concept and its binding statement are defined, but nothing in the candidate creates, consumes or acts on them, and no rule says what a match changes, so whether it confers any trust (I8) is unstated.",
+      "fix": "Drop the concept, or add that a match only attributes the bundle's commits and confers no trust.",
+      "severity": "minor"
+    },
+    {
+      "type": "useless",
+      "quote": "- **Working view**: Whatever is currently in the model's context window. Never",
+      "problem": "No other statement uses the working view; nothing creates, reads or acts on it, and the context lens that shows the context window at an event does not refer to it.",
+      "fix": "Drop the concept, or tie it to the context lens (\"the context lens shows the working view at an event\").",
+      "severity": "minor"
+    }
+  ]
+}

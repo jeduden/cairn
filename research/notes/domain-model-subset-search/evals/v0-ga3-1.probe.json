@@ -1,0 +1,51 @@
+{"findings": [
+  {
+    "type": "undefined",
+    "quote": "node only as a quarantine request that node's principal applies.",
+    "problem": "I5's only cross-node path depends on a quarantine request (and the Event and Provenance entries add an erasure request), but neither is defined: both are absent from the closed list of qualified requests, and no principal act class covers sending or applying one (only 'apply a purge request' is classed). Two implementers cannot agree on who sends one, what it carries or how it is applied.",
+    "fix": "Add 'quarantine request' and 'erasure request' to Qualified requests, with sender, addressee and the class (neutral or widening) of the principal act that sends and of the act that applies each.",
+    "severity": "needs-fix"
+  },
+  {
+    "type": "undefined",
+    "quote": "Either names the writer's last accepted seq.",
+    "problem": "The Retire a writer definition ends with 'Either', which has no antecedent (it names only a principal act), and never says what retirement does: whether later events are refused, who may mark it, or how other nodes treat it. The act is classed widening yet has no stated effect.",
+    "fix": "Replace with a complete definition: 'Retire a writer: a principal act naming the writer's last accepted seq; events after it are refused and counted (I6)', or cite the requirement that fixes the effect.",
+    "severity": "needs-fix"
+  },
+  {
+    "type": "gap",
+    "quote": "Acts with no member seat: open (OQ-41).",
+    "problem": "The room merge, which I10 requires to be deterministic, has no rule for acts recorded for a room by a principal with no member seat in it. Three places leave it open, so two implementers derive different room state for such acts.",
+    "fix": "State one rule, for example that such acts are shown by address in the acting principal's personal room and never counted by the room merge, until OQ-41 closes.",
+    "severity": "minor"
+  },
+  {
+    "type": "contradiction",
+    "quote": "revoke a seat key or a service account's certificate, turn capture on, and",
+    "problem": "Revoking a seat key is classed a cut act, yet the model says any principal act that removes a pin from a restore block is widening, and that revoking a device stays widening because it can drop pins. Revoking a device seat's key can equally stop its pins qualifying.",
+    "fix": "Say that revoking a seat key never changes any restore block, or class the revocation of a device seat's key as widening like revoking a device.",
+    "severity": "minor"
+  },
+  {
+    "type": "contradiction",
+    "quote": "boundaries B1 to B3 and the launcher, forbid risk acceptance and certify",
+    "problem": "I4 and Boundary define only B0, B1 and B3 ('Managed policy can disable B1 and B3'), but managed policy and the Core component text speak of 'B1 to B3', implying a B2 that the model never defines.",
+    "fix": "Write 'B1 and B3' here and in 'each B1 to B3 component's own entry point', or define B2.",
+    "severity": "minor"
+  },
+  {
+    "type": "useless",
+    "quote": "An ephemeral sign that a seat is connected, or typing (a",
+    "problem": "Presence hints, typing hints and live drafts (and the room settings that toggle them) are never stored, so they need a live link between nodes. No component can carry one: the core opens no socket, B1 is local only, and B3 does outbound publishing and segment exchange. Nothing can create or reach them.",
+    "fix": "Name the component and boundary that carries presence hints, or drop presence hint, typing hint, draft and the two live-display room settings.",
+    "severity": "minor"
+  },
+  {
+    "type": "gap",
+    "quote": "An integer the pin's author sets with it, lower first, the",
+    "problem": "Pin priority is set by the pin's author alone and orders the pin budget, but the model does not say whether it belongs to the pin or to a version, or whether a stamp covers it. An author whose pin the principal stamped or a trust grant covers can set priority 0 and push the principal's own constraints out of the verbatim restore, leaving only their id and count (I3).",
+    "fix": "Add: 'priority belongs to the pin version, so a stamp covers it, and qualifying pins the agent's own principal wrote order before those of other authors.'",
+    "severity": "minor"
+  }
+]}

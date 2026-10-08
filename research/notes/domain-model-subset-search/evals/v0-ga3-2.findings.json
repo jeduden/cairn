@@ -1,0 +1,47 @@
+[
+ {
+  "type": "gap",
+  "quote": "**Trusted-only export**: The JSONL of the events trusted for the principal's",
+  "problem": "Trust level is per event, but the free text of a cut or neutral principal act is untrusted even inside a trusted event. The export selects whole events by trust level, so that text can leave labelled trusted for downstream memory systems, and two implementers would either strip it or ship it.",
+  "fix": "Say the export carries the events trusted for the principal's agents with the free text of cut and neutral principal acts left out.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "contradiction",
+  "quote": "**Access token**: A short-lived credential a principal mints to enroll a",
+  "problem": "An access token is short-lived, so it needs an expiry, yet the Expire act entry says that before PRV-10 ships no expiry can be set but a delegation or acceptance grant's. Peer enrollment and invite links would then have tokens with no expiry before PRV-10.",
+  "fix": "State that before PRV-10 ships an access token has no expiry and is single use or ends only by revocation, or add access tokens to the expiries that can be set before PRV-10.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "Acts with no member seat: open (OQ-41).",
+  "problem": "The model says a stamper may still unstamp after the owner left, and routes principal acts on a room the principal has no member seat in to its personal room. Whether the room merge counts such an act is left open, so room state for exactly these acts differs between implementers (I10).",
+  "fix": "Add a one-line rule that the room merge counts a cut act recorded in the personal room naming the room, unstamp at least, or mark the unstamp case as depending on OQ-41.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "security",
+  "quote": "and writer live under I8 rests on OQ-39.",
+  "problem": "A paired phone has no home, yet it holds a device key that signs principal acts and the key sealing its device seat's writer. I8 binds all local state to a principal's home, and this leaves the phone's key custody undefined.",
+  "fix": "State the minimum rule now, for example that the phone's keys stay in the phone's platform key store and never leave it, leaving only the writer's location to OQ-39.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "**Working view**: Whatever is currently in the model's context window. Never",
+  "problem": "Working view is defined but nothing else in the candidate mentions it. Nothing creates, reads or acts on it, and the Replay tab's context lens is defined without reference to it.",
+  "fix": "Remove the entry, or tie it to the context lens (the context lens shows the working view at an event).",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]
