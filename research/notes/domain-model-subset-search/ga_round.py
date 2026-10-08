@@ -39,6 +39,8 @@ def version(name):
 def fit(since, only=None):
     hits, seen = {}, {}
     for e in ledger():
+        if e.get('stale'):
+            continue
         v = version(e['name'])
         if (only is not None and v != only) or (only is None and v < since):
             continue

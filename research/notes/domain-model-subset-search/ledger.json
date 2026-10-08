@@ -11,7 +11,8 @@
    "core": 21,
    "unlocated": 2
   },
-  "dangling": 2
+  "dangling": 2,
+  "stale": "reviewed with an earlier eval brief, before the settled decisions were added; not comparable"
  },
  {
   "name": "g0-all",
@@ -76,7 +77,8 @@
    "principal-keys": 2,
    "results-and-verdicts": 1
   },
-  "dangling": 0
+  "dangling": 0,
+  "stale": "reviewed with an earlier eval brief, before the settled decisions were added; not comparable"
  },
  {
   "name": "g0-lowrisk",
@@ -105,7 +107,8 @@
    "store-protection": 1,
    "sandbox-risk": 1
   },
-  "dangling": 4
+  "dangling": 4,
+  "stale": "reviewed with an earlier eval brief, before the settled decisions were added; not comparable"
  },
  {
   "name": "g1-core",
@@ -1935,6 +1938,73 @@
   "dangling": 0,
   "lenses": [
    "all"
+  ]
+ },
+ {
+  "name": "v0-all-r2",
+  "features": [
+   "acceptance-grants",
+   "access-tokens",
+   "away-policy",
+   "blind-peer",
+   "bridges",
+   "browser-room-view",
+   "bundle-import",
+   "ci-attestation",
+   "compute-kernel",
+   "conversation",
+   "delegation-grants",
+   "endorsement",
+   "export-bundles",
+   "facilitator",
+   "git-carrier",
+   "git-tracking",
+   "held-requests",
+   "intent-criteria",
+   "key-revocation",
+   "landmarks",
+   "launcher",
+   "moderation",
+   "needs-you",
+   "node-clone",
+   "notices",
+   "ownership-transfer",
+   "paired-phone",
+   "peer-sync",
+   "pin-candidates",
+   "presence-proof",
+   "presentations",
+   "principal-keys",
+   "publishing",
+   "purge-retention",
+   "results-and-verdicts",
+   "room-status",
+   "room-view-surfaces",
+   "rule-levels",
+   "sandbox-risk",
+   "segment-exchange",
+   "service-accounts",
+   "shared-rooms",
+   "stamps",
+   "store-protection",
+   "trust-grants",
+   "witness-check",
+   "work-rooms"
+  ],
+  "needs_fix": 9,
+  "minor": 14,
+  "per_feature": {
+   "principal-keys": 1,
+   "core": 5,
+   "access-tokens": 1,
+   "pin-candidates": 1,
+   "git-tracking": 1
+  },
+  "dangling": 0,
+  "lenses": [
+   "consistency",
+   "security",
+   "usefulness"
   ]
  }
 ]
