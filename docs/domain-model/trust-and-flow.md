@@ -74,13 +74,15 @@ summary: >-
 - **Trust grant**: A principal's widening act trusting another principal's key
   for its own agents, in one room or everywhere. It covers that principal's
   posts and pins written from device seats a device key of that principal
-  certified, never a cross-room post shown in another room, run seats,
+  certified, within that key's device scope (PRV-10), never a cross-room post
+  shown in another room, run seats,
   token-key-only nodes or room summaries; never in a foreign room; and a post it
   covers reaches only the grantor's agents whose run has a seat in the post's
   room. A grant naming a service account whose certificate or managed-policy
   listing marks it as relaying text others wrote, or whose listing is unmarked,
-  is refused; one naming any other service account shows a warning (OWN-29). Its
-  revocation is cut.
+  is refused; one naming any other service account shows a warning, for a
+  facilitator that it reads untrusted room text, which its posts never quote
+  (Facilitator, OWN-29). Its revocation is cut.
 - **Delegation**: One agent handing another a delegated task: its subagent, or,
   under a delegation grant, another agent of the same principal, an agent on
   another of its nodes, or another principal's agent (OWN-23 to OWN-26).
@@ -113,7 +115,10 @@ summary: >-
   a peer, peer or worktree checkpoint, that the node's principal or managed
   policy sets (ADM-15). Reaching one never drops or deletes an event: what is
   received over it is refused and audited, and this node's own recording over it
-  goes on, counted and raised as a Needs you item (I1, I6).
+  goes on, counted and raised as a Needs you item (I1, I6). Its first crossing
+  by this node's own recording, at each limit set for it, is recorded as a
+  structural event in this node's device seat's personal-room writer, as a
+  refused segment is, and that item derives from it (I10).
 - **Spend**: What runs cost in model tokens or money; no quota limits it until
   OQ-26 closes.
 - **Away policy**: A principal's opt-in choice of what an unanswered held

@@ -58,7 +58,9 @@ summary: >-
   a noun, "run" has no other meaning.
 - **Subagent**: An agent the harness started for another agent. It has its own
   run, tied to its parent's run by a parent link, with its own seats and
-  writers. It takes a delegated task without a delegation grant.
+  writers, and no seat in its parent's rooms but those it joins as Join says,
+  which Cairn may suggest (LANE-23). It takes a delegated task without a
+  delegation grant.
 - **Ingested run**: A run ingested from a transcript the hook handlers did not
   watch, with origin `ingested`, whose events are untrusted (REC-22).
   Transcripts the node's principal ingests from outside `transcript.roots` land
@@ -67,8 +69,11 @@ summary: >-
   on its own node, the owner appoints as the room's facilitator, making that
   device seat an appointed moderator (SEC-32); its program, neither a Cairn
   component nor an agent, acts through that node's CLI (`cairn room-summary
-  write`). It posts and writes room summaries, answering summary requests
-  (LANE-33).
+  write`). It posts only in its own words, pointing by range link to any
+  marked range it names and never quoting or embedding it, so it relays no
+  third party's text (SEC-32), and writes room summaries, answering summary
+  requests (LANE-33). An agent on that node can act through its CLI as the
+  program does: §6.1's residual risk R7, which only a sandbox removes.
 - **Author**: The seat that wrote an event or a pin. The author's principal
   follows from the seat.
 - **Member**: A seat whose add stands and that no bar covers, or a run's or a

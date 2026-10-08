@@ -305,6 +305,7 @@ Feature: Record (REC)
     Then Cairn mints a new device key and a new seat key before that append, the new seat key starting a new seat and writer that names the old seat
     And the new seat inherits no add, role or appointment of the old seat, and, outside the personal room, joins a room only as any seat does, while a personal-room seat, a device seat's included, is a member from its first event
     And the personal room keeps its room id
+    And every event recorded before the change counts on the node as another node's, received, a "witnessed" one reading as origin "peer", and is trusted only as PRV-02 trusts received events
     And an audit entry records the node identity change
     And no event is appended under the old device key or the old seat key
 

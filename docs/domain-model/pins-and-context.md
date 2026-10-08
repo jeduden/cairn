@@ -18,8 +18,9 @@ summary: >-
   principal's agents, the intent as Intent says (before PRV-10 ships, a pin from
   this node's own device seat to this node's agents), and to agents whose
   principal's trust grant covers its author's principal outside a foreign room;
-  any version of a type that restores restores to the agents of a principal who
-  stamped it, its stamp trusted on this node. Adding, editing or unpinning a pin
+  once PRV-10 ships, any version of a type that restores restores to the agents
+  of a principal who stamped it, its stamp trusted on this node. Adding, editing
+  or unpinning a pin
   of a type that restores, written from a device seat a device key certified
   (before PRV-10 ships, this node's own device seat), is a widening principal
   act of its author's principal, and a verdict and a pin candidate's
@@ -30,7 +31,9 @@ summary: >-
   neutral unpin of its own agent's run-seat pin, and a run seat's or a
   token-key-only node's restores only once stamped.
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
-  What a stamp covers.
+  What a stamp covers. Of the versions of one pin that qualify for an agent,
+  only the newest restores to it, but one qualifying only through a trust grant
+  never displaces one the agent's principal stamped (LANE-32).
 - **Pin candidate**: Proposed pin text an agent suggested (an `assistant` event,
   PIN-02) or Cairn detected (a derived artifact over its creating `user` event,
   holding its text by address, with no provenance of its own, I10); not yet a

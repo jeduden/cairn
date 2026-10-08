@@ -23,8 +23,11 @@ summary: >-
   started where its node identity differs (a cloned image, a copied volume or a
   restored snapshot): a new node, with its own device key, or a token key, and
   its own device seat, that mints new seat keys and shares the carried-over
-  personal room (REC-24). The node's principal is the principal whose home it
-  is.
+  personal room (REC-24). On it, as on any node whose node identity changed,
+  the events recorded before the change are another node's: they count as
+  received, a `witnessed` one read as `peer`, and are trusted only as PRV-02
+  trusts received events (I8). The node's principal is the principal whose
+  home it is.
 - **Device**: A node or a paired phone. A node's device key certifies the seats
   it uses (PRV-11), a token-key-only node's token key in its place (PRV-10); a
   paired phone's rests on OQ-39.

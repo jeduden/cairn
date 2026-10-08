@@ -366,6 +366,7 @@ Feature: Principal acts (OWN)
     And a trust grant naming a run seat's key, or a service account its certificate or managed-policy listing marks as relaying text others wrote, or one a managed-policy listing names without that mark, is refused and audited, while one naming any other service account shows a warning
     And the trust grant does not cover a service account whose principal key "carol" certified
     And it does not cover a post or pin "carol" writes from a token-key-only node
+    And it does not cover a post or pin "carol" writes from a device seat outside the device scope of the device key that certified it
     And a trust grant naming the room's facilitator is recorded only after "alice" is shown that the facilitator reads untrusted room text, and covers its posts but never its room summaries
     And no role, membership or room setting makes any other principal trusted
     And "carol"'s posts in a foreign room stay untrusted for "alice"'s agent whatever trust grant covers "carol"'s key

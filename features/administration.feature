@@ -198,6 +198,7 @@ Feature: Administration and lifecycle (ADM)
     When <arrival>
     Then <expected>
     And every event accepted before is still stored and recallable
+    And where this node's own recording crossed the quota, that first crossing at the quota's limit is a structural event in its device seat's personal-room writer, from which the Needs you item derives, and a rebuild appends none
 
     Examples:
       | quota               | arrival                                             | expected                                                                                  |

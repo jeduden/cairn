@@ -145,6 +145,7 @@ Feature: Security (SEC)
       | node.deployment_mode             | interactive |
       | flag.enabled                     | false       |
       | redaction.extra_patterns         | []          |
+      | pin_budget.max_model_tokens      | 100         |
 
   @SEC-12 @P0 @I5 @pending
   Scenario Outline: quarantine takes effect immediately on the recording node and is recorded

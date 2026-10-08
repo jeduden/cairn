@@ -356,6 +356,196 @@
   {
    "id": "DM-Q",
    "title": "An agent on the facilitator's own node could use the facilitator program's exemption from the terminal test",
+   "status": "accepted",
+   "risk": "R7",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "An agent on that node can act through its CLI as the program does: §6.1's residual risk R7, which only a sandbox removes."
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "on a facilitator's node, it takes the facilitator's acts through that node's CLI as the program does (SEC-32)"
+    }
+   ]
+  },
+  {
+   "id": "DM-R",
+   "title": "A stamped pin version restores before PRV-10, though I2 and Trusted sources trust stamps only once PRV-10 ships",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "once PRV-10 ships, any version of a type that restores restores to the agents"
+    },
+    {
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "Once PRV-10 ships, a stamped version of a type that restores restores word for word"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "or, once PRV-10 ships, a version the run's principal stamped, whose stamp is so trusted"
+    },
+    {
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "Once PRV-10 ships, a stamped version of a type that restores MUST restore word for word to the stamper's own agents only"
+    }
+   ]
+  },
+  {
+   "id": "DM-S",
+   "title": "More than one version of one pin qualifies for an agent and no rule says which restores",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "only the newest restores to it, but one qualifying only through a trust grant never displaces one the agent's principal stamped"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "of the versions of one pin that so qualify for a run, only the newest MAY restore, but one qualifying only through a trust grant MUST NOT displace one the run's principal stamped"
+    },
+    {
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "a cut principal act, or a newer version takes its place under PIN-10."
+    }
+   ]
+  },
+  {
+   "id": "DM-T",
+   "title": "The origin and trust of the events a node clone carries over",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "the events recorded before the change are another node's: they count as received, a `witnessed` one read as `peer`"
+    },
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "or recorded `witnessed` before this node's node identity changed, Node)"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "Every event recorded before the change MUST then count on the node as another node's, received and not recorded there (PRV-02, I8)"
+    }
+   ]
+  },
+  {
+   "id": "DM-U",
+   "title": "A quota excess raises a Needs you item that is no function of the record (I10)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "Its first crossing by this node's own recording, at each limit set for it, is recorded as a structural event in this node's device seat's personal-room writer"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "Its first crossing of each quota, at each limit set for it, MUST be recorded as a structural event in this node's device seat in its personal room"
+    }
+   ]
+  },
+  {
+   "id": "DM-V",
+   "title": "A trust grant covers a facilitator's posts, which its program writes while reading untrusted room text",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "facilitator that it reads untrusted room text, which its posts never quote"
+    },
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "It posts only in its own words, pointing by range link to any marked range it names and never quoting or embedding it, so it relays no third party's text (SEC-32)"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "Its posts MUST be in its own words only, shown as its own statements, that point by range link to the marked range each names and never quote or embed it, so it relays no third party's text"
+    }
+   ]
+  },
+  {
+   "id": "DM-W",
+   "title": "A trust grant's coverage of posts and pins omits the certifying device key's device scope",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "within that key's device scope (PRV-10), never a cross-room post"
+    },
+    {
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "covers only the posts and pins that principal wrote from device seats a device key of that principal certified, within that key's device scope (PRV-10);"
+    }
+   ]
+  },
+  {
+   "id": "DM-X",
+   "title": "Nothing binds a room id to its creating seat, so a second create room act can take the room",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "a create room act whose seat's first key does not derive the room id it names is void and shown"
+    },
+    {
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "derived from its seat's first key and 128 random bits the creating node mints, never chosen; any other create room act naming it MUST be void and shown"
+    }
+   ]
+  },
+  {
+   "id": "DM-Y",
+   "title": "A subagent of a run working in a room has no seat there",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "no seat in its parent's rooms but those it joins as Join says, which Cairn may suggest (LANE-23)"
+    },
+    {
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "and a subagent to its parent's rooms, and MUST NOT join either without that acceptance"
+    }
+   ]
+  },
+  {
+   "id": "DM-Z",
+   "title": "Repository configuration may lower the pin budget, removing pins from a restore block with no principal act",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "enabling injection, lowering the pin budget or otherwise removing a pin from"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "lower the pin budget or otherwise remove a pin from a restore block (OWN-11)"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "or a retention policy, lowers the pin budget, loosens redaction"
+    }
+   ]
+  },
+  {
+   "id": "DM-AA",
+   "title": "A revocation that acts on no room never reaches another principal's node that holds a shared room",
+   "status": "open"
+  },
+  {
+   "id": "DM-AB",
+   "title": "A witness check runs others' code on the principal's node where the home and its keys cannot be denied",
+   "status": "open"
+  },
+  {
+   "id": "DM-AC",
+   "title": "A later run of an agent restores only its personal room's pins until it joins again; a retry's intent restore needs a join nothing gives",
+   "status": "open"
+  },
+  {
+   "id": "DM-AD",
+   "title": "A run seat of the owner's own agent that joins a room has no role, so it is a viewer with no work",
    "status": "open"
   }
  ]

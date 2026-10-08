@@ -40,7 +40,9 @@ summary: >-
   its node's CLI (SEC-32); an agent's tool call acts only from its run seat
   (OWN-12). A token-key-only node's device seat is certified by its token key,
   and that node signs no principal or expire acts.
-- **Room id**: 128 random bits its create room act fixes, never chosen
+- **Room id**: A room's id, derived from the creating seat's first key and 128
+  random bits its create room act fixes, never chosen; a create room act whose
+  seat's first key does not derive the room id it names is void and shown
   (LANE-01).
 - **Seat id**: A seat's id, derived from the room id and the seat's first key.
   Nobody chooses it.

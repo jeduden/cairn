@@ -157,8 +157,8 @@ summaries. Every pin that restores is stored and restored verbatim, or named by
 id and count when the pin budget omits it (I3, PIN-08). A pin version the
 agent's principal stamped, when its type restores, and a pin its trust grant
 covers, written from a device seat a device key of the principal the trust grant
-names certified, never a token-key-only node's (OWN-29), are trusted for that
-principal's own agents only (I2).
+names certified, never a token-key-only node's (OWN-29), are trusted, once
+PRV-10 ships, for that principal's own agents only (I2).
 
 ## 9.6 Settings keys (selected)
 
@@ -171,7 +171,7 @@ principal's own agents only (I2).
 | `restore_block.landmarks_on_start`                                                           | `false`                  | Yes, only to `false`                 |
 | `restore_block.on_prompt`                                                                    | `false`                  | Only to `false`                      |
 | `restore_block.max_model_tokens`                                                             | 2000                     | Only lower                           |
-| `pin_budget.max_model_tokens`                                                                | 1000                     | Only lower                           |
+| `pin_budget.max_model_tokens`                                                                | 1000                     | No                                   |
 | `room_summary.max_model_tokens` (the agent's principal's cap on `room_summary_get`, LANE-33) | 2000                     | Only lower                           |
 | `recall.max_k`                                                                               | 50                       | Only lower                           |
 | `redaction.extra_patterns`                                                                   | `[]`                     | Yes, add only                        |

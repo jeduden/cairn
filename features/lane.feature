@@ -16,7 +16,7 @@ Feature: Room (LANE)
     And the events after the switch to "spike" went to its personal-room seat again
     And while a role assignment gives the run's seat in "R" the viewer role, or a mute covers it, in the room state this node holds when it records each event, its events on "feature/x" go to its personal-room seat, and none is refused
     And each event belongs to exactly one seat's writer and names its run, and the run's history spans both writers, tied together by the run
-    And a room created by a principal, or by an agent for its principal, has an id of 128 random bits minted by the creating node, and its create room act is the first act of the creating seat's writer and that seat's add
+    And a room created by a principal, or by an agent for its principal, has an id derived from the creating seat's first key and 128 random bits minted by the creating node, and its create room act is the first act of the creating seat's writer and that seat's add, while a create room act naming that id from a seat whose first key does not derive it is void and shown
     And a room has at most one intent, its conversation, seats and pins, and branches in any number of repositories, each named by a branch link
     And a branch with no remote gets a provisional, node-local identity, rebound when it is pushed, without rewriting the record
     And a branch belongs to the room whose branch link names it first in causal order, a branch link that would move it to another room is void and shown, and of two concurrent branch links naming one branch from two rooms the one with the lower commitment stands and the other is shown void

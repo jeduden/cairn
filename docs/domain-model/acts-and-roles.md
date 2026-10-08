@@ -170,10 +170,12 @@ exactly one kind (LANE-31).
 - **Handover**: Transfers ownership by an offer and an acceptance. Succession is
   the other path to ownership.
 - **Stamp**: The act of a principal with a seat in the room on one pin version,
-  after being shown its exact text, author and key fingerprint. A stamped
-  version of a type that restores restores word for word to that principal's own
-  agents only. An edit, an unpin or a list removal leaves a stamped version
-  restoring until its stamper unstamps it, a cut principal act (LANE-32).
+  after being shown its exact text, author and key fingerprint. Once PRV-10
+  ships, a stamped version of a type that restores restores word for word to
+  that principal's own agents only. An edit, an unpin or a list removal leaves
+  a stamped version
+  restoring until its stamper unstamps it, a cut principal act, or its own
+  stamp or edit puts a newer version in its place (LANE-32).
 - **Active pin**: A pin on its room's pin list (I10).
 - **Room merge**: The one rule deriving all room state from the three act kinds,
   in causal order (LANE-31). Seats that are members with no add, and the seat

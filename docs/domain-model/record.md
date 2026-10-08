@@ -12,7 +12,8 @@ summary: >-
   repository's `.cairn.toml`, its **repository configuration**, may only
   tighten: set only the keys §9.6 marks settable there, in the direction it
   names, such as lowering a limit or turning an injection path off, never
-  enabling injection, extending recall scope, changing the trust policy or the
+  enabling injection, lowering the pin budget or otherwise removing a pin from
+  a restore block, extending recall scope, changing the trust policy or the
   deployment mode, or disabling redaction or flags (SEC-11). Repository
   configuration declares no pin, and a key of it that would make a change ADM-04
   takes only from accepted configuration is ignored, audited and counted
@@ -85,7 +86,8 @@ summary: >-
   live on this node: by its hook handlers, its CLI, TUI, MCP server, launcher,
   room-view component or bridge component), `ingested` (appended by `cairn
   ingest`, whatever transcript it reads, past an ingest marker included),
-  `bundle` (read by import) or `peer` (received from a peer or a paired phone)
+  `bundle` (read by import) or `peer` (received from a peer or a paired phone,
+  or recorded `witnessed` before this node's node identity changed, Node)
   (RCL-09); the trust policy reads only whether an event was recorded on this
   node, ingested or received, and `bundle` beside `peer` is a display mark. A
   **witnessed run** is one this node's hook handlers watched. Independent of
