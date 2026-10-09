@@ -59,8 +59,14 @@ summary: >-
   room-view component, the one client that shows every surface, and the TUI, the
   CLI, the paired phone and the **harness strip** (a status line the harness
   shows) as reduced clients that say what they leave out (VIEW-14). A client of
-  the record. Its surfaces are a closed set, and unqualified, "surface" means
-  one of them; where principal acts are taken is a principal surface:
+  the record. Without the room-view component, and before the room view's
+  requirements ship (§12.2), the CLI shows the record at a terminal:
+  `cairn status` shows Health's counters and store locations (ADM-11), and
+  `cairn event search` and `expand`, `cairn landmark list`, `cairn pin list` and
+  `cairn audit` show the principal its agents' runs, events and landmarks, its
+  pins and pin candidates, and the audit log (§9.5). The room view's surfaces
+  are a closed set, and unqualified, "surface" means one of them; where
+  principal acts are taken is a principal surface:
   - **Fleet:** every live and recorded run of the principal's rooms, grouped by
     room.
   - **Room page:** one room, with the tabs Timeline, Review and Replay, the

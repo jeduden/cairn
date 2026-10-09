@@ -93,7 +93,7 @@ summary: >-
   live on this node: by its hook handlers, its CLI, TUI, MCP server, launcher,
   room-view component or bridge component), `ingested` (appended by `cairn
   ingest`, whatever transcript it reads, past an ingest marker included),
-  `bundle` (read by import) or `peer` (received from a peer or a paired phone,
+  `bundle` (imported) or `peer` (received from a peer, paired phone or backup,
   or recorded `witnessed` before this node's node identity changed, Node)
   (RCL-09); the trust policy reads only whether an event was recorded on this
   node, ingested or received, and `bundle` beside `peer` is a display mark. A
@@ -180,11 +180,11 @@ summary: >-
   receipt** lists every writer's chain head at a moment, the tamper evidence of
   VIEW-10 and SEC-27; a **purge receipt** states what a purge erased and what it
   could not (SEC-31).
-- **Backup**: A copy of a home's store and audit log, with no seat, device,
-  token or at-rest key (`cairn backup create`, ADM-06, SEC-10); reading
-  it back is a backup restore. Creating one records no principal act, only an
-  audited event (§9.5), and a copy the principal takes off the machine is its
-  own tool, outside Cairn's components (I4).
+- **Backup**: A copy of a home's store and audit log, with none of its keys
+  (`cairn backup create`, ADM-06, SEC-10); reading it back is a backup
+  restore, whose events count as received (Node). Creating one records no
+  principal act, only an audited event (§9.5), and a copy the principal takes
+  off the machine is its own tool, outside Cairn's components (I4).
 - **At-rest key**: The key that encrypts the store when encryption at rest is on
   (SEC-09).
 - **Bundle**: A reviewed export of a room, signed by the device key of the

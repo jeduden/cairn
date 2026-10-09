@@ -74,10 +74,14 @@ Feature: Administration and lifecycle (ADM)
   Scenario: a backup restore keeps every later removal and never reuses a writer's log
     Given an isolated Cairn home
     And a home with closed segments, an open segment, payloads, derived artifacts and an audit log
+    And a quarantine in force in the home
     And a backup taken by "cairn backup create", followed by a purge of run "run-a" and the unpin of a pin
     When the person runs "cairn backup restore" as a widening principal act
     Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device or at-rest key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was reinstated
+    And before it was confirmed, the backup restore named each pin of the copy that will not restore once its events count as received
+    And every event the copy holds counts on the node as received, a "witnessed" one reading as origin "peer", and is trusted only as PRV-02 trusts received events
+    And that quarantine stays in force on the node until a release there
     And every event and payload outside run "run-a" recalled before the backup is recalled identically
     And run "run-a" stays purged and the unpinned pin stays unpinned
     And each local seat the copy contains is followed by a new seat and writer under a newly minted seat key, which names the old seat and inherits no add or role of it, audited, and no reinstated writer's log gains an event or reuses a seq

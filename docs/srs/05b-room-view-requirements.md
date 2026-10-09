@@ -16,7 +16,13 @@ The room-view family of §5, kept in its own file. Each table lists:
 VIEW covers what a person reads in the room view: the browser, through
 the room-view component (B1), and the TUI, the CLI, the paired phone and
 the harness strip as reduced clients that say what they leave out
-(VIEW-14). A paired phone signs with its own device key and seals its
+(VIEW-14). Without the room-view component, and before VIEW's rows ship
+(§12.2), the CLI shows the record at a terminal: `cairn status` shows
+Health's counters and store locations (ADM-11), and `cairn event search`
+and `expand`, `cairn landmark list`, `cairn pin list` and `cairn audit`
+show the principal its agents' runs, events and landmarks, its pins and
+pin candidates, and the audit log (§9.5). A paired phone signs with its
+own device key and seals its
 own device seat's writer; the node it pairs with holds that writer. A
 paired phone never joins a room: its acts go to its device seat in the
 personal room, naming the room, and that room shows them by address

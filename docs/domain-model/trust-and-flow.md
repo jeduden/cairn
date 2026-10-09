@@ -173,9 +173,10 @@ summary: >-
   template, or a new run from a worktree checkpoint, whose join to the room the
   retry itself asks for (OWN-28, LANE-23).
 - **Counter**: A count of dropped, rejected, redacted, truncated, coalesced,
-  timed-out or failed operations of one kind, each also written to the **audit
-  log**, the node's append-only log of Cairn's own operations (OPS-01), shown on
-  Health until acknowledged (`cairn counter ack`, I6, OPS-03).
+  timed-out or failed operations of one kind, each written to the node's
+  append-only **audit log** of Cairn's own operations (OPS-01), shown by
+  `cairn status` (ADM-11), failing `cairn doctor` until acknowledged
+  (`cairn counter ack`, I6, OPS-03).
 - **Canary**: `cairn canary`'s end-to-end test: it writes a **canary event**
   through the hook path and recalls it through the MCP server (OPS-04).
 - **Stat**: A count derived from the record within a recall scope, such as

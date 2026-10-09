@@ -1780,6 +1780,51 @@
      "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
     }
    ]
+  },
+  {
+   "id": "DM-DD",
+   "title": "A node clone's carried-over quarantines read as another node's, against I5's request rule",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "those quarantines are its own, recorded in its home, not another node's quarantine"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "as its principal's own, recorded in its home, not as a quarantine request from another node (PEER-11)"
+    }
+   ]
+  },
+  {
+   "id": "DM-DE",
+   "title": "A backup restore reinstates unauthenticated events as witnessed, so an edited copy plants trusted events (stakeholder: they count as received)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "The events a backup restore reinstates count as received in the same way, even on the node that made the copy"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "count every event the copy holds as received and not recorded on this node, even on the node that made the copy"
+    }
+   ]
+  },
+  {
+   "id": "DM-DF",
+   "title": "The model names only dormant room-view surfaces as what shows a person the record and the counters in M1–M5",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/components-and-surfaces.md",
+     "quote": "`cairn status` shows Health's counters and store locations (ADM-11)"
+    },
+    {
+     "file": "docs/srs/05b-room-view-requirements.md",
+     "quote": "the CLI shows the record at a terminal"
+    }
+   ]
   }
  ]
 }

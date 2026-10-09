@@ -37,7 +37,13 @@ summary: >-
   received, a `witnessed` one read as `peer`, and are trusted only as PRV-02
   trusts received events (I8). On such a node, every quarantine in force in
   the home at the change stays in force until a release there (I5, REC-24).
-  The node's principal is the principal whose home it is.
+  The node's principal is the principal whose home it is: those quarantines
+  are its own, recorded in its home, not another node's quarantine, which
+  reaches a node only as a quarantine request its principal applies (PEER-11).
+  The events a backup restore reinstates count as received in the same way,
+  even on the node that made the copy, and every quarantine in force in the
+  copy stays in force until a release there (ADM-06); whether a copy whose
+  seals verify keeps its events as recorded on this node is open (OQ-48).
 - **Device**: A node or a paired phone. A node's device key certifies the seats
   it uses (PRV-11), a token-key-only node's token key in its place (PRV-10); a
   paired phone's rests on OQ-39.
