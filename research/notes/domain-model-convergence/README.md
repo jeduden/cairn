@@ -87,10 +87,11 @@ it cites and the grid:
 - pins and restore;
 - configuration, seats and keys.
 
-`review-brief.md` and the workflows are rewritten for this review before
-it runs. A verifier then judges each theme against the bar, and its
-default is "not blocking". The reviewers' own type labels count for
-nothing.
+[review-brief.md](review-brief.md) and
+[final-review-workflow.js](final-review-workflow.js) were rewritten for
+this review; the workflows of rounds 0 to 7 are in the history. A
+verifier then judges each theme against the bar, and its default is "not
+blocking". The reviewers' own type labels count for nothing.
 
 - A **blocking** theme breaks an invariant in M1–M5 behaviour, or sets
   two normative statements against each other. The verifier quotes the
