@@ -33,25 +33,11 @@ summary: >-
   personal room (REC-24). On it, as on any node whose node identity changed,
   the events recorded before the change are another node's: they count as
   received, a `witnessed` one read as `peer`, and are trusted only as PRV-02
-  trusts received events (I8). On such a node, every quarantine in force in
-  the home at the change stays in force until a release there (I5, REC-24).
-  The node's principal is the principal whose home it is: those quarantines
-  are its own, recorded in its home, not another node's quarantine, which
-  reaches a node only as a quarantine request its principal applies (PEER-11).
-  The events a backup restore reinstates count as received in the same way,
-  even on the node that made the copy, and every quarantine in force in the
-  copy stays in force until a release there, whichever node made the copy:
-  the restore applies each as its principal applies a quarantine request (I5,
-  ADM-06). Whether a copy whose seals verify keeps its events as recorded on
-  this node is open (OQ-48). Of the other principal acts among events so
-  received, each cut or neutral one in force at the change or in the copy
-  keeps its effect until undone there, and no widening one takes effect on
-  the node, a configuration acceptance included, until its principal takes
-  it there again (I8); whether one a device key signed takes effect once
-  PRV-10 ships is open too (OQ-48).
-  A backup restore reinstates the copy's segments and payloads, never its
-  derived artifacts: it rebuilds every one from the record and this node's
-  key set (I10, ADM-06).
+  trusts received events (I8). The events a backup restore reinstates count as
+  received in the same way, even on the node that made the copy. For both,
+  ADM-06 says which principal acts keep effect on the node, a quarantine it
+  keeps being its principal's own (open: OQ-48). A backup restore reinstates
+  the copy's segments and payloads, never its derived artifacts (I10).
 - **Device**: A node or a paired phone. A node's device key certifies the seats
   it uses (PRV-11), a token-key-only node's token key in its place (PRV-10); a
   paired phone's rests on OQ-39.

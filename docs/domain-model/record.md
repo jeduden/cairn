@@ -146,11 +146,10 @@ summary: >-
 - **Flag**: A mark Cairn sets on an event whose text matches an injection
   pattern (PRV-07); flagged text contributes only counts to landmarks (LMK-04).
 - **Quarantine**: Recorded, reversible exclusion of an event, span, run, writer
-  or derived artifact from every path that carries content to an agent and
-  from trusted-only exports (SEC-12), on the node that records it or applies
-  it by a backup restore, also after its node identity changes (Node), without
-  deletion (I5). A quarantined pin version counts as absent wherever PIN-10
-  chooses which version of a pin restores.
+  or derived artifact from every path that carries content to an agent and from
+  trusted-only exports (SEC-12), on the node that records it or carries it over
+  (ADM-06), without deletion (I5). A quarantined pin version counts as absent
+  wherever PIN-10 chooses which version of a pin restores.
 - **Purge**: Deletion of content, appending a **tombstone** naming the purged
   range, which views show in its place (ADM-07): by a principal act, or by the
   node under a retention policy, recorded naming the policy, which ages events

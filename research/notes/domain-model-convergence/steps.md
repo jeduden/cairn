@@ -8,6 +8,7 @@ target of 14,826.
 | ---- | ----------- | ------ | ------ | ---------------------- |
 | 1    | 18,177      | 0      | 2      | 0                      |
 | 2    | 18,147      | 0      | 0      | 0                      |
+| 3    | 17,419      | 0      | 0      | 0                      |
 
 ## Step 1: the open questions inside M1–M5
 
@@ -105,3 +106,34 @@ an MCP server that stops for good, a repository identity bound, recall
 that returns untrusted content, a hook handler failing open, a
 provisional branch identity rebound on push, the lack of an unlink act,
 and a locked key store. The final review reads them with the grid.
+
+## Step 3: chain passes
+
+One agent per chain wrote the chain's general rule once, in the row that
+governs it, and replaced the case clauses that restated it with a
+citation. The ledger's citations moved to the new text.
+
+| Chain                    | Rule in | Themes | Model words |
+| ------------------------ | ------- | ------ | ----------- |
+| Quarantine reach         | SEC-12  | 5      | −5          |
+| Run-seat key             | SEC-27  | 6      | −36         |
+| Recall taint             | SEC-13  | 8      | −50         |
+| Configuration acceptance | ADM-04  | 8      | −199        |
+| Pin version              | PIN-10  | 9      | −264        |
+| Backup restore and clone | ADM-06  | 9      | −174        |
+
+Each rule loosens nothing. Three of them tighten what the cases said:
+
+- a quarantine's reach over later matches now covers every path to an
+  agent;
+- recall taint flows back through a nested session's tool result;
+- each flow of SEC-13 is a MUST wherever taint is kept.
+
+The pending SEC-13 scenario gained the step for the new back flow. The
+agents noted two points for the final review:
+
+- OWN-10's "every rule level change the principal makes is a principal
+  act" sits against ADM-04's rule that a change which only tightens
+  needs no acceptance;
+- SEC-27's pending scenario has no step yet for a seat key missing from
+  where SEC-10 keeps it.
