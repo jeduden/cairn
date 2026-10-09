@@ -1,13 +1,13 @@
 ---
 id: ADR-2610091555
 title: "The initial invariants"
-status: proposed
+status: accepted
 summary: >-
   The security reviewer's record of Cairn's ten invariants as they stand
-  in docs/srs/invariants.md: the initial contract, accepted once the
-  stakeholder approves it by a comment on the pull request that adds it.
-  It replaces the change records of the draft, and every later change to
-  an invariant lands under ENG-29.
+  in docs/srs/invariants.md: the initial contract, approved by the
+  stakeholder by a comment on the pull request that adds it, on 9 October
+  2026. It replaces the change records of the draft, and every later
+  change to an invariant lands under ENG-29.
 ---
 # ADR-2610091555: The initial invariants
 
@@ -34,11 +34,10 @@ that adds this record. The file's SHA-256 is:
 3d669831fe07f49646b8a7cff9a15ae133ec70592f7ab5e56de042d63a8240ec
 ```
 
-The stakeholder approves this record, as security reviewer, by a comment
-on the pull request that adds it, naming the record's id and the hash
-above. That comment is the approval ENG-29 asks for, and it can be
-checked apart from this record. The record turns accepted with a link
-to it; until then it is proposed, and no invariant change rests on it.
+The stakeholder, @jeduden, approved this record as security reviewer on
+9 October 2026 by a [comment on jeduden/cairn#18][approval] naming the
+record's id and the hash above. That comment is the approval
+ENG-29 asks for, and it can be checked apart from this record.
 
 This record replaces the draft's change records, which are deleted; git
 history keeps them. The invariants' single source stays invariants.md,
@@ -61,3 +60,5 @@ which CLAUDE.md, AGENTS.md and README include.
   finding that would need it goes to the stakeholder.
 - The file's hash above lets a reviewer check that invariants.md still
   matches what was approved.
+
+[approval]: https://github.com/jeduden/cairn/pull/18#issuecomment-6087607800
