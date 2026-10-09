@@ -15,8 +15,10 @@ summary: >-
   another principal key. No key chains to a principal key before PRV-10 ships,
   so until then a room admits no seat of another principal, and admission,
   invites, bars and the owner's protection, which name principal keys, apply
-  only once it ships (OQ-42). A certified service account is still its own
-  principal; its **certifier** is whoever certified it. A principal key never
+  only once it ships (OQ-42), where how a seat of the owner whose key is lost,
+  such as an ended run's, then ends its add is open too. A certified service
+  account is still its own principal; its **certifier** is whoever certified
+  it. A principal key never
   certified counts as a person's, which nothing can prove; a service account
   whose certificate is revoked stays a service account. Only an agent's own
   principal widens what reaches that agent (I2); a room owner's notice allowance

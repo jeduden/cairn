@@ -756,7 +756,19 @@
   {
    "id": "DM-AN",
    "title": "Seats of an ended run or a lost device can never leave, so succession and a principal's own exit become unreachable once PRV-10 ships",
-   "status": "open"
+   "status": "deferred",
+   "oq": "OQ-42",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "where how a seat of the owner whose key is lost, such as an ended run's, then ends its add is open too"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "how a seat of the owner whose key is lost, such as an ended run's or a lost device's, ends its add, which succession (LANE-11) and an owner's leaving need"
+    }
+   ]
   },
   {
    "id": "DM-AO",
