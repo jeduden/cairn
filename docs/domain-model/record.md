@@ -152,7 +152,9 @@ summary: >-
   after its node identity changes (Node), without deletion (I5). On that node,
   no quarantined post is endorsed or reaches an agent under a trust grant,
   and no quarantined delegated task reaches a delegate in OWN-24's template
-  (SEC-12).
+  (SEC-12). A quarantined pin version never restores and counts as absent when
+  PIN-10 chooses which version of a pin restores, the intent's included; a pin
+  left with no qualifying version leaves the restore block.
 - **Purge**: Deletion of content, appending a **tombstone** naming the purged
   range, which views show in its place (ADM-07): by a principal act, or by the
   node under a retention policy, recorded naming the policy. The only way stored

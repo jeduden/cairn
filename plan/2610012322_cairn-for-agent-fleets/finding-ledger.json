@@ -923,22 +923,70 @@
   {
    "id": "DM-AY",
    "title": "Before PRV-10, nothing says which keys are another principal's",
-   "status": "open"
+   "status": "deferred",
+   "oq": "OQ-42",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "and which keys count as another principal's until then"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "until PRV-10 ships, which keys count as another principal's, on which branch ownership, a join without admission and a node clone's rooms depend"
+    }
+   ]
   },
   {
    "id": "DM-AZ",
    "title": "Any principal's seat whose key is lost cannot leave, not only the owner's",
-   "status": "open"
+   "status": "deferred",
+   "oq": "OQ-42",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "as is how a seat of any other principal whose key is lost ends its add without a kick"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "how a seat of any other principal whose key is lost ends its add without a kick, which that principal's own leaving needs"
+    }
+   ]
   },
   {
    "id": "DM-BA",
    "title": "A relaying mark's fate after a listing's removal or a certificate's revocation, and its effect on standing grants",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "stays relaying once what marked or listed it is revoked or removed"
+    },
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "no revocation or removal lifts that"
+    },
+    {
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "MUST make that grant cover nothing unless the grant causally follows it"
+    }
+   ]
   },
   {
    "id": "DM-BB",
    "title": "A pin whose newest qualifying version is quarantined: fall back or drop out",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "A quarantined pin version never restores and counts as absent when PIN-10 chooses which version of a pin restores"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "A quarantined pin version (SEC-12) MUST count as absent wherever this requirement chooses which version of a pin restores"
+    }
+   ]
   }
  ]
 }

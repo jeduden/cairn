@@ -68,8 +68,9 @@ exactly one kind (LANE-31).
     device seat's join to a room its principal has no member seat in, ask for or
     accept a join, which sends the run's events to a room other principals'
     nodes hold, endorse, loosen a rule level, turn on or change an away policy
-    other than turning it off, quarantine that removes a pin or a landmark from
-    a restore block, release a quarantine, purge or apply an erasure request,
+    other than turning it off, quarantine removing a pin, pin version or
+    landmark from a restore block, release a quarantine, purge or apply an
+    erasure request,
     export, bind a repository identity by hand or rebind it, accept open
     residual risks (OWN-22), certify a service account's principal key, assign a
     role, set a room's admission, appoint a moderator or the facilitator, stamp

@@ -94,7 +94,10 @@ summary: >-
   and its pins never carry (Facilitator, OWN-29). Its revocation is cut.
   A recorded grant covers nothing once the node's key set holds a certificate
   or listing marking the key it names as relaying, or a listing of it without
-  the mark, whatever order they arrived in (I10).
+  the mark, whatever order they arrived in (I10); no revocation or removal
+  lifts that, and a revocation of any certificate of that key, or a removal of
+  any listing of it, leaves every grant naming it that does not causally follow
+  that act covering nothing (Service account).
 - **Delegation**: One agent handing another a delegated task: its subagent, or,
   under a delegation grant, another agent of the same principal, an agent on
   another of its nodes, or another principal's agent (OWN-23 to OWN-26).

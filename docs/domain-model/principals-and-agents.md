@@ -19,9 +19,11 @@ summary: >-
   so until then a room admits no seat of another principal, and admission,
   invites, bars and the owner's protection, which name principal keys, apply
   only once it ships (OQ-42), where how a seat of the owner whose key is lost,
-  such as an ended run's, then ends its add is open too. A certified service
-  account is still its own principal; its **certifier** is whoever certified
-  it. A principal key never
+  such as an ended run's, then ends its add is open too, as is how a seat of
+  any other principal whose key is lost ends its add without a kick, and which
+  keys count as another principal's until then. A
+  certified service account is still its own principal; its **certifier** is
+  whoever certified it. A principal key never
   certified counts as a person's, which nothing can prove; a service account
   whose certificate is revoked stays a service account. Only an agent's own
   principal widens what reaches that agent (I2); a room owner's notice allowance
@@ -36,7 +38,12 @@ summary: >-
   managed-policy listing and each removal of one is recorded as a structural
   event that enters the key set of the node that recorded it from its machine's
   managed policy, and another node's only once the listed key countersigns it,
-  as a certificate; a removal enters wherever the listing it ends did (PRV-10).
+  as a certificate; a removal, needing no countersignature, enters wherever the
+  listing it ends did (PRV-10). A key marked as relaying, or listed unmarked,
+  stays relaying once what marked or listed it is revoked or removed; and a
+  revocation of any certificate of a key, or a removal of any listing of it,
+  makes every trust grant naming that key that does not causally follow that
+  act cover nothing (Trust grant).
   It can own rooms, have seats and be the principal of its own agents, such as
   CI or runner agents.
 - **Managed policy**: Settings belonging to root that an organisation sets on a

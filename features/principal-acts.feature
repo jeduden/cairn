@@ -370,6 +370,8 @@ Feature: Principal acts (OWN)
     Then the pin restores word for word to "alice"'s agent and reaches "bob"'s agent only through a tool call, enveloped
     And a trust grant naming a run seat's key, or a service account its certificate or managed-policy listing marks as relaying text others wrote, or one a managed-policy listing names without that mark, is refused and audited, while one naming any other service account shows a warning
     And a trust grant recorded before a certificate or managed-policy listing marking its key as relaying, or a listing of that key without the mark, reaches the node covers nothing once it arrives, as if it had arrived first
+    And no revocation of that certificate or removal of that listing makes the trust grant cover anything again
+    And a revocation of any certificate of a key, or a removal of any listing of it, makes every trust grant naming that key that does not causally follow it cover nothing
     And the trust grant does not cover a service account whose principal key "carol" certified
     And it does not cover a post or pin "carol" writes from a token-key-only node
     And it does not cover a post or pin "carol" writes from a device seat outside the device scope of the device key that certified it

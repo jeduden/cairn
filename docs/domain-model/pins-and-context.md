@@ -35,7 +35,8 @@ summary: >-
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
   What a stamp covers. Of the versions of one pin that qualify for an agent,
   only the newest restores to it, but one qualifying only through a trust grant
-  never displaces one the agent's principal stamped (LANE-32).
+  never displaces one the agent's principal stamped (LANE-32); a quarantined
+  version counts as absent in that choice (Quarantine).
 - **Pin candidate**: Proposed pin text an agent suggested (an `assistant` event,
   PIN-02) or Cairn detected (a derived artifact over its creating `user` event,
   holding its text by address, with no provenance of its own, I10); not yet a

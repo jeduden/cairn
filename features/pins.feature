@@ -132,7 +132,7 @@ Feature: Pins (PIN)
     And a room "L5" the run joined, with a constraint pin in it that the principal wrote from its device seat, the principal's stamp on one version of a constraint pin another principal wrote, and a constraint pin written from the device seat of the third principal, whose key the run's principal also trusts everywhere by a second trust grant, before every seat of the principal in "L5" was kicked, so that "L5" is now a foreign room, and a version the third principal added to that pin after the kick
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped constraint versions, each under its original author
-    And of the edited constraint pin the restore block includes only its newest version
+    And of the edited constraint pin the restore block includes only its newest version, or, once a widening principal act quarantines that version, its earlier one
     And the restore block includes no pin of "L4", not the stamped "fact" version and neither token-key-only node's unstamped pin
     And of the foreign room "L5" the restore block includes the principal's device-seat pin, the stamped version and the pin the second trust grant covers, by its version from before the kick, and not the version added after it
     And the restore block names "L1", "L2", "L5" and the personal room by id
