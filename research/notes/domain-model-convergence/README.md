@@ -23,9 +23,11 @@ problems, and nothing told noise from a real finding.
   which stays the same between rounds. A matcher sorts each needs-fix
   finding into a closed theme, an open one or a new one.
 - **Decisions.** A new theme that the SRS, an ADR or an earlier decision
-  already settles is written in on that decision; invariant wording,
-  ADR-level changes and new design choices go to the stakeholder in one
-  batch with options.
+  already settles is written in on that decision. A design question that
+  can wait is deferred to an open question with a milestone, by the
+  stakeholder's rule of 9 October 2026, rather than decided or edited in;
+  only a question that cannot wait (a security hole in what ships first,
+  or an invariant wording) goes to the stakeholder with options.
 - **Edits only tighten, delete or clarify**, in the model and the SRS
   together. No feature is dropped, no invariant weakened, no text trimmed
   without a ledger entry. A regression pass reviews the edited entries.
