@@ -8,18 +8,12 @@ summary: >-
 
 - **Record**: The set of writer logs a node holds. Every derived artifact
   derives from it and the node's own key set (I10); the audit log, counters and
-  **configuration** sit beside it: the principal's settings (§9.6), which a
-  repository's `.cairn.toml`, its **repository configuration**, may only
-  tighten: set only the keys §9.6 marks settable there, in the direction it
-  names, such as lowering a limit or turning an injection path off, never
-  enabling injection, lowering the pin budget or otherwise removing a pin from
-  a restore block, extending recall scope, changing the trust policy or the
-  deployment mode, or disabling redaction or flags (SEC-11). Repository
-  configuration declares no pin, and a key of it that would make a change ADM-04
-  takes only from accepted configuration is ignored, audited and counted
-  (ADM-04). Managed policy, configuration and repository configuration are the
-  three **settings layers**. The **store** is the home's files containing the
-  record, its derived artifacts and payloads (§8.1).
+  **configuration** sit beside it: the principal's settings (§9.6), some
+  changes to which apply only once accepted (ADM-04), and which a repository's
+  `.cairn.toml`, its **repository configuration**, may only tighten (SEC-11).
+  Managed policy, configuration and repository configuration are the three
+  **settings layers**. The **store** is the home's files containing the record,
+  its derived artifacts and payloads (§8.1).
 - **Writer**: One seat's append-only log, written on one node or paired phone
   and held by any node, named by its **writer id**, derived from the seat's
   first key. Its events are hash-chained; the **chain head** at a seq is the
@@ -147,9 +141,8 @@ summary: >-
   or from what an export's, a publish's or an invite's review step sends,
   recorded (I1, SEC-08).
 - **Retention policy**: A rule (`retention_policy.*`), set by the node's
-  principal or managed policy, that purges content per room and provenance class
-  after a time (I1, SEC-22); the principal's change to one is widening and
-  applies only once its configuration is accepted (ADM-04).
+  principal (ADM-04) or managed policy, that purges content per room and
+  provenance class after a time (I1, SEC-22).
 - **Flag**: A mark Cairn sets on an event whose text matches an injection
   pattern (PRV-07); flagged text contributes only counts to landmarks (LMK-04).
 - **Quarantine**: Recorded, reversible exclusion of an event, span, run, writer

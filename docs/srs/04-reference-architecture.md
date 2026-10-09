@@ -65,9 +65,8 @@ manager or an ephemeral node's entrypoint, and runs only while the act turning
 it on stands; starting `cairn ui` or `cairn launch` records no principal act,
 but `cairn ui --phone` records the widening act issuing the phone-scoped
 room-view secret (OWN-16).
-A configuration turning the room-view component or the launcher off needs no
-acceptance and stops it as soon as it applies; `cairn configuration accept`
-records the cut act turning it off.
+A configuration turning the room-view component or the launcher off applies
+at once (ADM-04, SEC-01).
 
 The core's parts:
 
@@ -101,8 +100,7 @@ signs them: a post with provenance `post`, a room summary `summary`, never
 trusted (LANE-33), every other room act with that seat's pin class, `operator`
 for a device seat and `assistant` for a run seat (LANE-31, PRV-01). A purge
 under a retention policy is not an act: the node records it naming the policy,
-whose setting was the act (the principal's change to a retention policy is
-widening and applies only once its configuration is accepted, ADM-04), and an
+whose setting was the act (ADM-04), and an
 erasure request it sends peers is `structural`, where one a principal act sends
 is `operator`. Every tombstone, and every refusal of a segment, is a
 `structural` event (PRV-01, REC-21). Every other table (search index, spans,

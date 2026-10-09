@@ -14,9 +14,8 @@ summary: >-
     own entry point, which the person, a service manager or an ephemeral node's
     entrypoint starts and which runs only while the act turning it on stands:
     for the room-view component and the launcher, the configuration acceptance
-    that turns it on, until a configuration turning it off applies, which needs
-    no acceptance and which `cairn configuration accept` records as the cut act
-    turning it off (ADM-04, SEC-01); for the bridge component, a bridge enabled
+    that turns it on, until a configuration turning it off applies (ADM-04,
+    SEC-01); for the bridge component, a bridge enabled
     for a host, while any stands), each harness adapter's transcript and hook
     part among them, the **MCP server** (the MCP tools of §9.2, one per harness
     session, serving its runs), the **kernel worker** (running the kernel's

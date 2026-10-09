@@ -62,8 +62,7 @@ exactly one kind (LANE-31).
     from a device seat a device key certified (before PRV-10 ships, this node's
     own device seat), confirm a pin candidate, change a room's visibility,
     invite a principal key, issue an invite link, choose a fork, turn on the
-    room-view component or the launcher by accepting the configuration that
-    turns it on (ADM-04), turn on the peer or publish component, issue a
+    peer or publish component, issue a
     phone-scoped room-view secret, accept a handover or succession, ask for a
     device seat's join to a room its principal has no member seat in, ask for or
     accept a join, which sends the run's events to a room other principals'
@@ -77,8 +76,8 @@ exactly one kind (LANE-31).
     a pin version, name a successor, offer a handover, record a trust grant,
     allow notices for a room or opt in to them, enable a bridge, which turns the
     bridge component on while any bridge stands enabled, set a room setting,
-    publish, apply a purge request, change a retention policy,
-    accept configuration (recording its digest), enroll a CI key, rotate a
+    publish, apply a purge request, change a retention policy, accept
+    configuration (recording its digest, ADM-04), enroll a CI key, rotate a
     device key, retire a writer, turn capture off or pause it, enroll or revoke
     a device, peer or authenticator, mint or rotate an access token, start a
     witness check, which confirms the command taken from an untrusted event

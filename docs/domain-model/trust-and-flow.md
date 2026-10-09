@@ -25,10 +25,8 @@ summary: >-
   none of them in a foreign room but the pins and stamps Foreign room names.
   Everything else is untrusted, as is a cut or neutral act's free text (OWN-11).
 - **Deployment mode**: `interactive` (a person types at the harness) or
-  `automation` (a pipeline does, the default), set per node (PRV-02, PRV-04,
-  `node.deployment_mode`);
-  changing it, loosening redaction or turning flags off applies only once
-  its configuration is accepted, as does every other change ADM-04 names.
+  `automation` (a pipeline does, the default), set per node by managed policy
+  or accepted configuration (PRV-02, PRV-04, ADM-04, `node.deployment_mode`).
 - **Trust policy**: The rule that derives each event's trust level (PRV-02); no
   settings layer changes it.
 - **Trust mark**: The sign beside an item saying where it came from and whether

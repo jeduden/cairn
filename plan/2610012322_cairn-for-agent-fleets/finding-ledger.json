@@ -166,20 +166,20 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/record.md",
-     "quote": "may only tighten: set only the keys §9.6 marks settable there, in the direction it names, such as lowering a limit or turning an injection path off"
-    },
-    {
-     "file": "docs/domain-model/record.md",
-     "quote": "Repository configuration declares no pin, and a key of it that would make a change ADM-04 takes only from accepted configuration is ignored, audited and counted"
-    },
-    {
-     "file": "docs/domain-model/pins-and-context.md",
-     "quote": "which takes effect only once the principal's widening act accepting that configuration records its digest; repository configuration declares none (ADM-04)"
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "A settings change that adds, edits or unpins a pin or otherwise removes one from a restore block"
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",
-     "quote": "A settings change that adds, edits or unpins a pin, changes the deployment mode or a retention policy"
+     "quote": "Repository configuration MUST only tighten (SEC-11): a key of it making a change this row holds MUST be ignored, audited and counted"
+    },
+    {
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "its device seat on that node adds, edits or unpins when that configuration is accepted (PIN-01, ADM-04)"
+    },
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "its **repository configuration**, may only tighten (SEC-11)"
     }
    ]
   },
@@ -523,16 +523,12 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/record.md",
-     "quote": "enabling injection, lowering the pin budget or otherwise removing a pin from"
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "otherwise removes one from a restore block, as lowering the pin budget does"
     },
     {
      "file": "docs/srs/06-security.md",
-     "quote": "lower the pin budget or otherwise remove a pin from a restore block (OWN-11)"
-    },
-    {
-     "file": "docs/srs/05a-administration-requirements.md",
-     "quote": "or a retention policy, lowers the pin budget, loosens redaction"
+     "quote": "or make a change ADM-04 holds for acceptance"
     }
    ]
   },
@@ -1270,11 +1266,15 @@
    "texts": [
     {
      "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "changing it, loosening redaction or turning flags off applies only once"
+     "quote": "set per node by managed policy or accepted configuration (PRV-02, PRV-04, ADM-04"
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",
-     "quote": "hold windows, turns flags off, or turns on a B1–B3 component MUST be accepted only from the principal's configuration"
+     "quote": "hold windows, turns flags off, or turns on a B1–B3 component MUST apply only from managed policy"
+    },
+    {
+     "file": "docs/srs/05e-provenance-requirements.md",
+     "quote": "explicit opt-in in the principal's configuration (ADM-04)"
     }
    ]
   },
@@ -1332,7 +1332,11 @@
    "texts": [
     {
      "file": "docs/domain-model/places.md",
-     "quote": "A token-key-only node signs no principal act to accept its configuration, so its deployment mode stays `automation` unless managed policy fixes it"
+     "quote": "A token-key-only node signs no principal act, so only managed policy makes a change there that ADM-04 holds for acceptance (open: OQ-06)"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "A token-key-only node signs no principal act (PRV-10), so only managed policy makes such a change there (open: OQ-06)"
     },
     {
      "file": "docs/srs/13-open-questions-and-risks.md",
@@ -2025,12 +2029,16 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "its configuration is accepted, as does every other change ADM-04 names"
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "loosens redaction, recall scope, rule levels or hold windows, turns flags off"
     },
     {
-     "file": "docs/srs/05a-administration-requirements.md",
-     "quote": "lowers the pin budget, loosens redaction, recall scope, rule levels or hold windows, turns flags off"
+     "file": "docs/domain-model/record.md",
+     "quote": "some changes to which apply only once accepted (ADM-04)"
+    },
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "or accepted configuration (PRV-02, PRV-04, ADM-04"
     }
    ]
   },

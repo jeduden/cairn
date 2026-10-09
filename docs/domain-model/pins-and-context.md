@@ -51,12 +51,9 @@ summary: >-
   agent's pin candidate is shown with its provenance `assistant`, marked
   untrusted, in every list of pin candidates and at its confirmation (PIN-02,
   PIN-05). Each confirmation also shows the pin's room, which PIN-05 fixes.
-- **Configuration pin**: A pin the principal's configuration declares, authored
-  by its device seat on that node (PIN-01), which takes effect only once the
-  principal's widening act accepting that configuration records its digest;
-  repository configuration declares none (ADM-04). Editing or removing one
-  there likewise applies only once that configuration is accepted; until then
-  the pin stays as it stood.
+- **Configuration pin**: A pin the principal's configuration declares, which
+  its device seat on that node adds, edits or unpins when that configuration is
+  accepted (PIN-01, ADM-04).
 - **Pin priority**: An integer the pin's author sets with it, lower first, each
   intent before every pin of another type (LANE-20). Qualifying pins fill the
   pin budget first from the rooms the run has had a seat in during the run, its
@@ -65,9 +62,8 @@ summary: >-
   (PIN-08). A pin keeps the priority and pin type it was written with:
   changing either takes an unpin and a new pin, as a move between rooms does
   (PIN-04, PIN-10).
-- **Budget**: The **pin budget** is the restore block's share of model tokens,
-  which only managed policy, or the principal's configuration once accepted,
-  lowers (ADM-04);
+- **Budget**: The **pin budget** is the restore block's share of model tokens
+  (PIN-08, ADM-04);
   every other budget is named too: the **hook budget** (a hook handler's time
   limit, §9.1, NFR-02), the **step budget** (how many steps a kernel execution
   may take, CMP-05) or the delegation budget; a limit keeps its own name, such
