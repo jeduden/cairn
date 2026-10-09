@@ -18,7 +18,8 @@ summary: >-
   newest version whose own event is trusted on this node, to its author's
   principal's agents, the intent as Intent says (before PRV-10 ships, a pin from
   this node's own device seat to this node's agents), and to agents whose
-  principal's trust grant covers its author's principal outside a foreign room;
+  principal's trust grant covers its author's principal outside a foreign room
+  or as Foreign room keeps it;
   once PRV-10 ships, any version of a type that restores restores to the agents
   of a principal who stamped it, its stamp trusted on this node. Adding, editing
   or unpinning a pin
@@ -49,8 +50,11 @@ summary: >-
   principal's widening act accepting that configuration records its digest;
   repository configuration declares none (ADM-04).
 - **Pin priority**: An integer the pin's author sets with it, lower first, the
-  intent before every other pin (LANE-20); qualifying pins fill the pin budget
-  in that order, then by their creating events' addresses (PIN-08).
+  intent before every other pin of its room (LANE-20). Qualifying pins fill the
+  pin budget first from the rooms the run has had a seat in during the run, its
+  personal room included, then from those only its agent's earlier runs had a
+  seat in, each in that order, then by their creating events' addresses
+  (PIN-08).
 - **Budget**: The **pin budget** is the restore block's share of model tokens;
   every other budget is named too: the **hook budget** (a hook handler's time
   limit, §9.1, NFR-02), the **step budget** (how many steps a kernel execution
@@ -82,9 +86,9 @@ summary: >-
   seat authors. The intent restores as the author of its newest version wrote
   it, that version's own event trusted on this node, to that author's
   principal's agents and to agents whose principal's trust grant covers that
-  author's principal outside a foreign room; after a change of ownership, a
-  handover or a succession, until the new owner revises or stamps it, it
-  restores only to its stampers' agents.
+  author's principal outside a foreign room or as Foreign room keeps it; after a
+  change of ownership, a handover or a succession, until the new owner revises
+  or stamps it, it restores only to its stampers' agents.
 - **Criterion**: One acceptance condition of an intent, with a stable id.
 - **Stake**: A pin of type `stake` stating what its author works on. Only its
   author, or for a device seat its author's principal, edits it; it is unpinned

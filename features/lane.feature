@@ -345,8 +345,8 @@ Feature: Room (LANE)
     And asking for a device seat's join to a room in which "alice" has no member seat is recorded as her widening principal act
     And the phone joins no room: its answer goes to its device seat in her personal room, a member there from its pairing with no add, naming the room, and the room shows it by address
     And the phone signs with its own device key and seals its device seat's writer with that seat's key, and the node it pairs with only holds the writer
-    When a subagent of that run joins on "alice"'s acceptance
-    Then it gets its own seat id, and its run is tied to its parent's run by a parent link
+    When a subagent of that run starts
+    Then it joins the room with no further principal act, under its parent's join, with its own seat id, its parent seat's role and no appointment, and its run is tied to its parent's run by a parent link
     When "alice"'s run leaves the room
     Then acts under its seat id are refused and the id stays in the room's history
     When the run joins the room again on "alice"'s acceptance

@@ -60,8 +60,10 @@ row: "- [{title}]({filename}) — {summary}"
   the seat ingest starts beside any of them (Run seat).
 - A restore block carries the qualifying pins of every room its run has had a
   seat in during the run, its personal room included, and of every room its
-  agent's earlier runs had a seat in (PIN-10, REC-02); a leave, kick or
-  bar keeps them, but once the room is foreign only those Foreign room names.
+  agent's earlier runs had a seat in, whose pins fill the pin budget
+  only after those of the rooms the run itself has had a seat in
+  (PIN-08, PIN-10, REC-02); a leave, kick or
+  bar keeps them, and where it makes the room foreign, as Foreign room says.
 - Ingest splits one transcript by run.
 - Every seat belongs to one principal and one room; every writer to one seat.
 - Each event goes to exactly one seat's writer. A run's event goes to its run

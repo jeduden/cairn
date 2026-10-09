@@ -17,8 +17,8 @@ exactly one kind (LANE-31).
   join request, leave, a role request, post, link, pin, edit, unpin, list
   removal, present, pick, kick, bar, unbar, mute and unmute; set title, labels
   or an assignment; and write a room summary or a summary request. A leave, kick
-  or bar never drops a room's qualifying pins from a run's restore block, within
-  the foreign-room limit of Relations. A pin, edit or unpin room act never
+  or bar never drops a pin from any restore block, even where it makes the room
+  foreign (Foreign room). A pin, edit or unpin room act never
   changes any restore block: an author's own pin, edit and unpin act only on
   pins that do not restore unstamped, and a list removal only takes a pin off
   the pin list. A link act adds one range link, branch link or criterion link.
@@ -135,7 +135,8 @@ exactly one kind (LANE-31).
   only the owner appoints. The appointer or the owner may revoke it.
 - **Join**: The act that adds a seat to a room under its admission, or without
   it for a device seat whose principal has a member seat there. A run joins only
-  when its principal asks for the join or accepts it (LANE-23). That covers the
+  when its principal asks for the join or accepts it, a subagent under its
+  parent's (Subagent, LANE-23). That covers the
   branches the room names later by branch links, whose runs' events then go
   there (LANE-01), so a branch link stays a room act. A device seat joins by a
   join room act its principal takes at a principal surface. Its node also joins

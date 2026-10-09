@@ -79,7 +79,8 @@ summary: >-
   posts and pins written from device seats a device key of that principal
   certified, within that key's device scope (PRV-10), never a cross-room post
   shown in another room, run seats,
-  token-key-only nodes or room summaries; never in a foreign room; and a post it
+  token-key-only nodes or room summaries; never in a foreign room, but for the
+  pins a leave, kick or bar keeps there (Foreign room); and a post it
   covers reaches only the grantor's agents whose run has a seat in the post's
   room. A grant naming a service account whose certificate or managed-policy
   listing marks it as relaying text others wrote, or whose listing is unmarked,

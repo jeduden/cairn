@@ -99,9 +99,9 @@ Feature: Pins (PIN)
   @PIN-08 @P0 @I3 @I6 @pending
   Scenario: pins over the pin budget are omitted whole, and each omitted pin is named by id and counted
     Given an isolated Cairn home
-    And 6 qualifying constraint pins of 250 estimated model tokens each, against the default pin budget of 1,000 model tokens
+    And 6 qualifying constraint pins of 250 estimated model tokens each, against the default pin budget of 1,000 model tokens: 4 in the run's personal room, and 2, each with a lower pin priority number than any of those 4, in a room only an earlier run of the same agent had a seat in
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block includes 4 of the pins, ordered by pin priority, then by creating address, writer then seq
+    Then the restore block includes the 4 personal-room pins, ordered by pin priority, then by creating address, writer then seq, and not the 2 of the earlier run's room
     And each included pin's text is complete and verbatim
     And the restore block names each of the 2 omitted pins by id and states that 2 pins were omitted
     And an audit entry records "2 pins omitted over the pin budget"
@@ -129,14 +129,14 @@ Feature: Pins (PIN)
     And a constraint pin in "L1" written from the device seat of a token-key-only node of the run's principal, unstamped
     And a constraint pin in "L2" written from the device seat of a token-key-only node of the third principal, unstamped
     And a pin the principal confirmed from a pin candidate whose creating "user" event was recorded in the deployment mode "interactive", while the current deployment mode is "automation"
-    And a room "L5" the run joined, with a constraint pin in it that the principal wrote from its device seat, the principal's stamp on one version of a constraint pin another principal wrote, and a constraint pin written from the device seat of the third principal, whose key the run's principal also trusts everywhere by a second trust grant, before every seat of the principal in "L5" was kicked, so that "L5" is now a foreign room
+    And a room "L5" the run joined, with a constraint pin in it that the principal wrote from its device seat, the principal's stamp on one version of a constraint pin another principal wrote, and a constraint pin written from the device seat of the third principal, whose key the run's principal also trusts everywhere by a second trust grant, before every seat of the principal in "L5" was kicked, so that "L5" is now a foreign room, and a version the third principal added to that pin after the kick
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped constraint versions, each under its original author
     And of the edited constraint pin the restore block includes only its newest version
     And the restore block includes no pin of "L4", not the stamped "fact" version and neither token-key-only node's unstamped pin
-    And of the foreign room "L5" the restore block includes the principal's device-seat pin and the stamped version, and not the pin the trust grant covers
+    And of the foreign room "L5" the restore block includes the principal's device-seat pin, the stamped version and the pin the second trust grant covers, by its version from before the kick, and not the version added after it
     And the restore block names "L1", "L2", "L5" and the personal room by id
-    And the other principal's unstamped constraint pin, the third principal's pin in "L5" and each token-key-only node's unstamped pin are stated only by count, room id and key fingerprint, with no text, and an audit entry records each
+    And the other principal's unstamped constraint pin and each token-key-only node's unstamped pin are stated only by count, room id and key fingerprint, with no text, and an audit entry records each
     And no pin of a type that does not restore is counted
     And a later run of the same agent, by the harness's stable agent id, with no seat in "L1", "L2" or "L5", gets the same pins of those rooms in its restore block
 

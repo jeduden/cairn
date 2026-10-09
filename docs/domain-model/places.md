@@ -62,7 +62,10 @@ summary: >-
   keep restoring to the runs Pin names: those that have had a seat in it
   during the run, or whose agent's earlier runs had one (PIN-10,
   REC-02). A room the principal owns or
-  has a seat in is never foreign.
+  has a seat in is never foreign. Yet a leave, kick or bar that makes a room
+  foreign drops no pin: what qualified there for its principal's agents, a
+  trust grant's pins included, keeps restoring as it stood, in causal order,
+  before that act, until that principal's own act changes it (PIN-10).
 - **Principal's rooms**: The rooms a principal owns or has a seat in.
 - **Visibility**: Whether a room is private, shared with the room's principals,
   published or stored on blind peers (LANE-17). Changing it is a widening

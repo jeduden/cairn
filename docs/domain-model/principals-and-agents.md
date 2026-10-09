@@ -60,8 +60,9 @@ summary: >-
   a noun, "run" has no other meaning.
 - **Subagent**: An agent the harness started for another agent. It has its own
   run, tied to its parent's run by a parent link, with its own seats and
-  writers, and no seat in its parent's rooms but those it joins as Join says,
-  which Cairn may suggest (LANE-23). It takes a delegated task without a
+  writers, among them a seat in each room its parent's run seat is a member of
+  when it starts, joined then with that seat's role and no appointment, under
+  its parent's join (LANE-23). It takes a delegated task without a
   delegation grant.
 - **Ingested run**: A run ingested from a transcript the hook handlers did not
   watch, with origin `ingested`, whose events are untrusted (REC-22).

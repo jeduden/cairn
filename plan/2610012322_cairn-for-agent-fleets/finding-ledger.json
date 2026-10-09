@@ -501,11 +501,11 @@
    "texts": [
     {
      "file": "docs/domain-model/principals-and-agents.md",
-     "quote": "no seat in its parent's rooms but those it joins as Join says, which Cairn may suggest (LANE-23)"
+     "quote": "among them a seat in each room its parent's run seat is a member of when it starts, joined then with that seat's role and no appointment, under its parent's join (LANE-23)"
     },
     {
      "file": "docs/srs/05b-lane-requirements.md",
-     "quote": "and a subagent to its parent's rooms, and MUST NOT join either without that acceptance"
+     "quote": "a subagent's join MUST ride on its parent's: at its start it joins each room its parent's run seat is a member of, with that seat's role and no appointment."
     }
    ]
   },
@@ -579,7 +579,7 @@
     },
     {
      "file": "docs/domain-model/index.md",
-     "quote": "and of every room its agent's earlier runs had a seat in (PIN-10, REC-02)"
+     "quote": "and of every room its agent's earlier runs had a seat in, whose pins fill the pin budget only after those of the rooms the run itself has had a seat in"
     },
     {
      "file": "docs/domain-model/trust-and-flow.md",
@@ -643,7 +643,21 @@
   {
    "id": "DM-AG",
    "title": "A run seat's leave, or another principal's kick or bar, makes a room foreign and drops trust-granted pins with no act of the agent's principal",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "Yet a leave, kick or bar that makes a room foreign drops no pin"
+    },
+    {
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "or bar never drops a pin from any restore block, even where it makes the room foreign (Foreign room)."
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "A branch switch, a leave, a kick or a bar MUST NOT drop a pin from any restore block"
+    }
+   ]
   },
   {
    "id": "DM-AH",
@@ -708,12 +722,36 @@
   {
    "id": "DM-AL",
    "title": "Inherited rooms' pins can crowd the run's own rooms' pins out of the pin budget",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "pin budget first from the rooms the run has had a seat in during the run, its personal room included, then from those only its agent's earlier runs had a seat in"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "Cairn MUST inject first the pins of the rooms the run has had a seat in during the run, its personal room included, then those of rooms only its agent's earlier runs had a seat in"
+    }
+   ]
   },
   {
    "id": "DM-AM",
    "title": "A short-lived subagent's work on its parent's room's branch lands in the personal room until a per-subagent join",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "among them a seat in each room its parent's run seat is a member of when it starts, joined then with that seat's role and no appointment, under its parent's join (LANE-23)"
+    },
+    {
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "a subagent's join MUST ride on its parent's: at its start it joins each room its parent's run seat is a member of, with that seat's role and no appointment."
+    },
+    {
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "a subagent under its parent's (Subagent, LANE-23)"
+    }
+   ]
   }
  ]
 }
