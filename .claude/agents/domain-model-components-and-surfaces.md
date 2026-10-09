@@ -60,6 +60,7 @@ citations win when they change.
   docs/srs/05b-lane-requirements.md,
   docs/srs/05c-principal-and-peer-requirements.md,
   docs/srs/05-functional-requirements.md,
+  docs/srs/05e-provenance-requirements.md,
   docs/srs/06b-boundary-register.md.
 - Scenarios: features/lane-view.feature, features/security.feature,
   features/administration.feature, features/lane.feature,

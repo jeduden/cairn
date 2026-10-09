@@ -57,6 +57,7 @@ citations win when they change.
 
 - SRS: docs/srs/05b-lane-requirements.md,
   docs/srs/05-functional-requirements.md,
+  docs/srs/05e-provenance-requirements.md,
   docs/srs/05c-principal-and-peer-requirements.md,
   docs/srs/07-non-functional-requirements.md.
 - Scenarios: features/lane.feature, features/pins.feature,

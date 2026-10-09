@@ -58,6 +58,7 @@ citations win when they change.
 - SRS: docs/srs/05b-lane-requirements.md,
   docs/srs/05c-principal-and-peer-requirements.md,
   docs/srs/06-security.md, docs/srs/05-functional-requirements.md,
+  docs/srs/05e-provenance-requirements.md,
   docs/srs/05d-peer-requirements.md,
   docs/srs/05a-administration-requirements.md,
   docs/srs/06b-boundary-register.md.

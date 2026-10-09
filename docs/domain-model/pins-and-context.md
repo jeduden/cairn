@@ -50,8 +50,7 @@ summary: >-
   version of the room's intent pin that the owner's device seat authors. An
   agent's pin candidate is shown with its provenance `assistant`, marked
   untrusted, in every list of pin candidates and at its confirmation (PIN-02,
-  PIN-05). Each confirmation also shows the room the new pin or pin version
-  will belong to; the rule choosing that room is open (OQ-49).
+  PIN-05). Each confirmation also shows the pin's room, which PIN-05 fixes.
 - **Configuration pin**: A pin the principal's configuration declares, authored
   by its device seat on that node (PIN-01), which takes effect only once the
   principal's widening act accepting that configuration records its digest;

@@ -284,7 +284,7 @@
      "quote": "certificates (a service-account certificate once countersigned), revocations, and recorded managed-policy listings and their removals it holds (I10)"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05e-provenance-requirements.md",
      "quote": "a service-account certificate MUST count only once the certified principal key countersigns it"
     }
    ]
@@ -544,7 +544,7 @@
      "quote": "and how a revocation of a device key or an access token, which acts on no room, reaches another principal's node that holds a room the revoking principal shares"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05e-provenance-requirements.md",
      "quote": "Revocations MUST be signed events that replicate like any other (open for another principal's node: OQ-41)."
     }
    ]
@@ -795,7 +795,7 @@
      "quote": "and another node's only once the listed key countersigns it"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05e-provenance-requirements.md",
      "quote": "and another node's only once the listed principal key countersigns the listing"
     }
    ]
@@ -870,7 +870,7 @@
      "quote": "only once the key it certifies countersigns it"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05e-provenance-requirements.md",
      "quote": "A device, token or seat certificate MUST count only once the key it certifies countersigns it"
     }
    ]
@@ -1043,7 +1043,7 @@
      "quote": "and so to neither, is a member of no room (Principal)"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05e-provenance-requirements.md",
      "quote": "its seat a member of no room (LANE-25)"
     }
    ]
@@ -1073,7 +1073,7 @@
      "quote": "a worktree checkpoint is `file` (REC-20) and a recall event `assistant` (RCL-07)"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05e-provenance-requirements.md",
      "quote": "Hook observations, key rotations, tombstones, canary events (OPS-04) and backup events (ADM-06) MUST carry `structural`"
     }
    ]
@@ -1396,7 +1396,7 @@
      "quote": "Its run records that task as untrusted `harness_text`, never `user` (PRV-08)"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05e-provenance-requirements.md",
      "quote": "MUST be classified untrusted `harness_text`, never `user` (OWN-24)"
     }
    ]
@@ -1404,17 +1404,15 @@
   {
    "id": "DM-CD",
    "title": "Where a witnessed run's events go while no MCP server holds its run-seat key",
-   "status": "deferred",
-   "oq": "OQ-43",
-   "milestone": "M1",
+   "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/seats-and-keys.md",
-     "quote": "Where a witnessed run's events go while no MCP server holds its run-seat key"
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "Until a witnessed run's MCP server holds its run-seat key, the hook handlers MUST append nothing for that run"
     },
     {
-     "file": "docs/srs/13-open-questions-and-risks.md",
-     "quote": "where a witnessed run's events go while no MCP server holds its run-seat key"
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "A witnessed run records nothing until its MCP server holds its run-seat key"
     }
    ]
   },
@@ -1454,8 +1452,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/srs/13-open-questions-and-risks.md",
-     "quote": "count and audit each such run (I6) until its events reach the record"
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "each such run MUST be counted and audited until its events reach the record (I6)"
     }
    ]
   },
@@ -1947,7 +1945,7 @@
      "quote": "descends from a run's tool call records no `user` event"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05e-provenance-requirements.md",
      "quote": "So MUST the input of a harness session whose process descends from a run's tool call"
     }
    ]
@@ -1977,7 +1975,7 @@
      "quote": "is `harness_text`, never `user` and never trusted"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05e-provenance-requirements.md",
      "quote": "an `isMeta` line, command output the harness writes as a `user` line, a line the launcher carried in (LANE-14)"
     }
    ]
@@ -2030,17 +2028,15 @@
   {
    "id": "DM-DT",
    "title": "Which room a confirmed pin candidate's pin belongs to was unstated (the confirmation now shows it)",
-   "status": "deferred",
-   "oq": "OQ-49",
-   "milestone": "M5",
+   "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/pins-and-context.md",
-     "quote": "Each confirmation also shows the room the new pin or pin version"
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "the pin's room (its creating event's room, or its principal's personal room where that principal has no member seat left there)"
     },
     {
      "file": "docs/srs/13-open-questions-and-risks.md",
-     "quote": "Which room does the pin a confirmed pin candidate makes belong to"
+     "quote": "Closed by the stakeholder (9 October 2026): the pin a confirmed pin candidate makes belongs to its creating event's room"
     }
    ]
   },

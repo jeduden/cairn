@@ -55,7 +55,8 @@ would need new wording, which needs an ADR and a security review.
 Your file cites requirements mostly in these places. Its own
 citations win when they change.
 
-- SRS: docs/srs/05-functional-requirements.md, docs/srs/06-security.md,
+- SRS: docs/srs/05-functional-requirements.md,
+  docs/srs/05e-provenance-requirements.md, docs/srs/06-security.md,
   docs/srs/05b-lane-requirements.md,
   docs/srs/05c-principal-and-peer-requirements.md,
   docs/srs/06b-boundary-register.md.
