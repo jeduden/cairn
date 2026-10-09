@@ -1,0 +1,294 @@
+{
+ "round": 7,
+ "reviews": [
+  {
+   "lens": "consistency",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "each cut or neutral one in force at the change or in the copy",
+     "problem": "Some cut acts only make sense relative to the current state. A 'tighten a rule level' that narrows an earlier loosening still sets a level looser than the default. After a node clone or a backup restore, the loosening (a widening act) does not take effect, but the tightening 'keeps its effect'. If that effect is the level the act set, the rule level ends up looser than with neither act. That is a widening no principal took on this node, and it breaks the definition that a cut act 'only stops, narrows or undoes a widening'. A tampered copy could use this to loosen rule levels.",
+     "fix": "each cut or neutral one in force at the change or in the copy keeps its effect, never leaving a rule level looser than it stands without the widening ones, until undone there",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "harness gives no stable agent id, each run is its own agent",
+     "problem": "Agent settles that without a stable agent id each run is its own agent. Run says that for a harness resume starting a new harness session without one, whether it is the resumed run's agent is open (OQ-43). The two statements cannot both hold.",
+     "fix": "harness gives no stable agent id, each run is its own agent, but for a harness resume that starts a new harness session (OQ-43)",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "are its own, recorded in its home, not another node's quarantine",
+     "problem": "The same entry calls a node clone a new node and says the events recorded before the change are another node's. It then calls the quarantines among those events 'its own' and 'not another node's quarantine', so I5's rule that another node's quarantine arrives only as a quarantine request its principal applies is bypassed by assertion.",
+     "fix": "Replace the sentence with: \"On a node clone, each quarantine in force at the change applies as its principal applies a quarantine request (I5, PEER-11), as the backup restore below does.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "undefined",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "the CLI's or TUI's terminal test, through a terminal it opens",
+     "problem": "The 'terminal test' is used here and in Facilitator as a named check that admits principal acts at the CLI or TUI, the only principal surface in M1 to M5, but the model never defines it. Recall's 'output is not a terminal' and the principal surface's 'at a terminal' leave open whether input, output or both are tested.",
+     "fix": "In Principal surface: \"the CLI or TUI at a terminal, which its **terminal test** checks: it takes a principal act only when its input and output are a terminal (OWN-12)\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "(its ordered posts), seats, pins, and branches in any repositories",
+     "problem": "A conversation is defined as ordered posts, but nothing says how posts from different writers are ordered. Room merge does not list posts among what it derives. Two implementers would order concurrent posts differently, against I10's order independence.",
+     "fix": "(its posts, in causal order, concurrent ones by the lower commitment), seats, pins, and branches in any repositories; and add posts to what Room merge covers",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "The seat ingest starts takes over the role",
+     "problem": "The seat ingest starts 'shares' the run seat's add but 'takes over' its role, so the role could be read as transferred. Then the live run seat is left with no role, which makes it a viewer without work, and its later events reroute to the personal-room seat. Ingest may run 'whether or not that server still runs'.",
+     "fix": "The seat ingest starts has the role of the run seat it names, which that run seat keeps (same wording in Run seat and Seat key)",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "intent before every other pin of its room (LANE-20)",
+     "problem": "Within one tier, pins from several rooms fill the pin budget by priority, but the intent goes first only among its own room's pins. When an intent's priority is higher than another pin in its room, the order across rooms is undefined: [A-intent, A-p1, B-p3] or [B-p3, A-intent, A-p1]. Implementers would omit different pins under the budget, which affects I3.",
+     "fix": "intent ranked before every other pin of its tier (LANE-20)",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "a principal act of the principal its seat key chains to (any other is void",
+     "problem": "No seat key chains to a principal key before PRV-10 ships, so every principal act retiring a writer is void until then. Yet 'retire a writer' is a classed widening act and is not gated on PRV-10. This waits on peers (PEER-05) and PRV-10.",
+     "fix": "a principal act of the principal its seat key chains to (before PRV-10 ships, of the principal whose node's device key certified it; any other is void",
+     "severity": "later"
+    }
+   ]
+  },
+  {
+   "lens": "security",
+   "findings": [
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "**Deployment mode**: `interactive` (a person types at the harness) or",
+     "problem": "Deployment mode is set per node. So on an `interactive` node, a harness session that a run's own tool call starts (an agent running the harness as a command, an ordinary fan-out pattern) records its input as a trusted `user` event, though that input is model output, which I2 excludes. Recall then labels it trusted to every agent of the principal, and the new run carries none of the starting run's recall taint, because it is neither a subagent, a delegate nor a resume.",
+     "fix": "Add to Deployment mode: \"A harness session that a run's tool call starts records its input as untrusted `harness_text`, never `user`, whatever the deployment mode, and its runs carry the starting run's recall taint (SEC-13).\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "or Cairn detected (a derived artifact over its creating `user` event,",
+     "problem": "Only an agent's pin candidate has to be shown marked untrusted. A candidate Cairn detects over an untrusted `user` event (in automation mode, or from an ingested transcript an agent can hand to `cairn ingest`) is shown at confirmation with no trust mark. Untrusted text can then become a trusted device-seat constraint that restores verbatim, through a confirmation that looks like the principal's own words.",
+     "fix": "After the agent-candidate sentence add: \"A detected pin candidate is shown with its creating event's provenance and trust level, marked untrusted where that event is, in every list of pin candidates and at its confirmation (PIN-05).\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "undefined",
+     "file": "docs/domain-model/record.md",
+     "quote": "`harness_text`, `operator`, `post`, `summary`, `structural` and `unparsed`.",
+     "problem": "The model defines `harness_meta` but never defines `harness_text`, and nothing says which text in a harness's user message counts as `user`. Text the harness adds that no one typed (another hook's added context, an expanded command file, an attached file's content) can therefore be classed `user`, and in interactive mode it becomes a trusted source.",
+     "fix": "Add after the `harness_meta` sentence: \"`harness_text` is free text the harness puts into the model's input that no one typed at the harness's own input, such as a subagent's task, a launcher-carried line, another hook's added context or an expanded command file; it is never `user` and never trusted.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "the record (CMP-01); each run's **kernel variables** live in its own",
+     "problem": "Kernel variables persist for the length of a run, but Quarantine and Purge only reach recall, restore blocks, landmark text and exports. A value a run loaded before a quarantine or purge keeps serving that content through `kernel_exec`. The content is then not out of circulation at once, as I5 requires, and a purged secret survives the purge.",
+     "fix": "Append to Kernel: \"; a quarantine withholds, and a purge erases, what they hold of its content from the moment it is recorded (I5, I1).\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "changing it, loosening redaction or turning flags off applies only once",
+     "problem": "The model names only some configuration changes that wait for acceptance: deployment mode, loosening redaction, turning flags off, retention policy, configuration pins, and turning on the room-view component or the launcher. It says nothing about removing a configuration pin, lowering the pin budget or loosening a rule level in configuration. Each of these would be widening as a principal act, yet an unrecorded file edit could drop a constraint from restore blocks.",
+     "fix": "Replace with: \"changing it, or making any configuration change that would be widening as a principal act (loosening redaction, turning flags off, removing a configuration pin, lowering the pin budget, loosening a rule level), applies only once its configuration is accepted (ADM-04); a tightening change applies at once.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "by its device seat on that node (PIN-01), which takes effect only once the",
+     "problem": "A configuration pin restores verbatim as trusted text once its configuration's digest is accepted. Unlike a pin candidate or a stamp, nothing requires showing the principal its exact text, type and priority first, except the dormant Setup surface. A declared pin still awaiting acceptance is shown nowhere either, so a constraint the principal configured can silently never restore.",
+     "fix": "\"...which takes effect only once the principal's widening act accepting that configuration, taken after it is shown each declared pin's exact text, pin type and priority, records its digest; until then `cairn status` shows it as awaiting acceptance.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/record.md",
+     "quote": "configuration declares no pin, and a key of it that would make a change ADM-04",
+     "problem": "Only a repository-configuration key that would make an ADM-04 change is said to be ignored, audited and counted. A key that §9.6 does not mark settable there, or one set against its stated direction, is not applied, but no rule counts it. That is a silent rejection under I6.",
+     "fix": "\"...and a key of it that §9.6 does not mark settable there, that is set against its direction, or that would make a change ADM-04 takes only from accepted configuration is ignored, audited and counted (ADM-04, I6).\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/record.md",
+     "quote": "**Gap marker**: What stands where content is missing: a tombstone for a purged",
+     "problem": "The gap markers form a closed list: tombstone, quarantine marker and truncation marker. A capture gap, such as a run's events while capture was paused or off, gets no marker. Recall then returns the run's history with an unmarked hole, which the agent takes as exact history.",
+     "fix": "Extend the list: \"..., a truncation marker on capped kernel output, or a capture-gap marker where a run's capture was off or paused, or a gap Cairn detected.\"",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "usefulness",
+   "findings": [
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "intent before every other pin of its room (LANE-20). Qualifying pins fill the",
+     "problem": "The pin budget fills across several rooms in one priority order. That order says lower priority goes first, but each intent also goes before every other pin of its own room, and the two rules can form a cycle. Example: room A's intent has priority 5 and must come before A's priority-1 constraint. That constraint comes before the personal room's priority-3 constraint, which comes before A's intent. With no total order, two implementers will omit different pins when the budget is short, and the restore block is no longer deterministic.",
+     "fix": "Replace \"the intent before every other pin of its room\" with \"every intent before every pin that is not an intent\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "exact text, pin type and priority, makes it a new pin its device seat authors",
+     "problem": "The model never says which room the pin made by a confirmed pin candidate belongs to, or which room's intent pin an intent or criterion candidate versions. One implementer will use the room of the candidate's creating event. Another will use the personal room, by the rule for a pin that names no room. A pin restores only to runs that had a seat in its room, so the same confirmation reaches different agents, and the principal confirms without being shown that room.",
+     "fix": "\"exact text, pin type, priority and room, makes it a new pin that its device seat in the room of the candidate's creating event authors\" (and \"the intent pin of that room\" for an intent or criterion).",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "useless",
+     "file": "docs/domain-model/components-and-surfaces.md",
+     "quote": "`cairn status` shows Health's counters and store locations (ADM-11)",
+     "problem": "In M1 to M5 the Needs you surface is dormant with the room view, and the CLI list that stands in for it shows no Needs you item. An overlap (LANE-13) does nothing except raise a Needs you item, so no person ever sees it and 'acknowledge an overlap' has nothing to act on. The same is true of a list removal's LANE-26 item. A run's join request needs its principal's acceptance, but no M1 to M5 place shows it to that principal.",
+     "fix": "\"`cairn status` shows Health's counters, store locations, the Needs you queue's items and pending join requests (ADM-11)\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "useless",
+     "file": "docs/domain-model/record.md",
+     "quote": "a principal act of the principal its seat key chains to (any other is void",
+     "problem": "Before PRV-10 ships, no seat key chains to a principal key, so every 'retire a writer' act is void, yet the model lists it as a widening principal act. Its only stated effect is on peers, which are dormant. The act therefore has no valid actor and no effect until PRV-10 principal keys and peers ship.",
+     "fix": "\"a principal act of the principal its seat key chains to (before PRV-10 ships, of this node's principal; any other is void\".",
+     "severity": "later"
+    }
+   ]
+  }
+ ],
+ "match": {
+  "matches": [
+   {
+    "lens": "consistency",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "Nearest is DM-DJ (fixed), whose closing text is the quoted sentence: cut or neutral acts keep their effect after a clone or restore, widening ones do not. The finding shows that text is incomplete, because a tightening that narrowed a widening which no longer takes effect would leave a rule level looser than default. Fixing DM-DJ as closed does not answer this."
+   },
+   {
+    "lens": "security",
+    "index": 0,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "No ledger theme covers a harness session that a run's own tool call starts. DM-AK covers only a resume, DM-AR a subagent's report and DM-AV a delegate. DM-A and DM-Q are the accepted same-user risk R7, which concerns principal acts, not the provenance and recall taint of a nested session's input."
+   },
+   {
+    "lens": "security",
+    "index": 1,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "Nearest is DM-I (fixed), which only requires the exact text, pin type and priority to be shown at confirmation. It says nothing of a trust mark for a detected candidate, so its closing text is incomplete for this finding."
+   },
+   {
+    "lens": "security",
+    "index": 2,
+    "theme": "NEW-4",
+    "kind": "new",
+    "reason": "The model never defines `harness_text` or the boundary of `user`. DM-CC fixed only the subagent task, and DM-BH only the classes of checkpoint, recall, canary and backup events. Neither answers a general definition of text no one typed at the harness's own input."
+   },
+   {
+    "lens": "security",
+    "index": 3,
+    "theme": "NEW-5",
+    "kind": "new",
+    "reason": "No ledger theme mentions kernel variables. DM-AW (quarantine and trusted-only exports) and DM-BS (purge never undoes an act) concern other channels. A value a run loaded before a quarantine or purge, and then served through `kernel_exec`, is untouched by either closing text."
+   },
+   {
+    "lens": "security",
+    "index": 4,
+    "theme": "NEW-6",
+    "kind": "new",
+    "reason": "Nearest is DM-BT (fixed), whose closing text is the quoted sentence naming only the deployment mode, loosening redaction and turning flags off. The finding shows that list is incomplete: removing a configuration pin, lowering the pin budget and loosening a rule level also wait for acceptance. DM-F and DM-Z cover repository configuration, not the principal's own."
+   },
+   {
+    "lens": "usefulness",
+    "index": 0,
+    "theme": "NEW-7",
+    "kind": "new",
+    "reason": "DM-AL (fixed) orders room tiers in the budget, and DM-CE fixes a pin's priority and type. Neither says how the intent-first rule combines with a priority order across several rooms, so a cyclic ordering is not answered by those closing texts."
+   },
+   {
+    "lens": "usefulness",
+    "index": 1,
+    "theme": "NEW-8",
+    "kind": "new",
+    "reason": "Nearest is DM-I (fixed), whose closing text lists the exact text, type and priority shown at confirmation and omits the room. Which room the new pin belongs to, and which room's intent an intent or criterion candidate revises, is a different defect."
+   },
+   {
+    "lens": "usefulness",
+    "index": 2,
+    "theme": "NEW-9",
+    "kind": "new",
+    "reason": "Nearest is DM-DF (fixed), whose closing text is the quoted `cairn status` sentence covering counters and store locations. The finding shows it is incomplete for Needs you items and pending join requests in M1 to M5. DM-U covers only the I10 derivation of a quota item."
+   }
+  ],
+  "new_themes": [
+   {
+    "id": "NEW-1",
+    "title": "A cut act kept after a node clone or backup restore (a tightening that narrowed a loosening) can leave a rule level looser than without the dropped widening act",
+    "settled_by": "none. REC-24, ADM-06 and OQ-48's interim rule keep every cut or neutral act's effect, and OWN-11 defines a cut act as one that only stops, narrows or undoes a widening. None says what a tightening leaves once the loosening it narrowed no longer takes effect."
+   },
+   {
+    "id": "NEW-2",
+    "title": "A harness session that a run's tool call starts records its input as a trusted `user` event on an interactive node and carries none of the starting run's recall taint",
+    "settled_by": "none. I2 lists the model's replies as untrusted and PRV-08 classes `user` only for text typed at the harness's input, but neither addresses a nested session or its taint. R1 and R7 are adjacent accepted same-user risks that do not cover this."
+   },
+   {
+    "id": "NEW-3",
+    "title": "A pin candidate Cairn detected is shown at confirmation with no provenance or trust mark, so untrusted text could be confirmed as a trusted constraint",
+    "settled_by": "PIN-05 (SRS): Cairn detects candidates only over trusted `user` events (PRV-02, PRV-04), so none arises from an untrusted `user` or ingested event. The model's Pin candidate entry omits the word trusted."
+   },
+   {
+    "id": "NEW-4",
+    "title": "The model defines `harness_meta` but not `harness_text`, and says nothing of which harness-added text counts as `user`",
+    "settled_by": "PRV-08 (SRS): `user` only for text typed at the harness's input, with a tool result, an isMeta line, harness command output and a launcher-carried line as untrusted `harness_text`. PRV-03 and PRV-01 also apply. The model's Provenance entry does not carry it."
+   },
+   {
+    "id": "NEW-5",
+    "title": "Kernel variables a run loaded before a quarantine or purge keep serving that content through `kernel_exec`",
+    "settled_by": "none. I5 (quarantine from recall immediately) states the principle, CMP-07 makes kernel reads honour quarantine and SEC-31 erases stored copies. None reaches values already held in a run's kernel namespace (CMP-02)."
+   },
+   {
+    "id": "NEW-6",
+    "title": "The model names only some configuration changes that wait for acceptance, leaving out removing a configuration pin, lowering the pin budget and loosening a rule level",
+    "settled_by": "ADM-04 (SRS) already lists a settings change that adds, edits or unpins a pin, lowers the pin budget or loosens rule levels as needing acceptance. OWN-11 makes any principal act that removes a pin from a restore block widening. The model's Deployment mode entry carries only a subset."
+   },
+   {
+    "id": "NEW-7",
+    "title": "The pin budget's order can be cyclic across rooms, because the intent-first rule within a room combines with a single priority order",
+    "settled_by": "LANE-20 (SRS): the intent is the room's lead pin, listed before every other pin at the highest priority. PIN-08 orders by tier, then pin priority, then address. Together these give a total order, but the model's Pin priority entry does not say the intent's priority is fixed."
+   },
+   {
+    "id": "NEW-8",
+    "title": "Which room the pin made by a confirmed pin candidate belongs to, and which room's intent an intent or criterion candidate versions, is unstated",
+    "settled_by": "none. PIN-10 defaults a pin to its principal's personal room, but `pin_candidate_propose` carries no room and PIN-05, LANE-20 and `cairn pin-candidate confirm` do not say which room a confirmed candidate or an intent candidate lands in."
+   },
+   {
+    "id": "NEW-9",
+    "title": "In M1 to M5 nothing shows a person the Needs you queue's items or pending join requests",
+    "settled_by": "12-delivery-plan (SRS) ships VIEW-05, LANE-13, LANE-23's join-request rest, LANE-26 and ADM-15 in M7, so none of these raises a Needs you item before M7. 09a already lists `cairn needs-you list` and `cairn join-request accept|decline`. The model's Room view entry does not list them."
+   }
+  ]
+ }
+}

@@ -1902,6 +1902,23 @@
      "quote": "At a terminal, the CLI and the TUI MUST show every control character but the line feed"
     }
    ]
+  },
+  {
+   "id": "DM-DL",
+   "title": "Before PRV-10 no seat key chains to a principal key, so the model's rule voids every principal act retiring a writer",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M8",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "a principal act of the principal its seat key chains to (any other is void"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
   }
  ]
 }
