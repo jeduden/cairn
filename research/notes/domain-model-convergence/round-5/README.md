@@ -25,3 +25,16 @@ node"). No meaning changes.
 
 Open themes stay at 0: the round opened 6 and closed 6. New themes per
 full round have gone 15, 13, 6, 10, 4 and 6.
+
+## Regression pass
+
+A blind review of the entries round 5 edited (`regression.json`), run
+under the full-model brief before the stakeholder narrowed the loop,
+found four needs-fix findings in three new themes. They close under the
+narrowed scope (`../m1-m5-scope.md`).
+
+| Theme | Closed as                                                         |
+| ----- | ----------------------------------------------------------------- |
+| DM-CG | fixed: OQ-43's interim counts and audits each unrecorded run (I6) |
+| DM-CH | deferred: OQ-47, M8 (what an access token carries for its joins)  |
+| DM-CI | deferred: OQ-47, M8 (a token-key-only run's first restore block)  |

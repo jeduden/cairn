@@ -1447,6 +1447,51 @@
      "quote": "Minting an access token that names a room to continue MUST be its principal's ask"
     }
    ]
+  },
+  {
+   "id": "DM-CG",
+   "title": "OQ-43's interim rule records nothing for a run whose MCP server holds no run-seat key, and counts and audits nothing either",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "count and audit each such run (I6) until its events reach the record"
+    }
+   ]
+  },
+  {
+   "id": "DM-CH",
+   "title": "An access token carries a room's ask and pins but not the acts a token-key-only node derives their qualification and its runs' membership from",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M8",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "and the token carries that ask and those rooms' qualifying pins"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
+  },
+  {
+   "id": "DM-CI",
+   "title": "A token-key-only node's runs have no join when their first restore block is built, since the run-seat key that signs it may not exist yet",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M8",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "so those pins restore to its runs from their first"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
   }
  ]
 }
