@@ -1246,6 +1246,66 @@
      "quote": "and the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds"
     }
    ]
+  },
+  {
+   "id": "DM-BT",
+   "title": "The deployment mode, redaction and flags change through the principal's configuration with no acceptance",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "changing it, loosening redaction or turning flags off applies only once"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "hold windows, turns flags off, or turns on a B1–B3 component MUST be accepted only from the principal's configuration"
+    }
+   ]
+  },
+  {
+   "id": "DM-BU",
+   "title": "The facilitator's program could author a pin that restores without a principal surface",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "its program writes no pin that restores unstamped"
+    }
+   ]
+  },
+  {
+   "id": "DM-BV",
+   "title": "Whether acts in a retired writer's later segments count in the room merge",
+   "status": "deferred",
+   "oq": "OQ-41",
+   "milestone": "M8",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "marked delivered after retirement (open for the room merge: OQ-41)"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "whether an act in a retired writer's segments past the seq its retirement names"
+    }
+   ]
+  },
+  {
+   "id": "DM-BW",
+   "title": "Recall scope for a room of the principal's that the agent's run seats have left",
+   "status": "deferred",
+   "oq": "OQ-45",
+   "milestone": "M8",
+   "texts": [
+    {
+     "file": "docs/domain-model/index.md",
+     "quote": "whether a call may name a room of the principal's that every run seat of the agent has left or lost"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "which neither scope reaches, is open (OQ-45)"
+    }
+   ]
   }
  ]
 }

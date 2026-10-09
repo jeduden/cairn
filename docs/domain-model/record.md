@@ -24,11 +24,11 @@ summary: >-
   and held by any node, named by its **writer id**, derived from the seat's
   first key. Its events are hash-chained; the **chain head** at a seq is the
   hash over every event up to it.
-- **Retire a writer**: Mark a writer retired: by a principal act, or by the
-  expire act ending the access token whose token key certified its seat key.
-  Either names the writer's last accepted seq. A peer still accepts segments
-  past it that continue its chain without a fork, marked delivered after
-  retirement; only a revocation refuses them (PEER-05).
+- **Retire a writer**: Mark a writer retired, by a principal act or the
+  expire act ending the access token whose token key certified its seat key,
+  naming its last accepted seq. A peer still accepts segments past it that
+  continue its chain without a fork, marked delivered after retirement (open
+  for the room merge: OQ-41); only a revocation refuses them (PEER-05).
 - **Event**: One immutable entry in a writer, such as a message (the harness's
   user input or the model's reply), tool call, tool result, **hook observation**
   (what a hook reported), worktree checkpoint, key rotation, tombstone, or an

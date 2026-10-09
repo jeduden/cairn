@@ -26,8 +26,11 @@ summary: >-
   Everything else is untrusted, and so is the free text a cut or neutral
   principal act carries (OWN-11).
 - **Deployment mode**: `interactive` (a person types at the harness) or
-  `automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`).
-- **Trust policy**: The rule that derives each event's trust level (PRV-02).
+  `automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`);
+  changing it, loosening redaction or turning flags off applies only once
+  its configuration is accepted (ADM-04).
+- **Trust policy**: The rule that derives each event's trust level (PRV-02); no
+  settings layer changes it.
 - **Trust mark**: The sign beside an item saying where it came from and whether
   it is trusted, from §9.7.6's closed set (VIEW-07).
 - **Taint**: The trust level a derived artifact, or an output built from events

@@ -104,9 +104,12 @@ row: "- [{title}]({filename}) — {summary}"
   to a node clone, and Cairn may suggest a room or a join.
 - A pin naming no room belongs to its author's principal's personal room on the
   node that wrote it.
-- Recall extends only to the principal's
-  rooms the agent has a seat in and the cross-room posts they show, never to a
-  foreign room unless the call names it.
+- Recall defaults to the calling agent's current run, through every writer of
+  its seats, whatever room each seat belongs to (RCL-05). It extends only to
+  the principal's rooms the agent has a seat in and the cross-room posts they
+  show, never to a foreign room unless the call names it; whether a call may
+  name a room of the principal's that every run seat of the agent has left or
+  lost to a kick or a bar rests on OQ-45.
 
 ## Names follow the model
 
