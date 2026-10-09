@@ -45,7 +45,10 @@ summary: >-
   detected it), a widening act taken only after that principal is shown its
   exact text, pin type and priority, makes it a new pin its device seat authors;
   for an intent or a criterion, only the owner's confirmation, making a new
-  version of the room's intent pin that the owner's device seat authors.
+  version of the room's intent pin that the owner's device seat authors. An
+  agent's pin candidate is shown with its provenance `assistant`, marked
+  untrusted, in every list of pin candidates and at its confirmation (PIN-02,
+  PIN-05).
 - **Configuration pin**: A pin the principal's configuration declares, authored
   by its device seat on that node (PIN-01), which takes effect only once the
   principal's widening act accepting that configuration records its digest;

@@ -64,9 +64,14 @@ summary: >-
   `cairn status` shows Health's counters and store locations (ADM-11), and
   `cairn event search` and `expand`, `cairn landmark list`, `cairn pin list` and
   `cairn audit` show the principal its agents' runs, events and landmarks, its
-  pins and pin candidates, and the audit log (§9.5). The room view's surfaces
-  are a closed set, and unqualified, "surface" means one of them; where
-  principal acts are taken is a principal surface:
+  pins and pin candidates, and the audit log (§9.5). Search and expand show each
+  event's provenance and trust level, as the envelope carries them (§9.3). At a
+  terminal, the CLI and the TUI show every control character but the line feed,
+  and every zero-width, bidirectional and tag character, in text other than
+  fixed text Cairn ships as a visible placeholder naming its code point, never
+  written raw (SEC-06). The room view's surfaces are a closed set, and
+  unqualified, "surface" means one of them; where principal acts are taken is a
+  principal surface:
   - **Fleet:** every live and recorded run of the principal's rooms, grouped by
     room.
   - **Room page:** one room, with the tabs Timeline, Review and Replay, the

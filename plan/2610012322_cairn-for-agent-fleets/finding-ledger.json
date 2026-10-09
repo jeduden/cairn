@@ -1825,6 +1825,83 @@
      "quote": "the CLI shows the record at a terminal"
     }
    ]
+  },
+  {
+   "id": "DM-DG",
+   "title": "A backup restore reinstated the copy's derived artifacts although its events now count as received (I10)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "A backup restore reinstates the copy's segments and payloads, never its derived artifacts"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "never its derived artifacts, rebuilding every derived artifact from the writer logs the node holds and its key set"
+    }
+   ]
+  },
+  {
+   "id": "DM-DH",
+   "title": "A restore on another node kept the copy's quarantines without a quarantine request (I5)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "the restore applies each as its principal applies a quarantine request"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "each applied by the restore as its principal applies a quarantine request"
+    }
+   ]
+  },
+  {
+   "id": "DM-DI",
+   "title": "Restoring another node's copy leaves its personal room beside this node's, unreached by recall and runs",
+   "status": "deferred",
+   "oq": "OQ-45",
+   "milestone": "M8",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "a backup restore of a copy another node made does not share that node's personal room"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "such as one a backup restore of a copy that node made reinstates (ADM-06)"
+    }
+   ]
+  },
+  {
+   "id": "DM-DJ",
+   "title": "After a node identity change or a restore, principal acts other than quarantines had no stated effect, so a configuration acceptance could carry over",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "no widening one takes effect on the node, a configuration acceptance included, until its principal takes it there again"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "no widening one, a configuration acceptance (ADM-04) included, MAY take effect on the node until its principal takes it there again"
+    }
+   ]
+  },
+  {
+   "id": "DM-DK",
+   "title": "The CLI showed untrusted text raw at a terminal before the room view's placeholders ship",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/components-and-surfaces.md",
+     "quote": "At a terminal, the CLI and the TUI show every control character but the line feed, and every zero-width, bidirectional and tag character"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "At a terminal, the CLI and the TUI MUST show every control character but the line feed"
+    }
+   ]
   }
  ]
 }

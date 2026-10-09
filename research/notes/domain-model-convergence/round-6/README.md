@@ -18,7 +18,23 @@ DM-DE could not wait: backup restore ships in M3 and seals in M7, so an
 altered copy could plant trusted events in between. Whether a verified
 seal may keep a restored event `witnessed` is deferred to OQ-48 (M7).
 
+## Regression pass
+
+A blind review of the entries round 6 edited (`regression.json`) found
+eight needs-fix findings in five new themes, four of them next to the
+backup-restore decision. The verify workflow (`regression-verify.json`)
+classed them; one edit of DM-DJ was merged by hand where DM-DH and DM-DI
+had changed the same sentences.
+
+| Theme | Closed as                                                                 |
+| ----- | ------------------------------------------------------------------------- |
+| DM-DG | fixed: a backup restore rebuilds every derived artifact (I10, ADM-06)     |
+| DM-DH | fixed: the restore applies the copy's quarantines as a request (I5)       |
+| DM-DI | deferred: OQ-45, M8 (another node's personal room after a restore)        |
+| DM-DJ | fixed: carried-over widening acts lapse until taken again (I8, REC-24)    |
+| DM-DK | fixed: the CLI shows control and bidirectional characters as placeholders |
+
 ## Count
 
-Open themes stay at 0: the round opened 5 and closed 5. Under the narrowed
-brief the count of clean rounds starts here.
+Open themes stay at 0: the round and its regression pass opened 10 and
+closed 10. Under the narrowed brief the count of clean rounds starts here.

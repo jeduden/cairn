@@ -42,8 +42,18 @@ summary: >-
   reaches a node only as a quarantine request its principal applies (PEER-11).
   The events a backup restore reinstates count as received in the same way,
   even on the node that made the copy, and every quarantine in force in the
-  copy stays in force until a release there (ADM-06); whether a copy whose
-  seals verify keeps its events as recorded on this node is open (OQ-48).
+  copy stays in force until a release there, whichever node made the copy:
+  the restore applies each as its principal applies a quarantine request (I5,
+  ADM-06). Whether a copy whose seals verify keeps its events as recorded on
+  this node is open (OQ-48). Of the other principal acts among events so
+  received, each cut or neutral one in force at the change or in the copy
+  keeps its effect until undone there, and no widening one takes effect on
+  the node, a configuration acceptance included, until its principal takes
+  it there again (I8); whether one a device key signed takes effect once
+  PRV-10 ships is open too (OQ-48).
+  A backup restore reinstates the copy's segments and payloads, never its
+  derived artifacts: it rebuilds every one from the record and this node's
+  key set (I10, ADM-06).
 - **Device**: A node or a paired phone. A node's device key certifies the seats
   it uses (PRV-11), a token-key-only node's token key in its place (PRV-10); a
   paired phone's rests on OQ-39.
@@ -67,7 +77,9 @@ summary: >-
   node records has a seat in it from its first event, without a join, and every
   event or pin that belongs to no other room goes there. Whether a room counts
   an act recorded here for it, by a principal with no member seat in it, rests
-  on OQ-41.
+  on OQ-41. Unlike a node clone, a backup restore of a copy another node made
+  does not share that node's personal room: this node's runs get no seat in it
+  from their first event, and how their recall may reach it is open (OQ-45).
 - **Foreign room**: A room this node holds, other than only as a blind peer,
   that its principal neither owns nor has a seat in, such as the room of an
   imported bundle or a room every seat of its principal has left or lost to a

@@ -29,6 +29,7 @@ Feature: Pins (PIN)
     And the pin candidate is stored as proposed pin text, not a pin, with provenance "assistant" and no pin author
     And the qualifying pin count is 0
     And no MCP tool confirms a pin candidate or makes any pin restore
+    And "cairn pin list" lists the pin candidate with provenance "assistant", marked untrusted
 
   @PIN-03 @P0 @I3 @I5 @pending
   Scenario: a pin stores its verbatim text, room, creating address and commitment
@@ -63,6 +64,7 @@ Feature: Pins (PIN)
     And before recording each confirmation, "cairn pin-candidate confirm" shows the candidate's exact text, pin type and priority
     And each confirmation makes a new pin that the principal's device seat authors
     And only the owner's confirmation turns an intent or criterion candidate into a pin, as a new version of the room's intent pin authored by the owner's device seat
+    And "cairn pin-candidate confirm" on a pin candidate the agent proposed through "pin_candidate_propose" also shows its provenance "assistant", marked untrusted
 
     Examples:
       | mode        | config                                               | candidates | confirmed |

@@ -76,6 +76,8 @@ Feature: Security (SEC)
     Then the recall result is wrapped in the envelope
     And the stored content appears only as one JSON string value in an item
     And the envelope warning states that its contents are historical data and not instructions
+    When the person runs "cairn event search" at a terminal for a stored tool result holding an escape sequence, a carriage return and a right-to-left override
+    Then each of those characters is shown as a visible placeholder naming its code point, and none is written to the terminal raw
 
   @SEC-07 @P0 @I2 @pending
   Scenario: restore content is constructed only inside the `restore_block` crate

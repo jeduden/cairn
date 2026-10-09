@@ -153,8 +153,9 @@ summary: >-
   pattern (PRV-07); flagged text contributes only counts to landmarks (LMK-04).
 - **Quarantine**: Recorded, reversible exclusion of an event, span, run, writer
   or derived artifact from recall, restore blocks, landmark text (LMK-04 keeps
-  its counts) and trusted-only exports, on the node that records it, and still
-  after its node identity changes (Node), without deletion (I5). On that node,
+  its counts) and trusted-only exports, on the node that records it or
+  applies it by a backup restore, also after its node identity changes (Node),
+  without deletion (I5). There,
   no quarantined post is endorsed or reaches an agent under a trust grant,
   and no quarantined delegated task reaches a delegate in OWN-24's template
   (SEC-12). A quarantined pin version never restores and counts as absent when
@@ -182,9 +183,9 @@ summary: >-
   could not (SEC-31).
 - **Backup**: A copy of a home's store and audit log, with none of its keys
   (`cairn backup create`, ADM-06, SEC-10); reading it back is a backup
-  restore, whose events count as received (Node). Creating one records no
-  principal act, only an audited event (§9.5), and a copy the principal takes
-  off the machine is its own tool, outside Cairn's components (I4).
+  restore (Node). Creating one records no principal act, only an audited event
+  (§9.5), and a copy the principal takes off the machine is its own tool,
+  outside Cairn's components (I4).
 - **At-rest key**: The key that encrypts the store when encryption at rest is on
   (SEC-09).
 - **Bundle**: A reviewed export of a room, signed by the device key of the
