@@ -36,7 +36,7 @@ const MATCHES = {
     reason: { type: 'string' },
   }, required: ['lens', 'index', 'theme', 'kind', 'reason'] } },
   new_themes: { type: 'array', items: { type: 'object', properties: {
-    id: { type: 'string' }, title: { type: 'string' }, settled_by: { type: 'string', description: 'an SRS requirement, ADR or earlier decision that already settles it, or "none"' },
+    id: { type: 'string' }, title: { type: 'string' }, settled_by: { type: 'string', description: 'an invariant, SRS requirement or earlier stakeholder decision that already settles it, or "none"' },
   }, required: ['id', 'title', 'settled_by'] } } },
   required: ['matches', 'new_themes'],
 }
@@ -53,7 +53,7 @@ const reviews = await parallel(Object.keys(LENS).map(lens => () => agent(
 phase('Match')
 const needs = reviews.flatMap(r => (r.findings || []).map((f, i) => ({ lens: r.lens, index: i, ...f })).filter(f => f.severity === 'needs-fix'))
 const match = needs.length === 0 ? { matches: [], new_themes: [] } : await agent(
-  `Read the finding ledger ${LEDGER}: themes with an id, a title, a status (open, fixed, deferred, accepted) and the texts that close them. Also read ${repo}/research/notes/domain-model-subset-search/core-findings-history.md for what each theme means. Below are this round's needs-fix findings on the domain model. For each one decide whether it is the same defect as a ledger theme (kind "closed" if that theme is fixed, deferred or accepted; "open" if that theme is open) or a new defect (kind "new", theme "NEW-<n>"; group findings that are one defect under one NEW id). A finding is the same defect only if fixing the theme as closed would also answer it; a finding that shows the closing text itself is wrong or incomplete is "new". For each new theme say whether an SRS requirement, ADR or earlier decision in the plan notes under ${repo}/plan/2610012322_cairn-for-agent-fleets already settles it (cite it) or "none". Edit no file.\n\n${JSON.stringify(needs)}`,
+  `Read the finding ledger ${LEDGER}: themes with an id, a title, a status (open, fixed, deferred, accepted) and the texts that close them. Also read ${repo}/research/notes/domain-model-subset-search/core-findings-history.md for what each theme means. Below are this round's needs-fix findings on the domain model. For each one decide whether it is the same defect as a ledger theme (kind "closed" if that theme is fixed, deferred or accepted; "open" if that theme is open) or a new defect (kind "new", theme "NEW-<n>"; group findings that are one defect under one NEW id). A finding is the same defect only if fixing the theme as closed would also answer it; a finding that shows the closing text itself is wrong or incomplete is "new". For each new theme say whether an invariant, an SRS requirement or an earlier stakeholder decision in the plan notes under ${repo}/plan/2610012322_cairn-for-agent-fleets already settles it (cite it) or "none". Edit no file.\n\n${JSON.stringify(needs)}`,
   { label: `r${round}:match`, phase: 'Match', schema: MATCHES, model: 'sonnet' },
 )
 return { round, reviews, match }
