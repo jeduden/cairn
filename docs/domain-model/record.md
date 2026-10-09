@@ -149,7 +149,10 @@ summary: >-
 - **Quarantine**: Recorded, reversible exclusion of an event, span, run, writer
   or derived artifact from recall, restore blocks and landmark text (LMK-04
   keeps its counts), on the node that records it, and still after its node
-  identity changes (Node), without deletion (I5).
+  identity changes (Node), without deletion (I5). On that node,
+  no quarantined post is endorsed or reaches an agent under a trust grant,
+  and no quarantined delegated task reaches a delegate in OWN-24's template
+  (SEC-12).
 - **Purge**: Deletion of content, appending a **tombstone** naming the purged
   range, which views show in its place (ADM-07): by a principal act, or by the
   node under a retention policy, recorded naming the policy. The only way stored

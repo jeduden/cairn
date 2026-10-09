@@ -45,8 +45,8 @@ exactly one kind (LANE-31).
     handover, withdraw as successor, dismiss a directed post, revoke an access
     token, a seat key or a service account's certificate unless that removes a
     pin from a restore block or stops principal acts arriving (SEC-27, PEER-06),
-    turn capture on, and turn off the room-view component, the launcher, the
-    peer component, the publish component or a bridge.
+    turn capture on, and turn off a B1 to B3 component or a bridge, refusing no
+    act (Component).
   - **Neutral:** mark a room ready, its **ready mark** (the owner or a principal
     whose device seat in the room is a moderator), or abandoned, its **abandoned
     mark** (the owner), acknowledge an overlap, record a `met`, `not met` or

@@ -83,7 +83,7 @@ summary: >-
   (PRV-11); once PRV-10 ships every seat key chains to a principal key. A node's
   **key set** is the keys, certificates (a service-account certificate once
   countersigned), revocations, and recorded managed-policy listings and their
-  removals it holds (I10).
+  removals it holds (I10), a listing only as Service account says.
 - **Access token**: A short-lived credential a principal mints to enroll a
   device or peer, certify an ephemeral node's seats or carry an invite link
   (PEER-06, PRV-10, LANE-18). Its expiry ends it by the expire act the minting

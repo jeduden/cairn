@@ -43,7 +43,10 @@ summary: >-
     but for the core's own kernel worker (CMP-05).
   - **Peer component (B2):** exchanges segments with peers (sync) and serves
     paired phones; on a paired phone it is Cairn's only code, with the room
-    view's reduced client inside it.
+    view's reduced client inside it. Turning it off, like any component, is cut:
+    unlike a revocation, which makes a node refuse the revoked key's events it
+    does not yet hold (PRV-10), it refuses none and drops no pin; what other
+    devices record meanwhile arrives once it is on again (PEER-01, PEER-03).
   - **Publish component (B3):** read-only publishing (SEC-26).
   - **Bridge component (B3):** outbound exchange with hosts the node's principal
     names, through three **bridges**: the **forge bridge** (reads pull requests,

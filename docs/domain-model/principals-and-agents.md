@@ -29,8 +29,11 @@ summary: >-
   longer listing it; none starts uncertified. A service-account certificate
   counts only once the certified principal key countersigns it, and each
   managed-policy listing and each removal of one is recorded as a structural
-  event that enters the node's key set (PRV-10). It can own rooms, have seats
-  and be the principal of its own agents, such as CI or runner agents.
+  event that enters the key set of the node that recorded it from its machine's
+  managed policy, and another node's only once the listed key countersigns it,
+  as a certificate; a removal enters wherever the listing it ends did (PRV-10).
+  It can own rooms, have seats and be the principal of its own agents, such as
+  CI or runner agents.
 - **Managed policy**: Settings belonging to root that an organisation sets on a
   machine. Cairn never overrides it (I7). Among its powers, it may disable
   boundaries B1 to B3 and the launcher, forbid risk acceptance and certify

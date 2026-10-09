@@ -36,7 +36,10 @@ summary: >-
   except for its sanitized structural fields.
 - **Recall taint**: A run's mark after it recalls untrusted content, which
   tightens the rule levels of the action classes SEC-13 configures as
-  sensitive (OWN-10). A delegate inherits the delegating run's (OWN-24). A run
+  sensitive (OWN-10). A delegate inherits the delegating run's (OWN-24).
+  A delegating run takes on a subagent's recall taint once that subagent's
+  `subagent_result` reaches it, as pulling any other delegate report through
+  `delegation_get` taints it (OWN-25). A run
   a harness resume starts carries the recall taint of the run it resumes, and
   carries recall taint from its first event where Cairn cannot tell that run
   (SEC-13).

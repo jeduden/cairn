@@ -15,6 +15,7 @@ Feature: Peer network (PEER)
     And the environment variable is recorded as a structural event, not a principal act, and audited
     And on a home where the CLI recorded no act turning it on, the peer component stays off, even when the person or a service manager starts its own entry point
     And with the peer component absent or stopped the core behaves exactly as with no peer component
+    And turning it off is a cut principal act that refuses no event and drops no pin, and what other devices recorded meanwhile arrives once it is on again
     And all of the above is true whether the peer component ships in the core's executable or its own
 
   @PEER-02 @P2 @I4 @pending

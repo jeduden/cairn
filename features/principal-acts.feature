@@ -308,6 +308,8 @@ Feature: Principal acts (OWN)
     Then the delegate report arrives inside the envelope
     And no text of the report entered the delegating agent's context before that call
     And ending the delegation grant, a cut principal act, stops every delegate it covers
+    When a subagent whose run carries recall taint returns its report to its parent's run as "subagent_result"
+    Then the parent's run carries recall taint
 
   @OWN-26 @P2 @I2 @I8 @pending
   Scenario: another principal's agent takes a delegated task only under its principal's acceptance grant

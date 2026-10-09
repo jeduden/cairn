@@ -752,6 +752,86 @@
      "quote": "a subagent under its parent's (Subagent, LANE-23)"
     }
    ]
+  },
+  {
+   "id": "DM-AN",
+   "title": "Seats of an ended run or a lost device can never leave, so succession and a principal's own exit become unreachable once PRV-10 ships",
+   "status": "open"
+  },
+  {
+   "id": "DM-AO",
+   "title": "A foreign room's branch link counts in branch ownership and can take the principal's own room's branch",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "foreign room's branch link names its branch in that room alone, voiding none"
+    },
+    {
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "A branch MUST belong to the first of this node's principal's rooms whose branch link names it"
+    }
+   ]
+  },
+  {
+   "id": "DM-AP",
+   "title": "A managed-policy listing enters every holding node's key set with no consent",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "and another node's only once the listed key countersigns it"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "and another node's only once the listed principal key countersigns the listing"
+    }
+   ]
+  },
+  {
+   "id": "DM-AQ",
+   "title": "Turning off the peer component is cut though it stops principal acts arriving",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/components-and-surfaces.md",
+     "quote": "Turning it off, like any component, is cut: unlike a revocation, which makes a node refuse the revoked key's events it does not yet hold"
+    },
+    {
+     "file": "docs/srs/05d-peer-requirements.md",
+     "quote": "turning it off a cut one: unlike a revocation (PRV-10), it refuses no event and drops no pin"
+    }
+   ]
+  },
+  {
+   "id": "DM-AR",
+   "title": "Recall taint does not flow up from a subagent to the run that receives its report",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "A delegating run takes on a subagent's recall taint once that subagent's"
+    },
+    {
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "the delegating run MUST take on the subagent's recall taint (SEC-13) once that report reaches it"
+    }
+   ]
+  },
+  {
+   "id": "DM-AS",
+   "title": "Quarantine does not cover trust-grant posts, endorsed posts or delegated tasks",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "no quarantined post is endorsed or reaches an agent under a trust grant"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "where no quarantined post MAY be endorsed (OWN-08) or reach an agent under a trust grant (OWN-29)"
+    }
+   ]
   }
  ]
 }
