@@ -36,7 +36,9 @@ summary: >-
   except for its sanitized structural fields.
 - **Recall taint**: A run's mark after it recalls untrusted content, which
   tightens the rule levels of the action classes SEC-13 configures as
-  sensitive (OWN-10). A delegate inherits the delegating run's (OWN-24).
+  sensitive (OWN-10). A delegate inherits the delegating run's (OWN-24),
+  and carries recall taint from its first event where its node cannot derive
+  that run's from the writers it holds (OWN-26).
   A delegating run takes on a subagent's recall taint once that subagent's
   `subagent_result` reaches it, as pulling any other delegate report through
   `delegation_get` taints it (OWN-25). A run

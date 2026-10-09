@@ -11,8 +11,11 @@ summary: >-
   each recorded on a device seat, and is the principal of every agent whose runs
   its nodes record. Cairn counts principals by principal key: every device key,
   token key and seat key that chains to one principal key through device, token
-  or seat certificates belongs to that principal; a chain never passes through
-  another principal key. No key chains to a principal key before PRV-10 ships,
+  or seat certificates belongs to that principal, each certificate counting
+  only once the key it certifies countersigns it; a key whose countersigned
+  certificates chain it to two principal keys chains to neither, and a chain
+  never passes through another principal key. No key chains to a principal key
+  before PRV-10 ships,
   so until then a room admits no seat of another principal, and admission,
   invites, bars and the owner's protection, which name principal keys, apply
   only once it ships (OQ-42), where how a seat of the owner whose key is lost,

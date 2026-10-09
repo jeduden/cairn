@@ -153,7 +153,7 @@ Feature: Security (SEC)
     And a store whose events match the quarantine selector <selector>
     When the person runs "cairn quarantine add <selector> --reason 'suspect content'"
     Then an "operator" event records the quarantine with the reason "suspect content"
-    And the matched events are absent from every later recall, landmark and injection on this node
+    And the matched events are absent from every later recall, landmark, injection and trusted-only export on this node
     And no matched post is endorsed or reaches an agent under a trust grant, and no matched delegated task reaches its delegate, each such write refused, audited and counted
     And a quarantine that would remove a pin or a landmark from a restore block takes effect only as a confirmed widening principal act
     And releasing the quarantine, a widening principal act, is recorded as an "operator" event the same way

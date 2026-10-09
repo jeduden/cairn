@@ -161,10 +161,12 @@ Feature: Administration and lifecycle (ADM)
   Scenario: export writes only trusted events with provenance as JSONL
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a" with user turns and web tool results
+    And one of its trusted events is quarantined
     When the person runs "cairn export --trusted-only"
     Then the command exits 0
     And every exported JSONL line is a trusted event carrying its address (writer, seq), provenance and trust
     And no untrusted event appears in the export
+    And the quarantined event does not appear in it, and the export's review step shows it as withheld
 
   @ADM-13 @P0 @I7 @pending
   Scenario: Cairn writes to no git repository beyond the confirmed settings file, the commit hook of LANE-28 and the launcher's fresh checkouts

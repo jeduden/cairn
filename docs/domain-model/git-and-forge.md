@@ -18,10 +18,15 @@ summary: >-
   link names it, across rooms, in causal order, concurrent ones by the lower
   commitment (Room merge), counting only this node's principal's rooms: a
   foreign room's branch link names its branch in that room alone, voiding none.
-  No act moves it but one making a room foreign or no longer foreign, and a
-  branch link of any other of those rooms naming it is void and shown
-  (LANE-01). So only that room takes a run's events on it, and the room trailer
-  of each commit on it names that room (LANE-28).
+  A branch moves only when a room enters or leaves those rooms (such as by a
+  join, a leave, a kick or a bar) or a concurrent branch link with the lower
+  commitment reaches this node later; events recorded and commits made before it
+  moves keep their room. A branch link of any other of those rooms naming it is
+  void and shown (LANE-01). So only that room takes a run's events on it, and
+  the room trailer of each commit on it names that room (LANE-28).
+  Since only this node's principal's rooms count, a room two principals share
+  may name a branch on one principal's node and hold a void link to it on the
+  other's.
 - **Commit**: A git commit.
 - **Worktree**: A git working tree on a node, where a run edits a branch; its
   repository's **git directory** is git's own store of objects and refs.
@@ -89,9 +94,10 @@ summary: >-
   artifact, a file or a diff, with the seat and branch.
 - **Verdict**: A person's `met`, `not met` or `needs changes` on one criterion:
   a `verdict` pin, recorded as a neutral principal act (OWN-27) by any person
-  whose device seat in the room has the pin capability, bound to the intent
-  version, the heads of every branch the room names, and the results and
-  evidence shown. It goes stale when any of them changes. It is never edited: a
-  newer verdict of the same person on the same criterion supersedes it, and
-  unpinning one is neutral. Cairn never derives one; service accounts contribute
-  evidence instead.
+  whose device seat in the room has the pin capability, bound to, and recorded
+  with, the intent version, the heads of every branch the room names on the
+  recording node, and the results and evidence shown. It goes stale when one of
+  them changes, never because the room names a branch it does not list, on
+  another node or later. It is never edited: a newer verdict of the same person
+  on the same criterion supersedes it, and unpinning one is neutral. Cairn never
+  derives one; service accounts contribute evidence instead.

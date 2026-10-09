@@ -844,6 +844,101 @@
      "quote": "where no quarantined post MAY be endorsed (OWN-08) or reach an agent under a trust grant (OWN-29)"
     }
    ]
+  },
+  {
+   "id": "DM-AT",
+   "title": "Branch ownership moves on a join or a later lower-commitment link, not only on a room turning foreign",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "A branch moves only when a room enters or leaves those rooms (such as by a join, a leave, a kick or a bar) or a concurrent branch link with the lower commitment reaches this node later"
+    },
+    {
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "MAY move only when a room enters or leaves them or concurrent branch links arrive"
+    }
+   ]
+  },
+  {
+   "id": "DM-AU",
+   "title": "A key can chain to two principal keys, since device, token and seat certificates need no countersignature",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "only once the key it certifies countersigns it"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "A device, token or seat certificate MUST count only once the key it certifies countersigns it"
+    }
+   ]
+  },
+  {
+   "id": "DM-AV",
+   "title": "A delegate whose node cannot derive the delegating run's recall taint has no fail-safe",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "carries recall taint from its first event where its node cannot derive that run's from the writers it holds"
+    },
+    {
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "A delegate on another node MUST carry recall taint (SEC-13) from its first event wherever its node cannot derive the delegating run's from the writers it holds"
+    }
+   ]
+  },
+  {
+   "id": "DM-AW",
+   "title": "Quarantine does not keep content out of trusted-only exports",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "from recall, restore blocks, landmark text (LMK-04 keeps its counts) and trusted-only exports"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "and every trusted-only export (ADM-12) on the node that records it"
+    }
+   ]
+  },
+  {
+   "id": "DM-AX",
+   "title": "A shared room can name different branches on two principals' nodes, so a verdict's binding and staleness differ",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "It goes stale when one of them changes, never because the room names a branch it does not list, on another node or later."
+    },
+    {
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "and never because the room names a branch it does not list"
+    }
+   ]
+  },
+  {
+   "id": "DM-AY",
+   "title": "Before PRV-10, nothing says which keys are another principal's",
+   "status": "open"
+  },
+  {
+   "id": "DM-AZ",
+   "title": "Any principal's seat whose key is lost cannot leave, not only the owner's",
+   "status": "open"
+  },
+  {
+   "id": "DM-BA",
+   "title": "A relaying mark's fate after a listing's removal or a certificate's revocation, and its effect on standing grants",
+   "status": "open"
+  },
+  {
+   "id": "DM-BB",
+   "title": "A pin whose newest qualifying version is quarantined: fall back or drop out",
+   "status": "open"
   }
  ]
 }

@@ -78,9 +78,10 @@ summary: >-
   from one of its devices whose device scope allows it, though its own events
   are trusted on that node as that node's trusted sources.
 - **Seat certificate**: A device key's or token key's signature over a seat key,
-  scoped to the seat's room, naming the seat kind, `run` or `device`. The node's
-  device key makes one for every seat the node uses from the first release
-  (PRV-11); once PRV-10 ships every seat key chains to a principal key. A node's
+  scoped to the seat's room, naming the seat kind, `run` or `device`, that the
+  seat key countersigns (Principal). The node's device key makes one for every
+  seat the node uses from the first release (PRV-11); once PRV-10 ships every
+  seat key chains to a principal key. A node's
   **key set** is the keys, certificates (a service-account certificate once
   countersigned), revocations, and recorded managed-policy listings and their
   removals it holds (I10), a listing only as Service account says.

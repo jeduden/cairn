@@ -320,6 +320,7 @@ Feature: Principal acts (OWN)
     When an agent of "alice" delegates a task to that target
     Then the delegated task reaches the target in the fixed template, marked as from "alice"'s agent
     And the target keeps "bob" as its one principal
+    And the target's run carries recall taint from its first event while "bob"'s node holds none of the delegating run's writers
     And the same delegation without the acceptance grant is refused and audited
     And once the acceptance grant's expiry passes, the delegating node refuses the same delegation at use time, and, once PRV-10 ships, "bob"'s node ends the acceptance grant by an expire act
 
@@ -328,9 +329,10 @@ Feature: Principal acts (OWN)
     Given an isolated Cairn home
     And a room whose agent stated "C1 is done" and recorded a passing check's result linked to C1
     When "alice", a person whose device seat in the room has the pin capability, records "met" on C1 and the agent then edits a file
-    Then the verdict is recorded as a "verdict" pin by "alice"'s own neutral principal act, on the signing device's seat in the room, bound to the intent version, the heads of every branch the room names and the results and evidence shown
+    Then the verdict is recorded as a "verdict" pin by "alice"'s own neutral principal act, on the signing device's seat in the room, bound to, and recorded with, the intent version, the heads of every branch the room names on her node and the results and evidence shown
     And Cairn pre-filled no verdict, and the agent's statement stays a claim
     And after the edit the verdict reads stale
+    And a branch the room names that the verdict does not list, linked later or named on another principal's node only, stales it on no node
     And a verdict on the room as a whole, rather than on a criterion, is refused
     And a verdict is refused from a service account, whose principal key a person, another service account or managed policy certified
     And the verdict approves nothing for landing, which stays with git and the forge
