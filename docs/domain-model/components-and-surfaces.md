@@ -11,41 +11,29 @@ summary: >-
   (OQ-32), and a new one is a model change and a §6.3 row.
   - **Core (B0):** the **hook handlers** (answering hooks), the **CLI**
     (`cairn`, but for `cairn ui`, `cairn launch` and each B1 to B3 component's
-    own entry point, which the person, a service manager or an ephemeral node's
-    entrypoint starts and which runs only while the act turning it on stands:
-    for the room-view component and the launcher, the configuration acceptance
-    that turns it on, until a configuration turning it off applies (ADM-04,
-    SEC-01); for the bridge component, a bridge enabled
-    for a host, while any stands), each harness adapter's transcript and hook
-    part among them, the **MCP server** (the MCP tools of §9.2, one per harness
+    own entry point, SEC-01), each harness adapter's transcript and hook part
+    among them, the **MCP server** (the MCP tools of §9.2, one per harness
     session, serving its runs), the **kernel worker** (running the kernel's
     executions), the **TUI** (the terminal room view), the **commit hook**
     (LANE-28, run as the CLI), and everything that builds what reaches the
     model.
-  - The **harness adapter** is no component: Cairn's code for one harness, split
-    between the core and the launcher: its transcript and hook part in the core
-    (it parses, opens no socket, starts no process); its run part in the
-    launcher, which starts, hosts and controls runs, pauses them at the harness
-    prompt, records sandbox state and carries in only text the core built.
+  - The **harness adapter** is no component: Cairn's code for one harness, its
+    transcript and hook part in the core and its run part in the launcher.
   - **Room-view component (B1):** serves the browser room view on loopback only
-    (SEC-20), and records the principal acts taken in it, marked with their
-    principal surface (VIEW-03). A **room-view secret** makes the browser room
-    view a principal surface (SEC-20): a **launch secret** it mints per launch,
-    exchanged once for an **origin secret** only its own origin, port included,
-    can read or send, which lasts until the component stops; a phone-scoped one
+    (SEC-20) and records the principal acts taken in it (VIEW-03). A
+    **room-view secret** makes the browser room view a principal surface
+    (SEC-20): a **launch secret** it mints per launch, exchanged once for an
+    **origin secret** only its own origin can read or send; a phone-scoped one
     serves a browser on the principal's phone (OWN-16).
   - **Launcher (B1):** `cairn launch`, which starts, hosts and controls runs
-    through each harness adapter's run part, carrying into the harness input
-    only text the core built and recorded, read from the record, never text from
-    the room-view component, whose loopback connection to it carries no text for
-    the model; and runs witness checks; the only component that starts programs,
-    but for the core's own kernel worker (CMP-05).
+    through each harness adapter's run part and runs witness checks; the only
+    component that starts programs, but for the core's own kernel worker
+    (SEC-29, CMP-05).
   - **Peer component (B2):** exchanges segments with peers (sync) and serves
     paired phones; on a paired phone it is Cairn's only code, with the room
     view's reduced client inside it. Turning it off, like any component, is cut:
     unlike a revocation, which makes a node refuse the revoked key's events it
-    does not yet hold (PRV-10), it refuses none and drops no pin; what other
-    devices record meanwhile arrives once it is on again (PEER-01, PEER-03).
+    does not yet hold (PRV-10), it refuses none and drops no pin (PEER-01).
   - **Publish component (B3):** read-only publishing (SEC-26).
   - **Bridge component (B3):** outbound exchange with hosts the node's principal
     names, through three **bridges**: the **forge bridge** (reads pull requests,
@@ -57,33 +45,20 @@ summary: >-
 - **Room view**: What shows rooms to a person: the browser, through the
   room-view component, the one client that shows every surface, and the TUI, the
   CLI, the paired phone and the **harness strip** (a status line the harness
-  shows) as reduced clients that say what they leave out (VIEW-14). A client of
-  the record. Without the room-view component, and before the room view's
-  requirements ship (§12.2), the CLI shows the record at a terminal:
-  `cairn status` shows Health's counters and store locations (ADM-11), and
-  `cairn event search` and `expand`, `cairn landmark list`, `cairn pin list` and
-  `cairn audit` show the principal its agents' runs, events and landmarks, its
-  pins and pin candidates, and the audit log (§9.5). Needs you's items wait for
-  VIEW-05 (M7), which derives them from the record (I10). Until the rest of
-  LANE-23 ships (M7), a run joins only when its principal asks for the join
-  (`cairn run join`); a join request made without that ask is refused, audited
-  and counted, never left waiting for an acceptance no client shows (§12.2).
-  Search and expand show each
-  event's provenance and trust level, as the envelope carries them (§9.3). At a
-  terminal, the CLI and the TUI show every control character but the line feed,
-  and every zero-width, bidirectional and tag character, in text other than
-  fixed text Cairn ships as a visible placeholder naming its code point, never
-  written raw (SEC-06). The room view's surfaces are a closed set, and
-  unqualified, "surface" means one of them; where principal acts are taken is a
-  principal surface:
+  shows) as reduced clients (VIEW-14). A client of the record. Without the
+  room-view component, and before the room view's requirements ship (§12.2),
+  the CLI shows the record at a terminal (§5.12); `cairn status` shows Health's
+  counters and store locations (ADM-11). The room view's surfaces are a closed
+  set, and unqualified, "surface" means one of them; where principal acts are
+  taken is a principal surface:
   - **Fleet:** every live and recorded run of the principal's rooms, grouped by
     room.
   - **Room page:** one room, with the tabs Timeline, Review and Replay, the
     Replay tab's **context lens** showing what the model's context window
     contained at an event; the verify and why panels, the comparison and the
     **quarantine list** (the room's quarantine set), with its **forensic view**
-    of quarantined content, open from it, and a foreign room opens in it, marked
-    foreign.
+    of quarantined content, open from it, and a foreign room opens in it
+    (LANE-15).
   - **Catch up:** the one surface answering "what happened since a starting
     point" the principal picks (VIEW-08).
   - **Needs you:** the one queue of items waiting on a principal (VIEW-05).

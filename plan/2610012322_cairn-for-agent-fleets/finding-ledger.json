@@ -189,8 +189,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/acts-and-roles.md",
-     "quote": "Before PRV-10 ships no expiry can be set but a grant's or an access token's, which then takes effect only as a refusal"
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "before PRV-10 ships, only that refusal applies"
     },
     {
      "file": "docs/domain-model/seats-and-keys.md",
@@ -212,8 +212,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/acts-and-roles.md",
-     "quote": "It ends a bar, a mute or a handover offer, recorded only by a node of the principal whose act set it or of the room's owner (LANE-25)"
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "Once its clock passes the expiry of a bar, a mute or a handover offer, the setter's or offerer's node MUST record that expire act"
     },
     {
      "file": "docs/srs/05b-lane-requirements.md",
@@ -300,7 +300,7 @@
    "texts": [
     {
      "file": "docs/domain-model/git-and-forge.md",
-     "quote": "A branch belongs to the first room whose branch link names it, across rooms, in causal order, concurrent ones by the lower commitment (Room merge)"
+     "quote": "It belongs to the first of this node's principal's rooms whose branch link names it, concurrent links resolving by Room merge"
     },
     {
      "file": "docs/domain-model/git-and-forge.md",
@@ -329,12 +329,12 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "Reaching one never drops or deletes an event: what is received over it is refused and audited"
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "refuse and audit anything received over one, recording each refused segment as REC-21 says, and never drop an accepted event to free space"
     },
     {
-     "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "this node's own recording over it goes on, counted and raised as a Needs you item (I1, I6)"
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "This node's own recording over a quota MUST raise a failure counter and a Needs you item and keep recording"
     },
     {
      "file": "docs/domain-model/record.md",
@@ -421,8 +421,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/places.md",
-     "quote": "the events recorded before the change are another node's: they count as received, a `witnessed` one read as `peer`"
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "each of their events MUST count as received and not recorded on the node, a `witnessed` one reading as origin `peer`"
     },
     {
      "file": "docs/domain-model/record.md",
@@ -444,10 +444,6 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "Its first crossing by this node's own recording, at each limit set for it, is recorded as a structural event in this node's device seat's personal-room writer"
-    },
-    {
      "file": "docs/srs/05a-administration-requirements.md",
      "quote": "Its first crossing of each quota, at each limit set for it, MUST be recorded as a structural event in this node's device seat in its personal room"
     }
@@ -459,8 +455,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "facilitator that it reads untrusted room text, which its posts never quote"
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "granting a facilitator MUST first show the grantor that the facilitator reads untrusted room text (T27)"
     },
     {
      "file": "docs/domain-model/principals-and-agents.md",
@@ -540,8 +536,8 @@
    "milestone": "M7",
    "texts": [
     {
-     "file": "docs/domain-model/index.md",
-     "quote": "as does how a device key's or access token's revocation reaches another principal's node"
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "how a revocation of a device key or an access token, which acts on no room, reaches another principal's node that holds a room the revoking principal shares"
     },
     {
      "file": "docs/srs/13-open-questions-and-risks.md",
@@ -559,8 +555,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/git-and-forge.md",
-     "quote": "Unless the platform can deny all of them, Cairn refuses the witness check before confirmation and says which it cannot deny (OWN-18)."
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "Cairn MUST refuse the witness check before confirmation and say which it cannot deny"
     },
     {
      "file": "docs/srs/05c-principal-and-peer-requirements.md",
@@ -582,8 +578,8 @@
      "quote": "inherit its rooms for recall (the `rooms` scope), for restore and for its directed posts, never a seat, add or role"
     },
     {
-     "file": "docs/domain-model/index.md",
-     "quote": "and of every room its agent's earlier runs had a seat in, whose pins fill the pin budget only after those of the rooms the run itself has had a seat in"
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "MUST inject first the pins of the rooms the run has had a seat in during the run, its personal room included, then those of rooms only its agent's earlier runs had a seat in"
     },
     {
      "file": "docs/domain-model/trust-and-flow.md",
@@ -624,8 +620,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/places.md",
-     "quote": "keep restoring to the runs Pin names: those that have had a seat in it"
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "A restore block MUST contain the qualifying pins of every room its run has had a seat in during the run, its personal room included, and of every room its agent's earlier runs had a seat in (REC-02)"
     }
    ]
   },
@@ -634,10 +630,6 @@
    "title": "A standing trust grant keeps covering a key the key set later marks relaying or lists unmarked",
    "status": "fixed",
    "texts": [
-    {
-     "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "A recorded grant covers nothing once the node's key set holds a certificate or listing marking the key it names as relaying"
-    },
     {
      "file": "docs/srs/05c-principal-and-peer-requirements.md",
      "quote": "a recorded trust grant MUST cover nothing once the node's key set holds such a certificate or listing for the principal key it names, whatever order they arrived in"
@@ -671,10 +663,6 @@
     {
      "file": "docs/srs/05a-administration-requirements.md",
      "quote": "each quarantine in force in either, whichever node made the copy, MUST stay in force on the node until a release there"
-    },
-    {
-     "file": "docs/domain-model/places.md",
-     "quote": "ADM-06 says which principal acts keep effect on the node, a quarantine it keeps being its principal's own"
     }
    ]
   },
@@ -684,8 +672,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/git-and-forge.md",
-     "quote": "every write outside that checkout (the repository's git directory and its other worktrees included) denied"
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "the repository's git directory and its other worktrees included"
     },
     {
      "file": "docs/srs/05c-principal-and-peer-requirements.md",
@@ -713,10 +701,6 @@
    "title": "A run a harness resume starts does not carry the resumed run's recall taint",
    "status": "fixed",
    "texts": [
-    {
-     "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "It passes between runs whatever agent each belongs to: from a run into the run a harness resume or clear of it starts"
-    },
     {
      "file": "docs/srs/06-security.md",
      "quote": "MUST pass from run to run, whatever agent each belongs to (REC-02): forward through a harness resume or a harness clear"
@@ -765,10 +749,6 @@
    "milestone": "M7",
    "texts": [
     {
-     "file": "docs/domain-model/principals-and-agents.md",
-     "quote": "where how a seat of the owner whose key is lost, such as an ended run's, then ends its add is open too"
-    },
-    {
      "file": "docs/srs/13-open-questions-and-risks.md",
      "quote": "how a seat of the owner whose key is lost, such as an ended run's or a lost device's, ends its add, which succession (LANE-11) and an owner's leaving need"
     }
@@ -780,8 +760,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/git-and-forge.md",
-     "quote": "foreign room's branch link names its branch in that room alone, voiding none"
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "a foreign room's branch link MUST void none"
     },
     {
      "file": "docs/srs/05b-lane-requirements.md",
@@ -825,10 +805,6 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "and back with their delegate reports or tool results (SEC-13)"
-    },
-    {
      "file": "docs/srs/06-security.md",
      "quote": "and back through a delegate report (OWN-25) or that tool call's result"
     },
@@ -856,7 +832,7 @@
    "texts": [
     {
      "file": "docs/domain-model/git-and-forge.md",
-     "quote": "A branch moves only when a room enters or leaves those rooms (such as by a join, a leave, a kick or a bar) or a concurrent branch link with the lower commitment reaches this node later"
+     "quote": "It moves only when a room enters or leaves those rooms or a concurrent branch link arrives (LANE-01)"
     },
     {
      "file": "docs/srs/05b-lane-requirements.md",
@@ -885,8 +861,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "which carry recall taint from their first event where their node cannot derive that run's"
+     "file": "docs/srs/06-security.md",
+     "quote": "the run reached carrying recall taint from its first event wherever its node cannot tell the run it comes from"
     },
     {
      "file": "docs/srs/06-security.md",
@@ -936,10 +912,6 @@
    "milestone": "M7",
    "texts": [
     {
-     "file": "docs/domain-model/principals-and-agents.md",
-     "quote": "and which keys count as another principal's until then"
-    },
-    {
      "file": "docs/srs/13-open-questions-and-risks.md",
      "quote": "until PRV-10 ships, which keys count as another principal's, on which branch ownership, a join without admission and a node clone's rooms depend"
     }
@@ -952,10 +924,6 @@
    "oq": "OQ-42",
    "milestone": "M7",
    "texts": [
-    {
-     "file": "docs/domain-model/principals-and-agents.md",
-     "quote": "as is how a seat of any other principal whose key is lost ends its add without a kick"
-    },
     {
      "file": "docs/srs/13-open-questions-and-risks.md",
      "quote": "how a seat of any other principal whose key is lost ends its add without a kick, which that principal's own leaving needs"
@@ -972,8 +940,8 @@
      "quote": "stays relaying once what marked or listed it is revoked or removed"
     },
     {
-     "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "no revocation or removal lifts that"
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "no revocation of such a certificate or removal of such a listing MAY lift that"
     },
     {
      "file": "docs/srs/05c-principal-and-peer-requirements.md",
@@ -987,8 +955,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/record.md",
-     "quote": "A quarantined pin version counts as absent wherever PIN-10 chooses which version of a pin restores"
+     "file": "docs/srs/06-security.md",
+     "quote": "A quarantine and its release MUST NOT change room state or the key set, but for which pin version PIN-10 restores"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
@@ -1001,10 +969,6 @@
    "title": "The foreign-room freeze (a leave, kick or bar drops no pin; pins keep restoring as they stood) also keeps restoring pins of a revoked key or a key the key set marks relaying",
    "status": "fixed",
    "texts": [
-    {
-     "file": "docs/domain-model/places.md",
-     "quote": "until a certificate it qualified through is revoked (PRV-10)"
-    },
     {
      "file": "docs/srs/05-functional-requirements.md",
      "quote": "or until a certificate it qualified through is revoked (PRV-10) or the trust grant it qualified by covers nothing (OWN-29), as in any other room"
@@ -1032,8 +996,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/places.md",
-     "quote": "A node serves a room's segments only to the peers"
+     "file": "docs/srs/05d-peer-requirements.md",
+     "quote": "serve each room's segments to the enrolled peers whose principal has a seat in that room (LANE-16)"
     },
     {
      "file": "docs/srs/05d-peer-requirements.md",
@@ -1047,8 +1011,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/principals-and-agents.md",
-     "quote": "and so to neither, is a member of no room (Principal)"
+     "file": "docs/srs/05e-provenance-requirements.md",
+     "quote": "a key whose countersigned certificates chain it to two principal keys MUST chain to neither, its seat a member of no room (LANE-25)"
     },
     {
      "file": "docs/srs/05e-provenance-requirements.md",
@@ -1078,7 +1042,7 @@
    "texts": [
     {
      "file": "docs/domain-model/record.md",
-     "quote": "a worktree checkpoint is `file` (REC-20) and a recall event `assistant` (RCL-07)"
+     "quote": "REC-20, RCL-07, OWN-18 and PEER-11 class the events they name"
     },
     {
      "file": "docs/srs/05e-provenance-requirements.md",
@@ -1092,10 +1056,6 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/record.md",
-     "quote": "It leaves out the free text of a cut or neutral principal act (OWN-11), which its review step shows as withheld."
-    },
-    {
      "file": "docs/srs/05a-administration-requirements.md",
      "quote": "or the free text of a cut or neutral principal act (OWN-11), each of which its review step shows as withheld (SEC-26)"
     }
@@ -1107,8 +1067,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "whatever Cairn returns to a tool call, its errors and a CLI verb's output that is not a terminal included, carries only fixed text Cairn ships, ids, counts and sanitized structural fields"
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "whatever Cairn returns to a tool call, its errors and a CLI verb's output that is not a terminal included, MUST carry only fixed text Cairn ships"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
@@ -1143,10 +1103,6 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/record.md",
-     "quote": "A purged pin version counts as absent as a quarantined one does (PIN-10)"
-    },
-    {
      "file": "docs/srs/05-functional-requirements.md",
      "quote": "once it is purged, however purged (SEC-31), its tombstone never restoring"
     }
@@ -1158,8 +1114,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/places.md",
-     "quote": "the pins a leave, kick or bar keeps there stay trusted and"
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "and the pins PIN-10 keeps after a leave, kick or bar, trusted for restore"
     }
    ]
   },
@@ -1168,10 +1124,6 @@
    "title": "Foreign room's freeze keeps the former owner's intent restoring after a change of ownership, against LANE-11",
    "status": "fixed",
    "texts": [
-    {
-     "file": "docs/domain-model/places.md",
-     "quote": "after a change of ownership, the intent restores in a foreign room only"
-    },
     {
      "file": "docs/srs/05-functional-requirements.md",
      "quote": "after a change of ownership, the intent MUST restore in such a room only as LANE-11 says"
@@ -1183,10 +1135,6 @@
    "title": "Peer's serving rule ignores a token-key-only node's token limits",
    "status": "fixed",
    "texts": [
-    {
-     "file": "docs/domain-model/places.md",
-     "quote": "A node serves a token-key-only node only the segments of the rooms its token key is limited to"
-    },
     {
      "file": "docs/srs/05d-peer-requirements.md",
      "quote": "A token-key-only node MUST get only the segments of the rooms its token key is limited to (PEER-06)"
@@ -1234,10 +1182,6 @@
    "oq": "OQ-41",
    "milestone": "M8",
    "texts": [
-    {
-     "file": "docs/domain-model/places.md",
-     "quote": "or a personal room's cross-room post to another principal's peer"
-    },
     {
      "file": "docs/srs/05d-peer-requirements.md",
      "quote": "as do its cross-room posts until OQ-41 closes"
@@ -1297,7 +1241,7 @@
    "milestone": "M8",
    "texts": [
     {
-     "file": "docs/domain-model/record.md",
+     "file": "docs/srs/05d-peer-requirements.md",
      "quote": "marked delivered after retirement (open for the room merge: OQ-41)"
     },
     {
@@ -1314,8 +1258,8 @@
    "milestone": "M8",
    "texts": [
     {
-     "file": "docs/domain-model/index.md",
-     "quote": "whether a call may name a room of the principal's that every run seat of the agent has left or lost"
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "Whether a call may name a room of its principal's that every run seat of the agent has left or lost to a kick or a bar"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
@@ -1330,10 +1274,6 @@
    "oq": "OQ-06",
    "milestone": "M8",
    "texts": [
-    {
-     "file": "docs/domain-model/places.md",
-     "quote": "A token-key-only node signs no principal act, so only managed policy makes a change there that ADM-04 holds for acceptance (open: OQ-06)"
-    },
     {
      "file": "docs/srs/05a-administration-requirements.md",
      "quote": "A token-key-only node signs no principal act (PRV-10), so only managed policy makes such a change there (open: OQ-06)"
@@ -1351,7 +1291,7 @@
    "texts": [
     {
      "file": "docs/domain-model/record.md",
-     "quote": "a principal act of the principal its seat key chains to (any other is void and shown)"
+     "quote": "by a principal act of the principal its seat key chains to, or by the expire act"
     },
     {
      "file": "docs/srs/05d-peer-requirements.md",
@@ -1365,8 +1305,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/principals-and-agents.md",
-     "quote": "even one their seats all left or lost to a kick or a bar (PIN-10, LANE-12); for recall, only the rooms where a seat of its runs is still a member (RCL-05)"
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "For restore and directed posts, its rooms MUST be every room its earlier runs had a seat in, even one their seats all left or lost to a kick or a bar"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
@@ -1807,10 +1747,6 @@
     {
      "file": "docs/srs/05a-administration-requirements.md",
      "quote": "MUST stay in force on the node until a release there, as its principal's own, recorded in its home"
-    },
-    {
-     "file": "docs/domain-model/places.md",
-     "quote": "a quarantine it keeps being its principal's own"
     }
    ]
   },
@@ -1820,8 +1756,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/places.md",
-     "quote": "The events a backup restore reinstates count as received in the same way, even on the node that made the copy"
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "and a backup copy's, MUST carry over to it thus, even on the node that made the copy"
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",
@@ -1850,8 +1786,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/places.md",
-     "quote": "A backup restore reinstates the copy's segments and payloads, never its derived artifacts"
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "every derived artifact MUST derive from the writer logs the node holds and its key set, none reinstated from the copy"
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",
@@ -1912,8 +1848,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/components-and-surfaces.md",
-     "quote": "At a terminal, the CLI and the TUI show every control character but the line feed, and every zero-width, bidirectional and tag character"
+     "file": "docs/srs/06-security.md",
+     "quote": "in text other than fixed text Cairn ships as a visible placeholder naming its code point, never written raw"
     },
     {
      "file": "docs/srs/06-security.md",
@@ -1929,8 +1865,8 @@
    "milestone": "M8",
    "texts": [
     {
-     "file": "docs/domain-model/record.md",
-     "quote": "a principal act of the principal its seat key chains to (any other is void"
+     "file": "docs/srs/05d-peer-requirements.md",
+     "quote": "any other principal act retiring it MUST be void and shown"
     },
     {
      "file": "docs/srs/13-open-questions-and-risks.md",
@@ -2078,8 +2014,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/components-and-surfaces.md",
-     "quote": "a join request made without that ask is refused, audited"
+     "file": "docs/srs/05b-room-view-requirements.md",
+     "quote": "principal's ask is refused, audited and counted, never left waiting for"
     },
     {
      "file": "docs/srs/12-delivery-plan.md",

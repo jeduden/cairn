@@ -55,61 +55,30 @@ row: "- [{title}]({filename}) — {summary}"
 
 - A principal owns any number of rooms; an agent's principal follows from its
   node.
-- A run has its personal-room seat from its first event, plus a further run seat
-  per room it joined or created, a new one for each seat key minted anew, and
-  the seat ingest starts beside any of them (Run seat).
-- A restore block carries the qualifying pins of every room its run has had a
-  seat in during the run, its personal room included, and of every room its
-  agent's earlier runs had a seat in, whose pins fill the pin budget
-  only after those of the rooms the run itself has had a seat in
-  (PIN-08, PIN-10, REC-02); a leave, kick or
-  bar keeps them, and where it makes the room foreign, as Foreign room says.
+- A run has its personal-room seat from its first event, plus a run seat per
+  room it joined or created, a new one per seat key minted anew, and the seat
+  ingest starts beside any of them (Run seat).
+- A restore block carries the qualifying pins of every room its run or its
+  agent's earlier runs had a seat in, and a leave, kick or bar drops none
+  (PIN-08, PIN-10, REC-02).
 - Ingest splits one transcript by run.
 - Every seat belongs to one principal and one room; every writer to one seat.
-- Each event goes to exactly one seat's writer. A run's event goes to its run
-  seat in the room it works in at that moment, one it joined or created that
-  names the branch of the run's latest preceding event naming its branch, while
-  that seat is a member and has work (its role, no mute), per the room state
-  this node holds when it records the event (LANE-01, LANE-16); else to its
-  personal-room seat; what `cairn ingest` appends for a witnessed run goes
-  instead to the seat ingest starts beside that run seat (Run seat). A room act
-  goes to the writer of the seat that signs it. A principal act or an expire act
-  goes to the device seat of the device that signs it, or before PRV-10 ships
-  records it, in the room it acts on; a node of a principal with a member seat
-  there first joins it without admission. One that acts on no room, on a room
-  its principal has no member seat in, or that a paired phone signs, goes to
-  that device seat in the personal room, naming the room, and that room shows it
-  by address as it shows a cross-room post (LANE-29); for a room with no member
-  seat, the room merge counting it rests on OQ-41, as does how a device key's or
-  access token's revocation reaches another principal's node. A seat key's
-  rotation goes
-  to that seat's own writer (SEC-27). A tombstone, an erasure request a
-  retention policy sends, and a bridge's or the launcher's event about a room's
-  branch go to the recording device's seat in the room they name, joined as for
-  a principal act, else to that device seat in the personal room, naming the
-  room. Any other event with no run goes to the recording device's seat in the
-  personal room of its node, or for a paired phone, of the node it pairs with.
-- A run's history spans its seats' writers, tied together by the run. Peers
-  exchange segments, so a room contains only the events routed to its seats and
-  shows others by address (LANE-01).
+- Each event goes to exactly one seat's writer: a run's to one of its run seats,
+  any other to a seat of the device that signs or records it, as LANE-01, OWN-02
+  and REC-19 route each (open: OQ-41).
+- A run's history spans its seats' writers, tied together by the run; a room
+  contains only the events routed to its seats and shows others by address
+  (LANE-01).
 - A purge destroys content, never an act's effect: its tombstone keeps the
-  structural fields, provenance, origin and recorder of each purged act,
-  tombstone and event the key set holds, so room state, the key set, the
-  quarantine set and every other derived artifact derive as before but for the
-  purged content (ADM-07, REC-17); how a node that never held them counts them
-  rests on OQ-44.
-- Principals and agents create rooms; an agent's room is owned by its principal.
-  Cairn never creates a room on its own initiative; a node's personal room comes
-  from the principal installing Cairn there (Personal room), or is carried over
-  to a node clone, and Cairn may suggest a room or a join.
-- A pin naming no room belongs to its author's principal's personal room on the
-  node that wrote it.
+  fields ADM-07 names, so every derived artifact derives as before but for the
+  purged content (ADM-07, REC-17; open: OQ-44).
+- Principals and agents create rooms, an agent's owned by its principal; Cairn
+  never does on its own initiative, a personal room coming from its principal's
+  install or a node clone (LANE-01, ADM-02).
 - Recall defaults to the calling agent's current run, through every writer of
-  its seats, whatever room each seat belongs to (RCL-05). It extends only to
-  the principal's rooms the agent has a seat in and the cross-room posts they
-  show, never to a foreign room unless the call names it; whether a call may
-  name a room of the principal's that every run seat of the agent has left or
-  lost to a kick or a bar rests on OQ-45.
+  its seats, whatever room each belongs to. It extends only to the principal's
+  rooms the agent has a seat in, with the cross-room posts they show, or to a
+  foreign room the call names (RCL-05, RCL-10; open: OQ-45).
 
 ## Names follow the model
 

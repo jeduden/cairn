@@ -9,6 +9,7 @@ target of 14,826.
 | 1    | 18,177      | 0      | 2      | 0                      |
 | 2    | 18,147      | 0      | 0      | 0                      |
 | 3    | 17,419      | 0      | 0      | 0                      |
+| 4    | 12,834      | 0      | 0      | 0                      |
 
 ## Step 1: the open questions inside M1–M5
 
@@ -137,3 +138,39 @@ agents noted two points for the final review:
   needs no acceptance;
 - SEC-27's pending scenario has no step yet for a seat key missing from
   where SEC-10 keeps it.
+
+## Step 4: deduplication
+
+One agent per model file took out each rule the SRS states and left the
+concept with the requirement id that holds the rule. Each agent kept a
+rule no requirement states, and listed it. Where a ledger theme cited a
+sentence that left, its citation moved to the SRS sentence that states
+the rule: 47 citations moved, and none was dropped.
+
+| File                       | Before | After |
+| -------------------------- | ------ | ----- |
+| acts-and-roles.md          | 2,247  | 1,596 |
+| components-and-surfaces.md | 986    | 678   |
+| git-and-forge.md           | 1,206  | 889   |
+| harness-facts.md           | 543    | 429   |
+| index.md                   | 2,147  | 1,710 |
+| pins-and-context.md        | 1,842  | 1,405 |
+| places.md                  | 1,214  | 649   |
+| principals-and-agents.md   | 1,626  | 1,215 |
+| record.md                  | 2,150  | 1,647 |
+| seats-and-keys.md          | 1,180  | 939   |
+| trust-and-flow.md          | 2,278  | 1,677 |
+
+The model ends at 12,834 words, under the target of 14,826. The SRS did
+not change.
+
+Rules the model keeps because no requirement states them, for the final
+review to weigh:
+
+- the direction of pin priority, lower first;
+- a personal-room seat can neither leave nor be kicked;
+- every change of visibility, admission or a room setting is widening;
+- a role assignment makes Cairn refuse no seat's act;
+- the naming rules for budgets, runs, sources and the harness's hooks;
+- a natural-language landmark headline never reaches a restore block;
+- an event from a peer or a bundle records no recorder.
