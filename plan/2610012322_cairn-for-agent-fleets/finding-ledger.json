@@ -987,6 +987,56 @@
      "quote": "A quarantined pin version (SEC-12) MUST count as absent wherever this requirement chooses which version of a pin restores"
     }
    ]
+  },
+  {
+   "id": "DM-BC",
+   "title": "The foreign-room freeze (a leave, kick or bar drops no pin; pins keep restoring as they stood) also keeps restoring pins of a revoked key or a key the key set marks relaying",
+   "status": "open"
+  },
+  {
+   "id": "DM-BD",
+   "title": "After a handover or succession, the new owner's stamp lifts the intent's restriction and restores the old version to the former owner's agents",
+   "status": "open"
+  },
+  {
+   "id": "DM-BE",
+   "title": "The model never says which sealed ranges a peer may receive: whether a private (personal) room syncs to the principal's own other nodes, and which ranges of other writers another principal's node may pull",
+   "status": "open"
+  },
+  {
+   "id": "DM-BF",
+   "title": "A seat key whose countersigned certificates chain it to two principal keys chains to neither, so a barred principal can take its seat out of the bar, kick and owner protection and stay a member",
+   "status": "open"
+  },
+  {
+   "id": "DM-BG",
+   "title": "The seat ingest starts shares the named run seat's add and takes over its role, but nothing ties it to the key that certified that run seat",
+   "status": "open"
+  },
+  {
+   "id": "DM-BH",
+   "title": "The Provenance entry gives no class to a worktree checkpoint, recall event, canary event or backup event",
+   "status": "open"
+  },
+  {
+   "id": "DM-BI",
+   "title": "The trusted-only export writes whole trusted events, so the untrusted free text of a cut or neutral principal act (a stated reason) reaches downstream memory systems marked trusted",
+   "status": "open"
+  },
+  {
+   "id": "DM-BJ",
+   "title": "The results and errors of tool calls that are not recall (room act tools, delegation tools, acting CLI verbs) have no rule on what they may carry",
+   "status": "open"
+  },
+  {
+   "id": "DM-BK",
+   "title": "A harness resume that starts a new harness session where the harness gives no stable agent id is a new agent whose restore block and recall omit the resumed run's rooms",
+   "status": "open"
+  },
+  {
+   "id": "DM-BL",
+   "title": "A purged pin version (by a principal act, a retention policy or an applied erasure request) has no rule when PIN-10 chooses which version of a pin restores",
+   "status": "open"
   }
  ]
 }
