@@ -111,19 +111,23 @@
    "texts": [
     {
      "file": "docs/domain-model/seats-and-keys.md",
-     "quote": "A run whose run-seat key is lost with its MCP server, on a harness resume or a restart, continues on a new run seat that names the old one"
+     "quote": "A run-seat key is lost with the MCP server that holds it, and a run that continues on a harness resume or a restart does so on a new run seat (Seat key; open: OQ-43)."
     },
     {
      "file": "docs/domain-model/seats-and-keys.md",
-     "quote": "and inherits no add: it joins its rooms again as Join says (open: OQ-43)."
+     "quote": "starts a new seat and writer that names the old one, inherits no add, role or appointment and is a member only as Seat says (SEC-27)."
     },
     {
      "file": "docs/srs/06-security.md",
-     "quote": "or a run-seat key lost with its MCP server, on a harness resume or a restart (open: OQ-43), MUST start a new seat and writer"
+     "quote": "as a run-seat key is once lost with its MCP server on a harness resume or a restart (open: OQ-43), MUST start a new seat and writer, audited, which names the old one, inherits no add, role or appointment, and is a member only as LANE-23 and LANE-25 say"
     },
     {
      "file": "docs/srs/13-open-questions-and-risks.md",
      "quote": "What does a continuing run's seat become when its run-seat key is lost with its MCP server"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "until this closes, the continuing run starts a new run seat under SEC-27."
     }
    ],
    "oq": "OQ-43",

@@ -8,9 +8,9 @@ summary: >-
 
 - **Seat**: One run's or one device's place in one room, its **seat kind** `run`
   or `device`, named by its seat certificate, made when the seat starts
-  (PRV-11), the only source Cairn shows a seat's kind from; a seat key minted on
-  a node identity change, a node clone or a backup restore starts another (Seat
-  key). The unit of membership, signing and authorship. A run's personal-room
+  (PRV-11), the only source Cairn shows a seat's kind from; a key that replaces
+  its seat key other than by rotation starts another (Seat key). The unit of
+  membership, signing and authorship. A run's personal-room
   seat exists from its first event, a paired phone's device seat in the personal
   room of the node it pairs with from its pairing, and a device seat a newly
   minted key starts in the personal room from its first event, each with no add;
@@ -32,10 +32,9 @@ summary: >-
   key a rotation replaced it with, by a seat certificate naming it the seat
   ingest starts beside that run seat: any other seat naming a run seat shares
   no add or role. An ingested run's seat key is kept like a device seat's key,
-  and the core seals its writer. A run whose run-seat key is lost with its MCP
-  server, on a harness resume or a restart, continues on a new run seat that
-  names the old one and inherits no add: it joins its rooms again as Join says
-  (open: OQ-43).
+  and the core seals its writer. A run-seat key is lost with the MCP server
+  that holds it, and a run that continues on a harness resume or a restart
+  does so on a new run seat (Seat key; open: OQ-43).
   A witnessed run records nothing until its MCP server holds its run-seat key,
   and one no MCP server serves is ingested (REC-19).
 - **Device seat**: A principal's seat for one device, a node or a paired phone.
@@ -53,13 +52,11 @@ summary: >-
   Nobody chooses it.
 - **Seat key**: A seat's one current key. It signs the seat's room acts and
   seals its writer. A rotation, signed by the old and the new key, keeps the
-  seat's id and writer and goes to that seat's own writer (SEC-27). A key minted
-  because the node identity changed, a node clone, a backup restore (REC-24,
-  ADM-06) or a run-seat key lost with its MCP server (Run seat), starts a new
-  seat and writer that names the old one and inherits no add, role or
-  appointment: outside the personal room it joins as any seat does (LANE-23),
-  and roles and appointments are assigned again; a personal-room seat is a
-  member from its first event. The seat ingest starts shares the add, where it
+  seat's id and writer and goes to that seat's own writer (SEC-27). Any other
+  key minted in its place, on a node identity change, a node clone, a backup
+  restore or the key's loss (Run seat), starts a new seat and writer that names
+  the old one, inherits no add, role or appointment and is a member only as
+  Seat says (SEC-27). The seat ingest starts shares the add, where it
   has one, and takes over the role instead (Run seat).
 - **Device key**: A device's key, certified by a principal key's **device
   certificate**, with a **device scope** (the kinds of principal act it may
