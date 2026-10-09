@@ -76,7 +76,7 @@ summary: >-
   resume that starts a new harness session, or a **harness clear**, starts a new
   run, of the same agent only where the harness gives a stable agent id;
   without one, whether it is the resumed run's agent is open (OQ-43), and until
-  then it takes that run's recall taint but none of its rooms. It has run
+  then it is its own agent. It has run
   seats and carries its recall taint (SEC-13), sandbox state (OWN-22), seat
   keys (SEC-10), kernel namespace (CMP-02) and spans (LMK-01). As a noun,
   "run" has no other meaning.
@@ -86,8 +86,7 @@ summary: >-
   when it starts, joined then with that seat's role and no appointment, under
   its parent's join (LANE-23). It takes a delegated task without a
   delegation grant.
-  Its run records that task as untrusted `harness_text`, never `user` (PRV-08),
-  since no one typed it at the harness's own input.
+  Its run records that task as untrusted `harness_text`, never `user` (PRV-08).
 - **Ingested run**: A run ingested from a transcript the hook handlers did not
   watch, with origin `ingested`, whose events are untrusted (REC-22).
   Transcripts the node's principal ingests from outside `transcript.roots` land

@@ -40,14 +40,11 @@ summary: >-
   structural fields.
 - **Recall taint**: A run's mark after it recalls untrusted content, which
   tightens the rule levels of the action classes SEC-13 configures as
-  sensitive (OWN-10). A delegate inherits the delegating run's (OWN-24),
-  and carries recall taint from its first event where its node cannot derive
-  that run's from the writers it holds (OWN-26).
-  A delegating run takes on a subagent's recall taint once that subagent's
-  `subagent_result` reaches it, as pulling any other delegate report through
-  `delegation_get` taints it (OWN-25). A run
-  a harness resume starts carries the recall taint of the run it resumes, and
-  carries recall taint from its first event where Cairn cannot tell that run
+  sensitive (OWN-10). It passes between runs whatever agent each belongs to:
+  from a run into the run a harness resume or clear of it starts, its
+  delegates' runs and the runs of a harness session its tool call starts,
+  which carry recall taint from their first event where their node cannot
+  derive that run's, and back with their delegate reports or tool results
   (SEC-13).
 - **Principal surface**: An authenticated client where principal acts are taken:
   the browser room view under SEC-20, the CLI or TUI at a terminal, or a paired

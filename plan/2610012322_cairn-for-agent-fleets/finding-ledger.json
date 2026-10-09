@@ -153,6 +153,10 @@
     {
      "file": "docs/srs/05-functional-requirements.md",
      "quote": "An agent MUST be identified by its node, its harness and the harness's agent id across harness sessions"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "MUST pass from run to run, whatever agent each belongs to (REC-02)"
     }
    ]
   },
@@ -715,11 +719,11 @@
    "texts": [
     {
      "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "A run a harness resume starts carries the recall taint of the run it resumes"
+     "quote": "It passes between runs whatever agent each belongs to: from a run into the run a harness resume or clear of it starts"
     },
     {
      "file": "docs/srs/06-security.md",
-     "quote": "carried into a run a harness resume or a harness clear starts (REC-02) from the run it resumes or clears"
+     "quote": "MUST pass from run to run, whatever agent each belongs to (REC-02): forward through a harness resume or a harness clear"
     }
    ]
   },
@@ -826,11 +830,15 @@
    "texts": [
     {
      "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "A delegating run takes on a subagent's recall taint once that subagent's"
+     "quote": "and back with their delegate reports or tool results (SEC-13)"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "and back through a delegate report (OWN-25) or that tool call's result"
     },
     {
      "file": "docs/srs/05c-principal-and-peer-requirements.md",
-     "quote": "the delegating run MUST take on the subagent's recall taint (SEC-13) once that report reaches it"
+     "quote": "and carries the subagent's recall taint (SEC-13)"
     }
    ]
   },
@@ -882,11 +890,11 @@
    "texts": [
     {
      "file": "docs/domain-model/trust-and-flow.md",
-     "quote": "carries recall taint from its first event where its node cannot derive that run's from the writers it holds"
+     "quote": "which carry recall taint from their first event where their node cannot derive that run's"
     },
     {
-     "file": "docs/srs/05c-principal-and-peer-requirements.md",
-     "quote": "A delegate on another node MUST carry recall taint (SEC-13) from its first event wherever its node cannot derive the delegating run's from the writers it holds"
+     "file": "docs/srs/06-security.md",
+     "quote": "the run reached carrying recall taint from its first event wherever its node cannot tell the run it comes from or derive that run's recall taint from the writers it holds"
     }
    ]
   },
@@ -1109,6 +1117,10 @@
     {
      "file": "docs/srs/05-functional-requirements.md",
      "quote": "whatever Cairn returns to a tool call, its errors and a CLI verb's output that is not a terminal"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "recall taint MUST be set on a run once untrusted content has been returned to it (RCL-04)"
     }
    ]
   },
@@ -1121,7 +1133,7 @@
    "texts": [
     {
      "file": "docs/domain-model/principals-and-agents.md",
-     "quote": "without one, whether it is the resumed run's agent is open (OQ-43), and until then it takes that run's recall taint but none of its rooms"
+     "quote": "without one, whether it is the resumed run's agent is open (OQ-43), and until then it is its own agent"
     },
     {
      "file": "docs/srs/13-open-questions-and-risks.md",
@@ -1949,8 +1961,16 @@
      "quote": "descends from a run's tool call records no `user` event"
     },
     {
+     "file": "docs/domain-model/harness-facts.md",
+     "quote": "recall taint passes between its runs and that run (SEC-13)"
+    },
+    {
      "file": "docs/srs/05e-provenance-requirements.md",
      "quote": "So MUST the input of a harness session whose process descends from a run's tool call"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "or the input a run's tool call gives a harness session (PRV-08), into each run so started from its first event"
     }
    ]
   },

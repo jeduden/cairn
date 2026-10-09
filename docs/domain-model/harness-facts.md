@@ -19,8 +19,7 @@ them, Cairn changes only harness configuration, under I7.
   describing the harness, never as a Cairn unit. One whose harness process
   descends from a run's tool call records no `user` event: its input, which
   that tool call supplied, is untrusted `harness_text` whatever the deployment
-  mode, and its runs carry that run's recall taint, or recall taint from their
-  first event where Cairn cannot tell that run (PRV-08, SEC-13).
+  mode (PRV-08); recall taint passes between its runs and that run (SEC-13).
 - **Transcript**: The harness's file of what a harness session did. A
   **transcript source** is a transcript Cairn ingests (Ingest marker, `cairn
   ingest`); a shrunk transcript or a rewritten prefix starts a new **transcript

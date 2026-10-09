@@ -177,6 +177,7 @@ Feature: Security (SEC)
     And a run that a harness resume of "r-1" starts in a new harness session carries recall taint from its first event
     And a run a harness resume starts in a new harness session, where Cairn cannot tell which run it resumes, carries recall taint from its first event
     And a run of a harness session whose harness process a Bash tool call of "r-1" started carries recall taint from its first event
+    And a run "r-2" carries recall taint once the tool result of its Bash tool call that started a harness session whose run carries recall taint reaches it
 
   @SEC-14 @P0 @I5 @pending
   Scenario: purged content is not recoverable from the storage the purge freed
