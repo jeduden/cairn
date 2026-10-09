@@ -154,6 +154,7 @@ exactly one kind (LANE-31).
   setter where SEC-32 permits, the setter's appointer or the owner may unbar.
 - **Mute**: Withdraws every capability but read from one seat or from the whole
   room; a whole-room mute leaves posting to the roles the owner names (LANE-16).
+  No mute covers the owner's device seats (Owner).
 - **Present**: Puts a presentation in the outcome window.
 - **Pick**: Chooses which presentation the outcome window shows.
 - **Admission**: Whether a room is invite only or admits a list of principal
@@ -169,14 +170,14 @@ exactly one kind (LANE-31).
   **succession**. Until a handover, a succession or the owner's rejoin, a room
   whose owner left keeps its pins as they were, but a stamper may still unstamp
   (LANE-11, LANE-32).
-- **Handover**: Transfers ownership by an offer and an acceptance. Succession is
-  the other path to ownership.
+- **Handover**: Transfers ownership by an offer and an acceptance.
 - **Stamp**: The act of a principal with a seat in the room on one pin version,
-  after being shown its exact text, author and key fingerprint. Once PRV-10
+  after being shown its exact text, pin type, priority, author and key
+  fingerprint. Once PRV-10
   ships, a stamped version of a type that restores restores word for word to
   that principal's own agents only. An edit, an unpin or a list removal leaves
   a stamped version
-  restoring until its stamper unstamps it, a cut principal act, or its own
+  restoring until its stamper unstamps it or its own
   stamp or edit puts a newer version in its place (LANE-32).
 - **Active pin**: A pin on its room's pin list (I10).
 - **Room merge**: The one rule deriving all room state from the three act kinds,

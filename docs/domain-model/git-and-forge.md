@@ -27,6 +27,8 @@ summary: >-
   Since only this node's principal's rooms count, a room two principals share
   may name a branch on one principal's node and hold a void link to it on the
   other's.
+  Whether a link another principal's seat wrote may win a concurrent tie over
+  one a seat of this node's principal wrote is open (OQ-46).
 - **Commit**: A git commit.
 - **Worktree**: A git working tree on a node, where a run edits a branch; its
   repository's **git directory** is git's own store of objects and refs.

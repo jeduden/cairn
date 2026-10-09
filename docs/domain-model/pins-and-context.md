@@ -55,7 +55,9 @@ summary: >-
   pin budget first from the rooms the run has had a seat in during the run, its
   personal room included, then from those only its agent's earlier runs had a
   seat in, each in that order, then by their creating events' addresses
-  (PIN-08).
+  (PIN-08). A pin keeps the priority and pin type it was written with:
+  changing either takes an unpin and a new pin, as a move between rooms does
+  (PIN-04, PIN-10).
 - **Budget**: The **pin budget** is the restore block's share of model tokens;
   every other budget is named too: the **hook budget** (a hook handler's time
   limit, §9.1, NFR-02), the **step budget** (how many steps a kernel execution

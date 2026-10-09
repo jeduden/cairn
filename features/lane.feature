@@ -237,6 +237,7 @@ Feature: Room (LANE)
     And a role assignment of the moderator role to a run seat is refused, since a run seat has the moderator role only by appointment
     And a device seat of "alice", but a paired phone's, has every room capability, for room acts and the principal acts that need one, but writing a room summary, editing and unpinning only pins its principal wrote from a device seat that do not restore unstamped, and making a list removal of any pin but the intent or a verdict, while her agents' run seats have only their role and any appointment
     And an appointment of a run seat or another principal's device seat as moderator is accepted only as a principal act of the owner, or of a principal whose device seat has the moderator role by role assignment, and only the appointer or the owner revokes it
+    And a mute of one seat or of the whole room leaves each device seat of "alice", but a paired phone's, every room capability it had, unmute included
     And an appointment of the facilitator by any principal but the owner is refused and audited
     And an appointment an appointed moderator tries, and its kick, bar or mute aimed at the owner or another moderator, are refused and audited
 
@@ -391,7 +392,7 @@ Feature: Room (LANE)
     And no sequence of deliveries, reorderings or duplications of these acts re-admits "bob" or revives the ended membership
     And a device seat a newly minted key started in "alice"'s personal room after a node clone is a member there from its first event, with no add
     And a seat "cairn ingest" started beside a run's personal-room seat is a member while that seat is, with no add
-    And a kick, bar or mute aimed at a seat of the owner or a key that chains to the owner's principal key is refused and audited
+    And a kick, bar or mute aimed at a seat of the owner or a key that chains to the owner's principal key is refused and audited, and a whole-room mute leaves them unmuted
     And the kicked and barred seats each get an explicit error naming the act's id on their next post, and read its reason through a tool
     And an opt-in notice of the kick reaches the agent only where the room's owner allows notices and "bob" opted in
 
@@ -496,7 +497,7 @@ Feature: Room (LANE)
     Given an isolated Cairn home
     And a room where an agent of "bob" pinned the constraint "run migrations only on staging", stored on the room's pin list, shown unstamped and restoring to no agent
     And agents of "alice" and "carol" in the room
-    When "alice" stamps version 1 of the pin as a widening principal act, after its text, its author's seat id and key fingerprint are shown
+    When "alice" stamps version 1 of the pin as a widening principal act, after its text, type, priority, author's seat id and key fingerprint are shown
     Then the pin shows "alice" as its stamper beside it
     And after compaction "alice"'s agent's restore block carries version 1 word for word, and "carol"'s agent's states it only as PIN-10 does
     When "bob"'s agent edits the pin to version 2

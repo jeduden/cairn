@@ -36,6 +36,8 @@ summary: >-
   server, on a harness resume or a restart, continues on a new run seat that
   names the old one and inherits no add: it joins its rooms again as Join says
   (open: OQ-43).
+  Where a witnessed run's events go while no MCP server holds its run-seat key,
+  before one does or where none runs, is open too (OQ-43).
 - **Device seat**: A principal's seat for one device, a node or a paired phone.
   The one seat kind for acting without a run. Its room acts are taken only at a
   principal surface, as principal acts are, but those its node takes on its own

@@ -71,7 +71,7 @@ Feature: Peer network (PEER)
     When an ephemeral node starts with the access token before it reaches any peer
     Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address it may deliver to
     And a seat key it certifies for a room outside the access token's rooms other than the node's own personal room, or after the access token's expiry, chains to no principal key and is refused
-    And its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events, device-seat pins of provenance "operator" and run-seat pins of provenance "assistant", and says later pins may be missing
+    And each run it records joins room "room-1" at the run's start, on the ask the access token carries from its mint (LANE-23), and its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events, device-seat pins of provenance "operator" and run-seat pins of provenance "assistant", and says later pins may be missing
     And the node, with only the token key, has a device seat its token key certified, which signs no principal acts and no expire acts, and every pin the node writes, from its device seat or a run seat, restores only once a principal stamps it from one of its devices whose device scope allows it, and no trust grant covers its posts or pins
     And "cairn status" names where the access token is read from and no child process inherits the access token in its environment
     And the access token's issue, use, rotation and revocation are audited, and the issuing node shows an unused access token as "enrolled, never synced"

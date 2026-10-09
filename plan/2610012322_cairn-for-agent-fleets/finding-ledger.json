@@ -1353,6 +1353,100 @@
      "quote": "for recall only the rooms where a seat of its runs is still a member (RCL-05; open: OQ-45)"
     }
    ]
+  },
+  {
+   "id": "DM-CA",
+   "title": "A whole-room mute may cover the owner's device seats and leave no seat able to unmute",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "No mute, a whole-room one included, covers its device seats"
+    },
+    {
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "from one seat or the whole room, never the owner's device seats"
+    }
+   ]
+  },
+  {
+   "id": "DM-CB",
+   "title": "Another principal's seat in a shared room can win the lower-commitment tie between concurrent branch links",
+   "status": "deferred",
+   "oq": "OQ-46",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "Whether a link another principal's seat wrote may win a concurrent tie over"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "In a room two principals share, a seat of the other principal with the link capability"
+    }
+   ]
+  },
+  {
+   "id": "DM-CC",
+   "title": "The provenance of a subagent's delegated task is unstated and could be trusted `user`",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "Its run records that task as untrusted `harness_text`, never `user` (PRV-08)"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "MUST be classified untrusted `harness_text`, never `user` (OWN-24)"
+    }
+   ]
+  },
+  {
+   "id": "DM-CD",
+   "title": "Where a witnessed run's events go while no MCP server holds its run-seat key",
+   "status": "deferred",
+   "oq": "OQ-43",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "Where a witnessed run's events go while no MCP server holds its run-seat key"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "where a witnessed run's events go while no MCP server holds its run-seat key"
+    }
+   ]
+  },
+  {
+   "id": "DM-CE",
+   "title": "A stamp neither shows nor fixes the pin priority and type that order and gate restore",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "A pin keeps the priority and pin type it was written with"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "changing a pin's type or priority MUST be an unpin then a new pin"
+    }
+   ]
+  },
+  {
+   "id": "DM-CF",
+   "title": "A token-key-only node's runs join no room, so its agents restore no constraints",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "Minting its access token is also its principal's ask for each of its runs to join"
+    },
+    {
+     "file": "docs/srs/05d-peer-requirements.md",
+     "quote": "Minting an access token that names a room to continue MUST be its principal's ask"
+    }
+   ]
   }
  ]
 }

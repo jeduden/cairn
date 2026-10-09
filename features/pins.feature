@@ -50,6 +50,7 @@ Feature: Pins (PIN)
     Then the record gains an edit event adding version 2 of the pin created at A1·10
     And the event at A1·10 and its pin text are unchanged
     And version 2's author is the seat that ran the edit, version 1 keeps its own author, and the pin's author stays version 1's
+    And version 2 keeps the pin's type and priority, and changing either takes an unpin and a new pin
     And version 1 stays readable, and "cairn rebuild" reproduces the one qualifying pin at version 2, "Never push directly to main or release branches"
 
   @PIN-05 @P1 @I2 @I3 @pending

@@ -86,6 +86,8 @@ summary: >-
   when it starts, joined then with that seat's role and no appointment, under
   its parent's join (LANE-23). It takes a delegated task without a
   delegation grant.
+  Its run records that task as untrusted `harness_text`, never `user` (PRV-08),
+  since no one typed it at the harness's own input.
 - **Ingested run**: A run ingested from a transcript the hook handlers did not
   watch, with origin `ingested`, whose events are untrusted (REC-22).
   Transcripts the node's principal ingests from outside `transcript.roots` land
@@ -126,9 +128,12 @@ summary: >-
   not restore unstamped, and make a list removal of any pin but the intent or a
   verdict, while its agents' run seats have only their role and any appointment;
   its act joining its own run assigns that seat contributor (LANE-16).
+  No mute, a whole-room one included, covers its device seats, which keep their
+  capabilities, so the owner can always unmute (LANE-16).
   Once PRV-10 ships, no one may kick, bar or mute the owner or any key that
-  chains to its principal key (LANE-25). "Owner" means nothing else, except in
-  the persona name "Returning owner" and where an outside domain qualifies it,
+  chains to its principal key (LANE-25). A whole-room mute spares them too.
+  "Owner" means nothing else, except in the persona name "Returning owner" and
+  where an outside domain qualifies it,
   as a code owner.
 - **Pull-request author**: The outside party whose commits a foreign room's
   bundle describes, matched through their commit-signing identity and a

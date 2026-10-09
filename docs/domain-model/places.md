@@ -20,7 +20,13 @@ summary: >-
   component; minting its access token is the widening act. A token-key-only
   node signs no principal act to accept its configuration, so its deployment
   mode stays `automation` unless managed policy fixes it (SEC-22); whether its
-  access token may name the mode is open (OQ-06). Its **node
+  access token may name the mode is open (OQ-06). Minting its access token
+  is also its principal's ask for each of its runs to join, at the run's
+  start, every room the token names to continue, as that room's admission
+  permits, and the token carries that ask and those rooms' qualifying pins
+  (LANE-23, PEER-06), so those pins restore to its runs from their first
+  restore block; no configuration pin of its own takes effect, and every pin
+  it writes restores only once stamped. Its **node
   identity** is a value outside the home that a cloned image or a restored
   snapshot cannot carry over (REC-24). A **node clone** is a copy of a home
   started where its node identity differs (a cloned image, a copied volume or a
