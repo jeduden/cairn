@@ -149,19 +149,15 @@ summary: >-
   or derived artifact from every path that carries content to an agent and
   from trusted-only exports (SEC-12), on the node that records it or applies
   it by a backup restore, also after its node identity changes (Node), without
-  deletion (I5). A quarantined pin version never
-  restores and counts as absent when PIN-10 chooses which version of a pin
-  restores, the intent's included; a pin left with no qualifying version leaves
-  the restore block.
+  deletion (I5). A quarantined pin version counts as absent wherever PIN-10
+  chooses which version of a pin restores.
 - **Purge**: Deletion of content, appending a **tombstone** naming the purged
   range, which views show in its place (ADM-07): by a principal act, or by the
   node under a retention policy, recorded naming the policy, which ages events
   by **time marks**, structural events the node records at intervals (REC-15).
   The only way stored
   content is destroyed (I1), never undoing an act's effect (Relations).
-  A purged pin version counts as absent when PIN-10
-  chooses a version, as a quarantined one does, and never restores, not even as
-  its tombstone.
+  A purged pin version counts as absent as a quarantined one does (PIN-10).
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
   range, a **quarantine marker** for a quarantined address, or a **truncation
   marker** on capped kernel output. A **missing range** is part of a writer this

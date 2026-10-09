@@ -262,19 +262,15 @@
    "texts": [
     {
      "file": "docs/domain-model/pins-and-context.md",
-     "quote": "restores, by its newest version whose own event is trusted on this node, to its author's principal's agents"
+     "quote": "by a version PIN-10 lets qualify for the run, trusted for the run's principal on this node by its own event"
     },
     {
      "file": "docs/domain-model/pins-and-context.md",
-     "quote": "restores to the agents of a principal who stamped it, its stamp trusted on this node."
-    },
-    {
-     "file": "docs/domain-model/pins-and-context.md",
-     "quote": "The intent restores as the author of its newest version wrote it, that version's own event trusted on this node"
+     "quote": "But for a stamped version, it restores only by its newest version (PIN-10)"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "by its newest version whose own event is trusted on this node under its recorded deployment mode (the intent only by its newest version"
+     "quote": "its own event trusted on this node under its recorded deployment mode (for the intent, only its newest version"
     }
    ]
   },
@@ -384,19 +380,19 @@
    "texts": [
     {
      "file": "docs/domain-model/pins-and-context.md",
-     "quote": "once PRV-10 ships, any version of a type that restores restores to the agents"
+     "quote": "trusted for the run's principal on this node by its own event or, once PRV-10 ships, by that principal's stamp"
     },
     {
      "file": "docs/domain-model/acts-and-roles.md",
-     "quote": "Once PRV-10 ships, a stamped version of a type that restores restores word for word"
+     "quote": "Once PRV-10 ships, a stamped version of a type that restores restores to that principal's own agents only, as PIN-10 says"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "or, once PRV-10 ships, a version the run's principal stamped, whose stamp is so trusted"
+     "quote": "or, once PRV-10 ships, one the run's principal stamped, its stamp so trusted"
     },
     {
      "file": "docs/srs/05b-lane-requirements.md",
-     "quote": "Once PRV-10 ships, a stamped version of a type that restores MUST restore word for word to the stamper's own agents only"
+     "quote": "Once PRV-10 ships, a stamped version of a type that restores MUST restore to the stamper's own agents only, as PIN-10 says"
     }
    ]
   },
@@ -407,11 +403,11 @@
    "texts": [
     {
      "file": "docs/domain-model/pins-and-context.md",
-     "quote": "only the newest restores to it, but one qualifying only through a trust grant never displaces one the agent's principal stamped"
+     "quote": "At most one version of a pin restores to an agent, the one PIN-10 chooses."
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "of the versions of one pin that so qualify for a run, only the newest MAY restore, but one qualifying only through a trust grant MUST NOT displace one the run's principal stamped"
+     "quote": "Of a pin's versions that qualify for a run, only the newest MAY restore, but one qualifying only through a trust grant MUST NOT displace one the run's principal stamped"
     },
     {
      "file": "docs/srs/05b-lane-requirements.md",
@@ -730,7 +726,7 @@
    "texts": [
     {
      "file": "docs/domain-model/pins-and-context.md",
-     "quote": "pin budget first from the rooms the run has had a seat in during the run, its personal room included, then from those only its agent's earlier runs had a seat in"
+     "quote": "by which PIN-08 orders qualifying pins in the pin budget"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
@@ -988,11 +984,11 @@
    "texts": [
     {
      "file": "docs/domain-model/record.md",
-     "quote": "A quarantined pin version never restores and counts as absent when PIN-10 chooses which version of a pin restores"
+     "quote": "A quarantined pin version counts as absent wherever PIN-10 chooses which version of a pin restores"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "MUST count as absent wherever this requirement chooses which version of a pin restores"
+     "quote": "A version MUST count as absent wherever this requirement chooses which version of a pin restores, the intent's included, while it is quarantined (SEC-12)"
     }
    ]
   },
@@ -1018,7 +1014,7 @@
    "texts": [
     {
      "file": "docs/domain-model/pins-and-context.md",
-     "quote": "it restores only to its stampers' agents: the new owner's stamp adds only"
+     "quote": "after a change of ownership, until the new owner revises it, it restores only to its stampers' agents (LANE-11)"
     },
     {
      "file": "docs/srs/05b-lane-requirements.md",
@@ -1144,11 +1140,11 @@
    "texts": [
     {
      "file": "docs/domain-model/record.md",
-     "quote": "A purged pin version counts as absent when PIN-10"
+     "quote": "A purged pin version counts as absent as a quarantined one does (PIN-10)"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "and so MUST a purged one, however purged (SEC-31), which MUST NOT restore as its tombstone"
+     "quote": "once it is purged, however purged (SEC-31), its tombstone never restoring"
     }
    ]
   },
@@ -1443,11 +1439,11 @@
    "texts": [
     {
      "file": "docs/domain-model/pins-and-context.md",
-     "quote": "A pin keeps the priority and pin type it was written with"
+     "quote": "A pin keeps the priority and pin type it was written with (PIN-04)"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "changing a pin's type or priority MUST be an unpin then a new pin"
+     "quote": "changing a pin's type, priority or room MUST be an unpin then a new pin"
     }
    ]
   },
@@ -2049,7 +2045,7 @@
    "texts": [
     {
      "file": "docs/domain-model/pins-and-context.md",
-     "quote": "intent before every pin of another type (LANE-20)"
+     "quote": "by which PIN-08 orders qualifying pins in the pin budget"
     },
     {
      "file": "docs/srs/05-functional-requirements.md",

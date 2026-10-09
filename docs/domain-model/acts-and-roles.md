@@ -173,11 +173,9 @@ exactly one kind (LANE-31).
 - **Stamp**: The act of a principal with a seat in the room on one pin version,
   after being shown its exact text, pin type, priority, author and key
   fingerprint. Once PRV-10
-  ships, a stamped version of a type that restores restores word for word to
-  that principal's own agents only. An edit, an unpin or a list removal leaves
-  a stamped version
-  restoring until its stamper unstamps it or its own
-  stamp or edit puts a newer version in its place (LANE-32).
+  ships, a stamped version of a type that restores restores to that
+  principal's own agents only, as PIN-10 says; no room act ends a stamp
+  (LANE-32).
 - **Active pin**: A pin on its room's pin list (I10).
 - **Room merge**: The one rule deriving all room state from the three act kinds,
   in causal order (LANE-31). Seats that are members with no add, and the seat

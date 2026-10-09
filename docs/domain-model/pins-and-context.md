@@ -13,15 +13,9 @@ summary: >-
   except the intent (Intent). Information, never an instruction. It restores
   only under PIN-10, to runs that have had a seat in its room during the run, or
   whose agent's earlier runs had one (REC-02), as
-  a **qualifying pin**: a pin of a type that restores written from a device seat
-  a device key certified, within that key's device scope, restores, by its
-  newest version whose own event is trusted on this node, to its author's
-  principal's agents, the intent as Intent says (before PRV-10 ships, a pin from
-  this node's own device seat to this node's agents), and to agents whose
-  principal's trust grant covers its author's principal outside a foreign room
-  or as Foreign room keeps it;
-  once PRV-10 ships, any version of a type that restores restores to the agents
-  of a principal who stamped it, its stamp trusted on this node. Adding, editing
+  a **qualifying pin**: a pin of a type that restores, by a version PIN-10 lets
+  qualify for the run, trusted for the run's principal on this node by its own
+  event or, once PRV-10 ships, by that principal's stamp. Adding, editing
   or unpinning a pin
   of a type that restores, written from a device seat a device key certified
   (before PRV-10 ships, this node's own device seat), is a widening principal
@@ -33,10 +27,8 @@ summary: >-
   neutral unpin of its own agent's run-seat pin, and a run seat's or a
   token-key-only node's restores only once stamped.
 - **Pin version**: One immutable text of a pin; each edit adds one, unstamped.
-  What a stamp covers. Of the versions of one pin that qualify for an agent,
-  only the newest restores to it, but one qualifying only through a trust grant
-  never displaces one the agent's principal stamped (LANE-32); a quarantined
-  or purged version counts as absent in that choice (Quarantine, Purge).
+  What a stamp covers. At most one version of a pin restores to an agent, the
+  one PIN-10 chooses.
 - **Pin candidate**: Proposed pin text an agent suggested (an `assistant` event,
   PIN-02) or Cairn detected (a derived artifact over its creating `user` event,
   holding its text by address, with no provenance of its own, I10) only in a
@@ -54,14 +46,9 @@ summary: >-
 - **Configuration pin**: A pin the principal's configuration declares, which
   its device seat on that node adds, edits or unpins when that configuration is
   accepted (PIN-01, ADM-04).
-- **Pin priority**: An integer the pin's author sets with it, lower first, each
-  intent before every pin of another type (LANE-20). Qualifying pins fill the
-  pin budget first from the rooms the run has had a seat in during the run, its
-  personal room included, then from those only its agent's earlier runs had a
-  seat in, each in that order, then by their creating events' addresses
-  (PIN-08). A pin keeps the priority and pin type it was written with:
-  changing either takes an unpin and a new pin, as a move between rooms does
-  (PIN-04, PIN-10).
+- **Pin priority**: An integer the pin's author sets with it, lower first, by
+  which PIN-08 orders qualifying pins in the pin budget. A pin keeps the
+  priority and pin type it was written with (PIN-04).
 - **Budget**: The **pin budget** is the restore block's share of model tokens
   (PIN-08, ADM-04);
   every other budget is named too: the **hook budget** (a hook handler's time
@@ -91,13 +78,9 @@ summary: >-
 - **Intent**: A room's lead pin, of type `intent`: a goal, its criteria and
   optionally the paths it is meant to change (LANE-20). Only the owner's
   principal act changes it; a new owner's revision adds a version its device
-  seat authors. The intent restores as the author of its newest version wrote
-  it, that version's own event trusted on this node, to that author's
-  principal's agents and to agents whose principal's trust grant covers that
-  author's principal outside a foreign room or as Foreign room keeps it; after a
-  change of ownership, a handover or a succession, until the new owner revises
-  it, it restores only to its stampers' agents: the new owner's stamp adds only
-  its own agents (LANE-32).
+  seat authors. But for a stamped version, it restores only by its newest
+  version (PIN-10); after a change of ownership, until the new owner revises it,
+  it restores only to its stampers' agents (LANE-11).
 - **Criterion**: One acceptance condition of an intent, with a stable id.
 - **Stake**: A pin of type `stake` stating what its author works on. Only its
   author, or for a device seat its author's principal, edits it; it is unpinned
