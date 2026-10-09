@@ -244,3 +244,26 @@ func TestNewerOrdersByStartThenByID(t *testing.T) {
 	assert.True(t, newer(Check{StartedAt: early.StartedAt, ID: 10}, early))
 	assert.False(t, newer(early, early))
 }
+
+func TestDefuseMentionsWrapsBareAtWordsInCode(t *testing.T) {
+	cases := map[string]string{
+		"@LANE-16 is retagged from @P2 @I2": "`@LANE-16` is retagged from `@P2` `@I2`",
+		"(I4 and @I10 added)":               "(I4 and `@I10` added)",
+		"tags `@P1 @I2` stay":               "tags `@P1 @I2` stay",
+		"mail a@b.com":                      "mail a@b.com",
+		"a lone @ sign":                     "a lone @ sign",
+		"path `x`: @I4.":                    "path `x`: `@I4`.",
+	}
+	for in, want := range cases {
+		assert.Equal(t, want, defuseMentions(in), in)
+	}
+}
+
+func TestBodyMentionsNoOne(t *testing.T) {
+	v := Verdict{Verdict: RequestChangesVerdict, Summary: "@I2 widens.", Findings: []Finding{
+		{Path: "features/lane.feature", Severity: Blocking, Body: "@LANE-16 is retagged @P1 @I4"},
+	}}
+	body := render(v, nil, RequestChanges, reviewed)
+	assert.Contains(t, body, "`@I2` widens.")
+	assert.Contains(t, body, "`@LANE-16` is retagged `@P1` `@I4`")
+}

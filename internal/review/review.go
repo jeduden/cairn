@@ -16,6 +16,7 @@ import (
 	"io"
 	"slices"
 	"strings"
+	"unicode"
 )
 
 // The answers a verdict can give.
@@ -241,11 +242,12 @@ func render(v Verdict, failed []Check, event, head string) string {
 	if event == Approve {
 		outcome = "Approved"
 	}
-	fmt.Fprintf(&b, "**%s** by the review agent on `%s`.\n\n%s\n", outcome, head[:min(len(head), 12)], v.Summary)
+	fmt.Fprintf(&b, "**%s** by the review agent on `%s`.\n\n%s\n",
+		outcome, head[:min(len(head), 12)], defuseMentions(v.Summary))
 	for _, sev := range []string{Blocking, Nit} {
 		for _, f := range v.Findings {
 			if f.Severity == sev {
-				fmt.Fprintf(&b, "\n- %s `%s`: %s", sev, location(f), f.Body)
+				fmt.Fprintf(&b, "\n- %s `%s`: %s", sev, location(f), defuseMentions(f.Body))
 			}
 		}
 	}
@@ -263,4 +265,39 @@ func location(f Finding) string {
 	}
 
 	return fmt.Sprintf("%s:%d", f.Path, f.Line)
+}
+
+// defuseMentions wraps each bare @word outside a code span in
+// backticks, so a review quoting a scenario tag such as @I2 mentions
+// no GitHub user of that name. Text inside backticks and the @ of an
+// email address stay as they are.
+func defuseMentions(s string) string {
+	var b strings.Builder
+	rs := []rune(s)
+	inCode := false
+	for i := 0; i < len(rs); i++ {
+		r := rs[i]
+		if r == '`' {
+			inCode = !inCode
+			b.WriteRune(r)
+			continue
+		}
+		if inCode || r != '@' || (i > 0 && wordRune(rs[i-1])) || i+1 == len(rs) || !wordRune(rs[i+1]) {
+			b.WriteRune(r)
+			continue
+		}
+		j := i + 1
+		for j < len(rs) && (wordRune(rs[j]) || rs[j] == '-') {
+			j++
+		}
+		b.WriteString("`" + string(rs[i:j]) + "`")
+		i = j - 1
+	}
+
+	return b.String()
+}
+
+// wordRune reports whether r can be part of a GitHub user name.
+func wordRune(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_'
 }
