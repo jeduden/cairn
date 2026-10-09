@@ -153,10 +153,10 @@ summary: >-
 - **Flag**: A mark Cairn sets on an event whose text matches an injection
   pattern (PRV-07); flagged text contributes only counts to landmarks (LMK-04).
 - **Quarantine**: Recorded, reversible exclusion of an event, span, run, writer
-  or derived artifact from recall, restore blocks, landmark text (LMK-04 keeps
-  its counts) and trusted-only exports, on the node that records it or applies
+  or derived artifact from every path that carries content to an agent and
+  from trusted-only exports (SEC-12), on the node that records it or applies
   it by a backup restore, also after its node identity changes (Node), without
-  deletion (I5); SEC-12 says what else it stops. A quarantined pin version never
+  deletion (I5). A quarantined pin version never
   restores and counts as absent when PIN-10 chooses which version of a pin
   restores, the intent's included; a pin left with no qualifying version leaves
   the restore block.

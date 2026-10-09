@@ -837,11 +837,7 @@
    "texts": [
     {
      "file": "docs/srs/06-security.md",
-     "quote": "no quarantined post MAY be endorsed (OWN-08) or reach an agent under a trust grant (OWN-29)"
-    },
-    {
-     "file": "docs/srs/06-security.md",
-     "quote": "where no quarantined post MAY be endorsed (OWN-08) or reach an agent under a trust grant (OWN-29)"
+     "quote": "any other write to an agent carrying it, such as an endorsement (OWN-08), a trust grant's post (OWN-29) or a delegated task (OWN-24)"
     }
    ]
   },
@@ -897,11 +893,15 @@
    "texts": [
     {
      "file": "docs/domain-model/record.md",
-     "quote": "from recall, restore blocks, landmark text (LMK-04 keeps its counts) and trusted-only exports"
+     "quote": "from every path that carries content to an agent and from trusted-only exports (SEC-12)"
     },
     {
      "file": "docs/srs/06-security.md",
-     "quote": "and every trusted-only export (ADM-12) on the node that records it"
+     "quote": "restore blocks and trusted-only exports leave it out (RCL-06, CMP-07, LMK-04, PIN-10, ADM-12)"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "MUST NOT write a quarantined one (SEC-12)"
     }
    ]
   },
