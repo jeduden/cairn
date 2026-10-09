@@ -168,11 +168,8 @@ touching a path [CODEOWNERS](.github/CODEOWNERS) assigns — the SRS, the gates
 that enforce it, CI and its tooling, the supply-chain policy, the agent
 instructions, and the security-sensitive packages until a security reviewer is
 named — also waits for the stakeholder's approval. Keep such changes out of code
-pull requests.
-
-On GitHub, write every `@`-word in backticks, tags such as `@I2` too.
-A bare one mentions the GitHub user of that name (jeduden/cairn#22).
-That holds for pull requests, reviews, comments, issues and commits.
+pull requests. On GitHub, write every `@`-word in backticks: a bare one, such as
+`@I2`, mentions that GitHub user (jeduden/cairn#22).
 
 ## Requirements and Scenarios
 
@@ -269,10 +266,7 @@ Report in the SRS's terms, not the source's.
 - Log with `log/slog`, and pass log fields through redaction (ENG-05)
 - Error messages: lowercase, no trailing punctuation
 - Prefer returning errors over panicking
-
-## Defensive Code
-
-Add a defensive branch only after a failing test that takes it (red/green).
+- Add a defensive branch only after a failing test that takes it (red/green)
 
 ## Isolation for Agents and Tests
 
