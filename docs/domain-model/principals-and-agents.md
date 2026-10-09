@@ -39,7 +39,8 @@ summary: >-
   event that enters the key set of the node that recorded it from its machine's
   managed policy, and another node's only once the listed key countersigns it,
   as a certificate; a removal, needing no countersignature, enters wherever the
-  listing it ends did (PRV-10). A key marked as relaying, or listed unmarked,
+  listing it ends did (PRV-10); how a listing or a removal reaches another
+  principal's node rests on OQ-41. A key marked as relaying, or listed unmarked,
   stays relaying once what marked or listed it is revoked or removed; and a
   revocation of any certificate of a key, or a removal of any listing of it,
   makes every trust grant naming that key that does not causally follow that

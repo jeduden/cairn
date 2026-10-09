@@ -104,7 +104,9 @@ summary: >-
   that act covering nothing (Service account).
 - **Delegation**: One agent handing another a delegated task: its subagent, or,
   under a delegation grant, another agent of the same principal, an agent on
-  another of its nodes, or another principal's agent (OWN-23 to OWN-26).
+  another of its nodes, or another principal's agent (OWN-23 to OWN-26). How
+  a delegated task and its delegate report travel between two principals'
+  nodes rests on OQ-14.
 - **Delegated task**: The text of a delegation: a subagent's from its harness,
   any other in OWN-24's template.
 - **Delegate report**: What a delegate returns, recorded on the delegating side

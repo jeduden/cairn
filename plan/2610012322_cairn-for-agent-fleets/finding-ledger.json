@@ -1139,6 +1139,103 @@
      "quote": "and so MUST a purged one, however purged (SEC-31), which MUST NOT restore as its tombstone"
     }
    ]
+  },
+  {
+   "id": "DM-BM",
+   "title": "Foreign room's trusted list leaves out the trust-grant pins a leave, kick or bar keeps",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "the pins a leave, kick or bar keeps there stay trusted and"
+    }
+   ]
+  },
+  {
+   "id": "DM-BN",
+   "title": "Foreign room's freeze keeps the former owner's intent restoring after a change of ownership, against LANE-11",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "after a change of ownership, the intent restores in a foreign room only"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "after a change of ownership, the intent MUST restore in such a room only as LANE-11 says"
+    }
+   ]
+  },
+  {
+   "id": "DM-BO",
+   "title": "Peer's serving rule ignores a token-key-only node's token limits",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "A node serves a token-key-only node only the segments of the rooms its token key is limited to"
+    },
+    {
+     "file": "docs/srs/05d-peer-requirements.md",
+     "quote": "A token-key-only node MUST get only the segments of the rooms its token key is limited to (PEER-06)"
+    }
+   ]
+  },
+  {
+   "id": "DM-BP",
+   "title": "A managed-policy listing or its removal never reaches another principal's node",
+   "status": "deferred",
+   "oq": "OQ-41",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "how a listing or a removal reaches another principal's node rests on OQ-41"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "managed-policy listing or its removal, a structural event in the personal room of the node that records it, reaches another principal's node"
+    }
+   ]
+  },
+  {
+   "id": "DM-BQ",
+   "title": "A delegation to another principal's agent has no path under Peer's serving rule",
+   "status": "deferred",
+   "oq": "OQ-14",
+   "milestone": "M8",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "How a delegated task and its delegate report travel between two principals' nodes rests on OQ-14"
+    },
+    {
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "how the delegated task and its delegate report travel between the two principals' nodes is open (OQ-14)"
+    }
+   ]
+  },
+  {
+   "id": "DM-BR",
+   "title": "A personal room's cross-room post could reach another principal's peer with no widening act",
+   "status": "deferred",
+   "oq": "OQ-41",
+   "milestone": "M8",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "or a personal room's cross-room post to another principal's peer"
+    },
+    {
+     "file": "docs/srs/05d-peer-requirements.md",
+     "quote": "as do its cross-room posts until OQ-41 closes"
+    }
+   ]
+  },
+  {
+   "id": "DM-BS",
+   "title": "A purge or retention policy can erase an act and so undo its effect (quarantine, unpin, unstamp, revocation, listing)",
+   "status": "open"
   }
  ]
 }

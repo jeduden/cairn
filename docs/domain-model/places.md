@@ -59,7 +59,8 @@ summary: >-
   kick or a bar. Recall marks every item it returns from it untrusted, whatever
   the item's trust level or trust grant covers its keys (RCL-10), and leaves it
   outside every extended recall scope unless named in the call; only its
-  principal's own device-seat pins and the versions it stamped stay trusted and
+  principal's own device-seat pins, the versions it stamped and
+  the pins a leave, kick or bar keeps there stay trusted and
   keep restoring to the runs Pin names: those that have had a seat in it
   during the run, or whose agent's earlier runs had one (PIN-10,
   REC-02). A room the principal owns or
@@ -69,6 +70,8 @@ summary: >-
   before that act, until that principal's own act changes it (PIN-10), or
   until a certificate it qualified through is revoked (PRV-10) or the trust
   grant it qualified by covers nothing (Trust grant), as in any other room.
+  But after a change of ownership, the intent restores in a foreign room only
+  as Intent says (LANE-11).
 - **Principal's rooms**: The rooms a principal owns or has a seat in.
 - **Visibility**: Whether a room is private, shared with the room's principals,
   published or stored on blind peers (LANE-17). Changing it is a widening
@@ -76,12 +79,16 @@ summary: >-
   blind peer for it, only as its visibility allows.
 - **Peer**: Another node this node's principal enrolled by key and exchanges
   sealed ranges with through the peer component (B2). Being a peer never makes
-  content trusted (PRV-02). A node serves a room's segments only to the peers
+  content trusted (PRV-02). A node serves a token-key-only node only the
+  segments of the rooms its token key is limited to and the cross-room posts
+  they show (Token key). A node serves a room's segments only to the peers
   whose principal has a seat in that room and to the blind peers holding it;
-  from any other room it serves a peer only a cross-room post, by its address,
-  when a seat of that peer's principal in the room the post targets asks for it
+  from any other room but a personal room it serves a peer only a cross-room
+  post, by its address, when a seat of that peer's principal in the room the
+  post targets asks for it
   (PEER-02, LANE-29). Whether it so serves a principal act a room shows by
-  address rests on OQ-41. Exchanging the sealed ranges each may receive is
+  address, or a personal room's cross-room post to another principal's peer,
+  rests on OQ-41. Exchanging the sealed ranges each may receive is
   **sync**.
 - **Blind peer**: A peer that holds a room's segments without any key they are
   encrypted to, so it stores and serves them encrypted and reads none of them

@@ -26,8 +26,9 @@ Feature: Peer network (PEER)
     Then "a" serves its complete copy of "room-1" to "b"
     And "c" is refused every segment of "room-1"
     And a blind peer that holds "room-1" is served its segments, encrypted (PEER-12)
-    And a node of the principal of "a" is served the segments of the personal room of "a", and a node of any other principal none of them
+    And a node of the principal of "a" is served the segments of the personal room of "a", and a node of any other principal none of them, nor a cross-room post written there
     And when a seat of the principal of "c" in a room that shows a cross-room post from "room-1" asks for it, "a" serves "c" that post by its address and no other event of "room-1"
+    And a token-key-only node of the principal of "a" is served only the segments of the rooms its token key is limited to and the cross-room posts they show, never the personal room of "a"
     And no other peer and no third-party service took part in enrollment, discovery or relay
 
   @PEER-03 @P2 @I9 @I10 @pending
@@ -126,6 +127,7 @@ Feature: Peer network (PEER)
     And a node of another principal, enrolled as a blind peer
     When the nodes of "alice" and "bob" sync the room's sealed ranges through the blind peer
     Then the blind peer stores only ranges encrypted to the device keys of the room's principals, never to a seat key
+    And it stores a range encrypted to a token-key-only node's token key only for a room that token key is limited to
     And it verifies the seat key's signature over each range before storing it
     And it holds no event content, header field, commitment key or room metadata
     And it derives no room state and has no seat in the room
