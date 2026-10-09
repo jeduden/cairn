@@ -26,7 +26,8 @@ summary: >-
   Everything else is untrusted, and so is the free text a cut or neutral
   principal act carries (OWN-11).
 - **Deployment mode**: `interactive` (a person types at the harness) or
-  `automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`);
+  `automation` (a pipeline does, the default), set per node (PRV-02, PRV-04,
+  `node.deployment_mode`);
   changing it, loosening redaction or turning flags off applies only once
   its configuration is accepted (ADM-04).
 - **Trust policy**: The rule that derives each event's trust level (PRV-02); no

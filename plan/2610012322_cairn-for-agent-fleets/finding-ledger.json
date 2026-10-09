@@ -1306,6 +1306,53 @@
      "quote": "which neither scope reaches, is open (OQ-45)"
     }
    ]
+  },
+  {
+   "id": "DM-BX",
+   "title": "A token-key-only node's deployment mode has no stated default or source",
+   "status": "deferred",
+   "oq": "OQ-06",
+   "milestone": "M8",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "A token-key-only node signs no principal act to accept its configuration, so its deployment mode stays `automation` unless managed policy fixes it"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "May the access token whose token key certifies its seat keys name the mode"
+    }
+   ]
+  },
+  {
+   "id": "DM-BY",
+   "title": "Whose principal act may retire a writer",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "a principal act of the principal its seat key chains to (any other is void and shown)"
+    },
+    {
+     "file": "docs/srs/05d-peer-requirements.md",
+     "quote": "Only the principal a writer's seat key chains to MAY retire it by a principal act"
+    }
+   ]
+  },
+  {
+   "id": "DM-BZ",
+   "title": "The Agent entry's 'its rooms' covers recall and restore, which reach different sets",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "even one their seats all left or lost to a kick or a bar (PIN-10, LANE-12); for recall, only the rooms where a seat of its runs is still a member (RCL-05)"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "for recall only the rooms where a seat of its runs is still a member (RCL-05; open: OQ-45)"
+    }
+   ]
   }
  ]
 }

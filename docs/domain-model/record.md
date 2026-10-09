@@ -24,11 +24,12 @@ summary: >-
   and held by any node, named by its **writer id**, derived from the seat's
   first key. Its events are hash-chained; the **chain head** at a seq is the
   hash over every event up to it.
-- **Retire a writer**: Mark a writer retired, by a principal act or the
-  expire act ending the access token whose token key certified its seat key,
-  naming its last accepted seq. A peer still accepts segments past it that
-  continue its chain without a fork, marked delivered after retirement (open
-  for the room merge: OQ-41); only a revocation refuses them (PEER-05).
+- **Retire a writer**: Mark a writer retired, naming its last accepted seq, by
+  a principal act of the principal its seat key chains to (any other is void
+  and shown) or the expire act ending the access token whose token key
+  certified its seat key. A peer still accepts segments past it that continue
+  its chain without a fork, marked delivered after retirement (open for the
+  room merge: OQ-41); only a revocation refuses them (PEER-05).
 - **Event**: One immutable entry in a writer, such as a message (the harness's
   user input or the model's reply), tool call, tool result, **hook observation**
   (what a hook reported), worktree checkpoint, key rotation, tombstone, or an
@@ -94,14 +95,12 @@ summary: >-
   (RCL-09); the trust policy reads only whether an event was recorded on this
   node, ingested or received, and `bundle` beside `peer` is a display mark. A
   **witnessed run** is one this node's hook handlers watched. Independent of
-  provenance. Each event also records its **recorder**,
-  the part that recorded it (the hook handlers, the CLI, the TUI, the MCP
-  server, the launcher, the room-view component, or the bridge component, whose
-  events take provenance `web`, always untrusted; the room-view component
-  records a principal act taken in the browser room view, marked with its
-  principal surface, and how it is signed rests on OQ-40), which the trust
-  policy reads; an event from a peer or a bundle records no recorder, only its
-  origin.
+  provenance. Each event also records its **recorder**, the part that recorded
+  it (one of those `witnessed` names: the bridge component's events take
+  provenance `web`, always untrusted; the room-view component records a
+  principal act taken in the browser room view, marked with its principal
+  surface, and how it is signed rests on OQ-40), which the trust policy reads;
+  an event from a peer or a bundle records no recorder, only its origin.
 - **Span**: A contiguous range of one run's events in one writer. A new span
   starts at every user turn, compaction, subagent start or end, and whenever the
   run's events move to another seat's writer (LMK-01).
@@ -163,8 +162,8 @@ summary: >-
   node under a retention policy, recorded naming the policy. The only way stored
   content is destroyed (I1); it never undoes an act's effect, as Relations
   says. A purged pin version counts as absent when PIN-10
-  chooses which version of a pin restores, as a quarantined one does, and never
-  restores, not even as its tombstone (Quarantine).
+  chooses a version, as a quarantined one does, and never restores, not even as
+  its tombstone.
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
   range, a **quarantine marker** for a quarantined address, or a **truncation
   marker** on capped kernel output. A **missing range** is part of a writer this
