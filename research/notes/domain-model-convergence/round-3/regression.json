@@ -1,0 +1,294 @@
+{
+ "round": "3-regression",
+ "reviews": [
+  {
+   "lens": "consistency",
+   "findings": [
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "principal's own device-seat pins and the versions it stamped stay trusted and",
+     "problem": "Foreign room says only the principal's own device-seat pins and the versions it stamped stay trusted and keep restoring. Three lines later it says a leave, kick or bar keeps a trust grant's pins restoring. A pin restores only by a version trusted on this node (Pin), and Trusted sources admits in a foreign room only 'the pins and stamps Foreign room names', so implementers will disagree on whether kept trust-grant pins are trusted, whether they restore, and whether they go into a trusted-only export.",
+     "fix": "\"only its principal's own device-seat pins, the versions it stamped and, in a room a leave, kick or bar made foreign, the trust-grant pins that act keeps stay trusted and keep restoring to the runs Pin names\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "and another node's only once the listed key countersigns it",
+     "problem": "A managed-policy listing is a structural event with no run, so the hub routes it to the recording device seat's personal room. A personal room's segments go only to its principal's other nodes, and Peer now serves nothing else, so a listing never reaches another principal's node. On that node the listed service account counts as an uncertified person's key, so it can record verdicts, and Trust grant's refusal of a relaying or unmarked account can never fire.",
+     "fix": "Defer it with its sibling question. In the hub's OQ-41 sentence: \"as does how a device key's or access token's revocation, or a managed-policy listing or its removal, reaches another principal's node\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "whose principal has a seat in that room and to the blind peers holding it;",
+     "problem": "Peer now serves only the segments of rooms the receiving peer's principal has a seat in, plus cross-room posts. Yet Delegation lets a run hand a delegated task to another principal's agent and records the delegate report on the delegating side (OWN-24, OWN-26), and Recall taint expects the delegate's node may not hold the delegating writers. No rule says the two runs must share a room, so one implementer will require a shared room and another will carry the task and the report outside room segments, against Peer.",
+     "fix": "Add to Delegation: \"a delegation to another principal's agent travels only in a room both runs have a seat in\". Alternatively, rest how it travels otherwise on an open question.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "A node serves a room's segments only to the peers",
+     "problem": "The new serving rule looks only at the peer's principal. A token-key-only ephemeral node has a token key limited to an access token's rooms, the rooms it may create and its own personal room, yet it still qualifies for every room its principal has a seat in, including every other node's personal room. Whether a node may serve it beyond its token's rooms is left to each implementer, and the choice decides what a short-lived cloud environment can expose.",
+     "fix": "\"A node serves a room's segments only to the peers whose principal has a seat in that room, a token-key-only node only within its token key's rooms, and to the blind peers holding it\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "harness gives no stable agent id, each run is its own agent",
+     "problem": "Agent states as settled that, without a stable agent id, each run is its own agent. Run and Run seat now say that whether a run started by a harness resume is the resumed run's agent is open (OQ-43). Both statements cannot hold.",
+     "fix": "\"harness gives no stable agent id, each run counts as its own agent until OQ-43 closes (Run)\"",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "certificates chain it to two principal keys chains to neither",
+     "problem": "A seat whose key chains to neither principal key belongs to no principal and, per Member, is a member of no room. That contradicts the hub's 'Every seat belongs to one principal and one room' and Personal room's 'Every run its node records has a seat in it'. The model also never says who owns a room such a seat created, although ownership 'changes only by handover or succession'.",
+     "fix": "Hub: \"Every seat belongs to at most one principal and one room\". Principal: \"who owns a room whose creating seat's key comes to chain to neither rests on OQ-42\".",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "change of ownership, a handover or a succession, until the new owner revises",
+     "problem": "After a handover or succession, Intent restores the intent only to its stampers' agents. Foreign room, though, keeps an intent that a trust grant qualified, in a room an earlier leave, kick or bar made foreign, restoring until that principal's own act, a revocation, or the grant covering nothing. A change of ownership is none of these, so the two entries disagree for that principal's agents.",
+     "fix": "Add to Foreign room's list: \"or a change of ownership stops it as Intent says\". Alternatively, add to Intent: \"it restores only to its stampers' agents, in a foreign room too\".",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "Whether it so serves a principal act a room shows by",
+     "problem": "When a retention policy sends an erasure request for a room its principal has no member seat in, the hub routes it to the device seat in the personal room, which Peer serves only to the principal's own nodes. The OQ-41 deferral covers only principal acts, so in this case the model silently loses what Qualified requests calls 'a node sends its purge to its peers'.",
+     "fix": "\"Whether it so serves a principal act, or an erasure request a retention policy sends naming that room, rests on OQ-41.\"",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "security",
+   "findings": [
+    {
+     "type": "security",
+     "file": "docs/domain-model/record.md",
+     "quote": "range, which views show in its place (ADM-07): by a principal act, or by the",
+     "problem": "A purge deletes an event's content, and a retention policy can purge whole provenance classes, `operator` and `structural` included. The model never says that a purged act's effect survives. Purging a revocation, a trust-grant revocation, an unstamp, a quarantine or a relaying listing would drop it from the key set, the room merge or the quarantine set, which are derived from the logs under I10. That would bring back revoked keys, grants that cover nothing, and quarantined content, all without the widening act that releasing them requires.",
+     "fix": "Add: \"A purge erases an event's free text and payload but keeps its structural fields, an act's included, so room state, the key set and the quarantine set derive as before.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/places.md",
+     "quote": "from any other room it serves a peer only a cross-room post, by its address,",
+     "problem": "\"Any other room\" includes the personal room, which the model says stays private with segments going only to its principal's other nodes. Every run has a contributor seat there from its first event, with no join. So any agent can write a cross-room post that this node then serves to another principal's peer, sending the run's text off the node with no widening act, although a join is classed as widening exactly because it sends the run's events to other principals' nodes.",
+     "fix": "\"from any other room but a personal room it serves a peer only a cross-room post, by its address, ...; a personal room's cross-room posts go only to its principal's other nodes\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "principal's own device-seat pins and the versions it stamped stay trusted and",
+     "problem": "Foreign room says that \"only\" own device-seat pins and stamped versions stay trusted. Two sentences later it says a trust grant's pins keep restoring after a leave, kick or bar. Pin restores a pin only through a version \"whose own event is trusted on this node\", so the trust-level rule and the restore rule disagree on whether those trust-grant pins restore.",
+     "fix": "\"only its principal's own device-seat pins, the versions it stamped and the trust-grant pins a leave, kick or bar keeps (below) stay trusted and keep restoring\"",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "inherits: untrusted when any event it derives from is untrusted or",
+     "problem": "Taint derives a recall result's trust only from the trust levels of its events. RCL-10 (Foreign room) marks every item recalled from a foreign room untrusted, whatever its trust level. A recall of trusted-level own pins from a foreign room is therefore trusted under Taint and untrusted under Foreign room, and implementers will disagree on whether it sets recall taint.",
+     "fix": "\"inherits: untrusted when any event it derives from is untrusted, when recall marks an item in it untrusted in a foreign room (RCL-10), or\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "change of ownership, a handover or a succession, until the new owner revises",
+     "problem": "Suppose the new owner's revision is quarantined or purged on this node, so it counts as absent. One reading says the new owner has revised the intent, so the old owner's version restores again to the old owner's agents and the old owner's trust grantees. The other reading says it has not, so the intent restores only to stampers' agents. Implementers will pick different ones.",
+     "fix": "\"until the new owner revises it with a version neither quarantined nor purged on this node\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "A quarantined pin version never restores and counts as absent when",
+     "problem": "Quarantine states its effect on pin versions and posts, but not on a quarantined stamp or trust grant. A principal who quarantines a malicious stamp or grant, for example one made from a compromised device, may still see the content it covers restore as trusted text. Whether it does depends on the implementer, which weakens I5.",
+     "fix": "Add: \"A quarantined stamp or trust grant takes no effect on that node; a quarantined cut act keeps its effect.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/index.md",
+     "quote": "this node holds when it records the event (LANE-01, LANE-16); else to its",
+     "problem": "Routing reads the room the run works in \"at that moment\", but uses the room state as of when the event is recorded. A hook handler resuming past an ingest marker, or `cairn ingest` backfilling a gap for the seat it starts beside the run seat, can record events after a join they came before. Those pre-join events would then go to a room that other principals' nodes hold.",
+     "fix": "Add: \"for an event recorded after later events of its run (past an ingest marker or by `cairn ingest`), per the room state this node held when it recorded the run's latest event preceding it in the transcript\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/places.md",
+     "quote": "whose principal has a seat in that room and to the blind peers holding it;",
+     "problem": "Visibility checks blind peers only when one is enrolled. Peer keeps serving a room's segments to any blind peer that holds it, so after the owner makes the room private, new segments, encrypted but with their metadata, keep going to storage the room's visibility no longer allows.",
+     "fix": "\"and to the blind peers enrolled for it while its visibility allows them;\"",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/index.md",
+     "quote": "Every seat belongs to one principal and one room; every writer to one seat.",
+     "problem": "Principal now says a key whose countersigned certificates chain it to two principal keys chains to neither, and Member treats such a seat as a member of no room. Such a seat belongs to no principal, which Relations rules out. An implementer following Relations could attribute it to the principal of its certifying device and let its pins qualify.",
+     "fix": "\"Every seat belongs to one room and to at most one principal (none when its key chains to two, Principal); every writer to one seat.\"",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "usefulness",
+   "findings": [
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "principal's own device-seat pins and the versions it stamped stay trusted and",
+     "problem": "A succession, or any change of ownership after the former owner's seats have all left, makes the room foreign to the former owner. Foreign room then says the former owner's own device-seat pins keep restoring to its agents, and the intent version it authored is one of those pins. Intent says that same version restores only to its stampers' agents after a change of ownership, so implementers will disagree on whether the former owner's agents still get the intent.",
+     "fix": "In Foreign room, write \"only its principal's own device-seat pins, but an intent whose ownership changed, which restores as Intent says, and the versions it stamped stay trusted and keep restoring\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "without one, whether it is the resumed run's agent is open (OQ-43), and until",
+     "problem": "Agent states as settled that \"where the harness gives no stable agent id, each run is its own agent\". Run says the same question is open (OQ-43). Its interim rule covers only recall taint and rooms, so anything else keyed to the agent, such as a directed post or a delegation grant naming the agent, can be built either way.",
+     "fix": "In Agent, write \"where the harness gives no stable agent id, each run is its own agent, but a run a harness resume starts is as Run says (OQ-43)\", and have Run's interim rule say the new run counts as its own agent until OQ-43 closes.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "the run seat, in the same room, sharing its add, where it has one, and taking",
+     "problem": "The text says the seat ingest starts \"shares\" the run seat's add but \"takes over\" its role, and Role and Seat key repeat \"takes over\". One implementer will read this as moving the role off the run seat, which `cairn ingest` can do while the MCP server still runs; the run seat then has no work and the live run's events fall back to its personal room. Another will copy the role, or keep it in step with the run seat's role.",
+     "fix": "Replace \"taking over its role\" (and \"takes over the role\" in Role and Seat key) with \"holding the same role as that run seat, which keeps it\".",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/index.md",
+     "quote": "rooms the agent has a seat in and the cross-room posts they show, never to a",
+     "problem": "A run that left a room, or was kicked from it, while another seat of its principal stays there cannot recall its own events in that room. The room is not one the agent has a seat in, and since it is not foreign it cannot be named in the call either. Yet `run` scope is defined as the run's history across its seats' writers, and the restore block's landmark index and recall hint point the run at those ranges. Restore uses \"had a seat in\" while recall uses \"has a seat in\", so the Agent entry's \"its rooms\" stands for two different sets.",
+     "fix": "Add \"or, for `run` scope, the current run's own events in any room it had a seat in\". Alternatively, defer the question to an open question with a milestone and mark it at the landmark index.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "content is destroyed (I1). A purged pin version counts as absent when PIN-10",
+     "problem": "Retention policy purges content by provenance class after a time, and a pin's versions are `operator` or `assistant` events. A policy such as \"purge `assistant` after 30 days\" therefore makes stamped constraints silently stop restoring, with no act taken at that moment and no Needs you item. Every other path that stops a pin restoring (unpin, list removal, a principal act) raises an item or requires a widening act.",
+     "fix": "Add to Retention policy: \"it skips a pin version that still restores until the pin is unpinned\". Alternatively, \"purging one raises a Needs you item\", or defer the choice to an open question with a milestone.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "whose principal has a seat in that room and to the blind peers holding it;",
+     "problem": "The serving rule and Personal room's \"only to its principal's other nodes\" both depend on knowing a peer's principal. Before PRV-10 no key chains to a principal key, and Principal leaves \"which keys count as another principal's until then\" open (OQ-42). If the peer component ships before PRV-10, sync either carries nothing (a person cannot see on one node what another node's agents did) or carries personal rooms to any enrolled peer.",
+     "fix": "Give OQ-42 the milestone \"closes before the peer component ships\". Alternatively, state \"until PRV-10 ships, a node enrolls as peers only its principal's own nodes, and each counts as such\".",
+     "severity": "minor"
+    }
+   ]
+  }
+ ],
+ "match": {
+  "matches": [
+   {
+    "lens": "consistency",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "Nearest are DM-AG and DM-BC (fixed), but their closing text in Foreign room is the sentence that contradicts the finding's quote. The 'only its principal's own device-seat pins and the versions it stamped' list is never reconciled with the 'Yet a leave, kick or bar ... a trust grant's pins included, keeps restoring' sentence, nor with Trust grant and Trusted sources, which defer to what Foreign room 'names'. Fixing DM-AG as closed leaves the contradiction in place, so the closing text is incomplete."
+   },
+   {
+    "lens": "consistency",
+    "index": 1,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "Not DM-AA (deferred, OQ-41), which covers only how a device key's or access token's revocation reaches another principal's node. A managed-policy listing is a structural event with no run, so LANE-01 routes it to the personal room, which Peer serves only to the principal's own nodes. DM-AP's closing text ('another node's only once the listed key countersigns it') therefore has no path to run on, and the listed account reads as an uncertified person's key elsewhere. DM-AA's deferral names revocations only, so closing it would not answer this; the finding's own fix is to extend that deferral to listings."
+   },
+   {
+    "lens": "consistency",
+    "index": 2,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "Nearest is DM-BE (fixed), whose closing text (a node serves a room's segments only to peers whose principal has a seat in it, plus cross-room posts by address) is what the finding shows incomplete. A delegated task and its report to another principal's agent (OWN-24, OWN-26) fit neither: no room need be shared, and LANE-29 bars a cross-room post from handing any agent a delegated task. Not DM-AV (recall taint on a delegate whose node lacks the writers), which assumes the delegation arrives."
+   },
+   {
+    "lens": "consistency",
+    "index": 3,
+    "theme": "NEW-4",
+    "kind": "new",
+    "reason": "Nearest is DM-BE (fixed). Its closing text keys the serving rule on the peer's principal alone, so a token-key-only node, whose token key is limited to an access token's rooms, the rooms it may create and its own personal room (Token key, PRV-10), qualifies for every room its principal has a seat in, other nodes' personal rooms included. The finding shows that closing text incomplete. No other ledger theme concerns what a token-key-only node may receive."
+   },
+   {
+    "lens": "security",
+    "index": 0,
+    "theme": "NEW-5",
+    "kind": "new",
+    "reason": "Not DM-BL (fixed), which covers only a purged pin version counting as absent when PIN-10 picks a version. This is purge of an act: a revocation, trust-grant revocation, unstamp, quarantine or relaying listing, or a whole provenance class under a retention policy. Room state, the key set and the quarantine set are derived from the logs (I10), so a purge could revive revoked keys or quarantined content with no widening act. REC-17 has structural fields behind the commitment, erased with the content, so the finding's proposed fix would also need REC-17 and ADM-07 changed."
+   },
+   {
+    "lens": "security",
+    "index": 1,
+    "theme": "NEW-6",
+    "kind": "new",
+    "reason": "Nearest is DM-BE (fixed), whose closing text ('from any other room it serves a peer only a cross-room post') is what the finding shows incomplete: 'any other room' includes a personal room, where every run has a seat from its first event. A cross-room post written there is then served to another principal's peer with no join, while the model classes a join as widening because it sends a run's events to other principals' nodes. Not DM-AG or OQ-41, which concern principal acts shown by address."
+   },
+   {
+    "lens": "usefulness",
+    "index": 0,
+    "theme": "NEW-7",
+    "kind": "new",
+    "reason": "Nearest is DM-BD (fixed), whose closing text (Intent: after a change of ownership the intent restores only to its stampers' agents) is not reconciled with Foreign room. A succession, or a handover after the former owner's seats left, makes the room foreign to the former owner, and Foreign room then says its own device-seat pins, the intent version it authored among them, keep restoring to its agents. Not DM-AE, which only widens which runs get a kept pin. Distinct from NEW-1: adding trust-grant pins to the list would not except the intent."
+   }
+  ],
+  "new_themes": [
+   {
+    "id": "NEW-1",
+    "title": "Foreign room says only its principal's own device-seat pins and the versions it stamped stay trusted and keep restoring, but three lines later keeps a trust grant's pins restoring after a leave, kick or bar, so whether kept trust-grant pins are trusted, restore and enter a trusted-only export is left to each implementer",
+    "settled_by": "SRS PRV-02 (in a foreign room, trusted: its device-seat pins, stamped versions and the pins PIN-10 keeps restoring there after a leave, kick or bar), PIN-10's freeze clause and OWN-29; the model's first Foreign room sentence just omits them"
+   },
+   {
+    "id": "NEW-2",
+    "title": "A managed-policy listing or its removal, a structural event with no run, goes to the recording device seat's personal room, which no other principal's node receives, so the listed service account's relaying mark never reaches nodes that hold its posts and Trust grant's refusal of a relaying or unmarked account cannot fire there",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-3",
+    "title": "A delegation to another principal's agent (delegated task and delegate report) has no path under Peer's serving rule, which carries only the segments of rooms the receiving principal has a seat in and cross-room posts, and LANE-29 forbids a cross-room post from carrying a delegated task",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-4",
+    "title": "Peer's serving rule looks only at the receiving peer's principal, so a token-key-only ephemeral node, whose token key is limited to an access token's rooms, the rooms it may create and its own personal room, qualifies for every room its principal has a seat in, including other nodes' personal rooms",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-5",
+    "title": "A purge, including a retention policy purging whole provenance classes, may delete an act's content (a revocation, trust-grant revocation, unstamp, quarantine or relaying listing), and the model never says the act's effect survives, so room state, the key set and the quarantine set derived from the logs (I10) could revert with no widening act",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-6",
+    "title": "Peer serves 'any other room' a peer only a cross-room post, which includes a personal room where every run has a seat from its first event, so an agent's cross-room post written there reaches another principal's node with no join or widening act",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-7",
+    "title": "Foreign room keeps the former owner's own device-seat pins restoring to its agents after a succession or handover leaves the room foreign to it, which includes the intent version it authored, while Intent restores that version only to its stampers' agents after a change of ownership",
+    "settled_by": "SRS LANE-11 (the former owner's pins keep restoring 'but for the intent', which restores only to its stampers' agents until the new owner revises it), LANE-32, and the model's Intent entry (closing DM-BD); Foreign room just lacks the exception"
+   }
+  ]
+ }
+}
