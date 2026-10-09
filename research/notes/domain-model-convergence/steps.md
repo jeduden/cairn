@@ -7,6 +7,7 @@ target of 14,826.
 | Step | Model words | Opened | Closed | On the work's own text |
 | ---- | ----------- | ------ | ------ | ---------------------- |
 | 1    | 18,177      | 0      | 2      | 0                      |
+| 2    | 18,147      | 0      | 0      | 0                      |
 
 ## Step 1: the open questions inside M1–M5
 
@@ -80,3 +81,27 @@ PRV-02, PRV-07, PRV-09, LANE-01, LANE-16, LANE-23 and §12.2. The latter
 schedules the step-1 decision and SEC-27's lost-key seat in M1. The model
 gained the term time mark and the subagent clause; it also dropped
 restatements of SEC-12 and ADM-02, so it shrank to 18,147 words.
+
+The last two rows' agents added six recommendations, settled the same
+way:
+
+- A run is counted once its hook handlers reach a `Stop`,
+  `SubagentStop` or `SessionEnd` before any MCP server holds its key;
+  earlier waits are only audited (REC-19).
+- The hook handlers tell a nested harness session from their own
+  process ancestry, read inside the core (PRV-08).
+- A new transcript generation is ingested past the prefix already
+  ingested, and a purged line is refused by a keyed hash (REC-07).
+- An event a hook's input makes waits in the ingest marker at its
+  transcript offset (REC-13).
+- `cairn verify` reports a source past its ingest position as pending,
+  and fails only for one nothing can resume (ADM-09).
+- A hook handler's budget cut is audited under a counter that is not a
+  failure counter (REC-13).
+
+The grid's gaps are not review findings, so they open no ledger theme.
+The agents also named events beyond the grid's 27 rows: a run's start,
+an MCP server that stops for good, a repository identity bound, recall
+that returns untrusted content, a hook handler failing open, a
+provisional branch identity rebound on push, the lack of an unlink act,
+and a locked key store. The final review reads them with the grid.
