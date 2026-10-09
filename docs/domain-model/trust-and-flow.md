@@ -34,9 +34,12 @@ summary: >-
   (a recall result, kernel output, an exported bundle, rendering or trusted-only
   export), inherits: untrusted when any event it derives from is untrusted,
   except for its sanitized structural fields.
-- **Recall taint**: A run's mark after it recalls untrusted content, or
-  inherited from the delegating run (OWN-24), which tightens the rule levels of
-  the action classes SEC-13 configures as sensitive (OWN-10).
+- **Recall taint**: A run's mark after it recalls untrusted content, which
+  tightens the rule levels of the action classes SEC-13 configures as
+  sensitive (OWN-10). A delegate inherits the delegating run's (OWN-24). A run
+  a harness resume starts carries the recall taint of the run it resumes, and
+  carries recall taint from its first event where Cairn cannot tell that run
+  (SEC-13).
 - **Principal surface**: An authenticated client where principal acts are taken:
   the browser room view under SEC-20, the CLI or TUI at a terminal, or a paired
   phone within its scope; without the peer component, a browser on the
@@ -82,7 +85,10 @@ summary: >-
   listing marks it as relaying text others wrote, or whose listing is unmarked,
   is refused; one naming any other service account shows a warning, for a
   facilitator that it reads untrusted room text, which its posts never quote
-  (Facilitator, OWN-29). Its revocation is cut.
+  and its pins never carry (Facilitator, OWN-29). Its revocation is cut.
+  A recorded grant covers nothing once the node's key set holds a certificate
+  or listing marking the key it names as relaying, or a listing of it without
+  the mark, whatever order they arrived in (I10).
 - **Delegation**: One agent handing another a delegated task: its subagent, or,
   under a delegation grant, another agent of the same principal, an agent on
   another of its nodes, or another principal's agent (OWN-23 to OWN-26).

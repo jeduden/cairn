@@ -556,11 +556,11 @@
    "texts": [
     {
      "file": "docs/domain-model/git-and-forge.md",
-     "quote": "Unless the platform can deny all three, Cairn refuses the witness check before confirmation and says which it cannot deny (OWN-18)."
+     "quote": "Unless the platform can deny all of them, Cairn refuses the witness check before confirmation and says which it cannot deny (OWN-18)."
     },
     {
      "file": "docs/srs/05c-principal-and-peer-requirements.md",
-     "quote": "Unless the platform can deny it all three, Cairn MUST refuse the witness check before confirmation and say which it cannot deny."
+     "quote": "Unless the platform can deny all of them, Cairn MUST refuse the witness check before confirmation and say which it cannot deny."
     },
     {
      "file": "docs/srs/06b-boundary-register.md",
@@ -613,6 +613,107 @@
      "quote": "the owner's act joining its own run MUST assign that seat contributor."
     }
    ]
+  },
+  {
+   "id": "DM-AE",
+   "title": "Foreign room restores its principal's own pins only to runs that had a seat there, not to the agent's later runs",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "keep restoring to the runs Pin names: those that have had a seat in it"
+    }
+   ]
+  },
+  {
+   "id": "DM-AF",
+   "title": "A standing trust grant keeps covering a key the key set later marks relaying or lists unmarked",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "A recorded grant covers nothing once the node's key set holds a certificate or listing marking the key it names as relaying"
+    },
+    {
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "a recorded trust grant MUST cover nothing once the node's key set holds such a certificate or listing for the principal key it names, whatever order they arrived in"
+    }
+   ]
+  },
+  {
+   "id": "DM-AG",
+   "title": "A run seat's leave, or another principal's kick or bar, makes a room foreign and drops trust-granted pins with no act of the agent's principal",
+   "status": "open"
+  },
+  {
+   "id": "DM-AH",
+   "title": "After a node identity change, the home's own earlier quarantines stop applying",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "every quarantine in force in the home at the change stays in force until a release there"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "every quarantine in force in the home at the change MUST stay in force on the node until a release there (SEC-12, I5)"
+    }
+   ]
+  },
+  {
+   "id": "DM-AI",
+   "title": "A witness check's code can write outside its checkout, into the repository's git directory or other worktrees",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "every write outside that checkout (the repository's git directory and its other worktrees included) denied"
+    },
+    {
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "and every write outside that checkout (the repository's git directory and its other worktrees included) denied"
+    }
+   ]
+  },
+  {
+   "id": "DM-AJ",
+   "title": "The facilitator's own-words rule covers posts but not pins, which a trust grant restores",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "every pin version it writes is likewise in its own words"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "Every pin version the facilitator writes MUST likewise be in its own words only"
+    }
+   ]
+  },
+  {
+   "id": "DM-AK",
+   "title": "A run a harness resume starts does not carry the resumed run's recall taint",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "A run a harness resume starts carries the recall taint of the run it resumes"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "carried into a run a harness resume starts (REC-02) from the run it resumes"
+    }
+   ]
+  },
+  {
+   "id": "DM-AL",
+   "title": "Inherited rooms' pins can crowd the run's own rooms' pins out of the pin budget",
+   "status": "open"
+  },
+  {
+   "id": "DM-AM",
+   "title": "A short-lived subagent's work on its parent's room's branch lands in the personal room until a per-subagent join",
+   "status": "open"
   }
  ]
 }

@@ -26,8 +26,9 @@ summary: >-
   personal room (REC-24). On it, as on any node whose node identity changed,
   the events recorded before the change are another node's: they count as
   received, a `witnessed` one read as `peer`, and are trusted only as PRV-02
-  trusts received events (I8). The node's principal is the principal whose
-  home it is.
+  trusts received events (I8). On such a node, every quarantine in force in
+  the home at the change stays in force until a release there (I5, REC-24).
+  The node's principal is the principal whose home it is.
 - **Device**: A node or a paired phone. A node's device key certifies the seats
   it uses (PRV-11), a token-key-only node's token key in its place (PRV-10); a
   paired phone's rests on OQ-39.
@@ -58,7 +59,9 @@ summary: >-
   the item's trust level or trust grant covers its keys (RCL-10), and leaves it
   outside every extended recall scope unless named in the call; only its
   principal's own device-seat pins and the versions it stamped stay trusted and
-  keep restoring, to runs that had a seat in it. A room the principal owns or
+  keep restoring to the runs Pin names: those that have had a seat in it
+  during the run, or whose agent's earlier runs had one (PIN-10,
+  REC-02). A room the principal owns or
   has a seat in is never foreign.
 - **Principal's rooms**: The rooms a principal owns or has a seat in.
 - **Visibility**: Whether a room is private, shared with the room's principals,

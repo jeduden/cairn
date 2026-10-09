@@ -177,6 +177,8 @@ Feature: Security (SEC)
     And the person runs "cairn recall-taint show --run r-1 --json"
     Then the output shows that "r-1" carries recall taint
     And the example PreToolUse hook handler requires approval for an action of a class it configures as sensitive
+    And a run that a harness resume of "r-1" starts in a new harness session carries recall taint from its first event
+    And a run a harness resume starts in a new harness session, where Cairn cannot tell which run it resumes, carries recall taint from its first event
 
   @SEC-14 @P0 @I5 @pending
   Scenario: purged content is not recoverable from the storage the purge freed
@@ -401,6 +403,7 @@ Feature: Security (SEC)
     And the owner can undo each bar
     And the facilitator's unbar of one of its own bars is refused and audited, since an appointed moderator never unbars
     And each such post is in the facilitator's own words and points by range link to the marked range it names, quoting none of it
+    And each pin version the facilitator writes is in its own words, quoting and embedding no marked range
     And the facilitator's posts reach no agent as trusted unless that agent's principal recorded a trust grant for the facilitator's principal key
     And the facilitator's program writes room summaries only with "cairn room-summary write", signed with its device seat, and never acts through an MCP tool
     And a run seat that a principal whose device seat has the moderator role by role assignment appointed moderator is kept to the same limits, and that appointer can undo each of its bars and mutes, while a seat it kicked only that seat's own principal adds again

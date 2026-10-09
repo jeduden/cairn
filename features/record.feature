@@ -300,12 +300,14 @@ Feature: Record (REC)
   Scenario Outline: a home whose node identity changed mints a new device key and new seat keys, keeps the personal room's id and appends nothing under an old key
     Given an isolated Cairn home
     And a device key and a seat key bound to the node identity read, from outside the home, on the node the home was created on
+    And a quarantine in force in the home
     And <change>
     When the hook "SessionStart" runs and appends its first event after the start
     Then Cairn mints a new device key and a new seat key before that append, the new seat key starting a new seat and writer that names the old seat
     And the new seat inherits no add, role or appointment of the old seat, and, outside the personal room, joins a room only as any seat does, while a personal-room seat, a device seat's included, is a member from its first event
     And the personal room keeps its room id
     And every event recorded before the change counts on the node as another node's, received, a "witnessed" one reading as origin "peer", and is trusted only as PRV-02 trusts received events
+    And that quarantine stays in force on the node until a release there
     And an audit entry records the node identity change
     And no event is appended under the old device key or the old seat key
 

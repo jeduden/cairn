@@ -225,9 +225,10 @@ Feature: Principal acts (OWN)
     And the act is recorded as their widening principal act
     And until that confirmation the command reached no terminal and the launcher did not run it
     And the confirmation sends the command to no agent, since what reaches an agent stays under I2 and OWN-03
-    And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base, with network, the OS user's home directory (`HOME`) and the principal's home (its platform key-store entries included) denied
+    And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base, with network, local endpoints, the OS user's home directory (`HOME`), the principal's home (its platform key-store entries included) and every write outside that checkout (the repository's git directory and its other worktrees included) denied
+    And a check whose code writes to the repository's git directory, a git hook included, or to another of its worktrees leaves both byte-identical
     And the launcher records its command by commitment, its exit status and the tree hash as a structural event
-    And unless the platform can deny the check network, `HOME` and the principal's home with its key-store entries, Cairn refuses the witness check before confirmation
+    And unless the platform can deny the check network, local endpoints, `HOME`, the principal's home with its key-store entries and every write outside its checkout, Cairn refuses the witness check before confirmation
     And the refusal says which of them the platform cannot deny
 
   @OWN-19 @P1 @I1 @I4 @pending
@@ -364,6 +365,7 @@ Feature: Principal acts (OWN)
     When "carol" pins the constraint "keep the public API stable" from her device seat
     Then the pin restores word for word to "alice"'s agent and reaches "bob"'s agent only through a tool call, enveloped
     And a trust grant naming a run seat's key, or a service account its certificate or managed-policy listing marks as relaying text others wrote, or one a managed-policy listing names without that mark, is refused and audited, while one naming any other service account shows a warning
+    And a trust grant recorded before a certificate or managed-policy listing marking its key as relaying, or a listing of that key without the mark, reaches the node covers nothing once it arrives, as if it had arrived first
     And the trust grant does not cover a service account whose principal key "carol" certified
     And it does not cover a post or pin "carol" writes from a token-key-only node
     And it does not cover a post or pin "carol" writes from a device seat outside the device scope of the device key that certified it

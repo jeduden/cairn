@@ -73,9 +73,10 @@ summary: >-
   component nor an agent, acts through that node's CLI (`cairn room-summary
   write`). It posts only in its own words, pointing by range link to any
   marked range it names and never quoting or embedding it, so it relays no
-  third party's text (SEC-32), and writes room summaries, answering summary
-  requests (LANE-33). An agent on that node can act through its CLI as the
-  program does: §6.1's residual risk R7, which only a sandbox removes.
+  third party's text (SEC-32); every pin version it writes is likewise in its
+  own words. It writes room summaries, answering summary requests
+  (LANE-33). An agent on that node can act through its CLI as the program
+  does: §6.1's residual risk R7, which only a sandbox removes.
 - **Author**: The seat that wrote an event or a pin. The author's principal
   follows from the seat.
 - **Member**: A seat whose add stands and that no bar covers, or a run's or a

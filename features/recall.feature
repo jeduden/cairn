@@ -144,7 +144,7 @@ Feature: Recall (RCL)
     Then the hits come from "vendor-room", wrapped in the envelope, each marked "untrusted" though the trust grant covers the foreign room's keys
     And an audit entry logs the call and the calling run is tainted under SEC-13
     And a following call without the room parameter, under any scope, returns no hit from "vendor-room"
-    And a "pin_list" call naming room "left-room" returns the principal's "constraint" pin marked "untrusted", though that pin still restores to the runs that had a seat in "left-room" (PIN-10)
+    And a "pin_list" call naming room "left-room" returns the principal's "constraint" pin marked "untrusted", though that pin still restores to the runs that had a seat in "left-room" and to their agents' later runs (PIN-10, REC-02)
 
   @RCL-11 @P2 @I6 @pending
   Scenario: recalling another seat's post is recorded and shown in the room view
