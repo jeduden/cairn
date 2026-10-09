@@ -47,7 +47,8 @@ summary: >-
   the node, by `cairn install`, the plugin or the managed install path, recorded
   at Cairn's first start there, or carried over to a node clone, which shares
   it. It stays private: no invite, admission or visibility change applies to it
-  (LANE-17). Its create room act is the device seat's add there. Every run its
+  (LANE-17), and its segments go only to its principal's other nodes (Peer).
+  Its create room act is the device seat's add there. Every run its
   node records has a seat in it from its first event, without a join, and every
   event or pin that belongs to no other room goes there. Whether a room counts
   an act recorded here for it, by a principal with no member seat in it, rests
@@ -65,7 +66,9 @@ summary: >-
   has a seat in is never foreign. Yet a leave, kick or bar that makes a room
   foreign drops no pin: what qualified there for its principal's agents, a
   trust grant's pins included, keeps restoring as it stood, in causal order,
-  before that act, until that principal's own act changes it (PIN-10).
+  before that act, until that principal's own act changes it (PIN-10), or
+  until a certificate it qualified through is revoked (PRV-10) or the trust
+  grant it qualified by covers nothing (Trust grant), as in any other room.
 - **Principal's rooms**: The rooms a principal owns or has a seat in.
 - **Visibility**: Whether a room is private, shared with the room's principals,
   published or stored on blind peers (LANE-17). Changing it is a widening
@@ -73,7 +76,12 @@ summary: >-
   blind peer for it, only as its visibility allows.
 - **Peer**: Another node this node's principal enrolled by key and exchanges
   sealed ranges with through the peer component (B2). Being a peer never makes
-  content trusted (PRV-02). Exchanging the sealed ranges each may receive is
+  content trusted (PRV-02). A node serves a room's segments only to the peers
+  whose principal has a seat in that room and to the blind peers holding it;
+  from any other room it serves a peer only a cross-room post, by its address,
+  when a seat of that peer's principal in the room the post targets asks for it
+  (PEER-02, LANE-29). Whether it so serves a principal act a room shows by
+  address rests on OQ-41. Exchanging the sealed ranges each may receive is
   **sync**.
 - **Blind peer**: A peer that holds a room's segments without any key they are
   encrypted to, so it stores and serves them encrypted and reads none of them

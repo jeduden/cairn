@@ -37,6 +37,4 @@ problems, and nothing told noise from a real finding.
 
 ## Rounds
 
-Each round's findings and matches are kept in `round-<n>/`. The loop
-stopped after round 3 on the stakeholder's bound (themes stopped
-falling); `round-3/README.md` says why and what it closed.
+Each round's findings and matches are kept in `round-<n>/`.

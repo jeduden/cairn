@@ -69,10 +69,12 @@ summary: >-
   transcripts contain its main agent's run and one per subagent, a **harness
   resume** that keeps its harness session continues the run, while a harness
   resume that starts a new harness session, or a **harness clear**, starts a new
-  run, of the same agent only where the harness gives a stable agent id. It has
-  run seats and carries its recall taint (SEC-13), sandbox state
-  (OWN-22), seat keys (SEC-10), kernel namespace (CMP-02) and spans (LMK-01). As
-  a noun, "run" has no other meaning.
+  run, of the same agent only where the harness gives a stable agent id;
+  without one, whether it is the resumed run's agent is open (OQ-43), and until
+  then it takes that run's recall taint but none of its rooms. It has run
+  seats and carries its recall taint (SEC-13), sandbox state (OWN-22), seat
+  keys (SEC-10), kernel namespace (CMP-02) and spans (LMK-01). As a noun,
+  "run" has no other meaning.
 - **Subagent**: An agent the harness started for another agent. It has its own
   run, tied to its parent's run by a parent link, with its own seats and
   writers, among them a seat in each room its parent's run seat is a member of
@@ -99,10 +101,12 @@ summary: >-
   paired phone's personal-room seat, or a device seat a newly minted key started
   in the personal room, or the seat ingest starts while the run seat it names is
   a member (Seat, Seat key, Run seat); the seat's role says what it may do. A
-  seat that left or was kicked, or that a bar covers, is not a member. A
-  principal is never a member; **the room's principals** are those with a member
-  seat, and text for people speaks of the room's principals. A personal-room
-  seat can neither leave nor be kicked.
+  seat that left or was kicked, or that a bar covers, is not a member, and a
+  seat whose key's countersigned certificates chain it to two principal keys,
+  and so to neither, is a member of no room (Principal). A principal is never
+  a member; **the room's principals** are those with a member seat, and text
+  for people speaks of the room's principals. A personal-room seat can neither
+  leave nor be kicked.
 - **Owner**: The one principal who owns a room: its intent, roles, admission,
   appointments, successor and handover. Ownership changes only by handover or
   succession (LANE-11); it stays with the owner after all its seats leave. The

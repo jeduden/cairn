@@ -79,9 +79,11 @@ summary: >-
   takes its seat's **pin class**, `operator` for a device seat and `assistant`
   for a run seat; a room summary is `summary`, never trusted; an erasure or
   quarantine request a principal act sends is `operator`, an erasure request a
-  retention policy sends `structural`; hook observations, key rotations,
-  tombstones and a witness check's record (the command by commitment, its exit
-  status and the tree hash, OWN-18) are `structural`.
+  retention policy sends `structural`; a worktree checkpoint is `file` (REC-20)
+  and a recall event `assistant` (RCL-07); hook observations, key rotations,
+  tombstones, canary and backup events and a witness check's record (the
+  command by commitment, its exit status and the tree hash, OWN-18) are
+  `structural`.
 - **Origin**: How an event reached this node's record: `witnessed` (recorded
   live on this node: by its hook handlers, its CLI, TUI, MCP server, launcher,
   room-view component or bridge component), `ingested` (appended by `cairn
@@ -158,7 +160,9 @@ summary: >-
 - **Purge**: Deletion of content, appending a **tombstone** naming the purged
   range, which views show in its place (ADM-07): by a principal act, or by the
   node under a retention policy, recorded naming the policy. The only way stored
-  content is destroyed (I1).
+  content is destroyed (I1). A purged pin version counts as absent when PIN-10
+  chooses which version of a pin restores, as a quarantined one does, and never
+  restores, not even as its tombstone (Quarantine).
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
   range, a **quarantine marker** for a quarantined address, or a **truncation
   marker** on capped kernel output. A **missing range** is part of a writer this
@@ -187,7 +191,9 @@ summary: >-
   principal key**, carried as a file or a git ref.
 - **Trusted-only export**: The JSONL of the events trusted for the principal's
   agents, with full provenance, that downstream memory systems read (ADM-12,
-  MEM-02); an export like a bundle (SEC-26).
+  MEM-02); an export like a bundle (SEC-26). It leaves out the free text of a
+  cut or neutral principal act (OWN-11), which its review step shows as
+  withheld.
 - **Export**: Writing a bundle, a rendering or a trusted-only export (`cairn
   export`), a widening principal act under SEC-26. To **publish** is to serve a
   room's bundle read-only through the publish component, only as the room's

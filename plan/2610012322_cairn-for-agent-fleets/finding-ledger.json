@@ -991,52 +991,154 @@
   {
    "id": "DM-BC",
    "title": "The foreign-room freeze (a leave, kick or bar drops no pin; pins keep restoring as they stood) also keeps restoring pins of a revoked key or a key the key set marks relaying",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "until a certificate it qualified through is revoked (PRV-10)"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "or until a certificate it qualified through is revoked (PRV-10) or the trust grant it qualified by covers nothing (OWN-29), as in any other room"
+    }
+   ]
   },
   {
    "id": "DM-BD",
    "title": "After a handover or succession, the new owner's stamp lifts the intent's restriction and restores the old version to the former owner's agents",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "it restores only to its stampers' agents: the new owner's stamp adds only"
+    },
+    {
+     "file": "docs/srs/05b-lane-requirements.md",
+     "quote": "the intent MUST restore only to its stampers' agents until the new owner revises it (LANE-32)."
+    }
+   ]
   },
   {
    "id": "DM-BE",
    "title": "The model never says which sealed ranges a peer may receive: whether a private (personal) room syncs to the principal's own other nodes, and which ranges of other writers another principal's node may pull",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "A node serves a room's segments only to the peers"
+    },
+    {
+     "file": "docs/srs/05d-peer-requirements.md",
+     "quote": "so a personal room's segments go only to its principal's other nodes"
+    }
+   ]
   },
   {
    "id": "DM-BF",
    "title": "A seat key whose countersigned certificates chain it to two principal keys chains to neither, so a barred principal can take its seat out of the bar, kick and owner protection and stay a member",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "and so to neither, is a member of no room (Principal)"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "its seat a member of no room (LANE-25)"
+    }
+   ]
   },
   {
    "id": "DM-BG",
    "title": "The seat ingest starts shares the named run seat's add and takes over its role, but nothing ties it to the key that certified that run seat",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "certified only by the key that certified that run seat"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "which only the key that certified the run seat it names, or the key a rotation replaced it with, MAY certify"
+    }
+   ]
   },
   {
    "id": "DM-BH",
    "title": "The Provenance entry gives no class to a worktree checkpoint, recall event, canary event or backup event",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "a worktree checkpoint is `file` (REC-20) and a recall event `assistant` (RCL-07)"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "Hook observations, key rotations, tombstones, canary events (OPS-04) and backup events (ADM-06) MUST carry `structural`"
+    }
+   ]
   },
   {
    "id": "DM-BI",
    "title": "The trusted-only export writes whole trusted events, so the untrusted free text of a cut or neutral principal act (a stated reason) reaches downstream memory systems marked trusted",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "It leaves out the free text of a cut or neutral principal act (OWN-11), which its review step shows as withheld."
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "or the free text of a cut or neutral principal act (OWN-11), each of which its review step shows as withheld (SEC-26)"
+    }
+   ]
   },
   {
    "id": "DM-BJ",
    "title": "The results and errors of tool calls that are not recall (room act tools, delegation tools, acting CLI verbs) have no rule on what they may carry",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "whatever Cairn returns to a tool call, its errors and a CLI verb's output that is not a terminal included, carries only fixed text Cairn ships, ids, counts and sanitized structural fields"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "whatever Cairn returns to a tool call, its errors and a CLI verb's output that is not a terminal"
+    }
+   ]
   },
   {
    "id": "DM-BK",
    "title": "A harness resume that starts a new harness session where the harness gives no stable agent id is a new agent whose restore block and recall omit the resumed run's rooms",
-   "status": "open"
+   "status": "deferred",
+   "oq": "OQ-43",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "without one, whether it is the resumed run's agent is open (OQ-43), and until then it takes that run's recall taint but none of its rooms"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "whether a run that a harness resume starts in a new harness session, where the harness gives no stable agent id, belongs to the agent of the run it resumes"
+    }
+   ]
   },
   {
    "id": "DM-BL",
    "title": "A purged pin version (by a principal act, a retention policy or an applied erasure request) has no rule when PIN-10 chooses which version of a pin restores",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "A purged pin version counts as absent when PIN-10"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "and so MUST a purged one, however purged (SEC-31), which MUST NOT restore as its tombstone"
+    }
+   ]
   }
  ]
 }

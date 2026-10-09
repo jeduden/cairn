@@ -12,10 +12,11 @@ Feature: Provenance and trust (PRV)
     And "every-kind" contains a user turn, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent's delegate report, lifecycle metadata, a system reminder and a malformed line
     And a principal act, an expire act, a pin written from a device seat, a pin a run seat wrote, a post from another seat, a room act of the run's seat and a room summary the room's facilitator wrote are recorded in the run's room, and a retention purge's tombstone naming that room's content on the recording device's seat there
     And the Bash tool call of "every-kind" was ingested by an earlier ingest than its tool result
+    And the person ran "cairn canary" and "cairn backup create" on this node
     When the person runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
     And the Bash tool result carries provenance "tool_result:Bash"
-    And the principal act, the expire act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", the room summary carries "summary", and the tombstone carries "structural"
+    And the principal act, the expire act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", the room summary carries "summary", and the tombstone, the canary event and the backup event carry "structural"
     And every provenance class is one of:
       | user               |
       | assistant          |

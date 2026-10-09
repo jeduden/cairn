@@ -28,8 +28,11 @@ summary: >-
   the run seat, in the same room, sharing its add, where it has one, and taking
   over its role, so a kick or leave of either seat ends that one add for both
   (REC-19); that seat is a run seat whose key the core keeps like a device
-  seat's key; an ingested run's seat key is kept like a device seat's key, and
-  the core seals its writer. A run whose run-seat key is lost with its MCP
+  seat's key, certified only by the key that certified that run seat or the
+  key a rotation replaced it with, by a seat certificate naming it the seat
+  ingest starts beside that run seat: any other seat naming a run seat shares
+  no add or role. An ingested run's seat key is kept like a device seat's key,
+  and the core seals its writer. A run whose run-seat key is lost with its MCP
   server, on a harness resume or a restart, continues on a new run seat that
   names the old one and inherits no add: it joins its rooms again as Join says
   (open: OQ-43).

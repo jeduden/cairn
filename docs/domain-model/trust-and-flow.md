@@ -32,8 +32,9 @@ summary: >-
   it is trusted, from §9.7.6's closed set (VIEW-07).
 - **Taint**: The trust level a derived artifact, or an output built from events
   (a recall result, kernel output, an exported bundle, rendering or trusted-only
-  export), inherits: untrusted when any event it derives from is untrusted,
-  except for its sanitized structural fields.
+  export), inherits: untrusted when any event it derives from is untrusted or
+  it holds the free text of a cut or neutral principal act (OWN-11), except for
+  its sanitized structural fields.
 - **Recall taint**: A run's mark after it recalls untrusted content, which
   tightens the rule levels of the action classes SEC-13 configures as
   sensitive (OWN-10). A delegate inherits the delegating run's (OWN-24),
@@ -63,7 +64,10 @@ summary: >-
   terminal (OWN-12); each records a recall event (RCL-07). Pull-only, and it
   defaults to the agent's current run. A recall tool that stops at its per-call
   cap returns a **continuation cursor** (`next_cursor`); passed back as
-  `cursor`, it continues without gap or overlap (RCL-03).
+  `cursor`, it continues without gap or overlap (RCL-03). Outside an envelope
+  and the closed paths, whatever Cairn returns to a tool call, its errors and a
+  CLI verb's output that is not a terminal included, carries only fixed text
+  Cairn ships, ids, counts and sanitized structural fields (I2).
 - **Closed path**: One of the ways I2 lists by which Cairn writes to an agent
   without the agent's recall: restore blocks, opt-in notices, compaction
   guidance and OWN-04's and OWN-07's templates; on a principal act recorded at

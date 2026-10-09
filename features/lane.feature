@@ -153,7 +153,7 @@ Feature: Room (LANE)
     And the handover records a moderator role assignment for "alice"'s device seats, so they have the moderator role, and her agents' events stay accepted
     And her pin keeps "alice"'s device seat as its author and keeps restoring to her agents
     And her pin reaches "bob"'s agents only through a version "bob" stamps, shown with "bob" as its stamper, or a trust grant of "bob" covering "alice"'s key
-    And until "bob" revises or stamps the intent, it restores only to the agents of the principals who stamped one of its versions
+    And until "bob" revises the intent, it restores only to the agents of the principals who stamped one of its versions, a stamp of "bob" adding "bob"'s agents and no other principal's
     And held requests stay with each agent's principal
     When "bob" revises the intent as a widening principal act
     Then the revision adds a new version of the intent pin that "bob"'s device seat authors
@@ -165,7 +165,7 @@ Feature: Room (LANE)
     When "bob" names "frank" as successor and "frank" withdraws as successor as a cut principal act
     Then "frank" can no longer accept ownership by succession
     When "bob" names "carol" as successor, the naming stands past 7 days, and every seat of "bob" leaves the room
-    Then ownership stays with "bob" until "carol" accepts it by succession, a widening principal act, after which the intent restores only to its stampers' agents until "carol" revises or stamps it
+    Then ownership stays with "bob" until "carol" accepts it by succession, a widening principal act, after which the intent restores only to its stampers' agents until "carol" revises it
     And while every seat of "bob" has left and "carol" has not accepted, as in a room whose owner named no successor, ownership stays with "bob", and every change to the room's pins, an author's edit and a moderator's list removal included, is refused until a handover, a succession or "bob"'s rejoin, while a principal who stamped a pin version may still unstamp it
     And that owner, with no seat in the room, may still offer a handover or name a successor, each recorded on its device seat in its personal room, naming the room
     And that owner may rejoin under the room's admission, which its principal key always satisfies
@@ -378,6 +378,7 @@ Feature: Room (LANE)
     And the "cairn ingest" seat is no longer a member either, since one add stands for both
     When two moderators bar "bob"'s principal key and one of them unbars only their own bar
     Then every key that chains to "bob"'s principal key, a freshly minted seat key included, stays out
+    And once the key of a barred seat of "bob" countersigns a seat certificate chaining it to a second principal key, that key chains to neither and the seat is a member of no room, so it stays out
     And a service account whose principal key "bob"'s principal key certified is not covered by the bar, since no chain passes through another principal key
     And each bar records its setter, reason, optional expiry and optional note
     And a bar whose expiry passed stands until an expire act arrives, and no derivation reads a clock

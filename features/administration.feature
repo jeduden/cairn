@@ -162,11 +162,13 @@ Feature: Administration and lifecycle (ADM)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a" with user turns and web tool results
     And one of its trusted events is quarantined
+    And the person took a cut principal act carrying a stated reason at a terminal
     When the person runs "cairn export --trusted-only"
     Then the command exits 0
     And every exported JSONL line is a trusted event carrying its address (writer, seq), provenance and trust
     And no untrusted event appears in the export
     And the quarantined event does not appear in it, and the export's review step shows it as withheld
+    And the cut act's line carries no stated reason, which the review step shows as withheld
 
   @ADM-13 @P0 @I7 @pending
   Scenario: Cairn writes to no git repository beyond the confirmed settings file, the commit hook of LANE-28 and the launcher's fresh checkouts

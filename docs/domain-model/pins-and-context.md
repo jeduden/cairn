@@ -36,7 +36,7 @@ summary: >-
   What a stamp covers. Of the versions of one pin that qualify for an agent,
   only the newest restores to it, but one qualifying only through a trust grant
   never displaces one the agent's principal stamped (LANE-32); a quarantined
-  version counts as absent in that choice (Quarantine).
+  or purged version counts as absent in that choice (Quarantine, Purge).
 - **Pin candidate**: Proposed pin text an agent suggested (an `assistant` event,
   PIN-02) or Cairn detected (a derived artifact over its creating `user` event,
   holding its text by address, with no provenance of its own, I10); not yet a
@@ -89,7 +89,8 @@ summary: >-
   principal's agents and to agents whose principal's trust grant covers that
   author's principal outside a foreign room or as Foreign room keeps it; after a
   change of ownership, a handover or a succession, until the new owner revises
-  or stamps it, it restores only to its stampers' agents.
+  it, it restores only to its stampers' agents: the new owner's stamp adds only
+  its own agents (LANE-32).
 - **Criterion**: One acceptance condition of an intent, with a stable id.
 - **Stake**: A pin of type `stake` stating what its author works on. Only its
   author, or for a device seat its author's principal, edits it; it is unpinned

@@ -26,6 +26,8 @@ Feature: Peer network (PEER)
     Then "a" serves its complete copy of "room-1" to "b"
     And "c" is refused every segment of "room-1"
     And a blind peer that holds "room-1" is served its segments, encrypted (PEER-12)
+    And a node of the principal of "a" is served the segments of the personal room of "a", and a node of any other principal none of them
+    And when a seat of the principal of "c" in a room that shows a cross-room post from "room-1" asks for it, "a" serves "c" that post by its address and no other event of "room-1"
     And no other peer and no third-party service took part in enrollment, discovery or relay
 
   @PEER-03 @P2 @I9 @I10 @pending
