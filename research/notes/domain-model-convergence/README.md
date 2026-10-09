@@ -38,6 +38,11 @@ From 9 October 2026 a fixed sequence of steps replaces that loop.
   case. A model edit is a concept sentence or a citation.
 - **The model does not grow.** No step leaves the model longer than it
   found it.
+- **Recommendations decide.** A design question whose verdict carries a
+  safety-first recommendation is settled by it, and the step records it
+  as the stakeholder's decision (stakeholder, 9 October 2026). Only a
+  question with no clear recommendation, or one that would touch an
+  invariant, goes to the stakeholder.
 - **Each decision is swept.** When the stakeholder decides a design
   question, its consequences are walked through the lifecycle grid. The
   edits for every cell it touches land with the decision, not in a later

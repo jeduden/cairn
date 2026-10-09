@@ -154,17 +154,17 @@ summary: >-
   pattern (PRV-07); flagged text contributes only counts to landmarks (LMK-04).
 - **Quarantine**: Recorded, reversible exclusion of an event, span, run, writer
   or derived artifact from recall, restore blocks, landmark text (LMK-04 keeps
-  its counts) and trusted-only exports, on the node that records it or
-  applies it by a backup restore, also after its node identity changes (Node),
-  without deletion (I5). There,
-  no quarantined post is endorsed or reaches an agent under a trust grant,
-  and no quarantined delegated task reaches a delegate in OWN-24's template
-  (SEC-12). A quarantined pin version never restores and counts as absent when
-  PIN-10 chooses which version of a pin restores, the intent's included; a pin
-  left with no qualifying version leaves the restore block.
+  its counts) and trusted-only exports, on the node that records it or applies
+  it by a backup restore, also after its node identity changes (Node), without
+  deletion (I5); SEC-12 says what else it stops. A quarantined pin version never
+  restores and counts as absent when PIN-10 chooses which version of a pin
+  restores, the intent's included; a pin left with no qualifying version leaves
+  the restore block.
 - **Purge**: Deletion of content, appending a **tombstone** naming the purged
   range, which views show in its place (ADM-07): by a principal act, or by the
-  node under a retention policy, recorded naming the policy. The only way stored
+  node under a retention policy, recorded naming the policy, which ages events
+  by **time marks**, structural events the node records at intervals (REC-15).
+  The only way stored
   content is destroyed (I1), never undoing an act's effect (Relations).
   A purged pin version counts as absent when PIN-10
   chooses a version, as a quarantined one does, and never restores, not even as

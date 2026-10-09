@@ -68,18 +68,16 @@ summary: >-
   (its ordered posts), seats, pins, and branches in any repositories, each named
   by a branch link. The unit Cairn shows and shares.
 - **Personal room**: A principal's private room on each of its nodes, created as
-  the first act of its device seat there when the principal installs Cairn on
-  the node, by `cairn install`, the plugin or the managed install path, recorded
-  at Cairn's first start there, or carried over to a node clone, which shares
-  it. It stays private: no invite, admission or visibility change applies to it
-  (LANE-17), and its segments go only to its principal's other nodes (Peer).
-  Its create room act is the device seat's add there. Every run its
-  node records has a seat in it from its first event, without a join, and every
-  event or pin that belongs to no other room goes there. Whether a room counts
-  an act recorded here for it, by a principal with no member seat in it, rests
-  on OQ-41. Unlike a node clone, a backup restore of a copy another node made
-  does not share that node's personal room: this node's runs get no seat in it
-  from their first event, and how their recall may reach it is open (OQ-45).
+  ADM-02 says, or carried over to a node clone, which shares it. It stays
+  private: no invite, admission or visibility change applies to it (LANE-17),
+  and its segments go only to its principal's other nodes (Peer). Its create
+  room act is the device seat's add there. Every run its node records has a seat
+  in it from its first event, without a join, and every event or pin that
+  belongs to no other room goes there. Whether a room counts an act recorded
+  here for it, by a principal with no member seat in it, rests on OQ-41. Unlike
+  a node clone, a backup restore of a copy another node made does not share that
+  node's personal room: this node's runs get no seat in it from their first
+  event, and how their recall may reach it is open (OQ-45).
 - **Foreign room**: A room this node holds, other than only as a blind peer,
   that its principal neither owns nor has a seat in, such as the room of an
   imported bundle or a room every seat of its principal has left or lost to a

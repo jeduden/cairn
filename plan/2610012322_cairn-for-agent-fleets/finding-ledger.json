@@ -610,7 +610,7 @@
     },
     {
      "file": "docs/srs/05b-lane-requirements.md",
-     "quote": "the owner's act joining its own run MUST assign that seat contributor."
+     "quote": "the owner's act joining its own run MUST assign that seat contributor"
     }
    ]
   },
@@ -715,7 +715,7 @@
     },
     {
      "file": "docs/srs/06-security.md",
-     "quote": "carried into a run a harness resume starts (REC-02) from the run it resumes"
+     "quote": "carried into a run a harness resume or a harness clear starts (REC-02) from the run it resumes or clears"
     }
    ]
   },
@@ -836,8 +836,8 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/domain-model/record.md",
-     "quote": "no quarantined post is endorsed or reaches an agent under a trust grant"
+     "file": "docs/srs/06-security.md",
+     "quote": "no quarantined post MAY be endorsed (OWN-08) or reach an agent under a trust grant (OWN-29)"
     },
     {
      "file": "docs/srs/06-security.md",
@@ -984,7 +984,7 @@
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "A quarantined pin version (SEC-12) MUST count as absent wherever this requirement chooses which version of a pin restores"
+     "quote": "MUST count as absent wherever this requirement chooses which version of a pin restores"
     }
    ]
   },
@@ -1074,7 +1074,7 @@
     },
     {
      "file": "docs/srs/05e-provenance-requirements.md",
-     "quote": "Hook observations, key rotations, tombstones, canary events (OPS-04) and backup events (ADM-06) MUST carry `structural`"
+     "quote": "Hook observations, key rotations, tombstones, canary events (OPS-04), backup events (ADM-06) and time marks (REC-15) MUST carry `structural`"
     }
    ]
   },
@@ -1453,7 +1453,7 @@
    "texts": [
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "each such run MUST be counted and audited until its events reach the record (I6)"
+     "quote": "MUST be counted and audited until its events reach the record (I6)"
     }
    ]
   },
@@ -1584,7 +1584,7 @@
    "texts": [
     {
      "file": "docs/srs/12-delivery-plan.md",
-     "quote": "REC-19 in part (the seat `cairn ingest` starts) with REC-22"
+     "quote": "REC-19 in part (the seat `cairn ingest` starts,"
     },
     {
      "file": "docs/srs/12-delivery-plan.md",

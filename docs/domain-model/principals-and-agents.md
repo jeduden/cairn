@@ -61,14 +61,14 @@ summary: >-
   the node that records its runs (OWN-01). It receives restore blocks and
   recalls history; an agent is never a principal. It is identified by its node,
   its harness and the harness's agent id across harness sessions; where the
-  harness gives no stable agent id, each run is its own agent. Its later runs
-  inherit its rooms for recall (the `rooms` scope), for restore and for its
-  directed posts, never a seat, add or role: a new run joins only as Join says
-  (REC-02, PIN-10). For restore and for its directed posts, its rooms are every
-  room its earlier runs had a seat in, even one their seats all left or lost to
-  a kick or a bar (PIN-10, LANE-12); for recall, only the rooms where a seat of
-  its runs is still a member (RCL-05), and a room of the principal's their
-  seats all left rests on OQ-45.
+  harness gives no stable agent id, each run is its own agent, as is each
+  subagent's run (REC-02). Its later runs inherit its rooms for recall (the
+  `rooms` scope), for restore and for its directed posts, never a seat, add or
+  role: a new run joins only as Join says (REC-02, PIN-10). For restore and for
+  its directed posts, its rooms are every room its earlier runs had a seat in,
+  even one their seats all left or lost to a kick or a bar (PIN-10, LANE-12);
+  for recall, only the rooms where a seat of its runs is still a member
+  (RCL-05), and a room of the principal's their seats all left rests on OQ-45.
 - **Run**: One agent's execution within one harness session, on one node, keyed
   by the harness session and the harness's agent id: a harness session's
   transcripts contain its main agent's run and one per subagent, a **harness
