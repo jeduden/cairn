@@ -3,7 +3,7 @@
 Spike S2 settles ADR-07: which pure-Go SQLite driver backs the store.
 It also bears on OQ-03 (is pure Go fast enough at 10M events) and
 answers OQ-04 (encryption at rest). The decision record is
-[ADR-2609302341](../../docs/adr/ADR-2609302341-sqlite-driver.md).
+ADR-2609302341.
 
 ## Verdict
 

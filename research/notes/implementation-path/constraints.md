@@ -303,12 +303,12 @@ and the gates under `internal/`. The ADRs split:
 
 - [ADR-2609292234][adr-test] (godog, cucumber messages, testify):
   Go-only; superseded by a language change.
-- [ADR-2609302341][adr-sqlite] (ncruces/go-sqlite3, proposed): Go-only.
+- ADR-2609302341 (ncruces/go-sqlite3, proposed): Go-only.
   Its measurements of FTS5 at 10M events carry over to any SQLite
   binding; the driver choice does not.
 - [ADR-2609301941][adr-review] (agent review): language-neutral; its
   gate, `cmd/review-gate`, is Go tooling that can stay Go.
-- [ADR-2610032155][adr-inv] (SRS 2.0 invariants): language-neutral, and
+- ADR-2610032155 (SRS 2.0 invariants): language-neutral, and
   already written for one executable or several: "some runtimes run
   every linked module's start-up code in every process".
 
@@ -463,7 +463,7 @@ The stakeholder's direction after revision 1 added these; the
 - **Per-component evidence**: build-time evidence of each component's
   reach, "dependencies and code that runs as the process starts
   included", whatever the packaging (SEC-01, SEC-19, ENG-16).
-- **The trade, from the security review** ([ADR-2610032155][adr-inv],
+- **The trade, from the security review** (ADR-2610032155,
   change 3): "the shipped file contains network code, so the guarantee
   is a property of each process".
 - **Distribution**: the plugin ships hooks, the MCP registration and
@@ -642,9 +642,7 @@ Positions every option takes in step 2:
 [net]: ../../../plan/2610022338_cairn-network-side/plan.md
 [adr-dir]: ../../../docs/adr/
 [adr-test]: ../../../docs/adr/ADR-2609292234-test-stack.md
-[adr-sqlite]: ../../../docs/adr/ADR-2609302341-sqlite-driver.md
 [adr-review]: ../../../docs/adr/ADR-2609301941-agent-review.md
-[adr-inv]: ../../../docs/adr/ADR-2610032155-srs-2-invariants.md
 [dev]: ../../../docs/development.md
 [deps]: ../../../DEPENDENCIES.md
 [lint]: ../../../.golangci.yml
