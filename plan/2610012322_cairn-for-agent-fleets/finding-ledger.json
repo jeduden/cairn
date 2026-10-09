@@ -2022,6 +2022,401 @@
      "quote": "until the rest of LANE-23 ships, a join request made without that ask is refused, audited and counted"
     }
    ]
+  },
+  {
+   "id": "DM-DV",
+   "title": "A pin whose text holds a restore-block delimiter cannot be restored verbatim without breaking INJ-08",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "verbatim text (≤ 1,000 characters†, holding none of INJ-08's delimiter sequences)"
+    }
+   ]
+  },
+  {
+   "id": "DM-DW",
+   "title": "INJ-07's total limit cannot hold once the pins and names PIN-08 and PIN-10 make the restore block carry exceed it",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "which bounds all but what PIN-08 and PIN-10 make it carry"
+    }
+   ]
+  },
+  {
+   "id": "DM-DX",
+   "title": "Repository configuration could add redaction patterns that erase content that is not secret, outside I1",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "plus patterns the principal defines in its own configuration, never a repository's (§9.6)"
+    }
+   ]
+  },
+  {
+   "id": "DM-DY",
+   "title": "After a device key is lost with the node identity unchanged, no key may certify the seat `cairn ingest` needs for the rest of a run",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "or once a key such a seat needs is missing (SEC-10), `cairn ingest` MUST append what remains of a run recorded before it"
+    }
+   ]
+  },
+  {
+   "id": "DM-DZ",
+   "title": "`cairn uninstall` after SEC-22 refuses turning capture off fell to ADM-02's branch that removes hooks with no act recorded",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "when Cairn refuses that act (OWN-22, SEC-22), `cairn uninstall` MUST change nothing, name why"
+    }
+   ]
+  },
+  {
+   "id": "DM-EA",
+   "title": "Binding a provisional repository or branch identity: which links follow it, and which event records it",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(a) whether binding a provisional repository identity (LANE-02), or a branch's provisional identity on push (LANE-01), is a structural event naming both identities that moves"
+    }
+   ]
+  },
+  {
+   "id": "DM-EB",
+   "title": "A platform key store that holds a key but refuses access",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(b) what the core certifies and appends while a platform key store holds a key but refuses access, which is neither a missing key (SEC-10) nor an unavailable identity (REC-24)"
+    }
+   ]
+  },
+  {
+   "id": "DM-EC",
+   "title": "Recall taint after a purge of what the recall returned",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(c) whether a run's recall taint (SEC-13) survives a purge of what its recall returned, which would need RCL-07's recall event to record whether a returned item was untrusted"
+    }
+   ]
+  },
+  {
+   "id": "DM-ED",
+   "title": "Whether a quarantine withholds copies of covered content held in recorded recall results",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(d) whether a quarantine (SEC-12) withholds the copies of covered content that SEC-31 names for a purge, such as items in recorded recall results"
+    }
+   ]
+  },
+  {
+   "id": "DM-EE",
+   "title": "The last span of a run whose end was never recorded",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(e) when LMK-01 closes the last span of a run whose end no hook handler recorded (NFR-06)"
+    }
+   ]
+  },
+  {
+   "id": "DM-EF",
+   "title": "What `cairn ingest` does with a new transcript generation of a purged source when there is no at-rest key",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(f) how `cairn ingest` keeps a purged range's lines out of a new transcript generation when no at-rest key exists (REC-07, SEC-31)"
+    }
+   ]
+  },
+  {
+   "id": "DM-EG",
+   "title": "The MCP server cannot tell which of its runs made a tool call",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(g) how the harness session's one MCP server tells which of its runs made a tool call, and what it does when it cannot (RCL-05, RCL-07, LANE-01, ASM-21)"
+    }
+   ]
+  },
+  {
+   "id": "DM-EH",
+   "title": "Recall event and taint for a CLI read whose output is not a terminal",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(h) which writer records the recall event of a read-only CLI verb whose output is not a terminal, and which run it taints (RCL-04, RCL-07, SEC-13)"
+    }
+   ]
+  },
+  {
+   "id": "DM-EI",
+   "title": "Which counters are failure counters",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(i) which of OPS-01's named counters are failure counters (ADM-11, OPS-03), REC-13's cut counter being none"
+    }
+   ]
+  },
+  {
+   "id": "DM-EJ",
+   "title": "Pin priority has no stated range or default, and a pin candidate brings none",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(j) the range of pin priority and the value recorded when the author gives none, for a confirmed pin candidate too (PIN-03, PIN-05)"
+    }
+   ]
+  },
+  {
+   "id": "DM-EK",
+   "title": "PIN-08 gives the order but not the fill rule for a pin that does not fit",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(k) whether PIN-08 stops at the first ordered pin that does not fit the pin budget left, or skips it and takes later ones that fit"
+    }
+   ]
+  },
+  {
+   "id": "DM-EL",
+   "title": "A configuration acceptance has no matching rule or baseline for its declared pins",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(l) how a configuration names each pin it declares, and what its acceptance compares them with to record each add, edit and unpin (ADM-04, ADM-06)"
+    }
+   ]
+  },
+  {
+   "id": "DM-EM",
+   "title": "No requirement says what a restore-building hook returns when its hook budget ends first",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(m) what a restore-building hook handler returns when its hook budget ends before its restore block is complete, never output that depends on timing (INJ-06, NFR-02)"
+    }
+   ]
+  },
+  {
+   "id": "DM-EN",
+   "title": "No requirement says where the deployment mode that trust derives from is recorded",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(n) where the deployment mode in force is recorded, so trust levels derive only from the record (PRV-02, ADM-04, SEC-22)"
+    }
+   ]
+  },
+  {
+   "id": "DM-EO",
+   "title": "Which settings apply while the managed-policy file is writable by the principal, unparsable or invalid",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(o) which managed-policy settings apply while that file is writable by the principal, unparsable or invalid, and whether widening acts wait meanwhile (ADM-04, SEC-22)"
+    }
+   ]
+  },
+  {
+   "id": "DM-EP",
+   "title": "Loosening changes that ADM-04 does not list fall under neither of its clauses",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(p) whether each loosening change ADM-04 does not list, such as raising `pin_budget.max_model_tokens` or SEC-10's opt-in to keys from the environment, waits for the widening"
+    }
+   ]
+  },
+  {
+   "id": "DM-EQ",
+   "title": "No scenario step covers losing a device key or device-seat key while the identity stays unchanged",
+   "status": "deferred",
+   "oq": "OQ-50",
+   "milestone": "M1",
+   "texts": [
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "(q) a scenario step for a device key and a device seat's key lost with the node identity unchanged (SEC-10, SEC-27, REC-24)"
+    }
+   ]
+  },
+  {
+   "id": "DM-ER",
+   "title": "Natural-language headlines and the restore block",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M6",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "whose every event is trusted; it is no structural field and never reaches a"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
+  },
+  {
+   "id": "DM-ES",
+   "title": "pin_list with room and recall scope",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/srs/09-interfaces.md",
+     "quote": "With `room`: the room's pins, intent first, each with its pin type and pin versions"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
+  },
+  {
+   "id": "DM-ET",
+   "title": "CMP-09 sub-calls through harness mechanisms",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M6",
+   "texts": [
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "Parallel model sub-calls over record data MAY be supported only through harness mechanisms. Cairn MUST NOT call model APIs itself."
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
+  },
+  {
+   "id": "DM-EU",
+   "title": "No requirement stops a personal-room seat from leaving",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "people speaks of the room's principals. A personal-room seat can neither"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
+  },
+  {
+   "id": "DM-EV",
+   "title": "A rule level tightened through configuration versus OWN-10's principal act",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/srs/05c-principal-and-peer-requirements.md",
+     "quote": "Every rule level change the principal makes MUST be a principal act."
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
+  },
+  {
+   "id": "DM-EW",
+   "title": "Pins from device seats whose device key was lost before PRV-10 stop qualifying once PRV-10 ships",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/srs/05e-provenance-requirements.md",
+     "quote": "A seat certificate a device key made before a principal key certified that key MUST stay valid once one does (PRV-10)."
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
+  },
+  {
+   "id": "DM-EX",
+   "title": "No requirement says an assignment refuses no seat's act",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M8",
+   "texts": [
+    {
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "- **Assignment**: Room state asking a seat to work on a branch. It makes Cairn"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
   }
  ]
 }

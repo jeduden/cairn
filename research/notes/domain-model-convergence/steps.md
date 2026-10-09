@@ -10,6 +10,7 @@ target of 14,826.
 | 2    | 18,147      | 0      | 0      | 0                      |
 | 3    | 17,419      | 0      | 0      | 0                      |
 | 4    | 12,834      | 0      | 0      | 0                      |
+| 5    | 12,834      | 29     | 29     | 18                     |
 
 ## Step 1: the open questions inside M1–M5
 
@@ -174,3 +175,57 @@ review to weigh:
 - the naming rules for budgets, runs, sources and the harness's hooks;
 - a natural-language landmark headline never reaches a restore block;
 - an event from a peer or a bundle records no recorder.
+
+## Step 5: the final review
+
+Four area reviewers read the model, the requirements it cites and the
+grid, following [review-brief.md](review-brief.md); an adversarial
+verifier per area judged each theme, defaulting to not blocking
+([final-review-workflow.js](final-review-workflow.js)). They reported 34
+findings, each a theme of its own. Two pairs are one defect each: a pin
+whose text holds a restore delimiter, raised in the trust and pins
+areas, and managed policy changing a pin, raised in the pins and
+configuration areas. That leaves 32 themes. The ledger records the 29
+that are real, and the three refuted ones are named below.
+
+| Verdict   | Themes | Where they went                        |
+| --------- | ------ | -------------------------------------- |
+| Blocking  | 5      | Fixed at their rule, DM-DV to DM-DZ    |
+| Known gap | 17     | OQ-50, for M1, DM-EA to DM-EQ          |
+| Later     | 7      | OQ-47 with their milestone, DM-ER on   |
+| Not real  | 3      | Refuted by the text the verifier cited |
+
+The five blocking themes, each fixed in the row that governs it, and
+each with a step in that row's pending scenario:
+
+- **A pin whose text holds a restore delimiter** (INJ-08 against I3 and
+  PIN-08). A pin's text holds none of INJ-08's delimiter sequences
+  (PIN-03), so every way a pin version gets its text refuses it.
+- **The restore block's limit against the pins it must carry** (INJ-07
+  against PIN-08 and I3). The limit bounds all but what PIN-08 and
+  PIN-10 make the block carry; a block those alone keep over it is
+  audited and counted.
+- **Repository redaction patterns** (I1). A repository's `.cairn.toml`
+  could add a pattern that erases text that is not secret; only the
+  principal's own configuration defines patterns (SEC-08, §9.6).
+- **`cairn ingest` after a lost key** (I1 against PRV-11). With the node
+  identity unchanged, no key could certify the seat that carries the
+  rest of a run; REC-19's personal-room route now covers a missing key
+  such a seat needs. The grid's row for a lost key cites REC-19.
+- **`cairn uninstall` after a SEC-22 refusal** (ADM-02 against itself).
+  Any refusal of the act turning capture off changes nothing.
+
+The verifiers refuted three themes: `kernel_variable_list` names outside
+the envelope (RCL-04 already envelopes them), managed policy changing a
+pin (raised twice; PIN-01 lets only a principal do it), and a new run
+seat's membership after a key loss (LANE-16 and LANE-25 already cover
+it).
+
+The last column of the table counts themes that quote a sentence steps
+1 to 4 wrote or reworded. It overcounts, since a reworded older rule
+counts too. One blocking theme sits on such text: REC-19's route for a
+node identity change, written in step 2, which the lost-key fix extends.
+
+The model did not change in this step. The SRS is at 2.31-draft. The
+reviewers' findings and the verifiers' verdicts are in
+`final-review/verdicts.json`.

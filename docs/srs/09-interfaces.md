@@ -174,7 +174,7 @@ PRV-10 ships, for that principal's own agents only (I2).
 | `pin_budget.max_model_tokens`                                                                | 1000                     | No                                   |
 | `room_summary.max_model_tokens` (the agent's principal's cap on `room_summary_get`, LANE-33) | 2000                     | Only lower                           |
 | `recall.max_k`                                                                               | 50                       | Only lower                           |
-| `redaction.extra_patterns`                                                                   | `[]`                     | Yes, add only                        |
+| `redaction.extra_patterns`                                                                   | `[]`                     | No                                   |
 | `flag.enabled`                                                                               | `true`                   | Only `true`                          |
 | `retention_policy.<room>.<provenance>` (`*` for every room)                                  | keep forever             | No                                   |
 | `kernel.enabled`                                                                             | `true` (when shipped)    | Only to `false`                      |

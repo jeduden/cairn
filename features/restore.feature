@@ -76,6 +76,7 @@ Feature: Restore and injection (INJ)
     Then the restore block is at most 2,000 model tokens
     And landmark detail is removed finest tier first, the coarsest tier last
     And every pin the PIN-08 rule admits is still present verbatim
+    And with "restore_block.max_model_tokens" set to 300 in repository configuration, the restore block holds every pin the PIN-08 rule admits verbatim, names the omitted pins by id and count, holds no landmark detail, and an audit entry and a counter record it over its total limit
 
   @INJ-08 @P0 @I2 @pending
   Scenario: injected fields can never contain the restore delimiters

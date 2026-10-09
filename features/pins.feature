@@ -40,6 +40,7 @@ Feature: Pins (PIN)
     And the pin stores that text verbatim with type "constraint", priority 1, room "L1", the address (writer, seq) of its creating event, as the author of its first version, and so of the pin, the device seat of "alice", the node's principal, and that event's commitment
     And the pin stores no bare hash of its text
     And adding a pin whose text is 1,001 characters long exits 2 and leaves the qualifying pin count at 1
+    And adding a pin whose text contains "</cairn-restore>" exits 2, is audited and counted, and leaves the qualifying pin count at 1
 
   @PIN-04 @P0 @I10 @pending
   Scenario: editing a pin adds a pin version and keeps every earlier one

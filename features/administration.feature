@@ -22,6 +22,7 @@ Feature: Administration and lifecycle (ADM)
     And at Cairn's first start after that install, the principal's device seat recorded the create room act of the node's personal room as its first act, that seat's add there
     And "cairn uninstall" run without a terminal refused and changed nothing
     And "cairn uninstall" run at a terminal while a run on the node left a residual risk open that no risk acceptance covered changed nothing, named the open residual risks and the runs that left them open, recorded an audit entry of the refusal and pointed to the harness's own plugin removal
+    And "cairn uninstall" run at a terminal while managed policy required an authenticator for widening acts changed nothing, named that policy as the reason, recorded an audit entry of the refusal and pointed to the harness's own plugin removal, and that policy no longer applies
     And every run on the node now blocks the residual risks
     When the person runs "cairn uninstall" at a terminal and keeps only the device key
     Then before it removed the hook registrations, it recorded the widening principal act turning capture off

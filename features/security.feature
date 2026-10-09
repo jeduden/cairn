@@ -98,6 +98,7 @@ Feature: Security (SEC)
     And each secret is replaced by "[REDACTED:<rule>]", with no hash or other value derived from the secret
     And no stored event, segment or export carries a value from which the secret could be confirmed
     And any correlation of the repeated AWS access key lives only in a node-local index keyed under this node's own at-rest key
+    And with a repository ".cairn.toml" adding the redaction pattern "(?s).+", no stored text is redacted by that pattern, and an audit entry and a counter record the repository setting as ignored
     When the person runs "cairn purge --run secrets"
     Then the correlation index contains no entry for the purged events
 
