@@ -7,14 +7,14 @@ one from the consistency lens, one from security and four from
 usefulness. Under the defer-first rule (`verify.json`) they close as
 follows.
 
-| Theme | Closed as                                                          |
-| ----- | ------------------------------------------------------------------ |
-| DM-CA | fixed: no mute covers the owner's device seats (LANE-16)           |
-| DM-CB | deferred: OQ-46, M7 (another principal's concurrent branch link)   |
-| DM-CC | fixed: a subagent's delegated task is `harness_text` (PRV-08)      |
-| DM-CD | deferred: OQ-43, M1 (a run's events before its run-seat key)       |
-| DM-CE | fixed: a pin keeps its priority and type; a stamp shows both       |
-| DM-CF | fixed: minting an access token asks its runs to join its rooms     |
+| Theme | Closed as                                                        |
+| ----- | ---------------------------------------------------------------- |
+| DM-CA | fixed: no mute covers the owner's device seats (LANE-16)         |
+| DM-CB | deferred: OQ-46, M7 (another principal's concurrent branch link) |
+| DM-CC | fixed: a subagent's delegated task is `harness_text` (PRV-08)    |
+| DM-CD | deferred: OQ-43, M1 (a run's events before its run-seat key)     |
+| DM-CE | fixed: a pin keeps its priority and type; a stamp shows both     |
+| DM-CF | fixed: minting an access token asks its runs to join its rooms   |
 
 To keep `05b-lane-requirements.md` under its token budget, LANE-31's
 pointer to OQ-46 reads only "(open: OQ-46)", and two phrases in LANE-01
