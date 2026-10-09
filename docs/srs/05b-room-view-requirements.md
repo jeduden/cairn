@@ -21,7 +21,11 @@ the harness strip as reduced clients that say what they leave out
 Health's counters and store locations (ADM-11), and `cairn event search`
 and `expand`, `cairn landmark list`, `cairn pin list` and `cairn audit`
 show the principal its agents' runs, events and landmarks, its pins and
-pin candidates, and the audit log (§9.5). A paired phone signs with its
+pin candidates, and the audit log (§9.5). Needs you's items wait for
+VIEW-05, which derives them from the record (I10). Until the rest of
+LANE-23 ships (§12.2), a join request a run makes without its
+principal's ask is refused, audited and counted, never left waiting for
+an acceptance no client shows. A paired phone signs with its
 own device key and seals its
 own device seat's writer; the node it pairs with holds that writer. A
 paired phone never joins a room: its acts go to its device seat in the

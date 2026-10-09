@@ -74,6 +74,7 @@ Feature: Compute kernel (CMP)
     Then the recall result is wrapped in the envelope
     And the printed output is capped at 8,000 model tokens with a truncation marker stating that variables persist
     And the envelope is tainted "untrusted" by the web event read during the execution
+    And a later "kernel_exec" with code "print(r[0])", which reads no event, is tainted "untrusted" by that web event too
     And no value other than printed output is returned
 
   @CMP-07 @P1 @I5 @I8 @pending
@@ -81,10 +82,13 @@ Feature: Compute kernel (CMP)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a"
     And an agent run with a Claude Code transcript "run-b"
+    And the agent has bound A1·7 to the kernel variable "held" with "held = cairn.event_get(address='A1:7')"
     And the person has quarantined A1·7 with "cairn quarantine add --range A1:7-7"
     When the agent calls the MCP tool "kernel_exec" with code "print(cairn.event_get(address='A1:7'), cairn.event_search(query='x', scope='rooms'))"
     Then the kernel returns exactly what the MCP tools "event_get" and "event_search" return for the same arguments
     And A1·7 and rooms the run has no seat in are absent
+    And the kernel states that the run's namespace was lost, and no variable "held" remains
+    And a purge of an event a kernel variable holds resets that namespace likewise
 
   @CMP-08 @P2 @I4 @pending
   Scenario: the opt-in Python kernel is confined, network-less and read-only

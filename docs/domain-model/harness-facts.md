@@ -16,7 +16,11 @@ them, Cairn changes only harness configuration, under I7.
   the launcher starts and controls runs in it.
 - **Harness session**: The harness's own unit, which yields one transcript, plus
   one per subagent where the harness writes them apart (ASM-03). Named only when
-  describing the harness, never as a Cairn unit.
+  describing the harness, never as a Cairn unit. One whose harness process
+  descends from a run's tool call records no `user` event: its input, which
+  that tool call supplied, is untrusted `harness_text` whatever the deployment
+  mode, and its runs carry that run's recall taint, or recall taint from their
+  first event where Cairn cannot tell that run (PRV-08, SEC-13).
 - **Transcript**: The harness's file of what a harness session did. A
   **transcript source** is a transcript Cairn ingests (Ingest marker, `cairn
   ingest`); a shrunk transcript or a rewritten prefix starts a new **transcript
@@ -37,7 +41,13 @@ them, Cairn changes only harness configuration, under I7.
   turn, LANE-14), and ingest records the matching line as untrusted
   `harness_text` (LANE-14). In interactive deployment mode its `user` event,
   never the model reply, is a trusted source on the node whose hook handlers
-  recorded it (I2, PRV-02).
+  recorded it (I2, PRV-02). Only that typed text is `user`. Other free text the
+  harness writes or adds to the model's input, such as an `isMeta` line,
+  command output it writes as a `user` line, a compaction summary, context a
+  hook adds, a launcher-carried line or a subagent's delegated task,
+  is `harness_text`, never `user` and never trusted, unless it is a turn's
+  model reply, a tool result, a file's or an MCP server's text or a subagent's
+  report (PRV-08, PRV-03).
 - **Compaction**: The harness replacing earlier context with a compaction
   summary when the context window fills or when asked. Cairn neither performs
   nor controls it (NG1); it records it and restores pins after it (I3).

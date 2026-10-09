@@ -174,6 +174,7 @@ Feature: Provenance and trust (PRV)
       | an "ai-title" transcript line carrying a harness session title                  | harness_text     | untrusted |
       | a "last-prompt" transcript line repeating a typed prompt                        | harness_text     | untrusted |
       | a subagent's "user" line carrying the delegated task its parent's run wrote     | harness_text     | untrusted |
+      | a "user" line of a harness session a run's Bash tool call started               | harness_text     | untrusted |
 
   @PRV-09 @P0 @I2 @I8 @pending
   Scenario Outline: an event's writer comes from the key that verifiably signed it, never from a field

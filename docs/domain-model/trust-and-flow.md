@@ -28,7 +28,7 @@ summary: >-
   `automation` (a pipeline does, the default), set per node (PRV-02, PRV-04,
   `node.deployment_mode`);
   changing it, loosening redaction or turning flags off applies only once
-  its configuration is accepted (ADM-04).
+  its configuration is accepted, as does every other change ADM-04 names.
 - **Trust policy**: The rule that derives each event's trust level (PRV-02); no
   settings layer changes it.
 - **Trust mark**: The sign beside an item saying where it came from and whether
@@ -212,5 +212,4 @@ summary: >-
   recorded, that a run looks stuck, shown as the `stuck?` freshness mark; it
   never starts or resumes a turn (OWN-09).
 - **Petname**: A name the person viewing chose for a key or a room, never one
-  another principal sent (VIEW-07). Notifications carry a room's petname, else
-  its id.
+  another principal sent (VIEW-07).

@@ -75,10 +75,11 @@ summary: >-
 - **Provenance**: An event's class from a closed set, saying what produced its
   content (PRV-01): `user`, `assistant`, `tool_call`, `tool_result:<tool>`,
   `web`, `mcp:<server>`, `file`, `subagent_result`, `harness_meta`,
-  `harness_text`, `operator`, `post`, `summary`, `structural` and `unparsed`.
+  `harness_text` (Turn), `operator`, `post`, `summary`, `structural` and
+  `unparsed`.
   `harness_meta` is what the harness reports, or the launcher records, about the
   harness's operation, never free text: turn triggers, model tokens, metadata
-  lines that carry no free text and sandbox state (PRV-08, OWN-22); `operator`
+  lines and sandbox state (PRV-08, OWN-22); `operator`
   is the class of principal acts, expire acts and device-seat pins; posts are
   `post` and run-seat pins `assistant`; every other room act but a room summary
   takes its seat's **pin class**, `operator` for a device seat and `assistant`
@@ -164,8 +165,8 @@ summary: >-
 - **Purge**: Deletion of content, appending a **tombstone** naming the purged
   range, which views show in its place (ADM-07): by a principal act, or by the
   node under a retention policy, recorded naming the policy. The only way stored
-  content is destroyed (I1); it never undoes an act's effect, as Relations
-  says. A purged pin version counts as absent when PIN-10
+  content is destroyed (I1), never undoing an act's effect (Relations).
+  A purged pin version counts as absent when PIN-10
   chooses a version, as a quarantined one does, and never restores, not even as
   its tombstone.
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
@@ -206,6 +207,6 @@ summary: >-
 - **Import**: Reading a bundle into this node's record (`cairn import`, REC-23).
   A transcript is ingested and a peer's segments are received; neither is
   imported.
-- **Kernel**: The hermetic compute environment in which an agent runs code over
+- **Kernel**: The hermetic environment where an agent runs code over
   the record (CMP-01); each run's **kernel variables** live in its own
-  namespace.
+  namespace, reset when what it read is quarantined or purged (CMP-07).

@@ -61,7 +61,7 @@ Feature: Pins (PIN)
     Then <candidates> pin candidates are derived, each over its creating "user" event, holding its text by address, with no provenance of its own and no pin author
     And the qualifying pin count is 0
     And the qualifying pin count is <confirmed> after the person confirms every pin candidate with "cairn pin-candidate confirm", each its own widening principal act
-    And before recording each confirmation, "cairn pin-candidate confirm" shows the candidate's exact text, pin type and priority
+    And before recording each confirmation, "cairn pin-candidate confirm" shows the candidate's exact text, pin type and priority, and the room the new pin will belong to
     And each confirmation makes a new pin that the principal's device seat authors
     And only the owner's confirmation turns an intent or criterion candidate into a pin, as a new version of the room's intent pin authored by the owner's device seat
     And "cairn pin-candidate confirm" on a pin candidate the agent proposed through "pin_candidate_propose" also shows its provenance "assistant", marked untrusted

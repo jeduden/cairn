@@ -39,8 +39,10 @@ summary: >-
   or purged version counts as absent in that choice (Quarantine, Purge).
 - **Pin candidate**: Proposed pin text an agent suggested (an `assistant` event,
   PIN-02) or Cairn detected (a derived artifact over its creating `user` event,
-  holding its text by address, with no provenance of its own, I10); not yet a
-  pin, so it has no pin author (a pin's author being its first version's). The
+  holding its text by address, with no provenance of its own, I10) only in a
+  `user` event trusted on this node, never in an ingested or other untrusted
+  one (PIN-05); not yet a pin, so it has no pin author (a pin's author being
+  its first version's). The
   confirmation of its principal (of the agent that suggested it or the node that
   detected it), a widening act taken only after that principal is shown its
   exact text, pin type and priority, makes it a new pin its device seat authors;
@@ -48,20 +50,25 @@ summary: >-
   version of the room's intent pin that the owner's device seat authors. An
   agent's pin candidate is shown with its provenance `assistant`, marked
   untrusted, in every list of pin candidates and at its confirmation (PIN-02,
-  PIN-05).
+  PIN-05). Each confirmation also shows the room the new pin or pin version
+  will belong to; the rule choosing that room is open (OQ-49).
 - **Configuration pin**: A pin the principal's configuration declares, authored
   by its device seat on that node (PIN-01), which takes effect only once the
   principal's widening act accepting that configuration records its digest;
-  repository configuration declares none (ADM-04).
-- **Pin priority**: An integer the pin's author sets with it, lower first, the
-  intent before every other pin of its room (LANE-20). Qualifying pins fill the
+  repository configuration declares none (ADM-04). Editing or removing one
+  there likewise applies only once that configuration is accepted; until then
+  the pin stays as it stood.
+- **Pin priority**: An integer the pin's author sets with it, lower first, each
+  intent before every pin of another type (LANE-20). Qualifying pins fill the
   pin budget first from the rooms the run has had a seat in during the run, its
   personal room included, then from those only its agent's earlier runs had a
   seat in, each in that order, then by their creating events' addresses
   (PIN-08). A pin keeps the priority and pin type it was written with:
   changing either takes an unpin and a new pin, as a move between rooms does
   (PIN-04, PIN-10).
-- **Budget**: The **pin budget** is the restore block's share of model tokens;
+- **Budget**: The **pin budget** is the restore block's share of model tokens,
+  which only managed policy, or the principal's configuration once accepted,
+  lowers (ADM-04);
   every other budget is named too: the **hook budget** (a hook handler's time
   limit, §9.1, NFR-02), the **step budget** (how many steps a kernel execution
   may take, CMP-05) or the delegation budget; a limit keeps its own name, such

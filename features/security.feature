@@ -176,6 +176,7 @@ Feature: Security (SEC)
     And the example PreToolUse hook handler requires approval for an action of a class it configures as sensitive
     And a run that a harness resume of "r-1" starts in a new harness session carries recall taint from its first event
     And a run a harness resume starts in a new harness session, where Cairn cannot tell which run it resumes, carries recall taint from its first event
+    And a run of a harness session whose harness process a Bash tool call of "r-1" started carries recall taint from its first event
 
   @SEC-14 @P0 @I5 @pending
   Scenario: purged content is not recoverable from the storage the purge freed

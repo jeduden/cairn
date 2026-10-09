@@ -64,7 +64,12 @@ summary: >-
   `cairn status` shows Health's counters and store locations (ADM-11), and
   `cairn event search` and `expand`, `cairn landmark list`, `cairn pin list` and
   `cairn audit` show the principal its agents' runs, events and landmarks, its
-  pins and pin candidates, and the audit log (§9.5). Search and expand show each
+  pins and pin candidates, and the audit log (§9.5). Needs you's items wait for
+  VIEW-05 (M7), which derives them from the record (I10). Until the rest of
+  LANE-23 ships (M7), a run joins only when its principal asks for the join
+  (`cairn run join`); a join request made without that ask is refused, audited
+  and counted, never left waiting for an acceptance no client shows (§12.2).
+  Search and expand show each
   event's provenance and trust level, as the envelope carries them (§9.3). At a
   terminal, the CLI and the TUI show every control character but the line feed,
   and every zero-width, bidirectional and tag character, in text other than

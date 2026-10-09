@@ -1919,6 +1919,145 @@
      "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
     }
    ]
+  },
+  {
+   "id": "DM-DM",
+   "title": "A cut act kept after a clone or restore can leave a rule level looser than without the lapsed widening act",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "each cut or neutral one in force at the change or in the copy"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
+  },
+  {
+   "id": "DM-DN",
+   "title": "A harness session a run's tool call starts recorded its input as trusted user and carried none of the run's recall taint",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/harness-facts.md",
+     "quote": "descends from a run's tool call records no `user` event"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "So MUST the input of a harness session whose process descends from a run's tool call"
+    }
+   ]
+  },
+  {
+   "id": "DM-DO",
+   "title": "A detected pin candidate seemed to be shown with no trust mark; the model omitted that Cairn detects only in trusted user events",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "`user` event trusted on this node, never in an ingested or other untrusted"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "Cairn SHOULD detect constraints stated in trusted `user` events as pin candidates"
+    }
+   ]
+  },
+  {
+   "id": "DM-DP",
+   "title": "The model never defined harness_text or which harness-added text counts as user",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/harness-facts.md",
+     "quote": "is `harness_text`, never `user` and never trusted"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "an `isMeta` line, command output the harness writes as a `user` line, a line the launcher carried in (LANE-14)"
+    }
+   ]
+  },
+  {
+   "id": "DM-DQ",
+   "title": "Kernel variables loaded before a quarantine or purge kept serving that content",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "reset when what it read is quarantined or purged (CMP-07)"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "a quarantine or purge MUST reset each namespace that read what it covers (CMP-05)"
+    }
+   ]
+  },
+  {
+   "id": "DM-DR",
+   "title": "The model named only some of the configuration changes ADM-04 holds for acceptance",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "its configuration is accepted, as does every other change ADM-04 names"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "lowers the pin budget, loosens redaction, recall scope, rule levels or hold windows, turns flags off"
+    }
+   ]
+  },
+  {
+   "id": "DM-DS",
+   "title": "The pin budget's order across rooms could cycle between intent-first and priority",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "intent before every pin of another type (LANE-20)"
+    },
+    {
+     "file": "docs/srs/05-functional-requirements.md",
+     "quote": "each with intents first (LANE-20), then by pin priority"
+    }
+   ]
+  },
+  {
+   "id": "DM-DT",
+   "title": "Which room a confirmed pin candidate's pin belongs to was unstated (the confirmation now shows it)",
+   "status": "deferred",
+   "oq": "OQ-49",
+   "milestone": "M5",
+   "texts": [
+    {
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "Each confirmation also shows the room the new pin or pin version"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "Which room does the pin a confirmed pin candidate makes belong to"
+    }
+   ]
+  },
+  {
+   "id": "DM-DU",
+   "title": "In M1–M5 nothing showed Needs you's items or pending join requests",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/components-and-surfaces.md",
+     "quote": "a join request made without that ask is refused, audited"
+    },
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "until the rest of LANE-23 ships, a join request made without that ask is refused, audited and counted"
+    }
+   ]
   }
  ]
 }
