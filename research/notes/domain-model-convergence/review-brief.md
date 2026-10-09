@@ -1,11 +1,28 @@
-# Review brief: one convergence round on the full domain model
+# Review brief: one convergence round on the domain model, M1 to M5
 
-You review Cairn's domain model as it stands, every feature included. This
-brief stays the same from round to round, so rounds can be compared. Cairn
+You review Cairn's domain model as it stands, every feature still defined.
+This brief stays the same from round to round, so rounds can be compared.
+Cairn
 is a lossless, security-first context layer for long-running Claude agents:
 an append-only record of every agent run, pins restored verbatim after
 compaction, exact recall on demand, and stored history never a
 prompt-injection channel.
+
+Scope, set by the stakeholder on 9 October 2026: the review covers what
+ships in milestones M1 to M5. An entry or clause about any of the following
+ships later and is dormant: another principal and PRV-10's principal keys,
+device certificates and device scopes; service accounts; admission, leave,
+kick, bar and mute; roles and appointments beyond a run seat's contributor
+role and the owner's device seat's every capability; stamps; trust grants;
+delegation; the facilitator and room summaries; the launcher and terminal
+takeover; the room view and its surfaces; seals and receipts of chain
+heads; peers, sync and blind peers; paired phones; ephemeral and
+token-key-only nodes and access tokens; expire acts; endorsement and
+directed posts; held requests; verdicts, landings and room trailers;
+bundles, import, publishing and bridges. A defect that arises only from
+dormant text has severity `later` and names the feature it waits for;
+it is never needs-fix. A defect in what ships in M1 to M5 is needs-fix,
+even where its fix would also reach dormant text.
 
 Read the model fully: `docs/srs/invariants.md`, `docs/domain-model/index.md`
 (the hub) and every concept file in `docs/domain-model/`. Review only this
@@ -52,6 +69,6 @@ Output: one fenced `json` block, an array of objects with `type` (one of
 the five above), `file` (the file you quote), `quote` (exact text copied
 from it, 10 to 200 characters, from the line at fault, no line breaks
 inside), `problem` (one or two sentences), `fix` (the smallest wording
-change that fixes it) and `severity` (`needs-fix` or `minor`). Then one
-line: `FINDINGS: <n needs-fix>`. An empty array is a valid and welcome
+change that fixes it) and `severity` (`needs-fix`, `minor` or `later`).
+Then one line: `FINDINGS: <n needs-fix>`. An empty array is a valid and welcome
 answer when the model holds.

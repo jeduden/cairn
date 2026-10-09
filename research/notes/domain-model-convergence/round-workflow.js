@@ -1,6 +1,6 @@
 export const meta = {
   name: 'dm-convergence-round',
-  description: 'One convergence round: strong blind review of the full domain model, findings matched against the finding ledger',
+  description: 'One convergence round: strong blind review of the domain model at M1 to M5, findings matched against the finding ledger',
   phases: [
     { title: 'Review', detail: 'three blind reviewers, one per lens, on the full model' },
     { title: 'Match', detail: 'each needs-fix finding matched to a ledger theme or named as a new theme' },
@@ -23,7 +23,7 @@ const FINDINGS = {
   properties: { findings: { type: 'array', items: { type: 'object', properties: {
     type: { type: 'string', enum: ['contradiction', 'undefined', 'gap', 'security', 'useless'] },
     file: { type: 'string' }, quote: { type: 'string' }, problem: { type: 'string' }, fix: { type: 'string' },
-    severity: { type: 'string', enum: ['needs-fix', 'minor'] },
+    severity: { type: 'string', enum: ['needs-fix', 'minor', 'later'] },
   }, required: ['type', 'file', 'quote', 'problem', 'fix', 'severity'] } } },
   required: ['findings'],
 }
