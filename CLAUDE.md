@@ -158,6 +158,10 @@ packages until a security reviewer is named — also waits for the
 stakeholder's approval. Keep
 such changes out of code pull requests, so code never waits on it.
 
+On GitHub, write every `@`-word in backticks, tags such as `@I2` too.
+A bare one mentions the GitHub user of that name (jeduden/cairn#22).
+That holds for pull requests, reviews, comments, issues and commits.
+
 ## Requirements and Scenarios
 
 The SRS is normative; the scenarios under `features/` make it
