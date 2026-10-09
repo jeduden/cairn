@@ -25,7 +25,7 @@ Feature: Administration and lifecycle (ADM)
     And every run on the node now blocks the residual risks
     When the person runs "cairn uninstall" at a terminal and keeps only the device key
     Then before it removed the hook registrations, it recorded the widening principal act turning capture off
-    And the output lists the hook, plugin and MCP registrations, room-view secrets, launcher endpoints, seat and device keys, enrollments and every other file Cairn wrote outside the store, each with an offer to remove it, and offers purge as the only removal of the store's content
+    And the output lists the hook, plugin and MCP registrations, seat and device keys and every other file Cairn wrote outside the store, each with an offer to remove it, and offers purge as the only removal of the store's content
     And the settings file is byte-identical to the one before install
     And an audit entry names the device key as left in place
 
@@ -50,14 +50,6 @@ Feature: Administration and lifecycle (ADM)
 
     Examples:
       | settings                                                                                                                                            | component               | expected                                                                                      |
-      | a managed policy file at the documented system path that the person can write                                                                       | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
-      | a managed policy file in a directory the person can write                                                                                           | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
-      | an unparsable managed policy file                                                                                                                   | the room-view component | refuses to start, and an audit entry and a counter record why                                 |
-      | a managed policy file with an unknown key                                                                                                           | the launcher            | refuses to start, and an audit entry and a counter record why                                 |
-      | a repository ".cairn.toml" that turns on the room-view component and a widening act that recorded its digest                                        | the room-view component | stays off, and an audit entry and a counter record the ignored key                            |
-      | the person's config.toml that turns on the room-view component with no widening act recording its digest                                            | the room-view component | stays off                                                                                     |
-      | the person's config.toml that turns on the room-view component and a widening act that recorded its digest                                          | the room-view component | starts                                                                                        |
-      | a managed policy that turns off the room-view component and the person's config.toml that turns it on, with a widening act that recorded its digest | the room-view component | stays off                                                                                     |
       | the person's config.toml containing "recal.max_k = 10"                                                                                              | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
       | the person's config.toml containing "recall.max_k = 'ten'"                                                                                          | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
       | the person's config.toml containing "recall.max_k = 500"                                                                                            | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
@@ -81,14 +73,14 @@ Feature: Administration and lifecycle (ADM)
   @ADM-06 @P0 @I1 @I6 @pending
   Scenario: a backup restore keeps every later removal and never reuses a writer's log
     Given an isolated Cairn home
-    And a home with sealed segments, an open segment, payloads, derived artifacts and an audit log
+    And a home with closed segments, an open segment, payloads, derived artifacts and an audit log
     And a backup taken by "cairn backup create", followed by a purge of run "run-a" and the unpin of a pin
     When the person runs "cairn backup restore" as a widening principal act
-    Then the backup contained every segment, the open segment up to a fresh seal, the payload store, derived artifacts and the audit log with its chain, no seat, device, token or at-rest key, and an audit entry recorded it
+    Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device or at-rest key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was reinstated
     And every event and payload outside run "run-a" recalled before the backup is recalled identically
     And run "run-a" stays purged and the unpinned pin stays unpinned
-    And each local seat the copy contains is followed by a new seat and writer under a newly minted seat key, which names the old seat and inherits no add, role or appointment of it, audited, and no reinstated writer's log gains an event or reuses a seq
+    And each local seat the copy contains is followed by a new seat and writer under a newly minted seat key, which names the old seat and inherits no add or role of it, audited, and no reinstated writer's log gains an event or reuses a seq
     And "cairn verify" exits 0 on the home after the backup restore
 
   @ADM-07 @P0 @I1 @I5 @pending
@@ -97,11 +89,11 @@ Feature: Administration and lifecycle (ADM)
     And an agent run with a Claude Code transcript "run-a" in room "room-a"
     When the person runs "cairn purge <scope>"
     Then the command exits 0
-    And the purged events are gone from the sealed segments, events, the search index, derived artifacts, the payload store and every copy of their content
+    And the purged events are gone from the segments, events, the search index, derived artifacts, the payload store and every copy of their content
     And the commitment key and payload reference of every purged event are erased
     And a tombstone event per purged range carries only addresses, counts, reason and commitments, and the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds, never their text
     And "cairn rebuild" then derives room state, the key set and the quarantine set as before the purge, but for the purged content
-    And the store is vacuumed and "cairn verify" confirms every rewritten segment's seals
+    And the store is vacuumed and "cairn verify" exits 0
 
     Examples:
       | scope                  |
@@ -177,20 +169,19 @@ Feature: Administration and lifecycle (ADM)
   Scenario: Cairn writes to no git repository beyond the confirmed settings file, the commit hook of LANE-28 and the launcher's fresh checkouts
     Given an isolated Cairn home
     And a git repository with a worktree, refs, notes, git configuration and git hooks
-    When an agent runs, the person confirms "cairn install --scope project", every Cairn component runs and the launcher runs a witness check
+    When an agent runs, the person confirms "cairn install --scope project" and every Cairn component runs
     Then the only changed file in the worktree is the harness settings file that install wrote
     And no ref is new or changed, and no new object was written
-    And the only changed git hook is the commit hook for room trailers that the confirmed install set up
-    And the witness check's fresh checkout lies outside the run's worktree and added no ref to the run's repository
+    And no git hook is new or changed but the commit hook for room trailers that a confirmed install sets up
     And the repository's notes, git configuration and other git hooks are byte-identical to before
 
   @ADM-14 @P1 @I1 @I5 @pending
   Scenario Outline: purge by seat or principal removes one principal's data with an audit trail on every node
     Given an isolated Cairn home
-    And two nodes that both hold the events that the seat "s-alice" of the principal "alice" wrote
-    When the person runs "cairn purge <scope>" on each node
-    Then neither node holds an event of the selected scope
-    And each node's audit log records the purge with its scope and ranges
+    And a node that holds the events that the seat "s-alice" of the principal "alice" wrote
+    When the person runs "cairn purge <scope>" on the node
+    Then the node holds no event of the selected scope
+    And its audit log records the purge with its scope and ranges
 
     Examples:
       | scope             |
@@ -205,6 +196,7 @@ Feature: Administration and lifecycle (ADM)
     When <arrival>
     Then <expected>
     And every event accepted before is still stored and recallable
+    And each refusal over a quota increases the counter "quota_rejected" by 1
     And where this node's own recording crossed the quota, that first crossing at the quota's limit is a structural event in its device seat's personal-room writer, from which the Needs you item derives, and a rebuild appends none
 
     Examples:

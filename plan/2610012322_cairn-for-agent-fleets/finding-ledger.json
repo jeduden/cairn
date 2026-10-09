@@ -1492,6 +1492,260 @@
      "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
     }
    ]
+  },
+  {
+   "id": "DM-CJ",
+   "title": "M5 held P1 rows that need the room view, results or worktree checkpoints (S-1)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "but not LANE-17, LANE-19, LANE-21, VIEW-20 and VIEW-21, which need the room view, results or worktree checkpoints and come in M7"
+    },
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "a two-week pilot of many concurrent agents with the room view in daily use; §11.1 gains \"what did my agent do, answered from Catch up alone\""
+    }
+   ]
+  },
+  {
+   "id": "DM-CK",
+   "title": "M1 and M3 rows assumed seals, which ship with REC-18 in M7 (S-2)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "the open segment up to its newest event (under a fresh seal once REC-18 ships)"
+    },
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "Do two writers' closed segments, merged in either order"
+    }
+   ]
+  },
+  {
+   "id": "DM-CL",
+   "title": "No sandbox state is recorded before the launcher ships (S-3)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "write; a run with none recorded counts as unsandboxed (OWN-22)."
+    },
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "Only the launcher (M7)"
+    }
+   ]
+  },
+  {
+   "id": "DM-CM",
+   "title": "Joins shipped only in M7, so subagents missed their parent's room pins (S-4)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "when its principal asks for the join or accepts it, a subagent under its"
+    },
+    {
+     "file": "docs/domain-model/index.md",
+     "quote": "per room it joined or created"
+    }
+   ]
+  },
+  {
+   "id": "DM-CN",
+   "title": "Four P0 rows were named by no milestone (S-5)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "MEM-01, SEC-01..08, SEC-10, SEC-12, SEC-15..18,"
+    }
+   ]
+  },
+  {
+   "id": "DM-CO",
+   "title": "OWN-01, the one-principal rule for an agent, sat in M7 (S-6)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "OWN-01 (its clauses on other principals' text apply once their requirements ship)"
+    },
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "OWN P1 rows but OWN-01, including OWN-21"
+    }
+   ]
+  },
+  {
+   "id": "DM-CP",
+   "title": "`cairn ingest` and its untrusted origin sat in M7 though M1 relied on them (S-7)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "REC-19 in part (the seat `cairn ingest` starts) with REC-22"
+    },
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "REC-18, the rest of REC-19, REC-20,"
+    }
+   ]
+  },
+  {
+   "id": "DM-CQ",
+   "title": "M1 and M2 checked roles and capabilities that LANE-16 brings only in M7 (S-8)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "LANE-16 in part (the owner's device seat with every capability, and the contributor role of a run's seat in its personal room"
+    },
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "the rest of LANE-16 (the other roles and capabilities room acts are checked against"
+    }
+   ]
+  },
+  {
+   "id": "DM-CR",
+   "title": "LANE-01 relied on LANE-31's branch-link tie rule from M7 (S-9)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "LANE-31 in part (the rule for two branch links naming one branch)"
+    }
+   ]
+  },
+  {
+   "id": "DM-CS",
+   "title": "A managed policy could require an authenticator before presence proofs ship (S-10)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "Until presence proofs ship (OWN-11, OWN-12), Cairn MUST refuse every widening act while managed policy requires an authenticator"
+    },
+    {
+     "file": "docs/srs/06-security.md",
+     "quote": "set quotas once ADM-15 ships, fix the deployment mode"
+    }
+   ]
+  },
+  {
+   "id": "DM-CT",
+   "title": "Scenarios of M1–M5 requirements exercised M6–M9 behaviour (S-11)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "features/lane.feature",
+     "quote": "whose current run holds no seat in the room, though an earlier run of that agent had one"
+    },
+    {
+     "file": "features/security.feature",
+     "quote": "nothing in the bundle lets a reader confirm a guess at a payload's content from its payload name"
+    }
+   ]
+  },
+  {
+   "id": "DM-CU",
+   "title": "Action class, commit author and review step were defined inside later entries (S-12)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "**Action class**: A kind of tool action, such as edits, commands or network"
+    },
+    {
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "**Commit author**: Git's author of a commit, never a seat."
+    }
+   ]
+  },
+  {
+   "id": "DM-CV",
+   "title": "The invariants name concepts whose requirements ship after M5 (S-13)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/index.md",
+     "quote": "The model keeps every concept defined, those"
+    },
+    {
+     "file": "docs/domain-model/index.md",
+     "quote": "and §12.2 decides when each one's requirements"
+    }
+   ]
+  },
+  {
+   "id": "DM-CW",
+   "title": "Address forms and writer labels (RCL-08) sat in M7 though M1 used them (S-14)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "RCL-05 changed, RCL-08, ADM-04 changed"
+    }
+   ]
+  },
+  {
+   "id": "DM-CX",
+   "title": "The trusted-only export had no review step before SEC-26 (M9) (S-15)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "SEC-26 in part (the trusted-only export as a widening principal act with its review step)"
+    },
+    {
+     "file": "docs/srs/06b-boundary-register.md",
+     "quote": "P2; trusted-only export P1"
+    }
+   ]
+  },
+  {
+   "id": "DM-CY",
+   "title": "The boundary register made the TUI P0 though it ships with VIEW-14 in M7 (S-16)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/06b-boundary-register.md",
+     "quote": "P0; TUI P1"
+    }
+   ]
+  },
+  {
+   "id": "DM-CZ",
+   "title": "REC-21's refused segments (M3) were recorded under Integrity status (M7) (S-17)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "**sealed range**. A refused segment is recorded as a structural event in"
+    },
+    {
+     "file": "docs/domain-model/record.md",
+     "quote": "one of §9.7.5's values (VIEW-10); `refused` shows a refused segment"
+    }
+   ]
+  },
+  {
+   "id": "DM-DA",
+   "title": "Seat ids derived under LANE-23 (M7) though quarantine and purge by seat need them in M1 (S-18)",
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "LANE-23 in part (how a seat id derives)"
+    },
+    {
+     "file": "docs/srs/12-delivery-plan.md",
+     "quote": "the room model's LANE-23..33 (the rest of LANE-23 and LANE-31)"
+    }
+   ]
   }
  ]
 }

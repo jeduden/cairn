@@ -112,6 +112,7 @@ Feature: Room view (VIEW)
     When the person opens the room's Room page and, from its verify panel, writes a head receipt to a path outside CAIRN_HOME
     Then the room shows its integrity status at all times, one of §9.7.5's seven values, here "broken"
     And every later event of that writer is marked "unverified" wherever it is shown, including in recall results
+    And a writer with a segment refused under REC-21 has the integrity status "refused", which a rebuild derives from the recorded refusal alone
     And the head receipt is shown as a short code carrying at least 80 bits of the heads' digest
     And the room view states that verification proves the sealed record unchanged up to its newest seal, not the unsigned tail and not its content true
     When the person turns an away policy on

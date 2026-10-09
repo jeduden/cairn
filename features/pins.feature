@@ -18,9 +18,7 @@ Feature: Pins (PIN)
       | automation  | the person's configuration declares a pin and a widening principal act recorded its digest | 1          |
       | interactive | the person runs "cairn pin add"                                                            | 1          |
       | automation  | a harness skill calls the MCP tool "pin_candidate_propose"                                 | 0          |
-      | automation  | a person stamps a version of a constraint pin an agent wrote                               | 1          |
       | interactive | the repository's ".cairn.toml" declares a pin                                              | 0          |
-      | automation  | the person runs "cairn pin add --room L2" from its device seat, a viewer in "L2"           | 0          |
 
   @PIN-02 @P0 @I2 @pending
   Scenario: text an agent proposes stays a pin candidate with no pin author
@@ -63,7 +61,6 @@ Feature: Pins (PIN)
     And the qualifying pin count is 0
     And the qualifying pin count is <confirmed> after the person confirms every pin candidate with "cairn pin-candidate confirm", each its own widening principal act
     And before recording each confirmation, "cairn pin-candidate confirm" shows the candidate's exact text, pin type and priority
-    And a token-key-only node of the principal cannot confirm a pin candidate
     And each confirmation makes a new pin that the principal's device seat authors
     And only the owner's confirmation turns an intent or criterion candidate into a pin, as a new version of the room's intent pin authored by the owner's device seat
 
@@ -78,10 +75,10 @@ Feature: Pins (PIN)
   Scenario: only constraint, preference and intent pins are injected automatically
     Given an isolated Cairn home
     And one pin of each type "constraint", "preference", "decision", "fact" and "episode", each written from the device seat of the run's principal
-    And a room of the run whose owner set an intent, stored as its pin of type "intent", and recorded a verdict, stored as a pin of type "verdict"
+    And a room of the run whose owner set an intent, stored as its pin of type "intent"
     When the hook "SessionStart" runs with source "compact"
     Then the restore block includes the "constraint", "preference" and "intent" pins verbatim
-    And the restore block includes no "decision", "fact", "episode" or "verdict" pin
+    And the restore block includes no "decision", "fact" or "episode" pin
     When the person runs "cairn pin add --type note 'Prefer tabs'"
     Then the command exits 2
     When the person runs "cairn pin add --type intent 'Ship CSV export'"
@@ -120,27 +117,18 @@ Feature: Pins (PIN)
   @PIN-10 @P0 @I3 @I2 @pending
   Scenario: a restore block includes the qualifying pins of every room the run has had a seat in during the run
     Given an isolated Cairn home
-    And a run whose seats' writers record it joining room "L1", then creating room "L2", then leaving "L1"
+    And a run whose seats' writers record it joining room "L1", then creating room "L2"
     And a branch switch onto a branch of room "L4", which the run neither joined nor created, so its later events went to its personal-room seat
-    And pins the run's principal wrote from its device seat in "L1" and in its personal room, a pin from the person's configuration, and a constraint pin in "L2" written from another principal's device seat
-    And a pin in "L2" written from the device seat of a third principal whose key the run's principal trusts in "L2" by a trust grant
-    And the principal's stamp on one version of a constraint pin an agent's run seat wrote in "L1", on one version of a second constraint pin another principal wrote in "L2", and on one version of a "fact" pin in "L1"
+    And pins the run's principal wrote from its device seat in "L1" and in its personal room, and a pin from the person's configuration
     And a pin the principal wrote from its device seat in "L4"
     And a constraint pin the principal wrote from its device seat in "L1" and then edited from that seat, each version's own event trusted on this node
-    And a constraint pin in "L1" written from the device seat of a token-key-only node of the run's principal, unstamped
-    And a constraint pin in "L2" written from the device seat of a token-key-only node of the third principal, unstamped
     And a pin the principal confirmed from a pin candidate whose creating "user" event was recorded in the deployment mode "interactive", while the current deployment mode is "automation"
-    And a room "L5" the run joined, with a constraint pin in it that the principal wrote from its device seat, the principal's stamp on one version of a constraint pin another principal wrote, and a constraint pin written from the device seat of the third principal, whose key the run's principal also trusts everywhere by a second trust grant, before every seat of the principal in "L5" was kicked, so that "L5" is now a foreign room, and a version the third principal added to that pin after the kick
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room, the confirmed pin, the pin the trust grant covers, and both stamped constraint versions, each under its original author
+    Then the restore block includes the "L1" pin, the personal-room pin, the configuration pin as a pin of the personal room and the confirmed pin
     And of the edited constraint pin the restore block includes only its newest version, or, once a widening principal act quarantines or purges that version, its earlier one
-    And the restore block includes no pin of "L4", not the stamped "fact" version and neither token-key-only node's unstamped pin
-    And of the foreign room "L5" the restore block includes the principal's device-seat pin, the stamped version and the pin the second trust grant covers, by its version from before the kick, and not the version added after it
-    And once the node holds a revocation of the third principal's device key that certified the seat of that pin in "L5", the restore block no longer includes it, as in any other room
-    And the restore block names "L1", "L2", "L5" and the personal room by id
-    And the other principal's unstamped constraint pin and each token-key-only node's unstamped pin are stated only by count, room id and key fingerprint, with no text, and an audit entry records each
-    And no pin of a type that does not restore is counted
-    And a later run of the same agent, by the harness's stable agent id, with no seat in "L1", "L2" or "L5", gets the same pins of those rooms in its restore block
+    And the restore block includes no pin of "L4"
+    And the restore block names "L1", "L2" and the personal room by id
+    And a later run of the same agent, by the harness's stable agent id, with no seat in "L1" or "L2", gets the same pins of those rooms in its restore block
 
   @PIN-11 @P2 @I3 @I6 @pending
   Scenario Outline: a pin that qualifies on another of the principal's nodes but not here is stated by count and reason

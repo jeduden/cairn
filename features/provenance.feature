@@ -10,13 +10,13 @@ Feature: Provenance and trust (PRV)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "every-kind"
     And "every-kind" contains a user turn, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent's delegate report, lifecycle metadata, a system reminder and a malformed line
-    And a principal act, an expire act, a pin written from a device seat, a pin a run seat wrote, a post from another seat, a room act of the run's seat and a room summary the room's facilitator wrote are recorded in the run's room, and a retention purge's tombstone naming that room's content on the recording device's seat there
+    And a principal act, a pin written from a device seat, a pin a run seat wrote, a post from another seat and a room act of the run's seat are recorded in the run's room, and a retention purge's tombstone naming that room's content on the recording device's seat there
     And the Bash tool call of "every-kind" was ingested by an earlier ingest than its tool result
     And the person ran "cairn canary" and "cairn backup create" on this node
     When the person runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
     And the Bash tool result carries provenance "tool_result:Bash"
-    And the principal act, the expire act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", the room summary carries "summary", and the tombstone, the canary event and the backup event carry "structural"
+    And the principal act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", and the tombstone, the canary event and the backup event carry "structural"
     And every provenance class is one of:
       | user               |
       | assistant          |
@@ -42,10 +42,8 @@ Feature: Provenance and trust (PRV)
     Then the event is stored with provenance "<provenance>"
     And its trust level for this principal's agents on this node derives as "<trust>", and no trust level is stored with the event
     And "cairn verify" <verify>
-    And the event shapes restore blocks, rule levels, permission grants, trust grants, delegation grants, trust levels and enrollments only if it is trusted and "cairn verify" reports nothing about it
-    And every principal act a device key this principal certified signed, and every post and pin written from a device seat such a key certified, derives the same trust level on each of its nodes holding the same writer logs
-    And in a foreign room, a post from a device seat of this principal and a post or pin a trust grant of this principal covers are untrusted, but for a pin PIN-10 keeps restoring there after a leave, kick or bar, while a pin from its device seat and a pin version it stamped are trusted there as elsewhere
-    And a "harness_meta" event or "user" event that this node's CLI, MCP server or launcher recorded live, with origin "witnessed" but not recorded by its hook handlers, is untrusted
+    And the event shapes restore blocks and trust levels only if it is trusted and "cairn verify" reports nothing about it
+    And a "harness_meta" event or "user" event that this node's CLI or MCP server recorded live, with origin "witnessed" but not recorded by its hook handlers, is untrusted
     And the free text a cut or neutral principal act carries, such as a stated reason, is recalled as untrusted, while the act's own "operator" event keeps its trust level and shapes what the act changes
 
     Examples:
@@ -65,22 +63,13 @@ Feature: Provenance and trust (PRV)
       | interactive | a writer of this node                                                                                                | harness_text     | untrusted | reports nothing                                                   |
       | interactive | a writer of this node                                                                                                | unparsed         | untrusted | reports nothing                                                   |
       | interactive | a run seat's writer on this node                                                                                     | post             | untrusted | reports nothing                                                   |
-      | interactive | a run seat's writer on this node, a pin version this principal stamped                                               | assistant        | trusted   | reports nothing                                                   |
       | automation  | a writer of this node, recorded live by its CLI                                                                      | operator         | trusted   | reports nothing                                                   |
-      | interactive | this principal's device seat on this node, once PRV-10 ships                                                         | post             | trusted   | reports nothing                                                   |
-      | interactive | this principal's device seat on another of its nodes, certified by a device key it certified, within scope           | post             | trusted   | reports nothing                                                   |
       | interactive | a writer of this node, from a transcript the hook handlers did not watch                                             | user             | untrusted | reports nothing                                                   |
       | automation  | a writer of this node, from a transcript the hook handlers did not watch                                             | harness_meta     | untrusted | reports nothing                                                   |
-      | interactive | a device seat of another node whose device key chains within its scope to the principal key of this node's principal | operator         | trusted   | reports nothing                                                   |
       | interactive | a device seat of another node whose device key has no certificate from the principal key of this node's principal    | operator         | untrusted | reports nothing                                                   |
       | automation  | a run seat's writer on another node of this principal                                                                | harness_meta     | untrusted | reports nothing                                                   |
       | interactive | a run seat's writer on another node of this principal                                                                | user             | untrusted | reports nothing                                                   |
-      | interactive | a writer of another principal                                                                                        | operator         | untrusted | reports nothing                                                   |
-      | interactive | a device seat of a principal this principal trusts by a trust grant, certified by that principal's device key        | post             | trusted   | reports nothing                                                   |
-      | interactive | a token-key-only node's device seat of a principal this principal trusts by a trust grant                            | post             | untrusted | reports nothing                                                   |
-      | interactive | the facilitator's device seat, of a service account this principal trusts by a trust grant                           | summary          | untrusted | reports nothing                                                   |
       | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance                               | operator         | trusted   | reports it as a widening principal act that fails OWN-22          |
-      | automation  | a writer of this node, widening with a required presence proof that does not verify                                  | operator         | trusted   | reports it as a widening principal act whose presence proof fails |
 
   @PRV-03 @P0 @I2 @pending
   Scenario Outline: model-reproducible text no principal stamped, and harness-summarised text, is untrusted
@@ -88,7 +77,6 @@ Feature: Provenance and trust (PRV)
     And deployment mode "interactive"
     When <item> is recorded
     Then the event is stored with provenance "<provenance>" and its trust level is "untrusted"
-    And a version of a constraint pin an agent's run seat wrote, with provenance "assistant", stays "untrusted" until this principal stamps it, and is then "trusted" for this principal's agents only
 
     Examples:
       | item                                                               | provenance   |
@@ -185,7 +173,6 @@ Feature: Provenance and trust (PRV)
       | a Bash tool_result whose output contains "<system-reminder>"                    | tool_result:Bash | untrusted |
       | an "ai-title" transcript line carrying a harness session title                  | harness_text     | untrusted |
       | a "last-prompt" transcript line repeating a typed prompt                        | harness_text     | untrusted |
-      | a "user" line matching the commitment of text the launcher carried in           | harness_text     | untrusted |
       | a subagent's "user" line carrying the delegated task its parent's run wrote     | harness_text     | untrusted |
 
   @PRV-09 @P0 @I2 @I8 @pending
@@ -212,11 +199,16 @@ Feature: Provenance and trust (PRV)
     When an event <event> arrives from another node
     Then the event is <expected>
     And the token-key-only node, whose device seat its token key certified, signs no principal act and no expire act
+    And an unstamped constraint pin from the device seat of a token-key-only node, this principal's or one of a principal its trust grant covers, in a room whose pins restore to this principal's agents, is stated in their restore blocks only by count, room id and key fingerprint, with no text, audited
     And the paired phone may read, and allow or deny held permission requests, and nothing else
     And a service account's principal key that a person, another service account or managed policy listing it certified counts as that service account's own principal, while only a principal key never certified counts as a person's, and a service account whose certificate is revoked stays a service account
     And a service-account certificate counts only once the certified principal key countersigns it, and each managed-policy listing and each removal of one is recorded as a structural event that enters the node's key set
     And every revocation is a signed event that replicates like any other
     And a seat key the laptop's device key certified for a room chains principal key → device key → seat key
+    And a seat certificate the laptop's device key made before the principal key certified it stays valid, and its seat key chains the same way
+    And a post from a device seat of this principal, on this node or another, whose device key the principal key certified, is trusted within that key's scope
+    And a principal act the laptop's device key signed, and a post or pin from a device seat it certified, derives the same trust level on each node of this principal holding the same writer logs
+    And an "operator" event a writer of another principal wrote is untrusted
     And a device key certified by a service account's principal key that this principal's principal key certified does not chain to this principal's principal key, since a chain runs through device, token or seat certificates and never through another principal key
     And a recorded I2 security review of this requirement exists before it ships
 
@@ -243,5 +235,4 @@ Feature: Provenance and trust (PRV)
     Then the device key has certified the run seat's key with a seat certificate scoped to that room and naming the seat kind "run"
     And the device key has certified the device seat's key with a seat certificate scoped to that room and naming the seat kind "device"
     And the output reports, for each seat, its seat certificate and the seat kind it names, taken only from that seat certificate, never from a field in its events
-    And once a principal key certifies the device key, both seat certificates stay valid and each seat key chains principal key → device key → seat key
     And a recorded I2 security review of this requirement exists before it ships

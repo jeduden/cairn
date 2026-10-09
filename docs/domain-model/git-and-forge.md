@@ -30,6 +30,7 @@ summary: >-
   Whether a link another principal's seat wrote may win a concurrent tie over
   one a seat of this node's principal wrote is open (OQ-46).
 - **Commit**: A git commit.
+- **Commit author**: Git's author of a commit, never a seat.
 - **Worktree**: A git working tree on a node, where a run edits a branch; its
   repository's **git directory** is git's own store of objects and refs.
 - **Forge**: The service that keeps remotes, pull requests, reviews and branch
@@ -59,9 +60,8 @@ summary: >-
   (the repository's git directory and its other worktrees included) denied, by
   a node whose **git identity** (the author and commit-signing identities its
   git configuration sets) authored no commit on the branch since it left its
-  base (a **commit author** is git's author of a commit, never a seat). Unless
-  the platform can deny all of them, Cairn refuses the witness check before
-  confirmation and says which it cannot deny (OWN-18).
+  base (Commit author). Unless the platform can deny all of them, Cairn refuses
+  the witness check before confirmation and says which it cannot deny (OWN-18).
 - **CI attestation**: A check's exit status for the exact commit, signed by a CI
   key the room's owner enrolled, recorded in the room so every principal sees
   the same class (LANE-22); a result resting on one is `CI attested`.

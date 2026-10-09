@@ -13,10 +13,6 @@ Feature: Security (SEC)
     And no code any component can execute starts a program outside the launcher, save the core's own kernel worker
     And CI fails when a component's evidence is missing or shows a violation
     And no core process runs or starts a component behind B1 to B3
-    And each B1 to B3 component's own entry point, started by the person, a service manager or an ephemeral node's entrypoint, runs only while the act turning it on, which the CLI records, stands: for the room-view component and the launcher, the acceptance of the configuration that turns it on, and for the bridge component, a bridge enabled for a host, while any stands
-    And a configuration turning the room-view component or the launcher off applies with no acceptance, from then on that component's entry point does not run, and "cairn configuration accept", at a terminal with nothing more asked, records it as the cut act turning it off
-    And the room-view component listens only on loopback, and the launcher only on loopback or on a local endpoint only the same OS user can reach
-    And neither connects anywhere else
 
   @SEC-02 @P0 @I8 @pending
   Scenario Outline: cairn refuses a home or store file with loose permissions or belonging to another OS user
@@ -98,7 +94,7 @@ Feature: Security (SEC)
     When the person runs "cairn ingest --all"
     Then no stored text field, payload, or hook input contains an AWS access key or "ACME-12345678"
     And each secret is replaced by "[REDACTED:<rule>]", with no hash or other value derived from the secret
-    And no stored event, segment, export or replicated structure carries a value from which the secret could be confirmed
+    And no stored event, segment or export carries a value from which the secret could be confirmed
     And any correlation of the repeated AWS access key lives only in a node-local index keyed under this node's own at-rest key
     When the person runs "cairn purge --run secrets"
     Then the correlation index contains no entry for the purged events
@@ -125,9 +121,9 @@ Feature: Security (SEC)
     And no key or credential value appears in the store, a segment, a derived artifact, a backup, an export, the audit log or any log output
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
     And a run ingested by "cairn ingest --path" has a seat key that ingest minted, kept like the device key in a file only the person's OS user can read
-    And the seat "cairn ingest" starts beside a witnessed run's run seat has a seat key the core keeps the same way, and the core seals its writer
+    And the seat "cairn ingest" starts beside a witnessed run's run seat has a seat key the core keeps the same way
     When the harness hands the run-seat private keys of a harness session's main run and of its subagent's run to that harness session's MCP server at launch
-    Then each key lives only in that server's memory, which seals each run seat's writer with its key, and no file, log, event, backup or output carries either
+    Then each key lives only in that server's memory, and no file, log, event, backup or output carries either
 
   @SEC-11 @P0 @I2 @I7 @pending
   Scenario Outline: repository configuration may only tighten security settings
@@ -154,10 +150,8 @@ Feature: Security (SEC)
     When the person runs "cairn quarantine add <selector> --reason 'suspect content'"
     Then an "operator" event records the quarantine with the reason "suspect content"
     And the matched events are absent from every later recall, landmark, injection and trusted-only export on this node
-    And no matched post is endorsed or reaches an agent under a trust grant, and no matched delegated task reaches its delegate, each such write refused, audited and counted
     And a quarantine that would remove a pin, a pin version or a landmark from a restore block takes effect only as a confirmed widening principal act
     And releasing the quarantine, a widening principal act, is recorded as an "operator" event the same way
-    And enrolled peers receive the quarantine only as a quarantine request
 
     Examples:
       | selector                     |
@@ -219,7 +213,7 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And the transcript roots are "~/.claude/projects"
     And a run whose hook "cwd" is "~/src/app/pkg", inside a repository whose top level is "~/src/app"
-    When the hook "Stop" runs and a hook input, transcript field or worktree checkpoint names the path "<path>"
+    When the hook "Stop" runs and a hook input or transcript field names the path "<path>"
     Then <expected>
 
     Examples:
@@ -227,7 +221,6 @@ Feature: Security (SEC)
       | /etc/passwd                                              | the path is rejected, nothing is read from it, and an audit entry records "path outside allowed roots" |
       | ~/.claude/projects/../../.ssh/id_ed25519                 | the path is rejected, nothing is read from it, and an audit entry records "path outside allowed roots" |
       | ~/.claude/projects/p/link-to-root.jsonl (a symlink to /) | the path is rejected, nothing is read from it, and an audit entry records "path outside allowed roots" |
-      | ~/src/app/README.md                                      | the file is read, and nothing in the repository is written                                             |
       | ~/src/app/.git/HEAD                                      | the file is read, and nothing in the repository is written                                             |
       | ~/src/app/docs/key (a symlink to ~/.ssh/id_ed25519)      | the path is rejected, nothing is read from it, and an audit entry records "path outside allowed roots" |
 
@@ -239,7 +232,6 @@ Feature: Security (SEC)
     Then every Cairn component, process and protocol is assigned to exactly one of B0, B1, B2 and B3
     And the check fails when a component's build-time reach evidence is missing, or when that evidence or a test of a component confined to its boundary shows more reach than its row grants
     And the check fails when a process exists that the register does not list
-    And every B1, B2 and B3 component, the launcher included, stays off on the home until the person turns it on, the room-view component and the launcher only by accepting the configuration that turns it on, and the bridge component only by enabling a bridge for a host
     And every Cairn feature whose purpose is to reach off the machine through a tool the person runs outside Cairn, such as its own tunnel, has its own row, stays off by default and turns on only by a widening principal act
 
   @SEC-20 @P1 @I4 @I6 @I8 @pending
@@ -247,11 +239,17 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     When the person starts the room-view component
     Then it listens only on a loopback network address, on a port chosen at launch
+    And it connects nowhere else
     And its launch secret has at least 128 bits and is never sent to the server in an HTTP request line, nor placed in argv, an environment another UID can read, a log or a referrer
+    And "cairn uninstall" lists its room-view secrets, each with an offer to remove it
     And the launch secret is exchanged once for an origin secret, which authenticates the browser as a principal surface and which only the room view's own origin, port included, can read or send
     And a page served from another loopback port cannot obtain or replay that origin secret
     And it permits enveloped reading and cut or neutral principal acts, and widening ones only under OWN-11, until the instance stops
+    And it stays off until the person accepts the configuration that turns it on, and its entry point, whoever starts it, runs only while that acceptance stands
+    And a configuration turning it off applies with no acceptance, from then on its entry point does not run, and "cairn configuration accept", at a terminal with nothing more asked, records it as the cut act turning it off
     And an HTTP request whose Host or Origin is not its own, and any cross-origin HTTP request, is rejected and audited
+    And it refuses to start while the core keeps recording, an audit entry and a counter recording why, when the managed policy file at the documented system path is one the person can write or is unparsable, or when managed policy disables B1
+    And it starts only from the person's config.toml after a widening act recorded that file's digest, stays off while managed policy turns it off, and stays off when a repository ".cairn.toml" turns it on, an audit entry and a counter recording the ignored key
 
   @SEC-21 @P1 @I2 @I4 @pending
   Scenario: the room view renders record content as inert text
@@ -271,17 +269,7 @@ Feature: Security (SEC)
 
     Examples:
       | policy                                      | action                                                                           | expected                                                                                |
-      | B1 disabled                                 | the person starts the room-view component                                        | Cairn refuses to start it and audits the refusal                                        |
-      | B2 disabled                                 | the person starts the peer component                                             | Cairn refuses to start it and audits the refusal                                        |
-      | B3 disabled                                 | the person enables a bridge for a host, which would turn the bridge component on | Cairn refuses to start the bridge component and audits the refusal                      |
-      | the launcher disabled                       | the person starts the launcher                                                   | Cairn refuses to start it and audits the refusal                                        |
-      | a storage quota                             | ingest exceeds the quota                                                         | the quota is enforced                                                                   |
       | a fixed deployment mode                     | the person changes the deployment mode                                           | the change is refused                                                                   |
-      | every boundary disabled                     | the person turns on the peer component                                           | the change is refused                                                                   |
-      | a cap on an action class's rule level       | the principal sets a higher rule level for that class                            | the rule level stays at the cap                                                         |
-      | away policies disabled                      | the principal sets an away policy                                                | the change is refused                                                                   |
-      | hook permission decisions disabled          | the hook "PermissionRequest" runs                                                | Cairn makes no permission decision                                                      |
-      | keeping held requests waiting disabled      | the hook "PermissionRequest" runs                                                | the held request is recorded and only mirrored, and the agent is not kept waiting       |
       | an authenticator required for widening acts | the principal confirms a widening act without the authenticator                  | the act is refused                                                                      |
       | risk acceptance forbidden                   | the principal accepts a residual risk                                            | the acceptance is refused                                                               |
       | a 30-day retention policy for room "p"      | an event of "p" ages past 30 days                                                | the node purges it, leaving a tombstone recorded naming the policy, audited and counted |
@@ -329,6 +317,7 @@ Feature: Security (SEC)
     And the secret, absolute path, user name, host name and email address are redacted, and an unresolved secret-scan hit fails the export closed
     And the bundle keeps the chained header of every withheld or redacted event and a signed manifest of included and withheld ranges
     And the bundle is a plain file whose chain verifies with no host, account or sync
+    And nothing in the bundle lets a reader confirm a guess at a payload's content from its payload name
     And a trusted-only export with "cairn export --trusted-only" passes the same review step, redaction and audit, and signs its manifest of included and withheld ranges
     And the bundle is signed by the exporter's device key, which chains to the bundle's principal key, and the core handles no principal key
     And a publish with "cairn bundle publish" passes the same review step, redaction and audit
@@ -345,7 +334,7 @@ Feature: Security (SEC)
     And the events sealed before the revocation still verify
     And the others are refused under the revocation rule
     And a head receipt of every writer's chain head verifies on another node with no network
-    And a seat key minted because a backup restore put the home on another machine starts a new seat and writer, which names the old seat, inherits no add, role or appointment and, outside the personal room, joins as any seat does
+    And a seat key minted on a backup restore, or because a node identity change put the home on another machine, starts a new seat and writer, which names the old seat, inherits no add, role or appointment and, outside the personal room, joins as any seat does
     And a node clone mints a new device key, or uses a token key, besides its new seat keys
     And a run whose run-seat key was lost with its MCP server on a harness resume continues on a new run seat that names the old one, inherits no add and joins its rooms again only as LANE-23 says
 
@@ -355,9 +344,11 @@ Feature: Security (SEC)
     And the node's principal enabled one forge bridge destination and one notification bridge destination by a principal act
     When the bridge component runs, as it does while any bridge stands enabled, and a held request and a pull-request review from the forge arrive
     Then every outbound bridge runs only in the bridge component, which is listed in the register, outbound only, and off for every destination not enabled
+    And the bridge component stays off until a bridge is enabled for a host, and its entry point, whoever starts it, runs only while a bridge stands enabled
     And the pull-request review is recorded by the bridge component only as an untrusted event of origin "witnessed" and provenance "web"
     And the notification carries only the room's petname, else its id, the queue class and a count, and no answer to it is accepted
     And every send and failure is counted and audited
+    And with B3 disabled by managed policy, enabling a bridge for a host starts no bridge component, and Cairn audits the refusal
 
   @SEC-29 @P1 @I4 @I2 @pending
   Scenario: the launcher alone starts programs, save the core's kernel worker, and only confirmed ones
@@ -368,8 +359,11 @@ Feature: Security (SEC)
     And build-time evidence shows no other component that starts a program, save the core starting its own kernel worker
     And the launcher connects nowhere beyond loopback to the room-view component, and that loopback connection carries no text for the model
     And the launcher carries into the harness input only text the core built and recorded, read from the record
+    And "cairn uninstall" lists its endpoints, each with an offer to remove it
     And any listener it opens meets the room-view listener rules or is a local endpoint only the same OS user can reach, refusing a connecting process of another UID
+    And it refuses to start while the core keeps recording, an audit entry and a counter recording why, when the managed policy file lies in a directory the person can write or carries an unknown key, or when managed policy disables the launcher
     And on a home where no act turned it on, the launcher is off
+    And a configuration turning it off applies with no acceptance, from then on its entry point does not run, and "cairn configuration accept", at a terminal with nothing more asked, records it as the cut act turning it off
 
   @SEC-30 @P2 @I5 @I6 @pending
   Scenario: a purge travels as an erasure request naming its tombstone and another principal with a seat can send a purge request
@@ -384,7 +378,7 @@ Feature: Security (SEC)
   @SEC-31 @P0 @I1 @I5 @I6 @pending
   Scenario: purging an event erases every copy this node holds and writes a signed purge receipt
     Given an isolated Cairn home
-    And an event whose content a steer sent, a recorded recall result names, and a worktree checkpoint, a payload, the index and a Cairn backup contain
+    And an event whose content a recorded recall result names, and a payload, the index and a Cairn backup contain
     When the person purges the event
     Then every copy in any writer's log, found by address or commitment, is erased or tombstoned, and the backup is erased or listed
     And ingesting its transcript positions again from the harness transcript is refused with an audit entry

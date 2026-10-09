@@ -14,21 +14,17 @@ Feature: Room (LANE)
     And that personal room was created when "alice" installed Cairn on the node, by "cairn install", the plugin or the managed install path, as the first act of her device seat there, recorded at Cairn's first start there, and that seat's add, and Cairn created no room on its own initiative
     And the events after the switch to "feature/x" went to the writer of the run's seat in "R", with no principal act
     And the events after the switch to "spike" went to its personal-room seat again
-    And while a role assignment gives the run's seat in "R" the viewer role, or a mute covers it, in the room state this node holds when it records each event, its events on "feature/x" go to its personal-room seat, and none is refused
     And each event belongs to exactly one seat's writer and names its run, and the run's history spans both writers, tied together by the run
     And a room created by a principal, or by an agent for its principal, has an id derived from the creating seat's first key and 128 random bits minted by the creating node, and its create room act is the first act of the creating seat's writer and that seat's add, while a create room act naming that id from a seat whose first key does not derive it is void and shown
     And a room has at most one intent, its conversation, seats and pins, and branches in any number of repositories, each named by a branch link
     And a branch with no remote gets a provisional, node-local identity, rebound when it is pushed, without rewriting the record
-    And a branch belongs to the room whose branch link names it first in causal order, a branch link that would move it to another room is void and shown, and of two concurrent branch links naming one branch from two rooms the one with the lower commitment stands and the other is shown void, even when the standing one reaches the node later or only through a later join to its room, the branch then moving for later events and commits only
+    And a branch belongs to the room whose branch link names it first in causal order, a branch link that would move it to another room is void and shown, and of two concurrent branch links naming one branch from two rooms the one with the lower commitment stands and the other is shown void
     And renaming a room leaves its id unchanged, and no table maps a run to a seat: its seats derive only from its personal-room seat, the create room and join acts its seats' writers record, and the seats naming one of its seats
     And a run's seat in a room the run created routes its events exactly as a seat it joined
-    And a principal act of "alice" on "R", signed by a node of hers with no seat in "R", is recorded on that node's device seat in "R", which joins without admission since her run's seat is a member there
-    And a principal act of "alice" rejecting a foreign room, in which she has no seat, goes to the signing device's seat in her personal room, naming that room
-    And a principal act of "alice" on "R" signed by her paired phone goes to the phone's device seat in her personal room, naming "R", and "R" shows it by address as it shows a cross-room post
-    And a tombstone, an erasure request a retention policy sends, and a bridge's or the launcher's event about a branch "R" names, each recorded by a node of "alice", go to that node's device seat in "R", which joins as for a principal act
-    And such an event about a room in which "alice" has no member seat goes where her principal act on that room would: to the recording node's device seat in her personal room, naming that room
-    And a rotation of a seat key goes to that seat's own writer
-    And any other event with no run, recorded by a node of "alice", goes to that node's device seat in her personal room there, and one her paired phone records to the phone's device seat in the personal room of the node it pairs with
+    And a principal act of "alice" on "R", from a node of hers with no seat in "R", is recorded on that node's device seat in "R", which joins without admission since her run's seat is a member there
+    And a principal act of "alice" that acts on no room, such as her risk acceptance, goes to the recording node's device seat in her personal room
+    And a tombstone of an event in "R", recorded by a node of "alice", goes to that node's device seat in "R", which joins as for a principal act
+    And any other event with no run, recorded by a node of "alice", goes to that node's device seat in her personal room there
 
   @LANE-02 @P0 @I1 @I6 @I8 @pending
   Scenario Outline: a repository's identity is independent of the local path
@@ -42,10 +38,9 @@ Feature: Room (LANE)
     And a later change in the identity the directory resolves to is audited, rewrites no room's branch links silently, rebinds only on the widening principal act "cairn repository bind", the same act that binds by hand, and scopes no Cairn state
 
     Examples:
-      | clone                                                           | identity                           |
-      | contains the bound parentless commit of the default branch      | the bound identity                 |
-      | is shallow, lacks the bound commit and carries an access token  | the identity from the access token |
-      | has no commit                                                   | a provisional, node-local identity |
+      | clone                                                      | identity                           |
+      | contains the bound parentless commit of the default branch | the bound identity                 |
+      | has no commit                                              | a provisional, node-local identity |
 
   @LANE-03 @P1 @I2 @pending
   Scenario: every event names an author derived from its writer, never from its content
@@ -176,6 +171,7 @@ Feature: Room (LANE)
     And a room with a post to the whole room and two directed posts, each directed to an agent of "alice"
     When the posts are delivered
     Then only the directed posts enter "alice"'s Needs you queue for an endorsement
+    And a directed post to an agent of "alice" whose current run holds no seat in the room, though an earlier run of that agent had one, enters her Needs you queue the same way
     When "alice" endorses one directed post and dismisses the other as a cut principal act
     Then each directed post shows its author's principal exactly one state: delivered, endorsed or dismissed
     And the endorsed directed post names the endorsing principal and shows any edit as a diff against the post
@@ -201,6 +197,7 @@ Feature: Room (LANE)
     And the post nobody endorsed triggers no turn
     When the launcher carries the text of its principal's steer into the harness's input
     Then the launcher records the commitment of that text as the turn's trigger, as harness_meta
+    And that harness_meta event, which the launcher and not the hook handlers recorded live, is untrusted
     And ingest marks the transcript line matching that commitment untrusted, never a user turn
     And the text the launcher carried in is text the core built and recorded
 
@@ -216,6 +213,8 @@ Feature: Room (LANE)
     And the seat key that does not chain is shown as an unknown key, by its fingerprint
     And PRV-07 flags are computed locally, the bundle's flags are ignored, and invisible characters are shown in place
     And the pull-request author counts as no principal, since its key is no principal key
+    And a principal act of the person rejecting the foreign room, in which the person has no member seat, goes to the signing device's seat in the person's personal room, naming that room
+    And so does a tombstone, an erasure request a retention policy sends, or a bridge's or the launcher's event about the foreign room that a node of the person records
     When the person records a trust grant for the bundle's principal key
     Then every event of the foreign room stays untrusted
 
@@ -238,6 +237,7 @@ Feature: Room (LANE)
     And a device seat of "alice", but a paired phone's, has every room capability, for room acts and the principal acts that need one, but writing a room summary, editing and unpinning only pins its principal wrote from a device seat that do not restore unstamped, and making a list removal of any pin but the intent or a verdict, while her agents' run seats have only their role and any appointment
     And an appointment of a run seat or another principal's device seat as moderator is accepted only as a principal act of the owner, or of a principal whose device seat has the moderator role by role assignment, and only the appointer or the owner revokes it
     And a mute of one seat or of the whole room leaves each device seat of "alice", but a paired phone's, every room capability it had, unmute included
+    And while a role assignment gives a run's seat the viewer role, or a mute covers it, in the room state the recording node holds when it records each event, that run's events on a branch the room names go to its personal-room seat, and none is refused
     And an appointment of the facilitator by any principal but the owner is refused and audited
     And an appointment an appointed moderator tries, and its kick, bar or mute aimed at the owner or another moderator, are refused and audited
 
@@ -294,9 +294,8 @@ Feature: Room (LANE)
     And a criterion may name a check's command, as C1 names "go test ./export", which makes that check expected on the room's branches
     And the restore block carries the second version word for word with its version, among the qualifying pins (PIN-10) and nowhere else
     And C3 stays a pin candidate, proposed text that is not a pin and has no pin author, until "alice" confirms it, exactly as shown, by a widening principal act that records it in a new intent version her device seat authors
-    When "alice" revises C1 at a principal surface with the presence proof a widening act needs
-    Then the new version applies to the room, to the restore blocks of "alice"'s agents in the room, and other principals' agents get it only as PIN-10 states, those of a principal whose trust grant covers "alice" included
-    And a revision whose presence proof fails changes nothing
+    When "alice" revises C1 at a principal surface
+    Then the new version applies to the room and to the restore blocks of "alice"'s agents in the room
     When "alice"'s agent, through a harness skill, proposes a revision of C1 through "pin_candidate_propose"
     Then the proposal is stored as a pin candidate the agent suggested, with no pin author, never as a pin or a principal act, and the intent is unchanged
 
@@ -384,6 +383,7 @@ Feature: Room (LANE)
     And each bar records its setter, reason, optional expiry and optional note
     And a bar whose expiry passed stands until an expire act arrives, and no derivation reads a clock
     And the expire act is recorded by the setter's node, or while it has not, by another node of the setter's principal or a node of the owner, signed with that node's device key
+    And the expire act carries provenance "operator"
     And an expire act a node of any other principal records, a moderator's or the barred principal's, ends nothing, and duplicate expire acts count as one
     And an expire act naming a bar whose original act set no expiry ends nothing
     And before PRV-10 ships, no act but a delegation grant or an acceptance grant sets an expiry, and no node records an expire act
@@ -395,6 +395,8 @@ Feature: Room (LANE)
     And a kick, bar or mute aimed at a seat of the owner or a key that chains to the owner's principal key is refused and audited, and a whole-room mute leaves them unmuted
     And the kicked and barred seats each get an explicit error naming the act's id on their next post, and read its reason through a tool
     And an opt-in notice of the kick reaches the agent only where the room's owner allows notices and "bob" opted in
+    When "alice" runs "cairn room mute" on a seat at a terminal
+    Then the mute, a room act, is signed with the seat key of her device seat in that room, carries no OWN-11 class and names the room it acted in
 
   @LANE-26 @P1 @I2 @I6 @I10 @pending
   Scenario: each pin version has one author, an unpin or a list removal wins, no pin, edit, unpin or list removal room act changes a restore block, and a stake makes Cairn refuse no other seat's act
@@ -439,6 +441,8 @@ Feature: Room (LANE)
     When the agent's run joins and later compacts
     Then the join carries no pin text, the next restore block names the room, and "pin_list" with "room" lists its pins, intent first, by pin id and version
     And after compaction the restore block carries "alice"'s and "carol"'s pins and the stamped version word for word, and states "bob"'s pin only as PIN-10 does
+    And where "carol" owns the room, each new version of its intent restores to the agent word for word as her pins do, and where "bob" owns it, the intent is stated only as PIN-10 does
+    And that statement gives "bob"'s pin only by count, room id and key fingerprint, with no text, audited, and counts no pin of a type that does not restore
     And the agent reads "bob"'s pin only through a tool, inside the envelope with its author's seat id and key fingerprint
 
   @LANE-28 @P1 @I2 @I4 @I7 @I10 @pending
@@ -447,6 +451,7 @@ Feature: Room (LANE)
     And a node whose install was confirmed after a shown diff, with no host named for the publish component
     When an agent commits on a branch of the room without writing any trailer
     Then the commit message carries exactly one "Cairn-Room:" trailer with a "cairn:" reference naming only the room id
+    And the commit hook for room trailers, which the confirmed install set up, is the only git hook Cairn changed
     And no setting turns the trailers off
     And no Cairn component sends the trailers off the machine; they leave only with the person's own push
     And a commit elsewhere whose message carries a hand-typed "Cairn-Room:" trailer for the room reads "asserted" until the record proves the landing link
@@ -475,6 +480,9 @@ Feature: Room (LANE)
     And every opt-in notice is audited and none starts or resumes a turn
     When the agent compacts after one of its run's seats was kicked
     Then its restore block still names the kicked seat's room with that room's qualifying pins, naming each room its run has had a seat in during the run (PIN-10), with the run's seat id only where that seat is still a member
+    And a room one of its run's seats left keeps its qualifying pins in the restore block the same way, named with no seat id
+    And where that kick ended the last member seat of "bob" in the room, making it a foreign room, its pins there are what qualified for his agents before the kick: his device-seat pins, the versions he stamped and the pins a trust grant of his covers everywhere, by their versions from before the kick, and no version added after it
+    And once the node holds a revocation of the device key that certified the seat of such a trust-granted pin, that pin no longer restores, as in any other room
     And no room or seat id in it comes from the harness
 
   @LANE-31 @P1 @I6 @I8 @I10 @pending
@@ -499,7 +507,9 @@ Feature: Room (LANE)
     And agents of "alice" and "carol" in the room
     When "alice" stamps version 1 of the pin as a widening principal act, after its text, type, priority, author's seat id and key fingerprint are shown
     Then the pin shows "alice" as its stamper beside it
+    And version 1, with provenance "assistant", is untrusted until "alice" stamps it, and then trusted for her agents only
     And after compaction "alice"'s agent's restore block carries version 1 word for word, and "carol"'s agent's states it only as PIN-10 does
+    And a version "alice" stamps of a constraint pin "carol" wrote from her device seat restores to "alice"'s agents the same way, each stamped version under its original author
     When "bob"'s agent edits the pin to version 2
     Then version 1 keeps restoring to "alice"'s agents, and version 2 restores to no agent until a principal stamps it
     And the edit is audited and raises a Needs you item for "alice"
@@ -521,6 +531,7 @@ Feature: Room (LANE)
     Then the room summary returned is the facilitator's, with provenance "summary", inside the envelope, and Cairn wrote none
     And "room_summary_get", a recall tool, records a recall event and writes no room summary
     And "event_search", "event_expand", "event_get" and "room_get" with an id each leave out the room's "summary" events, returning only their addresses
+    And so do the kernel built-ins "cairn.event_search", "cairn.event_expand" and "cairn.event_get" in a "kernel_exec" call
     And a room summary written from any seat but the facilitator's device seat is refused and audited
     And every statement in it links the events it summarises by address
     And no room summary reaches the agent without a call to "room_summary_get", and none starts or resumes a turn

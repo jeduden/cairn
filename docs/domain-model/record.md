@@ -57,7 +57,10 @@ summary: >-
   without changing any address. The **open segment** is a writer's newest,
   still growing; it closes at the points REC-19 names, and peers exchange its
   sealed prefix. A closed segment or an open segment's sealed prefix is a
-  **sealed range**.
+  **sealed range**. A refused segment is recorded as a structural event in
+  this node's device seat's personal-room writer once per writer and reason,
+  when first refused, beside its audit entry, so its refusal derives from the
+  record and a rebuild appends nothing (REC-21, I10).
 - **Seal**: A seat key's signature over its writer id, a seq and the chain head
   at that seq (REC-18), made where that key lives: a witnessed run's run seat's,
   but the seat ingest starts, by its run's MCP server, covering what the hook
@@ -121,8 +124,8 @@ summary: >-
   structural fields count as structural fields, never the text it carries; the
   act keeps its own class.
 - **Capture**: This node's hook handlers recording its runs' events; turning it
-  off is widening (OWN-11), so `cairn uninstall` records the widening act
-  turning capture off before it removes the hook registrations (ADM-02).
+  off is widening (OWN-11), so `cairn uninstall` records that act before it
+  removes the hook registrations (ADM-02).
 - **Ingest marker**: What a hook handler leaves when its hook budget cuts it
   short, so the next hook handler or `cairn ingest` resumes it (NFR-02).
   **Ingest** is reading a transcript into the record, by the hook handlers
@@ -170,11 +173,8 @@ summary: >-
   node does not hold, such as a peer's lost tail; a **capture gap** is part of a
   run its capture did not record.
 - **Integrity status**: What a room or writer shows about its chain and seals,
-  one of §9.7.5's values (VIEW-10). A refused segment is recorded as a
-  structural event in this node's device seat's personal-room writer once per
-  writer and reason, when first refused, beside its audit entry, so `refused`
-  derives from the record and a rebuild appends nothing (REC-21, I10). The UI
-  never says "secure".
+  one of §9.7.5's values (VIEW-10); `refused` shows a refused segment
+  (Segment). The UI never says "secure".
 - **Receipt**: A signed statement about a node's record, made to be kept apart
   from the home and checked with no network. Always qualified: a **head
   receipt** lists every writer's chain head at a moment, the tamper evidence of

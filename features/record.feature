@@ -33,7 +33,7 @@ Feature: Record (REC)
     And the events "parent-run" gained after the harness resume that kept its harness session belong to the run of "parent-run"
     And the events of "new-harness-session-run" belong to a new run, not to the run of "parent-run"
     And that new run belongs to the agent of "parent-run" only when the harness gives an agent id stable across harness sessions, else it is its own agent
-    And a later run of an agent reaches the agent's rooms through the "rooms" recall scope, its restore blocks and its directed posts, but holds no seat, add or role there until it joins under LANE-23
+    And a later run of an agent reaches the agent's rooms through the "rooms" recall scope and its restore blocks, but holds no seat, add or role there until it joins under LANE-23
 
   @REC-03 @P0 @I1 @I10 @pending
   Scenario: re-ingesting a transcript source creates no duplicate events
@@ -108,7 +108,7 @@ Feature: Record (REC)
     When the person runs "cairn ingest --all"
     Then the 20 KiB content is stored in the payload store under a name from which no one off this node can confirm a guess at the content, and its event carries a preview of at most 512 bytes, the payload reference and the commitment
     And the 2 KiB content is stored inline in its event
-    And nothing in an export, room bundle or replicated structure lets a reader off this node confirm a guess at the content from a payload name
+    And nothing in an export lets a reader off this node confirm a guess at the content from a payload name
     And each payload was written to a temporary file, fsynced, then renamed into place
 
   @REC-10 @P0 @I10 @pending
@@ -197,7 +197,7 @@ Feature: Record (REC)
     When the person runs "cairn verify"
     Then the command exits 0
     And every event carries a commitment to its canonical content under a random per-event key of at least 256 bits, stored with the content and absent from its chained header
-    And the hash chain, every seal, every tombstone and every exported structure refer to event content, structural fields included, only through the commitment, but for the structural fields, provenance, origin and recorder a tombstone keeps of a purged act, tombstone or event the key set holds
+    And the hash chain, every tombstone and every exported structure refer to event content, structural fields included, only through the commitment, but for the structural fields, provenance, origin and recorder a tombstone keeps of a purged act, tombstone or event the key set holds
     And the commitment keys of seq 10-14 were erased with their content
     And no retained or exported value confirms a guess at the purged content
 
@@ -210,6 +210,9 @@ Feature: Record (REC)
     Then the command exits 3 and names the second writer's seal at seq 10 as a mismatch
     And the first writer's seal, over its writer id, seq 20 and the chain head at seq 20, verifies against the seat key that made it
     And events 21 to 30 of the first writer are shown and recalled as "unsigned"
+    And each seal refers to event content only through the commitments its chain head covers
+    And merging the first writer's closed segments outside every hook budget, or rewriting them for a purge, keeps each of its seals verifiable
+    And "cairn backup create" copies an open segment only up to a fresh seal
 
   @REC-19 @P1 @I1 @I6 @pending
   Scenario Outline: a witnessed run's MCP server seals each of its run seats' writers within 2 s of any unsealed append and when the run stops, and the open segment closes at every stop and every 30 s
@@ -242,7 +245,9 @@ Feature: Record (REC)
     Then the record gains an event with provenance "file" carrying the checked-out commit id, the branch and a payload diff against the previous worktree checkpoint
     And the diff covers the tracked change and the untracked file but not the ignored file, with the API key redacted
     And a worktree checkpoint taken for a rewrite of the branch head keeps the replaced head
+    And purging content a worktree checkpoint contains erases or tombstones that copy, and the purge receipt names it
     And Cairn obtained the worktree state and git data inside the core, with no socket opened and no program started, within the hook budget, leaving any rest to an ingest marker
+    And it read the worktree's files, "README.md" among them, only inside the run's worktree and its repository's git directory, and wrote nothing in the repository
 
     Examples:
       | moment                                        |
@@ -262,7 +267,7 @@ Feature: Record (REC)
     And exactly one structural event in this node's device seat in its personal room records the refusal, appended when the segment was first refused, carrying only the writer id, the refused seq range, the segment's digest and the typed reason "unsupported format version", never the segment's content or free text
     And the second refusal of that writer for that reason is counted and audited, and appends no event
     When the person runs "cairn rebuild"
-    Then the rebuild only reads the recorded refusal, derives the writer's integrity status "refused" from it and appends no event
+    Then the rebuild only reads the recorded refusal and appends no event
     And the version 99 segment file is byte-identical to before
 
   @REC-22 @P1 @I1 @I2 @pending
@@ -305,7 +310,7 @@ Feature: Record (REC)
     And <change>
     When the hook "SessionStart" runs and appends its first event after the start
     Then Cairn mints a new device key and a new seat key before that append, the new seat key starting a new seat and writer that names the old seat
-    And the new seat inherits no add, role or appointment of the old seat, and, outside the personal room, joins a room only as any seat does, while a personal-room seat, a device seat's included, is a member from its first event
+    And the new seat inherits no add or role of the old seat, and, outside the personal room, joins a room only as any seat does, while a personal-room seat, a device seat's included, is a member from its first event
     And the personal room keeps its room id
     And every event recorded before the change counts on the node as another node's, received, a "witnessed" one reading as origin "peer", and is trusted only as PRV-02 trusts received events
     And that quarantine stays in force on the node until a release there
@@ -322,8 +327,8 @@ Feature: Record (REC)
   @REC-25 @P1 @I1 @I10 @pending
   Scenario: closed segments are merged later, outside every hook budget, so a writer has at most 48 segments a day
     Given an isolated Cairn home
-    And a writer that closed 200 sealed segments during one day of activity
+    And a writer that closed 200 segments during one day of activity
     When the deferred merge runs outside every hook budget
     Then the writer has at most 48 stored segments for that day
     And every address, commitment and chain head is unchanged
-    And "cairn verify" checks every seal and exits 0
+    And "cairn verify" exits 0

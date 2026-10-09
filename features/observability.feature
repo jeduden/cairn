@@ -19,7 +19,6 @@ Feature: Observability (OPS)
       | the transcript contains an AWS secret key and is ingested                         | redacted  | redactions           |
       | the hook "SessionStart" runs past its 150 ms hook budget                          | timed-out | hook_budget_exceeded |
       | the agent calls the MCP tool "event_expand" with a range above 8,000 model tokens | truncated | recall_truncated     |
-      | a peer offers a segment over its quota                                            | rejected  | quota_rejected       |
       | the hook "PreCompact" runs with an unreadable transcript path                     | failed    | hook_failed          |
 
   @OPS-02 @P0 @I6 @pending

@@ -23,8 +23,7 @@ summary: >-
   key certified, within that key's scope, a pin version its principal stamped,
   and for that agent the posts and pins a trust grant of its principal covers,
   none of them in a foreign room but the pins and stamps Foreign room names.
-  Everything else is untrusted, and so is the free text a cut or neutral
-  principal act carries (OWN-11).
+  Everything else is untrusted, as is a cut or neutral act's free text (OWN-11).
 - **Deployment mode**: `interactive` (a person types at the harness) or
   `automation` (a pipeline does, the default), set per node (PRV-02, PRV-04,
   `node.deployment_mode`);
@@ -37,8 +36,8 @@ summary: >-
 - **Taint**: The trust level a derived artifact, or an output built from events
   (a recall result, kernel output, an exported bundle, rendering or trusted-only
   export), inherits: untrusted when any event it derives from is untrusted or
-  it holds the free text of a cut or neutral principal act (OWN-11), except for
-  its sanitized structural fields.
+  it holds a cut or neutral act's free text (OWN-11), except for its sanitized
+  structural fields.
 - **Recall taint**: A run's mark after it recalls untrusted content, which
   tightens the rule levels of the action classes SEC-13 configures as
   sensitive (OWN-10). A delegate inherits the delegating run's (OWN-24),
@@ -65,9 +64,9 @@ summary: >-
   enveloped content (§9.2), such as `event_search`, `room_get`,
   `room_summary_get`, `delegation_get` or `kernel_exec` with its built-ins
   (CMP-03), or a read-only CLI verb the agent runs whose output is not a
-  terminal (OWN-12); each records a recall event (RCL-07). Pull-only, and it
-  defaults to the agent's current run. A recall tool that stops at its per-call
-  cap returns a **continuation cursor** (`next_cursor`); passed back as
+  terminal (OWN-12); each records a recall event (RCL-07). Pull-only,
+  defaulting to the agent's current run. A recall tool that stops at its
+  per-call cap returns a **continuation cursor** (`next_cursor`); passed back as
   `cursor`, it continues without gap or overlap (RCL-03). Outside an envelope
   and the closed paths, whatever Cairn returns to a tool call, its errors and a
   CLI verb's output that is not a terminal included, carries only fixed text
@@ -132,10 +131,11 @@ summary: >-
   trust and delegation grants.
 - **Notice allowance, notice opt-in**: The owner's per-room allowance and the
   agent's principal's opt-in. An opt-in notice needs both.
-- **Rule level**: For each action class (a kind of tool action, such as edits,
-  commands or network use), one of, loosest to tightest: act without asking, act
-  when told, ask first, hand off (OWN-10). A maximum rule level is the loosest
-  allowed.
+- **Action class**: A kind of tool action, such as edits, commands or network
+  use (OWN-10).
+- **Rule level**: For each action class, one of, loosest to tightest: act
+  without asking, act when told, ask first, hand off (OWN-10). A maximum rule
+  level is the loosest allowed.
 - **Quota**: A limit on storage or events, per room, node, writer received from
   a peer, peer or worktree checkpoint, that the node's principal or managed
   policy sets (ADM-15). Reaching one never drops or deletes an event: what is
@@ -152,7 +152,7 @@ summary: >-
 - **Residual risk**: One of the risks §6.1 lists for an unconfined run.
 - **Sandbox state**: What confines a run, its policy digest, and which residual
   risks it blocks, recorded from outside the sandbox, where the agent cannot
-  write (OWN-22).
+  write; a run with none recorded counts as unsandboxed (OWN-22).
 - **Risk acceptance**: The principal's act accepting the residual risks a run
   leaves open (OWN-22).
 - **Hand-off, hand-back**: An agent passes control to its principal as a held
@@ -162,8 +162,8 @@ summary: >-
   a run. **Terminal takeover**, the principal typing in the harness's terminal
   the launcher hosts, is the harness's own channel, never a principal act
   (OWN-02, OWN-19): the person's keystrokes are the harness's own input from
-  that terminal, which the launcher hosts but never carries, so what the
-  launcher carries into the harness's input stays text the core built (I4).
+  that terminal, which the launcher never carries, so what the launcher
+  carries into the harness's input stays text the core built (I4).
 - **Fixed template**: Wording Cairn ships, filled only with ids, counts, version
   numbers, key fingerprints, addresses and the principal-typed, endorsed or
   delegated text, or the text of a post a trust grant covers, its requirement
@@ -189,7 +189,7 @@ summary: >-
 - **Room status**: A room's one status from §9.7.2's closed set, such as
   Running, Quiet or Ready for review. It is computed where shown from room
   state, the heads, landings and check states of the branches it names, its
-  runs' statuses and their freshness marks. It is never recorded and never set
+  runs' statuses and their freshness marks. It is never recorded or set
   directly; OWN-21's ready and abandoned marks feed it.
 - **Queue class**: One of Needs you's classes Q1 to Q4, which set its order
   (§9.7.4, VIEW-05).

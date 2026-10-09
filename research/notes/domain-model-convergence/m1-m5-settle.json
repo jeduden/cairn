@@ -1,0 +1,2053 @@
+[
+ {
+  "label": "plan",
+  "items": [
+   {
+    "id": "S-1",
+    "edits": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "2.0 adds the remaining P1 rows of the 2.0 change",
+      "new": "2.0 adds the remaining P1 rows of the 2.0 change, LANE-20 included, but not LANE-17, LANE-19, LANE-21, VIEW-20 and VIEW-21, which need the room view, results or worktree checkpoints and come in M7"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "; §11.2 pilot: two weeks of many concurrent agents with the room view in daily use; §11.1 gains \"what did my agent do, answered from Catch up alone\"",
+      "new": "; §11.2 pilot: two weeks of many concurrent agents"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "VIEW-01..12, VIEW-14..18,",
+      "new": "VIEW-01..12, VIEW-14..18, VIEW-20, VIEW-21,"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "beside admission and the add),",
+      "new": "beside admission and the add), LANE-17, LANE-19, LANE-21,"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "shows B1 disabled; the stakeholder signs off",
+      "new": "shows B1 disabled; a two-week pilot of many concurrent agents with the room view in daily use; §11.1 gains \"what did my agent do, answered from Catch up alone\"; the stakeholder signs off"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "but not LANE-17, LANE-19, LANE-21, VIEW-20 and VIEW-21, which need the room view, results or worktree checkpoints and come in M7"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "a two-week pilot of many concurrent agents with the room view in daily use; §11.1 gains \"what did my agent do, answered from Catch up alone\""
+     }
+    ],
+    "note": "M5's scope now says LANE-20 stays and names the five rows that leave. M7's scope adds VIEW-20 and VIEW-21 after VIEW-14..18, and LANE-17, LANE-19 and LANE-21 after LANE-16. M5's exit criteria keep the §11.2 pilot without the room view; M7's exit criteria gain the room-view pilot and the §11.1 Catch up question. Results (LANE-05) and worktree checkpoints (REC-20) are M7 rows, which is why LANE-19 and LANE-21 follow. No change-log row must change: the 2.0 row lists LANE-17, LANE-19 and VIEW-20 as features, not by milestone. How I checked all twelve settlements: I applied every edit to a scratch copy in forward order and again in reverse order, and both gave identical files, so no edit depends on another. In both copies each old string was unique before applying, every ledger quote is still present after `mdsmith fix .`, `mdsmith check .` passes (337 files, 0 failures) and `go test ./...` passes. No file needed tightening to stay inside its token budget."
+   },
+   {
+    "id": "S-3",
+    "edits": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "sandbox state and a risk acceptance made there). The other principal\nsurfaces (OWN-02) and presence proofs stay in M7, which completes OWN-11\nand OWN-12.",
+      "new": "sandbox state and a risk acceptance made there). Only the launcher (M7)\nrecords a sandbox state, so under M1 to M5 alone every run counts as\nunsandboxed, as OWN-22 says, and each widening act waits for the risk\nacceptance the node's principal records at the controlling terminal. The\nother principal surfaces (OWN-02) and presence proofs stay in M7, which\ncompletes OWN-11 and OWN-12."
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "Only the launcher (M7)"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "unsandboxed, as OWN-22 says, and each widening act waits for the risk"
+     }
+    ],
+    "note": "Adds one sentence after the explanation of M1's widening acts. The paragraph's last sentence is re-wrapped to 80 columns with its words unchanged. The sentence says 'under M1 to M5 alone' because the execution order runs M7 before M4 and M5. The paragraph's first sentence (which rows need widening acts) is left alone in case S-4 adds LANE-23's join there."
+   },
+   {
+    "id": "S-5",
+    "edits": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "RCL P0, SEC-01..08, SEC-12, SEC-16, SEC-18,",
+      "new": "RCL P0, MEM-01, SEC-01..08, SEC-10, SEC-12, SEC-15..18,"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "MEM-01, SEC-01..08, SEC-10, SEC-12, SEC-15..18,"
+     }
+    ],
+    "note": "The four rows go into M1's base list rather than a version clause, because SEC-10, SEC-15, SEC-17 and MEM-01 date from the 1.x import. SEC-15..18 combines the existing SEC-16 and SEC-18 with the new SEC-15 and SEC-17. After this edit every P0 row is named by some milestone."
+   },
+   {
+    "id": "S-6",
+    "edits": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "CON changes, ENG-29;",
+      "new": "CON changes, ENG-29, OWN-01 (its clauses on other principals' text apply once their requirements ship);"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "OWN P1 rows including OWN-21",
+      "new": "OWN P1 rows but OWN-01, including OWN-21"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "OWN-01 (its clauses on other principals' text apply once their requirements ship)"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "OWN P1 rows but OWN-01, including OWN-21"
+     }
+    ],
+    "note": "OWN-01 joins M1's 2.0 clause. M7's family entry 'OWN P1 rows' now leaves it out, so only one milestone names it."
+   },
+   {
+    "id": "S-7",
+    "edits": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "REC-17, REC-24,",
+      "new": "REC-17, REC-19 in part (the seat `cairn ingest` starts) with REC-22, REC-24,"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "REC-18..20, REC-22,",
+      "new": "REC-18, the rest of REC-19, REC-20,"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "REC-19 in part (the seat `cairn ingest` starts) with REC-22"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "REC-18, the rest of REC-19, REC-20,"
+     }
+    ],
+    "note": "REC-22 and the part of REC-19 for the seat `cairn ingest` starts move to M1's 2.0 clause. M7 keeps REC-18, REC-20 and the rest of REC-19, which is its seals (see S-2). The M7 edit sits next to S-14's 'RCL-08, RCL-09,' edit without overlapping it."
+   },
+   {
+    "id": "S-8",
+    "edits": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "PRV-09, LANE-01, LANE-02,",
+      "new": "PRV-09, LANE-01, LANE-02, LANE-16 in part (the owner's device seat with every capability, and the contributor role of a run's seat in its personal room, in a room it created and in one it joined at its principal's ask),"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "LANE-16 (the roles and capabilities room acts are checked against",
+      "new": "the rest of LANE-16 (the other roles and capabilities room acts are checked against"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "LANE-16 in part (the owner's device seat with every capability, and the contributor role of a run's seat in its personal room"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "the rest of LANE-16 (the other roles and capabilities room acts are checked against"
+     }
+    ],
+    "note": "M1 now names the part of LANE-16 that the M1–M2 checks of work and pin capability need (LANE-01's 'member with work' and LANE-26's pin capability). 'Joined at its principal's ask' applies once S-4's own-principal join lands in M2. M7 keeps the rest. The M7 edit stops before ', beside admission', so it does not overlap S-1's insertion after 'the add),'."
+   },
+   {
+    "id": "S-9",
+    "edits": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "; 2.7 adds PRV-11",
+      "new": "; LANE-31 in part (the rule for two branch links naming one branch); 2.7 adds PRV-11"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "LANE-31 in part (the rule for two branch links naming one branch)"
+     }
+    ],
+    "note": "LANE-01 (M1) already sends two branch links naming one branch to LANE-31; M1 now names that tie rule. The M7 side ('the rest of LANE-23 and LANE-31') is in S-18's M7 edit, because both settlements change the same phrase, 'the room model's LANE-23..33'. This edit's anchor starts at the ';' that S-18's anchor stops before, so the two do not overlap."
+   },
+   {
+    "id": "S-14",
+    "edits": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "RCL-05 changed, ADM-04 changed",
+      "new": "RCL-05 changed, RCL-08, ADM-04 changed"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "RCL-08, RCL-09,",
+      "new": "RCL-09,"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "RCL-05 changed, RCL-08, ADM-04 changed"
+     }
+    ],
+    "note": "RCL-08, a row added in 2.0, moves from M7 into M1's 2.0 clause."
+   },
+   {
+    "id": "S-15",
+    "edits": [
+     {
+      "file": "docs/srs/06b-boundary-register.md",
+      "old": "| P2  | REC-23, SEC-26",
+      "new": "| P2; trusted-only export P1 | REC-23, SEC-26, ADM-12"
+     },
+     {
+      "file": "docs/srs/09a-command-line-interface.md",
+      "old": "| `cairn export --bundle\\|--rendering\\|--trusted-only`, `cairn bundle publish",
+      "new": "| `cairn export --trusted-only` (P1) | write the trusted-only JSONL export (ADM-12), a widening principal act that passes SEC-26's review step |\n| `cairn export --bundle\\|--rendering`, `cairn bundle publish"
+     },
+     {
+      "file": "docs/srs/09a-command-line-interface.md",
+      "old": "bundles, renderings (a room rendered for people to read, with no keys or commitments) and the trusted-only JSONL export (ADM-12), or publish",
+      "new": "bundles and renderings (a room rendered for people to read, with no keys or commitments), or publish"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "ADM-12, ENG-13, ENG-25), full §11",
+      "new": "ADM-12, ENG-13, ENG-25), SEC-26 in part (the trusted-only export as a widening principal act with its review step), full §11"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "REC-23, SEC-26, SEC-28",
+      "new": "REC-23, the rest of SEC-26, SEC-28"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "SEC-26 in part (the trusted-only export as a widening principal act with its review step)"
+     },
+     {
+      "file": "docs/srs/06b-boundary-register.md",
+      "quote": "P2; trusted-only export P1"
+     },
+     {
+      "file": "docs/srs/09a-command-line-interface.md",
+      "quote": "`cairn export --trusted-only` (P1)"
+     }
+    ],
+    "note": "Register row 7 keeps its number and stays P2 for bundles, import and renderings; it marks the trusted-only export P1 and cites ADM-12. In §9.5, `cairn export --trusted-only` moves out of the P2 export row into its own row marked (P1), just before it, and the P2 row's purpose no longer mentions the trusted-only export. The P2 row still says every export is a widening principal act under SEC-26. A separate row keeps the command column within its current width, so mdsmith fix re-pads only those two rows. The register table, by contrast, is fully re-padded because its Pri column widens. M9 keeps the rest of SEC-26. Edits are listed per file in file order."
+   },
+   {
+    "id": "S-16",
+    "edits": [
+     {
+      "file": "docs/srs/06b-boundary-register.md",
+      "old": "| P0  | VIEW-14, OWN-12",
+      "new": "| P0; TUI P1 | VIEW-14, OWN-12"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/06b-boundary-register.md",
+      "quote": "P0; TUI P1"
+     }
+    ],
+    "note": "Row 4 keeps the CLI at P0. The TUI takes VIEW-14's P1 and arrives with VIEW-14 in M7. The short quote is deliberate: mdsmith fix pads the Pri cell, which would break a quote that crosses the cell boundary."
+   },
+   {
+    "id": "S-18",
+    "edits": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "terminal) with OWN-22's precondition",
+      "new": "terminal) with OWN-22's precondition; LANE-23 in part (how a seat id derives)"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "the room model's LANE-23..33,",
+      "new": "the room model's LANE-23..33 (the rest of LANE-23 and LANE-31),"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "LANE-23 in part (how a seat id derives)"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "the room model's LANE-23..33 (the rest of LANE-23 and LANE-31)"
+     }
+    ],
+    "note": "M1 now names the part of LANE-23 that derives a seat id from the room's id and the seat key, which quarantine and purge by seat need. The anchor includes 'terminal)' because the paragraph above also contains 'with OWN-22's precondition'. The M7 edit also carries S-9's 'the rest of LANE-31'. S-4 brings LANE-23's own-principal joins to M2; 'the rest of LANE-23' in M7 stays true after that, but an S-4 edit to the same M7 phrase would collide with this one and need merging."
+   }
+  ]
+ },
+ {
+  "label": "requirements",
+  "items": [
+   {
+    "id": "S-2",
+    "edits": [
+     {
+      "file": "docs/srs/02-context.md",
+      "old": "closed into sealed segments.",
+      "new": "closed into segments, sealed once REC-18 ships."
+     },
+     {
+      "file": "docs/srs/05-functional-requirements.md",
+      "old": "The hash chain, every seal, every tombstone and every replicated or exported structure MUST refer to event content",
+      "new": "The hash chain, every tombstone, every replicated or exported structure and, once REC-18 ships, every seal MUST refer to event content"
+     },
+     {
+      "file": "docs/srs/05-functional-requirements.md",
+      "old": "keeping every seal verifiable.",
+      "new": "keeping every seal verifiable once REC-18 ships."
+     },
+     {
+      "file": "docs/srs/05a-administration-requirements.md",
+      "old": "capture the sealed segments, the open segment up to a fresh seal, the payload store",
+      "new": "capture the closed segments, the open segment up to its newest event (under a fresh seal once REC-18 ships), the payload store"
+     },
+     {
+      "file": "docs/srs/05a-administration-requirements.md",
+      "old": "from the sealed segments, events, search index",
+      "new": "from the closed segments, events, search index"
+     },
+     {
+      "file": "docs/srs/05a-administration-requirements.md",
+      "old": "rewrite the affected segments keeping their seals verifiable.",
+      "new": "rewrite the affected segments, keeping their seals verifiable once REC-18 ships."
+     },
+     {
+      "file": "docs/srs/06-security.md",
+      "old": "run-seat keys and seals their writers (REC-19)",
+      "new": "run-seat keys and, once REC-18 ships, seals their writers (REC-19)"
+     },
+     {
+      "file": "docs/srs/06-security.md",
+      "old": "whose writers the core seals (an ingested run's",
+      "new": "whose writers the core seals once REC-18 ships (an ingested run's"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "old": "Do two writers' sealed segments, merged in either order",
+      "new": "Do two writers' closed segments, merged in either order"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/05a-administration-requirements.md",
+      "quote": "the open segment up to its newest event (under a fresh seal once REC-18 ships)"
+     },
+     {
+      "file": "docs/srs/12-delivery-plan.md",
+      "quote": "Do two writers' closed segments, merged in either order"
+     }
+    ],
+    "note": "I covered every M1–M5 row whose text assumes seals. The scope rule puts these rows in M1–M5: CON-05 (CON changes, M1), REC-17 (M1), REC-25 (M3), ADM-06 and ADM-07 (M3), SEC-10 (P0, M1 under S-5) and spike S12. Each seal clause now applies once REC-18 ships. Where a row only meant closing, \"sealed segments\" now reads \"closed segments\" (S12, ADM-06, ADM-07), and ADM-06's backup takes the open segment up to its newest event.\n\nLeft alone on purpose:\n- REC-18, REC-19, VIEW-10 and the PEER, SEC-24, SEC-25 and SEC-27 rows.\n- OWN-02. It is a P1 OWN row in M7, and its seal clause already cites REC-18.\n- SEC-10's \"who signs and seals what another component records (OQ-40)\". It concerns B1–B3 components, which ship in M7.\n- 02-context.md line 29 (ephemeral nodes, PEER-05, M8) and NG4.\n\nOutside my area, for the owners of those files:\n- In the model, record.md's Segment entry says \"sealed as a unit when it closes\", plus \"sealed prefix\" and \"sealed range\". acts-and-roles.md line 31 says \"`operator` event its device seat's seal covers\". seats-and-keys.md lines 25–55 also speak of sealing.\n- Pending scenarios with seal steps: administration.feature 84 and 87 (ADM-06), 100 and 104 (ADM-07); record.feature 200 (REC-17), 325 and 329 (REC-25); security.feature 128 and 130 (SEC-10).\n- The CLI table's `cairn verify` row says \"chains, seals\". The §9.1 SubagentStop row cites REC-19, which is already dormant.\n\nBudget check: I applied both settlements' edits to a scratch copy under the scratchpad (HOME and CAIRN_HOME set to a temp dir), then ran `mdsmith fix .` and `mdsmith check .`, which ended with 0 failures. 05-functional-requirements.md grows by 6 words to 5917 words, a heuristic 7870 of its 8000 tokens. That fits, so I tightened nothing to offset it."
+   },
+   {
+    "id": "S-10",
+    "edits": [
+     {
+      "file": "docs/srs/06-security.md",
+      "old": "set quotas, fix the deployment mode",
+      "new": "set quotas once ADM-15 ships, fix the deployment mode"
+     },
+     {
+      "file": "docs/srs/06-security.md",
+      "old": "MUST refuse to start a component managed policy disables and MUST audit the refusal.",
+      "new": "MUST refuse to start a component managed policy disables and MUST audit the refusal. Until presence proofs ship (OWN-11, OWN-12), Cairn MUST refuse every widening act while managed policy requires an authenticator, and audit and count each refusal."
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/srs/06-security.md",
+      "quote": "Until presence proofs ship (OWN-11, OWN-12), Cairn MUST refuse every widening act while managed policy requires an authenticator"
+     },
+     {
+      "file": "docs/srs/06-security.md",
+      "quote": "set quotas once ADM-15 ships, fix the deployment mode"
+     }
+    ],
+    "note": "SEC-22 (P0, M1) now says two things. Quotas apply once ADM-15 ships. Until presence proofs ship (OWN-11, OWN-12, M7), a managed policy that requires an authenticator makes Cairn refuse every widening act, and each refusal is audited and counted (I6). The risk acceptance is a widening act, so it is refused too, which fits S-3.\n\nADM-04 mentions neither an authenticator nor quotas, so it needs no edit.\n\nThese edits come after S-2's SEC-10 edits in 06-security.md and do not overlap them. The file grows by 33 words, well under its budget. With S-2 applied as well, `mdsmith fix .` then `mdsmith check .` ended with 0 failures.\n\nOutside my area: SEC-22's pending scenario (security.feature 265–287) still has the \"a storage quota\" example. That step needs ADM-15 and should move to ADM-15's pending scenario under S-11. The \"an authenticator required for widening acts\" example still holds as written, because the act is refused."
+   }
+  ]
+ },
+ {
+  "label": "model",
+  "items": [
+   {
+    "id": "S-12",
+    "edits": [
+     {
+      "file": "docs/domain-model/trust-and-flow.md",
+      "old": "- **Rule level**: For each action class (a kind of tool action, such as edits,\n  commands or network use), one of, loosest to tightest: act without asking, act\n  when told, ask first, hand off (OWN-10). A maximum rule level is the loosest\n  allowed.\n",
+      "new": "- **Action class**: A kind of tool action, such as edits, commands or network\n  use (OWN-10).\n- **Rule level**: For each action class, one of, loosest to tightest: act\n  without asking, act when told, ask first, hand off (OWN-10). A maximum rule\n  level is the loosest allowed.\n"
+     },
+     {
+      "file": "docs/domain-model/trust-and-flow.md",
+      "old": "  that terminal, which the launcher hosts but never carries, so what the\n  launcher carries into the harness's input stays text the core built (I4).\n",
+      "new": "  that terminal, which the launcher never carries, so what the launcher\n  carries into the harness's input stays text the core built (I4).\n"
+     },
+     {
+      "file": "docs/domain-model/trust-and-flow.md",
+      "old": "It is never recorded and never set\n  directly;",
+      "new": "It is never recorded or set\n  directly;"
+     },
+     {
+      "file": "docs/domain-model/acts-and-roles.md",
+      "old": "- **Expire act**: Once PRV-10 ships, an act a node with a device key records,\n  signed with that key, ending only an expiry its original act set.",
+      "new": "- **Expire act**: Once PRV-10 ships, an act a node records, signed with its\n  device key, ending only an expiry its original act set."
+     },
+     {
+      "file": "docs/domain-model/acts-and-roles.md",
+      "old": "- **Mute**: Withdraws every capability but read from one seat or from the whole\n  room;",
+      "new": "- **Mute**: Withdraws every capability but read from one seat or the whole\n  room;"
+     },
+     {
+      "file": "docs/domain-model/acts-and-roles.md",
+      "old": "  satisfies its room's admission, for its device and run seats alike. An\n  invite's, an export's or a publish's **review step** shows the acting\n  principal, before it takes effect, what will take effect or leave, SEC-08\n  applied (LANE-10, SEC-26).\n",
+      "new": "  satisfies its room's admission, for its device and run seats alike.\n- **Review step**: The step before an invite, an export or a publish takes\n  effect. It shows the acting principal what will take effect or leave, SEC-08\n  applied (LANE-10, SEC-26).\n"
+     },
+     {
+      "file": "docs/domain-model/acts-and-roles.md",
+      "old": "  once every seat of the owner has left the room; that acceptance is a\n",
+      "new": "  once all the owner's seats have left the room; that acceptance is a\n"
+     },
+     {
+      "file": "docs/domain-model/git-and-forge.md",
+      "old": "- **Commit**: A git commit.\n",
+      "new": "- **Commit**: A git commit.\n- **Commit author**: Git's author of a commit, never a seat.\n"
+     },
+     {
+      "file": "docs/domain-model/git-and-forge.md",
+      "old": "  base (a **commit author** is git's author of a commit, never a seat). Unless\n  the platform can deny all of them, Cairn refuses the witness check before\n  confirmation and says which it cannot deny (OWN-18).\n",
+      "new": "  base (Commit author). Unless the platform can deny all of them, Cairn refuses\n  the witness check before confirmation and says which it cannot deny (OWN-18).\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/domain-model/trust-and-flow.md",
+      "quote": "**Action class**: A kind of tool action, such as edits, commands or network"
+     },
+     {
+      "file": "docs/domain-model/git-and-forge.md",
+      "quote": "**Commit author**: Git's author of a commit, never a seat."
+     }
+    ],
+    "note": "All three terms now have entries of their own, and each definition was moved, not copied. Action class sits just before Rule level in trust-and-flow.md, which keeps the catalog's 'rule levels'. Commit author sits after Commit in git-and-forge.md, and Witness check now points to it as '(Commit author)'. Review step sits after Admission in acts-and-roles.md, keeps its content (acting principal, what takes effect or leaves, SEC-08, LANE-10, SEC-26), and no longer leans on Admission. A third quote, for review step: '**Review step**: The step before an invite, an export or a publish takes'. No text in the model, SRS, scenarios or agents pointed at '(Rule level)', '(Witness check)' or '(Admission)' for these terms. The other uses name the term directly and now reach the new entries: Recall taint's 'action classes', record.md's Redaction and Trusted-only export 'review step', the SRS's 'commit authors' and persona-reviewer. The definitions are model-only, so there is no SRS quote. The review step entry is two sentences because a one-sentence version failed MDS023 readability (ARI 14.9). Offsets in the same files: trust-and-flow.md (+3 words) drops the repeated 'hosts but' in Terminal takeover and changes 'never recorded and never set' to 'never recorded or set' in Room status. acts-and-roles.md (+3) changes Expire act from 'a node with a device key records, signed with that key' to 'a node records, signed with its device key', Mute's 'or from the whole room' to 'or the whole room', and Successor's 'every seat of the owner has left' to 'all the owner's seats have left'. Measured with MDS028 (heuristic, 1.33 tokens per word): acts-and-roles 2995 to 2993, trust-and-flow 2996 to 2996, git-and-forge 1564 to 1565. On a scratch copy with all 17 of my edits, 'mdsmith fix .' changed nothing and 'mdsmith check .' passed (337 files, 0 failures)."
+   },
+   {
+    "id": "S-13",
+    "edits": [
+     {
+      "file": "docs/domain-model/index.md",
+      "old": "lands here before anything uses it. The domain-model agent reviews every change\nto these files and every proposal to change it. It names the invariants whose\nwording would change, and every use the change makes stale or that runs ahead.\n",
+      "new": "lands here before anything uses it. The model keeps every concept defined, those\nthe invariants name included, and §12.2 decides when each one's requirements\nship. The domain-model agent reviews every change to these files and every\nproposal to change it. It names the invariants whose wording would change, and\nevery use the change makes stale or that runs ahead.\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/domain-model/index.md",
+      "quote": "The model keeps every concept defined, those"
+     },
+     {
+      "file": "docs/domain-model/index.md",
+      "quote": "and §12.2 decides when each one's requirements"
+     }
+    ],
+    "note": "Added one sentence to the hub's 'Changing the model' section, right after 'It lands here before anything uses it.', and reflowed the rest of the paragraph to 80 columns. It names the invariants' concepts because S-13's question was about them. '§12.2' is written bare, like the model's other section references (§6.1, §9.7.5). The hub's budget is 3000; MDS028 measured 2778 before and 2804 after. The edit is model-only, so there is no SRS quote."
+   },
+   {
+    "id": "S-17",
+    "edits": [
+     {
+      "file": "docs/domain-model/record.md",
+      "old": "**sealed range**.\n",
+      "new": "**sealed range**. A refused segment is recorded as a structural event in\n  this node's device seat's personal-room writer once per writer and reason,\n  when first refused, beside its audit entry, so its refusal derives from the\n  record and a rebuild appends nothing (REC-21, I10).\n"
+     },
+     {
+      "file": "docs/domain-model/record.md",
+      "old": "  off is widening (OWN-11), so `cairn uninstall` records the widening act\n  turning capture off before it removes the hook registrations (ADM-02).\n",
+      "new": "  off is widening (OWN-11), so `cairn uninstall` records that act before it\n  removes the hook registrations (ADM-02).\n"
+     },
+     {
+      "file": "docs/domain-model/record.md",
+      "old": "  one of §9.7.5's values (VIEW-10). A refused segment is recorded as a\n  structural event in this node's device seat's personal-room writer once per\n  writer and reason, when first refused, beside its audit entry, so `refused`\n  derives from the record and a rebuild appends nothing (REC-21, I10). The UI\n  never says \"secure\".\n",
+      "new": "  one of §9.7.5's values (VIEW-10); `refused` shows a refused segment\n  (Segment). The UI never says \"secure\".\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/domain-model/record.md",
+      "quote": "**sealed range**. A refused segment is recorded as a structural event in"
+     },
+     {
+      "file": "docs/domain-model/record.md",
+      "quote": "one of §9.7.5's values (VIEW-10); `refused` shows a refused segment"
+     }
+    ],
+    "note": "Moved REC-21's sentence to the end of the Segment entry almost word for word. The one change: '`refused` derives' became 'its refusal derives', so Segment (M3) no longer depends on the integrity status value (VIEW-10, M7). Integrity status now only says that its `refused` value shows a refused segment, and points to Segment. Trust-and-flow's Quota entry ('as a refused segment is') still reads correctly. To offset the growth, Capture's 'records the widening act turning capture off' became 'records that act'. record.md measured 2991 before and 2995 after, under its 3000 budget. The first edit's old string is only '**sealed range**.\\n' so it overlaps as little as possible with any S-2 rewording of the Segment or Seal entries. If S-2 changes that line, re-anchor this edit on the end of the Segment entry. The edit is model-only, so there is no SRS quote."
+   },
+   {
+    "id": "S-3",
+    "edits": [
+     {
+      "file": "docs/domain-model/trust-and-flow.md",
+      "old": "  Everything else is untrusted, and so is the free text a cut or neutral\n  principal act carries (OWN-11).\n",
+      "new": "  Everything else is untrusted, as is a cut or neutral act's free text (OWN-11).\n"
+     },
+     {
+      "file": "docs/domain-model/trust-and-flow.md",
+      "old": "  it holds the free text of a cut or neutral principal act (OWN-11), except for\n  its sanitized structural fields.\n",
+      "new": "  it holds a cut or neutral act's free text (OWN-11), except for its sanitized\n  structural fields.\n"
+     },
+     {
+      "file": "docs/domain-model/trust-and-flow.md",
+      "old": "Pull-only, and it\n  defaults to the agent's current run. A recall tool that stops at its per-call\n  cap returns",
+      "new": "Pull-only,\n  defaulting to the agent's current run. A recall tool that stops at its\n  per-call cap returns"
+     },
+     {
+      "file": "docs/domain-model/trust-and-flow.md",
+      "old": "where the agent cannot\n  write (OWN-22).\n",
+      "new": "where the agent cannot\n  write; a run with none recorded counts as unsandboxed (OWN-22).\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "docs/domain-model/trust-and-flow.md",
+      "quote": "write; a run with none recorded counts as unsandboxed (OWN-22)."
+     }
+    ],
+    "note": "The Sandbox state entry did not say that a run with no recorded sandbox state counts as unsandboxed. No other model entry said it either, so I added one clause in OWN-22's wording. The clause costs 8 words, offset in trust-and-flow.md. Trusted sources' closing clause became 'as is a cut or neutral act's free text'; 'cut act' and 'neutral act' are acts-and-roles terms, and Trust level still gives OWN-11's full wording. Taint's 'the free text of a cut or neutral principal act' became 'a cut or neutral act's free text'. Recall's 'Pull-only, and it defaults' became 'Pull-only, defaulting'. Together with S-12's offsets, trust-and-flow.md measured 2996 before and 2996 after. The edit is model-only, so there is no SRS quote."
+   },
+   {
+    "id": "S-4",
+    "edits": [],
+    "ledger_quotes": [
+     {
+      "file": "docs/domain-model/acts-and-roles.md",
+      "quote": "when its principal asks for the join or accepts it, a subagent under its"
+     },
+     {
+      "file": "docs/domain-model/index.md",
+      "quote": "per room it joined or created"
+     }
+    ],
+    "note": "No change; both quotes are existing text. Both texts read correctly once a run's own-principal join ships in M2. The Join entry adds a seat 'under its admission', and Admission already covers the time before PRV-10: a room 'admits no other principal's seat', so the own principal's runs are admitted. A run joins only when its principal asks for or accepts the join, and a subagent joins under its parent's join, which matches the Subagent entry and LANE-23. The widening list in acts-and-roles includes 'ask for or accept a join', which matches S-4's widening act at the CLI. The hub's run-seat relation ('plus a further run seat per room it joined or created') needs nothing from M7. Join's clauses on expire acts, bridges and the launcher are dormant under the scope rule. One observation, not edited because S-4 limits the check to Join and the run-seat relation: the widening list's reason clause 'which sends the run's events to a room other principals' nodes hold' is dormant until peers ship, so in M2 it gives the reason rather than describing the join. If a later round flags it, 'which can send' would cover both cases for 2 words."
+   }
+  ]
+ },
+ {
+  "label": "scenarios-core",
+  "items": [
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/record.feature",
+      "old": "through the \"rooms\" recall scope, its restore blocks and its directed posts, but holds",
+      "new": "through the \"rooms\" recall scope and its restore blocks, but holds"
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    Then only the directed posts enter \"alice\"'s Needs you queue for an endorsement\n",
+      "new": "    Then only the directed posts enter \"alice\"'s Needs you queue for an endorsement\n    And a directed post to an agent of \"alice\" whose current run holds no seat in the room, though an earlier run of that agent had one, enters her Needs you queue the same way\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "whose current run holds no seat in the room, though an earlier run of that agent had one"
+     }
+    ],
+    "note": "REC-02 (M1): a later run's directed posts need LANE-12 (M8). Removed 'its directed posts' from REC-02's step and moved it to LANE-12's pending scenario."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/record.feature",
+      "old": "nothing in an export, room bundle or replicated structure lets",
+      "new": "nothing in an export lets"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "no stored event, segment, export or replicated structure carries",
+      "new": "no stored event, segment or export carries"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    And the bundle is a plain file whose chain verifies with no host, account or sync\n",
+      "new": "    And the bundle is a plain file whose chain verifies with no host, account or sync\n    And nothing in the bundle lets a reader confirm a guess at a payload's content from its payload name\n"
+     },
+     {
+      "file": "features/peer.feature",
+      "old": "    And only sealed ranges of writer logs were exchanged\n",
+      "new": "    And only sealed ranges of writer logs were exchanged\n    And nothing in an exchanged range lets a peer confirm a guess at a redacted secret, or at a payload's content from its payload name\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/security.feature",
+      "quote": "nothing in the bundle lets a reader confirm a guess at a payload's content from its payload name"
+     },
+     {
+      "file": "features/peer.feature",
+      "quote": "lets a peer confirm a guess at a redacted secret, or at a payload's content"
+     }
+    ],
+    "note": "REC-09 and SEC-08 (M1): their negative steps named room bundles (SEC-26, M9) and replicated structures (peers, M8). Narrowed both to exports and stored data; the bundle half moved to SEC-26 and the replication half to PEER-03."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/record.feature",
+      "old": "the hash chain, every seal, every tombstone",
+      "new": "the hash chain, every tombstone"
+     },
+     {
+      "file": "features/record.feature",
+      "old": "    And events 21 to 30 of the first writer are shown and recalled as \"unsigned\"\n",
+      "new": "    And events 21 to 30 of the first writer are shown and recalled as \"unsigned\"\n    And each seal refers to event content only through the commitments its chain head covers\n    And merging the first writer's closed segments outside every hook budget, or rewriting them for a purge, keeps each of its seals verifiable\n    And \"cairn backup create\" copies an open segment only up to a fresh seal\n"
+     },
+     {
+      "file": "features/record.feature",
+      "old": "closed 200 sealed segments",
+      "new": "closed 200 segments"
+     },
+     {
+      "file": "features/record.feature",
+      "old": "\"cairn verify\" checks every seal and exits 0",
+      "new": "\"cairn verify\" exits 0"
+     },
+     {
+      "file": "features/administration.feature",
+      "old": "a home with sealed segments, an open segment",
+      "new": "a home with closed segments, an open segment"
+     },
+     {
+      "file": "features/administration.feature",
+      "old": "the open segment up to a fresh seal, the payload store",
+      "new": "the open segment, the payload store"
+     },
+     {
+      "file": "features/administration.feature",
+      "old": "gone from the sealed segments, events",
+      "new": "gone from the segments, events"
+     },
+     {
+      "file": "features/administration.feature",
+      "old": "\"cairn verify\" confirms every rewritten segment's seals",
+      "new": "\"cairn verify\" exits 0"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "keeps the same way, and the core seals its writer",
+      "new": "keeps the same way"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "in that server's memory, which seals each run seat's writer with its key, and no file",
+      "new": "in that server's memory, and no file"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/record.feature",
+      "quote": "each seal refers to event content only through the commitments its chain head covers"
+     },
+     {
+      "file": "features/record.feature",
+      "quote": "or rewriting them for a purge, keeps each of its seals verifiable"
+     },
+     {
+      "file": "features/record.feature",
+      "quote": "And \"cairn backup create\" copies an open segment only up to a fresh seal"
+     }
+    ],
+    "note": "Seals ship with REC-18 and REC-19 (M7); per S-2 the M1-M5 record is hash-chained and unsigned. Took seal clauses out of REC-17, REC-25, ADM-06, ADM-07 and SEC-10 (closed segments instead of sealed ones). REC-17's, REC-25's, ADM-06's and ADM-07's seal clauses moved to REC-18; SEC-10's two seal clauses were deleted, since REC-19's scenario already has the MCP server sealing each run seat's writer and the core sealing the writer of the seat ingest starts."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/record.feature",
+      "old": "reads the recorded refusal, derives the writer's integrity status \"refused\" from it and appends no event",
+      "new": "reads the recorded refusal and appends no event"
+     },
+     {
+      "file": "features/lane-view.feature",
+      "old": "    And every later event of that writer is marked \"unverified\" wherever it is shown, including in recall results\n",
+      "new": "    And every later event of that writer is marked \"unverified\" wherever it is shown, including in recall results\n    And a writer with a segment refused under REC-21 has the integrity status \"refused\", which a rebuild derives from the recorded refusal alone\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane-view.feature",
+      "quote": "has the integrity status \"refused\", which a rebuild derives from the recorded refusal alone"
+     }
+    ],
+    "note": "REC-21 (M3): deriving the writer's integrity status 'refused' needs VIEW-10 (M7), as S-17 says. Removed it from REC-21's rebuild step and moved it to VIEW-10's pending scenario."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/record.feature",
+      "old": "inherits no add, role or appointment of the old seat",
+      "new": "inherits no add or role of the old seat"
+     },
+     {
+      "file": "features/administration.feature",
+      "old": "inherits no add, role or appointment of it",
+      "new": "inherits no add or role of it"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "a seat key minted because a backup restore put the home on another machine starts",
+      "new": "a seat key minted on a backup restore, or because a node identity change put the home on another machine, starts"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/security.feature",
+      "quote": "a seat key minted on a backup restore, or because a node identity change put the home on another machine"
+     }
+    ],
+    "note": "REC-24 (M1) and ADM-06 (M3): a new seat inheriting no appointment needs appointments (LANE-16's rest and SEC-32, M7). Took 'appointment' out of both. Widened SEC-27's pending step, which already says a seat key minted on a backup restore to another machine inherits no add, role or appointment, so it covers every backup restore and every node identity change."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/provenance.feature",
+      "old": "a principal act, an expire act, a pin written from a device seat, a pin a run seat wrote, a post from another seat, a room act of the run's seat and a room summary the room's facilitator wrote are recorded",
+      "new": "a principal act, a pin written from a device seat, a pin a run seat wrote, a post from another seat and a room act of the run's seat are recorded"
+     },
+     {
+      "file": "features/provenance.feature",
+      "old": "the principal act, the expire act and the device-seat pin carry provenance \"operator\", the post carries \"post\", the run-seat pin and the run seat's room act carry \"assistant\", the room summary carries \"summary\", and the tombstone",
+      "new": "the principal act and the device-seat pin carry provenance \"operator\", the post carries \"post\", the run-seat pin and the run seat's room act carry \"assistant\", and the tombstone"
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    And the expire act is recorded by the setter's node, or while it has not, by another node of the setter's principal or a node of the owner, signed with that node's device key\n",
+      "new": "    And the expire act is recorded by the setter's node, or while it has not, by another node of the setter's principal or a node of the owner, signed with that node's device key\n    And the expire act carries provenance \"operator\"\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "And the expire act carries provenance \"operator\""
+     }
+    ],
+    "note": "PRV-01 (M1): an expire act (LANE-25 and LANE-31, M7) and a facilitator's room summary (LANE-33, M7) need later requirements. Took both out of PRV-01's steps. The expire act's 'operator' provenance moved to LANE-25. The summary's provenance was deleted, since LANE-33 already returns the room summary 'with provenance \"summary\"'."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/provenance.feature",
+      "old": "      | interactive | a run seat's writer on this node, a pin version this principal stamped                                               | assistant        | trusted   | reports nothing                                                   |\n",
+      "new": ""
+     },
+     {
+      "file": "features/provenance.feature",
+      "old": "    And a version of a constraint pin an agent's run seat wrote, with provenance \"assistant\", stays \"untrusted\" until this principal stamps it, and is then \"trusted\" for this principal's agents only\n",
+      "new": ""
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    Then the pin shows \"alice\" as its stamper beside it\n",
+      "new": "    Then the pin shows \"alice\" as its stamper beside it\n    And version 1, with provenance \"assistant\", is untrusted until \"alice\" stamps it, and then trusted for her agents only\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "with provenance \"assistant\", is untrusted until \"alice\" stamps it, and then trusted for her agents only"
+     }
+    ],
+    "note": "PRV-02 and PRV-03 (M1): a pin version the principal stamped needs LANE-32 (M7). Deleted PRV-02's stamped-version example row and PRV-03's stamp step, and moved both to LANE-32's pending scenario as one step."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/provenance.feature",
+      "old": "    And every principal act a device key this principal certified signed, and every post and pin written from a device seat such a key certified, derives the same trust level on each of its nodes holding the same writer logs\n",
+      "new": ""
+     },
+     {
+      "file": "features/provenance.feature",
+      "old": "      | interactive | this principal's device seat on this node, once PRV-10 ships                                                         | post             | trusted   | reports nothing                                                   |\n      | interactive | this principal's device seat on another of its nodes, certified by a device key it certified, within scope           | post             | trusted   | reports nothing                                                   |\n",
+      "new": ""
+     },
+     {
+      "file": "features/provenance.feature",
+      "old": "      | interactive | a device seat of another node whose device key chains within its scope to the principal key of this node's principal | operator         | trusted   | reports nothing                                                   |\n",
+      "new": ""
+     },
+     {
+      "file": "features/provenance.feature",
+      "old": "      | interactive | a writer of another principal                                                                                        | operator         | untrusted | reports nothing                                                   |\n",
+      "new": ""
+     },
+     {
+      "file": "features/provenance.feature",
+      "old": "    And a seat key the laptop's device key certified for a room chains principal key → device key → seat key\n",
+      "new": "    And a seat key the laptop's device key certified for a room chains principal key → device key → seat key\n    And a seat certificate the laptop's device key made before the principal key certified it stays valid, and its seat key chains the same way\n    And a post from a device seat of this principal, on this node or another, whose device key the principal key certified, is trusted within that key's scope\n    And a principal act the laptop's device key signed, and a post or pin from a device seat it certified, derives the same trust level on each node of this principal holding the same writer logs\n    And an \"operator\" event a writer of another principal wrote is untrusted\n"
+     },
+     {
+      "file": "features/provenance.feature",
+      "old": "    And once a principal key certifies the device key, both seat certificates stay valid and each seat key chains principal key → device key → seat key\n",
+      "new": ""
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/provenance.feature",
+      "quote": "a seat certificate the laptop's device key made before the principal key certified it stays valid"
+     },
+     {
+      "file": "features/provenance.feature",
+      "quote": "a post from a device seat of this principal, on this node or another, whose device key the principal key certified"
+     },
+     {
+      "file": "features/provenance.feature",
+      "quote": "derives the same trust level on each node of this principal holding the same writer logs"
+     },
+     {
+      "file": "features/provenance.feature",
+      "quote": "And an \"operator\" event a writer of another principal wrote is untrusted"
+     }
+    ],
+    "note": "PRV-02 and PRV-11 (M1): steps that need principal keys certifying device keys (PRV-10, M7). Moved them to PRV-10's pending scenario: PRV-02's step on trust levels deriving alike across the principal's nodes, its example rows for device-seat posts trusted once PRV-10 ships (this node or another) and for another principal's writer, and PRV-11's step on seat certificates staying valid. PRV-02's row for another node's 'operator' event chaining to the principal key was deleted, since PRV-10's example where the laptop's device key stamps a version reads 'trusted'."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/provenance.feature",
+      "old": "    And in a foreign room, a post from a device seat of this principal and a post or pin a trust grant of this principal covers are untrusted, but for a pin PIN-10 keeps restoring there after a leave, kick or bar, while a pin from its device seat and a pin version it stamped are trusted there as elsewhere\n",
+      "new": ""
+     },
+     {
+      "file": "features/provenance.feature",
+      "old": "      | interactive | a device seat of a principal this principal trusts by a trust grant, certified by that principal's device key        | post             | trusted   | reports nothing                                                   |\n      | interactive | a token-key-only node's device seat of a principal this principal trusts by a trust grant                            | post             | untrusted | reports nothing                                                   |\n      | interactive | the facilitator's device seat, of a service account this principal trusts by a trust grant                           | summary          | untrusted | reports nothing                                                   |\n",
+      "new": ""
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And \"carol\"'s posts in a foreign room stay untrusted for \"alice\"'s agent whatever trust grant covers \"carol\"'s key\n",
+      "new": "    And \"carol\"'s posts in a foreign room stay untrusted for \"alice\"'s agent whatever trust grant covers \"carol\"'s key\n    And in a foreign room a post from \"alice\"'s own device seat, and a pin a trust grant of hers covers, are untrusted for her agents too, but for a pin PIN-10 keeps restoring there after a leave, kick or bar, while a pin from her device seat and a pin version she stamped are trusted there as elsewhere\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "in a foreign room a post from \"alice\"'s own device seat, and a pin a trust grant of hers covers"
+     }
+    ],
+    "note": "PRV-02 (M1): trust grants (OWN-29, M7), token-key-only nodes (PEER-06, M8), the facilitator (LANE-33, M7) and foreign rooms need later requirements. Moved PRV-02's foreign-room step to OWN-29's pending scenario. Deleted three example rows, each already covered: OWN-29 has a trust-granted device-seat post reach the agent in its template, and says the grant covers nothing from a token-key-only node and never the facilitator's room summaries; LANE-33 says a trust grant covers no room summary."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/provenance.feature",
+      "old": "this node's CLI, MCP server or launcher recorded live",
+      "new": "this node's CLI or MCP server recorded live"
+     },
+     {
+      "file": "features/provenance.feature",
+      "old": "      | a \"user\" line matching the commitment of text the launcher carried in           | harness_text     | untrusted |\n",
+      "new": ""
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    Then the launcher records the commitment of that text as the turn's trigger, as harness_meta\n",
+      "new": "    Then the launcher records the commitment of that text as the turn's trigger, as harness_meta\n    And that harness_meta event, which the launcher and not the hook handlers recorded live, is untrusted\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "which the launcher and not the hook handlers recorded live, is untrusted"
+     }
+    ],
+    "note": "PRV-02 and PRV-08 (M1): events the launcher records (SEC-29 and LANE-14, M7). Took 'or launcher' out of PRV-02's live-recording step and moved the launcher half to LANE-14's pending scenario. Deleted PRV-08's example row for a line matching text the launcher carried in, since LANE-14 already has ingest mark that line untrusted, never a user turn."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/provenance.feature",
+      "old": "      | automation  | a writer of this node, widening with a required presence proof that does not verify                                  | operator         | trusted   | reports it as a widening principal act whose presence proof fails |\n",
+      "new": ""
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    When a principal act arrives from <channel>\n    Then the act is \"<expected>\"\n",
+      "new": "    When a principal act arrives from <channel>\n    Then the act is \"<expected>\"\n    And a widening act whose required presence proof does not verify takes effect in no derived artifact, and \"cairn verify\" reports it\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "a widening act whose required presence proof does not verify takes effect in no derived artifact"
+     }
+    ],
+    "note": "PRV-02 (M1): presence proofs ship with the rest of OWN-11 and OWN-12 in M7, beside principal surfaces (OWN-02). Moved PRV-02's example row for a widening act whose required presence proof does not verify to OWN-02's pending scenario. PRV-02's row for a widening act outside OWN-22 stays, since S-3 keeps OWN-22's precondition in M1."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/provenance.feature",
+      "old": "shapes restore blocks, rule levels, permission grants, trust grants, delegation grants, trust levels and enrollments only if",
+      "new": "shapes restore blocks and trust levels only if"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And its reason comes from the fixed template set, references ids and is built as TrustedText\n",
+      "new": "    And its reason comes from the fixed template set, references ids and is built as TrustedText\n    And no untrusted event, nor an event \"cairn verify\" reports, shapes a rule level or a permission grant\n"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And the phone can only read, allow once and deny held permission requests\n",
+      "new": "    And the phone can only read, allow once and deny held permission requests\n    And no untrusted event, nor an event \"cairn verify\" reports, shapes an enrollment\n"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    Then the delegation is <expected>\n",
+      "new": "    Then the delegation is <expected>\n    And no untrusted event, nor an event \"cairn verify\" reports, shapes a delegation grant\n"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    Then the trust grant is a widening principal act, shown in the room with its grantor, \"carol\"'s key and its scope\n",
+      "new": "    Then the trust grant is a widening principal act, shown in the room with its grantor, \"carol\"'s key and its scope\n    And no untrusted event, nor an event \"cairn verify\" reports, shapes a trust grant\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "reports, shapes a rule level or a permission grant"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "reports, shapes an enrollment"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "reports, shapes a delegation grant"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "reports, shapes a trust grant"
+     }
+    ],
+    "note": "PRV-02 (M1): its 'shapes ... only if it is trusted' step named rule levels and permission grants (OWN-10 and OWN-04), trust grants (OWN-29), delegation grants (OWN-23) and enrollments (OWN-16 and PEER-06), all M7 or later. Narrowed the step to restore blocks and trust levels. Each later artifact moved to the pending scenario of the requirement that ships it; enrollments went to OWN-16, the first to ship."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/recall.feature",
+      "old": ", whose writers this node holds beside those of other runs in \"L1\" on two worktrees, of room \"L2\" where the run has no seat, and of a foreign room, and \"L1\" shows a cross-room post a seat in \"L2\" sent to it",
+      "new": ", whose writers this node holds beside those of other runs in \"L1\" on two worktrees and of room \"L2\" where the run has no seat"
+     },
+     {
+      "file": "features/recall.feature",
+      "old": "from every writer of \"L1\" and from the cross-room post \"L1\" shows, and with scope",
+      "new": "from every writer of \"L1\", and with scope"
+     },
+     {
+      "file": "features/recall.feature",
+      "old": "    And no scope returns any other hit from \"L2\", or any hit from the foreign room",
+      "new": "    And no scope returns any hit from \"L2\""
+     }
+    ],
+    "ledger_quotes": [],
+    "note": "RCL-05 (M1): cross-room posts (LANE-29, M7) and foreign rooms (RCL-10, M8). Deleted them from RCL-05's steps; nothing is lost. LANE-29's pending scenario already has the agent pull the cross-room post by recall 'since recall extends to the cross-room posts room \"B\" shows'. RCL-10's says a call without the room parameter, under any scope, returns no hit from the foreign room."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/recall.feature",
+      "old": "    And \"delegation_get\" with no scope returns the delegate report of a delegation the run made, recorded on the delegating side, and logs no extended recall scope\n",
+      "new": ""
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    Then the delegate report arrives inside the envelope\n",
+      "new": "    Then the delegate report arrives inside the envelope\n    And the call needs no scope and logs no extended recall scope, since the delegate report is recorded on the delegating side\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "the call needs no scope and logs no extended recall scope, since the delegate report is recorded on the delegating side"
+     }
+    ],
+    "note": "RCL-05 (M1): 'delegation_get' and delegate reports need OWN-23 to OWN-25 (M7). Moved RCL-05's step to OWN-25's pending scenario."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/security.feature",
+      "old": "    And each B1 to B3 component's own entry point, started by the person, a service manager or an ephemeral node's entrypoint, runs only while the act turning it on, which the CLI records, stands: for the room-view component and the launcher, the acceptance of the configuration that turns it on, and for the bridge component, a bridge enabled for a host, while any stands\n    And a configuration turning the room-view component or the launcher off applies with no acceptance, from then on that component's entry point does not run, and \"cairn configuration accept\", at a terminal with nothing more asked, records it as the cut act turning it off\n    And the room-view component listens only on loopback, and the launcher only on loopback or on a local endpoint only the same OS user can reach\n    And neither connects anywhere else\n",
+      "new": ""
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    And every B1, B2 and B3 component, the launcher included, stays off on the home until the person turns it on, the room-view component and the launcher only by accepting the configuration that turns it on, and the bridge component only by enabling a bridge for a host\n",
+      "new": ""
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    Then it listens only on a loopback network address, on a port chosen at launch\n",
+      "new": "    Then it listens only on a loopback network address, on a port chosen at launch\n    And it connects nowhere else\n"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    And it permits enveloped reading and cut or neutral principal acts, and widening ones only under OWN-11, until the instance stops\n",
+      "new": "    And it permits enveloped reading and cut or neutral principal acts, and widening ones only under OWN-11, until the instance stops\n    And it stays off until the person accepts the configuration that turns it on, and its entry point, whoever starts it, runs only while that acceptance stands\n    And a configuration turning it off applies with no acceptance, from then on its entry point does not run, and \"cairn configuration accept\", at a terminal with nothing more asked, records it as the cut act turning it off\n"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    Then every outbound bridge runs only in the bridge component, which is listed in the register, outbound only, and off for every destination not enabled\n",
+      "new": "    Then every outbound bridge runs only in the bridge component, which is listed in the register, outbound only, and off for every destination not enabled\n    And the bridge component stays off until a bridge is enabled for a host, and its entry point, whoever starts it, runs only while a bridge stands enabled\n"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    And on a home where no act turned it on, the launcher is off\n",
+      "new": "    And on a home where no act turned it on, the launcher is off\n    And a configuration turning it off applies with no acceptance, from then on its entry point does not run, and \"cairn configuration accept\", at a terminal with nothing more asked, records it as the cut act turning it off\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/security.feature",
+      "quote": "And it connects nowhere else"
+     },
+     {
+      "file": "features/security.feature",
+      "quote": "its entry point, whoever starts it, runs only while that acceptance stands"
+     },
+     {
+      "file": "features/security.feature",
+      "quote": "runs only while a bridge stands enabled"
+     },
+     {
+      "file": "features/security.feature",
+      "quote": "and \"cairn configuration accept\", at a terminal with nothing more asked, records it as the cut act turning it off"
+     }
+    ],
+    "note": "SEC-01 and SEC-19 (M1): steps on B1-B3 entry points, configuration acceptance, listeners and outbound reach need the room-view component (M7), the launcher (M7), the peer component (M8) and the bridge component (M9). Deleted from both. Moved to SEC-20 (room view: connects nowhere else, stays off until accepted, turning off as a cut act), SEC-28 (bridge: runs only while a bridge stands enabled) and SEC-29 (launcher: turning off). Already covered elsewhere: the room view's loopback listener (SEC-20), the launcher's listener, reach and staying off (SEC-29), the peer component and the ephemeral node's entrypoint (PEER-01), and the publish component, off by default (SEC-26)."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/security.feature",
+      "old": "    And no matched post is endorsed or reaches an agent under a trust grant, and no matched delegated task reaches its delegate, each such write refused, audited and counted\n",
+      "new": ""
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    And enrolled peers receive the quarantine only as a quarantine request\n",
+      "new": ""
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    Then Endorse was enabled only after the post was expanded\n",
+      "new": "    Then Endorse was enabled only after the post was expanded\n    And a quarantined post is never endorsed: the endorsement is refused, audited and counted\n"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And the delegated task reached the delegate through the harness's input inside the fixed template, marked as written by the delegating agent\n",
+      "new": "    And the delegated task reached the delegate through the harness's input inside the fixed template, marked as written by the delegating agent\n    And a quarantined delegated task never reaches the delegate in that template: the write is refused, audited and counted\n"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And the post starts or resumes no turn, reaches no agent of \"alice\" whose run has no seat in the room, and reaches \"bob\"'s agent only as untrusted recall\n",
+      "new": "    And the post starts or resumes no turn, reaches no agent of \"alice\" whose run has no seat in the room, and reaches \"bob\"'s agent only as untrusted recall\n    And a quarantined post of \"carol\"'s reaches no agent under the trust grant: the write is refused, audited and counted\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "a quarantined post is never endorsed: the endorsement is refused, audited and counted"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "a quarantined delegated task never reaches the delegate in that template"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "a quarantined post of \"carol\"'s reaches no agent under the trust grant"
+     }
+    ],
+    "note": "SEC-12 (M1): a quarantine refusing endorsements (OWN-08, M8), trust-grant writes (OWN-29, M7) and delegated tasks (OWN-24, M7), and reaching peers as a quarantine request (PEER-11, M8). The first three moved to those pending scenarios. The peer step was deleted, since PEER-11 already has a quarantine request travel to the peers."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/security.feature",
+      "old": "a hook input, transcript field or worktree checkpoint names the path",
+      "new": "a hook input or transcript field names the path"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "      | ~/src/app/README.md                                      | the file is read, and nothing in the repository is written                                             |\n",
+      "new": ""
+     },
+     {
+      "file": "features/record.feature",
+      "old": "    And Cairn obtained the worktree state and git data inside the core, with no socket opened and no program started, within the hook budget, leaving any rest to an ingest marker\n",
+      "new": "    And Cairn obtained the worktree state and git data inside the core, with no socket opened and no program started, within the hook budget, leaving any rest to an ingest marker\n    And it read the worktree's files, \"README.md\" among them, only inside the run's worktree and its repository's git directory, and wrote nothing in the repository\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/record.feature",
+      "quote": "only inside the run's worktree and its repository's git directory, and wrote nothing in the repository"
+     }
+    ],
+    "note": "SEC-18 (M1): a worktree checkpoint naming a path, and reading a worktree file such as README.md, need REC-20 (M7). Took 'worktree checkpoint' out of SEC-18's When step, deleted its README.md row and moved that read to REC-20's pending scenario. The .git/HEAD row stays, since M1 reads the repository's git directory (LANE-01, LANE-02)."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/administration.feature",
+      "old": "      | a managed policy file at the documented system path that the person can write                                                                       | the room-view component | refuses to start, and an audit entry and a counter record why                                 |\n      | a managed policy file in a directory the person can write                                                                                           | the launcher            | refuses to start, and an audit entry and a counter record why                                 |\n      | an unparsable managed policy file                                                                                                                   | the room-view component | refuses to start, and an audit entry and a counter record why                                 |\n      | a managed policy file with an unknown key                                                                                                           | the launcher            | refuses to start, and an audit entry and a counter record why                                 |\n      | a repository \".cairn.toml\" that turns on the room-view component and a widening act that recorded its digest                                        | the room-view component | stays off, and an audit entry and a counter record the ignored key                            |\n      | the person's config.toml that turns on the room-view component with no widening act recording its digest                                            | the room-view component | stays off                                                                                     |\n      | the person's config.toml that turns on the room-view component and a widening act that recorded its digest                                          | the room-view component | starts                                                                                        |\n      | a managed policy that turns off the room-view component and the person's config.toml that turns it on, with a widening act that recorded its digest | the room-view component | stays off                                                                                     |\n",
+      "new": ""
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    And an HTTP request whose Host or Origin is not its own, and any cross-origin HTTP request, is rejected and audited\n",
+      "new": "    And an HTTP request whose Host or Origin is not its own, and any cross-origin HTTP request, is rejected and audited\n    And it refuses to start while the core keeps recording, an audit entry and a counter recording why, when the managed policy file at the documented system path is one the person can write or is unparsable, or when managed policy disables B1\n    And it starts only from the person's config.toml after a widening act recorded that file's digest, stays off while managed policy turns it off, and stays off when a repository \".cairn.toml\" turns it on, an audit entry and a counter recording the ignored key\n"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "      | B1 disabled                                 | the person starts the room-view component                                        | Cairn refuses to start it and audits the refusal                                        |\n      | B2 disabled                                 | the person starts the peer component                                             | Cairn refuses to start it and audits the refusal                                        |\n      | B3 disabled                                 | the person enables a bridge for a host, which would turn the bridge component on | Cairn refuses to start the bridge component and audits the refusal                      |\n      | the launcher disabled                       | the person starts the launcher                                                   | Cairn refuses to start it and audits the refusal                                        |\n      | a storage quota                             | ingest exceeds the quota                                                         | the quota is enforced                                                                   |\n",
+      "new": ""
+     },
+     {
+      "file": "features/security.feature",
+      "old": "      | every boundary disabled                     | the person turns on the peer component                                           | the change is refused                                                                   |\n",
+      "new": ""
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    And every send and failure is counted and audited\n",
+      "new": "    And every send and failure is counted and audited\n    And with B3 disabled by managed policy, enabling a bridge for a host starts no bridge component, and Cairn audits the refusal\n"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    And any listener it opens meets the room-view listener rules or is a local endpoint only the same OS user can reach, refusing a connecting process of another UID\n",
+      "new": "    And any listener it opens meets the room-view listener rules or is a local endpoint only the same OS user can reach, refusing a connecting process of another UID\n    And it refuses to start while the core keeps recording, an audit entry and a counter recording why, when the managed policy file lies in a directory the person can write or carries an unknown key, or when managed policy disables the launcher\n"
+     },
+     {
+      "file": "features/peer.feature",
+      "old": "    And on a home where the CLI recorded no act turning it on, the peer component stays off, even when the person or a service manager starts its own entry point\n",
+      "new": "    And on a home where the CLI recorded no act turning it on, the peer component stays off, even when the person or a service manager starts its own entry point\n    And with B2 disabled by managed policy, Cairn refuses to start the peer component and audits the refusal, and with every boundary disabled, turning it on is refused\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/security.feature",
+      "quote": "is one the person can write or is unparsable, or when managed policy disables B1"
+     },
+     {
+      "file": "features/security.feature",
+      "quote": "after a widening act recorded that file's digest, stays off while managed policy turns it off"
+     },
+     {
+      "file": "features/security.feature",
+      "quote": "with B3 disabled by managed policy, enabling a bridge for a host starts no bridge component"
+     },
+     {
+      "file": "features/security.feature",
+      "quote": "lies in a directory the person can write or carries an unknown key, or when managed policy disables the launcher"
+     },
+     {
+      "file": "features/peer.feature",
+      "quote": "with B2 disabled by managed policy, Cairn refuses to start the peer component"
+     }
+    ],
+    "note": "ADM-04 and SEC-22 (M1): example rows that start the room-view component or the launcher (M7), the peer component (M8) or the bridge component (M9), and SEC-22's storage-quota row (ADM-15, M7, per S-10). Moved them: the room-view rows and B1 to SEC-20, the launcher rows to SEC-29, B2 and 'every boundary' to PEER-01, B3 to SEC-28. The quota row was deleted, since ADM-15's 'node' row already enforces a storage quota set by managed policy. Finding: ADM-04's M1 part has no row left for a writable, unparsable or invalid managed policy file, whose only M1 effect is an audit entry and a counter while the core keeps recording. An M1 row would need a new step, so it is raised, not written here."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/security.feature",
+      "old": "      | a cap on an action class's rule level       | the principal sets a higher rule level for that class                            | the rule level stays at the cap                                                         |\n      | away policies disabled                      | the principal sets an away policy                                                | the change is refused                                                                   |\n      | hook permission decisions disabled          | the hook \"PermissionRequest\" runs                                                | Cairn makes no permission decision                                                      |\n      | keeping held requests waiting disabled      | the hook \"PermissionRequest\" runs                                                | the held request is recorded and only mirrored, and the agent is not kept waiting       |\n",
+      "new": ""
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And the hook output carries no principal-typed text and no field of the record\n",
+      "new": "    And the hook output carries no principal-typed text and no field of the record\n    And with hook permission decisions disabled by managed policy, the hook makes no permission decision\n"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "      | Cairn fails while the permission request is held                         | the harness falls back to its own prompt and the action is not allowed |\n",
+      "new": "      | Cairn fails while the permission request is held                         | the harness falls back to its own prompt and the action is not allowed |\n      | managed policy disables keeping held requests waiting                    | it is recorded and only mirrored, and the agent is not kept waiting    |\n"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And the held-request id resolves through \"event_get\" to the held request's recorded event\n",
+      "new": "    And the held-request id resolves through \"event_get\" to the held request's recorded event\n    And with away policies disabled by managed policy, turning one on is refused\n"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And every rule level change \"alice\" made is on record as a principal act\n",
+      "new": "    And every rule level change \"alice\" made is on record as a principal act\n    And with managed policy capping \"force pushes\" at \"ask first\", \"alice\" setting it to \"act without asking\" leaves it at the cap\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "with hook permission decisions disabled by managed policy, the hook makes no permission decision"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "managed policy disables keeping held requests waiting"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "with away policies disabled by managed policy, turning one on is refused"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "\"alice\" setting it to \"act without asking\" leaves it at the cap"
+     }
+    ],
+    "note": "SEC-22 (M1): example rows capping an action class's rule level (OWN-10), disabling away policies (OWN-07), hook permission decisions (OWN-04) and keeping held requests waiting (OWN-06) need OWN P1 rows (M7). Moved each to that requirement's pending scenario; OWN-06's went in as an example row. SEC-22 keeps its M1 rows: fixed deployment mode, required authenticator (S-10), forbidden risk acceptance and retention policy."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/security.feature",
+      "old": "an event whose content a steer sent, a recorded recall result names, and a worktree checkpoint, a payload, the index and a Cairn backup contain",
+      "new": "an event whose content a recorded recall result names, and a payload, the index and a Cairn backup contain"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And no field of the untrusted event is embedded in it\n",
+      "new": "    And no field of the untrusted event is embedded in it\n    And purging content the steer's text carries erases or tombstones that copy, and the purge receipt names it\n"
+     },
+     {
+      "file": "features/record.feature",
+      "old": "    And a worktree checkpoint taken for a rewrite of the branch head keeps the replaced head\n",
+      "new": "    And a worktree checkpoint taken for a rewrite of the branch head keeps the replaced head\n    And purging content a worktree checkpoint contains erases or tombstones that copy, and the purge receipt names it\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "purging content the steer's text carries erases or tombstones that copy"
+     },
+     {
+      "file": "features/record.feature",
+      "quote": "purging content a worktree checkpoint contains erases or tombstones that copy"
+     }
+    ],
+    "note": "SEC-31 (M3): copies held in a steer's text (OWN-03, M7) and in a worktree checkpoint (REC-20, M7). Took both out of SEC-31's Given and moved the erasure of each to its pending scenario."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/administration.feature",
+      "old": "the hook, plugin and MCP registrations, room-view secrets, launcher endpoints, seat and device keys, enrollments and every other file",
+      "new": "the hook, plugin and MCP registrations, seat and device keys and every other file"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    And its launch secret has at least 128 bits and is never sent to the server in an HTTP request line, nor placed in argv, an environment another UID can read, a log or a referrer\n",
+      "new": "    And its launch secret has at least 128 bits and is never sent to the server in an HTTP request line, nor placed in argv, an environment another UID can read, a log or a referrer\n    And \"cairn uninstall\" lists its room-view secrets, each with an offer to remove it\n"
+     },
+     {
+      "file": "features/security.feature",
+      "old": "    And the launcher carries into the harness input only text the core built and recorded, read from the record\n",
+      "new": "    And the launcher carries into the harness input only text the core built and recorded, read from the record\n    And \"cairn uninstall\" lists its endpoints, each with an offer to remove it\n"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And where an authenticator is required each allow carries the phone's own presence proof bound to that answer\n",
+      "new": "    And where an authenticator is required each allow carries the phone's own presence proof bound to that answer\n    And \"cairn uninstall\" lists the phone's enrollment, with an offer to remove it\n"
+     },
+     {
+      "file": "features/peer.feature",
+      "old": "    And discovery alone enrolls no peer, while enrolling one verifies the key on both nodes by matching words or a scanned code\n",
+      "new": "    And discovery alone enrolls no peer, while enrolling one verifies the key on both nodes by matching words or a scanned code\n    And \"cairn uninstall\" lists each enrollment, with an offer to remove it\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/security.feature",
+      "quote": "\"cairn uninstall\" lists its room-view secrets, each with an offer to remove it"
+     },
+     {
+      "file": "features/security.feature",
+      "quote": "\"cairn uninstall\" lists its endpoints, each with an offer to remove it"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "\"cairn uninstall\" lists the phone's enrollment, with an offer to remove it"
+     },
+     {
+      "file": "features/peer.feature",
+      "quote": "\"cairn uninstall\" lists each enrollment, with an offer to remove it"
+     }
+    ],
+    "note": "ADM-02 (M2): uninstall listing room-view secrets (SEC-20, M7), launcher endpoints (SEC-29, M7) and enrollments (OWN-16, M7; PEER-06, M8). Took those three out of the list, which keeps 'every other file Cairn wrote outside the store', and moved each to its pending scenario."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/administration.feature",
+      "old": "no seat, device, token or at-rest key",
+      "new": "no seat, device or at-rest key"
+     },
+     {
+      "file": "features/peer.feature",
+      "old": "    And \"cairn status\" names where the access token is read from and no child process inherits the access token in its environment\n",
+      "new": "    And \"cairn status\" names where the access token is read from and no child process inherits the access token in its environment\n    And a backup \"cairn backup create\" makes on the node holds no token key\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/peer.feature",
+      "quote": "And a backup \"cairn backup create\" makes on the node holds no token key"
+     }
+    ],
+    "note": "ADM-06 (M3): a token key exists only on a token-key-only node (PEER-06, M8). Took 'token' out of ADM-06's list of keys a backup leaves out and moved it to PEER-06's pending scenario."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/administration.feature",
+      "old": "\"cairn install --scope project\", every Cairn component runs and the launcher runs a witness check",
+      "new": "\"cairn install --scope project\" and every Cairn component runs"
+     },
+     {
+      "file": "features/administration.feature",
+      "old": "    And the only changed git hook is the commit hook for room trailers that the confirmed install set up\n    And the witness check's fresh checkout lies outside the run's worktree and added no ref to the run's repository\n",
+      "new": "    And no git hook is new or changed but the commit hook for room trailers that a confirmed install sets up\n"
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    Then the commit message carries exactly one \"Cairn-Room:\" trailer with a \"cairn:\" reference naming only the room id\n",
+      "new": "    Then the commit message carries exactly one \"Cairn-Room:\" trailer with a \"cairn:\" reference naming only the room id\n    And the commit hook for room trailers, which the confirmed install set up, is the only git hook Cairn changed\n"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And a check whose code writes to the repository's git directory, a git hook included, or to another of its worktrees leaves both byte-identical\n",
+      "new": "    And a check whose code writes to the repository's git directory, a git hook included, or to another of its worktrees leaves both byte-identical\n    And its fresh checkout lies outside the run's worktree and adds no ref to the run's repository\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/administration.feature",
+      "quote": "no git hook is new or changed but the commit hook for room trailers that a confirmed install sets up"
+     },
+     {
+      "file": "features/lane.feature",
+      "quote": "the commit hook for room trailers, which the confirmed install set up, is the only git hook Cairn changed"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "its fresh checkout lies outside the run's worktree and adds no ref to the run's repository"
+     }
+    ],
+    "note": "ADM-13 (M1): the commit hook for room trailers (LANE-28, M7) and the launcher's witness check (SEC-29 and OWN-18, M7). Took the witness check out of ADM-13's When and moved its fresh-checkout step to OWN-18. Reworded the git-hook step so it holds before and after LANE-28 ships, and moved the hook's install to LANE-28."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/administration.feature",
+      "old": "    And two nodes that both hold the events that the seat \"s-alice\" of the principal \"alice\" wrote\n    When the person runs \"cairn purge <scope>\" on each node\n    Then neither node holds an event of the selected scope\n    And each node's audit log records the purge with its scope and ranges\n",
+      "new": "    And a node that holds the events that the seat \"s-alice\" of the principal \"alice\" wrote\n    When the person runs \"cairn purge <scope>\" on the node\n    Then the node holds no event of the selected scope\n    And its audit log records the purge with its scope and ranges\n"
+     },
+     {
+      "file": "features/peer.feature",
+      "old": "    And a quarantine request travels to the peers the same way, and a peer's principal applies it by a principal act of the class of the quarantine it applies\n",
+      "new": "    And a quarantine request travels to the peers the same way, and a peer's principal applies it by a principal act of the class of the quarantine it applies\n    And a purge by seat or by principal travels to the peers the same way, and each node that applies it records the purge in its audit log with its scope and ranges\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/peer.feature",
+      "quote": "a purge by seat or by principal travels to the peers the same way, and each node that applies it records the purge"
+     }
+    ],
+    "note": "ADM-14 (M3): two nodes holding one seat's events need peers (M8). Narrowed ADM-14 to one node and moved the multi-node purge, with each node's audit trail, to PEER-11's pending scenario. The title still says 'on every node' (title left unchanged). Note: in M3 the only principal a node holds data of is its own, so '--principal alice' purges this principal's data."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/observability.feature",
+      "old": "      | a peer offers a segment over its quota                                            | rejected  | quota_rejected       |\n",
+      "new": ""
+     },
+     {
+      "file": "features/administration.feature",
+      "old": "    And every event accepted before is still stored and recallable\n",
+      "new": "    And every event accepted before is still stored and recallable\n    And each refusal over a quota increases the counter \"quota_rejected\" by 1\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/administration.feature",
+      "quote": "each refusal over a quota increases the counter \"quota_rejected\" by 1"
+     }
+    ],
+    "note": "OPS-01 (M1): a peer offering a segment over its quota needs peers (M8) and quotas (ADM-15, M7). Deleted the row. ADM-15's 'peer' row already refuses and audits the segment, so only the 'quota_rejected' counter moved there."
+   },
+   {
+    "id": "S-11",
+    "edits": [],
+    "ledger_quotes": [],
+    "note": "No edits: findings from the S-11 pass over this area, left for a ruling. Every M1-M5 scenario in these seven files is @pending, so none had to be reported on that ground. (1) PRV-09 (M1, named in M1's 2.0 row) is left unchanged. Its whole scenario receives segments from a peer (M8): the Given is a peer declaring writers and every example row is a segment that peer sends. Moving those steps to SEC-25 would leave PRV-09 with no step. Its M1 part, the writer taken from the key that signed or wrote an event on this node and never from a field, needs a new step on an M1 source, such as cairn ingest or REC-24's node identity change. That is a finding, not an S-11 move. (2) PRV-05 keeps its 'summary' example row. The step checks that no settings layer can trust a class, which is M1 behaviour, though a summary event first arises with LANE-33 (M7). (3) Requirements that are in M1-M5 only in part keep both parts in their own scenario: REC-19's (S-7) seals, paired phone, kick and leave, and OWN-11's and OWN-12's M7 parts. Such a scenario cannot leave @pending until its rest ships in M7; a stakeholder ruling is needed on how the in-part ids close. (4) Posts and run-seat pins (room_post and room_pin are P1 rows that no M7-M9 row names) were treated as M1-M5, so the post and run-seat-pin steps and rows of PRV-01, PRV-02 and PRV-05 stay. (5) Outside this area: LANE-20, which S-1 keeps in M5, has presence-proof and other-principal steps in lane.feature."
+   }
+  ]
+ },
+ {
+  "label": "scenarios-pins",
+  "items": [
+   {
+    "id": "S-11",
+    "note": "PIN-01 (P0, M2): the example row in which a person stamps a version of an agent's constraint pin needs stamps (LANE-32, M7). LANE-32's pending scenario already covers it (a stamp makes version 1 of an agent's constraint pin restore word for word), so the row is deleted. Every M1-M5 scenario in pins.feature, restore.feature, landmarks.feature and kernel.feature is @pending; INJ-10, LMK-06, CMP-08, CMP-09 and PIN-11 ship in M6-M9 and were left alone. All twelve items applied together to a scratch copy: go test ./... (scenario gate, godog runner, drift) and mdsmith check . pass.",
+    "edits": [
+     {
+      "file": "features/pins.feature",
+      "old": "      | automation  | a person stamps a version of a constraint pin an agent wrote                               | 1          |\n",
+      "new": ""
+     }
+    ],
+    "ledger_quotes": []
+   },
+   {
+    "id": "S-11",
+    "note": "PIN-01 (P0, M2): the example row with a device seat that has the viewer role needs roles beyond S-8's part (LANE-16, M7); in M1-M5 the owner's device seat has every capability. LANE-26's pending scenario already covers it (a pin act from a device seat with the viewer role, a principal act included, is refused and audited), so the row is deleted.",
+    "edits": [
+     {
+      "file": "features/pins.feature",
+      "old": "      | automation  | the person runs \"cairn pin add --room L2\" from its device seat, a viewer in \"L2\"           | 0          |\n",
+      "new": ""
+     }
+    ],
+    "ledger_quotes": []
+   },
+   {
+    "id": "S-11",
+    "note": "PIN-05 (P1, M5): the step on a token-key-only node needs access tokens and token-key-only nodes (PRV-10, PEER-06; M7-M8). LANE-26's pending scenario already covers it (a confirmation of a pin candidate from a node that has only a token key is refused and audited), so the step is deleted.",
+    "edits": [
+     {
+      "file": "features/pins.feature",
+      "old": "    And a token-key-only node of the principal cannot confirm a pin candidate\n",
+      "new": ""
+     }
+    ],
+    "ledger_quotes": []
+   },
+   {
+    "id": "S-11",
+    "note": "PIN-06 (P0, M2): recording a verdict needs OWN-27 (an OWN P1 row, M7). The verdict is dropped from PIN-06's Given and Then, and OWN-27's pending scenario gains the step that a verdict pin does not reach the restore block.",
+    "edits": [
+     {
+      "file": "features/pins.feature",
+      "old": ", stored as its pin of type \"intent\", and recorded a verdict, stored as a pin of type \"verdict\"",
+      "new": ", stored as its pin of type \"intent\""
+     },
+     {
+      "file": "features/pins.feature",
+      "old": "includes no \"decision\", \"fact\", \"episode\" or \"verdict\" pin",
+      "new": "includes no \"decision\", \"fact\" or \"episode\" pin"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And Cairn pre-filled no verdict, and the agent's statement stays a claim\n",
+      "new": "    And Cairn pre-filled no verdict, and the agent's statement stays a claim\n    And the agent's next restore block includes no \"verdict\" pin, since only \"constraint\", \"preference\" and \"intent\" pins restore\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "the agent's next restore block includes no \"verdict\" pin, since only \"constraint\", \"preference\" and \"intent\" pins restore"
+     }
+    ]
+   },
+   {
+    "id": "S-11",
+    "note": "PIN-10 (P0, M2): the principal's stamps (on a run seat's constraint pin, on another principal's constraint pin and on a fact pin) need LANE-32 and PRV-10 (M7). LANE-32's pending scenario already covers a stamped run-seat pin restoring and a stamped fact version restoring to no agent; it gains the stamped version of another principal's device-seat pin and that each stamped version restores under its original author. PIN-10 drops the stamp Given and its two Then clauses, and its Then list gets its 'and'.",
+    "edits": [
+     {
+      "file": "features/pins.feature",
+      "old": "    And the principal's stamp on one version of a constraint pin an agent's run seat wrote in \"L1\", on one version of a second constraint pin another principal wrote in \"L2\", and on one version of a \"fact\" pin in \"L1\"\n",
+      "new": ""
+     },
+     {
+      "file": "features/pins.feature",
+      "old": "personal room, the confirmed pin",
+      "new": "personal room and the confirmed pin"
+     },
+     {
+      "file": "features/pins.feature",
+      "old": ", and both stamped constraint versions, each under its original author",
+      "new": ""
+     },
+     {
+      "file": "features/pins.feature",
+      "old": ", not the stamped \"fact\" version",
+      "new": ""
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    And after compaction \"alice\"'s agent's restore block carries version 1 word for word, and \"carol\"'s agent's states it only as PIN-10 does\n",
+      "new": "    And after compaction \"alice\"'s agent's restore block carries version 1 word for word, and \"carol\"'s agent's states it only as PIN-10 does\n    And a version \"alice\" stamps of a constraint pin \"carol\" wrote from her device seat restores to \"alice\"'s agents the same way, each stamped version under its original author\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "a version \"alice\" stamps of a constraint pin \"carol\" wrote from her device seat restores to \"alice\"'s agents the same way, each stamped version under its original author"
+     }
+    ]
+   },
+   {
+    "id": "S-11",
+    "note": "PIN-10 (P0, M2): the pin of a third principal that a trust grant covers in \"L2\" needs other principals and trust grants (OWN-29, PRV-10; M7). OWN-29's pending scenario already covers it (a pin from a device seat of a principal the trust grant names restores word for word to the grantor's agent), so its Given and Then clause are deleted.",
+    "edits": [
+     {
+      "file": "features/pins.feature",
+      "old": "    And a pin in \"L2\" written from the device seat of a third principal whose key the run's principal trusts in \"L2\" by a trust grant\n",
+      "new": ""
+     },
+     {
+      "file": "features/pins.feature",
+      "old": ", the pin the trust grant covers",
+      "new": ""
+     }
+    ],
+    "ledger_quotes": []
+   },
+   {
+    "id": "S-11",
+    "note": "PIN-10 (P0, M2): another principal's unstamped device-seat pin in \"L2\", stated only by count, room id and key fingerprint, needs other principals in a room (LANE-23, PRV-10; M7; until PRV-10 ships a room admits no seat of another principal). LANE-27's pending scenario, which already states \"bob\"'s pin only as PIN-10 does, gains the explicit count, room id and fingerprint statement, its audit, and that no pin of a type that does not restore is counted. PIN-10 drops the pin from its Given and the count and no-count steps. The deleted count step also named the token-key-only nodes' pins; PRV-10 receives that part (next item). In M1-M5 no pin of a restoring type in such a room fails to qualify, so PIN-10's count clause has no live case there.",
+    "edits": [
+     {
+      "file": "features/pins.feature",
+      "old": "in its personal room, a pin from the person's configuration, and a constraint pin in \"L2\" written from another principal's device seat",
+      "new": "in its personal room, and a pin from the person's configuration"
+     },
+     {
+      "file": "features/pins.feature",
+      "old": "    And the other principal's unstamped constraint pin and each token-key-only node's unstamped pin are stated only by count, room id and key fingerprint, with no text, and an audit entry records each\n    And no pin of a type that does not restore is counted\n",
+      "new": ""
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    And after compaction the restore block carries \"alice\"'s and \"carol\"'s pins and the stamped version word for word, and states \"bob\"'s pin only as PIN-10 does\n",
+      "new": "    And after compaction the restore block carries \"alice\"'s and \"carol\"'s pins and the stamped version word for word, and states \"bob\"'s pin only as PIN-10 does\n    And that statement gives \"bob\"'s pin only by count, room id and key fingerprint, with no text, audited, and counts no pin of a type that does not restore\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "that statement gives \"bob\"'s pin only by count, room id and key fingerprint, with no text, audited, and counts no pin of a type that does not restore"
+     }
+    ]
+   },
+   {
+    "id": "S-11",
+    "note": "PIN-10 (P0, M2): the unstamped constraint pins from token-key-only nodes, the principal's own and a trusted third principal's, need token keys and access tokens (PRV-10, PEER-06; M7-M8). PRV-10's example rows already cover that they stay untrusted until stamped; its pending scenario gains that such a pin is stated in the agents' restore blocks only by count, room id and key fingerprint, audited. PIN-10 drops both Givens and the token-key-only clause of its no-pin step (the count step went with the previous item).",
+    "edits": [
+     {
+      "file": "features/pins.feature",
+      "old": "    And a constraint pin in \"L1\" written from the device seat of a token-key-only node of the run's principal, unstamped\n    And a constraint pin in \"L2\" written from the device seat of a token-key-only node of the third principal, unstamped\n",
+      "new": ""
+     },
+     {
+      "file": "features/pins.feature",
+      "old": " and neither token-key-only node's unstamped pin",
+      "new": ""
+     },
+     {
+      "file": "features/provenance.feature",
+      "old": "    And the token-key-only node, whose device seat its token key certified, signs no principal act and no expire act\n",
+      "new": "    And the token-key-only node, whose device seat its token key certified, signs no principal act and no expire act\n    And an unstamped constraint pin from the device seat of a token-key-only node, this principal's or one of a principal its trust grant covers, in a room whose pins restore to this principal's agents, is stated in their restore blocks only by count, room id and key fingerprint, with no text, audited\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/provenance.feature",
+      "quote": "a token-key-only node, this principal's or one of a principal its trust grant covers, in a room whose pins restore to this principal's agents, is stated in their restore blocks only by count"
+     }
+    ]
+   },
+   {
+    "id": "S-11",
+    "note": "PIN-10 (P0, M2): the run leaving \"L1\" needs the leave (LANE-23, M7; S-4 brings only the own-principal join to M2). LANE-30's pending scenario, which already keeps a kicked seat's room and its qualifying pins in the restore block, gains the same for a room the run's seat left. PIN-10 keeps the join of \"L1\", so its \"L1\" pin and room id still restore and show.",
+    "edits": [
+     {
+      "file": "features/pins.feature",
+      "old": "then creating room \"L2\", then leaving \"L1\"",
+      "new": "then creating room \"L2\""
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    Then its restore block still names the kicked seat's room with that room's qualifying pins, naming each room its run has had a seat in during the run (PIN-10), with the run's seat id only where that seat is still a member\n",
+      "new": "    Then its restore block still names the kicked seat's room with that room's qualifying pins, naming each room its run has had a seat in during the run (PIN-10), with the run's seat id only where that seat is still a member\n    And a room one of its run's seats left keeps its qualifying pins in the restore block the same way, named with no seat id\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "a room one of its run's seats left keeps its qualifying pins in the restore block the same way, named with no seat id"
+     }
+    ]
+   },
+   {
+    "id": "S-11",
+    "note": "PIN-10 (P0, M2): room \"L5\", made foreign by a kick of every seat of the principal, with a stamped version, a pin a trust grant covers everywhere, a version added after the kick and a revocation of a device key, needs kicks (LANE-25), stamps (LANE-32), trust grants (OWN-29) and revocation (PRV-10), all M7. LANE-30's pending scenario, whose agent's run seat is kicked before it compacts, gains these two steps. PIN-10 drops \"L5\" from its Given, Then, room-id and later-run steps.",
+    "edits": [
+     {
+      "file": "features/pins.feature",
+      "old": "    And a room \"L5\" the run joined, with a constraint pin in it that the principal wrote from its device seat, the principal's stamp on one version of a constraint pin another principal wrote, and a constraint pin written from the device seat of the third principal, whose key the run's principal also trusts everywhere by a second trust grant, before every seat of the principal in \"L5\" was kicked, so that \"L5\" is now a foreign room, and a version the third principal added to that pin after the kick\n",
+      "new": ""
+     },
+     {
+      "file": "features/pins.feature",
+      "old": "    And of the foreign room \"L5\" the restore block includes the principal's device-seat pin, the stamped version and the pin the second trust grant covers, by its version from before the kick, and not the version added after it\n    And once the node holds a revocation of the third principal's device key that certified the seat of that pin in \"L5\", the restore block no longer includes it, as in any other room\n",
+      "new": ""
+     },
+     {
+      "file": "features/pins.feature",
+      "old": "\"L1\", \"L2\", \"L5\" and the personal room by id",
+      "new": "\"L1\", \"L2\" and the personal room by id"
+     },
+     {
+      "file": "features/pins.feature",
+      "old": "with no seat in \"L1\", \"L2\" or \"L5\"",
+      "new": "with no seat in \"L1\" or \"L2\""
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    And no room or seat id in it comes from the harness\n",
+      "new": "    And where that kick ended the last member seat of \"bob\" in the room, making it a foreign room, its pins there are what qualified for his agents before the kick: his device-seat pins, the versions he stamped and the pins a trust grant of his covers everywhere, by their versions from before the kick, and no version added after it\n    And once the node holds a revocation of the device key that certified the seat of such a trust-granted pin, that pin no longer restores, as in any other room\n    And no room or seat id in it comes from the harness\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "where that kick ended the last member seat of \"bob\" in the room, making it a foreign room, its pins there are what qualified for his agents before the kick"
+     },
+     {
+      "file": "features/lane.feature",
+      "quote": "once the node holds a revocation of the device key that certified the seat of such a trust-granted pin, that pin no longer restores"
+     }
+    ]
+   },
+   {
+    "id": "S-11",
+    "note": "CMP-03 (P1, M4): the room summary needs the facilitator's room summaries (LANE-33, M7); before then no event has provenance \"summary\". LANE-33's pending scenario, which already has the MCP recall tools leave out \"summary\" events, gains the kernel built-ins. CMP-03 drops the room summary Given and Then and the title's \"and leave out room summaries\" (a title is not a tag line; the gate reads only tags).",
+    "edits": [
+     {
+      "file": "features/kernel.feature",
+      "old": "Scenario: read-only recall built-ins return structured values and leave out room summaries",
+      "new": "Scenario: read-only recall built-ins return structured values"
+     },
+     {
+      "file": "features/kernel.feature",
+      "old": "    And a room summary containing the word \"migration\" in a room the run has a seat in\n",
+      "new": ""
+     },
+     {
+      "file": "features/kernel.feature",
+      "old": "    And \"cairn.event_search\", \"cairn.event_expand\" and \"cairn.event_get\" return the room summary's \"summary\" event only as its address, never its text\n",
+      "new": ""
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    And \"event_search\", \"event_expand\", \"event_get\" and \"room_get\" with an id each leave out the room's \"summary\" events, returning only their addresses\n",
+      "new": "    And \"event_search\", \"event_expand\", \"event_get\" and \"room_get\" with an id each leave out the room's \"summary\" events, returning only their addresses\n    And so do the kernel built-ins \"cairn.event_search\", \"cairn.event_expand\" and \"cairn.event_get\" in a \"kernel_exec\" call\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "so do the kernel built-ins \"cairn.event_search\", \"cairn.event_expand\" and \"cairn.event_get\" in a \"kernel_exec\" call"
+     }
+    ]
+   },
+   {
+    "id": "S-11",
+    "note": "CMP-07 (P1, M4): foreign rooms come only with leaves, kicks and bars (LANE-23, LANE-25; M7) or imported bundles (REC-23, M9), and their recall is RCL-10 (M8). RCL-10's pending scenario gains that the kernel built-in reaches no foreign room without the room parameter either. CMP-07 keeps quarantine and the rooms the run has no seat in.",
+    "edits": [
+     {
+      "file": "features/kernel.feature",
+      "old": "And A1·7, foreign rooms and rooms the run has no seat in are absent",
+      "new": "And A1·7 and rooms the run has no seat in are absent"
+     },
+     {
+      "file": "features/recall.feature",
+      "old": "    And a following call without the room parameter, under any scope, returns no hit from \"vendor-room\"\n",
+      "new": "    And a following call without the room parameter, under any scope, returns no hit from \"vendor-room\"\n    And neither does the kernel built-in \"cairn.event_search\" in a \"kernel_exec\" call without the room parameter, under any scope\n"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/recall.feature",
+      "quote": "neither does the kernel built-in \"cairn.event_search\" in a \"kernel_exec\" call without the room parameter, under any scope"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "label": "scenarios-rooms",
+  "items": [
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/lane.feature",
+      "old": "    And while a role assignment gives the run's seat in \"R\" the viewer role, or a mute covers it, in the room state this node holds when it records each event, its events on \"feature/x\" go to its personal-room seat, and none is refused\n",
+      "new": ""
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    And a mute of one seat or of the whole room leaves each device seat of \"alice\", but a paired phone's, every room capability it had, unmute included",
+      "new": "    And a mute of one seat or of the whole room leaves each device seat of \"alice\", but a paired phone's, every room capability it had, unmute included\n    And while a role assignment gives a run's seat the viewer role, or a mute covers it, in the room state the recording node holds when it records each event, that run's events on a branch the room names go to its personal-room seat, and none is refused"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "that run's events on a branch the room names go to its personal-room seat, and none is refused"
+     }
+    ],
+    "note": "LANE-01 (M1): the step on a viewer role assignment or a mute sending a run's events to its personal-room seat needs role assignments and mutes, which ship with LANE-16's roles and capabilities (M7). Moved to LANE-16's @pending outline beside its mute step; LANE-01 keeps the member-with-work routing. Area check, for the whole S-11 pass: the M1-M5 scenarios here are LANE-01, LANE-02, LANE-20, OWN-01, OWN-11 and OWN-12 (M1 part), OWN-22's precondition, ENG P0 (ENG-12 is M7), ENG-13, ENG-25, NFR-02..08 and NFR-10..14, and ASM-01..16 and ASM-21 (spikes S1, S3, S4, S6). lane-view.feature and peer.feature hold none, since every VIEW row is M7 or M9 after S-1 and every PEER row is P2. Not @pending, so they were left alone: ENG-01, ENG-18, ENG-24, ENG-26, ENG-27 and ENG-28. None of them exercises later behaviour, since each inspects the repository. Left in place because the later part is the same requirement's own: LANE-16, LANE-23 and LANE-31, which come to M1/M2 only in part (S-4, S-8, S-9, S-18) and whose other clauses ship in M7. OWN-11 and OWN-12 also stay, since presence proofs and other surfaces finish them in M7, and so does ENG-16, whose later components and room view client checks are its M7 change. Each of these scenarios stays @pending until its requirement completes. ENG-29's prototype clause holds in M1 as written, and OWN-22's scenario already uses a run with no recorded sandbox state (S-3). Checked in a scratch copy with every edit applied, in forward and in reverse order: go test ./... (scenario gate, BDD) and the drift suite pass, and mdsmith check . is clean. No Markdown file changed, so no token budget moved."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/lane.feature",
+      "old": ", even when the standing one reaches the node later or only through a later join to its room, the branch then moving for later events and commits only",
+      "new": ""
+     },
+     {
+      "file": "features/peer.feature",
+      "old": "    Then the room state and index are byte-identical on both peers",
+      "new": "    Then the room state and index are byte-identical on both peers\n    And of two concurrent branch links naming one branch from two rooms, the one with the lower commitment stands on both peers, even when it reaches a peer later or only through a later join to its room, the branch then moving for later events and commits only"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/peer.feature",
+      "quote": "stands on both peers, even when it reaches a peer later or only through a later join to its room"
+     }
+    ],
+    "note": "LANE-01 (M1): the tie rule for two concurrent branch links (LANE-31 in part, S-9) stays; the clause on the standing link reaching the node later or only through a later join to its room needs sync, which ships with the peer network (M8, whose exit criteria name concurrent branch links). Moved to PEER-03's @pending scenario, which derives state whatever the arrival order."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/lane.feature",
+      "old": "    And a principal act of \"alice\" rejecting a foreign room, in which she has no seat, goes to the signing device's seat in her personal room, naming that room",
+      "new": "    And a principal act of \"alice\" that acts on no room, such as her risk acceptance, goes to the recording node's device seat in her personal room"
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    And such an event about a room in which \"alice\" has no member seat goes where her principal act on that room would: to the recording node's device seat in her personal room, naming that room\n",
+      "new": ""
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    And the pull-request author counts as no principal, since its key is no principal key",
+      "new": "    And the pull-request author counts as no principal, since its key is no principal key\n    And a principal act of the person rejecting the foreign room, in which the person has no member seat, goes to the signing device's seat in the person's personal room, naming that room\n    And so does a tombstone, an erasure request a retention policy sends, or a bridge's or the launcher's event about the foreign room that a node of the person records"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "a principal act of \"alice\" that acts on no room, such as her risk acceptance, goes to the recording node's device seat"
+     },
+     {
+      "file": "features/lane.feature",
+      "quote": "a principal act of the person rejecting the foreign room, in which the person has no member seat"
+     },
+     {
+      "file": "features/lane.feature",
+      "quote": "an erasure request a retention policy sends, or a bridge's or the launcher's event about the foreign room"
+     }
+    ],
+    "note": "LANE-01 (M1): rejecting a foreign room ships with LANE-15 (M9), and a room in which the principal has no member seat arises only from a foreign room or a leave, kick or bar (M7 and later). Both steps moved to LANE-15's @pending scenario. So that LANE-01 keeps an M1 step for a principal act routed to the personal room, its rejection step now names a principal act that acts on no room (the risk acceptance, OWN-22's M1 precondition), routed as LANE-01 states."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/lane.feature",
+      "old": "    And a principal act of \"alice\" on \"R\" signed by her paired phone goes to the phone's device seat in her personal room, naming \"R\", and \"R\" shows it by address as it shows a cross-room post\n",
+      "new": ""
+     },
+     {
+      "file": "features/lane.feature",
+      "old": ", and one her paired phone records to the phone's device seat in the personal room of the node it pairs with",
+      "new": ""
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And the phone joins no room: its acts are recorded on its device seat in the personal room, naming the room, which shows them by address",
+      "new": "    And the phone joins no room: its acts are recorded on its device seat in the personal room, naming the room, which shows them by address\n    And any other event with no run that the phone records goes to its device seat in the personal room of the node it pairs with"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "any other event with no run that the phone records goes to its device seat in the personal room of the node it pairs with"
+     }
+    ],
+    "note": "LANE-01 (M1): paired phones ship with PRV-10 and OWN-16/OWN-17 (M7, M8). The phone's principal act routing step is deleted, since OWN-17's @pending scenario already records the phone's acts on its device seat in the personal room, naming the room, shown by address; the phone part of the 'any other event with no run' step moved to OWN-17."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/lane.feature",
+      "old": "    And a tombstone, an erasure request a retention policy sends, and a bridge's or the launcher's event about a branch \"R\" names, each recorded by a node of \"alice\", go to that node's device seat in \"R\", which joins as for a principal act",
+      "new": "    And a tombstone of an event in \"R\", recorded by a node of \"alice\", goes to that node's device seat in \"R\", which joins as for a principal act"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "a tombstone of an event in \"R\", recorded by a node of \"alice\", goes to that node's device seat in \"R\""
+     }
+    ],
+    "note": "LANE-01 (M1): an erasure request a retention policy sends travels to peers (PEER-11, M8), bridges ship in M7 to M9 and the launcher in M7. Deleted from LANE-01's step, which keeps the tombstone (purge, M3); LANE-23's @pending scenario already covers a node joining its device seat to the room before recording such an erasure request, bridge's or launcher's event."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/lane.feature",
+      "old": "    And a rotation of a seat key goes to that seat's own writer\n",
+      "new": ""
+     }
+    ],
+    "ledger_quotes": [],
+    "note": "LANE-01 (M1): a seat key's rotation ships with SEC-27 (M7). Deleted; LANE-24's @pending scenario already rotates a seat key by an event in its own writer."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/lane.feature",
+      "old": "    And a principal act of \"alice\" on \"R\", signed by a node of hers with no seat in \"R\"",
+      "new": "    And a principal act of \"alice\" on \"R\", from a node of hers with no seat in \"R\""
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "a principal act of \"alice\" on \"R\", from a node of hers with no seat in \"R\", is recorded on that node's device seat"
+     }
+    ],
+    "note": "LANE-01 (M1): a principal act signed by a device key ships with PRV-10 (M7); before it, LANE-01 routes the act to the recording node's device seat and the M1-M5 record is unsigned (S-2). The step now says from a node of hers; PRV-10's @pending scenario covers acts other nodes' device keys sign."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/lane.feature",
+      "old": "      | clone                                                           | identity                           |\n      | contains the bound parentless commit of the default branch      | the bound identity                 |\n      | is shallow, lacks the bound commit and carries an access token  | the identity from the access token |\n      | has no commit                                                   | a provisional, node-local identity |",
+      "new": "      | clone                                                      | identity                           |\n      | contains the bound parentless commit of the default branch | the bound identity                 |\n      | has no commit                                              | a provisional, node-local identity |"
+     },
+     {
+      "file": "features/peer.feature",
+      "old": "    Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address it may deliver to",
+      "new": "    Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address it may deliver to\n    And a shallow clone of repository \"r\" on the node, lacking the bound commit, takes the identity from the access token, and the node mints none"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/peer.feature",
+      "quote": "a shallow clone of repository \"r\" on the node, lacking the bound commit, takes the identity from the access token"
+     }
+    ],
+    "note": "LANE-02 (M1): the Examples row for a shallow clone carrying an access token needs access tokens, which ship with PEER-06 (M8). Row moved to PEER-06's @pending scenario, whose access token carries repository \"r\"'s identity; the table is re-padded."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/lane.feature",
+      "old": "    When \"alice\" revises C1 at a principal surface with the presence proof a widening act needs",
+      "new": "    When \"alice\" revises C1 at a principal surface"
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    And a revision whose presence proof fails changes nothing\n",
+      "new": ""
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    Then the verb is a recall tool: it prints the record content inside the envelope, records a recall event and taints the calling run",
+      "new": "    Then the verb is a recall tool: it prints the record content inside the envelope, records a recall event and taints the calling run\n    When the person revises the intent of a room she owns at a terminal where an authenticator is required\n    Then the revision applies only with the presence proof a widening act needs, and one whose presence proof fails changes nothing"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "the revision applies only with the presence proof a widening act needs, and one whose presence proof fails changes nothing"
+     }
+    ],
+    "note": "LANE-20 (M5): presence proofs ship with the rest of OWN-11 and OWN-12 (M7). The revision at a principal surface stays; its presence proof and the failed-proof step moved to OWN-12's @pending scenario, beside the verb that raises the proof."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/lane.feature",
+      "old": "applies to the room, to the restore blocks of \"alice\"'s agents in the room, and other principals' agents get it only as PIN-10 states, those of a principal whose trust grant covers \"alice\" included",
+      "new": "applies to the room and to the restore blocks of \"alice\"'s agents in the room"
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    And after compaction the restore block carries \"alice\"'s and \"carol\"'s pins and the stamped version word for word, and states \"bob\"'s pin only as PIN-10 does",
+      "new": "    And after compaction the restore block carries \"alice\"'s and \"carol\"'s pins and the stamped version word for word, and states \"bob\"'s pin only as PIN-10 does\n    And where \"carol\" owns the room, each new version of its intent restores to the agent word for word as her pins do, and where \"bob\" owns it, the intent is stated only as PIN-10 does"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/lane.feature",
+      "quote": "where \"carol\" owns the room, each new version of its intent restores to the agent word for word as her pins do"
+     }
+    ],
+    "note": "LANE-20 (M5): other principals' agents and trust grants ship with PRV-10 and OWN-29 (M7). The revision still applies to the room and to \"alice\"'s agents' restore blocks; the clause on other principals' agents, a trust grant's included, moved to LANE-27's @pending scenario, where an agent of \"alice\" holds a trust grant for \"carol\" and none for \"bob\"."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    When \"bob\" writes a principal act directed to that run\n    Then the run's one principal is \"alice\"\n    And the act from \"bob\" does not instruct the run\n    And \"bob\"'s text reaches the run only as untrusted recall, a post \"alice\" endorses, a pin version \"alice\" stamped, a delegated task under \"alice\"'s acceptance grant (OWN-26), or a post or pin \"bob\" wrote from a device seat his device key certified that a trust grant of \"alice\" covers (OWN-29)",
+      "new": "    Then the run's one principal is \"alice\", the principal of the node that records it"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    And no role, membership or room setting makes any other principal trusted",
+      "new": "    And no role, membership or room setting makes any other principal trusted\n    And a principal act \"bob\" writes directed to \"alice\"'s agent's run does not instruct it, since its one principal is \"alice\"\n    And \"bob\"'s text reaches that run only as untrusted recall, a post \"alice\" endorses, a pin version \"alice\" stamped, a delegated task under \"alice\"'s acceptance grant (OWN-26), or a post or pin \"bob\" wrote from a device seat his device key certified that a trust grant of \"alice\" covers"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "the run's one principal is \"alice\", the principal of the node that records it"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "a principal act \"bob\" writes directed to \"alice\"'s agent's run does not instruct it"
+     },
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "\"bob\"'s text reaches that run only as untrusted recall, a post \"alice\" endorses, a pin version \"alice\" stamped"
+     }
+    ],
+    "note": "OWN-01 (M1, S-6): its clauses on another principal's text apply once other principals ship (PRV-10, OWN-29, M7). The act from \"bob\" and the paths his text may take moved to OWN-29's @pending scenario, where agents of \"alice\" and \"bob\" share a room. OWN-01 keeps that the run's one principal is the principal of the node that records it, and has no When step until then."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    When the person runs \"cairn pin unpin\" at a terminal on a pin her own agent's run seat wrote, and on a verdict she recorded\n    Then each unpin is recorded as a neutral principal act with nothing more asked",
+      "new": "    When the person runs \"cairn pin unpin\" at a terminal on a pin her own agent's run seat wrote\n    Then the unpin is recorded as a neutral principal act with nothing more asked"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "Then the unpin is recorded as a neutral principal act with nothing more asked"
+     }
+    ],
+    "note": "OWN-12 (M1 part): verdicts ship with OWN-27 (M7). The unpin of a verdict is deleted from OWN-12's step, since OWN-27's @pending scenario already records \"alice\" unpinning a verdict as her neutral principal act; the unpin of a pin her own agent's run seat wrote stays."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/principal-acts.feature",
+      "old": "    When the person runs \"cairn room mute\" on a seat at a terminal\n    Then the mute, a room act, is signed with the seat key of the person's device seat in that room, carries no OWN-11 class and names the room it acted in",
+      "new": "    When the person runs \"cairn room post\" at a terminal\n    Then the post, a room act, is signed with the seat key of the person's device seat in that room, carries no OWN-11 class and names the room it acted in"
+     },
+     {
+      "file": "features/lane.feature",
+      "old": "    And an opt-in notice of the kick reaches the agent only where the room's owner allows notices and \"bob\" opted in",
+      "new": "    And an opt-in notice of the kick reaches the agent only where the room's owner allows notices and \"bob\" opted in\n    When \"alice\" runs \"cairn room mute\" on a seat at a terminal\n    Then the mute, a room act, is signed with the seat key of her device seat in that room, carries no OWN-11 class and names the room it acted in"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/principal-acts.feature",
+      "quote": "When the person runs \"cairn room post\" at a terminal"
+     },
+     {
+      "file": "features/lane.feature",
+      "quote": "the mute, a room act, is signed with the seat key of her device seat in that room"
+     }
+    ],
+    "note": "OWN-12 (M1 part): mutes ship with LANE-16 and LANE-25 (M7). The \"cairn room mute\" step moved to LANE-25's @pending scenario. So that OWN-12 keeps an M1 step for its rule on a CLI verb that writes a room act, that step now uses \"cairn room post\", the verb its next step already refuses to an agent."
+   },
+   {
+    "id": "S-11",
+    "edits": [
+     {
+      "file": "features/engineering.feature",
+      "old": "    Then the architecture check fails naming both crates\n    And every library crate has exactly one declared responsibility\n    And the browser room view client's TypeScript package imports nothing of the core but its generated types",
+      "new": "    Then the architecture check fails naming both crates\n    And every library crate has exactly one declared responsibility"
+     },
+     {
+      "file": "features/engineering.feature",
+      "old": "    Then the workflow gates on cargo clippy, cargo fmt, cargo-deny, cargo-audit, the browser room view client's strict TypeScript compile and lint, and the custom checks",
+      "new": "    Then the workflow gates on cargo clippy, cargo fmt, cargo-deny, cargo-audit, the browser room view client's strict TypeScript compile and lint, and the custom checks\n    And the browser room view client's TypeScript package imports nothing of the core but its generated types"
+     }
+    ],
+    "ledger_quotes": [
+     {
+      "file": "features/engineering.feature",
+      "quote": "strict TypeScript compile and lint, and the custom checks\n    And the browser room view client's TypeScript package imports"
+     }
+    ],
+    "note": "ENG-02 (M1, ENG P0 gates): the browser room view client ships with the room view (M7), and its CI gates with ENG-16's change (M7). The step on its TypeScript package's imports moved to ENG-16's @pending outline, beside its TypeScript compile and lint."
+   }
+  ]
+ }
+]

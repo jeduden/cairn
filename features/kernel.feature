@@ -25,14 +25,12 @@ Feature: Compute kernel (CMP)
     Then the namespace lists no variables
 
   @CMP-03 @P1 @pending
-  Scenario: read-only recall built-ins return structured values and leave out room summaries
+  Scenario: read-only recall built-ins return structured values
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a" containing the word "migration"
-    And a room summary containing the word "migration" in a room the run has a seat in
     When the agent calls the MCP tool "kernel_exec" with code "hits = cairn.event_search(query='migration'); print(type(hits), hits[0]['address'])"
     Then the printed output names a list and an address (writer, seq)
     And the built-ins "cairn.event_expand", "cairn.event_get", "cairn.landmark_list", "json", "re", "math" and "time" are callable
-    And "cairn.event_search", "cairn.event_expand" and "cairn.event_get" return the room summary's "summary" event only as its address, never its text
     And every global name the kernel exposes, the interpreter's universal built-ins included, is on the kernel's allow-list
     And a built-in added to the interpreter's universe is unavailable to kernel code
     And the record gains one recall event for each "cairn." built-in call the execution made, and no event other than a recall event
@@ -86,7 +84,7 @@ Feature: Compute kernel (CMP)
     And the person has quarantined A1·7 with "cairn quarantine add --range A1:7-7"
     When the agent calls the MCP tool "kernel_exec" with code "print(cairn.event_get(address='A1:7'), cairn.event_search(query='x', scope='rooms'))"
     Then the kernel returns exactly what the MCP tools "event_get" and "event_search" return for the same arguments
-    And A1·7, foreign rooms and rooms the run has no seat in are absent
+    And A1·7 and rooms the run has no seat in are absent
 
   @CMP-08 @P2 @I4 @pending
   Scenario: the opt-in Python kernel is confined, network-less and read-only

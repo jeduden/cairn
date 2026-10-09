@@ -14,6 +14,7 @@ Feature: Peer network (PEER)
     And the ephemeral node's own entrypoint starts the peer component on the strength of the person's environment variable
     And the environment variable is recorded as a structural event, not a principal act, and audited
     And on a home where the CLI recorded no act turning it on, the peer component stays off, even when the person or a service manager starts its own entry point
+    And with B2 disabled by managed policy, Cairn refuses to start the peer component and audits the refusal, and with every boundary disabled, turning it on is refused
     And with the peer component absent or stopped the core behaves exactly as with no peer component
     And turning it off is a cut principal act that refuses no event and drops no pin, and what other devices recorded meanwhile arrives once it is on again
     And all of the above is true whether the peer component ships in the core's executable or its own
@@ -38,7 +39,9 @@ Feature: Peer network (PEER)
     And a third node cut off from every peer
     When both peers rebuild their room state and index
     Then the room state and index are byte-identical on both peers
+    And of two concurrent branch links naming one branch from two rooms, the one with the lower commitment stands on both peers, even when it reaches a peer later or only through a later join to its room, the branch then moving for later events and commits only
     And only sealed ranges of writer logs were exchanged
+    And nothing in an exchanged range lets a peer confirm a guess at a redacted secret, or at a payload's content from its payload name
     And the cut-off node kept appending to its own writers without slowing its agents
 
   @PEER-04 @P2 @I9 @pending
@@ -70,13 +73,16 @@ Feature: Peer network (PEER)
     And the person mints, as a widening principal act, an access token for an ephemeral node carrying repository "r"'s identity, continuing room "room-1" with an expiry, and a token key the person's device key certified, limited to the access token's rooms, the node's own personal room and the expiry, read from an environment secret by a configuration setting under ADM-04
     When an ephemeral node starts with the access token before it reaches any peer
     Then the node certifies its own seat keys with the token key, so each chains through the token key and the device key to the person's principal key, and knows every peer network address it may deliver to
+    And a shallow clone of repository "r" on the node, lacking the bound commit, takes the identity from the access token, and the node mints none
     And a seat key it certifies for a room outside the access token's rooms other than the node's own personal room, or after the access token's expiry, chains to no principal key and is refused
     And each run it records joins room "room-1" at the run's start, on the ask the access token carries from its mint (LANE-23), and its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events, device-seat pins of provenance "operator" and run-seat pins of provenance "assistant", and says later pins may be missing
     And the node, with only the token key, has a device seat its token key certified, which signs no principal acts and no expire acts, and every pin the node writes, from its device seat or a run seat, restores only once a principal stamps it from one of its devices whose device scope allows it, and no trust grant covers its posts or pins
     And "cairn status" names where the access token is read from and no child process inherits the access token in its environment
+    And a backup "cairn backup create" makes on the node holds no token key
     And the access token's issue, use, rotation and revocation are audited, and the issuing node shows an unused access token as "enrolled, never synced"
     And revoking the access token with "cairn access-token revoke" is a cut principal act, since it removes no pin from a restore block
     And discovery alone enrolls no peer, while enrolling one verifies the key on both nodes by matching words or a scanned code
+    And "cairn uninstall" lists each enrollment, with an offer to remove it
 
   @PEER-07 @P2 @I2 @I8 @pending
   Scenario Outline: a relayed segment is accepted only when its seat key chains to a principal key in its key set
@@ -120,6 +126,7 @@ Feature: Peer network (PEER)
     And each peer's state, applied, refused or unreachable, is audited, counted and shown
     And the room view says "b" kept its copy
     And a quarantine request travels to the peers the same way, and a peer's principal applies it by a principal act of the class of the quarantine it applies
+    And a purge by seat or by principal travels to the peers the same way, and each node that applies it records the purge in its audit log with its scope and ranges
 
   @PEER-12 @P2 @I4 @I8 @pending
   Scenario: a blind peer stores and serves a room it cannot read

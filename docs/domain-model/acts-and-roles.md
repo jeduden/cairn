@@ -93,8 +93,8 @@ exactly one kind (LANE-31).
   quarantine request takes the class of the quarantine it applies. A principal
   act no requirement names is widening. Every principal act a requirement names
   is classed here, and OWN-11 follows.
-- **Expire act**: Once PRV-10 ships, an act a node with a device key records,
-  signed with that key, ending only an expiry its original act set. It ends a
+- **Expire act**: Once PRV-10 ships, an act a node records, signed with its
+  device key, ending only an expiry its original act set. It ends a
   bar, a mute or a handover offer, recorded only by a node of the principal
   whose act set it or of the room's owner (LANE-25). It ends an access token,
   recorded by the node that minted it (PEER-05). It ends a delegation grant or
@@ -152,7 +152,7 @@ exactly one kind (LANE-31).
 - **Bar**: Once PRV-10 ships (Principal), names a principal key and keeps every
   key that chains to it out, until an unbar or an expire act (LANE-25). Its
   setter where SEC-32 permits, the setter's appointer or the owner may unbar.
-- **Mute**: Withdraws every capability but read from one seat or from the whole
+- **Mute**: Withdraws every capability but read from one seat or the whole
   room; a whole-room mute leaves posting to the roles the owner names (LANE-16).
   No mute covers the owner's device seats (Owner).
 - **Present**: Puts a presentation in the outcome window.
@@ -161,12 +161,12 @@ exactly one kind (LANE-31).
   keys, once PRV-10 ships; until then a room admits no other principal's seat
   (Principal). An invite (a principal key and a role) and an invite link are
   widening principal acts of the owner. The owner's principal key always
-  satisfies its room's admission, for its device and run seats alike. An
-  invite's, an export's or a publish's **review step** shows the acting
-  principal, before it takes effect, what will take effect or leave, SEC-08
+  satisfies its room's admission, for its device and run seats alike.
+- **Review step**: The step before an invite, an export or a publish takes
+  effect. It shows the acting principal what will take effect or leave, SEC-08
   applied (LANE-10, SEC-26).
 - **Successor**: A principal the owner names in advance, who accepts ownership
-  once every seat of the owner has left the room; that acceptance is a
+  once all the owner's seats have left the room; that acceptance is a
   **succession**. Until a handover, a succession or the owner's rejoin, a room
   whose owner left keeps its pins as they were, but a stamper may still unstamp
   (LANE-11, LANE-32).

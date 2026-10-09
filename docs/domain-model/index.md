@@ -172,6 +172,8 @@ requirement naming its fields. The domain-model agent skips them.
 ## Changing the model
 
 A new concept, a renamed one or a new relation is a stakeholder decision. It
-lands here before anything uses it. The domain-model agent reviews every change
-to these files and every proposal to change it. It names the invariants whose
-wording would change, and every use the change makes stale or that runs ahead.
+lands here before anything uses it. The model keeps every concept defined, those
+the invariants name included, and §12.2 decides when each one's requirements
+ship. The domain-model agent reviews every change to these files and every
+proposal to change it. It names the invariants whose wording would change, and
+every use the change makes stale or that runs ahead.

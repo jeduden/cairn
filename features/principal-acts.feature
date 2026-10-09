@@ -9,10 +9,7 @@ Feature: Principal acts (OWN)
   Scenario: only the run's principal can instruct it
     Given an isolated Cairn home
     And an agent's run started on "alice"'s node
-    When "bob" writes a principal act directed to that run
-    Then the run's one principal is "alice"
-    And the act from "bob" does not instruct the run
-    And "bob"'s text reaches the run only as untrusted recall, a post "alice" endorses, a pin version "alice" stamped, a delegated task under "alice"'s acceptance grant (OWN-26), or a post or pin "bob" wrote from a device seat his device key certified that a trust grant of "alice" covers (OWN-29)
+    Then the run's one principal is "alice", the principal of the node that records it
 
   @OWN-02 @P1 @I2 @I6 @pending
   Scenario Outline: a principal act is recorded only from an authenticated principal surface
@@ -20,6 +17,7 @@ Feature: Principal acts (OWN)
     And an agent's active run
     When a principal act arrives from <channel>
     Then the act is "<expected>"
+    And a widening act whose required presence proof does not verify takes effect in no derived artifact, and "cairn verify" reports it
 
     Examples:
       | channel                                   | expected                                                                                                                                                                                                                                         |
@@ -40,6 +38,7 @@ Feature: Principal acts (OWN)
     And no output of a hook handler carries the steer
     And the text sent is principal-typed text or a fixed template its requirement names
     And no field of the untrusted event is embedded in it
+    And purging content the steer's text carries erases or tombstones that copy, and the purge receipt names it
 
   @OWN-04 @P1 @I2 @pending
   Scenario: hook output carries only a computed permission decision with a templated reason
@@ -48,7 +47,9 @@ Feature: Principal acts (OWN)
     When a hook reports a permission request for that action
     Then the hook output carries a decision of allow, ask, deny or defer, computed from the recorded rule levels and permission grants
     And its reason comes from the fixed template set, references ids and is built as TrustedText
+    And no untrusted event, nor an event "cairn verify" reports, shapes a rule level or a permission grant
     And the hook output carries no principal-typed text and no field of the record
+    And with hook permission decisions disabled by managed policy, the hook makes no permission decision
 
   @OWN-05 @P1 @I6 @I10 @pending
   Scenario: the first valid answer to a held request wins and conflicts resolve to deny
@@ -74,6 +75,7 @@ Feature: Principal acts (OWN)
       | no principal surface is connected and the harness prompt is unanswerable | it is only mirrored, not kept waiting                                  |
       | the harness adapter cannot keep the harness's own prompt answerable      | it is only mirrored and the answer is left to the harness              |
       | Cairn fails while the permission request is held                         | the harness falls back to its own prompt and the action is not allowed |
+      | managed policy disables keeping held requests waiting                    | it is recorded and only mirrored, and the agent is not kept waiting    |
 
   @OWN-07 @P1 @I2 @I9 @pending
   Scenario Outline: an away policy only answers the agent's own held request
@@ -85,6 +87,7 @@ Feature: Principal acts (OWN)
     And no turn is started or resumed
     And a later allow reaches only the requesting run as the fixed template "Held request <id> was allowed by your principal" with a permission grant for the identical action
     And the held-request id resolves through "event_get" to the held request's recorded event
+    And with away policies disabled by managed policy, turning one on is refused
 
     Examples:
       | policy                 | answer                                                                                  |
@@ -98,6 +101,7 @@ Feature: Principal acts (OWN)
     And a post by "bob"'s device seat in the room, longer than its preview, with invisible characters
     When "alice" expands it, edits it and endorses it to one of her own agents
     Then Endorse was enabled only after the post was expanded
+    And a quarantined post is never endorsed: the endorsement is refused, audited and counted
     And the agent receives exactly the confirmed text with invisible characters stripped and their count recorded
     And the endorsement is a signed principal act naming the post's commitment, its author's seat key, the target agent, the original text and the sent text
     And "bob" is shown the edit as a diff
@@ -131,6 +135,7 @@ Feature: Principal acts (OWN)
     And "force pushes" is tightened one level for the tainted run
     And the subagent, a delegate of the agent that started it, has no looser level than that agent
     And every rule level change "alice" made is on record as a principal act
+    And with managed policy capping "force pushes" at "ask first", "alice" setting it to "act without asking" leaves it at the cap
 
   @OWN-11 @P1 @I2 @I8 @pending
   Scenario Outline: a principal act is accepted according to its class
@@ -158,14 +163,16 @@ Feature: Principal acts (OWN)
     And the same verb with standard input or output not a terminal refuses before any other check
     When the person runs "cairn counter ack" at a terminal
     Then the acknowledgement is recorded as a neutral principal act with nothing more asked
-    When the person runs "cairn pin unpin" at a terminal on a pin her own agent's run seat wrote, and on a verdict she recorded
-    Then each unpin is recorded as a neutral principal act with nothing more asked
-    When the person runs "cairn room mute" on a seat at a terminal
-    Then the mute, a room act, is signed with the seat key of the person's device seat in that room, carries no OWN-11 class and names the room it acted in
+    When the person runs "cairn pin unpin" at a terminal on a pin her own agent's run seat wrote
+    Then the unpin is recorded as a neutral principal act with nothing more asked
+    When the person runs "cairn room post" at a terminal
+    Then the post, a room act, is signed with the seat key of the person's device seat in that room, carries no OWN-11 class and names the room it acted in
     When the agent's tool call runs "cairn room post" with its standard input and output not a terminal
     Then the verb refuses, so the agent never takes a room act as the person's device seat
     When the agent runs "cairn event search" for an untrusted event with its output not a terminal
     Then the verb is a recall tool: it prints the record content inside the envelope, records a recall event and taints the calling run
+    When the person revises the intent of a room she owns at a terminal where an authenticator is required
+    Then the revision applies only with the presence proof a widening act needs, and one whose presence proof fails changes nothing
 
   @OWN-13 @P1 @I2 @pending
   Scenario: a steer arriving after its turn ended is not applied without confirmation
@@ -201,8 +208,10 @@ Feature: Principal acts (OWN)
     When the paired phone, reaching its node over B2, tries to answer a held permission request with the harness's "allow-session"
     Then the answer is refused on the server
     And the phone can only read, allow once and deny held permission requests
+    And no untrusted event, nor an event "cairn verify" reports, shapes an enrollment
     And each answer the phone gives is signed with its own device key and recorded on its device seat in her personal room, naming the room, whose writer the phone seals with that seat's key and the node it pairs with only holds
     And where an authenticator is required each allow carries the phone's own presence proof bound to that answer
+    And "cairn uninstall" lists the phone's enrollment, with an offer to remove it
     And without the peer component a browser on the principal's phone reaching the room view through the principal's tunnel is a principal surface, not a paired phone, through a phone-scoped room-view secret that "cairn ui --phone" issued at a terminal as a widening principal act, whose scope the room-view component enforces on the server, and it sees the room view's own origin, port included
 
   @OWN-17 @P2 @I2 @I8 @pending
@@ -214,6 +223,7 @@ Feature: Principal acts (OWN)
     And the phone is limited to reading and to allowing or denying held permission requests
     And the phone seals its device seat's writer with that seat's key, and this node only holds the writer
     And the phone joins no room: its acts are recorded on its device seat in the personal room, naming the room, which shows them by address
+    And any other event with no run that the phone records goes to its device seat in the personal room of the node it pairs with
     And principal acts from "alice"'s other nodes take effect only under PRV-10, for the kinds of principal act, post and pin within their device scope and up to their maximum rule level
 
   @OWN-18 @P1 @I2 @pending
@@ -227,6 +237,7 @@ Feature: Principal acts (OWN)
     And the confirmation sends the command to no agent, since what reaches an agent stays under I2 and OWN-03
     And the witness check runs only through the launcher, started by "cairn witness-check start", outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base, with network, local endpoints, the OS user's home directory (`HOME`), the principal's home (its platform key-store entries included) and every write outside that checkout (the repository's git directory and its other worktrees included) denied
     And a check whose code writes to the repository's git directory, a git hook included, or to another of its worktrees leaves both byte-identical
+    And its fresh checkout lies outside the run's worktree and adds no ref to the run's repository
     And the launcher records its command by commitment, its exit status and the tree hash as a structural event
     And unless the platform can deny the check network, local endpoints, `HOME`, the principal's home with its key-store entries and every write outside its checkout, Cairn refuses the witness check before confirmation
     And the refusal says which of them the platform cannot deny
@@ -279,6 +290,7 @@ Feature: Principal acts (OWN)
     And <precondition>
     When the agent delegates a task to <target>
     Then the delegation is <expected>
+    And no untrusted event, nor an event "cairn verify" reports, shapes a delegation grant
 
     Examples:
       | precondition                                                               | target                                  | expected                                                                                                                                |
@@ -296,6 +308,7 @@ Feature: Principal acts (OWN)
     And the delegate has no rule level looser than the delegation grant's or the delegating agent's
     And the delegate's run is recall-tainted
     And the delegated task reached the delegate through the harness's input inside the fixed template, marked as written by the delegating agent
+    And a quarantined delegated task never reaches the delegate in that template: the write is refused, audited and counted
     And a further delegation beyond the delegation grant's depth is refused
     When the delegate returns its delegate report
     Then the delegate report is recorded on the delegating side, within the delegating run's "run" recall scope
@@ -306,6 +319,7 @@ Feature: Principal acts (OWN)
     And a delegation to an agent other than a subagent, whose delegate has returned its report
     When the delegating agent calls "delegation_get" for that delegation
     Then the delegate report arrives inside the envelope
+    And the call needs no scope and logs no extended recall scope, since the delegate report is recorded on the delegating side
     And no text of the report entered the delegating agent's context before that call
     And ending the delegation grant, a cut principal act, stops every delegate it covers
     When a subagent whose run carries recall taint returns its report to its parent's run as "subagent_result"
@@ -331,6 +345,7 @@ Feature: Principal acts (OWN)
     When "alice", a person whose device seat in the room has the pin capability, records "met" on C1 and the agent then edits a file
     Then the verdict is recorded as a "verdict" pin by "alice"'s own neutral principal act, on the signing device's seat in the room, bound to, and recorded with, the intent version, the heads of every branch the room names on her node and the results and evidence shown
     And Cairn pre-filled no verdict, and the agent's statement stays a claim
+    And the agent's next restore block includes no "verdict" pin, since only "constraint", "preference" and "intent" pins restore
     And after the edit the verdict reads stale
     And a branch the room names that the verdict does not list, linked later or named on another principal's node only, stales it on no node
     And a verdict on the room as a whole, rather than on a criterion, is refused
@@ -363,8 +378,10 @@ Feature: Principal acts (OWN)
     And a room where agents of "alice" and "bob" have seats, and "carol" posts from her device seat
     When "alice" records a trust grant naming "carol"'s principal key for this room
     Then the trust grant is a widening principal act, shown in the room with its grantor, "carol"'s key and its scope
+    And no untrusted event, nor an event "cairn verify" reports, shapes a trust grant
     And "carol"'s next post reaches "alice"'s agent through the harness's input in a fixed template naming her key fingerprint and the post's address
     And the post starts or resumes no turn, reaches no agent of "alice" whose run has no seat in the room, and reaches "bob"'s agent only as untrusted recall
+    And a quarantined post of "carol"'s reaches no agent under the trust grant: the write is refused, audited and counted
     And a post from "alice"'s own device seat reaches her agent only by recall or her endorsement, never in the trust grant's template
     When "carol" pins the constraint "keep the public API stable" from her device seat
     Then the pin restores word for word to "alice"'s agent and reaches "bob"'s agent only through a tool call, enveloped
@@ -377,7 +394,10 @@ Feature: Principal acts (OWN)
     And it does not cover a post or pin "carol" writes from a device seat outside the device scope of the device key that certified it
     And a trust grant naming the room's facilitator is recorded only after "alice" is shown that the facilitator reads untrusted room text, and covers its posts but never its room summaries
     And no role, membership or room setting makes any other principal trusted
+    And a principal act "bob" writes directed to "alice"'s agent's run does not instruct it, since its one principal is "alice"
+    And "bob"'s text reaches that run only as untrusted recall, a post "alice" endorses, a pin version "alice" stamped, a delegated task under "alice"'s acceptance grant (OWN-26), or a post or pin "bob" wrote from a device seat his device key certified that a trust grant of "alice" covers
     And "carol"'s posts in a foreign room stay untrusted for "alice"'s agent whatever trust grant covers "carol"'s key
+    And in a foreign room a post from "alice"'s own device seat, and a pin a trust grant of hers covers, are untrusted for her agents too, but for a pin PIN-10 keeps restoring there after a leave, kick or bar, while a pin from her device seat and a pin version she stamped are trusted there as elsewhere
     And a cross-room post "carol" sends from another room, shown in this room, reaches "alice"'s agent only as untrusted recall
     When "alice" revokes the trust grant as a cut principal act
     Then "carol"'s later posts reach "alice"'s agent only as untrusted recall, and her pin no longer restores to it

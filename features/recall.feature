@@ -64,15 +64,14 @@ Feature: Recall (RCL)
   @RCL-05 @P0 @I8 @pending
   Scenario: recall defaults to the agent's current run and extending it to its rooms is explicit and logged
     Given an isolated Cairn home
-    And a run with seats in its personal room and in room "L1", whose writers this node holds beside those of other runs in "L1" on two worktrees, of room "L2" where the run has no seat, and of a foreign room, and "L1" shows a cross-room post a seat in "L2" sent to it
+    And a run with seats in its personal room and in room "L1", whose writers this node holds beside those of other runs in "L1" on two worktrees and of room "L2" where the run has no seat
     When the agent calls the MCP tool "event_search" with query "deploy" and no scope
     Then every hit belongs to the calling run, across the writers of both its seats
-    And with scope "room" and room "L1" the hits come from every writer of "L1" and from the cross-room post "L1" shows, and with scope "rooms" from every room the run has a seat in, and an audit entry logs each call whose recall scope extends past the run
-    And no scope returns any other hit from "L2", or any hit from the foreign room
+    And with scope "room" and room "L1" the hits come from every writer of "L1", and with scope "rooms" from every room the run has a seat in, and an audit entry logs each call whose recall scope extends past the run
+    And no scope returns any hit from "L2"
     When the agent calls the MCP tool "event_get" with address "A2:5", an event of another run in "L1", and no scope
     Then the event is not returned, and the error says the address lies outside the current scope
     And with scope "room" and room "L1" the event is returned, and an audit entry logs the extended recall scope
-    And "delegation_get" with no scope returns the delegate report of a delegation the run made, recorded on the delegating side, and logs no extended recall scope
 
   @RCL-06 @P0 @I5 @pending
   Scenario: quarantined events are never recalled and purged ranges return a tombstone
@@ -144,6 +143,7 @@ Feature: Recall (RCL)
     Then the hits come from "vendor-room", wrapped in the envelope, each marked "untrusted" though the trust grant covers the foreign room's keys
     And an audit entry logs the call and the calling run is tainted under SEC-13
     And a following call without the room parameter, under any scope, returns no hit from "vendor-room"
+    And neither does the kernel built-in "cairn.event_search" in a "kernel_exec" call without the room parameter, under any scope
     And a "pin_list" call naming room "left-room" returns the principal's "constraint" pin marked "untrusted", though that pin still restores to the runs that had a seat in "left-room" and to their agents' later runs (PIN-10, REC-02)
 
   @RCL-11 @P2 @I6 @pending

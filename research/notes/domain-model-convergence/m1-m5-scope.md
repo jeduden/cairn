@@ -47,3 +47,19 @@ S-4; S-5 to S-18 follow from the SRS, the invariants and safety first.
 | S-16 | The boundary register makes the TUI P0                               | The register's CLI row stays P0 and the TUI follows VIEW-14 (M7).                                                                                                                                                                                      |
 | S-17 | REC-21's refused segments (M3) sit in Integrity status (M7)          | The model records them under Segment; the integrity status shows them once VIEW-10 ships.                                                                                                                                                              |
 | S-18 | Seat ids derive under LANE-23 (M7)                                   | LANE-23 in part comes to M1: how a seat id derives, which quarantine and purge by seat need.                                                                                                                                                           |
+
+## Applying the settlements
+
+The settle workflow (`m1-m5-settle.json`) drafted 206 edits to §12.2, the
+boundary register, §9.5, the requirement rows, the model and the pending
+scenarios; the ledger closes them as DM-CJ to DM-DA. Two points arose
+while applying them:
+
+- A requirement §12.2 brings forward in part leaves `@pending` only when
+  its whole text ships; until then the milestone that brings the part
+  forward verifies it by the steps that need nothing later (CLAUDE.md:
+  a requirement is implemented when its scenario passes).
+- PRV-09's scenario takes every writer from a peer's segments (M8), so it
+  has no step that M1 can pass. It needs an M1 step, such as a writer taken
+  from the key that wrote an event on this node; the first narrowed round
+  takes it up.
