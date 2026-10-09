@@ -1746,6 +1746,40 @@
      "quote": "the room model's LANE-23..33 (the rest of LANE-23 and LANE-31)"
     }
    ]
+  },
+  {
+   "id": "DM-DB",
+   "title": "A join's consent covers branches another principal's seat links later in a shared room",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "branches the room names later by branch links, whose runs' events then go"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
+  },
+  {
+   "id": "DM-DC",
+   "title": "Nothing fixes a room's visibility and admission at creation, so a run seat's create room act could open a room",
+   "status": "deferred",
+   "oq": "OQ-47",
+   "milestone": "M7",
+   "texts": [
+    {
+     "file": "docs/domain-model/places.md",
+     "quote": "published or stored on blind peers (LANE-17). Changing it is a widening"
+    },
+    {
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "that arise only from features M6 to M9 ship need a change before those milestones start"
+    }
+   ]
   }
  ]
 }
