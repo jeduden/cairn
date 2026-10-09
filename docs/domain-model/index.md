@@ -92,6 +92,12 @@ row: "- [{title}]({filename}) — {summary}"
 - A run's history spans its seats' writers, tied together by the run. Peers
   exchange segments, so a room contains only the events routed to its seats and
   shows others by address (LANE-01).
+- A purge destroys content, never an act's effect: its tombstone keeps the
+  structural fields, provenance, origin and recorder of each purged act,
+  tombstone and event the key set holds, so room state, the key set, the
+  quarantine set and every other derived artifact derive as before but for the
+  purged content (ADM-07, REC-17); how a node that never held them counts them
+  rests on OQ-44.
 - Principals and agents create rooms; an agent's room is owned by its principal.
   Cairn never creates a room on its own initiative; a node's personal room comes
   from the principal installing Cairn there (Personal room), or is carried over

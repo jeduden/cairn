@@ -197,7 +197,7 @@ Feature: Record (REC)
     When the person runs "cairn verify"
     Then the command exits 0
     And every event carries a commitment to its canonical content under a random per-event key of at least 256 bits, stored with the content and absent from its chained header
-    And the hash chain, every seal, every tombstone and every exported structure refer to event content, structural fields included, only through the commitment
+    And the hash chain, every seal, every tombstone and every exported structure refer to event content, structural fields included, only through the commitment, but for the structural fields, provenance, origin and recorder a tombstone keeps of a purged act, tombstone or event the key set holds
     And the commitment keys of seq 10-14 were erased with their content
     And no retained or exported value confirms a guess at the purged content
 

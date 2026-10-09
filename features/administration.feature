@@ -98,7 +98,8 @@ Feature: Administration and lifecycle (ADM)
     Then the command exits 0
     And the purged events are gone from the sealed segments, events, the search index, derived artifacts, the payload store and every copy of their content
     And the commitment key and payload reference of every purged event are erased
-    And a tombstone event per purged range carries only addresses, counts, reason and commitments
+    And a tombstone event per purged range carries only addresses, counts, reason and commitments, and the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds, never their text
+    And "cairn rebuild" then derives room state, the key set and the quarantine set as before the purge, but for the purged content
     And the store is vacuumed and "cairn verify" confirms every rewritten segment's seals
 
     Examples:
@@ -110,6 +111,7 @@ Feature: Administration and lifecycle (ADM)
       | --range writer-a:10-20 |
       | --before 2026-01-01    |
       | --provenance web       |
+      | --provenance operator  |
 
   @ADM-08 @P0 @I10 @pending
   Scenario: rebuild regenerates derived artifacts byte-identically whatever order the logs arrived in

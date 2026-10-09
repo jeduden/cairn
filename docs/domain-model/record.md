@@ -66,7 +66,8 @@ summary: >-
   component record rests on OQ-40. Events after the newest seal are unsigned.
 - **Commitment**: A keyed commitment to an event's content under a per-event
   random key, its **commitment key**, kept with the content and erased with it;
-  the only way the chain, seals and tombstones refer to content (REC-17).
+  the only way the chain, seals and tombstones refer to content, but for what a
+  tombstone keeps (REC-17, Purge).
 - **Provenance**: An event's class from a closed set, saying what produced its
   content (PRV-01): `user`, `assistant`, `tool_call`, `tool_result:<tool>`,
   `web`, `mcp:<server>`, `file`, `subagent_result`, `harness_meta`,
@@ -134,8 +135,8 @@ summary: >-
   redacted diff since the previous worktree checkpoint (REC-20).
 - **Derived artifact**: Anything computed from the record and the node's key
   set, such as those I10 lists: the **search index** over event text among its
-  indexes, the node's principal's Needs you queue among its queues, room state,
-  trust levels, and run and integrity statuses. Results with their evidence
+  indexes and the node's principal's Needs you queue among its queues. Results
+  with their evidence
   classes are derived artifacts; room status, a check's state and a run status's
   time-relative freshness marks are computed where shown; the **quarantine set**
   is what a node holds quarantined.
@@ -160,7 +161,8 @@ summary: >-
 - **Purge**: Deletion of content, appending a **tombstone** naming the purged
   range, which views show in its place (ADM-07): by a principal act, or by the
   node under a retention policy, recorded naming the policy. The only way stored
-  content is destroyed (I1). A purged pin version counts as absent when PIN-10
+  content is destroyed (I1); it never undoes an act's effect, as Relations
+  says. A purged pin version counts as absent when PIN-10
   chooses which version of a pin restores, as a quarantined one does, and never
   restores, not even as its tombstone (Quarantine).
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
@@ -180,7 +182,7 @@ summary: >-
   VIEW-10 and SEC-27; a **purge receipt** states what a purge erased and what it
   could not (SEC-31).
 - **Backup**: A copy of a home's store and audit log, with no seat, device,
-  token or at-rest key (ADM-06, SEC-10) (`cairn backup create`, ADM-06); reading
+  token or at-rest key (`cairn backup create`, ADM-06, SEC-10); reading
   it back is a backup restore. Creating one records no principal act, only an
   audited event (§9.5), and a copy the principal takes off the machine is its
   own tool, outside Cairn's components (I4).

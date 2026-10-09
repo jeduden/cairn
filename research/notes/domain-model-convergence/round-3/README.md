@@ -19,11 +19,32 @@ them, and they close as follows.
 | DM-BK | deferred by the stakeholder: OQ-43, M1 (a resume without an agent id) |
 | DM-BL | fixed: a purged pin version counts as absent                          |
 
+## Regression pass
+
+A blind review of the entries round 3 edited (`regression.json`) found
+7 needs-fix findings in seven new themes, closed under the goal's
+defer-first rule (`regression-verify.json`).
+
+| Theme | Closed as                                                            |
+| ----- | -------------------------------------------------------------------- |
+| DM-BM | fixed: Foreign room names the kept trust-grant pins as trusted       |
+| DM-BN | fixed: the intent follows LANE-11 in a foreign room too              |
+| DM-BO | fixed: a token-key-only node gets only its token's rooms' segments   |
+| DM-BP | deferred: OQ-41, M7 (a listing's reach to another principal's node)  |
+| DM-BQ | deferred: OQ-14, M8 (how a delegation travels between principals)    |
+| DM-BR | deferred: OQ-41, M8 (a personal room's cross-room posts)             |
+| DM-BS | fixed by the stakeholder: a purge's tombstone keeps the act's effect |
+
+DM-BS could not wait (quarantine and retention purges ship in M1), so it
+went to the stakeholder; its record.md edit also drops two sentences
+that repeated I10's list and ADM-06, to stay within budget.
+
 ## Count
 
-Open themes stay at 0: the round opened 10 and closed 10. New themes
+Open themes stay at 0: with its regression pass, the round opened 17 and
+closed 17. New themes
 per full round have gone 15, 13, 6 and 10; the regression passes found
-9 and 9. About half of round 3's themes sat beside the last decisions
+9, 9 and 7. About half of round 3's themes sat beside the last decisions
 (DM-BC, DM-BF, DM-BL, DM-BK); the rest were older gaps in text no round
 had edited.
 

@@ -1235,7 +1235,17 @@
   {
    "id": "DM-BS",
    "title": "A purge or retention policy can erase an act and so undo its effect (quarantine, unpin, unstamp, revocation, listing)",
-   "status": "open"
+   "status": "fixed",
+   "texts": [
+    {
+     "file": "docs/domain-model/index.md",
+     "quote": "A purge destroys content, never an act's effect: its tombstone keeps the"
+    },
+    {
+     "file": "docs/srs/05a-administration-requirements.md",
+     "quote": "and the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds"
+    }
+   ]
   }
  ]
 }
