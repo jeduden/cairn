@@ -242,7 +242,8 @@ func render(v Verdict, failed []Check, event, head string) string {
 	if event == Approve {
 		outcome = "Approved"
 	}
-	fmt.Fprintf(&b, "**%s** by the review agent on `%s`.\n\n%s\n", outcome, head[:min(len(head), 12)], defuseMentions(v.Summary))
+	fmt.Fprintf(&b, "**%s** by the review agent on `%s`.\n\n%s\n",
+		outcome, head[:min(len(head), 12)], defuseMentions(v.Summary))
 	for _, sev := range []string{Blocking, Nit} {
 		for _, f := range v.Findings {
 			if f.Severity == sev {
