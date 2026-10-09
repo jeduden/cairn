@@ -1,0 +1,322 @@
+{
+ "round": "2-regression",
+ "reviews": [
+  {
+   "lens": "consistency",
+   "findings": [
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "No act moves it but one making a room foreign or no longer foreign, and a",
+     "problem": "A branch belongs to the first link, in causal order, among this node's principal's rooms, so any act that adds a room to that set can move it. One example is a join to a room this node never held, when that room's concurrent link has the lower commitment; such a join neither makes a room foreign nor ends that. One implementer moves the branch, and with it the runs' events and room trailers, while another keeps it because 'no act moves it'.",
+     "fix": "No act moves it but one that adds a room to this node's principal's rooms or takes one out of them (a join, or a leave, kick or bar), or a concurrent branch link with a lower commitment that arrives later, and a",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "token key and seat key that chains to one principal key through device, token",
+     "problem": "Service-account certificates need the certified key's countersignature, but device, token and seat certificates have no such rule, and nothing limits a key to one principal key. So principal X can certify P's device key, which then chains to X as well. X then has a member seat in every room that key's device seat is in, and X's own device seat joins those rooms without admission (Join) and reads them. Read as 'exactly one', the same certificate strips P's device of its principal instead; either way 'every seat belongs to one principal' fails.",
+     "fix": "token key and seat key that chains to one principal key through device, token or seat certificates the certified key countersigned belongs to that principal; a key countersigns one principal key's certificates only, and a chain never passes through another principal key.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "so until then a room admits no seat of another principal, and admission,",
+     "problem": "Principals are counted by principal key, and no key chains to one before PRV-10 ships. So until then nothing says whether seats of the principal's second node, its token-key-only nodes or a node clone are 'of another principal'. Yet the pre-PRV-10 admission rule, Join's join without admission, the owner's device seats' capabilities and the hub's 'a node of a principal with a member seat there' all depend on that answer.",
+     "fix": "Add after it: 'until then a key belongs to the principal of the node whose device key it chains to, directly or through a token key, and keys chaining to two device keys count as two principals''.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "only once it ships (OQ-42), where how a seat of the owner whose key is lost,",
+     "problem": "Leave is a room act signed by the seat's own key, and an ended witnessed run's run-seat key is lost with its MCP server. So no principal, owner or not, can end such a seat's add itself; only another's kick can. The principal stays among the room's principals, and its agents keep a seat in the room, so recall still extends to it. 'A room every seat of its principal has left' (Foreign room) is then out of reach, yet the note marks the question open only for the owner.",
+     "fix": "only once it ships (OQ-42), where how a seat whose key is lost, such as an ended run's, ends its add without another seat's kick, and for the owner at all, is open too.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "as a certificate; a removal enters wherever the listing it ends did (PRV-10).",
+     "problem": "The model now says where a listing's removal enters, but not whether a removed listing or a revoked relaying certificate still marks the key as relaying. Trust grant refuses or voids a grant once the key set 'holds' such a mark, and the key set also holds the removal. If removal or revocation clears the mark, a relaying service account's relayed third-party text reaches the grantor's agents again. That widening comes from a certifier or managed policy, not from the agent's own principal, and through an act the cut list classes as cut. The clause before it also reads as requiring the listed key to countersign the removal.",
+     "fix": "as a certificate; a removal, needing no countersignature, enters wherever the listing it ends did, and neither it nor a certificate's revocation clears a relaying mark for trust grants (PRV-10).",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/components-and-surfaces.md",
+     "quote": "Turning it off, like any component, is cut:",
+     "problem": "'Like any component' includes the core's hook handlers. But Capture says turning off this node's hook handlers' recording is widening, and the cut list limits the cut class to 'a B1 to B3 component'.",
+     "fix": "Turning it off, like any B1 to B3 component, is cut:",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "security",
+   "findings": [
+    {
+     "type": "security",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "or seat certificates belongs to that principal; a chain never passes through",
+     "problem": "A service-account certificate counts only once the certified key countersigns it, but device, token and seat certificates need no countersignature. The model also never says who a key belongs to when two principal keys certify it. Those keys are public, so any principal can certify another principal's device or seat key and make it chain to its own principal key too. It can then claim ownership of the victim's rooms, or get the victim's seats kept out through a bar on itself. Taking the first certificate that arrives instead would break I10.",
+     "fix": "Change to: \"or seat certificates belongs to that principal, each certificate counting only once the key it certifies countersigns it, as a service-account certificate does; a chain never passes through\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "so until then a room admits no seat of another principal, and admission,",
+     "problem": "Cairn tells principals apart only by principal key, and before PRV-10 no key chains to one. So the model gives no way to decide which seat is 'another principal's'. One implementer admits every seat, since no chain differs; another admits only its own node's seats. Any peer's seat could also claim the join without admission that is meant for 'a device seat whose principal has a member seat there'.",
+     "fix": "Change to: \"so until then a room admits only seats whose certificates chain to the device key of the node whose seat created it, and admission,\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "A delegate inherits the delegating run's (OWN-24).",
+     "problem": "The resume case has a fail-safe default; this rule has none for a delegate whose node does not hold the delegating run's recall events, such as an agent on another node or another principal's agent. That node must either take the delegating node's word or start the delegate untainted. Either way the tightened rule levels silently fail to carry across nodes.",
+     "fix": "Change to: \"A delegate inherits the delegating run's (OWN-24), and carries recall taint from its first event where its node cannot tell that run's.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "or derived artifact from recall, restore blocks and landmark text (LMK-04",
+     "problem": "Quarantine excludes content from recall, restore blocks and landmark text, but not from exports. A trusted-only export selects events by trust level alone. So a quarantined trusted event, such as a compromised device's pin the principal took out of restore blocks, still leaves marked trusted for the downstream memory systems that feed models. Implementers will differ on whether to filter it.",
+     "fix": "Change to: \"or derived artifact from recall, restore blocks, landmark text and trusted-only exports (LMK-04\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "no quarantined post is endorsed or reaches an agent under a trust grant,",
+     "problem": "Quarantine blocks endorsing a quarantined post but says nothing about confirming a pin candidate whose text is a quarantined event. That confirmation makes a new device-seat pin, which is not itself quarantined and restores after every compaction. Quarantined content therefore reaches restore blocks through a path the rule leaves open.",
+     "fix": "Change to: \"no quarantined post is endorsed or reaches an agent under a trust grant, no pin candidate over a quarantined event is confirmed,\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "as a certificate; a removal enters wherever the listing it ends did (PRV-10).",
+     "problem": "A listing enters another node only once the listed key countersigns it, but a removal needs nothing. Any writer's structural event that claims to remove a listing ends it on every node where the listing entered, which breaks 'revocable only by its certifier'.",
+     "fix": "Change to: \"as a certificate; a removal enters wherever the listing it ends did, and only from the writer that recorded that listing (PRV-10).\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "invites, bars and the owner's protection, which name principal keys, apply",
+     "problem": "Before PRV-10 every seat in a room is the owner's, so the owner's device seats can be identified without principal keys. Yet deferring the protection lets a run seat the owner appointed moderator kick or mute them. A mute withdraws the pin capability the owner's restoring-pin acts need. Before PRV-10 a mute cannot carry an expiry, and unmute is itself a moderator capability, so the owner's agent can lock its principal out of the room.",
+     "fix": "Change to: \"invites, bars and the owner's protection, which name principal keys, apply\" ... \"only once it ships (OQ-42), though before then no seat may kick or mute a device seat,\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "link names it, across rooms, in causal order, concurrent ones by the lower",
+     "problem": "Concurrent branch links in different rooms are decided by the lower commitment, whose per-event random key the writer chooses. A writer can also make its link concurrent by not declaring the link it saw. So a contributor in a shared room can take a branch the principal linked first in a room it owns, which moves the events of the principal's joined runs on that branch into a room other principals' nodes hold.",
+     "fix": "Change to: \"link names it, across rooms, in causal order, concurrent ones preferring a room this node's principal owns, then by the lower\"",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "usefulness",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "counting only this node's principal's rooms",
+     "problem": "A branch now belongs to the first room among the rooms of this node's principal. So a room two principals share can name a branch on one principal's node and hold a void link to it on the other's, and its outcome, room status and the heads a verdict binds differ between them. The model never says which heads a verdict recorded on one node binds, or whether the other principal's node shows that verdict stale when the room names an extra branch there.",
+     "fix": "In Verdict, say that a verdict lists the branches and heads it was bound to on the recording node and goes stale only when the intent version, one of those listed heads, or their results or evidence change. In Branch, add: \"so a shared room may name different branches on its principals' nodes, each shown\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "so until then a room admits no seat of another principal",
+     "problem": "Cairn counts principals only by principal key, and before PRV-10 ships no key chains to one. A node therefore cannot tell whether a seat certified by a peer's device key (the same person's other machine) belongs to its principal or to another. Implementations will then differ on whether those seats may join without admission, whether that node's rooms are foreign here, and whether they fall in the `rooms` recall scope.",
+     "fix": "Add: \"Until then a node counts as its principal's only the seats its own device key or token key certified, and those its home held before a node identity change; every other seat is another principal's, so a room another node created is foreign on it.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "whose certificate is revoked stays a service account",
+     "problem": "Revoking a service-account certificate, or managed policy dropping its listing, has no stated effect: the account stays a service account, and the model does not say whether a revoked certificate's relaying mark still voids trust grants that name it. One implementer makes revocation a no-op. Another lets it revive grants that a relaying mark had voided, so an act the cut list classes as cut would let more reach an agent, and the cut list's 'unless that removes a pin ... or stops principal acts arriving' cannot be judged.",
+     "fix": "State what a revocation or a listing's removal changes, for example: \"it lifts no relaying mark the key set holds, and every trust grant naming that key covers nothing from then on\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "a removal enters wherever the listing it ends did",
+     "problem": "A listing's removal is a structural event with no run, so Relations routes it to the recording node's device seat in its personal room, which another principal's node never holds. The listing reached that node through the service account's own countersignature, but nothing carries the removal there, so the account stays listed on every other node and the sentence cannot hold under I10. Relations parks the matching question for device-key and access-token revocations under OQ-41, but not this one.",
+     "fix": "Extend the OQ-41 note in Relations: \"as does how a device key's, an access token's or a service-account certificate's revocation, or a managed-policy listing's removal, reaches another principal's node\". Alternatively, name the writer that carries a removal.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "or derived artifact from recall, restore blocks and landmark text",
+     "problem": "Pin version lets only a pin's newest qualifying version restore, and quarantine does not change trust. So when that newest version is quarantined, the model does not say whether the pin restores by its newest version that is not quarantined, or drops out of the restore block. One reading keeps the constraint restoring at its prior text, the other removes it, which also flips whether that quarantine is cut or widening.",
+     "fix": "Add to Quarantine: \"A quarantined pin version never restores; the pin restores by its newest qualifying version not quarantined, and a quarantine that leaves it none removes the pin from the restore block.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "undefined",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "reject a foreign room",
+     "problem": "'Reject a foreign room' is classed as cut, but the model never says what it changes: whether the room leaves Needs you, stops showing, or stops being received, or is dropped (which only a purge may do). Implementers will build different acts.",
+     "fix": "Define it at Foreign room, for example: \"rejecting a foreign room, a cut principal act, ends its Needs you item and stops this node receiving its segments, deleting nothing\".",
+     "severity": "minor"
+    }
+   ]
+  }
+ ],
+ "match": {
+  "matches": [
+   {
+    "lens": "consistency",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "Shows the closing text of DM-M/DM-AO ('no act moves it but one making a room foreign or no longer foreign', same as LANE-01) is incomplete: LANE-31 lets a later-arriving or newly joined room's lower-commitment concurrent branch link win, so an act that merely adds a room also moves the branch. Fixing DM-M/DM-AO as closed does not answer it."
+   },
+   {
+    "lens": "consistency",
+    "index": 1,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "DM-L's countersignature rule covers service-account certificates only. Nothing requires the certified key to countersign a device, token or seat certificate, so another principal can certify a victim's key and make it chain to two principal keys. Not answered by DM-L, DM-AP or the round-11 ruling that a chain never passes through another principal key."
+   },
+   {
+    "lens": "consistency",
+    "index": 2,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "Quotes DM-B's deferral text itself ('until then a room admits no seat of another principal'). The deferral leaves 'another principal' undefined before PRV-10, when no key chains to a principal key (second node, token-key-only node, node clone). The closing text is incomplete, so it is not simply DM-B closed."
+   },
+   {
+    "lens": "consistency",
+    "index": 3,
+    "theme": "NEW-4",
+    "kind": "new",
+    "reason": "Quotes DM-AN's deferral text, which marks the lost-key leave question open only for the owner's seats. The finding shows the same unreachable leave for a non-owner principal's ended run seat, so a foreign room can never arise and recall keeps extending to it. The closing text is incomplete."
+   },
+   {
+    "lens": "consistency",
+    "index": 4,
+    "theme": "NEW-5",
+    "kind": "new",
+    "reason": "DM-AF's closing text voids a grant once the key set holds a relaying certificate or listing, but is silent on whether a listing's removal or a certificate's revocation clears the mark. DM-C's cut classification of such a revocation depends on the answer. Neither theme's closing text answers it."
+   },
+   {
+    "lens": "security",
+    "index": 0,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "Same defect as consistency 1: device, token and seat certificates need no countersignature, and no rule says whom a key belongs to when two principal keys certify it. Breaks 'every seat belongs to one principal', bars and owner protection."
+   },
+   {
+    "lens": "security",
+    "index": 1,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "Same defect as consistency 2: with no chain to a principal key before PRV-10, the deferral's 'another principal's seat' cannot be decided, so implementers admit all seats or only their own node's. DM-B's deferral text is incomplete here."
+   },
+   {
+    "lens": "security",
+    "index": 2,
+    "theme": "NEW-6",
+    "kind": "new",
+    "reason": "DM-AK (resume) and DM-AR (subagent report flowing up) give fail-safes for those paths only. A delegate whose node does not hold the delegating run's recall events, on another node or of another principal, has no stated fail-safe, so OWN-24's inheritance can silently fail."
+   },
+   {
+    "lens": "security",
+    "index": 3,
+    "theme": "NEW-7",
+    "kind": "new",
+    "reason": "DM-AS extended Quarantine to trust-grant posts, endorsed posts and delegated tasks. Trusted-only exports, which feed downstream memory systems, are a separate channel selected by trust level alone, so a quarantined trusted event still leaves marked trusted. SEC-12 and SEC-26 do not cover it."
+   },
+   {
+    "lens": "usefulness",
+    "index": 0,
+    "theme": "NEW-8",
+    "kind": "new",
+    "reason": "A consequence of DM-AO's node-relative branch ownership that its closing text does not address: a room two principals share can name different branches on their nodes, so the heads a verdict binds (OWN-27) and when it goes stale differ, against LANE-22's 'same verdicts'. Verdict and Branch entries are silent."
+   },
+   {
+    "lens": "usefulness",
+    "index": 1,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "Same defect as consistency 2: what counts as another principal's seat before PRV-10 (a peer's device key, a node clone, the same person's other machine) is undefined, which blocks admission, foreign-room status and the rooms recall scope."
+   },
+   {
+    "lens": "usefulness",
+    "index": 2,
+    "theme": "NEW-5",
+    "kind": "new",
+    "reason": "Same defect as consistency 4: no stated effect of a certificate's revocation or a listing's removal on a relaying mark and on trust grants naming the key. DM-C's cut class cannot be judged without it."
+   },
+   {
+    "lens": "usefulness",
+    "index": 4,
+    "theme": "NEW-9",
+    "kind": "new",
+    "reason": "DM-K and DM-S settle that only the newest qualifying version restores but not how quarantine interacts: whether a quarantined newest version falls back to the prior version or drops the pin from the restore block. That also decides whether SEC-12 classes the quarantine as cut or widening."
+   }
+  ],
+  "new_themes": [
+   {
+    "id": "NEW-1",
+    "title": "Branch ownership moves on any act that adds a room to this node's principal's rooms, or on a later-arriving lower-commitment concurrent link, not only on an act making a room foreign or no longer foreign",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-2",
+    "title": "A key can chain to two principal keys: device, token and seat certificates need no countersignature by the certified key, so another principal can certify a victim's key, which then belongs to both",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-3",
+    "title": "Before PRV-10 'another principal's seat' is undefined, since no key chains to a principal key: second node, token-key-only node and node clone are not classed, and the pre-PRV-10 admission rule depends on it",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-4",
+    "title": "Seats whose key is lost (an ended run's, a lost device's) cannot leave for any principal, not only the owner, so a room never becomes foreign and recall keeps extending to it; OQ-42 marks only the owner's case open",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-5",
+    "title": "A relaying mark's persistence after a managed-policy listing's removal or a service-account certificate's revocation, and its effect on trust grants and on the cut class of the revocation, is unstated",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-6",
+    "title": "A delegate whose node cannot tell the delegating run's recall taint (another node, another principal's agent) has no fail-safe default",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-7",
+    "title": "Quarantine excludes content from recall, restore blocks and landmark text but not from trusted-only exports",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-8",
+    "title": "A room shared by two principals can name different branches on their nodes, so the heads a verdict binds and its staleness differ between nodes",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-9",
+    "title": "When a pin's newest qualifying version is quarantined, the model does not say whether the pin restores by its prior version or drops out of the restore block",
+    "settled_by": "none"
+   }
+  ]
+ }
+}
