@@ -10,7 +10,7 @@ summary: >-
 | **Product**                 | Cairn — lossless, security-first context layer for long-running Claude agents                                                            |
 | **Document**                | Software Requirements Specification (SRS)                                                                                                |
 | **Version**                 | 2.25-draft                                                                                                                               |
-| **Status**                  | Draft; the invariants (§1.3) are the initial version, approved in [ADR-2610091555](../adr/ADR-2610091555-initial-invariants.md) (ENG-29) |
+| **Status**                  | Draft; the invariants (§1.3) are the initial version, recorded in [ADR-2610091555](../adr/ADR-2610091555-initial-invariants.md) (ENG-29) |
 | **Date**                    | 2026-10-08                                                                                                                               |
 | **Implementation language** | Rust; TypeScript for the UI page ([ADR-2610050528](../adr/ADR-2610050528-language-rust-typescript.md))                                   |
 | **Stakeholder**             | @jeduden, also the security reviewer                                                                                                     |

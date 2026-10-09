@@ -13,7 +13,8 @@ its upgrade notes (ENG-23). Cairn follows semantic versioning.
   CI, a nightly fuzz job and the release pipeline. `cairn version` is
   the only command.
 - The invariants I1 to I10 are reworded to the domain model; their
-  initial wording is approved in ADR-2610091555.
+  initial wording is recorded in ADR-2610091555, for the
+  stakeholder's approval.
 
 ### Upgrade notes
 
