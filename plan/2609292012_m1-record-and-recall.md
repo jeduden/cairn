@@ -41,6 +41,13 @@ four things for M1:
   met NFR-04 over 1M events (10–13k events per second), while one
   event per commit ranged from 0.7k to 4.2k.
 
+Spike S7 chose an in-house stdio MCP server on `serde_json`
+([report](2609292009_spike-s7-mcp-sdk/report.md),
+[ADR-2610102211](../docs/adr/ADR-2610102211-mcp-server-in-house.md)).
+Task 6 links it into `cairn`: the reach test allows `serde_json` and
+its four crates, and the ADR that lists `serde_json` says it links
+into the core.
+
 ## Tasks
 
 1. Store, payload CAS and hash chain: REC-06, REC-09, REC-10, REC-12,

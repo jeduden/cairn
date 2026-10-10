@@ -1,0 +1,15 @@
+[package]
+name = "s7-sdk"
+version = "0.0.0"
+edition = "2024"
+[dependencies]
+rmcp = { version = "=3.5.1", default-features = false, features = ["server", "transport-io"] }
+tokio = { version = "1", features = ["rt", "macros", "io-std", "time"] }
+serde_json = "1"
+[profile.release]
+codegen-units = 1
+lto = "thin"
+strip = true
+
+# Standalone: kept out of the cairn workspace.
+[workspace]
