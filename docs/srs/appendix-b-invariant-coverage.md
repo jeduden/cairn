@@ -29,7 +29,7 @@ not listed here. What each invariant says is in its single source,
 
 | Priority | Functional and security (§5–§6) | Engineering (§10) |
 | -------- | ------------------------------- | ----------------- |
-| P0       | 87                              | 27                |
+| P0       | 87                              | 26                |
 | P1       | 109                             | 2                 |
 | P2       | 38                              | 0                 |
 | —        | Non-functional (§7): 15         |                   |

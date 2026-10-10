@@ -21,7 +21,7 @@ Pre-implementation. This repository contains:
 - one Gherkin scenario per requirement under `features/`, almost all
   `@pending`, kept in step with the SRS by a gate test;
 - CI (tests, coverage per test layer, clippy, cargo-deny and
-  cargo-audit, the drift suite, a reproducible release build,
+  cargo-audit, the drift suite, the release build,
   Markdown, workflow audit), a nightly job, and a signed release
   pipeline, all in Rust;
 - the delivery plans in [PLAN.md](PLAN.md).

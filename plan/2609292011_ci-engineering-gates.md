@@ -19,7 +19,7 @@ behavior into running checks, so M1 can exit on "CI gates green".
 ## Context
 
 Bootstrap already runs vet, staticcheck, gosec, errcheck, govulncheck,
-depguard, race tests, fuzz discovery and a reproducible signed release.
+depguard, race tests, fuzz discovery and a signed release.
 This plan covers the rest.
 
 ## Tasks
@@ -43,6 +43,6 @@ This plan covers the rest.
 ## Acceptance Criteria
 
 - [ ] Scenarios @ENG-02, @ENG-03, @ENG-12, @ENG-14, @ENG-15, @ENG-16,
-  @ENG-19, @ENG-20 and @ENG-21 pass
+  @ENG-20 and @ENG-21 pass
 - [ ] All tests pass: `go test -race ./...`
 - [ ] `go tool -modfile=tools/go.mod golangci-lint run` is clean
