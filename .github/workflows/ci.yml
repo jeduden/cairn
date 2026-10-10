@@ -93,6 +93,9 @@ jobs:
           use_oidc: true
           files: target/coverage/unit.lcov
           flags: unit
+          # Only the named file: the uploader's search would sweep up
+          # the other test layers' lcov beside it under this flag.
+          disable_search: true
           fail_ci_if_error: false
       - name: Upload integration coverage to Codecov
         if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
@@ -101,6 +104,9 @@ jobs:
           use_oidc: true
           files: target/coverage/integration.lcov
           flags: integration
+          # Only the named file: the uploader's search would sweep up
+          # the other test layers' lcov beside it under this flag.
+          disable_search: true
           fail_ci_if_error: false
       - name: Upload end-to-end coverage to Codecov
         if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
@@ -109,6 +115,9 @@ jobs:
           use_oidc: true
           files: target/coverage/e2e.lcov
           flags: e2e
+          # Only the named file: the uploader's search would sweep up
+          # the other test layers' lcov beside it under this flag.
+          disable_search: true
           fail_ci_if_error: false
 
   # ENG-16: clippy with warnings denied, and rustfmt's layout.
@@ -229,6 +238,8 @@ jobs:
           use_oidc: true
           files: cover.out
           flags: go
+          # Only the named file, never what the uploader's search finds.
+          disable_search: true
           fail_ci_if_error: false
 
   # NFR-10 / CON-02: the three release targets compile as static
