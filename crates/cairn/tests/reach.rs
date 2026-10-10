@@ -71,7 +71,7 @@ fn is_normal(dep: &Value) -> bool {
 fn the_core_executable_links_only_crates_its_reach_allows() {
     let cargo = std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
     let out = Command::new(cargo)
-        .args(["metadata", "--format-version", "1", "--locked", "--offline"])
+        .args(["metadata", "--format-version", "1", "--locked"])
         .current_dir(env!("CARGO_MANIFEST_DIR"))
         .output()
         .unwrap();
