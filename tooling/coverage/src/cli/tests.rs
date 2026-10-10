@@ -3,14 +3,20 @@ use crate::tests::FakeHost;
 use std::cell::RefCell;
 
 const METADATA: &str = r#"{
+  "workspace_root": "/w",
   "packages": [{"name": "srs", "manifest_path": "/w/srs/Cargo.toml", "targets": []}],
-  "metadata": {"coverage": {"floors": {"all": 100}}}
+  "metadata": {"coverage": {"floors": {"all": 100}, "pyramid": true}}
 }"#;
 
 fn host(report: &str) -> FakeHost {
     FakeHost {
         metadata: METADATA.into(),
         reports: RefCell::new([report.to_owned()].into()),
+        sources: vec![
+            ("/w/srs/src/tests.rs".into(), "#[test]\n".repeat(3)),
+            ("/w/srs/tests/gates.rs".into(), "#[test]\n".repeat(2)),
+        ],
+        scenarios: 1,
         ..FakeHost::default()
     }
 }
@@ -23,6 +29,7 @@ fn invoke(args: &[&str], host: &FakeHost, summary: Option<&Path>) -> (u8, String
         &mut err,
         host,
         summary,
+        false,
     );
     (
         code,
@@ -114,4 +121,67 @@ fn run_measures_into_target_coverage_by_default() {
             .borrow()
             .contains_key(Path::new("target/coverage/unit.lcov"))
     );
+}
+
+#[test]
+fn run_reports_the_pyramid_s_shape() {
+    let host = host("SF:/w/srs/src/lib.rs\nDA:1,1\n");
+
+    let (code, out, err) = invoke(&[], &host, None);
+
+    assert_eq!(code, EXIT_OK, "{err}");
+    assert!(
+        out.contains("Tests per test layer: unit 3, integration 2, end-to-end 1 (1 scenarios)"),
+        "{out}"
+    );
+    assert!(
+        host.calls
+            .borrow()
+            .contains(&"scenarios /w/features".to_owned())
+    );
+}
+
+#[test]
+fn run_fails_an_inverted_pyramid() {
+    let host = FakeHost {
+        scenarios: 5,
+        ..host("SF:/w/srs/src/lib.rs\nDA:1,1\n")
+    };
+
+    let (code, _, err) = invoke(&[], &host, None);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        err.contains("coverage: the test pyramid is inverted: unit 3, integration 2, end-to-end 5"),
+        "{err}"
+    );
+}
+
+#[test]
+fn run_fails_when_the_tests_cannot_be_counted() {
+    for needle in ["sources", "scenarios"] {
+        let host = FakeHost {
+            fail_on: Some(needle),
+            ..host("SF:/w/srs/src/lib.rs\nDA:1,1\n")
+        };
+        let (code, _, err) = invoke(&[], &host, None);
+        assert_eq!(code, EXIT_FAILURE, "{needle}");
+        assert!(err.contains(&format!("{needle} /w")), "{needle}: {err}");
+    }
+}
+
+#[test]
+fn run_refuses_to_measure_inside_a_measurement() {
+    let host = host("");
+    let (mut out, mut err) = (Vec::new(), Vec::new());
+
+    let code = run(Vec::<String>::new(), &mut out, &mut err, &host, None, true);
+
+    assert_eq!(code, EXIT_USAGE);
+    assert!(
+        String::from_utf8(err)
+            .unwrap()
+            .contains("refusing to recurse")
+    );
+    assert!(host.calls.borrow().is_empty());
 }

@@ -10,6 +10,7 @@ use serde_json::Value;
 
 /// A layer of the test pyramid, told apart by where a test lives.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(usize)]
 pub enum TestLayer {
     /// The tests beside the code, in each crate's `src/`.
     Unit,
@@ -105,6 +106,15 @@ pub struct Plan {
     pub floors: Floors,
     /// Floors for one crate, over the default ones.
     pub crate_floors: BTreeMap<String, Floors>,
+    /// Path endings of the files that are an executable's entry point,
+    /// such as `src/main.rs`. The end-to-end tests prove them, so the
+    /// unit and integration measures leave them out.
+    pub entry_points: Vec<String>,
+    /// Whether the test pyramid's shape is enforced: more unit tests
+    /// than integration tests, and more of those than end-to-end ones.
+    pub pyramid: bool,
+    /// The workspace's root directory.
+    pub root: PathBuf,
 }
 
 impl Plan {
@@ -119,9 +129,17 @@ impl Plan {
             serde_json::from_str(metadata).map_err(|e| format!("read cargo metadata: {e}"))?;
         let mut plan = Self::default();
         for package in value["packages"].as_array().into_iter().flatten() {
-            let name = package["name"].as_str().unwrap_or_default().to_owned();
-            let manifest = PathBuf::from(package["manifest_path"].as_str().unwrap_or_default());
-            let dir = manifest.parent().map(PathBuf::from).unwrap_or_default();
+            let (Some(name), Some(dir)) = (
+                package["name"].as_str(),
+                package["manifest_path"]
+                    .as_str()
+                    .and_then(|m| PathBuf::from(m).parent().map(PathBuf::from)),
+            ) else {
+                return Err(format!(
+                    "cargo metadata: a package without a name or manifest: {package}"
+                ));
+            };
+            let name = name.to_owned();
             plan.crates.push(Crate { name, dir });
             for target in package["targets"].as_array().into_iter().flatten() {
                 if target["kind"]
@@ -142,9 +160,26 @@ impl Plan {
         }
 
         let policy = &value["metadata"]["coverage"];
+        known_keys(
+            policy,
+            &["exclude", "entry-points", "floors", "pyramid", "crates"],
+            "coverage",
+        )?;
+        plan.root = PathBuf::from(value["workspace_root"].as_str().unwrap_or_default());
         plan.exclude = policy["exclude"].as_str().unwrap_or_default().to_owned();
+        plan.pyramid = policy["pyramid"].as_bool().unwrap_or_default();
+        for entry in policy["entry-points"].as_array().into_iter().flatten() {
+            let entry = entry
+                .as_str()
+                .ok_or_else(|| format!("coverage entry-points: {entry} is no path"))?;
+            plan.entry_points.push(entry.to_owned());
+        }
         plan.floors = floors(&policy["floors"]).map_err(|e| format!("coverage floors: {e}"))?;
         for (name, over) in policy["crates"].as_object().into_iter().flatten() {
+            if !plan.crates.iter().any(|c| &c.name == name) {
+                return Err(format!("coverage crates: {name:?} is no workspace crate"));
+            }
+            known_keys(over, &["floors"], &format!("coverage crates.{name}"))?;
             let over =
                 floors(&over["floors"]).map_err(|e| format!("coverage floors of {name}: {e}"))?;
             plan.crate_floors.insert(name.clone(), over);
@@ -162,6 +197,12 @@ impl Plan {
             .map_or(self.floors, |over| self.floors.overridden_by(*over))
     }
 
+    /// Whether `file` is an executable's entry point.
+    #[must_use]
+    pub fn is_entry_point(&self, file: &std::path::Path) -> bool {
+        self.entry_points.iter().any(|e| file.ends_with(e))
+    }
+
     /// The crate whose directory holds `file`: the deepest one, so a
     /// crate nested in another's directory keeps its own files.
     #[must_use]
@@ -170,6 +211,20 @@ impl Plan {
             .iter()
             .filter(|c| file.starts_with(&c.dir))
             .max_by_key(|c| c.dir.components().count())
+    }
+}
+
+/// Refuses a key of the `table` at `place` that `known` does not name,
+/// so a misspelled key cannot switch a floor off.
+fn known_keys(table: &Value, known: &[&str], place: &str) -> Result<(), String> {
+    match table
+        .as_object()
+        .into_iter()
+        .flatten()
+        .find(|(k, _)| !known.contains(&k.as_str()))
+    {
+        Some((key, _)) => Err(format!("{place}: unknown key {key:?}")),
+        None => Ok(()),
     }
 }
 

@@ -18,5 +18,6 @@ fn main() -> ExitCode {
         &mut io::stderr(),
         &host,
         summary.as_deref(),
+        env::var_os(coverage::MEASURING).is_some(),
     ))
 }

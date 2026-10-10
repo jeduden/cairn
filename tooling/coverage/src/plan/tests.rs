@@ -11,8 +11,11 @@ const METADATA: &str = r#"{
      "targets": [{"name": "review-gate", "kind": ["bin"]}, {"name": "e2e_review_gate", "kind": ["test"]},
                  {"name": "gate", "kind": ["test"]}]}
   ],
+  "workspace_root": "/w",
   "metadata": {"coverage": {
     "exclude": "(^|/)tests\\.rs$",
+    "entry-points": ["src/main.rs"],
+    "pyramid": true,
     "floors": {"all": 100, "unit": 90},
     "crates": {"srs": {"floors": {"unit": 95}}}
   }}
@@ -86,7 +89,7 @@ fn a_plan_without_a_policy_has_no_floors() {
 fn a_malformed_policy_is_refused() {
     let with = |coverage: &str| {
         Plan::from_metadata(&format!(
-            r#"{{"packages": [], "metadata": {{"coverage": {coverage}}}}}"#
+            r#"{{"packages": [{{"name": "srs", "manifest_path": "/w/srs/Cargo.toml", "targets": []}}], "metadata": {{"coverage": {coverage}}}}}"#
         ))
     };
 
@@ -148,4 +151,64 @@ fn layers_are_named_for_reports_and_flags() {
         TestLayer::EndToEnd
     );
     assert_eq!(TestLayer::of_test_target("gates"), TestLayer::Integration);
+}
+
+#[test]
+fn the_plan_names_the_entry_points_and_the_pyramid() {
+    let plan = Plan::from_metadata(METADATA).unwrap();
+
+    assert!(plan.pyramid);
+    assert_eq!(plan.root, Path::new("/w"));
+    assert!(plan.is_entry_point(Path::new("/w/tooling/review-gate/src/main.rs")));
+    assert!(!plan.is_entry_point(Path::new("/w/tooling/review-gate/src/domain.rs")));
+}
+
+#[test]
+fn an_entry_point_must_be_a_path() {
+    let err =
+        Plan::from_metadata(r#"{"packages": [], "metadata": {"coverage": {"entry-points": [1]}}}"#);
+
+    assert_eq!(err.unwrap_err(), "coverage entry-points: 1 is no path");
+}
+
+#[test]
+fn a_misspelled_policy_key_or_crate_is_refused() {
+    let with = |coverage: &str| {
+        let metadata = format!(
+            r#"{{"packages": [{{"name": "srs", "manifest_path": "/w/srs/Cargo.toml", "targets": []}}],
+               "metadata": {{"coverage": {coverage}}}}}"#
+        );
+        Plan::from_metadata(&metadata).map(|_| ())
+    };
+
+    assert_eq!(
+        with(r#"{"floor": {"unit": 99}}"#).unwrap_err(),
+        r#"coverage: unknown key "floor""#
+    );
+    assert_eq!(
+        with(r#"{"crates": {"srz": {}}}"#).unwrap_err(),
+        r#"coverage crates: "srz" is no workspace crate"#
+    );
+    assert_eq!(
+        with(r#"{"crates": {"srs": {"floor": {}}}}"#).unwrap_err(),
+        r#"coverage crates.srs: unknown key "floor""#
+    );
+    assert_eq!(
+        with(r#"{"crates": {"srs": {"floors": {"unit": 50}}}}"#),
+        Ok(())
+    );
+}
+
+#[test]
+fn a_package_without_a_name_or_manifest_is_refused() {
+    for package in [
+        r#"{"name": "a", "targets": []}"#,
+        r#"{"manifest_path": "/w/a/Cargo.toml"}"#,
+    ] {
+        let err = Plan::from_metadata(&format!(r#"{{"packages": [{package}]}}"#)).unwrap_err();
+        assert!(
+            err.starts_with("cargo metadata: a package without a name or manifest: "),
+            "{err}"
+        );
+    }
 }

@@ -12,10 +12,16 @@ pub mod lcov;
 pub mod measure;
 pub mod plan;
 pub mod report;
+pub mod shape;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub use host::Cargo;
+
+/// The variable every cargo a measurement starts carries. A `coverage`
+/// run that finds it set is running inside a measurement, a test
+/// started by one, and refuses: measuring again would recurse.
+pub const MEASURING: &str = "CAIRN_COVERAGE_MEASURING";
 
 /// What a measurement does to the machine: run cargo and write files.
 /// The tests put a fake in its place.
@@ -47,6 +53,21 @@ pub trait Host {
     ///
     /// Fails when the file cannot be written.
     fn append(&self, path: &Path, text: &str) -> Result<(), String>;
+
+    /// Every Rust source file under `dir`, with its text, skipping
+    /// build output.
+    ///
+    /// # Errors
+    ///
+    /// Fails when a directory or file cannot be read.
+    fn sources(&self, dir: &Path) -> Result<Vec<(PathBuf, String)>, String>;
+
+    /// How many scenarios under `features` are bound, not pending.
+    ///
+    /// # Errors
+    ///
+    /// Fails when the features cannot be read.
+    fn bound_scenarios(&self, features: &Path) -> Result<usize, String>;
 }
 
 #[cfg(test)]

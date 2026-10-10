@@ -16,6 +16,8 @@ pub(crate) struct FakeHost {
     pub fail_on: Option<&'static str>,
     pub calls: RefCell<Vec<String>>,
     pub files: RefCell<BTreeMap<PathBuf, String>>,
+    pub sources: Vec<(PathBuf, String)>,
+    pub scenarios: usize,
 }
 
 impl FakeHost {
@@ -57,5 +59,20 @@ impl Host for FakeHost {
             .or_default()
             .push_str(text);
         Ok(())
+    }
+
+    fn sources(&self, dir: &Path) -> Result<Vec<(PathBuf, String)>, String> {
+        self.call(format!("sources {}", dir.display()))?;
+        Ok(self
+            .sources
+            .iter()
+            .filter(|(p, _)| p.starts_with(dir))
+            .cloned()
+            .collect())
+    }
+
+    fn bound_scenarios(&self, features: &Path) -> Result<usize, String> {
+        self.call(format!("scenarios {}", features.display()))?;
+        Ok(self.scenarios)
     }
 }

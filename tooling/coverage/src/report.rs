@@ -13,6 +13,9 @@ use crate::plan::{Plan, TestLayer};
 pub struct Row {
     pub name: String,
     pub lines: usize,
+    /// The lines outside the crate's entry points: what the unit and
+    /// integration test layers are measured against.
+    pub own_lines: usize,
     /// Lines run, in the order of [`TestLayer::ALL`].
     pub by_layer: [usize; 3],
     pub all: usize,
@@ -31,10 +34,15 @@ pub fn tally(plan: &Plan, layers: &[(TestLayer, Lines)], all: &Lines) -> Vec<Row
             name: krate.name.clone(),
             ..Row::default()
         });
+        let entry_point = plan.is_entry_point(file);
         for (line, n) in hits {
             row.lines += 1;
+            row.own_lines += usize::from(!entry_point);
             row.all += usize::from(*n > 0);
             for (i, layer) in TestLayer::ALL.iter().enumerate() {
+                if entry_point && *layer != TestLayer::EndToEnd {
+                    continue;
+                }
                 let ran = layers.iter().filter(|(l, _)| l == layer).any(|(_, lines)| {
                     lines
                         .get(file)
@@ -76,24 +84,42 @@ pub fn table(rows: &[Row]) -> String {
     };
     for row in rows {
         total.lines += row.lines;
+        total.own_lines += row.own_lines;
         total.all += row.all;
         for (sum, n) in total.by_layer.iter_mut().zip(row.by_layer) {
             *sum += n;
         }
     }
     for row in rows.iter().chain([&total]) {
-        let cell = |covered| format!("{:.1}%", percent(covered, row.lines));
-        let [unit, integration, e2e] = row.by_layer.map(cell);
+        let [unit, integration, e2e] = TestLayer::ALL.map(|layer| {
+            format!(
+                "{:.1}%",
+                percent(row.by_layer[layer as usize], row.measured(layer))
+            )
+        });
+        let all = format!("{:.1}%", percent(row.all, row.lines));
         let _ = writeln!(
             out,
-            "| {} | {} | {unit} | {integration} | {e2e} | {} |",
-            row.name,
-            row.lines,
-            cell(row.all)
+            "| {} | {} | {unit} | {integration} | {e2e} | {all} |",
+            row.name, row.lines
         );
     }
 
     out
+}
+
+impl Row {
+    /// The lines `layer` is measured against: a crate's own lines for
+    /// the unit and integration test layers, every line for the
+    /// end-to-end one, which alone proves the entry points.
+    #[must_use]
+    pub fn measured(&self, layer: TestLayer) -> usize {
+        if layer == TestLayer::EndToEnd {
+            self.lines
+        } else {
+            self.own_lines
+        }
+    }
 }
 
 /// Every floor of `plan` a row falls short of, one line each.
@@ -104,24 +130,29 @@ pub fn shortfalls(plan: &Plan, rows: &[Row]) -> Vec<String> {
         let floors = plan.floors_of(&row.name);
         let measures = TestLayer::ALL
             .iter()
-            .zip(row.by_layer)
-            .map(|(layer, covered)| {
+            .map(|l| {
                 (
-                    format!("the {layer} test layer"),
-                    floors.of(*layer),
-                    covered,
+                    format!("the {l} test layer"),
+                    floors.of(*l),
+                    row.by_layer[*l as usize],
+                    row.measured(*l),
                 )
             })
-            .chain([("every test layer together".to_owned(), floors.all, row.all)]);
-        for (what, floor, covered) in measures {
+            .chain([(
+                "every test layer together".to_owned(),
+                floors.all,
+                row.all,
+                row.lines,
+            )]);
+        for (what, floor, covered, lines) in measures {
             let Some(floor) = floor else {
                 continue;
             };
-            let got = percent(covered, row.lines);
+            let got = percent(covered, lines);
             if got < floor {
                 out.push(format!(
-                    "coverage: {} is at {got:.1}% of its lines ({covered}/{}) in {what}, want {floor}%",
-                    row.name, row.lines
+                    "coverage: {} is at {got:.1}% of its lines ({covered}/{lines}) in {what}, want {floor}%",
+                    row.name
                 ));
             }
         }

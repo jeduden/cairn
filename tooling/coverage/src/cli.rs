@@ -9,6 +9,7 @@ use crate::lcov;
 use crate::measure::measure;
 use crate::plan::Plan;
 use crate::report::{shortfalls, table, tally};
+use crate::shape;
 
 /// Every crate meets its floors.
 pub const EXIT_OK: u8 = 0;
@@ -27,13 +28,15 @@ floor in [workspace.metadata.coverage].";
 /// Runs the command on `args` and returns its exit code. It is `main`
 /// without the process: `host` runs cargo and writes files, and
 /// `summary`, when set, is a Markdown file the table is appended to,
-/// as GitHub's `$GITHUB_STEP_SUMMARY` is.
+/// as GitHub's `$GITHUB_STEP_SUMMARY` is. `nested` says the process
+/// runs inside a measurement, where it refuses to start another.
 pub fn run(
     args: impl IntoIterator<Item = String>,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
     host: &dyn Host,
     summary: Option<&Path>,
+    nested: bool,
 ) -> u8 {
     let out = match parse_args(args) {
         Ok(Some(out)) => out,
@@ -46,6 +49,15 @@ pub fn run(
             return EXIT_USAGE;
         }
     };
+
+    if nested {
+        let _ = writeln!(
+            stderr,
+            "coverage: already inside a measurement ({}); refusing to recurse",
+            crate::MEASURING
+        );
+        return EXIT_USAGE;
+    }
 
     match report(host, &out, summary) {
         Ok((table, shortfalls)) => {
@@ -102,15 +114,26 @@ fn report(
     let layers = measure(host, &plan, out)?;
     let all = lcov::merge(layers.iter().map(|(_, lines)| lines));
     let rows = tally(&plan, &layers, &all);
-    let table = table(&rows);
+    let mut sources = Vec::new();
+    for krate in &plan.crates {
+        sources.extend(host.sources(&krate.dir)?);
+    }
+    let shape = shape::count(
+        &plan,
+        &sources,
+        host.bound_scenarios(&plan.root.join("features"))?,
+    );
+    let table = format!("{}\n{}\n", table(&rows), shape.line());
     if let Some(summary) = summary {
         host.append(
             summary,
             &format!("## Line coverage per test layer\n\n{table}\n"),
         )?;
     }
+    let mut problems = shortfalls(&plan, &rows);
+    problems.extend(shape.inverted().filter(|_| plan.pyramid));
 
-    Ok((table, shortfalls(&plan, &rows)))
+    Ok((table, problems))
 }
 
 #[cfg(test)]

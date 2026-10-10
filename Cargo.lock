@@ -169,6 +169,7 @@ dependencies = [
 name = "coverage"
 version = "0.0.0"
 dependencies = [
+ "scenario",
  "serde_json",
  "testkit",
 ]

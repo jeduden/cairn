@@ -42,21 +42,27 @@ unwrap_used = "deny"
 expect_used = "deny"
 panic = "deny"
 
-# Line-coverage floors, in percent, that `cargo run -p coverage` holds
-# every crate to (ENG-11). It measures each test layer apart: unit (the
-# tests beside the code), integration (a crate's tests/ targets) and
+# The test pyramid's policy, which `cargo run -p coverage` enforces
+# (ENG-11). It measures line coverage per test layer: unit (the tests
+# beside the code), integration (a crate's tests/ targets) and
 # end-to-end (the bdd scenario runner and every tests/e2e* target).
-# `all` is every test layer together. The unit floor keeps the
-# pyramid's base wide: most lines are proven by unit tests, not only
-# by scenarios. Unit-test files are left out of the measure, so the
-# numbers count shipped code. A crate's own floors go under
-# [workspace.metadata.coverage.crates.<name>.floors]; ENG-11's 90% and
-# 80% floors for the product crates join that way as they land.
+#
+# - Unit tests prove every function and module directly: each crate
+#   keeps 99% of its lines covered by unit tests alone. An executable's
+#   entry point (entry-points) is proven end to end instead, so the
+#   unit and integration measures leave it out.
+# - Integration and end-to-end tests guard behaviour: requirements and
+#   real boundaries. They are measured and reported, with no floor.
+# - `all`, every test layer together, holds each crate at 100%.
+# - `pyramid` fails a run whose test counts invert the pyramid: more
+#   integration than unit tests, or more end-to-end than integration.
+#
+# Unit-test files (tests.rs) and every tests/ directory are left out of
+# the measure, so the numbers count shipped code. A crate's own floors
+# go under [workspace.metadata.coverage.crates.<name>.floors];
+# ENG-11's floors for the product crates join that way as they land.
 [workspace.metadata.coverage]
 exclude = '(^|/)tests\.rs$'
-floors = { all = 100, unit = 90 }
-
-# coverage's real host runs cargo and writes files: a process boundary
-# its integration tests prove, so its unit tests reach less of it.
-[workspace.metadata.coverage.crates.coverage]
-floors = { unit = 80 }
+entry-points = ["src/main.rs"]
+floors = { all = 100, unit = 99 }
+pyramid = true
