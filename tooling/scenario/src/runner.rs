@@ -27,6 +27,9 @@ pub struct Options {
     /// Name filters, as `cargo test <filter>` passes them: a scenario is
     /// selected when its name contains one, or one names its tag.
     pub filters: Vec<String>,
+    /// Filters from `--skip`, as libtest takes them: a scenario one of
+    /// them matches, the way a name filter matches, is left out.
+    pub skips: Vec<String>,
 }
 
 /// libtest's flags that take no value, accepted and ignored so that
@@ -45,7 +48,7 @@ const LIBTEST_FLAGS: [&str; 7] = [
 const LIBTEST_VALUED: [&str; 2] = ["--test-threads", "--color"];
 
 /// Reads the target's command line: `--tags EXPR` (or `-t`), name
-/// filters, and the libtest flags cargo may pass on.
+/// filters, `--skip FILTER`, and the libtest flags cargo may pass on.
 ///
 /// # Errors
 ///
@@ -70,6 +73,7 @@ pub fn parse_args(args: &[String]) -> Result<Options, String> {
                 let expr = value()?;
                 options.tags = Some(expr.parse().map_err(|e| format!("--tags {expr:?}: {e}"))?);
             }
+            "--skip" => options.skips.push(value()?),
             f if LIBTEST_VALUED.contains(&f) => drop(value()?),
             f if LIBTEST_FLAGS.contains(&f) => {}
             f if f.starts_with('-') => return Err(format!("unknown flag {f:?}")),
@@ -96,6 +100,7 @@ impl Options {
                 .as_ref()
                 .is_none_or(|expr| expr.eval(tags.clone()))
             && (self.filters.is_empty() || self.filters.iter().any(matches_filter))
+            && !self.skips.iter().any(matches_filter)
     }
 }
 

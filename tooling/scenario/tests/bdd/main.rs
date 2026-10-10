@@ -104,7 +104,7 @@ fn run() -> ExitCode {
     let options = match runner::parse_args(&args) {
         Ok(options) => options,
         Err(err) => {
-            eprintln!("bdd: {err}\nusage: bdd [--tags EXPR] [FILTER]...");
+            eprintln!("bdd: {err}\nusage: bdd [--tags EXPR] [--skip FILTER]... [FILTER]...");
             return ExitCode::from(2);
         }
     };

@@ -31,6 +31,28 @@ fn parse_args_reads_tags_filters_and_ignores_libtest_flags() {
 }
 
 #[test]
+fn parse_args_reads_skips_as_libtest_does() {
+    let got = parse_args(&args(&["--skip", "disclosure", "--skip=@ENG-01"])).unwrap();
+
+    assert_eq!(got.skips, ["disclosure", "@ENG-01"]);
+    assert!(got.filters.is_empty());
+    assert_eq!(
+        parse_args(&args(&["--skip"])).unwrap_err(),
+        "--skip needs a value"
+    );
+}
+
+#[test]
+fn selects_leaves_out_what_a_skip_names() {
+    let skipping = parse_args(&args(&["--skip", "disclosure", "--skip", "@ENG-01"])).unwrap();
+    let bound = tags(&["ENG-24", "P0"]);
+
+    assert!(!skipping.selects("a 90-day disclosure policy", bound.iter()));
+    assert!(!skipping.selects("x", tags(&["ENG-01"]).iter()));
+    assert!(skipping.selects("x", bound.iter()));
+}
+
+#[test]
 fn parse_args_refuses_what_it_does_not_know() {
     assert_eq!(
         parse_args(&args(&["--bogus"])).unwrap_err(),
