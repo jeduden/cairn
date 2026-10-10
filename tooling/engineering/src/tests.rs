@@ -15,16 +15,16 @@ pub(crate) fn checkout(files: &[(&str, &str)]) -> (testkit::TempDir, Checkout) {
 
 #[test]
 fn contains_names_the_file_and_the_text() {
-    let (_dir, c) = checkout(&[(".github/workflows/release.yml", "go build -trimpath\n")]);
+    let (_dir, c) = checkout(&[(".github/workflows/release.yml", "cargo build --locked\n")]);
 
     assert!(
-        c.contains(".github/workflows/release.yml", "-trimpath")
+        c.contains(".github/workflows/release.yml", "--locked")
             .is_ok()
     );
     assert_eq!(
-        c.contains(".github/workflows/release.yml", "-buildvcs=true")
+        c.contains(".github/workflows/release.yml", "--offline")
             .unwrap_err(),
-        r#".github/workflows/release.yml does not contain "-buildvcs=true""#
+        r#".github/workflows/release.yml does not contain "--offline""#
     );
     assert!(
         c.contains("nope.md", "x")

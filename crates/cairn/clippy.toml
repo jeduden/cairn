@@ -1,0 +1,18 @@
+# The core executable's reach (SEC-01, ENG-16): the core (B0) opens no
+# socket and starts no program but its own kernel worker (CMP-05),
+# which joins with its own crate and an entry here under review. clippy
+# reads this file for this crate alone, so it repeats the workspace's
+# clippy.toml.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+
+disallowed-types = [
+  { path = "std::net::TcpListener", reason = "the core opens no socket (SEC-01)" },
+  { path = "std::net::TcpStream", reason = "the core opens no socket (SEC-01)" },
+  { path = "std::net::UdpSocket", reason = "the core opens no socket (SEC-01)" },
+  { path = "std::os::unix::net::UnixDatagram", reason = "the core opens no socket (SEC-01)" },
+  { path = "std::os::unix::net::UnixListener", reason = "the core opens no socket (SEC-01)" },
+  { path = "std::os::unix::net::UnixStream", reason = "the core opens no socket (SEC-01)" },
+  { path = "std::process::Command", reason = "the core starts no program but its kernel worker (SEC-01, CMP-05)" },
+]

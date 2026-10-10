@@ -18,8 +18,8 @@ compaction, and lets Claude recall exact history on demand. Stored history never
 becomes a prompt-injection channel.
 
 Status: pre-implementation. The repository holds the specification, the
-requirement matrix, and the CI and release pipeline, its tooling in Rust. The
-product arrives plan by plan; ADR-2610050528 proposes its language.
+requirement matrix, the CI and release pipeline, and the `cairn` core
+executable, all Rust. The product arrives plan by plan.
 
 ## The Invariants Come First
 
@@ -130,8 +130,8 @@ What they mean for everyday code:
 - **I2** — only `TrustedText` reaches a restore block; recall is pull-only and
   always enveloped.
 - **I4** — no network in the core, and no program start but its own kernel
-  worker (ENG-16). For the Go stub, depguard and an import-closure test refuse
-  `net`, `net/http` and `os/exec`.
+  worker (ENG-16). The `cairn` crate's clippy.toml refuses `std::net` and
+  `std::process`, and its reach test refuses any linked crate.
 - **I6** — audit and count each dropped, rejected, redacted or failed operation.
 - **I9** — hook handlers fail open unless that would break I2, I4 or I8.
 - **I10** — code that builds derived artifacts reads no clock or randomness.
@@ -153,7 +153,7 @@ header: ""
 row: "- [{filename}]({filename}) — {summary}"
 ?>
 - [CHANGELOG.md](CHANGELOG.md) — Release notes and upgrade notes per version, newest first (ENG-23).
-- [DEPENDENCIES.md](DEPENDENCIES.md) — Every direct dependency, Rust and Go, listed through the decision record that justifies it (ENG-18, ENG-26). The ENG-18 scenario fails the build when the manifests and the dependency ADRs disagree or a license is off the allow-list.
+- [DEPENDENCIES.md](DEPENDENCIES.md) — Every direct dependency, listed through the decision record that justifies it (ENG-18, ENG-26). The ENG-18 scenario fails the build when the manifests and the dependency ADRs disagree or a license is off the allow-list.
 - [docs/development.md](docs/development.md) — Build commands, static analysis and supply-chain checks, and how CI, the nightly fuzz job and the reproducible, signed release pipeline work. Testing has its own page, docs/testing.md.
 - [docs/domain-model/index.md](docs/domain-model/index.md) — Cairn's domain model: the closed set of concepts with their definitions, how they relate, the terms that are not Cairn concepts, and how names in code, docs and UI follow the model. The SRS links here for every term, and the domain-model agent reviews against it.
 - [docs/srs/index.md](docs/srs/index.md) — The Cairn Software Requirements Specification — the normative source for every requirement id a feature scenario is tagged with.

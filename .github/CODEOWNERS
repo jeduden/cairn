@@ -14,19 +14,22 @@
 # check, and the review gate that decides the review the reviewer app
 # posts (ENG-28). The workflow that runs it is under /.github/.
 /tooling/                     @jeduden
-/cmd/cairn/imports_test.go    @jeduden
+
+# The core executable's reach evidence (SEC-01, ENG-16): the clippy
+# configuration that refuses sockets and program starts in its code,
+# and the test that refuses a crate linked into it.
+/crates/cairn/clippy.toml     @jeduden
+/crates/cairn/tests/reach.rs  @jeduden
 
 # CI, the coverage floors, the toolchain pins, the lint and supply-chain
 # configuration and this file.
 /.github/                     @jeduden
 /scripts/                     @jeduden
-/tools/                       @jeduden
 /Cargo.toml                   @jeduden
 /rust-toolchain.toml          @jeduden
 /clippy.toml                  @jeduden
 /deny.toml                    @jeduden
 /codecov.yml                  @jeduden
-/.golangci.yml                @jeduden
 /.mdsmith.yml                 @jeduden
 
 # The supply-chain and disclosure policy: every new direct dependency

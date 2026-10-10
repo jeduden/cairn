@@ -1,6 +1,6 @@
 ---
 summary: >-
-  Every direct dependency, Rust and Go, listed through the decision
+  Every direct dependency, listed through the decision
   record that justifies it (ENG-18, ENG-26). The ENG-18 scenario fails
   the build when the manifests and the dependency ADRs disagree or a
   license is off the allow-list.
@@ -20,7 +20,7 @@ hand.
 
 The `ENG-18` scenario in
 [features/engineering.feature](features/engineering.feature) reads
-`go.mod`, `cargo metadata` and the ADRs. It fails the build in any
+`cargo metadata` and the ADRs. It fails the build in any
 of these cases:
 
 - a direct dependency is justified by no accepted ADR, or by more
@@ -45,25 +45,24 @@ footer: |
 
 ?>
 
-| ADR                                                          | Status     | Decision                                                                                                                                                                                                                                     |
-| ------------------------------------------------------------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ADR-2609292234](docs/adr/ADR-2609292234-test-stack.md)      | superseded | The executable requirement matrix runs through godog and reads Gherkin through cucumber's messages types; testify asserts in every test. All three are test-only.                                                                            |
-| [ADR-2610101442](docs/adr/ADR-2610101442-rust-test-stack.md) | accepted   | The repository tooling in Rust runs the scenarios through cucumber-rs and reads JSON through serde and serde_json; testify asserts in the Go tests that remain. All four serve tests and tooling only; none links into a shipped executable. |
+| ADR                                                              | Status     | Decision                                                                                                                                                                                                                                     |
+| ---------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-2609292234](docs/adr/ADR-2609292234-test-stack.md)          | superseded | The executable requirement matrix runs through godog and reads Gherkin through cucumber's messages types; testify asserts in every test. All three are test-only.                                                                            |
+| [ADR-2610101442](docs/adr/ADR-2610101442-rust-test-stack.md)     | superseded | The repository tooling in Rust runs the scenarios through cucumber-rs and reads JSON through serde and serde_json; testify asserts in the Go tests that remain. All four serve tests and tooling only; none links into a shipped executable. |
+| [ADR-2610101913](docs/adr/ADR-2610101913-test-stack-after-go.md) | accepted   | The scenarios run through cucumber-rs, and the tooling and the tests read JSON through serde and serde_json. All three serve tests and tooling only; none links into the core executable, whose reach test refuses any crate.                |
 <?/catalog?>
 
 Every direct dependency serves tests and repository tooling today.
 The SQLite driver's ADR stays proposed until M1 adds the module. None
-links into the shipped `cairn` binary, and the import-closure test in
-[cmd/cairn/imports_test.go](cmd/cairn/imports_test.go) keeps network
-and process packages out of it.
+links into the shipped `cairn` executable: its reach test,
+[crates/cairn/tests/reach.rs](crates/cairn/tests/reach.rs), fails the
+build when a crate does.
 
 [deny.toml](deny.toml) holds every crate in the tree, direct or not,
 to the same allow-list, with each exception named, and to crates.io as
 the only source; CI runs cargo-deny and cargo-audit over it (ENG-16).
-Updates arrive weekly from dependabot for Cargo, Go modules and
-actions.
+Updates arrive weekly from dependabot for Cargo and actions.
 
-Dev tools are no dependency. golangci-lint and govulncheck build from
-[tools/go.mod](tools/go.mod), so they never enter this module's graph.
-CI installs cargo-deny, cargo-audit and cargo-llvm-cov at exact
-versions.
+Dev tools are no dependency. CI installs cargo-deny, cargo-audit,
+cargo-llvm-cov and cargo-zigbuild at exact versions, and zig at an
+exact version checked against its SHA-256.

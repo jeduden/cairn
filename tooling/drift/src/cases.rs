@@ -1,13 +1,13 @@
 //! The registry: every drift a check that keeps the records in step
 //! exists to catch.
 
-use crate::{Case, Check, Injection, cargo_test, mdsmith, scenario};
+use crate::{Case, Check, Injection, cargo_test, clippy, mdsmith, scenario};
 
 /// The dependency decision the ENG-18 and ENG-26 cases drift.
-const TEST_STACK: &str = "docs/adr/ADR-2610101442-rust-test-stack.md";
+const TEST_STACK: &str = "docs/adr/ADR-2610101913-test-stack-after-go.md";
 
 /// The decision [`TEST_STACK`] superseded.
-const OLD_TEST_STACK: &str = "docs/adr/ADR-2609292234-test-stack.md";
+const OLD_TEST_STACK: &str = "docs/adr/ADR-2610101442-rust-test-stack.md";
 
 /// The workflow the ENG-28 cases drift.
 const REVIEW_WORKFLOW: &str = ".github/workflows/review.yml";
@@ -29,6 +29,7 @@ pub fn cases() -> Vec<Case> {
         agent_cases(),
         domain_model_cases(),
         ledger_cases(),
+        reach_cases(),
     ]
     .concat()
 }
@@ -57,13 +58,9 @@ fn dependency_cases() -> Vec<Case> {
         case(
             "a direct dependency no ADR justifies",
             "ENG-18",
-            Injection::replace(
-                "go.mod",
-                "require go.yaml.in/yaml/v3 v3.0.5 // indirect",
-                "require go.yaml.in/yaml/v3 v3.0.5",
-            ),
+            Injection::replace(TEST_STACK, "| `serde_json` |", "| `serde-json` |"),
             scenario("ENG-18"),
-            "go.yaml.in/yaml/v3 is named by 0 accepted ADRs",
+            "serde_json is named by 0 accepted ADRs",
         ),
         case(
             "the ADR justifying the test stack removed",
@@ -103,9 +100,9 @@ fn decision_cases() -> Vec<Case> {
         case(
             "two ADRs sharing an id",
             "ENG-26",
-            Injection::copy(TEST_STACK, "docs/adr/ADR-2610101442-copy.md"),
+            Injection::copy(TEST_STACK, "docs/adr/ADR-2610101913-copy.md"),
             scenario("ENG-26"),
-            "id ADR-2610101442 already used by",
+            "id ADR-2610101913 already used by",
         ),
         case(
             "an ADR superseded without a successor",
@@ -119,7 +116,7 @@ fn decision_cases() -> Vec<Case> {
             "ENG-26",
             Injection::replace(OLD_TEST_STACK, "status: superseded", "status: accepted"),
             scenario("ENG-26"),
-            r#"ADR-2609292234 names successor ADR-2610101442 but its status is "accepted", not superseded"#,
+            r#"ADR-2610101442 names successor ADR-2610101913 but its status is "accepted", not superseded"#,
         ),
         // Phase 3 of plan 2609292156 moves ADR-01 to ADR-10 into files
         // and makes this drift fail ENG-26.
@@ -147,12 +144,23 @@ fn repository_cases() -> Vec<Case> {
             "release builds no longer static",
             "ENG-01",
             Injection::replace(
-                ".github/workflows/release.yml",
-                r#"CGO_ENABLED: "0""#,
-                r#"CGO_ENABLED: "1""#,
+                ".github/workflows/build.yml",
+                "    x86_64-unknown-linux-musl:linux-amd64",
+                "    x86_64-unknown-linux-gnu:linux-amd64",
             ),
             scenario("ENG-01"),
-            r#"does not contain "CGO_ENABLED: \"0\"""#,
+            r#"the release build does not contain "x86_64-unknown-linux-musl""#,
+        ),
+        case(
+            "release builds keeping the builder's paths",
+            "ENG-01",
+            Injection::replace(
+                ".github/workflows/build.yml",
+                "export RUSTFLAGS=\"--remap-path-prefix=$PWD=. --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo ",
+                "export RUSTFLAGS=\"",
+            ),
+            scenario("ENG-01"),
+            r#"the release build does not contain "--remap-path-prefix""#,
         ),
         case(
             "the Rust toolchain no longer pinned to a release",
@@ -294,8 +302,8 @@ fn gate_cases() -> Vec<Case> {
             "mdsmith check",
             Injection::replace(
                 TEST_STACK,
-                "All four serve tests and tooling only;",
-                "All four serve tests only;",
+                "read JSON through serde and serde_json. All three serve",
+                "read JSON through serde and serde_json. Each of them serves",
             ),
             mdsmith(),
             "generated section is out of date",
@@ -321,7 +329,7 @@ fn parse_cases() -> Vec<Case> {
         case(
             "a decision record whose front matter no longer reads",
             "decision_records_parse",
-            Injection::replace(TEST_STACK, "id: ADR-2610101442", "id ADR-2610101442"),
+            Injection::replace(TEST_STACK, "id: ADR-2610101913", "id ADR-2610101913"),
             cargo_test("adr", "records", "decision_records_parse"),
             "malformed front matter",
         ),
@@ -450,6 +458,40 @@ fn ledger_cases() -> Vec<Case> {
         cargo_test("finding-ledger", "carried", "finding_ledger_is_carried"),
         "closed findings no longer carried in the text",
     )]
+}
+
+/// The drifts the core executable's reach evidence exists to catch
+/// (SEC-01, ENG-16): a crate linked in, or the core's own code opening
+/// a socket or starting a program.
+fn reach_cases() -> Vec<Case> {
+    vec![
+        case(
+            "a crate linked into the core executable",
+            "the_core_executable_links_only_crates_its_reach_allows",
+            Injection::replace(
+                "crates/cairn/Cargo.toml",
+                "[dev-dependencies]\nserde_json.workspace = true\n",
+                "[dependencies]\nserde_json.workspace = true\n\n[dev-dependencies]\n",
+            ),
+            cargo_test(
+                "cairn",
+                "reach",
+                "the_core_executable_links_only_crates_its_reach_allows",
+            ),
+            "cairn links crates its reach does not allow",
+        ),
+        case(
+            "the core executable opening a socket",
+            "SEC-01",
+            Injection::replace(
+                "crates/cairn/src/lib.rs",
+                "use std::io::Write;",
+                "use std::io::Write;\n\npub fn dial() -> Option<std::net::TcpStream> {\n    None\n}",
+            ),
+            clippy("cairn"),
+            "use of a disallowed type `std::net::TcpStream`",
+        ),
+    ]
 }
 
 #[cfg(test)]

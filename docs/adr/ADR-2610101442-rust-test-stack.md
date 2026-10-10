@@ -1,7 +1,8 @@
 ---
 id: ADR-2610101442
 title: "The test stack after the move to Rust: cucumber, serde, serde_json and testify"
-status: accepted
+status: superseded
+superseded-by: ADR-2610101913
 scope: dependencies
 summary: >-
   The repository tooling in Rust runs the scenarios through cucumber-rs

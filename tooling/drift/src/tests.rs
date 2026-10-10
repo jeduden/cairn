@@ -94,4 +94,8 @@ fn check_constructors_name_the_command() {
         "cargo test --locked -p srs --test gates -- --exact x"
     );
     assert_eq!(mdsmith().to_string(), "mdsmith check .");
+    assert_eq!(
+        clippy("cairn").to_string(),
+        "cargo clippy --locked -p cairn -- -D warnings"
+    );
 }

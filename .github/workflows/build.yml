@@ -1,0 +1,147 @@
+name: Build
+
+# The release build of the core executable (ENG-01, ENG-19, CON-02),
+# defined once: CI runs it on every change and the release workflow
+# runs it before anything is published, so release day builds nothing
+# new. Two independent builders, an x86_64 and an arm64 Linux runner,
+# each cross-build every target with the same pinned Rust, zig and
+# cargo-zigbuild. The reproducible job then requires their artifacts to
+# be bit-identical, and every binary runs on its own platform once.
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "The version stamped into the executable, e.g. v0.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  # ENG-01: every toolchain the build uses is exact. Rust comes from
+  # rust-toolchain.toml; zig, the linker for every target, and
+  # cargo-zigbuild, which drives it, are pinned here. Bump each by
+  # hand, with zig's SHA-256 sums from ziglang.org/download/index.json.
+  ZIG_VERSION: "0.15.2"
+  CARGO_ZIGBUILD_VERSION: "0.23.4"
+  # Every release target, as rust-target:artifact-name. The Linux
+  # targets are musl, which links statically (CON-02).
+  TARGETS: >-
+    x86_64-unknown-linux-musl:linux-amd64
+    aarch64-unknown-linux-musl:linux-arm64
+    aarch64-apple-darwin:darwin-arm64
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - builder: ubuntu-latest
+            zig: x86_64-linux
+            zig-sha256: 02aa270f183da276e5b5920b1dac44a63f1a49e55050ebde3aecc9eb82f93239
+            runs: linux-amd64
+          - builder: ubuntu-24.04-arm
+            zig: aarch64-linux
+            zig-sha256: 958ed7d1e00d0ea76590d27666efbf7a932281b3d7ba0c6b01b0ff26498f667f
+            runs: linux-arm64
+    runs-on: ${{ matrix.builder }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned Rust toolchain and the release targets
+        run: |
+          targets=""
+          for pair in $TARGETS; do targets="$targets,${pair%%:*}"; done
+          rustup toolchain install \
+            "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)" \
+            --profile minimal --no-self-update --target "${targets#,}"
+      - name: Install zig
+        env:
+          ZIG: ${{ matrix.zig }}
+          ZIG_SHA256: ${{ matrix.zig-sha256 }}
+        run: |
+          curl -sSfL -o zig.tar.xz "https://ziglang.org/download/${ZIG_VERSION}/zig-${ZIG}-${ZIG_VERSION}.tar.xz"
+          echo "${ZIG_SHA256}  zig.tar.xz" | sha256sum -c -
+          mkdir "$RUNNER_TEMP/zig"
+          tar -xJf zig.tar.xz -C "$RUNNER_TEMP/zig" --strip-components=1
+          rm zig.tar.xz
+          echo "$RUNNER_TEMP/zig" >> "$GITHUB_PATH"
+      # An exact version from crates.io, built against its own lockfile.
+      - run: cargo install --locked "cargo-zigbuild@${CARGO_ZIGBUILD_VERSION}"
+      - name: Build every target
+        env:
+          # ENG-01: the version and the commit, stamped into the
+          # executable; `cairn version --json` reads both back.
+          CAIRN_VERSION: ${{ inputs.version }}
+          CAIRN_COMMIT: ${{ github.sha }}
+        # ENG-01 and ENG-19: the path prefixes keep the builder's paths
+        # out of the binary, and -Wl,-S keeps the object files'
+        # timestamps out of the Mach-O UUID. Cargo.toml's release
+        # profile does the rest.
+        run: |
+          export RUSTFLAGS="--remap-path-prefix=$PWD=. --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo -Clink-arg=-Wl,-S"
+          mkdir dist
+          for pair in $TARGETS; do
+            target="${pair%%:*}"
+            cargo zigbuild --locked --release -p cairn --bin cairn --target "$target"
+            cp "target/$target/release/cairn" "dist/cairn-${pair#*:}"
+          done
+          (cd dist && sha256sum cairn-*)
+      - name: Check the binary reports what it was stamped with
+        env:
+          BIN: dist/cairn-${{ matrix.runs }}
+          VERSION: ${{ inputs.version }}
+          COMMIT: ${{ github.sha }}
+        run: scripts/check-stamp.sh "$BIN" "$VERSION" "$COMMIT"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ matrix.builder }}-cairn
+          path: dist/
+
+  # ENG-19: the two builders' artifacts must be bit-identical. A
+  # difference means the build is not reproducible, and nothing ships.
+  reproducible:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ubuntu-latest-cairn
+          path: a
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ubuntu-24.04-arm-cairn
+          path: b
+      - name: Compare the two builders
+        run: |
+          (cd a && sha256sum cairn-* | sort) > a.sum
+          (cd b && sha256sum cairn-* | sort) > b.sum
+          cat a.sum
+          diff -u a.sum b.sum || {
+            echo "::error::the two builders produced different artifacts"
+            exit 1
+          }
+
+  # The Linux builders ran their own platform's binary; the darwin one
+  # runs here, on the platform it is for.
+  darwin:
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ubuntu-latest-cairn
+          path: dist
+      - name: Check the binary reports what it was stamped with
+        env:
+          VERSION: ${{ inputs.version }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          chmod +x dist/cairn-darwin-arm64
+          scripts/check-stamp.sh dist/cairn-darwin-arm64 "$VERSION" "$COMMIT"

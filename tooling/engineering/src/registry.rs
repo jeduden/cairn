@@ -13,9 +13,10 @@ pub const CHECKOUT_STEP: &str = "the repository checkout";
 
 /// The gate tests outside the scenarios that ENG-27 holds to a drift
 /// case: the parse gates of the SRS and the ADRs, the requirement–scenario gate, the Appendix B check, the
-/// persona gates of Appendix C and §2.5, and the finding ledger's check
-/// that every closed domain-model finding stays in the text.
-pub const GATE_TESTS: [&str; 7] = [
+/// persona gates of Appendix C and §2.5, the finding ledger's check
+/// that every closed domain-model finding stays in the text, and the
+/// core executable's dependency reach (SEC-01).
+pub const GATE_TESTS: [&str; 8] = [
     "specification_parses",
     "decision_records_parse",
     "specification_and_features_agree",
@@ -23,6 +24,7 @@ pub const GATE_TESTS: [&str; 7] = [
     "appendix_c_covers_every_requirement",
     "personas_match_the_agents",
     "finding_ledger_is_carried",
+    "the_core_executable_links_only_crates_its_reach_allows",
 ];
 
 /// Refuses a case whose injection no longer finds its target, so a case

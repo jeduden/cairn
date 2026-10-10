@@ -91,7 +91,7 @@ fn sub_key(line: &str) -> Option<&str> {
 
 /// Drops a YAML comment: a whole comment line, or one that follows a
 /// space.
-fn uncomment(line: &str) -> String {
+pub(crate) fn uncomment(line: &str) -> String {
     if line.trim_start().starts_with('#') {
         return String::new();
     }
