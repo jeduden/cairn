@@ -20,9 +20,10 @@ Pre-implementation. This repository contains:
   normative source;
 - one Gherkin scenario per requirement under `features/`, almost all
   `@pending`, kept in step with the SRS by a gate test;
-- CI (build, race tests, coverage, lint, govulncheck, Markdown,
-  workflow audit), a nightly fuzz job, and a reproducible, signed
-  release pipeline;
+- CI (tests, coverage per test layer, clippy, cargo-deny and
+  cargo-audit, the drift suite, a reproducible release build,
+  Markdown, workflow audit), a nightly job, and a signed release
+  pipeline, all in Rust;
 - the delivery plans in [PLAN.md](PLAN.md).
 
 `cairn version` is the only command so far.
@@ -128,9 +129,10 @@ security review and a new major version, not a bug fix.
 ## Development
 
 ```sh
-go test ./...                                   # tests and scenarios
-go test ./cmd/cairn -run TestFeatures -v        # the requirement matrix
-go tool -modfile=tools/go.mod golangci-lint run # lint
+cargo test --workspace                          # tests and scenarios
+cargo test -p scenario --test bdd               # the requirement matrix
+cargo clippy --workspace --all-targets          # lint
+cargo run -p coverage                           # coverage per test layer
 mdsmith check .                                 # Markdown
 ```
 

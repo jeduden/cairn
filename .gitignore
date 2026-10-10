@@ -1,20 +1,12 @@
 # Binaries
 /cairn
 /cairn-*
-*.exe
-*.test
-
-# Coverage and profiles
-/*.out
-/coverage.*
-/*.coverprofile
-/*.prof
-
-# Go workspace
-go.work
-go.work.sum
+/dist/
 
 # Local state
 .env
 /.tmp/
 .claude/worktrees/
+
+# Cargo build output
+/target/

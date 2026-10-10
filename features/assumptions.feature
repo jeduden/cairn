@@ -1,6 +1,6 @@
 Feature: Assumptions register (ASM)
 
-  Scenarios for SRS §2.3, one per assumption, tagged with its id. The
+  The scenarios for SRS §2.3, one per assumption, tagged with its id. The
   rows carry neither priority nor traces, so a scenario here carries
   its id alone. Each is a contract test (ENG-17) that replays hook
   payloads and transcripts recorded from Claude Code by the M0 spike

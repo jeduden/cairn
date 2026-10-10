@@ -1,0 +1,66 @@
+# cargo-deny's policy for the whole dependency tree (ENG-16). The
+# ENG-18 scenario holds each direct dependency to an accepted ADR and
+# ENG-18's allow-list; this file holds every transitive crate to the
+# same list, its sources to crates.io, and nothing to a wildcard.
+# CI runs `cargo deny check licenses bans sources`; cargo-audit checks
+# advisories.
+
+[graph]
+all-features = true
+
+[licenses]
+# ENG-18's allow-list, BSD as its two permissive variants. A crate
+# offered under an SPDX OR expression passes when one choice does.
+allow = ["Apache-2.0", "MIT", "BSD-2-Clause", "BSD-3-Clause", "ISC"]
+confidence-threshold = 0.93
+# The list mirrors ENG-18 whether or not the tree uses each entry today.
+unused-allowed-license = "allow"
+# Two permissive, OSI-approved licenses outside the list, each held to
+# the crates that carry it today, so a new crate under either one stops
+# the build until a reviewed change names it here. A stakeholder
+# decision under ENG-18; see the PR that added them.
+#
+# - Unicode-3.0: unicode-ident, which every proc-macro needs through
+#   proc-macro2, and the ICU crates gherkin's text wrapping uses.
+# - BlueOak-1.0.0: synthez, which cucumber's step macros use.
+exceptions = [
+    { crate = "unicode-ident", allow = ["Unicode-3.0"] },
+    { crate = "icu_collections", allow = ["Unicode-3.0"] },
+    { crate = "icu_locale_core", allow = ["Unicode-3.0"] },
+    { crate = "icu_locale_fallback", allow = ["Unicode-3.0"] },
+    { crate = "icu_locale_fallback_data", allow = ["Unicode-3.0"] },
+    { crate = "icu_provider", allow = ["Unicode-3.0"] },
+    { crate = "icu_segmenter", allow = ["Unicode-3.0"] },
+    { crate = "icu_segmenter_data", allow = ["Unicode-3.0"] },
+    { crate = "litemap", allow = ["Unicode-3.0"] },
+    { crate = "potential_utf", allow = ["Unicode-3.0"] },
+    { crate = "tinystr", allow = ["Unicode-3.0"] },
+    { crate = "writeable", allow = ["Unicode-3.0"] },
+    { crate = "yoke", allow = ["Unicode-3.0"] },
+    { crate = "yoke-derive", allow = ["Unicode-3.0"] },
+    { crate = "zerofrom", allow = ["Unicode-3.0"] },
+    { crate = "zerofrom-derive", allow = ["Unicode-3.0"] },
+    { crate = "zerotrie", allow = ["Unicode-3.0"] },
+    { crate = "zerovec", allow = ["Unicode-3.0"] },
+    { crate = "zerovec-derive", allow = ["Unicode-3.0"] },
+    { crate = "synthez", allow = ["BlueOak-1.0.0"] },
+    { crate = "synthez-codegen", allow = ["BlueOak-1.0.0"] },
+    { crate = "synthez-core", allow = ["BlueOak-1.0.0"] },
+]
+
+[licenses.private]
+# The workspace's own crates are publish = false.
+ignore = true
+
+[bans]
+# Two versions of one crate are reported, not refused: syn 2 and 3
+# meet in cucumber's macros.
+multiple-versions = "warn"
+wildcards = "deny"
+# The workspace's own crates depend on each other by path.
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

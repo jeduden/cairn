@@ -1,0 +1,15 @@
+[package]
+name = "cairn"
+version = "0.0.0"
+description = "The Cairn core executable: the hook handlers, the MCP server and the CLI so far"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+testkit.workspace = true
+
+[lints]
+workspace = true

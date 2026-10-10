@@ -1,6 +1,6 @@
 Feature: Principal acts (OWN)
 
-  Scenarios for SRS §5.13, one per requirement, tagged with its id,
+  The scenarios for SRS §5.13, one per requirement, tagged with its id,
   priority and traced invariants. A scenario still tagged @pending is
   declared but not yet written: its steps are bound when the plan that
   implements the requirement lands.
@@ -85,7 +85,7 @@ Feature: Principal acts (OWN)
     When the hold window ends
     Then the agent's held request gets the answer "<answer>"
     And no turn is started or resumed
-    And a later allow reaches only the requesting run as the fixed template "Held request <id> was allowed by your principal" with a permission grant for the identical action
+    And a later allow reaches only the requesting run as the fixed template "Held request {id} was allowed by your principal" with a permission grant for the identical action
     And the held-request id resolves through "event_get" to the held request's recorded event
     And with away policies disabled by managed policy, turning one on is refused
 

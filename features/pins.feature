@@ -1,6 +1,6 @@
 Feature: Pins (PIN)
 
-  Scenarios for SRS §5.3, one per requirement, tagged with its id,
+  The scenarios for SRS §5.3, one per requirement, tagged with its id,
   priority and traced invariants. A scenario still tagged @pending is
   declared but not yet written: its steps are bound when the plan that
   implements the requirement lands.

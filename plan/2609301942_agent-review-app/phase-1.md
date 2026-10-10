@@ -24,13 +24,13 @@ runs the gate. A decision table drives the gate itself.
 RED: the scenario fails on the missing workflow, the gate's unit tests
 on the missing package. GREEN sites:
 
-- [internal/review](../../internal/review/review.go) decides the
-  review, and [cmd/review-gate](../../cmd/review-gate/main.go) wraps
+- `internal/review` decides the
+  review, and `cmd/review-gate` wraps
   it for the workflow. Both sit at the 100% coverage floor.
 - [review.yml](../../.github/workflows/review.yml) runs the agent and
   the gate, and [the review skill](../../.claude/skills/review/SKILL.md)
   is the agent's protocol.
 - Five drift cases guard ENG-28 in
-  [internal/drift](../../internal/drift/cases.go).
+  `internal/drift`.
 
 Gate: `@ENG-28` passes and the drift suite catches all five drifts.
