@@ -82,6 +82,9 @@ fn run(dir: &Path, target: &Path, check: &Check) -> (bool, String) {
         .args(&check.args)
         .current_dir(dir)
         .env("CARGO_TARGET_DIR", target)
+        // HOME stays, so rustup and cargo find their toolchains; Cairn's
+        // own home is the copy's (ENG-14).
+        .env("CAIRN_HOME", dir.join(".cairn"))
         .stdin(Stdio::null())
         .stdout(out.try_clone().unwrap())
         .stderr(out)

@@ -103,3 +103,69 @@ fn block_on_drives_a_future_through_its_waits() {
     assert_eq!(block_on(Countdown { left: 3 }), "done");
     assert_eq!(block_on(async { 7 }), 7);
 }
+
+#[test]
+fn is_isolated_wants_the_marked_home_under_the_temporary_directory() {
+    let temp = Path::new("/tmp");
+    let os = |s: &'static str| Some(OsStr::new(s));
+
+    assert!(is_isolated(os("/tmp/cairn-1"), os("/tmp/cairn-1"), temp));
+    assert!(
+        !is_isolated(os("/home/me"), os("/home/me"), temp),
+        "an exported marker cannot isolate a real home"
+    );
+    assert!(!is_isolated(os("/tmp/cairn-1"), os("/tmp/cairn-2"), temp));
+    assert!(!is_isolated(os("/tmp/cairn-1"), None, temp));
+    assert!(!is_isolated(None, os("/tmp/cairn-1"), temp));
+}
+
+#[test]
+fn isolate_points_home_cairn_home_and_the_marker_at_the_home() {
+    let mut command = Command::new("x");
+
+    isolate(&mut command, Path::new("/tmp/h"));
+
+    let envs: Vec<(String, String)> = command
+        .get_envs()
+        .map(|(k, v)| {
+            (
+                k.to_string_lossy().into_owned(),
+                v.unwrap().to_string_lossy().into_owned(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        envs,
+        [
+            ("CAIRN_BDD_HOME".to_owned(), "/tmp/h".to_owned()),
+            ("CAIRN_HOME".to_owned(), "/tmp/h/.cairn".to_owned()),
+            ("HOME".to_owned(), "/tmp/h".to_owned()),
+        ]
+    );
+}
+
+#[test]
+fn exit_code_passes_a_byte_and_fails_the_rest() {
+    assert_eq!(exit_code(Some(0)), 0);
+    assert_eq!(exit_code(Some(2)), 2);
+    assert_eq!(exit_code(Some(300)), 1);
+    assert_eq!(exit_code(None), 1);
+}
+
+#[test]
+fn sections_hold_one_value_per_type() {
+    #[derive(Default)]
+    struct Store(u8);
+    let mut sections = Sections::default();
+
+    sections.get::<Store>().0 = 7;
+
+    assert_eq!(sections.get::<Store>().0, 7);
+    assert_eq!(*sections.get::<u32>(), 0);
+    assert_eq!(format!("{sections:?}"), "Sections(2)");
+    assert_eq!(
+        Sections::default().get::<Store>().0,
+        0,
+        "another scenario, another value"
+    );
+}

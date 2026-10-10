@@ -24,6 +24,7 @@ pub fn cases() -> Vec<Case> {
         repository_cases(),
         review_cases(),
         gate_cases(),
+        parse_cases(),
         persona_cases(),
         agent_cases(),
         domain_model_cases(),
@@ -298,6 +299,31 @@ fn gate_cases() -> Vec<Case> {
             ),
             mdsmith(),
             "generated section is out of date",
+        ),
+    ]
+}
+
+/// The drifts the parse gates catch: the specification or a decision
+/// record no longer reading cleanly.
+fn parse_cases() -> Vec<Case> {
+    vec![
+        case(
+            "a requirement id defined twice",
+            "specification_parses",
+            Injection::replace(
+                "docs/srs/10-engineering-quality.md",
+                "| ENG-25 | P1  |",
+                "| ENG-24 | P1  |",
+            ),
+            cargo_test("srs", "gates", "specification_parses"),
+            "ENG-24 already defined at",
+        ),
+        case(
+            "a decision record whose front matter no longer reads",
+            "decision_records_parse",
+            Injection::replace(TEST_STACK, "id: ADR-2610101442", "id ADR-2610101442"),
+            cargo_test("adr", "records", "decision_records_parse"),
+            "malformed front matter",
         ),
     ]
 }

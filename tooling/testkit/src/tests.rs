@@ -62,6 +62,33 @@ fn create_unique_passes_other_errors_on() {
 }
 
 #[test]
-fn repo_root_holds_the_workspace_manifest() {
-    assert!(repo_root().join("Cargo.toml").is_file());
+fn isolate_points_home_and_cairn_home_at_the_directory() {
+    let mut command = Command::new("x");
+
+    isolate(&mut command, Path::new("/tmp/h"));
+
+    let envs: Vec<(String, String)> = command
+        .get_envs()
+        .map(|(k, v)| {
+            (
+                k.to_string_lossy().into_owned(),
+                v.unwrap().to_string_lossy().into_owned(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        envs,
+        [
+            ("CAIRN_HOME".into(), "/tmp/h/.cairn".into()),
+            ("HOME".into(), "/tmp/h".into())
+        ]
+    );
+}
+
+#[test]
+fn repo_root_is_two_levels_above_the_crate() {
+    assert_eq!(
+        repo_root(),
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
+    );
 }

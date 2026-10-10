@@ -67,3 +67,64 @@ fn the_executable_exits_2_on_a_wrong_command_line() {
     assert_eq!(out.status.code(), Some(2));
     assert!(out.stdout.is_empty());
 }
+
+#[test]
+fn the_executable_exits_1_without_a_review_outcome() {
+    let dir = TempDir::new().unwrap();
+    fs::write(
+        dir.path().join("runs.jsonl"),
+        r#"{"name":"CI","status":"completed","conclusion":"success"}"#,
+    )
+    .unwrap();
+
+    let out = review_gate(
+        &dir,
+        &[
+            "--outcome",
+            "outcome.json",
+            "--check-runs",
+            "runs.jsonl",
+            "--reviewed",
+            HEAD,
+            "--head",
+            HEAD,
+        ],
+    );
+
+    assert_eq!(out.status.code(), Some(1));
+    assert!(out.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&out.stderr).contains("read outcome.json"));
+}
+
+#[test]
+fn the_executable_prints_nothing_for_a_head_that_moved() {
+    let dir = TempDir::new().unwrap();
+    fs::write(
+        dir.path().join("outcome.json"),
+        r#"{"verdict":"approve","summary":"Fine.","findings":[]}"#,
+    )
+    .unwrap();
+    fs::write(
+        dir.path().join("runs.jsonl"),
+        r#"{"name":"CI","status":"completed","conclusion":"success"}"#,
+    )
+    .unwrap();
+
+    let out = review_gate(
+        &dir,
+        &[
+            "--outcome",
+            "outcome.json",
+            "--check-runs",
+            "runs.jsonl",
+            "--reviewed",
+            HEAD,
+            "--head",
+            "490efa7",
+        ],
+    );
+
+    assert!(out.status.success());
+    assert!(out.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&out.stderr).contains("moved past"));
+}

@@ -7,6 +7,7 @@ use std::ffi::OsString;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// How many names a [`TempDir`] tries before it gives up.
@@ -17,6 +18,15 @@ const ATTEMPTS: u32 = 1000;
 #[must_use]
 pub fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
+}
+
+/// Points `command` at `home` (ENG-14): its `HOME`, and a `CAIRN_HOME`
+/// inside it, so an executable a test starts cannot reach the real home
+/// or Claude Code configuration.
+pub fn isolate<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
+    command
+        .env("HOME", home)
+        .env("CAIRN_HOME", home.join(".cairn"))
 }
 
 /// A directory under the system's temporary directory, removed with

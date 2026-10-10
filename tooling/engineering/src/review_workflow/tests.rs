@@ -270,4 +270,16 @@ fn gate_outcome_names_what_the_gate_does() {
         gate_outcome(&row("malformed", "none", "current", "passed", "passed")),
         "an error"
     );
+    assert_eq!(
+        gate_outcome(&row("missing", "none", "current", "passed", "passed")),
+        "an error"
+    );
+}
+
+#[test]
+fn grants_write_reads_quoted_values_and_write_all() {
+    assert!(grants_write("      contents: \"write\"\n"));
+    assert!(grants_write("      contents: 'write'\n"));
+    assert!(grants_write("    permissions: write-all\n"));
+    assert!(!grants_write("    permissions: read-all\n"));
 }

@@ -287,13 +287,13 @@ fn render(outcome: &ReviewOutcome, failed: &[&CheckRun], event: &str, head: &str
             let _ = write!(
                 b,
                 "\n- {severity} `{}`: {}",
-                location(f),
+                code_span(&location(f)),
                 defuse_mentions(&f.body)
             );
         }
     }
     for r in failed {
-        let _ = write!(b, "\n- check `{}`: {}", r.name, r.conclusion);
+        let _ = write!(b, "\n- check `{}`: {}", code_span(&r.name), r.conclusion);
     }
 
     b
@@ -324,7 +324,13 @@ fn defuse_mentions(s: &str) -> String {
             && !(i > 0 && word_char(chars[i - 1]))
             && chars.get(i + 1).is_some_and(|next| word_char(*next));
         if !bare {
-            in_code ^= c == '`';
+            // A backtick opens a code span only when another closes it;
+            // GitHub prints a lone one as text, mentions and all.
+            in_code = match c {
+                '`' if in_code => false,
+                '`' => chars[i + 1..].contains(&'`'),
+                _ => in_code,
+            };
             out.push(c);
             i += 1;
             continue;
@@ -339,6 +345,13 @@ fn defuse_mentions(s: &str) -> String {
     }
 
     out
+}
+
+/// `text` made safe to print between backticks: a backtick inside
+/// would close the code span early and let a mention out, so it
+/// becomes a quote.
+fn code_span(text: &str) -> String {
+    text.replace('`', "'")
 }
 
 /// Whether `c` can be part of a GitHub user name.

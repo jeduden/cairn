@@ -263,3 +263,59 @@ fn an_spdx_or_expression_is_allowed_when_one_choice_is() {
     assert!(!license_allowed("GPL-3.0 OR LGPL-2.1", &allowed));
     assert!(!license_allowed("MIT AND GPL-3.0", &allowed));
 }
+
+fn cargo() -> std::ffi::OsString {
+    std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into())
+}
+
+#[test]
+fn cargo_metadata_reads_a_workspace_and_names_a_failure() {
+    let (dir, _) = crate::tests::checkout(&[
+        (
+            "Cargo.toml",
+            "[package]\nname = \"t\"\nversion = \"0.0.0\"\nedition = \"2024\"\n",
+        ),
+        ("src/lib.rs", ""),
+    ]);
+    let home = dir.path().join(".cairn");
+
+    let json = cargo_metadata(&cargo(), &dir.path().join("Cargo.toml"), &home).unwrap();
+    assert!(json.contains("\"name\":\"t\""), "{json}");
+
+    let err = cargo_metadata(&cargo(), &dir.path().join("missing/Cargo.toml"), &home).unwrap_err();
+    assert!(err.starts_with("cargo metadata failed: "), "{err}");
+    let err = cargo_metadata(
+        std::ffi::OsStr::new("/nonexistent/cargo"),
+        &dir.path().join("Cargo.toml"),
+        &home,
+    );
+    assert!(err.unwrap_err().starts_with("run cargo metadata: "));
+}
+
+#[test]
+fn direct_deps_reads_each_manifest_with_its_reader() {
+    let (_dir, checkout) = crate::tests::checkout(&[("go.mod", "require example.com/a v1.0.0\n")]);
+    let metadata = |manifest: &std::path::Path| {
+        assert!(manifest.ends_with("Cargo.toml"));
+        Ok(
+            r#"{"packages": [{"dependencies": [{"name": "serde", "source": "registry+x"}]}]}"#
+                .to_owned(),
+        )
+    };
+
+    assert_eq!(
+        direct_deps(&checkout, "go.mod", metadata).unwrap(),
+        ["example.com/a"]
+    );
+    assert_eq!(
+        direct_deps(&checkout, "Cargo.toml", metadata).unwrap(),
+        ["serde"]
+    );
+    assert_eq!(
+        direct_deps(&checkout, "package.json", metadata).unwrap_err(),
+        "no reader for the dependencies in package.json"
+    );
+    assert!(
+        direct_deps(&checkout, "Cargo.toml", |_| Err("boom".to_owned())).unwrap_err() == "boom"
+    );
+}

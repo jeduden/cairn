@@ -102,10 +102,10 @@ fn uncomment(line: &str) -> String {
 }
 
 /// Whether `text` grants a write permission: a `:` followed by
-/// `write` as a whole word.
+/// `write`, quoted or not, as a whole word, or `write-all`.
 fn grants_write(text: &str) -> bool {
     text.match_indices(':').any(|(i, _)| {
-        let rest = text[i + 1..].trim_start();
+        let rest = text[i + 1..].trim_start().trim_start_matches(['"', '\'']);
         rest.strip_prefix("write")
             .is_some_and(|after| !after.starts_with(is_word))
     })
@@ -290,8 +290,11 @@ pub fn gate_decides(rows: &[BTreeMap<String, String>]) -> Vec<String> {
         .collect()
 }
 
-/// Builds the review gate's input from one table row and names what the
-/// gate does with it.
+/// Runs the review gate's command line, as the review workflow does,
+/// on the files one table row describes, and names what it does: the
+/// review event it prints, "nothing" for a head that moved, or "an
+/// error" when it exits unsuccessfully. A `missing` verdict leaves the
+/// outcome file out.
 #[must_use]
 pub fn gate_outcome(row: &BTreeMap<String, String>) -> &'static str {
     const REVIEWED: &str = "206b0a76a81abb510e53d87ef187e83b5aacbcbb";
@@ -301,47 +304,60 @@ pub fn gate_outcome(row: &BTreeMap<String, String>) -> &'static str {
         "none" => "[]".to_owned(),
         severity => format!(r#"[{{"path":"a.rs","line":1,"severity":{severity:?},"body":"b"}}]"#),
     };
-    let body = format!(
-        r#"{{"verdict":{:?},"summary":"s","findings":{findings}}}"#,
-        cell("verdict")
-    );
-    let Ok(outcome) = review_gate::parse_outcome(&body) else {
-        return "an error";
-    };
     let conclusion = |cell: &str| {
         if cell == "passed" {
             "success"
         } else {
             "failure"
         }
-        .to_owned()
     };
-    let run = |name: &str, conclusion| review_gate::CheckRun {
-        name: name.into(),
-        status: "completed".into(),
-        conclusion,
-        ..review_gate::CheckRun::default()
+    let mut files = BTreeMap::from([(
+        "check-runs.jsonl",
+        format!(
+            "{{\"name\":\"CI\",\"status\":\"completed\",\"conclusion\":{:?}}}\n\
+             {{\"name\":\"lint\",\"status\":\"completed\",\"conclusion\":{:?}}}\n",
+            conclusion(cell("CI")),
+            conclusion(cell("other check"))
+        ),
+    )]);
+    if cell("verdict") != "missing" {
+        files.insert(
+            "outcome.json",
+            format!(
+                r#"{{"verdict":{:?},"summary":"s","findings":{findings}}}"#,
+                cell("verdict")
+            ),
+        );
+    }
+    let head = if cell("head") == "moved" {
+        MOVED
+    } else {
+        REVIEWED
     };
-    let input = review_gate::Input {
-        outcome,
-        reviewed: REVIEWED.into(),
-        head: if cell("head") == "moved" {
-            MOVED
-        } else {
-            REVIEWED
-        }
-        .into(),
-        check_runs: vec![
-            run("CI", conclusion(cell("CI"))),
-            run("lint", conclusion(cell("other check"))),
-        ],
+    let args = [
+        "--outcome",
+        "outcome.json",
+        "--check-runs",
+        "check-runs.jsonl",
+        "--reviewed",
+        REVIEWED,
+        "--head",
+        head,
+    ];
+    let read = |path: &str| {
+        files
+            .get(path)
+            .cloned()
+            .ok_or_else(|| std::io::Error::from(std::io::ErrorKind::NotFound))
     };
+    let (mut out, mut err) = (Vec::new(), Vec::new());
 
-    match review_gate::decide(&input) {
-        Err(_) => "an error",
-        Ok(None) => "nothing",
-        Ok(Some(review)) if review.event == review_gate::APPROVE => review_gate::APPROVE,
-        Ok(Some(_)) => review_gate::REQUEST_CHANGES,
+    let code = review_gate::cli::run(args.map(str::to_owned), &mut out, &mut err, &read);
+    match serde_json::from_slice::<review_gate::Review>(&out) {
+        _ if code != review_gate::cli::EXIT_OK => "an error",
+        _ if out.is_empty() => "nothing",
+        Ok(review) if review.event == review_gate::APPROVE => review_gate::APPROVE,
+        _ => review_gate::REQUEST_CHANGES,
     }
 }
 

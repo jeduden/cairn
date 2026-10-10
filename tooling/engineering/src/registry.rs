@@ -12,10 +12,12 @@ use scenario::Scenario;
 pub const CHECKOUT_STEP: &str = "the repository checkout";
 
 /// The gate tests outside the scenarios that ENG-27 holds to a drift
-/// case: the requirement–scenario gate, the Appendix B check, the
+/// case: the parse gates of the SRS and the ADRs, the requirement–scenario gate, the Appendix B check, the
 /// persona gates of Appendix C and §2.5, and the finding ledger's check
 /// that every closed domain-model finding stays in the text.
-pub const GATE_TESTS: [&str; 5] = [
+pub const GATE_TESTS: [&str; 7] = [
+    "specification_parses",
+    "decision_records_parse",
     "specification_and_features_agree",
     "appendix_b_matches_the_traces",
     "appendix_c_covers_every_requirement",

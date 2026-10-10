@@ -18,8 +18,6 @@ mod engineering_adr;
 mod engineering_drift;
 mod engineering_review;
 
-use std::any::{Any, TypeId, type_name};
-use std::collections::HashMap;
 use std::env;
 use std::fmt;
 use std::io;
@@ -31,10 +29,6 @@ use cucumber::writer::Stats as _;
 use scenario::runner;
 use testkit::TempDir;
 
-/// The variable that marks the runner's own process as isolated: its
-/// value is the home the parent created for it.
-const ISOLATED_HOME: &str = "CAIRN_BDD_HOME";
-
 /// The state one scenario threads through its steps, with its own
 /// fresh `HOME` and `CAIRN_HOME` (ENG-14): a step that starts a process
 /// points it at these, never at the real home.
@@ -43,7 +37,7 @@ const ISOLATED_HOME: &str = "CAIRN_BDD_HOME";
 pub struct World {
     pub home: PathBuf,
     pub cairn_home: PathBuf,
-    sections: HashMap<TypeId, Box<dyn Any>>,
+    sections: runner::Sections,
     _dir: TempDir,
 }
 
@@ -51,7 +45,7 @@ impl fmt::Debug for World {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("World")
             .field("home", &self.home)
-            .field("sections", &self.sections.len())
+            .field("sections", &self.sections)
             .finish()
     }
 }
@@ -64,30 +58,24 @@ impl World {
         Ok(Self {
             cairn_home: home.join(".cairn"),
             home,
-            sections: HashMap::new(),
+            sections: runner::Sections::default(),
             _dir: dir,
         })
     }
 
-    /// A section's own state beside the shared world, keyed by its
-    /// type: created on first use, the same value for the rest of the
-    /// scenario, gone with the world. A section declares a struct for
-    /// what its scenarios track and never adds a field to the world.
+    /// A section's own state beside the shared world; see
+    /// [`runner::Sections`].
     pub fn section<T: Default + 'static>(&mut self) -> &mut T {
-        let slot = self
-            .sections
-            .entry(TypeId::of::<T>())
-            .or_insert_with(|| Box::new(T::default()));
-        // The map is keyed by the type, so the value is always a T.
-        slot.downcast_mut()
-            .unwrap_or_else(|| unreachable!("section {} holds another type", type_name::<T>()))
+        self.sections.get::<T>()
     }
 }
 
 fn main() -> ExitCode {
-    match env::var_os(ISOLATED_HOME) {
-        Some(home) if env::var_os("HOME").as_ref() == Some(&home) => run(),
-        _ => isolate(),
+    let (home, marker) = (env::var_os("HOME"), env::var_os(runner::ISOLATED_HOME));
+    if runner::is_isolated(home.as_deref(), marker.as_deref(), &env::temp_dir()) {
+        run()
+    } else {
+        isolate()
     }
 }
 
@@ -96,16 +84,9 @@ fn main() -> ExitCode {
 /// reach the real home or Claude Code configuration (ENG-14).
 fn isolate() -> ExitCode {
     let started = TempDir::new().and_then(|home| {
-        let status = Command::new(env::current_exe()?)
-            .args(env::args_os().skip(1))
-            .env("HOME", home.path())
-            .env("CAIRN_HOME", home.path().join(".cairn"))
-            .env(ISOLATED_HOME, home.path())
-            .status()?;
-        Ok(status
-            .code()
-            .and_then(|c| u8::try_from(c).ok())
-            .unwrap_or(1))
+        let mut command = Command::new(env::current_exe()?);
+        let status = runner::isolate(command.args(env::args_os().skip(1)), home.path()).status()?;
+        Ok(runner::exit_code(status.code()))
     });
 
     match started {

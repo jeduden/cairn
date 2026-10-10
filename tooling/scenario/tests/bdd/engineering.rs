@@ -20,9 +20,20 @@ pub struct Engineering {
     pub adrs: Vec<Adr>,
     pub drifts: Vec<Case>,
     pub flow: Workflow,
+    /// The reviewer app's key, as a step last named it.
+    pub key: String,
 }
 
 impl Engineering {
+    /// The reviewer app's key the scenario named.
+    pub fn key(&self) -> Result<&str, String> {
+        if self.key.is_empty() {
+            Err("no step named the reviewer app's key".to_owned())
+        } else {
+            Ok(&self.key)
+        }
+    }
+
     /// The checkout the scenario opened on.
     pub fn checkout(&self) -> Result<&Checkout, String> {
         self.checkout

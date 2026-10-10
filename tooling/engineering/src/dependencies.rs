@@ -3,9 +3,13 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use std::ffi::OsStr;
+use std::path::Path;
+use std::process::Command;
+
 use adr::Adr;
 
-use crate::list;
+use crate::{Checkout, list};
 
 /// The module paths `go.mod` requires without an `// indirect` marker,
 /// in either the block or the one-line form.
@@ -62,6 +66,57 @@ pub fn cargo_direct_deps(metadata: &str) -> Result<Vec<String>, String> {
         .collect();
 
     Ok(deps.into_iter().map(str::to_owned).collect())
+}
+
+/// Runs `cargo metadata` on the workspace `manifest` roots, without
+/// resolving its dependency graph, with `CAIRN_HOME` pointed at
+/// `cairn_home` (ENG-14).
+///
+/// # Errors
+///
+/// Fails when cargo cannot run, exits unsuccessfully, or prints no
+/// UTF-8.
+pub fn cargo_metadata(cargo: &OsStr, manifest: &Path, cairn_home: &Path) -> Result<String, String> {
+    let out = Command::new(cargo)
+        .args([
+            "metadata",
+            "--format-version",
+            "1",
+            "--no-deps",
+            "--offline",
+            "--manifest-path",
+        ])
+        .arg(manifest)
+        .env("CAIRN_HOME", cairn_home)
+        .output()
+        .map_err(|e| format!("run cargo metadata: {e}"))?;
+    if !out.status.success() {
+        return Err(format!(
+            "cargo metadata failed: {}",
+            String::from_utf8_lossy(&out.stderr).trim_end()
+        ));
+    }
+
+    String::from_utf8(out.stdout).map_err(|e| format!("read cargo metadata: {e}"))
+}
+
+/// The direct dependencies the manifest `file` names: `go.mod`'s
+/// requirements, or the registry crates `metadata` lists for the Cargo
+/// workspace a `Cargo.toml` roots.
+///
+/// # Errors
+///
+/// Fails on a manifest with no reader, or when it cannot be read.
+pub fn direct_deps(
+    checkout: &Checkout,
+    file: &str,
+    metadata: impl Fn(&Path) -> Result<String, String>,
+) -> Result<Vec<String>, String> {
+    match file {
+        "go.mod" => Ok(go_direct_deps(&checkout.read(file)?)),
+        "Cargo.toml" => cargo_direct_deps(&metadata(&checkout.root.join(file))?),
+        other => Err(format!("no reader for the dependencies in {other}")),
+    }
 }
 
 /// The records whose decision is in force.

@@ -2,8 +2,14 @@
 //! which scenarios it runs, and an executor to drive the run on the
 //! current thread.
 
+use std::any::{Any, TypeId, type_name};
+use std::collections::HashMap;
+use std::ffi::OsStr;
+use std::fmt;
 use std::future::Future;
+use std::path::Path;
 use std::pin::pin;
+use std::process::Command;
 use std::sync::Arc;
 use std::task::{Context, Poll, Wake, Waker};
 use std::thread::{self, Thread};
@@ -118,6 +124,64 @@ pub fn block_on<F: Future>(future: F) -> F::Output {
             return out;
         }
         thread::park();
+    }
+}
+
+/// The variable that marks the runner's own process as isolated: its
+/// value is the home the parent created for it.
+pub const ISOLATED_HOME: &str = "CAIRN_BDD_HOME";
+
+/// Whether a process with `HOME` set to `home`, and the marker set to
+/// `marker`, runs isolated (ENG-14): the marker names its `HOME`, and
+/// that home sits under the system's temporary directory `temp`, so an
+/// exported marker cannot point the scenarios at a real home.
+#[must_use]
+pub fn is_isolated(home: Option<&OsStr>, marker: Option<&OsStr>, temp: &Path) -> bool {
+    match (home, marker) {
+        (Some(home), Some(marker)) => home == marker && Path::new(home).starts_with(temp),
+        _ => false,
+    }
+}
+
+/// Points `command` at `home`: its `HOME`, a `CAIRN_HOME` inside it,
+/// and the marker that says the process is isolated.
+pub fn isolate<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
+    command
+        .env("HOME", home)
+        .env("CAIRN_HOME", home.join(".cairn"))
+        .env(ISOLATED_HOME, home)
+}
+
+/// A child's exit status code as this process's exit code: a signal,
+/// or a code outside 0 to 255, is a failure.
+#[must_use]
+pub fn exit_code(code: Option<i32>) -> u8 {
+    code.and_then(|c| u8::try_from(c).ok()).unwrap_or(1)
+}
+
+/// The sections' own state beside a scenario's world, one value per
+/// type: created on first use and the same value for the rest of the
+/// scenario. A section declares a struct for what its scenarios track
+/// and never adds a field to the world.
+#[derive(Default)]
+pub struct Sections(HashMap<TypeId, Box<dyn Any>>);
+
+impl Sections {
+    /// The section state of type `T`.
+    pub fn get<T: Default + 'static>(&mut self) -> &mut T {
+        let slot = self
+            .0
+            .entry(TypeId::of::<T>())
+            .or_insert_with(|| Box::new(T::default()));
+        // The map is keyed by the type, so the value is always a T.
+        slot.downcast_mut()
+            .unwrap_or_else(|| unreachable!("section {} holds another type", type_name::<T>()))
+    }
+}
+
+impl fmt::Debug for Sections {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Sections({})", self.0.len())
     }
 }
 

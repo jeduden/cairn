@@ -437,3 +437,39 @@ fn the_body_mentions_no_one() {
         "{body}"
     );
 }
+
+#[test]
+fn an_unmatched_backtick_opens_no_code_span() {
+    assert_eq!(defuse_mentions("a ` b @user"), "a ` b `@user`");
+    assert_eq!(
+        defuse_mentions("`x` and ` then @user"),
+        "`x` and ` then `@user`"
+    );
+}
+
+#[test]
+fn paths_and_check_names_cannot_break_out_of_their_code_span() {
+    let outcome = ReviewOutcome {
+        findings: vec![finding("x` @user `y", 0, BLOCKING, "b")],
+        ..approve()
+    };
+    let failed = run("lint` @team `z", "completed", "failure");
+
+    let body = render(&outcome, &[&failed], REQUEST_CHANGES, REVIEWED);
+
+    assert!(body.contains("- blocking `x' @user 'y`: b"), "{body}");
+    assert!(body.contains("- check `lint' @team 'z`: failure"), "{body}");
+}
+
+#[test]
+fn decide_approves_an_outcome_with_only_nits() {
+    let nits = ReviewOutcome {
+        findings: vec![finding("a.rs", 2, NIT, "rename")],
+        ..approve()
+    };
+
+    let r = decide(&input(nits, green())).unwrap().unwrap();
+
+    assert_eq!(r.event, APPROVE);
+    assert!(r.body.contains("- nit `a.rs:2`: rename"), "{}", r.body);
+}

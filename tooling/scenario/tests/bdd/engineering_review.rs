@@ -27,22 +27,28 @@ fn runs_after(w: &mut World, name: String) -> Result<(), String> {
     regex = r#"^the job that runs the reviewing agent holds no write permission and not the "([^"]+)" key$"#
 )]
 fn agents_unprivileged(w: &mut World, key: String) -> Result<(), String> {
-    outcome(eng(w).flow.agents_unprivileged(&key))
+    let e = eng(w);
+    e.key = key;
+    outcome(e.flow.agents_unprivileged(&e.key))
 }
 
 #[then(regex = r#"^only one job holds the "([^"]+)" key, and it runs no agent$"#)]
 fn key_held_apart(w: &mut World, key: String) -> Result<(), String> {
-    eng(w).flow.key_held_apart(&key)
+    let e = eng(w);
+    e.key = key;
+    e.flow.key_held_apart(&e.key)
 }
 
 #[then(regex = r"^that job runs only after the agent's job succeeded$")]
 fn key_job_after_agents(w: &mut World) -> Result<(), String> {
-    outcome(eng(w).flow.key_job_after_agents(KEY)?)
+    let e = eng(w);
+    outcome(e.flow.key_job_after_agents(e.key()?)?)
 }
 
 #[then(regex = r#"^that job decides the review with "([^"]+)"$"#)]
 fn key_job_runs(w: &mut World, cmd: String) -> Result<(), String> {
-    eng(w).flow.key_job_runs(KEY, &cmd)
+    let e = eng(w);
+    e.flow.key_job_runs(e.key()?, &cmd)
 }
 
 #[then(regex = r"^the review gate decides:$")]
@@ -52,6 +58,3 @@ fn review_gate_decides(_w: &mut World, step: &Step) -> Result<(), String> {
         &table.rows,
     )?))
 }
-
-/// The reviewer app's key, as the scenario names it.
-const KEY: &str = "JEDUDEN_REVIEW_AGENT_KEY";
