@@ -8,7 +8,7 @@ description: >-
 ---
 # persona-review
 
-Each persona is an agent with one subjective seat. This skill is the
+Each persona is an agent with one subjective viewpoint. This skill is the
 objective procedure around them.
 
 ## Method
@@ -19,7 +19,7 @@ objective procedure around them.
    request or branch into its commit, its changed paths and a diff
    saved to a scratch file, and hand them those paths.
 2. List the personas: `ls .claude/agents/persona-*.md`. Run them all;
-   skip one only when the target plainly cannot touch its seat, and
+   skip one only when the target plainly cannot touch its concerns, and
    say which you skipped and why.
 3. Launch one subagent per persona in parallel, each with the
    persona's agent type and the target. Give no persona another's
@@ -36,7 +36,7 @@ objective procedure around them.
 ## Rules
 
 - A persona never approves. This review informs the stakeholder and
-  the review agent; it is not an approval gate.
+  the review agent; it is not a sign-off.
 - Findings that imply requirements go to the SRS change with the
   persona's agent name, so Appendix C, the persona coverage, can
   trace each requirement to the persona it serves.

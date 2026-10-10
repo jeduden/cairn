@@ -21,15 +21,14 @@ Feature: Engineering quality (ENG)
     When a crate depends on a crate its direction forbids
     Then the architecture check fails naming both crates
     And every library crate has exactly one declared responsibility
-    And the page's TypeScript package imports nothing of the core but its generated types
 
   @ENG-03 @P0 @pending
   Scenario: no mutable global state, injectable I/O and deadlines everywhere
-    Given the source tree
+    Given the repository's code
     When the static analyzers run
     Then no crate declares mutable global state
-    And every public blocking operation takes a deadline, directly or through a cancellation token a deadline fires
-    And no projection crate reads the wall clock or a random source
+    And every public blocking operation takes a deadline, directly or through a cancellation signal a deadline fires
+    And no crate that computes derived artifacts reads the wall clock or randomness
 
   @ENG-04 @P0 @pending
   Scenario: errors keep their cause, are typed per counter, and panics stop at the entry points
@@ -44,58 +43,58 @@ Feature: Engineering quality (ENG)
   Scenario: structured logs pass through redaction
     Given an isolated Cairn home
     And a log field containing an AWS access key
-    When Cairn writes the log record
-    Then the record is JSON emitted through tracing
+    When Cairn writes the log line
+    Then the log line is JSON emitted through tracing
     And the key appears only as a "[REDACTED:" marker
 
   @ENG-06 @P0 @pending
-  Scenario: the crash harness kills Cairn mid-operation and every invariant holds
+  Scenario: the crash-consistency test kills Cairn mid-operation and every invariant stays true
     Given an isolated Cairn home
-    When the crash harness kills Cairn at randomized points during ingestion, purge, migration and rebuild
+    When the crash-consistency test kills Cairn at randomized points during ingestion, purge, migration and rebuild
     Then after every kill "cairn verify" exits 0
-    And a nightly run completes at least 10000 iterations
+    And each nightly job completes at least 10000 iterations
 
   @ENG-07 @P0 @pending
   Scenario Outline: coverage-guided fuzzing covers every parser with a committed corpus
-    Given the cargo-fuzz target for the <surface>
+    Given the cargo-fuzz target for the <input>
     Then its seed corpus is committed under fuzz/corpus
-    And the nightly workflow fuzzes it
+    And the nightly fuzz job fuzzes it
 
     Examples:
-      | surface              |
-      | transcript parser    |
-      | hook input decoder   |
-      | query compiler       |
-      | envelope encoder     |
-      | field sanitizer      |
-      | redactor             |
-      | configuration parser |
+      | input                     |
+      | transcript parser         |
+      | hook input decoder        |
+      | event_search query parser |
+      | envelope encoder          |
+      | field sanitizer           |
+      | redactor                  |
+      | configuration parser      |
 
   @ENG-08 @P0 @pending
-  Scenario Outline: property-based tests pin the record's core laws
+  Scenario Outline: property-based tests check the record's core laws
     Given randomly generated records
-    Then the property "<property>" holds for every one
+    Then the property "<property>" is true of every one
 
     Examples:
-      | property                                          |
-      | seq is strictly increasing and gap-free           |
-      | ingest twice equals ingest once                   |
-      | rebuild reproduces projections exactly            |
-      | envelope encoding round-trips any byte sequence   |
-      | sanitized fields never contain restore delimiters |
+      | property                                                                                                           |
+      | within each writer's log, seq is strictly increasing and gap-free, so no two events share an address (writer, seq) |
+      | ingest twice equals ingest once                                                                                    |
+      | rebuild reproduces derived artifacts exactly                                                                       |
+      | envelope encoding round-trips any byte sequence                                                                    |
+      | sanitized fields never contain restore delimiters                                                                  |
 
   @ENG-09 @P0 @pending
   Scenario: data races are excluded and the store survives a concurrency soak
     Given an isolated Cairn home
     When 50 concurrent writers append 1000000 events
-    Then no seq value is duplicated or skipped
+    Then no two events share an address (writer, seq), and no seq is duplicated or skipped within any writer's log
     And "cairn verify" exits 0
     And every unsafe block that shares memory between threads passes under Miri or ThreadSanitizer
 
   @ENG-10 @P0 @pending
-  Scenario: golden files pin the exact bytes of restore blocks and envelopes
+  Scenario: golden files fix the exact bytes of restore blocks and envelopes
     Given a fixture record
-    When the restore block and a recall envelope are rendered
+    When the restore block and an envelope are rendered
     Then both equal their committed golden files byte for byte
 
   @ENG-11 @P0 @pending
@@ -105,16 +104,16 @@ Feature: Engineering quality (ENG)
     And the workspace as a whole is at least 80% covered
 
   @ENG-12 @P0 @pending
-  Scenario Outline: the end-to-end suite runs each component inside its boundary's sandbox
-    Given the end-to-end suite runs "<component>" inside a sandbox that <sandbox>
+  Scenario Outline: the end-to-end suite runs each component confined to its boundary
+    Given the end-to-end suite runs "<component>" confined to its boundary, which <confinement>
     When "<component>" opens a socket outside the boundary the register assigns it
     Then the suite fails naming the component and the caller
 
     Examples:
-      | component           | sandbox                       |
+      | component           | confinement                   |
       | core                | denies all network            |
-      | lane-view component | denies all but loopback       |
-      | run component       | denies all but loopback       |
+      | room-view component | denies all but loopback       |
+      | launcher            | denies all but loopback       |
       | peer component      | allows only its register rows |
       | publish component   | allows only its register rows |
       | bridge component    | allows only its register rows |
@@ -126,8 +125,8 @@ Feature: Engineering quality (ENG)
     Then the mutation score is at least 70%
 
   @ENG-14 @P0 @pending
-  Scenario: tests cannot touch the real home or Claude Code configuration
-    Given a test that resolves a path under the real user's home
+  Scenario: tests cannot touch the real `HOME` or Claude Code configuration
+    Given a test that resolves a path under the real `HOME`
     When the suite runs
     Then the isolation guard aborts that test
     And no agent instruction file in the repository directs a destructive command at non-isolated state
@@ -142,24 +141,25 @@ Feature: Engineering quality (ENG)
   Scenario Outline: CI gates on the static checks and on build-time reach evidence per component
     Given the CI workflow
     When CI reads the build-time reach evidence for the "<component>", dependencies and start-up code included
-    Then the workflow gates on cargo clippy, cargo fmt, cargo-deny, cargo-audit, the page's strict TypeScript compile and lint, and the custom checks
+    Then the workflow gates on cargo clippy, cargo fmt, cargo-deny, cargo-audit, the browser room view client's strict TypeScript compile and lint, and the custom checks
+    And the browser room view client's TypeScript package imports nothing of the core but its generated types
     And every crate that parses untrusted content or decides trust forbids unsafe code
-    And a build-time check fails when projection code reads a clock or a source of randomness
+    And a build-time check fails when code that computes derived artifacts reads a clock or randomness
     And a build-time check fails when restore content is built from anything but trusted text
     And CI fails when the evidence for the "<component>" is missing or shows that it <violation>
 
     Examples:
-      | component           | violation                                                                 |
-      | core                | opens any socket, or starts a program other than its own kernel worker    |
-      | run component       | makes an outbound connection or listens beyond loopback                   |
-      | lane-view component | starts a program, makes an outbound connection or listens beyond loopback |
-      | peer component      | starts a program or reaches beyond its register rows                      |
-      | publish component   | starts a program or reaches beyond its register rows                      |
-      | bridge component    | starts a program, listens, or reaches beyond its register rows            |
+      | component           | violation                                                                                                      |
+      | core                | opens any socket, or starts a program other than its own kernel worker                                         |
+      | launcher            | makes an off-machine connection or listens beyond loopback or a local endpoint only the same OS user can reach |
+      | room-view component | starts a program, makes an off-machine connection or listens beyond loopback                                   |
+      | peer component      | starts a program or reaches beyond its register rows                                                           |
+      | publish component   | starts a program or reaches beyond its register rows                                                           |
+      | bridge component    | starts a program, listens, or reaches beyond its register rows                                                 |
 
   @ENG-17 @P0 @pending
   Scenario: contract tests replay every supported Claude Code version
-    Given recorded hook payloads and transcripts for each supported Claude Code version
+    Given recorded hook inputs and transcripts for each supported Claude Code version
     When the contract suite replays them
     Then every one parses without an unparsed event
     And a nightly job drives real Claude Code through compaction, restore and recall
@@ -196,7 +196,7 @@ Feature: Engineering quality (ENG)
     And commits must be signed
     And every pull request needs an approval from a reviewer other than its author
     And CODEOWNERS names the stakeholder on the requirement text and on every path that enforces it
-    And CODEOWNERS names no owner on any other path
+    And CODEOWNERS names no code owner on any other path
     And changes to security-sensitive crates need two approvals, one from the designated security reviewer
 
   @ENG-22 @P0 @pending
@@ -269,5 +269,5 @@ Feature: Engineering quality (ENG)
     Given the repository checkout
     When a change to an invariant or to a requirement marked for I2 review is proposed
     Then it lands only with an accepted ADR that records a named human security reviewer's approval
-    And until that ADR is accepted, every component that crosses B0 is built only as a prototype
+    And until that ADR is accepted, every B1, B2 or B3 component is built only as a prototype
     And evidence from the release build proves no release artifact or tagged release contains prototype code

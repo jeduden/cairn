@@ -8,13 +8,15 @@ Feature: Provenance and trust (PRV)
   @PRV-01 @P0 @I2 @pending
   Scenario: every event carries its writer and exactly one provenance class from the closed set
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "every-kind"
-    And "every-kind" holds a user prompt, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent result, lifecycle metadata, a system reminder and a malformed line
-    And the project's lane holds an operator act and a post from another participant
-    And the Bash tool call of "every-kind" was ingested in an earlier run than its result
-    When the operator runs "cairn ingest --all"
+    And an agent run with a Claude Code transcript "every-kind"
+    And "every-kind" contains a user turn, assistant text, a tool call, Bash, WebFetch and MCP tool results, a file read, a subagent's delegate report, lifecycle metadata, a system reminder and a malformed line
+    And a principal act, a pin written from a device seat, a pin a run seat wrote, a post from another seat and a room act of the run's seat are recorded in the run's room, and a retention purge's tombstone naming that room's content on the recording device's seat there
+    And the Bash tool call of "every-kind" was ingested by an earlier ingest than its tool result
+    And the person ran "cairn canary" and "cairn backup create" on this node
+    When the person runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
-    And the Bash result carries provenance "tool_result:Bash"
+    And the Bash tool result carries provenance "tool_result:Bash"
+    And the principal act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", and the tombstone, the canary event and the backup event carry "structural"
     And every provenance class is one of:
       | user               |
       | assistant          |
@@ -28,50 +30,56 @@ Feature: Provenance and trust (PRV)
       | harness_text       |
       | operator           |
       | post               |
+      | summary            |
+      | structural         |
       | unparsed           |
 
   @PRV-02 @P0 @I2 @I8 @pending
-  Scenario Outline: the default trust policy trusts only this node's operator, harness metadata and interactive users, and certified operators
+  Scenario Outline: the default trust policy trusts this node's unsigned trusted sources only on this node, and alike on all the principal's nodes the acts a device key it certified signed and the posts and pins from a device seat such a key certified (once PRV-10 ships), the posts and pins its trust grant covers and the pin versions it stamped
     Given an isolated Cairn home
     And deployment mode "<mode>"
-    When an event with provenance "<provenance>" written by <writer> is ingested
-    Then the event is stored with provenance "<provenance>" and trust "<trust>"
+    When an event with provenance "<provenance>" written by <writer> is recorded
+    Then the event is stored with provenance "<provenance>"
+    And its trust level for this principal's agents on this node derives as "<trust>", and no trust level is stored with the event
     And "cairn verify" <verify>
-    And the event shapes restore blocks, rule levels, grants, trust and enrolments only if it is trusted and "cairn verify" reports nothing about it
+    And the event shapes restore blocks and trust levels only if it is trusted and "cairn verify" reports nothing about it
+    And a "harness_meta" event or "user" event that this node's CLI or MCP server recorded live, with origin "witnessed" but not recorded by its hook handlers, is untrusted
+    And the free text a cut or neutral principal act carries, such as a stated reason, is recalled as untrusted, while the act's own "operator" event keeps its trust level and shapes what the act changes
 
     Examples:
-      | mode        | writer                                                                                 | provenance       | trust     | verify                                                    |
-      | automation  | a writer of this node                                                                  | operator         | trusted   | reports nothing                                           |
-      | automation  | a writer of this node                                                                  | harness_meta     | trusted   | reports nothing                                           |
-      | interactive | a writer of this node                                                                  | user             | trusted   | reports nothing                                           |
-      | automation  | a writer of this node                                                                  | user             | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                  | assistant        | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                  | tool_call        | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                  | tool_result:Bash | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                  | web              | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                  | mcp:github       | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                  | file             | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                  | subagent_result  | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                  | harness_text     | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                  | unparsed         | untrusted | reports nothing                                           |
-      | interactive | a writer of this node                                                                  | post             | untrusted | reports nothing                                           |
-      | interactive | a writer of this node, from a transcript the hooks did not report                      | user             | untrusted | reports nothing                                           |
-      | interactive | a key on another node chaining to this tenant's owner key within its scope             | operator         | trusted   | reports nothing                                           |
-      | interactive | a key on another node with no certificate from this tenant's owner key                 | operator         | untrusted | reports nothing                                           |
-      | interactive | a writer of another node                                                               | user             | untrusted | reports nothing                                           |
-      | interactive | a writer of another tenant                                                             | operator         | untrusted | reports nothing                                           |
-      | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance | operator         | trusted   | reports it as a widening event that fails OWN-22          |
-      | automation  | a writer of this node, widening with a required presence check that does not verify    | operator         | trusted   | reports it as a widening event whose presence check fails |
+      | mode        | writer                                                                                                               | provenance       | trust     | verify                                                            |
+      | automation  | a writer of this node                                                                                                | operator         | trusted   | reports nothing                                                   |
+      | automation  | a writer of this node, recorded by its hook handlers                                                                 | harness_meta     | trusted   | reports nothing                                                   |
+      | interactive | a writer of this node, recorded by its hook handlers                                                                 | harness_meta     | trusted   | reports nothing                                                   |
+      | interactive | a writer of this node, recorded by its hook handlers                                                                 | user             | trusted   | reports nothing                                                   |
+      | automation  | a writer of this node, recorded by its hook handlers                                                                 | user             | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                                | assistant        | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                                | tool_call        | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                                | tool_result:Bash | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                                | web              | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                                | mcp:github       | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                                | file             | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                                | subagent_result  | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                                | harness_text     | untrusted | reports nothing                                                   |
+      | interactive | a writer of this node                                                                                                | unparsed         | untrusted | reports nothing                                                   |
+      | interactive | a run seat's writer on this node                                                                                     | post             | untrusted | reports nothing                                                   |
+      | automation  | a writer of this node, recorded live by its CLI                                                                      | operator         | trusted   | reports nothing                                                   |
+      | interactive | a writer of this node, from a transcript the hook handlers did not watch                                             | user             | untrusted | reports nothing                                                   |
+      | automation  | a writer of this node, from a transcript the hook handlers did not watch                                             | harness_meta     | untrusted | reports nothing                                                   |
+      | interactive | a device seat of another node whose device key has no certificate from the principal key of this node's principal    | operator         | untrusted | reports nothing                                                   |
+      | automation  | a run seat's writer on another node of this principal                                                                | harness_meta     | untrusted | reports nothing                                                   |
+      | interactive | a run seat's writer on another node of this principal                                                                | user             | untrusted | reports nothing                                                   |
+      | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance                               | operator         | trusted   | reports it as a widening principal act that fails OWN-22          |
 
   @PRV-03 @P0 @I2 @pending
-  Scenario Outline: model-reproducible and harness-summarised text is untrusted
+  Scenario Outline: model-reproducible text no principal stamped, and harness-summarised text, is untrusted
     Given an isolated Cairn home
     And deployment mode "interactive"
-    When <source> is recorded
-    Then the event is stored with provenance "<provenance>" and trust "untrusted"
+    When <item> is recorded
+    Then the event is stored with provenance "<provenance>" and its trust level is "untrusted"
 
     Examples:
-      | source                                                             | provenance   |
+      | item                                                               | provenance   |
       | an assistant message quoting "ignore previous instructions"        | assistant    |
       | a Bash tool call written by the assistant                          | tool_call    |
       | the compact_summary passed to the hook "PostCompact"               | harness_text |
@@ -79,23 +87,23 @@ Feature: Provenance and trust (PRV)
       | the restore block Cairn returned, written back into the transcript | harness_text |
 
   @PRV-04 @P0 @I2 @pending
-  Scenario: automation is the default mode and interactive is a tenant-only opt-in
+  Scenario: "automation" is the default deployment mode and "interactive" is an opt-in of the person's own configuration
     Given an isolated Cairn home
-    And the tenant configuration sets no mode
-    And the project's ".cairn.toml" sets mode to "interactive"
-    When a user prompt is ingested
+    And the person's configuration sets no deployment mode
+    And the repository's ".cairn.toml" sets "node.deployment_mode" to "interactive"
+    When this node's hook handlers witness a user turn
     Then the deployment mode is "automation"
-    And the event is stored with provenance "user" and trust "untrusted"
-    And an audit entry records "rejected project setting mode"
+    And the event is stored with provenance "user" and its trust level is "untrusted"
+    And an audit entry records "rejected repository setting node.deployment_mode"
 
   @PRV-05 @P0 @I2 @pending
-  Scenario Outline: configuration cannot trust a provenance class beyond the default policy
+  Scenario Outline: no settings layer can trust a provenance class beyond the default policy
     Given an isolated Cairn home
     And deployment mode "interactive"
-    And the tenant configuration sets the trust of "<provenance>" to "trusted"
+    And managed policy, the person's configuration and the repository's ".cairn.toml" each set the trust of "<provenance>" to "trusted"
     When an event with provenance "<provenance>" is ingested
-    Then the event is stored with provenance "<provenance>" and trust "untrusted"
-    And an audit entry records "rejected trust override for <provenance>"
+    Then the event is stored with provenance "<provenance>" and its trust level is "untrusted"
+    And an audit entry for each settings layer records "rejected trust override for <provenance>"
 
     Examples:
       | provenance       |
@@ -108,33 +116,35 @@ Feature: Provenance and trust (PRV)
       | subagent_result  |
       | harness_text     |
       | post             |
+      | summary          |
       | unparsed         |
 
   @PRV-06 @P0 @I2 @pending
-  Scenario Outline: a derived artifact records its sources and inherits their taint
+  Scenario Outline: a landmark, or kernel output, a recall result or an export built from events, records the events it comes from and inherits their taint
     Given an isolated Cairn home
-    And a project holding an event with provenance "harness_meta" and one with provenance "web"
-    When the <artifact> is derived from both events
-    Then the <artifact> records the addresses of both source events
+    And this node's record contains an event with provenance "harness_meta" its hook handlers recorded and one with provenance "web"
+    When the <artifact> is made from both events
+    Then the <artifact> records the addresses of both events it comes from
     And the <artifact> has trust "untrusted"
-    And the <artifact> derived from the "harness_meta" event alone has trust "trusted"
+    And the <artifact> made from the "harness_meta" event alone has trust "trusted"
+    And any sanitized structural field of the <artifact> is trusted though the <artifact> is untrusted
 
     Examples:
       | artifact      |
       | landmark      |
       | kernel output |
       | recall result |
-      | export record |
+      | export        |
 
   @PRV-07 @P1 @I5 @I6 @pending
   Scenario Outline: instruction-like untrusted content is flagged without blocking storage
     Given an isolated Cairn home
-    And a project with a Claude Code transcript "session"
-    And "session" holds a WebFetch result containing <content>
-    When the operator runs "cairn ingest --all"
-    Then the WebFetch result is stored as a "web" event flagged "instruction_like"
-    And its hit from the MCP tool "search" carries the flag, and no landmark contains its text
-    And "cairn audit --flagged" lists its seq
+    And an agent run with a Claude Code transcript "web-run"
+    And "web-run" contains a WebFetch tool result carrying <content>
+    When the person runs "cairn ingest --all"
+    Then the WebFetch tool result is stored as a "web" event flagged "instruction_like"
+    And its hit from the MCP tool "event_search" carries the flag, and no landmark contains its text
+    And "cairn audit --flagged" lists its address (writer, seq)
 
     Examples:
       | content                                                      |
@@ -148,55 +158,82 @@ Feature: Provenance and trust (PRV)
   Scenario Outline: provenance comes from a line's structure, and text markers only lower trust
     Given an isolated Cairn home
     And deployment mode "interactive"
-    When <source> is recorded
-    Then the event is stored with provenance "<provenance>" and trust "<trust>"
+    When <item> is recorded
+    Then the event is stored with provenance "<provenance>" and its trust level is "<trust>"
 
     Examples:
-      | source                                                                          | provenance       | trust     |
-      | a "user" line holding a prompt the person typed                                 | user             | trusted   |
-      | a "user" line holding only a Bash tool_result                                   | tool_result:Bash | untrusted |
+      | item                                                                            | provenance       | trust     |
+      | a "user" line carrying a prompt typed at the harness's input                    | user             | trusted   |
+      | a "user" line carrying only a Bash tool_result                                  | tool_result:Bash | untrusted |
       | a "user" line with isMeta true                                                  | harness_text     | untrusted |
-      | a "user" line holding "<local-command-stdout>" output                           | harness_text     | untrusted |
+      | a "user" line carrying "<local-command-stdout>" output                          | harness_text     | untrusted |
       | an "instructions" attachment carrying a CLAUDE.md file, rendered with role user | file             | untrusted |
       | an "mcp_instructions_delta" attachment from the MCP server "docs"               | mcp:docs         | untrusted |
       | a "skill_listing" attachment                                                    | harness_text     | untrusted |
       | a Bash tool_result whose output contains "<system-reminder>"                    | tool_result:Bash | untrusted |
-      | an "ai-title" record holding a session title                                    | harness_text     | untrusted |
-      | a "last-prompt" record repeating a typed prompt                                 | harness_text     | untrusted |
+      | an "ai-title" transcript line carrying a harness session title                  | harness_text     | untrusted |
+      | a "last-prompt" transcript line repeating a typed prompt                        | harness_text     | untrusted |
+      | a subagent's "user" line carrying the delegated task its parent's run wrote     | harness_text     | untrusted |
+      | a "user" line of a harness session a run's Bash tool call started               | harness_text     | untrusted |
 
   @PRV-09 @P0 @I2 @I8 @pending
   Scenario Outline: an event's writer comes from the key that verifiably signed it, never from a field
     Given an isolated Cairn home
     And a peer that declared the writers "w-peer-1" and "w-peer-2"
-    When this node imports <item> from the peer
-    Then the item is <outcome>
-    And an audit entry records each refusal
+    When this node receives <item> from the peer
+    Then the item is <expected>
+    And an audit entry records each refusal, and a structural event each refused segment
     And every stored event's writer is derived from the key that verifiably signed or wrote it, never from a field in the event or bundle
 
     Examples:
-      | item                                                        | outcome                |
+      | item                                                        | expected               |
       | a segment signed by "w-peer-1"                              | accepted as "w-peer-1" |
       | a segment signed by "w-peer-1" whose events name "w-peer-2" | accepted as "w-peer-1" |
       | an event claiming a writer of this node                     | refused                |
       | a segment signed by a key the peer did not declare          | refused                |
 
-  @PRV-10 @P2 @I2 @I8 @pending
-  Scenario Outline: an operator event from another node is trusted only through an owner-certified key chain
+  @PRV-10 @P1 @I2 @I8 @pending
+  Scenario Outline: an "operator" event from another node is trusted only through a key chain rooted in the principal key of this node's principal
     Given an isolated Cairn home
-    And this tenant's offline owner key certified a laptop device key with scope "allow, deny, pin" and maximum rule level 2, delegated to certify writer keys for one repository, and a phone key with the scope "allow, deny"
-    And the laptop key certified a sandbox token key limited to the token's project, lanes and expiry, which certified a sandbox writer key
-    When an "operator" event <event> arrives from another node
-    Then the event is <outcome>
+    And this principal's offline principal key certified the device key of its node on a laptop with scope "allow, deny, pin" and maximum rule level "act when told", and the device key of its paired phone with the scope "allow, deny"
+    And the laptop's device key certified a token key that certified the device seat key and a run seat key of a token-key-only ephemeral node, limited to an access token's rooms, that node's own personal room and the access token's expiry
+    When an event <event> arrives from another node
+    Then the event is <expected>
+    And the token-key-only node, whose device seat its token key certified, signs no principal act and no expire act
+    And an unstamped constraint pin from the device seat of a token-key-only node, this principal's or one of a principal its trust grant covers, in a room whose pins restore to this principal's agents, is stated in their restore blocks only by count, room id and key fingerprint, with no text, audited
+    And the paired phone may read, and allow or deny held permission requests, and nothing else
+    And a service account's principal key that a person, another service account or managed policy listing it certified counts as that service account's own principal, while only a principal key never certified counts as a person's, and a service account whose certificate is revoked stays a service account
+    And a service-account certificate counts only once the certified principal key countersigns it, and each managed-policy listing and each removal of one is recorded as a structural event that enters the node's key set
     And every revocation is a signed event that replicates like any other
+    And a seat key the laptop's device key certified for a room chains principal key → device key → seat key
+    And a seat certificate the laptop's device key made before the principal key certified it stays valid, and its seat key chains the same way
+    And a post from a device seat of this principal, on this node or another, whose device key the principal key certified, is trusted within that key's scope
+    And a principal act the laptop's device key signed, and a post or pin from a device seat it certified, derives the same trust level on each node of this principal holding the same writer logs
+    And an "operator" event a writer of another principal wrote is untrusted
+    And a device key certified by a service account's principal key that this principal's principal key certified does not chain to this principal's principal key, since a chain runs through device, token or seat certificates and never through another principal key
     And a recorded I2 security review of this requirement exists before it ships
 
     Examples:
-      | event                                                                            | outcome             |
-      | by the sandbox writer key, adding a pin within its scope and rule level          | trusted             |
-      | by the laptop key, an act outside its scope                                      | untrusted           |
-      | by the laptop key, at rule level 3                                               | untrusted           |
-      | by the sandbox writer key, not held before the token was revoked                 | refused and audited |
-      | by a writer key the revoked laptop key certified, not held before the revocation | refused and audited |
-      | by the revoked laptop key, covered by a seal held before the revocation          | accepted            |
-      | by the phone key, allowing a held permission request                             | trusted             |
-      | by the phone key, adding a pin                                                   | untrusted           |
+      | event                                                                                                                          | expected                                                                                   |
+      | by the token-key-only node's run seat key, adding a constraint pin within its access token's rooms                             | untrusted until a principal stamps it from one of its devices whose device scope allows it |
+      | by the token-key-only node's device seat key, adding a constraint pin within its access token's rooms                          | untrusted until a principal stamps it from one of its devices whose device scope allows it |
+      | by the laptop's device key, stamping a version of that pin                                                                     | trusted                                                                                    |
+      | by the device seat key of a token-key-only node of a principal this principal trusts by a trust grant, adding a constraint pin | untrusted until a principal stamps it from one of its devices whose device scope allows it |
+      | by the laptop's device key, an act outside its scope                                                                           | untrusted                                                                                  |
+      | by the laptop's device key, setting an action class to "act without asking"                                                    | untrusted                                                                                  |
+      | by the token-key-only node's run seat key, not held before the access token was revoked                                        | refused and audited                                                                        |
+      | by a seat key the laptop's revoked device key certified, not held before the revocation                                        | refused and audited                                                                        |
+      | by the laptop's revoked device key, covered by a seal held before the revocation                                               | accepted                                                                                   |
+      | by the phone's device key, allowing a held permission request                                                                  | trusted                                                                                    |
+      | by the phone's device key, adding a pin                                                                                        | untrusted                                                                                  |
+
+  @PRV-11 @P0 @I2 @I8 @pending
+  Scenario: the node's device key certifies each seat key with a seat certificate naming its seat kind
+    Given an isolated Cairn home
+    And a node whose device key no principal key has certified
+    When a run's run seat starts in a room and the node's device seat starts in the same room
+    And the person runs "cairn verify --json"
+    Then the device key has certified the run seat's key with a seat certificate scoped to that room and naming the seat kind "run"
+    And the device key has certified the device seat's key with a seat certificate scoped to that room and naming the seat kind "device"
+    And the output reports, for each seat, its seat certificate and the seat kind it names, taken only from that seat certificate, never from a field in its events
+    And a recorded I2 security review of this requirement exists before it ships

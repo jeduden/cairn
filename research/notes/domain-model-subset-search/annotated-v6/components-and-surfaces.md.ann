@@ -1,0 +1,110 @@
+---
+title: "Components and surfaces"
+order: "10"
+summary: >-
+  Cairn's components inside their network boundaries, the room view's surfaces⟦f:presentations⟧ and the outcome window⟦/f⟧.
+---
+# Components and surfaces
+
+- **Component**: A part Cairn plays, inside exactly one network boundary (I4).
+  The set is closed, listed here and in §6.3; how the components ship is open
+  (OQ-32), and a new one is a model change and a §6.3 row.
+  - **Core (B0):** the **hook handlers** (answering hooks), the **CLI**
+    (`cairn`), each harness adapter's transcript and hook
+    part among them, the **MCP server** (the MCP tools of §9.2, one per harness
+    session, serving its runs), ⟦f:compute-kernel⟧the **kernel worker** (running the kernel's
+    executions), ⟦/f⟧the **TUI** (the terminal room view), ⟦f:work-rooms⟧the **commit hook**
+    (LANE-28, run as the CLI), ⟦/f⟧and everything that builds what reaches the
+    model.
+  - The **harness adapter** is no component: Cairn's code for one harness⟦f:launcher⟧, split
+    between the core and the launcher⟦/f⟧: its transcript and hook part in the core
+    (it parses, opens no socket, starts no process)⟦f:launcher⟧; its run part in the
+    launcher, which starts, hosts and controls runs, pauses them at the harness
+    prompt⟦f:sandbox-risk⟧, records sandbox state⟦/f⟧ and carries in only text the core built⟦/f⟧.
+  ⟦f:browser-room-view⟧- **Room-view component (B1):** serves the browser room view on loopback only
+    (SEC-20), and records the principal acts taken in it, marked with their
+    principal surface (VIEW-03). Its entry point, `cairn ui`, is no part of the CLI: the person or a service
+    manager⟦f:access-tokens⟧, or an ephemeral node's entrypoint,⟦/f⟧ starts it, and it runs only
+    while the configuration acceptance turning the component on stands, until the
+    acceptance of a configuration turning it off (ADM-04, SEC-01). A **room-view
+    secret** makes the browser room view a principal surface (SEC-20): a
+    **launch secret** it mints per launch, exchanged once for an **origin
+    secret** only its own origin, port included, can read or send, which lasts
+    until the component stops; a phone-scoped one serves a browser on the
+    principal's phone through the principal's own tunnel (OWN-16), issued by a
+    widening act at a principal surface (`cairn ui --phone`). Started from a
+    process the harness or a run's tool process started, directly or through
+    descendants, `cairn ui` mints no room-view secret, a phone-scoped one
+    included. The component refuses and counts any connection to it from such
+    a process (I6), and serves nothing to a client without the origin secret but
+    the launch secret's one exchange.⟦/f⟧
+  ⟦f:launcher⟧- **Launcher (B1):** `cairn launch`, which starts, hosts and controls runs
+    through each harness adapter's run part, carrying into the harness input
+    only text the core built and recorded, read from the record⟦f:browser-room-view⟧, never text from
+    the room-view component, whose loopback connection to it carries no text for
+    the model⟦/f⟧⟦f:witness-check⟧; and runs witness checks⟦/f⟧; the only component that starts programs⟦f:compute-kernel⟧,
+    but for the core's own kernel worker (CMP-05)⟦/f⟧. Its entry point, `cairn launch`, is no part of the CLI: the person or a service
+    manager⟦f:access-tokens⟧, or an ephemeral node's entrypoint,⟦/f⟧ starts it, and it runs only
+    while the configuration acceptance turning it on stands, until `cairn
+    configuration accept` records the acceptance of a configuration turning it
+    off, the cut act turning it off (ADM-04, SEC-01). It refuses and counts any
+    connection to it from a process the harness or a run's tool process
+    started, directly or through descendants, as the hook handlers refuse a
+    hook call from inside a run (I6).⟦/f⟧
+  ⟦f:peer-sync⟧- **Peer component (B2):** exchanges segments with peers (sync)⟦f:paired-phone⟧ and serves
+    paired phones; on a paired phone it is Cairn's only code, with the room
+    view's reduced client inside it⟦/f⟧. Its entry point is no part of the CLI: the person or a service
+    manager⟦f:access-tokens⟧, or an ephemeral node's entrypoint,⟦/f⟧ starts it, and it runs only
+    while the act turning the component on stands.⟦/f⟧
+  ⟦f:git-carrier⟧- **Publish component (B3):** ⟦f:publishing⟧read-only publishing and ⟦/f⟧the segment exchange of
+    the **git carrier**, which keeps segments in a namespaced location of the
+    principal's remote; enabling it for a room is a widening principal act of
+    the room's owner⟦f:work-rooms⟧⟦f:segment-exchange⟧, only as the room's visibility allows⟦/f⟧⟦/f⟧. Its entry point is no part of the CLI: the person or a service
+    manager⟦f:access-tokens⟧, or an ephemeral node's entrypoint,⟦/f⟧ starts it, and it runs only
+    while the act turning the component on stands.⟦/f⟧
+  ⟦f:bridges⟧- **Bridge component (B3):** outbound exchange with hosts the node's principal
+    names, through ⟦f:ci-attestation⟧⟦f:needs-you⟧three ⟦/f⟧⟦/f⟧**bridges**: the **forge bridge** (reads pull requests,
+    reviews⟦f:results-and-verdicts⟧ and the checks the forge reports⟦/f⟧)⟦f:ci-attestation⟧, the **CI bridge** (fetches CI
+    attestations)⟦/f⟧⟦f:needs-you⟧ and the **notification bridge**⟦/f⟧. Its entry point is no part of the CLI: the person or a service
+    manager⟦f:access-tokens⟧, or an ephemeral node's entrypoint,⟦/f⟧ starts it, and it runs only
+    while a bridge enabled for a host stands.⟦/f⟧
+- **Boundary**: A network boundary I4 declares, named in each component's
+  entry: B0 core for the core⟦f:browser-room-view⟧, B1 machine for the room-view component⟦/f⟧⟦f:launcher⟧, B1
+  machine for the launcher⟦/f⟧⟦f:peer-sync⟧, B2 peer for the peer component⟦/f⟧⟦f:git-carrier⟧, B3 public for the
+  publish component⟦/f⟧⟦f:bridges⟧, B3 public for the bridge component⟦/f⟧ (I4).
+  Unqualified, "boundary" means a network boundary; any other boundary is
+  qualified, such as ⟦f:landmarks⟧a span boundary or ⟦/f⟧a crate boundary.
+- **Room view**: What shows rooms to a person: ⟦f:browser-room-view⟧the browser, through the
+  room-view component, and ⟦/f⟧the TUI, the CLI⟦f:paired-phone⟧, the paired phone⟦/f⟧ and the **harness
+  strip** (a status line the harness shows, printed by `cairn status --line`
+  from Health)⟦f:browser-room-view⟧ as reduced clients that say what
+  they leave out (VIEW-14)⟦/f⟧. A client of the record. Its surfaces, where it shows
+  things, are a closed set, and unqualified, "surface" means one of them; a
+  principal surface is the client a principal act is taken at, not one of
+  these (Principal surface):
+  ⟦f:room-view-surfaces⟧- **Fleet:** every live and recorded run of the principal's rooms, grouped by
+    room.⟦/f⟧
+  ⟦f:room-view-surfaces⟧- **Room page:** one room, with the tabs Timeline, Review and Replay, the
+    Replay tab's **context lens** showing the working view at an event, what
+    the model's context window contained then; the verify and why panels⟦f:results-and-verdicts⟧, the comparison⟦/f⟧ and the
+    **quarantine list** (the room's quarantine set), with its **forensic view**
+    of quarantined content, open from it⟦f:work-rooms⟧⟦f:shared-rooms⟧, and a foreign room opens in it, marked
+    foreign⟦/f⟧⟦/f⟧.⟦/f⟧
+  ⟦f:room-view-surfaces⟧- **Catch up:** the one surface answering "what happened since a starting
+    point" the principal picks (VIEW-08).⟦/f⟧
+  ⟦f:needs-you⟧- **Needs you:** the one queue of items waiting on a principal (VIEW-05).⟦/f⟧
+  - **Runs:** each run with its run status, its events by address with their
+    trust marks, its capture gaps, and the pins that restore, which the TUI and the CLI show⟦f:room-view-surfaces⟧;
+    the Fleet and the Room page show the same per room⟦/f⟧.
+  - **Pins:** the pin list of the personal room⟦f:work-rooms⟧ and of each other room among
+    the principal's rooms⟦/f⟧, each pin with its pin type, author, whether it qualifies⟦f:stamps⟧,
+    its versions' stampers⟦/f⟧ and its range links, which the TUI and the CLI show, so a
+    person can find a pin to edit, unpin or quarantine⟦f:room-view-surfaces⟧; the Room page shows the
+    same per room⟦/f⟧.
+  - **Health:** counters, failures, store locations and each room's and
+    writer's integrity status (I6, VIEW-10).
+  - **Setup:** configuration and harness configuration, every change shown as
+    a diff (I7, SEC-23).
+  ⟦f:peer-sync⟧- **Peers:** enrolled peers and their state.⟦/f⟧
+⟦f:presentations⟧- **Outcome window**: The part⟦f:room-view-surfaces⟧ of the Room page⟦/f⟧⟦f:conversation⟧ beside a room's conversation⟦/f⟧
+  that shows one presentation (VIEW-22)⟦f:results-and-verdicts⟧, never the outcome itself⟦/f⟧.⟦/f⟧

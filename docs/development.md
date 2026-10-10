@@ -2,7 +2,7 @@
 summary: >-
   Build and test commands, the executable requirement matrix (every SRS
   id has one tagged Gherkin scenario, pending until written), the
-  coverage floors, and how CI, the nightly fuzz run and the
+  coverage floors, and how CI, the nightly fuzz job and the
   reproducible, signed release pipeline work.
 ---
 # Development
@@ -12,7 +12,7 @@ rules in [CLAUDE.md](../CLAUDE.md).
 
 ## Build & test commands
 
-Requires Go 1.26. `go.mod` pins the exact toolchain (ENG-01), and the
+Requires Go 1.26. `go.mod` fixes the exact toolchain (ENG-01), and the
 `go` command fetches it on first use. Dev tools build from
 [tools/go.mod](../tools/go.mod), so their dependency trees never enter
 the module graph that ENG-18 counts.
@@ -48,7 +48,7 @@ id, its priority and its traced invariants as tags:
 
 ```gherkin
 @REC-03 @P0 @I1 @I10 @pending
-Scenario: re-ingesting a source creates no duplicate events
+Scenario: re-ingesting a transcript source creates no duplicate events
 ```
 
 `internal/scenario`'s `TestSpecificationAndFeaturesAgree` keeps the
@@ -64,7 +64,7 @@ is skipped and reported as such, never counted as a pass. godog runs
 the rest in strict mode from `cmd/cairn`'s `TestFeatures`, so a step
 whose text matches no definition fails instead of passing as
 undefined. CI's test job prints the count of passing and pending
-scenarios on every run.
+scenarios each time it runs.
 
 - `go test ./cmd/cairn -run TestFeatures -v` — every scenario, pending
   ones listed as skipped
@@ -143,8 +143,8 @@ of SEC-01; the network-deny sandbox half is ENG-12, still pending.
 
 ## CI, nightly and release
 
-Every workflow lives in `.github/workflows`. Every action is pinned
-by commit SHA with its version in a trailing comment, and dependabot
+Every workflow lives in `.github/workflows`. Every action is fixed
+to a commit SHA with its version in a trailing comment, and dependabot
 proposes the bumps after a seven-day cooldown.
 
 [ci.yml](../.github/workflows/ci.yml) runs on every push and pull
@@ -158,29 +158,30 @@ required check after a job, never after the workflow.
 
 [nightly.yml](../.github/workflows/nightly.yml) fuzzes every `Fuzz*`
 target in the tree for five minutes each (ENG-07). It discovers the
-targets, so a new one is fuzzed the night after it merges. The crash
-harness (ENG-06), the concurrency soak (ENG-09) and the live Claude
-Code run (ENG-17) join it as their plans land.
+targets, so a new one is fuzzed the night after it merges. The
+crash-consistency test (ENG-06), the concurrency soak (ENG-09) and
+the live Claude Code contract test (ENG-17) join it as their plans
+land.
 
 [review.yml](../.github/workflows/review.yml) reviews each pull
 request from a branch of this repository once its CI passes (ENG-21,
 ENG-28). It skips drafts, so a pull request is reviewed when it is
 marked ready, which reruns CI. The agent runs on the stakeholder's
-Claude subscription, not a per-token API key. It triggers on
+Claude subscription, not an API key billed per model token. It triggers on
 `workflow_run`, so GitHub runs it as `main` defines it, never as the
 pull request does. The review job runs an agent with read-only tools
 on the pull request's tree, following
 [the review skill](../.claude/skills/review/SKILL.md). The agent only
-writes a verdict. The post job alone holds the reviewer app's key. It
-runs `cmd/review-gate`, which approves only an approving verdict with
-no blocking finding, on the reviewed head, with `CI` green there;
+writes a review outcome. The post job alone has the reviewer app's
+key. It runs `cmd/review-gate`, which approves only an approving review
+outcome with no blocking finding, on the reviewed head, with `CI` green there;
 otherwise it requests changes.
 [ADR-2609301941](adr/ADR-2609301941-agent-review.md) records why.
 
 [release.yml](../.github/workflows/release.yml) runs from the Actions
 "Run workflow" button with a version like `v0.1.0`. A pushed tag is
 deliberately not the trigger: a failed build would leave a public tag
-pointing at nothing. The run takes these steps:
+pointing at nothing. The workflow takes these steps:
 
 1. Validate the version and run vet and the race-enabled suite.
 2. Build each target on two builders, Linux and macOS, with

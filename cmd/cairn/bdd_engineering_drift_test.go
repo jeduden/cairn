@@ -16,12 +16,14 @@ import (
 // check the registry itself, so they run without mdsmith.
 
 // gateTests are the gate tests outside the scenarios that ENG-27 holds
-// to a drift case: the requirement–scenario gate, the Appendix B check
-// and the persona gates of Appendix C and §2.5.
+// to a drift case: the requirement–scenario gate, the Appendix B check,
+// the persona gates of Appendix C and §2.5, and the finding ledger's
+// check that every closed domain-model finding stays in the text.
 func gateTests() []string {
 	return []string{
 		"TestSpecificationAndFeaturesAgree", "TestAppendixBMatchesTheTraces",
 		"TestAppendixCCoversEveryRequirement", "TestPersonasMatchTheAgents",
+		"TestFindingLedgerIsCarried",
 	}
 }
 

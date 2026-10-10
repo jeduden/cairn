@@ -1,0 +1,20 @@
+[
+ {
+  "type": "gap",
+  "quote": "An integer the pin's author sets with it, lower first, the",
+  "problem": "Pin priority is set by the pin's author, but a pin version is only an immutable text and a stamp covers only text, author and key fingerprint. The candidate does not say whether priority is fixed at creation, whether changing it adds an unstamped version, or whether the stamper is shown it, so two implementers can differ. An author of a stamped pin, such as an agent's run seat or another principal, can pick a priority that ranks it ahead of the stamper's own constraints in the pin budget and pushes them down to an id and count.",
+  "fix": "State that priority belongs to the pin version, so changing it adds an unstamped version, and that a stamp shows and covers it; or order pins from the agent's principal's own device seats before stamped pins of other authors.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "Whatever is currently in the model's context window. Never",
+  "problem": "Working view is defined, but nothing in the candidate creates it, reads it or acts on it. The Replay tab's context lens shows what the window contained at an event, and no rule or other concept refers to the working view.",
+  "fix": "Remove the Working view concept, or name where it is used, for example as the thing the context lens reconstructs a past state of.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

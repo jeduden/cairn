@@ -1,0 +1,58 @@
+{"findings": [
+  {
+    "type": "contradiction",
+    "quote": "One of B0 core, B1 machine, B2 peer and B3 public (I4).",
+    "problem": "Boundary and the bridge component name a B3 boundary and cite I4 for it, but I4 defines only B0 to B2 and says managed policy can disable only B1, B2, while the Managed policy concept says B1 to B3. B3 has no declared rule (off by default, read-only, principal-named hosts) in the invariant it cites.",
+    "fix": "Restore B3 to I4 (outbound exchange only with hosts the node's principal names, off until turned on, disableable by managed policy as B1 to B3) or remove the bridge component and B3 from Boundary, Core and Managed policy.",
+    "severity": "needs-fix"
+  },
+  {
+    "type": "security",
+    "quote": "or through a B2 component the node's principal turned on; whatever such a component brings",
+    "problem": "I4 lets Cairn components send data off the machine only as recalled content, I2 closed-path writes, or through a B2 component. The bridge component (forge, CI and notification bridges) makes outbound requests and sends a notification (petname or id, queue class, count) to a service the principal names, which I4 does not permit.",
+    "fix": "Add the B3 component to this egress sentence (\"or through a B2 or B3 component the node's principal turned on\") and state that whatever a B3 component brings in is trusted only as I2 allows.",
+    "severity": "needs-fix"
+  },
+  {
+    "type": "gap",
+    "quote": "turn on the peer component, accept a handover or succession",
+    "problem": "The cut list names turning off a bridge, and Core says the bridge component runs only while a bridge is enabled for a host, but no class lists enabling a bridge. 'Every principal act a requirement names is classed here' therefore fails for the act that lets data leave the node.",
+    "fix": "Add 'turn on a bridge for a host' to the widening list beside 'turn on the peer component'.",
+    "severity": "minor"
+  },
+  {
+    "type": "gap",
+    "quote": "Either names the writer's last accepted seq. A peer still accepts segments",
+    "problem": "'Either' refers to two ways to retire a writer, but the definition gives only one ('by a principal act'). It is unclear what else retires a writer or which revocation 'only a revocation refuses them' means.",
+    "fix": "Name the second way to retire a writer, or change 'Either names' to 'It names' and name the revocation that refuses late segments.",
+    "severity": "minor"
+  },
+  {
+    "type": "gap",
+    "quote": "Acts with no member seat: open (OQ-41).",
+    "problem": "The room merge leaves open whether it counts an act by a principal with no member seat in the room, such as the acceptance of a succession or handover by a principal not yet a member. Two implementers will derive different room state, against I10.",
+    "fix": "State one deterministic rule in the model, for example that such an act counts only when it is a succession or handover acceptance, and that every other act without a member seat does not count.",
+    "severity": "minor"
+  },
+  {
+    "type": "gap",
+    "quote": "and writer live under I8 rests on OQ-39.",
+    "problem": "A paired phone is 'a device with no home' that holds its own device key and seat key, yet I8 binds all local state to one principal's home. The candidate defers where its keys and writer live to an open question, so the phone's isolation is undefined.",
+    "fix": "State where the phone's keys and writer live (for example, in a phone-local store bound to the paired principal and refused for any other) so I8 holds, or exclude the paired phone.",
+    "severity": "minor"
+  },
+  {
+    "type": "security",
+    "quote": "branches the room names later by branch links, whose runs' events then go",
+    "problem": "The principal's join is said to cover branches the room names later, and a branch link is a room act any contributor takes, including another principal's agent. A single link therefore sends a joined run's events about that branch to a room other principals' nodes hold, a leave-the-node widening made by someone other than the run's principal.",
+    "fix": "Require the run's principal to accept (a widening principal act) a branch link that would route an already-joined run's events into the room, or state that joining names the branches the room already has and later links apply only to runs that join afterwards.",
+    "severity": "minor"
+  },
+  {
+    "type": "useless",
+    "quote": "Working view**: Whatever is currently in the model's context window.",
+    "problem": "Working view is defined but nothing in the candidate uses it. The context lens shows what the context window contained, and no rule, surface or act refers to the working view.",
+    "fix": "Remove the Working view concept, or use it where a rule depends on it.",
+    "severity": "minor"
+  }
+]}

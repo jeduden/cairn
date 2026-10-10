@@ -1,0 +1,92 @@
+[
+ {
+  "type": "contradiction",
+  "quote": "dismiss a directed post, revoke a seat key or a service account's certificate, turn capture on, and",
+  "problem": "The candidate classes revoking a device or a peer as widening because it can drop pins, and says any principal act that removes a pin from a restore block is widening whatever verb carries it, with only unstamp and trust-grant revocation excepted. Revoking a seat key (a device seat's key) or a service account's certificate can equally drop pins from a restore block, yet it is listed as cut. Two implementers would class it differently, which changes the assurance the act needs.",
+  "fix": "List revoking a device seat's key and a service account's certificate as widening (or add them to the stated exceptions with their reason); keep cut only for a revocation that cannot remove a pin from a restore block, such as a run seat's key.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "certificate is revoked stays a service account. Only an agent's own principal",
+  "problem": "A trust grant is refused when the named service account is marked as relaying or is unmarked, but the candidate does not say what a later revocation of that account's certificate or managed-policy listing does to a trust grant already recorded. A grant could keep covering a compromised account's posts and pins, or lapse, depending on the implementer.",
+  "fix": "Add: when the certificate is revoked or the listing removed, the account counts as unmarked, so a trust grant naming it no longer covers its posts and pins.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "contradiction",
+  "quote": "imported bundle or a room every seat of its principal has left or lost to a",
+  "problem": "The example names a room every seat of the principal has left as foreign, but the definition's last sentence says a room the principal owns is never foreign, and an owner stays owner after all its seats leave (and its pins are said to be kept as they were). For an owner who left, the two statements give opposite answers, with large consequences: all recall marked untrusted and restore limited to own device-seat pins and stamps.",
+  "fix": "Qualify the example: 'a room it does not own that every seat of its principal has left or lost to a kick or a bar'.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "**Quota**: A limit on storage or events, per room, node, writer received from",
+  "problem": "The candidate never says what reaching a quota does. Dropping or refusing an event of this node's own runs would break I1, whose only exceptions are redaction, purge and retention policy, and Purge is called the only way stored content is destroyed.",
+  "fix": "State that a quota refuses only what a peer sends or what is optional, counts each refusal, and never discards an event of this node's own runs.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "Acts with no member seat: open (OQ-41).",
+  "problem": "The room merge is the one rule deriving all room state (I10), but for an act recorded in the personal room naming a room where its principal has no member seat, the candidate leaves open whether the room counts it. Two implementers would derive different room state, for example for an unstamp or a cut act taken after leaving.",
+  "fix": "Replace 'open' with a rule: the room merge counts such an act (state which classes) or ignores it, with the principal's own trust levels derived from its own writer log either way.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "bar, a mute or a handover offer (LANE-25). It ends a delegation grant or an",
+  "problem": "For a delegation or acceptance grant the expire act names whose node records it, but for a bar, a mute or a handover offer only 'a node with a device key' is stated. As worded, any node with a device key, including that of the barred principal, could record the expire act that ends its own bar.",
+  "fix": "Say whose node records the expire act for a bar, mute or handover offer, for example the node of the principal whose seat set it, or the owner's node.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "A restore block's **room summary pointer** names the latest room",
+  "problem": "The restore block is deterministic, but 'latest in causal order' is undefined for two concurrent room summaries, for example from an old and a new facilitator after a re-appointment.",
+  "fix": "Add a tie-break for concurrent room summaries, such as the lower commitment, as the room merge uses elsewhere.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "undefined",
+  "quote": "Either names the writer's last accepted seq. A peer still accepts segments",
+  "problem": "The definition of retiring a writer reads 'by a principal act. Either names ...' with no second alternative, so 'Either' refers to nothing and the definition does not say which acts retire a writer or whose writer may be retired.",
+  "fix": "Name the alternatives that 'Either' refers to, or reword: 'Mark a writer retired by a principal act, which names the writer's last accepted seq.'",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "**Working view**: Whatever is currently in the model's context window. Never",
+  "problem": "The term is defined but nothing in the candidate uses it. The context lens speaks of the model's context window directly, and no rule, act or surface creates, reads or acts on a working view.",
+  "fix": "Drop the concept, or use it in the context lens definition.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "**Pull-request author**: The outside party whose commits a foreign room's",
+  "problem": "The concept is matched to a bundle by a binding statement, but nothing else in the candidate says what the match gives or lets anything act on it. It appears elsewhere only as a replacement name in the excluded-terms table.",
+  "fix": "State what the match is for (for example, attributing the bundle's commits in the foreign room), or drop the concept.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

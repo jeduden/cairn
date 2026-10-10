@@ -39,7 +39,7 @@ proxy on the same day. Anything not read at its source is marked
   or ISC license, with at most ten in total —
   [DEPENDENCIES.md](../../../DEPENDENCIES.md). The proposed SQLite
   driver is already a cgo-free wasm2go translation —
-  [ADR-2609302341](../../../docs/adr/ADR-2609302341-sqlite-driver.md).
+  ADR-2609302341.
 
 Slots used below: **pty host** (spawns the harness on a pseudo-terminal),
 **headless VT model** (parses output into a screen, scrollback and

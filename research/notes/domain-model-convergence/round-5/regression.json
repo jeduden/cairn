@@ -1,0 +1,197 @@
+{
+ "round": "5-regression",
+ "reviews": [
+  {
+   "lens": "consistency",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "and the token carries that ask and those rooms' qualifying pins",
+     "problem": "Several kinds of pin restore only through another act that the node must hold (I10): a run seat's pin, a token-key-only node's pin and the intent after a change of ownership need a stamp, and another principal's pin needs a trust grant. PEER-06 explicitly carries run seats' `assistant` pins, but the token carries no stamp, no trust grant and no certificates for the principal's other devices. So the ephemeral node cannot work out that these pins qualify, and they do not restore 'from their first restore block' as the sentence claims.",
+     "fix": "\"and the token carries that ask, those rooms' qualifying pins and the stamps, trust grants and certificates they qualify through\", with the same change in PEER-06.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "every room the token names to continue, as that room's admission",
+     "problem": "A run has a seat in a room only through a member seat, and that seat's join must be admitted by the room's admission (the owner's principal key, or a key the admission lists). The token carries neither the room's create room act nor its admission or role acts. So until it reaches a peer, the token-key-only node cannot work out that its run's join was admitted, or what role the seat has. Both restore ('has had a seat in', Pin) and event routing (Relations) depend on that membership.",
+     "fix": "After \"carries that ask\", add \"the acts each named room's owner, admission and the joining run seat's role derive from,\". Or state that a join the carried ask covers counts as admitted, as a contributor, until the node holds the room's state.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "is also its principal's ask for each of its runs to join, at the run's",
+     "problem": "A run whose run-seat key is lost with its MCP server carries on under a new run seat, which must join its rooms again as Join says (Run seat). The token's ask only covers the start of a run, and a token-key-only node signs no principal act that could ask for or accept the new join. So it is undefined whether such a continuing run rejoins the token's rooms.",
+     "fix": "\"ask for each of its runs to join, at the run's start and on each new run seat it continues on (Run seat), every room the token names to continue\"",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "(LANE-23, PEER-06), so those pins restore to its runs from their first",
+     "problem": "Before PRV-10 ships, a device seat's pins qualify only on their own node (Device key; Pin: 'a pin from this node's own device seat to this node's agents'). Nothing in the model limits token-key-only nodes to after PRV-10, and Access token and Expire act give access tokens a pre-PRV-10 rule. So before PRV-10, the minting node's device-seat pins that the token carries cannot restore on the ephemeral node, which contradicts this sentence.",
+     "fix": "\"so, once PRV-10 ships, those pins restore to its runs from their first restore block\", or state in Token key that a token-key-only node exists only once PRV-10 ships.",
+     "severity": "minor"
+    },
+    {
+     "type": "undefined",
+     "file": "docs/domain-model/record.md",
+     "quote": "`bundle` (read by import) or `peer` (received from a peer or a paired phone",
+     "problem": "Origin is a closed set describing how an event reached this node's record, and the trust policy reads whether an event was recorded here, ingested or received. The ask and pin events an access token carries (Node) arrive by none of these routes. One implementer may record them as `witnessed`, which counts as recorded on this node and so as this node's trusted `operator` events; another may record them as `peer`.",
+     "fix": "Extend `peer`: \"(received from a peer or a paired phone, or carried in by a token-key-only node's access token, PEER-06, ...)\".",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "Until this closes, the hook handlers append nothing for such a run, leaving an ingest marker, and its events reach the record only once its MCP server holds the key or through `cairn ingest`.",
+     "problem": "What `cairn ingest` appends for a witnessed run goes to the seat it starts beside that run's run seat, and only the key that certified that run seat may certify it (REC-19, Run seat). A run whose MCP server never held a run-seat key has no run seat. So this interim rule names no seat or writer for the events that ingest appends. It also does not say that the run is counted and shown while unrecorded (I6), which only the recommended option says.",
+     "fix": "\"... or through `cairn ingest`, as an ingested run (REC-22), the run shown `unrecorded` (VIEW-04) and counted (I6) until then.\"",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "security",
+   "findings": [
+    {
+     "type": "security",
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "Until this closes, the hook handlers append nothing for such a run, leaving an ingest marker",
+     "problem": "The interim records nothing for a witnessed run while no MCP server holds its run-seat key. Where no server ever runs, for example because the harness's managed settings leave out Cairn's MCP server (I7 forbids overriding that), nothing is recorded at all. Unlike the recommended option, the interim counts, audits and shows nothing, and such a run has no seat in which VIEW-04's `unrecorded` mark could show it, so its whole capture gap goes unseen (I6) until someone runs `cairn ingest`.",
+     "fix": "Until this closes, the hook handlers append nothing for such a run, leaving an ingest marker; each such run is counted, audited and shown `unrecorded` on Fleet (I6) until its events reach the record, once its MCP server holds the key or through `cairn ingest`.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "permits, and the token carries that ask and those rooms' qualifying pins",
+     "problem": "A run seat's pin, or another principal's pin, qualifies only through the principal's stamp or trust grant and a certificate chain in the key set (Pin, Trust grant), and the token is not said to carry any of these. The token-key-only node then either cannot derive that those pins qualify, which contradicts \"so those pins restore\", or restores them on the token's word, outside what its own record and key set derive (I10, I2).",
+     "fix": "the token carries that ask, those rooms' qualifying pins, and the stamps, trust grants and certificates each one qualifies through (LANE-23, PEER-06)",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "(LANE-23, PEER-06), so those pins restore to its runs from their first",
+     "problem": "A pin restores only to runs that have had a seat in its room (Pin). The run's join is signed with a run-seat key that lives only in its MCP server's memory, and OQ-43 leaves open what happens before that server holds the key. At the first restore block (run start), the run may still have no seat in those rooms, so the pins either do not restore there or restore without the seat precondition.",
+     "fix": "so those pins restore to its runs from the first restore block after the run's join to their room is recorded",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "is also its principal's ask for each of its runs to join, at the run's start,",
+     "problem": "\"Each of its runs\" includes ingested runs. On a token-key-only node, a transcript ingested from outside transcript.roots would then join every room the token names, and its untrusted events would go to rooms that other principals' nodes hold. Ingested run says such transcripts land in the personal room.",
+     "fix": "is also its principal's ask for each witnessed run it records to join, at the run's start,",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "chains to its principal key (LANE-25). A whole-room mute spares them too.",
+     "problem": "Mute and LANE-16 exempt only the owner's device seats, so under a whole-room mute the owner's run seats and token-key-only node seats lose work and their events go to the personal room. This sentence spares every key that chains to the owner's principal key once PRV-10 ships, so those events keep reaching the shared room and other principals' nodes. Implementers will route the owner's runs' events differently under a whole-room mute.",
+     "fix": "Either drop \"A whole-room mute spares them too.\", or state the same exception in Mute and LANE-16: \"No mute covers the owner's device seats, nor, once PRV-10 ships, any seat whose key chains to the owner's principal key (Owner).\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "Its run records that task as untrusted `harness_text`, never `user` (PRV-08),",
+     "problem": "Only the first delegated task is named. The harness also writes later model-authored text into a subagent's transcript as `user` lines, such as a resumed subagent's new prompt or a parent's follow-up message. Read literally, this sentence leaves those as `user`, which is trusted in interactive mode, so the parent model's text would cause no recall taint and would enter trusted-only exports.",
+     "fix": "Its run records that task, and every other text its transcript carries as a `user` line, as untrusted `harness_text`, never `user` (PRV-08), since no one types at a subagent's input.",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "usefulness",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "(LANE-23, PEER-06), so those pins restore to its runs from their first",
+     "problem": "A restore block only carries pins of rooms the run has had a seat in. A run's join is a room act signed by its run-seat key, and Run seat keeps that key only in the MCP server's memory. Where a run's events go before the MCP server holds that key is open (OQ-43), and OQ-43's interim rule has the hook handlers append nothing until then. So the SessionStart restore block is normally built before any join exists, and \"from their first restore block\" cannot hold. One implementer will add the token's rooms anyway, against PIN-10. Another will leave them out, against this sentence.",
+     "fix": "Replace \"so those pins restore to its runs from their first restore block\" with \"so those pins restore to its runs once each run's joins are recorded, which needs its MCP server to hold the run-seat key (OQ-43); until then its restore blocks say those rooms' pins may be missing\", or state that a run's restore blocks carry the token's rooms' pins from its first event.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "its act joining its own run assigns that seat contributor (LANE-16).",
+     "problem": "A token-key-only node's runs join the rooms the access token names, under the ask the token carries (Node). The ask names no seat and covers future runs, so it is unclear whether it counts as the owner's act joining its own run. If it does not, the joined seat has no role assignment and is a viewer. A viewer has no work, so the run's events go to its personal room instead of the room it continues. An invite's role assignment for future seats is spelled out; the token's ask is not.",
+     "fix": "\"its act joining its own run, an access token's ask to join included (Node), assigns that seat contributor (LANE-16).\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "is also its principal's ask for each of its runs to join, at the run's",
+     "problem": "The ask covers joins only at a run's start. If a run on a token-key-only node loses its run-seat key with its MCP server, it continues on a new run seat with no add and must join again as Join says (Seat key, Run seat). That node can take no principal act, so either the token's ask also covers the new seat or the run's later events land in its personal room until the principal accepts a join from another device. The model does not say which.",
+     "fix": "\"is also its principal's ask for each of its runs to join, at the run's start and on each new run seat it continues on (Run seat), every room the token names to continue\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/srs/13-open-questions-and-risks.md",
+     "quote": "Until this closes, the hook handlers append nothing for such a run, leaving an ingest marker",
+     "problem": "The recommended option shows the run as `unrecorded` and counts it (I6), but the interim rule leaves both out. In a harness session where no MCP server runs, capture then stops without any count, audit entry or mark until someone runs `cairn ingest`, a silent failure under I6.",
+     "fix": "Append \", the run shown `unrecorded` (VIEW-04) and counted (I6) until then\" to the interim sentence.",
+     "severity": "minor"
+    }
+   ]
+  }
+ ],
+ "match": {
+  "matches": [
+   {
+    "lens": "consistency",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "The nearest theme is DM-CF (fixed), whose closing text is the sentence this finding attacks: the token carries the ask and the rooms' qualifying pins (PEER-06 carries pins as signed events with provenance only). The finding shows that text is incomplete. A run seat's pin qualifies only through a stamp, another principal's through a trust grant, and a device seat's through certificates, and the token carries none of them (PIN-10). Fixing DM-CF as closed would not answer it. SRS review 33 C62 (research/notes/srs-specialist-review-33, bundled, never applied) proposed carrying the stamps and edit events, but not trust grants or certificates."
+   },
+   {
+    "lens": "consistency",
+    "index": 1,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "This is the same shortfall in DM-CF's closing text as consistency/0, seen from the join side: the token carries the ask and the pins but not the acts the node derives the run's admitted membership from (the create room act for the owner, the admission act, the seat's role). A run has a seat only through an admitted join (LANE-23, PIN-10 'has had a seat in'). One rule that the token carries the acts its ask and pins derive from, or that a carried join counts as admitted until the node holds the room's state, answers both findings. DM-AD (the owner's act joining its own run assigns contributor, LANE-16) covers the role only when the minting principal owns the room, not the owner and admission derivation."
+   },
+   {
+    "lens": "security",
+    "index": 0,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "The nearest theme is DM-CD (deferred to OQ-43, S4, M1), which defers where the events go, not the interim's I6 behaviour. The interim sentence added in 84189fa ('the hook handlers append nothing for such a run, leaving an ingest marker') counts, audits and shows nothing. The recommended option in the same row says 'shown unrecorded (VIEW-04) and counted (I6)'. A run with no events has no personal-room seat (Seat: 'from its first event'), so VIEW-04's 'in every room it has a seat in' has nowhere to show it. NFR-06 audits hook-handler errors only, and withholding appends is a choice, not an error. The finding shows the deferral's closing text is incomplete, so keeping DM-CD deferred does not answer it."
+   },
+   {
+    "lens": "usefulness",
+    "index": 0,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "This shows that DM-CF's closing claim, 'those pins restore to its runs from their first restore block', cannot hold. A restore block carries the pins of rooms the run has had a seat in (PIN-10, INJ-02). A join is a room act signed by the run-seat key, which lives only in the MCP server's memory (LANE-23, SEC-10). OQ-43's interim has the hook handlers append nothing until that server holds the key, so the SessionStart restore block precedes any join. It is a different defect from NEW-1 (what the token carries) and from NEW-2 (the interim's I6 visibility): fixing either leaves this timing conflict. PEER-06 and peer.feature:68 say only 'joins at the run's start' and that restore blocks 'say later pins may be missing'. OQ-43 closes before M1 and PEER-06 ships in M8 (P2), so the wording can depend on OQ-43."
+   }
+  ],
+  "new_themes": [
+   {
+    "id": "NEW-1",
+    "title": "The access token carries a room's ask and qualifying pins but not the acts the node derives their qualification and the run's admitted membership from (stamps, trust grants, device and token certificates, create room, admission and role acts), so a token-key-only node cannot work out that the carried pins restore",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-2",
+    "title": "OQ-43's interim rule (hook handlers append nothing for a run whose MCP server holds no run-seat key, leaving an ingest marker) counts, audits and shows nothing, and a run with no events has no seat to show VIEW-04's unrecorded in, so the capture gap goes unseen (I6)",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-3",
+    "title": "A token-key-only node's pins restore 'from their first restore block' although each run's join is signed by a run-seat key only the MCP server holds (OQ-43), so no join exists when the first restore block is built",
+    "settled_by": "none"
+   }
+  ]
+ }
+}

@@ -31,13 +31,18 @@ browser unchanged. A UI the core draws needs a second UI there.
 - **Tauri 2 is the app shell** on all five platforms. Starting Cairn
   opens it; on a desktop the app carries the static core executable
   that hooks and the MCP server run as (common ground item 1 of the
-  options).
+  options). The app shell, the app and the hosted browser surface
+  name packaging under OQ-32, not new concepts: how Cairn's
+  components ship. The app shell and the app change no boundary
+  (§6.3); the hosted browser surface needs its own row (below).
 - **The UI is one web page**, written once. In the app it reaches its
   backend through Tauri's IPC; in a browser the same page is served by
   Cairn's own server and makes the same calls over HTTP and a
   WebSocket, behind one interface.
-- **Results open in a second webview** on their own origin, with no
-  bridge into the core: the running app, an HTML report, a test page.
+- **Presentations open in a second webview** on their own origin,
+  with no bridge into the core: an HTML report, a test page. A dev
+  server's URL stays inert text the person opens in their own browser
+  (VIEW-22).
 - **Untrusted text is rendered as text.** The page never inserts agent
   or tool output as HTML, under a CSP with no inline script and no
   `eval` (SEC-21), and the IPC exposes only the commands a capability
@@ -70,8 +75,9 @@ browser unchanged. A UI the core draws needs a second UI there.
 - **SRS changes, each the stakeholder's:** Windows in CON-02 and
   NFR-10; decision 9's loopback page becomes the shared UI, not the
   way in; a phone that shows rooms and chats changes OWN-16 and
-  OWN-17; the hosted browser surface is a new boundary row (B3, or an
-  owner-run node), with SEC-20's credential rules on the network.
+  OWN-17; the hosted browser surface, packaging under OQ-32, is a new
+  boundary row (B3, or a node its principal runs), with SEC-20's
+  credential rules on the network.
 - **Licences (ENG-18).** Tauri is Apache-2.0 OR MIT. Its tree carries
   MPL-2.0 in five crates: four only at build time inside the
   `tauri-macros` proc-macro, and `option-ext`, through `dirs`, in the

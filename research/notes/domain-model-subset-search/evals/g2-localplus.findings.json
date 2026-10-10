@@ -1,0 +1,83 @@
+[
+ {
+  "type": "contradiction",
+  "quote": "dismiss a directed post, revoke a run seat's key, turn capture on, turn",
+  "problem": "Revoking a run seat's key is classed Cut. Pin says a pin stops qualifying when the version that restores was written by a seat whose key is revoked, so a stamped run-seat constraint leaves the restore block. The widening rule says any principal act that removes a pin from a restore block is widening whatever verb carries it, and its only stated exception is an unstamp.",
+  "fix": "Class revoking a run seat's key as widening when it removes a stamped pin from a restore block, or list it among the stated exceptions to the pin-removal rule.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "security",
+  "quote": "under a delegation grant, another agent of the same principal, an agent on",
+  "problem": "Delegation reaches 'an agent on another of its nodes', and Delegate report mentions a report 'from another node'. I4 declares only B0 and loopback B1, and has no peer boundary, import or other channel by which one node's Cairn hands a task to another node. The sentence implies an undeclared data path off the machine.",
+  "fix": "Drop 'an agent on another of its nodes' and the 'from another node' clause in Delegate report, or add the declared boundary and path that carries them.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "undefined",
+  "quote": "to that seat's own writer (SEC-27). A tombstone, an erasure request a",
+  "problem": "'Erasure request a retention policy sends' is used as an event kind with a routing rule, but it appears nowhere else. It is not in the Qualified requests list, and Retention policy only purges and appends a tombstone, so the event and its recipient are undefined. Nothing in the candidate receives a request.",
+  "fix": "Delete 'an erasure request a retention policy sends' from the routing sentence, leaving the tombstone, or define the event and its recipient.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "An unstamp are the exceptions: each withdraws only the acting",
+  "problem": "The sentence is malformed. It names one exception but says 'are' and 'each', which implies other exceptions to 'any act removing a pin from a restore block is widening' were dropped. Implementers cannot tell which cut or neutral acts may remove a pin.",
+  "fix": "Write 'An unstamp is the exception: it withdraws only the acting principal's own trust', and add any other exception the Cut and Neutral lists rely on.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "contradiction",
+  "quote": "such as what an MCP tool that is no recall tool returns, or a CLI call from",
+  "problem": "Recall defines output Cairn gives an agent 'outside the closed paths', such as non-recall tool results. I2 and Closed path say Cairn writes to an agent only through the closed set and that no other write to an agent exists, so the closed set is not closed as written.",
+  "fix": "Add non-recall tool results that carry only fixed text, sanitized structural fields and ids to I2's list and to Closed path, or say these are not writes to an agent.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "that its principal neither owns nor has a seat in, such as a room every seat of its principal has left or lost to a",
+  "problem": "A node has one principal and no channel receives another principal's rooms, so every room it holds is owned by its principal. Owned rooms are never foreign, and the owner cannot be kicked or lose ownership by leaving, so no room can be foreign. The restore, recall and trust exceptions built on Foreign room can never apply.",
+  "fix": "Drop Foreign room and its exceptions, or add the way a room owned by another principal reaches a node.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "Whether a room is private, shared with the room's principals (LANE-17).",
+  "problem": "The room's principals are those with a member seat, and here all of them belong to the node's one principal. Nothing reads the setting, so changing it, a widening act, changes no behaviour.",
+  "fix": "Remove Visibility and the visibility changes from the widening list and the room merge, or state what it governs here.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "An ephemeral sign that a seat is connected, or typing (a",
+  "problem": "Presence hints, typing hints, drafts, and the room settings for whether drafts and typing show, have no audience here. The only people who can see them are the same principal typing, and the cited PEER-09 describes connections the candidate lacks.",
+  "fix": "Remove Presence hint, typing hint and the draft and typing room settings, or name who sees them.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "undefined",
+  "quote": "by a recorded neutral principal act, so every device shows one order.",
+  "problem": "A device is a node, and the focus-set act is recorded on one device seat's writer. Nothing in the candidate carries that act to another node, so 'every device shows one order' relies on a channel the candidate lacks.",
+  "fix": "Say the focus set is shown in order on this node, or define how the act reaches other devices.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

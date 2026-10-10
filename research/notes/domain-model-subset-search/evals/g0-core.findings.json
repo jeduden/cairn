@@ -1,0 +1,330 @@
+[
+ {
+  "type": "security",
+  "quote": "An authenticated client where principal acts are taken:",
+  "problem": "Nothing defines what authenticates the client. Being 'at a terminal' is the only thing separating the principal from an agent running `cairn` from its own tool call, and an agent can get a pseudo-terminal. So an agent can take widening principal acts, such as adding a `constraint` pin that then restores as trusted text, and can get recall output without an envelope. The rule 'a skill's call is the agent's own tool call, never a principal act' has nothing to enforce it.",
+  "fix": "Add: \"A client started from an agent's tool call is never a principal surface, whatever its output: it takes no principal act, acts only with that run's seat, and returns only enveloped output (OWN-02).\"",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "security",
+  "quote": "A pin the principal's configuration declares, authored",
+  "problem": "A configuration pin is written by the device seat, so it is `operator` and trusted. That makes the principal's settings file (file content an agent can edit) a direct path into restore blocks. The widening act 'accept configuration (recording its digest)' exists but is never tied to configuration pins. It is also unclear whether repository configuration 'tightening' may declare pins.",
+  "fix": "\"A pin declared by a configuration whose digest the principal accepted by the widening act accept configuration, authored by its device seat on that node; repository configuration declares no pins (PIN-01).\"",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "contradiction",
+  "quote": "only exceptions are secrets removed by redaction before storage.",
+  "problem": "I1 names redaction as the only exception. But the principal can turn capture off or pause it (a widening act, which `cairn uninstall` also records), and the candidate defines a capture gap as part of a run that capture did not record. Those events are not recoverable, so I1 and capture-off cannot both hold.",
+  "fix": "\"only exceptions are secrets removed by redaction before storage, and events of a run while its principal turned capture off or paused it, each shown as a capture gap.\"",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "contradiction",
+  "quote": "origin (whether recorded on this node, ingested or received), recorder and",
+  "problem": "The trust policy reads a 'received' origin, but Origin's closed set has only `witnessed` ('recorded live on this node') and `ingested`. The writers a node clone carries over were recorded on another node and fit no origin value. So their trust level, and whether their pins qualify, is left to the implementer.",
+  "fix": "Add to Origin: \"`received` (held from a writer another node recorded, a node clone's carried-over writers included)\", and say in Trust level whether received events can be trusted.",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "contradiction",
+  "quote": "restores to its author's principal's agents (a pin from this node's own",
+  "problem": "These statements disagree whenever a principal has two nodes, for example after a node clone: 'restores to its author's principal's agents' and Foreign room's 'its principal's own device-seat pins stay trusted and keep restoring' say one thing, while '(this node's own device seat)', Trusted sources' 'trusted only on this node' and I8's 'another node wrote ... untrusted' say another. Constraints the principal pinned on the original node then either restore on the clone or do not.",
+  "fix": "Pick one rule and use it in all three places, e.g. \"restores only to this node's agents, and only when written from this node's own device seat\", and replace \"its principal's own device-seat pins\" in Foreign room with \"this node's own device-seat pins\".",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "gap",
+  "quote": "Every seat belongs to one principal and one room; every writer to one seat.",
+  "problem": "The record carries no principal identity or key, so nothing says how a node finds the principal of a seat its own device key did not certify. On a node clone, a room the original node's device seat created could be read as the principal's own room (the clone's device seat gets owner capabilities) or as a foreign room (recall marks it untrusted and leaves it out of scope). It depends on the implementer.",
+  "fix": "Add: \"A seat's principal is the principal of the node whose device key certified its seat certificate; a node clone counts the device key it carried over as its own principal's.\"",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "useless",
+  "quote": "A client of the record. Its surfaces are a closed",
+  "problem": "The closed set of surfaces is only Health and Setup. No surface shows runs, run status, freshness marks, events with trust marks, or pins, even though the room view 'shows rooms' and those marks are defined as 'shown'. The journey 'a person sees what agents did' fails, and the clients are called 'reduced' against no full view.",
+  "fix": "Add a surface: \"- **Runs:** each room's runs with their run status and freshness mark, their events with trust marks, and the room's pins.\"",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "gap",
+  "quote": "revoke a seat key, turn capture on.",
+  "problem": "Revoking a seat key is classed as a cut act, but nothing says what it does to the seat's membership, its later events or its pins. If revoking a device seat's key stops its pins qualifying, it removes pins from a restore block, which the candidate makes widening 'whatever verb carries it'. If it does not, a compromised seat's constraints keep restoring.",
+  "fix": "Add to the cut list: \"revoke a seat key (its seat signs and seals nothing after it; its pins keep their restore state until a widening act removes them).\"",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "undefined",
+  "quote": "One of B0 core, B1 machine and B3 public (I4).",
+  "problem": "I4 declares only B0, and the closed component set has only core components. Yet Boundary lists B1 and B3, Managed policy disables 'B1 to B3' (which implies a B2 the set leaves out), and the CLI entry refers to B1\u2013B3 components and to 'the act turning it on', which no principal act names.",
+  "fix": "\"Boundary: B0 core, the only network boundary (I4)\", and drop the B1\u2013B3 references from Core and Managed policy.",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "contradiction",
+  "quote": "A pin, edit or unpin room act never changes any restore block",
+  "problem": "A restore block carries 'the count, room id and key fingerprint of pins of a type that restores that do not qualify'. So a run seat's room act pinning a `constraint` changes the restore block.",
+  "fix": "\"A pin, edit or unpin room act never adds, changes or removes a restored pin; it changes only the non-qualifying count a restore block names\".",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "contradiction",
+  "quote": "the kinds of principal act it may",
+  "problem": "Device scope limits 'the kinds of principal act it may sign', but in this model principal acts are `operator` events covered by a device seat's seal and are never signed by a device key. Nothing sets the scope or checks it.",
+  "fix": "Drop the device scope, or say who sets it and that a principal act or pin outside the recording device's scope is refused and counted.",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "useless",
+  "quote": "Wording Cairn ships, filled only with ids, counts, version",
+  "problem": "No closed path and no other concept uses a fixed template or principal-typed text. I2's paths are only restore blocks and compaction guidance, which use 'fixed text Cairn ships'.",
+  "fix": "Remove Fixed template and principal-typed text, or name the closed path that writes one.",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "gap",
+  "quote": "lives only in the memory of its harness session's MCP server,",
+  "problem": "The writer id and seat id derive from the seat's first key, and the run's seat exists from its first event, which the hook handlers record. Nothing says who mints that key, or how the hook handlers (which open no socket) name the writer before the MCP server has started or when it never starts. The same applies to a subagent's first event.",
+  "fix": "Add: \"the MCP server mints the run-seat key at the run's first tool-visible point; events the hook handlers record before that go to <named writer>.\"",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "gap",
+  "quote": "rooms the agent has a seat in, never to a",
+  "problem": "The `rooms` recall scope depends on which runs belong to 'the agent', but nothing defines agent identity across runs, for example after a harness clear or in a new harness session. Implementers will draw the recall scope differently.",
+  "fix": "Add to Agent: \"An agent is identified by <key>; runs with the same key are the same agent's.\"",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "security",
+  "quote": "An authenticated client where principal acts are taken:",
+  "problem": "Nothing authenticates a principal surface except being \"the CLI or TUI at a terminal\". An agent's tool calls run the same `cairn` as the same OS user and can open a pseudo-terminal. Injected text can therefore drive widening principal acts (add a `constraint` pin, release a quarantine, accept configuration, turn capture off), whose results reach every later restore block as trusted text. It can also acknowledge counters, which hides failures (I6).",
+  "fix": "\"An authenticated client where principal acts are taken: the CLI or TUI at a terminal, authenticated by a check no process a harness session started can pass; an act from such a process is refused and counted.\"",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "or a read-only CLI verb the agent runs whose output is not a",
+  "problem": "A CLI read counts as recall (enveloped, recall event recorded) only when its output is not a terminal, and the agent controls that (`script`, a pty). An agent steered by injected text can then receive untrusted history unenveloped and unrecorded, a path I2 does not allow.",
+  "fix": "\"or any read-only CLI verb a process a harness session started runs, whatever its output\", and say that the CLI envelopes every read not taken at an authenticated principal surface.",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "takes its seat's **pin class**, `operator` for a device seat and `assistant`",
+  "problem": "Room acts are taken \"wherever\", and a CLI call holds no run-seat key, so an agent's CLI room act signs as the device seat. Model-written text in such an act (a `fact` pin, a link) gets `operator` provenance, which I2 lists as a trusted source. Untrusted text is laundered into trusted text.",
+  "fix": "\"`operator` for a device seat's act taken at a principal surface, `assistant` for every other room act\".",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "**Hook**: The harness's callback into Cairn, carrying its **hook input**, a",
+  "problem": "`user` and `harness_meta` events are trusted because \"its hook handlers recorded\" them, but `cairn hook` is a CLI verb any process of the OS user can call with any hook input. An agent can record its own text as a trusted `user` event in interactive mode, or forge hook observations into any run's writer.",
+  "fix": "Add: \"Events from a hook call the core cannot tell apart from an agent's own tool call (no per-harness-session credential the harness passes and its tools cannot read) are untrusted, and the call is counted.\"",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "**Delegated task**: The text of a delegation: a subagent's from its harness.",
+  "problem": "A delegated task is model-written text that arrives as the subagent's harness input. No rule gives it a class other than `user`, and the hook handlers record it, so in `interactive` mode it becomes a trusted source, although I2 says the model's replies are untrusted.",
+  "fix": "Append: \"recorded in the subagent's run with `assistant` provenance, never `user`; only a user turn's typed text takes `user`.\"",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "contradiction",
+  "quote": "One of B0 core, B1 machine and B3 public (I4).",
+  "problem": "I4 declares only B0 and lets data leave the machine only through the harness. B1 and B3 have no rules, and the closed component list holds no B1 or B3 component. Yet the CLI carries \"each B1 to B3 component's own entry point\" and managed policy disables \"B1 to B3\", so a public component could send data off the machine with nothing bounding it.",
+  "fix": "\"One boundary: B0, the core (I4).\" Also drop the B1\u2013B3 entry-point clause under Core and \"it may disable boundaries B1 to B3\" under Managed policy.",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "contradiction",
+  "quote": "a device seat a device key certified restores to its author's principal's agents",
+  "problem": "The general clause restores pins from any certified device seat to the author's principal's agents. The parenthetical, I2 (\"anything another node produced\") and I8 trust only this node's own `operator` events. After a node clone, the original node's device-seat pins in the carried-over personal room restore under one reading and not the other. Nothing binds a device key to a principal, so \"its author's principal\" cannot be checked.",
+  "fix": "\"a pin of a type that restores written from this node's own device seat restores to this node's agents\". Change Foreign room to \"this node's own device-seat pins\", and state whether a node clone counts the device seat it carried over as its own.",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "A pin the principal's configuration declares, authored",
+  "problem": "Configuration is a file in the home that any process of the OS user can write, the agent's tool calls included. Its pins become trusted device-seat pins that restore, and its `node.deployment_mode` decides whether `user` events are trusted. Nothing says a configuration change applies only after an accept configuration act records its digest. Nothing stops an untrusted repository `.cairn.toml` from adding pins as \"tightening\".",
+  "fix": "\"A pin the principal's configuration declares once an accept configuration act has recorded that configuration's digest, authored ...\". Add under Record: \"repository configuration declares no pin\".",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "gap",
+  "quote": "revoke a seat key, turn capture on.",
+  "problem": "The candidate never says whether revoking a seat key untrusts the events that key sealed before the revocation. If it does, revoking a device seat's key drops its pins from restore blocks, which the next paragraph makes widening, so listing it under Cut is wrong. If it does not, constraints planted with a compromised key keep restoring. Two implementers would derive different trust levels from the same key set.",
+  "fix": "\"revoke a seat key (state whether earlier events it sealed keep their trust level; a revocation that removes a pin from a restore block is widening)\".",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "gap",
+  "quote": "A device's key with a **device scope** (the kinds of principal act it may",
+  "problem": "Nothing says who sets a device scope, where it is recorded, or what happens to an act outside it. Principal acts are `operator` events sealed by a device seat key, never signed by a device key, so \"may sign\" constrains nothing.",
+  "fix": "\"... with a device scope, recorded in the key set when the key is made: the kinds of principal act its device seat may record, and of pin its seats may write; an act outside it is refused and counted\".",
+  "severity": "minor",
+  "lens": "security"
+ },
+ {
+  "type": "gap",
+  "quote": "Acts with no member seat: open (OQ-41).",
+  "problem": "After a node clone, the new seats in non-personal rooms inherit no add, so they are not members. Whether their acts and pins change room state or qualify is left open, which is an authorization rule two implementers will build differently.",
+  "fix": "\"Acts of a seat that is not a member are recorded and counted but change no room state.\"",
+  "severity": "minor",
+  "lens": "security"
+ },
+ {
+  "type": "useless",
+  "quote": "Wording Cairn ships, filled only with ids, counts, version",
+  "problem": "In this candidate I2's closed paths are restore blocks and compaction guidance only, so no path uses a fixed template or principal-typed text. Any use would write to an agent outside the closed paths.",
+  "fix": "Drop Fixed template and principal-typed text, or add the path that uses them to I2's closed set.",
+  "severity": "minor",
+  "lens": "security"
+ },
+ {
+  "type": "contradiction",
+  "quote": "Any agent that receives a delegation, a subagent included",
+  "problem": "Delegation is defined as handing a task to \"its subagent\" through the harness, yet Delegate implies non-subagent delegates. That suggests an agent-to-agent hand-off Cairn would deliver, a write I2 does not list.",
+  "fix": "\"A subagent, which receives a delegation from its harness (OWN-24).\"",
+  "severity": "minor",
+  "lens": "security"
+ },
+ {
+  "type": "undefined",
+  "quote": "event was recorded on this node, ingested or received",
+  "problem": "The trust policy reads \"received\", but origin is only `witnessed` or `ingested` and no boundary receives anything. It is undefined how a node classifies writers it holds from elsewhere, such as a node clone's carried-over writers.",
+  "fix": "\"the trust policy reads only whether an event was witnessed on this node or ingested\", and say which origin a node clone's carried-over events take.",
+  "severity": "minor",
+  "lens": "security"
+ },
+ {
+  "type": "useless",
+  "quote": "they leave out (VIEW-14). A client of the record. Its surfaces are a closed",
+  "problem": "The room view has a closed set of only two surfaces, Health and Setup. Neither one shows a room's runs, events or pins, so run status, freshness marks, trust marks, integrity status and gap markers have nowhere to appear. The journey where a person sees what agents did fails.",
+  "fix": "Add a surface: '- **Room:** a room's runs with their run status and freshness mark, its pin list, and its events by address with trust marks, gap markers and integrity status.'",
+  "severity": "needs-fix",
+  "lens": "usefulness"
+ },
+ {
+  "type": "useless",
+  "quote": "The room acts are create room, link, pin, edit, unpin.",
+  "problem": "A seat's only add is its own create room act, and Relations gives a run seats only in its personal room. So every other room has just its creating device seat as a member. No run ever restores that room's pins or recalls it, and create room (beyond the personal room), role assignment and recall scope `rooms` have no use.",
+  "fix": "Add a room act 'add (the owner places a run's or device's seat in a room)' to this list and to Seat's add, and have Relations give a run 'a seat in each room an add places it in'. Otherwise drop non-personal rooms, role assignment and scope `rooms`.",
+  "severity": "needs-fix",
+  "lens": "usefulness"
+ },
+ {
+  "type": "security",
+  "quote": "A pin the principal's configuration declares, authored",
+  "problem": "The principal's configuration is a file in the home, and the agent's own file tools (same OS user) can write it. Nothing says a configuration pin waits for the widening act 'accept configuration', which has no stated effect. A constraint the model wrote can therefore be authored by the device seat, qualify and restore into every run.",
+  "fix": "'A pin the principal's configuration declares once an accept-configuration principal act has recorded that configuration's digest, authored ...'; a configuration with no accepted digest declares no pins.",
+  "severity": "needs-fix",
+  "lens": "usefulness"
+ },
+ {
+  "type": "security",
+  "quote": "An authenticated client where principal acts are taken:",
+  "problem": "'Authenticated' is never defined, so 'at a terminal' is the only test, and an agent's shell can get a pseudo-terminal. Its CLI call then takes widening principal acts, such as adding a constraint pin that restores, and Recall's 'output is not a terminal' test lets its read verbs return history without an envelope.",
+  "fix": "'...an authenticated client, the CLI or TUI at a terminal, confirmed by a check no process a harness session started can pass; a CLI call from such a process is never a principal act and its output is always enveloped.'",
+  "severity": "needs-fix",
+  "lens": "usefulness"
+ },
+ {
+  "type": "security",
+  "quote": "**Room act**: An act signed by a seat key, wherever it is taken.",
+  "problem": "A device seat's room acts and pins have provenance `operator` and are trusted on this node, and they need no principal surface. Nothing stops an agent's own CLI call from signing with the device-seat key in the home's key store, which gives text the model wrote operator trust and the owner's room capabilities.",
+  "fix": "Add: 'A device seat's room acts are taken only at a principal surface; an agent's tool call signs only with its run seat.'",
+  "severity": "needs-fix",
+  "lens": "usefulness"
+ },
+ {
+  "type": "gap",
+  "quote": "ingest starts, lives only in the memory of its harness session's MCP server,",
+  "problem": "A run seat's seat id and writer id derive from its first key, and that key exists only in the MCP server's memory. Yet hook handlers, which are separate processes with no socket, record the run's first event. Nothing says how they find the run seat's writer, or what happens before the MCP server starts or if it never starts, so implementers will drop or misplace events differently.",
+  "fix": "Add: 'The MCP server stores each run seat's certificate when it mints the key; a hook handler that finds none leaves an ingest marker, and the next hook handler resumes once it exists, counting any events still unplaced (I6).'",
+  "severity": "needs-fix",
+  "lens": "usefulness"
+ },
+ {
+  "type": "useless",
+  "quote": "**Foreign room**: A room this node holds",
+  "problem": "Here a node holds only writers its own principal's seats wrote: witnessed, ingested into the personal room, or carried over to a node clone. So it can never hold a room its principal neither owns nor has a seat in. The foreign-room trust input, RCL-10's narrowing and the foreign room recall scope are all dead.",
+  "fix": "Drop Foreign room and its uses in Trust level, Trusted sources, Recall scope and Relations.",
+  "severity": "minor",
+  "lens": "usefulness"
+ },
+ {
+  "type": "undefined",
+  "quote": "event was recorded on this node, ingested or received.",
+  "problem": "Origin has only the values `witnessed` and `ingested`, and nothing in the candidate receives events. Meanwhile a node clone's carried-over events are marked `witnessed` although this node did not record them, so implementers may disagree on whether to trust them.",
+  "fix": "Replace 'or received' with 'or carried over to a node clone, which counts as another node's'.",
+  "severity": "minor",
+  "lens": "usefulness"
+ },
+ {
+  "type": "useless",
+  "quote": "**Fixed template**: Wording Cairn ships, filled only with ids, counts, version",
+  "problem": "No closed path in this candidate uses a fixed template or principal-typed text. Restore blocks and compaction guidance are built from fixed text, qualifying pins and structural fields only.",
+  "fix": "Drop Fixed template and principal-typed text.",
+  "severity": "minor",
+  "lens": "usefulness"
+ },
+ {
+  "type": "useless",
+  "quote": "A device's key with a **device scope** (the kinds of principal act it may",
+  "problem": "Here principal acts are sealed by the device seat and never signed by a device key, and nothing sets or checks a device scope. Implementers will differ on whether to enforce one.",
+  "fix": "'**Device key**: A device's key, which certifies the seats its node uses.'",
+  "severity": "minor",
+  "lens": "usefulness"
+ },
+ {
+  "type": "undefined",
+  "quote": "One of B0 core, B1 machine and B3 public (I4).",
+  "problem": "This candidate's I4 defines only B0, and only the core has components. B1 and B3 refer to nothing, and neither do the CLI's exception for 'each B1 to B3 component's own entry point', the 'ephemeral node', 'the act turning it on', or managed policy disabling 'B1 to B3' (which also implies a B2).",
+  "fix": "'One of B0 core (I4)'. Drop the CLI's B1\u2013B3 entry-point clause and managed policy's power to disable B1 to B3.",
+  "severity": "minor",
+  "lens": "usefulness"
+ },
+ {
+  "type": "security",
+  "quote": "**Delegated task**: The text of a delegation: a subagent's from its harness.",
+  "problem": "A delegated task reaches the subagent's run as the harness's input, but the candidate gives it no provenance. Ingest that maps it to `user` would mark text the parent model wrote as trusted in interactive mode. Apart from naming this text, Delegation and Delegate have no rule that acts on them.",
+  "fix": "'...from its harness, recorded under its parent's `assistant` provenance, never as a `user` event.'",
+  "severity": "minor",
+  "lens": "usefulness"
+ },
+ {
+  "type": "gap",
+  "quote": "revoke a seat key, turn capture on.",
+  "problem": "The candidate never says what revoking a seat key changes. It is open whether the seat's later room acts still count in the room merge, whether its later seals verify, and what a run does whose MCP server still holds the revoked key.",
+  "fix": "Add to Seat key: 'Once revoked, the seat's acts and seals after the revocation count for nothing in the room merge or integrity status; the run continues on a newly minted seat, and the writer stays in the record.'",
+  "severity": "minor",
+  "lens": "usefulness"
+ }
+]

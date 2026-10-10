@@ -1,0 +1,187 @@
+---
+title: "Trust and flow"
+order: "09"
+summary: >-
+  Trust and how content reaches an agent: trust levels and sources, recall⟦f:endorsement⟧, endorsement⟦/f⟧⟦f:trust-grants⟧, trust grants⟦/f⟧, delegation⟦f:rule-levels⟧, rule levels⟦/f⟧⟦f:away-policy⟧, away policies⟦/f⟧⟦f:launcher⟧, fixed templates⟦/f⟧⟦f:sandbox-risk⟧, sandbox state and risk acceptance⟦/f⟧⟦f:store-protection⟧, quotas⟦f:delegation-grants⟧ and spend⟦/f⟧⟦/f⟧, counters, canary⟦f:landmarks⟧ and stats⟦/f⟧, run status⟦f:room-status⟧ and room status⟦/f⟧⟦f:needs-you⟧, the Needs you queue and focus set⟦/f⟧⟦f:room-status⟧, overlap⟦/f⟧⟦f:segment-exchange⟧, forks⟦/f⟧⟦f:conversation⟧, presence hints⟦/f⟧⟦f:room-view-surfaces⟧ and petnames⟦/f⟧.
+---
+# Trust and flow
+
+- **Trust level**: `trusted` or `untrusted`, per event for one principal's
+  agents on one node: derived by the trust policy from the event's provenance,
+  origin (whether recorded on this node or ingested⟦f:segment-exchange⟧, or received⟦/f⟧⟦f:bundle-import⟧⟦f:export-bundles⟧, or
+  imported⟦/f⟧⟦/f⟧), recorder and writer, the deployment mode recorded with the event,
+  the node's key set⟦f:work-rooms⟧, whether the event's room is foreign to that principal⟦/f⟧⟦f:stamps⟧, and that principal's
+  stamps⟦f:trust-grants⟧ and trust grants⟦/f⟧ as its writer logs carry them⟦/f⟧ (I10). The free text a
+  cut or neutral principal act carries, such as a stated reason, is untrusted
+  whatever its event's trust level (OWN-11).
+- **Trusted sources**: I2's trusted sources as PRV-02 applies them⟦f:work-rooms⟧, which RCL-10
+  narrows in a foreign room⟦/f⟧: this node's `operator` and structural events and
+  those the predecessors of its own device seats wrote (Seat key), the
+  `harness_meta` events its hook handlers recorded (Hook), and the `user` events
+  they recorded (Turn) while the deployment mode is `interactive`, all trusted only on this
+  node⟦f:principal-keys⟧; and, once PRV-10 ships, principal acts signed by a device key the
+  agent's principal certified, ⟦f:conversation⟧posts and ⟦/f⟧pins written from a device seat such a
+  key certified, within that key's scope⟦f:stamps⟧, a pin version its principal stamped⟦/f⟧⟦f:trust-grants⟧,
+  and for that agent the ⟦f:conversation⟧posts and ⟦/f⟧pins a trust grant of its principal covers⟦/f⟧⟦f:work-rooms⟧,
+  none of them in a foreign room but the pins⟦f:stamps⟧ and stamps⟦/f⟧ Foreign room names⟦/f⟧⟦/f⟧.
+  Everything else is untrusted, and so is the free text a cut or neutral
+  principal act carries (OWN-11).
+- **Deployment mode**: `interactive` (a person types at the harness) or
+  `automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`).
+- **Trust policy**: The rule that derives each event's trust level (PRV-02).
+- **Trust mark**: The sign beside an item saying where it came from and whether
+  it is trusted, from §9.7.6's closed set (VIEW-07).
+- **Taint**: The trust level a derived artifact, or an output built from events
+  (a recall result⟦f:compute-kernel⟧, kernel output⟦/f⟧⟦f:export-bundles⟧, an exported bundle, rendering or trusted-only
+  export⟦/f⟧), inherits: untrusted when any event it derives from is untrusted,
+  except for its sanitized structural fields.
+⟦f:rule-levels⟧- **Recall taint**: A run's mark after it recalls untrusted content, or
+  inherited from the delegating run (OWN-24), which tightens the rule levels of
+  the action classes SEC-13 configures as sensitive (OWN-10).⟦/f⟧
+- **Principal surface**: An authenticated client where principal acts are taken:
+  ⟦f:browser-room-view⟧the browser room view under SEC-20, ⟦/f⟧the CLI or TUI at a terminal that no
+  run's tool process started⟦f:paired-phone⟧, or a paired phone⟦f:principal-keys⟧ within its scope⟦/f⟧⟦/f⟧. A CLI
+  or TUI call from inside a run is the agent's own tool call: never a principal
+  act and never a device seat's room act, and its reads are recall, enveloped,
+  whatever its output (OWN-02).⟦f:browser-room-view⟧⟦f:peer-sync⟧ Without the peer component,⟦/f⟧ a
+  browser on the principal's phone reaches the room view only as the browser
+  room view, through the principal's own tunnel, which is the principal's tool
+  outside Cairn's components (I4).⟦/f⟧
+⟦f:presence-proof⟧- **Presence proof**: A hardware-backed, user-verified proof of a person's
+  presence, bound to one widening act (OWN-11).⟦/f⟧
+- **Recall**: An agent's call to a **recall tool**: an MCP tool that returns
+  enveloped content (§9.2), such as `event_search`, `room_get`⟦f:facilitator⟧,
+  `room_summary_get`⟦/f⟧⟦f:delegation-grants⟧, `delegation_get`⟦/f⟧⟦f:compute-kernel⟧ or `kernel_exec` with its built-ins
+  (CMP-03)⟦/f⟧; or any CLI or TUI read from inside a run, whatever its output
+  (OWN-12); each records a recall event (RCL-07). Pull-only, and it
+  defaults to the agent's current run. A recall tool that stops at its per-call
+  cap returns a **continuation cursor** (`next_cursor`); passed back as
+  `cursor`, it continues without gap or overlap (RCL-03).
+- **Closed path**: One of the ways I2 lists by which Cairn writes to an agent
+  without the agent's recall: restore blocks⟦f:notices⟧, opt-in notices⟦/f⟧⟦f:held-requests⟧, OWN-04's⟦f:away-policy⟧ and
+  OWN-07's⟦/f⟧ templates⟦/f⟧ and compaction guidance⟦f:launcher⟧; on a principal act recorded at
+  that time, through the harness's own input, principal-typed text, a fixed
+  template referencing ids⟦f:endorsement⟧⟦f:conversation⟧ or an endorsed post⟦/f⟧⟦/f⟧⟦/f⟧⟦f:delegation-grants⟧; a delegated task under its
+  grants⟦/f⟧⟦f:trust-grants⟧; and what a trust grant covers⟦/f⟧. No other write to an agent exists (I2),
+  and data leaves the machine through them only as the harness sends them to its
+  model (I4).
+- **Recall scope**: `run` or `room`⟦f:work-rooms⟧, or `rooms`, or a foreign room named in the
+  call⟦/f⟧ (RCL-05). A wider scope is said to extend recall; "widening" belongs to
+  acts.
+⟦f:endorsement⟧- **Endorsement**: The principal act of a principal with a seat in the room,
+  sending a post's text, exactly as the principal confirmed it after any edit,
+  to one of the principal's own agents, inside a fixed template naming the
+  author's seat key fingerprint and the post's address (OWN-08).⟦/f⟧
+⟦f:trust-grants⟧- **Trust grant**: A principal's widening act trusting another principal's key
+  for its own agents, in one room or everywhere. It covers that principal's
+  ⟦f:conversation⟧posts and ⟦/f⟧pins written from device seats a device key of that principal
+  certified, never ⟦f:conversation⟧a cross-room post shown in another room, ⟦/f⟧run seats⟦f:access-tokens⟧,
+  token-key-only nodes⟦/f⟧⟦f:facilitator⟧ or room summaries⟦/f⟧; never in a foreign room⟦f:conversation⟧; and a post it
+  covers reaches only the grantor's agents whose run has a seat in the post's
+  room, inside OWN-29's template: wording Cairn ships, filled only with ids, key
+  fingerprints, addresses and that post's text⟦/f⟧⟦f:service-accounts⟧. A grant naming a service account whose certificate or managed-policy
+  listing marks it as relaying text others wrote, or whose listing is unmarked,
+  is refused; one naming any other service account shows a warning⟦/f⟧ (OWN-29). Its
+  revocation is cut.⟦/f⟧
+- **Delegation**: One agent handing another a delegated task: its subagent⟦f:delegation-grants⟧, or,
+  under a delegation grant, another agent of the same principal, an agent on
+  another of its nodes⟦f:acceptance-grants⟧, or another principal's agent⟦/f⟧⟦/f⟧ (OWN-23 to OWN-26).
+- **Delegated task**: The text of a delegation: a subagent's from its harness⟦f:delegation-grants⟧,
+  any other in OWN-24's template⟦/f⟧. In the delegate's run it is recorded with
+  `assistant` provenance, as the delegating run's text, never as a `user` event
+  (Turn).
+⟦f:delegation-grants⟧- **Delegate report**: What a delegate returns, recorded on the delegating side
+  so it stays in the delegating run's recall scope (OWN-24), enveloped: through
+  `delegation_get`, except a subagent's, which its harness returns as untrusted
+  `subagent_result` (OWN-25).⟦/f⟧
+⟦f:delegation-grants⟧- **Delegation grant**: The delegating principal's widening act naming who may
+  delegate, to which targets⟦f:rule-levels⟧, at what rule level⟦/f⟧, within what **delegation
+  budget** (its cap in spend), how many delegates at once, how deep, and until
+  when (OWN-23); past that expiry the delegating node refuses a delegation under
+  it⟦f:principal-keys⟧, and its expire act ends it⟦/f⟧.⟦/f⟧
+⟦f:acceptance-grants⟧- **Acceptance grant**: The receiving principal's widening act on its own node,
+  naming the delegating principal, the targets⟦f:rule-levels⟧, the maximum rule level⟦/f⟧⟦f:delegation-grants⟧, the
+  delegation budget⟦/f⟧ and the expiry (OWN-26), which ends it as a delegation
+  grant's does. Delegation to another principal's agent needs both a delegation
+  grant and an acceptance grant.⟦/f⟧
+⟦f:held-requests⟧- **Permission grant**: The grant that lets an approved action pass again when
+  the harness next raises it at its permission prompt (OWN-07).⟦f:delegation-grants⟧ Separate from
+  ⟦f:trust-grants⟧trust and ⟦/f⟧delegation grants.⟦/f⟧⟦/f⟧
+⟦f:notices⟧- **Notice allowance, notice opt-in**: The owner's per-room allowance and the
+  agent's principal's opt-in. An opt-in notice needs both.⟦/f⟧
+⟦f:rule-levels⟧- **Rule level**: For each action class (a kind of tool action, such as edits,
+  commands or network use), one of, loosest to tightest: act without asking, act
+  when told, ask first, hand off (OWN-10). A maximum rule level is the loosest
+  allowed.⟦/f⟧
+⟦f:store-protection⟧- **Quota**: A limit on storage or events, per room⟦f:peer-sync⟧, writer received from
+  a peer, peer⟦/f⟧⟦f:git-tracking⟧, worktree checkpoint⟦/f⟧ or node, that the node's principal or managed
+  policy sets (ADM-15); reaching it never drops, truncates or deletes an event:
+  it is counted and shown (I6).⟦/f⟧
+⟦f:delegation-grants⟧- **Spend**: What runs cost in model tokens or money⟦f:store-protection⟧; no quota limits it until
+  OQ-26 closes⟦/f⟧.⟦/f⟧
+⟦f:away-policy⟧- **Away policy**: A principal's opt-in choice of what an unanswered held
+  request does while it is on: keep going, pause or stop (OWN-07). Only that
+  principal act sets it, never a settings key.⟦/f⟧
+⟦f:sandbox-risk⟧- **Residual risk**: One of the risks §6.1 lists for an unconfined run.⟦/f⟧
+⟦f:sandbox-risk⟧- **Sandbox state**: What confines a run, its policy digest, and which residual
+  risks it blocks, recorded from outside the sandbox, where the agent cannot
+  write (OWN-22).⟦/f⟧
+⟦f:sandbox-risk⟧- **Risk acceptance**: The principal's act accepting the residual risks a run
+  leaves open (OWN-22).⟦/f⟧
+⟦f:held-requests⟧- **Hand-off, hand-back**: An agent passes control to its principal as a held
+  request; the principal returns control with a note⟦f:git-tracking⟧ and a worktree checkpoint⟦/f⟧
+  (OWN-20).⟦/f⟧
+⟦f:launcher⟧- **Run controls**: Steer, interrupt, pause, resume and stop: principal acts on
+  a run. **Terminal takeover**, the principal typing in the harness's terminal
+  the launcher hosts, is the harness's own channel, never a principal act
+  (OWN-02, OWN-19): the person's keystrokes are the harness's own input from
+  that terminal, which the launcher hosts but never carries, so what the
+  launcher carries into the harness's input stays text the core built (I4).⟦/f⟧
+⟦f:launcher⟧- **Fixed template**: Wording Cairn ships, filled only with ids, counts, version
+  numbers, key fingerprints, addresses and the principal-typed⟦f:endorsement⟧, endorsed⟦/f⟧⟦f:delegation-grants⟧ or
+  delegated⟦/f⟧ text⟦f:trust-grants⟧⟦f:conversation⟧, or the text of a post a trust grant covers⟦/f⟧⟦/f⟧, its requirement
+  names; **principal-typed text** is text a principal typed at a principal
+  surface for that act.⟦/f⟧
+⟦f:launcher⟧- **Correction, retry**: ⟦f:results-and-verdicts⟧After a verdict: ⟦/f⟧principal-typed text in a fixed
+  template⟦f:git-tracking⟧, or a new run from a worktree checkpoint⟦/f⟧ (OWN-28).⟦/f⟧
+- **Counter**: A count of dropped, rejected, redacted, truncated, coalesced,
+  timed-out or failed operations of one kind, each also written to the **audit
+  log**, the node's append-only log of Cairn's own operations (OPS-01), shown on
+  Health until acknowledged (`cairn counter ack`, I6, OPS-03).
+- **Canary**: `cairn canary`'s end-to-end test: it writes a **canary event**
+  through the hook path and recalls it through the MCP server (OPS-04).
+⟦f:landmarks⟧- **Stat**: A count derived from the record within a recall scope, such as
+  events, runs, compactions or recalls, read through `stat_list` (RCL-01).⟦/f⟧
+- **Run status**: A run's one status from §9.7.1's closed set (one waiting on
+  its principal is Asking⟦f:needs-you⟧, never Needs you⟦/f⟧), with its **freshness mark**, which
+  says how current the run's events are on this node, whether hooks still arrive
+  (`unrecorded`), or that it is an ingested run (`ingested`)⟦f:room-view-surfaces⟧; `stuck?` is a
+  watchdog observation⟦/f⟧ (VIEW-04); time-relative freshness marks are computed
+  where shown, never derived artifacts.
+⟦f:room-status⟧- **Room status**: A room's one status from §9.7.2's closed set, such as
+  Running, Quiet or Ready for review. It is computed where shown from room
+  state, the heads, landings⟦f:results-and-verdicts⟧ and check states⟦/f⟧ of the branches it names, its
+  runs' statuses and their freshness marks. It is never recorded and never set
+  directly; OWN-21's ready and abandoned marks feed it.⟦/f⟧
+⟦f:needs-you⟧- **Queue class**: One of Needs you's classes Q1 to Q4, which set its order
+  (§9.7.4, VIEW-05).⟦/f⟧
+⟦f:needs-you⟧- **Focus set**: The rooms a principal marks to come first in Needs you, changed
+  by a recorded neutral principal act, so every device shows one order.⟦/f⟧
+⟦f:room-status⟧- **Open room**: A room with no ready mark whose branch heads still stand
+  (OWN-21) and no abandoned mark, that names no branch or names one that has not
+  landed.⟦/f⟧
+⟦f:results-and-verdicts⟧- **Exposure**: Of a branch, the untrusted and flagged items its runs read⟦f:rule-levels⟧ and
+  their recall taint⟦/f⟧ (VIEW-13).⟦/f⟧
+⟦f:room-status⟧- **Overlap**: Runs in two open rooms editing one file⟦f:needs-you⟧, which raises a Needs you
+  item for each room's owner until that owner acknowledges it for that room⟦/f⟧
+  (LANE-13).⟦/f⟧
+⟦f:segment-exchange⟧- **Fork**: Either of two events one writer sealed at one seq, both kept for
+  forensics; the node's principal chooses which fork to keep (PEER-10).⟦/f⟧
+⟦f:conversation⟧- **Presence hint**: An ephemeral sign that a seat is connected, or typing (a
+  **typing hint**), never stored in the record (PEER-09).⟦/f⟧
+⟦f:room-view-surfaces⟧- **Watchdog observation**: Cairn's note, computed where shown and never
+  recorded, that a run looks stuck, shown as the `stuck?` freshness mark; it
+  never starts or resumes a turn (OWN-09).⟦/f⟧
+⟦f:room-view-surfaces⟧- **Petname**: A name the person viewing chose for a key or a room, never one
+  another principal sent (VIEW-07).⟦f:needs-you⟧ Notifications carry a room's petname, else
+  its id.⟦/f⟧⟦/f⟧

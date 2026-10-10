@@ -1,0 +1,200 @@
+[
+ {
+  "type": "gap",
+  "quote": "ends it: the seat's later acts and seals count for nothing",
+  "problem": "Revoking a run seat's key is a cut act and ends that seat, but no rule gives the still-running run a new seat: keys are minted anew only on a node clone or identity change, on key loss with the MCP server, or on device-seat revocation. So the run's later events either land in a writer whose seals count for nothing or stop being recorded. If recording stops, the act becomes widening under 'stops this node recording its own runs' events', which contradicts its cut class.",
+  "fix": "Add: \"Revoking a run seat's key mints a new key that starts a new run seat and writer naming the revoked one without taking it as its predecessor; the run's later events go there.\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "except that it names the revoked seat without",
+  "problem": "The candidate never says whether a revoked device seat still counts among 'this node's own device seats' for the predecessor chain that trusted sources and pin qualification use. If it counts, pins its unrevoked predecessors wrote keep restoring on this node but stop on any later node clone with no act, because the new seat does not take the revoked one as its predecessor. If it does not count, revoking it also drops every pin its predecessors wrote.",
+  "fix": "Append: \"...without taking it as its predecessor, and takes the revoked seat's own predecessor, if any, as its predecessor.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "event its device seat's seal covers, told apart from a room act by",
+  "problem": "A principal act is told apart from a room act by the principal surface it is marked with. A device seat also takes its room acts only at a principal surface, and the next sentence classes acts by seat-key signature instead. A device seat's room act taken at the CLI meets both tests, so two implementers can class the same act differently.",
+  "fix": "Replace with: \"told apart from a room act by bearing no seat-key signature beyond its writer's seal, and marked with the principal surface it was taken at (OWN-02)\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "Managed policy alone overrides the principal's settings",
+  "problem": "This says managed policy is the only layer that overrides the principal's settings. Yet Record makes repository configuration a settings layer that may make cut changes to those same settings, so one of the two statements is false.",
+  "fix": "\"Managed policy and repository configuration override the principal's settings, each only with changes a cut act could make\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "undefined",
+  "quote": "principal its certifying device key identifies.",
+  "problem": "Nothing in the candidate ties a device key to a principal: it has no principal key and no certificate over a device key. That leaves undefined who owns a seat that this node's device key, or an ancestor node's, did not certify.",
+  "fix": "\"any other seat belongs to another principal, kept as theirs and untrusted (I8)\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "A node. A node's device key certifies the seats",
+  "problem": "Device is defined only as 'A node', so one concept has two names. This contradicts the hub rule that every Cairn concept has one name, and leaves 'device' and 'node' interchangeable throughout.",
+  "fix": "Drop Device as a separate concept and read 'device seat' and 'device key' as a node's seat and a node's key; or define a device as something distinct from a node.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "from one of their predecessors, however far back (Seat key), restores to this",
+  "problem": "A node clone is any copied home started under a new node identity: a cloned image, a copied volume or a restored snapshot. Its predecessors' operator events and constraint pins become trusted, and the pins restore, with no principal act on the new node. So if another person bakes a home into a shared container image or snapshot, that person's pins restore as trusted to the agents of whoever starts it. This contradicts 'only an agent's own principal widens what reaches that agent'.",
+  "fix": "Add: \"A node clone's predecessors' writes are trusted, and their pins qualify, only after a widening principal act on the clone accepts that lineage; until then the trust policy reads them as another node's.\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "ends it: the seat's later acts and seals count for nothing, and a device",
+  "problem": "Revoking a run seat's key is a cut act and ends the seat, but nothing mints a new seat for the run, which keeps running. Its later events either go to a seat whose seals count for nothing, so they stay unsealed for good with no marker, or they have no seat to go to, which breaks I1. Two implementers would build different things here.",
+  "fix": "Add: \"Revoking a run seat's key while its run continues mints a new run seat that names the revoked one without taking it as its predecessor, and the run's later events go there.\"",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "except that it names the revoked seat without",
+  "problem": "After this node revokes its own device seat's key, this node's device key still certifies the revoked seat. So it is undefined whether that seat's predecessors' writes, and its own earlier operator events, stay trusted and qualifying on this node. The broken chain only takes effect on a later clone of this node.",
+  "fix": "Add: \"A revoked device seat no longer counts as one of this node's own device seats; only predecessors of its current device seats count.\"",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "its digest, except a change that only cuts; that acceptance adds, edits or",
+  "problem": "A cut-only change from configuration or a repository's .cairn.toml takes effect with no act recorded. 'Changes a cut act could make' include quarantining content and revoking a run seat's key. Text an untrusted repository supplies could then quarantine or revoke without a principal act, and the quarantine set would no longer derive from the writer logs, which breaks I10.",
+  "fix": "Add: \"A settings layer's cut-only change only narrows settings; quarantine and key revocation happen only as recorded principal acts.\"",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "Cairn's components send data off the machine only as recalled content an agent",
+  "problem": "I4 says data leaves the machine only as recalled content or through the closed paths. But Recall says Cairn also gives agents other output: a non-recall MCP tool's return, or a non-read CLI call from inside a run. The harness sends that output to its model too.",
+  "fix": "Append to I4: \"or as the fixed text, sanitized structural fields and ids that any other tool call returns\".",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "or any CLI or TUI read from inside a run, whatever its output",
+  "problem": "I2 lets untrusted content reach the model only when the agent calls a recall tool, and a recall tool is defined as an MCP tool. Yet a CLI or TUI read from inside a run returns enveloped record text without any recall-tool call.",
+  "fix": "In I2 write \"when the agent explicitly recalls (calls a recall tool, or reads through the CLI or TUI from inside a run)\", or define a recall tool to include those reads.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "trust marks, and the pins that restore, which the TUI and the CLI show.",
+  "problem": "The surfaces are a closed set, and only Runs shows pins, and only those that restore. Nothing shows a person the room's pin list: decision, fact and episode pins, run-seat pins, the non-qualifying constraint pins the restore block counts, and their range links. Yet the person must find these pins to take the neutral unpin of a run-seat pin, to edit or unpin a device-seat pin, or to quarantine one, so implementers will differ on whether and where agents' pins are shown at all.",
+  "fix": "Extend Runs: \"...and the room's pin list, each pin with its author, pin type, whether it qualifies, and its range links, which the TUI and the CLI show.\"",
+  "severity": "needs-fix",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "edited or unpinned only by the widening act accepting that configuration",
+  "problem": "Revoking a device seat's key stops the pins that seat authored from qualifying, configuration pins included, and an edit cannot revive them because the creating event stays revoked. Only accepting configuration may change configuration pins, and the candidate never says whether accepting an unchanged configuration re-creates them under the new device seat. So configuration constraints may never restore again (journey 1), depending on the implementer.",
+  "fix": "Add: \"Accepting configuration re-creates, under the current device seat, every configuration pin whose creating event a revoked seat wrote, even when the digest is unchanged.\"",
+  "severity": "needs-fix",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "range links. Any other output Cairn gives an agent outside the closed paths,",
+  "problem": "Recall admits a second output to an agent outside the closed paths: what a non-recall MCP tool (such as room_pin) or a non-read CLI call returns. But Closed path and I2 say \"No other write to an agent exists\", and I4 lets data leave the machine only as recalled content or through closed paths. A strict implementer would make the agent's own room_<act> tools return nothing, not even the pin id the agent needs to link or edit.",
+  "fix": "In I2, I4 and Closed path, add: \"...or as the reply to the agent's own non-recall tool call, built only from fixed text Cairn ships, sanitized structural fields and ids.\"",
+  "severity": "needs-fix",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "strip** (a status line the harness shows). A client of the record. Its surfaces are a closed",
+  "problem": "The harness strip is part of the room view, but no surface in the closed set names it. Runs is shown by \"the TUI and the CLI\", and Health and Setup name no client, so the strip has no defined content and two implementers would show different things.",
+  "fix": "State what the strip shows, e.g. \"the harness strip shows the harness session's runs' run statuses and the count of unacknowledged counters\", or drop it from the room view.",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "A **missing range** is part of a writer this",
+  "problem": "Nothing in this candidate can create a missing range. A node holds only the writers it wrote or carried over whole in a node clone, and it never learns of any part it does not hold, so the concept has no use.",
+  "fix": "Delete the missing range sentence from Gap marker.",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "**Working view**: Whatever is currently in the model's context window.",
+  "problem": "No concept, rule or surface in the candidate creates, reads or acts on the working view; the term is never used again.",
+  "fix": "Delete the Working view entry, or use it where restore blocks and compaction are defined.",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "**Qualified requests**: A permission request (the harness's).",
+  "problem": "\"Permission request\" and \"request\" appear nowhere else in the candidate, so this naming rule qualifies a term nothing uses. The run status Asking, the only waiting-on-the-principal state, is not tied to it.",
+  "fix": "Delete the entry, or tie it to its use: \"a run waiting on a permission request (the harness's) is Asking\".",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "ingest starts, stand beside it. It covers membership, roles, pins, pin versions, range links. When acts conflict, the more restrictive act wins, then the lower",
+  "problem": "The candidate defines Concurrent but never uses it. The room merge's conflict rule does not say it applies only to concurrent acts, so one implementer may let a causally earlier, more restrictive act override a later one, while another follows causal order.",
+  "fix": "\"When concurrent acts conflict, the more restrictive act wins, then the lower commitment.\"",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "off or pausing it is widening (OWN-11), and pausing turns it off until the",
+  "problem": "Pausing capture turns it off until the principal turns it on again, which is exactly what turning it off does. Pause has no distinct use, yet I1 and the widening class list it as if it differed.",
+  "fix": "Drop pause, or give it its distinct rule (e.g. \"pausing turns it off until a stated time, when it turns on again\").",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "prefix is a **sealed range**.",
+  "problem": "Sealed range is defined but never used: seals, integrity status and refused segments are all stated without it.",
+  "fix": "Delete the sealed-range sentence, or use it in Seal or Integrity status.",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ }
+]

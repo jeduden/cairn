@@ -1,0 +1,237 @@
+---
+title: "Acts and roles"
+order: "07"
+summary: >-
+  The ⟦f:principal-keys⟧three ⟦/f⟧act kinds and what they may do: room acts, principal acts and their classes, ⟦f:principal-keys⟧expire acts, ⟦/f⟧roles, ⟦f:moderation⟧appointments, ⟦/f⟧⟦f:work-rooms⟧joins, ⟦/f⟧⟦f:moderation⟧moderation, ⟦/f⟧⟦f:ownership-transfer⟧handover, ⟦/f⟧⟦f:stamps⟧stamps ⟦/f⟧and the room merge.
+---
+# Acts and roles
+
+Room state derives from the ⟦f:principal-keys⟧three ⟦/f⟧act kinds below only. Seats that are members with no
+add, and the seat ingest starts, stand beside them (Seat). Each act belongs to
+exactly one kind (LANE-31).
+
+- **Room act**: An act signed by a seat key, a device seat's only where Device
+  seat says. It is checked against the capabilities of the seat's role and the
+  room state; create room needs none⟦f:work-rooms⟧, and join, a join request and leave
+  are checked against ⟦f:shared-rooms⟧admission and ⟦/f⟧the add instead⟦/f⟧. The room acts are create room⟦f:work-rooms⟧, join, a join request, leave, a role
+  request⟦/f⟧⟦f:conversation⟧, post⟦/f⟧, link, pin, edit, unpin⟦f:moderation⟧, list removal⟦/f⟧⟦f:presentations⟧, present, pick⟦/f⟧⟦f:moderation⟧, kick⟦/f⟧⟦f:shared-rooms⟧, bar,
+  unbar⟦/f⟧⟦f:moderation⟧, mute and unmute⟦/f⟧⟦f:work-rooms⟧; set title, labels or an assignment⟦/f⟧⟦f:facilitator⟧; and write a room
+  summary or a summary request⟦/f⟧.⟦f:work-rooms⟧ A leave⟦f:moderation⟧ or a kick⟦/f⟧⟦f:shared-rooms⟧ or a bar⟦/f⟧ never drops a room's
+  qualifying pins from a run's restore block⟦f:shared-rooms⟧, within the foreign-room limit of
+  Relations⟦/f⟧.⟦/f⟧ A pin, edit or unpin room act never adds, changes or removes a restored pin: a
+  device seat's pin, edit or unpin room act on a pin of a type that restores is refused
+  and counted (Pin)⟦f:access-tokens⟧, but on a token-key-only node⟦/f⟧; an author's own pin, edit and unpin act only on pins that
+  do not qualify⟦f:stamps⟧ unstamped⟦/f⟧⟦f:moderation⟧, and a list removal only takes a pin off the pin list⟦/f⟧. A link act
+  adds one range link⟦f:work-rooms⟧⟦f:git-tracking⟧, branch link⟦/f⟧⟦/f⟧⟦f:results-and-verdicts⟧⟦f:intent-criteria⟧ or criterion link⟦/f⟧⟦/f⟧. Create room is the first
+  act of the creating seat's writer: a device seat's, once per node, creating
+  its node's personal room (Personal room)⟦f:work-rooms⟧, or any seat's,
+  creating another room⟦/f⟧; any other create room act is refused and counted
+  (I6).⟦f:work-rooms⟧⟦f:segment-exchange⟧ A created room starts private⟦f:shared-rooms⟧⟦f:principal-keys⟧ and invite only⟦/f⟧⟦/f⟧;
+  its create room act sets no visibility⟦f:shared-rooms⟧⟦f:principal-keys⟧ or admission⟦/f⟧⟦/f⟧, which only the
+  owner's widening principal act changes.⟦/f⟧⟦/f⟧ Room acts are governance, not I2 trust: on
+  their own they never widen what reaches an agent, which only principal acts⟦f:stamps⟧
+  such as ⟦f:trust-grants⟧a trust grant, ⟦/f⟧⟦f:endorsement⟧an endorsement or ⟦/f⟧a stamp⟦/f⟧ do, and OWN-11's classes do
+  not cover them.
+- **Principal act**: An act of a kind OWN-11 classes, taken at a principal
+  surface. It is ⟦f:principal-keys⟧signed by a device key once PRV-10 ships; before then it is ⟦/f⟧an
+  `operator` event its device seat's seal covers, told apart from a room act by
+  bearing no seat-key signature beyond its writer's seal, and marked with the
+  principal surface it was taken at (OWN-02). Only the CLI or TUI at a principal
+  surface⟦f:browser-room-view⟧, or the room-view component for the browser room view⟦/f⟧⟦f:paired-phone⟧, or a paired phone⟦/f⟧ records an `operator` event so marked; the
+  hook handlers⟦f:compute-kernel⟧, the kernel worker⟦/f⟧ and the MCP server never do, and an `operator`
+  event without that mark is never a principal act. A process of the same OS
+  user that writes to the store, or signs with this node's device key or a seat
+  key, outside Cairn's code is §6.1's ⟦f:sandbox-risk⟧residual ⟦/f⟧risk R3⟦f:store-protection⟧: only a head receipt kept off the machine
+  shows it⟦/f⟧. An act a seat key signs as
+  the act, beyond sealing its writer, is a room act. A widening act lets more
+  reach an agent, or more act or leave the node; a cut act only stops, narrows
+  or undoes a widening; a neutral act does neither, such as acknowledging
+  counters. ⟦f:work-rooms⟧⟦f:segment-exchange⟧Every change of visibility⟦f:shared-rooms⟧ or admission⟦/f⟧ is widening,
+  whichever way it goes. ⟦/f⟧⟦f:moderation⟧Every change of a room setting is widening, whichever way
+  it goes. ⟦/f⟧⟦/f⟧Its classes:
+  - **Cut:** ⟦f:held-requests⟧deny, ⟦/f⟧⟦f:launcher⟧interrupt, pause or stop a run, ⟦/f⟧⟦f:delegation-grants⟧cancel a delegation, ⟦/f⟧⟦f:held-requests⟧end a
+    permission grant, ⟦/f⟧⟦f:bundle-import⟧⟦f:work-rooms⟧⟦f:shared-rooms⟧reject a foreign room, ⟦/f⟧⟦/f⟧⟦/f⟧⟦f:work-rooms⟧decline a join request, ⟦/f⟧⟦f:rule-levels⟧tighten a
+    rule level, ⟦/f⟧⟦f:work-rooms⟧revoke a role assignment, ⟦/f⟧⟦f:ci-attestation⟧revoke a CI key, ⟦/f⟧⟦f:publishing⟧stop publishing a
+    room, ⟦/f⟧quarantine content without removing anything from a restore block,
+    ⟦f:sandbox-risk⟧withdraw a risk acceptance, ⟦/f⟧⟦f:trust-grants⟧revoke a trust grant, ⟦/f⟧⟦f:delegation-grants⟧end a delegation grant⟦f:acceptance-grants⟧ or
+    an acceptance grant⟦/f⟧, ⟦/f⟧⟦f:away-policy⟧turn an away policy off, ⟦/f⟧⟦f:ownership-transfer⟧withdraw a named successor,
+    ⟦/f⟧⟦f:moderation⟧revoke an appointment, ⟦/f⟧⟦f:stamps⟧unstamp a pin version, ⟦/f⟧⟦f:notices⟧turn notices off, ⟦/f⟧⟦f:ownership-transfer⟧decline a
+    handover, withdraw as successor, ⟦/f⟧⟦f:endorsement⟧⟦f:conversation⟧dismiss a directed post, ⟦/f⟧⟦/f⟧⟦f:access-tokens⟧revoke an access
+    token (unless that removes a pin from a restore block), ⟦/f⟧⟦f:key-revocation⟧revoke a run seat's key⟦f:stamps⟧ (unless that stops a stamped version qualifying)⟦/f⟧, ⟦/f⟧⟦f:service-accounts⟧revoke
+    a service account's certificate (unless that removes a pin from a restore
+    block), ⟦/f⟧accept a configuration whose change only cuts and removes no pin
+    from a restore block⟦f:key-revocation⟧ and whose acceptance re-records no pin⟦/f⟧, turn capture on⟦f:browser-room-view⟧, turn
+    off the room-view component⟦/f⟧⟦f:launcher⟧, turn off the launcher⟦/f⟧⟦f:peer-sync⟧, turn off the peer
+    component⟦/f⟧⟦f:git-carrier⟧, turn off the publish component or the git carrier⟦/f⟧⟦f:bridges⟧, turn off a
+    bridge⟦/f⟧.
+  - **Neutral:** ⟦f:room-status⟧mark a room ready, its **ready mark** (the owner⟦f:moderation⟧⟦f:shared-rooms⟧ or a principal
+    whose device seat in the room is a moderator⟦/f⟧⟦/f⟧), or abandoned, its **abandoned
+    mark** (the owner), acknowledge an overlap, ⟦/f⟧⟦f:results-and-verdicts⟧record a `met`, `not met` or
+    `needs changes` verdict, unpin a verdict, ⟦/f⟧⟦f:room-view-surfaces⟧open the forensic view, ⟦/f⟧⟦f:purge-retention⟧⟦f:shared-rooms⟧make a
+    purge request, ⟦/f⟧⟦/f⟧⟦f:peer-sync⟧refuse a quarantine request⟦f:purge-retention⟧, an erasure request⟦/f⟧⟦f:purge-retention⟧⟦f:shared-rooms⟧ or a purge
+    request⟦/f⟧⟦/f⟧, ⟦/f⟧⟦f:results-and-verdicts⟧⟦f:git-tracking⟧choose a branch to compare, ⟦/f⟧⟦/f⟧acknowledge counters, ⟦f:needs-you⟧dismiss a Q3 or
+    Q4 item⟦f:endorsement⟧⟦f:conversation⟧ other than a directed post⟦/f⟧⟦/f⟧, ⟦/f⟧unpin a pin its own agent's run seat
+    wrote⟦f:needs-you⟧, and add a room to or remove it from the focus set⟦/f⟧.
+  - **Widening:** ⟦f:held-requests⟧allow, answer a hand-off (a hand-back), reply, ⟦/f⟧⟦f:launcher⟧steer, confirm
+    a steer for a later turn (OWN-13), ⟦f:results-and-verdicts⟧⟦f:git-tracking⟧send a correction, retry from a worktree
+    checkpoint, ⟦/f⟧⟦/f⟧⟦/f⟧⟦f:intent-criteria⟧set or revise an intent, ⟦/f⟧⟦f:launcher⟧resume, ⟦/f⟧⟦f:delegation-grants⟧record a delegation grant⟦f:acceptance-grants⟧ or an
+    acceptance grant⟦/f⟧, ⟦/f⟧add, edit or unpin a pin of a type that restores written
+    from one of this node's own device seats⟦f:node-clone⟧ or their predecessors, however far
+    back⟦/f⟧⟦f:access-tokens⟧, that no token key certified⟦/f⟧⟦f:principal-keys⟧, or, once PRV-10 ships, from a device seat a
+    device key certified⟦/f⟧, ⟦f:pin-candidates⟧confirm a pin candidate, ⟦/f⟧⟦f:work-rooms⟧⟦f:segment-exchange⟧change a room's visibility,
+    ⟦/f⟧⟦/f⟧⟦f:shared-rooms⟧⟦f:principal-keys⟧invite a principal key, ⟦f:access-tokens⟧issue an invite link, ⟦/f⟧⟦/f⟧⟦/f⟧⟦f:segment-exchange⟧choose a fork, ⟦/f⟧⟦f:browser-room-view⟧turn on the
+    room-view component by accepting the configuration that turns it on
+    (ADM-04), ⟦/f⟧⟦f:launcher⟧turn on the launcher by accepting the configuration that
+    turns it on (ADM-04), ⟦/f⟧⟦f:peer-sync⟧turn on the peer component, ⟦/f⟧⟦f:git-carrier⟧turn on the publish
+    component, ⟦/f⟧⟦f:browser-room-view⟧issue a phone-scoped room-view secret, ⟦/f⟧⟦f:ownership-transfer⟧accept a handover or succession, ⟦/f⟧⟦f:work-rooms⟧ask for a
+    device seat's join to a room its principal has no member seat in, ⟦/f⟧⟦f:work-rooms⟧ask for or
+    accept a join⟦f:shared-rooms⟧, which sends the run's events to a room other principals'
+    nodes hold⟦/f⟧, ⟦/f⟧⟦f:work-rooms⟧⟦f:git-tracking⟧⟦f:shared-rooms⟧accept a branch link another principal's seat added (Join), ⟦/f⟧⟦/f⟧⟦/f⟧⟦f:endorsement⟧endorse, ⟦/f⟧⟦f:rule-levels⟧loosen a rule level, ⟦/f⟧⟦f:away-policy⟧turn on or change an away policy
+    other than turning it off, ⟦/f⟧quarantine that removes a pin⟦f:landmarks⟧ or a landmark⟦/f⟧ from
+    a restore block or changes which version of a pin restores, release a quarantine, ⟦f:purge-retention⟧purge⟦f:peer-sync⟧ or apply an erasure request⟦/f⟧,
+    ⟦/f⟧⟦f:export-bundles⟧export, ⟦/f⟧⟦f:bundle-import⟧⟦f:export-bundles⟧import a bundle, ⟦/f⟧⟦/f⟧⟦f:store-protection⟧create a backup, ⟦/f⟧ingest a
+    transcript from outside `transcript.roots`, ⟦f:git-tracking⟧bind a repository identity by hand or rebind it, ⟦/f⟧⟦f:sandbox-risk⟧accept open
+    residual risks (OWN-22), ⟦/f⟧⟦f:service-accounts⟧⟦f:principal-keys⟧certify a service account's principal key, ⟦/f⟧⟦/f⟧⟦f:work-rooms⟧assign a
+    role, ⟦/f⟧⟦f:shared-rooms⟧set a room's admission, ⟦/f⟧⟦f:moderation⟧appoint a moderator⟦f:facilitator⟧ or the facilitator⟦/f⟧, ⟦/f⟧⟦f:stamps⟧stamp
+    a pin version, ⟦/f⟧⟦f:ownership-transfer⟧name a successor, offer a handover, ⟦/f⟧⟦f:trust-grants⟧record a trust grant,
+    ⟦/f⟧⟦f:notices⟧allow notices for a room or opt in to them, ⟦/f⟧⟦f:bridges⟧enable a bridge, which turns the
+    bridge component on while any bridge stands enabled, ⟦/f⟧⟦f:git-carrier⟧enable the git carrier, ⟦/f⟧⟦f:moderation⟧set
+    a room setting, ⟦/f⟧⟦f:publishing⟧⟦f:export-bundles⟧publish, ⟦/f⟧⟦/f⟧⟦f:purge-retention⟧⟦f:shared-rooms⟧apply a purge request, ⟦/f⟧⟦/f⟧⟦f:purge-retention⟧change a retention policy,
+    ⟦/f⟧accept configuration (recording its digest) but as Cut says, ⟦f:ci-attestation⟧enroll a CI key, ⟦/f⟧⟦f:principal-keys⟧rotate a
+    device key, ⟦/f⟧⟦f:segment-exchange⟧retire a writer, ⟦/f⟧⟦f:key-revocation⟧revoke a device seat's key⟦f:stamps⟧, or a run seat's key when that stops a stamped version
+    qualifying⟦/f⟧, ⟦/f⟧turn capture off⟦f:node-clone⟧, accept a node clone's lineage (Node)⟦/f⟧⟦f:principal-keys⟧, enroll or revoke
+    a device⟦f:peer-sync⟧, peer⟦/f⟧⟦f:presence-proof⟧ or authenticator⟦/f⟧⟦/f⟧⟦f:access-tokens⟧, mint or rotate an access token⟦/f⟧⟦f:witness-check⟧⟦f:results-and-verdicts⟧, start a
+    witness check, which confirms the command taken from an untrusted event
+    (OWN-18)⟦/f⟧⟦/f⟧⟦f:store-protection⟧, and a backup restore⟦/f⟧.⟦f:principal-keys⟧ Revoking a device⟦f:peer-sync⟧ or a peer⟦/f⟧ stays widening
+    although it undoes an enrollment, since it can drop pins and stop acts
+    arriving.⟦/f⟧
+
+  Any principal act that removes a pin from a restore block or changes which
+  version of one restores, turns off restore blocks at any point Restore block
+  names, lowers the pin budget, or stops this node recording its own runs'
+  events, is widening whatever verb carries it, so
+  `cairn uninstall` records the widening act turning capture off before it
+  removes the hook registrations (ADM-02)⟦f:access-tokens⟧, a structural event naming the
+  uninstall standing in for that act on a token-key-only node⟦/f⟧. ⟦f:access-tokens⟧On an ephemeral node, PEER-01's
+  environment variable, a structural event, stands in for ⟦f:peer-sync⟧turning on its peer
+  component, ⟦/f⟧⟦f:git-carrier⟧turning on, for the git-carrier remotes its access token names, its publish
+  component, ⟦/f⟧and accepting the configuration whose digest its access token names;
+  minting that access token is the widening act. ⟦/f⟧⟦f:stamps⟧An unstamp is an exception: it withdraws only the acting principal's
+  own trust (LANE-32). ⟦/f⟧⟦f:trust-grants⟧A trust-grant revocation is an exception: it withdraws
+  only the grantor's own trust (OWN-29). ⟦/f⟧⟦f:peer-sync⟧Applying a quarantine request takes
+  the class of the quarantine it applies. ⟦/f⟧A principal act no requirement names
+  is widening. Every principal act a requirement names is classed here, and
+  OWN-11 follows.
+⟦f:principal-keys⟧- **Expire act**: Once PRV-10 ships, an act a node with a device key records,
+  signed with that key, ending only an expiry its original act set.⟦f:shared-rooms⟧ It ends a
+  bar⟦f:moderation⟧, a mute⟦/f⟧⟦f:ownership-transfer⟧ or a handover offer⟦/f⟧, recorded only by a node of the principal whose
+  act set it or of the owner (LANE-25).⟦/f⟧⟦f:access-tokens⟧ It ends an access token, recorded
+  by the node that minted it (PEER-05); before PRV-10 ships, an access token's
+  expiry may still be set and takes effect only as a refusal by the node that
+  minted it.⟦/f⟧⟦f:delegation-grants⟧ It ends a delegation grant⟦f:acceptance-grants⟧ or an
+  acceptance grant⟦/f⟧, recorded by the node of the principal that recorded the
+  grant (OWN-23⟦f:acceptance-grants⟧, OWN-26⟦/f⟧). Before PRV-10 ships no expiry can be set but a
+  grant's⟦f:access-tokens⟧ or an access token's⟦/f⟧; a grant's then takes effect only as a refused
+  delegation (Delegation grant).⟦/f⟧⟦/f⟧
+- **Role**: A named set of room capabilities: ⟦f:work-rooms⟧viewer, ⟦/f⟧contributor⟦f:moderation⟧ or moderator⟦/f⟧.
+  ⟦f:work-rooms⟧The owner gives a seat its role by a **role assignment**. ⟦/f⟧⟦f:shared-rooms⟧⟦f:principal-keys⟧⟦f:work-rooms⟧An invite⟦f:access-tokens⟧ or invite
+  link⟦/f⟧ records one for every seat that chains to the invited principal key and
+  joins under it, run seats included⟦f:moderation⟧, though a run seat an invite names
+  moderator is a contributor⟦/f⟧. ⟦/f⟧⟦/f⟧⟦/f⟧⟦f:paired-phone⟧A paired phone's personal-room seat has no role
+  and reads⟦f:principal-keys⟧ within its device scope⟦/f⟧. ⟦/f⟧The seat ingest starts takes over the role
+  of the run seat it names (REC-19). A run's personal-room seat⟦f:work-rooms⟧, its seat in a
+  room it created, or, for an agent of the room's owner, its seat in a room it
+  joined,⟦/f⟧ is a contributor⟦f:work-rooms⟧; any other seat with no role, other than the
+  owner's device seats, is a viewer⟦/f⟧.⟦f:ownership-transfer⟧⟦f:moderation⟧ A handover records a moderator role assignment
+  for the former owner's device seats (LANE-11).⟦/f⟧⟦/f⟧⟦f:moderation⟧ A run seat is a moderator only
+  by appointment.⟦/f⟧⟦f:facilitator⟧⟦f:moderation⟧ Only the facilitator's device seat writes a room summary,
+  beside its appointment.⟦/f⟧⟦/f⟧
+  ⟦f:work-rooms⟧- **Viewer:** read, a role request⟦f:facilitator⟧ and a summary request⟦/f⟧.⟦/f⟧
+  - **Contributor:** read⟦f:facilitator⟧ and a summary request⟦/f⟧; ⟦f:conversation⟧post, ⟦/f⟧link⟦f:presentations⟧ and present⟦/f⟧; pin,
+    edit and unpin its own pins, its **pin capability**, a device seat's own
+    pins being every pin its principal wrote from a device seat⟦f:principal-keys⟧ within that
+    seat's device scope⟦/f⟧, and a run seat's those it or the run seats it replaced in
+    the same run wrote⟦f:work-rooms⟧; and work⟦/f⟧.
+  ⟦f:moderation⟧- **Moderator:** a contributor's capabilities, plus a list removal of any pin⟦f:intent-criteria⟧
+    but the intent⟦f:results-and-verdicts⟧ or a verdict⟦/f⟧⟦/f⟧, kick⟦f:shared-rooms⟧, bar, unbar⟦/f⟧, mute, unmute⟦f:presentations⟧, pick⟦/f⟧⟦f:work-rooms⟧, and set
+    title, labels and assignments⟦/f⟧.⟦/f⟧
+- **Capability**: What a role lets a seat do. The closed set LANE-16 lists: what
+  the ⟦f:moderation⟧three ⟦/f⟧roles list⟦f:facilitator⟧⟦f:moderation⟧, plus writing a room summary, which only the
+  facilitator's appointment carries⟦/f⟧⟦/f⟧.
+⟦f:work-rooms⟧- **Work**: A capability, not an act: to edit and execute commands⟦f:git-tracking⟧, write worktree
+  checkpoints and commit⟦/f⟧ (LANE-16); a run's events go to its run seat as
+  Relations says; an assignment only asks. As a capability, "work" means nothing
+  else; what one agent hands another is a delegated task.⟦/f⟧
+⟦f:moderation⟧- **Appointment**: A principal act that makes a run seat⟦f:shared-rooms⟧, or a device seat of a
+  principal other than the owner,⟦/f⟧ an **appointed moderator**, a moderator within
+  SEC-32's limits. The owner may appoint⟦f:shared-rooms⟧, and so may a principal whose device
+  seat has the moderator role by role assignment⟦f:facilitator⟧, except the facilitator, whom
+  only the owner appoints⟦/f⟧⟦/f⟧. The appointer or the owner may revoke it.⟦/f⟧
+⟦f:work-rooms⟧- **Join**: The act that adds a seat to a room⟦f:shared-rooms⟧ under its admission, or without
+  it for a device seat whose principal has a member seat there⟦/f⟧. A run joins only
+  when its principal asks for the join or accepts it, or as a subagent's run
+  under its parent run's (Subagent)⟦f:access-tokens⟧, or, on a token-key-only
+  node, when its access token names the room, minting that token being the
+  widening act⟦/f⟧ (LANE-23). ⟦f:git-tracking⟧A run's join or
+  create room act covers the branches the room names, at the join and later, by branch links⟦f:shared-rooms⟧ its
+  principal's seats add, and by those another principal's seat added or adds once the
+  run's principal accepts each (a widening principal act)⟦/f⟧, whose runs' events then go
+  there (LANE-01), so a branch link stays a room act. ⟦/f⟧A device seat joins by a
+  join room act its principal takes at a principal surface. Its node also joins
+  it before recording there a principal⟦f:principal-keys⟧ or expire⟦/f⟧ act⟦f:purge-retention⟧, a tombstone⟦f:peer-sync⟧, an erasure
+  request a retention policy sends⟦/f⟧⟦/f⟧⟦f:launcher⟧⟦f:git-tracking⟧, or ⟦f:bridges⟧a bridge's or ⟦/f⟧the launcher's event about
+  a room's branch⟦/f⟧⟦/f⟧⟦f:shared-rooms⟧, without admission when its principal has a member seat there⟦/f⟧.
+  ⟦f:paired-phone⟧A paired phone never joins. ⟦/f⟧An owner whose seats have all left rejoins⟦f:shared-rooms⟧⟦f:principal-keys⟧ under
+  admission, which its principal key always satisfies (Admission)⟦/f⟧⟦/f⟧. **Leave** is
+  a seat's room act ending its own add.⟦/f⟧
+⟦f:moderation⟧- **Kick**: Revokes a seat's current add. Only that seat's principal may add it
+  again (LANE-25).⟦/f⟧
+⟦f:shared-rooms⟧- **Bar**: ⟦f:principal-keys⟧Names a principal key and keeps every key that chains to it out,
+  until an unbar or an expire act (LANE-25).⟦/f⟧ Its setter⟦f:moderation⟧ where SEC-32
+  permits, the setter's appointer⟦/f⟧ or the owner may unbar.⟦/f⟧
+⟦f:moderation⟧- **Mute**: Withdraws every capability but read from one seat or from the whole
+  room⟦f:conversation⟧; a whole-room mute leaves posting to the roles the owner names⟦/f⟧ (LANE-16).⟦/f⟧
+⟦f:presentations⟧- **Present**: Puts a presentation in the outcome window.⟦/f⟧
+⟦f:presentations⟧- **Pick**: Chooses which presentation the outcome window shows.⟦/f⟧
+⟦f:shared-rooms⟧- **Admission**: ⟦f:principal-keys⟧Whether a room is invite only or admits a list of principal
+  keys. An invite (a principal key and a role)⟦f:access-tokens⟧ and an invite link⟦/f⟧ are widening
+  principal acts of the owner. The owner's principal key always satisfies its
+  room's admission, for its device and run seats alike. Until PRV-10 ships, the
+  device key that certified a seat stands for its principal key in admission,
+  invites⟦f:moderation⟧, the owner's protection⟦/f⟧ and bars (LANE-25). ⟦/f⟧An invite's **review step** shows the acting principal, before it takes
+  effect, what will take effect or leave, SEC-08 applied (LANE-10).⟦/f⟧
+⟦f:ownership-transfer⟧- **Successor**: A principal the owner names in advance, who accepts ownership
+  once every device seat of the owner has left the room and every run of its
+  agents there has ended; that acceptance is a
+  **succession**. Until a handover, a succession or the owner's rejoin, a room
+  whose owner left keeps its pins as they were⟦f:stamps⟧, but a stamper may still unstamp⟦/f⟧
+  (LANE-11⟦f:stamps⟧, LANE-32⟦/f⟧).⟦/f⟧
+⟦f:ownership-transfer⟧- **Handover**: Transfers ownership by an offer and an acceptance. Succession is
+  the other path to ownership.⟦/f⟧
+⟦f:stamps⟧- **Stamp**: The act of a principal with a seat in the room on one pin version,
+  after being shown its exact text, priority, author and key fingerprint. A stamped
+  version of a type that restores restores word for word to that principal's own
+  agents only. An edit, an unpin⟦f:moderation⟧ or a list removal⟦/f⟧ leaves a stamped version
+  restoring until its stamper unstamps it, a cut principal act (LANE-32).⟦/f⟧
+- **Active pin**: A pin on its room's pin list (I10).
+- **Room merge**: The one rule deriving all room state from the ⟦f:principal-keys⟧three ⟦/f⟧act kinds,
+  in causal order (LANE-31). Seats that are members with no add, and the seat
+  ingest starts, stand beside it. It covers membership, roles, ⟦f:moderation⟧appointments,
+  ⟦/f⟧pins, pin versions, range links⟦f:work-rooms⟧⟦f:git-tracking⟧, branch links⟦/f⟧⟦/f⟧⟦f:results-and-verdicts⟧⟦f:intent-criteria⟧, criterion links⟦/f⟧⟦/f⟧⟦f:stamps⟧, stamps⟦/f⟧⟦f:moderation⟧, mutes⟦/f⟧⟦f:presentations⟧, presentations, picks⟦/f⟧⟦f:shared-rooms⟧, bars⟦/f⟧⟦f:ownership-transfer⟧, handovers and
+  their offers⟦/f⟧⟦f:room-status⟧, OWN-21's ready and abandoned marks⟦/f⟧⟦f:ci-attestation⟧, the CI keys enrolled in the
+  room⟦/f⟧⟦f:git-carrier⟧ and whether the git carrier is enabled for it⟦/f⟧.⟦f:work-rooms⟧ It covers ⟦f:ownership-transfer⟧the successor,
+  ⟦/f⟧title, labels, assignment⟦f:segment-exchange⟧, visibility⟦/f⟧⟦f:shared-rooms⟧, admission⟦/f⟧⟦f:notices⟧, the notice allowance⟦/f⟧⟦f:moderation⟧ and the
+  **room settings** (⟦f:conversation⟧⟦f:peer-sync⟧whether drafts show live, whether typing shows, ⟦/f⟧the roles a
+  whole-room mute leaves posting to, and ⟦/f⟧the **appointment rate**: how many
+  kicks⟦f:shared-rooms⟧, bars⟦/f⟧ and mutes an appointed moderator may set per period⟦f:conversation⟧⟦f:peer-sync⟧, PEER-09⟦/f⟧⟦/f⟧,
+  SEC-32)⟦/f⟧.⟦/f⟧ When concurrent acts conflict, the more restrictive act wins (an unpin over an
+  edit over a pin; a cut principal act over a widening one), then the lower
+  commitment. An act the room merge discards is shown on Health as a count
+  derived from the record, so a rebuild reproduces it and appends nothing (I6,
+  I10). ⟦f:presentations⟧Concurrent picks resolve by **pick order** (⟦f:facilitator⟧the facilitator's
+  seat, then ⟦/f⟧⟦f:moderation⟧any other moderator, then ⟦/f⟧the owner, VIEW-22). ⟦/f⟧⟦f:work-rooms⟧⟦f:git-tracking⟧Of two branch links
+  naming one branch, the first in causal order stands, concurrent ones by the
+  lower commitment (LANE-01). ⟦/f⟧⟦/f⟧⟦f:work-rooms⟧Acts with no member seat: open (OQ-41).⟦/f⟧
+- **Concurrent**: Of two acts or events: neither causally after the other;
+  **causal order** puts each after every act or event it saw.
+- **Room state**: Everything the room merge derives (LANE-31).

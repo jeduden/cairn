@@ -1,0 +1,83 @@
+---
+title: "Seats and keys"
+order: "06"
+summary: >-
+  Seats and the keys behind them: run and device seats, room and seat ids, seat, device⟦f:principal-keys⟧, principal⟦f:access-tokens⟧ and token⟦/f⟧⟦/f⟧ keys, certificates⟦f:access-tokens⟧, access tokens⟦/f⟧⟦f:presence-proof⟧, authenticators⟦/f⟧⟦f:ci-attestation⟧ and CI keys⟦/f⟧.
+---
+# Seats and keys
+
+- **Seat**: One run's or one device's place in one room, its **seat kind** `run`
+  or `device`, named by its seat certificate, made when the seat starts
+  (PRV-11), the only source Cairn shows a seat's kind from; a seat key minted on
+  a node identity change, a node clone⟦f:store-protection⟧ or a backup restore⟦/f⟧ starts another (Seat
+  key). The unit of membership, signing and authorship. A run's personal-room
+  seat exists from its first event⟦f:paired-phone⟧, a paired phone's device seat in the personal
+  room of the node it pairs with from its pairing⟦/f⟧, and a device seat a newly
+  minted key starts in the personal room from its first event, each with no add;
+  every other seat keeps its place while its **add** stands: the act that placed
+  it, its create room act⟦f:work-rooms⟧⟦f:shared-rooms⟧⟦f:principal-keys⟧, a join its principal asked for or accepted that the
+  room's admission admitted⟦/f⟧⟦/f⟧, or a device seat's join⟦f:shared-rooms⟧⟦f:principal-keys⟧ without admission⟦/f⟧⟦/f⟧⟦/f⟧; the seat
+  ingest starts keeps its place while the run seat it names does, sharing that
+  seat's add, one for both, where it has one (LANE-25, REC-19).
+- **Run seat**: A run's seat. A witnessed run's run-seat key, but for the seat
+  ingest starts, lives only in the memory of its harness session's MCP server,
+  which keeps the run-seat keys of the main run and its subagents' runs and
+  seals their writers (SEC-10); what `cairn ingest` appends, whether or not that
+  server still runs, goes to the one seat and writer ingest starts beside that
+  run seat, which every later `cairn ingest` extends and the core seals, naming
+  the run seat, in the same room, sharing its add, where it has one, and taking
+  over its role⟦f:work-rooms⟧, so a ⟦f:moderation⟧kick or ⟦/f⟧leave of either seat ends that one add for both⟦/f⟧
+  (REC-19); that seat is a run seat whose key the core keeps like a device
+  seat's key; an ingested run's seat key is kept like a device seat's key, and
+  the core seals its writer.
+- **Device seat**: A principal's seat for one device, a node⟦f:paired-phone⟧ or a paired phone⟦/f⟧.
+  The one seat kind for acting without a run.⟦f:access-tokens⟧ A token-key-only node's device
+  seat is certified by its token key, and that node signs no principal⟦f:principal-keys⟧ or expire⟦/f⟧
+  acts.⟦/f⟧
+- **Room id**: 128 random bits its create room act fixes, never chosen
+  (LANE-01).
+- **Seat id**: A seat's id, derived from the room id and the seat's first key.
+  Nobody chooses it.
+- **Seat key**: A seat's one current key. It signs the seat's room acts and
+  seals its writer. A rotation, signed by the old and the new key, keeps the
+  seat's id and writer and goes to that seat's own writer (SEC-27). A key minted
+  because the node identity changed, a node clone⟦f:store-protection⟧ or a backup restore⟦/f⟧ (REC-24⟦f:store-protection⟧,
+  ADM-06⟦/f⟧), starts a new seat and writer that names the old one and inherits no
+  add, role⟦f:moderation⟧ or appointment⟦/f⟧⟦f:work-rooms⟧: outside the personal room it joins as any seat does
+  (LANE-23), and roles⟦f:moderation⟧ and appointments⟦/f⟧ are assigned again⟦/f⟧; a personal-room seat
+  is a member from its first event. The seat ingest starts shares the add, where
+  it has one, and takes over the role instead (Run seat).
+- **Device key**: A device's key⟦f:principal-keys⟧, certified by a principal key's **device
+  certificate**,⟦/f⟧ with a **device scope** (the kinds of principal act it may
+  sign, and of⟦f:conversation⟧ post and⟦/f⟧ pin its seats may write)⟦f:rule-levels⟧ and a maximum rule level⟦/f⟧⟦f:principal-keys⟧. It
+  signs principal acts and expire acts once PRV-10 ships⟦/f⟧⟦f:git-carrier⟧, and a room's segments
+  the git carrier carries⟦f:blind-peer⟧⟦f:peer-sync⟧ or a blind peer holds⟦/f⟧⟦/f⟧ are encrypted to its principals'
+  device keys⟦f:access-tokens⟧, or a token-key-only node's token key⟦/f⟧ (PEER-08⟦f:blind-peer⟧, PEER-12⟦/f⟧)⟦/f⟧⟦f:principal-keys⟧. Before
+  PRV-10 ships no principal key certifies a device key, so a device seat's pins
+  qualify only on its own node⟦/f⟧.
+⟦f:principal-keys⟧- **Principal key**: A principal's root key, kept offline or in a
+  platform-protected key store and never kept by a Cairn component (the
+  principal's own key tooling signs with it), which certifies its device keys⟦f:service-accounts⟧
+  and may certify a service account's principal key by a **service-account
+  certificate**, which marks whether that account relays text others wrote⟦/f⟧
+  (PRV-10).⟦/f⟧
+⟦f:access-tokens⟧- **Token key**: A key a device key certifies by a **token certificate**, which
+  may stand between a device key and a seat key for an ephemeral node, limited
+  to an access token's rooms, the rooms it may create, its node's own personal
+  room and its expiry (PRV-10). A node with only a token key signs no principal⟦f:principal-keys⟧
+  or expire⟦/f⟧ acts; ⟦f:stamps⟧every pin it writes restores only once a principal stamps it
+  from one of its devices whose device scope allows it, though ⟦/f⟧its own events
+  are trusted on that node as that node's trusted sources.⟦/f⟧
+- **Seat certificate**: A device key's⟦f:access-tokens⟧ or token key's⟦/f⟧ signature over a seat key,
+  scoped to the seat's room, naming the seat kind, `run` or `device`. The node's
+  device key makes one for every seat the node uses from the first release
+  (PRV-11)⟦f:principal-keys⟧; once
+  PRV-10 ships every seat key chains to a principal key⟦/f⟧. A node's **key set** is
+  the keys, certificates and revocations it holds (I10).
+⟦f:access-tokens⟧- **Access token**: A short-lived credential a principal mints to enroll a
+  device⟦f:peer-sync⟧ or peer⟦/f⟧, certify an ephemeral node's seats⟦f:shared-rooms⟧⟦f:principal-keys⟧ or carry an invite link⟦/f⟧⟦/f⟧
+  (PEER-06, PRV-10⟦f:shared-rooms⟧⟦f:principal-keys⟧, LANE-18⟦/f⟧⟦/f⟧). "Token" is always an access token, a model token,
+  an access token's token key, a token certificate or a token-key-only node.⟦/f⟧
+⟦f:presence-proof⟧- **Authenticator**: A hardware-backed key that gives presence proofs (OWN-11).⟦/f⟧
+⟦f:ci-attestation⟧- **CI key**: A key the room's owner enrolled in the room to sign CI
+  attestations.⟦/f⟧

@@ -1,0 +1,85 @@
+---
+title: "Places"
+order: "03"
+summary: >-
+  Where Cairn's state lives and is shared: homes, nodes, devices⟦f:paired-phone⟧ and paired phones⟦/f⟧⟦f:sandbox-risk⟧, sandboxes⟦/f⟧, rooms and their kinds⟦f:work-rooms⟧⟦f:segment-exchange⟧, visibility⟦/f⟧⟦/f⟧⟦f:peer-sync⟧, peers⟦f:blind-peer⟧ and blind peers⟦/f⟧⟦/f⟧.
+---
+# Places
+
+- **Home**: The directory with one principal's Cairn state on a node
+  (`CAIRN_HOME`, default `~/.cairn`), to which the keys SEC-10 keeps in a
+  platform key store, named per home, or only in an MCP server's memory are
+  bound, belonging to one OS user and optionally bound to a **home id**
+  (`home.id`) that the environment must supply to open it (SEC-03). The unit of
+  isolation (I8).
+- **Node**: One home on one machine, container or cloud environment, for one
+  principal.⟦f:principal-keys⟧ Its device key signs principal acts and expire acts once PRV-10
+  ships⟦/f⟧⟦f:access-tokens⟧; an **ephemeral node**, one in a short-lived cloud environment, may have
+  only a token key, a **token-key-only node**⟦/f⟧⟦f:principal-keys⟧.⟦/f⟧ Its **node identity** is a value
+  outside the home that a cloned image or a restored snapshot cannot carry over
+  (REC-24). A **node clone** is a copy of a home started where its node identity
+  differs (a cloned image, a copied volume or a restored snapshot): a new node,
+  with its own device key⟦f:access-tokens⟧, or a token key⟦/f⟧, and its own device seat, that mints
+  new seat keys and shares the carried-over personal room (REC-24). A **node
+  identity change**, a home's node identity differing from the one it last
+  started under, makes it a node clone of the earlier node. A node clone's
+  device seat takes the earlier node's seats as predecessors only once a
+  widening principal act on the clone, its **lineage acceptance**, records
+  that; until then the trust policy reads what they wrote as another node's and
+  their pins do not qualify, though the carried-over personal room stays its
+  principal's. A lineage acceptance takes in the predecessors the earlier node
+  had itself taken, however far back.⟦f:store-protection⟧ A backup restore, itself widening,
+  takes its predecessors as Backup says instead.⟦/f⟧ The node's principal is the
+  principal whose home it is.
+- **Device**: A node⟦f:paired-phone⟧ or a paired phone⟦/f⟧, named so where it acts through its
+  device seats and the key that certifies them; "device" names nothing else. A
+  node's device key certifies the seats
+  it uses (PRV-11)⟦f:access-tokens⟧, a token-key-only node's token key in its place (PRV-10)⟦/f⟧⟦f:paired-phone⟧; a
+  paired phone's rests on OQ-39⟦/f⟧.
+⟦f:paired-phone⟧- **Paired phone**: A device with no home, limited to reading and to allowing or
+  denying held permission requests⟦f:principal-keys⟧ within its device scope⟦/f⟧, reaching its node
+  over B2. It signs with its own device key and seals its device seat's writer
+  with that seat's key; the node it pairs with holds the writer. Where its keys
+  and writer live under I8 rests on OQ-39.⟦/f⟧
+⟦f:sandbox-risk⟧- **Sandbox**: A confinement around a run that blocks some residual risks
+  (OWN-22).⟦/f⟧
+- **Room**: ⟦f:intent-criteria⟧Where an intent is worked on: at most one intent, ⟦/f⟧⟦f:conversation⟧a **conversation**
+  (its ordered posts), ⟦/f⟧seats and pins⟦f:work-rooms⟧⟦f:git-tracking⟧, and branches in any repositories, each named
+  by a branch link⟦/f⟧⟦/f⟧. The unit Cairn shows and shares.
+- **Personal room**: A principal's private room on each of its nodes, created as
+  the first act of its device seat there when the principal installs Cairn on
+  the node, by `cairn install`, the plugin or the managed install path, recorded
+  at Cairn's first start there, or carried over to a node clone, which shares
+  it. It stays private⟦f:work-rooms⟧⟦f:segment-exchange⟧: no ⟦f:shared-rooms⟧⟦f:principal-keys⟧invite, admission or ⟦/f⟧⟦/f⟧visibility change applies to it
+  (LANE-17)⟦/f⟧⟦/f⟧. Its create room act is the device seat's add there. Every run its
+  node records has a seat in it from its first event⟦f:work-rooms⟧, without a join⟦/f⟧, and every
+  event or pin⟦f:work-rooms⟧ that belongs to no other room⟦/f⟧ goes there.⟦f:work-rooms⟧ Whether a room counts
+  an act recorded here for it, by a principal with no member seat in it, rests
+  on OQ-41.⟦/f⟧
+⟦f:work-rooms⟧⟦f:shared-rooms⟧- **Foreign room**: A room this node holds⟦f:blind-peer⟧, other than only as a ⟦f:peer-sync⟧blind peer⟦/f⟧,⟦/f⟧
+  that its principal neither owns nor has a seat in⟦f:work-rooms⟧, such as ⟦f:bundle-import⟧the room of an
+  imported ⟦f:export-bundles⟧bundle⟦/f⟧ or ⟦/f⟧a room every seat of its principal has left⟦f:moderation⟧ or lost to a
+  kick⟦f:shared-rooms⟧⟦f:principal-keys⟧ or a bar⟦/f⟧⟦/f⟧⟦/f⟧⟦/f⟧. Recall marks every item it returns from it untrusted, whatever
+  the item's trust level⟦f:trust-grants⟧ or trust grant covers its keys⟦/f⟧ (RCL-10), and leaves it
+  outside every extended recall scope unless named in the call; only the
+  device-seat pins that qualify on this node (Pin)⟦f:stamps⟧ and the versions its principal stamped⟦/f⟧ stay trusted and
+  keep restoring, to runs that had a seat in it. A room the principal owns or
+  has a seat in is never foreign.⟦f:bundle-import⟧ Rejecting a foreign room is a cut principal act
+  recording its stated reason, on the device seat in the personal room, naming
+  the room (LANE-15): the room view stops showing the room, and the act removes
+  no pin from a restore block.⟦/f⟧⟦/f⟧⟦/f⟧
+- **Principal's rooms**: The rooms a principal owns or has a seat in.
+⟦f:work-rooms⟧⟦f:segment-exchange⟧- **Visibility**: Whether a room is private, shared with the room's principals⟦f:publishing⟧,
+  published⟦/f⟧⟦f:blind-peer⟧ or stored on ⟦f:peer-sync⟧blind peers⟦/f⟧⟦/f⟧ (LANE-17). Changing it is a widening
+  principal act of the owner⟦f:blind-peer⟧; a node's principal ⟦f:publishing⟧⟦f:export-bundles⟧publishes⟦/f⟧ a room, or ⟦/f⟧enrolls a
+  ⟦f:peer-sync⟧blind peer⟦/f⟧ for it, only as its visibility allows⟦/f⟧.⟦/f⟧⟦/f⟧
+⟦f:peer-sync⟧- **Peer**: Another node this node's principal enrolled by key and exchanges
+  sealed ranges with through the peer component (B2). Being a peer never makes
+  content trusted (PRV-02). Exchanging the sealed ranges each may receive is
+  **sync**. A peer receives only the sealed ranges of rooms whose principals
+  include its principal⟦f:blind-peer⟧, or that it holds as a blind peer⟦/f⟧, and those of a
+  principal's personal room only if it is one of that principal's own nodes
+  (PEER-02, LANE-17).⟦/f⟧
+⟦f:blind-peer⟧⟦f:peer-sync⟧- **Blind peer**: A peer that holds a room's segments without any key they are
+  encrypted to, so it stores and serves them encrypted and reads none of them
+  (PEER-12)⟦f:shared-rooms⟧; a room it holds only so is never foreign to it⟦/f⟧.⟦/f⟧⟦/f⟧

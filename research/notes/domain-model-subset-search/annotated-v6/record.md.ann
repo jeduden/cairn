@@ -1,0 +1,239 @@
+---
+title: "Record"
+order: "04"
+summary: >-
+  The record and what derives from it: writers, events, addresses, segments, seals, provenance and origin⟦f:landmarks⟧, spans and landmarks⟦/f⟧, quarantine⟦f:purge-retention⟧ and purge⟦/f⟧⟦f:store-protection⟧, receipts, backups⟦/f⟧⟦f:export-bundles⟧, bundles and exports⟦/f⟧.
+---
+# Record
+
+- **Record**: The set of writer logs a node holds. Every derived artifact
+  derives from it and the node's own key set (I10); the audit log, counters and
+  **configuration** sit beside it: the principal's settings (§9.6). A change to
+  configuration, one that only cuts included, takes effect only once the
+  principal act accepting it records its digest, since the file can change
+  outside any principal act; that acceptance adds, edits or unpins its
+  configuration pins (ADM-04), and is widening unless the change only cuts and
+  removes no pin from a restore block⟦f:key-revocation⟧ and the acceptance re-records no pin⟦/f⟧ (Principal act). A repository's
+  `.cairn.toml`, its **repository configuration**, declares no pins and may make
+  only changes a cut act could make, never removing a pin from a restore block,
+  turning off restore blocks or lowering the pin budget, which take effect
+  without acceptance (ADM-04). It applies only to runs whose working directory
+  lies in that repository, and only to settings keys scoped to those runs. Managed policy, configuration and repository configuration are the
+  three **settings layers**. A settings layer's cut-only change only narrows
+  settings; quarantine happens only as a recorded principal act⟦f:key-revocation⟧, and so does
+  key revocation⟦/f⟧. The **store** is the home's files containing the
+  record, its derived artifacts and payloads (§8.1).
+- **Writer**: One seat's append-only log, written on one node⟦f:paired-phone⟧ or paired phone⟦/f⟧⟦f:segment-exchange⟧
+  and held by any node⟦/f⟧, named by its **writer id**, derived from the seat's
+  first key. Its events are hash-chained; the **chain head** at a seq is the
+  hash over every event up to it.
+⟦f:segment-exchange⟧- **Retire a writer**: Mark a writer retired: by a principal act⟦f:access-tokens⟧⟦f:principal-keys⟧, or by the
+  expire act ending the access token whose token key certified its seat key⟦/f⟧⟦/f⟧.
+  The retirement names the writer's last accepted seq, and segments past it are
+  marked delivered after retirement: they stay in the record (I1), but their
+  acts count for nothing in the room merge and their pin versions never
+  qualify.⟦f:peer-sync⟧ A peer still accepts those that continue
+  its chain without a fork; only a revocation refuses them (PEER-05).⟦/f⟧⟦/f⟧
+- **Event**: One immutable entry in a writer, such as a message (the harness's
+  user input or the model's reply), tool call, tool result, **hook observation**
+  (what a hook reported)⟦f:git-tracking⟧, worktree checkpoint⟦/f⟧⟦f:launcher⟧⟦f:work-rooms⟧⟦f:git-tracking⟧, the launcher's event about a room's
+  branch⟦/f⟧⟦/f⟧⟦/f⟧, key rotation⟦f:purge-retention⟧, tombstone⟦/f⟧, or an
+  act (a room act, a principal act⟦f:principal-keys⟧ or an expire act⟦/f⟧), a **recall event** (one
+  recall, RCL-07), a canary event⟦f:store-protection⟧, a backup event⟦/f⟧⟦f:pin-candidates⟧, an agent's pin candidate⟦/f⟧⟦f:segment-exchange⟧, a⟦f:purge-retention⟧n
+  erasure or⟦/f⟧ quarantine request⟦/f⟧, or an unparsed line. Its **event kind** is
+  which kind of entry it is, recorded apart from its provenance.
+- **seq**: An event's position in its writer: strictly increasing, gap-free and
+  never reused (REC-06).
+- **Address**: (writer, seq), shown as short `A2·4812` (its writer label and
+  seq), range `A2·4812–5025` or full `cairn:room/<room>/w/<writer>/<seq>`. Every
+  shown form is accepted wherever an address is taken, and so is one ASCII input
+  form, `<label>:<seq>` or `<label>:<from>-<to>` (for example `A2:12`,
+  `A2:30-40`), with the writer id accepted in place of the label (RCL-08). A
+  **writer label** is a writer's short display alias, unique per node, each
+  **writer-label assignment** recorded as a structural event in the assigning
+  device seat's personal-room writer. An address range lies in one writer;
+  "range" on its own means an address range. The only meaning of "address".
+- **Payload**: The full content of a large event, stored outside the event in
+  the store's **payload store**, under a name that confirms no guess at its
+  content (REC-09).
+- **Segment**: A range of one writer, sealed as a unit when it closes⟦f:peer-sync⟧; what
+  peers ⟦f:git-carrier⟧and the git carrier ⟦/f⟧exchange⟦/f⟧. A unit of the record, not a storage
+  layout, though a writer's closed segments may be merged (REC-25)⟦f:purge-retention⟧ or rewritten
+  by a purge (ADM-07)⟦/f⟧ without changing any address. The **open segment** is a
+  writer's newest, still growing; it closes at the points REC-19 names⟦f:peer-sync⟧, and
+  peers exchange its sealed prefix⟦/f⟧.⟦f:segment-exchange⟧ A closed segment or an open segment's sealed
+  prefix is a **sealed range**.⟦/f⟧
+- **Seal**: A seat key's signature over its writer id, a seq and the chain head
+  at that seq (REC-18), made where that key lives: a witnessed run's run seat's,
+  but the seat ingest starts, by its run's MCP server once it holds the key,
+  else by the core (Run seat), covering what the hook handlers appended, an ingested run's by the core⟦f:paired-phone⟧, a paired phone's device
+  seat's by the phone (OQ-39)⟦/f⟧, and every other writer's by the core⟦f:launcher⟧⟦f:browser-room-view⟧⟦f:bridges⟧; how the
+  core signs and seals what the room-view component, the launcher and the bridge
+  component record rests on OQ-40⟦/f⟧⟦/f⟧⟦/f⟧. Events after the newest seal are unsigned.
+- **Commitment**: A keyed commitment to an event's content under a per-event
+  random key, its **commitment key**, kept with the content⟦f:purge-retention⟧ and erased with it⟦/f⟧;
+  the only way the chain and seals⟦f:purge-retention⟧, and tombstones,⟦/f⟧ refer to content (REC-17).
+- **Provenance**: An event's class from a closed set, saying what produced its
+  content (PRV-01): `user`, `assistant`, `tool_call`, `tool_result:<tool>`,
+  `web`, `mcp:<server>`, `file`, `subagent_result`, `harness_meta`,
+  `harness_text`, `operator`⟦f:conversation⟧, `post`⟦/f⟧⟦f:facilitator⟧, `summary`⟦/f⟧, `structural` and `unparsed`.
+  `harness_meta` is what the harness reports⟦f:launcher⟧, or the launcher records,⟦/f⟧ about the
+  harness's operation, never free text: ⟦f:launcher⟧turn triggers, ⟦/f⟧model tokens, metadata
+  lines that carry no free text⟦f:sandbox-risk⟧ and sandbox state⟦/f⟧ (PRV-08⟦f:sandbox-risk⟧, OWN-22⟦/f⟧); `operator`
+  is the class of principal acts⟦f:principal-keys⟧, expire acts⟦/f⟧ and device-seat pins; ⟦f:conversation⟧posts are
+  `post` and ⟦/f⟧run-seat pins `assistant`; every other room act⟦f:facilitator⟧ but a room summary⟦/f⟧
+  takes its seat's **pin class**, `operator` for a device seat and `assistant`
+  for a run seat; ⟦f:facilitator⟧a room summary is `summary`, never trusted; ⟦/f⟧⟦f:segment-exchange⟧a⟦f:purge-retention⟧n erasure or⟦/f⟧
+  quarantine request a principal act sends is `operator`⟦f:purge-retention⟧, an erasure request a
+  retention policy sends `structural`⟦/f⟧; ⟦/f⟧hook observations, key rotations⟦f:purge-retention⟧,
+  tombstones⟦/f⟧⟦f:store-protection⟧, backup events⟦/f⟧⟦f:witness-check⟧⟦f:results-and-verdicts⟧, a witness check's record (the command by commitment, its exit
+  status and the tree hash, OWN-18)⟦/f⟧⟦/f⟧⟦f:launcher⟧⟦f:work-rooms⟧⟦f:git-tracking⟧, the launcher's events about a room's branch⟦/f⟧⟦/f⟧⟦/f⟧ and canary events are `structural`; a recall event is
+  `tool_call`⟦f:git-tracking⟧, and a worktree checkpoint `file`, its commit and branch being
+  structural fields⟦/f⟧.
+- **Origin**: How an event reached this node's record: `witnessed` (recorded
+  live on this node: by its hook handlers, its CLI, TUI, MCP server⟦f:launcher⟧, launcher⟦/f⟧⟦f:browser-room-view⟧,
+  room-view component⟦/f⟧⟦f:bridges⟧ or bridge component⟦/f⟧) or `ingested` (appended by `cairn
+  ingest`, whatever transcript it reads, past an ingest marker included)⟦f:bundle-import⟧⟦f:export-bundles⟧,
+  or `bundle` (read by import)⟦/f⟧⟦/f⟧⟦f:segment-exchange⟧, or `peer` (received ⟦f:peer-sync⟧from a peer⟦f:paired-phone⟧, a paired phone⟦/f⟧⟦f:git-carrier⟧ or
+  ⟦/f⟧⟦/f⟧⟦f:git-carrier⟧through the git carrier⟦/f⟧)⟦/f⟧ (RCL-09); the trust policy reads only whether an
+  event was recorded on this node or ingested⟦f:segment-exchange⟧, or received (`peer`)⟦/f⟧⟦f:bundle-import⟧⟦f:export-bundles⟧, or read from a
+  bundle (`bundle`), which it reads as another node's⟦/f⟧⟦/f⟧⟦f:bundle-import⟧⟦f:export-bundles⟧⟦f:segment-exchange⟧, and `bundle` beside
+  `peer` is a display mark⟦/f⟧⟦/f⟧⟦/f⟧.⟦f:node-clone⟧ A node clone's carried-over writers keep the
+  origin they were recorded with, `witnessed` there meaning recorded live on the
+  node it was cloned from; the trust policy reads them as another node's but for
+  the `operator` and structural events the predecessors of its own device seats,
+  however far back, wrote up to the seqs it took in (Node, Trusted sources).⟦/f⟧ A **witnessed run** is one this node's hook handlers
+  watched. Independent of provenance. Each event also records its **recorder**,
+  the part that recorded it (the hook handlers, the CLI, the TUI, the MCP
+  server⟦f:launcher⟧, the launcher⟦/f⟧⟦f:browser-room-view⟧, the room-view component⟦/f⟧⟦f:bridges⟧, or the bridge component, whose
+  events take provenance `web`, always untrusted⟦/f⟧⟦f:browser-room-view⟧; the room-view component
+  records a principal act taken in the browser room view, marked with its
+  principal surface, and how it is signed rests on OQ-40⟦/f⟧), which the trust
+  policy reads⟦f:peer-sync⟧; an event from a peer⟦f:bundle-import⟧⟦f:export-bundles⟧ or a bundle⟦/f⟧⟦/f⟧ records no recorder, only its
+  origin⟦/f⟧.
+⟦f:landmarks⟧- **Span**: A contiguous range of one run's events in one writer. A new span
+  starts at every user turn, compaction, subagent start or end, and whenever the
+  run's events move to another seat's writer (LMK-01).⟦/f⟧
+⟦f:landmarks⟧- **Landmark**: A structural headline over one span, built only from its
+  events' sanitized structural fields and bound to its address range (LMK-02). LMK-06 may add a **natural-language headline** to a span whose every
+  event is trusted, made only by a deterministic template over trusted fields;
+  it is no structural field and never reaches a restore block. Landmarks roll up
+  into **tiers** of at most `k` **landmark blocks**, each a sequence of
+  landmarks; a full tier collapses its older landmark blocks to one line each,
+  listing one address range per writer, into the next tier (LMK-05).⟦/f⟧
+- **Structural field**: A field Cairn derives from an event's shape, never from
+  its text: ids, kinds, counts, tool names, key fingerprints, addresses, version
+  numbers, sanitized paths and exit status, sanitized under LMK-03. Sanitized,
+  it is trusted whatever the event's trust level (PRV-06, LMK-03). Of them, a
+  closed path carries only ids, kinds (event kinds, seat kinds, pin types, and
+  provenance classes without their `<tool>` or `<server>` names), counts,
+  addresses, key fingerprints and version numbers; tool names and paths, though sanitized, reach the model only
+  through recall.
+- **Structural event**: An event of provenance `structural`, whose meaning lies
+  only in structural fields. A hook observation keeps only a hook's structural
+  fields; content a hook carries is recorded under its own class. An act's
+  structural fields count as structural fields, never the text it carries; the
+  act keeps its own class.
+- **Capture**: This node's hook handlers recording its runs' events. Turning it
+  off is widening (OWN-11) and turning it on is cut, each a principal act
+  recorded in the device seat's personal-room writer. What a run does between
+  the two is its **capture gap** (I1): once capture is back on, the hook
+  handlers append a structural **capture-gap marker** naming both acts to the
+  writer of each run that wrote meanwhile, then move its ingest position past
+  what it wrote. The two acts also show the node-wide capture gap on Runs and
+  Health, covering the runs that began and ended within it. While capture is
+  off, `cairn ingest` appends nothing for this node's witnessed runs. Hook
+  registrations found removed without `cairn uninstall` are counted and shown,
+  at the next start of any core component, as a node-wide capture gap on Runs
+  and Health (I6).
+- **Ingest marker**: What a hook handler leaves when its hook budget cuts it
+  short, so the next hook handler or `cairn ingest` resumes it (NFR-02).
+  **Ingest** is reading a transcript into the record, by the hook handlers
+  incrementally (REC-13) or by `cairn ingest`; what `cairn ingest` appends takes
+  origin `ingested` and is never recorded by the hook handlers, even past an
+  ingest marker. A transcript source's **ingest position** is how far ingest has
+  read it: a byte offset and a hash of the consumed prefix (REC-03).
+⟦f:git-tracking⟧- **Worktree checkpoint**: An event recording a worktree's commit, branch and
+  redacted diff since the previous worktree checkpoint (REC-20).⟦/f⟧
+- **Derived artifact**: Anything computed from the record and the node's key
+  set, such as those I10 lists: the **search index** over event text among its
+  indexes⟦f:needs-you⟧, the node's principal's Needs you queue among its queues⟦/f⟧, room state,
+  trust levels, and run and integrity statuses⟦f:results-and-verdicts⟧. Results with their evidence
+  classes are derived artifacts⟦/f⟧; ⟦f:room-status⟧room status, ⟦/f⟧⟦f:results-and-verdicts⟧a check's state and ⟦/f⟧a run status's
+  time-relative freshness marks are computed where shown; the **quarantine set**
+  is what a node holds quarantined.
+- **Redaction**: Removing secrets from content before it is stored⟦f:bundle-import⟧⟦f:export-bundles⟧, on import⟦/f⟧⟦/f⟧⟦f:export-bundles⟧,
+  or from what an export's⟦f:publishing⟧, a publish's⟦/f⟧⟦f:shared-rooms⟧ or an invite's⟦/f⟧ review step sends⟦/f⟧⟦f:conversation⟧⟦f:peer-sync⟧, or
+  from a draft a room shows live, before the peer component sends it⟦/f⟧⟦/f⟧, recorded (I1,
+  SEC-08).
+⟦f:purge-retention⟧- **Retention policy**: A rule (`retention_policy.*`), set by the node's
+  principal or managed policy, that purges content per room and provenance class
+  after a time (I1, SEC-22); the principal's change to one is widening and
+  applies only once its configuration is accepted (ADM-04).⟦/f⟧
+- **Flag**: A mark Cairn sets on an event whose text matches an injection
+  pattern (PRV-07), shown with the event on Runs and inside the envelope of any
+  recall that returns it⟦f:landmarks⟧; flagged text contributes only counts to landmarks (LMK-04)⟦/f⟧.
+- **Quarantine**: Recorded, reversible exclusion of an event⟦f:landmarks⟧, span⟦/f⟧, run, writer
+  or derived artifact from recall⟦f:export-bundles⟧, the trusted-only export⟦/f⟧ and restore blocks⟦f:landmarks⟧, and landmark text (LMK-04
+  keeps its counts)⟦/f⟧, on the node that records it, without deletion (I5). A
+  derived artifact is quarantined by quarantining what it derives from, or by
+  taking it out of recall directly.
+  Quarantining a pin quarantines its creating event and every version event,
+  taking it out of every restore block, widening when it restored; a
+  quarantined version event counts for nothing: the newest version not
+  quarantined restores, and quarantining the version that restores is widening
+  (Principal act).
+⟦f:purge-retention⟧- **Purge**: Deletion of content, appending a **tombstone** naming the purged
+  range, which views show in its place (ADM-07): by a principal act, or by the
+  node under a retention policy, recorded naming the policy. The only way stored
+  content is destroyed (I1). A purge never erases an act's structural fields,
+  so every act keeps its effect on room state, the key set and the quarantine
+  set after its free text is purged.⟦/f⟧
+- **Gap marker**: What stands where content is missing: ⟦f:purge-retention⟧a tombstone for a purged
+  range, ⟦/f⟧a capture-gap marker for a capture gap (Capture)⟦f:compute-kernel⟧, a **truncation
+  marker** on capped kernel output⟦/f⟧ or a **quarantine marker** for a quarantined
+  address.⟦f:segment-exchange⟧ A **missing range** is part of a writer this
+  node does not hold⟦f:peer-sync⟧, such as a peer's lost tail⟦/f⟧.⟦/f⟧
+- **Integrity status**: What a room or writer shows about its chain and seals,
+  one of §9.7.5's values (VIEW-10). A refused segment is recorded as a
+  structural event in this node's device seat's personal-room writer once per
+  writer and reason, when first refused, beside its audit entry, so `refused`
+  derives from the record and a rebuild appends nothing (REC-21, I10). The UI
+  never says "secure".
+⟦f:store-protection⟧- **Receipt**: A signed statement about a node's record, made to be kept apart
+  from the home and checked with no network. Always qualified: a **head
+  receipt** lists every writer's chain head at a moment, the tamper evidence of
+  VIEW-10 and SEC-27⟦f:purge-retention⟧; a **purge receipt** states what a purge erased and what it
+  could not (SEC-31)⟦/f⟧.⟦/f⟧
+⟦f:store-protection⟧- **Backup**: A copy of a home's store and audit log, with no seat, device⟦f:access-tokens⟧,
+  token⟦/f⟧ or at-rest key (ADM-06, SEC-10) (`cairn backup create`, ADM-06); reading
+  it back is a backup restore. A backup restore reads every event of a writer
+  the copy holds past its newest seal that verifies against a head receipt the
+  principal kept apart, and every event of a writer that does not verify, as
+  another node's, and records each verified seal's seq (I10).⟦f:node-clone⟧ It takes as a
+  predecessor only a device seat the copied node's device key certified, or one
+  of that seat's own predecessors, each only up to that seq.⟦/f⟧⟦/f⟧
+⟦f:store-protection⟧- **At-rest key**: The key that encrypts the store when encryption at rest is on
+  (SEC-09).⟦/f⟧
+⟦f:export-bundles⟧- **Bundle**: A reviewed export of a room, signed by the device key of the
+  device that exported it, its **exporter**⟦f:principal-keys⟧, which chains to the **bundle's
+  principal key** once PRV-10 ships, the exporter's device key standing for it
+  until then⟦/f⟧, carried as a file or a git ref.⟦/f⟧
+⟦f:export-bundles⟧- **Trusted-only export**: The JSONL of the events trusted for the principal's
+  agents, without the free text of cut or neutral principal acts, with full
+  provenance, that downstream memory systems read (ADM-12,
+  MEM-02); an export like a bundle (SEC-26).⟦/f⟧
+⟦f:export-bundles⟧- **Export**: Writing a bundle, a rendering or a trusted-only export (`cairn
+  export`), a widening principal act under SEC-26. Its review step shows the
+  acting principal, before it takes effect, what will leave, SEC-08 applied.⟦f:publishing⟧ To **publish** is to serve a
+  room's bundle read-only through the publish component⟦f:work-rooms⟧⟦f:segment-exchange⟧, only as the room's
+  visibility allows⟦/f⟧⟦/f⟧; a widening principal act under SEC-26, and stopping it is
+  cut.⟦/f⟧⟦/f⟧
+⟦f:export-bundles⟧- **Rendering**: A room rendered for people to read, with no keys or commitments
+  (`cairn export --rendering`, SEC-26).⟦/f⟧
+⟦f:bundle-import⟧⟦f:export-bundles⟧- **Import**: Reading a bundle into this node's record (`cairn import`, REC-23).⟦f:peer-sync⟧
+  A transcript is ingested and a peer's segments are received; neither is
+  imported.⟦/f⟧⟦/f⟧⟦/f⟧
+⟦f:compute-kernel⟧- **Kernel**: The hermetic compute environment in which an agent runs code over
+  the record (CMP-01); each run's **kernel variables** live in its own
+  namespace.⟦/f⟧

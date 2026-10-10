@@ -1,0 +1,452 @@
+[
+ {
+  "candidate": "g1-core",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "contradiction",
+  "quote": "act of the creating seat's writer: a device seat's for its node's personal",
+  "problem": "Create room is open to any creating seat, and `room_create` exists as an MCP tool for agents, yet the candidate defines only the personal room. It also says every event or pin goes there, gives a role only to a run's personal-room seat, and restores only the pins of the run's personal room, so a room created any other way has no kind and its creating seat has no role.",
+  "fix": "Create room is the first act of a device seat's writer and makes only its node's personal room (Personal room); no other room exists."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "contradiction",
+  "quote": "its home was cloned from (Node), belongs to this node's principal.",
+  "problem": "Only seats certified by this node's device key or its direct source node's key get a principal, but Pin and Trusted sources trust predecessor device seats 'however far back'. On a clone of a clone, the seat that created the personal room belongs to no principal, so the room's owner, the owner's capabilities, and who may edit or unpin those still-restoring pins are all undefined.",
+  "fix": "or by the device key of any node its home descends from by node clones (Node), belongs to this node's principal."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "contradiction",
+  "quote": "Managed policy alone overrides the principal's settings; repository",
+  "problem": "Managed policy may override any of the principal's settings with no accepting act and no limit to cuts, and the candidate never says whether it may declare pins. A widening override, such as turning `restore_block.on_prompt` on, contradicts 'Only an agent's own principal widens what reaches that agent (I2)'.",
+  "fix": "Managed policy alone overrides the principal's settings, only with changes a cut act could make, and declares no pins; repository"
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "minor",
+  "type": "undefined",
+  "quote": "a node identity change, a node clone or the loss of a run",
+  "problem": "'Node identity change' is used, here and in Seat key, as a reason to mint a new key separate from a node clone, but only the node clone is defined. Nothing says whether an identity change in place makes a new node with its own device key, or which principal the old seats then belong to.",
+  "fix": "Replace 'a node identity change, a node clone' with 'a node clone (REC-24)' here and in Seat key, or define node identity change in Node as making a node clone of the earlier node."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "minor",
+  "type": "gap",
+  "quote": "ends it: the seat's later acts and seals count for nothing, and a device",
+  "problem": "Nothing stops the principal revoking this node's own current device seat's key, and no rule mints a replacement. Every later principal act must be covered by that seat's seal, so the node can never again quarantine, release, acknowledge counters, turn capture on or add a pin (I5, I6).",
+  "fix": "Add: 'A node never revokes its own current device seat's key.'"
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "minor",
+  "type": "gap",
+  "quote": "off or pausing it is widening (OWN-11), and what a run does meanwhile is a",
+  "problem": "Capture 'off' and 'paused' are never told apart. Nothing says whether incremental ingest, which resumes from the ingest position, records the transcript written meanwhile once capture is back on, so whether a capture gap exists at all is left open.",
+  "fix": "Add: 'Pausing turns it off until the principal resumes it; either way the hook handlers' ingest position moves past what the run wrote meanwhile.'"
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "minor",
+  "type": "contradiction",
+  "quote": "its principal had capture off or paused, each shown as a capture gap.",
+  "problem": "'Each' takes in both exceptions, so redacted secrets would be shown as capture gaps. A capture gap is defined as 'part of a run its capture did not record', and a redaction is not one.",
+  "fix": "its principal had capture off or paused, the latter shown as a capture gap."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "minor",
+  "type": "gap",
+  "quote": "It covers membership, roles, pins, pin versions.",
+  "problem": "Link is a room act and room state derives from acts only, but the room merge does not cover the range links that link acts add. Their state, for example a link to a pin that was unpinned at the same time, is derived by no rule.",
+  "fix": "It covers membership, roles, pins, pin versions and range links."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "security",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "security",
+  "quote": "or any CLI or TUI read from inside a run, whatever its output",
+  "problem": "Only reads count as recall. The room-act MCP tools (room_pin, room_edit, room_unpin, room_link, room_create) and CLI calls from inside a run that are not reads (cairn ingest, rebuild, migrate, a pin command) also return output that the harness sends to the model. That output is neither enveloped recall nor a closed path, and nothing bounds it: ingest could echo an attacker's unparsed line, or room_edit could echo pin text. This breaks I2's 'No other write to an agent exists' and I4's list of what leaves the machine.",
+  "fix": "Write 'or any CLI or TUI call from inside a run, and any MCP tool's result, whatever its output', or say that every other agent-facing output carries only fixed text Cairn ships, structural fields and ids."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "security",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "gap",
+  "quote": "ends it: the seat's later acts and seals count for nothing, and a device",
+  "problem": "Revoking a device seat's key is an allowed widening act, but a new seat is minted only on a node identity change, a node clone or a lost run-seat key. Once the node's own current device seat is revoked, no device seat remains whose seal makes a principal act count. No cut act (quarantine, turning capture on) and no neutral act (acknowledging counters) can follow on that node, so I5 and I6 stop holding there.",
+  "fix": "Add: 'Revoking this node's own device seat's key mints a new device seat, certified by its device key, that names the revoked seat but does not take it as a predecessor.'"
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "security",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "security",
+  "quote": "a **qualifying pin**, its creating event trusted on this node: a pin",
+  "problem": "Qualification checks only the creating event, and revocation stops only 'a device seat's pins', meaning those it authored first. Yet the principal can edit any device-seat pin from any of its device seats. Example: on a node clone, a leaked device-seat key is used to edit a constraint pin carried over from the predecessor. After the principal revokes that key, the pin's author is still unrevoked, so the attacker's version keeps restoring as trusted text.",
+  "fix": "Write: 'a pin qualifies only while neither its creating event nor the version that restores was written by a seat whose key is revoked', and in Seat key: 'a device seat's pins and the pin versions it wrote stop qualifying'."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "security",
+  "feature": "core",
+  "severity": "minor",
+  "type": "contradiction",
+  "quote": "A seat certified by this node's device key, or by the device key of the node",
+  "problem": "This rule gives this node's principal only the seats certified by its own device key or its direct parent's. Pin and Trusted sources, though, trust what a device seat's predecessors wrote 'however far back'. On a clone of a clone, the grandparent's device-seat pins qualify, but their author belongs to no principal of this node. I8 then treats them as another principal's untrusted content, and this principal cannot edit or unpin them.",
+  "fix": "Write 'or by the device key of any node in the chain its home was cloned from'."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "usefulness",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "useless",
+  "quote": "act of the creating seat's writer: a device seat's for its node's personal",
+  "problem": "Create room is open to any seat: an agent through `room_create`, or a device seat at a principal surface. But in this candidate a room other than the personal room is a dead end. No act adds another seat to it. Only personal-room run seats get a role, so a run seat there has no capabilities. Every event and pin goes to the personal room, and restore blocks carry only personal-room pins. So nothing ever restores from such a room, records into it, or is recalled through it.",
+  "fix": "Create room is only the first act of a node's device seat, creating its personal room; no other room is created."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "usefulness",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "useless",
+  "quote": "It covers membership, roles, pins, pin versions.",
+  "problem": "The link room act \"adds one range link\". But the room merge is the one rule that derives all room state, and it does not cover links. Nothing in the candidate reads a range link: not restore blocks, not recall, not the Runs surface. So the link act and the contributor's link capability have no effect, and implementers will disagree on where a link lives and how link acts conflict.",
+  "fix": "It covers membership, roles, pins, pin versions and range links, which recall returns with their pin. Alternatively, drop the link act, the range link and the link capability."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "usefulness",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "gap",
+  "quote": "revoke a device seat's key, turn capture off or pause it",
+  "problem": "Nothing stops the principal revoking this node's own device seat's key, and no rule mints a replacement. Seat key lists only node identity change, node clone and a lost run-seat key. After the revocation every principal act counts for nothing, because it needs that seat's seal. The node can then never pin a constraint again, turn capture back on, accept configuration or acknowledge counters, and all its existing constraint pins stop restoring.",
+  "fix": "In Seat key, add revoking this node's own device seat's key to the cases that mint a new device seat in the personal room. Alternatively, limit the widening act to \"revoke a predecessor device seat's key\"."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "usefulness",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "gap",
+  "quote": "A seat certified by this node's device key, or by the device key of the node",
+  "problem": "On a clone of a clone, the seat that created the personal room was certified by the grandparent node's device key. This rule covers only one generation, so that seat is not shown to belong to this principal. Ownership of the personal room is then undetermined, and so are the owner capabilities this node's device seat needs to take a widening pin act. Pin, meanwhile, says predecessors qualify \"however far back\".",
+  "fix": "...or by the device key of any node its home was cloned from, however far back (Node), belongs to this node's principal."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "usefulness",
+  "feature": "core",
+  "severity": "minor",
+  "type": "useless",
+  "quote": "A capability, not an act: to edit and execute commands (LANE-16)",
+  "problem": "Nothing in the candidate checks or gates work. Every run seat is a contributor, device seats hold every capability, and Cairn never controls the harness's edits or commands. So the work capability has no effect.",
+  "fix": "Drop \"and work\" from Contributor and drop the Work entry, or state what Cairn gates on it."
+ },
+ {
+  "candidate": "g1-core",
+  "lens": "usefulness",
+  "feature": "core",
+  "severity": "minor",
+  "type": "useless",
+  "quote": "A mark Cairn sets on an event whose text matches an injection",
+  "problem": "Cairn sets a flag, but nothing reads it: not the trust policy, trust marks, envelopes, restore blocks or any surface. No agent or person ever sees it.",
+  "fix": "Append: shown with the event on Runs and inside the envelope of any recall that returns it."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "consistency",
+  "feature": "browser-room-view",
+  "severity": "needs-fix",
+  "type": "contradiction",
+  "quote": "widening act at a principal surface (`cairn ui --phone`)",
+  "problem": "`cairn ui` is declared no part of the CLI, and Principal surface lists only the browser room view, the CLI or TUI at a terminal no run's tool process started, and a paired phone. So the act issuing a phone-scoped room-view secret is taken at no principal surface, and the 'never from inside a run' exclusion does not reach `cairn ui`: nothing stops a run's tool process from starting it and holding its launch secret.",
+  "fix": "In Principal surface add \"or `cairn ui` started at a terminal that no run's tool process started; `cairn ui` started from a run's tool process mints no room-view secret\"."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "consistency",
+  "feature": "service-accounts",
+  "severity": "needs-fix",
+  "type": "security",
+  "quote": "listing marks it as relaying text others wrote, or whose listing is unmarked,",
+  "problem": "A service account whose certificate is revoked, or that managed policy stops listing, 'stays a service account', but then no standing certificate or listing marks it as relaying. A trust grant naming it falls under 'any other service account' and only warns, so a cut act (revoking or delisting) makes a relaying account's posts and pins grantable.",
+  "fix": "\"...whose certificate or managed-policy listing, standing or revoked, marks it as relaying text others wrote, whose listing is unmarked, or that no standing certificate or listing covers, is refused\"."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "minor",
+  "type": "contradiction",
+  "quote": "of a type that restores written from one of this node's own device seats, or",
+  "problem": "On a token-key-only node, its own device-seat pin is an `operator` event trusted on that node (Token key). By this qualifying-pin rule it restores unstamped, and the Widening list makes adding it a principal act the node cannot sign. Yet Pin's last clause and Token key say such pins are changed by room acts and restore only once stamped.",
+  "fix": "Here write \"written from one of this node's own device seats a device key certified, or\", and use the same qualifier in the Widening list's \"from one of this node's own device seats or their predecessors\"."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "minor",
+  "type": "gap",
+  "quote": "its home was cloned or restored from (Node), belongs to this node's principal.",
+  "problem": "This rule reaches back one hop, while Pin, Trusted sources and Seat key follow predecessors 'however far back'. On a clone of a clone, or a restore of a clone, the seat that created the carried-over personal room was certified by the grandparent's device key. It belongs to no stated principal, so that room's owner is undetermined.",
+  "fix": "\"or by the device key of any node its home descends from by node clone or backup restore, however far back, belongs to this node's principal.\""
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "consistency",
+  "feature": "facilitator",
+  "severity": "minor",
+  "type": "contradiction",
+  "quote": "recall tool, the kernel's built-ins included, leaves `summary` events out,",
+  "problem": "Recall also covers any CLI or TUI read from inside a run, which is not a recall tool. This exclusion does not reach such reads, so an agent can read a room summary without `room_summary_get`, contradicting 'reads solely through `room_summary_get`'.",
+  "fix": "\"every other recall tool and every CLI or TUI read from inside a run, the kernel's built-ins included, leaves `summary` events out,\""
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "consistency",
+  "feature": "delegation-grants",
+  "severity": "minor",
+  "type": "contradiction",
+  "quote": "grant (OWN-23, OWN-26). Before PRV-10 ships no expiry can be set but a",
+  "problem": "An access token is a short-lived credential with an expiry, used to enroll devices and peers and to carry invite links, and nothing limits it to PRV-10. Yet before PRV-10 no expiry but a grant's can be set, so a pre-PRV-10 access token either never expires or breaks this rule.",
+  "fix": "\"Before PRV-10 ships no expiry can be set but a grant's or an access token's, each of which then takes effect only as a refusal by the node that set it\", or state that access tokens arrive with PRV-10."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "consistency",
+  "feature": "principal-keys",
+  "severity": "minor",
+  "type": "undefined",
+  "quote": "certificate**, with a **device scope** (the kinds of principal act it may",
+  "problem": "Device scope and the maximum rule level come with the device certificate, and before PRV-10 no principal key certifies a device key. Yet pre-PRV-10 rules read the scope: a device seat's pin capability covers its own pins only within its device scope, and a device-seat pin can be edited only from devices whose scope allows it. Nothing says whether an uncertified device key's scope is everything or nothing.",
+  "fix": "Add to Device key: \"Before PRV-10 ships a device key's device scope is every kind of principal act, post and pin, with no maximum rule level.\""
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "minor",
+  "type": "gap",
+  "quote": "Every seat belongs to one principal and one room; every writer to one seat.",
+  "problem": "Before PRV-10 no key chains to a principal key. The only other rule gives a principal to seats certified by this node's device key, or that of its clone or restore source. A seat certified by a peer's device key belongs to no stated principal, yet room ownership, the owner's immunity to kick, bar and mute, admission, and 'only that seat's principal may add it again' all depend on knowing it.",
+  "fix": "Add: \"Before PRV-10 ships, a seat whose certifying key chains to no principal key belongs to a principal identified by that device key.\""
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "consistency",
+  "feature": "bridges",
+  "severity": "minor",
+  "type": "gap",
+  "quote": "bridge component on while any bridge stands enabled, enable the git carrier, set",
+  "problem": "Room settings and the git carrier's enabled state are room state the room merge derives. Yet no entry says whose principal act sets a room setting (drafts, typing, appointment rate) or enables the git carrier for a room, or whether visibility limits the carrier as it limits publishing and blind peers. Two implementers could allow any member principal or only the owner.",
+  "fix": "In Owner write \"owns a room and its intent, roles, admission, room settings, appointments, successor and handover\", and add \"enabling the git carrier for a room is the owner's act, only as its visibility allows\"."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "consistency",
+  "feature": "core",
+  "severity": "minor",
+  "type": "gap",
+  "quote": "**Provenance**: An event's class from a closed set, saying what produced its",
+  "problem": "Provenance assigns a class to acts, pins, posts, summaries, requests, hook observations, key rotations, tombstones and witness-check records. It assigns none to worktree checkpoints, whose redacted diff is worktree text, or to recall, canary and backup events. The class decides trust, and so whether a diff enters the trusted-only export that downstream memory systems read.",
+  "fix": "Add: \"a worktree checkpoint is `file`, its commit and branch structural fields; a recall event is `tool_call`; canary and backup events are `structural`\"."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "security",
+  "feature": "conversation",
+  "severity": "needs-fix",
+  "type": "security",
+  "quote": "posts and pins written from device seats a device key of that principal",
+  "problem": "The agent's own principal's device-seat posts and pins are trusted only 'within that key's device scope'. A trust grant covers another principal's posts and pins from any device seat its device keys certified, with no scope check, and I2 and Pin say the same. So a device key that principal scoped to write no pins or posts still puts trusted pins into the grantor's restore blocks and pushes posts into its agents.",
+  "fix": "Read 'posts and pins written from device seats a device key of that principal certified, within that key's device scope', and add the same words to I2 and to Pin's trust-grant clause."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "security",
+  "feature": "work-rooms",
+  "severity": "needs-fix",
+  "type": "security",
+  "quote": "principal has a member seat there that may post, and its seats pull it by",
+  "problem": "A run seat in a private room, or in the personal room, can send a cross-room post into a shared room, and other principals' seats pull its text. The only condition is that some seat of the run's principal is a member there that may post. So an agent's text reaches other principals' nodes without the join, the widening act that gates a run's events reaching rooms other principals' nodes hold.",
+  "fix": "'the target room shows it while the sending seat, or for a run seat a seat of the same run, is a member there that may post'."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "security",
+  "feature": "browser-room-view",
+  "severity": "needs-fix",
+  "type": "security",
+  "quote": "the browser room view under SEC-20, the CLI or TUI at a terminal that no",
+  "problem": "Only CLI and TUI calls made from inside a run are excluded from principal acts. `cairn ui` is 'no part of the CLI', and nothing says a room-view component that a run's tool process started (`cairn ui --phone` included) is not a principal surface. An agent that starts one holds its launch secret and can take widening acts: trust grants, stamps, restoring pins, allows.",
+  "fix": "'the browser room view under SEC-20 of a room-view component that no run's tool process started, the CLI or TUI at a terminal that no run's tool process started'."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "security",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "security",
+  "quote": "on a node identity change, a backup restore or a node clone (REC-24,",
+  "problem": "After a backup restore, the backup's device seats count as predecessors, so everything they wrote becomes trusted and their pins restore as trusted text. But a backup carries no keys, its events after the newest seal are unsigned, and before PRV-10 nothing ties its device key to this principal. A tampered or foreign backup file therefore puts text into restore blocks, while a bundle read from a file stays untrusted.",
+  "fix": "Add: 'a backup restore names a writer as predecessor only once that writer verifies to its newest seal against a head receipt the principal kept apart, or chains to this principal's key; events past that seal are read as another node's'."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "security",
+  "feature": "access-tokens",
+  "severity": "minor",
+  "type": "security",
+  "quote": "token-key-only nodes or room summaries; never in a foreign room; and a post it",
+  "problem": "Trust grants exclude room summaries because the facilitator's program writes them from untrusted room content. The same program also writes posts from the same device seat, and those posts stay grantable. No rule marks a facilitator's service account as relaying, so its derived text can reach the grantor's agents inside OWN-29's template.",
+  "fix": "'never ... token-key-only nodes, room summaries or posts from a device seat appointed facilitator'."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "security",
+  "feature": "principal-keys",
+  "severity": "minor",
+  "type": "contradiction",
+  "quote": "or expire acts; every pin it writes restores only once a principal stamps it",
+  "problem": "Pin says a restoring-type pin written from one of this node's own device seats restores to this node's agents, and on a token-key-only node that covers its own device seat. Token key and Pin also say every pin such a node writes restores only once stamped. Implementers will disagree on whether its unstamped pins enter restore blocks on that node.",
+  "fix": "'every pin it writes restores on any other node only once a principal stamps it', or exclude token-key-only nodes from Pin's first clause."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "security",
+  "feature": "export-bundles",
+  "severity": "minor",
+  "type": "security",
+  "quote": "The JSONL of the events trusted for the principal's",
+  "problem": "The free text a cut or neutral principal act carries is untrusted 'whatever its event's trust level'. The trusted-only export takes whole trusted events, and no rule strips that text, so untrusted text reaches downstream memory systems marked as trusted.",
+  "fix": "'The JSONL of the events trusted for the principal's agents, without the free text of cut or neutral principal acts, with full provenance'."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "security",
+  "feature": "ci-attestation",
+  "severity": "minor",
+  "type": "gap",
+  "quote": "room and whether the git carrier is enabled for it",
+  "problem": "Room state records whether the git carrier is enabled, through the widening act 'enable the git carrier'. Nothing says whose act counts or that visibility gates it, though the carrier stores a room's segments on a remote host much as a blind peer does, and blind peers are gated by visibility. So a member who is not the owner could put a private room's segments on a host the owner never allowed.",
+  "fix": "Add to Visibility: 'Enabling the git carrier for a room is a widening principal act of the owner, only as its visibility allows.'"
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "security",
+  "feature": "git-tracking",
+  "severity": "minor",
+  "type": "security",
+  "quote": "branches the room names later by branch links, whose runs' events then go",
+  "problem": "Once a run has joined another principal's room, any contributor there, another principal's agent included, can add a branch link that pulls this run's events on that branch into the shared room. Principal act classes anything that lets more leave the node as a widening act, yet this needs no act of the run's principal.",
+  "fix": "'That covers the branches the room names later by branch links that a seat of the run's principal added, or that its principal accepts'."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "security",
+  "feature": "paired-phone",
+  "severity": "minor",
+  "type": "security",
+  "quote": "paired phone's personal-room seat, or a device seat a newly minted key started",
+  "problem": "Personal-room seats are members with no add, and nothing ties a run's, a phone's or a newly minted key's personal-room seat to the room's principal. Another principal's node can certify a seat for this personal room's id and count as a member, against 'It stays private'.",
+  "fix": "'...or such a personal-room seat that belongs to the personal room's principal (Every seat belongs to one principal)'."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "security",
+  "feature": "delegation-grants",
+  "severity": "minor",
+  "type": "gap",
+  "quote": "so it stays in the delegating run's recall scope (OWN-24), enveloped: through",
+  "problem": "A report from another principal's or another node's delegate is recorded inside the delegating run's recall scope, which means in its own seats' writers. Nothing gives it a provenance from the closed set or keeps the delegate's seat as its author, so the report risks being sealed as the delegating seat's own content, against I8's 'kept as theirs: attributed to its seat key'.",
+  "fix": "'recorded on the delegating side as untrusted content naming the delegate's seat as its author, so it stays in ...'."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "usefulness",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "gap",
+  "quote": "A worker a harness runs for exactly one principal: the principal of",
+  "problem": "Nothing says which runs belong to one agent, yet recall reaches 'the principal's rooms the agent has a seat in', defaults to 'the agent's current run', and a directed post goes to 'one agent'. Whether the run that a harness clear or a new harness session starts is the same agent decides whether it can recall, or be sent posts for, the rooms an earlier run joined, so two implementers build different recall scopes.",
+  "fix": "Add to Agent which runs are one agent's (e.g. 'each harness session's main agent and each subagent is its own agent; a harness clear or a new harness session starts a new agent'), or say 'the run has a seat in' in Relations' recall rule."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "usefulness",
+  "feature": "core",
+  "severity": "needs-fix",
+  "type": "gap",
+  "quote": "run, tied to its parent's run by a parent link, with its own seats and",
+  "problem": "Under 'A run joins only when its principal asks for the join or accepts it', and with no rule that a subagent's run takes its parent run's rooms, a subagent working on a joined room's branch has only its personal-room seat. That room's constraints never reach its restore block, even after its own compaction, and its work goes to the personal room instead of the room the person watches.",
+  "fix": "Add to Subagent: 'Its run joins each room its parent run has a member seat in, under the parent's join, from its first event (LANE-23).'"
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "usefulness",
+  "feature": "access-tokens",
+  "severity": "needs-fix",
+  "type": "contradiction",
+  "quote": "A short-lived credential a principal mints to enroll a",
+  "problem": "Access tokens are called short-lived, but Expire act says 'Before PRV-10 ships no expiry can be set but a grant's'. So before PRV-10, an access token minted to enroll a device or peer cannot expire: one implementer enforces a lifetime, another keeps it valid until it is revoked.",
+  "fix": "In Expire act: 'Before PRV-10 ships no expiry can be set but a grant's or an access token's, each then taking effect only as a refusal by the node that set it'."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "usefulness",
+  "feature": "core",
+  "severity": "minor",
+  "type": "useless",
+  "quote": "Whatever is currently in the model's context window. Never",
+  "problem": "Nothing in the candidate creates, shows or reads the working view. The context lens describes the same content ('what the model's context window contained at an event') without naming it.",
+  "fix": "Have the Replay tab's context lens show 'the working view at an event', or drop Working view."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "usefulness",
+  "feature": "bundle-import",
+  "severity": "minor",
+  "type": "useless",
+  "quote": "The outside party whose commits a foreign room's",
+  "problem": "Nothing in the candidate uses the pull-request author or its binding statement: no surface, trust rule, link or act consumes the match, so implementers cannot tell what a match does.",
+  "fix": "Say what the match feeds (e.g. 'the foreign room's Room page names it beside the commits it matched'), or drop the concept."
+ },
+ {
+  "candidate": "g1-all",
+  "lens": "usefulness",
+  "feature": "git-tracking",
+  "severity": "minor",
+  "type": "useless",
+  "quote": "repository's **git directory** is git's own store of objects and refs.",
+  "problem": "The git directory is defined but nothing uses it. The witness check's write limits, the git carrier and bundles as git refs each name other places.",
+  "fix": "Drop the clause, or name it where it matters (e.g. in the witness check's fresh checkout)."
+ }
+]

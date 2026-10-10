@@ -1,0 +1,191 @@
+[
+ {
+  "type": "gap",
+  "quote": "device seats, is a viewer; a run's personal-room seat, or its seat in a room",
+  "problem": "An invite records a role for the run seats of every invited principal, but nothing gives one to the owner's own agents. Their run seats in a room the run did not create default to viewer, so they have no work and cannot post: their events go to the personal room until the owner assigns a role to each new run seat by hand.",
+  "fix": "\"A seat with none, other than the owner's device seats, is a viewer; a run's personal-room seat, its seat in a room it created, or a run seat of the owner's agents, is a contributor.\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "CLI; a skill's call is the agent's own tool call, never a principal act.",
+  "problem": "The CLI writes room acts as the node's device seat (the facilitator's program uses it that way), and room acts need no principal surface. So an agent's own tool call to the CLI can post or pin as the device seat. That gives its text device-seat standing: a trusted source for its principal's agents, and covered by other principals' trust grants, which exclude run seats precisely to keep agent text out.",
+  "fix": "\"...is the agent's own tool call, never a principal act nor a device seat's act: a CLI verb a run's tool call starts acts only as that run's run seat.\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "revocable only by its certifier: managed policy revokes one it lists by no",
+  "problem": "Managed policy certifies by listing and revokes by unlisting. But settings layers sit beside the record and outside the key set, the only inputs I10 allows. Once a listing is withdrawn nothing shows the key was ever certified, so it 'counts as a person's' (it may record verdicts, and grants naming it are no longer refused), against 'a service account whose certificate is revoked stays a service account'.",
+  "fix": "Add: \"each listing, and its withdrawal, enters the node's key set as a service-account certificate and its revocation.\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "bar, a mute or a handover offer (LANE-25). It ends an access token, recorded",
+  "problem": "The candidate names which node records the expire act for access tokens and grants, but not for a bar, a mute or a handover offer. As written, any node with a device key may record it, including the muted or barred principal's own node. Room state reads no clock (I10), so nothing stops an early expire act that lifts that principal's own mute.",
+  "fix": "\"It ends a bar, a mute or a handover offer, recorded by the node of the principal whose act set it (LANE-25).\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "whose owner left keeps its pins as they were, but a stamper may still unstamp",
+  "problem": "This says a room whose owner left keeps its pins as they were. Yet contributors keep their pin capability and moderators keep list removal, with no exception for such a room. Implementers will differ on whether pin acts are frozen there.",
+  "fix": "Either \"keeps restoring its pins as they did\", or add the freeze as an exception to the contributor's pin capability and to list removal.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "seat in the room it works in at that moment, one it joined or created that",
+  "problem": "Two rooms a run is a member of may both name its branch. The room merge's rule that the first branch link stands does not say whether it applies across rooms, and a node that holds only the later room cannot apply it. So the run's event has no single target room.",
+  "fix": "\"...one it joined or created that names the branch..., the one whose branch link naming it is first in causal order, then lower commitment, ...\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "room and whether the git carrier is enabled for it. It covers the successor,",
+  "problem": "Room state includes the room settings and whether the git carrier is enabled, but no rule says who may set them. The owner's list leaves them out and moderators set only title, labels and assignments. It is also unstated whether a private room, the personal room included, may go to the git carrier.",
+  "fix": "Add: \"Only the owner sets room settings and enables the git carrier for a room, as its visibility allows.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "only exceptions are secrets removed by redaction before storage or on import,",
+  "problem": "Turning capture off or pausing it is a recorded widening act, and the candidate names the capture gap it leaves. But I1's closed list of exceptions to 'every event an agent saw or produced remains recoverable' does not include events produced while capture was off.",
+  "fix": "Add to I1's exceptions: \"and events a run produced while its node's principal had capture off or paused\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "confirmation of its principal (of the agent that suggested it or the node that",
+  "problem": "Confirming a pin candidate turns an agent's untrusted assistant text into a trusted device-seat pin that restores verbatim to the principal's agents. Stamps require 'being shown its exact text' and endorsement sends text 'exactly as the principal confirmed it', but no rule says the principal sees the exact text it confirms here.",
+  "fix": "\"The confirmation of its principal, after being shown its exact text, ... makes that exact text the first version of a new pin its device seat authors\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "content trusted (PRV-02). Exchanging the sealed ranges each may receive is",
+  "problem": "Nothing says which sealed ranges a peer may receive. Visibility covers only publishing and blind peers, so it is open whether another principal's peer gets a private room, and whether one node's personal room reaches the principal's other nodes. That room holds acts that name no room, such as an everywhere trust grant, an away policy or a notice opt-in.",
+  "fix": "\"Exchanging the sealed ranges of rooms whose visibility lets the peer's principal hold them, personal-room writers going only to the principal's own nodes, is sync.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "The one seat kind for acting without a run.",
+  "problem": "Only join is tied to a principal surface, and only principal acts are barred from an agent's tool call. So an agent, for example one injected through tool output, can run `cairn` from its shell and post or pin from the node's device seat. That content is `operator`-class trusted on this node. Once PRV-10 ships it is also a trusted source, and it reaches every agent whose principal holds a trust grant for this principal inside OWN-29's template: model output becomes trusted text and reaches other agents automatically.",
+  "fix": "The one seat kind for acting without a run; its room acts are taken only by its principal at a principal surface, never by an agent's tool call, which acts from its run seat.",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "It posts and writes room summaries, answering summary requests",
+  "problem": "A trust grant excludes room summaries, but the facilitator, whose job is to relay others' text, also posts. Nothing requires its service account to be marked as relaying, so a grant naming it is allowed with only a warning. Its summary-like posts of untrusted room content then reach the grantor's agents in OWN-29's template, which gets around the room-summary exclusion.",
+  "fix": "It posts and writes room summaries, answering summary requests; a trust grant covers neither, so the facilitator's posts are excluded like its summaries.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "server's URL (inert text the person opens in their own browser), a build",
+  "problem": "The browser room view is a principal surface that holds the origin secret. Any contributor seat, run seats included, can present a build artifact or file in its outcome window. Only a URL is said to be inert, so an implementer may render an agent's HTML or SVG artifact live in that origin. There it could take principal acts (stamp, trust grant, allow) that the agent's own tool calls may never take.",
+  "fix": "...a build artifact, a file or a diff, each shown as inert content that never runs in or loads from the room view's origin, with the seat and branch.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "detected it), a widening act, makes it a new pin its device seat authors",
+  "problem": "Confirming a pin candidate turns model-written text into a device-seat pin. That pin restores verbatim and is covered by trust grants. Yet unlike a stamp or an endorsement, the confirmation is not bound to the exact text shown to the principal, so an implementer may allow a one-click confirmation of text the principal never saw in full.",
+  "fix": "detected it), a widening act taken after being shown its exact text, makes it a new pin its device seat authors",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "delegation budget and the expiry (OWN-26), which ends it as a delegation",
+  "problem": "'Ends it as a delegation grant's does' points to 'the delegating node refuses'. Read that way, the receiving principal's expiry, rule-level cap and budget are enforced only by the other principal's node, which I8 treats as untrusted. No rule says the receiving node checks its own acceptance grant before delivering OWN-24's template.",
+  "fix": "delegation budget and the expiry (OWN-26); the receiving node refuses a delegated task outside it, past its expiry included, and its expire act ends it.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "blind peer for it, only as its visibility allows.",
+  "problem": "A blind peer may hold a room only as its visibility allows. The git carrier also stores a room's encrypted segments on a host the principal names, but it has no such gate and no stated actor. So any principal of a shared room could put every principal's segments on a third-party remote that the owner's visibility never allowed.",
+  "fix": "blind peer for it, or enables the git carrier for it, only as its visibility allows.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "or a read-only CLI verb the agent runs whose output is not a",
+  "problem": "A CLI read counts as enveloped recall only when its output is not a terminal. An agent's shell can run the CLI on a pseudo-terminal, and some harnesses always do, so record content, untrusted posts and tool output included, then reaches the model without an envelope.",
+  "fix": "or a read-only CLI verb the agent runs, whose record content is enveloped whether or not its output is a terminal",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "device seats, is a viewer; a run's personal-room seat, or its seat in a room",
+  "severity": "needs-fix",
+  "problem": "A run seat of the owner's own agent that joins one of the owner's rooms it did not create gets no role, so it is a viewer. A viewer has no work, so the run's events go to its personal room, and it cannot post, pin or present in the room. The room then holds none of that run's results or evidence for verdicts. This happens every time a new run, for example after a harness clear, joins the room an earlier run created. An invited guest's run seats, by contrast, get the invite's role automatically.",
+  "fix": "Change to: \"a run's personal-room seat, its seat in a room it created, or its seat in a room its principal owns that it joined, is a contributor.\"",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "per room it joined or created, a new one for each seat key minted anew",
+  "severity": "minor",
+  "problem": "Run-seat keys live only in the MCP server's memory, so a harness resume that continues the run but restarts the server mints new keys and new seats. Only the node-clone case says whether a new seat keeps the old seat's add, role and appointment. Two implementers would disagree on whether a resumed run stays a working member of its rooms or quietly falls back to its personal room until its principal approves a new join and assigns a new role.",
+  "fix": "Add to Seat key: \"A run seat minted anew within the same run, as after a harness resume, names the old seat and shares its add and role.\" (Or state that it joins and gets roles again, as for a node clone.)",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "An integer the pin's author sets with it, lower first, the",
+  "severity": "minor",
+  "problem": "Pin priority decides which qualifying pins fill the pin budget, and an agent's run seat sets it on its own pins. A stamp shows only the exact text, author and key fingerprint, not the priority. A stamped agent pin can therefore outrank every constraint the principal wrote and push them out to id and count, without the principal seeing that this would happen.",
+  "fix": "In Stamp, change to \"after being shown its exact text, pin priority, author and key fingerprint\", and say that the priority belongs to the stamped version.",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "undefined",
+  "quote": "permission grant, reject a foreign room, decline a join request, tighten a",
+  "severity": "minor",
+  "problem": "\"Reject a foreign room\" is classed as a cut act, but nothing says what it does. Two implementers could make it stop sync, drop the room from view, or quarantine it. If it also stopped the room's own pins and stamped versions restoring, the rule that any act removing a pin from a restore block is widening would make it a widening act, not a cut act.",
+  "fix": "Define the act's effect, for example: \"reject a foreign room (stop receiving its segments and stop showing it in Fleet; its record and restoring pins stay)\".",
+  "lens": "usefulness",
+  "model": "default"
+ }
+]

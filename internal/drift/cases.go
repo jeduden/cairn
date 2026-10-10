@@ -12,7 +12,7 @@ func Cases() []Case {
 	var out []Case
 	for _, group := range [][]Case{
 		dependencyCases(), decisionCases(), repositoryCases(), reviewCases(),
-		gateCases(), personaCases(),
+		gateCases(), personaCases(), agentCases(), domainModelCases(), ledgerCases(),
 	} {
 		out = append(out, group...)
 	}
@@ -253,6 +253,72 @@ func personaCases() []Case {
 			Edit:   Edit{Op: Remove, File: ".claude/agents/persona-reviewer.md"},
 			Check:  GoTest("./internal/srs", "TestPersonasMatchTheAgents"),
 			Want:   "persona-reviewer",
+		},
+	}
+}
+
+// agentCases lists the drifts mdsmith's agent schemas catch: a reviewing
+// agent given a tool beyond reading, and the domain-model agent losing
+// one of its required sections.
+func agentCases() []Case {
+	return []Case{
+		{
+			Name:   "a reviewing agent granted a write tool",
+			Guards: "mdsmith check",
+			Edit: Edit{Op: Replace, File: ".claude/agents/persona-reviewer.md",
+				Old: "tools: Read, Grep, Glob", New: "tools: Read, Grep, Glob, Edit"},
+			Check: Mdsmith(),
+			Want:  "tools: got",
+		},
+		{
+			Name:   "the domain-model agent losing a required section",
+			Guards: "mdsmith check",
+			Edit: Edit{Op: Replace, File: ".claude/agents/domain-model.md",
+				Old: "## How you report", New: "## Reporting"},
+			Check: Mdsmith(),
+			Want:  "How you report",
+		},
+	}
+}
+
+// domainModelCases lists the drifts mdsmith's domain-model schemas catch:
+// the hub losing one of the sections that span every concept group, and a
+// concept file losing the summary the hub's catalog reads.
+func domainModelCases() []Case {
+	return []Case{
+		{
+			Name:   "the domain-model hub losing a required section",
+			Guards: "mdsmith check",
+			Edit: Edit{Op: Replace, File: "docs/domain-model/index.md",
+				Old: "## Not Cairn concepts", New: "## Excluded terms"},
+			Check: Mdsmith(),
+			Want:  "Not Cairn concepts",
+		},
+		{
+			Name:   "a domain-model concept file losing its summary",
+			Guards: "mdsmith check",
+			Edit: Edit{Op: Replace, File: "docs/domain-model/places.md",
+				Old: "summary: >-", New: "abstract: >-"},
+			Check: Mdsmith(),
+			Want:  "summary",
+		},
+	}
+}
+
+// ledgerCases lists the drift the finding ledger's check exists to catch:
+// a closed domain-model finding whose closing sentence leaves the text.
+func ledgerCases() []Case {
+	return []Case{
+		{
+			Name:   "a closed finding's sentence trimmed from the model",
+			Guards: "TestFindingLedgerIsCarried",
+			Edit: Edit{
+				Op: Replace, File: "docs/domain-model/components-and-surfaces.md",
+				Old: "What shows rooms to a person: the browser, through the",
+				New: "What shows rooms to a person: the",
+			},
+			Check: GoTest("./internal/ledger", "TestFindingLedgerIsCarried"),
+			Want:  "closed findings no longer carried in the text",
 		},
 	}
 }
