@@ -148,6 +148,7 @@ row: "- [{filename}]({filename}) — {summary}"
 - [docs/domain-model/index.md](docs/domain-model/index.md) — Cairn's domain model: the closed set of concepts with their definitions, how they relate, the terms that are not Cairn concepts, and how names in code, docs and UI follow the model. The SRS links here for every term, and the domain-model agent reviews against it.
 - [docs/srs/index.md](docs/srs/index.md) — The Cairn Software Requirements Specification — the normative source for every requirement id a feature scenario is tagged with.
 - [docs/testing.md](docs/testing.md) — How Cairn is tested: the test pyramid of unit, integration and end-to-end tests, line coverage and test counts per test layer with their floors, the executable requirement matrix (one Gherkin scenario per SRS id), drift injection, and the test-engineer agents that monitor and shape the pyramid.
+- [docs/use-cases.md](docs/use-cases.md) — Pending use cases, one file each under docs/use-cases, before the SRS covers them: who wants each, what it is, the milestone it targets and its status. Not normative; an entry moves into the SRS when a plan takes it up.
 - [SECURITY.md](SECURITY.md) — How to report a vulnerability in Cairn privately, the 90-day coordinated disclosure policy, which versions get fixes, and how to verify a release (ENG-24, ENG-20).
 <?/catalog?>
 
@@ -196,10 +197,9 @@ mechanics are in [docs/development.md](docs/development.md).
 
 ## Tests
 
-Unit tests prove every function and module directly, 99% per crate; integration
-and end-to-end tests guard behaviour. [testing.md](docs/testing.md) has the
-floors and the pyramid's shape. The `test-engineer` agents review tests; the
-`test-shape` skill applies their findings.
+Unit tests prove each function directly, 99% per crate; integration and
+end-to-end tests guard behaviour ([testing.md](docs/testing.md)). The
+`test-engineer` agents review tests; the `test-shape` skill reshapes them.
 
 ## Domain Model
 
