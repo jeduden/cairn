@@ -4,11 +4,10 @@ codecov:
     # checks, so the status is never evaluated against a stale or
     # missing upload.
     wait_for_ci: true
-    # A same-repo run uploads four reports: the Rust unit, integration
-    # and end-to-end test layers, and the Go stub. The Go job finishes
-    # minutes before the Rust coverage job, so without this the status
-    # posts on the Go upload alone and reads as a drop.
-    after_n_builds: 4
+    # A same-repo run uploads three reports, one per test layer. They
+    # land seconds apart, so without this the status can post on the
+    # first alone and read as a drop.
+    after_n_builds: 3
 
 coverage:
   status:
@@ -35,9 +34,8 @@ coverage:
         if_no_uploads: success
         if_not_found: success
 
-# One flag per test layer of the Rust tooling, and one for the Go
-# stub, so the dashboard shows what unit, integration and end-to-end
-# tests each cover. The statuses above count every flag together;
+# One flag per test layer, so the dashboard shows what unit,
+# integration and end-to-end tests each cover. The statuses above count every flag together;
 # `cargo run -p coverage` holds each crate to its floors per test layer.
 flags:
   unit:
@@ -46,10 +44,8 @@ flags:
     carryforward: false
   e2e:
     carryforward: false
-  go:
-    carryforward: false
 
 comment:
   layout: "condensed_header, condensed_files, condensed_footer"
   require_changes: true
-  after_n_builds: 4
+  after_n_builds: 3

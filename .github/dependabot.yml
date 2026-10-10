@@ -31,21 +31,3 @@ updates:
     open-pull-requests-limit: 1
     cooldown:
       default-days: 7
-
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 1
-    cooldown:
-      default-days: 7
-
-  # Dev tools build from their own modfile, so they update on their
-  # own schedule and never constrain consumers of this module.
-  - package-ecosystem: "gomod"
-    directory: "/tools"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 1
-    cooldown:
-      default-days: 7
