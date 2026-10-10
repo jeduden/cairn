@@ -25,8 +25,9 @@ for. Three specialists go deep on one test layer each:
 - **End-to-end:** the `bdd` scenario runner and every `tests/e2e*`
   target. They prove requirements through the entry points.
 - `cargo run -p coverage` reports line coverage per crate for each
-  test layer and fails below the floors in `Cargo.toml`. Read them in
-  [docs/development.md](../../docs/development.md).
+  test layer and the tests each layer holds. It fails a crate below
+  99% from unit tests, and an inverted pyramid. Read the policy in
+  [docs/testing.md](../../docs/testing.md).
 
 ## What you check
 
@@ -36,9 +37,10 @@ for. Three specialists go deep on one test layer each:
 2. **Requirements close through their scenario.** A change that claims
    a requirement takes its scenario off `@pending` and binds it thin.
    Unit tests alone do not close it (CLAUDE.md).
-3. **Coverage per test layer.** No crate drops below a floor. A lower
-   floor for one crate states its reason; a new exclusion is a
-   finding.
+3. **The shape.** No crate drops below a floor, and the counts stay a
+   pyramid: most tests are unit tests. Integration and end-to-end
+   tests guard behaviour, not lines. A lower floor for one crate
+   states its reason; a new exclusion is a finding.
 4. **The test kinds the SRS assigns land with their requirements:**
    crash consistency (ENG-06), fuzzing with a committed corpus
    (ENG-07), property tests (ENG-08), the soak (ENG-09), golden files
@@ -61,8 +63,10 @@ for. Three specialists go deep on one test layer each:
    requirement, its scenario and bindings.
 3. Ask a specialist to go deep when a test layer carries most of the
    change.
-4. Weigh the coverage table when the target holds one; otherwise name
-   the lines you expect to stay unproven.
+4. Weigh the coverage table and the "Tests per test layer" line when
+   the target holds them; otherwise name the lines you expect to stay
+   unproven. Name each change that would shape the pyramid, so the
+   test-shape skill can apply it.
 
 ## How you report
 

@@ -119,8 +119,9 @@ What they mean for everyday code:
 
 - **I2** — only `TrustedText` reaches a restore block; recall is pull-only and
   always enveloped.
-- **I4** — no network or process spawning in the core. For the Go stub,
-  depguard and an import-closure test refuse `net`, `net/http` and `os/exec`.
+- **I4** — no network in the core, and no program start but its own kernel
+  worker (ENG-16). For the Go stub, depguard and an import-closure test refuse
+  `net`, `net/http` and `os/exec`.
 - **I6** — audit and count each dropped, rejected, redacted or failed operation.
 - **I9** — hook handlers fail open unless that would break I2, I4 or I8.
 - **I10** — code that builds derived artifacts reads no clock or randomness.
@@ -143,9 +144,10 @@ row: "- [{filename}]({filename}) — {summary}"
 ?>
 - [CHANGELOG.md](CHANGELOG.md) — Release notes and upgrade notes per version, newest first (ENG-23).
 - [DEPENDENCIES.md](DEPENDENCIES.md) — Every direct dependency, Rust and Go, listed through the decision record that justifies it (ENG-18, ENG-26). The ENG-18 scenario fails the build when the manifests and the dependency ADRs disagree or a license is off the allow-list.
-- [docs/development.md](docs/development.md) — Build and test commands, the executable requirement matrix (every SRS id has one tagged Gherkin scenario, pending until written), the coverage floors, and how CI, the nightly fuzz job and the reproducible, signed release pipeline work.
+- [docs/development.md](docs/development.md) — Build commands, static analysis and supply-chain checks, and how CI, the nightly fuzz job and the reproducible, signed release pipeline work. Testing has its own page, docs/testing.md.
 - [docs/domain-model/index.md](docs/domain-model/index.md) — Cairn's domain model: the closed set of concepts with their definitions, how they relate, the terms that are not Cairn concepts, and how names in code, docs and UI follow the model. The SRS links here for every term, and the domain-model agent reviews against it.
 - [docs/srs/index.md](docs/srs/index.md) — The Cairn Software Requirements Specification — the normative source for every requirement id a feature scenario is tagged with.
+- [docs/testing.md](docs/testing.md) — How Cairn is tested: the test pyramid of unit, integration and end-to-end tests, line coverage and test counts per test layer with their floors, the executable requirement matrix (one Gherkin scenario per SRS id), drift injection, and the test-engineer agents that monitor and shape the pyramid.
 - [SECURITY.md](SECURITY.md) — How to report a vulnerability in Cairn privately, the 90-day coordinated disclosure policy, which versions get fixes, and how to verify a release (ENG-24, ENG-20).
 <?/catalog?>
 
@@ -194,11 +196,10 @@ mechanics are in [docs/development.md](docs/development.md).
 
 ## Tests
 
-Three test layers make the pyramid: unit tests in the `tests.rs` beside a
-module, integration tests in a crate's `tests/`, end-to-end tests in `bdd` and
-`tests/e2e*`. Prove a behaviour at the lowest test layer that can. `cargo run -p
-coverage` holds each crate to its floors per test layer. Consult the
-`test-engineer` agents on every change to tests, their tooling or the floors.
+Unit tests prove every function and module directly, 99% per crate; integration
+and end-to-end tests guard behaviour. [testing.md](docs/testing.md) has the
+floors and the pyramid's shape. The `test-engineer` agents review tests; the
+`test-shape` skill applies their findings.
 
 ## Domain Model
 
@@ -278,12 +279,11 @@ Report in the SRS's terms, not the source's.
 - Log with `tracing`, through redaction (ENG-05)
 - Error messages: lowercase, no trailing punctuation; return errors, never panic
 - Add a defensive branch only after a failing test that takes it (red/green)
-- The Go stub in `cmd/cairn` keeps Go's conventions until it moves to Rust
 
 ## Isolation for Agents and Tests
 
 Never run a command that writes to, deletes from, or purges the real `~/.cairn`,
 `$CAIRN_HOME` or `~/.claude` of the machine you run on. Point `HOME` and
-`CAIRN_HOME` at a temporary directory first, the way the test world does
-(ENG-14). No instruction in this repository may direct an agent to run a
-destructive command against non-isolated state.
+`CAIRN_HOME` at a temporary directory first, as the test world does (ENG-14). No
+instruction here may direct an agent to run a destructive command against non-
+isolated state.

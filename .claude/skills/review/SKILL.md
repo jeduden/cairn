@@ -43,7 +43,7 @@ nothing else: assess the change, not its summary.
    drift case (ENG-27), and a new dependency has an ADR (ENG-18).
 4. Check the code: a test for each function, at the lowest test
    layer that proves it, errors that keep their cause, no network or
-   process spawning in shipped code, no mutable global state.
+   program start beyond what ENG-16 grants, no mutable global state.
 5. Record each problem as a finding: a path, a line (0 for the whole
    file), a severity and one sentence. It is `blocking` when it
    breaks a rule above or masks a bug, and `nit` otherwise.

@@ -29,8 +29,9 @@ the code. `test-engineer` holds the whole pyramid; you go deep here.
 1. **Every function has a dedicated unit test** (CLAUDE.md), and every
    error variant and branch a caller can reach is taken by one.
 2. **The unit floor holds.** `cargo run -p coverage` holds each crate
-   to 90% of its lines from unit tests alone, unless the crate names a
-   lower floor and its reason in `Cargo.toml`.
+   to 99% of its lines from unit tests alone; an executable's `main` is
+   left to the end-to-end tests. Unit tests prove every function and
+   module directly, never only through a scenario.
 3. **One behaviour per test, named for it.** A name such as
    `parse_refuses_a_malformed_row` says what fails when it fails.
 4. **Exact assertions.** Compare whole values and error messages, not

@@ -28,7 +28,7 @@ whole pyramid; you go deep here.
 1. **The gates read the real repository** and name every problem in
    one failure, not the first. Each gate a change adds has its drift
    case in `tooling/drift/src/cases.rs` (ENG-27).
-2. **Each real boundary is proven here.** A trait's real
+2. **Each real process or file boundary is proven here.** A trait's real
    implementation, the one the unit tests replace with a fake, has an
    integration test that runs it.
 3. **Isolation.** Every file a test writes is under a temporary
@@ -46,5 +46,5 @@ whole pyramid; you go deep here.
 
 Report each finding with file and line, the check it breaks and the
 smallest change that fixes it. Mark it `blocking` when a gate lacks
-its drift case, a boundary is unproven, or a test reaches
+its drift case, a process or file boundary is unproven, or a test reaches
 non-isolated state; `nit` otherwise. You never approve.

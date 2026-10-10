@@ -17,7 +17,7 @@ You review the top of Cairn's test pyramid: the scenarios under
 ## What an end-to-end test is here
 
 - A scenario proves one requirement through Cairn's entry points: the
-  CLI, the hooks, the MCP server, or the repository for §10's checks.
+  CLI, the hook handlers, the MCP server, or the repository for §10's checks.
   Its bindings live in `tooling/scenario/tests/bdd/<section>.rs`.
 - A `tests/e2e*` target runs a built executable as a process, through
   `CARGO_BIN_EXE_<name>`, and asserts its exit code and its output.
