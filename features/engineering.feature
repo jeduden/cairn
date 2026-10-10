@@ -1,16 +1,17 @@
 Feature: Engineering quality (ENG)
 
-  Scenarios for SRS §10, one per requirement, tagged with its id and
+  The scenarios for SRS §10, one per requirement, tagged with its id and
   priority; the engineering tables carry no Traces column. A scenario
   still tagged @pending is declared but not yet written: its steps are
   bound when the plan that implements the requirement lands. The
   scenarios without @pending inspect the repository itself and run on
-  every `go test ./...`.
+  every `cargo test --workspace`.
 
   @ENG-01 @P0
   Scenario: the toolchain is pinned and release builds are static, trimmed and stamped
     Given the repository checkout
     Then "go.mod" pins the Go toolchain with a toolchain directive
+    And "rust-toolchain.toml" pins the Rust toolchain to an exact release
     And the release workflow sets CGO_ENABLED to "0"
     And the release workflow builds with "-trimpath"
     And the release workflow builds with "-buildvcs=true"
@@ -168,6 +169,7 @@ Feature: Engineering quality (ENG)
   Scenario: every direct dependency is justified by an accepted ADR with an allow-listed license
     Given the repository checkout
     When the direct dependencies are read from "go.mod"
+    And the direct dependencies are read from "Cargo.toml"
     And the ADRs are read from "docs/adr"
     Then each direct dependency is named by exactly one accepted ADR
     And every module an accepted ADR names is a direct dependency
@@ -239,7 +241,7 @@ Feature: Engineering quality (ENG)
   Scenario: every check that keeps the records in step is proven by an injected drift
     Given the repository checkout
     When the drift cases are read
-    Then the CI workflow runs the drift suite with "go test -tags drift ./internal/drift"
+    Then the CI workflow runs the drift suite with "cargo test --locked -p drift --test suite -- --ignored"
     And every drift case's edit applies to the checkout
     And every non-pending scenario that inspects the repository checkout has a drift case guarding its id
     And the requirement-scenario gate, the Appendix B check and the persona gates each have a drift case
@@ -252,7 +254,7 @@ Feature: Engineering quality (ENG)
     And the job that runs the reviewing agent holds no write permission and not the "JEDUDEN_REVIEW_AGENT_KEY" key
     And only one job holds the "JEDUDEN_REVIEW_AGENT_KEY" key, and it runs no agent
     And that job runs only after the agent's job succeeded
-    And that job decides the review with "go run ./cmd/review-gate"
+    And that job decides the review with "cargo run --locked --quiet -p review-gate"
     And the review gate decides:
       | verdict         | finding  | head    | CI     | other check | review          |
       | approve         | none     | current | passed | passed      | APPROVE         |
@@ -263,6 +265,7 @@ Feature: Engineering quality (ENG)
       | approve         | none     | moved   | passed | passed      | nothing         |
       | approve         | none     | current | failed | passed      | an error        |
       | malformed       | none     | current | passed | passed      | an error        |
+      | missing         | none     | current | passed | passed      | an error        |
 
   @ENG-29 @P0 @pending
   Scenario: an invariant or I2-review change lands only with an ADR recording a named security reviewer's approval

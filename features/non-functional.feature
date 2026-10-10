@@ -1,6 +1,6 @@
 Feature: Non-functional requirements (NFR)
 
-  Scenarios for SRS §7, one per requirement, tagged with its id. The
+  The scenarios for SRS §7, one per requirement, tagged with its id. The
   rows carry no priority column and trace no invariants, so a scenario
   here carries its id alone. A scenario still tagged @pending is
   declared but not yet written: its steps are bound when the plan that

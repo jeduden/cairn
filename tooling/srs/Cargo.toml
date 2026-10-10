@@ -1,0 +1,16 @@
+[package]
+name = "srs"
+version = "0.0.0"
+description = "Reads the SRS requirement tables, Appendix B and C and the §2.5 personas for the gates"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[dev-dependencies]
+testkit.workspace = true
+
+[lints]
+workspace = true

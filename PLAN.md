@@ -26,6 +26,7 @@ empty: |
 | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------ |
 | 2609292156 | sonnet | [The repository's knowledge follows Cairn's layers](plan/2609292156_knowledge-follows-cairn-layers/plan.md)        |
 | 2610012322 | opus   | [Scope Cairn for agent fleets: shared, real-time, public sessions](plan/2610012322_cairn-for-agent-fleets/plan.md) |
+| 2610050706 | sonnet | [Move the whole toolchain from Go to Rust](plan/2610050706_toolchain-to-rust/plan.md)                              |
 <?/catalog?>
 
 ## All plans
@@ -71,5 +72,5 @@ empty: |
 | 2610012322 | 🔳     | opus   | [Scope Cairn for agent fleets: shared, real-time, public sessions](plan/2610012322_cairn-for-agent-fleets/plan.md) |
 | 2610022338 | 🔲     | opus   | [Cairn's lane experience and peer network: no central service](plan/2610022338_cairn-network-side/plan.md)         |
 | 2610031222 | 🔲     | opus   | [Sandboxed agents: the boundary Cairn's owner acts rest on](plan/2610031222_agent-sandboxing/plan.md)              |
-| 2610050706 | 🔲     | sonnet | [Move the whole toolchain from Go to Rust](plan/2610050706_toolchain-to-rust/plan.md)                              |
+| 2610050706 | 🔳     | sonnet | [Move the whole toolchain from Go to Rust](plan/2610050706_toolchain-to-rust/plan.md)                              |
 <?/catalog?>

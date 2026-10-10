@@ -1,0 +1,16 @@
+[package]
+name = "drift"
+version = "0.0.0"
+description = "Registers, for every check that keeps the records in step, the drift it exists to catch, and injects it (ENG-27)"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[dev-dependencies]
+testkit.workspace = true
+
+[lints]
+workspace = true

@@ -23,7 +23,41 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # The repository tooling is Rust (plan 2610050706). Every Rust job
+  # installs the release rust-toolchain.toml names (ENG-01), reading it
+  # from there, so no job names another.
+  #
+  # Every unit and integration test, and every scenario through
+  # cucumber-rs. Pending scenarios are skipped and counted, so the
+  # backlog is visible in every run.
   test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No job here pushes, and a checkout that leaves a token in
+          # .git/config hands one to every later step.
+          persist-credentials: false
+      - name: Install the pinned Rust toolchain
+        run: >-
+          rustup toolchain install
+          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          --profile minimal --component clippy,rustfmt,llvm-tools-preview
+          --no-self-update
+      - run: cargo test --workspace --locked
+      # The pending backlog, counted. A measurement, not a gate.
+      - name: Count scenarios
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          cargo test --locked --quiet -p scenario --test bdd |
+            grep '^scenarios:' | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # ENG-11: line coverage per test layer (unit, integration,
+  # end-to-end) and per crate, held to the floors in Cargo.toml's
+  # [workspace.metadata.coverage]. The table lands in the job summary,
+  # and Codecov receives one flag per test layer.
+  coverage:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -32,8 +66,133 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # No job here pushes, and a checkout that leaves a token in
-          # .git/config hands one to every later step.
+          persist-credentials: false
+      - name: Install the pinned Rust toolchain
+        run: >-
+          rustup toolchain install
+          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          --profile minimal --component clippy,rustfmt,llvm-tools-preview
+          --no-self-update
+      # An exact version from crates.io, built against its own
+      # lockfile. Bump it by hand, the way the zizmor version is.
+      - run: cargo install --locked cargo-llvm-cov@0.9.1
+      - run: cargo run --locked -p coverage
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage
+          path: target/coverage/
+      # OIDC over a stored token: the runner mints a short-lived
+      # identity that Codecov exchanges for an upload grant, so no
+      # secret sits in this repository's settings. A fork PR has no
+      # id-token, so the steps are skipped rather than failing.
+      - name: Upload unit coverage to Codecov
+        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          files: target/coverage/unit.lcov
+          flags: unit
+          # Only the named file: the uploader's search would sweep up
+          # the other test layers' lcov beside it under this flag.
+          disable_search: true
+          fail_ci_if_error: false
+      - name: Upload integration coverage to Codecov
+        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          files: target/coverage/integration.lcov
+          flags: integration
+          # Only the named file: the uploader's search would sweep up
+          # the other test layers' lcov beside it under this flag.
+          disable_search: true
+          fail_ci_if_error: false
+      - name: Upload end-to-end coverage to Codecov
+        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          files: target/coverage/e2e.lcov
+          flags: e2e
+          # Only the named file: the uploader's search would sweep up
+          # the other test layers' lcov beside it under this flag.
+          disable_search: true
+          fail_ci_if_error: false
+
+  # ENG-16: clippy with warnings denied, and rustfmt's layout.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned Rust toolchain
+        run: >-
+          rustup toolchain install
+          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          --profile minimal --component clippy,rustfmt,llvm-tools-preview
+          --no-self-update
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+  # ENG-16: cargo-deny holds every crate in the tree to ENG-18's
+  # license allow-list (deny.toml names the exceptions), to crates.io
+  # and to no wildcard; cargo-audit refuses a crate with a known
+  # vulnerability.
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned Rust toolchain
+        run: >-
+          rustup toolchain install
+          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          --profile minimal --component clippy,rustfmt,llvm-tools-preview
+          --no-self-update
+      # Exact versions from crates.io, built against their own
+      # lockfiles. Bump them by hand, the way the zizmor version is.
+      - run: cargo install --locked cargo-deny@0.20.2 cargo-audit@0.22.2
+      - run: cargo deny check licenses bans sources
+      - run: cargo audit
+
+  # ENG-27: every check that keeps the specification, its scenarios
+  # and the repository's records in step is proven here. The suite
+  # injects each registered drift into a copy of the checkout and fails
+  # when the check it names lets the drift through. It needs mdsmith on
+  # PATH, so it runs here rather than in `cargo test --workspace`.
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned Rust toolchain
+        run: >-
+          rustup toolchain install
+          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          --profile minimal --component clippy,rustfmt,llvm-tools-preview
+          --no-self-update
+      # The same pinned mdsmith the markdown job lints with, installed
+      # onto PATH without running it. Bump the SHA and `version` together.
+      - uses: jeduden/mdsmith@0ca0d2f7c95ab53e3e9ed8851150af98b95088fb # v0.55.1
+        with:
+          version: v0.55.1
+      - run: cargo test --locked -p drift --test suite -- --ignored
+
+  # The Go that remains until phase 4 of plan 2610050706: the
+  # `cairn version` stub and its import-closure test (SEC-01).
+  go:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The OIDC token Codecov exchanges for an upload grant, below.
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
@@ -57,36 +216,16 @@ jobs:
           for mod in plan/*/bench/go.mod; do
             (cd "$(dirname "$mod")" && go vet ./... && go test ./...)
           done
-      # ENG-09: every test under the race detector. One profile from
-      # every test — the unit tests and the godog scenarios alike;
-      # -coverpkg=./... attributes a hit to the package whose code ran,
-      # so a scenario step in cmd/cairn counts for the internal package
-      # it drives. Pending scenarios are skipped, and `go test -v`
-      # names each one, so the backlog is visible in every run.
-      - run: go test -race ./... -coverpkg=./... -coverprofile=cover.out
-      # codecov is a soft ratchet; this is the hard floor. Every
-      # package named here stays at 100% of its non-excluded
+      # ENG-09: every Go test under the race detector.
+      - run: go test -race ./... -coverprofile=cover.out
+      # The hard floor: cmd/cairn stays at 100% of its non-excluded
       # statements (scripts/coverage-exclude.txt lists the justified
-      # exceptions). ENG-11's 90%/80% floors join this call as the
-      # product packages land.
-      - run: scripts/check-coverage.sh 100 ./cmd/cairn ./internal/srs ./internal/scenario ./internal/adr ./internal/drift ./internal/review ./cmd/review-gate
-      # The pending backlog, counted. A measurement, not a gate.
-      - name: Count pending scenarios
-        if: ${{ !cancelled() }}
-        shell: bash
-        run: |
-          go test ./cmd/cairn -run TestFeatures -v -count=1 |
-            awk '/--- SKIP/ {s++} /--- PASS: TestFeatures\// {p++}
-                 END {printf "scenarios: %d passing, %d pending\n", p, s}' |
-            tee -a "$GITHUB_STEP_SUMMARY"
-      - name: Summarise coverage
-        if: ${{ !cancelled() }}
-        shell: bash
-        run: go tool cover -func=cover.out | tail -1
+      # exceptions).
+      - run: scripts/check-coverage.sh 100 ./cmd/cairn
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
-          name: coverage
+          name: go-coverage
           path: cover.out
       # OIDC over a stored token: the runner mints a short-lived
       # identity that Codecov exchanges for an upload grant, so no
@@ -98,6 +237,9 @@ jobs:
         with:
           use_oidc: true
           files: cover.out
+          flags: go
+          # Only the named file, never what the uploader's search finds.
+          disable_search: true
           fail_ci_if_error: false
 
   # NFR-10 / CON-02: the three release targets compile as static
@@ -125,7 +267,7 @@ jobs:
           CGO_ENABLED: "0"
         run: go build -trimpath -buildvcs=true -o /dev/null ./cmd/cairn
 
-  lint:
+  go-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -146,7 +288,7 @@ jobs:
 
   # ENG-16: no reachable known vulnerability in the module or the
   # standard library it builds with.
-  vuln:
+  go-vuln:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -173,28 +315,7 @@ jobs:
           version: v0.55.1
           args: check .
 
-  # ENG-27: every check that keeps the specification, its scenarios
-  # and the repository's records in step is proven here. The suite
-  # injects each registered drift into a copy of the checkout and fails
-  # when the check it names lets the drift through. It needs mdsmith on
-  # PATH, so it runs here rather than in `go test ./...`.
-  drift:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-      # The same pinned mdsmith the markdown job lints with, installed
-      # onto PATH without running it. Bump the SHA and `version` together.
-      - uses: jeduden/mdsmith@0ca0d2f7c95ab53e3e9ed8851150af98b95088fb # v0.55.1
-        with:
-          version: v0.55.1
-      - run: go test -tags drift ./internal/drift -count=1 -v
-
-  # Workflows are an attack surface go vet never reads. zizmor checks
+  # Workflows are an attack surface no compiler reads. zizmor checks
   # them for an unpinned action, a token left in a checkout, an input
   # interpolated into a shell.
   workflows:
@@ -224,7 +345,7 @@ jobs:
   ci:
     name: CI
     if: ${{ always() }}
-    needs: [test, build, lint, vuln, markdown, workflows, drift]
+    needs: [test, coverage, lint, supply-chain, drift, go, build, go-lint, go-vuln, markdown, workflows]
     runs-on: ubuntu-latest
     steps:
       - name: Fail unless every job passed

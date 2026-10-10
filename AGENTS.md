@@ -18,7 +18,7 @@ compaction, and lets Claude recall exact history on demand. Stored history never
 becomes a prompt-injection channel.
 
 Status: pre-implementation. The repository holds the specification, the
-requirement matrix, and the CI and release pipeline, its tooling in Go. The
+requirement matrix, and the CI and release pipeline, its tooling in Rust. The
 product arrives plan by plan; ADR-2610050528 proposes its language.
 
 ## The Invariants Come First
@@ -129,8 +129,9 @@ What they mean for everyday code:
 
 - **I2** — only `TrustedText` reaches a restore block; recall is pull-only and
   always enveloped.
-- **I4** — no `net`, `net/http` or `os/exec` in the core; depguard and an
-  import-closure test enforce it.
+- **I4** — no network in the core, and no program start but its own kernel
+  worker (ENG-16). For the Go stub, depguard and an import-closure test refuse
+  `net`, `net/http` and `os/exec`.
 - **I6** — audit and count each dropped, rejected, redacted or failed operation.
 - **I9** — hook handlers fail open unless that would break I2, I4 or I8.
 - **I10** — code that builds derived artifacts reads no clock or randomness.
@@ -152,10 +153,11 @@ header: ""
 row: "- [{filename}]({filename}) — {summary}"
 ?>
 - [CHANGELOG.md](CHANGELOG.md) — Release notes and upgrade notes per version, newest first (ENG-23).
-- [DEPENDENCIES.md](DEPENDENCIES.md) — Every direct Go dependency, listed through the decision record that justifies it (ENG-18, ENG-26). The ENG-18 scenario fails the build when go.mod and the dependency ADRs disagree or a license is off the allow-list.
-- [docs/development.md](docs/development.md) — Build and test commands, the executable requirement matrix (every SRS id has one tagged Gherkin scenario, pending until written), the coverage floors, and how CI, the nightly fuzz job and the reproducible, signed release pipeline work.
+- [DEPENDENCIES.md](DEPENDENCIES.md) — Every direct dependency, Rust and Go, listed through the decision record that justifies it (ENG-18, ENG-26). The ENG-18 scenario fails the build when the manifests and the dependency ADRs disagree or a license is off the allow-list.
+- [docs/development.md](docs/development.md) — Build commands, static analysis and supply-chain checks, and how CI, the nightly fuzz job and the reproducible, signed release pipeline work. Testing has its own page, docs/testing.md.
 - [docs/domain-model/index.md](docs/domain-model/index.md) — Cairn's domain model: the closed set of concepts with their definitions, how they relate, the terms that are not Cairn concepts, and how names in code, docs and UI follow the model. The SRS links here for every term, and the domain-model agent reviews against it.
 - [docs/srs/index.md](docs/srs/index.md) — The Cairn Software Requirements Specification — the normative source for every requirement id a feature scenario is tagged with.
+- [docs/testing.md](docs/testing.md) — How Cairn is tested: the test pyramid of unit, integration and end-to-end tests, line coverage and test counts per test layer with their floors, the executable requirement matrix (one Gherkin scenario per SRS id), drift injection, and the test-engineer agents that monitor and shape the pyramid.
 - [docs/use-cases.md](docs/use-cases.md) — Pending use cases, one file each under docs/use-cases, before the SRS covers them: who wants each, what it is, the milestone it targets and its status. Not normative; an entry moves into the SRS when a plan takes it up.
 - [SECURITY.md](SECURITY.md) — How to report a vulnerability in Cairn privately, the 90-day coordinated disclosure policy, which versions get fixes, and how to verify a release (ENG-24, ENG-20).
 <?/catalog?>
@@ -168,8 +170,9 @@ summary in the index there; open only the section a task touches.
 - Any change follows Red/Green TDD: failing test, then pass, then commit
 - Keep commits small and focused on one change
 - Run `mdsmith check .` before committing; all Markdown must pass
-- Never modify `.mdsmith.yml` (linter configuration) without explicit user
-  consent
+- Never modify `.mdsmith.yml` (linter configuration) without explicit consent
+- Every direct dependency needs an accepted ADR under `docs/adr/`, listed in
+  [DEPENDENCIES.md](DEPENDENCIES.md) (ENG-18, ENG-26); aim to add none
 - Run `mdsmith merge-driver install` once per clone (development.md says why)
 
 ## Review
@@ -190,16 +193,23 @@ its traced invariants, and a gate test fails the build when the two drift. The
 mechanics are in [docs/development.md](docs/development.md).
 
 - Implementing a requirement means making its scenario pass: drop `@pending`,
-  make the steps concrete, bind them in `cmd/cairn/bdd_<section>_test.go`. Unit
-  tests alone do not close a requirement.
+  make the steps concrete, bind them in
+  `tooling/scenario/tests/bdd/<section>.rs`. Unit tests alone do not close a
+  requirement.
 - A new or changed requirement lands with its scenario in the same change,
   `@pending` until written.
 - Never delete, retag or re-pend a scenario to make CI green. A scenario that
   cannot pass as written is a finding to raise.
 - A check that inspects the repository's own records lands with a drift case in
-  `internal/drift` that proves it fails (ENG-27).
+  `tooling/drift/src/cases.rs` that proves it fails (ENG-27).
 - Behavior surfaced mid-work — a bug found while fixing something else — is
   checked against the matrix before being judged covered.
+
+## Tests
+
+Unit tests prove each function directly, 99% per crate; integration and
+end-to-end tests guard behaviour ([testing.md](docs/testing.md)). The
+`test-engineer` agents review tests; the `test-shape` skill reshapes them.
 
 ## Domain Model
 
@@ -225,7 +235,7 @@ The subagents under `.claude/agents`, each one perspective:
 
 <?catalog
 glob:
-  - ".claude/agents/{domain-model,persona-*}.md"
+  - ".claude/agents/{domain-model,persona-*,test-engineer}.md"
 sort: path
 header: ""
 row: "- [{name}]({filename}) — {description}"
@@ -240,6 +250,7 @@ row: "- [{name}]({filename}) — {description}"
 - [persona-returning-owner](.claude/agents/persona-returning-owner.md) — Someone coming back after hours or days who asks one question first: what did my agents do while I was away? Reviews a pull request, plan, pitch, design or spec from this perspective and reports where it fails them. Never approves.
 - [persona-reviewer](.claude/agents/persona-reviewer.md) — A reviewer deciding whether a room's branch may land: reads the story, the diff and the evidence, and signs off or asks for changes. Reviews a pull request, plan, pitch, design or spec from this perspective and reports where it fails them. Never approves.
 - [persona-security-officer](.claude/agents/persona-security-officer.md) — A security reviewer who must sign off that Cairn adds no new exfiltration or injection path, and that its audit trail holds. Reviews a pull request, plan, pitch, design or spec from this perspective and reports where it fails them. Never approves.
+- [test-engineer](.claude/agents/test-engineer.md) — Guards Cairn's test pyramid as a whole: each behaviour proven at the lowest test layer that can prove it, each requirement closed by its scenario, coverage held per test layer, and the test kinds the SRS asks for. Reviews a pull request, plan, design or spec and reports where its tests fall short. Never approves.
 <?/catalog?>
 
 ## Plan Maintenance
@@ -263,37 +274,27 @@ Report in the SRS's terms, not the source's.
   upheld — not the functions or types touched.
 - Reach for a source entity only when the requirement frame cannot carry the
   point, and trace from the requirement down to it.
-- Name the mechanism that verified a claim — godog scenario, fuzz target, golden
-  file, CI job — before folding its result into plan terms.
+- Name the mechanism that verified a claim — cucumber scenario, fuzz target,
+  golden file, CI job — before folding its result into plan terms.
 
 ## Code Style
 
-- Follow standard Go conventions (gofmt, goimports)
-- Keep functions small and focused; each ships with a dedicated unit test
-- No mutable package-level state; all I/O behind interfaces a test can inject;
-  every blocking call takes a `context.Context` with a deadline (ENG-03)
-- Wrap errors with `%w`; a failure class that feeds a counter gets a typed
-  error; panics stop at the hook and MCP entry points (ENG-04)
-- Log with `log/slog`, and pass log fields through redaction (ENG-05)
-- Error messages: lowercase, no trailing punctuation
-- Prefer returning errors over panicking
+- rustfmt, and clippy with every warning denied; the workspace lints forbid
+  `unsafe` and refuse `unwrap`, `expect` and `panic!` outside tests
+- Small functions, each with a unit test in the `tests.rs` beside its module
+- No mutable global state; I/O behind a trait or closure a test can inject;
+  every blocking call takes a deadline (ENG-03)
+- Errors keep their cause (`source()`); a counted failure class gets its own
+  variant; panics stop at the hook and MCP entry points (ENG-04)
+- Log with `tracing`, through redaction (ENG-05)
+- Error messages: lowercase, no trailing punctuation; return errors, never panic
 - Add a defensive branch only after a failing test that takes it (red/green)
 
 ## Isolation for Agents and Tests
 
 Never run a command that writes to, deletes from, or purges the real `~/.cairn`,
 `$CAIRN_HOME` or `~/.claude` of the machine you run on. Point `HOME` and
-`CAIRN_HOME` at a temporary directory first, the way the test world does
-(ENG-14). No instruction in this repository may direct an agent to run a
-destructive command against non-isolated state.
-
-## Dependencies
-
-Every direct dependency needs an accepted decision record under `docs/adr/`
-(ENG-18, ENG-26). Its Decision table gives the module's purpose, license and
-maintenance status, and its Alternatives section weighs what was passed over.
-The license must be on the allow-list. [DEPENDENCIES.md](DEPENDENCIES.md) lists
-those records, generated by `mdsmith fix`. The ENG-18 scenario fails the build
-otherwise. Aim to add none: the target is at most ten direct dependencies in
-total.
+`CAIRN_HOME` at a temporary directory first, as the test world does (ENG-14). No
+instruction here may direct an agent to run a destructive command against non-
+isolated state.
 <?/include?>

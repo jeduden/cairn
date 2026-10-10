@@ -1,0 +1,68 @@
+# The Cargo workspace (ENG-02). Today it holds the repository tooling
+# under tooling/, ported from Go by plan 2610050706; the product's
+# crates join it as their plans land.
+#
+# Every external dependency is declared once, in
+# [workspace.dependencies], and each crate takes it with
+# `workspace = true`. The ENG-18 scenario reads the direct
+# dependencies through `cargo metadata`, and each needs an accepted
+# ADR under docs/adr.
+[workspace]
+resolver = "3"
+members = ["tooling/*"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.99"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+cucumber = "0.23.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+
+adr = { path = "tooling/adr" }
+drift = { path = "tooling/drift" }
+coverage = { path = "tooling/coverage" }
+engineering = { path = "tooling/engineering" }
+finding-ledger = { path = "tooling/finding-ledger" }
+review-gate = { path = "tooling/review-gate" }
+scenario = { path = "tooling/scenario" }
+srs = { path = "tooling/srs" }
+testkit = { path = "tooling/testkit" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+# Errors are returned, never panicked (CLAUDE.md). clippy.toml lets a
+# test unwrap, expect and panic.
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+
+# The test pyramid's policy, which `cargo run -p coverage` enforces
+# (ENG-11). It measures line coverage per test layer: unit (the tests
+# beside the code), integration (a crate's tests/ targets) and
+# end-to-end (the bdd scenario runner and every tests/e2e* target).
+#
+# - Unit tests prove every function and module directly: each crate
+#   keeps 99% of its lines covered by unit tests alone. An executable's
+#   entry point (entry-points) is proven end to end instead, so the
+#   unit and integration measures leave it out.
+# - Integration and end-to-end tests guard behaviour: requirements and
+#   real boundaries. They are measured and reported, with no floor.
+# - `all`, every test layer together, holds each crate at 100%.
+# - `pyramid` fails a run whose test counts invert the pyramid: more
+#   integration than unit tests, or more end-to-end than integration.
+#
+# Unit-test files (tests.rs) and every tests/ directory are left out of
+# the measure, so the numbers count shipped code. A crate's own floors
+# go under [workspace.metadata.coverage.crates.<name>.floors];
+# ENG-11's floors for the product crates join that way as they land.
+[workspace.metadata.coverage]
+exclude = '(^|/)tests\.rs$'
+entry-points = ["src/main.rs"]
+floors = { all = 100, unit = 99 }
+pyramid = true
