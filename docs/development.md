@@ -26,6 +26,8 @@ phase 4 of plan
   by its requirement id
 - `cargo test -p srs --test gates` and `cargo test -p scenario --test
   gate` — the gates alone
+- `cargo run -p coverage` — line coverage per test layer and per crate,
+  held to the floors (see Coverage)
 - `cargo fmt --all --check` and `cargo clippy --workspace --all-targets
   -- -D warnings` — layout and lint (ENG-16)
 - `cargo deny check licenses bans sources` and `cargo audit` — the
@@ -124,19 +126,48 @@ new field on the world.
 
 ## Coverage
 
-[cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov) measures
-line coverage of the Rust tooling. Unit tests live in `tests.rs` files
-beside the code they test, and the measure leaves those files out, so
-the number counts shipped code only. A test that drives a built
-executable as a process covers its `main`, so no exclusion is needed.
+Coverage is measured per test layer, so the test pyramid is visible
+in every run rather than one blended number:
 
-The Go stub keeps its own hard floor:
-[scripts/check-coverage.sh](../scripts/check-coverage.sh) fails when
-`cmd/cairn` drops below 100% of its non-excluded statements.
-[scripts/coverage-exclude.txt](../scripts/coverage-exclude.txt) lists
-each justified exclusion; only a pure process boundary such as
-`main()` belongs there. Codecov's project and patch thresholds in
-[codecov.yml](../codecov.yml) are a soft ratchet on top.
+- **unit**: the tests beside the code, in each crate's `src/`, in the
+  `tests.rs` beside the module they test;
+- **integration**: a crate's `tests/` targets, which drive its public
+  API against the real repository or the file system;
+- **end-to-end**: the `bdd` scenario runner and every `tests/e2e*`
+  target, which drive the system through its entry points, a built
+  executable run as a process among them. ENG-12's confined suite and
+  ENG-17's live test join this layer when they land.
+
+`cargo run -p coverage` runs
+[cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov) once per
+test layer, over one build. It prints line coverage per crate for
+each layer and for all of them. It writes each layer's lcov to
+`target/coverage/`. Install the tool first, with `cargo install
+--locked cargo-llvm-cov@0.9.1`.
+
+The floors live in [Cargo.toml](../Cargo.toml) under
+`[workspace.metadata.coverage]`, and the tool fails below them:
+
+- every test layer together: 100% of each tooling crate's lines;
+- the unit test layer alone: 90%, so most lines are proven by unit
+  tests, not only by scenarios. A crate whose process or file boundary
+  belongs to its integration tests may name a lower unit floor of its
+  own, with the reason beside it.
+
+ENG-11's floors for the product crates (90% for the security-sensitive
+ones, 80% overall) join the same table as those crates land.
+
+`tests.rs` files are left out of the measure, so the numbers count
+shipped code only. A test that runs a built executable as a process
+covers its `main`, so no line needs an exclusion. CI's `coverage` job
+writes the table into its summary and uploads one Codecov flag per
+test layer; Codecov's thresholds in [codecov.yml](../codecov.yml) are
+a soft ratchet on top.
+
+The Go stub keeps its own floor of 100%, which
+[scripts/check-coverage.sh](../scripts/check-coverage.sh) enforces.
+[scripts/coverage-exclude.txt](../scripts/coverage-exclude.txt) names
+its one exclusion: `main()`, a pure process boundary.
 
 ## Static analysis
 

@@ -53,6 +53,64 @@ jobs:
           cargo test --locked --quiet -p scenario --test bdd |
             grep '^scenarios:' | tee -a "$GITHUB_STEP_SUMMARY"
 
+  # ENG-11: line coverage per test layer (unit, integration,
+  # end-to-end) and per crate, held to the floors in Cargo.toml's
+  # [workspace.metadata.coverage]. The table lands in the job summary,
+  # and Codecov receives one flag per test layer.
+  coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The OIDC token Codecov exchanges for an upload grant, below.
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned Rust toolchain
+        run: >-
+          rustup toolchain install
+          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          --profile minimal --component clippy,rustfmt,llvm-tools-preview
+          --no-self-update
+      # An exact version from crates.io, built against its own
+      # lockfile. Bump it by hand, the way the zizmor version is.
+      - run: cargo install --locked cargo-llvm-cov@0.9.1
+      - run: cargo run --locked -p coverage
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage
+          path: target/coverage/
+      # OIDC over a stored token: the runner mints a short-lived
+      # identity that Codecov exchanges for an upload grant, so no
+      # secret sits in this repository's settings. A fork PR has no
+      # id-token, so the steps are skipped rather than failing.
+      - name: Upload unit coverage to Codecov
+        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          files: target/coverage/unit.lcov
+          flags: unit
+          fail_ci_if_error: false
+      - name: Upload integration coverage to Codecov
+        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          files: target/coverage/integration.lcov
+          flags: integration
+          fail_ci_if_error: false
+      - name: Upload end-to-end coverage to Codecov
+        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          files: target/coverage/e2e.lcov
+          flags: e2e
+          fail_ci_if_error: false
+
   # ENG-16: clippy with warnings denied, and rustfmt's layout.
   lint:
     runs-on: ubuntu-latest
@@ -170,6 +228,7 @@ jobs:
         with:
           use_oidc: true
           files: cover.out
+          flags: go
           fail_ci_if_error: false
 
   # NFR-10 / CON-02: the three release targets compile as static
@@ -275,7 +334,7 @@ jobs:
   ci:
     name: CI
     if: ${{ always() }}
-    needs: [test, lint, supply-chain, drift, go, build, go-lint, go-vuln, markdown, workflows]
+    needs: [test, coverage, lint, supply-chain, drift, go, build, go-lint, go-vuln, markdown, workflows]
     runs-on: ubuntu-latest
     steps:
       - name: Fail unless every job passed

@@ -24,6 +24,7 @@ serde_json = "1.0.151"
 
 adr = { path = "tooling/adr" }
 drift = { path = "tooling/drift" }
+coverage = { path = "tooling/coverage" }
 engineering = { path = "tooling/engineering" }
 finding-ledger = { path = "tooling/finding-ledger" }
 review-gate = { path = "tooling/review-gate" }
@@ -40,3 +41,22 @@ unsafe_code = "forbid"
 unwrap_used = "deny"
 expect_used = "deny"
 panic = "deny"
+
+# Line-coverage floors, in percent, that `cargo run -p coverage` holds
+# every crate to (ENG-11). It measures each test layer apart: unit (the
+# tests beside the code), integration (a crate's tests/ targets) and
+# end-to-end (the bdd scenario runner and every tests/e2e* target).
+# `all` is every test layer together. The unit floor keeps the
+# pyramid's base wide: most lines are proven by unit tests, not only
+# by scenarios. Unit-test files are left out of the measure, so the
+# numbers count shipped code. A crate's own floors go under
+# [workspace.metadata.coverage.crates.<name>.floors]; ENG-11's 90% and
+# 80% floors for the product crates join that way as they land.
+[workspace.metadata.coverage]
+exclude = '(^|/)tests\.rs$'
+floors = { all = 100, unit = 90 }
+
+# coverage's real host runs cargo and writes files: a process boundary
+# its integration tests prove, so its unit tests reach less of it.
+[workspace.metadata.coverage.crates.coverage]
+floors = { unit = 80 }
