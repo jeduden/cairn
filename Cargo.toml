@@ -67,8 +67,8 @@ entry-points = ["src/main.rs"]
 floors = { all = 100, unit = 99 }
 pyramid = true
 
-# Release builds are reproducible (ENG-19): one codegen unit and no
-# debug information or symbols, so two builders give the same bytes.
+# Release builds: one codegen unit and no debug information or
+# symbols.
 [profile.release]
 codegen-units = 1
 lto = "thin"

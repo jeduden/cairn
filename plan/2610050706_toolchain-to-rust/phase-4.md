@@ -7,8 +7,9 @@ result: false
 # Phase 4: the core executable in Rust; Go removed
 
 Requirements. None closes. ENG-01's scenario now checks the Rust
-release flags; ENG-19 and SEC-01 stay pending, with the build-time
-evidence below in place.
+release flags; SEC-01 stays pending, with the build-time evidence
+below in place. ENG-19 was withdrawn (SRS 2.35-draft): the release
+build is no longer checked for reproducibility.
 
 What lands:
 
@@ -17,14 +18,15 @@ What lands:
   `--json` adds the commit the build stamped.
 - [x] The release build in one reusable workflow, `build.yml`, which
   CI runs on every change and the release workflow runs before it
-  publishes. It needs the pinned Rust and nothing else. An x86_64 and
-  an arm64 Linux runner each build `linux/amd64` and `linux/arm64`
-  (musl, static, linked by rust-lld); an arm64 and an x86_64 macOS
-  runner each build `darwin/arm64`. A last job compares each target's
-  two builds bit for bit (ENG-19), and each binary runs once on its
-  own platform. A first version linked every target with zig through
-  cargo-zigbuild on the two Linux runners; it was dropped to keep the
-  build to the Rust toolchain alone.
+  publishes. It needs the pinned Rust and nothing else. One x86_64
+  Linux runner builds `linux/amd64` and `linux/arm64` (musl, static,
+  linked by rust-lld) and `windows/amd64` (mingw-w64); one arm64 macOS
+  runner builds `darwin/arm64`. Each binary runs once on its own
+  platform. Each target was first built by two builders and compared
+  bit for bit (ENG-19); that check went with ENG-19. A first version
+  linked every target with zig through cargo-zigbuild on the two Linux
+  runners; it was dropped to keep the build to the Rust toolchain
+  alone.
 - [x] ENG-01's steps check the Rust release flags:
   `--remap-path-prefix`, the stamped commit, and the musl targets.
 - [x] Reach evidence for the core crate replaces the import-closure
