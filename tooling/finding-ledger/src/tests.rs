@@ -123,6 +123,14 @@ fn validate_reports_each_malformed_theme() {
             theme("T-7", FIXED, vec![text("", "q")]),
             "T-7: a cited text needs a file and a quote",
         ),
+        (
+            theme("T-8", FIXED, vec![text("/etc/passwd", "q")]),
+            r#"T-8: cited file "/etc/passwd" is not a path inside the repository"#,
+        ),
+        (
+            theme("T-9", FIXED, vec![text("docs/../../a.md", "q")]),
+            r#"T-9: cited file "docs/../../a.md" is not a path inside the repository"#,
+        ),
     ];
     for (t, want) in cases {
         assert_eq!(Ledger { themes: vec![t] }.validate(), [want]);
@@ -149,6 +157,15 @@ fn numbered_wants_digits_after_the_prefix() {
     assert!(!numbered("M", "M"));
     assert!(!numbered("M7a", "M"));
     assert!(!numbered("R7", "M"));
+}
+
+#[test]
+fn inside_repository_refuses_a_root_or_a_parent() {
+    assert!(inside_repository("docs/domain-model/places.md"));
+    assert!(inside_repository("./docs/a.md"));
+    assert!(!inside_repository("/etc/passwd"));
+    assert!(!inside_repository("../a.md"));
+    assert!(!inside_repository("docs/../../a.md"));
 }
 
 #[test]

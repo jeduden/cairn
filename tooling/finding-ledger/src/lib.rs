@@ -10,6 +10,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::io;
+use std::path::{Component, Path};
 
 use serde::Deserialize;
 
@@ -229,6 +230,11 @@ impl Theme {
                     "{}: a cited text needs a file and a quote",
                     self.id
                 ));
+            } else if !inside_repository(&x.file) {
+                problems.push(format!(
+                    "{}: cited file {:?} is not a path inside the repository",
+                    self.id, x.file
+                ));
             }
         }
 
@@ -240,6 +246,14 @@ impl Theme {
 fn numbered(s: &str, prefix: &str) -> bool {
     s.strip_prefix(prefix)
         .is_some_and(|rest| !rest.is_empty() && rest.bytes().all(|b| b.is_ascii_digit()))
+}
+
+/// Whether `file` names a path relative to the repository root that
+/// stays inside it: no root, no prefix and no `..`.
+fn inside_repository(file: &str) -> bool {
+    Path::new(file)
+        .components()
+        .all(|c| matches!(c, Component::Normal(_) | Component::CurDir))
 }
 
 /// Collapses every run of whitespace to one space.
