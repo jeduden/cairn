@@ -63,6 +63,7 @@ rules:
       - "plan/*.md"
       - "plan/*/plan.md"
       - "docs/adr/*.md"
+      - "docs/use-cases/UC-*.md"
     exclude:
       - "plan/proto.md"
 
@@ -110,6 +111,29 @@ kinds:
         - heading: "Decision"
         - heading: "Alternatives"
         - heading: "Consequences"
+  use-case:
+    # One pending use case per file under docs/use-cases, front matter
+    # and a title only: the docs/use-cases.md index generates its table
+    # from the front matter. The summary is the use case itself, one
+    # sentence of at most 40 words, so an entry stays a use case and
+    # never grows into a design.
+    path-pattern: "docs/use-cases/UC-*.md"
+    schema:
+      filename: "UC-[0-9][0-9][0-9].md"
+      frontmatter:
+        id: '=~"^UC-[0-9]{3}$"'
+        title: nonEmpty
+        summary: '=~"^[^ ]+( [^ ]+){0,39}$" & !~"[.!?;] "'
+        personas: '=~"^U[1-9](, U[1-9])*$"'
+        milestone: '=~"^(M[1-9]( to M[1-9])?|unplanned)$"'
+        status: '"pending" | "specified" | "shipped"'
+        "requirements?": '=~"^[A-Z]+-[0-9]{2}(, [A-Z]+-[0-9]{2})*$"'
+      closed: true
+      sections:
+        - heading: null
+    rules:
+      max-file-length:
+        max: 20
   skill:
     # The plan-* skills `frit skills` writes into .claude/skills. A
     # skill loads into a working session, so every line is paid for:
@@ -293,6 +317,8 @@ kinds:
 kind-assignment:
   - glob: ["docs/**/*.md", "!docs/srs/*.md", "!docs/adr/*.md"]
     kinds: [doc]
+  - glob: ["docs/use-cases/UC-*.md"]
+    kinds: [use-case]
   - glob: ["docs/domain-model/index.md"]
     kinds: [domain-model]
   - glob: ["docs/domain-model/*.md", "!docs/domain-model/index.md"]
