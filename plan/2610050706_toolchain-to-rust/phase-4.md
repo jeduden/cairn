@@ -17,14 +17,14 @@ What lands:
   `--json` adds the commit the build stamped.
 - [x] The release build in one reusable workflow, `build.yml`, which
   CI runs on every change and the release workflow runs before it
-  publishes. Two independent builders, an x86_64 and an arm64 Linux
-  runner, cross-build `linux/amd64`, `linux/arm64` (musl, static) and
-  `darwin/arm64` with zig as the linker through cargo-zigbuild, both
-  pinned. A third job compares the builders bit for bit (ENG-19), and
-  each binary runs once on its own platform. The plan named Linux and
-  macOS builders. On macOS, rustc would find the runner's own Xcode
-  SDK, which a Linux builder lacks, so the second builder is the arm64
-  Linux runner and macOS only runs the binary.
+  publishes. It needs the pinned Rust and nothing else. An x86_64 and
+  an arm64 Linux runner each build `linux/amd64` and `linux/arm64`
+  (musl, static, linked by rust-lld); an arm64 and an x86_64 macOS
+  runner each build `darwin/arm64`. A last job compares each target's
+  two builds bit for bit (ENG-19), and each binary runs once on its
+  own platform. A first version linked every target with zig through
+  cargo-zigbuild on the two Linux runners; it was dropped to keep the
+  build to the Rust toolchain alone.
 - [x] ENG-01's steps check the Rust release flags:
   `--remap-path-prefix`, the stamped commit, and the musl targets.
 - [x] Reach evidence for the core crate replaces the import-closure

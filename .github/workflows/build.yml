@@ -2,11 +2,12 @@ name: Build
 
 # The release build of the core executable (ENG-01, ENG-19, CON-02),
 # defined once: CI runs it on every change and the release workflow
-# runs it before anything is published, so release day builds nothing
-# new. Two independent builders, an x86_64 and an arm64 Linux runner,
-# each cross-build every target with the same pinned Rust, zig and
-# cargo-zigbuild. The reproducible job then requires their artifacts to
-# be bit-identical, and every binary runs on its own platform once.
+# runs it before anything is published. Every target is built by two
+# independent builders, set a and set b, with the Rust release
+# rust-toolchain.toml pins: the Linux targets link with the rust-lld
+# Rust ships, the Windows target with mingw-w64 on the same Linux
+# builders, and the darwin target with the runner's own Apple linker.
+# The reproducible job requires the two sets to be bit-identical.
 on:
   workflow_call:
     inputs:
@@ -19,78 +20,86 @@ permissions:
   contents: read
 
 env:
-  # ENG-01: every toolchain the build uses is exact. Rust comes from
-  # rust-toolchain.toml; zig, the linker for every target, and
-  # cargo-zigbuild, which drives it, are pinned here. Bump each by
-  # hand, with zig's SHA-256 sums from ziglang.org/download/index.json.
-  ZIG_VERSION: "0.15.2"
-  CARGO_ZIGBUILD_VERSION: "0.23.4"
-  # Every release target, as rust-target:artifact-name. The Linux
+  # The release targets, as rust-target:artifact-name. The Linux
   # targets are musl, which links statically (CON-02).
-  TARGETS: >-
+  LINUX_TARGETS: >-
     x86_64-unknown-linux-musl:linux-amd64
     aarch64-unknown-linux-musl:linux-arm64
+    x86_64-pc-windows-gnu:windows-amd64
+  DARWIN_TARGETS: >-
     aarch64-apple-darwin:darwin-arm64
+  # ENG-01: mingw-w64, exact, from Ubuntu 24.04's release pocket, which
+  # never changes. Both Linux builders run 24.04, so both link Windows
+  # with the same files.
+  MINGW: >-
+    gcc-mingw-w64-x86-64-win32=13.2.0-6ubuntu1+26.1
+    binutils-mingw-w64-x86-64=2.41.90.20240122-1ubuntu1+11.4
+    mingw-w64-x86-64-dev=11.0.1-3build1
 
 jobs:
   build:
+    name: build (${{ matrix.builder }})
     strategy:
       fail-fast: false
       matrix:
         include:
-          - builder: ubuntu-latest
-            zig: x86_64-linux
-            zig-sha256: 02aa270f183da276e5b5920b1dac44a63f1a49e55050ebde3aecc9eb82f93239
-            runs: linux-amd64
-          - builder: ubuntu-24.04-arm
-            zig: aarch64-linux
-            zig-sha256: 958ed7d1e00d0ea76590d27666efbf7a932281b3d7ba0c6b01b0ff26498f667f
-            runs: linux-arm64
+          - { builder: ubuntu-24.04, os: linux, set: a, runs: linux-amd64 }
+          - { builder: ubuntu-24.04-arm, os: linux, set: b, runs: linux-arm64 }
+          - { builder: macos-15, os: darwin, set: a, runs: darwin-arm64 }
+          - { builder: macos-15-intel, os: darwin, set: b, runs: "" }
     runs-on: ${{ matrix.builder }}
+    env:
+      OS: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install the pinned Rust toolchain and the release targets
+      - name: Pick this builder's targets
         run: |
-          targets=""
-          for pair in $TARGETS; do targets="$targets,${pair%%:*}"; done
+          if [ "$OS" = linux ]; then targets="$LINUX_TARGETS"; else targets="$DARWIN_TARGETS"; fi
+          echo "TARGETS=$targets" >> "$GITHUB_ENV"
+      - name: Install mingw-w64
+        if: matrix.os == 'linux'
+        run: |
+          sudo apt-get update -qq
+          # shellcheck disable=SC2086 # MINGW is a list of packages
+          sudo apt-get install -y -qq --no-install-recommends $MINGW
+      - name: Install the pinned Rust toolchain and the targets
+        run: |
+          list=""
+          for pair in $TARGETS; do list="$list,${pair%%:*}"; done
           rustup toolchain install \
             "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)" \
-            --profile minimal --no-self-update --target "${targets#,}"
-      - name: Install zig
-        env:
-          ZIG: ${{ matrix.zig }}
-          ZIG_SHA256: ${{ matrix.zig-sha256 }}
-        run: |
-          curl -sSfL -o zig.tar.xz "https://ziglang.org/download/${ZIG_VERSION}/zig-${ZIG}-${ZIG_VERSION}.tar.xz"
-          echo "${ZIG_SHA256}  zig.tar.xz" | sha256sum -c -
-          mkdir "$RUNNER_TEMP/zig"
-          tar -xJf zig.tar.xz -C "$RUNNER_TEMP/zig" --strip-components=1
-          rm zig.tar.xz
-          echo "$RUNNER_TEMP/zig" >> "$GITHUB_PATH"
-      # An exact version from crates.io, built against its own lockfile.
-      - run: cargo install --locked "cargo-zigbuild@${CARGO_ZIGBUILD_VERSION}"
-      - name: Build every target
+            --profile minimal --no-self-update --target "${list#,}"
+      - name: Build
         env:
           # ENG-01: the version and the commit, stamped into the
           # executable; `cairn version --json` reads both back.
           CAIRN_VERSION: ${{ inputs.version }}
           CAIRN_COMMIT: ${{ github.sha }}
         # ENG-01 and ENG-19: the path prefixes keep the builder's paths
-        # out of the binary, and -Wl,-S keeps the object files'
+        # out of the binary. rust-lld links musl statically; on
+        # Windows, --no-insert-timestamp keeps the link time out of the
+        # executable; on darwin, -Wl,-S keeps the object files'
         # timestamps out of the Mach-O UUID. Cargo.toml's release
         # profile does the rest.
         run: |
-          export RUSTFLAGS="--remap-path-prefix=$PWD=. --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo -Clink-arg=-Wl,-S"
+          base="--remap-path-prefix=$PWD=. --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo"
           mkdir dist
           for pair in $TARGETS; do
             target="${pair%%:*}"
-            cargo zigbuild --locked --release -p cairn --bin cairn --target "$target"
-            cp "target/$target/release/cairn" "dist/cairn-${pair#*:}"
+            exe=""
+            case "$target" in
+              *-linux-musl) extra="-Clinker=rust-lld" ;;
+              *-windows-gnu) extra="-Clinker=x86_64-w64-mingw32-gcc-win32 -Clink-arg=-Wl,--no-insert-timestamp"; exe=".exe" ;;
+              *) extra="-Clink-arg=-Wl,-S" ;;
+            esac
+            RUSTFLAGS="$base $extra" cargo build --locked --release -p cairn --bin cairn --target "$target"
+            cp "target/$target/release/cairn$exe" "dist/cairn-${pair#*:}$exe"
           done
-          (cd dist && sha256sum cairn-*)
+          (cd dist && shasum -a 256 cairn-*)
       - name: Check the binary reports what it was stamped with
+        if: matrix.runs != ''
         env:
           BIN: dist/cairn-${{ matrix.runs }}
           VERSION: ${{ inputs.version }}
@@ -98,23 +107,25 @@ jobs:
         run: scripts/check-stamp.sh "$BIN" "$VERSION" "$COMMIT"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ matrix.builder }}-cairn
+          name: ${{ matrix.set }}-${{ matrix.os }}-cairn
           path: dist/
 
-  # ENG-19: the two builders' artifacts must be bit-identical. A
-  # difference means the build is not reproducible, and nothing ships.
+  # ENG-19: the two sets must be bit-identical. A difference means the
+  # build is not reproducible, and nothing ships.
   reproducible:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: ubuntu-latest-cairn
+          pattern: a-*-cairn
           path: a
+          merge-multiple: true
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: ubuntu-24.04-arm-cairn
+          pattern: b-*-cairn
           path: b
+          merge-multiple: true
       - name: Compare the two builders
         run: |
           (cd a && sha256sum cairn-* | sort) > a.sum
@@ -125,23 +136,22 @@ jobs:
             exit 1
           }
 
-  # The Linux builders ran their own platform's binary; the darwin one
-  # runs here, on the platform it is for.
-  darwin:
+  # The Windows executable is built on Linux; it runs once here, on the
+  # platform it is for.
+  windows:
     needs: build
-    runs-on: macos-latest
+    runs-on: windows-2025
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: ubuntu-latest-cairn
+          name: a-linux-cairn
           path: dist
       - name: Check the binary reports what it was stamped with
+        shell: bash
         env:
           VERSION: ${{ inputs.version }}
           COMMIT: ${{ github.sha }}
-        run: |
-          chmod +x dist/cairn-darwin-arm64
-          scripts/check-stamp.sh dist/cairn-darwin-arm64 "$VERSION" "$COMMIT"
+        run: scripts/check-stamp.sh dist/cairn-windows-amd64.exe "$VERSION" "$COMMIT"

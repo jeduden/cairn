@@ -50,7 +50,8 @@ fn the_checkout_s_release_build_runs_through_the_build_workflow() {
 
     let build = build.as_deref().map_err(String::as_str);
     assert_eq!(
-        build.and_then(|b| toolchain::builds_with(b, "cargo zigbuild").map_err(|_| "no zigbuild")),
+        build
+            .and_then(|b| toolchain::builds_with(b, "--remap-path-prefix").map_err(|_| "no remap")),
         Ok(())
     );
 }

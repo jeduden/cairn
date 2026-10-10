@@ -115,10 +115,11 @@ Feature: Non-functional requirements (NFR)
     Then the build yields one executable that links <linking>
 
     Examples:
-      | platform     | linking                                          |
-      | linux/amd64  | no dynamic library at all                        |
-      | linux/arm64  | no dynamic library at all                        |
-      | darwin/arm64 | no dynamic library beyond the operating system's |
+      | platform      | linking                                          |
+      | linux/amd64   | no dynamic library at all                        |
+      | linux/arm64   | no dynamic library at all                        |
+      | darwin/arm64  | no dynamic library beyond the operating system's |
+      | windows/amd64 | no dynamic library beyond the operating system's |
 
   @NFR-11 @pending
   Scenario: the supported Claude Code versions are accepted and incompatible formats are loud
