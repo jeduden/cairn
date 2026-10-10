@@ -34,7 +34,7 @@ fn release_build_reads_the_workflow_and_the_workflows_it_calls() {
         ),
         (
             ".github/workflows/build.yml",
-            "run: cargo zigbuild --remap-path-prefix\n",
+            "run: cargo build --remap-path-prefix\n",
         ),
     ]);
 

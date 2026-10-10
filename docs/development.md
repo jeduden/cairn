@@ -77,14 +77,14 @@ that adds it pins the nightly and the run. The crash-consistency test
 contract test (ENG-17) join it as their plans land.
 
 [build.yml](../.github/workflows/build.yml) is the release build.
-CI runs it on every change, and the release workflow runs it too. Two
-independent builders, an x86_64 and an arm64 Linux runner, each build
-`linux/amd64`, `linux/arm64` and `darwin/arm64`. They use the pinned
-Rust, with zig as the linker through cargo-zigbuild. The Linux
-targets link musl statically (CON-02). `--remap-path-prefix` keeps
+CI runs it on every change, and the release workflow runs it too. It
+needs the pinned Rust and nothing else. An x86_64 and an arm64 Linux
+runner each build `linux/amd64` and `linux/arm64`, linked statically
+against musl with the rust-lld Rust ships (CON-02). An arm64 and an
+x86_64 macOS runner each build `darwin/arm64`. `--remap-path-prefix` keeps
 the builder's paths out. `CAIRN_VERSION` and `CAIRN_COMMIT` stamp the
-version and the commit (ENG-01). A third job compares the two
-builders' SHA-256 sums and stops on any difference (ENG-19). Each
+version and the commit (ENG-01). A last job compares the two
+builders of each target and stops on any difference (ENG-19). Each
 binary also runs once on its own platform and must report what it
 was stamped with.
 

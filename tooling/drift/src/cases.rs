@@ -156,8 +156,8 @@ fn repository_cases() -> Vec<Case> {
             "ENG-01",
             Injection::replace(
                 ".github/workflows/build.yml",
-                "export RUSTFLAGS=\"--remap-path-prefix=$PWD=. --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo ",
-                "export RUSTFLAGS=\"",
+                "base=\"--remap-path-prefix=$PWD=. --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo\"",
+                "base=\"\"",
             ),
             scenario("ENG-01"),
             r#"the release build does not contain "--remap-path-prefix""#,
