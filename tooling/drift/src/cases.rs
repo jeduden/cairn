@@ -243,7 +243,7 @@ fn review_cases() -> Vec<Case> {
             "ENG-28",
             Injection::replace(
                 REVIEW_WORKFLOW,
-                "cargo run --locked --quiet -p review-gate -- --outcome",
+                "cargo run --locked --quiet -p review-gate --offline -- --outcome",
                 "cp outcome.json review.json; true --outcome",
             ),
             scenario("ENG-28"),

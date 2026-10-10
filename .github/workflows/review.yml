@@ -150,6 +150,10 @@ jobs:
           rustup toolchain install
           "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
           --profile minimal --no-self-update
+      # Built, its crates fetched and their build scripts run, before the
+      # app's token exists; the decide step below runs it offline.
+      - name: Build the review gate
+        run: cargo build --locked --quiet -p review-gate
       # The app's token, scoped to this repository and to what posting
       # a review needs. A missing key fails the step, and the job.
       - name: Mint the reviewer app's token
@@ -177,7 +181,7 @@ jobs:
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           printf '%s' "$OUTCOME" > outcome.json
-          cargo run --locked --quiet -p review-gate -- --outcome outcome.json \
+          cargo run --locked --quiet -p review-gate --offline -- --outcome outcome.json \
             --check-runs check-runs.jsonl --reviewed "$HEAD_SHA" --head "$(cat head.txt)" > review.json
       - name: Post the review
         env:
