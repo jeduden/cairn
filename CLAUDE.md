@@ -119,8 +119,8 @@ What they mean for everyday code:
 
 - **I2** — only `TrustedText` reaches a restore block; recall is pull-only and
   always enveloped.
-- **I4** — no `net`, `net/http` or `os/exec` in the core; depguard and an
-  import-closure test enforce it.
+- **I4** — no network or process spawning in the core. For the Go stub,
+  depguard and an import-closure test refuse `net`, `net/http` and `os/exec`.
 - **I6** — audit and count each dropped, rejected, redacted or failed operation.
 - **I9** — hook handlers fail open unless that would break I2, I4 or I8.
 - **I10** — code that builds derived artifacts reads no clock or randomness.
@@ -142,7 +142,7 @@ header: ""
 row: "- [{filename}]({filename}) — {summary}"
 ?>
 - [CHANGELOG.md](CHANGELOG.md) — Release notes and upgrade notes per version, newest first (ENG-23).
-- [DEPENDENCIES.md](DEPENDENCIES.md) — Every direct Go dependency, listed through the decision record that justifies it (ENG-18, ENG-26). The ENG-18 scenario fails the build when go.mod and the dependency ADRs disagree or a license is off the allow-list.
+- [DEPENDENCIES.md](DEPENDENCIES.md) — Every direct dependency, Rust and Go, listed through the decision record that justifies it (ENG-18, ENG-26). The ENG-18 scenario fails the build when the manifests and the dependency ADRs disagree or a license is off the allow-list.
 - [docs/development.md](docs/development.md) — Build and test commands, the executable requirement matrix (every SRS id has one tagged Gherkin scenario, pending until written), the coverage floors, and how CI, the nightly fuzz job and the reproducible, signed release pipeline work.
 - [docs/domain-model/index.md](docs/domain-model/index.md) — Cairn's domain model: the closed set of concepts with their definitions, how they relate, the terms that are not Cairn concepts, and how names in code, docs and UI follow the model. The SRS links here for every term, and the domain-model agent reviews against it.
 - [docs/srs/index.md](docs/srs/index.md) — The Cairn Software Requirements Specification — the normative source for every requirement id a feature scenario is tagged with.
@@ -179,14 +179,15 @@ its traced invariants, and a gate test fails the build when the two drift. The
 mechanics are in [docs/development.md](docs/development.md).
 
 - Implementing a requirement means making its scenario pass: drop `@pending`,
-  make the steps concrete, bind them in `cmd/cairn/bdd_<section>_test.go`. Unit
-  tests alone do not close a requirement.
+  make the steps concrete, bind them in
+  `tooling/scenario/tests/bdd/<section>.rs`. Unit tests alone do not close a
+  requirement.
 - A new or changed requirement lands with its scenario in the same change,
   `@pending` until written.
 - Never delete, retag or re-pend a scenario to make CI green. A scenario that
   cannot pass as written is a finding to raise.
 - A check that inspects the repository's own records lands with a drift case in
-  `internal/drift` that proves it fails (ENG-27).
+  `tooling/drift/src/cases.rs` that proves it fails (ENG-27).
 - Behavior surfaced mid-work — a bug found while fixing something else — is
   checked against the matrix before being judged covered.
 
@@ -252,21 +253,22 @@ Report in the SRS's terms, not the source's.
   upheld — not the functions or types touched.
 - Reach for a source entity only when the requirement frame cannot carry the
   point, and trace from the requirement down to it.
-- Name the mechanism that verified a claim — godog scenario, fuzz target, golden
-  file, CI job — before folding its result into plan terms.
+- Name the mechanism that verified a claim — cucumber scenario, fuzz target,
+  golden file, CI job — before folding its result into plan terms.
 
 ## Code Style
 
-- Follow standard Go conventions (gofmt, goimports)
-- Keep functions small and focused; each ships with a dedicated unit test
-- No mutable package-level state; all I/O behind interfaces a test can inject;
-  every blocking call takes a `context.Context` with a deadline (ENG-03)
-- Wrap errors with `%w`; a failure class that feeds a counter gets a typed
-  error; panics stop at the hook and MCP entry points (ENG-04)
-- Log with `log/slog`, and pass log fields through redaction (ENG-05)
-- Error messages: lowercase, no trailing punctuation
-- Prefer returning errors over panicking
+- rustfmt, and clippy with every warning denied; the workspace lints forbid
+  `unsafe` and refuse `unwrap`, `expect` and `panic!` outside tests
+- Small functions, each with a unit test in the `tests.rs` beside its module
+- No mutable global state; I/O behind a trait or closure a test can inject;
+  every blocking call takes a deadline (ENG-03)
+- Errors keep their cause (`source()`); a counted failure class gets its own
+  variant; panics stop at the hook and MCP entry points (ENG-04)
+- Log with `tracing`, through redaction (ENG-05)
+- Error messages: lowercase, no trailing punctuation; return errors, never panic
 - Add a defensive branch only after a failing test that takes it (red/green)
+- The Go stub in `cmd/cairn` keeps Go's conventions until it moves to Rust
 
 ## Isolation for Agents and Tests
 

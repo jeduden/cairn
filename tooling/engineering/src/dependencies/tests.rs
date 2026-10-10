@@ -231,3 +231,35 @@ fn lists_dependency_adrs_wants_a_link_for_each_record_naming_a_module() {
         ["DEPENDENCIES.md does not link docs/adr/ADR-03-x.md"]
     );
 }
+
+#[test]
+fn cargo_direct_deps_reads_every_registry_dependency_of_the_members() {
+    let metadata = r#"{"packages": [
+        {"name": "a", "dependencies": [
+            {"name": "serde", "source": "registry+https://github.com/rust-lang/crates.io-index", "kind": null},
+            {"name": "b", "source": null, "path": "/w/b", "kind": null},
+            {"name": "cucumber", "source": "registry+https://github.com/rust-lang/crates.io-index", "kind": "dev"}
+        ]},
+        {"name": "b", "dependencies": [
+            {"name": "serde", "source": "registry+https://github.com/rust-lang/crates.io-index", "kind": null}
+        ]}
+    ]}"#;
+
+    assert_eq!(cargo_direct_deps(metadata).unwrap(), ["cucumber", "serde"]);
+    assert!(
+        cargo_direct_deps("not json")
+            .unwrap_err()
+            .starts_with("read cargo metadata: ")
+    );
+    assert_eq!(cargo_direct_deps("{}").unwrap(), Vec::<String>::new());
+}
+
+#[test]
+fn an_spdx_or_expression_is_allowed_when_one_choice_is() {
+    let allowed = strings(&["Apache-2.0", "MIT", "BSD", "ISC"]);
+
+    assert!(license_allowed("MIT OR Apache-2.0", &allowed));
+    assert!(license_allowed("GPL-3.0 OR BSD-3-Clause", &allowed));
+    assert!(!license_allowed("GPL-3.0 OR LGPL-2.1", &allowed));
+    assert!(!license_allowed("MIT AND GPL-3.0", &allowed));
+}

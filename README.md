@@ -128,9 +128,10 @@ security review and a new major version, not a bug fix.
 ## Development
 
 ```sh
-go test ./...                                   # tests and scenarios
-go test ./cmd/cairn -run TestFeatures -v        # the requirement matrix
-go tool -modfile=tools/go.mod golangci-lint run # lint
+cargo test --workspace                          # tests and scenarios
+cargo test -p scenario --test bdd               # the requirement matrix
+cargo clippy --workspace --all-targets          # lint
+cargo run -p coverage                           # coverage per test layer
 mdsmith check .                                 # Markdown
 ```
 

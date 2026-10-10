@@ -1,7 +1,7 @@
 ---
 n: 2
 title: "Remove the Go tooling; ENG-18 reads Cargo"
-status: "🔲"
+status: "✅"
 result: false
 ---
 # Phase 2: remove the Go tooling; ENG-18 reads Cargo

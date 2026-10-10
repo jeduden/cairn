@@ -1,5 +1,5 @@
 //! Steps of `features/engineering.feature` shared across §10: the
-//! checkout a scenario inspects, ENG-01's toolchain and release flags,
+//! checkout a scenario inspects, ENG-01's toolchain pins and release flags,
 //! and ENG-24's disclosure policy.
 
 use adr::Adr;
@@ -50,6 +50,12 @@ fn pins_the_go_toolchain(w: &mut World, file: String) -> Result<(), String> {
     } else {
         Err(format!("{file} has no toolchain directive"))
     }
+}
+
+#[then(regex = r#"^"([^"]+)" pins the Rust toolchain to an exact release$"#)]
+fn pins_the_rust_toolchain(w: &mut World, file: String) -> Result<(), String> {
+    let toml = eng(w).checkout()?.read(&file)?;
+    engineering::toolchain::rust_toolchain_pinned(&toml)
 }
 
 #[then(regex = r#"^the release workflow sets CGO_ENABLED to "0"$"#)]

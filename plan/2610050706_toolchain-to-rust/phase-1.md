@@ -1,7 +1,7 @@
 ---
 n: 1
 title: "Every gate in Rust, beside its Go original"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 1: every gate in Rust, beside its Go original

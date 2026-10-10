@@ -1,7 +1,7 @@
 //! ENG-18: every direct dependency is justified by exactly one accepted
 //! ADR, with an allow-listed license, within the stated target.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use adr::Adr;
 
@@ -36,6 +36,32 @@ pub fn go_direct_deps(go_mod: &str) -> Vec<String> {
     }
 
     deps
+}
+
+/// The crates the workspace's members depend on directly from a
+/// registry, read from `cargo metadata --no-deps`: normal, build and
+/// dev dependencies alike, and never a member reached by path.
+///
+/// # Errors
+///
+/// Fails when `metadata` is not cargo's JSON.
+pub fn cargo_direct_deps(metadata: &str) -> Result<Vec<String>, String> {
+    let value: serde_json::Value =
+        serde_json::from_str(metadata).map_err(|e| format!("read cargo metadata: {e}"))?;
+    let deps: BTreeSet<&str> = value["packages"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .flat_map(|p| p["dependencies"].as_array().into_iter().flatten())
+        .filter(|d| {
+            d["source"]
+                .as_str()
+                .is_some_and(|s| s.starts_with("registry+"))
+        })
+        .filter_map(|d| d["name"].as_str())
+        .collect();
+
+    Ok(deps.into_iter().map(str::to_owned).collect())
 }
 
 /// The records whose decision is in force.
@@ -129,12 +155,16 @@ pub fn licenses_allowed(adrs: &[Adr], allowed: &[String]) -> Vec<String> {
 /// Whether `license` is on `allowed`. A family name admits only its
 /// named permissive variants, never a bare family or any other id
 /// sharing its prefix: "BSD" admits BSD-2-Clause and BSD-3-Clause, not
-/// BSD-4-Clause or BSD-Protection.
+/// BSD-4-Clause or BSD-Protection. An SPDX `OR` expression, such as
+/// "MIT OR Apache-2.0", offers a choice, so one allowed choice admits
+/// it.
 #[must_use]
 pub fn license_allowed(license: &str, allowed: &[String]) -> bool {
-    allowed.iter().any(|a| match a.as_str() {
-        "BSD" => ["BSD-2-Clause", "BSD-3-Clause"].contains(&license),
-        a => license == a,
+    license.split(" OR ").any(|choice| {
+        allowed.iter().any(|a| match a.as_str() {
+            "BSD" => ["BSD-2-Clause", "BSD-3-Clause"].contains(&choice),
+            a => choice == a,
+        })
     })
 }
 

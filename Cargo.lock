@@ -308,6 +308,7 @@ dependencies = [
  "drift",
  "review-gate",
  "scenario",
+ "serde_json",
  "srs",
  "testkit",
 ]

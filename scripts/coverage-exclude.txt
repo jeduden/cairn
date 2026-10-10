@@ -4,4 +4,3 @@
 # place to hide untested logic. Format:
 #   path/to/file.go:startLine-endLine  # reason
 cmd/cairn/main.go:35-37  # main(): reads real argv and stdio and calls os.Exit; run() is the tested substitute for everything else
-cmd/review-gate/main.go:29-31  # main(): reads real argv, files and stdio and calls os.Exit; run() is the tested substitute for everything else

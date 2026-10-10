@@ -8,25 +8,24 @@
 /docs/srs/                    @jeduden
 /docs/adr/                    @jeduden
 
-# The requirement–scenario gate, the ADR reader the ENG-18 and ENG-26
-# scenarios check through, the scenario runner and the import closure
-# test that enforces I4.
-/internal/srs/                @jeduden
-/internal/adr/                @jeduden
-/internal/scenario/           @jeduden
-/internal/drift/              @jeduden
-/cmd/cairn/bdd_test.go        @jeduden
+# The repository tooling: the requirement–scenario gate, the ADR
+# reader the ENG-18 and ENG-26 scenarios check through, the scenario
+# runner and its step bindings, the drift suite, the finding ledger's
+# check, and the review gate that decides the review the reviewer app
+# posts (ENG-28). The workflow that runs it is under /.github/.
+/tooling/                     @jeduden
 /cmd/cairn/imports_test.go    @jeduden
 
-# The review gate: what decides the review the reviewer app posts
-# (ENG-28). The workflow that runs it is under /.github/.
-/internal/review/             @jeduden
-/cmd/review-gate/             @jeduden
-
-# CI, the coverage floor, the lint configuration and this file.
+# CI, the coverage floors, the toolchain pins, the lint and supply-chain
+# configuration and this file.
 /.github/                     @jeduden
 /scripts/                     @jeduden
 /tools/                       @jeduden
+/Cargo.toml                   @jeduden
+/rust-toolchain.toml          @jeduden
+/clippy.toml                  @jeduden
+/deny.toml                    @jeduden
+/codecov.yml                  @jeduden
 /.golangci.yml                @jeduden
 /.mdsmith.yml                 @jeduden
 

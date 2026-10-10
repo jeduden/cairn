@@ -4,7 +4,10 @@
 use crate::{Case, Check, Injection, cargo_test, mdsmith, scenario};
 
 /// The dependency decision the ENG-18 and ENG-26 cases drift.
-const TEST_STACK: &str = "docs/adr/ADR-2609292234-test-stack.md";
+const TEST_STACK: &str = "docs/adr/ADR-2610101442-rust-test-stack.md";
+
+/// The decision [`TEST_STACK`] superseded.
+const OLD_TEST_STACK: &str = "docs/adr/ADR-2609292234-test-stack.md";
 
 /// The workflow the ENG-28 cases drift.
 const REVIEW_WORKFLOW: &str = ".github/workflows/review.yml";
@@ -55,8 +58,8 @@ fn dependency_cases() -> Vec<Case> {
             "ENG-18",
             Injection::replace(
                 "go.mod",
-                "\tgo.yaml.in/yaml/v3 v3.0.5 // indirect",
-                "\tgo.yaml.in/yaml/v3 v3.0.5",
+                "require go.yaml.in/yaml/v3 v3.0.5 // indirect",
+                "require go.yaml.in/yaml/v3 v3.0.5",
             ),
             scenario("ENG-18"),
             "go.yaml.in/yaml/v3 is named by 0 accepted ADRs",
@@ -66,15 +69,15 @@ fn dependency_cases() -> Vec<Case> {
             "ENG-18",
             Injection::remove(TEST_STACK),
             scenario("ENG-18"),
-            "github.com/cucumber/godog is named by 0 accepted ADRs",
+            "cucumber is named by 0 accepted ADRs",
         ),
         case(
             "an ADR still justifying a module the manifests dropped",
             "ENG-18",
             Injection::replace(
                 TEST_STACK,
-                "| `github.com/stretchr/testify`",
-                "| `example.com/stale` | p | MIT | m |\n| `github.com/stretchr/testify`",
+                "| `serde_json`",
+                "| `example.com/stale` | p | MIT | m |\n| `serde_json`",
             ),
             scenario("ENG-18"),
             "names example.com/stale, which is not a direct dependency",
@@ -84,11 +87,11 @@ fn dependency_cases() -> Vec<Case> {
             "ENG-18",
             Injection::replace(
                 TEST_STACK,
-                "| MIT     | Active; the de-facto",
-                "| GPL-3.0 | Active; the de-facto",
+                "MIT OR Apache-2.0 | Active; the de-facto Rust",
+                "GPL-3.0 | Active; the de-facto Rust",
             ),
             scenario("ENG-18"),
-            r#"is licensed "GPL-3.0", not on the allow-list"#,
+            r#"serde is licensed "GPL-3.0", not on the allow-list"#,
         ),
     ]
 }
@@ -99,9 +102,9 @@ fn decision_cases() -> Vec<Case> {
         case(
             "two ADRs sharing an id",
             "ENG-26",
-            Injection::copy(TEST_STACK, "docs/adr/ADR-2609292234-copy.md"),
+            Injection::copy(TEST_STACK, "docs/adr/ADR-2610101442-copy.md"),
             scenario("ENG-26"),
-            "id ADR-2609292234 already used by",
+            "id ADR-2610101442 already used by",
         ),
         case(
             "an ADR superseded without a successor",
@@ -109,6 +112,13 @@ fn decision_cases() -> Vec<Case> {
             Injection::replace(TEST_STACK, "status: accepted", "status: superseded"),
             scenario("ENG-26"),
             r#"is superseded by "", which is no other ADR"#,
+        ),
+        case(
+            "a superseded ADR left in force beside its successor",
+            "ENG-26",
+            Injection::replace(OLD_TEST_STACK, "status: superseded", "status: accepted"),
+            scenario("ENG-26"),
+            r#"ADR-2609292234 names successor ADR-2610101442 but its status is "accepted", not superseded"#,
         ),
         // Phase 3 of plan 2609292156 moves ADR-01 to ADR-10 into files
         // and makes this drift fail ENG-26.
@@ -144,6 +154,17 @@ fn repository_cases() -> Vec<Case> {
             r#"does not contain "CGO_ENABLED: \"0\"""#,
         ),
         case(
+            "the Rust toolchain no longer pinned to a release",
+            "ENG-01",
+            Injection::replace(
+                "rust-toolchain.toml",
+                r#"channel = "1.99.0""#,
+                r#"channel = "stable""#,
+            ),
+            scenario("ENG-01"),
+            r#"rust-toolchain.toml does not pin an exact release: "stable""#,
+        ),
+        case(
             "the disclosure policy dropped",
             "ENG-24",
             Injection::replace(
@@ -159,11 +180,11 @@ fn repository_cases() -> Vec<Case> {
             "ENG-27",
             Injection::replace(
                 ".github/workflows/ci.yml",
-                "go test -tags drift ./internal/drift",
+                "cargo test --locked -p drift --test suite -- --ignored",
                 "true",
             ),
             scenario("ENG-27"),
-            r#"does not contain "go test -tags drift ./internal/drift""#,
+            r#"does not contain "cargo test --locked -p drift --test suite -- --ignored""#,
         ),
     ]
 }
@@ -221,11 +242,11 @@ fn review_cases() -> Vec<Case> {
             "ENG-28",
             Injection::replace(
                 REVIEW_WORKFLOW,
-                "go run ./cmd/review-gate -verdict",
-                "cp verdict.json review.json; true -verdict",
+                "cargo run --locked --quiet -p review-gate -- --outcome",
+                "cp outcome.json review.json; true --outcome",
             ),
             scenario("ENG-28"),
-            r#"job post does not run "go run ./cmd/review-gate""#,
+            r#"job post does not run "cargo run --locked --quiet -p review-gate""#,
         ),
     ]
 }
@@ -272,8 +293,8 @@ fn gate_cases() -> Vec<Case> {
             "mdsmith check",
             Injection::replace(
                 TEST_STACK,
-                "All three are test-only.",
-                "All three are test-only, for now.",
+                "All four serve tests and tooling only;",
+                "All four serve tests only;",
             ),
             mdsmith(),
             "generated section is out of date",

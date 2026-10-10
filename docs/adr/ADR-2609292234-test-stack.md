@@ -1,7 +1,8 @@
 ---
 id: ADR-2609292234
 title: "The test stack: godog, cucumber messages and testify"
-status: accepted
+status: superseded
+superseded-by: ADR-2610101442
 scope: dependencies
 summary: >-
   The executable requirement matrix runs through godog and reads

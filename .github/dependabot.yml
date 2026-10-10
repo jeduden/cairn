@@ -24,6 +24,14 @@ updates:
     ignore:
       - dependency-name: "jeduden/mdsmith"
 
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 7
+
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:

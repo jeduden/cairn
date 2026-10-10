@@ -12,6 +12,7 @@ adr.workspace = true
 drift.workspace = true
 review-gate.workspace = true
 scenario.workspace = true
+serde_json.workspace = true
 srs.workspace = true
 
 [dev-dependencies]

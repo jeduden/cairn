@@ -78,23 +78,25 @@ by both.
 ## Tasks
 
 1. Proving slice: a Cargo workspace, a pinned toolchain, the cucumber
-   runner and the scenario gate in Rust, beside Go
+   runner and the scenario gate in Rust, beside Go (phase 1)
 2. Port the SRS parser's remaining checks (Appendix B and C, personas)
    and the ADR reader, with the ENG-18 and ENG-26 bindings reading
-   `Cargo.toml` as well as `go.mod`
+   `Cargo.toml` as well as `go.mod` (phases 1 and 2)
 3. Port the drift harness and its cases, and run the drift suite
-   against both languages
-4. Port the review gate and its workflow (ENG-28)
+   against both languages (phase 1)
+4. Port the review gate and its workflow (ENG-28) (phases 1 and 2)
 5. Port `cairn version` to the Rust core executable; the release
-   workflow builds it; ENG-01's steps check the Rust toolchain;
+   workflow builds it; ENG-01's steps check the Rust release flags;
    reach evidence per crate replaces the import-closure test (SEC-01)
-6. CI on Rust: clippy, `cargo fmt`, `cargo-deny`, `cargo-audit`, and
-   coverage through `cargo-llvm-cov` in place of
-   `scripts/check-coverage.sh`
-7. Remove Go: `go.mod`, `go.sum`, the Go sources, `.golangci.yml`;
-   supersede the test-stack ADR; drop the Go clauses from CON-01,
-   ENG-01 and ENG-16; rewrite CLAUDE.md's code style,
-   `docs/development.md` and DEPENDENCIES.md's introduction
+   (phase 4)
+6. CI on Rust: clippy, `cargo fmt`, `cargo-deny`, `cargo-audit` (phase
+   2), and coverage through `cargo-llvm-cov`, measured per test layer,
+   in place of `scripts/check-coverage.sh` (phase 3)
+7. Remove Go: the gates and godog first (phase 2); then `go.mod`,
+   `go.sum`, the last Go sources and `.golangci.yml`, and the Go
+   clauses of CON-01, ENG-01 and ENG-16 (phase 4)
+8. Test-engineer agents that review the test pyramid, and a skill
+   that runs them (phase 3)
 
 ## Execution
 
@@ -126,19 +128,21 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                    |
-| --- | ------ | -------------------------------------------------------- |
-| 1   | 🔳     | [Every gate in Rust, beside its Go original](phase-1.md) |
-| 2   | 🔲     | [Remove the Go tooling; ENG-18 reads Cargo](phase-2.md)  |
-| 3   | 🔲     | [Coverage per test layer](phase-3.md)                    |
-| 4   | 🔲     | [The core executable in Rust; Go removed](phase-4.md)    |
+| #   | Status | Phase                                                                                                                                                                                                                                                |
+| --- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ✅     | [Every gate in Rust, beside its Go original](phase-1.md)                                                                                                                                                                                             |
+|     | ↳      | Every Go gate has a Rust port under tooling/, and cucumber-rs runs the six bound scenarios. CI run 38060936531 on 594102c passed the Go drift job and the Rust one side by side: every registered drift is caught by both languages.                 |
+| 2   | ✅     | [Remove the Go tooling; ENG-18 reads Cargo](phase-2.md)                                                                                                                                                                                              |
+|     | ↳      | The Go gates and godog are gone; the six bound scenarios run in cucumber-rs alone. ENG-18 reads go.mod and cargo metadata, ENG-01 checks rust-toolchain.toml, and the review workflow decides with the Rust review gate. 30 drift cases, all caught. |
+| 3   | 🔲     | [Coverage per test layer](phase-3.md)                                                                                                                                                                                                                |
+| 4   | 🔲     | [The core executable in Rust; Go removed](phase-4.md)                                                                                                                                                                                                |
 <?/catalog?>
 
 ## Acceptance Criteria
 
-- [ ] `cargo test --workspace` runs every non-pending scenario through
+- [x] `cargo test --workspace` runs every non-pending scenario through
   cucumber-rs, with `@pending` skipped and undefined steps failing
-- [ ] Every gate that Go runs today runs in Rust, and the drift suite
+- [x] Every gate that Go runs today runs in Rust, and the drift suite
   shows each registered drift caught by the Rust gate
 - [ ] The release workflow builds the Rust core executable, and
   ENG-01's scenario checks the Rust toolchain and release flags

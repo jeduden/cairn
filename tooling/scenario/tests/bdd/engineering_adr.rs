@@ -1,17 +1,57 @@
 //! The ENG-18 and ENG-26 steps: what the engineering scenarios check in
 //! the direct dependencies and the decision records under docs/adr.
 
+use std::env;
+use std::path::Path;
+use std::process::Command;
+
 use cucumber::{then, when};
 use engineering::{decisions, dependencies, outcome};
 
 use crate::World;
 use crate::engineering::eng;
 
+/// Adds the direct dependencies one manifest names: `go.mod`'s
+/// requirements, or the registry crates `cargo metadata` lists for the
+/// workspace a `Cargo.toml` roots.
 #[when(regex = r#"^the direct dependencies are read from "([^"]+)"$"#)]
 fn read_direct_deps(w: &mut World, file: String) -> Result<(), String> {
-    let deps = dependencies::go_direct_deps(&eng(w).checkout()?.read(&file)?);
-    eng(w).deps = deps;
+    let checkout = eng(w).checkout()?.clone();
+    let deps = match file.as_str() {
+        "go.mod" => dependencies::go_direct_deps(&checkout.read(&file)?),
+        "Cargo.toml" => {
+            dependencies::cargo_direct_deps(&cargo_metadata(&checkout.root.join(&file))?)?
+        }
+        other => return Err(format!("no reader for the dependencies in {other}")),
+    };
+    eng(w).deps.extend(deps);
     Ok(())
+}
+
+/// Runs `cargo metadata` on the workspace `manifest` roots, without
+/// resolving its dependency graph.
+fn cargo_metadata(manifest: &Path) -> Result<String, String> {
+    let cargo = env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
+    let out = Command::new(cargo)
+        .args([
+            "metadata",
+            "--format-version",
+            "1",
+            "--no-deps",
+            "--offline",
+            "--manifest-path",
+        ])
+        .arg(manifest)
+        .output()
+        .map_err(|e| format!("run cargo metadata: {e}"))?;
+    if !out.status.success() {
+        return Err(format!(
+            "cargo metadata failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        ));
+    }
+
+    String::from_utf8(out.stdout).map_err(|e| format!("read cargo metadata: {e}"))
 }
 
 #[when(regex = r#"^the ADRs are read from "([^"]+)"$"#)]
