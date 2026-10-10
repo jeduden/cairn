@@ -166,8 +166,16 @@ impl Plan {
             "coverage",
         )?;
         plan.root = PathBuf::from(value["workspace_root"].as_str().unwrap_or_default());
-        plan.exclude = policy["exclude"].as_str().unwrap_or_default().to_owned();
-        plan.pyramid = policy["pyramid"].as_bool().unwrap_or_default();
+        plan.exclude = typed(
+            &policy["exclude"],
+            Value::as_str,
+            "exclude",
+            "regular expression",
+        )?
+        .unwrap_or_default()
+        .to_owned();
+        plan.pyramid =
+            typed(&policy["pyramid"], Value::as_bool, "pyramid", "boolean")?.unwrap_or_default();
         for entry in policy["entry-points"].as_array().into_iter().flatten() {
             let entry = entry
                 .as_str()
@@ -226,6 +234,23 @@ fn known_keys(table: &Value, known: &[&str], place: &str) -> Result<(), String> 
         Some((key, _)) => Err(format!("{place}: unknown key {key:?}")),
         None => Ok(()),
     }
+}
+
+/// Reads the policy value `key` through `read`: `None` when it is left
+/// out, and an error when it is set to a value of another type, so a
+/// wrongly typed key cannot switch its check off.
+fn typed<'a, T>(
+    value: &'a Value,
+    read: impl Fn(&'a Value) -> Option<T>,
+    key: &str,
+    kind: &str,
+) -> Result<Option<T>, String> {
+    if value.is_null() {
+        return Ok(None);
+    }
+    read(value)
+        .map(Some)
+        .ok_or_else(|| format!("coverage {key}: {value} is no {kind}"))
 }
 
 /// Reads a `{ all = .., unit = .., integration = .., e2e = .. }` table

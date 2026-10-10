@@ -113,6 +113,14 @@ fn a_malformed_policy_is_refused() {
         with(r#"{"crates": {"srs": {"floors": {"e2e": -1}}}}"#).unwrap_err(),
         "coverage floors of srs: e2e = -1 is no percentage"
     );
+    assert_eq!(
+        with(r#"{"pyramid": "true"}"#).unwrap_err(),
+        r#"coverage pyramid: "true" is no boolean"#
+    );
+    assert_eq!(
+        with(r#"{"exclude": ["tests.rs"]}"#).unwrap_err(),
+        r#"coverage exclude: ["tests.rs"] is no regular expression"#
+    );
     assert!(
         Plan::from_metadata("not json")
             .unwrap_err()
@@ -211,4 +219,16 @@ fn a_package_without_a_name_or_manifest_is_refused() {
             "{err}"
         );
     }
+}
+
+#[test]
+fn typed_reads_a_value_of_its_type_or_refuses_another() {
+    let read = |v: &Value| typed(v, Value::as_bool, "pyramid", "boolean");
+
+    assert_eq!(read(&Value::Null), Ok(None));
+    assert_eq!(read(&Value::Bool(true)), Ok(Some(true)));
+    assert_eq!(
+        read(&Value::from(1)),
+        Err("coverage pyramid: 1 is no boolean".to_owned())
+    );
 }
