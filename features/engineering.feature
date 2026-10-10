@@ -10,11 +10,11 @@ Feature: Engineering quality (ENG)
   @ENG-01 @P0
   Scenario: the toolchain is pinned and release builds are static, trimmed and stamped
     Given the repository checkout
-    Then "go.mod" pins the Go toolchain with a toolchain directive
-    And "rust-toolchain.toml" pins the Rust toolchain to an exact release
-    And the release workflow sets CGO_ENABLED to "0"
-    And the release workflow builds with "-trimpath"
-    And the release workflow builds with "-buildvcs=true"
+    Then "rust-toolchain.toml" pins the Rust toolchain to an exact release
+    And the release workflow builds with "--remap-path-prefix"
+    And the release workflow builds with "CAIRN_COMMIT"
+    And the release workflow builds with "x86_64-unknown-linux-musl"
+    And the release workflow builds with "aarch64-unknown-linux-musl"
 
   @ENG-02 @P0 @pending
   Scenario: dependency directions between the workspace crates are declared and enforced
@@ -168,8 +168,7 @@ Feature: Engineering quality (ENG)
   @ENG-18 @P0
   Scenario: every direct dependency is justified by an accepted ADR with an allow-listed license
     Given the repository checkout
-    When the direct dependencies are read from "go.mod"
-    And the direct dependencies are read from "Cargo.toml"
+    When the direct dependencies are read from "Cargo.toml"
     And the ADRs are read from "docs/adr"
     Then each direct dependency is named by exactly one accepted ADR
     And every module an accepted ADR names is a direct dependency

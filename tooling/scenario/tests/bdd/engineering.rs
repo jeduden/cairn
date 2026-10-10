@@ -53,30 +53,16 @@ fn the_repository_checkout(w: &mut World) {
     eng(w).checkout = Some(Checkout::new(&testkit::repo_root()));
 }
 
-#[then(regex = r#"^"([^"]+)" pins the Go toolchain with a toolchain directive$"#)]
-fn pins_the_go_toolchain(w: &mut World, file: String) -> Result<(), String> {
-    let checkout = eng(w).checkout()?;
-    if engineering::toolchain::go_toolchain_pinned(&checkout.read(&file)?) {
-        Ok(())
-    } else {
-        Err(format!("{file} has no toolchain directive"))
-    }
-}
-
 #[then(regex = r#"^"([^"]+)" pins the Rust toolchain to an exact release$"#)]
 fn pins_the_rust_toolchain(w: &mut World, file: String) -> Result<(), String> {
     let toml = eng(w).checkout()?.read(&file)?;
     engineering::toolchain::rust_toolchain_pinned(&toml)
 }
 
-#[then(regex = r#"^the release workflow sets CGO_ENABLED to "0"$"#)]
-fn release_is_static(w: &mut World) -> Result<(), String> {
-    eng(w).checkout()?.contains(RELEASE, r#"CGO_ENABLED: "0""#)
-}
-
 #[then(regex = r#"^the release workflow builds with "([^"]+)"$"#)]
 fn release_builds_with(w: &mut World, flag: String) -> Result<(), String> {
-    eng(w).checkout()?.contains(RELEASE, &flag)
+    let build = engineering::toolchain::release_build(eng(w).checkout()?, RELEASE)?;
+    engineering::toolchain::builds_with(&build, &flag)
 }
 
 #[then(regex = r#"^"SECURITY.md" links the private vulnerability reporting channel$"#)]

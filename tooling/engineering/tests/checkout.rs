@@ -34,7 +34,7 @@ fn a_checkout_names_what_it_cannot_find() {
 }
 
 #[test]
-fn the_checkout_pins_its_toolchains() {
+fn the_checkout_pins_its_rust_toolchain() {
     let c = checkout();
 
     assert_eq!(
@@ -42,9 +42,16 @@ fn the_checkout_pins_its_toolchains() {
             .and_then(|t| toolchain::rust_toolchain_pinned(&t)),
         Ok(())
     );
+}
+
+#[test]
+fn the_checkout_s_release_build_runs_through_the_build_workflow() {
+    let build = toolchain::release_build(&checkout(), ".github/workflows/release.yml");
+
+    let build = build.as_deref().map_err(String::as_str);
     assert_eq!(
-        c.read("go.mod").map(|m| toolchain::go_toolchain_pinned(&m)),
-        Ok(true)
+        build.and_then(|b| toolchain::builds_with(b, "cargo zigbuild").map_err(|_| "no zigbuild")),
+        Ok(())
     );
 }
 

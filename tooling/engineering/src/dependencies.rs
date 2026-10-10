@@ -11,37 +11,6 @@ use adr::Adr;
 
 use crate::{Checkout, list};
 
-/// The module paths `go.mod` requires without an `// indirect` marker,
-/// in either the block or the one-line form.
-#[must_use]
-pub fn go_direct_deps(go_mod: &str) -> Vec<String> {
-    let mut deps = Vec::new();
-    let mut in_block = false;
-    for line in go_mod.lines().map(str::trim) {
-        let line = match line {
-            "require (" => {
-                in_block = true;
-                continue;
-            }
-            ")" if in_block => {
-                in_block = false;
-                continue;
-            }
-            _ => match line.strip_prefix("require ") {
-                Some(rest) => rest,
-                None if in_block => line,
-                None => continue,
-            },
-        };
-        let fields: Vec<&str> = line.split_whitespace().collect();
-        if fields.len() >= 2 && !line.contains("// indirect") {
-            deps.push(fields[0].to_owned());
-        }
-    }
-
-    deps
-}
-
 /// The crates the workspace's members depend on directly from a
 /// registry, read from `cargo metadata --no-deps`: normal, build and
 /// dev dependencies alike, and never a member reached by path.
@@ -100,9 +69,8 @@ pub fn cargo_metadata(cargo: &OsStr, manifest: &Path, cairn_home: &Path) -> Resu
     String::from_utf8(out.stdout).map_err(|e| format!("read cargo metadata: {e}"))
 }
 
-/// The direct dependencies the manifest `file` names: `go.mod`'s
-/// requirements, or the registry crates `metadata` lists for the Cargo
-/// workspace a `Cargo.toml` roots.
+/// The direct dependencies the manifest `file` names: the registry
+/// crates `metadata` lists for the Cargo workspace a `Cargo.toml` roots.
 ///
 /// # Errors
 ///
@@ -113,7 +81,6 @@ pub fn direct_deps(
     metadata: impl Fn(&Path) -> Result<String, String>,
 ) -> Result<Vec<String>, String> {
     match file {
-        "go.mod" => Ok(go_direct_deps(&checkout.read(file)?)),
         "Cargo.toml" => cargo_direct_deps(&metadata(&checkout.root.join(file))?),
         other => Err(format!("no reader for the dependencies in {other}")),
     }

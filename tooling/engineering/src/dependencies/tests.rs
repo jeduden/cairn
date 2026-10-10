@@ -33,30 +33,6 @@ fn strings(s: &[&str]) -> Vec<String> {
 }
 
 #[test]
-fn go_direct_deps_skips_indirect_and_reads_both_forms() {
-    let go_mod = "module x
-
-go 1.26.0
-
-require example.com/one v1.0.0
-
-require (
-\texample.com/two v1.0.0
-\texample.com/three v1.0.0 // indirect
-)
-
-require (
-\texample.com/four v1.0.0
-)
-";
-
-    assert_eq!(
-        go_direct_deps(go_mod),
-        ["example.com/one", "example.com/two", "example.com/four"]
-    );
-}
-
-#[test]
 fn deps_named_once_and_modules_are_deps() {
     let deps = strings(&["a", "b", "c"]);
     let adrs = vec![
@@ -294,7 +270,7 @@ fn cargo_metadata_reads_a_workspace_and_names_a_failure() {
 
 #[test]
 fn direct_deps_reads_each_manifest_with_its_reader() {
-    let (_dir, checkout) = crate::tests::checkout(&[("go.mod", "require example.com/a v1.0.0\n")]);
+    let (_dir, checkout) = crate::tests::checkout(&[]);
     let metadata = |manifest: &std::path::Path| {
         assert!(manifest.ends_with("Cargo.toml"));
         Ok(
@@ -303,10 +279,6 @@ fn direct_deps_reads_each_manifest_with_its_reader() {
         )
     };
 
-    assert_eq!(
-        direct_deps(&checkout, "go.mod", metadata).unwrap(),
-        ["example.com/a"]
-    );
     assert_eq!(
         direct_deps(&checkout, "Cargo.toml", metadata).unwrap(),
         ["serde"]
