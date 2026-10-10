@@ -1,0 +1,5 @@
+# A test may unwrap, expect and panic: a failed assertion is how it
+# reports. Product and tooling code returns errors instead.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true

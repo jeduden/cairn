@@ -44,9 +44,10 @@ footer: |
 
 ?>
 
-| ADR                                                     | Status   | Decision                                                                                                                                                          |
-| ------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ADR-2609292234](docs/adr/ADR-2609292234-test-stack.md) | accepted | The executable requirement matrix runs through godog and reads Gherkin through cucumber's messages types; testify asserts in every test. All three are test-only. |
+| ADR                                                          | Status   | Decision                                                                                                                                                                                          |
+| ------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-2609292234](docs/adr/ADR-2609292234-test-stack.md)      | accepted | The executable requirement matrix runs through godog and reads Gherkin through cucumber's messages types; testify asserts in every test. All three are test-only.                                 |
+| [ADR-2610101442](docs/adr/ADR-2610101442-rust-test-stack.md) | proposed | The repository tooling in Rust runs the scenarios through cucumber-rs and reads JSON through serde and serde_json. All three serve repository tooling only; none links into a shipped executable. |
 <?/catalog?>
 
 Every dependency `go.mod` requires is test-only today. The SQLite

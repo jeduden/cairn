@@ -1,0 +1,11 @@
+[package]
+name = "testkit"
+version = "0.0.0"
+description = "Test-only helpers the tooling crates share; never linked into a shipped executable"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

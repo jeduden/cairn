@@ -1,7 +1,7 @@
 ---
 id: 2610050706
 title: "Move the whole toolchain from Go to Rust"
-status: "🔲"
+status: "🔳"
 summary: >-
   Port everything the repository runs from Go to Rust: the scenario
   runner (cucumber-rs in place of godog), the gates that keep the SRS,
@@ -98,9 +98,12 @@ by both.
 
 ## Execution
 
-| Phase | Model | Gate                                                                                                                                              |
-| ----- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | opus  | `cargo test --workspace` and `go test ./...` pass; the Rust gate catches the priority drift; each non-pending scenario runs in exactly one runner |
+| Phase | Model | Gate                                                                                                     |
+| ----- | ----- | -------------------------------------------------------------------------------------------------------- |
+| 1     | opus  | `cargo test --workspace` and `go test ./...` pass; CI's `drift` and `rust-drift` jobs pass on one commit |
+| 2     | opus  | CI green with no Go gate left; the drift suite catches every case through the Rust checks                |
+| 3     | opus  | CI's coverage job prints line coverage per test layer and fails a crate below its floor                  |
+| 4     | opus  | No Go source remains; the release workflow publishes the Rust core executable                            |
 
 ## Phases
 
@@ -123,9 +126,12 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                                    |
-| --- | ------ | ------------------------------------------------------------------------ |
-| 1   | 🔲     | [Proving slice: the Rust scenario runner and gate beside Go](phase-1.md) |
+| #   | Status | Phase                                                    |
+| --- | ------ | -------------------------------------------------------- |
+| 1   | 🔳     | [Every gate in Rust, beside its Go original](phase-1.md) |
+| 2   | 🔲     | [Remove the Go tooling; ENG-18 reads Cargo](phase-2.md)  |
+| 3   | 🔲     | [Coverage per test layer](phase-3.md)                    |
+| 4   | 🔲     | [The core executable in Rust; Go removed](phase-4.md)    |
 <?/catalog?>
 
 ## Acceptance Criteria

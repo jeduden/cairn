@@ -1,6 +1,6 @@
 Feature: Engineering quality (ENG)
 
-  Scenarios for SRS §10, one per requirement, tagged with its id and
+  The scenarios for SRS §10, one per requirement, tagged with its id and
   priority; the engineering tables carry no Traces column. A scenario
   still tagged @pending is declared but not yet written: its steps are
   bound when the plan that implements the requirement lands. The

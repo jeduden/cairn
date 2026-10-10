@@ -1,0 +1,42 @@
+# The Cargo workspace (ENG-02). Today it holds the repository tooling
+# under tooling/, ported from Go by plan 2610050706; the product's
+# crates join it as their plans land.
+#
+# Every external dependency is declared once, in
+# [workspace.dependencies], and each crate takes it with
+# `workspace = true`. The ENG-18 scenario reads the direct
+# dependencies through `cargo metadata`, and each needs an accepted
+# ADR under docs/adr.
+[workspace]
+resolver = "3"
+members = ["tooling/*"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.99"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+cucumber = "0.23.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+
+adr = { path = "tooling/adr" }
+drift = { path = "tooling/drift" }
+engineering = { path = "tooling/engineering" }
+finding-ledger = { path = "tooling/finding-ledger" }
+review-gate = { path = "tooling/review-gate" }
+scenario = { path = "tooling/scenario" }
+srs = { path = "tooling/srs" }
+testkit = { path = "tooling/testkit" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+# Errors are returned, never panicked (CLAUDE.md). clippy.toml lets a
+# test unwrap, expect and panic.
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

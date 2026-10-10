@@ -1,0 +1,21 @@
+[package]
+name = "engineering"
+version = "0.0.0"
+description = "The checks behind the bound scenarios of SRS §10, Engineering quality"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+adr.workspace = true
+drift.workspace = true
+review-gate.workspace = true
+scenario.workspace = true
+srs.workspace = true
+
+[dev-dependencies]
+testkit.workspace = true
+
+[lints]
+workspace = true
