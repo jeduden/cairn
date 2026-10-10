@@ -12,14 +12,15 @@ measured, is in [testing.md](testing.md).
 
 ## Build & test commands
 
-The repository tooling is a Cargo workspace under `tooling/`. Its
-Rust release is fixed in [rust-toolchain.toml](../rust-toolchain.toml)
-(ENG-01), and rustup installs it on the first `cargo` command. Until
-phase 4 of plan
-[2610050706](../plan/2610050706_toolchain-to-rust/plan.md), the
-`cairn version` stub in `cmd/cairn` stays Go 1.26, fixed by `go.mod`.
+The repository is one Cargo workspace: the product's crates under
+`crates/`, today the `cairn` core executable, and the repository
+tooling under `tooling/`. Its Rust release is fixed in
+[rust-toolchain.toml](../rust-toolchain.toml) (ENG-01), and rustup
+installs it on the first `cargo` command.
 
 - `cargo test --workspace` — every test, scenarios included
+- `cargo run -p cairn -- version` — the core executable, built for
+  this machine
 - `cargo test -p scenario --test bdd` — every scenario, pending ones
   counted
 - `cargo test -p scenario --test bdd -- --tags @REC-03` — one scenario
@@ -32,11 +33,6 @@ phase 4 of plan
   -- -D warnings` — layout and lint (ENG-16)
 - `cargo deny check licenses bans sources` and `cargo audit` — the
   supply chain (ENG-16), with [deny.toml](../deny.toml)'s policy
-- `go test -race ./...` and `scripts/check-coverage.sh 100
-  ./cmd/cairn` — the Go that remains, at its 100% floor
-- `go tool -modfile=tools/go.mod golangci-lint run` and `go tool
-  -modfile=tools/go.mod govulncheck ./...` — lint and known
-  vulnerabilities for that Go
 - `mdsmith check .` — lint the Markdown; `mdsmith fix .` rewrites
   what it can, including the generated catalogs
 
@@ -50,15 +46,13 @@ with every warning denied, and rustfmt.
 license allow-list, each exception named, and to crates.io as the
 only source. cargo-audit refuses a crate with a known vulnerability.
 
-For the Go stub, [.golangci.yml](../.golangci.yml) enables
-staticcheck, gosec, errcheck and the `go vet` suite. It adds
-`depguard`, which refuses `net`, `net/http` and `os/exec` in
-non-test code, and `gochecknoglobals` for ENG-03's
-no-mutable-package-state rule.
-[cmd/cairn/imports_test.go](../cmd/cairn/imports_test.go) walks the
-whole import closure of the shipped binary, so the same packages
-cannot arrive through a dependency either. Both are the import half
-of SEC-01; the network-deny sandbox half is ENG-12, still pending.
+The core executable's reach is held two ways (SEC-01, ENG-16). Its
+own [clippy.toml](../crates/cairn/clippy.toml) refuses the
+`std::net` socket types and `std::process::Command` in its code, and
+[its reach test](../crates/cairn/tests/reach.rs) refuses any crate
+linked into it, so neither can arrive through a dependency. Both are
+the build-time half of SEC-01; the network-deny sandbox half is
+ENG-12, still pending.
 
 ## CI, nightly and release
 
@@ -67,21 +61,32 @@ to a commit SHA with its version in a trailing comment, and dependabot
 proposes the bumps after a seven-day cooldown.
 
 [ci.yml](../.github/workflows/ci.yml) runs on every push and pull
-request to `main`. Its Rust jobs run every test and scenario, clippy
-and rustfmt, cargo-deny and cargo-audit, and the drift suite. Its Go
-jobs vet, race-test, lint and vulnerability-check the stub, and
-cross-build it for the three release targets (NFR-10). It also runs
+request to `main`. It runs every test and scenario, clippy and
+rustfmt, cargo-deny and cargo-audit, and the drift suite, and the
+release build of the three targets (NFR-10, ENG-19). It also runs
 `mdsmith check .` and zizmor over the workflows themselves. A final
 job named `CI` passes only when every other job passed. It is the one
 check the branch and release-tag rulesets require, because GitHub
 names a required check after a job, never after the workflow.
 
-[nightly.yml](../.github/workflows/nightly.yml) fuzzes every `Fuzz*`
-target in the tree for five minutes each (ENG-07). It discovers the
-targets, so a new one is fuzzed the night after it merges. The
-crash-consistency test (ENG-06), the concurrency soak (ENG-09) and
-the live Claude Code contract test (ENG-17) join it as their plans
-land.
+[nightly.yml](../.github/workflows/nightly.yml) is where
+cargo-fuzz runs every target under `fuzz/` (ENG-07). There are none
+yet; the job fails the night a `fuzz/` crate appears until the plan
+that adds it pins the nightly and the run. The crash-consistency test
+(ENG-06), the concurrency soak (ENG-09) and the live Claude Code
+contract test (ENG-17) join it as their plans land.
+
+[build.yml](../.github/workflows/build.yml) is the release build.
+CI runs it on every change, and the release workflow runs it too. Two
+independent builders, an x86_64 and an arm64 Linux runner, each build
+`linux/amd64`, `linux/arm64` and `darwin/arm64`. They use the pinned
+Rust, with zig as the linker through cargo-zigbuild. The Linux
+targets link musl statically (CON-02). `--remap-path-prefix` keeps
+the builder's paths out. `CAIRN_VERSION` and `CAIRN_COMMIT` stamp the
+version and the commit (ENG-01). A third job compares the two
+builders' SHA-256 sums and stops on any difference (ENG-19). Each
+binary also runs once on its own platform and must report what it
+was stamped with.
 
 [review.yml](../.github/workflows/review.yml) reviews each pull
 request from a branch of this repository once its CI passes (ENG-21,
@@ -103,14 +108,12 @@ head, with `CI` green there; otherwise it requests changes.
 deliberately not the trigger: a failed build would leave a public tag
 pointing at nothing. The workflow takes these steps:
 
-1. Validate the version and run vet and the race-enabled suite.
-2. Build each target on two builders, Linux and macOS, with
-   `CGO_ENABLED=0 -trimpath -buildvcs=true` and the version stamped.
-3. Compare the two builders' SHA-256 sums and stop on any difference
-   (ENG-19).
-4. Generate an SPDX SBOM, attest build provenance and the SBOM, and
+1. Validate the version and run the whole suite.
+2. Run the release build above, with the version stamped, and stop on
+   any difference between the builders (ENG-19).
+3. Generate an SPDX SBOM, attest build provenance and the SBOM, and
    sign `checksums.txt` keylessly with cosign (ENG-20).
-5. Create the tag and publish the release, only now that everything
+4. Create the tag and publish the release, only now that everything
    above succeeded.
 
 GitHub's build-provenance attestation meets SLSA Build Level 2. Level

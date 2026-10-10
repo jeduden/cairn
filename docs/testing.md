@@ -65,12 +65,8 @@ carries `CAIRN_COVERAGE_MEASURING`, and a run that finds it set refuses
 to start, so a test cannot set off a measurement inside a measurement.
 
 CI's `coverage` job writes the table and the test counts into its
-summary, and uploads one Codecov flag per test layer; Codecov's
+summary. It uploads one Codecov flag per test layer. Codecov's
 thresholds in [codecov.yml](../codecov.yml) are a soft ratchet on top.
-The Go stub keeps its own floor of 100%, which
-[scripts/check-coverage.sh](../scripts/check-coverage.sh) enforces.
-[scripts/coverage-exclude.txt](../scripts/coverage-exclude.txt) names
-its one exclusion: `main()`, a pure process boundary.
 
 ## The executable requirement matrix
 

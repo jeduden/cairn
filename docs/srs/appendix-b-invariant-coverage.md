@@ -2,7 +2,7 @@
 title: "Appendix B — Invariant coverage"
 summary: >-
   Which requirements serve each invariant, generated from the Traces
-  column of §5–§6, plus the requirement count by priority. A Go test
+  column of §5–§6, plus the requirement count by priority. A gate test
   keeps both in step with the tables.
 ---
 # Appendix B — Invariant coverage
