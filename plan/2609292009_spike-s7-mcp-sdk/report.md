@@ -7,7 +7,7 @@ own (§9.2, §12.1). The decision record is ADR-2610102211.
 ## Decision
 
 An in-house stdio server on `serde_json`. Both stubs speak the
-protocol the recall tools need, and each passed the same checks
+protocol §9.2's MCP tools need, and each passed the same checks
 against a raw JSON-RPC driver and against the reference TypeScript
 client. The reach decides:
 

@@ -13,7 +13,7 @@ summary: >-
 
 ## Context
 
-The MCP server is the core component that serves the recall tools of
+The MCP server is the core component that serves the MCP tools of
 §9.2 to one harness session over stdio. It is part of B0: it opens no
 socket and starts no program (I4, SEC-01). The core executable's
 reach test fails the build when a crate links into `cairn` that its
