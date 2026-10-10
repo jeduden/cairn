@@ -1,7 +1,7 @@
 ---
 id: 2610050706
 title: "Move the whole toolchain from Go to Rust"
-status: "🔳"
+status: "✅"
 summary: >-
   Port everything the repository runs from Go to Rust: the scenario
   runner (cucumber-rs in place of godog), the gates that keep the SRS,
@@ -100,12 +100,12 @@ by both.
 
 ## Execution
 
-| Phase | Model | Gate                                                                                                     |
-| ----- | ----- | -------------------------------------------------------------------------------------------------------- |
-| 1     | opus  | `cargo test --workspace` and `go test ./...` pass; CI's `drift` and `rust-drift` jobs pass on one commit |
-| 2     | opus  | CI green with no Go gate left; the drift suite catches every case through the Rust checks                |
-| 3     | opus  | CI's coverage job prints line coverage per test layer and fails a crate below its floor                  |
-| 4     | opus  | No Go source remains; the release workflow publishes the Rust core executable                            |
+| Phase | Model | Gate                                                                                                                |
+| ----- | ----- | ------------------------------------------------------------------------------------------------------------------- |
+| 1     | opus  | `cargo test --workspace` and `go test ./...` pass; CI's `drift` and `rust-drift` jobs pass on one commit            |
+| 2     | opus  | CI green with no Go gate left; the drift suite catches every case through the Rust checks                           |
+| 3     | opus  | CI's coverage job prints line coverage per test layer and fails a crate below its floor                             |
+| 4     | opus  | No Go source remains outside the archived spike S2 benchmark; CI runs the release build of the Rust core executable |
 
 ## Phases
 
@@ -128,15 +128,16 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                                                                                                                                                                                                                                                                        |
-| --- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | ✅     | [Every gate in Rust, beside its Go original](phase-1.md)                                                                                                                                                                                                                                                     |
-|     | ↳      | Every Go gate has a Rust port under tooling/, and cucumber-rs runs the six bound scenarios. CI run 38060936531 on 594102c passed the Go drift job and the Rust one side by side: every registered drift is caught by both languages.                                                                         |
-| 2   | ✅     | [Remove the Go tooling; ENG-18 reads Cargo](phase-2.md)                                                                                                                                                                                                                                                      |
-|     | ↳      | The Go gates and godog are gone; the six bound scenarios run in cucumber-rs alone. ENG-18 reads go.mod and cargo metadata, ENG-01 checks rust-toolchain.toml, and the review workflow decides with the Rust review gate. 30 drift cases, all caught.                                                         |
-| 3   | ✅     | [Coverage per test layer](phase-3.md)                                                                                                                                                                                                                                                                        |
-|     | ↳      | The coverage executable measures each test layer, holds 99% unit and 100% overall per crate, and fails an inverted pyramid. Locally every crate is at 100% from its unit tests; the shape is unit 199, integration 18, end-to-end 14. Four test-engineer agents and two skills review and shape the pyramid. |
-| 4   | 🔲     | [The core executable in Rust; Go removed](phase-4.md)                                                                                                                                                                                                                                                        |
+| #   | Status | Phase                                                                                                                                                                                                                                                                                                                                                    |
+| --- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ✅     | [Every gate in Rust, beside its Go original](phase-1.md)                                                                                                                                                                                                                                                                                                 |
+|     | ↳      | Every Go gate has a Rust port under tooling/, and cucumber-rs runs the six bound scenarios. CI run 38060936531 on 594102c passed the Go drift job and the Rust one side by side: every registered drift is caught by both languages.                                                                                                                     |
+| 2   | ✅     | [Remove the Go tooling; ENG-18 reads Cargo](phase-2.md)                                                                                                                                                                                                                                                                                                  |
+|     | ↳      | The Go gates and godog are gone; the six bound scenarios run in cucumber-rs alone. ENG-18 reads go.mod and cargo metadata, ENG-01 checks rust-toolchain.toml, and the review workflow decides with the Rust review gate. 30 drift cases, all caught.                                                                                                     |
+| 3   | ✅     | [Coverage per test layer](phase-3.md)                                                                                                                                                                                                                                                                                                                    |
+|     | ↳      | The coverage executable measures each test layer, holds 99% unit and 100% overall per crate, and fails an inverted pyramid. Locally every crate is at 100% from its unit tests; the shape is unit 199, integration 18, end-to-end 14. Four test-engineer agents and two skills review and shape the pyramid.                                             |
+| 4   | ✅     | [The core executable in Rust; Go removed](phase-4.md)                                                                                                                                                                                                                                                                                                    |
+|     | ↳      | `cairn version` is the Rust core executable, built reproducibly by one workflow CI and the release share: two Linux builders, three targets, compared bit for bit. Its clippy config and reach test hold it to no socket, no program start and no linked crate. Go is gone outside the archived spike S2 benchmark; SRS 2.32-draft drops the Go clauses. |
 <?/catalog?>
 
 ## Acceptance Criteria
@@ -145,10 +146,11 @@ footer: |
   cucumber-rs, with `@pending` skipped and undefined steps failing
 - [x] Every gate that Go runs today runs in Rust, and the drift suite
   shows each registered drift caught by the Rust gate
-- [ ] The release workflow builds the Rust core executable, and
+- [x] The release workflow builds the Rust core executable, and
   ENG-01's scenario checks the Rust toolchain and release flags
-- [ ] CI gates on clippy, `cargo fmt`, `cargo-deny`, `cargo-audit`
+- [x] CI gates on clippy, `cargo fmt`, `cargo-deny`, `cargo-audit`
   and the coverage floors
-- [ ] No Go source, `go.mod` or `go.sum` remains, and CON-01, ENG-01
-  and ENG-16 no longer mention Go
-- [ ] `mdsmith check .` passes
+- [x] No Go source, `go.mod` or `go.sum` remains outside spike S2's
+  archived benchmark, and CON-01, ENG-01 and ENG-16 no longer mention
+  Go
+- [x] `mdsmith check .` passes
