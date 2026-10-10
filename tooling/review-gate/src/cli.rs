@@ -87,8 +87,11 @@ fn parse_flags(args: impl IntoIterator<Item = String>) -> Result<[String; 4], St
             .iter()
             .position(|f| *f == name)
             .ok_or_else(|| format!("unknown flag {arg:?}"))?;
+        // An empty value is no value: an empty head would match an
+        // empty reviewed head and post a review on no commit.
         let value = inline
             .or_else(|| args.next())
+            .filter(|v| !v.is_empty())
             .ok_or_else(|| format!("--{name} needs a value"))?;
         values[slot] = Some(value);
     }

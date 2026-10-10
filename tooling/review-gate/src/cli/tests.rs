@@ -118,6 +118,29 @@ fn run_fails_closed() {
             EXIT_USAGE,
         ),
         (
+            "an empty reviewed head",
+            {
+                let mut a = args(HEAD);
+                a[5] = String::new();
+                a
+            },
+            inputs(),
+            "--reviewed needs a value",
+            EXIT_USAGE,
+        ),
+        (
+            "an empty inline head",
+            vec![
+                "--outcome=outcome.json".to_owned(),
+                "--check-runs=check-runs.jsonl".to_owned(),
+                format!("--reviewed={HEAD}"),
+                "--head=".to_owned(),
+            ],
+            inputs(),
+            "--head needs a value",
+            EXIT_USAGE,
+        ),
+        (
             "a stray argument",
             stray,
             inputs(),
