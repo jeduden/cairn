@@ -139,6 +139,15 @@ pub fn cargo_test(package: &str, target: &str, name: &str) -> Check {
     )
 }
 
+/// Lints `package`'s shipped code with clippy, every warning an error.
+#[must_use]
+pub fn clippy(package: &str) -> Check {
+    Check::new(
+        "cargo",
+        &["clippy", "--locked", "-p", package, "--", "-D", "warnings"],
+    )
+}
+
 /// Lints every Markdown file, generated sections included.
 #[must_use]
 pub fn mdsmith() -> Check {
