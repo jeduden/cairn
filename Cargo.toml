@@ -1,6 +1,6 @@
-# The Cargo workspace (ENG-02). Today it holds the repository tooling
-# under tooling/, ported from Go by plan 2610050706; the product's
-# crates join it as their plans land.
+# The Cargo workspace (ENG-02): the product's crates under crates/,
+# today the `cairn` core executable, and the repository tooling under
+# tooling/. The product's other crates join it as their plans land.
 #
 # Every external dependency is declared once, in
 # [workspace.dependencies], and each crate takes it with
@@ -9,7 +9,7 @@
 # ADR under docs/adr.
 [workspace]
 resolver = "3"
-members = ["tooling/*"]
+members = ["crates/*", "tooling/*"]
 
 [workspace.package]
 edition = "2024"
@@ -66,3 +66,10 @@ exclude = '(^|/)tests\.rs$'
 entry-points = ["src/main.rs"]
 floors = { all = 100, unit = 99 }
 pyramid = true
+
+# Release builds are reproducible (ENG-19): one codegen unit and no
+# debug information or symbols, so two builders give the same bytes.
+[profile.release]
+codegen-units = 1
+lto = "thin"
+strip = true
