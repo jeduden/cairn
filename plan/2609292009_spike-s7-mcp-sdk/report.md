@@ -4,7 +4,7 @@ Spike S7 asks how `cairn mcp` speaks MCP over stdio: through the Rust
 MCP SDK `rmcp` with HTTP off, or through a minimal server of Cairn's
 own (§9.2, §12.1). The decision record is ADR-2610102211.
 
-## Verdict
+## Decision
 
 An in-house stdio server on `serde_json`. Both stubs speak the
 protocol the recall tools need, and each passed the same checks
