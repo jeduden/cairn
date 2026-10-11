@@ -243,3 +243,97 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> Result<()> {
     std::fs::rename(&tmp, path)?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::record::Writer;
+    use serde_json::json;
+
+    fn dir(name: &str) -> PathBuf {
+        let d = std::env::temp_dir().join("s12-node-tests").join(name);
+        let _ = std::fs::remove_dir_all(&d);
+        d
+    }
+
+    fn writer_with_segments() -> (Writer, Vec<Segment>) {
+        let mut w = Writer::open(b"k", "interactive").unwrap();
+        let mut out = Vec::new();
+        for i in 0..3 {
+            w.append("message", "user", json!({"text": format!("m{i}")}))
+                .unwrap();
+            out.extend(w.close_segment());
+        }
+        (w, out)
+    }
+
+    #[test]
+    fn a_second_copy_of_a_segment_changes_nothing() {
+        let (w, segs) = writer_with_segments();
+        let mut n = Node::new(&dir("dup"), &[w.id()]).unwrap();
+        n.receive(&segs[0]).unwrap();
+        let before: Vec<Event> = n.events().into_iter().cloned().collect();
+        n.receive(&segs[0]).unwrap();
+        let after: Vec<Event> = n.events().into_iter().cloned().collect();
+        assert_eq!(before, after);
+    }
+
+    #[test]
+    fn a_fork_is_refused() {
+        let (w, segs) = writer_with_segments();
+        let mut n = Node::new(&dir("fork"), &[w.id()]).unwrap();
+        n.receive(&segs[0]).unwrap();
+        // The same writer id and seq, another history.
+        let mut other = Writer::open(b"k", "interactive").unwrap();
+        other
+            .append("message", "user", json!({"text": "else"}))
+            .unwrap();
+        let forked = other.close_segment().unwrap();
+        let err = n.receive(&forked).unwrap_err();
+        assert!(err.0.contains("fork"), "{err}");
+    }
+
+    #[test]
+    fn a_segment_that_does_not_chain_to_what_is_held_is_refused() {
+        let (w, segs) = writer_with_segments();
+        let mut n = Node::new(&dir("chain"), &[w.id()]).unwrap();
+        n.receive(&segs[2]).unwrap();
+        let mut bad = segs[1].clone();
+        bad.events.last_mut().unwrap().hash = [9; 32];
+        // Its own check fails first: the hash no longer matches.
+        assert!(n.receive(&bad).is_err());
+        assert!(n.receive(&segs[1]).is_ok());
+    }
+
+    #[test]
+    fn only_a_held_tombstone_can_be_applied() {
+        let (w, segs) = writer_with_segments();
+        let mut n = Node::new(&dir("erasure"), &[]).unwrap();
+        n.receive(&segs[0]).unwrap();
+        let not_a_tombstone = Address {
+            writer: w.id().to_string(),
+            seq: 1,
+        };
+        assert!(n.apply_erasure(&not_a_tombstone).is_err());
+    }
+
+    #[test]
+    fn origin_and_trust_follow_the_key_set() {
+        let (w, segs) = writer_with_segments();
+        let mut own = Node::new(&dir("own"), &[w.id()]).unwrap();
+        let mut peer = Node::new(&dir("peer"), &[]).unwrap();
+        for s in &segs {
+            own.receive(s).unwrap();
+            peer.receive(s).unwrap();
+        }
+        let user = own.events()[1].clone();
+        assert_eq!(
+            (own.origin(w.id()), own.trust(&user)),
+            ("witnessed", "trusted")
+        );
+        assert_eq!(
+            (peer.origin(w.id()), peer.trust(&user)),
+            ("peer", "untrusted")
+        );
+    }
+}

@@ -12,7 +12,7 @@
 
 // S2's corpus, read where it lives; formatting it is S2's business.
 #[path = "../../../2609292004_spike-s2-sqlite-driver/bench/src/corpus.rs"]
-#[allow(dead_code)]
+#[allow(dead_code, clippy::all)]
 #[rustfmt::skip]
 pub mod corpus;
 

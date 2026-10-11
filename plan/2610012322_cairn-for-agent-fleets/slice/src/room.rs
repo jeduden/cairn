@@ -186,3 +186,38 @@ pub fn derive(node: &Node) -> RoomState {
     state.conflicts.sort_by(|x, y| x.void.cmp(&y.void));
     state
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::record::{Segment, Writer};
+
+    #[test]
+    fn heads_seen_order_events_across_writers() {
+        let mut a = Writer::open(b"a", "interactive").unwrap();
+        let mut b = Writer::open(b"b", "interactive").unwrap();
+        let sa: Segment = a.close_segment().unwrap();
+        let b_before = b
+            .append("message", "user", serde_json::json!({"text": "x"}))
+            .unwrap();
+        b.see(&a);
+        let b_after = b
+            .append("message", "user", serde_json::json!({"text": "y"}))
+            .unwrap();
+        let sb = b.close_segment().unwrap();
+        let dir = std::env::temp_dir().join("s12-room-tests");
+        let _ = std::fs::remove_dir_all(&dir);
+        let mut n = Node::new(&dir, &[]).unwrap();
+        n.receive(&sb).unwrap();
+        n.receive(&sa).unwrap();
+        let clocks = Clocks::of(&n);
+        let a1 = Address {
+            writer: a.id().to_string(),
+            seq: 1,
+        };
+        assert!(clocks.before(&a1, &b_after));
+        assert!(!clocks.before(&a1, &b_before));
+        assert!(!clocks.before(&b_after, &a1));
+        assert!(clocks.before(&b_before, &b_after));
+    }
+}

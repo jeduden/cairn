@@ -53,7 +53,7 @@ fn events(segments: &[Segment]) -> impl Iterator<Item = &Event> {
 }
 
 /// B's segments newest first, interleaved with A's, then A's again.
-fn reordered<'a>(f: &'a Fleet) -> Vec<&'a Segment> {
+fn reordered(f: &Fleet) -> Vec<&Segment> {
     let mut out = Vec::new();
     let mut b = f.b_segments.iter().rev();
     for a in &f.a_segments {
