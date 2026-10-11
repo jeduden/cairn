@@ -1477,7 +1477,7 @@
     },
     {
      "file": "docs/srs/12-delivery-plan.md",
-     "quote": "Do two writers' closed segments, merged in either order"
+     "quote": "Do two writers' closed segments, received in either order"
     }
    ]
   },
