@@ -89,10 +89,16 @@ With it, SRS 3.0-draft changes these requirements:
   the record and the key set alone: `ingested` for a writer whose seat
   certificate names it an ingest seat, then `bundle` or `peer` from the
   arrival events, then `witnessed` for a writer whose seat key a key
-  this node minted since its node identity last changed certified. No
+  named by a key event after the newest node identity change event
+  certified. No
   stored origin value, and no origin another node derived, decides it.
-- **REC-24** records a node identity change event, so a lost and
-  re-minted device key keeps earlier writers `witnessed`.
+- **SEC-10 and REC-24** record a key event for every device key or
+  token key a node starts using, and a node identity change event for
+  each change, which takes a fresh access token. `witnessed` holds for a
+  writer whose seat key a key named after the newest change certified,
+  so a lost and re-minted key keeps earlier writers `witnessed`, and a
+  clone never does. "Last changed" comes from the record, never from
+  the audit log, which I10 does not read.
 - **REC-17, ADM-07 and §8.2.** A tombstone no longer keeps a purged
   event's origin; each node derives it from the writer's seat
   certificate, the arrival events and the node identity change events.
@@ -137,7 +143,7 @@ miss, and what answers each:
 | output whose order follows storage                                              | ADM-08: every read orders its output by values                                        |
 | a stored origin changed from `peer` to `witnessed`, making the event trusted    | REC-26 derives origin from the record; verify compares it with the rest of I10        |
 | a node's own backup restored and read as `witnessed`                            | REC-26 reads arrival events before the node's own writers                             |
-| a purge of the events origin derives from, turning `peer` back into `witnessed` | ADM-07: no purge scope covers arrival or node identity change events                  |
+| a purge of the events origin derives from, turning `peer` back into `witnessed` | ADM-07: no purge scope covers arrival, node identity change or key events             |
 
 The digest is itself a risk: kept past a purge, it would let anyone
 holding the other content confirm a guess at the purged content. ADM-08

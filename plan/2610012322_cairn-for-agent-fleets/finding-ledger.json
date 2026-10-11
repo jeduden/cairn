@@ -426,7 +426,7 @@
     },
     {
      "file": "docs/domain-model/record.md",
-     "quote": "in a writer whose seat key was certified by a key this node minted before its node identity last changed"
+     "quote": "in a writer whose seat key was certified by a key named only by key events before that node identity change event"
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",
@@ -1046,7 +1046,7 @@
     },
     {
      "file": "docs/srs/05e-provenance-requirements.md",
-     "quote": "Hook observations, key rotations, tombstones, canary events (OPS-04), backup events (ADM-06), arrival events (REC-26), node identity change events (REC-24), refused-segment events (REC-21) and time marks (REC-15) MUST carry `structural`"
+     "quote": "Hook observations, key rotations, key events (SEC-10), tombstones, canary events (OPS-04), backup events (ADM-06), arrival events (REC-26), node identity change events (REC-24), refused-segment events (REC-21) and time marks (REC-15) MUST carry `structural`"
     }
    ]
   },

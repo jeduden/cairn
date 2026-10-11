@@ -346,6 +346,7 @@ Feature: Record (REC)
     And the witnessed run's events read origin "witnessed", the ingested run's "ingested", the peer's "peer", the bundle's "bundle", the restored range's "peer", and the range that came both ways "bundle" whichever way came first
     And after the origin the store keeps derived for a peer event is changed to "witnessed", "cairn verify" fails until "cairn rebuild" derives "peer" again
     And after the node identity changes, a node identity change event carries only the fingerprints of the replaced and new device keys, and the events of its earlier writers read origin "peer"
-    And after a device key is lost and minted anew, the events of its earlier writers still read origin "witnessed"
+    And after a device key is lost and minted anew, the events of its earlier writers still read origin "witnessed", since a key event names the lost key after the newest node identity change event
+    And on a token-key-only node, its own writers' events read origin "witnessed" through the key event that adopted its token key, and after its node identity changes, it adopts a fresh token key and its earlier writers' events read origin "peer"
     And every seat certificate of a seat "cairn ingest" started or minted, the ingested run's included, names it an ingest seat
     And "cairn rebuild" appends no arrival event

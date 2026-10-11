@@ -67,6 +67,12 @@ summary: >-
   principal or expire acts, and every pin it writes restores only once stamped
   (PEER-06, PRV-10), though its own events are trusted on that node as that
   node's trusted sources.
+- **Key event**: The structural event a node records in its device seat in its
+  personal room when it starts using a device key or token key: minted, minted
+  anew after a loss, or carried by an access token. It carries only the key's
+  fingerprint and why it started (SEC-10). The key events after a node's newest
+  node identity change event name the keys whose seats' events read `witnessed`
+  (REC-26).
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room and naming its seat kind and whether it is an ingest
   seat, that the seat key countersigns (PRV-10, PRV-11). A node's **key set** is
