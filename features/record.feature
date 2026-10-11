@@ -197,7 +197,7 @@ Feature: Record (REC)
     When the person runs "cairn verify"
     Then the command exits 0
     And every event carries a commitment to its canonical content under a random per-event key of at least 256 bits, stored with the content and absent from its chained header
-    And the hash chain, every tombstone and every exported structure refer to event content, structural fields included, only through the commitment, but for the structural fields, provenance, origin and recorder a tombstone keeps of a purged act, tombstone or event the key set holds
+    And the hash chain, every tombstone and every exported structure refer to event content, structural fields included, only through the commitment, but for the structural fields, provenance and recorder a tombstone keeps of a purged act, tombstone or event the key set holds
     And the commitment keys of seq 10-14 were erased with their content
     And no retained or exported value confirms a guess at the purged content
 
@@ -344,5 +344,7 @@ Feature: Record (REC)
     Then each sealed range the node accepted is named by exactly one arrival event per way it arrived in its device seat in its personal room, carrying only the writer id, seq range, digest and how it arrived
     And the witnessed run's events read origin "witnessed", the ingested run's "ingested", the peer's "peer", the bundle's "bundle", the restored range's "peer", and the range that came both ways "bundle" whichever way came first
     And after the origin the store keeps derived for a peer event is changed to "witnessed", "cairn verify" fails until "cairn rebuild" derives "peer" again
-    And after the node identity changes, the events of its earlier writers read origin "peer"
+    And after the node identity changes, a node identity change event names the replaced and new keys, and the events of its earlier writers read origin "peer"
+    And after a device key is lost and minted anew, the events of its earlier writers still read origin "witnessed"
+    And the ingested run's seat certificate names it an ingest seat
     And "cairn rebuild" appends no arrival event

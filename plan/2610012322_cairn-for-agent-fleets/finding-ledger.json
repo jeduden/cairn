@@ -426,7 +426,7 @@
     },
     {
      "file": "docs/domain-model/record.md",
-     "quote": "in a writer an earlier device key or token key of this node certified, as before a node identity change"
+     "quote": "in a writer a key of this node certified before its node identity last changed"
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",
@@ -1046,7 +1046,7 @@
     },
     {
      "file": "docs/srs/05e-provenance-requirements.md",
-     "quote": "Hook observations, key rotations, tombstones, canary events (OPS-04), backup events (ADM-06), arrival events (REC-26), refused-segment events (REC-21) and time marks (REC-15) MUST carry `structural`"
+     "quote": "Hook observations, key rotations, tombstones, canary events (OPS-04), backup events (ADM-06), arrival events (REC-26), node identity change events (REC-24), refused-segment events (REC-21) and time marks (REC-15) MUST carry `structural`"
     }
    ]
   },
@@ -1199,7 +1199,7 @@
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",
-     "quote": "and the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds"
+     "quote": "and the structural fields, provenance and recorder of each purged act, tombstone and event the key set holds"
     }
    ]
   },
