@@ -33,7 +33,7 @@ M1's bounded ranking meets NFR-03.
 
 - Candidates: `modernc.org/sqlite` v1.60.1 and
   `github.com/ncruces/go-sqlite3` v0.35.6, both on SQLite 3.53.4.
-- Harness: the separate module in [bench](bench/main.go), so neither
+- Harness: the separate module in [bench-go](bench-go/main.go), so neither
   driver enters cairn's module graph. It builds one seeded synthetic
   store per driver. The store holds §8.2's `events` record and its
   external-content FTS5 projection, chained by SHA-256.
@@ -215,7 +215,7 @@ stay with the security review that OQ-04 names.
 ## Reproducing
 
 ```sh
-cd plan/2609292004_spike-s2-sqlite-driver/bench
+cd plan/2609292004_spike-s2-sqlite-driver/bench-go
 go build -o /tmp/bench .
 /tmp/bench load -driver modernc -db /tmp/s2.db -n 10000000
 /tmp/bench search -driver ncruces -db /tmp/s2.db -n 300

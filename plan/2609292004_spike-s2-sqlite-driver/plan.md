@@ -1,15 +1,15 @@
 ---
 id: 2609292004
-title: "Spike S2: choose the pure-Go SQLite driver"
-status: "✅"
+title: "Spike S2: the SQLite driver for the Rust core"
+status: "🔳"
 summary: >-
-  Benchmark modernc.org/sqlite against ncruces/go-sqlite3 for FTS5,
-  cancellation, WAL concurrency, encryption and 10M-event
-  performance.
+  Measure rusqlite with SQLite and FTS5 bundled for FTS5, cancellation,
+  WAL concurrency, encryption, reach and 10M-event performance. Reopened
+  after the move to Rust; the Go comparison stays as history.
 model: opus
 depends-on: []
 ---
-# Spike S2: choose the pure-Go SQLite driver
+# Spike S2: the SQLite driver for the Rust core
 
 ## Goal
 
@@ -18,24 +18,43 @@ at the scale NFR-03 and NFR-05 demand.
 
 ## Context
 
-Resolves ADR-07, OQ-03 and OQ-04. The choice must keep CON-02 (static,
-`CGO_ENABLED=0`) and SEC-01 (no network imports).
+Resolves ADR-07, OQ-03 and OQ-04. The choice must keep CON-02 (one
+executable per target, static on Linux) and SEC-01 (no socket, no
+program start in the core).
+
+The spike first ran for the Go core and chose `ncruces/go-sqlite3`
+over `modernc.org/sqlite`. The move to Rust
+([ADR-2610050528](../../docs/adr/ADR-2610050528-language-rust-typescript.md))
+withdrew that choice: ADR-07 now proposes `rusqlite` with SQLite and
+FTS5 bundled, which no measurement covers. The plan is reopened for
+it. The Go harness and report stay as history in
+[bench-go](bench-go/main.go) and [report-go.md](report-go.md).
 
 ## Tasks
 
-1. Build a synthetic 10M-event store with both drivers
-2. Measure FTS5 BM25 search p95, ingestion throughput, and store
-   overhead against NFR-03, NFR-04 and NFR-09
-3. Check query cancellation by context deadline and WAL correctness
-   under 50 concurrent writers
-4. Survey an encrypting VFS for each driver (OQ-04)
-5. Check each driver's import closure with the existing import test
-6. Write the report and record the decision in ADR-07, whose Decision
-   table names the driver module (ENG-18, ENG-26)
+1. [ ] Port the harness to Rust, generating the Go harness's corpus
+   byte for byte, so the two reports measure the same store
+2. [ ] Build the 10M-event store with `rusqlite` and measure FTS5 BM25
+   search p95, expand, ingestion throughput, hook memory and store
+   overhead against NFR-03, NFR-04 and NFR-09, on the large host and
+   on emulated reference hardware
+3. [ ] Check FTS5's features, query cancellation through SQLite's
+   interrupt, and WAL correctness under 50 concurrent writer processes
+4. [ ] Probe SQLCipher, bundled with its crypto, for OQ-04
+5. [ ] Check the reach and licenses of what `rusqlite` links, and build
+   it statically for every release target the way the release
+   workflow does (CON-02, ENG-19)
+6. [ ] Write the report and record the driver in a dependency ADR,
+   proposed until the M1 change that links the store accepts it
+   (ENG-18, ENG-26)
 
 ## Outcome
 
-The [benchmark report](report.md) holds the numbers. Both drivers
+Pending: the Rust measurements are running.
+
+## Go outcome (history)
+
+The [benchmark report](report-go.md) holds the numbers. Both drivers
 passed the FTS5, cancellation and 50-writer WAL checks. On a large
 host ncruces takes 11–21% longer at full-ranked search and ingests
 21–31% fewer events per second in batches. On emulated reference

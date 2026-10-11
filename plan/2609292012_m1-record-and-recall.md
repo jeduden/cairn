@@ -24,7 +24,7 @@ SEC-16, SEC-18, OPS-01 to OPS-03, and ADM-04, ADM-05, ADM-09 and ADM-11.
 Split into phases when started.
 
 Spike S2 chose `github.com/ncruces/go-sqlite3`
-([report](2609292004_spike-s2-sqlite-driver/report.md)). It leaves
+([report](2609292004_spike-s2-sqlite-driver/report-go.md)). It leaves
 four things for M1:
 
 - Task 1 adds the module to `go.mod` and flips
