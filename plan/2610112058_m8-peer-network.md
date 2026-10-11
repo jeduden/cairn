@@ -6,6 +6,7 @@ summary: >-
   Peers enrolled by key: machines and other principals sync rooms
   after any partition with no central service, ephemeral nodes hand
   over their record, and invites, directed posts and endorsement.
+milestone-order: 7
 model: opus
 depends-on: [2610112057, 2609292016]
 ---

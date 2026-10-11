@@ -5,6 +5,7 @@ status: "🔲"
 summary: >-
   The remaining P1 requirements, the full §11 evaluation, an
   external security review and a two-week pilot.
+milestone-order: 6
 model: opus
 depends-on: [2609292014, 2609292015, 2609292008]
 ---

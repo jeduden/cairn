@@ -5,6 +5,7 @@ status: '"🔲" | "🔳" | "✅" | "⛔"'
 summary: 'string | *""'
 model: '"haiku" | "sonnet" | "opus" | "fable" | *""'
 depends-on: '[...int] | *[]'
+milestone-order: '(int & >=1) | *null'
 phases: >-
   [...{n: int | string, title: string & != "",
   status: "🔲" | "🔳" | "✅" | "⛔"}] | *[]

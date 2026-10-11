@@ -6,6 +6,7 @@ summary: >-
   Forge review beside the room, handover, bundles that carry a room
   with a pull request, read-only publishing and outbound bridges, each
   through its own proposal.
+milestone-order: 8
 model: opus
 depends-on: [2610112058]
 ---
