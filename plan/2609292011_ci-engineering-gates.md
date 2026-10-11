@@ -27,7 +27,15 @@ This plan covers the rest.
 1. Declare the allowed import directions between internal packages and
    enforce them (ENG-02)
 2. Add analyzers for TrustedText construction and for clock or
-   randomness use in projection code (ENG-03, ENG-16, SEC-07)
+   randomness use in projection code (ENG-03, ENG-16, SEC-07). Clock
+   and randomness are done for the product crates: each crate's
+   clippy.toml bans the clocks and the hash collections, and the
+   engineering gate test `the_product_crates_keep_their_bans` holds every
+   crate under `crates/` to that, beside
+   `no_product_crate_keeps_mutable_global_state` (ENG-03). What remains is
+   TrustedText: once the restore builder of plan 2609292013 defines
+   it, a compile-fail test proves no code outside its module can build
+   one from untrusted text (I2)
 3. Run the end-to-end suite in a network-denied sandbox that fails on
    any socket (ENG-12, SEC-01)
 4. Add the isolation guard that aborts a test touching the real home

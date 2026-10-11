@@ -15,4 +15,18 @@ disallowed-types = [
   { path = "std::os::unix::net::UnixListener", reason = "the core opens no socket (SEC-01)" },
   { path = "std::os::unix::net::UnixStream", reason = "the core opens no socket (SEC-01)" },
   { path = "std::process::Command", reason = "the core starts no program but its kernel worker (SEC-01, CMP-05)" },
+  { path = "std::collections::HashMap", reason = "its order is random per process; use BTreeMap (I10)" },
+  { path = "std::collections::HashSet", reason = "its order is random per process; use BTreeSet (I10)" },
+  { path = "std::hash::RandomState", reason = "a random seed breaks a rebuild (I10)" },
+]
+
+# Derived artifacts read no clock and no random order (I10, ENG-03):
+# a rebuild reproduces them exactly. A call site that must read a clock,
+# such as one stamping a structural event, says so with
+# `#[expect(clippy::disallowed_methods, reason = "...")]`, under review.
+# BTreeMap and BTreeSet keep a stable order where the hash collections
+# would not.
+disallowed-methods = [
+  { path = "std::time::SystemTime::now", reason = "derived artifacts read no clock (I10)" },
+  { path = "std::time::Instant::now", reason = "derived artifacts read no clock (I10)" },
 ]

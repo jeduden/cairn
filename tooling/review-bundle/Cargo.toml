@@ -1,0 +1,21 @@
+[package]
+name = "review-bundle"
+version = "0.0.0"
+description = "Builds the review agent's bundle and the deterministic findings from main's tree, the pull request's tree and its diff (ENG-21, ENG-28)"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+adr.workspace = true
+scenario.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+srs.workspace = true
+
+[dev-dependencies]
+testkit.workspace = true
+
+[lints]
+workspace = true

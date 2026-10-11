@@ -7,6 +7,7 @@
 
 pub mod decisions;
 pub mod dependencies;
+pub mod product_crates;
 pub mod registry;
 pub mod review_workflow;
 pub mod toolchain;

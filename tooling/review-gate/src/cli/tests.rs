@@ -14,6 +14,7 @@ fn inputs() -> BTreeMap<String, String> {
             "check-runs.jsonl",
             r#"{"name":"CI","status":"completed","conclusion":"success"}"#,
         ),
+        ("checked.json", "[]"),
     ]
     .into_iter()
     .map(|(k, v)| (k.to_owned(), v.to_owned()))
@@ -30,6 +31,8 @@ fn args(current: &str) -> Vec<String> {
         HEAD,
         "--head",
         current,
+        "--checked",
+        "checked.json",
     ]
     .map(str::to_owned)
     .to_vec()
@@ -62,6 +65,19 @@ fn run_prints_the_review_to_post() {
     let review: Review = serde_json::from_str(&out).unwrap();
     assert_eq!(review.event, APPROVE);
     assert_eq!(review.commit_id, HEAD);
+}
+
+#[test]
+fn the_usage_names_every_flag_as_required() {
+    let (code, _, err) = invoke(vec!["--nope".to_owned()], &inputs());
+
+    assert_eq!(code, EXIT_USAGE);
+    assert!(
+        err.ends_with(
+            "usage: review-gate --outcome FILE --check-runs FILE --reviewed SHA --head SHA --checked FILE\n"
+        ),
+        "{err}"
+    );
 }
 
 #[test]
@@ -118,6 +134,13 @@ fn run_fails_closed() {
             EXIT_USAGE,
         ),
         (
+            "no --checked",
+            args(HEAD)[..8].to_vec(),
+            inputs(),
+            "--checked is required",
+            EXIT_USAGE,
+        ),
+        (
             "an empty reviewed head",
             {
                 let mut a = args(HEAD);
@@ -135,6 +158,7 @@ fn run_fails_closed() {
                 "--check-runs=check-runs.jsonl".to_owned(),
                 format!("--reviewed={HEAD}"),
                 "--head=".to_owned(),
+                "--checked=checked.json".to_owned(),
             ],
             inputs(),
             "--head needs a value",
@@ -220,4 +244,35 @@ fn run_reports_a_failed_write() {
     assert_eq!(code, EXIT_FAILURE);
     assert!(String::from_utf8(err).unwrap().contains("closed"));
     assert!(Closed.flush().is_ok());
+}
+
+#[test]
+fn run_merges_the_deterministic_findings() {
+    let mut files = inputs();
+    files.insert(
+        "checked.json".to_owned(),
+        r#"[{"path":"features/record.feature","line":0,"severity":"blocking","body":"re-pended"}]"#
+            .to_owned(),
+    );
+
+    let (code, out, err) = invoke(args(HEAD), &files);
+
+    assert_eq!(code, EXIT_OK, "{err}");
+    let review: Review = serde_json::from_str(&out).unwrap();
+    assert_eq!(review.event, crate::REQUEST_CHANGES);
+}
+
+#[test]
+fn run_fails_closed_on_a_missing_or_malformed_checked_file() {
+    let mut files = inputs();
+    files.remove("checked.json");
+    let (code, out, err) = invoke(args(HEAD), &files);
+    assert_eq!(code, EXIT_FAILURE, "{err}");
+    assert!(out.is_empty());
+    assert!(err.contains("read checked.json"), "{err}");
+
+    files.insert("checked.json".to_owned(), "nope".to_owned());
+    let (code, _, err) = invoke(args(HEAD), &files);
+    assert_eq!(code, EXIT_FAILURE, "{err}");
+    assert!(err.contains("malformed deterministic findings"), "{err}");
 }

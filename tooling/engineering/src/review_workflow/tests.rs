@@ -247,6 +247,10 @@ fn gate_outcome_names_what_the_gate_does() {
     };
 
     assert_eq!(
+        gate_outcome(&row("approve", "none", "current", "passed", "passed")),
+        "APPROVE"
+    );
+    assert_eq!(
         gate_outcome(&row("approve", "nit", "current", "passed", "passed")),
         "APPROVE"
     );
@@ -274,6 +278,29 @@ fn gate_outcome_names_what_the_gate_does() {
         gate_outcome(&row("missing", "none", "current", "passed", "passed")),
         "an error"
     );
+}
+
+#[test]
+fn gate_outcome_hands_the_gate_a_deterministic_finding() {
+    let row = |check: &str| {
+        [
+            ("verdict", "approve"),
+            ("finding", "none"),
+            ("check finding", check),
+            ("head", "current"),
+            ("CI", "passed"),
+            ("other check", "passed"),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_owned(), v.to_owned()))
+        .collect::<BTreeMap<_, _>>()
+    };
+
+    assert_eq!(gate_outcome(&row("none")), "APPROVE");
+    assert_eq!(gate_outcome(&row("nit")), "APPROVE");
+    assert_eq!(gate_outcome(&row("missing")), "an error");
+    assert_eq!(gate_outcome(&row("blocking")), "REQUEST_CHANGES");
+    assert_eq!(gate_outcome(&row("malformed")), "an error");
 }
 
 #[test]

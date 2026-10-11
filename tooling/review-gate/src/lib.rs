@@ -3,8 +3,10 @@
 //! outcome; this crate, run by the workflow step that alone holds the
 //! reviewer app's key, decides what review to post. It approves only an
 //! approving outcome with no blocking finding, on the head the agent
-//! read, once CI passed there. It is repository tooling and never
-//! links into a shipped executable.
+//! read, once CI passed there. The deterministic checks the review
+//! workflow runs before the agent add their own findings, and a
+//! blocking one withholds approval whatever the agent says. It is
+//! repository tooling and never links into a shipped executable.
 
 pub mod cli;
 
@@ -81,6 +83,9 @@ pub struct Input {
     /// The pull request's head commit now.
     pub head: String,
     pub check_runs: Vec<CheckRun>,
+    /// The findings of the deterministic checks the workflow ran on the
+    /// reviewed head, beside the agent's.
+    pub checked: Vec<Finding>,
 }
 
 /// The pull request review to post, in the shape GitHub's
@@ -97,6 +102,8 @@ pub struct Review {
 pub enum Error {
     /// The agent's output does not fit the review outcome's schema.
     Outcome(String),
+    /// The deterministic checks' findings do not fit their schema.
+    Checked(String),
     /// A line of the check runs is not a check run.
     CheckRun {
         line: usize,
@@ -110,6 +117,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Outcome(msg) => write!(f, "review: malformed review outcome: {msg}"),
+            Self::Checked(msg) => write!(f, "review: malformed deterministic findings: {msg}"),
             Self::CheckRun { line, source } => write!(f, "review: check run line {line}: {source}"),
             Self::Ci(head) => write!(f, "review: CI has not passed on the reviewed head: {head}"),
         }
@@ -120,7 +128,7 @@ impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::CheckRun { source, .. } => Some(source),
-            Self::Outcome(_) | Self::Ci(_) => None,
+            Self::Outcome(_) | Self::Checked(_) | Self::Ci(_) => None,
         }
     }
 }
@@ -158,20 +166,34 @@ fn validate(outcome: &ReviewOutcome) -> Result<(), Error> {
     if outcome.summary.trim().is_empty() {
         return Err(Error::Outcome("no summary".into()));
     }
-    for (i, f) in outcome.findings.iter().enumerate() {
+    validate_findings(&outcome.findings).map_err(Error::Outcome)
+}
+
+/// Decodes the deterministic checks' findings: a list of findings in
+/// the review outcome's shape.
+///
+/// # Errors
+///
+/// Fails on anything that is not such a list.
+pub fn parse_checked(data: &str) -> Result<Vec<Finding>, Error> {
+    let findings: Vec<Finding> =
+        serde_json::from_str(data).map_err(|e| Error::Checked(e.to_string()))?;
+    validate_findings(&findings).map_err(Error::Checked)?;
+
+    Ok(findings)
+}
+
+/// Checks every finding names a severity, a path, a body and a line.
+fn validate_findings(findings: &[Finding]) -> Result<(), String> {
+    for (i, f) in findings.iter().enumerate() {
         if f.severity != BLOCKING && f.severity != NIT {
-            return Err(Error::Outcome(format!(
-                "finding {i}: severity {:?}",
-                f.severity
-            )));
+            return Err(format!("finding {i}: severity {:?}", f.severity));
         }
         if f.path.is_empty() || f.body.trim().is_empty() {
-            return Err(Error::Outcome(format!(
-                "finding {i} has no path or no body"
-            )));
+            return Err(format!("finding {i} has no path or no body"));
         }
         if f.line < 0 {
-            return Err(Error::Outcome(format!("finding {i}: line {}", f.line)));
+            return Err(format!("finding {i}: line {}", f.line));
         }
     }
 
@@ -215,13 +237,20 @@ pub fn decide(input: &Input) -> Result<Option<Review>, Error> {
     let failed: Vec<&CheckRun> = runs.into_iter().filter(|r| failed(r)).collect();
     let approves = input.outcome.verdict == APPROVE_VERDICT
         && failed.is_empty()
-        && !input.outcome.findings.iter().any(is_blocking);
+        && !input.outcome.findings.iter().any(is_blocking)
+        && !input.checked.iter().any(is_blocking);
     let event = if approves { APPROVE } else { REQUEST_CHANGES };
 
     Ok(Some(Review {
         commit_id: input.reviewed.clone(),
         event: event.to_owned(),
-        body: render(&input.outcome, &failed, event, &input.reviewed),
+        body: render(
+            &input.outcome,
+            &input.checked,
+            &failed,
+            event,
+            &input.reviewed,
+        ),
     }))
 }
 
@@ -268,35 +297,127 @@ fn failed(r: &CheckRun) -> bool {
     r.status == "completed" && !["success", "neutral", "skipped"].contains(&r.conclusion.as_str())
 }
 
-/// Writes the review body: the outcome and the head it covers, the
-/// agent's summary, its blocking findings, then its nits, then the
-/// checks that failed.
-fn render(outcome: &ReviewOutcome, failed: &[&CheckRun], event: &str, head: &str) -> String {
+/// Writes the review body. A title names the gate's outcome and the
+/// head it covers; a line gives the review agent's verdict and, when
+/// the gate overrules it, why. Then come the sections, each under a
+/// fixed heading and only when it has content: the review agent's
+/// summary and findings (always), the deterministic checks' findings,
+/// and the checks that failed. Findings list blocking before nits.
+/// Agent text is kept on one line after a label, so it cannot open a
+/// section.
+fn render(
+    outcome: &ReviewOutcome,
+    checked: &[Finding],
+    failed: &[&CheckRun],
+    event: &str,
+    head: &str,
+) -> String {
     let title = if event == APPROVE {
         "Approved"
     } else {
         "Changes requested"
     };
     let short = head.get(..12).unwrap_or(head);
+    let verdict = if outcome.verdict == APPROVE_VERDICT {
+        "approve"
+    } else {
+        "request changes"
+    };
     let mut b = format!(
-        "**{title}** by the review agent on `{short}`.\n\n{}\n",
-        defuse_mentions(&outcome.summary)
+        "**{title}** by the review gate on `{short}`.\n\n\
+         The review agent's verdict: {verdict}."
     );
-    for severity in [BLOCKING, NIT] {
-        for f in outcome.findings.iter().filter(|f| f.severity == severity) {
-            let _ = write!(
-                b,
-                "\n- {severity} `{}`: {}",
-                code_span(&location(f)),
-                defuse_mentions(&f.body)
-            );
-        }
+    if let Some(reason) = overruled(outcome, checked, failed, event) {
+        let _ = write!(b, " The gate requests changes: {reason}.");
     }
-    for r in failed {
-        let _ = write!(b, "\n- check `{}`: {}", code_span(&r.name), r.conclusion);
+    let _ = write!(
+        b,
+        "\n\n### Review agent\n\nSummary: {}\n",
+        defuse_mentions(&one_line(&outcome.summary))
+    );
+    list_findings(&mut b, &outcome.findings);
+    if !checked.is_empty() {
+        b.push_str("\n### Deterministic checks (review-bundle)\n");
+        list_findings(&mut b, checked);
+    }
+    if !failed.is_empty() {
+        b.push_str("\n### Failed checks\n\n");
+        for r in failed {
+            let _ = writeln!(b, "- check `{}`: {}", code_span(&r.name), r.conclusion);
+        }
     }
 
     b
+}
+
+/// Why the gate requests changes on an approving verdict: the first of
+/// a blocking deterministic finding, a failed check and a blocking
+/// finding of the agent's. `None` when the gate follows the verdict.
+fn overruled(
+    outcome: &ReviewOutcome,
+    checked: &[Finding],
+    failed: &[&CheckRun],
+    event: &str,
+) -> Option<&'static str> {
+    let reasons = [
+        (
+            checked.iter().any(is_blocking),
+            "a deterministic check found a blocking finding",
+        ),
+        (!failed.is_empty(), "a check failed"),
+        (
+            outcome.findings.iter().any(is_blocking),
+            "the agent reported a blocking finding",
+        ),
+    ];
+    (event != APPROVE && outcome.verdict == APPROVE_VERDICT)
+        .then(|| reasons.into_iter().find(|(holds, _)| *holds))
+        .flatten()
+        .map(|(_, reason)| reason)
+}
+
+/// Appends `findings` to `b` as a list after a blank line, one line
+/// each, blocking ones first; nothing when there are none.
+fn list_findings(b: &mut String, findings: &[Finding]) {
+    if findings.is_empty() {
+        return;
+    }
+    b.push('\n');
+    for severity in [BLOCKING, NIT] {
+        for f in findings.iter().filter(|f| f.severity == severity) {
+            let _ = writeln!(
+                b,
+                "- {severity} `{}`: {}",
+                code_span(&location(f)),
+                defuse_mentions(&one_line(&f.body))
+            );
+        }
+    }
+}
+
+/// `s` with every run of whitespace that breaks a line, at `\n` or
+/// `\r`, made one space, so no part of it starts a line of the body.
+/// Whitespace within a line stays as it is.
+fn one_line(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        if !c.is_whitespace() {
+            out.push(c);
+            continue;
+        }
+        let mut run = String::from(c);
+        while let Some(w) = chars.next_if(|w| w.is_whitespace()) {
+            run.push(w);
+        }
+        if run.contains(['\n', '\r']) {
+            out.push(' ');
+        } else {
+            out.push_str(&run);
+        }
+    }
+
+    out
 }
 
 /// Names a finding's file, and its line when it has one.
@@ -349,9 +470,10 @@ fn defuse_mentions(s: &str) -> String {
 
 /// `text` made safe to print between backticks: a backtick inside
 /// would close the code span early and let a mention out, so it
-/// becomes a quote.
+/// becomes a quote, and a line break would start a line of the body,
+/// so it is collapsed as [`one_line`] does.
 fn code_span(text: &str) -> String {
-    text.replace('`', "'")
+    one_line(text).replace('`', "'")
 }
 
 /// Whether `c` can be part of a GitHub user name.

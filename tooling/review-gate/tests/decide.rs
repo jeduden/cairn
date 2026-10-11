@@ -1,12 +1,15 @@
 //! The gate's public API as the command line chains it: parse the
-//! agent's outcome and the check runs, then decide.
+//! agent's outcome, the check runs and the deterministic findings,
+//! then decide.
 
 #![allow(
     clippy::unwrap_used,
     reason = "a test's parse of its own fixture fails as the assertion"
 )]
 
-use review_gate::{APPROVE, Input, REQUEST_CHANGES, decide, parse_check_runs, parse_outcome};
+use review_gate::{
+    APPROVE, Input, REQUEST_CHANGES, decide, parse_check_runs, parse_checked, parse_outcome,
+};
 
 const HEAD: &str = "206b0a76a81abb510e53d87ef187e83b5aacbcbb";
 
@@ -19,6 +22,7 @@ fn input(outcome: &str, head: &str) -> Input {
             "{\"name\":\"CI\",\"status\":\"completed\",\"conclusion\":\"success\"}\n",
         )
         .unwrap(),
+        checked: parse_checked("[]").unwrap(),
     }
 }
 
@@ -46,4 +50,17 @@ fn a_head_that_moved_gets_no_review() {
     let got = decide(&input(r#"{"verdict":"approve","summary":"s"}"#, "490efa7")).unwrap();
 
     assert_eq!(got, None);
+}
+
+#[test]
+fn a_blocking_deterministic_finding_overrules_the_agents_approval() {
+    let mut i = input(r#"{"verdict":"approve","summary":"s"}"#, HEAD);
+    i.checked = parse_checked(
+        r#"[{"path":"features/record.feature","line":0,"severity":"blocking","body":"re-pended"}]"#,
+    )
+    .unwrap();
+
+    let got = decide(&i).unwrap();
+
+    assert_eq!(got.map(|r| r.event), Some(REQUEST_CHANGES.to_owned()));
 }

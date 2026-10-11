@@ -94,13 +94,18 @@ ENG-28). It skips drafts, so a pull request is reviewed when it is
 marked ready, which reruns CI. The agent runs on the stakeholder's
 Claude subscription, not an API key billed per model token. It triggers on
 `workflow_run`, so GitHub runs it as `main` defines it, never as the
-pull request does. The review job runs an agent with read-only tools
-on the pull request's tree, following
+pull request does. The review job first runs main's `review-bundle`
+over main's tree and the pull request's: it writes the review bundle
+the agent reads, sets the review's class and makes the deterministic
+findings
+(see Review below). The agent then runs with read-only tools on the
+pull request's tree, following
 [the review skill](../.claude/skills/review/SKILL.md). The agent only
 writes a review outcome. The post job alone has the reviewer app's
 key. It runs the `review-gate` crate's executable, which approves only an
-approving review outcome with no blocking finding, on the reviewed
-head, with `CI` green there; otherwise it requests changes.
+approving review outcome with no blocking finding, its own or a
+deterministic one, on the reviewed head, with `CI` green there;
+otherwise it requests changes.
 [ADR-2609301941](adr/ADR-2609301941-agent-review.md) records why.
 
 [release.yml](../.github/workflows/release.yml) runs from the Actions
@@ -120,6 +125,57 @@ GitHub's build-provenance attestation meets SLSA Build Level 2. Level
 3 needs the build isolated in a reusable workflow; that step keeps
 ENG-20 pending. [SECURITY.md](../SECURITY.md) has the verification
 commands.
+
+## Review
+
+The SRS is enforced at the cheapest layer that can decide each rule.
+About nine in ten requirements name a test as their verification
+method, so their scenario, once off `@pending`, enforces them on every
+pull request without an agent.
+
+What CI decides, on every pull request:
+
+- the requirement–scenario matrix, Appendix B and C and the persona
+  agents (the gate tests), and every drift case (ENG-27);
+- dependencies and their ADRs (ENG-18) and the decision records
+  (ENG-26);
+- rustfmt and clippy, with each product crate's bans on sockets and
+  program starts (I4) and on clocks and hash order (I10), and the
+  reach test;
+- no mutable global state in a product crate (ENG-03);
+- coverage per test layer (ENG-11), and every live scenario.
+
+What `review-bundle` decides, comparing the pull request with main:
+
+- a scenario live on main deleted or put back on `@pending`: blocking;
+- an invariant, or a row ENG-29 marks for I2 review, changed without
+  both an accepted ADR in the same change that names ENG-29 and each
+  guarded id, and a comment of the stakeholder on the pull request:
+  blocking;
+- a clippy ban lifted at a call site, or a diff header it cannot read:
+  a nit, and an unread header makes the review deep.
+
+The review class sets the agent's model, turn budget and tools. A change
+holding only Markdown outside the stakeholder's paths, the domain model,
+plans and scenarios is light. Any path CODEOWNERS assigns makes it
+deep, and only a deep review may consult the read-only reviewer
+subagents. Anything else, an empty diff included, is standard.
+The review bundle quotes only the touched rows, their scenarios and
+the invariants, a few thousand model tokens where the SRS holds
+hundreds of thousands. A re-review starts from the diff since the reviewer app's
+last review, found by the app's own login. The pull request's agent
+instructions move out of the agent's directory, so none loads; the
+agent reads them as data. The posted review names the gate as its
+author, states the agent's verdict, and keeps the agent's findings,
+the deterministic ones and failed checks under their own headings.
+
+What is left to the agent is judgement: whether the code and the step
+bindings do what each touched row says, new paths to the model (I2),
+new reach (I4), content of another principal (I8), errors and seams
+no lint sees, and the domain model's terms. Persona reviews belong to
+plans and SRS changes (the `persona-review` skill), not to each pull
+request. The nightly job takes what is too slow for a pull request:
+fuzzing, crash consistency, soak and benchmarks, as their plans land.
 
 ## The plan catalog and its merge driver
 

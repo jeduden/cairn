@@ -294,7 +294,10 @@ pub fn gate_decides(rows: &[BTreeMap<String, String>]) -> Vec<String> {
 /// on the files one table row describes, and names what it does: the
 /// review event it prints, "nothing" for a head that moved, or "an
 /// error" when it exits unsuccessfully. A `missing` verdict leaves the
-/// outcome file out.
+/// outcome file out. The gate always gets `--checked`: a `check
+/// finding` of `none`, or a row without the column, hands it an empty
+/// list, `nit` or `blocking` one deterministic finding of that
+/// severity, `malformed` a file that is no list, and `missing` no file.
 #[must_use]
 pub fn gate_outcome(row: &BTreeMap<String, String>) -> &'static str {
     const REVIEWED: &str = "206b0a76a81abb510e53d87ef187e83b5aacbcbb";
@@ -310,6 +313,14 @@ pub fn gate_outcome(row: &BTreeMap<String, String>) -> &'static str {
         } else {
             "failure"
         }
+    };
+    let check = match row.get("check finding").map_or("none", String::as_str) {
+        "none" => Some("[]".to_owned()),
+        "missing" => None,
+        "malformed" => Some("nope".to_owned()),
+        severity => Some(format!(
+            r#"[{{"path":"features/x.feature","line":0,"severity":{severity:?},"body":"c"}}]"#
+        )),
     };
     let mut files = BTreeMap::from([(
         "check-runs.jsonl",
@@ -334,7 +345,7 @@ pub fn gate_outcome(row: &BTreeMap<String, String>) -> &'static str {
     } else {
         REVIEWED
     };
-    let args = [
+    let args = vec![
         "--outcome",
         "outcome.json",
         "--check-runs",
@@ -343,7 +354,12 @@ pub fn gate_outcome(row: &BTreeMap<String, String>) -> &'static str {
         REVIEWED,
         "--head",
         head,
+        "--checked",
+        "checked.json",
     ];
+    if let Some(body) = check {
+        files.insert("checked.json", body);
+    }
     let read = |path: &str| {
         files
             .get(path)
@@ -352,7 +368,12 @@ pub fn gate_outcome(row: &BTreeMap<String, String>) -> &'static str {
     };
     let (mut out, mut err) = (Vec::new(), Vec::new());
 
-    let code = review_gate::cli::run(args.map(str::to_owned), &mut out, &mut err, &read);
+    let code = review_gate::cli::run(
+        args.into_iter().map(str::to_owned),
+        &mut out,
+        &mut err,
+        &read,
+    );
     match serde_json::from_slice::<review_gate::Review>(&out) {
         _ if code != review_gate::cli::EXIT_OK => "an error",
         _ if out.is_empty() => "nothing",
