@@ -3,66 +3,77 @@
 A lossless, security-first context layer for long-running Claude
 agents.
 
-Long agent runs compact, and compaction forgets: the rules you set
-fade, and detail the agent needs later is gone. Run several agents
-across worktrees and machines, and you also lose track of what each
-one did and why.
+Long agent runs compact, and compaction forgets: the constraints you
+gave an agent fade, and detail it needs later is gone. Run several
+agents across worktrees and machines, and you also lose track of what
+each one did and why.
 
-Cairn keeps the complete, tamper-evident record of what your agents
-did, one room at a time, on your own machines. A room is where an
-intent is worked on: the intent itself, pins, a conversation among its
-agents and people, and branches in any repository, each commit on them
-naming its room.
+Cairn keeps the complete, append-only, provenance-tagged record of what
+your agents did, one room at a time, on your own machines. The record
+shows tampering by anyone but a process of your own OS user, and by
+that too once a head receipt leaves the machine. A room is where an
+intent is worked on: at most one intent, pins, a conversation among
+the room's principals and the agents with a seat in it, and branches
+in any repository, each commit on them naming its room.
 
-- **Pins come back word for word.** Pin the goal, your constraints and
-  your preferences; after every compaction they return verbatim to
-  your agents in that room.
+- **Pins come back word for word.** Pin the room's intent, your
+  constraints and your preferences. After every compaction they return
+  verbatim, or named by id and count once the pin budget is full, to
+  every agent of yours that has had a seat in that room.
 - **Exact recall on demand.** Agents search and read back their
   history through MCP tools, or run code over it in a hermetic kernel
   with read-only access to the record. Recalled content always arrives
-  marked as untrusted data.
-- **A live view for people.** The room view shows each room as its
-  agents work and what waits on you, in the browser on this machine or
-  in the terminal. Back after a weekend, Catch up says what changed
-  and flags every gap.
+  inside an untrusted-data envelope.
+- **A live view for people.** The room view shows each room live, and
+  what waits on you, in the browser on this machine or in the
+  terminal. Back after a weekend, Catch up says what changed and flags
+  every gap.
 
-All of it without a new path from untrusted content to an agent:
+Where usefulness and safety conflict, Cairn picks safety and makes the
+convenience opt-in:
 
-- Tool output, web pages, files, other people's posts and the model's
-  own replies reach an agent only when it recalls them, inside an
-  untrusted-data envelope. Cairn writes to an agent only through a
-  closed set of paths, and instructions come only from you and those
-  you trust by key.
+- Cairn writes to an agent only through a closed set of paths: restore
+  blocks built from your pins and fixed text, and what your own acts
+  send or allow, such as a steer, an endorsed post or a trust grant.
+  Everything else, from tool output, web pages and files to model
+  replies and other principals' posts, reaches an agent only when it
+  recalls it.
 - The core (hook handlers, MCP server, kernel worker, CLI and TUI)
   runs without a daemon, opens no socket and makes no outbound
-  connection.
-- Every other component stays inside one declared network boundary
-  and is off until you turn it on: the room view and the launcher on
-  this machine only, peers you enroll by key, publishing and bridges
-  to hosts you name. Nothing sends telemetry or depends on a central
-  service.
-- Secrets are redacted before anything is written, and all state
+  connection. Only the core builds what reaches the model.
+- Every other component is reviewed, off until you turn it on, and
+  kept inside one declared network boundary: the room-view component
+  and the launcher listen only on this machine, the peer component
+  reaches only peers and paired phones you enroll by key, and read-only
+  publishing and bridges reach only hosts you name. Managed policy can
+  turn any of them off. Nothing sends telemetry or depends on a central
+  or third-party service.
+- Secrets are redacted before Cairn stores anything, and all state
   lives in one principal's home with strict permissions.
 
 Cairn serves Claude first: Claude Code and the Claude Agent SDK, with
-other harnesses later.
+other harnesses later. Long-term memory stays out of scope; Cairn never
+promotes the record into one.
 
 ## Status
 
-Pre-implementation: everything above is specified, not yet built.
-This repository contains:
+Pre-implementation: everything above is specified, not yet built. The
+record, pins and recall come first (M1 to M3), then the room view and
+the launcher (M7, provisional), the kernel (M4), peers (M8), and
+publishing and bridges (M9); [§12](docs/srs/12-delivery-plan.md) has
+the order. This repository contains:
 
 - the [Software Requirements Specification](docs/srs/index.md), the
   normative source, and the [domain model](docs/domain-model/index.md)
   that defines every term it uses;
 - one Gherkin scenario per requirement under `features/`, almost all
   `@pending`, kept in step with the SRS by a gate test;
-- the `cairn` core executable, whose only command so far is
-  `cairn version`;
+- the `cairn` core executable, whose only commands so far are
+  `cairn version` and `cairn help`;
 - CI (tests, coverage per test layer, clippy, cargo-deny and
   cargo-audit, the drift suite, the release build, Markdown, workflow
   audit), a nightly fuzz job, an agent review of every pull request,
-  and a signed release pipeline, all in Rust;
+  and a signed release pipeline, every gate written in Rust;
 - the delivery plans in [PLAN.md](PLAN.md).
 
 <?include
