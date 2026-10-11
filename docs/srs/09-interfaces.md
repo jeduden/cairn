@@ -9,29 +9,34 @@ summary: >-
 
 ## 9.1 Hook contract
 
-Cairn's hook handlers read each hook's JSON object from stdin and write at most
-one JSON object to stdout. Output uses the harness's `hookSpecificOutput`
-structure; injection uses `additionalContext`. The `PreCompact` handler writes
-plain text instead, and the `PostCompact` handler writes nothing: the harness
-repeats both hooks' output, accepted or rejected, where the model reads it
-(ASM-02). Every handler exits 0: on any other exit status the harness repeats
-the `PreCompact` or `PostCompact` handler's stderr there too. Cairn installs
-each hook with its own harness timeout, `SessionEnd`'s included, and its `Stop`
-handler returns within it (ASM-10). A `SessionStart` with `source` = `fork`
-gets no restore block until OQ-51 (a) is ruled.
+Cairn installs only the hooks through which it writes to an agent:
+`SessionStart`, `UserPromptSubmit` and `PermissionRequest`. It reads everything
+else from the harness's transcripts, which the harness session's MCP server
+ingests as they grow (REC-13). It installs no `PreCompact`, `PostCompact`,
+`PostToolUse`, `Stop`, `SubagentStart`, `SubagentStop`, `SessionEnd` or
+`Notification` hook: the harness repeats some hooks' output and stderr where the
+model reads it (ASM-02), and a `Stop` handler that reaches its timeout keeps
+every `SessionEnd` handler from starting (ASM-10).
 
-| Hook                  | Matcher                      | Inputs used                                                       | Output                                                                                                                                                                                                           | Hook budget (NFR-02)                  | On internal failure                               |
-| --------------------- | ---------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------- |
-| `SessionStart`        | `startup`, `resume`, `clear` | `session_id`, `transcript_path`, `cwd`, `source`                  | Restore block (INJ-02): qualifying pins (PIN-10) and the recall hint                                                                                                                                             | 150 ms                                | Empty output, exit 0, audit                       |
-| `SessionStart`        | `compact`                    | as above                                                          | Restore block (INJ-01)                                                                                                                                                                                           | 150 ms                                | Empty output, exit 0, audit                       |
-| `PreCompact`          | `manual`, `auto`             | `session_id`, `transcript_path`, `trigger`, `custom_instructions` | Compaction guidance as plain text, which the harness appends to the compaction's instructions (ASM-02): fixed text Cairn ships, never record content (PIN-07, I2); never blocks compaction in v1                 | 2 s                                   | Exit 0, audit                                     |
-| `PostCompact`         | —                            | `session_id`, `compact_summary`                                   | None, not even an error; records `compact_summary` as `harness_text`                                                                                                                                             | 100 ms                                | Exit 0, audit                                     |
-| `PostToolUse`, `Stop` | —                            | `session_id`, `transcript_path`                                   | None; incremental ingestion (REC-13)                                                                                                                                                                             | 100 ms                                | Exit 0, audit                                     |
-| `UserPromptSubmit`    | —                            | `session_id`, `prompt`                                            | None recorded from `prompt`: the turn's `user` event comes only from its transcript line (PRV-08), over which PIN-05 derives pin candidates; a restore block only while `restore_block.on_prompt` is on (INJ-04) | 50 ms                                 | Exit 0, audit                                     |
-| `SessionEnd`          | —                            | `session_id`, `transcript_path`                                   | None; writes an ingest marker and ingests what fits                                                                                                                                                              | 1 s                                   | Exit 0, audit                                     |
-| `PermissionRequest`   | —                            | `session_id`, the harness's permission request                    | A permission decision from the rule levels and permission grants the principal signed, with a fixed template (OWN-04); keeps the agent waiting on its held request only under OWN-06                             | 50 ms beyond the hold window (NFR-02) | No decision, exit 0, audit; never allows (OWN-06) |
-| `SubagentStop`        | —                            | `session_id`, `transcript_path`                                   | None; incremental ingestion (REC-13); the harness session's MCP server seals the subagent's run-seat writer as its run stops (REC-19)                                                                            | 100 ms                                | Exit 0, audit                                     |
-| `Notification`        | —                            | `session_id`, the harness's notification text                     | None; ingestion (REC-13)                                                                                                                                                                                         | 100 ms                                | Exit 0, audit                                     |
+Cairn's hook handlers read each hook's JSON object from stdin, check it against
+the shape recorded for its harness version (REC-26), and write at most one JSON
+object to stdout. Output uses the harness's `hookSpecificOutput` structure;
+injection uses `additionalContext`. A hook handler writes nothing to stderr,
+suppresses the default panic message (ENG-04), logs only to the home's log file
+(OPS-05) and exits 0 on every path. Its output carries no field but
+`hookSpecificOutput`, with `additionalContext` built from `TrustedText` or
+OWN-04's decision: never `systemMessage`, `reason`, `stopReason` or `continue`.
+With no `Notification` or `SessionEnd` hook, Cairn records neither a
+notification's text nor a `SessionEnd` `reason`. Cairn installs each hook with
+its own harness timeout (ASM-10), and the commands it installs carry no secret,
+no path under the OS user's home directory and no record content (ADM-17).
+
+| Hook                | Matcher                              | Inputs used                                      | Output                                                                                                                                                                                                                                                                                            | Hook budget (NFR-02)                  | On internal failure                               |
+| ------------------- | ------------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------- |
+| `SessionStart`      | `startup`, `resume`, `clear`, `fork` | `session_id`, `transcript_path`, `cwd`, `source` | Restore block (INJ-02): qualifying pins (PIN-10) and the recall hint                                                                                                                                                                                                                              | 150 ms                                | Empty output, exit 0, audit                       |
+| `SessionStart`      | `compact`                            | as above                                         | Restore block (INJ-01)                                                                                                                                                                                                                                                                            | 150 ms                                | Empty output, exit 0, audit                       |
+| `UserPromptSubmit`  | —                                    | `session_id`, `prompt_id`, `prompt`              | A structural hook observation of the `prompt_id` and the prompt commitment (PRV-08), never the prompt's text: the turn's `user` event comes only from its transcript line (PRV-08), over which PIN-05 derives pin candidates; a restore block only while `restore_block.on_prompt` is on (INJ-04) | 50 ms                                 | Exit 0, audit                                     |
+| `PermissionRequest` | —                                    | `session_id`, the harness's permission request   | A permission decision from the rule levels and permission grants the principal signed, with a fixed template (OWN-04); keeps the agent waiting on its held request only under OWN-06                                                                                                              | 50 ms beyond the hold window (NFR-02) | No decision, exit 0, audit; never allows (OWN-06) |
 
 ## 9.2 MCP tools
 

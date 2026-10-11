@@ -10,7 +10,9 @@
     "subagent": "a foreground subagent running Bash",
     "subagent-compaction": "a subagent compacted automatically (CLAUDE_CODE_AUTO_COMPACT_WINDOW=100000, CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=40)",
     "interactive": "an interactive harness session: three prompts, a rewind, a partial compaction, /exit",
-    "directories": "one harness session in each of /w/my_app, /w/my.app and /w/my-app"
+    "directories": "one harness session in each of /w/my_app, /w/my.app and /w/my-app",
+    "subagent-compaction-background": "spike S13: a background subagent (run_in_background) compacted automatically, with record/snap.sh snapshotting every transcript at each hook (.snap beside each input)",
+    "compaction-during-background": "spike S13: the main agent compacted automatically while a background subagent ran, with snapshots as above"
   },
   "hook_context": [
     "transcripts/projects/-w-my-app/205beaae-e4b8-4798-a1aa-cdf50c807136.jsonl"
@@ -35,9 +37,21 @@
     }
   },
   "subagent_compaction": {
-    "hooks": "subagent-compaction",
-    "main_transcript": "transcripts/projects/-w-sub2/ff036475-48bc-4843-ae69-a8fe3aba87ea.jsonl",
-    "subagent_transcript": "transcripts/projects/-w-sub2/ff036475-48bc-4843-ae69-a8fe3aba87ea/subagents/agent-ad93ff50e4608d660.jsonl"
+    "foreground": {
+      "hooks": "subagent-compaction",
+      "compacting_transcript": "transcripts/projects/-w-sub2/ff036475-48bc-4843-ae69-a8fe3aba87ea/subagents/agent-ad93ff50e4608d660.jsonl",
+      "other_transcript": "transcripts/projects/-w-sub2/ff036475-48bc-4843-ae69-a8fe3aba87ea.jsonl"
+    },
+    "background": {
+      "hooks": "subagent-compaction-background",
+      "compacting_transcript": "transcripts/projects/-w-bg/11c21cff-e184-47a3-8e99-1724125262c2/subagents/agent-a71726b5680b41103.jsonl",
+      "other_transcript": "transcripts/projects/-w-bg/11c21cff-e184-47a3-8e99-1724125262c2.jsonl"
+    },
+    "main_during_background": {
+      "hooks": "compaction-during-background",
+      "compacting_transcript": "transcripts/projects/-w-bg/1dcf1342-e004-400a-95f3-e1adcc196edb.jsonl",
+      "other_transcript": "transcripts/projects/-w-bg/1dcf1342-e004-400a-95f3-e1adcc196edb/subagents/agent-ae8c72f2ae1272398.jsonl"
+    }
   },
   "directories": "directories",
   "timeouts": "timeouts.json",

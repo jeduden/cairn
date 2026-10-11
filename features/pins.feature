@@ -87,16 +87,6 @@ Feature: Pins (PIN)
     When the person runs "cairn pin add --type intent 'Ship CSV export'"
     Then the command exits 2
 
-  @PIN-07 @P1 @I2 @I3 @pending
-  Scenario: compaction guidance is fixed text Cairn ships, free of record content
-    Given an isolated Cairn home
-    And an agent run with a Claude Code transcript "long-run"
-    When the hook "PreCompact" runs with trigger "auto" for "long-run"
-    Then the output carries compaction guidance to preserve constraints stated in trusted "user" events verbatim
-    And the compaction guidance is byte-identical to that for trigger "manual" on an empty record
-    And the compaction guidance is TrustedText, built only from fixed text Cairn ships, and contains no text from "long-run" or from any pin
-    And the hook handler exits 0 without blocking compaction
-
   @PIN-08 @P0 @I3 @I6 @pending
   Scenario: pins over the pin budget are omitted whole, and each omitted pin is named by id and counted
     Given an isolated Cairn home
