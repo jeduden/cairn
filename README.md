@@ -3,30 +3,67 @@
 A lossless, security-first context layer for long-running Claude
 agents.
 
-Long agent runs compact, and compaction forgets. Cairn keeps an
-append-only, provenance-tagged record of every agent run. It restores
-the constraints you pinned, verbatim, after every compaction. The
-agent recalls exact history on demand through MCP tools, always wrapped
-as untrusted data. It does this without opening a new attack surface: no
-automatic path from untrusted content to the model, a daemonless core
-that never touches the network, every other component off until you
-turn it on, strict per-principal isolation.
+Long agent runs compact, and compaction forgets: the rules you set
+fade, and detail the agent needs later is gone. Run several agents
+across worktrees and machines, and you also lose track of what each
+one did and why.
+
+Cairn keeps the complete, tamper-evident record of what your agents
+did, one room at a time, on your own machines. A room is where an
+intent is worked on: the intent itself, pins, a conversation among its
+agents and people, and branches in any repository, each commit on them
+naming its room.
+
+- **Pins come back word for word.** Pin the goal, your constraints and
+  your preferences; after every compaction they return verbatim to
+  your agents in that room.
+- **Exact recall on demand.** Agents search and read back their
+  history through MCP tools, or run code over it in a hermetic kernel
+  with read-only access to the record. Recalled content always arrives
+  marked as untrusted data.
+- **A live view for people.** The room view shows each room as its
+  agents work and what waits on you, in the browser on this machine or
+  in the terminal. Back after a weekend, Catch up says what changed
+  and flags every gap.
+
+All of it without a new path from untrusted content to an agent:
+
+- Tool output, web pages, files, other people's posts and the model's
+  own replies reach an agent only when it recalls them, inside an
+  untrusted-data envelope. Cairn writes to an agent only through a
+  closed set of paths, and instructions come only from you and those
+  you trust by key.
+- The core (hook handlers, MCP server, kernel worker, CLI and TUI)
+  runs without a daemon, opens no socket and makes no outbound
+  connection.
+- Every other component stays inside one declared network boundary
+  and is off until you turn it on: the room view and the launcher on
+  this machine only, peers you enroll by key, publishing and bridges
+  to hosts you name. Nothing sends telemetry or depends on a central
+  service.
+- Secrets are redacted before anything is written, and all state
+  lives in one principal's home with strict permissions.
+
+Cairn serves Claude first: Claude Code and the Claude Agent SDK, with
+other harnesses later.
 
 ## Status
 
-Pre-implementation. This repository contains:
+Pre-implementation: everything above is specified, not yet built.
+This repository contains:
 
 - the [Software Requirements Specification](docs/srs/index.md), the
-  normative source;
+  normative source, and the [domain model](docs/domain-model/index.md)
+  that defines every term it uses;
 - one Gherkin scenario per requirement under `features/`, almost all
   `@pending`, kept in step with the SRS by a gate test;
+- the `cairn` core executable, whose only command so far is
+  `cairn version`;
 - CI (tests, coverage per test layer, clippy, cargo-deny and
-  cargo-audit, the drift suite, the release build,
-  Markdown, workflow audit), a nightly job, and a signed release
-  pipeline, all in Rust;
+  cargo-audit, the drift suite, the release build, Markdown, workflow
+  audit), a nightly fuzz job, an agent review of every pull request,
+  and a signed release pipeline, all in Rust;
 - the delivery plans in [PLAN.md](PLAN.md).
-
-`cairn version` is the only command so far.
 
 <?include
 file: docs/srs/invariants.md
