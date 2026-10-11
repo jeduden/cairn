@@ -257,6 +257,17 @@ fn review_cases() -> Vec<Case> {
             scenario("ENG-28"),
             r#"job post does not run "cargo run --locked --quiet -p review-gate""#,
         ),
+        case(
+            "the review posted without the deterministic findings",
+            "ENG-28",
+            Injection::replace(
+                REVIEW_WORKFLOW,
+                "            --checked checked.json > review.json",
+                "            > review.json",
+            ),
+            scenario("ENG-28"),
+            r#"job post does not run "--checked checked.json""#,
+        ),
     ]
 }
 

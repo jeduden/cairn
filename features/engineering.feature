@@ -248,17 +248,21 @@ Feature: Engineering quality (ENG)
     And only one job holds the "JEDUDEN_REVIEW_AGENT_KEY" key, and it runs no agent
     And that job runs only after the agent's job succeeded
     And that job decides the review with "cargo run --locked --quiet -p review-gate"
+    And that job decides the review with "--checked checked.json"
     And the review gate decides:
-      | verdict         | finding  | head    | CI     | other check | review          |
-      | approve         | none     | current | passed | passed      | APPROVE         |
-      | approve         | nit      | current | passed | passed      | APPROVE         |
-      | approve         | blocking | current | passed | passed      | REQUEST_CHANGES |
-      | approve         | none     | current | passed | failed      | REQUEST_CHANGES |
-      | request_changes | none     | current | passed | passed      | REQUEST_CHANGES |
-      | approve         | none     | moved   | passed | passed      | nothing         |
-      | approve         | none     | current | failed | passed      | an error        |
-      | malformed       | none     | current | passed | passed      | an error        |
-      | missing         | none     | current | passed | passed      | an error        |
+      | verdict         | finding  | check finding | head    | CI     | other check | review          |
+      | approve         | none     | none          | current | passed | passed      | APPROVE         |
+      | approve         | nit      | none          | current | passed | passed      | APPROVE         |
+      | approve         | blocking | none          | current | passed | passed      | REQUEST_CHANGES |
+      | approve         | none     | nit           | current | passed | passed      | APPROVE         |
+      | approve         | none     | blocking      | current | passed | passed      | REQUEST_CHANGES |
+      | approve         | none     | malformed     | current | passed | passed      | an error        |
+      | approve         | none     | none          | current | passed | failed      | REQUEST_CHANGES |
+      | request_changes | none     | none          | current | passed | passed      | REQUEST_CHANGES |
+      | approve         | none     | none          | moved   | passed | passed      | nothing         |
+      | approve         | none     | none          | current | failed | passed      | an error        |
+      | malformed       | none     | none          | current | passed | passed      | an error        |
+      | missing         | none     | none          | current | passed | passed      | an error        |
 
   @ENG-29 @P0 @pending
   Scenario: an invariant or I2-review change lands only with an ADR recording a named security reviewer's approval

@@ -1,7 +1,12 @@
 name: Review
 
 # ENG-21 and ENG-28: an agent reviews each pull request once its CI
-# passes, and the reviewer app posts the outcome. The agent only
+# passes, and the reviewer app posts the outcome. Before the agent
+# runs, main's review-bundle tool reads main's tree and the pull
+# request's: it writes the bundle of touched requirement rows,
+# scenarios and invariants the agent reads first, routes the review by
+# what changed, and makes the findings no agent is needed for (a live
+# scenario put back on @pending, ENG-29's record). The agent only
 # writes a review outcome. A separate job, the only one that holds the
 # app's key, decides with the review-gate crate what review to post: an
 # approval only for an approving verdict with no blocking finding, on
@@ -41,6 +46,7 @@ jobs:
     outputs:
       pull: ${{ steps.pull.outputs.number }}
       outcome: ${{ steps.agent.outputs.structured_output }}
+      checked: ${{ steps.bundle.outputs.checked }}
     steps:
       - name: Find the pull request, unless it is a draft
         id: pull
@@ -73,6 +79,62 @@ jobs:
         env:
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: git -C pr-head diff "origin/main...$HEAD_SHA" > pr.diff
+      # The release rust-toolchain.toml names, so the tool builds as CI
+      # tested it. It is main's tool, built from main's tree; the pull
+      # request's tree is only its input.
+      - name: Install the pinned Rust toolchain
+        if: steps.pull.outputs.number != ''
+        run: >-
+          rustup toolchain install
+          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          --profile minimal --no-self-update
+      # The route sets how deep the review goes, from the paths that
+      # changed: light for Markdown no stakeholder path holds, deep for
+      # any path CODEOWNERS assigns, standard otherwise. A deep review
+      # may consult the read-only reviewer subagents.
+      - name: Bundle what the change touches
+        id: bundle
+        if: steps.pull.outputs.number != ''
+        run: |
+          mkdir -p review
+          cargo run --locked --quiet -p review-bundle -- --base . --head pr-head \
+            --diff pr.diff --out review > route.txt
+          cat route.txt >> "$GITHUB_OUTPUT"
+          class=$(sed -n 's/^class=//p' route.txt)
+          case "$class" in
+            light) model=claude-haiku-5-5; turns=12; tools=Read,Glob,Grep ;;
+            standard) model=claude-sonnet-5-5; turns=30; tools=Read,Glob,Grep ;;
+            deep) model=claude-opus-5-5; turns=40; tools=Read,Glob,Grep,Agent ;;
+            *) echo "::error::review-bundle printed no known class"; exit 1 ;;
+          esac
+          {
+            echo "model=$model"
+            echo "turns=$turns"
+            echo "tools=$tools"
+            echo "checked=$(jq -c . review/checked.json)"
+          } >> "$GITHUB_OUTPUT"
+          cat route.txt "review/checked.json" >> "$GITHUB_STEP_SUMMARY"
+      # A pull request the reviewer app reviewed before: the diff since
+      # that head and that review, so the agent starts from what moved.
+      - name: Find what changed since the last review
+        if: steps.pull.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PULL: ${{ steps.pull.outputs.number }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          last=$(gh api --paginate "repos/$REPO/pulls/$PULL/reviews" \
+            --jq '.[] | select(.user.type == "Bot" and ((.body // "")
+              | test("^\\*\\*(Approved|Changes requested)\\*\\* by the review agent")))
+              | "\(.id) \(.commit_id)"' | tail -n 1)
+          id=${last%% *}
+          sha=${last#* }
+          if [ -n "$last" ] && [ "$sha" != "$HEAD_SHA" ] \
+            && git -C pr-head cat-file -e "$sha^{commit}" 2>/dev/null; then
+            git -C pr-head diff "$sha" "$HEAD_SHA" > review/since-last.diff
+            gh api "repos/$REPO/pulls/$PULL/reviews/$id" --jq .body > review/last-review.md
+          fi
       # A change to a CODEOWNERS path needs the stakeholder's consent
       # (ENG-21), given in a comment or review on the pull request.
       # Only what an owner in main's CODEOWNERS wrote is kept. A
@@ -113,12 +175,14 @@ jobs:
           github_token: ${{ github.token }}
           prompt: |
             Review the pull request whose tree is in pr-head/ and whose diff
-            against main is in pr.diff. Follow .claude/skills/review/SKILL.md
-            exactly, and answer with the review outcome it describes.
+            against main is in pr.diff. Read review/bundle.md first. Follow
+            .claude/skills/review/SKILL.md exactly, and answer with the
+            review outcome it describes.
           claude_args: >-
             --add-dir pr-head
-            --max-turns 30
-            --allowedTools Read,Glob,Grep
+            --model ${{ steps.bundle.outputs.model }}
+            --max-turns ${{ steps.bundle.outputs.turns }}
+            --allowedTools ${{ steps.bundle.outputs.tools }}
             --disallowedTools Bash,Edit,Write,NotebookEdit,WebFetch,WebSearch
             --json-schema '{"type":"object","additionalProperties":false,
             "required":["verdict","summary","findings"],
@@ -175,14 +239,19 @@ jobs:
           gh api "repos/$REPO/pulls/$PULL" --jq .head.sha > head.txt
           gh api --paginate "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
             --jq '.check_runs[] | {id, name, status, conclusion, started_at}' > check-runs.jsonl
+      # The deterministic findings weigh beside the agent's: a blocking
+      # one withholds approval whatever the agent's verdict.
       - name: Decide the review
         env:
           OUTCOME: ${{ needs.review.outputs.outcome }}
+          CHECKED: ${{ needs.review.outputs.checked }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           printf '%s' "$OUTCOME" > outcome.json
+          printf '%s' "$CHECKED" > checked.json
           cargo run --locked --quiet -p review-gate --offline -- --outcome outcome.json \
-            --check-runs check-runs.jsonl --reviewed "$HEAD_SHA" --head "$(cat head.txt)" > review.json
+            --check-runs check-runs.jsonl --reviewed "$HEAD_SHA" --head "$(cat head.txt)" \
+            --checked checked.json > review.json
       - name: Post the review
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}

@@ -277,6 +277,28 @@ fn gate_outcome_names_what_the_gate_does() {
 }
 
 #[test]
+fn gate_outcome_hands_the_gate_a_deterministic_finding() {
+    let row = |check: &str| {
+        [
+            ("verdict", "approve"),
+            ("finding", "none"),
+            ("check finding", check),
+            ("head", "current"),
+            ("CI", "passed"),
+            ("other check", "passed"),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_owned(), v.to_owned()))
+        .collect::<BTreeMap<_, _>>()
+    };
+
+    assert_eq!(gate_outcome(&row("none")), "APPROVE");
+    assert_eq!(gate_outcome(&row("nit")), "APPROVE");
+    assert_eq!(gate_outcome(&row("blocking")), "REQUEST_CHANGES");
+    assert_eq!(gate_outcome(&row("malformed")), "an error");
+}
+
+#[test]
 fn grants_write_reads_quoted_values_and_write_all() {
     assert!(grants_write("      contents: \"write\"\n"));
     assert!(grants_write("      contents: 'write'\n"));
