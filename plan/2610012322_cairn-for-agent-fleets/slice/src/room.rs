@@ -1,8 +1,9 @@
 //! Room state from acts: branch links, merged by LANE-31's rule with no
 //! clock. Of two branch links naming one branch, the first in causal
 //! order stands; of concurrent ones, the one with the lower commitment.
-//! Causal order comes only from the chain heads each header names
-//! (REC-10), so it is the same on every node holding the same writers.
+//! Causal order comes only from the chain heads each header names as
+//! seen (REC-10), so it is the same on every node holding the same
+//! writers.
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -37,15 +38,15 @@ pub struct RoomState {
     pub conflicts: Vec<Conflict>,
 }
 
-/// Each held event's causal past as a vector clock: for every writer,
-/// the highest seq of it this event follows.
-pub struct Clocks {
+/// Each held event's causal past: for every writer, the highest seq of
+/// it this event follows. No clock is read.
+pub struct CausalOrder {
     writers: Vec<String>,
-    clocks: HashMap<Address, Vec<u64>>,
+    pasts: HashMap<Address, Vec<u64>>,
 }
 
-impl Clocks {
-    pub fn of(node: &Node) -> Clocks {
+impl CausalOrder {
+    pub fn of(node: &Node) -> CausalOrder {
         let mut writers: Vec<String> = node
             .events()
             .iter()
@@ -53,7 +54,7 @@ impl Clocks {
             .collect();
         writers.dedup();
         let at = |w: &str| writers.iter().position(|x| x == w);
-        let mut clocks: HashMap<Address, Vec<u64>> = HashMap::new();
+        let mut pasts: HashMap<Address, Vec<u64>> = HashMap::new();
         let mut pending: Vec<Vec<&Event>> = writers
             .iter()
             .map(|w| {
@@ -64,30 +65,30 @@ impl Clocks {
                     .collect()
             })
             .collect();
-        // Advance each writer while every head its next event names is
-        // computed or not held; heads only name sealed, earlier events,
-        // so this always progresses.
+        // Advance each writer while every chain head its next event names
+        // as seen is computed or not held; those name only earlier events
+        // that ended a closed segment, so this always progresses.
         loop {
             let mut progressed = false;
             for (wi, queue) in pending.iter_mut().enumerate() {
                 while let Some(e) = queue.last() {
-                    let ready = e.header.heads.iter().all(|(w, h)| {
+                    let ready = e.header.chain_heads_seen.iter().all(|(w, h)| {
                         let a = Address {
                             writer: w.clone(),
                             seq: h.seq,
                         };
-                        clocks.contains_key(&a) || node.event(&a).is_none()
+                        pasts.contains_key(&a) || node.event(&a).is_none()
                     });
                     if !ready {
                         break;
                     }
-                    let mut vc = queue_prev(&clocks, e).unwrap_or_else(|| vec![0; writers.len()]);
-                    for (w, h) in &e.header.heads {
+                    let mut vc = queue_prev(&pasts, e).unwrap_or_else(|| vec![0; writers.len()]);
+                    for (w, h) in &e.header.chain_heads_seen {
                         let a = Address {
                             writer: w.clone(),
                             seq: h.seq,
                         };
-                        if let Some(other) = clocks.get(&a) {
+                        if let Some(other) = pasts.get(&a) {
                             vc.iter_mut()
                                 .zip(other)
                                 .for_each(|(x, y)| *x = (*x).max(*y));
@@ -96,7 +97,7 @@ impl Clocks {
                         }
                     }
                     vc[wi] = e.header.seq;
-                    clocks.insert(e.address(), vc);
+                    pasts.insert(e.address(), vc);
                     queue.pop();
                     progressed = true;
                 }
@@ -105,7 +106,7 @@ impl Clocks {
                 break;
             }
         }
-        Clocks { writers, clocks }
+        CausalOrder { writers, pasts }
     }
 
     /// Does `a` come before `b` in causal order?
@@ -114,26 +115,27 @@ impl Clocks {
             return a.seq < b.seq;
         }
         let i = self.writers.iter().position(|w| *w == a.writer);
-        match (i, self.clocks.get(b)) {
+        match (i, self.pasts.get(b)) {
             (Some(i), Some(vc)) => vc[i] >= a.seq,
             _ => false,
         }
     }
 }
 
-/// The clock of the writer's previous held event.
-fn queue_prev(clocks: &HashMap<Address, Vec<u64>>, e: &Event) -> Option<Vec<u64>> {
+/// The causal past of the writer's previous held event.
+fn queue_prev(pasts: &HashMap<Address, Vec<u64>>, e: &Event) -> Option<Vec<u64>> {
     let prev = Address {
         writer: e.header.writer.clone(),
         seq: e.header.seq.checked_sub(1)?,
     };
-    clocks.get(&prev).cloned()
+    pasts.get(&prev).cloned()
 }
 
-/// A branch-link act's (room, repository, branch), if `e` is one.
+/// The (room, repository, branch) a link act adding a branch link
+/// names, if `e` is one.
 fn branch_link(e: &Event) -> Option<(String, String, String)> {
     let c = &e.body.as_ref()?.content;
-    if e.header.kind != "act" || c.get("act")?.as_str()? != "branch_link" {
+    if e.header.kind != "act" || c.get("act")? != "link" || c.get("link")? != "branch" {
         return None;
     }
     let s = |k: &str| c.get(k).and_then(|v| v.as_str()).map(str::to_string);
@@ -148,7 +150,7 @@ pub fn derive(node: &Node) -> RoomState {
             groups.entry(key).or_default().push(e);
         }
     }
-    let clocks = Clocks::of(node);
+    let order = CausalOrder::of(node);
     let mut state = RoomState::default();
     for ((room, repository, branch), acts) in groups {
         let first: Vec<&Event> = acts
@@ -157,14 +159,14 @@ pub fn derive(node: &Node) -> RoomState {
             .filter(|e| {
                 !acts
                     .iter()
-                    .any(|o| clocks.before(&o.address(), &e.address()))
+                    .any(|o| order.before(&o.address(), &e.address()))
             })
             .collect();
         let Some(stands) = first.iter().min_by_key(|e| e.header.commitment) else {
             continue;
         };
         for void in acts.iter().filter(|e| e.hash != stands.hash) {
-            let rule = if clocks.before(&stands.address(), &void.address()) {
+            let rule = if order.before(&stands.address(), &void.address()) {
                 FIRST_IN_CAUSAL_ORDER
             } else {
                 LOWER_COMMITMENT
@@ -193,7 +195,7 @@ mod tests {
     use crate::record::{Segment, Writer};
 
     #[test]
-    fn heads_seen_order_events_across_writers() {
+    fn chain_heads_seen_order_events_across_writers() {
         let mut a = Writer::open(b"a", "interactive").unwrap();
         let mut b = Writer::open(b"b", "interactive").unwrap();
         let sa: Segment = a.close_segment().unwrap();
@@ -210,14 +212,14 @@ mod tests {
         let mut n = Node::new(&dir, &[]).unwrap();
         n.receive(&sb).unwrap();
         n.receive(&sa).unwrap();
-        let clocks = Clocks::of(&n);
+        let order = CausalOrder::of(&n);
         let a1 = Address {
             writer: a.id().to_string(),
             seq: 1,
         };
-        assert!(clocks.before(&a1, &b_after));
-        assert!(!clocks.before(&a1, &b_before));
-        assert!(!clocks.before(&b_after, &a1));
-        assert!(clocks.before(&b_before, &b_after));
+        assert!(order.before(&a1, &b_after));
+        assert!(!order.before(&a1, &b_before));
+        assert!(!order.before(&b_after, &a1));
+        assert!(order.before(&b_before, &b_after));
     }
 }

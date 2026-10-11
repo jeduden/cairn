@@ -20,13 +20,14 @@ pub struct Address {
 
 /// Another writer's chain head at a seq, as this writer had seen it.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Head {
+pub struct ChainHead {
     pub seq: u64,
     pub chain_head: [u8; 32],
 }
 
 /// The chained header: only the address, kind, provenance, `prev_hash`,
-/// the heads seen and the commitment (REC-10, REC-17).
+/// the other writers' chain heads seen and the commitment (REC-10,
+/// REC-17).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Header {
     pub writer: String,
@@ -34,14 +35,14 @@ pub struct Header {
     pub kind: String,
     pub provenance: String,
     pub prev_hash: Option<[u8; 32]>,
-    pub heads: BTreeMap<String, Head>,
+    pub chain_heads_seen: BTreeMap<String, ChainHead>,
     pub commitment: Commitment,
 }
 
 impl Header {
     pub fn to_json(&self) -> Value {
         let heads: Map<String, Value> = self
-            .heads
+            .chain_heads_seen
             .iter()
             .map(|(w, h)| {
                 let head = json!({"seq": h.seq, "chain_head": hex(&h.chain_head)});
@@ -54,15 +55,18 @@ impl Header {
             "kind": self.kind,
             "provenance": self.provenance,
             "prev_hash": self.prev_hash.map(|h| hex(&h)).unwrap_or_default(),
-            "heads": heads,
+            "chain_heads_seen": heads,
             "commitment": hex(&self.commitment),
         })
     }
 
     pub fn from_json(v: &Value) -> Result<Header> {
         let mut heads = BTreeMap::new();
-        for (w, h) in field(v, "heads")?.as_object().ok_or_else(|| bad("heads"))? {
-            let head = Head {
+        for (w, h) in field(v, "chain_heads_seen")?
+            .as_object()
+            .ok_or_else(|| bad("chain_heads_seen"))?
+        {
+            let head = ChainHead {
                 seq: uint(h, "seq")?,
                 chain_head: unhex32(text(h, "chain_head")?)?,
             };
@@ -79,7 +83,7 @@ impl Header {
             } else {
                 Some(unhex32(prev)?)
             },
-            heads,
+            chain_heads_seen: heads,
             commitment: unhex32(text(v, "commitment")?)?,
         })
     }
@@ -244,24 +248,25 @@ pub struct Writer {
     id: String,
     /// `log[i]` is the event at seq `i + 1`.
     log: Vec<Event>,
-    seen: BTreeMap<String, Head>,
+    chain_heads_seen: BTreeMap<String, ChainHead>,
     open_from: usize,
     closed: Vec<(usize, usize)>,
 }
 
 impl Writer {
-    /// Opens a writer named by its seat key, recording its deployment
-    /// mode as its first, structural event.
+    /// Opens a writer whose writer id derives from its seat's first key,
+    /// recording the node's deployment mode as its first, structural
+    /// event.
     pub fn open(seat_key: &[u8], deployment_mode: &str) -> Result<Writer> {
         let mut w = Writer {
             id: hex(&Sha256::digest(seat_key)),
             log: Vec::new(),
-            seen: BTreeMap::new(),
+            chain_heads_seen: BTreeMap::new(),
             open_from: 0,
             closed: Vec::new(),
         };
         w.append(
-            "run_start",
+            "deployment_mode",
             "structural",
             json!({"deployment_mode": deployment_mode}),
         )?;
@@ -282,7 +287,7 @@ impl Writer {
             kind: kind.to_string(),
             provenance: provenance.to_string(),
             prev_hash: self.log.last().map(|e| e.hash),
-            heads: self.seen.clone(),
+            chain_heads_seen: self.chain_heads_seen.clone(),
             commitment: commit::commit(&key, &canon::encode(&content)),
         };
         let event = Event {
@@ -296,19 +301,20 @@ impl Writer {
     }
 
     /// The chain head at the end of the newest closed segment.
-    pub fn sealed_head(&self) -> Option<Head> {
+    pub fn closed_chain_head(&self) -> Option<ChainHead> {
         let &(_, end) = self.closed.last()?;
         let e = &self.log[end - 1];
-        Some(Head {
+        Some(ChainHead {
             seq: e.header.seq,
             chain_head: e.hash,
         })
     }
 
-    /// Records the other writer's sealed chain head as seen.
+    /// Records the other writer's chain head at its newest closed
+    /// segment as seen.
     pub fn see(&mut self, other: &Writer) {
-        if let Some(h) = other.sealed_head() {
-            self.seen.insert(other.id.clone(), h);
+        if let Some(h) = other.closed_chain_head() {
+            self.chain_heads_seen.insert(other.id.clone(), h);
         }
     }
 
@@ -475,14 +481,14 @@ mod tests {
     }
 
     #[test]
-    fn see_records_only_the_sealed_head() {
+    fn see_records_only_the_closed_chain_head() {
         let (mut a, mut b) = (keyed(b"a"), keyed(b"b"));
         a.see(&b);
-        assert!(a.seen.is_empty());
+        assert!(a.chain_heads_seen.is_empty());
         b.close_segment();
         b.append("message", "user", json!({"text": "open"}))
             .unwrap();
         a.see(&b);
-        assert_eq!(a.seen[b.id()].seq, 2);
+        assert_eq!(a.chain_heads_seen[b.id()].seq, 2);
     }
 }

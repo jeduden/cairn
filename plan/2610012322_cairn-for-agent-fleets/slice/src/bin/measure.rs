@@ -11,7 +11,7 @@
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use s12slice::fixture::{self, Fleet};
+use s12slice::fixture::{self, TwoWriters};
 use s12slice::index::{self, Ids, Incremental};
 use s12slice::node::Node;
 use s12slice::record::{Address, Event, Segment};
@@ -36,7 +36,7 @@ fn yes(b: bool) -> &'static str {
     if b { "yes" } else { "no" }
 }
 
-fn orders(f: &Fleet) -> [(&'static str, Vec<&Segment>); 2] {
+fn orders(f: &TwoWriters) -> [(&'static str, Vec<&Segment>); 2] {
     [
         (
             "A then B",
@@ -62,7 +62,7 @@ fn main() -> Result<()> {
     std::fs::create_dir_all(&dir)?;
 
     let t = Instant::now();
-    let f = fixture::fleet(per_writer, per_segment)?;
+    let f = fixture::two_writers(per_writer, per_segment)?;
     let secs = t.elapsed().as_secs_f64();
     let all: Vec<&Event> = f
         .a_segments

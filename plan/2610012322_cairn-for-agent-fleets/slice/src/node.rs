@@ -2,8 +2,8 @@
 //!
 //! What a node holds is a function of the set of segments it received,
 //! never of their order: an event's header is the same in every copy
-//! (else the copy is a fork and refused), its content is held while
-//! some copy carried it and no applied tombstone names it.
+//! (a second, different event at a held seq is refused), its content is
+//! held while some copy carried it and no applied tombstone names it.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -11,31 +11,33 @@ use std::path::{Path, PathBuf};
 use crate::record::{Address, Event, Segment, purged_addresses};
 use crate::{Error, Result, index, room};
 
-/// One node's record and key set. Its files live under one directory.
+/// One node's record and its own writers. Its files live under one
+/// directory.
 pub struct Node {
     dir: PathBuf,
-    /// The writers whose seat keys this node holds: their events are
-    /// `witnessed` here, every other writer's `peer` (RCL-09).
-    key_set: BTreeSet<String>,
+    /// The writers of this node's own seats, whose seat keys it holds.
+    /// The slice reads origin from them: their events `witnessed`
+    /// here, every other writer's `peer` (RCL-09).
+    own_writers: BTreeSet<String>,
     held: BTreeMap<String, BTreeMap<u64, Event>>,
     ranges: BTreeMap<String, BTreeSet<(u64, u64)>>,
-    /// Erasure requests this node's principal applied (PEER-11). A
-    /// tombstone in a writer of this node's key set is its own purge
-    /// and needs none.
-    erasures: BTreeSet<Address>,
+    /// The erasure requests this node's principal applied (PEER-11),
+    /// each named by the tombstone the slice stands in for it with. A
+    /// tombstone in one of the node's own writers is its own purge and
+    /// needs none.
+    erasure_requests: BTreeSet<Address>,
 }
 
 impl Node {
-    /// A node holding nothing yet, whose key set holds the seat keys of
-    /// the writers named.
-    pub fn new(dir: &Path, key_set: &[&str]) -> Result<Node> {
+    /// A node holding nothing yet, whose own writers are those named.
+    pub fn new(dir: &Path, own_writers: &[&str]) -> Result<Node> {
         std::fs::create_dir_all(dir)?;
         Ok(Node {
             dir: dir.to_path_buf(),
-            key_set: key_set.iter().map(|s| s.to_string()).collect(),
+            own_writers: own_writers.iter().map(|s| s.to_string()).collect(),
             held: BTreeMap::new(),
             ranges: BTreeMap::new(),
-            erasures: BTreeSet::new(),
+            erasure_requests: BTreeSet::new(),
         })
     }
 
@@ -49,7 +51,10 @@ impl Node {
             if let Some(h) = held.get(&seq)
                 && h.hash != e.hash
             {
-                return Err(Error::new(format!("{:?}: fork, refused", e.address())));
+                return Err(Error::new(format!(
+                    "{:?}: a second, different event at a held seq, refused",
+                    e.address()
+                )));
             }
             let links = [
                 seq.checked_sub(1)
@@ -85,8 +90,9 @@ impl Node {
     }
 
     /// Applies an erasure request: this node's principal erases what
-    /// the tombstone at `tombstone` names (PEER-11).
-    pub fn apply_erasure(&mut self, tombstone: &Address) -> Result<()> {
+    /// the tombstone at `tombstone` names (PEER-11). The slice stands
+    /// in for the request, a signed event, with the tombstone itself.
+    pub fn apply_erasure_request(&mut self, tombstone: &Address) -> Result<()> {
         match self.event(tombstone) {
             Some(e) if e.header.kind == "tombstone" => {}
             _ => {
@@ -95,7 +101,7 @@ impl Node {
                 )));
             }
         }
-        self.erasures.insert(tombstone.clone());
+        self.erasure_requests.insert(tombstone.clone());
         let dirty = self.apply_tombstones();
         self.store(&dirty)
     }
@@ -108,7 +114,8 @@ impl Node {
             .into_iter()
             .filter(|t| t.header.kind == "tombstone")
             .filter(|t| {
-                self.key_set.contains(&t.header.writer) || self.erasures.contains(&t.address())
+                self.own_writers.contains(&t.header.writer)
+                    || self.erasure_requests.contains(&t.address())
             })
             .filter_map(|t| t.body.as_ref())
             .flat_map(|b| purged_addresses(&b.content))
@@ -133,19 +140,23 @@ impl Node {
         self.held.values().flat_map(|w| w.values()).collect()
     }
 
-    /// How the writer's events reached this node (RCL-09).
+    /// How the writer's events reached this node (RCL-09). Origin is
+    /// per event; in the slice every event of a writer reaches a node
+    /// the same way: recorded live by its own writers, received for
+    /// any other.
     pub fn origin(&self, writer: &str) -> &'static str {
-        if self.key_set.contains(writer) {
+        if self.own_writers.contains(writer) {
             "witnessed"
         } else {
             "peer"
         }
     }
 
-    /// The deployment mode the writer recorded in its first event.
+    /// The node's deployment mode as the writer recorded it, in its
+    /// first event.
     fn deployment_mode(&self, writer: &str) -> Option<&str> {
         let first = self.held.get(writer)?.get(&1)?;
-        if first.header.kind != "run_start" {
+        if first.header.kind != "deployment_mode" {
             return None;
         }
         first
@@ -206,9 +217,9 @@ impl Node {
         Ok(())
     }
 
-    /// Rebuilds the search index and room state from the held writers
-    /// and the key set alone (ADM-08) into a new file that replaces the
-    /// old one; returns its path.
+    /// Rebuilds the index file, holding the search index and room state,
+    /// from the held writers and the node's own writers alone (ADM-08),
+    /// as a new file that replaces the old one; returns its path.
     pub fn rebuild(&self) -> Result<PathBuf> {
         let path = self.dir.join("index.db");
         let next = self.dir.join("index.db.next");
@@ -279,9 +290,9 @@ mod tests {
     }
 
     #[test]
-    fn a_fork_is_refused() {
+    fn a_second_event_at_a_held_seq_is_refused() {
         let (w, segs) = writer_with_segments();
-        let mut n = Node::new(&dir("fork"), &[w.id()]).unwrap();
+        let mut n = Node::new(&dir("second-event"), &[w.id()]).unwrap();
         n.receive(&segs[0]).unwrap();
         // The same writer id and seq, another history.
         let mut other = Writer::open(b"k", "interactive").unwrap();
@@ -290,7 +301,7 @@ mod tests {
             .unwrap();
         let forked = other.close_segment().unwrap();
         let err = n.receive(&forked).unwrap_err();
-        assert!(err.0.contains("fork"), "{err}");
+        assert!(err.0.contains("second, different event"), "{err}");
     }
 
     #[test]
@@ -314,11 +325,11 @@ mod tests {
             writer: w.id().to_string(),
             seq: 1,
         };
-        assert!(n.apply_erasure(&not_a_tombstone).is_err());
+        assert!(n.apply_erasure_request(&not_a_tombstone).is_err());
     }
 
     #[test]
-    fn origin_and_trust_follow_the_key_set() {
+    fn origin_and_trust_follow_the_own_writers() {
         let (w, segs) = writer_with_segments();
         let mut own = Node::new(&dir("own"), &[w.id()]).unwrap();
         let mut peer = Node::new(&dir("peer"), &[]).unwrap();

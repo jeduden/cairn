@@ -1,7 +1,7 @@
 //! The scenario the test and the measurement share: two run seats'
-//! writers, A and B, each appending spike S2's corpus, exchanging
-//! sealed chain heads whenever they close a segment, and each linking
-//! one branch to the room.
+//! writers, A and B, each appending spike S2's corpus and recording the
+//! other's chain head at its newest closed segment whenever they close
+//! one, while seats A and B each link one branch to the room.
 
 use serde_json::{Map, Value, json};
 
@@ -11,21 +11,21 @@ use crate::record::{Address, Segment, Writer};
 
 pub const ROOM: &str = "room-1";
 pub const REPOSITORY: &str = "repository-1";
-/// The branch both writers link concurrently: neither had seen the
-/// other's act.
+/// The branch seats A and B link concurrently: neither had seen the
+/// other's link act.
 pub const CONCURRENT_BRANCH: &str = "feature/x";
-/// The branch B links after it had seen A's link.
+/// The branch seat B links after it had seen A's branch link.
 pub const CAUSAL_BRANCH: &str = "feature/y";
 
 /// Both writers and the segments each closed, in the order closed.
-pub struct Fleet {
+pub struct TwoWriters {
     pub a: Writer,
     pub b: Writer,
     pub a_segments: Vec<Segment>,
     pub b_segments: Vec<Segment>,
-    /// A's and B's link of the concurrent branch.
+    /// A's and B's branch link of the concurrent branch.
     pub concurrent_links: (Address, Address),
-    /// A's and B's link of the causal branch, A's first.
+    /// A's and B's branch link of the causal branch, A's first.
     pub causal_links: (Address, Address),
 }
 
@@ -50,17 +50,16 @@ pub fn corpus_event(e: &CorpusEvent) -> (&'static str, String, Value) {
     (kind, provenance, Value::Object(content))
 }
 
-/// A run seat's branch-link act; a run seat's acts take its pin class,
-/// `assistant` (PRV-01).
+/// A run seat's link act adding a branch link; a run seat's acts take
+/// its pin class, `assistant` (PRV-01).
 pub fn link(w: &mut Writer, branch: &str) -> Result<Address> {
-    let act =
-        json!({"act": "branch_link", "room": ROOM, "repository": REPOSITORY, "branch": branch});
+    let act = json!({"act": "link", "link": "branch", "room": ROOM, "repository": REPOSITORY, "branch": branch});
     w.append("act", "assistant", act)
 }
 
-/// Builds the fleet: `per_writer` corpus events each, a segment closed
-/// every `per_segment` of them.
-pub fn fleet(per_writer: usize, per_segment: usize) -> Result<Fleet> {
+/// Builds both writers: `per_writer` corpus events each, a segment
+/// closed every `per_segment` of them.
+pub fn two_writers(per_writer: usize, per_segment: usize) -> Result<TwoWriters> {
     let mut a = Writer::open(b"seat key of A", "interactive")?;
     let mut b = Writer::open(b"seat key of B", "interactive")?;
     let (mut ca, mut cb) = (Corpus::from_seeds(1, 1), Corpus::from_seeds(1, 2));
@@ -90,8 +89,8 @@ pub fn fleet(per_writer: usize, per_segment: usize) -> Result<Fleet> {
     b.see(&a);
     let b_causal = link(&mut b, CAUSAL_BRANCH)?;
     close(&mut b, &mut b_segments);
-    let concurrent_links = concurrent.ok_or_else(|| crate::Error::new("fleet too small"))?;
-    Ok(Fleet {
+    let concurrent_links = concurrent.ok_or_else(|| crate::Error::new("too few events"))?;
+    Ok(TwoWriters {
         a,
         b,
         a_segments,

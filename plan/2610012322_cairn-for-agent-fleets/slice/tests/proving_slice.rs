@@ -1,12 +1,12 @@
 //! Spike S12, plan 2610012322 phase 1's gate: two writers' segments,
-//! merged in either order, rebuild a byte-identical index and one room
-//! state; every event keeps its writer and trust, and the other
+//! received in either order, rebuild a byte-identical index file, the
+//! search index and one room state; every event keeps its writer and trust, and the other
 //! writer's events read untrusted; a purged event leaves no stored or
 //! replicated value that confirms a guess at its content.
 
 use std::path::PathBuf;
 
-use s12slice::fixture::{self, CAUSAL_BRANCH, CONCURRENT_BRANCH, Fleet};
+use s12slice::fixture::{self, CAUSAL_BRANCH, CONCURRENT_BRANCH, TwoWriters};
 use s12slice::index;
 use s12slice::node::Node;
 use s12slice::record::{Address, Event, Segment};
@@ -16,8 +16,8 @@ use s12slice::scan::{self, Guess};
 const PER_WRITER: usize = 2_000;
 const PER_SEGMENT: usize = 250;
 
-fn fleet() -> Fleet {
-    fixture::fleet(PER_WRITER, PER_SEGMENT).unwrap()
+fn two_writers() -> TwoWriters {
+    fixture::two_writers(PER_WRITER, PER_SEGMENT).unwrap()
 }
 
 fn fresh(name: &str) -> PathBuf {
@@ -29,7 +29,8 @@ fn fresh(name: &str) -> PathBuf {
     dir
 }
 
-/// A node with the named key set that received the segments in order.
+/// A node with the named own writers that received the segments in
+/// order.
 fn node<'a>(name: &str, keys: &[&str], segments: impl IntoIterator<Item = &'a Segment>) -> Node {
     let mut n = Node::new(&fresh(name), keys).unwrap();
     for s in segments {
@@ -53,7 +54,7 @@ fn events(segments: &[Segment]) -> impl Iterator<Item = &Event> {
 }
 
 /// B's segments newest first, interleaved with A's, then A's again.
-fn reordered(f: &Fleet) -> Vec<&Segment> {
+fn reordered(f: &TwoWriters) -> Vec<&Segment> {
     let mut out = Vec::new();
     let mut b = f.b_segments.iter().rev();
     for a in &f.a_segments {
@@ -67,7 +68,7 @@ fn reordered(f: &Fleet) -> Vec<&Segment> {
 
 #[test]
 fn either_order_rebuilds_a_byte_identical_index_on_each_node() {
-    let f = fleet();
+    let f = two_writers();
     let mut per_node = Vec::new();
     for (name, key) in [("a", f.a.id()), ("b", f.b.id())] {
         let ab = node(
@@ -95,13 +96,13 @@ fn either_order_rebuilds_a_byte_identical_index_on_each_node() {
         per_node.push(bytes);
     }
     // The comparison is not vacuous: trust derives per node, so the
-    // two nodes' indexes differ.
+    // two nodes' index files differ.
     assert_ne!(per_node[0], per_node[1]);
 }
 
 #[test]
 fn every_event_keeps_its_writer_and_the_other_writers_events_read_untrusted() {
-    let f = fleet();
+    let f = two_writers();
     let (a, b) = (f.a.id(), f.b.id());
     let all: Vec<&Event> = events(&f.a_segments).chain(events(&f.b_segments)).collect();
     let mut expected: Vec<Address> = all.iter().map(|e| e.address()).collect();
@@ -153,7 +154,7 @@ fn every_event_keeps_its_writer_and_the_other_writers_events_read_untrusted() {
 
 #[test]
 fn either_order_derives_one_branch_link_per_branch() {
-    let f = fleet();
+    let f = two_writers();
     let a = f.a.id();
     let ab = node("room-ab", &[a], f.a_segments.iter().chain(&f.b_segments));
     let ba = node("room-ba", &[a], f.b_segments.iter().chain(&f.a_segments));
@@ -168,7 +169,7 @@ fn either_order_derives_one_branch_link_per_branch() {
             .map(|l| l.act.clone())
             .collect()
     };
-    // Concurrent links: the lower commitment stands (LANE-31).
+    // Concurrent branch links: the lower commitment stands (LANE-31).
     let (la, lb) = &f.concurrent_links;
     let commitment = |at: &Address| {
         events(&f.a_segments)
@@ -184,7 +185,8 @@ fn either_order_derives_one_branch_link_per_branch() {
         lb
     };
     assert_eq!(standing(CONCURRENT_BRANCH), vec![lower.clone()]);
-    // B linked after it had seen A's link: the first in causal order stands.
+    // Seat B linked after it had seen A's branch link: the first in
+    // causal order stands.
     assert_eq!(standing(CAUSAL_BRANCH), vec![f.causal_links.0.clone()]);
 
     // Each resolved conflict is recorded with both acts.
@@ -199,7 +201,7 @@ fn either_order_derives_one_branch_link_per_branch() {
     expected.sort();
     assert_eq!(named, expected);
 
-    // The index holds the same room state.
+    // The index file holds the same room state.
     let mut in_index = index::branch_links(&ab.rebuild().unwrap()).unwrap();
     in_index.sort();
     let mut derived: Vec<(String, Address)> = state
@@ -213,7 +215,7 @@ fn either_order_derives_one_branch_link_per_branch() {
 
 #[test]
 fn a_purged_event_leaves_nothing_that_confirms_a_guess() {
-    let mut f = fleet();
+    let mut f = two_writers();
     let (a, b) = (f.a.id().to_string(), f.b.id().to_string());
     let originals: Vec<Segment> = f.a_segments.clone();
 
@@ -333,7 +335,7 @@ fn a_purged_event_leaves_nothing_that_confirms_a_guess() {
         node_b.receive(s).unwrap();
     }
     assert!(!stored_confirmations(&node_b, &guess).is_empty());
-    node_b.apply_erasure(&tombstone).unwrap();
+    node_b.apply_erasure_request(&tombstone).unwrap();
     assert_eq!(stored_confirmations(&node_b, &guess), Vec::<String>::new());
     for s in &originals {
         node_b.receive(s).unwrap();

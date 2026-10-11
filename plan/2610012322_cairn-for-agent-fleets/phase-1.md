@@ -29,8 +29,8 @@ RED: a test in a separate module beside this plan, reusing S2's
 corpus, writes events as segments for two writers, A and B. It builds
 the SQLite index from A then B, and from B then A. It fails until both
 indexes are byte-identical, every event keeps its writer and trust,
-and B's events read as untrusted on A's node. It also has both
-writers link one branch to the room, and fails until both orders derive
+and B's events read as untrusted on A's node. It also has seats A and
+B each link one branch to the room, and fails until both orders derive
 one branch link (LANE-31; SRS 2.0 renamed the lane to the room, whose
 branches branch links name). It purges one of A's events and fails
 until no stored or replicated value matches a guess at its content

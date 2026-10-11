@@ -161,10 +161,10 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                                                                                                                                                                                                           |
-| --- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | ✅     | [Scope proposal and the record/index proving slice](phase-1.md)                                                                                                                                                                                 |
-|     | ↳      | Spike S12 passes: two writers' segments in either order rebuild a byte-identical index, foreign events stay untrusted, one branch link stands, a purge leaves nothing confirming a guess. ADM-08 needs a decision for an index kept per append. |
+| #   | Status | Phase                                                                                                                                                                                                                                                   |
+| --- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ✅     | [Scope proposal and the record/index proving slice](phase-1.md)                                                                                                                                                                                         |
+|     | ↳      | Spike S12 passes: on each node, two writers' segments in either order rebuild a byte-identical index file, foreign events stay untrusted, one branch link stands, a purge leaves nothing confirming a guess. Byte-identity per append needs a decision. |
 <?/catalog?>
 
 ## Acceptance Criteria
@@ -179,5 +179,5 @@ footer: |
   accepted on 4 October 2026
 - [ ] M1 is re-planned on the approved identity model
 - [x] All tests pass: `cargo test --workspace` at the root and
-  `cargo test` in the prototype's own crate
+  `cargo test` in the proving slice's own crate
 - [x] `mdsmith check .` is clean
