@@ -15,11 +15,12 @@
 # posts (ENG-28). The workflow that runs it is under /.github/.
 /tooling/                     @jeduden
 
-# The core executable's reach evidence (SEC-01, ENG-16): the clippy
-# configuration that refuses sockets and program starts in its code,
-# and the test that refuses a crate linked into it.
-/crates/cairn/clippy.toml     @jeduden
-/crates/cairn/tests/reach.rs  @jeduden
+# The core crates' reach and determinism evidence (SEC-01, ENG-16,
+# ENG-03): each crate's clippy configuration, which refuses sockets,
+# program starts, clocks and random order in its code, and the test
+# that refuses a crate linked into it.
+/crates/*/clippy.toml         @jeduden
+/crates/*/tests/reach.rs      @jeduden
 
 # CI, the coverage floors, the toolchain pins, the lint and supply-chain
 # configuration and this file.
@@ -48,12 +49,12 @@
 # reviewer is still TBD (SRS front matter), so the stakeholder holds
 # the role until one is named: replace @jeduden on each line with the
 # reviewer's user or team then.
-/internal/provenance/         @jeduden
-/internal/redact/             @jeduden
-/internal/flag/               @jeduden
-/internal/query/              @jeduden
-/internal/envelope/           @jeduden
-/internal/inject/             @jeduden
-/internal/pin/                @jeduden
-/internal/landmark/           @jeduden
-/internal/config/             @jeduden
+/crates/provenance/           @jeduden
+/crates/redaction/            @jeduden
+/crates/flag/                 @jeduden
+/crates/search/               @jeduden
+/crates/envelope/             @jeduden
+/crates/restore_block/        @jeduden
+/crates/pin/                  @jeduden
+/crates/landmark/             @jeduden
+/crates/configuration/        @jeduden
