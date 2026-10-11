@@ -23,7 +23,7 @@ The [spike report][report] ran the Go harness's measurements on the
 same 10M-event corpus. The store must meet NFR-03, NFR-04, NFR-05 and
 NFR-09, cancel a query on a deadline (ENG-03), keep the core inside
 its reach (I4, SEC-01) and build as one executable per target, static
-on Linux (CON-02), reproducibly (ENG-19).
+on Linux (CON-02).
 
 ## Decision
 
@@ -70,10 +70,9 @@ reach test's allow-list in the change that links the store.
   1.96× text, the schema's cost, for spike S8 to settle.
 - The release workflow builds the musl targets with `rust-lld` alone.
   SQLite is C, so the change that links the store also pins a C
-  compiler and the musl headers on both Linux builders, the way
-  mingw-w64 is pinned, and proves the two builders still give the same
-  bytes (ENG-19). Clang 18 with musl 1.2.4's headers built both musl
-  targets in the spike.
+  compiler and both targets' musl headers on the Linux builder, the
+  way mingw-w64 is pinned. Clang 18 with musl 1.2.4's headers built
+  both musl targets in the spike.
 - SQLite's own security fixes arrive through `libsqlite3-sys`
   releases, reviewed as dependency updates.
 - Encryption at rest needs a design of its own (OQ-04): SQLCipher on a

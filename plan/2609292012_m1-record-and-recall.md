@@ -33,9 +33,9 @@ proposed). It leaves five things for M1:
   allows its six crates.
 - That change builds SQLite with extension loading compiled out, so
   no `dlopen` links into the core.
-- It also pins a C compiler and the musl headers on both Linux
-  builders, since bundled SQLite does not build with `rust-lld`
-  alone, and shows the two builders still agree (ENG-19).
+- It also pins a C compiler and both musl targets' headers on the
+  Linux builder, since bundled SQLite does not build with `rust-lld`
+  alone.
 - Task 6 bounds BM25 ranking. Full ranking takes 1.45 s p95 on
   emulated reference hardware. Ranking only the newest 2,000 matches
   meets NFR-03 at 172 ms p95, with a 548 ms p99 to watch.

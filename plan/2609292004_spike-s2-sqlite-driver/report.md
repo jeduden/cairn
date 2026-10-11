@@ -30,8 +30,8 @@ program-start code. Two things need work before the core links it:
   `dlopen`. `LIBSQLITE3_FLAGS=-DSQLITE_OMIT_LOAD_EXTENSION` compiles it
   out.
 - The release workflow builds the musl targets with `rust-lld` alone.
-  SQLite is C, so those builds need a pinned C compiler and musl
-  headers on both Linux builders.
+  SQLite is C, so those builds need a pinned C compiler and both
+  targets' musl headers on the Linux builder.
 
 The store overhead still misses NFR-09's 1.5×: the schema causes it,
 not the driver.
@@ -82,7 +82,7 @@ writing process opened its own connection per transaction, as a hook
 handler process does, and appended one to three events inside `BEGIN
 IMMEDIATE`. The verification recomputed the whole hash chain.
 
-## Reach, licenses and builds (SEC-01, I4, ENG-18, CON-02, ENG-19)
+## Reach, licenses and builds (SEC-01, I4, ENG-18, CON-02)
 
 The smallest binary that opens a store with FTS5 links six crates:
 `rusqlite`, `libsqlite3-sys`, `bitflags`, `fallible-iterator`,
@@ -111,9 +111,10 @@ there. Building with `LIBSQLITE3_FLAGS="-USQLITE_ENABLE_LOAD_EXTENSION
 
 The aarch64 binary was built, not run: the host has no emulator. Two
 builds of the static amd64 binary from different directories, with
-the workflow's path remapping, gave the same bytes. Whether the amd64
-and arm64 builders give the same bytes for each target (ENG-19) needs
-the same pinned C compiler on both, and a CI run to prove it.
+the workflow's path remapping, gave the same bytes. ENG-19 is
+withdrawn, so the release needs no more than that: one x86_64 Linux
+builder builds both musl targets and the Windows target, and it needs
+a pinned C compiler and both targets' musl headers.
 
 ## Performance at 10M events
 

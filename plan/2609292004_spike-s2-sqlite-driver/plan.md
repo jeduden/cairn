@@ -43,7 +43,7 @@ it. The Go harness and report stay as history in
 4. [x] Probe SQLCipher, bundled with its crypto, for OQ-04
 5. [x] Check the reach and licenses of what `rusqlite` links, and build
    it statically for every release target the way the release
-   workflow does (CON-02, ENG-19)
+   workflow does (CON-02)
 6. [x] Write the report and record the driver in a dependency ADR,
    proposed until the M1 change that links the store accepts it
    (ENG-18, ENG-26)
@@ -78,10 +78,10 @@ Handed on:
 
 - M1's query compiler ranks the newest matches and watches the p99,
   548 ms on reference hardware.
-- The change that links the store pins a C compiler and the musl
-  headers on both Linux builders and proves ENG-19 still holds. The
-  release workflow builds musl with `rust-lld` alone today, and
-  bundled SQLite does not build that way.
+- The change that links the store pins a C compiler and both musl
+  targets' headers on the Linux builder. The release workflow builds
+  musl with `rust-lld` alone today, and bundled SQLite does not build
+  that way.
 - OQ-04 stays open: SQLCipher with vendored OpenSSL links socket code
   into the core. The options go to the security review.
 - Spike S8 freezes NFR-09's 1.5× store overhead.
