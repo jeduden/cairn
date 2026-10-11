@@ -44,7 +44,9 @@ Feature: Provenance and trust (PRV)
     And "cairn verify" <verify>
     And the event shapes restore blocks and trust levels only if it is trusted and "cairn verify" reports nothing about it
     And a "user" line whose "promptSource" marks the harness's own notice is stored as untrusted "harness_text", and a "user" line this node's capture recorded live that matches no prompt commitment, carries another "promptId" or is marked "sdk" stays "user" but untrusted
-    And a second line matching a prompt commitment another line already matched is untrusted, and the counter "prompt_match_conflicts" increases by 1
+    And the first line carrying a prompt commitment's prompt_id uses it up whatever its promptSource, so a later line carrying that prompt_id, typed or not, is untrusted, the counter "prompt_match_conflicts" increases by 1 and an audit entry records the conflict
+    And each match is a structural event naming the "user" event and its prompt_id
+    And a "harness_meta" event its capture read from a transcript line is untrusted, while its sanitized structural fields, such as model tokens, stay usable
     And after "cairn rebuild" every event's trust level is unchanged
     And a purge of a matched "user" event erases its prompt commitment and that commitment's key
     And the free text a cut or neutral principal act carries, such as a stated reason, is recalled as untrusted, while the act's own "operator" event keeps its trust level and shapes what the act changes
@@ -52,8 +54,9 @@ Feature: Provenance and trust (PRV)
     Examples:
       | mode        | writer                                                                                                            | provenance       | trust     | verify                                                   |
       | automation  | a writer of this node                                                                                             | operator         | trusted   | reports nothing                                          |
-      | automation  | a writer of this node, recorded live by its capture                                                               | harness_meta     | trusted   | reports nothing                                          |
-      | interactive | a writer of this node, recorded live by its capture                                                               | harness_meta     | trusted   | reports nothing                                          |
+      | automation  | a writer of this node, recorded by its hook handlers or launcher                                                  | harness_meta     | trusted   | reports nothing                                          |
+      | interactive | a writer of this node, recorded by its hook handlers or launcher                                                  | harness_meta     | trusted   | reports nothing                                          |
+      | interactive | a writer of this node, recorded live by its capture from a transcript line                                        | harness_meta     | untrusted | reports nothing                                          |
       | interactive | a writer of this node, recorded live by its capture and matched to a prompt its hook handler got                  | user             | trusted   | reports nothing                                          |
       | automation  | a writer of this node, recorded live by its capture and matched to a prompt its hook handler got                  | user             | untrusted | reports nothing                                          |
       | interactive | a writer of this node                                                                                             | assistant        | untrusted | reports nothing                                          |
@@ -125,7 +128,7 @@ Feature: Provenance and trust (PRV)
   @PRV-06 @P0 @I2 @pending
   Scenario Outline: a landmark, or kernel output, a recall result or an export built from events, records the events it comes from and inherits their taint
     Given an isolated Cairn home
-    And this node's record contains an event with provenance "harness_meta" its capture recorded and one with provenance "web"
+    And this node's record contains an event with provenance "harness_meta" its hook handlers recorded and one with provenance "web"
     When the <artifact> is made from both events
     Then the <artifact> records the addresses of both events it comes from
     And the <artifact> has trust "untrusted"

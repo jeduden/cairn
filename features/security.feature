@@ -390,6 +390,7 @@ Feature: Security (SEC)
     Then every copy in any writer's log, found by address or commitment, is erased or tombstoned, and the backup is erased or listed
     And ingesting its transcript positions again from the harness transcript is refused with an audit entry
     And a signed purge receipt names the scope, the ranges, the copies erased and every known copy Cairn cannot erase
+    And every prompt commitment whose prompt_id a purged event's line carries, matched or not, is erased with its key, and the receipt counts them
 
   @SEC-32 @P1 @I2 @I6 @pending
   Scenario: the facilitator moderates within its appointment's limits and reaches no agent as trusted without a trust grant

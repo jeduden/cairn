@@ -73,9 +73,19 @@ Feature: Record (REC)
     Given a fresh isolated Cairn home "E" where "cairn ingest" recorded "parent-run"
     When the MCP server of "forked-run" ingests it live
     Then the 40 repeated lines are events of their own in the writer of the run of "forked-run", never repeat references to the ingested events, each audited
-    Given a fresh isolated Cairn home "F" whose MCP server of "forked-run" holds the repeated lines for "parent-run", which no MCP server of this node holds a session binding for
+    Given a fresh isolated Cairn home "F" on an injected clock, where no MCP server holds a session binding for "parent-run"
+    When the MCP server of "forked-run" ingests its repeated lines live
+    Then they go at once into the writer of the run of "forked-run", audited, with no hold
+    Given a fresh isolated Cairn home "G" on an injected clock, where an MCP server holds the session binding for "parent-run" but has not ingested the repeated lines
+    When the MCP server of "forked-run" ingests them live
     Then the hold is counted and shown by "cairn status"
-    And after 30 s the lines are released into the writer of the run of "forked-run" and audited
+    And once the clock passes 30 s the lines are released into the writer of the run of "forked-run" and audited
+    Given a fresh isolated Cairn home "H" where the lines of "forked-run" are held for "parent-run"
+    When the transcript of "parent-run" is deleted
+    Then the held lines are released into the writer of the run of "forked-run" and audited (REC-08)
+    Given a fresh isolated Cairn home "I" where two witnessed transcripts that repeat each other's lines were recorded by different recorders
+    When both are ingested
+    Then the repeated lines are events of their own in each run's writer, never repeat references, each audited
     Given a transcript "planted-run" in the transcript directory of "parent-run" that repeats the uuid of a line of "parent-run" with other text
     When the person runs "cairn ingest --all"
     Then that line of "planted-run" is recorded as its own event, the counter "repeat_conflicts" increases by 1 and an audit entry records the conflict
@@ -180,7 +190,7 @@ Feature: Record (REC)
   Scenario Outline: the harness session's MCP server ingests its transcripts as they grow, once bound to its harness session, and marks what it leaves when it stops
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run" and a subagent transcript "explore-agent"
-    And the "SessionStart" hook handler of the run's harness process recorded the binding at line 12 of "main-run"
+    And the "SessionStart" hook handler of the run's harness process recorded the session binding at line 12 of "main-run"
     And a neighbouring transcript "other-run" in the same transcript directory
     And a session binding another harness process's "SessionStart" hook handler recorded in the home for "other-run"
     When the harness session's MCP server starts before any session binding exists, and the harness appends 5 lines to "main-run"
@@ -189,13 +199,14 @@ Feature: Record (REC)
     And the harness appends 200 lines to "main-run" and 50 to "explore-agent"
     Then the events of the first 120 lines of "main-run" are in the record before the MCP server stops
     And nothing of "other-run" is ingested as witnessed
-    And after the session binding is checked, "main-run" is replaced by a symlink to "~/.ssh/id_ed25519", and the MCP server refuses it, audited, opening no socket
     When <stop>
     Then the events ingested are a prefix of each transcript, in its order
     And the event the "SessionStart" hook input made sits at line 12 of "main-run"
     And an ingest marker records the remainder of each transcript ingest did not reach
     And <resume> resumes from the ingest marker, and the record then holds every line once
     And <auditor> audits the stop under a named counter that is not a failure counter, shown by "cairn status"
+    When after its session binding is checked, the subagent transcript "explore-agent" is replaced by a symlink to "~/.ssh/id_ed25519"
+    Then the MCP server refuses to read it, audited, and opened no socket throughout
 
     Examples:
       | stop                                                             | resume                             | auditor                                   |

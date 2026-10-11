@@ -98,5 +98,7 @@ explain them. They leave four things for M1:
 - [ ] `cairn verify` proves completeness, and quarantine is effective
 - [ ] ENG-11 coverage floors hold for every security-sensitive package
   landed
+- [ ] The property test of ENG-08 for a harness fork's ingest order (REC-04)
+  passes over generated forks and orders
 - [ ] The transcript parser's fuzz target runs nightly from the corpus
   S3 recorded, and its row of @ENG-07 passes

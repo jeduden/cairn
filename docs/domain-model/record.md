@@ -47,10 +47,11 @@ summary: >-
 - **Seal**: A seat key's signature over its writer id, a seq and the chain head
   at that seq (REC-18), made where that key lives (REC-19). Events after the
   newest seal are unsigned.
-- **Prompt commitment**: A commitment to the redacted text of a prompt a
-  `UserPromptSubmit` hook handler got, kept with the hook input's `prompt_id`
-  in a structural hook observation under a node-local key, which PRV-08 matches
-  against one transcript line and a purge of that line's event erases.
+- **Prompt commitment**: Unlike an event's commitment, a commitment to the
+  redacted text a `UserPromptSubmit` hook handler got, under its own random key
+  kept only on this node, recorded with the hook input's `prompt_id` in a
+  structural hook observation; the first transcript line carrying that
+  `prompt_id` uses it up, and purge erases it with its key (PRV-08, SEC-31).
 - **Commitment**: A keyed commitment to an event's content under a per-event
   random key, its **commitment key**, kept with the content and erased with it;
   the only way the chain, seals and tombstones refer to content, but for what a
@@ -61,7 +62,8 @@ summary: >-
   `harness_text` (Turn), `operator`, `post`, `summary`, `structural` and
   `unparsed`. `harness_meta` is what the harness reports, or the launcher
   records, about the harness's operation, never free text: turn triggers, model
-  tokens, metadata lines and sandbox state (PRV-08, OWN-22).
+  tokens, metadata lines and sandbox state (PRV-08, OWN-22); only what a hook
+  handler or the launcher records is trusted, never what a transcript line says.
   `operator` is the class of principal acts, expire acts and device-seat pins,
   and `assistant` of run-seat pins; posts are `post`, room summaries `summary`,
   and every other room act takes its seat's **pin class**, `operator` for a

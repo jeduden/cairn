@@ -78,12 +78,13 @@ Feature: Engineering quality (ENG)
     Then the property "<property>" is true of every one
 
     Examples:
-      | property                                                                                                           |
-      | within each writer's log, seq is strictly increasing and gap-free, so no two events share an address (writer, seq) |
-      | ingest twice equals ingest once                                                                                    |
-      | rebuild reproduces derived artifacts exactly                                                                       |
-      | envelope encoding round-trips any byte sequence                                                                    |
-      | sanitized fields never contain restore delimiters                                                                  |
+      | property                                                                                                                                                      |
+      | within each writer's log, seq is strictly increasing and gap-free, so no two events share an address (writer, seq)                                            |
+      | ingest twice equals ingest once                                                                                                                               |
+      | every order of ingesting a harness fork's transcripts, with a fork observation, records each repeated line in the same writer with the same repeat references |
+      | rebuild reproduces derived artifacts exactly                                                                                                                  |
+      | envelope encoding round-trips any byte sequence                                                                                                               |
+      | sanitized fields never contain restore delimiters                                                                                                             |
 
   @ENG-09 @P0 @pending
   Scenario: data races are excluded and the store survives a concurrency soak
