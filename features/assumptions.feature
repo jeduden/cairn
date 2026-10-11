@@ -76,20 +76,27 @@ Feature: Assumptions register (ASM)
     And no transcript younger than 30 days was deleted
 
   @ASM-06
-  Scenario Outline: subagent compaction hooks carry the main agent's identity (S1)
+  Scenario Outline: compaction hooks carry the main agent's identity whichever agent compacts, and name the compacting agent nowhere until they return (S1, S13)
     Given a recorded hook input for Claude Code "supported"
-    And the hook input was captured during a subagent's compaction
+    And the hook input was captured during <case> compaction
     When the hook "<Event>" runs with the recorded hook input
     Then its "session_id" and "transcript_path" are the main agent's harness session's
     And it carries <extra>
     And it carries no subagent-specific field
-    And the additional context of the "SessionStart" hook that follows it lands in the subagent's transcript, where the model reads it
+    And the additional context of the "SessionStart" hook that follows it lands in the compacting agent's transcript, where the model reads it, and in no other
+    And <timing>
 
     Examples:
-      | Event        | extra                     |
-      | PreCompact   | "trigger" set to "auto"   |
-      | SessionStart | "source" set to "compact" |
-      | PostCompact  | "trigger" set to "auto"   |
+      | case                                               | Event        | extra                     | timing                                                                                 |
+      | a foreground subagent's                            | PreCompact   | "trigger" set to "auto"   | the compaction's boundary lies in the compacting agent's transcript                    |
+      | a foreground subagent's                            | SessionStart | "source" set to "compact" | the compaction's boundary lies in the compacting agent's transcript                    |
+      | a foreground subagent's                            | PostCompact  | "trigger" set to "auto"   | the compaction's boundary lies in the compacting agent's transcript                    |
+      | a background subagent's                            | PreCompact   | "trigger" set to "auto"   | no transcript of the harness session held the compaction's boundary when its hooks ran |
+      | a background subagent's                            | SessionStart | "source" set to "compact" | no transcript of the harness session held the compaction's boundary when its hooks ran |
+      | a background subagent's                            | PostCompact  | "trigger" set to "auto"   | no transcript of the harness session held the compaction's boundary when its hooks ran |
+      | the main agent's, while a background subagent ran, | PreCompact   | "trigger" set to "auto"   | no transcript of the harness session held the compaction's boundary when its hooks ran |
+      | the main agent's, while a background subagent ran, | SessionStart | "source" set to "compact" | no transcript of the harness session held the compaction's boundary when its hooks ran |
+      | the main agent's, while a background subagent ran, | PostCompact  | "trigger" set to "auto"   | no transcript of the harness session held the compaction's boundary when its hooks ran |
 
   @ASM-07 @pending
   Scenario Outline: a plugin bundling hooks and an MCP server loads on each target (S4)

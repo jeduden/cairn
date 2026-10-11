@@ -11,7 +11,7 @@ use cucumber::{given, then, when};
 use engineering::outcome;
 use harness_contract::measured::{self, Measurement};
 use harness_contract::transcript_tree::{self, Tree};
-use harness_contract::{hook_input, recording, text, transcript};
+use harness_contract::{hook_input, recording, snapshot, text, transcript};
 use serde_json::Value;
 
 use crate::World;
@@ -25,6 +25,8 @@ pub struct Assumptions {
     flow: String,
     /// The working directories a step named.
     cwds: Vec<String>,
+    /// The compaction a step named: its key under `subagent_compaction`.
+    compaction: String,
 }
 
 /// One recorded Claude Code version and what a step read from it.
@@ -569,10 +571,19 @@ fn a_recorded_hook_input(w: &mut World, version: String) -> Result<(), String> {
     open_versions(w, &version)
 }
 
-#[given(regex = r"^the hook input was captured during a subagent's compaction$")]
-fn during_subagent_compaction(w: &mut World) -> Result<(), String> {
+#[given(
+    regex = r"^the hook input was captured during (a foreground subagent's|a background subagent's|the main agent's, while a background subagent ran,) compaction$"
+)]
+fn during_compaction(w: &mut World, case: String) -> Result<(), String> {
+    let key = match case.as_str() {
+        "a foreground subagent's" => "foreground",
+        "a background subagent's" => "background",
+        _ => "main_during_background",
+    };
+    asm(w).compaction = format!("subagent_compaction.{key}");
+    let base = asm(w).compaction.clone();
     each(w, |v| {
-        let flow = recording::named(&v.manifest, "subagent_compaction.hooks")?.to_owned();
+        let flow = recording::named(&v.manifest, &format!("{base}.hooks"))?.to_owned();
         v.inputs = recording::hook_inputs(&v.dir, &flow)?;
         Ok(none_unless(
             hook_input::ordered(&v.inputs, "SubagentStart", "PreCompact"),
@@ -647,23 +658,82 @@ fn no_subagent_field(w: &mut World) -> Result<(), String> {
     })
 }
 
+/// The transcripts of the compaction a step named: the compacting
+/// agent's and the other agent's.
+fn compaction_transcripts(v: &Version, base: &str) -> Result<(Vec<Value>, Vec<Value>), String> {
+    Ok((
+        recording::lines(&v.path(&format!("{base}.compacting_transcript"))?)?,
+        recording::lines(&v.path(&format!("{base}.other_transcript"))?)?,
+    ))
+}
+
 #[then(
-    regex = r#"^the additional context of the "SessionStart" hook that follows it lands in the subagent's transcript, where the model reads it$"#
+    regex = r#"^the additional context of the "SessionStart" hook that follows it lands in the compacting agent's transcript, where the model reads it, and in no other$"#
 )]
-fn session_start_context_lands_in_subagent(w: &mut World) -> Result<(), String> {
+fn session_start_context_lands_in_compacting(w: &mut World) -> Result<(), String> {
+    let base = asm(w).compaction.clone();
     each(w, |v| {
-        let main = recording::lines(&v.path("subagent_compaction.main_transcript")?)?;
-        let subagent = recording::lines(&v.path("subagent_compaction.subagent_transcript")?)?;
+        let (compacting, other) = compaction_transcripts(v, &base)?;
         let mut problems = Vec::new();
-        if transcript::has_compaction(&main) {
-            problems.push("the main agent's transcript holds a compaction".to_owned());
-        }
-        if !transcript::context_after_compaction(&subagent, "SessionStart") {
+        if !transcript::context_after_compaction(&compacting, "SessionStart") {
             problems.push(
-                "no SessionStart context follows the subagent's compaction in its transcript"
-                    .into(),
+                "no SessionStart context follows the compaction in the compacting agent's transcript"
+                    .to_owned(),
             );
         }
+        if transcript::context_after_compaction(&other, "SessionStart") {
+            problems
+                .push("SessionStart context follows a compaction in the other transcript".into());
+        }
+        Ok(problems)
+    })
+}
+
+#[then(regex = r"^the compaction's boundary lies in the compacting agent's transcript$")]
+fn boundary_in_compacting(w: &mut World) -> Result<(), String> {
+    let base = asm(w).compaction.clone();
+    each(w, |v| {
+        let (compacting, other) = compaction_transcripts(v, &base)?;
+        let mut problems = none_unless(transcript::has_compaction(&compacting), || {
+            "the compacting agent's transcript holds no compaction".into()
+        });
+        if transcript::has_compaction(&other) {
+            problems.push("the other transcript holds a compaction".into());
+        }
+        Ok(problems)
+    })
+}
+
+#[then(
+    regex = r"^no transcript of the harness session held the compaction's boundary when its hooks ran$"
+)]
+fn no_boundary_at_hook_time(w: &mut World) -> Result<(), String> {
+    let base = asm(w).compaction.clone();
+    each(w, |v| {
+        let flow = recording::named(&v.manifest, &format!("{base}.hooks"))?.to_owned();
+        let mut hooks = Vec::new();
+        for path in recording::files(&v.dir.join("hooks").join(&flow), ".json")? {
+            let input = recording::json(&path)?;
+            let snap = std::fs::read_to_string(path.with_extension("snap"))
+                .map_err(|e| format!("{}: {e}", path.display()))?;
+            let source = match text(&input, "source") {
+                "" => text(&input, "trigger"),
+                s => s,
+            };
+            hooks.push((
+                text(&input, "hook_event_name").to_owned(),
+                source.to_owned(),
+                snapshot::parse(&snap)?,
+            ));
+        }
+        let compactions = hooks
+            .iter()
+            .filter(|(e, s, _)| e == "SessionStart" && s == "compact")
+            .count();
+        let mut problems = none_unless(compactions > 0, || {
+            format!("the {flow} flow holds no compaction")
+        });
+        problems.extend(snapshot::early_boundaries(&hooks));
         Ok(problems)
     })
 }
