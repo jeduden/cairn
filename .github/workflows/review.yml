@@ -70,7 +70,9 @@ jobs:
     steps:
       # The pull request and the head to review. After CI, the head CI
       # ran on. After a comment, the pull request's head, once its CI
-      # passed there, and only for a comment a CODEOWNERS owner in main
+      # passed there and if it was committed before the comment (the
+      # time-of-check guard a comment trigger needs; the post job checks
+      # the head again), and only for a comment a CODEOWNERS owner in main
       # wrote, not one an agent posted through the owner's account,
       # which ends with the Claude Code attribution line. The comment is
       # read from the event file, never spliced into the script.
@@ -101,6 +103,14 @@ jobs:
               'select(.state == "open" and .draft == false and .head.repo.full_name == env.REPO) | .head.sha')
             if [ -z "$head" ]; then
               echo "::notice::pull request $pull is not open and ready from this repository; nothing to review"
+              exit 0
+            fi
+            # The comment must come after the head it brings a review
+            # of: a head committed later is not what the owner saw.
+            commit_at=$(gh api "repos/$REPO/commits/$head" --jq .commit.committer.date)
+            comment_at=$(jq -r .comment.created_at "$GITHUB_EVENT_PATH")
+            if [[ $(date -d "$commit_at" +%s) -gt $(date -d "$comment_at" +%s) ]]; then
+              echo "::notice::$head was committed after the comment; its CI run brings the review"
               exit 0
             fi
             passed=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$head&event=pull_request" \
