@@ -30,6 +30,7 @@ Feature: Restore and injection (INJ)
       | startup |
       | resume  |
       | clear   |
+      | fork    |
 
   @INJ-03 @P0 @I2 @pending
   Scenario: the restore builder accepts only TrustedText
@@ -49,15 +50,33 @@ Feature: Restore and injection (INJ)
     And with "restore_block.on_prompt" set to true the hook output carries a restore block built only from TrustedText
     And an audit entry records "UserPromptSubmit injection"
 
-  @INJ-05 @P0 @I9 @pending
-  Scenario: an ambiguous run gets pins only
+  @INJ-05 @P0 @I2 @I3 @I8 @I9 @pending
+  Scenario Outline: an ambiguous compaction restores only the pins every candidate run qualifies for, and names the rest
     Given an isolated Cairn home
-    And an agent run with a Claude Code transcript "parent-with-subagent"
-    And a qualifying pin "Never push directly to main; open a pull request."
+    And an agent run with a Claude Code transcript "parent-with-subagent", seated in room "L1", which its harness session's MCP server has ingested to its end
+    And its subagent "explore-agent", seated in room "L2", started by <start>
+    And <sandbox>
+    And a pin "Never push directly to main; open a pull request." that qualifies for both runs
+    And a pin in room "L1" "Use the staging database." that qualifies only for the run of "parent-with-subagent"
+    And a pin in room "L2" "Read only the docs directory." that qualifies only for the run of "explore-agent"
     When the hook "SessionStart" runs with source "compact" and the parent's session_id but no subagent fields
-    Then the restore block contains the qualifying pin
+    Then the restore block contains "Never push directly to main; open a pull request." verbatim
+    And the restore block contains neither "Use the staging database." nor "Read only the docs directory." but names each by id and room id, with their count
     And the restore block contains no landmark index
+    When <end> is recorded and ingested to the end of every transcript
+    Then the same hook <after>
+    When the harness appends a line to "parent-with-subagent" that ingest has not reached
+    Then the same hook is ambiguous again and returns only the pins that qualify for both runs
+    When the pins in rooms "L1" and "L2" are unpinned, so both runs qualify for the same pins
+    Then the restore block holds every qualifying pin verbatim and omits only the landmark index
     And the command exits 0
+
+    Examples:
+      | start                                                   | end                                       | sandbox                                                                            | after                                                                                                    |
+      | a foreground tool call with no tool result yet          | the subagent's tool result                | every run on the node has a signed sandbox state blocking R3 and R8                | returns the pins of the run of "parent-with-subagent" alone                                              |
+      | a background tool call whose tool result came at launch | the task notification naming the subagent | every run on the node has a signed sandbox state blocking R3 and R8                | returns the pins of the run of "parent-with-subagent" alone                                              |
+      | a foreground tool call with no tool result yet          | the subagent's tool result                | no run on the node has a recorded sandbox state                                    | is still ambiguous, until the harness session ends, and returns only the pins that qualify for both runs |
+      | a background tool call whose tool result came at launch | the task notification naming the subagent | every run's sandbox state on the node blocks R3 and R8, but no component signed it | is still ambiguous, until the harness session ends, and returns only the pins that qualify for both runs |
 
   @INJ-06 @P0 @I10 @pending
   Scenario: an identical record yields a byte-identical restore block
@@ -92,7 +111,7 @@ Feature: Restore and injection (INJ)
   Scenario: compaction summaries never reach a restore block
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "compacted-run"
-    And the hook "PostCompact" runs with compact_summary "SUMMARY-CANARY-7f3a"
+    And the harness wrote the compaction summary "SUMMARY-CANARY-7f3a" to "compacted-run", and the run's MCP server ingested it
     When the hook "SessionStart" runs with source "compact"
     Then the restore block does not contain "SUMMARY-CANARY-7f3a"
     And the restore block contains no untrusted bytes
@@ -109,10 +128,10 @@ Feature: Restore and injection (INJ)
     And no opt-in notice starts or resumes a turn
 
     Examples:
-      | setting                                                             | hook             | notice    |
-      | left at the default                                                 | UserPromptSubmit | no notice |
-      | allowed by the room's owner only                                    | UserPromptSubmit | no notice |
-      | opted into by the agent's principal only                            | UserPromptSubmit | no notice |
-      | allowed by the room's owner and opted into by the agent's principal | UserPromptSubmit | a notice  |
-      | allowed by the room's owner and opted into by the agent's principal | SessionStart     | a notice  |
-      | allowed by the room's owner and opted into by the agent's principal | PostToolUse      | no notice |
+      | setting                                                             | hook              | notice    |
+      | left at the default                                                 | UserPromptSubmit  | no notice |
+      | allowed by the room's owner only                                    | UserPromptSubmit  | no notice |
+      | opted into by the agent's principal only                            | UserPromptSubmit  | no notice |
+      | allowed by the room's owner and opted into by the agent's principal | UserPromptSubmit  | a notice  |
+      | allowed by the room's owner and opted into by the agent's principal | SessionStart      | a notice  |
+      | allowed by the room's owner and opted into by the agent's principal | PermissionRequest | no notice |

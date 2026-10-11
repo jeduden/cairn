@@ -11,8 +11,10 @@ Feature: Landmarks (LMK)
     And an agent run with a Claude Code transcript "turns-compaction-subagent"
     And "turns-compaction-subagent" contains an isMeta "user" line and a "user" line of command output
     And midway the run joins room "L1", which names its current branch, so its later events go to the writer of its seat in "L1"
+    And the run is served by its harness session's MCP server, and its harness session then ends
     When the person runs "cairn landmark list --json"
     Then a new span starts at each user turn, each compaction, each subagent start and end, and where the run's events move to its seat's writer in "L1"
+    And the subagent's last span closes where its result reaches the parent's transcript, and the run's last span where its harness session ends, each recorded by the MCP server as a structural event
     And no span contains events of two writers
     And neither the isMeta line nor the command output starts a span
     And after the person runs "cairn rebuild" the span boundaries are byte-identical

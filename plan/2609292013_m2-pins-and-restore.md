@@ -17,7 +17,7 @@ byte-deterministic restore block that untrusted content can never reach.
 
 ## Context
 
-Milestone M2. Scope: PIN P0, INJ P0, ADM-01 to ADM-03, ADM-10 and
+Milestone M2. Scope: PIN P0, INJ P0, ADM-01 to ADM-03, ADM-10, ADM-17 and
 SEC-11.
 
 ## Tasks
@@ -27,8 +27,9 @@ SEC-11.
 2. The TrustedText type and the restore builder: INJ-01 to INJ-09,
    SEC-07
 3. Project config may only tighten: SEC-11
-4. Plugin distribution, install and uninstall, read-only doctor: ADM-01
-   to ADM-03, ADM-10
+4. Plugin distribution, install and uninstall, read-only doctor, and
+   installed commands free of secrets and home paths: ADM-01 to ADM-03,
+   ADM-10, ADM-17
 
 ## Acceptance Criteria
 

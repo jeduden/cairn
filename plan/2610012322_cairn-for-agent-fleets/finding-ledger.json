@@ -2139,7 +2139,7 @@
    "texts": [
     {
      "file": "docs/srs/13-open-questions-and-risks.md",
-     "quote": "(e) when LMK-01 closes the last span of a run whose end no hook handler recorded (NFR-06)"
+     "quote": "(e) when LMK-01 closes the last span of a run whose end no MCP server recorded (NFR-06)"
     }
    ]
   },

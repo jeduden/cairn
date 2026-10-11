@@ -1,0 +1,17 @@
+[package]
+name = "harness-contract"
+version = "0.0.0"
+description = "Reads the hook inputs and transcripts recorded from Claude Code under testdata/claude-code and checks the assumptions register against them (ENG-17)"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde_json.workspace = true
+
+[dev-dependencies]
+testkit.workspace = true
+
+[lints]
+workspace = true

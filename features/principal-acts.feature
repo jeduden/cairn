@@ -279,6 +279,7 @@ Feature: Principal acts (OWN)
     And a run with no recorded sandbox state
     When "alice" writes a widening principal act
     Then the run counts as unsandboxed and is still recorded
+    And a run whose recorded sandbox state names R1 as blocked, but which no measuring component signed with a key no agent can read, leaves R1 open
     And the act is refused unless a recorded risk acceptance names each open risk, including that the agent can forge it
     And a risk acceptance is shown on every surface beside each run relying on it
     And the risk acceptance is asked again when the set of open risks grows

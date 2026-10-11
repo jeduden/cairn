@@ -39,7 +39,7 @@ proposed). It leaves five things for M1:
 - Task 6 bounds BM25 ranking. Full ranking takes 1.45 s p95 on
   emulated reference hardware. Ranking only the newest 2,000 matches
   meets NFR-03 at 172 ms p95, with a 548 ms p99 to watch.
-- Task 2's ingestion commits a hook handler's events together. 100
+- Task 2's ingestion commits its events in batches. 100
   events per commit met NFR-04 over 1M events at 26.1k events per
   second, while one event per commit ran at 4.2k.
 
@@ -50,12 +50,36 @@ Task 6 links it into `cairn`: the reach test allows `serde_json` and
 its four crates, and the ADR that lists `serde_json` says it links
 into the core.
 
+Spikes S1 and S3 recorded the hook inputs and transcripts of Claude
+Code 2.1.296 under `testdata/claude-code`. The `@ASM-*` scenarios replay
+them; the [S1 report](2609292003_spike-s1-hook-contract/report.md) and
+the [S3 report](2609292005_spike-s3-transcript-formats/report.md)
+explain them. They leave four things for M1:
+
+- Task 2's transcript parser gets its cargo-fuzz target in the same
+  change (ENG-07), seeded under `fuzz/corpus` from
+  `testdata/claude-code/*/transcripts`. That change adds the `fuzz/`
+  crate with its `libfuzzer-sys` dependency ADR (ENG-18, ENG-26), pins
+  the dated nightly ENG-01 requires for it, and makes the nightly job
+  run it. S3 handed this over so that M1 does not wait on a spike that
+  waits on M1's parser.
+- A fork repeats a transcript's lines with their `uuid`s in a new
+  transcript. On the stakeholder's ruling (OQ-51), task 2 records each
+  repeated line once and the fork's run refers to it (REC-04).
+- REC-13 is P0 and M1's since the stakeholder's ruling of 11 October
+  2026: the harness session's MCP server records the run live, watching
+  its transcripts, so M1's witnessed runs and trusted `user` events
+  (PRV-02, PRV-08) need it. Spike S13 grounds INJ-05's ambiguity rule.
+- Task 2's parser checks each line against the shape recorded for its
+  Claude Code version and keeps a line that drifts as untrusted
+  `harness_text` (REC-26), the shapes generated from those fixtures.
+
 ## Tasks
 
 1. Store, payload CAS and hash chain: REC-06, REC-09, REC-10, REC-12,
    ADM-05
 2. Ingestion through the harness adapter: REC-01 to REC-05, REC-07,
-   REC-08, REC-11
+   REC-08, REC-11; the transcript parser's fuzz target (ENG-07)
 3. Provenance, trust policy and taint: PRV-01 to PRV-06
 4. Redaction before storage, input limits and path validation: SEC-05,
    SEC-08, SEC-16, SEC-18
@@ -74,3 +98,7 @@ into the core.
 - [ ] `cairn verify` proves completeness, and quarantine is effective
 - [ ] ENG-11 coverage floors hold for every security-sensitive package
   landed
+- [ ] The property test of ENG-08 for a harness fork's ingest order (REC-04)
+  passes over generated forks and orders
+- [ ] The transcript parser's fuzz target runs nightly from the corpus
+  S3 recorded, and its row of @ENG-07 passes
