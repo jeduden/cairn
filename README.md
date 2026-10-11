@@ -1,60 +1,53 @@
 # Cairn
 
-A complete record of what your Claude agents did: exact recall for the
-agents, one view for you, and no automatic path from untrusted content
-to the model.
+Your Claude agents as part of your team: work with them at your pace,
+see what they build while they build it, and point at exactly what you
+mean.
 
-## First, for every run
+## Vision
 
-- **"My agent forgot what I told it after compaction."** Pin it as a
-  constraint. After every compaction it comes back word for word, or by
-  id when over budget. The agent can recall exactly what it did hours
-  ago, wrapped as untrusted data.
-- **"We run fifty runners under managed policy."** Install shows its
-  diff first, each principal's record stays in its own home, every
-  failure is audited and counted, and you can purge content.
+- **At your pace.** Work with your agents and other people live, after
+  the fact or asynchronously: watch runs as they happen, see what waits
+  on you, or come back to a Catch up that links each line to the events
+  behind it and shows every gap.
+- **From every angle.** Understand what is being built while it is
+  being built: the conversation, each changed file beside the events
+  that changed it, and what backs each result, from a bare claim to a
+  check.
+- **By reference.** Link your posts to the exact events you mean, by
+  address, and find any of them again by a word you remember, so people
+  and agents know what you are talking about.
 
-## Then, with the room view
+Underneath, every run stays on your machines unless you turn on peers.
+Your pinned constraints come back word for word after each compaction,
+or named when the budget leaves them out. Agents recall history only
+when they ask, each item enveloped with its trust level, and nothing
+untrusted reaches them unless they ask or you act.
 
-The room view is optional: your browser, a terminal or the CLI.
+## Milestones
 
-- **"Which of my five agents needs me?"** It ranks what waits on you
-  and spots runs in two rooms editing one file; with the launcher,
-  answer, steer or stop them there.
-- **"What happened while I was away?"** Catch up shows what changed,
-  each line linked to its events and every gap shown; no model writes
-  it. A head receipt kept off the machine shows any rewrite up to it.
-  Search finds Saturday's decision.
-- **"I review what my agents built."** The diff comes with the runs
-  behind it and what backs each result: a bare claim or a check. You
-  approve on your forge, and the landed commit links back to its room,
-  marked proven or not.
+Specified, not built yet. The milestones below come in delivery order
+([§12](docs/srs/12-delivery-plan.md)); M7's scope is provisional, and
+each M9 item lands through its own proposal.
 
-## Later
+| Milestone                      | What it brings                                                                                                                |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| M1 Record and recall           | Runs recorded from their transcripts; exact recall for agents; every failure audited and counted; migrations with a backup    |
+| M2 Pins and restore            | Pins back after every compaction; install as a Claude Code plugin that shows its diff first                                   |
+| M3 Landmarks and lifecycle     | Landmarks into long runs; backup and purge                                                                                    |
+| M7 Standalone room view        | On your machine: Needs you, Catch up, search, integrity status, overlaps, review with what backs each result, links to events |
+| M4 Kernel                      | Agents run code over their own record                                                                                         |
+| M5 Hardening and evaluation    | Encryption at rest, retention, evaluation                                                                                     |
+| M8 Peer network                | Your machines and other people peer by key and sync after partitions; invites and endorsed posts; off until you turn it on    |
+| M9 Review, publishing, bridges | Forge review beside the room, handover, rooms shared with pull requests as bundles, CI through bridges                        |
 
-- **"My agents run on three machines and in cloud sandboxes."** Your
-  machines peer by key with no central service, keep working offline
-  and sync after; a short-lived cloud node syncs as it runs, any gap
-  shown.
-- **"A teammate wants to help."** They join your room live by invite
-  and post; you choose what reaches your agent, and they see what you
-  chose.
-- **"A stranger sent a pull request with its room."** It arrives as a
-  redacted plain file, checked against their commit-signing identity
-  and never trusted; your agents can only recall it.
-
-## What reaches your agents
-
-In every step, Cairn writes to an agent only your pins, an index of its
-history, fixed text and what your own acts send or allow, such as an
-endorsement or a trust grant. Other history reaches it only by recall.
-The core opens no socket, and every component beyond it stays off
-until you turn it on.
+Marking part of an event or an image, and sharing that mark, are
+pending use cases ([UC-002, UC-003](docs/use-cases.md)) aimed at M7 to
+M9 but not yet specified.
 
 ## Status
 
-Specified, not built yet; [§12](docs/srs/12-delivery-plan.md) has the
-milestones behind "First", "Then" and "Later". This repository holds:
+This repository holds:
 
 - the [Software Requirements Specification](docs/srs/index.md), the
   normative source, and the [domain model](docs/domain-model/index.md)
