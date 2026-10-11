@@ -25,10 +25,13 @@ summary: >-
   replaced it with, by a seat certificate naming it so; any other seat naming a
   run seat shares no add or role (REC-19). The core keeps that seat's key, and
   an ingested run's, like a device seat's key and seals their writers (SEC-10).
-  A run-seat key is lost with the MCP server that holds it, and a run that
-  continues on a harness resume or a restart does so on a new run seat (Seat
-  key; open: OQ-43). A witnessed run records nothing until its MCP server holds
-  its run-seat key, and one no MCP server serves is ingested (REC-19).
+  An **ingest seat** is a run seat `cairn ingest` starts or mints, the one
+  beside a run seat and an ingested run's included, which its seat certificate
+  names so (REC-19, REC-26). A run-seat key is lost with the MCP server that
+  holds it, and a run that continues on a harness resume or a restart does so on
+  a new run seat (Seat key; open: OQ-43). A witnessed run records nothing until
+  its MCP server holds its run-seat key, and one no MCP server serves is
+  ingested (REC-19).
 - **Device seat**: A principal's seat for one device, a node or a paired phone.
   The one seat kind for acting without a run. Its room acts are taken only at a
   principal surface, as principal acts are, but those its node takes on its own
@@ -65,11 +68,11 @@ summary: >-
   (PEER-06, PRV-10), though its own events are trusted on that node as that
   node's trusted sources.
 - **Seat certificate**: A device key's or token key's signature over a seat key,
-  scoped to the seat's room and naming its seat kind, that the seat key
-  countersigns (PRV-10, PRV-11). A node's **key set** is the keys, certificates
-  (a service-account certificate once countersigned), revocations, and recorded
-  managed-policy listings and their removals it holds (I10), a listing only as
-  Service account says.
+  scoped to the seat's room and naming its seat kind and whether it is an ingest
+  seat, that the seat key countersigns (PRV-10, PRV-11). A node's **key set** is
+  the keys, certificates (a service-account certificate once countersigned),
+  revocations, and recorded managed-policy listings and their removals it holds
+  (I10), a listing only as Service account says.
 - **Access token**: A short-lived credential a principal mints to enroll a
   device or peer, certify an ephemeral node's seats or carry an invite link
   (PEER-06, PRV-10, LANE-18). Its expiry ends it by the expire act the minting

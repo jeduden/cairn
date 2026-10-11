@@ -426,7 +426,7 @@
     },
     {
      "file": "docs/domain-model/record.md",
-     "quote": "in a writer a key of this node certified before its node identity last changed"
+     "quote": "in a writer whose seat key was certified by a key this node minted before its node identity last changed"
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",

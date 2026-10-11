@@ -225,8 +225,8 @@ Feature: Record (REC)
     Then the run's MCP server sealed each of its run seats' writers with that seat's key within 2 s of any unsealed append, covering what the hook handlers had appended
     And it seals those writers again when the run stops, and events after the newest seal are shown as "unsigned"
     And what "cairn ingest" later appends for the run, whether or not its MCP server still runs, goes to one run seat and writer it starts beside each run seat it extends, in that seat's room, which a second "cairn ingest" extends without starting another, whose key the core keeps like a device seat's key, never in the MCP server, and whose writer the core seals, naming that run seat, taking over its role and sharing its add where it has one, so a kick or leave of either seat ends that one add for both, and the one beside the run's personal-room seat is a member as long as that seat is
-    And once the device key that certified a run seat, or the key of the seat "cairn ingest" started beside it, is missing with the node identity unchanged, "cairn ingest" appends what remains of that run to such a seat in the personal room, certified by the device key minted anew, and stops counting the run
-    And only a seat that the key which certified the run seat it names, or the key a rotation replaced it with, certified by a seat certificate naming it the seat "cairn ingest" starts beside that run seat shares that run seat's add and role; a seat another node's key certified naming that run seat, or a new run seat naming it after its run-seat key was lost, shares no add or role
+    And once the device key that certified a run seat, or the key of the seat "cairn ingest" started beside it, is missing with the node identity unchanged, "cairn ingest" appends what remains of that run to such a seat in the personal room, certified by the device key minted anew by a seat certificate naming it an ingest seat, and stops counting the run
+    And only a seat that the key which certified the run seat it names, or the key a rotation replaced it with, certified by a seat certificate naming it an ingest seat beside that run seat shares that run seat's add and role; a seat another node's key certified naming that run seat, or a new run seat naming it after its run-seat key was lost, shares no add or role
     And a segment was closed once 30 s had passed though no hook closed one, and the open segment is closed at "<hook>" within the hook budgets
     And "cairn verify" and "cairn status" each report the other writer's chain as ended without a closed segment
     And the paired phone sealed its device seat's writer with that seat's key after each append to it
@@ -318,6 +318,7 @@ Feature: Record (REC)
     And that quarantine stays in force on the node until a release there
     And that configuration acceptance takes no effect on the node: the deployment mode stays "automation" until the person accepts the configuration there
     And an audit entry records the node identity change
+    And a structural node identity change event in the new device seat in the personal room carries only the fingerprints of the replaced and new device key or token key
     And no event is appended under the old device key or the old seat key
 
     Examples:
@@ -344,7 +345,7 @@ Feature: Record (REC)
     Then each sealed range the node accepted is named by exactly one arrival event per way it arrived in its device seat in its personal room, carrying only the writer id, seq range, digest and how it arrived
     And the witnessed run's events read origin "witnessed", the ingested run's "ingested", the peer's "peer", the bundle's "bundle", the restored range's "peer", and the range that came both ways "bundle" whichever way came first
     And after the origin the store keeps derived for a peer event is changed to "witnessed", "cairn verify" fails until "cairn rebuild" derives "peer" again
-    And after the node identity changes, a node identity change event names the replaced and new keys, and the events of its earlier writers read origin "peer"
+    And after the node identity changes, a node identity change event carries only the fingerprints of the replaced and new device keys, and the events of its earlier writers read origin "peer"
     And after a device key is lost and minted anew, the events of its earlier writers still read origin "witnessed"
-    And the ingested run's seat certificate names it an ingest seat
+    And every seat certificate of a seat "cairn ingest" started or minted, the ingested run's included, names it an ingest seat
     And "cairn rebuild" appends no arrival event

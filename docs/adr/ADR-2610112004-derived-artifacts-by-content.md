@@ -87,15 +87,15 @@ With it, SRS 3.0-draft changes these requirements:
   device seat in its personal room, once per way it arrived: writer id,
   seq range, digest and how it arrived. An event's origin derives from
   the record and the key set alone: `ingested` for a writer whose seat
-  certificate names an ingest seat, then `bundle` or `peer` from the
+  certificate names it an ingest seat, then `bundle` or `peer` from the
   arrival events, then `witnessed` for a writer whose seat key a key
   this node minted since its node identity last changed certified. No
   stored origin value, and no origin another node derived, decides it.
-- **REC-24** records a node identity change as a structural event, so a
-  lost and re-minted device key keeps earlier writers `witnessed`.
+- **REC-24** records a node identity change event, so a lost and
+  re-minted device key keeps earlier writers `witnessed`.
 - **REC-17, ADM-07 and §8.2.** A tombstone no longer keeps a purged
-  event's origin; each node derives it from the writer and the arrival
-  events.
+  event's origin; each node derives it from the writer's seat
+  certificate, the arrival events and the node identity change events.
 - **PEER-03.** Two peers holding the same segments derive room state and
   a search index identical in content, apart from each event's trust
   level and origin. Each node derives those for itself and never takes
