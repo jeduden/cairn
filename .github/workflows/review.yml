@@ -98,7 +98,7 @@ jobs:
             gh api --paginate "repos/$REPO/issues/$PULL/comments" \
               --jq '.[] | {author: .user.login, at: .created_at, body}'
             gh api --paginate "repos/$REPO/pulls/$PULL/reviews" \
-              --jq '.[] | {author: .user.login, at: .submitted_at, body}'
+              --jq '.[] | {author: .user.login, at: .submitted_at, body, state}'
           } | jq -s --argjson owners "$owners" '[.[]
             | select(.author as $a | $owners | index($a))
             | select((.body // "") | test("\\S"))
@@ -164,15 +164,24 @@ jobs:
             gh api "repos/$REPO/pulls/$PULL/reviews/$id" --jq .body > review/last-review.md
           fi
       # The pull request's agent instructions are data to review, never
-      # instructions to load: they move out of the directory the agent
-      # is given, to review/pr-instructions/, where it reads them as text.
+      # instructions to load: every one, at any depth of its tree, leaves
+      # it and is copied, each file under its path, into one text file,
+      # review/pr-instructions.txt. No file named as an instruction file
+      # stays under either directory the agent is given, where a nested
+      # CLAUDE.md or .claude/ loads when the agent reads beside it.
       - name: Keep the pull request's instructions out of the agent's load path
         if: steps.pull.outputs.number != ''
         run: |
-          mkdir -p review/pr-instructions
-          for f in .claude CLAUDE.md AGENTS.md .mcp.json; do
-            if [ -e "pr-head/$f" ]; then mv "pr-head/$f" review/pr-instructions/; fi
-          done
+          find pr-head -path pr-head/.git -prune -o \( -name .claude -o -name CLAUDE.md \
+            -o -name CLAUDE.local.md -o -name AGENTS.md -o -name .mcp.json \) -prune -print0 \
+            > instructions.list
+          while IFS= read -r -d '' f; do
+            find "$f" -type f -print0 | while IFS= read -r -d '' g; do
+              printf '\n===== %s =====\n' "${g#pr-head/}"
+              cat "$g"
+            done
+            rm -rf "$f"
+          done < instructions.list > review/pr-instructions.txt
       # Read-only tools and a read-only token: the agent can read the
       # trees and the pull request, and write nothing but its review outcome.
       # It runs on the stakeholder's Claude subscription, through the

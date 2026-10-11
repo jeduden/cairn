@@ -4,9 +4,10 @@
 //! workflow's step outputs.
 //!
 //! `--consent` names a JSON array of the comments the CODEOWNERS owners
-//! wrote on the pull request, each `{"author", "at", "body"}`, which the
-//! workflow filters before the command reads it. One with a non-blank
-//! body is the stakeholder's consent ENG-29 asks for.
+//! wrote on the pull request, each `{"author", "at", "body"}` and, for a
+//! review, its `state`, which the workflow filters before the command
+//! reads it. One with a non-blank body, other than a review that
+//! requests changes, is the stakeholder's consent ENG-29 asks for.
 
 use std::fs;
 use std::io::Write;
@@ -29,6 +30,9 @@ const USAGE: &str =
 
 /// The flags, in the order the usage names them, each required.
 const FLAGS: [&str; 5] = ["base", "head", "diff", "out", "consent"];
+
+/// The state of a review that requests changes, as GitHub names it.
+const CHANGES_REQUESTED: &str = "CHANGES_REQUESTED";
 
 /// The review bundle's file name under `--out`.
 pub const BUNDLE: &str = "bundle.md";
@@ -105,8 +109,9 @@ fn failed<E: std::fmt::Display>(verb: &'static str, path: &Path) -> impl FnOnce(
 }
 
 /// Whether `json`, the owners' comments, holds the stakeholder's
-/// consent: at least one comment with a non-blank body. Each comment
-/// must carry a string `author`, `at` and `body`.
+/// consent: at least one comment with a non-blank body that is no
+/// review requesting changes. Each comment must carry a string
+/// `author`, `at` and `body`.
 fn consents(json: &str) -> Result<bool, String> {
     let value: Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
     let comments = value.as_array().ok_or("not an array of comments")?;
@@ -120,7 +125,8 @@ fn consents(json: &str) -> Result<bool, String> {
         };
         field("author")?;
         field("at")?;
-        consent |= !field("body")?.trim().is_empty();
+        let objects = comment.get("state").and_then(Value::as_str) == Some(CHANGES_REQUESTED);
+        consent |= !objects && !field("body")?.trim().is_empty();
     }
 
     Ok(consent)

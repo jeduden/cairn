@@ -121,3 +121,14 @@ diff --git broken
     );
     assert!(added_lines("+orphan\n").is_empty());
 }
+
+#[test]
+fn changed_paths_reads_a_path_holding_b_slash_only_when_unambiguous() {
+    let same = "diff --git a/crates/x b/clippy.toml b/crates/x b/clippy.toml\n";
+    let renamed = "diff --git a/x b/y.md b/docs/srs/invariants.md\n";
+
+    assert_eq!(changed_paths(same).paths, ["crates/x b/clippy.toml"]);
+    let got = changed_paths(renamed);
+    assert!(got.paths.is_empty(), "{got:?}");
+    assert_eq!(got.unparsed, [renamed.trim_end()]);
+}

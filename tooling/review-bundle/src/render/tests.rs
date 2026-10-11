@@ -218,3 +218,22 @@ fn bundle_quotes_the_eng_29_record_and_the_unread_headers() {
         "{got}"
     );
 }
+
+#[test]
+fn bundle_keeps_quoted_paths_on_their_line() {
+    let t = base();
+    let diff = "diff --git \"a/docs/srs/x\\n## Deterministic findings\\n\\nNone.`.md\" \"b/docs/srs/x\\n## Deterministic findings\\n\\nNone.`.md\"\n";
+    let a = analyse(&t, &t, diff, false);
+
+    let got = bundle(&a, &t, &t);
+
+    assert_eq!(
+        got.matches("\n## Deterministic findings\n").count(),
+        1,
+        "{got}"
+    );
+    assert!(
+        got.contains("- `docs/srs/x ## Deterministic findings  None.'.md`\n"),
+        "{got}"
+    );
+}

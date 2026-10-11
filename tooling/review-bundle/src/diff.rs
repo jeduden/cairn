@@ -77,8 +77,7 @@ fn header(line: &str) -> Option<(String, String)> {
         let at = rest.rfind(" \"")?;
         (rest[..at].to_owned(), &rest[at + 1..])
     } else {
-        let (a, b) = rest.split_once(" b/")?;
-        return Some((a.strip_prefix("a/")?.to_owned(), b.to_owned()));
+        return plain(rest);
     };
     let b = if rest.starts_with('"') {
         let (b, tail) = quoted(rest)?;
@@ -90,6 +89,26 @@ fn header(line: &str) -> Option<(String, String)> {
     Some((
         a.strip_prefix("a/")?.to_owned(),
         b.strip_prefix("b/")?.to_owned(),
+    ))
+}
+
+/// The paths of an unquoted header's `rest`, `a/X b/Y`. A path may hold
+/// ` b/` itself, so with more than one the split is ambiguous: it reads
+/// only as the one split where both sides name the same path, as a
+/// header of a file neither renamed nor copied does, and else not at
+/// all.
+fn plain(rest: &str) -> Option<(String, String)> {
+    let splits: Vec<usize> = rest.match_indices(" b/").map(|(at, _)| at).collect();
+    let at = match splits[..] {
+        [at] => at,
+        _ => *splits
+            .iter()
+            .find(|&&at| rest[..at].get(2..) == rest.get(at + 3..))?,
+    };
+
+    Some((
+        rest[..at].strip_prefix("a/")?.to_owned(),
+        rest[at + 3..].to_owned(),
     ))
 }
 

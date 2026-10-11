@@ -303,7 +303,8 @@ fn failed(r: &CheckRun) -> bool {
 /// fixed heading and only when it has content: the review agent's
 /// summary and findings (always), the deterministic checks' findings,
 /// and the checks that failed. Findings list blocking before nits.
-/// Agent text is kept on one line, so it cannot open a section.
+/// Agent text is kept on one line after a label, so it cannot open a
+/// section.
 fn render(
     outcome: &ReviewOutcome,
     checked: &[Finding],
@@ -331,7 +332,7 @@ fn render(
     }
     let _ = write!(
         b,
-        "\n\n### Review agent\n\n{}\n",
+        "\n\n### Review agent\n\nSummary: {}\n",
         defuse_mentions(&one_line(&outcome.summary))
     );
     list_findings(&mut b, &outcome.findings);

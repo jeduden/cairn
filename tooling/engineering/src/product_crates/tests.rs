@@ -240,6 +240,22 @@ fn crates_keep_their_bans_reads_each_crate_or_the_workspace() {
 }
 
 #[test]
+fn crates_keep_their_bans_reads_the_file_clippy_reads() {
+    let (d, c) = checkout(Some(&full()), &[]);
+    fs::write(d.path().join("crates/core/.clippy.toml"), "").unwrap();
+    let got = crates_keep_their_bans(&c);
+    assert_eq!(got.len(), every_ban().len());
+    assert!(
+        got[0].starts_with("crate core: crates/core/.clippy.toml does not ban"),
+        "{got:?}"
+    );
+
+    let (d, c) = checkout(None, &[]);
+    fs::write(d.path().join("crates/clippy.toml"), full()).unwrap();
+    assert!(crates_keep_their_bans(&c).is_empty());
+}
+
+#[test]
 fn crates_keep_their_bans_names_what_it_cannot_read() {
     let (d, c) = checkout(None, &[]);
     fs::remove_file(d.path().join("clippy.toml")).unwrap();

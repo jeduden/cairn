@@ -50,13 +50,13 @@ fn class(b: &mut String, a: &Analysis) {
     } else {
         b.push_str("; these are stakeholder paths (CODEOWNERS):\n\n");
         for p in &a.owned {
-            let _ = writeln!(b, "- `{p}`");
+            let _ = writeln!(b, "- `{}`", code(p));
         }
     }
     if !a.unparsed.is_empty() {
         b.push_str("\nThese diff headers do not read, so the class fails closed:\n\n");
         for h in &a.unparsed {
-            let _ = writeln!(b, "- `{h}`");
+            let _ = writeln!(b, "- `{}`", code(h));
         }
     }
 }
@@ -69,7 +69,14 @@ fn findings(b: &mut String, a: &Analysis) {
         b.push_str("None.\n");
     }
     for f in &a.findings {
-        let _ = writeln!(b, "- {} `{}:{}`: {}", f.severity, f.path, f.line, f.body);
+        let _ = writeln!(
+            b,
+            "- {} `{}:{}`: {}",
+            f.severity,
+            code(&f.path),
+            f.line,
+            one_line(&f.body)
+        );
     }
     if let Some(r) = &a.eng_29_record {
         let _ = write!(b, "\nENG-29 record: `{}`, whose summary reads:\n\n", r.path);
@@ -149,6 +156,19 @@ fn steps(b: &mut String, label: &str, s: &scenario::Scenario) {
     for step in &s.steps {
         let _ = writeln!(b, "- {step}");
     }
+}
+
+/// `s` with each line break made a space, so text from the pull
+/// request, a path git quoted with a `\n` in it among them, cannot
+/// start a line of the bundle.
+fn one_line(s: &str) -> String {
+    s.replace(['\n', '\r'], " ")
+}
+
+/// `s` made safe to print between backticks: on one line, and with no
+/// backtick to close the code span early.
+fn code(s: &str) -> String {
+    one_line(s).replace('`', "'")
 }
 
 /// `s`, or "none" when it is empty.

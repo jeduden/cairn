@@ -226,6 +226,24 @@ fn analyse_flags_each_file_that_lifts_a_ban() {
 }
 
 #[test]
+fn lifts_a_ban_reads_the_lint_and_the_groups_that_hold_it() {
+    for line in [
+        "#[allow(clippy::disallowed_methods)]",
+        "#![allow(clippy::style)]",
+        "#[expect(clippy::all, reason = \"r\")]",
+    ] {
+        assert!(lifts_a_ban(line), "{line}");
+    }
+    for line in [
+        "#[allow(clippy::allow_attributes)]",
+        "#[allow(clippy::styled)]",
+        "x",
+    ] {
+        assert!(!lifts_a_ban(line), "{line}");
+    }
+}
+
+#[test]
 fn analyse_lets_a_pending_scenario_go_live_or_go() {
     let mut head = base();
     head.scenarios[1].pending = false;
@@ -279,6 +297,22 @@ fn analyse_asks_eng_29_s_record_and_consent_for_an_invariant_change() {
         )]
     );
     assert_eq!(record, None);
+}
+
+#[test]
+fn analyse_reads_an_invariant_change_from_the_trees_whatever_the_diff_names() {
+    let mut head = base();
+    head.invariants = "I1, rewritten".into();
+
+    let (findings, _) = guarded(&mut head, None, &["docs/notes.md"], true);
+
+    assert_eq!(
+        findings,
+        [eng_29_finding(
+            INVARIANTS,
+            "this change touches an invariant (ENG-29), but no accepted ADR under docs/adr that this change changes names ENG-29 and invariant"
+        )]
+    );
 }
 
 #[test]

@@ -217,8 +217,22 @@ fn crates(c: &Checkout) -> Result<Vec<String>, String> {
     Ok(out)
 }
 
-/// Requires every product crate's clippy.toml, or the workspace's when
-/// it has none, to carry every ban.
+/// The configuration file clippy reads for the crate `name`, relative
+/// to the root: as clippy looks it up, the first of `.clippy.toml` and
+/// `clippy.toml` in the crate's directory, then in each directory above
+/// it up to the root. The root's `clippy.toml` when there is none, so a
+/// missing file is named.
+fn clippy_config(c: &Checkout, name: &str) -> String {
+    let crate_dir = format!("{CRATES}/{name}/");
+    let dirs = [crate_dir.as_str(), "crates/", ""];
+    dirs.iter()
+        .flat_map(|dir| [".clippy.toml", "clippy.toml"].map(|f| format!("{dir}{f}")))
+        .find(|rel| c.root.join(rel).is_file())
+        .unwrap_or_else(|| "clippy.toml".to_owned())
+}
+
+/// Requires the clippy configuration each product crate builds with,
+/// its own or one in a directory above it, to carry every ban.
 #[must_use]
 pub fn crates_keep_their_bans(c: &Checkout) -> Vec<String> {
     let names = match crates(c) {
@@ -227,12 +241,7 @@ pub fn crates_keep_their_bans(c: &Checkout) -> Vec<String> {
     };
     let mut problems = Vec::new();
     for name in names {
-        let own = format!("{CRATES}/{name}/clippy.toml");
-        let file = if c.root.join(&own).is_file() {
-            own
-        } else {
-            "clippy.toml".to_owned()
-        };
+        let file = clippy_config(c, &name);
         match c.read(&file) {
             Err(e) => problems.push(e),
             Ok(body) => problems.extend(

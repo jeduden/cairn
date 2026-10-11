@@ -205,6 +205,10 @@ fn consents_holds_on_one_comment_with_a_body() {
     assert_eq!(consents("[]"), Ok(false));
     assert_eq!(consents(&comment(" \\n\\t")), Ok(false));
     assert_eq!(consents(&comment("I consent")), Ok(true));
+    let review =
+        |state: &str| format!(r#"[{{"author": "o", "at": "t", "body": "b", "state": "{state}"}}]"#);
+    assert_eq!(consents(&review("CHANGES_REQUESTED")), Ok(false));
+    assert_eq!(consents(&review("APPROVED")), Ok(true));
     for bad in ["", "{}", "[1]", r#"[{"author": "o", "body": "x"}]"#] {
         assert!(consents(bad).is_err(), "{bad}");
     }

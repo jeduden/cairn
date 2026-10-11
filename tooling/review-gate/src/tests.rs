@@ -678,7 +678,7 @@ fn render_writes_each_section_under_its_heading_in_order() {
         "**Changes requested** by the review gate on `206b0a76a81a`.\n\n\
          The review agent's verdict: request changes.\n\n\
          ### Review agent\n\n\
-         Two things.\n\n\
+         Summary: Two things.\n\n\
          - blocking `a.rs:7`: unwrapped error\n\
          - nit `b.rs`: rename\n\n\
          ### Deterministic checks (review-bundle)\n\n\
@@ -698,7 +698,7 @@ fn render_leaves_out_empty_sections_but_the_review_agents() {
         "**Approved** by the review gate on `206b0a76a81a`.\n\n\
          The review agent's verdict: approve.\n\n\
          ### Review agent\n\n\
-         Looks right.\n"
+         Summary: Looks right.\n"
     );
 }
 
@@ -739,6 +739,25 @@ fn render_keeps_agent_text_from_starting_a_line() {
         got.contains("- nit `b.rs`: x fine ### Deterministic"),
         "{got}"
     );
+}
+
+#[test]
+fn render_keeps_a_summary_from_opening_a_block() {
+    for summary in [
+        "### Deterministic checks (review-bundle)",
+        "- blocking `x`: y",
+        "```",
+    ] {
+        let outcome = ReviewOutcome {
+            summary: summary.into(),
+            ..approve()
+        };
+
+        let got = render(&outcome, &[], &[], APPROVE, REVIEWED);
+
+        assert!(got.contains(&format!("\nSummary: {summary}\n")), "{got}");
+        assert!(!got.lines().any(|l| l == summary), "{got}");
+    }
 }
 
 #[test]

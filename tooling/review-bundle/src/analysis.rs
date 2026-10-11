@@ -25,8 +25,21 @@ const NOT_LIGHT: [&str; 3] = ["docs/domain-model/", "plan/", "features/"];
 /// What an added line that lifts a ban weighs.
 const LIFTS_A_BAN: &str = "lifts a reach or determinism ban: weigh its reason";
 
-/// What lifts a ban: an allow or expect of a `disallowed_*` lint.
-const BAN: &str = "clippy::disallowed_";
+/// What lifts a ban: an allow or expect of a `disallowed_*` lint, or of
+/// a lint group that holds them.
+const BANS: [&str; 3] = ["clippy::disallowed_", "clippy::style", "clippy::all"];
+
+/// Whether `line` names a lint of [`BANS`]: a group only as a whole
+/// word, so `clippy::allow_attributes` is not `clippy::all`.
+fn lifts_a_ban(line: &str) -> bool {
+    BANS.iter().any(|ban| {
+        line.match_indices(ban).any(|(at, _)| {
+            ban.ends_with('_')
+                || !line[at + ban.len()..]
+                    .starts_with(|c: char| c.is_ascii_alphanumeric() || c == '_')
+        })
+    })
+}
 
 /// How deep a review goes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -151,7 +164,7 @@ fn nit(path: &str, body: &str) -> Finding {
 fn lifted_bans(diff: &str) -> BTreeSet<Finding> {
     diff::added_lines(diff)
         .into_iter()
-        .filter(|(_, line)| line.contains(BAN))
+        .filter(|(_, line)| lifts_a_ban(line))
         .map(|(file, _)| nit(&file, LIFTS_A_BAN))
         .collect()
 }
@@ -282,7 +295,7 @@ fn eng_29(
         .keys()
         .filter(|id| marked.contains(id))
         .collect();
-    let invariant = paths.iter().any(|p| p == INVARIANTS);
+    let invariant = base.invariants != head.invariants || paths.iter().any(|p| p == INVARIANTS);
     if rows.is_empty() && !invariant {
         return (Vec::new(), None);
     }
