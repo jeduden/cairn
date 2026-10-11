@@ -30,6 +30,7 @@ pub fn cases() -> Vec<Case> {
         domain_model_cases(),
         ledger_cases(),
         reach_cases(),
+        core_crate_cases(),
     ]
     .concat()
 }
@@ -501,6 +502,64 @@ fn reach_cases() -> Vec<Case> {
             ),
             clippy("cairn"),
             "use of a disallowed type `std::net::TcpStream`",
+        ),
+    ]
+}
+
+/// The drifts the core crates' bans exist to catch: a crate's
+/// clippy.toml dropping one (I4, I10), the core reading a clock or a
+/// random order (I10), and mutable global state (ENG-03).
+fn core_crate_cases() -> Vec<Case> {
+    const LIB: &str = "crates/cairn/src/lib.rs";
+    const AT: &str = "use std::io::Write;";
+    vec![
+        case(
+            "a core crate's clippy.toml dropping a reach ban",
+            "the_core_crates_keep_their_bans",
+            Injection::replace(
+                "crates/cairn/clippy.toml",
+                "  { path = \"std::net::UdpSocket\", reason = \"the core opens no socket (SEC-01)\" },\n",
+                "",
+            ),
+            cargo_test("engineering", "checkout", "the_core_crates_keep_their_bans"),
+            "crates/cairn/clippy.toml does not ban std::net::UdpSocket",
+        ),
+        case(
+            "the core reading the clock",
+            "I10",
+            Injection::replace(
+                LIB,
+                AT,
+                "use std::io::Write;\n\npub fn now() -> std::time::Instant {\n    std::time::Instant::now()\n}",
+            ),
+            clippy("cairn"),
+            "use of a disallowed method `std::time::Instant::now`",
+        ),
+        case(
+            "the core keeping a hash map's random order",
+            "I10",
+            Injection::replace(
+                LIB,
+                AT,
+                "use std::io::Write;\n\npub type Index = std::collections::HashMap<u8, u8>;",
+            ),
+            clippy("cairn"),
+            "use of a disallowed type `std::collections::HashMap`",
+        ),
+        case(
+            "a core crate keeping mutable global state",
+            "no_core_crate_keeps_mutable_global_state",
+            Injection::replace(
+                LIB,
+                AT,
+                "use std::io::Write;\n\npub static SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);",
+            ),
+            cargo_test(
+                "engineering",
+                "checkout",
+                "no_core_crate_keeps_mutable_global_state",
+            ),
+            "crates/cairn/src/lib.rs:10: mutable global state: pub static SEQ",
         ),
     ]
 }

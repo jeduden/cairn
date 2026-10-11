@@ -68,3 +68,20 @@ fn the_checkout_s_review_workflow_parses_into_its_trigger_and_jobs() {
     );
     assert!(flow.is_ok_and(|w| w.jobs.len() >= 2));
 }
+
+/// Every core crate's clippy.toml refuses the core's reach (I4) and
+/// the clock and random order derived artifacts may not read (I10).
+#[test]
+fn the_core_crates_keep_their_bans() {
+    let problems = engineering::core_crates::crates_keep_their_bans(&checkout());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// No core crate keeps mutable global state (ENG-03).
+#[test]
+fn no_core_crate_keeps_mutable_global_state() {
+    let problems = engineering::core_crates::no_mutable_globals(&checkout());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
