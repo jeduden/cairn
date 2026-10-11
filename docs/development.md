@@ -149,17 +149,25 @@ What `review-bundle` decides, comparing the pull request with main:
 
 - a scenario live on main deleted or put back on `@pending`: blocking;
 - an invariant, or a row ENG-29 marks for I2 review, changed without
-  an accepted ADR in the same change that records the security
-  reviewer: blocking.
+  both an accepted ADR in the same change that names ENG-29 and each
+  guarded id, and a comment of the stakeholder on the pull request:
+  blocking;
+- a clippy ban lifted at a call site, or a diff header it cannot read:
+  a nit, and an unread header makes the review deep.
 
 The review class sets the agent's model, turn budget and tools. A change
-holding only Markdown outside the stakeholder's paths is light. Any
-path CODEOWNERS assigns makes it deep, and only a deep review may
-consult the read-only reviewer subagents. Anything else is standard.
+holding only Markdown outside the stakeholder's paths, the domain model,
+plans and scenarios is light. Any path CODEOWNERS assigns makes it
+deep, and only a deep review may consult the read-only reviewer
+subagents. Anything else, an empty diff included, is standard.
 The review bundle quotes only the touched rows, their scenarios and
 the invariants, a few thousand model tokens where the SRS holds
 hundreds of thousands. A re-review starts from the diff since the reviewer app's
-last review.
+last review, found by the app's own login. The pull request's agent
+instructions move out of the agent's directory, so none loads; the
+agent reads them as data. The posted review names the gate as its
+author, states the agent's verdict, and keeps the agent's findings,
+the deterministic ones and failed checks under their own headings.
 
 What is left to the agent is judgement: whether the code and the step
 bindings do what each touched row says, new paths to the model (I2),
