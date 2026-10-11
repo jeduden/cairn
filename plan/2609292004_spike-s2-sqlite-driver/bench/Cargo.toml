@@ -1,0 +1,23 @@
+[package]
+name = "s2bench"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+rusqlite = { version = "=0.40.2", features = ["bundled"] }
+sha2 = "0.10"
+
+[features]
+# The OQ-04 probe: SQLCipher with its crypto vendored, in place of
+# plain bundled SQLite. Build with --no-default-features --features cipher.
+default = ["plain"]
+plain = []
+cipher = ["rusqlite/bundled-sqlcipher-vendored-openssl"]
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+
+# Standalone: kept out of the cairn workspace.
+[workspace]

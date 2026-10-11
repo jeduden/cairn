@@ -95,7 +95,7 @@ What was searched and weighed:
 - Git as the record. It is a natural transport for reviewed segments
   and open source, but too slow and too coarse as the live store.
 - The S2 harness under
-  [bench](../2609292004_spike-s2-sqlite-driver/bench/main.go) is
+  [bench](../2609292004_spike-s2-sqlite-driver/bench-go/main.go) is
   reused for the index side: its corpus, its FTS5 probes and its
   measurements.
 
