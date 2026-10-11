@@ -128,7 +128,8 @@ summary: >-
   timed-out or failed operations of one kind, each written to the node's
   append-only **audit log** of Cairn's own operations (OPS-01), shown by
   `cairn status` (ADM-11), failing `cairn doctor` until acknowledged
-  (`cairn counter ack`, I6, OPS-03).
+  (`cairn counter ack`, I6, OPS-03). The audit log also records every purge
+  (ADM-07).
 - **Canary**: `cairn canary`'s end-to-end test: it writes a **canary event**
   through the hook path and recalls it through the MCP server (OPS-04).
 - **Stat**: A count derived from the record within a recall scope, such as

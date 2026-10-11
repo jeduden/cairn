@@ -104,6 +104,7 @@ Feature: Administration and lifecycle (ADM)
     And "cairn rebuild" then derives room state, the key set and the quarantine set as before the purge, but for the purged content
     And the store is vacuumed and "cairn verify" exits 0
     And no file of the store, its free space and write-ahead log included, holds a byte of the purged content, its commitment keys or its search index entries
+    And the audit log records the purge with its scope, ranges, reason and the principal act behind it, never the purged content
 
     Examples:
       | scope                  |
