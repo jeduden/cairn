@@ -62,14 +62,14 @@ summary: >-
   `harness_text` (Turn), `operator`, `post`, `summary`, `structural` and
   `unparsed`. `harness_meta` is what the harness reports, or the launcher
   records, about the harness's operation, never free text: turn triggers, model
-  tokens, metadata lines and sandbox state (PRV-08, OWN-22); only what a hook
-  handler or the launcher records is trusted, never what a transcript line says.
-  `operator` is the class of principal acts, expire acts and device-seat pins,
-  and `assistant` of run-seat pins; posts are `post`, room summaries `summary`,
-  and every other room act takes its seat's **pin class**, `operator` for a
-  device seat and `assistant` for a run seat (PRV-01, OWN-02). REC-20, RCL-07,
-  OWN-18 and PEER-11 class the events they name; PRV-01 lists the structural
-  ones.
+  tokens, metadata lines and sandbox state (PRV-08, OWN-22); only what the
+  launcher records is trusted, never what a hook handler or a transcript line
+  says. `operator` is the class of principal acts, expire acts and device-seat
+  pins, and `assistant` of run-seat pins; posts are `post`, room summaries
+  `summary`, and every other room act takes its seat's **pin class**, `operator`
+  for a device seat and `assistant` for a run seat (PRV-01, OWN-02). REC-20,
+  RCL-07, OWN-18 and PEER-11 class the events they name; PRV-01 lists the
+  structural ones.
 - **Origin**: How an event reached this node's record (RCL-09): `witnessed`
   (recorded live on this node), `ingested` (appended by `cairn ingest`,
   REC-22), `bundle` (imported) or `peer` (received from a peer, paired phone or

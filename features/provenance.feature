@@ -52,31 +52,33 @@ Feature: Provenance and trust (PRV)
     And the free text a cut or neutral principal act carries, such as a stated reason, is recalled as untrusted, while the act's own "operator" event keeps its trust level and shapes what the act changes
 
     Examples:
-      | mode        | writer                                                                                                                          | provenance       | trust     | verify                                                   |
-      | automation  | a writer of this node                                                                                                           | operator         | trusted   | reports nothing                                          |
-      | automation  | a writer of this node, recorded by its hook handlers or launcher                                                                | harness_meta     | trusted   | reports nothing                                          |
-      | interactive | a writer of this node, recorded by its hook handlers or launcher                                                                | harness_meta     | trusted   | reports nothing                                          |
-      | interactive | a writer of this node, recorded live by its capture from a transcript line                                                      | harness_meta     | untrusted | reports nothing                                          |
-      | interactive | a writer of this node, recorded live by its capture and matched to a prompt its hook handler got, in a run sandboxed against R8 | user             | trusted   | reports nothing                                          |
-      | interactive | a writer of this node, recorded live by its capture and matched to a prompt its hook handler got, in an unsandboxed run         | user             | untrusted | reports nothing                                          |
-      | automation  | a writer of this node, recorded live by its capture and matched to a prompt its hook handler got                                | user             | untrusted | reports nothing                                          |
-      | interactive | a writer of this node                                                                                                           | assistant        | untrusted | reports nothing                                          |
-      | interactive | a writer of this node                                                                                                           | tool_call        | untrusted | reports nothing                                          |
-      | interactive | a writer of this node                                                                                                           | tool_result:Bash | untrusted | reports nothing                                          |
-      | interactive | a writer of this node                                                                                                           | web              | untrusted | reports nothing                                          |
-      | interactive | a writer of this node                                                                                                           | mcp:github       | untrusted | reports nothing                                          |
-      | interactive | a writer of this node                                                                                                           | file             | untrusted | reports nothing                                          |
-      | interactive | a writer of this node                                                                                                           | subagent_result  | untrusted | reports nothing                                          |
-      | interactive | a writer of this node                                                                                                           | harness_text     | untrusted | reports nothing                                          |
-      | interactive | a writer of this node                                                                                                           | unparsed         | untrusted | reports nothing                                          |
-      | interactive | a run seat's writer on this node                                                                                                | post             | untrusted | reports nothing                                          |
-      | automation  | a writer of this node, recorded live by its CLI                                                                                 | operator         | trusted   | reports nothing                                          |
-      | interactive | a writer of this node, ingested by "cairn ingest" from a transcript no MCP server ingested as it grew                           | user             | untrusted | reports nothing                                          |
-      | automation  | a writer of this node, ingested by "cairn ingest" from a transcript no MCP server ingested as it grew                           | harness_meta     | untrusted | reports nothing                                          |
-      | interactive | a device seat of another node whose device key has no certificate from the principal key of this node's principal               | operator         | untrusted | reports nothing                                          |
-      | automation  | a run seat's writer on another node of this principal                                                                           | harness_meta     | untrusted | reports nothing                                          |
-      | interactive | a run seat's writer on another node of this principal                                                                           | user             | untrusted | reports nothing                                          |
-      | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance                                          | operator         | trusted   | reports it as a widening principal act that fails OWN-22 |
+      | mode        | writer                                                                                                                                                                      | provenance       | trust     | verify                                                   |
+      | automation  | a writer of this node                                                                                                                                                       | operator         | trusted   | reports nothing                                          |
+      | automation  | a writer of this node, recorded by its launcher                                                                                                                             | harness_meta     | trusted   | reports nothing                                          |
+      | interactive | a writer of this node, recorded by its launcher                                                                                                                             | harness_meta     | trusted   | reports nothing                                          |
+      | interactive | a writer of this node, recorded live by its capture from a transcript line                                                                                                  | harness_meta     | untrusted | reports nothing                                          |
+      | interactive | a writer of this node, recorded live by its capture and matched to a prompt its hook handler got, while every run on the node has a signed sandbox state blocking R3 and R8 | user             | trusted   | reports nothing                                          |
+      | interactive | a writer of this node, recorded live by its capture and matched to a prompt its hook handler got, while a run on the node leaves R8 open                                    | user             | untrusted | reports nothing                                          |
+      | interactive | a writer of this node, recorded live by its capture and matched to a prompt its hook handler got, while a run's sandbox state blocks R8 but no component signed it          | user             | untrusted | reports nothing                                          |
+      | interactive | a writer of this node, recorded by its hook handlers as a hook observation, while a run on the node leaves R8 open                                                          | structural       | untrusted | reports nothing                                          |
+      | automation  | a writer of this node, recorded live by its capture and matched to a prompt its hook handler got                                                                            | user             | untrusted | reports nothing                                          |
+      | interactive | a writer of this node                                                                                                                                                       | assistant        | untrusted | reports nothing                                          |
+      | interactive | a writer of this node                                                                                                                                                       | tool_call        | untrusted | reports nothing                                          |
+      | interactive | a writer of this node                                                                                                                                                       | tool_result:Bash | untrusted | reports nothing                                          |
+      | interactive | a writer of this node                                                                                                                                                       | web              | untrusted | reports nothing                                          |
+      | interactive | a writer of this node                                                                                                                                                       | mcp:github       | untrusted | reports nothing                                          |
+      | interactive | a writer of this node                                                                                                                                                       | file             | untrusted | reports nothing                                          |
+      | interactive | a writer of this node                                                                                                                                                       | subagent_result  | untrusted | reports nothing                                          |
+      | interactive | a writer of this node                                                                                                                                                       | harness_text     | untrusted | reports nothing                                          |
+      | interactive | a writer of this node                                                                                                                                                       | unparsed         | untrusted | reports nothing                                          |
+      | interactive | a run seat's writer on this node                                                                                                                                            | post             | untrusted | reports nothing                                          |
+      | automation  | a writer of this node, recorded live by its CLI                                                                                                                             | operator         | trusted   | reports nothing                                          |
+      | interactive | a writer of this node, ingested by "cairn ingest" from a transcript no MCP server ingested as it grew                                                                       | user             | untrusted | reports nothing                                          |
+      | automation  | a writer of this node, ingested by "cairn ingest" from a transcript no MCP server ingested as it grew                                                                       | harness_meta     | untrusted | reports nothing                                          |
+      | interactive | a device seat of another node whose device key has no certificate from the principal key of this node's principal                                                           | operator         | untrusted | reports nothing                                          |
+      | automation  | a run seat's writer on another node of this principal                                                                                                                       | harness_meta     | untrusted | reports nothing                                          |
+      | interactive | a run seat's writer on another node of this principal                                                                                                                       | user             | untrusted | reports nothing                                          |
+      | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance                                                                                      | operator         | trusted   | reports it as a widening principal act that fails OWN-22 |
 
   @PRV-03 @P0 @I2 @pending
   Scenario Outline: model-reproducible text no principal stamped, and harness-summarised text, is untrusted
@@ -129,7 +131,7 @@ Feature: Provenance and trust (PRV)
   @PRV-06 @P0 @I2 @pending
   Scenario Outline: a landmark, or kernel output, a recall result or an export built from events, records the events it comes from and inherits their taint
     Given an isolated Cairn home
-    And this node's record contains an event with provenance "harness_meta" its hook handlers recorded and one with provenance "web"
+    And this node's record contains an event with provenance "harness_meta" its launcher recorded and one with provenance "web"
     When the <artifact> is made from both events
     Then the <artifact> records the addresses of both events it comes from
     And the <artifact> has trust "untrusted"
@@ -169,26 +171,26 @@ Feature: Provenance and trust (PRV)
     Then the event is stored with provenance "<provenance>" and its trust level is "<trust>"
 
     Examples:
-      | item                                                                                                                       | provenance       | trust     |
-      | a "user" line carrying a prompt typed at the harness's input, matched, in a run sandboxed against R8                       | user             | trusted   |
-      | a "user" line carrying a prompt typed at the harness's input, matched, in an unsandboxed run                               | user             | untrusted |
-      | a "user" line whose promptSource is "system", carrying a task notification                                                 | harness_text     | untrusted |
-      | a "user" line typed at the input whose text matches no prompt a "UserPromptSubmit" hook handler of its harness session got | user             | untrusted |
-      | a "user" line whose promptSource is "sdk", matched to its prompt commitment, in deployment mode "interactive"              | user             | untrusted |
-      | a "user" line of a harness session whose process ancestry no structural observation records yet                            | harness_text     | untrusted |
-      | an attachment of a type no supported version records                                                                       | harness_text     | untrusted |
-      | a "user" line carrying only a Bash tool_result                                                                             | tool_result:Bash | untrusted |
-      | a "user" line with isMeta true                                                                                             | harness_text     | untrusted |
-      | a "user" line carrying "<local-command-stdout>" output                                                                     | harness_text     | untrusted |
-      | an "instructions" attachment carrying a CLAUDE.md file, rendered with role user                                            | file             | untrusted |
-      | a "session_context" attachment, rendered with role user                                                                    | harness_text     | untrusted |
-      | an "mcp_instructions_delta" attachment from the MCP server "docs"                                                          | mcp:docs         | untrusted |
-      | a "skill_listing" attachment                                                                                               | harness_text     | untrusted |
-      | a Bash tool_result whose output contains "<system-reminder>"                                                               | tool_result:Bash | untrusted |
-      | an "ai-title" transcript line carrying a harness session title                                                             | harness_text     | untrusted |
-      | a "last-prompt" transcript line repeating a typed prompt                                                                   | harness_text     | untrusted |
-      | a subagent's "user" line carrying the delegated task its parent's run wrote                                                | harness_text     | untrusted |
-      | a "user" line of a harness session a run's Bash tool call started                                                          | harness_text     | untrusted |
+      | item                                                                                                                                             | provenance       | trust     |
+      | a "user" line carrying a prompt typed at the harness's input, matched, while every run on the node has a signed sandbox state blocking R3 and R8 | user             | trusted   |
+      | a "user" line carrying a prompt typed at the harness's input, matched, while a run on the node leaves R8 open                                    | user             | untrusted |
+      | a "user" line whose promptSource is "system", carrying a task notification                                                                       | harness_text     | untrusted |
+      | a "user" line typed at the input whose text matches no prompt a "UserPromptSubmit" hook handler of its harness session got                       | user             | untrusted |
+      | a "user" line whose promptSource is "sdk", matched to its prompt commitment, in deployment mode "interactive"                                    | user             | untrusted |
+      | a "user" line of a harness session whose process ancestry no structural observation records yet                                                  | harness_text     | untrusted |
+      | an attachment of a type no supported version records                                                                                             | harness_text     | untrusted |
+      | a "user" line carrying only a Bash tool_result                                                                                                   | tool_result:Bash | untrusted |
+      | a "user" line with isMeta true                                                                                                                   | harness_text     | untrusted |
+      | a "user" line carrying "<local-command-stdout>" output                                                                                           | harness_text     | untrusted |
+      | an "instructions" attachment carrying a CLAUDE.md file, rendered with role user                                                                  | file             | untrusted |
+      | a "session_context" attachment, rendered with role user                                                                                          | harness_text     | untrusted |
+      | an "mcp_instructions_delta" attachment from the MCP server "docs"                                                                                | mcp:docs         | untrusted |
+      | a "skill_listing" attachment                                                                                                                     | harness_text     | untrusted |
+      | a Bash tool_result whose output contains "<system-reminder>"                                                                                     | tool_result:Bash | untrusted |
+      | an "ai-title" transcript line carrying a harness session title                                                                                   | harness_text     | untrusted |
+      | a "last-prompt" transcript line repeating a typed prompt                                                                                         | harness_text     | untrusted |
+      | a subagent's "user" line carrying the delegated task its parent's run wrote                                                                      | harness_text     | untrusted |
+      | a "user" line of a harness session a run's Bash tool call started                                                                                | harness_text     | untrusted |
 
   @PRV-09 @P0 @I2 @I8 @pending
   Scenario Outline: an event's writer comes from the key that verifiably signed it, never from a field

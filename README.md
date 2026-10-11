@@ -53,13 +53,13 @@ security review and a new major version, not a bug fix.
   model only inside an untrusted-data envelope when the agent explicitly calls a
   recall tool, or through one of the closed paths below that a principal act
   names. The trusted sources are this node's own `operator` and structural
-  events, the `harness_meta` events its hook handlers or launcher recorded, and
-  the `user` events its capture matched to a prompt its hook handlers got in a
-  run sandboxed against R8 (PRV-08), while the deployment mode is `interactive`,
-  and, once PRV-10 ships, principal acts signed by a device key the agent's
-  principal certified and posts and pins written from a device seat such a key
-  certified, within that key's scope, a pin version a principal stamped, for
-  that principal's own agents, and the posts and pins a trust grant of the
+  events (hook observations only as PRV-08 allows), the `harness_meta` events
+  its launcher recorded, and the `user` events matched to a prompt (PRV-08),
+  while the deployment mode is `interactive` and no run on the node leaves R3 or
+  R8 open, and, once PRV-10 ships, principal acts signed by a device key the
+  agent's principal certified and posts and pins written from a device seat such
+  a key certified, within that key's scope, a pin version a principal stamped,
+  for that principal's own agents, and the posts and pins a trust grant of the
   agent's principal covers. Cairn writes to an agent only through a closed set
   of paths. Without a principal act: restore blocks (INJ-01, INJ-02, INJ-04),
   built only from qualifying pins, trusted structural fields and fixed text

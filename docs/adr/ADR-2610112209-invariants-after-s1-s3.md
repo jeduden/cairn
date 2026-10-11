@@ -46,33 +46,45 @@ of a named human security reviewer's approval.
 
 [docs/srs/invariants.md](../srs/invariants.md) changes in three places:
 
-1. **I2's trusted sources.** "The `harness_meta` events its hook handlers or
-   launcher recorded, and the `user` events its capture matched to a prompt its
-   hook handlers got (PRV-08), while the deployment mode is `interactive`". Such
-   a `user` event is trusted only in a run sandboxed against R8 (OWN-22). PRV-08
-   states the match: the line marks its prompt as the harness's own input, not
-   the harness's own notice (`promptSource`), carries the hook input's
-   `prompt_id`, and its text matches the prompt commitment a `UserPromptSubmit`
-   hook handler of the same harness session kept. The commitment is a structural
-   hook observation over the prompt's redacted text, keyed under a node-local
-   key that never leaves the node and is erased when the matched event is
-   purged. The match result is recorded, so trust derives from the record alone
-   (I10). Only a prompt typed interactively counts; a print-mode prompt stays
-   `user` but untrusted. A `harness_meta` line read from a transcript is
-   untrusted too; its sanitized structural fields, such as model tokens, stay
-   usable (PRV-06). Spike S13 found that the harness also submits its own task
-   notifications through `UserPromptSubmit`, so the commitment alone is not
-   enough.
+1. **I2's trusted sources.** Which `harness_meta` and `user` events are
+   trusted changes, as quoted below.
 2. **I2's closed paths.** Compaction guidance (PIN-07) is removed. The
    list only narrows.
 3. **I3.** A pin may also be named by id and count instead of restored
    when INJ-05 cannot tell which run a restore is for.
 
-The text in force is the one invariants.md holds in the commit that
-adds this record. Its SHA-256 is:
+I2's sentence on the trusted sources now begins:
 
 ```text
-26a1d02775cc5879d4ff61af1aa0e4cc2593be69cdaf7dca582d74912c7d013d
+The trusted sources are this node's own `operator` and structural events
+(hook observations only as PRV-08 allows), the `harness_meta` events its
+launcher recorded, and the `user` events matched to a prompt (PRV-08), while
+the deployment mode is `interactive` and no run on the node leaves R3 or R8
+open, and, once PRV-10 ships, …
+```
+
+PRV-08 states the rest:
+
+- A `UserPromptSubmit` hook handler keeps a prompt commitment. It is a
+  structural hook observation of the hook input's `prompt_id` and a
+  commitment to the prompt's redacted text. Its own random key of at least
+  256 bits is kept only on this node and erased with the commitment.
+- The first transcript line carrying that `prompt_id` uses the commitment
+  up. It matches only when it marks the prompt as typed and its redacted
+  text matches. The match is recorded, so trust derives from the record
+  alone (I10).
+- A run leaves a residual risk open unless its sandbox state blocks it and
+  was signed by the component that measured it, with a key no agent can
+  read. Until OQ-40 provides that key, every run leaves R3 and R8 open. So
+  no `user` event is trusted, and hook observations are untrusted.
+- Only the launcher's `harness_meta` is trusted. `harness_meta` a hook
+  handler records or a transcript line holds is not.
+
+The text in force is the one invariants.md holds in the commit that adds
+this record. Its SHA-256 is:
+
+```text
+ee7a6f5889ceb3d7397ea8c41d999e4a88e56ab91b1113357645c42ab31c8cc9
 ```
 
 Until a security reviewer is named, the stakeholder holds that role.
@@ -93,23 +105,22 @@ record's id and the hash above.
 
 ## Consequences
 
-- A prompt the harness rewrites before writing it to the transcript
-  stays an untrusted `user` event; this fails safe.
-- Nothing read from a transcript is trusted unless it is a `user` line
-  matched to a prompt commitment in a run sandboxed against R8. An
-  unsandboxed agent can append transcript lines and run a hook handler
-  itself, so no transcript line or hook observation is unforgeable for
-  it: in such a run no `user` event is trusted, so PIN-05 finds no pin
-  candidates, and a compaction stays ambiguous from a subagent's start
-  to the end of its harness session (INJ-05). Where every candidate run
-  qualifies for the same pins, nothing is lost but the landmark index.
-- R8 joins the residual risks OWN-22 tracks: while an unsandboxed run
-  leaves it open, widening acts need the principal's risk acceptance
-  naming it. Lines appended to a transcript by the
-  agent or another process of the same OS user stay untrusted (§6.1,
-  R8).
-- After a compaction while any subagent may run, background subagents
-  included, the main agent may get fewer pins verbatim and must recall
-  the rest.
-- This record supersedes ADR-2610091555 once accepted (ENG-26), and the
-  hash above replaces that record's as the approved text.
+- **Fail closed until OQ-40.** An agent of the same OS user can append
+  transcript lines, run a hook handler with an input it made, and write the
+  Cairn home, so no transcript line, hook observation or unsigned sandbox state
+  is unforgeable for it (§6.1, R3 and R8). Until sandbox states are signed out
+  of the agent's reach, which needs the launcher (M7) and OQ-40, no `user` event
+  is trusted: PIN-05 finds no pin candidates, and a compaction stays ambiguous
+  from a subagent's start to the end of its harness session (INJ-05). Pins still
+  restore, since they come from principal acts.
+- **Small cost where rooms match.** Where every candidate run qualifies for the
+  same pins, an ambiguous compaction loses only the landmark index.
+- **Seals.** Before seals ship (REC-18, M7), any record in a home the agent can
+  write can be forged; the gate holds once both seals and signed sandbox states
+  exist.
+- **Fails safe.** A prompt the harness rewrites before writing it to the
+  transcript stays an untrusted `user` event.
+- **Risk acceptance.** R8 joins the residual risks OWN-22 tracks: while a run
+  leaves it open, widening acts need the principal's risk acceptance naming it.
+- **Supersession.** This record supersedes ADR-2610091555 once accepted
+  (ENG-26), and the hash above replaces that record's as the approved text.
