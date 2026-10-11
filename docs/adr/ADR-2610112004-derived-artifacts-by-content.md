@@ -49,11 +49,11 @@ by content, and to narrow PEER-03 to what is the same on every node.
 
 ## Decision
 
-I10's list names the search index where it said "indexes", and its last
-sentence becomes: "Rebuilding reproduces their content exactly, whatever
-their storage layout." The rest of I10 is unchanged. Derived artifacts
-stay a deterministic function of the writer logs a node holds and its
-own key set. Arrival order still plays no part.
+I10's list names the search index where it said "indexes" and adds origins. Its
+last sentence becomes: "Rebuilding reproduces their content exactly, whatever
+their storage layout." The rest of I10 is unchanged. Derived artifacts stay a
+deterministic function of the writer logs a node holds and its own key set.
+Arrival order still plays no part.
 
 With it, SRS 3.0-draft changes these requirements:
 
@@ -82,10 +82,19 @@ With it, SRS 3.0-draft changes these requirements:
   in the home.
 - **ENG-08.** Its property test compares canonical digests after any
   sequence of appends and lifecycle events.
+- **REC-26, new.** Each sealed range a node accepts is recorded once as
+  an arrival event in its device seat: writer id, seq range, digest and
+  how it arrived. An event's origin derives from the record and the key
+  set alone: `ingested` for what `cairn ingest` appended, `witnessed`
+  for another event in a writer this node's current key certified,
+  otherwise `bundle` or `peer` from the arrival events. No stored
+  per-event value decides it.
 - **PEER-03.** Two peers holding the same segments derive room state and
   a search index identical in content, apart from each event's trust
-  level and origin. Each node derives or records those for itself and
-  never takes them from another node.
+  level and origin. Each node derives those for itself and never takes
+  them from another node.
+- **LMK-05** gets back its bound on the landmark index, which a
+  rewording dropped without a decision.
 
 The domain model's derived artifact is its content, never its storage
 layout, and two copies are the same when their canonical digest matches.
@@ -94,7 +103,7 @@ layout, and two copies are the same when their canonical digest matches.
 SHA-256 is:
 
 ```text
-1a53333abaa3ad65299df8708c5b61834acdaf709c2bcdfe7c237bdf80e98811
+e8ff84895c034c89ead83fd5150ed87a7ae47720db998a8a68d6b3878e2cc93a
 ```
 
 The stakeholder, @jeduden, approves this record as security reviewer
@@ -119,6 +128,7 @@ miss, and what answers each:
 | a trigger, view or extra index, or a changed tokenizer or ranking configuration | the schema and settings are part of the digest; verify refuses unknown schema objects |
 | an index that disagrees with the table it indexes                               | ADM-08's integrity checks of the store and the search index                           |
 | output whose order follows storage                                              | ADM-08: every read orders its output by values                                        |
+| a stored origin changed from `peer` to `witnessed`, making the event trusted    | REC-26 derives origin from the record; verify compares it with the rest of I10        |
 
 The digest is itself a risk: kept past a purge, it would let anyone
 holding the other content confirm a guess at the purged content. ADM-08
@@ -142,13 +152,16 @@ What stays as strong as before:
   (REC-10, REC-18, REC-25).
 
 PEER-03's narrowing adds no path from untrusted content to the model.
-Each node keeps deriving trust levels and recording origin for itself,
-and never takes either from another node.
+Each node derives trust levels and origin for itself, and never takes
+either from another node.
 
-One question stays open for the stakeholder. Origin is recorded per
-event in the record, outside the chained header (§8.2, REC-10), and
-trust levels derive from it. Neither the hash chain nor the canonical
-digest covers it.
+Before this change, origin was a stored per-event value outside the
+hash chain. Trust levels derive from it, so changing a peer event's
+origin to `witnessed` would have made it trusted (I2), and nothing would
+have noticed. REC-26 closes that: origin now derives from the record and
+the key set, as I10 lists it. Until seals ship (REC-18), a node's own
+writers are anchored by head receipts alone. That limit is the same for
+everything the record holds.
 
 ## Alternatives
 
@@ -172,3 +185,5 @@ digest covers it.
   write-ahead log with `TRUNCATE`, or rebuilds the search index.
 - M1's schema may keep trust levels and origin apart from the parts
   every node shares, so PEER-03's shared parts compare directly.
+- M1 records arrival events and derives origin from them; M7 and M8,
+  which bring bundles and peers, write the arrival events they need.

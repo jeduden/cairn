@@ -335,3 +335,14 @@ Feature: Record (REC)
     Then the writer has at most 48 stored segments for that day
     And every address, commitment and chain head is unchanged
     And "cairn verify" exits 0
+
+  @REC-26 @P0 @I2 @I10 @pending
+  Scenario: origin derives from the record and the key set, never from a stored value
+    Given an isolated Cairn home
+    And a witnessed run, an ingested run, a sealed range received from a peer and one imported in a bundle
+    When the person runs "cairn rebuild"
+    Then each sealed range the node accepted is named by exactly one arrival event in its device seat, carrying only the writer id, seq range, digest and how it arrived
+    And the witnessed run's events read origin "witnessed", the ingested run's "ingested", the peer's "peer" and the bundle's "bundle"
+    And after a stored origin of a peer event is changed to "witnessed", "cairn verify" fails until "cairn rebuild" derives "peer" again
+    And after the node identity changes, the events of its earlier writers read origin "peer"
+    And "cairn rebuild" appends no arrival event

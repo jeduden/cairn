@@ -64,15 +64,19 @@ summary: >-
   device seat and `assistant` for a run seat (PRV-01, OWN-02). REC-20, RCL-07,
   OWN-18 and PEER-11 class the events they name; PRV-01 lists the structural
   ones.
-- **Origin**: How an event reached this node's record (RCL-09): `witnessed`
-  (recorded live on this node), `ingested` (appended by `cairn ingest`,
-  REC-22), `bundle` (imported) or `peer` (received from a peer, paired phone or
-  backup, or recorded `witnessed` before this node's node identity changed,
-  Node); the trust policy reads `bundle` as `peer` (PRV-02). Independent of
-  provenance. A **witnessed run** is one this node's hook handlers watched.
-  Every event but one from a peer or a bundle also records its **recorder**,
-  the part that recorded it: the hook handlers, CLI, TUI, MCP server, launcher,
-  room-view component or bridge component.
+- **Origin**: How an event reached this node's record (RCL-09), derived from the
+  record and the node's key set alone (REC-26): `ingested` (appended by `cairn
+  ingest`, REC-22), `witnessed` (any other event in a writer this node's current
+  device key or token key certified), `bundle` (imported) or `peer` (received
+  from a peer, paired phone or backup, or recorded `witnessed` before this
+  node's node identity changed, Node); the trust policy reads `bundle` as `peer`
+  (PRV-02). An **arrival event** is the structural event this node's device seat
+  records for each sealed range it accepts, naming the writer, the seq range,
+  the range's digest and how it arrived. Independent of provenance. A
+  **witnessed run** is one this node's hook handlers watched. Every event but
+  one from a peer or a bundle also records its **recorder**, the part that
+  recorded it: the hook handlers, CLI, TUI, MCP server, launcher, room-view
+  component or bridge component.
 - **Span**: A contiguous range of one run's events in one writer, bounded as
   LMK-01 says.
 - **Landmark**: A structural headline over one span, bound to its address range
