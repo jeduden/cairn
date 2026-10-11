@@ -1,0 +1,184 @@
+{
+  "claude_code": "2.1.296",
+  "method": "Each handler logs its start, then a tick every 100 ms for 15 s unless killed; ran_ms is last tick minus start. A trial lists the hooks configured in it; a configured hook missing from measurements never started.",
+  "trials": {
+    "timeout4": {
+      "mode": "print",
+      "configured": [
+        "SessionStart",
+        "UserPromptSubmit",
+        "PostToolUse",
+        "Stop",
+        "SessionEnd",
+        "PreCompact",
+        "PostCompact"
+      ],
+      "timeout_s": 4
+    },
+    "se4a": {
+      "mode": "print",
+      "configured": [
+        "SessionStart",
+        "Stop",
+        "SessionEnd"
+      ],
+      "timeout_s": 4
+    },
+    "nostop-se4": {
+      "mode": "print",
+      "configured": [
+        "SessionEnd"
+      ],
+      "timeout_s": 4
+    },
+    "slowstop-se10": {
+      "mode": "print",
+      "configured": [
+        "Stop",
+        "SessionEnd"
+      ],
+      "timeout_s": {
+        "Stop": 4,
+        "SessionEnd": 10
+      }
+    },
+    "se-10": {
+      "mode": "print",
+      "configured": [
+        "SessionEnd"
+      ],
+      "timeout_s": 10
+    },
+    "se-none": {
+      "mode": "print",
+      "configured": [
+        "SessionEnd"
+      ],
+      "timeout_s": null
+    },
+    "ise-none": {
+      "mode": "interactive",
+      "configured": [
+        "SessionEnd"
+      ],
+      "timeout_s": null
+    },
+    "ise-10": {
+      "mode": "interactive",
+      "configured": [
+        "SessionEnd"
+      ],
+      "timeout_s": 10
+    }
+  },
+  "measurements": [
+    {
+      "mode": "print",
+      "trial": "timeout4",
+      "event": "PostToolUse",
+      "configured_timeout_s": 4,
+      "handler_sleep_s": 15,
+      "ran_ms": 3933,
+      "finished": false
+    },
+    {
+      "mode": "print",
+      "trial": "timeout4",
+      "event": "SessionStart",
+      "configured_timeout_s": 4,
+      "handler_sleep_s": 15,
+      "ran_ms": 3941,
+      "finished": false
+    },
+    {
+      "mode": "print",
+      "trial": "timeout4",
+      "event": "Stop",
+      "configured_timeout_s": 4,
+      "handler_sleep_s": 15,
+      "ran_ms": 3933,
+      "finished": false
+    },
+    {
+      "mode": "print",
+      "trial": "timeout4",
+      "event": "UserPromptSubmit",
+      "configured_timeout_s": 4,
+      "handler_sleep_s": 15,
+      "ran_ms": 3927,
+      "finished": false
+    },
+    {
+      "mode": "print",
+      "trial": "se-10",
+      "event": "SessionEnd",
+      "configured_timeout_s": 10,
+      "handler_sleep_s": 15,
+      "ran_ms": 9939,
+      "finished": false
+    },
+    {
+      "mode": "print",
+      "trial": "se-none",
+      "event": "SessionEnd",
+      "configured_timeout_s": null,
+      "handler_sleep_s": 15,
+      "ran_ms": 1447,
+      "finished": false
+    },
+    {
+      "mode": "print",
+      "trial": "se4a",
+      "event": "SessionStart",
+      "configured_timeout_s": 4,
+      "handler_sleep_s": 15,
+      "ran_ms": 3927,
+      "finished": false
+    },
+    {
+      "mode": "print",
+      "trial": "se4a",
+      "event": "Stop",
+      "configured_timeout_s": 4,
+      "handler_sleep_s": 15,
+      "ran_ms": 3933,
+      "finished": false
+    },
+    {
+      "mode": "print",
+      "trial": "nostop-se4",
+      "event": "SessionEnd",
+      "configured_timeout_s": 4,
+      "handler_sleep_s": 15,
+      "ran_ms": 3933,
+      "finished": false
+    },
+    {
+      "mode": "print",
+      "trial": "slowstop-se10",
+      "event": "Stop",
+      "configured_timeout_s": 4,
+      "handler_sleep_s": 15,
+      "ran_ms": 3936,
+      "finished": false
+    },
+    {
+      "mode": "interactive",
+      "trial": "ise-none",
+      "event": "SessionEnd",
+      "configured_timeout_s": null,
+      "handler_sleep_s": 15,
+      "ran_ms": 1449,
+      "finished": false
+    },
+    {
+      "mode": "interactive",
+      "trial": "ise-10",
+      "event": "SessionEnd",
+      "configured_timeout_s": 10,
+      "handler_sleep_s": 15,
+      "ran_ms": 9933,
+      "finished": false
+    }
+  ]
+}

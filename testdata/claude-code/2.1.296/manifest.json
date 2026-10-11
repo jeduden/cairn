@@ -1,0 +1,45 @@
+{
+  "claude_code": "2.1.296",
+  "hook_flows": {
+    "startup": "print mode: SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop, SessionEnd",
+    "resume": "print mode, --resume of the startup harness session",
+    "continue": "print mode, --continue",
+    "fork": "print mode, --resume with --fork-session",
+    "compact": "print mode, /compact with custom instructions",
+    "clear": "print mode, /clear",
+    "subagent": "a foreground subagent running Bash",
+    "subagent-compaction": "a subagent compacted automatically (CLAUDE_CODE_AUTO_COMPACT_WINDOW=100000, CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=40)",
+    "interactive": "an interactive harness session: three prompts, a rewind, a partial compaction, /exit",
+    "directories": "one harness session in each of /w/my_app, /w/my.app and /w/my-app"
+  },
+  "hook_context": [
+    "transcripts/projects/-w-my-app/205beaae-e4b8-4798-a1aa-cdf50c807136.jsonl"
+  ],
+  "projects": "transcripts/projects",
+  "harness_context": {
+    "transcript": "transcripts/projects/-w-ctx/56906b31-cee0-47eb-82df-cad00967bad4.jsonl",
+    "markers": {
+      "CLAUDE.md": "CLAUDE-MD-FIXTURE-LINE",
+      "MCP server instructions": "MCP-INSTRUCTIONS-FIXTURE",
+      "skill listing": "SKILL-FIXTURE"
+    }
+  },
+  "appends": {
+    "rewind": {
+      "before": "transcripts/rewind/1-before-rewind.jsonl",
+      "after": "transcripts/rewind/2-after-rewind.jsonl"
+    },
+    "partial compaction": {
+      "before": "transcripts/rewind/2-after-rewind.jsonl",
+      "after": "transcripts/rewind/3-after-summarize.jsonl"
+    }
+  },
+  "subagent_compaction": {
+    "hooks": "subagent-compaction",
+    "main_transcript": "transcripts/projects/-w-sub2/ff036475-48bc-4843-ae69-a8fe3aba87ea.jsonl",
+    "subagent_transcript": "transcripts/projects/-w-sub2/ff036475-48bc-4843-ae69-a8fe3aba87ea/subagents/agent-ad93ff50e4608d660.jsonl"
+  },
+  "directories": "directories",
+  "timeouts": "timeouts.json",
+  "cleanup": "cleanup.json"
+}
