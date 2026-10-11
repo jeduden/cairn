@@ -106,8 +106,10 @@ summary: >-
 - **Residual risk**: One of the risks §6.1 lists for an unconfined run.
 - **Sandbox state**: What confines a run, its policy digest, and which residual
   risks it blocks, recorded from outside the sandbox, where the agent cannot
-  write; a run with none recorded counts as unsandboxed (OWN-22). One no
-  component signed out of the agent's reach leaves R3 and R8 open (PRV-08).
+  write; a run with none recorded counts as unsandboxed (OWN-22). A residual
+  risk counts as blocked only by a sandbox state its measuring component signed
+  out of the agent's reach (open: OQ-40); until then a run leaves it open
+  (OWN-22, PRV-08).
 - **Risk acceptance**: The principal's act accepting the residual risks a run
   leaves open (OWN-22).
 - **Hand-off, hand-back**: An agent passes control to its principal as a held

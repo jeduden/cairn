@@ -53,9 +53,9 @@ security review and a new major version, not a bug fix.
   recall tool, or through one of the closed paths below that a principal act
   names. The trusted sources are this node's own `operator` and structural
   events (hook observations only as PRV-08 allows), the `harness_meta` events
-  its launcher recorded, and the `user` events matched to a prompt (PRV-08),
-  while the deployment mode is `interactive` and no run on the node leaves R3 or
-  R8 open, and, once PRV-10 ships, principal acts signed by a device key the
+  its launcher recorded, and, while the deployment mode is `interactive` and no
+  run on the node leaves R3 or R8 open, the `user` events matched to a prompt
+  (PRV-08), and, once PRV-10 ships, principal acts signed by a device key the
   agent's principal certified and posts and pins written from a device seat such
   a key certified, within that key's scope, a pin version a principal stamped,
   for that principal's own agents, and the posts and pins a trust grant of the

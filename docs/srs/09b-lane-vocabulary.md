@@ -110,13 +110,13 @@ says "secure".
 
 No mark, for the principal's own agents, on this node's own `operator` and
 structural events (hook observations only as PRV-08 allows), the `harness_meta`
-events its launcher recorded, and the `user` events matched to a prompt
-(PRV-08), while the deployment mode is `interactive` and no run on the node
-leaves R3 or R8 open (an ingested one is untrusted, REC-22, and a line the
-launcher carried in is untrusted `harness_text`, never a `user` event, LANE-14);
-on principal acts a device key the principal certified signed, and posts and
-pins written from a device seat such a key certified, within that key's scope,
-from any of its nodes (shown with a device glyph); on pin versions the principal
+events its launcher recorded, and, while the deployment mode is `interactive`
+and no run on the node leaves R3 or R8 open, the `user` events matched to a
+prompt (PRV-08) (an ingested one is untrusted, REC-22, and a line the launcher
+carried in is untrusted `harness_text`, never a `user` event, LANE-14); on
+principal acts a device key the principal certified signed, and posts and pins
+written from a device seat such a key certified, within that key's scope, from
+any of its nodes (shown with a device glyph); on pin versions the principal
 stamped (shown with the stamper, LANE-32); and on posts and pins a trust grant
 of the principal covers outside a foreign room, written from device seats a
 device key of the principal the trust grant names certified, never a

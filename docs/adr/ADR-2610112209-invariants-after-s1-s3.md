@@ -58,9 +58,9 @@ I2's sentence on the trusted sources now begins:
 ```text
 The trusted sources are this node's own `operator` and structural events
 (hook observations only as PRV-08 allows), the `harness_meta` events its
-launcher recorded, and the `user` events matched to a prompt (PRV-08), while
-the deployment mode is `interactive` and no run on the node leaves R3 or R8
-open, and, once PRV-10 ships, …
+launcher recorded, and, while the deployment mode is `interactive` and no
+run on the node leaves R3 or R8 open, the `user` events matched to a prompt
+(PRV-08), and, once PRV-10 ships, …
 ```
 
 PRV-08 states the rest:
@@ -73,10 +73,13 @@ PRV-08 states the rest:
   up. It matches only when it marks the prompt as typed and its redacted
   text matches. The match is recorded, so trust derives from the record
   alone (I10).
-- A run leaves a residual risk open unless its sandbox state blocks it and
-  was signed by the component that measured it, with a key no agent can
-  read. Until OQ-40 provides that key, every run leaves R3 and R8 open. So
-  no `user` event is trusted, and hook observations are untrusted.
+- OWN-22 now says a residual risk counts as blocked only by a sandbox state
+  the measuring component signed with a key no agent can read. Until OQ-40
+  provides that key, every run leaves R3 and R8 open, and so do processes
+  of the OS user that no run of this node records. So no `user` event is
+  trusted, and hook observations are untrusted.
+- The condition is checked in causal order, between a prompt commitment
+  and its match, a run with no recorded end counting as active (I10).
 - Only the launcher's `harness_meta` is trusted. `harness_meta` a hook
   handler records or a transcript line holds is not.
 
@@ -84,7 +87,7 @@ The text in force is the one invariants.md holds in the commit that adds
 this record. Its SHA-256 is:
 
 ```text
-ee7a6f5889ceb3d7397ea8c41d999e4a88e56ab91b1113357645c42ab31c8cc9
+f23fa79e1b9ff27414ce35d90fae1c33764ca2e1f12540aede2dda129ea6ac5c
 ```
 
 Until a security reviewer is named, the stakeholder holds that role.

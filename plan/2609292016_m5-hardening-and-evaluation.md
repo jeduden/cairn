@@ -24,8 +24,8 @@ evaluation, the external review and the pilot.
 ## Tasks
 
 1. Instruction-like flagging: PRV-07
-2. Pin candidates and the CLAUDE.md duplicate warning: PIN-05, PIN-09.
-   PIN-05 finds no candidates while every run leaves R8 open, which
+2. Pin candidates and the CLAUDE.md duplicate warning: PIN-05, PIN-09. PIN-05
+   finds no candidates while any run on the node leaves R3 or R8 open, which
    holds until OQ-40 gives sandbox states a signature (OQ-51)
 3. SDK transcripts and retention: REC-14 and REC-15
 4. Encryption at rest and the recall-taint policy hook: SEC-09, SEC-13
