@@ -3,43 +3,57 @@
 A complete record of what your Claude agents did: exact recall for the
 agents, one view for you, and no automatic path for prompt injection.
 
-Compaction makes long-running agents forget. Across many agents, you
-lose track of what each one did and what checked it. Cairn installs
-once, as a Claude Code plugin on a workstation or a runner. It comes in
-three steps:
+## First, for every run
 
-1. **Record, pins and recall.** Every run is recorded, append-only,
-   with known secret formats redacted first; `cairn verify` shows
-   tampering by anyone but your own OS user. Your pinned intent and
-   constraints come back word for word after every compaction; a pin
-   the budget leaves out is named by id. Agents recall exact history
-   when they ask, inside an untrusted-data envelope.
-2. **The room view.** A room per intent, live on this machine in your
-   browser or terminal: what waits on you, ranked, to answer there.
-   Catch up leads with integrity and capture gaps, and links each line
-   to its events; no model writes it. Each result shows what backs it:
-   a bare claim, the agent's own check or a witness check. Commits name
-   their room; approval stays on your forge.
-3. **Peers and bridges.** Your machines, cloud sandboxes too, peer by
-   key with no central service and sync after any partition; teammates
-   join a room by your invite and post there. A pull-request author's
-   room arrives as a plain file checked against their commit-signing
-   key, never trusted. Bridges can bring in CI attestations from hosts
-   you name.
+- **"My agent forgot what I told it after compaction."** Pin it as a
+  constraint. After every compaction it comes back word for word, or by
+  id when over budget. The agent can recall exactly what it did hours
+  ago, wrapped as untrusted data.
+- **"We run fifty runners under managed policy."** Install shows its
+  diff first, each principal's record stays in its own home, every
+  failure is audited and counted, and you can purge content.
 
-Unasked, Cairn gives an agent only its restore block (your pins and an
-index into its history) and fixed text naming ids. Anything else in the
-record reaches an agent only when the agent recalls it or you act, such
-as endorsing a post. The core opens no socket, and every other part is
-off until you turn it on. Local state stays in one principal's home,
-every failure is audited and counted, install shows its diff first, and
-you can quarantine or purge content, though a peer may refuse.
+## Then, with the room view
+
+The room view is optional: your browser, a terminal or the CLI.
+
+- **"Which of my five agents needs me?"** It ranks what waits on you
+  and spots runs in two rooms editing one file; with the launcher,
+  answer, steer or stop them there.
+- **"What happened while I was away?"** Catch up shows what changed,
+  each line linked to its events and every gap shown; no model writes
+  it. A head receipt kept off the machine shows any rewrite. Search
+  finds Saturday's decision.
+- **"I review what my agents built."** The diff comes with the runs
+  behind it and what backs each result: a bare claim or a check. You
+  approve on your forge, and the landed commit links back to its room,
+  marked proven or not.
+
+## Later
+
+- **"My agents run on three machines and in cloud sandboxes."** Your
+  machines peer by key with no central service, keep working offline
+  and sync after; a short-lived cloud node syncs as it runs, any gap
+  shown.
+- **"A teammate wants to help."** They join your room live by invite
+  and post; you choose what reaches your agent, and they see what you
+  chose.
+- **"A stranger sent a pull request with its room."** It arrives as a
+  redacted plain file, checked against their commit-signing identity
+  and never trusted; your agents can only recall it.
+
+## What reaches your agents
+
+In every step, Cairn writes to an agent only your pins, an index of its
+history, fixed text and what your own acts send or allow, such as an
+endorsement or a trust grant. Other history reaches it only by recall.
+The core opens no socket, and every component beyond it stays off
+until you turn it on.
 
 ## Status
 
-Specified, not built yet; step 1 comes first, and
-[§12](docs/srs/12-delivery-plan.md) has the milestones. This
-repository holds:
+Specified, not built yet; [§12](docs/srs/12-delivery-plan.md) has the
+milestones behind "First", "Then" and "Later". This repository holds:
 
 - the [Software Requirements Specification](docs/srs/index.md), the
   normative source, and the [domain model](docs/domain-model/index.md)
