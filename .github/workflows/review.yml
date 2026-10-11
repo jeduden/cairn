@@ -64,7 +64,7 @@ jobs:
       pull-requests: read
     outputs:
       pull: ${{ steps.pull.outputs.number }}
-      head: ${{ steps.pull.outputs.head }}
+      head_sha: ${{ steps.pull.outputs.head_sha }}
       outcome: ${{ steps.agent.outputs.structured_output }}
       checked: ${{ steps.bundle.outputs.checked }}
     steps:
@@ -118,7 +118,7 @@ jobs:
             echo "::notice::no open, ready pull request has head $head; nothing to review"
           fi
           echo "number=$number" >> "$GITHUB_OUTPUT"
-          echo "head=$head" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head" >> "$GITHUB_OUTPUT"
       # The agent works in main's checkout, so it follows main's
       # protocol and main's CLAUDE.md, never the pull request's.
       - if: steps.pull.outputs.number != ''
@@ -128,14 +128,14 @@ jobs:
       - if: steps.pull.outputs.number != ''
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ steps.pull.outputs.head }}
+          ref: ${{ steps.pull.outputs.head_sha }}
           path: pr-head
           fetch-depth: 0
           persist-credentials: false
       - name: Write the pull request's diff against main
         if: steps.pull.outputs.number != ''
         env:
-          HEAD_SHA: ${{ steps.pull.outputs.head }}
+          HEAD_SHA: ${{ steps.pull.outputs.head_sha }}
         run: git -C pr-head diff "origin/main...$HEAD_SHA" > pr.diff
       # A change to a CODEOWNERS path needs the stakeholder's consent
       # (ENG-21), given in a comment or review on the pull request.
@@ -209,7 +209,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           PULL: ${{ steps.pull.outputs.number }}
-          HEAD_SHA: ${{ steps.pull.outputs.head }}
+          HEAD_SHA: ${{ steps.pull.outputs.head_sha }}
         run: |
           last=$(gh api --paginate "repos/$REPO/pulls/$PULL/reviews" \
             --jq '.[] | select(.user.login == env.REVIEWER) | "\(.id) \(.commit_id)"' \
@@ -313,7 +313,7 @@ jobs:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           REPO: ${{ github.repository }}
           PULL: ${{ needs.review.outputs.pull }}
-          HEAD_SHA: ${{ needs.review.outputs.head }}
+          HEAD_SHA: ${{ needs.review.outputs.head_sha }}
         run: |
           gh api "repos/$REPO/pulls/$PULL" --jq .head.sha > head.txt
           gh api --paginate "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
@@ -324,7 +324,7 @@ jobs:
         env:
           OUTCOME: ${{ needs.review.outputs.outcome }}
           CHECKED: ${{ needs.review.outputs.checked }}
-          HEAD_SHA: ${{ needs.review.outputs.head }}
+          HEAD_SHA: ${{ needs.review.outputs.head_sha }}
         run: |
           printf '%s' "$OUTCOME" > outcome.json
           printf '%s' "$CHECKED" > checked.json
