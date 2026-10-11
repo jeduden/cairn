@@ -1,79 +1,55 @@
 # Cairn
 
-A lossless, security-first context layer for long-running Claude
-agents.
+A complete record of what your Claude agents did: exact recall for the
+agents, one view for you, and no automatic path for prompt injection.
 
-Long agent runs compact, and compaction forgets: the constraints you
-gave an agent fade, and detail it needs later is gone. Run several
-agents across worktrees and machines, and you also lose track of what
-each one did and why.
+Compaction makes long-running agents forget. Across many agents, you
+lose track of what each one did and what checked it. Cairn installs
+once, as a Claude Code plugin on a workstation or a runner. It comes in
+three steps:
 
-Cairn keeps the complete, append-only, provenance-tagged record of what
-your agents did, one room at a time, on your own machines. The record
-shows tampering by anyone but a process of your own OS user, and by
-that too once a head receipt leaves the machine. A room is where an
-intent is worked on: at most one intent, pins, a conversation among
-the room's principals and the agents with a seat in it, and branches
-in any repository, each commit on them naming its room.
+1. **Record, pins and recall.** Every run is recorded, append-only,
+   with known secret formats redacted first; `cairn verify` shows
+   tampering by anyone but your own OS user. Your pinned intent and
+   constraints come back word for word after every compaction; a pin
+   the budget leaves out is named by id. Agents recall exact history
+   when they ask, inside an untrusted-data envelope.
+2. **The room view.** A room per intent, live on this machine in your
+   browser or terminal: what waits on you, ranked, to answer there.
+   Catch up leads with integrity and capture gaps, and links each line
+   to its events; no model writes it. Each result shows what backs it:
+   a bare claim, the agent's own check or a witness check. Commits name
+   their room; approval stays on your forge.
+3. **Peers and bridges.** Your machines, cloud sandboxes too, peer by
+   key with no central service and sync after any partition; teammates
+   join a room by your invite and post there. A pull-request author's
+   room arrives as a plain file checked against their commit-signing
+   key, never trusted. Bridges can bring in CI attestations from hosts
+   you name.
 
-- **Pins come back word for word.** Pin the room's intent, your
-  constraints and your preferences. After every compaction they return
-  verbatim, or named by id and count once the pin budget is full, to
-  every agent of yours that has had a seat in that room.
-- **Exact recall on demand.** Agents search and read back their
-  history through MCP tools, or run code over it in a hermetic kernel
-  with read-only access to the record. Recalled content always arrives
-  inside an untrusted-data envelope.
-- **A live view for people.** The room view shows each room live, and
-  what waits on you, in the browser on this machine or in the
-  terminal. Back after a weekend, Catch up says what changed and flags
-  every gap.
-
-Where usefulness and safety conflict, Cairn picks safety and makes the
-convenience opt-in:
-
-- Cairn writes to an agent only through a closed set of paths: restore
-  blocks built from your pins and fixed text, and what your own acts
-  send or allow, such as a steer, an endorsed post or a trust grant.
-  Everything else, from tool output, web pages and files to model
-  replies and other principals' posts, reaches an agent only when it
-  recalls it.
-- The core (hook handlers, MCP server, kernel worker, CLI and TUI)
-  runs without a daemon, opens no socket and makes no outbound
-  connection. Only the core builds what reaches the model.
-- Every other component is reviewed, off until you turn it on, and
-  kept inside one declared network boundary: the room-view component
-  and the launcher listen only on this machine, the peer component
-  reaches only peers and paired phones you enroll by key, and read-only
-  publishing and bridges reach only hosts you name. Managed policy can
-  turn any of them off. Nothing sends telemetry or depends on a central
-  or third-party service.
-- Secrets are redacted before Cairn stores anything, and all state
-  lives in one principal's home with strict permissions.
-
-Cairn serves Claude first: Claude Code and the Claude Agent SDK, with
-other harnesses later. Long-term memory stays out of scope; Cairn never
-promotes the record into one.
+Unasked, Cairn gives an agent only its restore block (your pins and an
+index into its history) and fixed text naming ids. Anything else in the
+record reaches an agent only when the agent recalls it or you act, such
+as endorsing a post. The core opens no socket, and every other part is
+off until you turn it on. Local state stays in one principal's home,
+every failure is audited and counted, install shows its diff first, and
+you can quarantine or purge content, though a peer may refuse.
 
 ## Status
 
-Pre-implementation: everything above is specified, not yet built. The
-record, pins and recall come first (M1 to M3), then the room view and
-the launcher (M7, provisional), the kernel (M4), peers (M8), and
-publishing and bridges (M9); [§12](docs/srs/12-delivery-plan.md) has
-the order. This repository contains:
+Specified, not built yet; step 1 comes first, and
+[§12](docs/srs/12-delivery-plan.md) has the milestones. This
+repository holds:
 
 - the [Software Requirements Specification](docs/srs/index.md), the
   normative source, and the [domain model](docs/domain-model/index.md)
-  that defines every term it uses;
+  that defines its terms;
 - one Gherkin scenario per requirement under `features/`, almost all
   `@pending`, kept in step with the SRS by a gate test;
-- the `cairn` core executable, whose only commands so far are
-  `cairn version` and `cairn help`;
-- CI (tests, coverage per test layer, clippy, cargo-deny and
-  cargo-audit, the drift suite, the release build, Markdown, workflow
-  audit), a nightly fuzz job, an agent review of every pull request,
-  and a signed release pipeline, every gate written in Rust;
+- the `cairn` core executable, with `cairn version` and `cairn help`
+  so far;
+- CI, a nightly fuzz job, an agent review of every pull request and a
+  signed release pipeline, every gate written in Rust;
 - the delivery plans in [PLAN.md](PLAN.md).
 
 <?include
