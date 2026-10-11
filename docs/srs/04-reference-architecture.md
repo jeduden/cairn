@@ -124,12 +124,14 @@ stored.
 
 1. Context approaches its limit, and Claude Code compacts it. Cairn sends it
    nothing for the compaction.
-2. The harness session's MCP server, which ingests the transcript as it grows,
+2. Claude Code fires `SessionStart` with `source = compact`. Cairn returns the
+   **restore block**: the qualifying pins (PIN-10, verbatim), the landmark
+   index, and the recall hint. No transcript names the compacting run yet
+   (ASM-06), so INJ-05 decides whose pins it may hold.
+3. Once the hook returns, the harness writes the compaction to the transcript.
+   The harness session's MCP server, which ingests the transcript as it grows,
    records the compaction and its summary as a `harness_text` event, closes the
    current span and updates landmarks (REC-13).
-3. Claude Code fires `SessionStart` with `source = compact`. Cairn returns the
-   **restore block**: the qualifying pins (PIN-10, verbatim), the landmark
-   index, and the recall hint.
 4. Later, the agent needs a detail that compaction dropped. It calls
    `event_search`, then `event_expand` on the returned address
    range, and receives the exact original inside an untrusted-data envelope.

@@ -56,7 +56,8 @@ summary: >-
   by the harness session and the harness's agent id: a harness session's
   transcripts contain its main agent's run and one per subagent, a **harness
   resume** that keeps its harness session continues the run, while a harness
-  resume that starts a new harness session, a **harness clear**, or a **harness
+  resume that starts a new harness session without marking itself a fork, a
+  **harness clear**, or a **harness
   fork** (a new harness session, marked by `source` = `fork`, whose transcript
   repeats an earlier one's lines)
   starts a new run (REC-02), of the same agent only where the harness gives a

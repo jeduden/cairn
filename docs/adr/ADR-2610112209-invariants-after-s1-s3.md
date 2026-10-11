@@ -3,7 +3,8 @@ id: ADR-2610112209
 title: "I2 and I3 after the rulings on spikes S1 and S3"
 status: proposed
 summary: >-
-  The security reviewer's record of three changes to I2 and I3 that the
+  A proposed record, for the security reviewer's approval, of three
+  changes to I2 and I3 that the
   stakeholder's rulings of 11 October 2026 on spikes S1 and S3 (OQ-51)
   need: trusted user events matched to a prompt, compaction guidance
   dropped from the closed paths, and pins omitted for run ambiguity.
@@ -50,8 +51,14 @@ of a named human security reviewer's approval.
    hook handlers got (PRV-08), while the deployment mode is
    `interactive`". PRV-08 states the match: the line marks its prompt as
    the harness's own input, not the harness's own notice
-   (`promptSource`), and its text matches the keyed commitment a
-   `UserPromptSubmit` hook handler of the same harness session kept.
+   (`promptSource`), carries the hook input's `prompt_id`, and its text
+   matches the prompt commitment a `UserPromptSubmit` hook handler of the
+   same harness session kept. The commitment is a structural hook
+   observation over the prompt's redacted text, keyed under a node-local
+   key that never leaves the node and is erased when the matched event is
+   purged. The match result is recorded, so trust derives from the
+   record alone (I10). Only a prompt typed interactively counts; a
+   print-mode prompt stays `user` but untrusted.
    Spike S13 found that the harness also submits its own task
    notifications through `UserPromptSubmit`, so the commitment alone is
    not enough.
@@ -86,7 +93,12 @@ record's id and the hash above.
 ## Consequences
 
 - A prompt the harness rewrites before writing it to the transcript
-  stays untrusted `harness_text`; this fails safe.
+  stays an untrusted `user` event; this fails safe.
+- Other `harness_meta`, such as model tokens and metadata lines, is
+  still read from the transcript and stays trusted: it carries only
+  structural fields. Sandbox state and any field that gates a principal
+  act come only from the launcher or a hook observation (PRV-02). The
+  approval of this record accepts that residual risk (§6.1, R8).
 - After a compaction while any subagent may run, background subagents
   included, the main agent may get fewer pins verbatim and must recall
   the rest.

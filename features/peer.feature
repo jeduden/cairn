@@ -49,7 +49,7 @@ Feature: Peer network (PEER)
     Given an isolated Cairn home
     And connected peers "a", "b" and "c", where "c" reaches "a" only through "b"
     When the MCP server on "a" ingests a transcript line into a run seat's writer
-    Then the harness session's MCP server seals the run seat's writer within 2 s of that unsealed append, covering what the hook handler appended, and the event is carried as part of a sealed range
+    Then the harness session's MCP server seals the run seat's writer within 2 s of that unsealed append, and the event is carried as part of a sealed range
     And an event after the newest seal stays unsigned and is not carried
     And it appears in the room view of "b" and of "c" within 5 s of being written
     And it reaches "c" across at most one relay hop through an enrolled peer

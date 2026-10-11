@@ -128,10 +128,11 @@ Feature: Non-functional requirements (NFR)
   @NFR-11 @pending
   Scenario: the supported Claude Code versions are accepted and format changes are loud
     Given recorded transcripts for the latest Claude Code release and the previous two minor versions
-    And a transcript line with an unknown field and one with an unknown line type
+    And an "assistant" line with an unknown field, a "user" line with an unknown field, a line of an unknown line type, and an "assistant" line without the "message" key
     When the person runs "cairn ingest --all"
-    Then every supported transcript ingests and unknown lines are stored as unparsed events
-    And a transcript in a changed format ingests with each line that drifts kept, counted as format drift and shown by "cairn status" (REC-26)
+    Then every supported transcript ingests, the "assistant" line with an unknown field as "assistant" with no format drift, and the line of an unknown type as an unparsed event
+    And the "user" line with an unknown field is stored as untrusted "harness_text"
+    And the "assistant" line without the "message" key is kept, counted as format drift and shown by "cairn status" (REC-26)
 
   @NFR-12 @pending
   Scenario: a new person reaches a working setup with defaults in five minutes

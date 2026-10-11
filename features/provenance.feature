@@ -43,7 +43,10 @@ Feature: Provenance and trust (PRV)
     And its trust level for this principal's agents on this node derives as "<trust>", and no trust level is stored with the event
     And "cairn verify" <verify>
     And the event shapes restore blocks and trust levels only if it is trusted and "cairn verify" reports nothing about it
-    And a "user" line this node's capture recorded live whose text matches no prompt a "UserPromptSubmit" hook handler of its harness session got, or whose "promptSource" marks the harness's own notice, is stored as untrusted "harness_text", counted and audited
+    And a "user" line whose "promptSource" marks the harness's own notice is stored as untrusted "harness_text", and a "user" line this node's capture recorded live that matches no prompt commitment, carries another "promptId" or is marked "sdk" stays "user" but untrusted
+    And a second line matching a prompt commitment another line already matched is untrusted, and the counter "prompt_match_conflicts" increases by 1
+    And after "cairn rebuild" every event's trust level is unchanged
+    And a purge of a matched "user" event erases its prompt commitment and that commitment's key
     And the free text a cut or neutral principal act carries, such as a stated reason, is recalled as untrusted, while the act's own "operator" event keeps its trust level and shapes what the act changes
 
     Examples:
@@ -165,7 +168,8 @@ Feature: Provenance and trust (PRV)
       | item                                                                                                                       | provenance       | trust     |
       | a "user" line carrying a prompt typed at the harness's input                                                               | user             | trusted   |
       | a "user" line whose promptSource is "system", carrying a task notification                                                 | harness_text     | untrusted |
-      | a "user" line typed at the input whose text matches no prompt a "UserPromptSubmit" hook handler of its harness session got | harness_text     | untrusted |
+      | a "user" line typed at the input whose text matches no prompt a "UserPromptSubmit" hook handler of its harness session got | user             | untrusted |
+      | a "user" line whose promptSource is "sdk", matched to its prompt commitment, in deployment mode "interactive"              | user             | untrusted |
       | a "user" line of a harness session whose process ancestry no structural observation records yet                            | harness_text     | untrusted |
       | an attachment of a type no supported version records                                                                       | harness_text     | untrusted |
       | a "user" line carrying only a Bash tool_result                                                                             | tool_result:Bash | untrusted |

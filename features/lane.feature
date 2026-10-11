@@ -53,13 +53,13 @@ Feature: Room (LANE)
     And no author is taken from event content
 
   @LANE-04 @P1 @I2 @I10 @pending
-  Scenario: files changed and commands with their exit status are derived from structural fields
+  Scenario: files changed and commands with whether they failed are derived from structural fields
     Given an isolated Cairn home
     And a room whose run edits two files through tool calls and runs a command that exits 1
     And a third file changed only between two worktree checkpoints
     And an assistant message claiming an edit to a fourth file
     When the room's changes and commands are derived
-    Then the files changed and the command with exit status 1 are listed per run and per room, each bound to its address range
+    Then the files changed and the command, marked failed by its tool result's structural "is_error" field, are listed per run and per room, each bound to its address range
     And each diff hunk names the event, author and preceding message that produced it, and the third file's hunk is marked "from checkpoint"
     And the fourth file is not listed, and "cairn rebuild" derives the same lists
 

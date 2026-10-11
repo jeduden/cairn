@@ -66,10 +66,17 @@ Feature: Record (REC)
     Then in both homes each of the 40 repeated lines is one event in the writer of the run of "parent-run", and the run of "forked-run" records a repeat reference to its address, never a copy
     And in home "B" the repeated lines of "forked-run" were held at an ingest marker until "parent-run" was ingested
     And the run membership and the derived artifacts of the two homes are byte-identical
-    Given a fresh isolated Cairn home "C" with no "SessionStart" hook observation for either transcript
-    When home "C" ingests "parent-run" and "forked-run"
-    Then each of the 40 repeated lines is one event in the writer of the run of "forked-run", whose harness session id sorts first
-    Given a transcript "planted-run" in the transcript roots that repeats the uuid of a line of "parent-run" with other text
+    Given two fresh isolated Cairn homes "C" and "D" with no "SessionStart" hook observation for either transcript
+    When home "C" ingests "parent-run", then "forked-run"
+    And home "D" ingests "forked-run", then "parent-run"
+    Then in each home each of the 40 repeated lines is one event in the writer of the run that first recorded it there, "parent-run"'s in "C" and "forked-run"'s in "D", the other run recording a repeat reference, and a structural event records and audits that choice
+    Given a fresh isolated Cairn home "E" where "cairn ingest" recorded "parent-run"
+    When the MCP server of "forked-run" ingests it live
+    Then the 40 repeated lines are events of their own in the writer of the run of "forked-run", never repeat references to the ingested events, each audited
+    Given a fresh isolated Cairn home "F" whose MCP server of "forked-run" holds the repeated lines for "parent-run", which no MCP server of this node holds a session binding for
+    Then the hold is counted and shown by "cairn status"
+    And after 30 s the lines are released into the writer of the run of "forked-run" and audited
+    Given a transcript "planted-run" in the transcript directory of "parent-run" that repeats the uuid of a line of "parent-run" with other text
     When the person runs "cairn ingest --all"
     Then that line of "planted-run" is recorded as its own event, the counter "repeat_conflicts" increases by 1 and an audit entry records the conflict
     Given the person purged the events of the 40 repeated lines from the run of "parent-run"
@@ -175,11 +182,14 @@ Feature: Record (REC)
     And an agent run with a Claude Code transcript "main-run" and a subagent transcript "explore-agent"
     And the "SessionStart" hook handler of the run's harness process recorded the binding at line 12 of "main-run"
     And a neighbouring transcript "other-run" in the same transcript directory
-    When the harness session's MCP server starts and binds itself to that harness session
+    And a session binding another harness process's "SessionStart" hook handler recorded in the home for "other-run"
+    When the harness session's MCP server starts before any session binding exists, and the harness appends 5 lines to "main-run"
+    Then none of those lines is ingested as witnessed
+    When the MCP server takes the session binding of its own harness process, ignoring the one for "other-run"
     And the harness appends 200 lines to "main-run" and 50 to "explore-agent"
     Then the events of the first 120 lines of "main-run" are in the record before the MCP server stops
     And nothing of "other-run" is ingested as witnessed
-    And the MCP server opened no socket and followed no symlink swapped in after SEC-18's check
+    And after the session binding is checked, "main-run" is replaced by a symlink to "~/.ssh/id_ed25519", and the MCP server refuses it, audited, opening no socket
     When <stop>
     Then the events ingested are a prefix of each transcript, in its order
     And the event the "SessionStart" hook input made sits at line 12 of "main-run"
@@ -257,7 +267,7 @@ Feature: Record (REC)
     And only a seat that the key which certified the run seat it names, or the key a rotation replaced it with, certified by a seat certificate naming it the seat "cairn ingest" starts beside that run seat shares that run seat's add and role; a seat another node's key certified naming that run seat, or a new run seat naming it after its run-seat key was lost, shares no add or role
     And a segment was closed once 30 s had passed though no turn had ended, and the open segment is closed at <moment>
     And a second run, whose "SessionStart" hook handler ran before any MCP server held its run-seat key, appended nothing, and its MCP server appended the hook observation from the ingest marker once it held that key
-    And a third harness session, whose "SessionStart" hook observation no MCP server bound itself to within 30 s, is counted and audited as a failure by its next hook handler, "cairn status" and "cairn ingest"
+    And a third harness session, for whose "SessionStart" hook observation no MCP server took the session binding within 30 s, is counted and audited as a failure once, by whichever of its next hook handler, "cairn status" and "cairn ingest" finds it first
     And "cairn verify" and "cairn status" each report the other writer's chain as ended without a closed segment
     And the paired phone sealed its device seat's writer with that seat's key after each append to it
     And the core sealed every writer but the witnessed run's run seats' and the paired phone's, the ingested run's run seat's writer and this node's device seat's writer included, after each append to it
@@ -370,7 +380,7 @@ Feature: Record (REC)
   Scenario Outline: a transcript line or hook input whose shape differs from its harness version's is kept, counted and audited as format drift
     Given an isolated Cairn home
     And deployment mode "interactive"
-    And the shapes recorded for the supported Claude Code versions, which regenerating them from "testdata/claude-code" reproduces byte for byte, with a drift case that fails when they differ
+    And the shapes recorded for the supported Claude Code versions
     And an agent run with a Claude Code transcript "main-run", served by its harness session's MCP server
     When <drift>, carrying an AWS access key
     Then <kept>
@@ -378,11 +388,12 @@ Feature: Record (REC)
     And the counter "<counter>" increases by 1 and the audit log names the harness version and what differed
     And "cairn status" shows the format drift
     And ingest goes on with the next line of "main-run"
+    And regenerating the shapes from "testdata/claude-code" reproduces the recorded ones byte for byte, and a drift case fails when they differ
 
     Examples:
-      | drift                                                                                                            | kept                                                                        | counter      |
-      | the harness appends a line of a type no supported version records                                                | the line is stored as an "unparsed" event and counted as format drift too   | format_drift |
-      | the harness appends an "assistant" line without the "message" key                                                | the line is stored whole as an untrusted "harness_text" event               | format_drift |
-      | the harness appends a "user" line typed at the input, matching a prompt, whose "version" is no supported version | the line is stored whole as an untrusted "harness_text" event, never "user" | format_drift |
-      | the harness appends a "user" line typed at the input, matching a prompt, with a key no recorded shape has        | the line is stored whole as an untrusted "harness_text" event, never "user" | format_drift |
-      | the hook "SessionStart" runs with a hook input that lacks "source"                                               | the hook handler gives the empty answer and exits 0                         | format_drift |
+      | drift                                                                                                            | kept                                                                                                                     | counter      |
+      | the harness appends a line of a type no supported version records                                                | the line is stored as an "unparsed" event, counted as format drift too, and the counter "events_unparsed" increases by 1 | format_drift |
+      | the harness appends an "assistant" line without the "message" key                                                | the line is stored whole as an untrusted "harness_text" event                                                            | format_drift |
+      | the harness appends a "user" line typed at the input, matching a prompt, whose "version" is no supported version | the line is stored whole as an untrusted "harness_text" event, never "user"                                              | format_drift |
+      | the harness appends a "user" line typed at the input, matching a prompt, with a key no recorded shape has        | the line is stored whole as an untrusted "harness_text" event, never "user"                                              | format_drift |
+      | the hook "SessionStart" runs with a hook input that lacks "source"                                               | the hook handler gives the empty answer and exits 0                                                                      | format_drift |
