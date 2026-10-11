@@ -52,9 +52,9 @@ empty: |
 | ID         | Status | Model  | Title                                                                                                              |
 | ---------- | ------ | ------ | ------------------------------------------------------------------------------------------------------------------ |
 | 2609292002 | ✅     | opus   | [Bootstrap the repository: SRS, requirement matrix, CI and release](plan/2609292002_bootstrap-repository.md)       |
-| 2609292003 | 🔲     | sonnet | [Spike S1: record the hook contract](plan/2609292003_spike-s1-hook-contract.md)                                    |
+| 2609292003 | ✅     | sonnet | [Spike S1: record the hook contract](plan/2609292003_spike-s1-hook-contract/plan.md)                               |
 | 2609292004 | ✅     | opus   | [Spike S2: the SQLite driver for the Rust core](plan/2609292004_spike-s2-sqlite-driver/plan.md)                    |
-| 2609292005 | 🔲     | sonnet | [Spike S3: catalogue the transcript formats](plan/2609292005_spike-s3-transcript-formats.md)                       |
+| 2609292005 | ✅     | sonnet | [Spike S3: catalogue the transcript formats](plan/2609292005_spike-s3-transcript-formats/plan.md)                  |
 | 2609292006 | 🔲     | sonnet | [Spike S4: prove plugin distribution](plan/2609292006_spike-s4-plugin-distribution.md)                             |
 | 2609292007 | 🔲     | opus   | [Spike S5: Starlark or Python for the kernel](plan/2609292007_spike-s5-kernel-language.md)                         |
 | 2609292008 | 🔲     | sonnet | [Spike S6: can compaction be deferred](plan/2609292008_spike-s6-compaction-control.md)                             |
