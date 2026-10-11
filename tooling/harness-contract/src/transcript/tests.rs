@@ -254,3 +254,69 @@ fn context_after_compaction_looks_past_the_first_boundary() {
     assert!(context_after_compaction(&after, "SessionStart"));
     assert!(!context_after_compaction(&after, "PostCompact"));
 }
+
+fn hook_line(kind: &str, content: &str) -> Value {
+    json!({"type": "attachment", "attachment": {"type": kind, "content": content}})
+}
+
+#[test]
+fn where_shown_names_each_place_a_text_shows() {
+    let lines = [
+        hook_line("hook_success", "word"),
+        hook_line("hook_non_blocking_error", "word"),
+        json!({"type": "system", "subtype": "stop_hook_summary", "content": "word"}),
+        json!({"type": "user", "message": {"content": "<local-command-stdout>word</local-command-stdout>"}}),
+        json!({"type": "assistant", "message": {"content": [{"type": "text", "text": "word"}]}}),
+        hook_line("hook_success", "other"),
+    ];
+
+    assert_eq!(
+        where_shown(&lines, "word"),
+        BTreeSet::from([
+            Shown::HookAttachment,
+            Shown::CommandOutput,
+            Shown::Other("assistant".into())
+        ])
+    );
+    assert!(where_shown(&lines, "absent").is_empty());
+}
+
+#[test]
+fn where_shown_names_an_other_line_by_its_kind() {
+    let lines = [
+        json!({"type": "user", "message": {"content": "word"}}),
+        hook_line("hook_additional_context", "word"),
+    ];
+
+    assert_eq!(
+        where_shown(&lines, "word"),
+        BTreeSet::from([
+            Shown::Other("user".into()),
+            Shown::Other("attachment/hook_additional_context".into())
+        ])
+    );
+}
+
+#[test]
+fn context_per_compaction_counts_each_stretch() {
+    let with = |hook: &str, text: &str| {
+        json!({"type": "attachment",
+               "attachment": {"type": "hook_additional_context", "hookEvent": hook, "content": [text]}})
+    };
+    let boundary = json!({"type": "system", "subtype": "compact_boundary"});
+    let lines = [
+        with("SessionStart", "word"),
+        with("SessionStart", "other"),
+        with("UserPromptSubmit", "word"),
+        boundary.clone(),
+        boundary,
+        with("SessionStart", "word"),
+        with("SessionStart", "word"),
+    ];
+
+    assert_eq!(
+        context_per_compaction(&lines, "SessionStart", "word"),
+        [1, 0, 2]
+    );
+    assert_eq!(context_per_compaction(&[], "SessionStart", "word"), [0]);
+}

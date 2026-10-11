@@ -41,5 +41,87 @@
   },
   "directories": "directories",
   "timeouts": "timeouts.json",
-  "cleanup": "cleanup.json"
+  "cleanup": "cleanup.json",
+  "stderr": {
+    "0": {
+      "transcript": "transcripts/probes/stderr-exit-0.jsonl",
+      "nonces": {
+        "PostCompact": [
+          "80cf0c974634"
+        ],
+        "PostToolUse": [
+          "eb87233233a1"
+        ],
+        "PreCompact": [
+          "07dad60040bb"
+        ],
+        "SessionEnd": [
+          "8106a9d3c7ec",
+          "6b2e3910a659",
+          "5941ffede3d5"
+        ],
+        "SessionStart": [
+          "dbf1ce13a044",
+          "66f594c6f2a6",
+          "2b96ef0de5ef",
+          "8c78936f872a"
+        ],
+        "Stop": [
+          "5196b631f5ce",
+          "b7e695243fdc"
+        ],
+        "UserPromptSubmit": [
+          "1b30c8b2dd8b",
+          "ede4abe5c456"
+        ]
+      }
+    },
+    "1": {
+      "transcript": "transcripts/probes/stderr-exit-1.jsonl",
+      "nonces": {
+        "PostCompact": [
+          "a9c8861e623c"
+        ],
+        "PostToolUse": [
+          "74ad43e628e7"
+        ],
+        "PreCompact": [
+          "e5abaab6d0f8"
+        ],
+        "SessionEnd": [
+          "f1424a96e369",
+          "2b88efaa690e",
+          "13a2eb78233a"
+        ],
+        "SessionStart": [
+          "22cc671b089a",
+          "f6766f975ff3",
+          "95bbbd12a768",
+          "7e19417ae16f"
+        ],
+        "Stop": [
+          "0e9eb871eab3",
+          "4810f7922442"
+        ],
+        "UserPromptSubmit": [
+          "2deeb022275b",
+          "240fc8cf8564"
+        ]
+      }
+    }
+  },
+  "resume_context": {
+    "transcript": "transcripts/probes/resume-after-compaction.jsonl",
+    "sources": [
+      "startup",
+      "resume",
+      "compact",
+      "resume"
+    ],
+    "answer": "The secret word for this check is 88f0b3494945.",
+    "answered_on": [
+      "startup",
+      "resume"
+    ]
+  }
 }

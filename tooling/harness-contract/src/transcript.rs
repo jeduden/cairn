@@ -90,6 +90,63 @@ pub fn context_after_compaction(lines: &[Value], hook: &str) -> bool {
     compaction(lines).is_some_and(|b| hook_context_events(&lines[b..]).contains(hook))
 }
 
+/// How many of `hook`'s context attachments holding `needle` each
+/// stretch between compactions records, the first stretch first.
+#[must_use]
+pub fn context_per_compaction(lines: &[Value], hook: &str, needle: &str) -> Vec<usize> {
+    let mut counts = vec![0];
+    for l in lines {
+        if text(l, "subtype") == "compact_boundary" {
+            counts.push(0);
+        } else if text(l, "attachment.type") == "hook_additional_context"
+            && text(l, "attachment.hookEvent") == hook
+            && l.to_string().contains(needle)
+            && let Some(last) = counts.last_mut()
+        {
+            *last += 1;
+        }
+    }
+    counts
+}
+
+/// Where a line holding some text was recorded.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Shown {
+    /// A slash command's output, which the model reads.
+    CommandOutput,
+    /// The record of a hook's own run, which the model does not read.
+    HookAttachment,
+    /// Any other line, by its type and subtype.
+    Other(String),
+}
+
+/// Where each line holding `needle` was recorded.
+#[must_use]
+pub fn where_shown(lines: &[Value], needle: &str) -> BTreeSet<Shown> {
+    lines
+        .iter()
+        .filter(|l| l.to_string().contains(needle))
+        .map(shown)
+        .collect()
+}
+
+fn shown(line: &Value) -> Shown {
+    let kind = text(line, "type");
+    let sub = match text(line, "attachment.type") {
+        "" => text(line, "subtype"),
+        a => a,
+    };
+    match (kind, sub) {
+        ("attachment", "hook_success" | "hook_non_blocking_error")
+        | ("system", "stop_hook_summary") => Shown::HookAttachment,
+        ("user", _) if text(line, "message.content").contains(COMMAND_OUTPUT) => {
+            Shown::CommandOutput
+        }
+        (kind, "") => Shown::Other(kind.to_owned()),
+        (kind, sub) => Shown::Other(format!("{kind}/{sub}")),
+    }
+}
+
 fn compaction(lines: &[Value]) -> Option<usize> {
     lines
         .iter()

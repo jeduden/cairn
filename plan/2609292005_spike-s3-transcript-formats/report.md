@@ -92,7 +92,10 @@ start deleted a 40-day-old subagent transcript; no start deleted a
 40-day-old harness session transcript, and the sentinel file `.last-cleanup`
 was not written again. The binary's retention sweep checks conditions
 the spike could not observe from outside. Cairn should treat a
-transcript as deletable at any harness start (ASM-05, REC-08).
+transcript as deletable at any harness start (ASM-05, REC-08). Git
+keeps no modification times, so the fixture is a listing,
+`cleanup.json`, of the planted paths with their ages and of the paths
+left after the starts, not a tree; @ASM-05 replays that listing.
 
 ## OQ-12
 

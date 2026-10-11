@@ -22,7 +22,7 @@ fn versions() -> Result<Vec<(PathBuf, Value)>, String> {
 }
 
 /// Every path a manifest names: its strings, except its version, the
-/// flow descriptions and the markers.
+/// flow descriptions, the markers, and the probes' nonces and answers.
 fn named_paths(manifest: &Value) -> Vec<String> {
     let mut out = Vec::new();
     collect(manifest, "", &mut out);
@@ -32,9 +32,16 @@ fn named_paths(manifest: &Value) -> Vec<String> {
 fn collect(v: &Value, key: &str, out: &mut Vec<String>) {
     match v {
         Value::String(s)
-            if ![".claude_code", ".hook_flows", ".markers"]
-                .iter()
-                .any(|k| key.contains(k)) =>
+            if ![
+                ".claude_code",
+                ".hook_flows",
+                ".markers",
+                ".nonces",
+                ".answer",
+                ".sources",
+            ]
+            .iter()
+            .any(|k| key.contains(k)) =>
         {
             out.push(s.clone());
         }

@@ -237,6 +237,130 @@ fn output_echoed(w: &mut World, event: String, shows: String) -> Result<(), Stri
     })
 }
 
+#[then(
+    regex = r#"^on exit status (\d) the "([^"]+)" hook's stderr shows (in a compact command's output|only in its own hook attachment)$"#
+)]
+fn stderr_shows(w: &mut World, status: String, event: String, place: String) -> Result<(), String> {
+    each(w, |v| {
+        let (lines, nonces) = stderr_probe(v, &status, &event)?;
+        Ok(nonces
+            .iter()
+            .flat_map(|n| stderr_problems(&transcript::where_shown(&lines, n), &place))
+            .map(|p| format!("on exit status {status} the {event} hook's stderr {p}"))
+            .collect())
+    })
+}
+
+#[then(regex = r"^on exit status (\d) every hook's stderr shows only in its own hook attachment$")]
+fn every_stderr_attached(w: &mut World, status: String) -> Result<(), String> {
+    each(w, |v| {
+        let events: Vec<String> = v
+            .manifest
+            .pointer(&format!("/stderr/{status}/nonces"))
+            .and_then(Value::as_object)
+            .ok_or_else(|| format!("the manifest names no stderr nonces for exit status {status}"))?
+            .keys()
+            .cloned()
+            .collect();
+        let mut problems = Vec::new();
+        for event in events {
+            let (lines, nonces) = stderr_probe(v, &status, &event)?;
+            problems.extend(
+                nonces
+                    .iter()
+                    .flat_map(|n| {
+                        stderr_problems(
+                            &transcript::where_shown(&lines, n),
+                            "only in its own hook attachment",
+                        )
+                    })
+                    .map(|p| format!("on exit status {status} the {event} hook's stderr {p}")),
+            );
+        }
+        Ok(problems)
+    })
+}
+
+/// The transcript of the stderr probe for exit status `status`, and
+/// the nonces `event`'s handler wrote to stderr in it.
+fn stderr_probe(
+    v: &Version,
+    status: &str,
+    event: &str,
+) -> Result<(Vec<Value>, Vec<String>), String> {
+    let lines = recording::lines(&v.path(&format!("stderr.{status}.transcript"))?)?;
+    let nonces: Vec<String> = v
+        .manifest
+        .pointer(&format!("/stderr/{status}/nonces/{event}"))
+        .and_then(Value::as_array)
+        .ok_or_else(|| {
+            format!("the manifest names no {event} stderr nonce for exit status {status}")
+        })?
+        .iter()
+        .filter_map(Value::as_str)
+        .map(str::to_owned)
+        .collect();
+    Ok((lines, nonces))
+}
+
+fn stderr_problems(
+    shown: &std::collections::BTreeSet<transcript::Shown>,
+    place: &str,
+) -> Vec<String> {
+    if place == "in a compact command's output" {
+        return none_unless(shown.contains(&transcript::Shown::CommandOutput), || {
+            "never shows in a compact command's output".into()
+        });
+    }
+    shown
+        .iter()
+        .filter(|s| **s != transcript::Shown::HookAttachment)
+        .map(|s| format!("shows in {s:?}"))
+        .collect()
+}
+
+#[then(
+    regex = r#"^a harness resume drops a "SessionStart" additional context equal to one since the last compaction, and records it again after one$"#
+)]
+fn resume_drops_repeated_context(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        let lines = recording::lines(&v.path("resume_context.transcript")?)?;
+        let answer = recording::named(&v.manifest, "resume_context.answer")?;
+        let answered_on: Vec<&str> = v
+            .manifest
+            .pointer("/resume_context/answered_on")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .collect();
+        let sources: Vec<&str> = v
+            .manifest
+            .pointer("/resume_context/sources")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .collect();
+        let answered = sources.iter().filter(|s| answered_on.contains(s)).count();
+        let resumes = sources.iter().filter(|s| **s == "resume").count();
+        let counts = transcript::context_per_compaction(&lines, "SessionStart", answer);
+        let mut problems = Vec::new();
+        if resumes < 2 || answered <= counts.iter().sum::<usize>() {
+            problems.push(format!(
+                "the SessionStart hook answered {answered} times over {resumes} resumes, and {} were recorded",
+                counts.iter().sum::<usize>()
+            ));
+        }
+        if counts.len() < 2 || counts.iter().any(|c| *c != 1) {
+            problems.push(format!(
+                "between compactions the answer was recorded {counts:?} times, not once each"
+            ));
+        }
+        Ok(problems)
+    })
+}
+
 // ASM-03 and ASM-16: the tree of transcripts.
 
 #[given(regex = r#"^a recorded "~/.claude/projects" tree for Claude Code "([^"]+)"$"#)]
@@ -387,10 +511,10 @@ fn line_appended(w: &mut World, kind: String) -> Result<(), String> {
 // ASM-05: cleanup.
 
 #[given(
-    regex = r#"^a recorded "~/.claude/projects" tree before and after harness starts with "cleanupPeriodDays" of (\d+)$"#
+    regex = r#"^a recorded "~/.claude/projects" listing before and after harness starts with "cleanupPeriodDays" of (\d+) for Claude Code "([^"]+)"$"#
 )]
-fn tree_before_after_cleanup(w: &mut World, days: u32) -> Result<(), String> {
-    open_versions(w, "supported")?;
+fn tree_before_after_cleanup(w: &mut World, days: u32, version: String) -> Result<(), String> {
+    open_versions(w, &version)?;
     each(w, |v| {
         v.cleanup_doc = recording::json(&v.path("cleanup")?)?;
         let period = v
@@ -466,8 +590,16 @@ fn the_hook_runs(w: &mut World, event: String) -> Result<(), String> {
             .find(|i| text(i, "hook_event_name") == "SessionStart")
             .cloned()
             .ok_or("the flow holds no SessionStart of the main agent")?;
+        let start = all
+            .iter()
+            .position(|i| text(i, "hook_event_name") == "SubagentStart")
+            .ok_or("the flow holds no SubagentStart")?;
         v.inputs = std::iter::once(parent)
-            .chain(hook_input::of_event(&all, &event).into_iter().cloned())
+            .chain(
+                hook_input::of_event(&all[start..], &event)
+                    .into_iter()
+                    .cloned(),
+            )
             .collect();
         Ok(none_unless(v.inputs.len() > 1, || {
             format!("the flow holds no {event} hook input")
@@ -489,6 +621,18 @@ fn the_main_agents_identity(w: &mut World) -> Result<(), String> {
             &rest,
             &["session_id", "transcript_path"],
         ))
+    })
+}
+
+#[then(regex = r#"^it carries (".+)$"#)]
+fn it_carries(w: &mut World, extra: String) -> Result<(), String> {
+    let expects = hook_input::parse(&extra)?;
+    each(w, |v| {
+        Ok(v.inputs
+            .iter()
+            .skip(1)
+            .flat_map(|i| hook_input::unmet(i, &expects))
+            .collect())
     })
 }
 
