@@ -15,7 +15,7 @@ Feature: Landmarks (LMK)
     Then a new span starts at each user turn, each compaction, each subagent start and end, and where the run's events move to its seat's writer in "L1"
     And no span contains events of two writers
     And neither the isMeta line nor the command output starts a span
-    And after the person runs "cairn rebuild" the span boundaries are byte-identical
+    And after the person runs "cairn rebuild" the span boundaries are identical
 
   @LMK-02 @P0 @I2 @pending
   Scenario Outline: a closed span yields one landmark of sanitized structural fields only

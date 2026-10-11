@@ -4,7 +4,7 @@ title: "M3: landmarks and lifecycle"
 status: "🔲"
 summary: >-
   Structural landmarks with tiered roll-up, backup and restore,
-  purge with tombstones, and byte-identical rebuild.
+  purge with tombstones, and a rebuild identical in content.
 model: opus
 depends-on: [2609292013]
 ---
@@ -32,4 +32,4 @@ Milestone M3. Scope: LMK P0, ADM-06 to ADM-08 and SEC-14.
 
 - [ ] Every scenario in scope passes; none of them is still @pending
 - [ ] Recall target met at 10 compactions
-- [ ] Rebuild is byte-identical on every evaluation store
+- [ ] Rebuild is identical in content on every evaluation store

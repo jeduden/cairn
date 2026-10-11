@@ -118,9 +118,9 @@ security review and a new major version, not a bug fix.
 - **I9 — Cairn never degrades the agent.** A Cairn failure never blocks or
   slows the agent beyond defined budgets. Cairn fails open, except where
   continuing would violate I2, I4, or I8.
-- **I10 — Everything derived is rebuildable.** All derived artifacts (indexes,
-  landmarks, active pins, quarantine set, room state, trust levels, run and
-  integrity statuses, queues, evidence and proof classes, stats) are a
+- **I10 — Everything derived is rebuildable.** All derived artifacts (the search
+  index, landmarks, active pins, quarantine set, room state, trust levels, run
+  and integrity statuses, queues, evidence and proof classes, stats) are a
   deterministic function of the set of writer logs a node holds and the node's
   own key set, independent of the order in which logs arrived. Rebuilding
   reproduces their content exactly, whatever their storage layout.

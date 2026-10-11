@@ -80,7 +80,7 @@ Feature: Engineering quality (ENG)
       | property                                                                                                           |
       | within each writer's log, seq is strictly increasing and gap-free, so no two events share an address (writer, seq) |
       | ingest twice equals ingest once                                                                                    |
-      | rebuild reproduces derived artifacts exactly                                                                       |
+      | after any sequence of appends and lifecycle events, each derived artifact's canonical digest equals a rebuild's |
       | envelope encoding round-trips any byte sequence                                                                    |
       | sanitized fields never contain restore delimiters                                                                  |
 

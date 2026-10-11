@@ -103,7 +103,8 @@ Feature: Administration and lifecycle (ADM)
     And a tombstone event per purged range carries only addresses, counts, reason and commitments, and the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds, never their text
     And "cairn rebuild" then derives room state, the key set and the quarantine set as before the purge, but for the purged content
     And the store is vacuumed and "cairn verify" exits 0
-    And no file of the store, its free space and write-ahead log included, holds a byte of the purged content, its commitment keys or its search index entries
+    And once the purge reports the range erased, with encryption at rest on and off, no file in the home or the storage engine's temporary directory, read decrypted, contains a canary token only the purged events carried, their commitment keys or a search index entry naming a purged address
+    And while another process holds a read transaction on the store, the purge does not report the range erased before that holds, and audits and counts each residue it cannot yet remove
     And the audit log records the purge with its scope, ranges, reason and the principal act behind it, never the purged content
 
     Examples:
@@ -121,6 +122,7 @@ Feature: Administration and lifecycle (ADM)
   Scenario: rebuild regenerates derived artifacts identical in content whatever order the logs arrived in
     Given an isolated Cairn home
     And a second isolated Cairn home with the same key set, the two nodes holding the same writer logs with pins, quarantine and landmarks, received in opposite orders
+    And a configuration acceptance, a withdrawn risk acceptance and a released quarantine, each recorded after the events they affect were indexed
     When the person runs "cairn rebuild" in each home
     Then the command exits 0 in each home
     And "cairn verify" confirms every derived artifact is identical in content to its state before rebuild, by a canonical digest of that content
@@ -141,6 +143,10 @@ Feature: Administration and lifecycle (ADM)
       | an event row's hash has been altered       | hash chain                     |
       | a payload file's bytes have been altered   | payload integrity              |
       | a landmark row has been altered            | derived artifact consistency   |
+      | a trust level has been altered in place    | derived artifact consistency   |
+      | a schema object Cairn does not ship has been added to the store | derived artifact consistency |
+      | the search index's ranking configuration has been altered | derived artifact consistency |
+      | a search index entry names an event whose text lacks the term | derived artifact consistency |
 
   @ADM-10 @P0 @I7 @pending
   Scenario: doctor is read-only and doctor --fix shows each change first

@@ -27,7 +27,8 @@ $CAIRN_HOME/                          0700, belonging to one OS user       (N)
 
 A home contains one store, `store.db` with its payload store, partitioned by
 writer, never by repository or room (N). Names in the home MUST NOT reveal a
-repository's path or identity (N).
+repository's path or identity (N). The storage engine MUST keep its temporary
+storage in memory or in a directory in the home, never elsewhere (N).
 
 ## 8.2 Logical schema
 
@@ -54,6 +55,12 @@ Canonicalization Scheme (RFC 8785) over a documented field set, with SHA-256
 **(N)**. The field set and encoding version are recorded in `meta` so that
 future changes remain verifiable.
 
+The **canonical digest** of a derived artifact (ADM-08) MUST be SHA-256 over
+the canonical encoding of its content: every value any read of it can return,
+row by row in key order, together with its schema and every stored setting
+that decides what a read returns, such as the search index's tokenizer and
+ranking configuration. Its field set and version are recorded in `meta` **(N)**.
+
 ## 8.4 Model-token estimation
 
 The pin budget (PIN-08) and the model-token caps of INJ-07, RCL-03 and
@@ -76,7 +83,7 @@ already derive. The final review and M1's scenarios check against the
 grid, and each later milestone's review adds the events it ships
 (OQ-47).
 
-| Event                                       | Index          | Landmarks      | Active pins             | Quarantine set | Room state             | Trust levels   | Run status | Integrity status | Queues | Evidence classes | Proof classes | Stats           | Provenance     | Room membership         |
+| Event                                       | Search index   | Landmarks      | Active pins             | Quarantine set | Room state             | Trust levels   | Run status | Integrity status | Queues | Evidence classes | Proof classes | Stats           | Provenance     | Room membership         |
 | ------------------------------------------- | -------------- | -------------- | ----------------------- | -------------- | ---------------------- | -------------- | ---------- | ---------------- | ------ | ---------------- | ------------- | --------------- | -------------- | ----------------------- |
 | Node identity change                        | —              | LMK-01         | ADM-06, PIN-10          | ADM-06         | REC-24, ADM-06         | ADM-06, PRV-02 | —          | —                | —      | —                | —             | REC-24          | ADM-06, REC-19 | REC-24, LANE-01         |
 | Node clone                                  | —              | LMK-01         | ADM-06, PIN-10          | ADM-06         | REC-24, ADM-06         | ADM-06, PRV-02 | —          | —                | —      | —                | —             | REC-24          | ADM-06, REC-19 | REC-24, LANE-01         |
