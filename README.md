@@ -26,20 +26,27 @@ untrusted reaches them unless they ask or you act.
 
 ## Milestones
 
-Specified, not built yet. The milestones below come in delivery order
-([§12](docs/srs/12-delivery-plan.md)); M7's scope is provisional, and
-each M9 item lands through its own proposal.
+Specified, not built yet. Each milestone is a plan, listed here from
+its own front matter; [§12](docs/srs/12-delivery-plan.md) holds its
+scope. They run in the order M1, M2, M3, M7, M4, M5, M8, M9. M7's
+scope is provisional, and each M9 item lands through its own proposal.
 
-| Milestone                      | What it brings                                                                                                                |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| M1 Record and recall           | Runs recorded from their transcripts; exact recall for agents; every failure audited and counted; migrations with a backup    |
-| M2 Pins and restore            | Pins back after every compaction; install as a Claude Code plugin that shows its diff first                                   |
-| M3 Landmarks and lifecycle     | Landmarks into long runs; backup and purge                                                                                    |
-| M7 Standalone room view        | On your machine: Needs you, Catch up, search, integrity status, overlaps, review with what backs each result, links to events |
-| M4 Kernel                      | Agents run code over their own record                                                                                         |
-| M5 Hardening and evaluation    | Encryption at rest, retention, evaluation                                                                                     |
-| M8 Peer network                | Your machines and other people peer by key and sync after partitions; invites and endorsed posts; off until you turn it on    |
-| M9 Review, publishing, bridges | Forge review beside the room, handover, rooms shared with pull requests as bundles, CI through bridges                        |
+<?catalog
+glob: "plan/*_m[0-9]-*.md"
+sort: numeric:id
+header: |
+  | Milestone | Status | What it brings |
+  |-----------|--------|----------------|
+row: "| [{title}]({filename}) | {status} | {summary} |"
+?>
+| Milestone                                                                      | Status | What it brings                                                                                                             |
+| ------------------------------------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------- |
+| [M1: record and recall](plan/2609292012_m1-record-and-recall.md)               | 🔲     | The append-only record, provenance and trust, pull-only recall over MCP, and the security and operations floor under them. |
+| [M2: pins and restore](plan/2609292013_m2-pins-and-restore.md)                 | 🔲     | Verbatim pins and the deterministic, TrustedText-only restore block after compaction, plus plugin install.                 |
+| [M3: landmarks and lifecycle](plan/2609292014_m3-landmarks-and-lifecycle.md)   | 🔲     | Structural landmarks with tiered roll-up, backup and restore, purge with tombstones, and a rebuild identical in content.   |
+| [M4: the hermetic compute kernel](plan/2609292015_m4-compute-kernel.md)        | 🔲     | A per-session Starlark kernel in a resource-limited worker with read-only, quarantine-aware access to the record.          |
+| [M5: hardening and evaluation](plan/2609292016_m5-hardening-and-evaluation.md) | 🔲     | The remaining P1 requirements, the full §11 evaluation, an external security review and a two-week pilot.                  |
+<?/catalog?>
 
 Marking part of an event or an image, and sharing that mark, are
 pending use cases ([UC-002, UC-003](docs/use-cases.md)) aimed at M7 to
