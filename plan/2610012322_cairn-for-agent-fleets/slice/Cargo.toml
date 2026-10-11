@@ -18,3 +18,8 @@ lto = "thin"
 # Standalone: kept out of the cairn workspace, so nothing here enters
 # cairn's module graph.
 [workspace]
+
+# The test runs SQLite and SHA-256 over megabytes; optimize the
+# dependencies in test builds too.
+[profile.dev.package."*"]
+opt-level = 2
