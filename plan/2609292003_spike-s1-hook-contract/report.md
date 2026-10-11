@@ -14,7 +14,9 @@ in a scratch directory, never the real `~/.claude` (ENG-14). The
 `record` kit beside the fixtures holds the handlers: `dump.sh` saves
 each hook input and can answer with `additionalContext`, `tick.sh`
 measures how long a handler runs before the harness stops it, and
-`nonce.sh`, `plain.sh` and `instr.sh` answer with a fresh random word.
+`nonce.sh`, `plain.sh`, `instr.sh` and `stderr.sh` answer with a fresh
+random word, and `fixed.sh` answers the same word at every start but a
+compaction.
 A word the model repeats afterwards proves it read that output; the
 model could not have guessed it. Interactive flows ran in `tmux`.
 `redact.sh` rewrote paths, the account's email, organization and
@@ -128,8 +130,6 @@ spike did not test.
 
 - Exit status 2, which the harness documents as blocking for some
   hooks and as feeding their stderr to the model.
-- The stderr probes and the resume-after-compaction probe are measured
-  but not yet replayed by a scenario.
 - Whether the `PreCompact` and `PostCompact` output reaches the model
   after an automatic compaction. The recorded ones showed no such
   line.
@@ -139,7 +139,8 @@ spike did not test.
 ## Raised for the stakeholder
 
 The reviews of this spike raised findings that need a ruling, not a
-spike. None of them is written into the SRS here.
+spike. OQ-51 tracks each of them; none is written into a requirement
+here.
 
 From the security officer:
 
