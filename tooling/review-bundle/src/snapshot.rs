@@ -117,25 +117,24 @@ fn optional(path: &Path) -> Result<String, Error> {
 /// relative to `root`.
 fn decisions(root: &Path) -> Result<BTreeMap<String, String>, Error> {
     let dir = root.join("docs/adr");
+    let list = |source: io::Error| Error::Read {
+        path: dir.clone(),
+        source,
+    };
     let entries = match fs::read_dir(&dir) {
         Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(BTreeMap::new()),
-        listed => listed.map_err(|source| Error::Read {
-            path: dir.clone(),
-            source,
-        })?,
+        listed => listed.map_err(list)?,
     };
+    let paths = entries
+        .map(|e| e.map(|e| e.path()).map_err(list))
+        .collect::<Result<Vec<_>, _>>()?;
     let mut out = BTreeMap::new();
-    for entry in entries {
-        let path = entry
-            .map_err(|source| Error::Read {
-                path: dir.clone(),
-                source,
-            })?
-            .path();
-        if path.extension().is_some_and(|e| e == "md") {
-            let key = relative(root, &path).display().to_string();
-            out.insert(key, required(&path)?);
-        }
+    for path in paths
+        .into_iter()
+        .filter(|p| p.extension().is_some_and(|e| e == "md"))
+    {
+        let key = relative(root, &path).display().to_string();
+        out.insert(key, required(&path)?);
     }
 
     Ok(out)

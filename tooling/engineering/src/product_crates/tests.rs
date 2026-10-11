@@ -34,7 +34,9 @@ fn checkout(clippy: Option<&str>, src: &[(&str, &str)]) -> (TempDir, Checkout) {
 
 #[test]
 fn banned_reads_every_path() {
-    let got = banned("x = [\n { path = \"a::B\", reason = \"r\" },\n{path=\"c::d\"}, { path = 3 }\n]\n# path is\n");
+    let got = banned(
+        "x = [\n { path = \"a::B\", reason = \"r\" },\n{path=\"c::d\"}, { path = 3 }\n]\n# path is\n",
+    );
 
     assert_eq!(got, BTreeSet::from(["a::B".to_owned(), "c::d".to_owned()]));
 }
@@ -45,7 +47,10 @@ fn missing_bans_names_each_absent_one() {
     let without = full().replace("std::time::Instant::now", "x");
 
     assert_eq!(missing_bans(&without), ["std::time::Instant::now"]);
-    assert_eq!(missing_bans("").len(), REACH_BANS.len() + DETERMINISM_BANS.len());
+    assert_eq!(
+        missing_bans("").len(),
+        REACH_BANS.len() + DETERMINISM_BANS.len()
+    );
 }
 
 #[test]
@@ -88,7 +93,10 @@ fn crates_keep_their_bans_reads_each_crate_or_the_workspace() {
     let (_d, c) = checkout(None, &[]);
     let got = crates_keep_their_bans(&c);
     assert_eq!(got.len(), REACH_BANS.len() + DETERMINISM_BANS.len());
-    assert!(got[0].starts_with("crate core: clippy.toml does not ban"), "{got:?}");
+    assert!(
+        got[0].starts_with("crate core: clippy.toml does not ban"),
+        "{got:?}"
+    );
 }
 
 #[test]
@@ -109,7 +117,10 @@ fn no_mutable_globals_reads_shipped_code_only() {
         None,
         &[
             ("lib.rs", "static OK: u8 = 1;\n"),
-            ("store/log.rs", "static SEQ: AtomicU64 = AtomicU64::new(0);\n"),
+            (
+                "store/log.rs",
+                "static SEQ: AtomicU64 = AtomicU64::new(0);\n",
+            ),
             ("store/tests.rs", "static T: Mutex<u8> = Mutex::new(0);\n"),
             ("notes.md", "static X: Mutex<u8>\n"),
         ],
@@ -117,7 +128,9 @@ fn no_mutable_globals_reads_shipped_code_only() {
 
     assert_eq!(
         no_mutable_globals(&c),
-        ["crates/core/src/store/log.rs:1: mutable global state: static SEQ: AtomicU64 = AtomicU64::new(0);"]
+        [
+            "crates/core/src/store/log.rs:1: mutable global state: static SEQ: AtomicU64 = AtomicU64::new(0);"
+        ]
     );
 }
 
@@ -128,5 +141,9 @@ fn no_mutable_globals_names_what_it_cannot_read() {
     assert!(no_mutable_globals(&c)[0].starts_with("read crates/core/src/bad.rs"));
 
     fs::remove_dir_all(d.path().join("crates/core/src")).unwrap();
-    assert!(no_mutable_globals(&c)[0].starts_with("list "), "{:?}", no_mutable_globals(&c));
+    assert!(
+        no_mutable_globals(&c)[0].starts_with("list "),
+        "{:?}",
+        no_mutable_globals(&c)
+    );
 }

@@ -1,6 +1,8 @@
-//! The core crates under `crates/` keep two promises a compiler can
+//! The product crates under `crates/` keep two promises a compiler can
 //! hold: the core's reach (I4, SEC-01) and derived artifacts that read
-//! no clock or random order (I10, ENG-03). Each crate's clippy.toml
+//! no clock or random order (I10, ENG-03). Every crate there serves the
+//! core today; a B1 to B3 component's crate weighs its own reach when
+//! its ADR lands (ENG-29), and this gate changes with it. Each crate's clippy.toml
 //! carries the bans, so clippy refuses a socket, a program start, a
 //! clock read or a hash map's random order; a call site that needs one
 //! says so with an `expect` and a reason, under review. And no crate
@@ -43,7 +45,13 @@ const CRATES: &str = "crates";
 /// `LazyLock` or `OnceLock` that is set once and only read is no
 /// mutable state.
 const MUTABLE: [&str; 7] = [
-    "Mutex", "RwLock", "Cell<", "RefCell", "UnsafeCell", "Atomic", "mut ",
+    "Mutex",
+    "RwLock",
+    "Cell<",
+    "RefCell",
+    "UnsafeCell",
+    "Atomic",
+    "mut ",
 ];
 
 /// Every `path = "..."` a clippy.toml names.
@@ -158,7 +166,11 @@ pub fn no_mutable_globals(c: &Checkout) -> Vec<String> {
             problems.push(e);
         }
         for path in files {
-            let rel = path.strip_prefix(&c.root).unwrap_or(&path).display().to_string();
+            let rel = path
+                .strip_prefix(&c.root)
+                .unwrap_or(&path)
+                .display()
+                .to_string();
             match fs::read_to_string(&path) {
                 Err(e) => problems.push(format!("read {rel}: {e}")),
                 Ok(body) => problems.extend(mutable_globals(&rel, &body)),

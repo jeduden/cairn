@@ -2,7 +2,7 @@
 name: review
 description: >-
   Review one pull request as the reviewer agent (ENG-21, ENG-28): read
-  its bundle and diff, check them against the SRS rows, the scenarios
+  its review bundle and diff, check them against the SRS rows, the scenarios
   and the invariants, and answer with a structured review outcome.
   Trigger on "review this pull request", or from the review workflow.
 ---
@@ -14,7 +14,8 @@ post nothing and change nothing.
 
 ## Inputs
 
-- `review/bundle.md`, read first: the route, the deterministic
+- `review/bundle.md`, read first: the review bundle, with the class,
+  the deterministic
   findings, each touched row and scenario, and the invariants. Open
   other SRS text only for a row it names but does not quote.
 - `review/since-last.diff`, `review/last-review.md`: when present,
@@ -31,10 +32,10 @@ else.
 
 ## Method
 
-CI and the bundle's checks already decided what development.md lists
+CI and the review bundle's checks already decided what development.md lists
 under Review; repeat none of it. Spend turns on judgement:
 
-1. Read the bundle, then the diff. Keep each finding of the last
+1. Read the review bundle, then the diff. Keep each finding of the last
    review that the new commits did not fix.
 2. Read the bindings of each scenario the change edits or makes live.
    A step that does not exercise its row's text is blocking.
@@ -44,7 +45,7 @@ under Review; repeat none of it. Spend turns on judgement:
 4. Errors keep their cause; each function has a test at the lowest
    layer; blocking calls take a deadline; I/O sits behind a seam.
 5. Names, docs and messages use the domain model's terms.
-6. On a deep route only, you may ask `persona-security-officer`
+6. On a deep review only, you may ask `persona-security-officer`
    about rows tracing I2, I4 or I8, and the domain-model specialist
    for a term the change uses.
 

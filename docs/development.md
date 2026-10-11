@@ -95,8 +95,9 @@ marked ready, which reruns CI. The agent runs on the stakeholder's
 Claude subscription, not an API key billed per model token. It triggers on
 `workflow_run`, so GitHub runs it as `main` defines it, never as the
 pull request does. The review job first runs main's `review-bundle`
-over main's tree and the pull request's: it writes the bundle the
-agent reads, routes the review and makes the deterministic findings
+over main's tree and the pull request's: it writes the review bundle
+the agent reads, sets the review's class and makes the deterministic
+findings
 (see Review below). The agent then runs with read-only tools on the
 pull request's tree, following
 [the review skill](../.claude/skills/review/SKILL.md). The agent only
@@ -138,10 +139,10 @@ What CI decides, on every pull request:
   agents (the gate tests), and every drift case (ENG-27);
 - dependencies and their ADRs (ENG-18) and the decision records
   (ENG-26);
-- rustfmt and clippy, with each core crate's bans on sockets and
+- rustfmt and clippy, with each product crate's bans on sockets and
   program starts (I4) and on clocks and hash order (I10), and the
   reach test;
-- no mutable global state in a core crate (ENG-03);
+- no mutable global state in a product crate (ENG-03);
 - coverage per test layer (ENG-11), and every live scenario.
 
 What `review-bundle` decides, comparing the pull request with main:
@@ -151,13 +152,13 @@ What `review-bundle` decides, comparing the pull request with main:
   an accepted ADR in the same change that records the security
   reviewer: blocking.
 
-Its route sets the agent's model, turn budget and tools. A change
+The review class sets the agent's model, turn budget and tools. A change
 holding only Markdown outside the stakeholder's paths is light. Any
 path CODEOWNERS assigns makes it deep, and only a deep review may
 consult the read-only reviewer subagents. Anything else is standard.
-The bundle quotes only the touched rows, their scenarios and the
-invariants, a few thousand tokens where the SRS holds hundreds of
-thousands. A re-review starts from the diff since the reviewer app's
+The review bundle quotes only the touched rows, their scenarios and
+the invariants, a few thousand model tokens where the SRS holds
+hundreds of thousands. A re-review starts from the diff since the reviewer app's
 last review.
 
 What is left to the agent is judgement: whether the code and the step

@@ -1,8 +1,8 @@
 //! Builds what the review workflow hands the reviewing agent, before it
-//! runs (ENG-21, ENG-28): a bundle of only the requirement rows,
+//! runs (ENG-21, ENG-28): a review bundle of only the requirement rows,
 //! scenarios and invariants the pull request touches, so the agent
-//! reads a few thousand tokens instead of browsing the SRS; the route
-//! that sets how deep the review goes; and the findings deterministic
+//! reads a few thousand model tokens instead of browsing the SRS; the
+//! review class that sets how deep the review goes; and the findings deterministic
 //! checks make on their own, which the review gate weighs beside the
 //! agent's. It reads main's tree and the pull request's tree as data
 //! and runs nothing from either. It is repository tooling and never

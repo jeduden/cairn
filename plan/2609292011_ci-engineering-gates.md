@@ -28,11 +28,11 @@ This plan covers the rest.
    enforce them (ENG-02)
 2. Add analyzers for TrustedText construction and for clock or
    randomness use in projection code (ENG-03, ENG-16, SEC-07). Clock
-   and randomness are done for the core crates: each crate's
+   and randomness are done for the product crates: each crate's
    clippy.toml bans the clocks and the hash collections, and the
-   engineering gate test `the_core_crates_keep_their_bans` holds every
+   engineering gate test `the_product_crates_keep_their_bans` holds every
    crate under `crates/` to that, beside
-   `no_core_crate_keeps_mutable_global_state` (ENG-03). What remains is
+   `no_product_crate_keeps_mutable_global_state` (ENG-03). What remains is
    TrustedText: once the restore builder of plan 2609292013 defines
    it, a compile-fail test proves no code outside its module can build
    one from untrusted text (I2)

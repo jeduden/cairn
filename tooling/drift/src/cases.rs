@@ -30,7 +30,7 @@ pub fn cases() -> Vec<Case> {
         domain_model_cases(),
         ledger_cases(),
         reach_cases(),
-        core_crate_cases(),
+        product_crate_cases(),
     ]
     .concat()
 }
@@ -506,22 +506,26 @@ fn reach_cases() -> Vec<Case> {
     ]
 }
 
-/// The drifts the core crates' bans exist to catch: a crate's
+/// The drifts the product crates' bans exist to catch: a crate's
 /// clippy.toml dropping one (I4, I10), the core reading a clock or a
 /// random order (I10), and mutable global state (ENG-03).
-fn core_crate_cases() -> Vec<Case> {
+fn product_crate_cases() -> Vec<Case> {
     const LIB: &str = "crates/cairn/src/lib.rs";
     const AT: &str = "use std::io::Write;";
     vec![
         case(
-            "a core crate's clippy.toml dropping a reach ban",
-            "the_core_crates_keep_their_bans",
+            "a product crate's clippy.toml dropping a reach ban",
+            "the_product_crates_keep_their_bans",
             Injection::replace(
                 "crates/cairn/clippy.toml",
                 "  { path = \"std::net::UdpSocket\", reason = \"the core opens no socket (SEC-01)\" },\n",
                 "",
             ),
-            cargo_test("engineering", "checkout", "the_core_crates_keep_their_bans"),
+            cargo_test(
+                "engineering",
+                "checkout",
+                "the_product_crates_keep_their_bans",
+            ),
             "crates/cairn/clippy.toml does not ban std::net::UdpSocket",
         ),
         case(
@@ -547,8 +551,8 @@ fn core_crate_cases() -> Vec<Case> {
             "use of a disallowed type `std::collections::HashMap`",
         ),
         case(
-            "a core crate keeping mutable global state",
-            "no_core_crate_keeps_mutable_global_state",
+            "a product crate keeping mutable global state",
+            "no_product_crate_keeps_mutable_global_state",
             Injection::replace(
                 LIB,
                 AT,
@@ -557,7 +561,7 @@ fn core_crate_cases() -> Vec<Case> {
             cargo_test(
                 "engineering",
                 "checkout",
-                "no_core_crate_keeps_mutable_global_state",
+                "no_product_crate_keeps_mutable_global_state",
             ),
             "crates/cairn/src/lib.rs:10: mutable global state: pub static SEQ",
         ),

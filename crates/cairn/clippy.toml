@@ -22,7 +22,7 @@ disallowed-types = [
 
 # Derived artifacts read no clock and no random order (I10, ENG-03):
 # a rebuild reproduces them exactly. A call site that must read a clock,
-# such as a structural time mark, says so with
+# such as one stamping a structural event, says so with
 # `#[expect(clippy::disallowed_methods, reason = "...")]`, under review.
 # BTreeMap and BTreeSet keep a stable order where the hash collections
 # would not.

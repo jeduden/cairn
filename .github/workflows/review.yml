@@ -3,9 +3,9 @@ name: Review
 # ENG-21 and ENG-28: an agent reviews each pull request once its CI
 # passes, and the reviewer app posts the outcome. Before the agent
 # runs, main's review-bundle tool reads main's tree and the pull
-# request's: it writes the bundle of touched requirement rows,
-# scenarios and invariants the agent reads first, routes the review by
-# what changed, and makes the findings no agent is needed for (a live
+# request's: it writes the review bundle of touched requirement rows,
+# scenarios and invariants the agent reads first, sets the review's
+# class by what changed, and makes the findings no agent is needed for (a live
 # scenario put back on @pending, ENG-29's record). The agent only
 # writes a review outcome. A separate job, the only one that holds the
 # app's key, decides with the review-gate crate what review to post: an
@@ -88,7 +88,7 @@ jobs:
           rustup toolchain install
           "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
           --profile minimal --no-self-update
-      # The route sets how deep the review goes, from the paths that
+      # The review class sets how deep the review goes, from the paths that
       # changed: light for Markdown no stakeholder path holds, deep for
       # any path CODEOWNERS assigns, standard otherwise. A deep review
       # may consult the read-only reviewer subagents.
@@ -98,9 +98,9 @@ jobs:
         run: |
           mkdir -p review
           cargo run --locked --quiet -p review-bundle -- --base . --head pr-head \
-            --diff pr.diff --out review > route.txt
-          cat route.txt >> "$GITHUB_OUTPUT"
-          class=$(sed -n 's/^class=//p' route.txt)
+            --diff pr.diff --out review > class.txt
+          cat class.txt >> "$GITHUB_OUTPUT"
+          class=$(sed -n 's/^class=//p' class.txt)
           case "$class" in
             light) model=claude-haiku-5-5; turns=12; tools=Read,Glob,Grep ;;
             standard) model=claude-sonnet-5-5; turns=30; tools=Read,Glob,Grep ;;
@@ -113,7 +113,7 @@ jobs:
             echo "tools=$tools"
             echo "checked=$(jq -c . review/checked.json)"
           } >> "$GITHUB_OUTPUT"
-          cat route.txt "review/checked.json" >> "$GITHUB_STEP_SUMMARY"
+          cat class.txt "review/checked.json" >> "$GITHUB_STEP_SUMMARY"
       # A pull request the reviewer app reviewed before: the diff since
       # that head and that review, so the agent starts from what moved.
       - name: Find what changed since the last review
@@ -164,7 +164,7 @@ jobs:
       # Read-only tools and a read-only token: the agent can read the
       # trees and the pull request, and write nothing but its review outcome.
       # It runs on the stakeholder's Claude subscription, through the
-      # token `claude setup-token` prints, so a review has no per-token
+      # token `claude setup-token` prints, so a review has no per-model-token
       # bill; it counts against the plan's usage limits instead.
       - name: Review
         id: agent

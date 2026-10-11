@@ -15,7 +15,7 @@
 # posts (ENG-28). The workflow that runs it is under /.github/.
 /tooling/                     @jeduden
 
-# The core crates' reach and determinism evidence (SEC-01, ENG-16,
+# The product crates' reach and determinism evidence (SEC-01, ENG-16,
 # ENG-03): each crate's clippy configuration, which refuses sockets,
 # program starts, clocks and random order in its code, and the test
 # that refuses a crate linked into it.
