@@ -52,8 +52,7 @@ into the core executable, and the reach test allows `serde_json`,
   Cargo features, and Cargo unifies features across a workspace: the
   core's reach would hold only while no other crate turned `net` or
   `process` on. The reach test would catch a new crate, not a new
-  feature of an allowed one. It also brings `unicode-ident`'s
-  Unicode-3.0 license, which ENG-18's allow-list lacks.
+  feature of an allowed one.
 - **The MCP server on `serde_json::Value` without `serde_json`.** A
   JSON reader of Cairn's own saves one dependency, but it is parser
   code the core must fuzz and keep correct, and the store, the

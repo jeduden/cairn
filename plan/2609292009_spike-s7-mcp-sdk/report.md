@@ -71,7 +71,7 @@ a millisecond.
 The two ranges are two runs. Every license in either graph is MIT,
 Apache-2.0, or offered as one of them, except `unicode-ident`'s added
 Unicode-3.0, a proc-macro dependency of `rmcp`'s graph that
-`cargo-deny` would need allow-listed.
+`deny.toml` already excepts for the tooling.
 
 ### Reach in source
 
