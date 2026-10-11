@@ -17,9 +17,11 @@
 
 # The product crates' reach and determinism evidence (SEC-01, ENG-16,
 # ENG-03): each crate's clippy configuration, which refuses sockets,
-# program starts, clocks and random order in its code, and the test
-# that refuses a crate linked into it.
+# program starts, clocks and random order in its code, its manifest,
+# whose [lints] could switch the bans off, and the test that refuses a
+# crate linked into it.
 /crates/*/clippy.toml         @jeduden
+/crates/*/Cargo.toml          @jeduden
 /crates/*/tests/reach.rs      @jeduden
 
 # CI, the coverage floors, the toolchain pins, the lint and supply-chain
