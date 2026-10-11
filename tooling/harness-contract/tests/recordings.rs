@@ -29,20 +29,21 @@ fn named_paths(manifest: &Value) -> Vec<String> {
     out
 }
 
+/// The manifest keys whose strings are not paths, matched as whole
+/// segments of a key's dotted path.
+const NOT_PATHS: [&str; 7] = [
+    "claude_code",
+    "hook_flows",
+    "markers",
+    "nonces",
+    "answer",
+    "answered_on",
+    "sources",
+];
+
 fn collect(v: &Value, key: &str, out: &mut Vec<String>) {
     match v {
-        Value::String(s)
-            if ![
-                ".claude_code",
-                ".hook_flows",
-                ".markers",
-                ".nonces",
-                ".answer",
-                ".sources",
-            ]
-            .iter()
-            .any(|k| key.contains(k)) =>
-        {
+        Value::String(s) if !key.split('.').any(|segment| NOT_PATHS.contains(&segment)) => {
             out.push(s.clone());
         }
         Value::Array(a) => a.iter().for_each(|x| collect(x, key, out)),
