@@ -41,6 +41,7 @@ fn input(outcome: ReviewOutcome, check_runs: Vec<CheckRun>) -> Input {
         reviewed: REVIEWED.into(),
         head: REVIEWED.into(),
         check_runs,
+        checked: vec![],
     }
 }
 
@@ -359,7 +360,7 @@ fn render_lists_blocking_findings_before_nits() {
         ],
     };
 
-    let body = render(&outcome, &[], REQUEST_CHANGES, REVIEWED);
+    let body = render(&outcome, &[], &[], REQUEST_CHANGES, REVIEWED);
 
     let (blocking, nit) = (
         body.find("unwrapped error").unwrap(),
@@ -368,7 +369,7 @@ fn render_lists_blocking_findings_before_nits() {
     assert!(blocking < nit, "{body}");
     assert!(body.contains("- nit `b.rs`: rename"), "{body}");
     assert!(body.contains(&REVIEWED[..12]), "{body}");
-    assert!(render(&outcome, &[], REQUEST_CHANGES, "abc").contains("on `abc`."));
+    assert!(render(&outcome, &[], &[], REQUEST_CHANGES, "abc").contains("on `abc`."));
 }
 
 #[test]
@@ -429,7 +430,7 @@ fn the_body_mentions_no_one() {
         )],
     };
 
-    let body = render(&outcome, &[], REQUEST_CHANGES, REVIEWED);
+    let body = render(&outcome, &[], &[], REQUEST_CHANGES, REVIEWED);
 
     assert!(body.contains("`@I2` widens."), "{body}");
     assert!(
@@ -455,7 +456,7 @@ fn paths_and_check_names_cannot_break_out_of_their_code_span() {
     };
     let failed = run("lint` @team `z", "completed", "failure");
 
-    let body = render(&outcome, &[&failed], REQUEST_CHANGES, REVIEWED);
+    let body = render(&outcome, &[], &[&failed], REQUEST_CHANGES, REVIEWED);
 
     assert!(body.contains("- blocking `x' @user 'y`: b"), "{body}");
     assert!(body.contains("- check `lint' @team 'z`: failure"), "{body}");
@@ -472,4 +473,75 @@ fn decide_approves_an_outcome_with_only_nits() {
 
     assert_eq!(r.event, APPROVE);
     assert!(r.body.contains("- nit `a.rs:2`: rename"), "{}", r.body);
+}
+
+#[test]
+fn parse_checked_reads_the_deterministic_findings() {
+    let got = parse_checked(
+        r#"[{"path":"features/record.feature","line":4,"severity":"blocking","body":"REC-01 went back to @pending"}]"#,
+    )
+    .unwrap();
+
+    assert_eq!(
+        got,
+        vec![finding(
+            "features/record.feature",
+            4,
+            BLOCKING,
+            "REC-01 went back to @pending"
+        )]
+    );
+    assert!(parse_checked("[]").unwrap().is_empty());
+}
+
+#[test]
+fn parse_checked_refuses_what_the_schema_does_not() {
+    for (name, data, want) in [
+        ("not a list", "{}", "malformed deterministic findings"),
+        (
+            "an unknown severity",
+            r#"[{"path":"a","line":0,"severity":"fatal","body":"b"}]"#,
+            "severity",
+        ),
+        (
+            "no body",
+            r#"[{"path":"a","line":0,"severity":"nit","body":" "}]"#,
+            "no path or no body",
+        ),
+    ] {
+        let err = parse_checked(data).unwrap_err().to_string();
+        assert!(err.contains(want), "{name}: {err}");
+    }
+}
+
+#[test]
+fn decide_withholds_approval_on_a_blocking_deterministic_finding() {
+    let mut i = input(approve(), green());
+    i.checked = vec![finding("docs/srs/invariants.md", 0, BLOCKING, "no ADR")];
+
+    let got = decide(&i).unwrap().unwrap();
+
+    assert_eq!(got.event, REQUEST_CHANGES);
+    assert!(
+        got.body
+            .contains("- blocking `docs/srs/invariants.md`: no ADR"),
+        "{}",
+        got.body
+    );
+    assert!(got.body.contains("deterministic check"), "{}", got.body);
+}
+
+#[test]
+fn decide_approves_beside_a_deterministic_nit() {
+    let mut i = input(approve(), green());
+    i.checked = vec![finding("a.rs", 1, NIT, "route deep")];
+
+    let got = decide(&i).unwrap().unwrap();
+
+    assert_eq!(got.event, APPROVE);
+    assert!(
+        got.body.contains("- nit `a.rs:1`: route deep"),
+        "{}",
+        got.body
+    );
 }

@@ -3,8 +3,10 @@
 //! outcome; this crate, run by the workflow step that alone holds the
 //! reviewer app's key, decides what review to post. It approves only an
 //! approving outcome with no blocking finding, on the head the agent
-//! read, once CI passed there. It is repository tooling and never
-//! links into a shipped executable.
+//! read, once CI passed there. The deterministic checks the review
+//! workflow runs before the agent add their own findings, and a
+//! blocking one withholds approval whatever the agent says. It is
+//! repository tooling and never links into a shipped executable.
 
 pub mod cli;
 
@@ -81,6 +83,9 @@ pub struct Input {
     /// The pull request's head commit now.
     pub head: String,
     pub check_runs: Vec<CheckRun>,
+    /// The findings of the deterministic checks the workflow ran on the
+    /// reviewed head, beside the agent's.
+    pub checked: Vec<Finding>,
 }
 
 /// The pull request review to post, in the shape GitHub's
@@ -97,6 +102,8 @@ pub struct Review {
 pub enum Error {
     /// The agent's output does not fit the review outcome's schema.
     Outcome(String),
+    /// The deterministic checks' findings do not fit their schema.
+    Checked(String),
     /// A line of the check runs is not a check run.
     CheckRun {
         line: usize,
@@ -110,6 +117,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Outcome(msg) => write!(f, "review: malformed review outcome: {msg}"),
+            Self::Checked(msg) => write!(f, "review: malformed deterministic findings: {msg}"),
             Self::CheckRun { line, source } => write!(f, "review: check run line {line}: {source}"),
             Self::Ci(head) => write!(f, "review: CI has not passed on the reviewed head: {head}"),
         }
@@ -120,7 +128,7 @@ impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::CheckRun { source, .. } => Some(source),
-            Self::Outcome(_) | Self::Ci(_) => None,
+            Self::Outcome(_) | Self::Checked(_) | Self::Ci(_) => None,
         }
     }
 }
@@ -158,20 +166,34 @@ fn validate(outcome: &ReviewOutcome) -> Result<(), Error> {
     if outcome.summary.trim().is_empty() {
         return Err(Error::Outcome("no summary".into()));
     }
-    for (i, f) in outcome.findings.iter().enumerate() {
+    validate_findings(&outcome.findings).map_err(Error::Outcome)
+}
+
+/// Decodes the deterministic checks' findings: a list of findings in
+/// the review outcome's shape.
+///
+/// # Errors
+///
+/// Fails on anything that is not such a list.
+pub fn parse_checked(data: &str) -> Result<Vec<Finding>, Error> {
+    let findings: Vec<Finding> =
+        serde_json::from_str(data).map_err(|e| Error::Checked(e.to_string()))?;
+    validate_findings(&findings).map_err(Error::Checked)?;
+
+    Ok(findings)
+}
+
+/// Checks every finding names a severity, a path, a body and a line.
+fn validate_findings(findings: &[Finding]) -> Result<(), String> {
+    for (i, f) in findings.iter().enumerate() {
         if f.severity != BLOCKING && f.severity != NIT {
-            return Err(Error::Outcome(format!(
-                "finding {i}: severity {:?}",
-                f.severity
-            )));
+            return Err(format!("finding {i}: severity {:?}", f.severity));
         }
         if f.path.is_empty() || f.body.trim().is_empty() {
-            return Err(Error::Outcome(format!(
-                "finding {i} has no path or no body"
-            )));
+            return Err(format!("finding {i} has no path or no body"));
         }
         if f.line < 0 {
-            return Err(Error::Outcome(format!("finding {i}: line {}", f.line)));
+            return Err(format!("finding {i}: line {}", f.line));
         }
     }
 
@@ -215,13 +237,20 @@ pub fn decide(input: &Input) -> Result<Option<Review>, Error> {
     let failed: Vec<&CheckRun> = runs.into_iter().filter(|r| failed(r)).collect();
     let approves = input.outcome.verdict == APPROVE_VERDICT
         && failed.is_empty()
-        && !input.outcome.findings.iter().any(is_blocking);
+        && !input.outcome.findings.iter().any(is_blocking)
+        && !input.checked.iter().any(is_blocking);
     let event = if approves { APPROVE } else { REQUEST_CHANGES };
 
     Ok(Some(Review {
         commit_id: input.reviewed.clone(),
         event: event.to_owned(),
-        body: render(&input.outcome, &failed, event, &input.reviewed),
+        body: render(
+            &input.outcome,
+            &input.checked,
+            &failed,
+            event,
+            &input.reviewed,
+        ),
     }))
 }
 
@@ -270,8 +299,14 @@ fn failed(r: &CheckRun) -> bool {
 
 /// Writes the review body: the outcome and the head it covers, the
 /// agent's summary, its blocking findings, then its nits, then the
-/// checks that failed.
-fn render(outcome: &ReviewOutcome, failed: &[&CheckRun], event: &str, head: &str) -> String {
+/// deterministic checks' findings, then the checks that failed.
+fn render(
+    outcome: &ReviewOutcome,
+    checked: &[Finding],
+    failed: &[&CheckRun],
+    event: &str,
+    head: &str,
+) -> String {
     let title = if event == APPROVE {
         "Approved"
     } else {
@@ -282,8 +317,22 @@ fn render(outcome: &ReviewOutcome, failed: &[&CheckRun], event: &str, head: &str
         "**{title}** by the review agent on `{short}`.\n\n{}\n",
         defuse_mentions(&outcome.summary)
     );
+    list_findings(&mut b, &outcome.findings);
+    if !checked.is_empty() {
+        b.push_str("\n\nFound by a deterministic check:\n");
+        list_findings(&mut b, checked);
+    }
+    for r in failed {
+        let _ = write!(b, "\n- check `{}`: {}", code_span(&r.name), r.conclusion);
+    }
+
+    b
+}
+
+/// Appends `findings` to `b`, one line each, blocking ones first.
+fn list_findings(b: &mut String, findings: &[Finding]) {
     for severity in [BLOCKING, NIT] {
-        for f in outcome.findings.iter().filter(|f| f.severity == severity) {
+        for f in findings.iter().filter(|f| f.severity == severity) {
             let _ = write!(
                 b,
                 "\n- {severity} `{}`: {}",
@@ -292,11 +341,6 @@ fn render(outcome: &ReviewOutcome, failed: &[&CheckRun], event: &str, head: &str
             );
         }
     }
-    for r in failed {
-        let _ = write!(b, "\n- check `{}`: {}", code_span(&r.name), r.conclusion);
-    }
-
-    b
 }
 
 /// Names a finding's file, and its line when it has one.

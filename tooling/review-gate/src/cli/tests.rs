@@ -221,3 +221,37 @@ fn run_reports_a_failed_write() {
     assert!(String::from_utf8(err).unwrap().contains("closed"));
     assert!(Closed.flush().is_ok());
 }
+
+#[test]
+fn run_merges_the_deterministic_findings_when_given() {
+    let mut files = inputs();
+    files.insert(
+        "checked.json".to_owned(),
+        r#"[{"path":"features/record.feature","line":0,"severity":"blocking","body":"re-pended"}]"#
+            .to_owned(),
+    );
+    let mut a = args(HEAD);
+    a.extend(["--checked".to_owned(), "checked.json".to_owned()]);
+
+    let (code, out, err) = invoke(a, &files);
+
+    assert_eq!(code, EXIT_OK, "{err}");
+    let review: Review = serde_json::from_str(&out).unwrap();
+    assert_eq!(review.event, crate::REQUEST_CHANGES);
+}
+
+#[test]
+fn run_fails_closed_on_a_missing_or_malformed_checked_file() {
+    let mut a = args(HEAD);
+    a.extend(["--checked".to_owned(), "checked.json".to_owned()]);
+    let (code, out, err) = invoke(a.clone(), &inputs());
+    assert_eq!(code, EXIT_FAILURE, "{err}");
+    assert!(out.is_empty());
+    assert!(err.contains("read checked.json"), "{err}");
+
+    let mut files = inputs();
+    files.insert("checked.json".to_owned(), "nope".to_owned());
+    let (code, _, err) = invoke(a, &files);
+    assert_eq!(code, EXIT_FAILURE, "{err}");
+    assert!(err.contains("malformed deterministic findings"), "{err}");
+}
