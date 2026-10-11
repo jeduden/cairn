@@ -243,7 +243,7 @@ Feature: Engineering quality (ENG)
   Scenario: an agent's approval passes through a gate the agent cannot reach
     Given the repository checkout
     When the review workflow is read from ".github/workflows/review.yml"
-    Then it runs only when the "CI" workflow completes, as the default branch defines it
+    Then it runs only when the "CI" workflow completes or a pull request gets a comment, as the default branch defines it
     And the job that runs the reviewing agent holds no write permission and not the "JEDUDEN_REVIEW_AGENT_KEY" key
     And only one job holds the "JEDUDEN_REVIEW_AGENT_KEY" key, and it runs no agent
     And that job runs only after the agent's job succeeded
