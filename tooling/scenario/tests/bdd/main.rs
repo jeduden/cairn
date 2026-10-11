@@ -13,6 +13,7 @@
 //! `cargo test -p scenario --test bdd -- --tags @ENG-24` runs one
 //! scenario by its requirement id.
 
+mod assumptions;
 mod engineering;
 mod engineering_adr;
 mod engineering_drift;

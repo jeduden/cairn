@@ -3,73 +3,78 @@ Feature: Assumptions register (ASM)
   The scenarios for SRS §2.3, one per assumption, tagged with its id. The
   rows carry neither priority nor traces, so a scenario here carries
   its id alone. Each is a contract test (ENG-17) that replays hook
-  payloads and transcripts recorded from Claude Code by the M0 spike
+  inputs and transcripts recorded from Claude Code by the M0 spike
   named in the row's "Verified in" column, and is re-run against every
   supported Claude Code release. A scenario still tagged @pending is
   declared but not yet written: its steps are bound when the spike's
   recorded fixtures land.
 
-  @ASM-01 @pending
+  @ASM-01
   Scenario Outline: hook inputs carry the documented fields (S1)
-    Given a recorded hook input for Claude Code "<version>"
-    When the hook "<Event>" runs with the recorded hook input
-    Then the hook input carries "session_id", "transcript_path", "cwd" and "hook_event_name"
-    And it also carries <extra>
+    Given the hook inputs recorded from Claude Code "supported" in the "<flow>" flow
+    When the "<Event>" hook inputs are read
+    Then each carries "session_id", "transcript_path", "cwd" and "hook_event_name"
+    And the last carries <extra>
+    And the last one's "session_id" is <identity> the "startup" flow's
 
     Examples:
-      | version   | Event            | extra                                                                                                                                                                                        |
-      | supported | SessionStart     | "source" in startup, resume, clear or compact, and on a resume the resumed harness session's "session_id" when it keeps that harness session, a new one when it starts a new harness session |
-      | supported | PreCompact       | "trigger" and "custom_instructions"                                                                                                                                                          |
-      | supported | PostCompact      | "compact_summary"                                                                                                                                                                            |
-      | supported | UserPromptSubmit | "prompt"                                                                                                                                                                                     |
-
-  @ASM-02 @pending
-  Scenario Outline: additionalContext is honoured on SessionStart and UserPromptSubmit only (S1)
-    Given a recorded hook input for Claude Code "<version>"
-    And a recorded harness response to a hook output carrying "additionalContext"
-    When the hook "<Event>" runs with the recorded hook input
-    Then the recorded transcript <shows> the additional context in the model's context
+      | flow     | Event            | extra                                                  | identity     |
+      | startup  | SessionStart     | "source" set to "startup"                              | the same as  |
+      | resume   | SessionStart     | "source" set to "resume"                               | the same as  |
+      | continue | SessionStart     | "source" set to "resume"                               | the same as  |
+      | fork     | SessionStart     | "source" set to "fork"                                 | other than   |
+      | clear    | SessionStart     | "source" set to "clear"                                | other than   |
+      | compact  | SessionStart     | "source" set to "compact"                              | the same as  |
+      | compact  | PreCompact       | "trigger" set to "manual" and "custom_instructions"    | the same as  |
+      | compact  | PostCompact      | "trigger" set to "manual" and "compact_summary"        | the same as  |
+      | startup  | UserPromptSubmit | "prompt"                                               | the same as  |
+  @ASM-02
+  Scenario Outline: additionalContext reaches the model from SessionStart, UserPromptSubmit and PostToolUse, and compaction hooks' output is echoed (S1)
+    Given the transcripts recorded from Claude Code "supported" with every hook answering "additionalContext"
+    When each line of the recordings is read
+    Then the "<Event>" hook's additional context <context> as a hook context attachment
+    And the "<Event>" hook's output <echo> in a compact command's output
 
     Examples:
-      | version   | Event            | shows       |
-      | supported | SessionStart     | shows       |
-      | supported | UserPromptSubmit | shows       |
-      | supported | PostCompact      | never shows |
-
-  @ASM-03 @pending
+      | Event            | context     | echo        |
+      | SessionStart     | shows       | never shows |
+      | UserPromptSubmit | shows       | never shows |
+      | PostToolUse      | shows       | never shows |
+      | PreCompact       | never shows | shows       |
+      | PostCompact      | never shows | shows       |
+  @ASM-03
   Scenario: transcripts are one JSONL file per harness session with subagents nested (S3)
     Given a recorded "~/.claude/projects" tree for Claude Code "supported"
-    When the transcript discovery walks the tree
-    Then each harness session yields one JSONL transcript under "~/.claude/projects/<project-slug>/"
+    When the recorded tree is walked
+    Then each harness session yields one JSONL transcript under "~/.claude/projects/<transcript-dir>/"
     And each subagent transcript lies under "<session_id>/subagents/"
-
-  @ASM-04 @pending
-  Scenario Outline: transcripts are append-mostly but can be truncated or rewritten (S3)
+    And each subagent transcript has a ".meta.json" beside it naming its agent type
+  @ASM-04
+  Scenario Outline: a rewind or a partial compaction appends to the transcript and never rewrites it (S3)
     Given a recorded transcript before and after a "<flow>" flow for Claude Code "supported"
-    When the person runs "cairn ingest --all" on each recording in turn
-    Then the second recording is detected as <change>
-    And an audit entry records "transcript <change>"
+    When the two recordings are compared
+    Then the earlier recording is a byte prefix of the later one
+    And <shape>
 
     Examples:
-      | flow   | change    |
-      | rewind | truncated |
-      | resume | rewritten |
-
-  @ASM-05 @pending
-  Scenario: transcripts can be deleted after cleanupPeriodDays (S3)
-    Given a recorded "~/.claude/projects" tree before and after cleanup with "cleanupPeriodDays" of 30
-    When the person runs "cairn ingest --all" on each recording in turn
-    Then the runs whose transcripts were deleted remain recallable from the store
-    And an audit entry records "transcript deleted by harness cleanup"
-
-  @ASM-06 @pending
-  Scenario: subagent compaction hooks carry the parent's identity (S1)
+      | flow               | shape                                                                    |
+      | rewind             | the first line appended continues from a line before the earlier one's last |
+      | partial compaction | a "compact_boundary" line is appended                                    |
+  @ASM-05
+  Scenario: the harness deletes transcripts after cleanupPeriodDays, but not on a schedule Cairn controls (S3)
+    Given a recorded "~/.claude/projects" tree before and after harness starts with "cleanupPeriodDays" of 30
+    When the two trees are compared
+    Then a transcript older than 30 days was deleted
+    And a transcript older than 30 days was kept
+    And no transcript younger than 30 days was deleted
+  @ASM-06
+  Scenario: subagent compaction hooks carry the main agent's identity (S1)
     Given a recorded hook input for Claude Code "supported"
     And the hook input was captured during a subagent's compaction
     When the hook "PreCompact" runs with the recorded hook input
-    Then its "session_id" and "transcript_path" are the parent's
+    Then its "session_id" and "transcript_path" are the main agent's harness session's
     And it carries no subagent-specific field
-
+    And the additional context of the "SessionStart" hook that follows it lands in the subagent's transcript, where the model reads it
   @ASM-07 @pending
   Scenario Outline: a plugin bundling hooks and an MCP server loads on each target (S4)
     Given the Cairn plugin bundling its hook handlers and the "cairn mcp" server
@@ -98,59 +103,68 @@ Feature: Assumptions register (ASM)
     Then the recorded transcript shows whether compaction was blocked or proceeded
     And the observed behaviour is written into the OQ-01 recommendation
 
-  @ASM-10 @pending
-  Scenario: harness timeouts are per hook but SessionEnd gets a short shared harness timeout (S1)
-    Given a recorded hook input for Claude Code "supported"
-    And hooks configured with a harness timeout of 10 s each
-    When the hook "SessionEnd" runs with a handler that sleeps past 1.5 s
-    Then the recorded harness terminated the handler after about 1.5 s
-    And the other hooks ran up to their configured 10 s harness timeout
+  @ASM-10
+  Scenario Outline: each hook's harness timeout is its own, and SessionEnd's defaults to about 1.5 s (S1)
+    Given the hook timeouts measured on Claude Code "supported"
+    When the "<Event>" handler sleeps past its harness timeout in <mode> mode with <timeout>
+    Then the harness terminated the handler after about <limit> s
+    And no "SessionEnd" handler started in a print-mode harness session whose "Stop" handler reached its harness timeout
 
-  @ASM-11 @pending
+    Examples:
+      | Event            | mode        | timeout         | limit |
+      | SessionStart     | print       | a 4 s timeout   | 4     |
+      | UserPromptSubmit | print       | a 4 s timeout   | 4     |
+      | PostToolUse      | print       | a 4 s timeout   | 4     |
+      | Stop             | print       | a 4 s timeout   | 4     |
+      | SessionEnd       | print       | a 4 s timeout   | 4     |
+      | SessionEnd       | print       | a 10 s timeout  | 10    |
+      | SessionEnd       | print       | no timeout      | 1.5   |
+      | SessionEnd       | interactive | a 10 s timeout  | 10    |
+      | SessionEnd       | interactive | no timeout      | 1.5   |
+  @ASM-11
   Scenario: context the harness adds is written as attachment lines (S3)
     Given a recorded transcript for Claude Code "supported" from a worktree with a CLAUDE.md file, an MCP server and a skill
     When each line of the recording is read
     Then the CLAUDE.md file, the MCP server instructions and the skill listing appear as "attachment" lines
     And each of those lines carries "attachment.type" and "renderedRole"
-
-  @ASM-12 @pending
+  @ASM-12
   Scenario: one API message spans several lines, one content block each (S3)
-    Given a recorded transcript for Claude Code "supported" with an assistant reply carrying text and two tool calls
+    Given a recorded transcript for Claude Code "supported" with an assistant reply carrying two tool calls
     When each line of the recording is read
     Then each assistant line carries exactly one content block
     And the reply's lines share one "message.id" and repeat its "usage"
-
-  @ASM-13 @pending
+  @ASM-13
   Scenario: a tool-result line repeats the output and names its call (S3)
     Given a recorded transcript for Claude Code "supported" with a Bash tool call and its tool result
     When each line of the recording is read
     Then the tool-result line carries the output in "message.content" and again in "toolUseResult"
     And its "sourceToolAssistantUUID" names the line carrying the Bash tool call
-
-  @ASM-14 @pending
+  @ASM-14
   Scenario Outline: some transcript line types carry no uuid or no timestamp (S3)
     Given a recorded transcript for Claude Code "supported"
     When each line of the recording is read
     Then every line of type "<type>" carries <missing>
 
     Examples:
-      | type            | missing                        |
-      | last-prompt     | neither "uuid" nor "timestamp" |
-      | queue-operation | no "uuid"                      |
-      | ai-title        | neither "uuid" nor "timestamp" |
-
-  @ASM-15 @pending
+      | type                  | missing                        |
+      | last-prompt           | neither "uuid" nor "timestamp" |
+      | queue-operation       | no "uuid"                      |
+      | ai-title              | neither "uuid" nor "timestamp" |
+      | atis-latch            | neither "uuid" nor "timestamp" |
+      | cost-state            | neither "uuid" nor "timestamp" |
+      | mode                  | neither "uuid" nor "timestamp" |
+      | permission-mode       | neither "uuid" nor "timestamp" |
+      | file-history-snapshot | neither "uuid" nor "timestamp" |
+  @ASM-15
   Scenario: thinking blocks keep their signature but not their text (S3)
     Given a recorded transcript for Claude Code "supported" with extended thinking enabled
     When each line of the recording is read
     Then every thinking block carries a signature and empty thinking text
-
-  @ASM-16 @pending
+  @ASM-16
   Scenario: how working directories map to transcript directories is recorded (S3)
     Given a recorded "~/.claude/projects" tree for Claude Code "supported" after one harness session in each of "/w/my_app", "/w/my.app" and "/w/my-app"
-    When the transcript discovery walks the tree
+    When the recorded tree is walked
     Then the three harness sessions share the transcript directory "-w-my-app"
-
   @ASM-17 @pending
   Scenario: transcript lines are appended within 1 s of their event while an agent runs (S9)
     Given a recorded harness session from Claude Code "supported" with the time of each hook event

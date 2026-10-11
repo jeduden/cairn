@@ -15,6 +15,8 @@ srs.workspace = true
 adr.workspace = true
 drift.workspace = true
 engineering.workspace = true
+harness-contract.workspace = true
+serde_json.workspace = true
 testkit.workspace = true
 
 # The executable requirement matrix: every scenario under features/,
