@@ -34,7 +34,7 @@ about `rmcp` with HTTP off, not the MCP Go SDK.
 
 The [spike report](report.md) holds the numbers, and
 [ADR-2610102211](../../docs/adr/ADR-2610102211-mcp-server-in-house.md)
-records the decision: an in-house stdio server on `serde_json`. Both
+proposes the decision: an in-house stdio server on `serde_json`. Both
 stubs passed every protocol check, against a raw JSON-RPC driver and
 the reference TypeScript client. `rmcp` puts 50 crates in the core's
 graph against 5, and keeps its sockets and program starts behind Cargo
