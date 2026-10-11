@@ -8,6 +8,8 @@ on: # a comment
   workflow_run:
     workflows: [CI]
     types: [completed]
+  issue_comment:
+    types: [created]
 
 jobs:
   review:
@@ -36,7 +38,7 @@ const HEADER: &[&str] = &["verdict", "finding", "head", "CI", "other check", "re
 fn parse_splits_triggers_and_jobs() {
     let w = parse(&format!("stray: before\n  sub: key\n{REVIEW_FLOW}"));
 
-    assert_eq!(w.triggers, ["workflow_run"]);
+    assert_eq!(w.triggers, ["workflow_run", "issue_comment"]);
     assert_eq!(w.jobs.len(), 2);
     assert_eq!(w.jobs[0].name, "review");
     assert!(
@@ -94,7 +96,7 @@ fn grants_write_and_has_word_match_whole_words() {
 }
 
 #[test]
-fn runs_after_wants_only_workflow_run_on_the_named_workflow() {
+fn runs_after_wants_the_named_workflow_and_comments_only() {
     let mut w = parse(REVIEW_FLOW);
     assert!(w.runs_after("CI").is_ok());
     assert_eq!(
@@ -102,16 +104,31 @@ fn runs_after_wants_only_workflow_run_on_the_named_workflow() {
         r#"the workflow_run trigger does not say "workflows: [Build]""#
     );
 
-    w.on = w.on.replace("types: [completed]", "types: [requested]");
+    let mut done = w.clone();
+    done.on = done.on.replace("types: [completed]", "types: [requested]");
     assert_eq!(
-        w.runs_after("CI").unwrap_err(),
+        done.runs_after("CI").unwrap_err(),
         r#"the workflow_run trigger does not say "types: [completed]""#
+    );
+
+    let mut edited = w.clone();
+    edited.on = edited.on.replace("types: [created]", "types: [edited]");
+    assert_eq!(
+        edited.runs_after("CI").unwrap_err(),
+        r#"the issue_comment trigger does not say "types: [created]""#
     );
 
     w.triggers.push("workflow_dispatch".into());
     assert_eq!(
         w.runs_after("CI").unwrap_err(),
-        "the review workflow triggers on [workflow_run workflow_dispatch], want only workflow_run"
+        "the review workflow triggers on [workflow_run issue_comment workflow_dispatch], \
+         want workflow_run and issue_comment"
+    );
+
+    w.triggers = vec!["workflow_run".into()];
+    assert_eq!(
+        w.runs_after("CI").unwrap_err(),
+        "the review workflow triggers on [workflow_run], want workflow_run and issue_comment"
     );
 }
 

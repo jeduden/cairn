@@ -94,7 +94,11 @@ ENG-28). It skips drafts, so a pull request is reviewed when it is
 marked ready, which reruns CI. The agent runs on the stakeholder's
 Claude subscription, not an API key billed per model token. It triggers on
 `workflow_run`, so GitHub runs it as `main` defines it, never as the
-pull request does. The review job first runs main's `review-bundle`
+pull request does. It also triggers on `issue_comment`, which GitHub
+runs as `main` defines it too: a code owner's comment on a pull
+request whose CI passed reviews it again. Consent to a stakeholder
+path is such a comment, so the review that reads it follows at once.
+The review job first runs main's `review-bundle`
 over main's tree and the pull request's: it writes the review bundle
 the agent reads, sets the review's class and makes the deterministic
 findings
