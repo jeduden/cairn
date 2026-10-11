@@ -63,8 +63,8 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      pull: ${{ steps.pull.outputs.number }}
-      head_sha: ${{ steps.pull.outputs.head_sha }}
+      pull: ${{ steps.pull_head.outputs.number }}
+      head_sha: ${{ steps.pull_head.outputs.head_sha }}
       outcome: ${{ steps.agent.outputs.structured_output }}
       checked: ${{ steps.bundle.outputs.checked }}
     steps:
@@ -75,7 +75,7 @@ jobs:
       # which ends with the Claude Code attribution line. The comment is
       # read from the event file, never spliced into the script.
       - name: Find the pull request, unless it is a draft
-        id: pull
+        id: pull_head
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -121,21 +121,21 @@ jobs:
           echo "head_sha=$head" >> "$GITHUB_OUTPUT"
       # The agent works in main's checkout, so it follows main's
       # protocol and main's CLAUDE.md, never the pull request's.
-      - if: steps.pull.outputs.number != ''
+      - if: steps.pull_head.outputs.number != ''
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - if: steps.pull.outputs.number != ''
+      - if: steps.pull_head.outputs.number != ''
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ steps.pull.outputs.head_sha }}
+          ref: ${{ steps.pull_head.outputs.head_sha }}
           path: pr-head
           fetch-depth: 0
           persist-credentials: false
       - name: Write the pull request's diff against main
-        if: steps.pull.outputs.number != ''
+        if: steps.pull_head.outputs.number != ''
         env:
-          HEAD_SHA: ${{ steps.pull.outputs.head_sha }}
+          HEAD_SHA: ${{ steps.pull_head.outputs.head_sha }}
         run: git -C pr-head diff "origin/main...$HEAD_SHA" > pr.diff
       # A change to a CODEOWNERS path needs the stakeholder's consent
       # (ENG-21), given in a comment or review on the pull request.
@@ -143,11 +143,11 @@ jobs:
       # comment an agent posted through the owner's account ends with
       # the Claude Code attribution line, and it is dropped.
       - name: Collect the stakeholder's comments
-        if: steps.pull.outputs.number != ''
+        if: steps.pull_head.outputs.number != ''
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          PULL: ${{ steps.pull.outputs.number }}
+          PULL: ${{ steps.pull_head.outputs.number }}
         run: |
           owners=$(grep -v '^#' .github/CODEOWNERS \
             | grep -oE '@[A-Za-z0-9-]+(/[A-Za-z0-9_.-]+)?' | grep -v / \
@@ -167,7 +167,7 @@ jobs:
       # tested it. It is main's tool, built from main's tree; the pull
       # request's tree is only its input.
       - name: Install the pinned Rust toolchain
-        if: steps.pull.outputs.number != ''
+        if: steps.pull_head.outputs.number != ''
         run: >-
           rustup toolchain install
           "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
@@ -178,7 +178,7 @@ jobs:
       # may consult the read-only reviewer subagents.
       - name: Bundle what the change touches
         id: bundle
-        if: steps.pull.outputs.number != ''
+        if: steps.pull_head.outputs.number != ''
         run: |
           mkdir -p review
           cargo run --locked --quiet -p review-bundle -- --base . --head pr-head \
@@ -203,13 +203,13 @@ jobs:
       # Only the app's own login counts: any other bot, a workflow of the
       # pull request's branch among them, could post a look-alike.
       - name: Find what changed since the last review
-        if: steps.pull.outputs.number != ''
+        if: steps.pull_head.outputs.number != ''
         env:
           REVIEWER: jeduden-review-agent[bot]
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          PULL: ${{ steps.pull.outputs.number }}
-          HEAD_SHA: ${{ steps.pull.outputs.head_sha }}
+          PULL: ${{ steps.pull_head.outputs.number }}
+          HEAD_SHA: ${{ steps.pull_head.outputs.head_sha }}
         run: |
           last=$(gh api --paginate "repos/$REPO/pulls/$PULL/reviews" \
             --jq '.[] | select(.user.login == env.REVIEWER) | "\(.id) \(.commit_id)"' \
@@ -228,7 +228,7 @@ jobs:
       # stays under either directory the agent is given, where a nested
       # CLAUDE.md or .claude/ loads when the agent reads beside it.
       - name: Keep the pull request's instructions out of the agent's load path
-        if: steps.pull.outputs.number != ''
+        if: steps.pull_head.outputs.number != ''
         run: |
           find pr-head -path pr-head/.git -prune -o \( -name .claude -o -name CLAUDE.md \
             -o -name CLAUDE.local.md -o -name AGENTS.md -o -name .mcp.json \) -prune -print0 \
@@ -247,7 +247,7 @@ jobs:
       # bill; it counts against the plan's usage limits instead.
       - name: Review
         id: agent
-        if: steps.pull.outputs.number != ''
+        if: steps.pull_head.outputs.number != ''
         uses: anthropics/claude-code-action@12dd8d74c712f5f3669365b2369b558c495b1104 # v1.0.238
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
