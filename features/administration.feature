@@ -106,6 +106,7 @@ Feature: Administration and lifecycle (ADM)
     And once the purge reports the range erased, with encryption at rest on and off, no file in the home or the storage engine's temporary directory, read decrypted, contains a canary token only the purged events carried, their commitment keys or a search index entry naming a purged address
     And while another process holds a read transaction on the store, the purge does not report the range erased before that holds, and audits and counts each residue it cannot yet remove
     And the audit log records the purge with its scope, ranges, reason and the principal act behind it, never the purged content
+    And no arrival event or node identity change event is purged, whatever the scope, and the origin of every remaining event derives as before
 
     Examples:
       | scope                  |

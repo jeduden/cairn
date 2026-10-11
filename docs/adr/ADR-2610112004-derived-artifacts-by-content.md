@@ -137,6 +137,7 @@ miss, and what answers each:
 | output whose order follows storage                                              | ADM-08: every read orders its output by values                                        |
 | a stored origin changed from `peer` to `witnessed`, making the event trusted    | REC-26 derives origin from the record; verify compares it with the rest of I10        |
 | a node's own backup restored and read as `witnessed`                            | REC-26 reads arrival events before the node's own writers                             |
+| a purge of the events origin derives from, turning `peer` back into `witnessed` | ADM-07: no purge scope covers arrival or node identity change events                  |
 
 The digest is itself a risk: kept past a purge, it would let anyone
 holding the other content confirm a guess at the purged content. ADM-08
