@@ -1,7 +1,8 @@
 # Cairn
 
 A complete record of what your Claude agents did: exact recall for the
-agents, one view for you, and no automatic path for prompt injection.
+agents, one view for you, and no automatic path from untrusted content
+to the model.
 
 ## First, for every run
 
@@ -22,8 +23,8 @@ The room view is optional: your browser, a terminal or the CLI.
   answer, steer or stop them there.
 - **"What happened while I was away?"** Catch up shows what changed,
   each line linked to its events and every gap shown; no model writes
-  it. A head receipt kept off the machine shows any rewrite. Search
-  finds Saturday's decision.
+  it. A head receipt kept off the machine shows any rewrite up to it.
+  Search finds Saturday's decision.
 - **"I review what my agents built."** The diff comes with the runs
   behind it and what backs each result: a bare claim or a check. You
   approve on your forge, and the landed commit links back to its room,
