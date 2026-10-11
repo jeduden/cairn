@@ -41,11 +41,11 @@ them, Cairn changes only harness configuration, under I7.
   `automation`. A line the launcher carried in starts no user turn: the launcher
   records the carried text's commitment as its **turn trigger** (what started a
   turn, LANE-14). Only that typed text is `user`, trusted only when matched to
-  the prompt commitment of the text a `UserPromptSubmit` hook got (PRV-08).
-  Other free text the harness writes or adds to the model's input is
-  `harness_text`, never `user` and never trusted, unless it is a turn's model
-  reply, a tool result, a file's or an MCP server's text or a subagent's report
-  (PRV-08, PRV-03).
+  the prompt commitment of the text a `UserPromptSubmit` hook got, in a run
+  sandboxed against R8 (PRV-08). Other free text the harness writes or adds to
+  the model's input is `harness_text`, never `user` and never trusted, unless it
+  is a turn's model reply, a tool result, a file's or an MCP server's text or a
+  subagent's report (PRV-08, PRV-03).
 - **Compaction**: The harness replacing earlier context with a compaction
   summary when the context window fills or when asked. Cairn neither performs
   nor controls it (NG1), and sends the harness nothing for it; it records it

@@ -111,29 +111,30 @@ says "secure".
 No mark, for the principal's own agents, on this node's own `operator` and
 structural events, the `harness_meta` events its hook handlers or launcher
 recorded, and the `user` events its capture matched to a prompt its hook
-handlers got (PRV-08), while the deployment mode is `interactive` (an ingested
-one is untrusted, REC-22, and a line the launcher carried in is untrusted
-`harness_text`, never a `user` event, LANE-14); on principal acts a device key
-the principal certified signed, and posts and pins written from a device seat
-such a key certified, within that key's scope, from any of its nodes (shown with
-a device glyph); on pin versions the principal stamped (shown with the stamper,
-LANE-32); and on posts and pins a trust grant of the principal covers outside a
-foreign room, written from device seats a device key of the principal the trust
-grant names certified, never a token-key-only node's (shown with the granted
-key's petname, OWN-29). In a foreign room only the principal's own device-seat
-pins and the versions it stamped go unmarked, as in a restore block (PIN-10); in
-recall every item from a foreign room is marked untrusted (RCL-10). The free
-text of a cut or neutral principal act, such as a stated reason, shows `○`
-whatever its event's trust level, on this node's own `operator` events too
-(OWN-11). `○` plus petname on anything untrusted from another principal, agent,
-node or bundle, a `user` event another node recorded included; a key with no
-petname shows its fingerprint. `⚑` flagged (PRV-07). `▒` quarantined. `▬` from a
-seat that is no longer a member: it left, was kicked or was barred. `ingested`.
-`new key`. "from a revoked device". Timeline rails: solid for the agent's
-principal, hollow for other principals, dotted for agents and the forge. Events
-from a token-key-only node's writers are untrusted on every other node, and its
-pins restore only once a principal stamps a version (PRV-02). Unsandboxed agents
-are one line on Health, not a mark on every tile.
+handlers got in a run sandboxed against R8 (PRV-08), while the deployment mode
+is `interactive` (an ingested one is untrusted, REC-22, and a line the launcher
+carried in is untrusted `harness_text`, never a `user` event, LANE-14); on
+principal acts a device key the principal certified signed, and posts and pins
+written from a device seat such a key certified, within that key's scope, from
+any of its nodes (shown with a device glyph); on pin versions the principal
+stamped (shown with the stamper, LANE-32); and on posts and pins a trust grant
+of the principal covers outside a foreign room, written from device seats a
+device key of the principal the trust grant names certified, never a
+token-key-only node's (shown with the granted key's petname, OWN-29). In a
+foreign room only the principal's own device-seat pins and the versions it
+stamped go unmarked, as in a restore block (PIN-10); in recall every item from a
+foreign room is marked untrusted (RCL-10). The free text of a cut or neutral
+principal act, such as a stated reason, shows `○` whatever its event's trust
+level, on this node's own `operator` events too (OWN-11). `○` plus petname on
+anything untrusted from another principal, agent, node or bundle, a `user` event
+another node recorded included; a key with no petname shows its fingerprint. `⚑`
+flagged (PRV-07). `▒` quarantined. `▬` from a seat that is no longer a member:
+it left, was kicked or was barred. `ingested`. `new key`. "from a revoked
+device". Timeline rails: solid for the agent's principal, hollow for other
+principals, dotted for agents and the forge. Events from a token-key-only node's
+writers are untrusted on every other node, and its pins restore only once a
+principal stamps a version (PRV-02). Unsandboxed agents are one line on Health,
+not a mark on every tile.
 
 ## 9.7.7 Keymap
 

@@ -48,20 +48,21 @@ of a named human security reviewer's approval.
 
 1. **I2's trusted sources.** "The `harness_meta` events its hook handlers or
    launcher recorded, and the `user` events its capture matched to a prompt its
-   hook handlers got (PRV-08), while the deployment mode is `interactive`".
-   PRV-08 states the match: the line marks its prompt as the harness's own
-   input, not the harness's own notice (`promptSource`), carries the hook
-   input's `prompt_id`, and its text matches the prompt commitment a
-   `UserPromptSubmit` hook handler of the same harness session kept. The
-   commitment is a structural hook observation over the prompt's redacted text,
-   keyed under a node-local key that never leaves the node and is erased when
-   the matched event is purged. The match result is recorded, so trust derives
-   from the record alone (I10). Only a prompt typed interactively counts; a
-   print-mode prompt stays `user` but untrusted. A `harness_meta` line read from
-   a transcript is untrusted too; its sanitized structural fields, such as model
-   tokens, stay usable (PRV-06). Spike S13 found that the harness also submits
-   its own task notifications through `UserPromptSubmit`, so the commitment
-   alone is not enough.
+   hook handlers got (PRV-08), while the deployment mode is `interactive`". Such
+   a `user` event is trusted only in a run sandboxed against R8 (OWN-22). PRV-08
+   states the match: the line marks its prompt as the harness's own input, not
+   the harness's own notice (`promptSource`), carries the hook input's
+   `prompt_id`, and its text matches the prompt commitment a `UserPromptSubmit`
+   hook handler of the same harness session kept. The commitment is a structural
+   hook observation over the prompt's redacted text, keyed under a node-local
+   key that never leaves the node and is erased when the matched event is
+   purged. The match result is recorded, so trust derives from the record alone
+   (I10). Only a prompt typed interactively counts; a print-mode prompt stays
+   `user` but untrusted. A `harness_meta` line read from a transcript is
+   untrusted too; its sanitized structural fields, such as model tokens, stay
+   usable (PRV-06). Spike S13 found that the harness also submits its own task
+   notifications through `UserPromptSubmit`, so the commitment alone is not
+   enough.
 2. **I2's closed paths.** Compaction guidance (PIN-07) is removed. The
    list only narrows.
 3. **I3.** A pin may also be named by id and count instead of restored
@@ -71,7 +72,7 @@ The text in force is the one invariants.md holds in the commit that
 adds this record. Its SHA-256 is:
 
 ```text
-6a78f9f84be967381465e6c4be8f402531d92e81e08537dbd937f759ea217fb4
+26a1d02775cc5879d4ff61af1aa0e4cc2593be69cdaf7dca582d74912c7d013d
 ```
 
 Until a security reviewer is named, the stakeholder holds that role.
@@ -95,7 +96,16 @@ record's id and the hash above.
 - A prompt the harness rewrites before writing it to the transcript
   stays an untrusted `user` event; this fails safe.
 - Nothing read from a transcript is trusted unless it is a `user` line
-  matched to a prompt commitment. Lines appended to a transcript by the
+  matched to a prompt commitment in a run sandboxed against R8. An
+  unsandboxed agent can append transcript lines and run a hook handler
+  itself, so no transcript line or hook observation is unforgeable for
+  it: in such a run no `user` event is trusted, so PIN-05 finds no pin
+  candidates, and a compaction stays ambiguous from a subagent's start
+  to the end of its harness session (INJ-05). Where every candidate run
+  qualifies for the same pins, nothing is lost but the landmark index.
+- R8 joins the residual risks OWN-22 tracks: while an unsandboxed run
+  leaves it open, widening acts need the principal's risk acceptance
+  naming it. Lines appended to a transcript by the
   agent or another process of the same OS user stay untrusted (§6.1,
   R8).
 - After a compaction while any subagent may run, background subagents
