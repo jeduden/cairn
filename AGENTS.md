@@ -122,7 +122,7 @@ security review and a new major version, not a bug fix.
   integrity statuses, queues, evidence and proof classes, stats) are a
   deterministic function of the set of writer logs a node holds and the node's
   own key set, independent of the order in which logs arrived. Rebuilding
-  reproduces them exactly.
+  reproduces their content exactly, whatever their storage layout.
 <?/include?>
 
 What they mean for everyday code:

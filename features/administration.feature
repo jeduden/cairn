@@ -103,6 +103,7 @@ Feature: Administration and lifecycle (ADM)
     And a tombstone event per purged range carries only addresses, counts, reason and commitments, and the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds, never their text
     And "cairn rebuild" then derives room state, the key set and the quarantine set as before the purge, but for the purged content
     And the store is vacuumed and "cairn verify" exits 0
+    And no file of the store, its free space and write-ahead log included, holds a byte of the purged content, its commitment keys or its search index entries
 
     Examples:
       | scope                  |
@@ -116,13 +117,13 @@ Feature: Administration and lifecycle (ADM)
       | --provenance operator  |
 
   @ADM-08 @P0 @I10 @pending
-  Scenario: rebuild regenerates derived artifacts byte-identically whatever order the logs arrived in
+  Scenario: rebuild regenerates derived artifacts identical in content whatever order the logs arrived in
     Given an isolated Cairn home
     And a second isolated Cairn home with the same key set, the two nodes holding the same writer logs with pins, quarantine and landmarks, received in opposite orders
     When the person runs "cairn rebuild" in each home
     Then the command exits 0 in each home
-    And "cairn verify" confirms every derived artifact is byte-identical to its state before rebuild
-    And the derived artifacts of the two homes are byte-identical
+    And "cairn verify" confirms every derived artifact is identical in content to its state before rebuild, by a canonical digest of that content
+    And the derived artifacts of the two homes are identical in content
 
   @ADM-09 @P0 @I6 @I10 @pending
   Scenario Outline: verify exits non-zero on any integrity failure

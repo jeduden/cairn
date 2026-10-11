@@ -101,7 +101,9 @@ summary: >-
   redacted diff since the previous worktree checkpoint (REC-20).
 - **Derived artifact**: Anything computed from the record and the node's key
   set, such as those I10 lists, the **search index** over event text among
-  them. The **quarantine set** is what a node holds quarantined.
+  them. A derived artifact is its content, never its storage layout: two
+  copies are the same when a canonical digest of what they hold matches
+  (ADM-08). The **quarantine set** is what a node holds quarantined.
 - **Redaction**: Removing secrets from content before it is stored, on import,
   or from what an export's, a publish's or an invite's review step sends,
   recorded (I1, SEC-08).

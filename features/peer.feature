@@ -37,8 +37,8 @@ Feature: Peer network (PEER)
     Given an isolated Cairn home
     And two peers receiving the same closed segments and sealed prefix of an open one, in different orders and partitions
     And a third node cut off from every peer
-    When both peers rebuild their room state and index
-    Then the room state and index are byte-identical on both peers
+    When both peers rebuild their room state and search index
+    Then the room state and search index are identical in content on both peers, apart from the trust levels and origin each derives for itself
     And of two concurrent branch links naming one branch from two rooms, the one with the lower commitment stands on both peers, even when it reaches a peer later or only through a later join to its room, the branch then moving for later events and commits only
     And only sealed ranges of writer logs were exchanged
     And nothing in an exchanged range lets a peer confirm a guess at a redacted secret, or at a payload's content from its payload name
