@@ -212,7 +212,7 @@ fn review_cases() -> Vec<Case> {
                 "  pull_request_target:\n  workflow_run:\n",
             ),
             scenario("ENG-28"),
-            "triggers on [pull_request_target workflow_run], want only workflow_run",
+            "triggers on [pull_request_target workflow_run issue_comment], want workflow_run and issue_comment",
         ),
         case(
             "the reviewing agent granted a write permission",

@@ -17,7 +17,7 @@ fn read_review_workflow(w: &mut World, file: String) -> Result<(), String> {
 }
 
 #[then(
-    regex = r#"^it runs only when the "([^"]+)" workflow completes, as the default branch defines it$"#
+    regex = r#"^it runs only when the "([^"]+)" workflow completes or a pull request gets a comment, as the default branch defines it$"#
 )]
 fn runs_after(w: &mut World, name: String) -> Result<(), String> {
     eng(w).flow.runs_after(&name)

@@ -64,7 +64,7 @@ fn the_checkout_s_review_workflow_parses_into_its_trigger_and_jobs() {
 
     assert_eq!(
         flow.as_ref().map(|w| w.triggers.clone()),
-        Ok(vec!["workflow_run".to_owned()])
+        Ok(vec!["workflow_run".to_owned(), "issue_comment".to_owned()])
     );
     assert!(flow.is_ok_and(|w| w.jobs.len() >= 2));
 }

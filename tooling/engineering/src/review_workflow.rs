@@ -125,32 +125,53 @@ fn is_word(c: char) -> bool {
 }
 
 impl Workflow {
-    /// Requires `workflow_run` as the only trigger, on the named
-    /// workflow's completion. GitHub runs a `workflow_run` workflow as
-    /// the default branch defines it, so a pull request cannot rewrite
-    /// its own reviewer; any other trigger would let a branch's copy
-    /// run.
+    /// Requires exactly two triggers: `workflow_run` on the named
+    /// workflow's completion, and `issue_comment` on a new comment, so
+    /// the stakeholder's consent in a comment brings a review. GitHub
+    /// runs both as the default branch defines them, so a pull request
+    /// cannot rewrite its own reviewer; any other trigger would let a
+    /// branch's copy run.
     ///
     /// # Errors
     ///
-    /// Fails on another trigger, or one that names another workflow.
+    /// Fails on another trigger or a missing one, or on a trigger
+    /// block that does not say what it must.
     pub fn runs_after(&self, name: &str) -> Result<(), String> {
-        if self.triggers != ["workflow_run"] {
+        if self.triggers != ["workflow_run", "issue_comment"] {
             return Err(format!(
-                "the review workflow triggers on {}, want only workflow_run",
+                "the review workflow triggers on {}, want workflow_run and issue_comment",
                 list(&self.triggers)
             ));
         }
-        for want in [
-            format!("workflows: [{name}]"),
-            "types: [completed]".to_owned(),
-        ] {
-            if !self.on.contains(&want) {
-                return Err(format!("the workflow_run trigger does not say {want:?}"));
+        let wants = [
+            ("workflow_run", format!("workflows: [{name}]")),
+            ("workflow_run", "types: [completed]".to_owned()),
+            ("issue_comment", "types: [created]".to_owned()),
+        ];
+        for (trigger, want) in wants {
+            if !self.trigger_block(trigger).contains(&want) {
+                return Err(format!("the {trigger} trigger does not say {want:?}"));
             }
         }
 
         Ok(())
+    }
+
+    /// The lines of `on:` that belong to `trigger`: from its own key to
+    /// the next trigger's.
+    fn trigger_block(&self, trigger: &str) -> String {
+        let mut inside = false;
+        let mut out = String::new();
+        for line in self.on.split_inclusive('\n') {
+            if let Some(key) = sub_key(line) {
+                inside = key == trigger;
+            }
+            if inside {
+                out.push_str(line);
+            }
+        }
+
+        out
     }
 
     /// The jobs that run the reviewing agent.
