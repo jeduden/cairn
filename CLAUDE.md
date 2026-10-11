@@ -42,21 +42,21 @@ security review and a new major version, not a bug fix.
   model only inside an untrusted-data envelope when the agent explicitly calls a
   recall tool, or through one of the closed paths below that a principal act
   names. The trusted sources are this node's own `operator` and structural
-  events, the `harness_meta` events its hook handlers recorded, and the `user`
-  events they recorded while the deployment mode is `interactive`, and, once
-  PRV-10 ships, principal acts signed by a device key the agent's principal
-  certified and posts and pins written from a device seat such a key certified,
-  within that key's scope, a pin version a principal stamped, for that
-  principal's own agents, and the posts and pins a trust grant of the agent's
-  principal covers. Cairn writes to an agent only through a closed set of paths.
-  Without a principal act: restore blocks (INJ-01, INJ-02, INJ-04), built only
-  from qualifying pins, trusted structural fields and fixed text Cairn ships;
-  and opt-in notices (INJ-10), compaction guidance (PIN-07) and the fixed
-  templates of OWN-04 and OWN-07, each built only from fixed text Cairn ships,
-  trusted structural fields and ids. On a principal act recorded at that time:
-  through the harness's own input, only principal-typed text, a fixed template
-  that references ids, or a post a principal endorsed exactly as shown inside
-  the template of OWN-08. Under a delegation grant its principal recorded
+  events, the `harness_meta` events its capture recorded, and the `user` events
+  its capture matched to a prompt its hook handlers got (PRV-08), while the
+  deployment mode is `interactive`, and, once PRV-10 ships, principal acts
+  signed by a device key the agent's principal certified and posts and pins
+  written from a device seat such a key certified, within that key's scope, a
+  pin version a principal stamped, for that principal's own agents, and the
+  posts and pins a trust grant of the agent's principal covers. Cairn writes to
+  an agent only through a closed set of paths. Without a principal act: restore
+  blocks (INJ-01, INJ-02, INJ-04), built only from qualifying pins, trusted
+  structural fields and fixed text Cairn ships; and opt-in notices (INJ-10) and
+  the fixed templates of OWN-04 and OWN-07, each built only from fixed text
+  Cairn ships, trusted structural fields and ids. On a principal act recorded at
+  that time: through the harness's own input, only principal-typed text, a fixed
+  template that references ids, or a post a principal endorsed exactly as shown
+  inside the template of OWN-08. Under a delegation grant its principal recorded
   (OWN-23), and, for an agent of another principal, an acceptance grant that
   agent's principal recorded (OWN-26): a delegated task inside the fixed
   template of OWN-24. Once its requirements ship, a principal may also trust
@@ -67,7 +67,7 @@ security review and a new major version, not a bug fix.
   No other write to an agent exists.
 - **I3 — Constraints are never summarized.** Every pin that restores is stored
   verbatim and restored verbatim after every compaction, or named by id and
-  count when the budget omits it.
+  count when the budget or run ambiguity (INJ-05) omits it.
 - **I4 — Each component stays inside one declared network boundary, and only the
   core builds what reaches the model.** B0, the core (hook handlers, the MCP
   server, the kernel worker, the CLI, the TUI and everything that builds what

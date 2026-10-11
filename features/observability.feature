@@ -15,11 +15,11 @@ Feature: Observability (OPS)
 
     Examples:
       | operation                                                                         | expected  | counter              |
-      | the hook "PostToolUse" runs with a malformed JSON object                          | rejected  | hook_rejected        |
+      | the hook "UserPromptSubmit" runs with a malformed JSON object                     | rejected  | hook_rejected        |
       | the transcript contains an AWS secret key and is ingested                         | redacted  | redactions           |
       | the hook "SessionStart" runs past its 150 ms hook budget                          | timed-out | hook_budget_exceeded |
       | the agent calls the MCP tool "event_expand" with a range above 8,000 model tokens | truncated | recall_truncated     |
-      | the hook "PreCompact" runs with an unreadable transcript path                     | failed    | hook_failed          |
+      | the hook "SessionStart" runs with an unreadable transcript path                   | failed    | hook_failed          |
 
   @OPS-02 @P0 @I6 @pending
   Scenario: the audit log is an append-only hash-chained JSONL file that rotates with chain continuation
@@ -34,7 +34,7 @@ Feature: Observability (OPS)
   Scenario: doctor fails while a failure counter has risen since the counters were last acknowledged
     Given an isolated Cairn home
     And the person has acknowledged the counters with "cairn counter ack", a neutral principal act
-    When the hook "PostToolUse" runs with a malformed JSON object
+    When the hook "UserPromptSubmit" runs with a malformed JSON object
     And the person runs "cairn doctor"
     Then the command exits 1
     When the person runs "cairn counter ack"
@@ -47,18 +47,26 @@ Feature: Observability (OPS)
     And deployment mode "automation"
     When the person runs "cairn canary"
     Then the command exits 0
-    And the canary event was written through a hook handler and recalled through the MCP server's tool "event_search"
+    And the canary event was written through capture's ingest path and recalled through the MCP server's tool "event_search"
     Given the MCP recall path is broken
     When the person runs "cairn canary"
     Then the command exits 1
 
-  @OPS-05 @P1 @I4 @pending
-  Scenario: structured JSON logs go to a local file or stderr and nowhere else
+  @OPS-05 @P1 @I2 @I4 @pending
+  Scenario Outline: structured JSON logs go to a local file or stderr and nowhere else, and a hook handler logs only to the home's log file
     Given an isolated Cairn home
-    And logging is configured to the file "logs/cairn.log"
+    And logging is configured to <target>
     When the person runs "cairn ingest --all"
-    Then every line of "logs/cairn.log" is a JSON object with "time", "level" and "msg"
+    Then every line written to <target> is a JSON object with "time", "level" and "msg"
     And the process opened no network connection
+    When the hook "SessionStart" runs with an unreadable transcript path
+    Then the hook handler writes nothing to stderr and opens no network connection
+    And the home's log file records the failure as a JSON object with "time", "level" and "msg"
+
+    Examples:
+      | target                    |
+      | the file "logs/cairn.log" |
+      | stderr                    |
 
   @OPS-06 @P1 @I6 @pending
   Scenario Outline: every failure of a component outside the core reaches the home's audit log and a named counter

@@ -69,7 +69,7 @@ summary: >-
   REC-22), `bundle` (imported) or `peer` (received from a peer, paired phone or
   backup, or recorded `witnessed` before this node's node identity changed,
   Node); the trust policy reads `bundle` as `peer` (PRV-02). Independent of
-  provenance. A **witnessed run** is one this node's hook handlers watched.
+  provenance. A **witnessed run** is one this node's capture recorded live.
   Every event but one from a peer or a bundle also records its **recorder**,
   the part that recorded it: the hook handlers, CLI, TUI, MCP server, launcher,
   room-view component or bridge component.
@@ -90,12 +90,18 @@ summary: >-
   fields; content a hook carries is recorded under its own class. An act's
   structural fields count as structural fields, never the text it carries; the
   act keeps its own class.
-- **Capture**: This node's hook handlers recording its runs' events; turning it
-  off is widening (OWN-11, ADM-02).
-- **Ingest marker**: What a hook handler leaves when its hook budget cuts it
-  short, so the next hook handler or `cairn ingest` resumes it (NFR-02).
-  **Ingest** is reading a transcript into the record, by the hook handlers
-  incrementally (REC-13) or by `cairn ingest` (REC-22). A transcript source's
+- **Capture**: This node's MCP servers and hook handlers recording its runs'
+  events; turning it off is widening (OWN-11, ADM-02).
+- **Ingest marker**: What ingest leaves when it stops short of a transcript's
+  end, so the next MCP server or `cairn ingest` resumes it (REC-13), and what a
+  hook handler leaves for its MCP server to append (REC-19, REC-20). A **start
+  marker** is what a hook handler leaves as it starts and clears as it
+  finishes; one left behind is counted and audited (NFR-02).
+  **Ingest** is reading a transcript into the record, by the harness session's
+  MCP server as the transcript grows (REC-13) or by `cairn ingest` (REC-22). A
+  line a harness fork repeats is recorded once, in the writer of the run it
+  belongs to; every other run that repeats it records a **repeat reference** to
+  that event's address, never a copy (REC-04). A transcript source's
   **ingest position** is how far ingest has read it (REC-03).
 - **Worktree checkpoint**: An event recording a worktree's commit, branch and
   redacted diff since the previous worktree checkpoint (REC-20).

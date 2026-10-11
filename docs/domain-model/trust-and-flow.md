@@ -130,14 +130,14 @@ summary: >-
   `cairn status` (ADM-11), failing `cairn doctor` until acknowledged
   (`cairn counter ack`, I6, OPS-03).
 - **Canary**: `cairn canary`'s end-to-end test: it writes a **canary event**
-  through the hook path and recalls it through the MCP server (OPS-04).
+  through capture's ingest path and recalls it through the MCP server (OPS-04).
 - **Stat**: A count derived from the record within a recall scope, such as
   events, runs, compactions or recalls, read through `stat_list` (RCL-01).
 - **Run status**: A run's one status from §9.7.1's closed set (one waiting on
   its principal is Asking, never Needs you), with its **freshness mark**, which
-  says how current the run's events are on this node, whether hooks still arrive
-  (`unrecorded`), or that it is an ingested run (`ingested`); `stuck?` is a
-  watchdog observation (VIEW-04).
+  says how current the run's events are on this node, whether ingest keeps up
+  with its transcript (`unrecorded`), or that it is an ingested run
+  (`ingested`); `stuck?` is a watchdog observation (VIEW-04).
 - **Room status**: A room's one status from §9.7.2's closed set, such as
   Running, Quiet or Ready for review, computed where shown and never recorded
   or set directly (VIEW-04); OWN-21's ready and abandoned marks feed it.
@@ -154,6 +154,7 @@ summary: >-
   item for each room's owner (LANE-13).
 - **Fork**: Either of two events one writer sealed at one seq, both kept for
   forensics; the node's principal chooses which fork to keep (PEER-10).
+  Unqualified, "fork" means this; the harness's own is always a harness fork.
 - **Presence hint**: An ephemeral sign that a seat is connected, or typing (a
   **typing hint**), never stored in the record (PEER-09).
 - **Watchdog observation**: Cairn's note, computed where shown and never

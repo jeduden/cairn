@@ -17,17 +17,15 @@ signed off, the evaluation published and the pilot clean.
 
 ## Context
 
-Milestone M5. Scope: PRV-07, PIN-05, PIN-07, PIN-09, REC-13 to REC-15,
+Milestone M5. Scope: PRV-07, PIN-05, PIN-09, REC-14 and REC-15,
 SEC-09, SEC-13, OPS-04, OPS-05, ADM-12, ENG-13, ENG-25, the §11
 evaluation, the external review and the pilot.
 
 ## Tasks
 
 1. Instruction-like flagging: PRV-07
-2. Pin candidates, compaction guidance, CLAUDE.md duplicate warning:
-   PIN-05, PIN-07, PIN-09
-3. Incremental hook ingestion, SDK transcripts, retention: REC-13 to
-   REC-15
+2. Pin candidates and the CLAUDE.md duplicate warning: PIN-05, PIN-09
+3. SDK transcripts and retention: REC-14 and REC-15
 4. Encryption at rest and the recall-taint policy hook: SEC-09, SEC-13
 5. Canary, structured logs, trusted-only export: OPS-04, OPS-05, ADM-12
 6. Mutation testing and the maintainer runbook: ENG-13, ENG-25

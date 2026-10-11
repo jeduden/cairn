@@ -10,8 +10,9 @@ The harness's own facts, which Cairn records and names but never manages; of
 them, Cairn changes only harness configuration, under I7.
 
 - **Harness**: The external program that runs agents, such as Claude Code or the
-  Agent SDK. It keeps their transcripts, compacts their context and reports to
-  Cairn through hooks.
+  Agent SDK. It keeps their transcripts, compacts their context and calls Cairn
+  through hooks where Cairn writes to an agent; Cairn reads the rest of a run
+  from its transcripts.
 - **Harness session**: The harness's own unit, which yields one transcript, plus
   one per subagent where the harness writes them apart (ASM-03). Named only when
   describing the harness, never as a Cairn unit. One whose harness process
@@ -23,10 +24,16 @@ them, Cairn changes only harness configuration, under I7.
   generation** (REC-07). The **transcript roots** (`transcript.roots`) are the
   directories ingest reads transcripts from by default (REC-01, SEC-18). As a
   Cairn term, "source" is a transcript source or a trusted source; the harness's
-  `source` field and §6.1's threat sources keep their own sense.
+  `source` field and §6.1's threat sources keep their own sense. A transcript
+  line or hook input whose shape differs from the one recorded for its harness
+  version is **format drift**, counted and audited (REC-26): such a line is kept
+  whole, redacted, as untrusted `harness_text`, and such a hook input gets the
+  empty answer.
 - **Hook**: The harness's callback into Cairn, carrying its **hook input**, a
-  JSON object (§9.1). The core's hook handlers answer it. Git's hooks are always
-  qualified, as the commit hook.
+  JSON object (§9.1). The core's hook handlers answer it. Cairn installs only
+  the hooks through which it writes to an agent: `SessionStart`,
+  `UserPromptSubmit` and `PermissionRequest`. Git's hooks are always qualified,
+  as the commit hook.
 - **Turn**: One exchange between the harness and the model, from an input to the
   model reply that ends it. A **user turn** is the turn that text typed at the
   harness's own input starts (its prompt, or the terminal the launcher hosts): a
@@ -39,6 +46,8 @@ them, Cairn changes only harness configuration, under I7.
   server's text or a subagent's report (PRV-08, PRV-03).
 - **Compaction**: The harness replacing earlier context with a compaction
   summary when the context window fills or when asked. Cairn neither performs
-  nor controls it (NG1); it records it and restores pins after it (I3).
-  **Compaction guidance** is fixed text Cairn ships that a `PreCompact` hook
-  handler returns to the harness for its compaction (PIN-07, I2).
+  nor controls it (NG1), and sends the harness nothing for it; it records it
+  from the transcript and restores pins after it (I3). The harness's own call
+  that writes the summary is a harness internal, no agent and no run, and Cairn
+  records nothing for it (REC-02). While its hooks run, nothing names the
+  compacting run (ASM-06).

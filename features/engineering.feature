@@ -38,6 +38,7 @@ Feature: Engineering quality (ENG)
     When the hook "SessionStart" runs with a valid input
     Then the command exits 0
     And the hook output is empty
+    And the hook handler wrote nothing to stderr, the default panic message included
     And an audit entry records "panic recovered"
 
   @ENG-05 @P0 @pending
@@ -159,11 +160,14 @@ Feature: Engineering quality (ENG)
       | bridge component    | starts a program, listens, or reaches beyond its register rows                                                 |
 
   @ENG-17 @P0 @pending
-  Scenario: contract tests replay every supported Claude Code version
+  Scenario: contract tests replay every supported Claude Code version and catch format drift, and fixtures hold no residual identifier
     Given recorded hook inputs and transcripts for each supported Claude Code version
     When the contract suite replays them
-    Then every one parses without an unparsed event
+    Then every one parses without an unparsed event or format drift
     And a nightly job drives real Claude Code through compaction, restore and recall
+    And the nightly job records a transcript and hook inputs from the newest Claude Code release and fails on any format drift
+    And the residual-identifier check runs in CI over every file under "testdata/claude-code", and in the nightly job before any recording is logged or kept as an artifact
+    And it fails on a recorded fixture that carries an account's email address, organization id, a home path or the name of one of its skills or connectors, with its drift case
 
   @ENG-18 @P0
   Scenario: every direct dependency is justified by an accepted ADR with an allow-listed license

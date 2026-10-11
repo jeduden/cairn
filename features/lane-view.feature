@@ -68,12 +68,12 @@ Feature: Room view (VIEW)
     Given an isolated Cairn home
     And synced posts by a key the person gave a petname, a key with none, and a new key using a known name
     And one post with zero-width, bidirectional and tag characters and an HTML comment
-    And a "user" event this node ingested from a transcript its hook handlers did not watch
+    And a "user" event this node ingested with "cairn ingest" from a transcript no MCP server ingested as it grew
     And a foreign room this node's principal rejected with a stated reason, a cut principal act
     When the person opens the room view
     Then each post carries the trust mark of §9.7.6 and the petname the person chose for its author's key, never the name the peer sent
     And the key with no petname is shown by its fingerprint and the new key is marked "new key"
-    And the ingested "user" event carries the trust mark of §9.7.6 too, since only the "user" events this node's hook handlers recorded while its deployment mode is "interactive" are trusted
+    And the ingested "user" event carries the trust mark of §9.7.6 too, since only the "user" events this node's capture matched to a prompt its hook handlers got while its deployment mode is "interactive" are trusted
     And the stated reason carries the trust mark of §9.7.6, though this node recorded the act, since the free text of a cut or neutral principal act is untrusted whatever its event's trust level
     And the invisible characters and the HTML comment render as visible placeholders with a count
 

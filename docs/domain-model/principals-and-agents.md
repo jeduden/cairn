@@ -56,12 +56,14 @@ summary: >-
   by the harness session and the harness's agent id: a harness session's
   transcripts contain its main agent's run and one per subagent, a **harness
   resume** that keeps its harness session continues the run, while a harness
-  resume that starts a new harness session, or a **harness clear**, starts a new
-  run (REC-02), of the same agent only where the harness gives a stable agent
-  id; without one, whether it is the resumed run's agent is open (OQ-43), and
-  until then it is its own agent. It has run seats and carries its recall taint
-  (SEC-13), sandbox state (OWN-22), seat keys (SEC-10), kernel namespace
-  (CMP-02) and spans (LMK-01). As a noun, "run" has no other meaning.
+  resume that starts a new harness session, a **harness clear**, or a **harness
+  fork** (a new harness session, marked by `source` = `fork`, whose transcript
+  repeats an earlier one's lines)
+  starts a new run (REC-02), of the same agent only where the harness gives a
+  stable agent id; without one, whether it is the resumed run's agent is open
+  (OQ-43), and until then it is its own agent. It has run seats and carries its
+  recall taint (SEC-13), sandbox state (OWN-22), seat keys (SEC-10), kernel
+  namespace (CMP-02) and spans (LMK-01). As a noun, "run" has no other meaning.
 - **Subagent**: An agent the harness started for another agent. It has its own
   run, tied to its parent's run by a parent link, with its own seats and
   writers, among them a seat in each room its parent's run seat is a member of
@@ -69,8 +71,8 @@ summary: >-
   its parent's join (LANE-23). It takes a delegated task without a delegation
   grant. Its run records that task as untrusted `harness_text`, never `user`
   (PRV-08).
-- **Ingested run**: A run ingested from a transcript the hook handlers did not
-  watch, with origin `ingested`, whose events are untrusted (REC-22).
+- **Ingested run**: A run ingested from a transcript no MCP server ingested as
+  it grew, with origin `ingested`, whose events are untrusted (REC-22).
 - **Facilitator**: The service account, at most one per room, whose device seat,
   on its own node, the owner appoints as the room's facilitator, making that
   device seat an appointed moderator (SEC-32); its program, neither a Cairn

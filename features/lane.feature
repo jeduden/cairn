@@ -73,13 +73,13 @@ Feature: Room (LANE)
     And the class is derived from structural fields only, never from event text
 
     Examples:
-      | evidence                                                                                                                                                           | class         | binding |
-      | an assistant message stating the tests pass                                                                                                                        | claim         | —       |
-      | tool output alone                                                                                                                                                  | claim         | —       |
-      | a command, its exit status and its tree the hook handlers recorded on the node of the run that made the edits                                                      | own check     | bound   |
-      | a command the hook handlers recorded after edits made through a shell                                                                                              | claim         | unbound |
-      | the check re-run through the launcher on a fresh checkout of the exact commit by a node whose git identity authored no commit on the branch since it left its base | witness check | —       |
-      | a CI attestation for the exact commit, signed by a CI key the room's owner enrolled in the room and brought in by the CI bridge                                    | CI attested   | —       |
+      | evidence                                                                                                                                                                         | class         | binding |
+      | an assistant message stating the tests pass                                                                                                                                      | claim         | —       |
+      | tool output alone                                                                                                                                                                | claim         | —       |
+      | a command, whether it failed by its tool result's structural "is_error" field, and its tree, recorded by capture from the transcript of the run that made the edits, on its node | own check     | bound   |
+      | a command capture recorded after edits made through a shell                                                                                                                      | claim         | unbound |
+      | the check re-run through the launcher on a fresh checkout of the exact commit by a node whose git identity authored no commit on the branch since it left its base               | witness check | —       |
+      | a CI attestation for the exact commit, signed by a CI key the room's owner enrolled in the room and brought in by the CI bridge                                                  | CI attested   | —       |
 
   @LANE-06 @P1 @I6 @I10 @pending
   Scenario Outline: the rooms behind a landed commit carry one proof class
@@ -197,7 +197,7 @@ Feature: Room (LANE)
     And the post nobody endorsed triggers no turn
     When the launcher carries the text of its principal's steer into the harness's input
     Then the launcher records the commitment of that text as the turn's trigger, as harness_meta
-    And that harness_meta event, which the launcher and not the hook handlers recorded live, is untrusted
+    And that harness_meta event, which the launcher and not capture recorded live, is untrusted
     And ingest marks the transcript line matching that commitment untrusted, never a user turn
     And the text the launcher carried in is text the core built and recorded
 

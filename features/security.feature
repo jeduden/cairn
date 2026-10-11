@@ -58,7 +58,7 @@ Feature: Security (SEC)
   @SEC-05 @P0 @I9 @pending
   Scenario Outline: oversized or deeply nested hook input is refused and large transcript lines stream
     Given an isolated Cairn home
-    When the hook "PostToolUse" runs with <input>
+    When the hook "UserPromptSubmit" runs with <input>
     Then the hook handler exits 0 with no injection
     And <expected>
 
@@ -93,8 +93,10 @@ Feature: Security (SEC)
     And a redaction pattern the person defined "ACME-[0-9]{8}"
     And an agent run with a Claude Code transcript "secrets"
     And "secrets" contains a Bash tool result whose output carries an AWS access key in both "message.content" and "toolUseResult"
+    And "secrets" contains a "session_context" attachment carrying the account's email address and organization id
     When the person runs "cairn ingest --all"
     Then no stored text field, payload, or hook input contains an AWS access key or "ACME-12345678"
+    And no stored text field contains the account's email address or organization id
     And each secret is replaced by "[REDACTED:<rule>]", with no hash or other value derived from the secret
     And no stored event, segment or export carries a value from which the secret could be confirmed
     And any correlation of the repeated AWS access key lives only in a node-local index keyed under this node's own at-rest key
@@ -218,7 +220,7 @@ Feature: Security (SEC)
     Given an isolated Cairn home
     And the transcript roots are "~/.claude/projects"
     And a run whose hook "cwd" is "~/src/app/pkg", inside a repository whose top level is "~/src/app"
-    When the hook "Stop" runs and a hook input or transcript field names the path "<path>"
+    When the hook "SessionStart" runs, or the run's MCP server ingests a transcript line, naming the path "<path>"
     Then <expected>
 
     Examples:

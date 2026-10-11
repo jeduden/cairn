@@ -10,7 +10,7 @@ Feature: Non-functional requirements (NFR)
   Scenario Outline: hook handlers meet their p95 wall-clock targets on a 1M-event store under fleet load
     Given an isolated Cairn home
     And a synthetic store with 1M events on the reference hardware
-    And the room view is open and ten harnesses are writing
+    And the room view is open and ten harnesses are writing, each one's MCP server ingesting
     When the hook "<Event>" runs 1,000 times with a representative hook input
     Then the p95 wall-clock time is at most <target>
 
@@ -18,22 +18,26 @@ Feature: Non-functional requirements (NFR)
       | Event             | target                                                                                                                                      |
       | UserPromptSubmit  | 50 ms                                                                                                                                       |
       | SessionStart      | 150 ms                                                                                                                                      |
-      | PostToolUse       | 100 ms                                                                                                                                      |
-      | Stop              | 100 ms                                                                                                                                      |
-      | SubagentStop      | 100 ms                                                                                                                                      |
-      | Notification      | 100 ms                                                                                                                                      |
-      | PreCompact        | 2 s                                                                                                                                         |
-      | SessionEnd        | 1 s                                                                                                                                         |
       | PermissionRequest | 50 ms of Cairn's own processing beyond the wait, which ends within the principal's hold window and at least 10 s before the harness timeout |
 
   @NFR-02 @pending
-  Scenario: a hook handler stops within its hook budget and hands off the rest through an ingest marker
+  Scenario Outline: a hook handler stays within its hook budget, and one the harness stopped leaves a start marker that is counted
     Given an isolated Cairn home
-    And an agent run with a Claude Code transcript "large-backlog"
-    When the hook "SessionEnd" runs with a harness timeout of 1.5 s
+    And an agent run with a Claude Code transcript "main-run"
+    When the hook "<Event>" runs within its hook budget, with a harness timeout just above it
     Then the hook handler exits 0 within its hook budget, below the harness timeout
-    And an ingest marker records the unfinished ingestion
-    And the next "cairn ingest --all" completes the ingestion from the marker
+    And it left a start marker and cleared it before it exited
+    When the hook "<Event>" runs and the harness kills it before it finishes
+    Then its start marker is left behind
+    And <next> counts and audits it under "hook_unfinished"
+    And a second reader does not count the same start marker again
+    And a start marker of a hook handler still within its harness timeout is not counted
+
+    Examples:
+      | Event             | next                                                    |
+      | SessionStart      | the next hook handler                                   |
+      | UserPromptSubmit  | the MCP server of the next harness session as it starts |
+      | PermissionRequest | "cairn status"                                          |
 
   @NFR-03 @pending
   Scenario Outline: MCP recall meets its p95 latency at 10M events
@@ -122,12 +126,12 @@ Feature: Non-functional requirements (NFR)
       | windows/amd64 | no dynamic library beyond the operating system's |
 
   @NFR-11 @pending
-  Scenario: the supported Claude Code versions are accepted and incompatible formats are loud
+  Scenario: the supported Claude Code versions are accepted and format changes are loud
     Given recorded transcripts for the latest Claude Code release and the previous two minor versions
     And a transcript line with an unknown field and one with an unknown line type
     When the person runs "cairn ingest --all"
     Then every supported transcript ingests and unknown lines are stored as unparsed events
-    And a transcript in an incompatible format makes the command exit 1 with an audit entry
+    And a transcript in a changed format ingests with each line that drifts kept, counted as format drift and shown by "cairn status" (REC-26)
 
   @NFR-12 @pending
   Scenario: a new person reaches a working setup with defaults in five minutes
@@ -158,10 +162,10 @@ Feature: Non-functional requirements (NFR)
     And any surface that misses its target says so on screen
 
     Examples:
-      | action                                                     | target |
-      | an event the hook handlers record appears in the room view | 1 s    |
-      | Catch up paints                                            | 1 s    |
-      | search shows its first hits                                | 300 ms |
-      | a hit opens in context                                     | 150 ms |
-      | replay steps from one event to the next                    | 50 ms  |
-      | replay rebuilds a worktree                                 | 500 ms |
+      | action                                                              | target |
+      | a line the harness appends to a transcript appears in the room view | 1 s    |
+      | Catch up paints                                                     | 1 s    |
+      | search shows its first hits                                         | 300 ms |
+      | a hit opens in context                                              | 150 ms |
+      | replay steps from one event to the next                             | 50 ms  |
+      | replay rebuilds a worktree                                          | 500 ms |
