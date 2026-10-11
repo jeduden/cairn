@@ -1,7 +1,8 @@
 ---
 summary: >-
   Build commands, static analysis and supply-chain checks, and how CI,
-  the nightly fuzz job and the signed release pipeline work. Testing has its own page, docs/testing.md.
+  the nightly fuzz job and the signed release pipeline work. Testing
+  has its own page, docs/testing.md.
 ---
 # Development
 
