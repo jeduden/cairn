@@ -1,4 +1,5 @@
 use super::*;
+use crate::analysis::Record;
 use crate::{BLOCKING, Finding, analyse};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -51,7 +52,12 @@ fn base() -> Snapshot {
 
 #[test]
 fn bundle_says_what_it_is_and_quotes_the_invariants() {
-    let a = analyse(&base(), &base(), "diff --git a/README.md b/README.md\n");
+    let a = analyse(
+        &base(),
+        &base(),
+        "diff --git a/README.md b/README.md\n",
+        false,
+    );
 
     let got = bundle(&a, &base(), &base());
 
@@ -66,9 +72,13 @@ fn bundle_says_what_it_is_and_quotes_the_invariants() {
         "{got}"
     );
     assert!(
-        got.contains("@pending on main: 2; in this pull request: 2."),
+        got.contains(
+            "@pending on main: 2; in this pull request: 2.\n\nTaken off @pending here: none.\n"
+        ),
         "{got}"
     );
+    assert!(!got.contains("ENG-29 record"), "{got}");
+    assert!(!got.contains("do not read"), "{got}");
     assert!(
         got.contains("## Requirements this change touches\n\nNone.\n"),
         "{got}"
@@ -85,6 +95,7 @@ fn bundle_lists_stakeholder_paths_and_findings() {
         &base(),
         &base(),
         "diff --git a/docs/srs/05.md b/docs/srs/05.md\n",
+        false,
     );
     a.findings.push(Finding {
         path: "features/x.feature".into(),
@@ -111,7 +122,7 @@ fn bundle_shows_both_sides_of_a_changed_row_and_scenario() {
     let mut head = base();
     head.requirements[0].text = "Ingest all.".into();
     head.scenarios[0].steps.push("another step".into());
-    let a = analyse(&base(), &head, "");
+    let a = analyse(&base(), &head, "", false);
 
     let got = bundle(&a, &base(), &head);
 
@@ -141,7 +152,7 @@ fn bundle_shows_rows_and_scenarios_added_removed_or_only_named() {
     head.scenarios.remove(1);
     head.requirements.push(req("REC-03", "Index.", &[]));
     head.scenarios.push(sc("REC-03", true, &[]));
-    let mut a = analyse(&base(), &head, "+ see NFR-01\n");
+    let mut a = analyse(&base(), &head, "+ see NFR-01\n", false);
     a.touched.push("REC-09".into());
 
     let got = bundle(&a, &base(), &head);
@@ -168,6 +179,42 @@ fn bundle_shows_rows_and_scenarios_added_removed_or_only_named() {
         got.contains(
             "### REC-09\n\nNo row defines it in either tree.\n\nNo scenario carries it.\n"
         ),
+        "{got}"
+    );
+}
+
+#[test]
+fn bundle_lists_the_scenarios_taken_off_pending() {
+    let mut head = base();
+    head.scenarios[1].pending = false;
+    head.scenarios[2].pending = false;
+    head.scenarios.push(sc("REC-03", false, &[]));
+    let a = analyse(&base(), &head, "", false);
+
+    let got = bundle(&a, &base(), &head);
+
+    assert!(
+        got.contains("in this pull request: 0.\n\nTaken off @pending here: REC-02, NFR-01.\n"),
+        "{got}"
+    );
+}
+
+#[test]
+fn bundle_quotes_the_eng_29_record_and_the_unread_headers() {
+    let mut a = analyse(&base(), &base(), "diff --git broken\n", false);
+    a.eng_29_record = Some(Record {
+        path: "docs/adr/ADR-1-x.md".into(),
+        summary: "Approved.\nBy them.".into(),
+    });
+
+    let got = bundle(&a, &base(), &base());
+
+    assert!(
+        got.contains("none is a stakeholder path.\n\nThese diff headers do not read, so the class fails closed:\n\n- `diff --git broken`\n"),
+        "{got}"
+    );
+    assert!(
+        got.contains("\nENG-29 record: `docs/adr/ADR-1-x.md`, whose summary reads:\n\n> Approved.\n> By them.\n"),
         "{got}"
     );
 }

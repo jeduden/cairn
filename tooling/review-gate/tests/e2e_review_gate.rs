@@ -13,7 +13,10 @@ use testkit::TempDir;
 
 const HEAD: &str = "206b0a76a81abb510e53d87ef187e83b5aacbcbb";
 
+/// Runs the executable in `dir`, beside a `checked.json` of no
+/// deterministic findings.
 fn review_gate(dir: &TempDir, args: &[&str]) -> std::process::Output {
+    fs::write(dir.path().join("checked.json"), "[]").unwrap();
     Command::new(env!("CARGO_BIN_EXE_review-gate"))
         .current_dir(dir.path())
         .args(args)
@@ -46,6 +49,8 @@ fn the_executable_prints_the_review_for_a_green_head() {
             HEAD,
             "--head",
             HEAD,
+            "--checked",
+            "checked.json",
         ],
     );
 
@@ -88,6 +93,8 @@ fn the_executable_exits_1_without_a_review_outcome() {
             HEAD,
             "--head",
             HEAD,
+            "--checked",
+            "checked.json",
         ],
     );
 
@@ -121,10 +128,35 @@ fn the_executable_prints_nothing_for_a_head_that_moved() {
             HEAD,
             "--head",
             "490efa7",
+            "--checked",
+            "checked.json",
         ],
     );
 
     assert!(out.status.success());
     assert!(out.stdout.is_empty());
     assert!(String::from_utf8_lossy(&out.stderr).contains("moved past"));
+}
+
+#[test]
+fn the_executable_exits_2_without_the_deterministic_findings() {
+    let dir = TempDir::new().unwrap();
+
+    let out = review_gate(
+        &dir,
+        &[
+            "--outcome",
+            "outcome.json",
+            "--check-runs",
+            "runs.jsonl",
+            "--reviewed",
+            HEAD,
+            "--head",
+            HEAD,
+        ],
+    );
+
+    assert_eq!(out.status.code(), Some(2));
+    assert!(out.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&out.stderr).contains("--checked is required"));
 }

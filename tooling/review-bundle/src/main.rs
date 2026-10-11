@@ -1,9 +1,10 @@
 //! The `review-bundle` command builds what the review workflow hands
-//! the reviewing agent (ENG-21, ENG-28): the bundle of touched
+//! the reviewing agent (ENG-21, ENG-28): the review bundle of touched
 //! requirement rows, scenarios and invariants, the deterministic
-//! findings the review gate weighs, and the route printed as step
-//! outputs. The workflow runs it from main's copy of the repository,
-//! with main's tree and the pull request's tree as data.
+//! findings the review gate weighs, and the review class printed as
+//! step outputs. The workflow runs it from main's copy of the
+//! repository, with main's tree, the pull request's tree and the
+//! stakeholder's comments as data.
 //!
 //! It reads files and writes the two outputs and stdout only. It is CI
 //! tooling and never ships.

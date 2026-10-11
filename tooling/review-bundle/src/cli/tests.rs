@@ -30,7 +30,12 @@ impl World {
         fixture::tree(w.base.path());
         fixture::tree(w.head.path());
         fs::write(w.files.path().join("pr.diff"), diff).unwrap();
+        w.consent("[]");
         w
+    }
+
+    fn consent(&self, json: &str) {
+        fs::write(self.files.path().join("consent.json"), json).unwrap();
     }
 
     fn path(dir: &TempDir) -> String {
@@ -46,6 +51,8 @@ impl World {
             self.files.path().join("pr.diff").display().to_string(),
             "--out".into(),
             Self::path(&self.files),
+            "--consent".into(),
+            self.files.path().join("consent.json").display().to_string(),
         ]
     }
 
@@ -96,7 +103,7 @@ type Breaks<'a> = &'a dyn Fn(&World);
 
 #[test]
 fn run_fails_on_a_tree_a_diff_or_an_output_it_cannot_use() {
-    let cases: [(&str, Breaks, &str); 4] = [
+    let cases: [(&str, Breaks, &str); 6] = [
         (
             "main's tree",
             &|w| fs::remove_dir_all(w.base.path().join("docs/srs")).unwrap(),
@@ -116,6 +123,16 @@ fn run_fails_on_a_tree_a_diff_or_an_output_it_cannot_use() {
             "the output",
             &|w| fs::create_dir(w.files.path().join(BUNDLE)).unwrap(),
             "write",
+        ),
+        (
+            "the findings",
+            &|w| fs::create_dir(w.files.path().join(CHECKED)).unwrap(),
+            "checked.json",
+        ),
+        (
+            "the consent",
+            &|w| w.consent("{\"author\": \"a\"}"),
+            "consent.json",
         ),
     ];
     for (name, change, want) in cases {
@@ -138,6 +155,10 @@ fn run_refuses_a_wrong_command_line() {
             vec!["--base", "a", "--head", "b", "--diff", "c"],
             "--out is required",
         ),
+        (
+            vec!["--base", "a", "--head", "b", "--diff", "c", "--out", "d"],
+            "--consent is required",
+        ),
         (vec!["--base="], "--base needs a value"),
     ] {
         let (code, out, err) = invoke(&args);
@@ -147,5 +168,44 @@ fn run_refuses_a_wrong_command_line() {
             err.contains(want) && err.contains("usage:"),
             "{args:?}: {err}"
         );
+    }
+}
+
+#[test]
+fn run_takes_an_eng_29_record_with_the_stakeholder_s_consent() {
+    let adr = "docs/adr/ADR-2610111300-guard.md";
+    let w = World::new(&format!(
+        "diff --git a/docs/srs/invariants.md b/docs/srs/invariants.md\ndiff --git a/{adr} b/{adr}\n"
+    ));
+    fs::write(
+        w.head.path().join(adr),
+        "---\nid: ADR-2610111300\ntitle: \"g\"\nstatus: accepted\nsummary: >-\n  An invariant changes under ENG-29.\n---\n# ADR-2610111300: g\n",
+    )
+    .unwrap();
+
+    let (_, refused, _) = w.run();
+    w.consent(r#"[{"author": "owner", "at": "2026-10-11T12:00:00Z", "body": "ok"}]"#);
+    let (code, out, err) = w.run();
+
+    assert!(refused.contains("findings=1"), "{refused}");
+    assert_eq!(code, EXIT_OK, "{err}");
+    assert!(out.contains("findings=0"), "{out}");
+    assert!(
+        w.output(BUNDLE)
+            .contains("ENG-29 record: `docs/adr/ADR-2610111300-guard.md`, whose summary reads:\n\n> An invariant changes under ENG-29.\n"),
+        "{}",
+        w.output(BUNDLE)
+    );
+}
+
+#[test]
+fn consents_holds_on_one_comment_with_a_body() {
+    let comment = |body: &str| format!(r#"[{{"author": "o", "at": "t", "body": "{body}"}}]"#);
+
+    assert_eq!(consents("[]"), Ok(false));
+    assert_eq!(consents(&comment(" \\n\\t")), Ok(false));
+    assert_eq!(consents(&comment("I consent")), Ok(true));
+    for bad in ["", "{}", "[1]", r#"[{"author": "o", "body": "x"}]"#] {
+        assert!(consents(bad).is_err(), "{bad}");
     }
 }

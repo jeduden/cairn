@@ -1,5 +1,6 @@
 //! The gate's public API as the command line chains it: parse the
-//! agent's outcome and the check runs, then decide.
+//! agent's outcome, the check runs and the deterministic findings,
+//! then decide.
 
 #![allow(
     clippy::unwrap_used,
@@ -21,7 +22,7 @@ fn input(outcome: &str, head: &str) -> Input {
             "{\"name\":\"CI\",\"status\":\"completed\",\"conclusion\":\"success\"}\n",
         )
         .unwrap(),
-        checked: Vec::new(),
+        checked: parse_checked("[]").unwrap(),
     }
 }
 

@@ -1,10 +1,11 @@
-//! Reads `.github/CODEOWNERS` for the paths it assigns, so the review's
-//! route follows the same list the stakeholder's consent does (ENG-21).
+//! Reads `.github/CODEOWNERS` for the paths it assigns, so the review
+//! class follows the same list the stakeholder's consent does (ENG-21).
 //!
-//! It reads the subset of the format the repository uses: a pattern
-//! with a leading `/` is anchored at the root, one without matches at
-//! any depth, a trailing `/` names a directory's contents, and `*`
-//! matches within one path segment.
+//! It reads the subset of the format the repository uses, by the
+//! gitignore rules CODEOWNERS follows: a pattern that starts with `/` or
+//! holds a `/` anywhere but at its end is anchored at the root, any
+//! other matches at any depth; a trailing `/` names a directory's
+//! contents; and `*` matches within one path segment.
 
 /// The patterns `codeowners` assigns, in file order: each line's first
 /// field, comments and blank lines left out.
@@ -22,7 +23,7 @@ pub fn patterns(codeowners: &str) -> Vec<String> {
 /// Whether `path`, relative to the root, is one `pattern` assigns.
 #[must_use]
 pub fn owns(pattern: &str, path: &str) -> bool {
-    let anchored = pattern.starts_with('/');
+    let anchored = pattern.trim_end_matches('/').contains('/');
     let dir = pattern.ends_with('/');
     let want: Vec<&str> = pattern
         .trim_matches('/')

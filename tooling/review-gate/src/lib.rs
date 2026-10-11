@@ -297,9 +297,13 @@ fn failed(r: &CheckRun) -> bool {
     r.status == "completed" && !["success", "neutral", "skipped"].contains(&r.conclusion.as_str())
 }
 
-/// Writes the review body: the outcome and the head it covers, the
-/// agent's summary, its blocking findings, then its nits, then the
-/// deterministic checks' findings, then the checks that failed.
+/// Writes the review body. A title names the gate's outcome and the
+/// head it covers; a line gives the review agent's verdict and, when
+/// the gate overrules it, why. Then come the sections, each under a
+/// fixed heading and only when it has content: the review agent's
+/// summary and findings (always), the deterministic checks' findings,
+/// and the checks that failed. Findings list blocking before nits.
+/// Agent text is kept on one line, so it cannot open a section.
 fn render(
     outcome: &ReviewOutcome,
     checked: &[Finding],
@@ -313,34 +317,106 @@ fn render(
         "Changes requested"
     };
     let short = head.get(..12).unwrap_or(head);
+    let verdict = if outcome.verdict == APPROVE_VERDICT {
+        "approve"
+    } else {
+        "request changes"
+    };
     let mut b = format!(
-        "**{title}** by the review agent on `{short}`.\n\n{}\n",
-        defuse_mentions(&outcome.summary)
+        "**{title}** by the review gate on `{short}`.\n\n\
+         The review agent's verdict: {verdict}."
+    );
+    if let Some(reason) = overruled(outcome, checked, failed, event) {
+        let _ = write!(b, " The gate requests changes: {reason}.");
+    }
+    let _ = write!(
+        b,
+        "\n\n### Review agent\n\n{}\n",
+        defuse_mentions(&one_line(&outcome.summary))
     );
     list_findings(&mut b, &outcome.findings);
     if !checked.is_empty() {
-        b.push_str("\n\nFound by a deterministic check:\n");
+        b.push_str("\n### Deterministic checks (review-bundle)\n");
         list_findings(&mut b, checked);
     }
-    for r in failed {
-        let _ = write!(b, "\n- check `{}`: {}", code_span(&r.name), r.conclusion);
+    if !failed.is_empty() {
+        b.push_str("\n### Failed checks\n\n");
+        for r in failed {
+            let _ = writeln!(b, "- check `{}`: {}", code_span(&r.name), r.conclusion);
+        }
     }
 
     b
 }
 
-/// Appends `findings` to `b`, one line each, blocking ones first.
+/// Why the gate requests changes on an approving verdict: the first of
+/// a blocking deterministic finding, a failed check and a blocking
+/// finding of the agent's. `None` when the gate follows the verdict.
+fn overruled(
+    outcome: &ReviewOutcome,
+    checked: &[Finding],
+    failed: &[&CheckRun],
+    event: &str,
+) -> Option<&'static str> {
+    let reasons = [
+        (
+            checked.iter().any(is_blocking),
+            "a deterministic check found a blocking finding",
+        ),
+        (!failed.is_empty(), "a check failed"),
+        (
+            outcome.findings.iter().any(is_blocking),
+            "the agent reported a blocking finding",
+        ),
+    ];
+    (event != APPROVE && outcome.verdict == APPROVE_VERDICT)
+        .then(|| reasons.into_iter().find(|(holds, _)| *holds))
+        .flatten()
+        .map(|(_, reason)| reason)
+}
+
+/// Appends `findings` to `b` as a list after a blank line, one line
+/// each, blocking ones first; nothing when there are none.
 fn list_findings(b: &mut String, findings: &[Finding]) {
+    if findings.is_empty() {
+        return;
+    }
+    b.push('\n');
     for severity in [BLOCKING, NIT] {
         for f in findings.iter().filter(|f| f.severity == severity) {
-            let _ = write!(
+            let _ = writeln!(
                 b,
-                "\n- {severity} `{}`: {}",
+                "- {severity} `{}`: {}",
                 code_span(&location(f)),
-                defuse_mentions(&f.body)
+                defuse_mentions(&one_line(&f.body))
             );
         }
     }
+}
+
+/// `s` with every run of whitespace that breaks a line, at `\n` or
+/// `\r`, made one space, so no part of it starts a line of the body.
+/// Whitespace within a line stays as it is.
+fn one_line(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        if !c.is_whitespace() {
+            out.push(c);
+            continue;
+        }
+        let mut run = String::from(c);
+        while let Some(w) = chars.next_if(|w| w.is_whitespace()) {
+            run.push(w);
+        }
+        if run.contains(['\n', '\r']) {
+            out.push(' ');
+        } else {
+            out.push_str(&run);
+        }
+    }
+
+    out
 }
 
 /// Names a finding's file, and its line when it has one.
@@ -393,9 +469,10 @@ fn defuse_mentions(s: &str) -> String {
 
 /// `text` made safe to print between backticks: a backtick inside
 /// would close the code span early and let a mention out, so it
-/// becomes a quote.
+/// becomes a quote, and a line break would start a line of the body,
+/// so it is collapsed as [`one_line`] does.
 fn code_span(text: &str) -> String {
-    text.replace('`', "'")
+    one_line(text).replace('`', "'")
 }
 
 /// Whether `c` can be part of a GitHub user name.

@@ -67,7 +67,11 @@ fn class_names_are_the_ones_the_workflow_reads() {
 #[test]
 fn analyse_routes_by_the_paths_that_changed() {
     let cases = [
-        (vec!["plan/x/plan.md", "README.md"], Class::Light),
+        (vec!["docs/guide.md", "README.md"], Class::Light),
+        (vec!["plan/x/plan.md", "README.md"], Class::Standard),
+        (vec!["docs/domain-model/run.md"], Class::Standard),
+        (vec!["features/notes.md"], Class::Standard),
+        (vec![], Class::Standard),
         (
             vec!["plan/x/plan.md", "crates/cairn/src/lib.rs"],
             Class::Standard,
@@ -78,15 +82,16 @@ fn analyse_routes_by_the_paths_that_changed() {
     ];
     for (paths, want) in cases {
         let diff: String = paths.iter().map(|p| header(p)).collect();
-        let got = analyse(&base(), &base(), &diff);
+        let got = analyse(&base(), &base(), &diff, false);
         assert_eq!(got.class, want, "{paths:?}");
         assert_eq!(got.class == Class::Deep, !got.owned.is_empty(), "{paths:?}");
+        assert!(got.unparsed.is_empty(), "{paths:?}");
     }
 }
 
 #[test]
 fn analyse_finds_nothing_in_an_unchanged_tree() {
-    let got = analyse(&base(), &base(), &header("README.md"));
+    let got = analyse(&base(), &base(), &header("README.md"), false);
 
     assert!(got.requirements.is_empty());
     assert!(got.scenarios.is_empty());
@@ -103,7 +108,7 @@ fn analyse_reads_added_removed_and_changed_rows() {
     head.requirements.remove(2);
     head.requirements.push(req("REC-03", "Index."));
 
-    let got = analyse(&base(), &head, "");
+    let got = analyse(&base(), &head, "", false);
 
     assert_eq!(
         got.requirements,
@@ -124,7 +129,7 @@ fn analyse_reads_scenario_changes_and_mentions_into_the_touched_ids() {
         header("crates/cairn/src/lib.rs")
     );
 
-    let got = analyse(&base(), &head, &diff);
+    let got = analyse(&base(), &head, &diff, false);
 
     assert_eq!(
         got.scenarios,
@@ -137,9 +142,9 @@ fn analyse_reads_scenario_changes_and_mentions_into_the_touched_ids() {
 fn analyse_refuses_a_live_scenario_removed_or_pended_again() {
     let mut head = base();
     head.scenarios[0].pending = true;
-    let pended = analyse(&base(), &head, "");
+    let pended = analyse(&base(), &head, "", false);
     head.scenarios.remove(0);
-    let removed = analyse(&base(), &head, "");
+    let removed = analyse(&base(), &head, "", false);
 
     assert_eq!(
         pended.findings,
@@ -151,13 +156,72 @@ fn analyse_refuses_a_live_scenario_removed_or_pended_again() {
                 .into(),
         }]
     );
-    assert_eq!(removed.findings.len(), 1);
-    assert!(
-        removed.findings[0]
-            .body
-            .contains("REC-01 scenario is live on main and this change removes it"),
-        "{:?}",
-        removed.findings
+    assert_eq!(removed.findings, [removal("REC-01")]);
+}
+
+/// The finding for a live scenario of `base()` that the change removes.
+fn removal(id: &str) -> Finding {
+    Finding {
+        path: "features/record.feature".into(),
+        line: 7,
+        severity: BLOCKING,
+        body: format!("the {id} scenario is live on main and this change removes it"),
+    }
+}
+
+#[test]
+fn analyse_refuses_a_live_scenario_retagged_to_another_id() {
+    let mut head = base();
+    head.scenarios[0].id = "REC-09".into();
+    head.scenarios[0].path = "features/other.feature".into();
+    head.scenarios[0].line = 30;
+
+    let got = analyse(&base(), &head, "", false);
+
+    assert_eq!(got.findings, [removal("REC-01")]);
+}
+
+#[test]
+fn analyse_reads_an_unparsed_header_as_deep_and_names_it() {
+    let bad = "diff --git \"a/x\" y";
+    let diff = format!("{}{bad}\n", header("README.md"));
+
+    let got = analyse(&base(), &base(), &diff, false);
+
+    assert_eq!(got.class, Class::Deep);
+    assert!(got.owned.is_empty());
+    assert_eq!(got.unparsed, [bad]);
+    assert_eq!(got.paths, ["README.md"]);
+    assert_eq!(
+        got.findings,
+        [Finding {
+            path: bad.into(),
+            line: 0,
+            severity: NIT,
+            body: "the paths this diff header names do not read, so the review class is deep"
+                .into(),
+        }]
+    );
+}
+
+#[test]
+fn analyse_flags_each_file_that_lifts_a_ban() {
+    let diff = format!(
+        "+#[allow(clippy::disallowed_methods)] before any header\n{}+#[allow(clippy::disallowed_types)]\n+#![expect(clippy::disallowed_methods)]\n-#[allow(clippy::disallowed_types)]\n{}+ a line\n",
+        header("crates/cairn/src/a.rs"),
+        header("crates/cairn/src/b.rs")
+    );
+
+    let got = analyse(&base(), &base(), &diff, false);
+
+    assert_eq!(
+        got.findings,
+        [Finding {
+            path: "crates/cairn/src/a.rs".into(),
+            line: 0,
+            severity: NIT,
+            body: "lifts a reach or determinism ban: weigh its reason".into(),
+        }]
     );
 }
 
@@ -167,78 +231,200 @@ fn analyse_lets_a_pending_scenario_go_live_or_go() {
     head.scenarios[1].pending = false;
     head.scenarios.remove(2);
 
-    assert!(analyse(&base(), &head, "").findings.is_empty());
+    assert!(analyse(&base(), &head, "", false).findings.is_empty());
+}
+
+/// The findings and the ENG-29 record when `head` holds `adr` at
+/// [`ADR`], the diff changes `paths` and the stakeholder `consent`s.
+fn guarded(
+    head: &mut Snapshot,
+    adr: Option<String>,
+    paths: &[&str],
+    consent: bool,
+) -> (Vec<Finding>, Option<Record>) {
+    if let Some(body) = adr {
+        head.decisions.insert(ADR.into(), body);
+    }
+    let diff: String = paths.iter().map(|p| header(p)).collect();
+    let got = analyse(&base(), head, &diff, consent);
+    (got.findings, got.eng_29_record)
+}
+
+/// The ENG-29 finding at `path` with `body`.
+fn eng_29_finding(path: &str, body: &str) -> Finding {
+    Finding {
+        path: path.into(),
+        line: 0,
+        severity: BLOCKING,
+        body: body.into(),
+    }
+}
+
+/// `base()` with PRV-10's row changed.
+fn prv_10_changed() -> Snapshot {
+    let mut head = base();
+    head.requirements[2].text = "Certify, now differently.".into();
+    head
 }
 
 #[test]
-fn analyse_asks_eng_29_s_record_for_an_invariant_change() {
-    let got = analyse(&base(), &base(), &header(INVARIANTS));
+fn analyse_asks_eng_29_s_record_and_consent_for_an_invariant_change() {
+    let (findings, record) = guarded(&mut base(), None, &[INVARIANTS], false);
 
-    assert_eq!(got.findings.len(), 1);
-    assert_eq!(got.findings[0].path, INVARIANTS);
-    assert!(
-        got.findings[0]
-            .body
-            .contains("touches an invariant but changes no accepted ADR"),
-        "{:?}",
-        got.findings
+    assert_eq!(
+        findings,
+        [eng_29_finding(
+            INVARIANTS,
+            "this change touches an invariant (ENG-29), but no accepted ADR under docs/adr that this change changes names ENG-29 and invariant; and no stakeholder comment consents to it"
+        )]
+    );
+    assert_eq!(record, None);
+}
+
+#[test]
+fn analyse_names_the_invariant_and_the_marked_row_together() {
+    let (findings, _) = guarded(
+        &mut prv_10_changed(),
+        None,
+        &[INVARIANTS, "docs/srs/05.md"],
+        true,
+    );
+
+    assert_eq!(
+        findings,
+        [eng_29_finding(
+            INVARIANTS,
+            "this change touches an invariant, PRV-10 (ENG-29), but no accepted ADR under docs/adr that this change changes names ENG-29, invariant and PRV-10"
+        )]
     );
 }
 
 #[test]
 fn analyse_asks_eng_29_s_record_for_a_row_marked_for_i2_review() {
-    let mut head = base();
-    head.requirements[2].text = "Certify, now differently.".into();
     let mut other = base();
     other.requirements[0].text = "Changed, but not marked.".into();
 
-    let got = analyse(&base(), &head, &header("docs/srs/05.md"));
+    let (findings, _) = guarded(&mut prv_10_changed(), None, &["docs/srs/05.md"], true);
 
-    assert!(
-        got.findings[0].body.contains("touches PRV-10 but"),
-        "{:?}",
-        got.findings
+    assert_eq!(
+        findings,
+        [eng_29_finding(
+            "docs/srs/05.md",
+            "this change touches PRV-10 (ENG-29), but no accepted ADR under docs/adr that this change changes names ENG-29 and PRV-10"
+        )]
     );
     assert!(
-        analyse(&base(), &other, &header("docs/srs/05.md"))
-            .findings
+        guarded(&mut other, None, &["docs/srs/05.md"], false)
+            .0
             .is_empty()
     );
 }
 
 #[test]
-fn analyse_takes_an_accepted_record_naming_the_security_reviewer() {
-    let diff = format!("{}{}", header(INVARIANTS), header(ADR));
-    let with = |body: String| {
-        let mut head = base();
-        head.decisions.insert(ADR.into(), body);
-        analyse(&base(), &head, &diff).findings.len()
-    };
+fn analyse_places_a_removed_marked_row_where_main_had_it() {
+    let mut head = base();
+    head.requirements.remove(2);
+
+    let (findings, _) = guarded(&mut head, None, &[], true);
+
+    assert_eq!(findings[0].path, "docs/srs/05.md");
+}
+
+#[test]
+fn analyse_is_not_satisfied_by_a_record_without_eng_29() {
+    let adr = record(
+        "accepted",
+        "Approved until a security reviewer is named; invariant PRV-10.",
+    );
+
+    let (findings, record) = guarded(
+        &mut prv_10_changed(),
+        Some(adr),
+        &["docs/srs/05.md", ADR],
+        true,
+    );
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(record, None);
+}
+
+#[test]
+fn analyse_asks_consent_beside_an_accepted_record() {
+    let adr = record("accepted", "ENG-29: PRV-10 changes, approved.");
+
+    let (findings, record) = guarded(
+        &mut prv_10_changed(),
+        Some(adr),
+        &["docs/srs/05.md", ADR],
+        false,
+    );
 
     assert_eq!(
-        with(record("accepted", "Approved by the Security Reviewer.")),
-        0
+        findings,
+        [eng_29_finding(
+            "docs/srs/05.md",
+            "this change touches PRV-10 (ENG-29), but no stakeholder comment consents to it"
+        )]
     );
+    assert_eq!(record, None);
+}
+
+#[test]
+fn analyse_takes_an_accepted_record_and_consent() {
+    let adr = record(
+        "accepted",
+        "ENG-29: PRV-10 and an invariant change, approved.",
+    );
+
+    let (findings, record) = guarded(
+        &mut prv_10_changed(),
+        Some(adr),
+        &[INVARIANTS, "docs/srs/05.md", ADR],
+        true,
+    );
+
+    assert!(findings.is_empty(), "{findings:?}");
     assert_eq!(
-        with(record("proposed", "Approved by the security reviewer.")),
-        1
+        record,
+        Some(Record {
+            path: ADR.into(),
+            summary: "s".into(),
+        })
     );
-    assert_eq!(with(record("accepted", "Approved.")), 1);
-    assert_eq!(with("no front matter".into()), 1);
+}
+
+#[test]
+fn analyse_takes_only_an_accepted_record_naming_every_guarded_id() {
+    let paths = [INVARIANTS, "docs/srs/05.md", ADR];
+    let count = |body: String| {
+        guarded(&mut prv_10_changed(), Some(body), &paths, true)
+            .0
+            .len()
+    };
+
+    assert_eq!(count(record("proposed", "ENG-29 PRV-10 invariant")), 1);
+    assert_eq!(count(record("accepted", "ENG-29 invariant")), 1);
+    assert_eq!(count(record("accepted", "ENG-29 PRV-10")), 1);
+    assert_eq!(count(record("accepted", "ENG-290 PRV-10 invariant")), 1);
+    assert_eq!(count("no front matter".into()), 1);
 }
 
 #[test]
 fn analyse_takes_only_a_record_the_change_touches() {
-    let mut head = base();
-    head.decisions.insert(
-        ADR.into(),
-        record("accepted", "the security reviewer approved"),
-    );
+    let adr = record("accepted", "ENG-29 invariant");
 
     assert_eq!(
-        analyse(&base(), &head, &header(INVARIANTS)).findings.len(),
+        guarded(&mut base(), Some(adr), &[INVARIANTS], true).0.len(),
         1
     );
+}
+
+#[test]
+fn analyse_ignores_a_deleted_record() {
+    let (findings, record) = guarded(&mut base(), None, &[INVARIANTS, ADR], true);
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(record, None);
 }
 
 #[test]
@@ -247,4 +433,11 @@ fn marked_for_i2_review_reads_eng_29_s_row() {
     let mut without = base();
     without.requirements.pop();
     assert!(marked_for_i2_review(&without).is_empty());
+}
+
+#[test]
+fn and_list_joins_with_a_final_and() {
+    assert_eq!(and_list(&[]), "");
+    assert_eq!(and_list(&["a"]), "a");
+    assert_eq!(and_list(&["a", "b", "c"]), "a, b and c");
 }

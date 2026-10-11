@@ -269,6 +269,41 @@ fn review_cases() -> Vec<Case> {
             scenario("ENG-28"),
             r#"job post does not run "--checked checked.json""#,
         ),
+        // The test asserts with its own message, the findings, which
+        // lack the PRV-11 finding once it drifts; only the failing
+        // test's banner names it.
+        case(
+            "ENG-29 no longer naming a requirement marked for I2 review",
+            "ENG-29",
+            Injection::replace(
+                "docs/srs/10-engineering-quality.md",
+                "(PRV-10, PRV-11)",
+                "(PRV-10)",
+            ),
+            cargo_test(
+                "review-bundle",
+                "bundle",
+                "the_requirements_eng_29_marks_follow_its_row",
+            ),
+            "---- the_requirements_eng_29_marks_follow_its_row stdout ----",
+        ),
+        // The SRS no longer a stakeholder path, a change to it routes
+        // light; the failure prints the class the bundle chose.
+        case(
+            "CODEOWNERS no longer holding the SRS",
+            "ENG-28",
+            Injection::replace(
+                ".github/CODEOWNERS",
+                "/docs/srs/                    @jeduden",
+                "/docs/srsx/                   @jeduden",
+            ),
+            cargo_test(
+                "review-bundle",
+                "e2e_review_bundle",
+                "the_executable_bundles_this_repository_against_itself",
+            ),
+            "class=light",
+        ),
     ]
 }
 
@@ -526,7 +561,22 @@ fn product_crate_cases() -> Vec<Case> {
                 "checkout",
                 "the_product_crates_keep_their_bans",
             ),
-            "crates/cairn/clippy.toml does not ban std::net::UdpSocket",
+            "crates/cairn/clippy.toml does not ban std::net::UdpSocket in disallowed-types",
+        ),
+        case(
+            "a product crate's clippy.toml dropping a determinism ban",
+            "I10",
+            Injection::replace(
+                "crates/cairn/clippy.toml",
+                "  { path = \"std::time::SystemTime::now\", reason = \"derived artifacts read no clock (I10)\" },\n",
+                "",
+            ),
+            cargo_test(
+                "engineering",
+                "checkout",
+                "the_product_crates_keep_their_bans",
+            ),
+            "crates/cairn/clippy.toml does not ban std::time::SystemTime::now in disallowed-methods",
         ),
         case(
             "the core reading the clock",

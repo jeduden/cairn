@@ -294,9 +294,10 @@ pub fn gate_decides(rows: &[BTreeMap<String, String>]) -> Vec<String> {
 /// on the files one table row describes, and names what it does: the
 /// review event it prints, "nothing" for a head that moved, or "an
 /// error" when it exits unsuccessfully. A `missing` verdict leaves the
-/// outcome file out. A `check finding` other than `none` hands the gate
-/// one deterministic finding of that severity; a row without the column
-/// hands it none.
+/// outcome file out. The gate always gets `--checked`: a `check
+/// finding` of `none`, or a row without the column, hands it an empty
+/// list, `nit` or `blocking` one deterministic finding of that
+/// severity, `malformed` a file that is no list, and `missing` no file.
 #[must_use]
 pub fn gate_outcome(row: &BTreeMap<String, String>) -> &'static str {
     const REVIEWED: &str = "206b0a76a81abb510e53d87ef187e83b5aacbcbb";
@@ -314,7 +315,8 @@ pub fn gate_outcome(row: &BTreeMap<String, String>) -> &'static str {
         }
     };
     let check = match row.get("check finding").map_or("none", String::as_str) {
-        "none" => None,
+        "none" => Some("[]".to_owned()),
+        "missing" => None,
         "malformed" => Some("nope".to_owned()),
         severity => Some(format!(
             r#"[{{"path":"features/x.feature","line":0,"severity":{severity:?},"body":"c"}}]"#
@@ -343,7 +345,7 @@ pub fn gate_outcome(row: &BTreeMap<String, String>) -> &'static str {
     } else {
         REVIEWED
     };
-    let mut args = vec![
+    let args = vec![
         "--outcome",
         "outcome.json",
         "--check-runs",
@@ -352,10 +354,11 @@ pub fn gate_outcome(row: &BTreeMap<String, String>) -> &'static str {
         REVIEWED,
         "--head",
         head,
+        "--checked",
+        "checked.json",
     ];
     if let Some(body) = check {
         files.insert("checked.json", body);
-        args.extend(["--checked", "checked.json"]);
     }
     let read = |path: &str| {
         files

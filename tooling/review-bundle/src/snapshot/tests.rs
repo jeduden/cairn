@@ -49,23 +49,24 @@ fn read_fails_on_what_it_cannot_read() {
         change(dir.path());
         let err = Snapshot::read(dir.path()).unwrap_err();
         let has_source = std::error::Error::source(&err).is_some();
-        (err.to_string(), has_source)
+        let root = dir.path().display().to_string();
+        (err.to_string().replace(&root, "ROOT"), has_source)
     };
     let cases: [(&str, Breaks, &str); 5] = [
         (
             "no SRS",
             &|r| fs::remove_dir_all(r.join("docs/srs")).unwrap(),
-            "srs",
+            "review-bundle: srs: list ROOT/docs/srs: ",
         ),
         (
             "unreadable features",
             &|r| fs::write(r.join("features/record.feature"), "not gherkin").unwrap(),
-            "scenario",
+            "review-bundle: scenario: read features: ",
         ),
         (
             "no invariants",
             &|r| fs::remove_file(r.join("docs/srs/invariants.md")).unwrap(),
-            "invariants.md",
+            "review-bundle: read ROOT/docs/srs/invariants.md: ",
         ),
         (
             "CODEOWNERS a directory",
@@ -73,17 +74,17 @@ fn read_fails_on_what_it_cannot_read() {
                 fs::remove_file(r.join(".github/CODEOWNERS")).unwrap();
                 fs::create_dir(r.join(".github/CODEOWNERS")).unwrap();
             },
-            "CODEOWNERS",
+            "review-bundle: read ROOT/.github/CODEOWNERS: ",
         ),
         (
             "a record that is a directory",
             &|r| fs::create_dir(r.join("docs/adr/dir.md")).unwrap(),
-            "dir.md",
+            "review-bundle: read ROOT/docs/adr/dir.md: ",
         ),
     ];
     for (name, change, want) in cases {
         let (msg, has_source) = broken(change);
-        assert!(msg.contains(want), "{name}: {msg}");
+        assert!(msg.starts_with(want), "{name}: {msg}");
         assert!(has_source, "{name}");
     }
 }

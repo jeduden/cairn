@@ -1,11 +1,12 @@
 //! Compares main's tree with the pull request's: which requirements and
-//! scenarios changed, which the diff names, the route the review takes,
-//! and the findings a machine can decide alone.
+//! scenarios changed, which the diff names, the review class, and the
+//! findings a machine can decide alone. It reads nothing but its inputs:
+//! the stakeholder's consent arrives as a flag the command line read.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use crate::{BLOCKING, Finding, Snapshot, diff, owners};
+use crate::{BLOCKING, Finding, NIT, Snapshot, diff, owners};
 
 /// The invariants file ENG-29 guards.
 pub const INVARIANTS: &str = "docs/srs/invariants.md";
@@ -17,15 +18,28 @@ const ENG_29: &str = "ENG-29";
 /// Where the decision records live.
 const ADR_DIR: &str = "docs/adr/";
 
+/// Markdown under these directories is read as more than prose: the
+/// domain model, the plans and the scenarios.
+const NOT_LIGHT: [&str; 3] = ["docs/domain-model/", "plan/", "features/"];
+
+/// What an added line that lifts a ban weighs.
+const LIFTS_A_BAN: &str = "lifts a reach or determinism ban: weigh its reason";
+
+/// What lifts a ban: an allow or expect of a `disallowed_*` lint.
+const BAN: &str = "clippy::disallowed_";
+
 /// How deep a review goes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Class {
-    /// Only Markdown no stakeholder path holds: plans, notes, guides.
+    /// Only Markdown no stakeholder path holds, outside the domain
+    /// model, the plans and the scenarios: notes and guides.
     Light,
-    /// Anything else no stakeholder path holds: product code, scenarios.
+    /// Anything else no stakeholder path holds: product code, scenarios,
+    /// plans, or a diff that names no path.
     Standard,
     /// A path CODEOWNERS assigns: the SRS, its gates, CI, the agent
-    /// instructions, the security-sensitive crates.
+    /// instructions, the security-sensitive crates; or a diff header
+    /// whose paths do not read, so the class fails closed.
     Deep,
 }
 
@@ -49,26 +63,40 @@ pub enum Change {
     Changed,
 }
 
-/// What the pull request does, as the bundle and the gate read it.
+/// The decision record that satisfies ENG-29, as the review bundle
+/// quotes it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Record {
+    pub path: String,
+    pub summary: String,
+}
+
+/// What the pull request does, as the review bundle and the gate read it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Analysis {
     pub class: Class,
     /// The paths CODEOWNERS assigns among the changed ones.
     pub owned: Vec<String>,
     pub paths: Vec<String>,
+    /// The diff headers whose paths do not read.
+    pub unparsed: Vec<String>,
     pub requirements: BTreeMap<String, Change>,
     pub scenarios: BTreeMap<String, Change>,
     /// Every id the change touches: a changed requirement or scenario,
     /// or one a changed line names, that either tree defines.
     pub touched: Vec<String>,
     pub findings: Vec<Finding>,
+    /// The record that satisfies ENG-29, when a guarded change has one
+    /// and the stakeholder consented.
+    pub eng_29_record: Option<Record>,
 }
 
 /// Compares `base`, main's tree, with `head`, the pull request's, whose
-/// diff against main is `diff`.
+/// diff against main is `diff`. `consent` says whether a stakeholder
+/// comment on the pull request consents to it.
 #[must_use]
-pub fn analyse(base: &Snapshot, head: &Snapshot, diff: &str) -> Analysis {
-    let paths = diff::changed_paths(diff);
+pub fn analyse(base: &Snapshot, head: &Snapshot, diff: &str, consent: bool) -> Analysis {
+    let diff::Paths { paths, unparsed } = diff::changed_paths(diff);
     let patterns = owners::patterns(&base.codeowners);
     let owned: Vec<String> = paths
         .iter()
@@ -86,26 +114,56 @@ pub fn analyse(base: &Snapshot, head: &Snapshot, diff: &str) -> Analysis {
         .filter(|id| known.contains(id.as_str()))
         .collect();
     let mut findings = ratchet(base, head);
-    findings.extend(eng_29(base, head, &paths, &requirements));
+    let (guard, eng_29_record) = eng_29(base, head, &paths, &requirements, consent);
+    findings.extend(guard);
+    findings.extend(unparsed.iter().map(|h| nit(h, UNPARSED)));
+    findings.extend(lifted_bans(diff));
     findings.sort();
 
     Analysis {
-        class: classify(&paths, &owned),
+        class: classify(&paths, &owned, &unparsed),
         owned,
         paths,
+        unparsed,
         requirements,
         scenarios,
         touched: touched.into_iter().collect(),
         findings,
+        eng_29_record,
     }
 }
 
-/// The route: deep when a stakeholder path changed, light when only
-/// Markdown did, standard otherwise.
-fn classify(paths: &[String], owned: &[String]) -> Class {
-    if !owned.is_empty() {
+/// What an unparsed diff header weighs.
+const UNPARSED: &str = "the paths this diff header names do not read, so the review class is deep";
+
+/// A nit at `path` as a whole.
+fn nit(path: &str, body: &str) -> Finding {
+    Finding {
+        path: path.to_owned(),
+        line: 0,
+        severity: NIT,
+        body: body.to_owned(),
+    }
+}
+
+/// One nit per file the diff adds a line to that lifts a reach or
+/// determinism ban, which a reviewer weighs.
+fn lifted_bans(diff: &str) -> BTreeSet<Finding> {
+    diff::added_lines(diff)
+        .into_iter()
+        .filter(|(_, line)| line.contains(BAN))
+        .map(|(file, _)| nit(&file, LIFTS_A_BAN))
+        .collect()
+}
+
+/// The review class: deep when a stakeholder path changed or a header
+/// does not read, light when only prose Markdown did, standard
+/// otherwise.
+fn classify(paths: &[String], owned: &[String], unparsed: &[String]) -> Class {
+    let light = |p: &String| p.ends_with(".md") && !NOT_LIGHT.iter().any(|d| p.starts_with(d));
+    if !owned.is_empty() || !unparsed.is_empty() {
         Class::Deep
-    } else if paths.iter().all(|p| p.ends_with(".md")) {
+    } else if !paths.is_empty() && paths.iter().all(light) {
         Class::Light
     } else {
         Class::Standard
@@ -209,50 +267,106 @@ fn ratchet(base: &Snapshot, head: &Snapshot) -> Vec<Finding> {
 
 /// ENG-29: a change to an invariant, or to a requirement ENG-29 marks
 /// for I2 review, lands only with an accepted decision record, changed
-/// in the same pull request, that records the security reviewer.
+/// in the same pull request, that names ENG-29 and what it covers, and
+/// with the stakeholder's consent. Returns the finding when either is
+/// missing, else the record that satisfies it.
 fn eng_29(
     base: &Snapshot,
     head: &Snapshot,
     paths: &[String],
     requirements: &BTreeMap<String, Change>,
-) -> Vec<Finding> {
+    consent: bool,
+) -> (Vec<Finding>, Option<Record>) {
     let marked = marked_for_i2_review(base);
-    let mut guarded: Vec<String> = requirements
+    let rows: Vec<&String> = requirements
         .keys()
         .filter(|id| marked.contains(id))
-        .cloned()
         .collect();
-    if paths.iter().any(|p| p == INVARIANTS) {
-        guarded.insert(0, "an invariant".to_owned());
+    let invariant = paths.iter().any(|p| p == INVARIANTS);
+    if rows.is_empty() && !invariant {
+        return (Vec::new(), None);
     }
-    if guarded.is_empty() {
-        return Vec::new();
+    let mut names = vec![ENG_29];
+    let mut guarded = Vec::new();
+    if invariant {
+        names.push("invariant");
+        guarded.push("an invariant");
     }
-    let recorded = paths
+    names.extend(rows.iter().map(|id| id.as_str()));
+    guarded.extend(rows.iter().map(|id| id.as_str()));
+    let record = paths
         .iter()
         .filter(|p| p.starts_with(ADR_DIR))
         .filter_map(|p| head.decisions.get(p).map(|body| (p, body)))
-        .any(|(p, body)| records_security_review(Path::new(p), body));
-    if recorded {
-        return Vec::new();
+        .find_map(|(p, body)| covering(p, body, &names[1..]));
+    if let (Some(record), true) = (&record, consent) {
+        return (Vec::new(), Some(record.clone()));
     }
-
-    vec![Finding {
-        path: INVARIANTS.to_owned(),
+    let mut missing = Vec::new();
+    if record.is_none() {
+        missing.push(format!(
+            "no accepted ADR under docs/adr that this change changes names {}",
+            and_list(&names)
+        ));
+    }
+    if !consent {
+        missing.push("no stakeholder comment consents to it".to_owned());
+    }
+    let path = if invariant {
+        INVARIANTS.to_owned()
+    } else {
+        rows.first()
+            .and_then(|id| row_path(head, id).or_else(|| row_path(base, id)))
+            .unwrap_or_default()
+    };
+    let finding = Finding {
+        path,
         line: 0,
         severity: BLOCKING,
         body: format!(
-            "this change touches {} but changes no accepted ADR under docs/adr that records the security reviewer's approval (ENG-29)",
-            guarded.join(", ")
+            "this change touches {} (ENG-29), but {}",
+            guarded.join(", "),
+            missing.join("; and ")
         ),
-    }]
+    };
+
+    (vec![finding], None)
 }
 
-/// Whether `body` is an accepted decision record that names the
-/// security reviewer.
-fn records_security_review(path: &Path, body: &str) -> bool {
-    adr::parse(path, body).is_ok_and(|a| a.status == adr::ACCEPTED)
-        && body.to_lowercase().contains("security reviewer")
+/// `items` as "a, b and c".
+fn and_list(items: &[&str]) -> String {
+    match items.split_last() {
+        Some((last, rest)) if !rest.is_empty() => format!("{} and {last}", rest.join(", ")),
+        _ => items.join(""),
+    }
+}
+
+/// Where `tree` holds the row `id`.
+fn row_path(tree: &Snapshot, id: &str) -> Option<String> {
+    tree.requirements
+        .iter()
+        .find(|r| r.id == id)
+        .map(|r| r.path.display().to_string())
+}
+
+/// The record at `path` when `body` is an accepted decision record that
+/// names ENG-29 and each of `names`: the word "invariant" or a
+/// requirement id.
+fn covering(path: &str, body: &str, names: &[&str]) -> Option<Record> {
+    let adr = adr::parse(Path::new(path), body).ok()?;
+    let ids: BTreeSet<&str> = diff::ids_in(body).collect();
+    let lower = body.to_lowercase();
+    let names_all = names.iter().all(|n| {
+        if srs::is_requirement_id(n) {
+            ids.contains(n)
+        } else {
+            lower.contains(n)
+        }
+    });
+    (adr.status == adr::ACCEPTED && ids.contains(ENG_29) && names_all).then(|| Record {
+        path: path.to_owned(),
+        summary: adr.summary,
+    })
 }
 
 /// The ids ENG-29's row names besides itself: the requirements marked
@@ -261,11 +375,11 @@ fn marked_for_i2_review(base: &Snapshot) -> Vec<String> {
     base.requirements
         .iter()
         .find(|r| r.id == ENG_29)
-        .map(|r| diff::mentioned_ids(&format!("+{}", r.text)))
+        .map(|r| {
+            let ids: BTreeSet<&str> = diff::ids_in(&r.text).filter(|id| *id != ENG_29).collect();
+            ids.into_iter().map(str::to_owned).collect()
+        })
         .unwrap_or_default()
-        .into_iter()
-        .filter(|id| id != ENG_29)
-        .collect()
 }
 
 #[cfg(test)]

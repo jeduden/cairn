@@ -1,5 +1,7 @@
-//! Writes the review bundle the reviewing agent reads first: the class, the
-//! deterministic findings, and the rows, scenarios and invariants the
+//! Writes the review bundle the reviewing agent reads first: the review
+//! class, the deterministic findings and the record that satisfies
+//! ENG-29, the scenario backlog with the scenarios the pull request
+//! takes off `@pending`, and the rows, scenarios and invariants the
 //! change touches, each from main and, where it differs, from the pull
 //! request.
 
@@ -20,9 +22,10 @@ pub fn bundle(a: &Analysis, base: &Snapshot, head: &Snapshot) -> String {
     findings(&mut b, a);
     let _ = write!(
         b,
-        "\n## Scenario backlog\n\n@pending on main: {}; in this pull request: {}.\n",
+        "\n## Scenario backlog\n\n@pending on main: {}; in this pull request: {}.\n\nTaken off @pending here: {}.\n",
         pending(base),
-        pending(head)
+        pending(head),
+        taken_off_pending(base, head)
     );
     touched(&mut b, a, base, head);
     let _ = write!(
@@ -50,6 +53,12 @@ fn class(b: &mut String, a: &Analysis) {
             let _ = writeln!(b, "- `{p}`");
         }
     }
+    if !a.unparsed.is_empty() {
+        b.push_str("\nThese diff headers do not read, so the class fails closed:\n\n");
+        for h in &a.unparsed {
+            let _ = writeln!(b, "- `{h}`");
+        }
+    }
 }
 
 /// The deterministic findings, already decided: the gate weighs them
@@ -61,6 +70,12 @@ fn findings(b: &mut String, a: &Analysis) {
     }
     for f in &a.findings {
         let _ = writeln!(b, "- {} `{}:{}`: {}", f.severity, f.path, f.line, f.body);
+    }
+    if let Some(r) = &a.eng_29_record {
+        let _ = write!(b, "\nENG-29 record: `{}`, whose summary reads:\n\n", r.path);
+        for line in r.summary.lines() {
+            let _ = writeln!(b, "> {line}");
+        }
     }
 }
 
@@ -139,6 +154,27 @@ fn steps(b: &mut String, label: &str, s: &scenario::Scenario) {
 /// `s`, or "none" when it is empty.
 fn or_none(s: &str) -> &str {
     if s.is_empty() { "none" } else { s }
+}
+
+/// The ids of the scenarios pending on main and live in the pull
+/// request, in main's order, or "none".
+fn taken_off_pending(base: &Snapshot, head: &Snapshot) -> String {
+    let ids: Vec<&str> = base
+        .scenarios
+        .iter()
+        .filter(|was| was.pending)
+        .filter(|was| {
+            head.scenarios
+                .iter()
+                .any(|is| is.id == was.id && !is.pending)
+        })
+        .map(|was| was.id.as_str())
+        .collect();
+    if ids.is_empty() {
+        "none".to_owned()
+    } else {
+        ids.join(", ")
+    }
 }
 
 /// How many scenarios of `s` are pending.

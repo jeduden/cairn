@@ -247,6 +247,10 @@ fn gate_outcome_names_what_the_gate_does() {
     };
 
     assert_eq!(
+        gate_outcome(&row("approve", "none", "current", "passed", "passed")),
+        "APPROVE"
+    );
+    assert_eq!(
         gate_outcome(&row("approve", "nit", "current", "passed", "passed")),
         "APPROVE"
     );
@@ -294,6 +298,7 @@ fn gate_outcome_hands_the_gate_a_deterministic_finding() {
 
     assert_eq!(gate_outcome(&row("none")), "APPROVE");
     assert_eq!(gate_outcome(&row("nit")), "APPROVE");
+    assert_eq!(gate_outcome(&row("missing")), "an error");
     assert_eq!(gate_outcome(&row("blocking")), "REQUEST_CHANGES");
     assert_eq!(gate_outcome(&row("malformed")), "an error");
 }

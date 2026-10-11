@@ -16,7 +16,12 @@ fn tree() -> Snapshot {
 fn the_repository_reads_and_compares_equal_to_itself() {
     let t = tree();
 
-    let got = analyse(&t, &t, "diff --git a/plan/x.md b/plan/x.md\n");
+    let got = analyse(
+        &t,
+        &t,
+        "diff --git a/docs/testing.md b/docs/testing.md\n",
+        false,
+    );
 
     assert_eq!(got.class, Class::Light);
     assert!(got.requirements.is_empty() && got.scenarios.is_empty());
@@ -31,6 +36,7 @@ fn an_invariant_edit_without_its_record_is_a_blocking_finding() {
         &t,
         &t,
         "diff --git a/docs/srs/invariants.md b/docs/srs/invariants.md\n",
+        false,
     );
 
     assert_eq!(got.class, Class::Deep);
@@ -48,11 +54,13 @@ fn the_requirements_eng_29_marks_follow_its_row() {
         .find(|r| r.id == "PRV-11")
         .unwrap();
     row.text.push_str(" Edited.");
+    let path = row.path.display().to_string();
 
     let got = analyse(
         &base,
         &head,
-        "diff --git a/docs/srs/05e-provenance-requirements.md b/docs/srs/05e-provenance-requirements.md\n",
+        &format!("diff --git a/{path} b/{path}\n"),
+        false,
     );
 
     assert!(
@@ -64,7 +72,7 @@ fn the_requirements_eng_29_marks_follow_its_row() {
     );
     let bundle = render::bundle(&got, &base, &head);
     assert!(
-        bundle.contains("This pull request (`docs/srs/05e-provenance-requirements.md:"),
+        bundle.contains(&format!("This pull request (`{path}:")),
         "{bundle}"
     );
 }

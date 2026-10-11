@@ -54,3 +54,25 @@ fn glob_matches_any_run_and_nothing_more() {
     assert!(!glob("a*c", "abd"));
     assert!(!glob("b*", "a"));
 }
+
+#[test]
+fn owns_anchors_a_pattern_with_an_inner_slash() {
+    assert!(owns("docs/srs/", "docs/srs/a.md"));
+    assert!(!owns("docs/srs/", "x/docs/srs/a.md"));
+    assert!(owns("crates/*/clippy.toml", "crates/pin/clippy.toml"));
+    assert!(!owns("crates/*/clippy.toml", "x/crates/pin/clippy.toml"));
+}
+
+#[test]
+fn owns_reads_an_unanchored_directory() {
+    assert!(owns("target/", "target/x"));
+    assert!(owns("target/", "a/target/x"));
+    assert!(!owns("target/", "a/target"));
+}
+
+#[test]
+fn glob_matches_several_stars() {
+    assert!(glob("a*b*c", "axbyc"));
+    assert!(!glob("a*b*c", "axc"));
+    assert!(glob("**", ""));
+}

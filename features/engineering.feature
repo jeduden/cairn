@@ -263,6 +263,7 @@ Feature: Engineering quality (ENG)
       | approve         | none     | none          | current | failed | passed      | an error        |
       | malformed       | none     | none          | current | passed | passed      | an error        |
       | missing         | none     | none          | current | passed | passed      | an error        |
+      | approve         | none     | missing       | current | passed | passed      | an error        |
 
   @ENG-29 @P0 @pending
   Scenario: an invariant or I2-review change lands only with an ADR recording a named security reviewer's approval

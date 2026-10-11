@@ -1,5 +1,5 @@
-//! The `review-gate` command line: four required flags and an optional
-//! one in; a review, nothing or an error out.
+//! The `review-gate` command line: five required flags in; a review,
+//! nothing or an error out.
 
 use std::io::{self, Write};
 
@@ -12,14 +12,13 @@ pub const EXIT_FAILURE: u8 = 1;
 /// The command line is wrong.
 pub const EXIT_USAGE: u8 = 2;
 
-const USAGE: &str = "usage: review-gate --outcome FILE --check-runs FILE --reviewed SHA --head SHA [--checked FILE]";
+const USAGE: &str =
+    "usage: review-gate --outcome FILE --check-runs FILE --reviewed SHA --head SHA --checked FILE";
 
-/// The flags, in the order the usage names them. Every one but the
-/// last is required.
+/// The flags, in the order the usage names them. Every one is
+/// required: a gate run without the deterministic findings could
+/// approve what a blocking one withholds.
 const FLAGS: [&str; 5] = ["outcome", "check-runs", "reviewed", "head", "checked"];
-
-/// How many of [`FLAGS`], from the first, are required.
-const REQUIRED: usize = 4;
 
 /// Runs the command on `args` and returns its exit code. It is `main`
 /// without the process: `read` maps a path to the file's text, and
@@ -30,17 +29,14 @@ pub fn run(
     stderr: &mut dyn Write,
     read: &dyn Fn(&str) -> io::Result<String>,
 ) -> u8 {
-    let Flags {
-        required: [outcome, check_runs, reviewed, head],
-        checked,
-    } = match parse_flags(args) {
+    let [outcome, check_runs, reviewed, head, checked] = match parse_flags(args) {
         Ok(flags) => flags,
         Err(msg) => {
             let _ = writeln!(stderr, "review-gate: {msg}\n{USAGE}");
             return EXIT_USAGE;
         }
     };
-    let input = read_input(&outcome, &check_runs, checked.as_deref(), read).map(|i| Input {
+    let input = read_input(&outcome, &check_runs, &checked, read).map(|i| Input {
         reviewed,
         head,
         ..i
@@ -77,18 +73,9 @@ pub fn run(
     }
 }
 
-/// The values the command line gave [`FLAGS`].
-#[derive(Debug, PartialEq, Eq)]
-struct Flags {
-    /// The first [`REQUIRED`] flags, in order.
-    required: [String; REQUIRED],
-    /// `--checked`, when given.
-    checked: Option<String>,
-}
-
 /// Reads `--name value` and `--name=value` pairs into the values of
-/// [`FLAGS`], the first [`REQUIRED`] of them required.
-fn parse_flags(args: impl IntoIterator<Item = String>) -> Result<Flags, String> {
+/// [`FLAGS`], in order; each is required.
+fn parse_flags(args: impl IntoIterator<Item = String>) -> Result<[String; 5], String> {
     let mut values: [Option<String>; 5] = Default::default();
     let mut args = args.into_iter();
     while let Some(arg) = args.next() {
@@ -112,33 +99,26 @@ fn parse_flags(args: impl IntoIterator<Item = String>) -> Result<Flags, String> 
         values[slot] = Some(value);
     }
 
-    let [outcome, check_runs, reviewed, head, checked] = values;
-    let mut required: [String; REQUIRED] = Default::default();
-    for (i, value) in [outcome, check_runs, reviewed, head]
-        .into_iter()
-        .enumerate()
-    {
+    let mut required: [String; 5] = Default::default();
+    for (i, value) in values.into_iter().enumerate() {
         required[i] = value.ok_or_else(|| format!("--{} is required", FLAGS[i]))?;
     }
 
-    Ok(Flags { required, checked })
+    Ok(required)
 }
 
-/// Loads the review outcome, the check runs and, when named, the
-/// deterministic checks' findings.
+/// Loads the review outcome, the check runs and the deterministic
+/// checks' findings.
 fn read_input(
     outcome: &str,
     check_runs: &str,
-    checked: Option<&str>,
+    checked: &str,
     read: &dyn Fn(&str) -> io::Result<String>,
 ) -> Result<Input, String> {
     let load = |path: &str| read(path).map_err(|e| format!("read {path}: {e}"));
     let outcome = parse_outcome(&load(outcome)?).map_err(|e| e.to_string())?;
     let check_runs = parse_check_runs(&load(check_runs)?).map_err(|e| e.to_string())?;
-    let checked = match checked {
-        Some(path) => parse_checked(&load(path)?).map_err(|e| e.to_string())?,
-        None => Vec::new(),
-    };
+    let checked = parse_checked(&load(checked)?).map_err(|e| e.to_string())?;
 
     Ok(Input {
         outcome,
