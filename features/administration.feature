@@ -82,7 +82,7 @@ Feature: Administration and lifecycle (ADM)
     Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device or at-rest key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was reinstated
     And before it was confirmed, the backup restore named each pin of the copy that will not restore once its events count as received
-    And every event the copy holds counts on the node as received, a "witnessed" one reading as origin "peer", and is trusted only as PRV-02 trusts received events
+    And every event the copy holds counts on the node as received, each deriving origin "peer" or "bundle", never "witnessed", and is trusted only as PRV-02 trusts received events
     And that quarantine stays in force on the node until a release there
     And the copy's configuration acceptance takes no effect on the node: the deployment mode stays "automation" until the person accepts the configuration there
     And a backup another node of the principal made, restored the same way, gives no run of this node a seat from its first event in that node's personal room

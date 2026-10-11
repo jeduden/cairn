@@ -8,9 +8,9 @@ summary: >-
 
 - **Trust level**: `trusted` or `untrusted`, per event for one principal's
   agents on one node, derived by the trust policy from the event's provenance,
-  origin (whether recorded on this node, ingested or received), recorder,
-  writer and recorded deployment mode, the node's key set, and that principal's
-  stamps and trust grants as its writer logs carry them (PRV-02, I10).
+  origin (whether witnessed, ingested, received or imported), recorder, writer
+  and recorded deployment mode, the node's key set, and that principal's stamps
+  and trust grants as its writer logs carry them (PRV-02, I10).
 - **Trusted sources**: The sources I2 lists, whose events the trust policy
   classifies as `trusted` (PRV-02), narrowed in a foreign room (RCL-10);
   everything else is untrusted.

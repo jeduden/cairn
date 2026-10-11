@@ -314,7 +314,7 @@ Feature: Record (REC)
     Then Cairn mints a new device key and a new seat key before that append, the new seat key starting a new seat and writer that names the old seat
     And the new seat inherits no add or role of the old seat, and, outside the personal room, joins a room only as any seat does, while a personal-room seat, a device seat's included, is a member from its first event
     And the personal room keeps its room id
-    And every event recorded before the change counts on the node as another node's, received, a "witnessed" one reading as origin "peer", and is trusted only as PRV-02 trusts received events
+    And every event recorded before the change counts on the node as another node's, received, each deriving origin "peer" or "bundle", never "witnessed", and is trusted only as PRV-02 trusts received events
     And that quarantine stays in force on the node until a release there
     And that configuration acceptance takes no effect on the node: the deployment mode stays "automation" until the person accepts the configuration there
     And an audit entry records the node identity change
@@ -339,10 +339,10 @@ Feature: Record (REC)
   @REC-26 @P0 @I2 @I10 @pending
   Scenario: origin derives from the record and the key set, never from a stored value
     Given an isolated Cairn home
-    And a witnessed run, an ingested run, a sealed range received from a peer and one imported in a bundle
+    And a witnessed run, an ingested run, a sealed range received from a peer, one imported in a bundle, one reinstated by a backup restore of this node's own copy, and one range that arrived both from a peer and in a bundle
     When the person runs "cairn rebuild"
-    Then each sealed range the node accepted is named by exactly one arrival event in its device seat, carrying only the writer id, seq range, digest and how it arrived
-    And the witnessed run's events read origin "witnessed", the ingested run's "ingested", the peer's "peer" and the bundle's "bundle"
-    And after a stored origin of a peer event is changed to "witnessed", "cairn verify" fails until "cairn rebuild" derives "peer" again
+    Then each sealed range the node accepted is named by exactly one arrival event per way it arrived in its device seat in its personal room, carrying only the writer id, seq range, digest and how it arrived
+    And the witnessed run's events read origin "witnessed", the ingested run's "ingested", the peer's "peer", the bundle's "bundle", the restored range's "peer", and the range that came both ways "bundle" whichever way came first
+    And after the origin the store keeps derived for a peer event is changed to "witnessed", "cairn verify" fails until "cairn rebuild" derives "peer" again
     And after the node identity changes, the events of its earlier writers read origin "peer"
     And "cairn rebuild" appends no arrival event

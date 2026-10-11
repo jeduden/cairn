@@ -82,13 +82,15 @@ With it, SRS 3.0-draft changes these requirements:
   in the home.
 - **ENG-08.** Its property test compares canonical digests after any
   sequence of appends and lifecycle events.
-- **REC-26, new.** Each sealed range a node accepts is recorded once as
-  an arrival event in its device seat: writer id, seq range, digest and
-  how it arrived. An event's origin derives from the record and the key
-  set alone: `ingested` for what `cairn ingest` appended, `witnessed`
-  for another event in a writer this node's current key certified,
-  otherwise `bundle` or `peer` from the arrival events. No stored
-  per-event value decides it.
+- **REC-26, new.** Each range a node accepts from a peer, a paired phone,
+  a bundle or a backup restore is recorded as an arrival event in its
+  device seat in its personal room, once per way it arrived: writer id,
+  seq range, digest and how it arrived. An event's origin derives from
+  the record and the key set alone: `ingested` for an ingested seat's
+  writer, then `bundle` or `peer` from the arrival events, then
+  `witnessed` for a writer whose seat key this node's current device key
+  or token key certified. No stored origin value, and no origin another
+  node derived, decides it.
 - **PEER-03.** Two peers holding the same segments derive room state and
   a search index identical in content, apart from each event's trust
   level and origin. Each node derives those for itself and never takes
@@ -129,6 +131,7 @@ miss, and what answers each:
 | an index that disagrees with the table it indexes                               | ADM-08's integrity checks of the store and the search index                           |
 | output whose order follows storage                                              | ADM-08: every read orders its output by values                                        |
 | a stored origin changed from `peer` to `witnessed`, making the event trusted    | REC-26 derives origin from the record; verify compares it with the rest of I10        |
+| a node's own backup restored and read as `witnessed`                            | REC-26 reads arrival events before the node's own writers                             |
 
 The digest is itself a risk: kept past a purge, it would let anyone
 holding the other content confirm a guess at the purged content. ADM-08
@@ -185,5 +188,6 @@ everything the record holds.
   write-ahead log with `TRUNCATE`, or rebuilds the search index.
 - M1's schema may keep trust levels and origin apart from the parts
   every node shares, so PEER-03's shared parts compare directly.
-- M1 records arrival events and derives origin from them; M7 and M8,
-  which bring bundles and peers, write the arrival events they need.
+- M1 derives origin from the record. M3, M8 and M9, which bring backup
+  restore, peers and paired phones, and bundles, write the arrival
+  events they need.
