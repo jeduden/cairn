@@ -1,0 +1,47 @@
+[
+ {
+  "type": "undefined",
+  "quote": "permission grant, reject a foreign room, decline a join request, tighten a",
+  "problem": "Rejecting a foreign room is classed as a cut act, but the model never says what it does (stop holding the room, drop its pins and stamps, quarantine it). If it stops the room's own device-seat pins or stamped versions restoring, it removes pins from a restore block and so would be widening by the model's own rule, which makes the class unverifiable.",
+  "fix": "Define the act in Foreign room, e.g. 'reject a foreign room: stop recalling it and show it as rejected; it removes nothing from a restore block', or move it to widening if it can.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "Acts with no member seat: open (OQ-41).",
+  "problem": "The room merge is the one rule for all room state, yet it leaves open whether an act by a principal with no member seat counts. The model's own paths produce such acts: a stamper who left unstamping ('a stamper may still unstamp'), a named successor or handover recipient outside the room accepting, an owner acting after all its seats left. Two implementers derive different pin lists and ownership, against I10.",
+  "fix": "State a rule, e.g. 'An act by a principal with no member seat counts only if it is a cut act or the acceptance of a handover or succession; any other is shown by address and does not count.'",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "(its ordered posts), seats, pins, and branches in any repositories, each named",
+  "problem": "The conversation is 'ordered posts', but no order is given, and the room merge list covers neither posts nor the conversation. Concurrent posts from different writers can be ordered differently by two implementers, so the Timeline differs and a rebuild may not reproduce it (I10).",
+  "fix": "Write '(its posts in causal order, concurrent ones by the lower commitment)'.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "undefined",
+  "quote": "the node, by `cairn install`, the plugin or the managed install path, recorded",
+  "problem": "'The plugin' and 'the managed install path' are install routes used as Cairn things but never defined, while I7 allows harness configuration changes only through explicit install and uninstall operations. It is unclear whether these routes are such operations and show the change first.",
+  "fix": "Say 'by `cairn install`, or by an install that I7 and managed policy allow', or define the plugin and managed install path as install forms of `cairn install`.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "Whatever is currently in the model's context window. Never",
+  "problem": "Working view is defined but nothing in the candidate creates it, reads it or acts on it; the context lens shows past windows reconstructed from the record, and no rule or relation mentions the working view.",
+  "fix": "Drop the Working view entry, or tie it to a use, e.g. 'the context lens shows the working view at an event'.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

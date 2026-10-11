@@ -1,0 +1,65 @@
+[
+ {
+  "type": "contradiction",
+  "quote": "seat's pins and the pin versions it wrote stop qualifying (Pin), so revoking a",
+  "problem": "Pin says a pin stops qualifying when the creating event or the restoring version was written by any seat whose key is revoked. So revoking a run seat's key also drops its stamped versions from restore blocks. Principal act classes revoking a run seat's key as cut, yet say any act that removes a pin from a restore block is widening whatever verb carries it.",
+  "fix": "Say a run seat's revocation is cut unless it removes a pin from a restore block, in which case it is widening. Or restrict the Pin revocation rule to device seats.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "An unstamp are the exceptions: each withdraws only the acting",
+  "problem": "The sentence is garbled: singular subject, plural verb, and 'each' over a single item. It is the only statement of what is exempt from 'any act that removes a pin from a restore block is widening'. Implementers cannot tell whether unstamp alone is exempt or whether other acts (such as unpinning a run-seat pin) also are.",
+  "fix": "Rewrite as 'An unstamp is the exception: it withdraws only the acting principal's own trust (LANE-32).' Name any other exempt act explicitly.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "Either names the writer's last accepted seq. A peer still accepts segments",
+  "problem": "'Either' has no referent, since only one way to retire a writer (a principal act) is given. Retirement is also said to refuse nothing, and only a revocation refuses segments, so the effect of retiring a writer is never stated.",
+  "fix": "Replace with 'It names the writer's last accepted seq and only marks later segments delivered after retirement; a peer still accepts those that continue its chain without a fork.'",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "content trusted (PRV-02). Exchanging the sealed ranges each may receive is",
+  "problem": "Sync is defined by 'the sealed ranges each may receive', but no rule says which ranges a peer may receive and no requirement is cited. Which ranges leave the node over B2 (private versus shared rooms, personal room, other principals' peers) decides what I4 and I8 allow to leave. Two implementers could send different sets.",
+  "fix": "State that a peer may receive only the sealed ranges of rooms whose visibility lets that peer's principal read them (LANE-17), and cite the requirement that sets the rule.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "undefined",
+  "quote": "whatever its output (OWN-02). Without the peer component, a",
+  "problem": "The conditional implies the peer component is another way for a phone to reach the room view. Here a peer is only a node enrolled by key and B2 covers nodes only, so no phone path through the peer component exists. The clause refers to a concept the candidate lacks.",
+  "fix": "Drop the condition: 'A browser on the principal's phone reaches the room view only as the browser room view, through the principal's own tunnel, which is the principal's tool outside Cairn's components (I4).'",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "**Bundle**: A reviewed export of a room, signed by the device key of the",
+  "problem": "Export can create a bundle, but nothing in the candidate reads one back. Origin has only witnessed, ingested and peer, and `cairn ingest` reads transcripts only. The carriage 'as a file or a git ref' and the exporter's chain to a principal key therefore serve no consumer here.",
+  "fix": "Name what consumes a bundle (an import or ingest path with its origin and trust rule), or drop Bundle from this model.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "principal its certifying device key identifies until PRV-10 ships, then to",
+  "problem": "Before PRV-10 no principal key certifies a device key, and principals are counted only by chains to a principal key. No rule says how a foreign device key identifies a principal in that period. Implementers could treat each device key as its own principal or all foreign keys as one, which changes the room's principals, foreign-room status and I8 attribution.",
+  "fix": "State the pre-PRV-10 rule, for example 'until PRV-10 ships, each uncertified device key counts as its own principal'.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

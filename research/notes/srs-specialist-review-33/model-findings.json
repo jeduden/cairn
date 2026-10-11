@@ -1,0 +1,212 @@
+[
+ {
+  "quote": "It covers membership, roles, appointments, pins, pin versions, stamps, mutes, presentations, picks, bars, handovers and their offers, OWN-21's ready and abandoned marks, the CI keys enrolled in the room and whether the git carrier is enabled for it.",
+  "severity": "needs-fix",
+  "problem": "The same entry resolves branch links ('Of two branch links naming one branch, the first in causal order stands'), and LANE-01 sends branch links to LANE-31. But the coverage list, which reads as close",
+  "rid": "acts-and-roles#6"
+ },
+ {
+  "quote": "A seat with none, other than the owner's device seats, is a viewer; a run's personal-room seat, or its seat in a room it created, is a contributor.",
+  "severity": "needs-fix",
+  "problem": "Together with LANE-16 ('its agents' run seats MUST have only their role and any appointment'; 'No role MAY follow from joining'), the owner's own run that joins the owner's room is a viewer with no wo",
+  "rid": "acts-and-roles#7"
+ },
+ {
+  "quote": "**Capability**: What a role lets a seat do.",
+  "severity": "needs-fix",
+  "problem": "The model elsewhere gives capabilities without a role: the owner's device seats have every room capability without one (Owner), and writing a room summary comes only from the facilitator's appointment",
+  "rid": "acts-and-roles#8"
+ },
+ {
+  "quote": "**tree** (git's snapshot of a commit's files)",
+  "severity": "needs-fix",
+  "problem": "Contradiction inside the file and with LANE-05 (05b-lane-requirements.md:18, 'the tree is the latest worktree checkpoint plus the edits recorded since'). Own check runs 'on the latest worktree checkpo",
+  "rid": "git-and-forge#2"
+ },
+ {
+  "quote": "It approves and lands; Cairn does neither \u2026 Cairn never lands anything",
+  "severity": "needs-fix",
+  "problem": "The model states as permanent what OQ-37 (13-open-questions-and-risks.md:44, 'May Cairn run, push or merge code itself? Until this closes, ADM-13 applies \u2026 the forge lands and approves code') leaves o",
+  "rid": "git-and-forge#4"
+ },
+ {
+  "quote": "results with their evidence and proof classes",
+  "severity": "needs-fix",
+  "problem": "The summary, repeated in the hub catalog (index.md:49), attaches proof classes to results; a proof class is 'Of a landing link'.",
+  "rid": "git-and-forge#13"
+ },
+ {
+  "quote": "the tamper evidence of VIEW-10 and SEC-27",
+  "severity": "needs-fix",
+  "problem": "Gives Evidence (git-and-forge) a second meaning inside the model itself. This belongs to the record specialist.",
+  "rid": "git-and-forge#14"
+ },
+ {
+  "quote": "The harness's callback into Cairn, carrying its **hook input**, a JSON object (\u00a79.1). The core's hook handlers answer it.",
+  "severity": "needs-fix",
+  "problem": "Hook defines hook input but nothing names what the handlers return, yet 'hook output' carries normative rules: OWN-04 (05c:20 'Hook output MAY carry a permission decision'), OWN-03 (05c:19 'never thro",
+  "rid": "harness-facts#1"
+ },
+ {
+  "quote": "One exchange between the harness and the model, from an input to the model reply that ends it.",
+  "severity": "needs-fix",
+  "problem": "Read literally, each tool result is an input that starts an exchange, so tool results would trigger turns, which LANE-14 forbids ('Nothing else MAY trigger a turn', 05b-lane:26). OWN-15 'mid-turn stee",
+  "rid": "harness-facts#3"
+ },
+ {
+  "quote": "and ingest records the matching line as untrusted `harness_text` (LANE-14)",
+  "severity": "needs-fix",
+  "problem": "LANE-14 says only that ingest 'MUST mark untrusted'; the `harness_text` classification is PRV-08 (05-functional:53)",
+  "rid": "harness-facts#5"
+ },
+ {
+  "quote": "and opt-in notices (INJ-10), compaction guidance (PIN-07) and the fixed templates of OWN-04 and OWN-07, each built only from fixed text Cairn ships, trusted structural fields and ids.",
+  "severity": "needs-fix",
+  "problem": "harness-facts.md:44-46, PIN-07, \u00a79.1 (09-interfaces:20), \u00a74.4 (04:128-129) and the fifteenth-round decision (index.md:36) all say fixed text Cairn ships, never record content; I2 also admits structura",
+  "rid": "harness-facts#8"
+ },
+ {
+  "quote": "A room this node holds, other than only as a blind peer, that its principal neither owns nor has a seat in",
+  "severity": "needs-fix",
+  "problem": "A node that holds a cross-room post's sending writer only to show the post in a room of its principal meets this definition, so the sending room is foreign; RCL-05 (05-functional-requirements.md:82) b",
+  "rid": "places#6"
+ },
+ {
+  "quote": "Whether a room is private, shared with the room's principals, published or stored on blind peers (LANE-17).",
+  "severity": "needs-fix",
+  "problem": "Only publishing and blind-peer enrollment are gated by visibility (also LANE-17, 05b-lane:29); nothing says whether an invite, admission change or join into a non-personal private room is refused or m",
+  "rid": "places#7"
+ },
+ {
+  "quote": "that mints new seat keys and shares the carried-over personal room (REC-24)",
+  "severity": "needs-fix",
+  "problem": "'shares' here (and 'carried over to a node clone, which shares it') collides with Visibility's 'shared with the room's principals' for a room that 'stays private'; the hub verb for a node keeping a ro",
+  "rid": "places#8"
+ },
+ {
+  "quote": "managed policy revokes one it lists by no longer listing it; none starts uncertified",
+  "severity": "needs-fix",
+  "problem": "Service account and Person: a listing is a settings layer beside the record (record.md:11-14), not part of the key set (seats-and-keys.md:75-76), and no requirement records it. After delisting the key",
+  "rid": "principals-and-agents#1"
+ },
+ {
+  "quote": "A personal-room seat can neither leave nor be kicked.",
+  "severity": "needs-fix",
+  "problem": "The Member rule has no requirement. LANE-23 makes every leave a room act after which acts under that id are refused, and room_leave takes any room. Before PRV-10, LANE-25's 'any key that chains to the",
+  "rid": "principals-and-agents#2"
+ },
+ {
+  "quote": "Under a delegation grant its principal recorded (OWN-23), and, for an agent of another principal, an acceptance grant that agent's principal recorded (OWN-26)",
+  "severity": "needs-fix",
+  "problem": "I2 never names the delegating agent, so 'its principal' binds to the agent written to. For cross-principal delegation that makes the receiving principal record the delegation grant, contradicting OWN-",
+  "rid": "principals-and-agents#3"
+ },
+ {
+  "quote": "Only an agent's own principal widens what reaches that agent (I2)",
+  "severity": "needs-fix",
+  "problem": "Under OWN-26 and I2, a delegated task reaches another principal's agent only under the delegating principal's delegation grant, a widening act of a different principal, together with the acceptance gr",
+  "rid": "principals-and-agents#4"
+ },
+ {
+  "quote": "a harness resume that starts a new harness session, or a **harness clear**, starts a new run",
+  "severity": "needs-fix",
+  "problem": "The model asserts that a harness clear starts a new run, but no requirement or assumption backs it. REC-02 and ASM-01 cover only resume. Run is keyed by harness session, so if a clear kept its session",
+  "rid": "principals-and-agents#6"
+ },
+ {
+  "quote": "**Integrity status**: What a room or writer shows about its chain and seals,",
+  "severity": "needs-fix",
+  "problem": "Gap in the model: RCL-09 ('Every recalled item MUST carry ... its integrity status'), VIEW-10, REC-18 and \u00a79.7.5's own value `unverified` ('an event after a break', 09b:102) give one integrity status ",
+  "rid": "record#5"
+ },
+ {
+  "quote": "under a name that confirms no guess at its content (REC-09)",
+  "severity": "needs-fix",
+  "problem": "The cited REC-09 (and its scenario at record.feature:107) promises only that the name is one 'from which no one off this node can confirm a guess at the content'. The model promises more than the requ",
+  "rid": "record#12"
+ },
+ {
+  "quote": "**Flag**: A mark Cairn sets on an event whose text matches an injection pattern (PRV-07)",
+  "severity": "needs-fix",
+  "problem": "The cited PRV-07 flags only untrusted events ('Cairn SHOULD flag ... untrusted events that contain instruction-like content'). The model's definition covers any event.",
+  "rid": "record#13"
+ },
+ {
+  "quote": "tombstones and a witness check's record (the command by commitment, its exit",
+  "severity": "needs-fix",
+  "problem": "Record means the set of writer logs a node holds. Here 'record' names one event, giving the word a second meaning inside the file that defines it.",
+  "rid": "record#14"
+ },
+ {
+  "quote": "a **device scope** (the kinds of principal act it may sign, and of post and pin its seats may write)",
+  "severity": "needs-fix",
+  "problem": "PRV-10 (05-functional-requirements.md:55: 'A paired phone's scope MUST be limited to reading and to allowing or denying held permission requests'), OWN-16 ('whose scope permits only reading'), LANE-16",
+  "rid": "seats-and-keys#8"
+ },
+ {
+  "quote": "certify an ephemeral node's seats or carry an invite link",
+  "severity": "needs-fix",
+  "problem": "git-and-forge Qualified links ('an invite link (which connects nothing: it carries an access token)') and LANE-18 ('an invite link carrying a one-time access token'). My file has the access token carr",
+  "rid": "seats-and-keys#9"
+ },
+ {
+  "quote": "limited to an access token's rooms, the rooms it may create, its node's own personal room and its expiry (PRV-10)",
+  "severity": "needs-fix",
+  "problem": "Citation check. PRV-10 says nothing about these limits; PEER-06 states them ('a token key, certified by the issuing node's device key and limited to those rooms, the node's own personal room and the e",
+  "rid": "seats-and-keys#10"
+ },
+ {
+  "quote": "a new one for each seat key minted anew",
+  "severity": "needs-fix",
+  "problem": "Seat key: a rotation keeps the seat's id and writer (SEC-27); only a key minted on a node identity change, a node clone or a backup restore starts a new seat. A rotation also mints a new key, so 'each",
+  "rid": "seats-and-keys#12"
+ },
+ {
+  "quote": "shown on Health until acknowledged (`cairn counter ack`, I6, OPS-03)",
+  "severity": "needs-fix",
+  "problem": "ADM-11 (05a:24) and \u00a79.5 `cairn status` (09a:16) keep non-zero failure counters shown; OPS-03 uses acknowledgement only as cairn doctor's baseline",
+  "rid": "trust-and-flow#9"
+ },
+ {
+  "quote": "A recall tool that stops at its per-call cap returns a **continuation cursor** (`next_cursor`); passed back as `cursor`, it continues without gap or overlap (RCL-03).",
+  "severity": "needs-fix",
+  "problem": "kernel_exec, a recall tool here, returns a truncation marker at its cap (CMP-06; record.md:148-149), and landmark_list has a cap but no cursor; RCL-03 (05-functional:80) does not state 'without gap or",
+  "rid": "trust-and-flow#10"
+ },
+ {
+  "quote": "The rooms a principal marks to come first in Needs you",
+  "severity": "needs-fix",
+  "problem": "\u00a79.7.4 (09b:88-90) orders by class first, with focus-set rooms first only inside Q2 and Q3",
+  "rid": "trust-and-flow#11"
+ },
+ {
+  "quote": "What confines a run, its policy digest, and which residual risks it blocks",
+  "severity": "needs-fix",
+  "problem": "Cites OWN-22, which requires no policy digest; nothing in the SRS mentions one",
+  "rid": "trust-and-flow#12"
+ },
+ {
+  "quote": "that the node's principal or managed policy sets (ADM-15)",
+  "severity": "needs-fix",
+  "problem": "\u00a79.6 (09-interfaces:183) also lets repository configuration lower `quota.*`",
+  "rid": "trust-and-flow#13"
+ },
+ {
+  "quote": "never one another principal sent (VIEW-07)",
+  "severity": "needs-fix",
+  "problem": "VIEW-07 (05b-room-view:44): 'never a name another principal or a peer sent'; the model omits peers",
+  "rid": "trust-and-flow#14"
+ },
+ {
+  "quote": "the Needs you queue and focus set",
+  "severity": "needs-fix",
+  "problem": "The summary (and the hub catalog row generated from it) points here for the Needs you queue, which components-and-surfaces.md defines; this file defines only queue classes and the focus set",
+  "rid": "trust-and-flow#15"
+ },
+ {
+  "quote": "exchanged once for an **origin secret** only its own origin, port included, can read or send",
+  "severity": "needs-fix",
+  "problem": "Hub rule 'every word one meaning': the model defines Origin as how an event reached the record, yet uses 'origin' unqualified in the browser's sense, and so does the SRS (SEC-20, SEC-21, OWN-11, OWN-1",
+  "rid": "whole#11"
+ }
+]

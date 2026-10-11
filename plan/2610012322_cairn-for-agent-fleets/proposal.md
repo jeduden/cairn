@@ -222,7 +222,7 @@ Priorities: P0 for v1.0, P1 expected for v1.0, P2 later, specified now.
 Sections 6.2 to 6.14 drafted the requirement rows. They landed, and were
 revised since, in [§5](../../docs/srs/05-functional-requirements.md),
 [§5b](../../docs/srs/05b-lane-requirements.md),
-[§5c](../../docs/srs/05c-owner-and-peer-requirements.md),
+[§5c](../../docs/srs/05c-principal-and-peer-requirements.md),
 [§6](../../docs/srs/06-security.md),
 [§7](../../docs/srs/07-non-functional-requirements.md),
 [§9](../../docs/srs/09-interfaces.md) and

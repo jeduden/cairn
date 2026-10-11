@@ -1,0 +1,165 @@
+[
+ {
+  "id": "R4-1",
+  "real": true,
+  "why": "The model never says that a change the principal's own configuration makes to the deployment mode, to redaction or to flags waits for acceptance. The Deployment mode entry reads only \"`automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`).\" Redaction and Flag say nothing about it either. Record speaks of acceptance only for repository configuration: \"a key of it that would make a change ADM-04 takes only from accepted configuration is ignored\". The rule is stated only for retention policies (\"the principal's change to one is widening and applies only once its configuration is accepted (ADM-04)\") and for configuration pins. A reader cannot tell that an agent rewriting config.toml from `automation` to `interactive` changes nothing until a principal act accepts it.\n\nWhat the SRS already says, part by part:\n- Deployment mode and redaction: ADM-04 and PRV-04 settle both.\n- Trust policy: settled by PRV-02's fixed list of inputs. The only input that comes from a setting is the recorded deployment mode, so no settings layer changes the rule. §9.6 has no key for it, and I10 forbids trust levels that depend on unrecorded configuration.\n- Flags: genuinely open. ADM-04 does not list turning `flag.enabled` off; SEC-11 bars only repository configuration from doing it. Yet turning flags off is widening by the model's own definition (\"A widening act lets more reach an agent\"). LMK-04 keeps flagged events out of the landmark text fields that restore blocks carry (INJ-01), and PRV-07 marks the flag in recall results. So today an agent could switch flags off through the principal's configuration with no principal act.\n\nThe flags part is a tightening that follows from OWN-11 and from ADM-04's own pattern (it already lists \"loosens redaction\"). There is no real behavioral choice, and it closes a hole in a P0 requirement, so it is not deferred.",
+  "settled_by": "Mostly settled, not for flags. ADM-04: \"A settings change that adds, edits or unpins a pin, changes the deployment mode or a retention policy, lowers the pin budget, loosens redaction, recall scope, rule levels or hold windows, or turns on a B1–B3 component MUST be accepted only from the principal's configuration after the widening principal act accepting it records its digest, or from managed policy, which never turns a B1–B3 component on\". PRV-04: \"`interactive` MUST be an explicit opt-in in the principal's configuration.\" PRV-02 (trust policy): \"Trust levels MUST derive per event, principal and reading node from provenance, origin (reading `bundle` as `peer`), recorder, writer, recorded deployment mode, the node's key set and that principal's stamps and trust grants\". Flags: none. SEC-11 covers only repository configuration: \"it MUST NOT enable any injection, ... change the trust policy, change the deployment mode, or disable redaction or flags.\"",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "A: add turning flags off to ADM-04's list and carry the whole rule in the model's Deployment mode and Trust policy entries",
+    "effect": "An agent that edits config.toml can no longer change the deployment mode, loosen redaction or turn flags off until a widening act at a principal surface accepts the configuration's digest. The model says so, and says that no settings layer changes the trust policy.",
+    "invariant_change": false
+   },
+   {
+    "label": "B: carry only ADM-04's existing list in the model and leave flag.enabled a plain setting",
+    "effect": "The model matches the SRS as written, but an agent can still turn flags off through the principal's configuration with no principal act. Flagged events' sanitized fields then reach the landmark text in restore blocks, and recall results lose the flag.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option A, a tightening that is not deferred. It closes a hole in ADM-04 (P0, which ships before any milestone that could hold a deferral) and needs no invariant wording change.\n\nWhere the text goes: the acceptance rule sits in the Deployment mode entry rather than in Redaction and Flag because record.md is at 2991 of its 3000 heuristic tokens.\n\nI checked the edits on a scratch copy:\n- trust-and-flow.md rises to 2993 of 3000 tokens, so later edits to that file in this round must free words first.\n- principals-and-agents.md is untouched by this theme.\n- `mdsmith check docs/domain-model docs/srs` passes, including the re-padded ADM-04 table row.\n- The scenario gates pass: `go test ./internal/scenario ./internal/srs ./cmd/cairn`.\n\nThe ADM-04 scenario gains one Examples row (`flag.enabled = false` with no recorded digest leaves flags on), since a changed requirement lands with its scenario.",
+  "edits": [
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "  `automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`).\n- **Trust policy**: The rule that derives each event's trust level (PRV-02).",
+    "new": "  `automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`);\n  changing it, loosening redaction or turning flags off applies only once\n  its configuration is accepted (ADM-04).\n- **Trust policy**: The rule that derives each event's trust level (PRV-02); no\n  settings layer changes it."
+   },
+   {
+    "file": "docs/srs/05a-administration-requirements.md",
+    "old": "hold windows, or turns on a B1–B3 component MUST be accepted only from the principal's configuration after the widening principal act accepting it records its digest, or from managed policy, which never turns a B1–B3 component on; a repository configuration key making one MUST be ignored, audited and counted.                                                                           | T   | I6, I7",
+    "new": "hold windows, turns flags off, or turns on a B1–B3 component MUST be accepted only from the principal's configuration after the widening principal act accepting it records its digest, or from managed policy, which never turns a B1–B3 component on; a repository configuration key making one MUST be ignored, audited and counted.                                                          | T   | I6, I7"
+   },
+   {
+    "file": "features/administration.feature",
+    "old": "      | the person's config.toml containing \"payload.threshold_bytes = -1\"                                                                                  | cairn status            | exits 2, and the error names the key \"payload.threshold_bytes\" and the problem \"out of range\" |",
+    "new": "      | the person's config.toml containing \"payload.threshold_bytes = -1\"                                                                                  | cairn status            | exits 2, and the error names the key \"payload.threshold_bytes\" and the problem \"out of range\" |\n      | the person's config.toml containing \"flag.enabled = false\" with no widening act recording its digest, and a tool result that orders the assistant   | cairn audit --flagged   | lists that tool result as flagged: flags stay on until a widening act records that digest     |"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/trust-and-flow.md",
+   "quote": "changing it, loosening redaction or turning flags off applies only once"
+  }
+ },
+ {
+  "id": "R4-2",
+  "real": true,
+  "why": "This is a real gap in the model, though not in the SRS.\n\nThe Facilitator entry says the program \"acts through that node's CLI\" and that \"every pin version it writes is likewise in its own words\". It never says whether the program may write a constraint, preference or intent pin that restores unstamped, for example to grantors' agents under a trust grant. Read alone, the own-words rule seems to allow it.\n\nOnly by combining three other entries does the model imply the answer:\n- Device seat exempts only room acts: \"Its room acts are taken only at a principal surface, as principal acts are, but those its node takes on its own (Personal room, Join) and the facilitator's, which its program takes through its node's CLI (SEC-32)\".\n- Pin says \"Adding, editing or unpinning a pin of a type that restores, written from a device seat a device key certified ..., is a widening principal act of its author's principal\".\n- Principal act requires a principal surface.\n\nThe SRS settles it outright. OWN-12 makes every principal-act verb refuse without a terminal and exempts the facilitator's program only for verbs that write a room act. §9.5 lists `cairn pin add`, `edit` and `unpin` as room acts only for pins that do not restore or that come from a token-key-only node. The pins a token-key-only node writes restore only once stamped, and no trust grant covers them.\n\nSo the program writes no pin that restores unstamped; only §6.1's residual risk R7 remains, which DM-Q already accepts. The model only needs to say this in the Facilitator entry.",
+  "settled_by": "OWN-12: \"Every CLI verb that writes a principal act (§9.5) MUST refuse unless its standard input and output are a terminal.\" and \"`cairn pin add`, `cairn pin edit` and `cairn pin unpin` write widening principal acts of the pin's author's principal, each still needing its seat's pin capability (LANE-26), when the pin is of a type that restores written from a device seat a device key certified\" and \"A CLI verb that writes a room act, such as `cairn room mute`, MUST sign it with the seat key of the principal's device seat in that room, give it no OWN-11 class, name the room it acted in, and, as a verb writing a principal act does, refuse unless its standard input and output are a terminal, except for the facilitator's program (SEC-32)\". §9.5 (09a): \"`cairn pin add`, `edit` and `unpin` of a device-seat pin of a type that does not restore or written from a token-key-only node, a verdict excepted, and `cairn list-removal make`) signs it with the seat key of the principal's own seat in that room (LANE-23, LANE-24) and, but the facilitator's program's (SEC-32), refuses unless its standard input and output are a terminal (OWN-12).\"",
+  "klass": "settled",
+  "options": [],
+  "recommendation": "Settled: change the model only, with no deferral needed.\n\n- The Facilitator entry should carry OWN-12's consequence: the program writes no pin that restores unstamped, because such a pin from a device seat a device key certified is a widening principal act at a principal surface, and the program's exemption from the terminal test covers only room acts.\n- The wording \"restores unstamped\" also covers a token-key-only facilitator node, whose pins are room acts that restore only once stamped.\n- The SRS needs no change, since OWN-12 and §9.5 already state the rule.\n- DM-AJ's quote (\"every pin version it writes is likewise in its own words\") and DM-Q's sentence stay intact.\n- principals-and-agents.md rises to 1983 of 3000 heuristic tokens.\n- `mdsmith check` passes on a scratch copy.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "  own words. It writes room summaries, answering summary requests\n  (LANE-33).",
+    "new": "  own words, and its program writes no pin that restores unstamped: one of a\n  type that restores from a device seat a device key certified is a widening\n  principal act, taken at a principal surface, and the program is exempt from\n  the terminal test only for room acts (OWN-12). It writes room summaries,\n  answering summary requests\n  (LANE-33)."
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "its program writes no pin that restores unstamped"
+  }
+ },
+ {
+  "id": "R4-3",
+  "real": true,
+  "why": "Real. record.md says a peer still accepts a retired writer's segments past the retirement seq, \"marked delivered after retirement; only a revocation refuses them (PEER-05)\". LANE-31 derives room state \"as a deterministic function of the set of acts\". Neither says whether an act past that seq is in that set. An expire act ending an access token retires every writer its token key certified. So one implementer lets an expired ephemeral node's seat keep linking branches, pinning or kicking until someone revokes it, and another ignores those acts. Two existing rules lean towards 'they do not count': PEER-06 limits a token key to \"the expiry\", and LANE-31 lets an expiry in room state take effect \"only through its expire act\". But retirement by a principal act, and a late leave, are real behavioural choices, so this is a design question, not a tightening. It can wait. PEER-05 and sync for token-key-only nodes ship in M8 (§12.2), after M7's room merge, so no retired writer's later segment reaches any node earlier, and nothing that ships before M8 has a hole. No invariant wording is involved.",
+  "settled_by": "none. PEER-05 says only: \"A peer MUST still accept its segments past that `seq` that continue its chain without a fork, marked delivered after retirement, and only a revocation refuses them.\" LANE-31 merges \"as a deterministic function of the set of acts\", and \"an expiry in room state MUST take effect only through its expire act\". PEER-06 limits the token key to \"those rooms, the node's own personal room and the expiry\". None of them says whether an act past the retirement seq counts in the room merge, no OQ covers it, and no ADR touches it.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "No act past the retirement seq counts in the room merge",
+    "effect": "Its events are kept, recallable and shown marked delivered after retirement, but they change no room state. Retirement and token expiry then bound what a seat can govern. A late branch link or pin from an expired ephemeral node has to be redone by a current seat. A late leave is ignored, so the seat stays a member, as an ended run's seat already does.",
+    "invariant_change": false
+   },
+   {
+    "label": "Every act counts like any other until a revocation refuses the writer's later segments",
+    "effect": "Retirement only marks delivery and the missing range. An expired credential's seat keeps acting in its rooms until someone revokes it: a branch link can take a branch, and an appointed seat can kick or bar. The access token's expiry has no effect on room state.",
+    "invariant_change": false
+   },
+   {
+    "label": "Only a leave of the writer's own seat counts past the seq",
+    "effect": "A retired seat can still leave cleanly. Nothing else it does after retirement adds anything or acts on another seat. This costs one more special case in the merge.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Defer, before M8. Add it as an 'Also open, before M8' item of OQ-41, the open question on which acts the room merge counts. LANE-31 already points there with \"(open: OQ-41)\", and so does the model's Room merge entry (\"Acts with no member seat: open (OQ-41)\"). Inside the OQ, recommend the first option, which is the safe one. It can wait because PEER-05's retirement and late delivery ship only in M8. I used OQ-41 rather than a new number so this does not collide with R4-4's OQ-45 or with the edit to the summary line. Two edits risk the limits. record.md stays under the token budget only because the entry is rewrapped: 'Either names the writer's last accepted seq' becomes 'naming its last accepted seq', for a net gain of +3 words. record.md then sits at about 2995 of its 3000 heuristic tokens, so it has room for about 4 more words from any other theme. The OQ-41, PEER-05 and RCL-05 rows widen their tables, so run `mdsmith fix .` after applying. I checked: the whole repository passes `mdsmith check .` with these edits.",
+  "edits": [
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "Mark a writer retired: by a principal act, or by the\n  expire act ending the access token whose token key certified its seat key.\n  Either names the writer's last accepted seq. A peer still accepts segments\n  past it that continue its chain without a fork, marked delivered after\n  retirement; only a revocation refuses them (PEER-05).",
+    "new": "Mark a writer retired, by a principal act or the\n  expire act ending the access token whose token key certified its seat key,\n  naming its last accepted seq. A peer still accepts segments past it that\n  continue its chain without a fork, marked delivered after retirement (open\n  for the room merge: OQ-41); only a revocation refuses them (PEER-05)."
+   },
+   {
+    "file": "docs/srs/05d-peer-requirements.md",
+    "old": "marked delivered after retirement, and only a revocation refuses them.",
+    "new": "marked delivered after retirement (open for the room merge: OQ-41), and only a revocation refuses them."
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "or as from any other room. | Stakeholder; security review, before M7's room merge, a personal room's cross-room posts before M8",
+    "new": "or as from any other room. Also open, before M8: whether an act in a retired writer's segments past the seq its retirement names, which a peer still accepts, marked delivered after retirement (PEER-05), counts in the room merge. An expire act ending an access token retires every writer whose seat key its token key certified, so if such acts count, an expired ephemeral node's seat keeps acting in its rooms, by a branch link, a pin or a kick, until a revocation. Options: no act past that seq counts, its events kept, recallable and shown so marked (recommended); each counts as any other act until a revocation refuses the writer's later segments; or only a leave of the writer's own seat counts. | Stakeholder; security review, before M7's room merge, a personal room's cross-room posts and a retired writer's later acts before M8"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/record.md",
+   "quote": "marked delivered after retirement (open for the room merge: OQ-41)"
+  }
+ },
+ {
+  "id": "R4-4",
+  "real": true,
+  "why": "Partly real. The default `run` scope is not a defect. RCL-05 already binds it to \"the calling agent's current run, through every writer of its seats\". The model's Recall entry says recall \"defaults to the agent's current run\", and its Recall scope entry says \"A wider scope is said to extend recall\". So \"Recall extends only to ...\" in Relations covers only the wider scopes. Relations just does not carry the default, and the edit adds it. The room that the agent's run seats have left is a real gap. The model's verbs say an agent \"has a seat in a room through its runs' seats that are members\". So a room of the principal's in which every run seat of the agent has left, or lost its seat to a kick or a bar, is outside `room` and `rooms` (RCL-05: \"one of its principal's rooms the agent has a seat in\"). It is not foreign either (\"that its principal neither owns nor has a seat in\"), so RCL-10's naming path does not apply. Only the current run's own writer there is reachable. Yet PIN-10 keeps restoring that room's pins (\"of every room its agent's earlier runs had a seat in\") and names the omitted ones by id, which the agent cannot then fetch. Meanwhile a room the principal has left entirely can be named. Today's outcome is the restrictive one, so there is no security hole, only a usefulness gap and an inconsistency. That makes it a deferrable design question. Leave and kick ship in M7 (LANE-23..33). The mismatch with foreign rooms appears only when RCL-10 ships, in M8. The finding's own fix says \"whatever room holds it\", which breaks the model's verb rule (\"holds\" is said of nodes), so the edit says 'belongs to' instead.",
+  "settled_by": "In part. RCL-05 settles the default scope: \"Recall scope MUST default to `run`: the calling agent's current run, through every writer of its seats, which record its delegate reports.\" Two rules together leave a non-foreign room, whose every agent run seat has left, reachable only through `run`: RCL-05 (\"`room` (one of its principal's rooms the agent has a seat in, through the writers this node holds)\") and RCL-10 (\"Recall MUST reach a foreign room only through a `room` parameter naming it in that call\"). No requirement, ADR or ledger closing text (DM-AC, DM-AG) decides whether a call may name such a room.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "A call may name it, as under RCL-10 (enveloped, logged, every item untrusted, the run tainted), only where its pins restore to the run",
+    "effect": "The agent can read a room whose pins still restore to it and fetch a pin the budget omitted. Nothing becomes trusted, and I2 holds through the envelope and recall taint. A run seat that was kicked can still read what its node holds of the room, which a foreign room already allows.",
+    "invariant_change": false
+   },
+   {
+    "label": "A call may name it, with every item keeping its trust level as under the `room` scope",
+    "effect": "The most useful option. But a leave or kick no longer bounds the agent's trusted reach, which weakens RCL-05's 'has a seat in' boundary.",
+    "invariant_change": false
+   },
+   {
+    "label": "Keep today's rule: only the `run` scope reaches it",
+    "effect": "The least reach. A later run cannot read a room whose pins restore to it, nor fetch a pin of that room the budget omitted. A foreign room can still be named, so the asymmetry stays.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Defer to a new OQ-45, before M8, alongside RCL-10. Inside the OQ, recommend the first option. Until it closes, today's restrictive rule holds: only the `run` scope reaches such a room. This needs no new MUST and no change to a scenario. The OQ number is provisional: renumber it if another theme takes OQ-45. The summary lines in docs/srs/13-open-questions-and-risks.md and docs/srs/index.md (the latter is a catalog that `mdsmith fix` regenerates) then read OQ-01..45. The `run`-scope half is settled by RCL-05, and the model edit only carries it. index.md stays well within its line and token budget (about 2290 of 3000 tokens). The new OQ row and the widened RCL-05 row need `mdsmith fix .` to re-pad the tables. I checked: the repository passes `mdsmith check .` with these edits.",
+  "edits": [
+   {
+    "file": "docs/domain-model/index.md",
+    "old": "- Recall extends only to the principal's\n  rooms the agent has a seat in and the cross-room posts they show, never to a\n  foreign room unless the call names it.",
+    "new": "- Recall defaults to the calling agent's current run, through every writer of\n  its seats, whatever room each seat belongs to (RCL-05). It extends only to\n  the principal's rooms the agent has a seat in and the cross-room posts they\n  show, never to a foreign room unless the call names it; whether a call may\n  name a room of the principal's that every run seat of the agent has left or\n  lost to a kick or a bar rests on OQ-45."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "A foreign room MUST be reached only under RCL-10, never through the `room` or `rooms` scope.",
+    "new": "A foreign room MUST be reached only under RCL-10, never through the `room` or `rooms` scope. Whether a call may name a room of its principal's that every run seat of the agent has left or lost to a kick or a bar, which neither scope reaches, is open (OQ-45)."
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "\n\n## 13.2 Risks",
+    "new": "\n| OQ-45 | Recall reaches a room of the principal's only while the agent has a seat in it (RCL-05), and a foreign room only when the call names it (RCL-10). A room of the principal's that every run seat of the agent has left or lost to a kick or a bar, and that is not foreign, falls between them: no call reaches it beyond the current run's own events in it (the `run` scope), though its pins keep restoring to the agent's runs and the restore block names it and any of its pins the pin budget omits (PIN-08, PIN-10). Until this closes, only the `run` scope reaches it. Options: a call may name it, as under RCL-10, enveloped, logged, every item untrusted and the run tainted (SEC-13), only where its pins restore to the run (recommended); a call may name it with every item keeping its trust level, as under the `room` scope; or only the `run` scope reaches it. | Stakeholder; with RCL-10, before M8 |\n\n## 13.2 Risks"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "Open questions OQ-01..44",
+    "new": "Open questions OQ-01..45"
+   },
+   {
+    "file": "docs/srs/index.md",
+    "old": "Open questions OQ-01..44",
+    "new": "Open questions OQ-01..45"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/index.md",
+   "quote": "whether a call may name a room of the principal's that every run seat of the agent has left or lost to a kick or a bar rests on OQ-45"
+  }
+ }
+]

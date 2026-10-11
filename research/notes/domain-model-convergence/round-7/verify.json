@@ -1,0 +1,386 @@
+[
+ {
+  "id": "R7-1",
+  "real": true,
+  "why": "The defect is real in the current text, but it shows up only once M7 ships. places.md says: \"Of the other principal acts among events so received, each cut or neutral one in force at the change or in the copy keeps its effect until undone there, and no widening one takes effect on the node\". REC-24 and ADM-06 say the same, and so does OQ-48's interim rule (\"each cut or neutral act in force there keeps its effect\"). A rule-level act sets a level outright: §9.5 says `cairn rule-level set` sets a level, \"loosening a rule level widening and tightening one a cut\". It is classed against the level standing when it is taken. Example: the base level is ask first; a widening act sets act without asking; a cut act then sets act when told. After a node clone or a backup restore, the widening act lapses. If the cut act still has the effect of setting act when told, the level ends up looser than if neither act had been taken. That contradicts the model's definition that a cut act \"only stops, narrows or undoes a widening\" (acts-and-roles.md, OWN-11). It also lets an altered backup copy, which carries a loosening and then such a tightening, loosen a rule level. ADM-06's clause to \"reapply every ... rule level tightening recorded after the backup was taken\" has the same gap. Scope: rule levels are OWN-10 (P1), and §12.2's M7 row takes \"OWN P1 rows but OWN-01\". No M1–M5 row names OWN-10. Every other cut act that ships in M1–M5 only stops, ends or revokes something, or puts it in its safe state: quarantine, withdrawing a risk acceptance, turning capture on. None of them can leave anything looser than it stands without the widening acts. So the finding arises only from an M7 feature, and before M7 nothing ships that it could loosen.",
+  "settled_by": "None for the rule itself: no requirement says what a kept tightening leaves once the widening act it narrowed lapses. The disposition follows the M1–M5 scope decision (research/notes/domain-model-convergence/m1-m5-scope.md): \"A finding that arises only from M6–M9 features is reported as `later` with its milestone and is not a needs-fix finding of this loop; the ledger defers it to OQ-47 with that milestone, for that milestone's ENG-29 review gate.\"",
+  "klass": "design",
+  "options": [
+   {
+    "label": "Defer to OQ-47 with milestone M7 (recommended)",
+    "effect": "No text changes now. The ledger records the theme as deferred to OQ-47 with M7. M7's ENG-29 review gate decides it before OWN-10's rule levels ship, and should apply option 2's wording. Nothing that ships in M1–M5 is left open, because no rule level exists before M7.",
+    "invariant_change": false
+   },
+   {
+    "label": "Apply the safe wording now",
+    "effect": "places.md gets a new sentence after \"PRV-10 ships is open too (OQ-48).\": \"A cut act so kept never leaves a rule level looser than it stands without the widening ones: it takes the tighter of the level the act set and that one.\" REC-24 gets \"never leaving a rule level looser than it stands without the widening ones,\" after \"keep its effect likewise until undone there,\". ADM-06 gets the same clause after \"in force in the copy\" and on its reapplied rule level tightenings. OQ-48's interim sentence gets it too. This follows from OWN-11's definition of a cut act and from I8, and it closes the altered-copy path. It is dormant until OWN-10 ships, and it uses about 11 of the roughly 25 words left in 05-functional-requirements.md.",
+    "invariant_change": false
+   },
+   {
+    "label": "At M7, a kept cut act lapses with the widening act it narrowed",
+    "effect": "Simpler to derive, but a tightening below the level that stands without the widening acts is lost too, which loosens a rule level after a clone or a restore. Rejected on safety grounds.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Defer to OQ-47 with milestone M7. The defect is real but arises only from OWN-10's rule levels, which ship in M7, so it can wait: nothing that ships before M7 can be loosened this way, and no invariant's wording is involved. OQ-47's row is generic, so no SRS or model text changes now, in line with DM-DB, DM-DC and DM-DL. For M7's ENG-29 gate, recommend option 2, the safe side under I8 and OWN-11: a cut act kept after a node identity change or a backup restore never leaves a rule level looser than it stands without the widening acts, and takes the tighter of the level it set and that level. Apply it in places.md, REC-24, ADM-06 (including its reapplied rule level tightenings) and OQ-48's interim rule.",
+  "edits": [],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "each cut or neutral one in force at the change or in the copy"
+  }
+ },
+ {
+  "id": "R7-6",
+  "real": true,
+  "why": "trust-and-flow.md's Deployment mode entry reads: \"changing it, loosening redaction or turning flags off applies only once its configuration is accepted (ADM-04).\" Several other places in the model carry parts of the rule. record.md has the retention policy (\"applies only once its configuration is accepted\"). pins-and-context.md has adding a configuration pin (\"takes effect only once the principal's widening act accepting that configuration records its digest\"). components-and-surfaces.md has turning on the room-view component or the launcher. record.md also refers to \"a change ADM-04 takes only from accepted configuration\" but never lists that set. Nowhere does the model say that editing or removing a configuration pin, lowering the pin budget, or loosening recall scope, rule levels or hold windows waits for acceptance. The Deployment mode list therefore reads as complete. A reader could conclude that an unrecorded edit to the configuration file, which an unsandboxed agent can make (R3), drops a constraint pin or lowers the pin budget at once, against I3 and PIN-01. The SRS is complete here. Configuration pins (PIN-01) and the pin budget (PIN-08) are M2 and ADM-04 is M1, so the theme is in scope. Rule levels and hold windows are M7 (OWN-10, OWN-06), so the edit covers them only by pointing to ADM-04. I am not adopting the finding's clause \"a tightening change applies at once\". ADM-04 holds any change to the deployment mode or a retention policy for acceptance, whichever way it goes, and no requirement states that clause. After a node identity change or a restore, when the acceptance lapses (DM-DJ), it would also be unclear what the change is a tightening of. The edit keeps DM-BT's cited text intact. To stay inside trust-and-flow.md's 3000-token budget, it deletes the Petname entry's sentence on notifications, which repeats pins-and-context.md's Notification entry (\"It carries only the room's petname, else its id\"). trust-and-flow.md goes from 1 word of headroom to 3 (checked with mdsmith). pins-and-context.md has about 300 words to spare.",
+  "settled_by": "ADM-04 (docs/srs/05a-administration-requirements.md): \"A settings change that adds, edits or unpins a pin, changes the deployment mode or a retention policy, lowers the pin budget, loosens redaction, recall scope, rule levels or hold windows, turns flags off, or turns on a B1–B3 component MUST be accepted only from the principal's configuration after the widening principal act accepting it records its digest, or from managed policy, which never turns a B1–B3 component on\"",
+  "klass": "settled",
+  "options": [],
+  "recommendation": "The model should carry ADM-04's full set; the SRS needs no edit. In trust-and-flow.md, end the Deployment mode entry with \"as does every other change ADM-04 names\", keeping DM-BT's text. In pins-and-context.md, say that editing or removing a configuration pin waits for acceptance and the pin stays as it stood until then, and that only managed policy, or the principal's configuration once accepted, lowers the pin budget. Offset the growth by deleting the Petname entry's duplicate sentence on notifications.",
+  "edits": [
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "its configuration is accepted (ADM-04).",
+    "new": "its configuration is accepted, as does every other change ADM-04 names."
+   },
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "another principal sent (VIEW-07). Notifications carry a room's petname, else\n  its id.",
+    "new": "another principal sent (VIEW-07)."
+   },
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "repository configuration declares none (ADM-04).",
+    "new": "repository configuration declares none (ADM-04). Editing or removing one\n  there likewise applies only once that configuration is accepted; until then\n  the pin stays as it stood."
+   },
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "The **pin budget** is the restore block's share of model tokens;",
+    "new": "The **pin budget** is the restore block's share of model tokens,\n  which only managed policy, or the principal's configuration once accepted,\n  lowers (ADM-04);"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/trust-and-flow.md",
+   "quote": "its configuration is accepted, as does every other change ADM-04 names"
+  }
+ },
+ {
+  "id": "R7-2",
+  "real": true,
+  "why": "The defect is real. The model's Deployment mode says \"`interactive` (a person types at the harness) or `automation` (a pipeline does, the default), set per node\". Turn makes `user` any \"text typed at the harness's own input\", which includes a pipeline's. Trusted sources trust \"the `user` events they recorded while the deployment mode is `interactive`\". So when an agent runs the harness as a command (`claude -p`, the Agent SDK, a script), an interactive node records that nested session's prompt as a trusted `user` event. PRV-08 does not exclude it either: it reads \"`user` only when it contains text typed at the harness's input\", and the nested prompt is typed at the nested harness's input. That text is model output, which I2 lists as untrusted (\"the model's replies\"). Recall would then mark it trusted for every agent of the principal (T20, principal-voice laundering). The nested session is not a resume, a subagent or a delegate, so SEC-13, OWN-24 and OWN-25 give it none of the starting run's recall taint. The PRV P0 classification ships in M1, so this cannot be deferred: it is a hole in what ships first. The taint half is SEC-13 (M5). The safe side follows from I2 and from DM-CC's precedent for a subagent's task (\"Its run records that task as untrusted `harness_text`, never `user`\"), so this is a tightening, not a design choice. Scope limit: a harness that the agent starts detached from its tool call's process tree (tmux, setsid) and then types into is a same-user process. §6.1 already scopes that out (\"For principal acts and a device seat's room acts only\"), so this adds no new risk. The rule is stated by process descent so that it is testable. Budget: harness-facts.md has room (411 to 538 words, 56 lines). trust-and-flow.md is untouched. 05-functional-requirements.md was already near its 8000-token cap at about 7961; after the offsets in PRV-08's first sentence, my three themes leave it at about 7990. Sibling drafts R7-7 and R7-8, which I saw in the shared scratchpad r7c, also grow 05, and together they would breach the cap. My verified edit set is in scratchpad r7-245-mine/mine.json. Not raised by the finding: the reverse direction, where the starting run takes on the nested run's recall taint once that tool call returns (OWN-25's analogue). It could become an OQ for M5.",
+  "settled_by": "none. I2 lists \"the model's replies\" as untrusted, and PRV-08 classifies `user` \"only when it contains text typed at the harness's input\". Neither names a harness session that a run's tool call starts, and SEC-13 carries recall taint only \"into a run a harness resume starts (REC-02) from the run it resumes\".",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "Record the input as untrusted harness_text and carry the starting run's recall taint",
+    "effect": "A harness session whose harness process descends from a run's tool call records no `user` event, in any deployment mode (PRV-08, M1). Its runs carry the starting run's recall taint, or recall taint from their first event where Cairn cannot tell which run started it (SEC-13, M5). This matches DM-CC's treatment of a subagent's task.",
+    "invariant_change": false
+   },
+   {
+    "label": "Record such a session under deployment mode automation",
+    "effect": "Same trust result, since `user` is untrusted in automation (PRV-04), and it keeps the `user` class and user turns. But it departs from DM-CC's precedent and shows model-written text as `user` in recall.",
+    "invariant_change": false
+   },
+   {
+    "label": "Defer to an OQ",
+    "effect": "Not available: interactive-mode trust of model-written text would ship in M1.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Tighten now (M1 for the classification, M5 for the recall taint). Add the rule to the model's Harness session entry, PRV-08 and SEC-13, and extend the pending PRV-08 and SEC-13 scenarios with the nested-session case. 05-functional-requirements.md ends near its token cap, so the orchestrator should budget the other clusters' 05 edits against it.",
+  "edits": [
+   {
+    "file": "docs/domain-model/harness-facts.md",
+    "old": "  describing the harness, never as a Cairn unit.",
+    "new": "  describing the harness, never as a Cairn unit. One whose harness process\n  descends from a run's tool call records no `user` event: its input, which\n  that tool call supplied, is untrusted `harness_text` whatever the deployment\n  mode, and its runs carry that run's recall taint, or recall taint from their\n  first event where Cairn cannot tell that run (PRV-08, SEC-13)."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "never `user` (OWN-24).",
+    "new": "never `user` (OWN-24). So MUST the input of a harness session whose harness process descends from a run's tool call."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "from the structural fields of its transcript line (line type, attachment type, content block type, `isMeta`, and the tool call a tool result answers) and never from its",
+    "new": "from its transcript line's structural fields (line, attachment and content block type, `isMeta`, and the tool call a tool result answers), never from its"
+   },
+   {
+    "file": "docs/srs/06-security.md",
+    "old": "from the run it resumes, and set from such a run's first event where Cairn cannot tell which run it resumes,",
+    "new": "from the run it resumes and into each run of a harness session a run's tool call starts (PRV-08) from that run, and set from such a run's first event where Cairn cannot tell which run it resumes or started it,"
+   },
+   {
+    "file": "features/provenance.feature",
+    "old": "      | a subagent's \"user\" line carrying the delegated task its parent's run wrote     | harness_text     | untrusted |",
+    "new": "      | a subagent's \"user\" line carrying the delegated task its parent's run wrote     | harness_text     | untrusted |\n      | a \"user\" line of a harness session a run's Bash tool call started               | harness_text     | untrusted |"
+   },
+   {
+    "file": "features/security.feature",
+    "old": "    And a run a harness resume starts in a new harness session, where Cairn cannot tell which run it resumes, carries recall taint from its first event",
+    "new": "    And a run a harness resume starts in a new harness session, where Cairn cannot tell which run it resumes, carries recall taint from its first event\n    And a run of a harness session whose harness process a Bash tool call of \"r-1\" started carries recall taint from its first event"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/harness-facts.md",
+   "quote": "descends from a run's tool call records no `user` event"
+  }
+ },
+ {
+  "id": "R7-4",
+  "real": true,
+  "why": "The defect is real in the model. record.md lists `harness_text` and defines `harness_meta` (\"never free text: turn triggers, model tokens, metadata lines that carry no free text and sandbox state\"), but nowhere defines `harness_text` or says which text is `user`. Only two single cases exist: Turn's launcher-carried line and Subagent's delegated task. The SRS already settles the rule. PRV-08 says \"`user` only when it contains text typed at the harness's input\" and that free text outside a message is `harness_text`, and PRV-03 says \"`harness_text` ... MUST be untrusted\". So the model only needs to carry it, which I do in Turn (harness-facts.md has room), with a pointer from Provenance. One SRS clarification keeps the two in step. PRV-08's \"an `isMeta` line, command output ... which MUST be untrusted `harness_text` (LANE-14), are not\" names a class only for the launcher-carried line. The pending PRV-08 scenario already classes the other two as harness_text, so the rewrite names the class for all of them. It folds in the next sentence and saves 5 words in the near-full 05 file. The model text also names a compaction summary, which §9.1 records as `harness_text`. It excludes a turn's model reply and a tool's, file's, MCP server's or subagent's output, which keep their own classes, as the PRV-08 scenario rows show (a CLAUDE.md attachment is `file`, MCP instructions are `mcp:docs`). Budget: in record.md, the pointer \"(Turn)\" costs 1 word, offset by dropping the redundant \"that carry no free text\" after \"never free text:\". This keeps record.md net neutral together with R7-5's offsets.",
+  "settled_by": "PRV-08: \"A transcript line MUST be classified `user` only when it contains text typed at the harness's input\" and \"Free text a transcript line carries outside a message MUST be classified `harness_text`, never `harness_meta`.\" PRV-03: \"`tool_call`, `harness_text` and unstamped `assistant` text MUST be untrusted.\"",
+  "klass": "settled",
+  "options": [
+   {
+    "label": "Carry PRV-08's boundary in Turn, point Provenance to it, and name the class of isMeta lines and command output in PRV-08",
+    "effect": "The model defines `harness_text` and the boundary of `user`, and the SRS names one class for every non-`user` line that PRV-08 lists, matching its pending scenario.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Settled (M1, PRV P0). Carry PRV-08's rule in the model's Turn entry with a pointer from Provenance, and clarify PRV-08 so that it names the class of isMeta lines and command output.",
+  "edits": [
+   {
+    "file": "docs/domain-model/harness-facts.md",
+    "old": "  recorded it (I2, PRV-02).",
+    "new": "  recorded it (I2, PRV-02). Only that typed text is `user`. Other free text the\n  harness writes or adds to the model's input, such as an `isMeta` line,\n  command output it writes as a `user` line, a compaction summary, context a\n  hook adds, a launcher-carried line or a subagent's delegated task,\n  is `harness_text`, never `user` and never trusted, unless it is a turn's\n  model reply, a tool result, a file's or an MCP server's text or a subagent's\n  report (PRV-08, PRV-03)."
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "  `harness_text`, `operator`, `post`, `summary`, `structural` and `unparsed`.",
+    "new": "  `harness_text` (Turn), `operator`, `post`, `summary`, `structural` and\n  `unparsed`."
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "lines that carry no free text and sandbox state",
+    "new": "lines and sandbox state"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "a tool result, an `isMeta` line, command output the harness writes as a `user` line and a line the launcher carried in, which MUST be untrusted `harness_text` (LANE-14), are not. Free text a transcript line carries outside a message MUST be classified `harness_text`, never `harness_meta`.",
+    "new": "a tool result is not, and an `isMeta` line, command output the harness writes as a `user` line, a line the launcher carried in (LANE-14) and free text a line carries outside a message MUST be untrusted `harness_text`, never `harness_meta`."
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/harness-facts.md",
+   "quote": "is `harness_text`, never `user` and never trusted"
+  }
+ },
+ {
+  "id": "R7-5",
+  "real": true,
+  "why": "The defect is real in the current text. CMP-02 keeps a run's kernel namespace \"until `kernel_reset`, worker restart, or the run's end\". CMP-07 covers only \"Kernel reads\", and the model's Quarantine and Purge entries name recall, restore blocks, landmark text and exports. So a value bound before a quarantine or purge can still be printed through `kernel_exec`. The outcome is already settled. `kernel_exec` is a recall tool (model Recall: \"`kernel_exec` with its built-ins (CMP-03)\"). RCL-06 says \"Anything quarantined MUST never be returned: ... and a purged range a tombstone\", and SEC-12 makes a quarantine \"take effect immediately for all recall ... operations\". What the SRS lacks is the mechanism for values already held. The simplest one that derives from the record (I10) is a reset: CMP-03's recall events name every address a namespace read, so Cairn resets each namespace that read what the quarantine or purge covers and states the loss, as CMP-05 already does. Purge then also erases the held copy, which keeps I1's purge exception honest. The same held-value gap breaks taint. CMP-06 taints output only \"by every event read during the execution\", so printing an earlier untrusted read later would come back untainted. The model's Taint (\"inherits: untrusted when any event it derives from is untrusted\") and §4.4 (\"tainted by the events it derives from\") already say otherwise, so CMP-06 is tightened to match at no word cost. Milestones: kernel M4, quarantine M1, purge M3, all in M1–M5. Budget: record.md stays net neutral (+1 word overall with R7-4). The Kernel line is offset by \"compute ... in which\" becoming \"where\" and Purge's \"as Relations says\" becoming \"(Relations)\". 05 grows by 14 words here; see R7-2 for the cap.",
+  "settled_by": "RCL-06: \"Anything quarantined MUST never be returned: a quarantined address returns a quarantine marker, and a purged range a tombstone.\" SEC-12: quarantine \"MUST take effect immediately for all recall, landmark and injection operations and every trusted-only export (ADM-12) on the node that records it\". kernel_exec is a recall tool (model Recall, §9.2).",
+  "klass": "settled",
+  "options": [
+   {
+    "label": "Reset each namespace that read what a quarantine or purge covers, stating the loss as CMP-05 does",
+    "effect": "Simple, derived from recall events (I10). The agent loses that run's other variables and recomputes them, and quarantined content is then refused by CMP-07.",
+    "invariant_change": false
+   },
+   {
+    "label": "Track provenance per variable and withhold or erase only the affected values",
+    "effect": "Same guarantee, keeps unrelated variables, but needs per-value provenance state in the kernel worker.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Settled (M4, with quarantine from M1 and purge from M3). Add the reset rule to CMP-07 and the model's Kernel entry, align CMP-06's taint with the model's Taint, and extend the pending CMP-06 and CMP-07 scenarios.",
+  "edits": [
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "own\n  namespace.",
+    "new": "own\n  namespace, reset when what it read is quarantined or purged (CMP-07)."
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "The hermetic compute environment in which an agent runs code over",
+    "new": "The hermetic environment where an agent runs code over"
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "content is destroyed (I1); it never undoes an act's effect, as Relations\n  says. A purged pin version",
+    "new": "content is destroyed (I1), never undoing an act's effect (Relations).\n  A purged pin version"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "Kernel reads MUST honour quarantine and recall scope exactly as MCP recall does.",
+    "new": "Kernel reads MUST honour quarantine and recall scope exactly as MCP recall does; a quarantine or purge MUST reset each namespace that read what it covers (CMP-05)."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "tainted by every event read during the execution.",
+    "new": "tainted by every event its namespace has read."
+   },
+   {
+    "file": "features/kernel.feature",
+    "old": "    And the envelope is tainted \"untrusted\" by the web event read during the execution",
+    "new": "    And the envelope is tainted \"untrusted\" by the web event read during the execution\n    And a later \"kernel_exec\" with code \"print(r[0])\", which reads no event, is tainted \"untrusted\" by that web event too"
+   },
+   {
+    "file": "features/kernel.feature",
+    "old": "    And the person has quarantined A1·7 with \"cairn quarantine add --range A1:7-7\"",
+    "new": "    And the agent has bound A1·7 to the kernel variable \"held\" with \"held = cairn.event_get(address='A1:7')\"\n    And the person has quarantined A1·7 with \"cairn quarantine add --range A1:7-7\""
+   },
+   {
+    "file": "features/kernel.feature",
+    "old": "    And A1·7 and rooms the run has no seat in are absent",
+    "new": "    And A1·7 and rooms the run has no seat in are absent\n    And the kernel states that the run's namespace was lost, and no variable \"held\" remains\n    And a purge of an event a kernel variable holds resets that namespace likewise"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/record.md",
+   "quote": "reset when what it read is quarantined or purged (CMP-07)"
+  }
+ },
+ {
+  "id": "R7-3",
+  "real": true,
+  "why": "The model's entry is missing a word, but the rule itself is not missing. The model reads \"or Cairn detected (a derived artifact over its creating `user` event,\" and never says that event must be trusted, so a reader could think detection runs over any `user` event. The SRS already rules that out. PIN-05 reads \"Cairn SHOULD detect constraints stated in trusted `user` events as pin candidates\". PRV-02 trusts a `user` event only \"on the recording node only, ... the `user` events they recorded while `node.deployment_mode` is `interactive`\" and says \"Every other event, every `ingested` or `summary` one included, MUST be `untrusted`\". So both cases in the finding (a `user` event recorded in automation mode, or one `cairn ingest` appended) produce no candidate at all. The PIN-05 scenario's Examples already expect 0 candidates in `automation` mode. The fix the finding proposes (show a trust mark on detected candidates) would always read trusted, so it adds nothing. The model only needs to carry PIN-05's word. A separate question, which I propose no edit for: SEC-12 does not list confirmation among the operations a quarantine stops, so it is open whether a candidate over a quarantined event can still be confirmed. That is a possible I5 follow-up finding and not part of this theme.",
+  "settled_by": "PIN-05: \"Cairn SHOULD detect constraints stated in trusted `user` events as pin candidates, each a derived artifact over its creating `user` event that holds its text by address, with no provenance of its own (I10).\" PRV-02: \"Every other event, every `ingested` or `summary` one included, MUST be `untrusted`\".",
+  "klass": "settled",
+  "options": [],
+  "recommendation": "Carry PIN-05's condition in the model's Pin candidate entry: Cairn detects a candidate only in a `user` event trusted on this node, never in an ingested or other untrusted one. No SRS edit is needed, because PIN-05 and PRV-02 already say this. Do not add the proposed trust mark for detected candidates: such a candidate's event is always trusted, so the mark would carry no information. Budget: pins-and-context.md grows by about 15 words and one line.",
+  "edits": [
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "or Cairn detected (a derived artifact over its creating `user` event,\n  holding its text by address, with no provenance of its own, I10); not yet a\n  pin, so it has no pin author (a pin's author being its first version's). The",
+    "new": "or Cairn detected (a derived artifact over its creating `user` event,\n  holding its text by address, with no provenance of its own, I10) only in a\n  `user` event trusted on this node, never in an ingested or other untrusted\n  one (PIN-05); not yet a pin, so it has no pin author (a pin's author being\n  its first version's). The"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/pins-and-context.md",
+   "quote": "`user` event trusted on this node, never in an ingested or other untrusted"
+  }
+ },
+ {
+  "id": "R7-7",
+  "real": true,
+  "why": "The cycle is real in the model's text. Pin priority says \"lower first, the intent before every other pin of its room (LANE-20)\", and then fills the budget from each group of rooms \"each in that order\". Within one group, room A's intent at priority 5 must come before A's priority-1 constraint, which comes before the personal room's priority-3 constraint, which by integer order comes before A's intent. So the restore block's omissions stop being a deterministic function of the record (I10, I3). LANE-20 already ranks the intent above the rest: \"The intent MUST be stored as the room's lead pin, listed before every other pin: a pin of type `intent`, ... at the highest priority.\" Read as a priority no author-set integer reaches, that puts every intent ahead of every other pin within each PIN-08 group, which gives a total order. But the model restates the rule per room only. PIN-08 (\"each in order of pin priority, then of their creating events' addresses\") never mentions intents. And an integer ordered \"lower first\" has no highest value, so a constraint could share the intent's number and come before it by address. This is a tightening of what LANE-20 already says, with no behavioral choice. DM-AL's room-group order stays first, and DM-CE's fixed priority is untouched.",
+  "settled_by": "LANE-20 largely settles it: \"The intent MUST be stored as the room's lead pin, listed before every other pin: a pin of type `intent`, each version authored by the owner's device seat at that time, at the highest priority.\" It needs PIN-08 to state that order (\"each in order of pin priority, then of their creating events' addresses (writer, then `seq`)\").",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "Within each of PIN-08's groups of rooms (the run's own rooms first, then those only its agent's earlier runs had a seat in), put every intent first, then order by pin priority, then by creating event address. State this in the model's Pin priority entry and in PIN-08. LANE-20 needs no edit (05b is at its budget). Budget: 05-functional-requirements.md grows by about 3 words for this theme, and by about 8 together with R7-8, which leaves about 27 tokens (about 20 words) of its 8000 for other clusters. pins-and-context.md does not grow. Run mdsmith fix to re-pad the table.",
+  "edits": [
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "lower first, the\n  intent before every other pin of its room (LANE-20).",
+    "new": "lower first, each\n  intent before every pin of another type (LANE-20)."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "each in order of pin priority, then of their creating events' addresses (writer, then `seq`)",
+    "new": "each with intents first (LANE-20), then by pin priority, then by their creating events' addresses (writer, then `seq`)"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/pins-and-context.md",
+   "quote": "intent before every pin of another type (LANE-20)"
+  }
+ },
+ {
+  "id": "R7-8",
+  "real": true,
+  "why": "The gap is real. PIN-05 makes a confirmed candidate \"a new pin that principal's device seat authors\", and LANE-20 makes an intent candidate \"a new version of the room's intent pin\". Neither names the room. `pin_candidate_propose` takes only `text`, `type` and `reason`, and `cairn pin-candidate confirm <pin-candidate>` names no room. Two existing rules fit. Under LANE-01, \"An event's room MUST be its writer's seat's room\", and a principal act goes \"in the room it acts on\", which points to the room of the candidate's creating event. PIN-10 says \"Every pin MUST belong to exactly one room, by default its principal's personal room on the node that wrote it.\" A pin restores only to runs that have had a seat in its room. So the choice decides which runs get the pin, and the principal confirms without being shown which room it is. The pending LANE-20 scenario lands a criterion that \"an agent in the room proposed\" in that room's intent, which favors the creating event's room, but no normative text says so. This is a real choice, and it can wait. PIN-05, LANE-20 and `pin_candidate_propose` ship in M5; PIN-02 in M2 only stores candidates. Before PRV-10 (M7) a room admits no other principal's seat, so either room restores a principal-confirmed pin only to that principal's own runs: no I2 or I8 hole ships before M5. One part is a safe tightening of decision I (a candidate is confirmed only after its exact text is shown): show the room at confirmation too.",
+  "settled_by": "none. PIN-10 (\"Every pin MUST belong to exactly one room, by default its principal's personal room on the node that wrote it\") and LANE-01 (\"An event's room MUST be its writer's seat's room\"; a principal act goes \"in the room it acts on\") both fit and point to different rooms.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "Defer to a new OQ-49 (before M5), and show the room at confirmation now",
+    "effect": "PIN-05, `cairn pin-candidate confirm` and the model show the room the new pin or pin version will belong to, next to the exact text, pin type and priority. OQ-49 records which room that is, with the options below, and must close before M5, when PIN-05 and LANE-20 ship. Nothing that ships before M5 depends on the answer.",
+    "invariant_change": false
+   },
+   {
+    "label": "The room of the candidate's creating event",
+    "effect": "The confirmation acts on that room, as LANE-01 routes a principal act, so the principal's device seat there authors the pin; for an intent or criterion it versions that room's intent. The pin restores to the runs of the room where the constraint came up, and its text is already in that room's record. No interface change. It is still open which room applies when the principal has no member seat left there.",
+    "invariant_change": false
+   },
+   {
+    "label": "Personal room by PIN-10's default, unless the principal names another",
+    "effect": "The pin restores to every run on the node, not only the room's runs. An intent or criterion candidate needs a new `room` parameter on `pin_candidate_propose`, which is an interface change.",
+    "invariant_change": false
+   },
+   {
+    "label": "The principal picks the room at confirmation",
+    "effect": "The principal picks one of its rooms, with the creating event's room offered first. This is the most flexible option but adds a step to every confirmation, and an intent candidate still needs a default room.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Defer, as the stakeholder rule of 9 October 2026 asks. Add a new OQ-49 (Stakeholder; before M5, with PIN-05 and LANE-20) that names the creating event's room as the recommended option. Add a one-line open-question note to the model's Pin candidate entry. As a safe tightening now, show the room the new pin or pin version will belong to at confirmation, in the model, PIN-05, the §9 CLI row and the PIN-05 scenario. The DM-I quotes stay intact. This can wait: it is not a security hole in anything that ships before M5, and no invariant wording changes. Watch for numbering clashes: if another cluster also adds an OQ-49, renumber this one and the range OQ-01..49 in the file 13 summary and the index.md catalog row. The new OQ row is unpadded, so mdsmith fix will re-pad the table. Budget: pins-and-context.md ends at about 2711 tokens and 185 lines. 05-functional-requirements.md grows by about 5 words for this theme (see R7-7 for the remaining headroom).",
+  "edits": [
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "at its confirmation (PIN-02,\n  PIN-05).",
+    "new": "at its confirmation (PIN-02,\n  PIN-05). Each confirmation also shows the room the new pin or pin version\n  will belong to; the rule choosing that room is open (OQ-49)."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "pin type and priority and, for one an agent suggested",
+    "new": "pin type and priority, the new pin's room (open: OQ-49) and, for one an agent suggested"
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "authored by the owner's device seat (PIN-05, LANE-20, OWN-11)",
+    "new": "authored by the owner's device seat; the room that pin or version will belong to is shown with the text (open: OQ-49; PIN-05, LANE-20, OWN-11)"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "\n\n## 13.2 Risks",
+    "new": "\n| OQ-49 | Which room does the pin a confirmed pin candidate makes belong to, and which room's intent does a confirmed intent or criterion candidate version (PIN-05, LANE-20)? `pin_candidate_propose` names no room, every event belongs to its writer's seat's room (LANE-01), and a pin that names none goes to its principal's personal room (PIN-10), so either room fits, and a pin restores only to runs that have had a seat in its room, or whose agent's earlier runs had one. Whatever closes this, the confirmation shows that room with the candidate's exact text, pin type and priority (PIN-05). Options: the room of the candidate's creating event, the confirmation acting on that room as LANE-01 routes a principal act, so the principal's device seat there authors the pin, and that room's intent for an intent or criterion (recommended); the personal room unless the principal names another at confirmation, an intent or criterion candidate naming its room through a `room` parameter of `pin_candidate_propose`; or the principal picks one of its rooms at confirmation, the creating event's room first. Also open: which room it is when the principal has no member seat left in the creating event's room (LANE-01). | Stakeholder; before M5, with PIN-05 and LANE-20 |\n\n## 13.2 Risks"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "Open questions OQ-01..48 with",
+    "new": "Open questions OQ-01..49 with"
+   },
+   {
+    "file": "docs/srs/index.md",
+    "old": "— Open questions OQ-01..48 with",
+    "new": "— Open questions OQ-01..49 with"
+   },
+   {
+    "file": "features/pins.feature",
+    "old": "shows the candidate's exact text, pin type and priority\n",
+    "new": "shows the candidate's exact text, pin type and priority, and the room the new pin will belong to\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/pins-and-context.md",
+   "quote": "Each confirmation also shows the room the new pin or pin version"
+  }
+ },
+ {
+  "id": "R7-9",
+  "real": true,
+  "why": "The finding is partly real. (a) The Needs you part is not real in M1 to M5. VIEW-05 (the queue) is in M7 (\"VIEW-01..12\"), and so is every source of an item in §9.7.4. Held requests and hand-offs (OWN-05, OWN-06, OWN-07, OWN-20) are among the \"OWN P1 rows but OWN-01\". Overlap (LANE-13), list removals and stamps (LANE-26, LANE-32, inside \"LANE-23..33\"), quotas (ADM-15), run crash and rate-limit statuses and verdicts all ship in M7. Directed posts and role requests come in M8 or as P2, and forge reviews in M9. REC-21 (M3) records a refused segment as a structural event, but the Q2 item is derived from it only once VIEW-05 ships. Until then the refusal is counted and audited, and `cairn status`'s counters and `cairn audit` show it (the model's Counter entry says \"shown by `cairn status` (ADM-11)\"). So no Needs you item exists before M7, and the finding's overlap and list-removal examples are later-only, with no M7 defect: `cairn needs-you list` and `cairn overlap acknowledge` exist there. The proposed fix of putting Needs you items into `cairn status` (ADM-11, P0 Health) is wrong. (b) The join-request part is real. Stakeholder decision S-4 brings the own-principal join to M2 (\"a run joins a room when its principal asks at the CLI\"). M1's LANE-16 part says \"in one it joined at its principal's ask\". Yet §12.2's M2 row does not name LANE-23 in part at all, and M7 keeps \"the rest of LANE-23\", which includes accepting a join request made without the ask (`cairn join-request accept|decline <join-request>`). `room_join_request` is a P1 tool the agent can call in M2. Its row says only \"needing the run's principal's acceptance unless that principal asked\". So an unasked request made in M2 would wait for an acceptance that is out of scope, with no client listing it: §9.5 has no list verb, Needs you is M7, and §9.7.4 names no join request even then. That breaks I6's \"visible to the node's principal\". The safe side follows from S-4, I6 and the S-10 precedent (\"Until presence proofs ship (M7), such a policy refuses every widening act\"): until the rest of LANE-23 ships, refuse such a request, audit it and count it. The agent gets §9.2's explicit error, and the principal can ask with `cairn run join`. Adding a pending-request list verb to M2 instead would widen S-4's scope, which an edit here may not do. DM-CM's closing text (\"A run joins only when its principal asks for the join or accepts it\") stays true as the general rule. Observation for the ledger: §9.7.4 has no class for a join request awaiting acceptance, although VIEW-05 lists \"every open item waiting on the principal\". This arises only once the rest of LANE-23 ships, so it goes to OQ-47 with M7.",
+  "settled_by": "In part. Stakeholder S-4 (research/notes/domain-model-convergence/m1-m5-scope.md): \"the own-principal part of LANE-23 comes to M2: a subagent joins its parent's rooms under its parent's join, and a run joins a room when its principal asks at the CLI, a widening act; admission names principal keys and stays in M7.\" §12.2 M7: \"VIEW-01..12, ... OWN P1 rows but OWN-01, ... LANE-13, ... the room model's LANE-23..33 (the rest of LANE-23 and LANE-31), ... ADM-15\". This settles that no Needs you item and no acceptance of an unasked join request exists before M7. I6: \"Every dropped, rejected, redacted, timed-out, or failed operation is counted, logged, and visible to the node's principal.\" Nothing yet says what M1 to M5 do with a join request made without the ask, and the M2 row lacks S-4's LANE-23 part.",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "Tighten as follows. Carry S-4 in §12.2's M2 row as \"LANE-23 in part\". Until the rest of LANE-23 ships (M7), a join request a run makes without its principal's ask is refused, audited and counted. State this in the M2 row and the `room_join_request` row, and in the model's Room view entry and the VIEW preamble, the pair that DM-DF made the M1 to M5 CLI stand-in. Next to it, say that Needs you's items wait for VIEW-05 (M7), which derives them from the record. This is not a deferral: there is no real choice, and the safe side follows from S-4 and I6. The model text goes into components-and-surfaces.md, which has room (about 1230 of 3000 tokens, 91 lines, about 96 after the edit). It does not go into the Join entry because acts-and-roles.md sits at about 2992 of 3000 tokens. Both SRS table edits widen a padded cell; run `mdsmith fix` to re-pad. If another theme also adds S-4's LANE-23 part to the M2 row, merge the two into one entry. Record the §9.7.4 gap (no Needs you class for a join request awaiting acceptance) under OQ-47 with M7.",
+  "edits": [
+   {
+    "file": "docs/domain-model/components-and-surfaces.md",
+    "old": "pins and pin candidates, and the audit log (§9.5). Search and expand show each",
+    "new": "pins and pin candidates, and the audit log (§9.5). Needs you's items wait for\n  VIEW-05 (M7), which derives them from the record (I10). Until the rest of\n  LANE-23 ships (M7), a run joins only when its principal asks for the join\n  (`cairn run join`); a join request made without that ask is refused, audited\n  and counted, never left waiting for an acceptance no client shows (§12.2).\n  Search and expand show each"
+   },
+   {
+    "file": "docs/srs/05b-room-view-requirements.md",
+    "old": "pin candidates, and the audit log (§9.5). A paired phone signs with its",
+    "new": "pin candidates, and the audit log (§9.5). Needs you's items wait for\nVIEW-05, which derives them from the record (I10). Until the rest of\nLANE-23 ships (§12.2), a join request a run makes without its\nprincipal's ask is refused, audited and counted, never left waiting for\nan acceptance no client shows. A paired phone signs with its"
+   },
+   {
+    "file": "docs/srs/09-interfaces.md",
+    "old": "unless that principal asked for the join (LANE-23, LANE-24); returns the seat id once it takes effect",
+    "new": "unless that principal asked for the join (LANE-23, LANE-24); until the rest of LANE-23 ships (M7, §12.2), one made without that ask is refused, audited and counted; returns the seat id once it takes effect"
+   },
+   {
+    "file": "docs/srs/12-delivery-plan.md",
+    "old": "PIN-03 changed, PIN-10",
+    "new": "PIN-03 changed, PIN-10, LANE-23 in part (the own-principal join: a run's join its principal asks for at the CLI, `cairn run join`, and a subagent's under its parent's; until the rest of LANE-23 ships, a join request made without that ask is refused, audited and counted)"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/components-and-surfaces.md",
+   "quote": "a join request made without that ask is refused, audited"
+  }
+ }
+]

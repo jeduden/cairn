@@ -43,7 +43,7 @@ hardware the gaps are about 10% and 21%, and no target's outcome
 turns on the driver. It wins:
 modernc links `os/exec` and `net` into the binary, and only ncruces
 offers an encrypting VFS.
-[ADR-2609302341](../../docs/adr/ADR-2609302341-sqlite-driver.md)
+ADR-2609302341
 records the choice.
 
 Deviations from the tasks:

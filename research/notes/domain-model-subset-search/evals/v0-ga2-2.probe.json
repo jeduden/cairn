@@ -1,0 +1,67 @@
+{
+ "findings": [
+  {
+   "type": "contradiction",
+   "quote": "revoke a seat key or a service account's certificate, turn capture on, and",
+   "problem": "The text makes any principal act that removes a pin from a restore block widening whatever verb carries it, and says revoking a device or a peer stays widening because it can drop pins. Revoking a seat key is listed as cut although a revoked device seat's key stops its pins qualifying, so a low-friction cut act could drop constraints from restore blocks (I3).",
+   "fix": "Move 'revoke a seat key' to the widening list, or state that a revoked seat key never changes whether its earlier pins qualify.",
+   "severity": "minor"
+  },
+  {
+   "type": "contradiction",
+   "quote": "moderator is a contributor. A paired phone's personal-room seat has no role",
+   "problem": "A paired phone's personal-room seat is said to have no role, but a few lines later 'a seat with none, other than the owner's device seats, is a viewer', and a paired phone's seat is not an owner's device seat. The phone's seat is therefore both roleless and a viewer with role-request and summary-request capabilities.",
+   "fix": "Write 'A seat with none, other than the owner's device seats and a paired phone's, is a viewer.'",
+   "severity": "minor"
+  },
+  {
+   "type": "gap",
+   "quote": "Either names the writer's last accepted seq. A peer still accepts segments",
+   "problem": "'Either' has no antecedent: only one way to retire a writer is given ('by a principal act'), so it is unclear who or what supplies the last accepted seq and whether a writer can retire itself.",
+   "fix": "Replace 'Either names' with 'It names', or restore the second alternative.",
+   "severity": "minor"
+  },
+  {
+   "type": "undefined",
+   "quote": "own entry point, which the person, a service manager or an ephemeral node's",
+   "problem": "'Ephemeral node' is used as a kind of node but is never defined; Node covers machine, container or cloud environment and node clone, and no concept says what makes a node ephemeral or how its entrypoint differs.",
+   "fix": "Say 'a node's entrypoint' or define ephemeral node under Node.",
+   "severity": "minor"
+  },
+  {
+   "type": "gap",
+   "quote": "forensics; the node's principal chooses which fork to keep (PEER-10).",
+   "problem": "Both forked events are 'kept for forensics', yet the principal 'chooses which fork to keep'. An address is (writer, seq), and two events share one seq, so it is not stated what the chosen fork changes, which event the address resolves to, or that the other stays recoverable (I1).",
+   "fix": "Say the principal chooses which fork later segments extend, that the address resolves to that one, and that the other stays in the record by its commitment.",
+   "severity": "minor"
+  },
+  {
+   "type": "gap",
+   "quote": "**Setup:** configuration and harness configuration, every change shown as",
+   "problem": "Setup is indented one level under Health, while Fleet, Room page, Catch up, Needs you, Health and Peers are siblings in a 'closed set' of surfaces. Two implementers could build Setup as a part of Health or as its own surface.",
+   "fix": "Outdent Setup to a sibling of Health.",
+   "severity": "minor"
+  },
+  {
+   "type": "gap",
+   "quote": "and writer live under I8 rests on OQ-39.",
+   "problem": "A paired phone is a device 'with no home' yet holds its own device key and seat key and seals a writer, while I8 binds all local state to one principal's home. The candidate states no rule for where that state lives, only an open question.",
+   "fix": "State where the phone's keys and writer live and how I8 covers them, or state that I8 does not cover a paired phone.",
+   "severity": "minor"
+  },
+  {
+   "type": "gap",
+   "quote": "lower commitment (LANE-01). Acts with no member seat: open (OQ-41).",
+   "problem": "I10 requires room state to be a deterministic function of the logs, yet the room merge leaves open whether acts recorded for a room by a principal with no member seat count (for example an unstamp or a trust-grant revocation by a principal who left). Two implementers will derive different room state.",
+   "fix": "State whether the room merge counts such acts, or that they affect only the acting principal's own trust and never room state.",
+   "severity": "minor"
+  },
+  {
+   "type": "useless",
+   "quote": "Whatever is currently in the model's context window. Never",
+   "problem": "Working view is defined but used nowhere else in the candidate; nothing creates, shows or acts on it (the Replay tab's context lens speaks of the context window directly), so the concept adds nothing.",
+   "fix": "Drop Working view, or have the context lens name it.",
+   "severity": "minor"
+  }
+ ]
+}

@@ -1,0 +1,156 @@
+[
+ {
+  "cand": "v0-all-r3-partial",
+  "lens": "security",
+  "model": "default",
+  "findings": [
+   {
+    "type": "security",
+    "quote": "the browser room view under SEC-20, the CLI or TUI at a terminal, or a paired",
+    "problem": "The agent runs `cairn` through its own tools as the same OS user and can give it a pseudo-terminal, and the candidate itself uses \"output is not a terminal\" as the test that separates an agent's CLI call from a person's. So \"at a terminal\" is the only stated check on CLI principal acts, and the agent can pass it. The agent could then stamp, add device-seat pins, record trust grants or accept configuration for itself, which breaks I2's closed set. A presence proof is defined but never required.",
+    "fix": "\"the CLI or TUI at a terminal, where a widening act also needs a presence proof (OWN-11) or another check an agent's own tool call cannot pass; a terminal alone never makes a principal surface\"",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "security",
+    "quote": "confirmation of its principal (of the agent that suggested it or the node that",
+    "problem": "Confirming a pin candidate turns text the model wrote into a device-seat pin that restores verbatim to all the principal's agents. Stamp requires that the principal be shown the exact text, author and key fingerprint, and endorsement sends exactly the text confirmed. This step has no such rule, so a confirm-by-id or truncated preview could put an injected suggestion into every later restore block.",
+    "fix": "\"The confirmation of its principal ..., after being shown its exact text, a widening act, makes exactly that text a new pin its device seat authors\"",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "security",
+    "quote": "the room-view component, whose loopback connection to it carries no text for",
+    "problem": "The candidate limits only the text the launcher carries, not what it acts on. Run controls (resume is a widening act) and witness-check starts can arrive over a loopback connection that I4 allows on plain loopback, where the agent and other OS users can reach it. Nothing says the launcher acts only on principal acts recorded at a principal surface. A forged witness-check start would run a command from an untrusted event outside the run's sandbox.",
+    "fix": "Add: \"the launcher acts only on principal acts it reads from the record (run controls, witness-check starts); the loopback connection only signals that one was recorded\"",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "content trusted (PRV-02). Exchanging the sealed ranges each may receive is",
+    "problem": "What a peer \"may receive\" is never defined. Peers exchange whole segments, and a principal act on a room with no member seat lands in the personal room and is shown there by address. Another principal's node therefore has to pull from a personal-room writer. With no rule, one implementer could ship that whole segment, including other principal acts, their free text and configuration pins. That breaks the personal room's privacy and I8.",
+    "fix": "\"... is sync: a room's sealed ranges go only to peers of the room's principals or its enrolled blind peers, and from another writer, a personal room's included, only the events a room the peer receives shows by address\"",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "security",
+    "quote": "The JSONL of the events trusted for the principal's",
+    "problem": "The free text a cut or neutral principal act carries is untrusted whatever its event's trust level. The trusted-only export takes whole trusted events, so downstream memory systems receive that untrusted text labelled as trusted.",
+    "fix": "\"The JSONL of the events trusted for the principal's agents, the free text of cut and neutral principal acts left out, with full provenance, ...\"",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "A limit on storage or events, per room, node, writer received from",
+    "problem": "The candidate never says what happens when a quota is reached. A per-room or per-node limit on this node's own events can only be met by not recording or by deleting events. Neither is one of I1's recorded exceptions (redaction, explicit purge, retention policy), and blocking the agent would break I9.",
+    "fix": "Add: \"reaching one refuses what peers send (counted, I6); it never drops or deletes this node's own runs' events, which only a purge or a retention policy removes\"",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "forensics; the node's principal chooses which fork to keep (PEER-10).",
+    "problem": "Nothing says which fork, if either, derived artifacts and restore blocks use before the principal chooses. A first-seen rule breaks I10's order independence. A deterministic tiebreak lets whoever holds a stolen seat key craft the winning fork, so a forged device-seat pin or act would count.",
+    "fix": "Add: \"until it chooses, neither fork, nor anything after it in that writer, counts toward derived artifacts or restore blocks\"",
+    "severity": "minor"
+   },
+   {
+    "type": "security",
+    "quote": "token-key-only nodes or room summaries; never in a foreign room; and a post it",
+    "problem": "Trust grants exclude room summaries because summaries come from untrusted content. The facilitator's posts come from the same untrusted room content but are covered, so the exclusion can be bypassed by posting a summary as a post. Whether that is refused depends only on how its certifier marked relaying.",
+    "fix": "\"token-key-only nodes, room summaries or a facilitator's posts; never in a foreign room; ...\"",
+    "severity": "minor"
+   }
+  ]
+ },
+ {
+  "cand": "v0-all-r3-partial",
+  "lens": "consistency",
+  "model": "default",
+  "findings": [
+   {
+    "type": "contradiction",
+    "quote": "budget is the pin budget, and I9's defined budgets are these named budgets and",
+    "problem": "Budget gives a closed list of I9's defined budgets (hook, step and delegation budgets plus the named limits), and the hold window is not on it. Yet Held request has Cairn keep the agent waiting up to its hold window. As written, every held request slows the agent beyond a defined budget (I9), unless the hold window fits inside the hook budget, which nothing says.",
+    "fix": "Add the hold window to the list (\"\u2026the step budget, the hold window (OWN-06) or the delegation budget\"), or state that the hold window never exceeds the hook budget.",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "contradiction",
+    "quote": "a **qualifying pin**, its creating event or stamp trusted on this node: a pin",
+    "problem": "Before PRV-10 a stamp is an `operator` principal act, which is trusted on this node. Under this rule a stamped run-seat or token-key-only pin therefore qualifies and restores before PRV-10. But I2 and Trusted sources count \"a pin version a principal stamped\" as trusted only once PRV-10 ships, so two implementers will disagree on whether stamps work before PRV-10.",
+    "fix": "Either add \"once PRV-10 ships\" to Stamp and to the stamp clause here, or add \"before PRV-10 ships, a version this node's own device seat stamped, for this node's agents\" to I2's and Trusted sources' pre-PRV-10 list.",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "contradiction",
+    "quote": "token, a seat key or a service account's certificate, turn capture on, and",
+    "problem": "Revoking an access token or a seat key is classed as cut. But the model calls revoking a device or peer widening \"since it can drop pins and stop acts arriving\", and says any act that removes a pin from a restore block is widening whatever verb carries it. A seat-key or access-token revocation refuses that seat's later segments (Retire a writer), so it stops acts such as unpins, unstamps and revocations from arriving, just like a device revocation.",
+    "fix": "Move \"revoke an access token or a seat key\" from Cut to Widening, next to \"enroll or revoke a device, peer or authenticator\", and extend the closing sentence about revoking a device or peer to cover them.",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "ingest starts, lives only in the memory of its harness session's MCP server,",
+    "problem": "A run-seat key lives only in the MCP server's memory, yet a harness resume that keeps the harness session continues the run in a new process. Rotation needs the old key, and Seat key starts a new seat only on a node identity change, a node clone or a backup restore. Nothing says whether the continued run keeps unsealed writers, mints a new seat that must rejoin every room, or does something else.",
+    "fix": "State what happens when the MCP server holding a run's seat keys ends while the run continues: for example, \"a harness resume or MCP server restart mints a new seat key, which starts a new run seat that names the old one and shares its add (as the seat ingest starts does)\".",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "run, tied to its parent's run by a parent link, with its own seats and",
+    "problem": "A run gets a seat in a room only by joining or creating it, and a run joins only when its principal asks or accepts. Nothing says a subagent's run shares its parent's joins. So a subagent working on the room's branch routes its events to the personal room and gets no restore of the room's intent or constraints at its start, and implementers will differ.",
+    "fix": "Add: \"A subagent's run has a run seat in every room its parent run's seat is a member of, under the parent's add, from its first event\", or state explicitly that it must join on its own.",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "gap",
+    "quote": "its nodes record. Cairn counts principals by principal key: every device key,",
+    "problem": "Principals are counted only by chains to a principal key, but before PRV-10 no principal key certifies a device key, so nothing chains. Pre-PRV-10 rooms can still hold other principals' nodes (accepting a join sends events to them). Ownership rights, admission, bars, re-adding after a kick and \"the room's principals\" then have no rule for deciding which principal a seat from another node belongs to.",
+    "fix": "Add a pre-PRV-10 rule, for example \"Before PRV-10 ships, a seat belongs to the principal of the node whose device key certified it, as this node's principal enrolled that key\", or state that rooms are shared only among one principal's nodes until PRV-10 ships.",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "contradiction",
+    "quote": "grant (OWN-23, OWN-26). Before PRV-10 ships no expiry can be set but a",
+    "problem": "Before PRV-10 no expiry can be set except a grant's, and an access token ends only by an expire act, which is itself PRV-10. Yet Access token is defined as a short-lived credential for enrolling devices and peers, which happens before PRV-10. Pre-PRV-10 enrollment tokens therefore either cannot expire or break this rule.",
+    "fix": "Add access tokens to the exception: \"no expiry can be set but a grant's or an access token's, which then takes effect only as a refusal by the node that minted it\".",
+    "severity": "needs-fix"
+   },
+   {
+    "type": "security",
+    "quote": "bar, a mute or a handover offer (LANE-25). It ends an access token, recorded",
+    "problem": "Expire acts name the node that records them for access tokens and grants, but not for bars, mutes or handover offers. Derivation reads no clock (I10), so if any node with a device key may record the expire act, a muted seat's own node can end its mute before the expiry.",
+    "fix": "Add a recorder: \"It ends a bar, a mute or a handover offer, recorded by the node of the seat that set it or of the owner (LANE-25)\".",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "naming one branch, the first in causal order stands, concurrent ones by the",
+    "problem": "The model does not say whether this rule applies within one room or across all rooms a node holds. Event routing sends a run's event to \"the room\" it joined that names its branch. If two rooms the run joined both name the branch, the target room is undefined.",
+    "fix": "State the scope, for example \"Of two branch links naming one branch, in any rooms this node holds, the first in causal order stands\u2026\", or give a tie-break for routing when several joined rooms name the branch.",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "(LANE-33). A restore block's **room summary pointer** names the latest room",
+    "problem": "The model does not say which room summary is \"latest\" when two summaries are concurrent, as can happen when the facilitator is replaced. A restore block must be deterministic, and the room merge gives tie-breaks for picks and branch links but none here.",
+    "fix": "Add a tie-break: \"the latest room summary in causal order, concurrent ones by the lower commitment\".",
+    "severity": "minor"
+   },
+   {
+    "type": "security",
+    "quote": "detected it), a widening act, makes it a new pin its device seat authors; for",
+    "problem": "Confirming a pin candidate turns `assistant` text, which is untrusted, into a device-seat pin that restores verbatim as trusted text. Stamp and Endorsement require the principal to be shown the exact text, but confirmation does not, so confirming by id alone would let untrusted text become trusted.",
+    "fix": "Add \"after being shown its exact text\" to the confirmation, as Stamp does.",
+    "severity": "minor"
+   },
+   {
+    "type": "gap",
+    "quote": "**Quota**: A limit on storage or events, per room, node, writer received from",
+    "problem": "Quotas per room and per node limit this node's own runs' events, but I1's closed list of exceptions has no quota. Nothing says what reaching such a quota does. Dropping events would break I1, and refusing to record would leave a capture gap.",
+    "fix": "State the effect: \"a quota never drops this node's own runs' events (I1); reaching one refuses received segments or raises a counter (I6)\".",
+    "severity": "minor"
+   }
+  ]
+ }
+]

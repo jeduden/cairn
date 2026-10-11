@@ -1,0 +1,200 @@
+[
+ {
+  "type": "gap",
+  "quote": "Names a principal key and keeps every key that chains to it out",
+  "problem": "Device key says that before PRV-10 ships no principal key certifies a device key, so before then no seat chains to any principal key. Bars, invites (\"every seat that chains to the invited principal key\"), admission lists and the owner's protection from kick, bar and mute then match no other principal's seat. Unlike Bundle, which lets the exporter's device key stand in, no rule says what these match before PRV-10.",
+  "fix": "Add to Admission and Bar: \"Before PRV-10 ships, the device key that certified a seat stands for its principal key in invites, admission lists and bars\" (or state that a room admits no other principal's seat until PRV-10 ships).",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "sending seat's writer; the target room shows it while a member seat there",
+  "problem": "A cross-room post stays in the sending room's writer, and the target room's seats are to pull it by address. Peer lets a node receive only sealed ranges of rooms whose principals include its principal. A target-room principal who is not in the sending room therefore either never gets the post or is sent a range of a room it does not belong to. Implementers will resolve this differently, and one way leaks that room's range.",
+  "fix": "State which way it goes: either peers serve the target room's principals only that post's event (with what proves it), or principals not in the sending room see only its address.",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "or `peer` (received from a peer, a paired phone or",
+  "problem": "Origin gives every event from a paired phone origin `peer`, which the trust policy reads as another node's. Yet Relations makes the phone's device seat this node's principal's, and Principal surface makes the phone a principal surface for allow and deny. Before PRV-10, a phone's acts are then neither this node's `operator` events nor any other trusted source.",
+  "fix": "Add: \"a paired phone's device-seat events, within its device scope, are read as this node's\" (or state that phone acts take effect only once PRV-10 ships).",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "had capture off or paused, the latter each shown as a capture gap",
+  "problem": "\"The latter\" reads as if only paused capture leaves a capture gap. Capture says pausing turns capture off and that whatever a run does while capture is off is a capture gap.",
+  "fix": "\"...while its principal had capture off or paused, each shown as a capture gap.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "`canary`, `ui`, `why`, `open`, `launch`, `hook`, `mcp` and `kernel-worker`.",
+  "problem": "Names lists `ui` and `launch` among the CLI's one-word commands. Components says the entry points `cairn ui` and `cairn launch` are no part of the CLI, which is B0 and opens no socket, while the room-view component and the launcher listen on loopback.",
+  "fix": "Say these are words of the `cairn` command, and that `ui` and `launch` start the room-view component and the launcher (B1), not the CLI.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "turning it off applies, which needs no acceptance and which `cairn",
+  "problem": "A configuration that turns the launcher off applies without acceptance, yet its cut act is recorded only when `cairn configuration accept` runs, and accepting configuration is classed as widening. If accept never runs, the launcher stops with no recorded act. The room-view component's turn-off has no recording rule at all.",
+  "fix": "\"...turning it off applies, needing no acceptance; Cairn records the cut act turning it off when that configuration applies\", and the same for the room-view component.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "undefined",
+  "quote": "verbatim and restored verbatim after every compaction, or named by id and",
+  "problem": "I3 and Restore block name omitted pins by id, and the room summary pointer names a summary \"by its id\". The model defines no id for a pin or a room summary: only rooms, seats, writers, criteria and held requests have ids, and events have addresses.",
+  "fix": "Define a pin's id (e.g. its creating event's address) in Pin, and say the room summary pointer names the summary by its address.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "block frames the qualifying pins for the agent as its principal's",
+  "problem": "Qualifying pins include another principal's intent and pins a trust grant covers. I8 keeps such content \"attributed to its seat key\", yet the restore block presents every qualifying pin as the agent's own principal's constraint and carries no author.",
+  "fix": "\"...frames each qualifying pin as a constraint its principal trusts, naming the author's key fingerprint when another principal wrote it.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "seats wrote, SEC-30), a quarantine request (to peers), and a summary request",
+  "problem": "Provenance says a principal act sends a quarantine request, and I5 lets a quarantine reach another node only that way. No act that sends one is named or classed, so it is unclear whether every quarantine goes to peers automatically or a separate act sends it, and in which class (sending lets more leave the node).",
+  "fix": "\"a quarantine request (sent to peers by the quarantine act that names them, in that quarantine's class)\", or list \"send a quarantine request\" in one class.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "without taking it as its predecessor, and the run's later events go there.",
+  "problem": "The new run seat starts \"as above\", so it inherits no add and is no member outside the personal room until the run joins again. Relations sends a run's events to a run seat only while it is a member with work, and otherwise to its personal-room seat.",
+  "fix": "\"...and, once it is a member (outside the personal room after a new join), the run's later events go there.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "undefined",
+  "quote": "sign, and of post and pin its seats may write) and a maximum rule level; it",
+  "problem": "Device scope limits the kinds of post a device's seats may write, and trust grants and trusted sources are bounded by that scope. The model defines no post kinds; pins have pin types.",
+  "fix": "Name the post kinds device scope ranges over (e.g. post, comment, directed post, cross-room post), or drop posts from device scope.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "device seat takes the earlier node's seats as predecessors only once a",
+  "problem": "Node makes every seat of the earlier node a predecessor of the clone's device seat, including its run seats, and Backup likewise takes \"a seat\". Pin then qualifies any restoring pin \"written from ... one of their predecessors\", so an earlier run's unstamped `assistant` pin (model text) restores on the clone with no stamp. That puts model text in the restore block outside I2's trusted sources.",
+  "fix": "\"A node clone's device seat takes the earlier node's device seats as predecessors\" (and the same for Backup), and in Pin add: \"a predecessor run seat's pins still restore only once stamped\".",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "A lineage acceptance takes in the predecessors the earlier node",
+  "problem": "A backup restore takes a predecessor only up to its newest seal that verifies against a head receipt, and reads later events as another node's. A node clone made from a copied volume or restored snapshot can be tampered with in the same way, yet lineage acceptance verifies nothing. Unsigned events appended past the newest seal, such as an `operator` pin or a trust grant, would become trusted sources and restore.",
+  "fix": "Add: \"A lineage acceptance takes each seat's writer only up to its newest seal that verifies; events past it, and every writer that does not verify, are read as another node's, as Backup says.\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "takes over the role instead (Run seat). Revoking a seat key",
+  "problem": "Nothing says whose revocation of a seat key counts. The key set holds every revocation a node holds, and only service-account certificates are \"revocable only by its certifier\". So another principal could record and sync a revocation of this principal's device-seat key, which stops its pins qualifying and removes constraints from its agents' restore blocks.",
+  "fix": "Add: \"A seat key's revocation counts only when the principal the key belongs to, or the holder of the key that certified it, records it; any other is refused and counted (I6).\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "ends it: the seat's later acts and seals count for nothing",
+  "problem": "A retirement names the writer's last accepted seq, but a revocation names no cut-off. If \"later\" is read causally, a stolen key's acts that never saw the revocation still count. What counts would also depend on which prefix a node held when the revocation arrived, which breaks I10's order independence.",
+  "fix": "\"A revocation names the seat's last accepted seq; every event and seal past it counts for nothing, whatever its causal order.\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "the person's keystrokes are the harness's own input from",
+  "problem": "Text typed at the terminal the launcher hosts starts a user turn: the model takes it as its user's instruction, and in interactive mode it becomes a trusted `user` event. The launcher may listen on an endpoint the same OS user can reach. Hooks, the CLI and `cairn ui` each bar a run's tool process, but nothing bars one from typing into the hosted terminal, so an injected agent can instruct itself as the user.",
+  "fix": "Add: \"Only a terminal that no run's tool process started or reaches may type into a hosted terminal; the launcher refuses and counts input from a run's tool process (I6).\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "**Bar**: Names a principal key and keeps every key that chains to it out",
+  "problem": "Before PRV-10 ships, no principal key certifies a device key, so no seat key chains to a principal key. A bar then keeps nobody out: the barred principal stays a member and keeps receiving the room's sealed ranges. Admission lists and the owner's no-kick protection cannot be checked either. Unlike the bundle's exporter key, no pre-PRV-10 stand-in is named.",
+  "fix": "Add: \"Before PRV-10 ships, a bar, an admission list and the owner's protection name a device key in place of a principal key and cover every seat it certifies.\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "the **git carrier**, which keeps segments in a namespaced location of the",
+  "problem": "I4 lets B3 exchange data only with hosts the node's principal names. The git carrier writes to \"the principal's remote\" and is enabled by the room owner's act, but nothing says which principal names that remote. A repository's remotes live in git configuration that a run can edit, so segments could go to a host that no principal named.",
+  "fix": "\"...in a namespaced location of a remote the node's principal names when turning on the publish component, never one taken from repository or git configuration.\"",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "A grant naming a service account whose certificate or managed-policy",
+  "problem": "The relay check refuses a grant only when it is recorded. A standing grant keeps covering a key that is later certified or listed as relaying, or whose certificate is revoked. That account's relayed posts then reach the grantor's agents automatically inside OWN-29's template.",
+  "fix": "Add: \"A standing grant stops covering a service account while a certificate or listing marks it as relaying, or while none covers it.\"",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "Whether a room is invite only or admits a list of principal",
+  "problem": "Admission, invites (\"a principal key and a role\", a role \"for every seat that chains to the invited principal key\") and bars (\"keeps every key that chains to it out\") work only through chains to a principal key. The candidate also says \"Before PRV-10 ships no principal key certifies a device key\", so before PRV-10 no seat from another node, not even one from the owner's own second node, can satisfy admission or get an invited role, and a bar keeps no one out. Shared and cross-node work rooms then have no defined way to admit anyone, while a bundle does get a pre-PRV-10 stand-in key.",
+  "fix": "Add to Admission (and say it applies to invites, bars and successors too): \"Before PRV-10 ships, the device key that certified a seat stands for its principal key in admission, invites and bars, as the exporter's device key does for a bundle.\" Alternatively, state that admitting seats from other nodes waits for PRV-10.",
+  "severity": "needs-fix",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "or expire acts; every pin it writes restores only once a principal stamps it",
+  "problem": "On a token-key-only node, the principal accepts the configuration by minting the access token that names its digest. Even so, the configuration pins that this acceptance adds are authored by the token-certified device seat, and they restore only once someone stamps each one from another device. For an ephemeral agent, its configured constraints never come back after compaction, so configuration pins have no effect on those nodes.",
+  "fix": "Append: \"but for a configuration pin of the configuration whose digest its access token names, which qualifies as a pin of the minting device's seat would.\"",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "derives from it and the node's own key set (I10); the audit log, counters and",
+  "problem": "Counters and the audit log sit outside every writer, so sync and the git carrier never carry them, and Health shows only the local node's. On an ephemeral token-key-only node, dropped, redacted or failed operations disappear with the environment, and the principal never sees them, which breaks I6. Refused segments are the only failures the candidate records into a writer.",
+  "fix": "Add to Counter: \"a node whose peer component or git carrier is on also records each counter change as a structural event in its device seat's personal-room writer, as it records a refused segment, so the principal's other nodes show it on Health.\"",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ }
+]

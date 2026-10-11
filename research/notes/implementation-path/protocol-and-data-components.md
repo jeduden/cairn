@@ -292,7 +292,7 @@ stdio binding "is just newline-delimited JSON-RPC"
 
 The store needs FTS5 with BM25, query cancellation, WAL writes from 50
 processes and a static binary
-([ADR-2609302341](../../../docs/adr/ADR-2609302341-sqlite-driver.md)).
+(ADR-2609302341).
 
 - **Go.**
   - `ncruces/go-sqlite3` v0.35.6, 23 September 2026, MIT, the chosen

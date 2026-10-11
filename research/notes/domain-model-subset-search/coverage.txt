@@ -1,0 +1,10 @@
+model list items: 234 (concept files 224, hub Relations 10)
+features: core + 47; core entries 116
+unassigned items: none
+items in more than one feature: none
+entries naming no model item: none
+dangling feature ids in requires/requires_any/soft: none
+requires cycles: none
+core entries without a justification: ['principals-and-agents: Delegate']
+features with no entries of their own: ['publishing', 'node-clone', 'key-revocation']
+not assigned by design (not concepts, not asked for): the hub's verb list (owns, is a member of, has a seat in, holds) and the six 'Names follow the model' rules; both hold for any subset and belong with core.

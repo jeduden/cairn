@@ -1,0 +1,29 @@
+[
+ {
+  "type": "undefined",
+  "quote": "Either names the writer's last accepted seq. A peer still accepts segments",
+  "problem": "\"Either\" has no antecedent: the definition names one way to retire a writer (a principal act), yet refers to two. \"A revocation\" that refuses later segments is not defined for writers; only \"revoke a seat key\" appears in the cut class, and it names no last accepted seq.",
+  "fix": "Write: \"A retirement or a seat key revocation names the writer's last accepted seq.\"",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "undefined",
+  "quote": "own entry point, which the person, a service manager or an ephemeral node's",
+  "problem": "\"Ephemeral node\" is used as if it were a Cairn concept. Node covers a machine, container or cloud environment, but nothing defines \"ephemeral\", so a reader cannot tell which nodes start a component's entry point this way.",
+  "fix": "Replace \"an ephemeral node's entrypoint\" with \"a container's entrypoint\", or define ephemeral node under Node.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "permission grant, reject a foreign room, decline a join request, tighten a",
+  "problem": "\"Reject a foreign room\" is classed as a cut act, but no definition says what it does. Foreign room names no such act, and it cannot delete (only purge destroys, I1). If it stopped the own pins and stamped versions that still restore there, it would remove pins from a restore block, which the model says is always widening.",
+  "fix": "Add to Foreign room: \"Its principal may reject it, a cut act that quarantines the room from recall (I5) and removes no pin from a restore block.\"",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

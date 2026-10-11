@@ -108,7 +108,7 @@ What merges without conflict already: plan 2610012322 gives each
 writer its own append-only, signed log. The set of all writers' logs
 is a grow-only set, so any two peers that exchange logs converge, in
 any order, after any partition. Messages, tool runs, results and
-approvals are events in those logs; their order across writers is
+verdicts are events in those logs; their order across writers is
 causal (each event names the heads it saw), not wall-clock.
 
 What needs a CRDT: state that several participants edit at once. Two
@@ -158,8 +158,9 @@ node is special.
    networks, background sync and offline queues, and a blind peer
    another entity can host without reading the lanes (PEER-12)
 4. Live co-editing in one worktree, with a CRDT chosen by ADR
-5. The merge gate on the lane: signed approvals, required checks and
-   landing in git, working across partitions
+5. Landing through git and the forge: approvals and checks stay with
+   the forge, shown as asserted, and each room links its branches to
+   their pull requests, working across partitions
 6. Public lanes: export with stricter redaction and review, signed,
    served by any peer, imported as untrusted
 7. Git as a carrier: one ref per writer for open-source projects

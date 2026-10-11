@@ -1,0 +1,296 @@
+{
+ "round": 2,
+ "reviews": [
+  {
+   "lens": "consistency",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "once every seat of the owner has left the room; that acceptance is a",
+     "problem": "Succession, and the owner-left state Owner and Join describe, need every seat of the owner to leave. An ended run's run-seat key lived only in its MCP server's memory, so that seat can never sign a leave, and once PRV-10 ships no one may kick any key that chains to the owner's principal key, so the seat stays a member forever. Succession therefore cannot happen once any owner's run has joined the room.",
+     "fix": "Add to Leave: \"A principal may end the add of its own run seat whose run has ended or whose key is lost, by a principal act recorded on its device seat in the room\", and class that act.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "link names it, across rooms, in causal order, concurrent ones by the lower",
+     "problem": "Branch ownership counts branch links from every room the node holds, foreign rooms included. A foreign room is an imported bundle's room or another principal's room, and its link is concurrent with the principal's own link and wins on a commitment its author can grind. So untrusted content can void the principal's own branch link, send its runs' events to the personal room and put the foreign room's id in its commits' room trailers, although Foreign room and I8 keep such content from acting on the principal.",
+     "fix": "\"A branch belongs to the first room, among those not foreign to this node's principal, whose branch link names it ...; a foreign room's branch link never voids another room's.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "principal's own device-seat pins and the versions it stamped stay trusted and",
+     "problem": "The sentence says only the principal's own device-seat pins and the versions it stamped keep restoring from a foreign room. The next sentence, and Trust grant, keep a trust grant's pins restoring when a leave, kick or bar made the room foreign. Both cannot hold for a room a leave made foreign.",
+     "fix": "Begin the sentence with \"Beyond what a leave, kick or bar keeps (below), only its principal's own device-seat pins ...\".",
+     "severity": "minor"
+    },
+    {
+     "type": "undefined",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "permission grant, reject a foreign room, decline a join request, tighten a",
+     "problem": "\"Reject a foreign room\" is classed as a cut act, but nothing in the model says what rejecting does: drop the held segments, stop syncing, quarantine, or refuse an import. Implementers would build different things, and dropping segments would touch I1.",
+     "fix": "Define it in Foreign room, for example \"its principal may reject it: a recorded cut act that quarantines the room from recall and stops receiving its segments, deleting nothing\".",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "(Personal room, Join) and the facilitator's, which its program takes through",
+     "problem": "The facilitator's program may take room acts through the CLI without a principal surface, and Facilitator and Trust grant say it writes pin versions. A device-seat pin of a type that restores is a widening principal act, though, and no exception lets the program take one. So whether the facilitator can write constraint or preference pins is undecided.",
+     "fix": "State in Facilitator either \"its pins are of types that do not restore\" or \"its program's CLI counts as a principal surface for its own pin acts\".",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "off is widening (OWN-11), so `cairn uninstall` records the widening act",
+     "problem": "A token-key-only node \"signs no principal or expire acts\", so once PRV-10 ships it cannot record the capture-off act that uninstall must record first, nor the configuration acceptance the launcher and room view need. Only the peer component gets a stand-in (PEER-01's variable).",
+     "fix": "Add to Token key: \"On a token-key-only node, uninstall records capture off as a structural event, and components other than the peer component stay off.\" Alternatively, give the stand-in that applies.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "device that exported it, its **exporter**, which chains to the **bundle's",
+     "problem": "A bundle is defined by a chain to a principal key, but no key chains to a principal key before PRV-10 ships. Unlike pins, admission and principal acts, Bundle states no pre-PRV-10 rule, so whether export, import and the pull-request author's binding statement work before then is undecided.",
+     "fix": "Add \"before PRV-10 ships a bundle names only its exporter's device key, and no binding statement can match it\", or say export waits for PRV-10.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "so until then a room admits no seat of another principal, and admission,",
+     "problem": "Before PRV-10 no key chains to a principal key, so a node cannot tell whether a seat received from a peer or an ephemeral node is the same principal's or another's. The rule cannot be evaluated, and \"every seat belongs to one principal\" has no test. One implementer would admit enrolled peers' seats, another would refuse every seat from another device key.",
+     "fix": "State the pre-PRV-10 test, for example \"until then a room admits only seats certified by this node's device key or a token key it certified\".",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "The one principal who owns a room: its intent, roles, admission,",
+     "problem": "\"Set a room setting\" is a widening principal act, but no entry names who may take it. The settings include the appointment rate, which limits appointed moderators, so letting a moderator principal set it would let it lift its own appointees' limit.",
+     "fix": "Add \"room settings\" to the Owner's list: \"its intent, roles, admission, room settings, appointments, successor and handover\".",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "change of ownership, a handover or a succession, until the new owner revises",
+     "problem": "After a handover the intent restores only to its stampers' agents until the new owner revises or stamps it. Read literally, the new owner's stamp then restores the old version again to the old author's agents and to those whose trust grant covers that author. That is another principal widening what reaches them, which Principal forbids (\"Only an agent's own principal widens\"), and the text does not say what restores after the stamp.",
+     "fix": "\"... until the new owner revises it, it restores only to its stampers' agents; the new owner's stamp adds only the new owner's agents.\"",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "security",
+   "findings": [
+    {
+     "type": "security",
+     "file": "git-and-forge.md",
+     "quote": "link names it, across rooms, in causal order, concurrent ones by the lower",
+     "problem": "When two rooms link the same branch, the room that gets it is chosen among every room the node holds, including foreign rooms such as an imported stranger's bundle. Concurrent links are settled by the lower commitment, and the writer picks the random key behind it, so any room creator can grind a winning link. A link that never saw the principal's own private room can therefore void that room's link, send its runs' events on the branch to the other room (and to other principals' nodes, for a run that joined it), and put that room in every commit's room trailer.",
+     "fix": "\"concurrent ones in favour of a room the node's principal owns, then by the lower commitment; a branch link in a foreign room claims no branch\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "principals-and-agents.md",
+     "quote": "managed-policy listing and each removal of one is recorded as a structural",
+     "problem": "A service-account certificate counts only once the listed key countersigns it. A managed-policy listing enters the key set of every node that holds it, with no countersignature and no rule on which machine's managed policy may record it. Root on any node can list a person's principal key without the relaying mark. On every node holding that writer, that person's verdicts then stop counting and every trust grant naming the key covers nothing, and only the lister can undo it.",
+     "fix": "\"each managed-policy listing ... enters a node's key set only when that node's own machine's managed policy recorded it, or once the listed principal key countersigns it, as a service-account certificate does\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "acts-and-roles.md",
+     "quote": "peer component, the publish component or a bridge.",
+     "problem": "Turning off the peer component is classed as cut, yet it stops every principal act from the principal's other devices and paired phones from arriving. That same effect is the stated reason revoking a device or a peer is widening. A cut act, with no presence proof and reachable through R7, can therefore freeze a node so that a later unstamp, trust-grant revocation, or a phone's deny or stop never takes effect there.",
+     "fix": "Move \"turn off the peer component\" to the widening class, \"since it stops principal acts arriving\", as for revoking a device or a peer.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "trust-and-flow.md",
+     "quote": "A delegate inherits the delegating run's (OWN-24).",
+     "problem": "Recall taint only flows down, from the delegating run to the delegate. A subagent that recalls untrusted history hands what it read to its parent as subagent_result through the harness. The parent made no recall, so it acts on that recalled untrusted content with its sensitive action classes still loose.",
+     "fix": "Add: \"A delegating run takes on a delegate's recall taint when it receives that delegate's report, a subagent's `subagent_result` included.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "record.md",
+     "quote": "or derived artifact from recall, restore blocks and landmark text (LMK-04",
+     "problem": "Quarantine keeps content out of recall, restore blocks and landmark text only. It does not cover the other closed paths that carry event text: posts a trust grant delivers in OWN-29's template, and delegated tasks in OWN-24's. A quarantined post or writer of a trusted principal is still written to the grantor's agents, so I5's removal from circulation fails on those paths.",
+     "fix": "\"... from recall, restore blocks, landmark text, the posts a trust grant delivers and delegated tasks (LMK-04 keeps its counts)\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "record.md",
+     "quote": "it back is a backup restore. Creating one records no principal act, only an",
+     "problem": "A change of node identity re-classes earlier events as received, but a backup restore on the same machine keeps the node identity. Every event read back therefore counts as recorded on this node, and its operator events stay trusted sources, including the unsealed tail after the newest seal. A backup altered while off the machine can add qualifying pins to restore blocks.",
+     "fix": "\"A backup restore reads back only ranges whose seals verify against this node's key set; an unsealed tail or a failing range is refused, counted and shown.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "pins-and-context.md",
+     "quote": "An integer the pin's author sets with it, lower first, the",
+     "problem": "Pin priority is unbounded and chosen by the author. When the pin budget fills, the agent's own principal's pins get no precedence over pins that qualify only through a trust grant. A granted principal can set a minimal priority and push the grantor's own constraints out of the restore block (named only by id and count) in every shared room.",
+     "fix": "Add: \"Within each tier, pins qualifying by the agent's own principal's authorship or stamp fill the pin budget before those qualifying only through a trust grant.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "record.md",
+     "quote": "redacted diff since the previous worktree checkpoint (REC-20).",
+     "problem": "The provenance list gives a worktree checkpoint no class. Recorded by the hook handlers, one implementer will class it structural, which makes a diff of file content an attacker can control a trusted source on this node, carried into a trusted-only export. Another will class it as untrusted file content.",
+     "fix": "\"... (REC-20); its diff takes provenance `file`, and only its commit id is a structural field.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "acts-and-roles.md",
+     "quote": "SEC-32). When acts conflict, the more restrictive act wins, then the lower",
+     "problem": "\"More restrictive\" is not defined for acts on pins and stamps. There, restricting the room (an unpin or an unstamp) loosens the agent, because a constraint stops restoring. For a concurrent unpin and edit, or unstamp and stamp, two implementers will differ on whether the constraint keeps restoring.",
+     "fix": "Add: \"For acts on a pin of a type that restores, the act that leaves it restoring counts as the more restrictive.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "acts-and-roles.md",
+     "quote": "invite's, an export's or a publish's **review step** shows the acting",
+     "problem": "Setting an admission list lets the listed principals' nodes join and receive the room's history, just as an invite does. Only an invite, an export or a publish has a review step with SEC-08 applied. The same data leaves unreviewed and without the review step's redaction.",
+     "fix": "\"An invite's, an admission change's, an export's or a publish's **review step** ...\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "pins-and-context.md",
+     "quote": "ephemeral like a presence hint (PEER-09)",
+     "problem": "A draft shown live leaves its writer's node over B2 but is never stored. Redaction runs only before storage, on import and in review steps, so a secret typed into a draft reaches every member's node unredacted. The owner's room setting decides this, not the draft writer's principal.",
+     "fix": "\"... ephemeral like a presence hint, redacted before it leaves the node and shown live only while its writer's principal also allows it (PEER-09).\"",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "usefulness",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "once every seat of the owner has left the room",
+     "problem": "Only two things end a seat's add: its own leave, signed with its key, or a kick, and once PRV-10 ships no one may kick a key that chains to the owner's principal key. A run seat's key lives only in its MCP server's memory, and a lost machine's device-seat key is gone with it. So the seat of an ended run, or of a lost device, stays a member forever, and succession can never happen in any room where one of the owner's runs ever joined. That is exactly the case succession exists for, the owner who is gone. For the same reason, a principal can never make such a room foreign by leaving (Foreign room).",
+     "fix": "Extend Leave in Join: \"**Leave** is a seat's room act ending its own add; its principal may also end, by a cut principal act, the add of any of its own seats whose key it no longer holds (an ended run's seat, a lost device's seat).\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "undefined",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "permission grant, reject a foreign room, decline a join request",
+     "problem": "Rejecting a foreign room is classed as a cut act, but the model never says what it does: to the events this node holds, to sync, to recall that names the room, or to the pins Foreign room keeps restoring. No widening act brings a foreign room in either (import is in no class), so the cut undoes nothing the model defines, and two implementers will build different effects.",
+     "fix": "Define it under Foreign room, for example \"To **reject** a foreign room is its principal's cut act that stops this node receiving the room's segments and stops recall reaching it even when named, keeping what it holds (I1) and every pin Foreign room keeps restoring\", or drop it from the cut list.",
+     "severity": "minor"
+    }
+   ]
+  }
+ ],
+ "match": {
+  "matches": [
+   {
+    "lens": "consistency",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "The owner's ended run seats, and seats of a lost device, can never end their add (no key to sign a leave, and no one may kick a key chaining to the owner's principal key after PRV-10), so succession and making a room foreign by leaving become impossible. DM-D (deferred, OQ-43) only says a continuing run starts a new seat and inherits no add. It is silent on ending the old seat's add, so closing it would not answer this."
+   },
+   {
+    "lens": "usefulness",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "Same defect as consistency/0: seats of an ended run or lost device stay members forever, blocking LANE-11 succession and a principal's making a room foreign by leaving. It adds the lost-device case, which DM-D does not cover."
+   },
+   {
+    "lens": "consistency",
+    "index": 1,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "The closing text of DM-M ('first room whose branch link names it, across rooms, concurrent ones by the lower commitment') is itself incomplete. It counts branch links from foreign rooms, which can win by grinding the commitment, void the principal's own link and redirect its runs' events and room trailers."
+   },
+   {
+    "lens": "security",
+    "index": 0,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "Same defect as consistency/1, with the grinding of the lower commitment spelled out. The DM-M closing text lets a foreign room's branch link claim a branch. A new rule is needed: a foreign room's branch link claims no branch, or an owned room wins ties."
+   },
+   {
+    "lens": "security",
+    "index": 1,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "DM-L's closing text has each managed-policy listing enter the node's key set, with no consent and no rule on which machine's managed policy may record it. Any root can list a person's principal key unmarked, so verdicts stop counting and trust grants naming the key cover nothing. The closed text is incomplete, so this is not DM-L as closed."
+   },
+   {
+    "lens": "security",
+    "index": 2,
+    "theme": "NEW-4",
+    "kind": "new",
+    "reason": "Turning off the peer component is classed cut, yet it stops principal acts arriving, which is the stated reason revoking a device or peer is widening. DM-C closes the revocation verbs only, so closing it would not answer this other act."
+   },
+   {
+    "lens": "security",
+    "index": 3,
+    "theme": "NEW-5",
+    "kind": "new",
+    "reason": "Recall taint is stated to flow only down, from delegating run to delegate (OWN-24). A parent that receives a subagent's subagent_result makes no recall and stays untainted. No ledger theme covers upward flow; DM-AK is only about a run a harness resume starts."
+   },
+   {
+    "lens": "security",
+    "index": 4,
+    "theme": "NEW-6",
+    "kind": "new",
+    "reason": "Quarantine (record.md, I5) is stated to cover only recall, restore blocks and landmark text. A quarantined post or writer of a trusted principal is still written to the grantor's agents in OWN-29's template, and delegated tasks in OWN-24's template. No ledger theme covers quarantine's reach over the other closed paths; DM-AH is only about node identity changes."
+   }
+  ],
+  "new_themes": [
+   {
+    "id": "NEW-1",
+    "title": "Seats of an ended run or lost device can never leave or be kicked once PRV-10 ships, so a room whose owner ran agents in it can never reach succession or become foreign by leaving",
+    "settled_by": "none. LANE-11, LANE-25 and OQ-41 do not settle it. OQ-41's third option only mentions an owner's last seat leaving. OQ-43 and DM-D cover only a continuing run. blind-4 Q11 and blind-8 Q3 assume the owner's seats can leave."
+   },
+   {
+    "id": "NEW-2",
+    "title": "A foreign room's branch link counts in branch ownership, so a ground commitment lets it void the principal's own room's link and take the branch's events and room trailers",
+    "settled_by": "none. LANE-01 and LANE-31 fix the order (first in causal order, concurrent ones by the lower commitment) but do not exclude foreign rooms. I8 and RCL-10 give the principle that foreign content never acts on the principal, but no requirement or plan note applies it to branch links."
+   },
+   {
+    "id": "NEW-3",
+    "title": "A managed-policy listing enters every holding node's key set with no countersignature and no rule on whose managed policy may record it, so one root can mark a person's principal key as relaying",
+    "settled_by": "none. PRV-10 and the principals-and-agents entry say only that each listing and removal is a structural event that enters the node's key set. blind-22 Q10, blind-24 Q3, blind-28 Q2 and blind-30 Q10 decide who revokes and the mark, not which machine may record a listing."
+   },
+   {
+    "id": "NEW-4",
+    "title": "Turning off the peer component is a cut act though it stops principal acts arriving, the reason revoking a device or peer is widening",
+    "settled_by": "none that weighs the conflict. OWN-11 and blind-12 Q5 class it cut. blind-27 Q8 later made revoking a device or peer widening because it can stop acts arriving. Neither decision considers the other."
+   },
+   {
+    "id": "NEW-5",
+    "title": "Recall taint does not flow up from a delegate to the delegating run that receives its subagent_result",
+    "settled_by": "none expressly. SEC-13 ('set when untrusted content has been returned to that run') and OWN-25 (a subagent's delegate report stays untrusted subagent_result) imply it. No requirement or plan decision says a received delegate report sets the parent's taint, and the model's Recall taint entry says 'after it recalls'."
+   },
+   {
+    "id": "NEW-6",
+    "title": "Quarantine keeps content out of recall, restore blocks and landmark text but not out of the other closed paths: trust-grant posts (OWN-29), delegated tasks (OWN-24) and endorsed posts (OWN-08)",
+    "settled_by": "none expressly. SEC-12 says quarantine takes effect 'for all recall, landmark and injection operations' on the recording node. That is the nearest text, but 'injection' reads as the INJ rows (restore blocks, notices), and no requirement, ADR or plan note names the OWN-08, OWN-24 or OWN-29 pushes. I5 says only 'from recall'."
+   }
+  ]
+ }
+}

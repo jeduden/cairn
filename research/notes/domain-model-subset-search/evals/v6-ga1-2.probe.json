@@ -1,0 +1,39 @@
+{
+  "findings": [
+    {
+      "type": "security",
+      "quote": "- **Paired phone**: A device with no home, limited to reading the principal's",
+      "problem": "I8 binds all local state to one principal's home, yet a paired phone is a device with no home that holds its own device key, seals its device seat's writer and signs allow or deny acts, and the model says where its keys and writer live under I8 is undecided. Acts the phone signs are trusted principal acts under I2, with no stated custody rule for the key that signs them.",
+      "fix": "Replace 'rests on OQ-39' by a rule: the phone's device key stays in the phone's platform key store, its writer is held in the home of the node it pairs with, and I8's home rule applies to that home.",
+      "severity": "needs-fix"
+    },
+    {
+      "type": "gap",
+      "quote": "Acts with no member seat: open (OQ-41).",
+      "problem": "The room merge is the one rule deriving all room state (I10), but the model declares it open for acts by a principal with no member seat. The model still relies on such acts: a named successor, who need not hold a seat, accepts a succession, and a stamper who has left may still unstamp. Two implementers would derive different owners and stamps from the same logs.",
+      "fix": "State which acts of a principal with no member seat the room merge counts (at least the cut acts that withdraw its own trust and a succession or handover acceptance), or require the successor and the handover acceptor to hold a member seat.",
+      "severity": "needs-fix"
+    },
+    {
+      "type": "gap",
+      "quote": "component record rests on OQ-40. Events after the newest seal are unsigned.",
+      "problem": "Before PRV-10 a principal act is an operator event its device seat's seal covers, and the browser room view is a principal surface only because the room-view component records such acts. How the core signs and seals what that component records is left open, and unsealed events are called unsigned without saying whether an unsealed marked operator event counts as a principal act.",
+      "fix": "Say that an operator event counts as a principal act only once its device seat's seal covers it, and that the core seals what the room-view component, the launcher and the bridge component record.",
+      "severity": "minor"
+    },
+    {
+      "type": "undefined",
+      "quote": "verbatim and restored verbatim after every compaction, or named by id and",
+      "problem": "I3 and the restore block name an omitted pin by id, and a closed path may carry only Cairn's own ids, but no pin id is defined: neither Pin nor Pin version assigns one or says who chooses it, and the only addressing the model defines is an event's address. The agent's fallback to recall an omitted pin then has no defined key, and an author-chosen id would put untrusted text into trusted restore text.",
+      "fix": "Add to Pin: a pin's id is the address of its creating event, assigned by Cairn and never chosen.",
+      "severity": "minor"
+    },
+    {
+      "type": "gap",
+      "quote": "principal or managed policy, that purges content per room and provenance class",
+      "problem": "I3 says every restoring pin is stored and restored verbatim, but I1 also allows redaction before storage and a retention policy, which managed policy can set, that purges by room and provenance class; device-seat pins are operator events, so such a policy can reach them. The model neither exempts restoring pins nor says what a restore block carries for a qualifying pin whose text was redacted or purged.",
+      "fix": "Add: a retention policy and redaction leave a qualifying pin as stored; a qualifying pin whose text a principal purged is named by id and count in the restore block instead of restored.",
+      "severity": "minor"
+    }
+  ]
+}

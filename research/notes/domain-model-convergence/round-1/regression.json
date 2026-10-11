@@ -1,0 +1,325 @@
+{
+ "round": "1-regression",
+ "reviews": [
+  {
+   "lens": "consistency",
+   "findings": [
+    {
+     "type": "contradiction",
+     "file": "places.md",
+     "quote": "keep restoring, to runs that had a seat in it",
+     "problem": "Foreign room says its principal's device-seat pins and stamped versions keep restoring only to runs that themselves had a seat in the room. The hub relation and Pin also restore a room's qualifying pins to later runs whose agent's earlier runs had a seat, and there the foreign-room limit narrows only which pins restore. A later run of the same agent never holds a seat there (Agent), so it gets these pins under one reading and not under the other.",
+     "fix": "Replace with \"keep restoring to the runs Pin names: those that had a seat in it, or whose agent's earlier runs had one (PIN-10, REC-02)\", or narrow the hub relation and Pin to match, whichever rule is intended.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "trust-and-flow.md",
+     "quote": "listing marks it as relaying text others wrote, or whose listing is unmarked,",
+     "problem": "The relaying rule only refuses a grant at the moment it is recorded. Nothing says a standing grant stops covering when the node's key set later marks the named key as relaying or lists it unmarked. That happens when a service-account certificate or managed-policy listing arrives after the grant, or when a key looked uncertified at grant time and so counted as a person's. Coverage then depends on the order logs arrived, which I10 forbids, and a relaying account's third-party text reaches the grantor's agents as trusted, outside I2.",
+     "fix": "Append: \"A recorded grant covers nothing while the node's key set marks the named key as relaying or lists it unmarked.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "index.md",
+     "quote": "bar keeps them, but once the room is foreign only those Foreign room names.",
+     "problem": "A run seat's own leave makes the room foreign when it was the principal's last member seat there. Leave is a room act an agent can take by tool call. Another principal's moderator kicking or barring that last seat has the same effect. Either way, every pin a trust grant covers drops out of the principal's agents' restore blocks. Yet the model treats removing a pin from a restore block as widening and says room acts never widen. Untrusted content that steers an agent into leaving therefore sheds constraints its principal adopted by trust grant.",
+     "fix": "Add: \"a room becomes foreign for restore only by a principal act of the run's principal (rejecting it, or leaving from its device seat), never by a run seat's leave or another principal's kick or bar.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "index.md",
+     "quote": "records it, in the room it acts on; a node of a principal with a member seat",
+     "problem": "\"The room it acts on\" is undefined for principal acts that name a room but change no room state. Examples: run controls and replies for a run working there, a trust grant scoped to one room, the focus set, a notice opt-in, acknowledging an overlap. One implementer records them in the shared room, which joins a device seat there and shows every member the act, including principal-typed steer text; another records them in the personal room. The same sentence also tells an act that acts on no room to name \"the room\".",
+     "fix": "Change to \"in the room whose room state it changes (Room merge); every other principal act acts on no room\", and in the next sentence write \"naming the room it concerns, if any\".",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "acts-and-roles.md",
+     "quote": "restoring until its stamper unstamps it, a cut principal act, or its own",
+     "problem": "Read as a list, \"a cut principal act\" is a second, unnamed way for a stamped version to stop restoring. That contradicts the rule that, apart from unstamping and revoking a trust grant, any act removing a pin from a restore block is widening. Read as an apposition, it only classes the unstamp. Implementers could end stamped restores on other cut acts.",
+     "fix": "Change to \"until its stamper unstamps it (a cut principal act), or its own stamp or edit puts a newer version in its place\".",
+     "severity": "minor"
+    },
+    {
+     "type": "undefined",
+     "file": "record.md",
+     "quote": "such as lowering a limit or turning an injection path off, never",
+     "problem": "\"Injection path\" and \"enabling injection\" are used as Cairn concepts but never defined; the model's name for the ways Cairn writes to an agent is closed path. It is unclear which closed paths repository configuration may turn off (restore on prompt, opt-in notices, compaction guidance) without falling under \"removing a pin from a restore block\".",
+     "fix": "Write \"turning a closed path other than restore blocks off\" and \"never turning a closed path on\" in place of the two injection phrases.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "git-and-forge.md",
+     "quote": "A check re-run through the launcher, outside any agent",
+     "problem": "A witness check's independence (its node's git identity authored no commit on the branch) and its denials can be checked only on the node that ran it. Its structural record is untrusted on every other node. CI attestation states that every principal sees the same class; nothing says which evidence class another principal's node gives a received witness-check record, so one implementer shows `witness check` and another `claim`. The model also does not say what happens when this node's git identity did author a commit on the branch.",
+     "fix": "Add: \"A witness check recorded on another principal's node counts as `claim` there, and Cairn refuses a witness check on a node whose git identity authored a commit on the branch, as it refuses one whose platform cannot deny all three.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "trust-and-flow.md",
+     "quote": "covers reaches only the grantor's agents whose run has a seat in the post's",
+     "problem": "A directed post waits in its target agent's principal's Needs you queue for an endorsement (Directed post). A trust grant covering its author makes it reach every grantor agent with a seat in the room. The model does not say which rule applies to a directed post whose author a grant covers, or whether it then reaches agents it was not directed to.",
+     "fix": "Append: \"; a directed post it covers reaches only the agent it is directed to, and still waits for endorsement\" (or state the opposite rule explicitly).",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "security",
+   "findings": [
+    {
+     "type": "security",
+     "file": "docs/domain-model/places.md",
+     "quote": "the events recorded before the change are another node's: they count as",
+     "problem": "I5 applies a quarantine only on the node that records it, and applies another node's quarantine only as a quarantine request that node's principal accepts. Because every event from before a node identity change now counts as another node's, the home's own quarantines are dropped, so a snapshot restore or a node clone silently puts quarantined events back into recall, and quarantined pins back into restore blocks.",
+     "fix": "Append: \"; the quarantines and other cut acts this home recorded before the change still apply on it (I5)\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "context, on a fresh checkout of the exact commit, with network, the OS user's",
+     "problem": "A witness check runs code from an untrusted commit outside any agent sandbox, and the only things denied are network, HOME and the principal's home. The code can therefore write anywhere else the OS user can, such as the repository's git directory (hooks, config) or worktrees outside HOME, and plant code that later runs unconfined, with network. For a sandboxed agent, this is a way out of the sandbox.",
+     "fix": "\"with network, the OS user's home directory (`HOME`), the principal's home (its platform key-store entries included) and every write outside that checkout, the repository's git directory included, denied ... Unless the platform can deny all four\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "It posts only in its own words, pointing by range link to any",
+     "problem": "The own-words rule covers only the facilitator's posts. As an appointed moderator, its device seat also has the pin capability, and a trust grant covers pins written from device seats. A facilitator reads untrusted room text, so it can pin that text verbatim. A grant, which shows only a warning that 'its posts never quote', then restores that text word for word as trusted text in the grantor's restore blocks.",
+     "fix": "\"It posts and pins only in its own words, ...\", and in Trust grant: \"which its posts and pins never quote\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "run, of the same agent only where the harness gives a stable agent id. It has",
+     "problem": "A harness resume that starts a new harness session carries the resumed context into a new run, including the untrusted content the old run recalled. The model gives recall taint only to a run that recalls or to a delegate, so the resumed run starts untainted and its sensitive action classes run at rule levels that were never tightened.",
+     "fix": "Add: \"A run a harness resume starts carries the recall taint of the run it resumes.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "inherited from the delegating run (OWN-24), which tightens the rule levels of",
+     "problem": "Taint flows only from the delegating run down to the delegate. A subagent's report comes back as `subagent_result` outside recall, so a parent can have a subagent recall untrusted history and get that content into its own context without becoming tainted. This bypasses the tightening of rule levels.",
+     "fix": "\"or inherited from the delegating run (OWN-24), or from a tainted delegate whose report it receives\".",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "keep restoring, to runs that had a seat in it. A room the principal owns or",
+     "problem": "Pin and the restore-block relation now also restore a room's qualifying pins to runs whose agent's earlier runs had a seat in it. Foreign room limits restoring to runs that had a seat in it. Implementers will differ on whether a later run of the agent gets a foreign room's pins.",
+     "fix": "\"keep restoring, to runs that had a seat in it or whose agent's earlier runs had one\".",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "that principal's own agents only. An edit, an unpin or a list removal leaves",
+     "problem": "An unpin and a list removal raise a Needs you item for each stamper; an edit raises none. When an author corrects a pin, a stamper's agents keep restoring the superseded version, even where a trust grant would carry the new one (Pin version), and the stamper is never told.",
+     "fix": "\"An edit, an unpin or a list removal raises a Needs you item for each stamper and leaves a stamped version restoring until ...\".",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "usefulness",
+   "findings": [
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "keep restoring, to runs that had a seat in it. A room the principal owns or",
+     "problem": "Pin and the restore-block relation now restore a room's pins to later runs whose agent's earlier runs had a seat there, and once the room is foreign they defer to Foreign room. Foreign room restores the surviving pins (its principal's own device-seat pins and stamped versions) only to runs that themselves had a seat in it, so implementers will disagree on whether an agent's later runs still get its principal's own constraints from a room it left.",
+     "fix": "keep restoring, to runs that had a seat in it and to the later runs of their agents (PIN-10, REC-02).",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "useless",
+     "file": "docs/domain-model/index.md",
+     "quote": "seat in during the run, its personal room included, and of every room its",
+     "problem": "A restore block inherits every room the agent's earlier runs ever had a seat in, and a leave, kick or bar does not drop them. The pin budget then fills by pin priority, with every room's intent ahead of every other pin. For a long-lived agent with a stable agent id, old rooms' intents and constraints crowd out the current room's constraints, which after compaction appear only by id and count.",
+     "fix": "seat in during the run, its personal room included, and, only after those fill the pin budget, of every room its agent's earlier runs had a seat in (PIN-10, REC-02)",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "useless",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "writers, and no seat in its parent's rooms but those it joins as Join says,",
+     "problem": "A subagent that edits its parent's room's branch has no seat in that room until its principal asks for or accepts a join for that one subagent run, usually after the short-lived subagent has finished. Until then its events, edits and checks go to the private personal room, outside the room's history and results. The room's constraints never reach the subagent's restore block, and the room's other principals never see the work behind commits that carry the room's trailer.",
+     "fix": "writers, and no seat in its parent's rooms but those it joins as Join says, which Cairn may suggest; its principal may opt in to have a join it asks for or accepts for a run cover that run's subagents (LANE-23).",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "whose stamped version keeps restoring to its agents until it unstamps it.",
+     "problem": "Pin, Stamp and I2 let a stamp make a version restore only once PRV-10 ships. Unpin and List removal say without that condition that each stamper's version keeps restoring until it unstamps it. Before PRV-10, when an author unpins a device-seat pin it stamped, one implementer keeps the stamped version restoring and another stops it, and the stamper's Needs you item describes an effect that does not exist.",
+     "fix": "In Unpin and List removal: \"raises a Needs you item for each stamper, whose stamped version, once PRV-10 ships, keeps restoring to its agents until it unstamps it.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "useless",
+     "file": "docs/domain-model/places.md",
+     "quote": "the events recorded before the change are another node's: they count as",
+     "problem": "After a node clone, a copied volume, a restored snapshot or a backup restore onto a new machine, the carried-over device-seat pins belong to another node. Before PRV-10 only this node's own device seat's pins qualify, and stamps restore nothing. Every constraint in the carried-over personal room therefore stops restoring, and the model gives the principal no act to bring it back except retyping each pin.",
+     "fix": "Add: \"Before PRV-10 ships, each carried-over pin of a type that restores is a pin candidate of the node's principal, whose confirmation makes it a pin this node's device seat authors.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/record.md",
+     "quote": "names, such as lowering a limit or turning an injection path off, never",
+     "problem": "Repository configuration may tighten \"such as lowering a limit or turning an injection path off\", but the same sentence forbids removing a pin from a restore block. Lowering the restore block limit (INJ-07), which is a named limit, or turning off a restore-block path does exactly that. Implementers will disagree on whether a repository's .cairn.toml, which an outside branch can carry, may strip an agent's constraints.",
+     "fix": "names, such as lowering a limit other than the restore block limit or turning off an injection path other than a restore block, never",
+     "severity": "minor"
+    },
+    {
+     "type": "useless",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "run, of the same agent only where the harness gives a stable agent id. It has",
+     "problem": "A harness resume that starts a new harness session continues the same conversation in the model's context. Without a stable agent id it is nonetheless a new agent that inherits none of the resumed run's rooms. Its restore block drops their pins, its recall scopes no longer reach its own pre-resume events in those rooms, and its events go to the personal room until its principal asks for each join again.",
+     "fix": "run, of the same agent only where the harness gives a stable agent id or names the harness session it resumes.",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "stamp or edit puts a newer version in its place (LANE-32).",
+     "problem": "Stamp says a stamped version stops restoring once the stamper's own edit adds a newer version. Pin version keeps it restoring until a newer version qualifies for the agent. Suppose a stamper uses a room act to edit a pin from its token-key-only node, and the new version does not qualify. Under Stamp its agents lose the pin through a room act, which acts-and-roles.md says never changes a restore block; under Pin version they keep it.",
+     "fix": "stamp, or its own edit that qualifies for its agents (Pin version), puts a newer version in its place (LANE-32).",
+     "severity": "minor"
+    }
+   ]
+  }
+ ],
+ "match": {
+  "matches": [
+   {
+    "lens": "consistency",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "DM-AC is fixed and its closing texts (Agent, the hub relation, PIN-10, REC-02) restore a room's pins to later runs of an agent whose earlier runs had a seat. The Foreign room entry in places.md was not among them and still limits its principal's own device-seat pins and stamps to 'runs that had a seat in it'. So fixing DM-AC as closed does not answer this; the closing text is incomplete. PIN-10 and REC-02 settle the rule: the foreign-room limit narrows only which pins qualify (no trust grant), not which runs get them."
+   },
+   {
+    "lens": "consistency",
+    "index": 1,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "Not DM-L (certificate consent, listings entering the key set) and not DM-V (facilitator posts). DM-L's closing text puts listings into the key set but nothing makes a standing trust grant respond to a later certificate or listing, so coverage depends on arrival order (I10) and a relaying account's text can become trusted (I2). ADR-2610061700 decision 2 already says a trust grant never covers relaying service accounts; the model states only a refusal at record time."
+   },
+   {
+    "lens": "consistency",
+    "index": 2,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "No ledger theme covers who may make a room foreign. DM-C and DM-Z are about revocation classes and repository configuration, not leave, kick or bar. Rounds 20 Q1, 21 Q1 and 30 Q3 and the RCL-10 scenario decided that a room every seat left or lost is foreign and that trust-granted pins then stop restoring. Nothing decides whether a run seat's leave or another principal's kick or bar may cause that, against the widening rule that removing a pin from a restore block is a principal act. Changing the definition of Foreign room is a design choice."
+   },
+   {
+    "lens": "security",
+    "index": 0,
+    "theme": "NEW-4",
+    "kind": "new",
+    "reason": "The quoted sentence is DM-T's closing text. DM-T fixed the origin and trust of carried-over events but did not say whether the home's own quarantines still apply. I5 and SEC-12 apply a quarantine only on the node that records it, and another node's only as a request, so those events return to recall and restore. ADM-06 reapplies quarantines on a backup restore but nothing covers a node clone. The closing text is incomplete."
+   },
+   {
+    "lens": "security",
+    "index": 1,
+    "theme": "NEW-5",
+    "kind": "new",
+    "reason": "The quoted sentence is DM-AB's closing text. DM-AB made Cairn refuse the witness check unless network, HOME and the principal's home are denied, but says nothing about writes elsewhere (the repository's git directory, other worktrees). OWN-18 and boundary register row 25 name only those three, so the closing text is incomplete."
+   },
+   {
+    "lens": "security",
+    "index": 2,
+    "theme": "NEW-6",
+    "kind": "new",
+    "reason": "DM-V's closing text (Facilitator's own-words rule and the trust-grant warning) covers posts only. The facilitator's appointed-moderator device seat has the pin capability, a trust grant covers pins written from device seats, and SEC-32 forbids only changing another seat's pin. A facilitator's pin of text it read from untrusted room text is therefore not covered by the closing text."
+   },
+   {
+    "lens": "security",
+    "index": 3,
+    "theme": "NEW-7",
+    "kind": "new",
+    "reason": "Not DM-E (which runs are one agent) and not DM-D (a continuing run's lost seat key, deferred as OQ-43). Neither says whether a run that a harness resume starts in a new harness session carries the recall taint of the run it resumes. Recall taint is set on a run that recalls or is inherited by a delegate (OWN-24, SEC-13); no requirement covers a resume."
+   },
+   {
+    "lens": "usefulness",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "Same defect as consistency 0: the Foreign room entry restores its principal's own pins and stamps only to runs that themselves had a seat, while Pin and the hub relation (DM-AC's closing texts) also restore them to later runs of the agent. Its fix words the same repair differently, PIN-10 and REC-02's run set."
+   },
+   {
+    "lens": "usefulness",
+    "index": 1,
+    "theme": "NEW-8",
+    "kind": "new",
+    "reason": "The quoted sentence is DM-AC's closing text in index.md. DM-AC fixed the inheritance of rooms across an agent's runs but gave it no bound or order, so a long-lived agent's old rooms fill the pin budget ahead of the current room's pins. Round 20 Q1 decided only that a leave, kick or bar does not drop a run's own rooms. PIN-08 orders by pin priority and creating-event address, with no room order; PIN-10 names omitted pins by id and count. So the closing text is incomplete and nothing settles the order."
+   },
+   {
+    "lens": "usefulness",
+    "index": 2,
+    "theme": "NEW-9",
+    "kind": "new",
+    "reason": "The quoted sentence is DM-Y's closing text. DM-Y made the model carry LANE-23: no subagent seat in its parent's rooms without a join the principal asks for or accepts, which Cairn may only suggest. The finding shows that this leaves a short-lived subagent's work in the personal room. LANE-23 says a join stays explicit and a subagent that joins gets its own seat id, but says nothing on whether one acceptance for a run may cover its subagents, so the closing text is incomplete and the choice is a design decision."
+   }
+  ],
+  "new_themes": [
+   {
+    "id": "NEW-1",
+    "title": "Foreign room restores its principal's own device-seat pins and stamps only to runs that themselves had a seat, while Pin and the hub relation restore a room's pins also to later runs of an agent whose earlier runs had a seat",
+    "settled_by": "PIN-10, REC-02"
+   },
+   {
+    "id": "NEW-2",
+    "title": "A trust grant refuses a relaying or unmarked service account only when it is recorded, so a standing grant keeps covering a key the key set later marks relaying or lists unmarked, in an order-dependent way (I10, I2)",
+    "settled_by": "ADR-2610061700 decision 2 (a trust grant never covers relaying service accounts), OWN-29"
+   },
+   {
+    "id": "NEW-3",
+    "title": "A room becomes foreign through a room act (a run seat's leave, another principal's kick or bar) and so drops trust-granted pins from restore blocks, though removing a pin from a restore block is a principal act and room acts never widen",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-4",
+    "title": "After a node clone or identity change, the home's own earlier quarantines count as another node's and stop applying, putting quarantined events back into recall and restore against I5",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-5",
+    "title": "A witness check runs an untrusted commit's code with only network, HOME and the principal's home denied, so it can write the git directory or worktrees outside its checkout and plant code that later runs unconfined",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-6",
+    "title": "The facilitator's own-words rule covers posts only, so its appointed-moderator device seat can pin text it read from untrusted room text and a trust grant restores that pin verbatim",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-7",
+    "title": "A run that a harness resume starts in a new harness session does not carry the recall taint of the run it resumes, so its sensitive action classes stay at untightened rule levels",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-8",
+    "title": "A restore block carries the pins of every room an agent's earlier runs had a seat in, with no bound or order, so old rooms' intents and constraints crowd the current room's out of the pin budget",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-9",
+    "title": "A subagent has no seat in its parent's room until its principal asks for or accepts a join, usually after it has finished, so its events and edits stay in the personal room outside the room's history",
+    "settled_by": "none"
+   }
+  ]
+ }
+}

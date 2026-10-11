@@ -199,7 +199,7 @@ wasm2go and "every commit is tested on … Windows: amd64, arm64"
 full locking and shared-memory WAL on windows/amd64 and arm64
 ([support matrix][gosq-matrix]). It cross-builds from Linux with no C
 toolchain. FTS5 and the ADR-07 measurements carry over unchanged
-([ADR-2609302341][adr-sqlite]).
+(ADR-2609302341).
 
 **Rust.** rusqlite 0.40.2 (8 Aug 2026), MIT, with `bundled` compiles
 SQLite through the `cc` crate and always sets `-DSQLITE_ENABLE_FTS5`;
@@ -605,7 +605,6 @@ S under a week, M one to three weeks, L more than three weeks.
 [term]: terminal-components.md
 [ui]: ui-and-packaging-components.md
 [pdc]: protocol-and-data-components.md
-[adr-sqlite]: ../../../docs/adr/ADR-2609302341-sqlite-driver.md
 [release]: ../../../.github/workflows/release.yml
 [cc-setup]: https://code.claude.com/docs/en/setup
 [cc-hooks]: https://code.claude.com/docs/en/hooks

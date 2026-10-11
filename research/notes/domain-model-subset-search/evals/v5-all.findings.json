@@ -1,0 +1,173 @@
+[
+ {
+  "type": "contradiction",
+  "quote": "the run's later events go there.",
+  "problem": "The new run seat starts 'as above', so it inherits no add and must join again, but the routing rule in Relations sends a run's events only to a run seat that is a member with work, and otherwise to the personal-room seat. The two rules disagree about where the run's later events go after its seat key is revoked.",
+  "fix": "Replace with: \"and the run's later events go there once that seat joins as Join says; until then they go to its personal-room seat (Relations).\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "ends it: the revocation names the seat's last accepted seq, the seat's acts",
+  "problem": "No statement says whose principal act may revoke a seat key. Revocation retroactively voids the seat's acts and seals past a seq and stops its pins qualifying. If another principal could record it, that principal could erase a moderator's acts or strip a principal's pins on every node.",
+  "fix": "Add: \"Only the seat's own principal, from a device whose device scope allows it, revokes its seat key; a revocation recorded by any other principal is refused and counted (I6).\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "harness started, other than Cairn's own hook handlers, MCP server and harness strip",
+  "problem": "The harness strip (`cairn status --line`) is exempt from recall, but nothing tells it apart from the same command run by an agent's tool process. Hook calls have such a rule: from inside a run's tool process they are refused. Without one, an agent's tool call can get Health output unenveloped, a write to the agent outside I2's closed paths.",
+  "fix": "Add: \"the harness strip being only the status line the harness itself starts; a `cairn status --line` call from inside a run's tool process is recall, enveloped, like any other.\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "or `bundle` (read by import), or `peer` (received from a peer, a paired phone or",
+  "problem": "A paired phone's events take origin `peer`, which the trust policy reads as another node's, and the trusted sources list only events recorded on this node. Yet Relations says the phone's device seat belongs to this node's principal, and Paired phone lets it allow held permission requests. Whether its principal acts count as this principal's trusted acts is left undefined.",
+  "fix": "State in Trusted sources and Origin how a paired phone's device-seat events are read, e.g. \"a paired phone's principal acts, received over B2 from the device seat this node paired, count among this node's own operator events\" (or explicitly defer this to OQ-39).",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "so every act keeps its effect on room state, the key set and the quarantine",
+  "problem": "A purge, including one by a retention policy that managed policy sets with no principal act, keeps a pin act's effect on room state while erasing its text. Nothing says whether that pin still qualifies or what the restore block then carries, so I3's verbatim restore cannot hold as written.",
+  "fix": "Add: \"A pin whose restoring version's text is purged stops qualifying; the restore block names it by id with its tombstone's address, and a retention policy that would purge a qualifying pin counts as removing a pin from a restore block.\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "nodes, admitting no other principal), shared with the room's principals,",
+  "problem": "Every created room starts private, which admits no other principal, while the owner may invite a principal key or issue an invite link. Nothing says whether an invite to a private room is refused, waits for a visibility change, or changes visibility itself.",
+  "fix": "Add to Admission: \"An invite or invite link takes effect only while the room's visibility is not private.\" (or state that it is refused while the room is private).",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "a run's tool process started, directly or through descendants, `cairn ui` so",
+  "problem": "Principal surface counts `cairn ui` only when it is 'so started', that is at a terminal. Room-view component lets a service manager or an ephemeral node's entrypoint start it, and withholds a room-view secret only when the start comes from a harness-started process. The two rules disagree on whether a browser on a service-manager-started `cairn ui` is a principal surface.",
+  "fix": "Replace \"`cairn ui` so started\" with \"`cairn ui` started by a process that neither the harness nor a run's tool process started\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "`cairn uninstall` records the widening act turning capture off before it",
+  "problem": "Install and uninstall may also run through the harness's plugin path or the managed install path, which are not principal surfaces. A principal act must be taken at a principal surface. Only token-key-only nodes get a structural event that stands in, so nothing marks the capture gap for the other uninstall paths.",
+  "fix": "Extend the stand-in: \"a structural event naming the uninstall standing in for that act on a token-key-only node or when uninstall runs through the plugin or managed install path.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "off, the cut act turning it off (ADM-04, SEC-01). It refuses and counts any",
+  "problem": "Turning the launcher or the room-view component off is carried by a configuration acceptance and classed as cut. Record says any acceptance, even of an unchanged configuration, re-records pins and is then widening. When the turn-off acceptance re-records a pin, the two classes conflict.",
+  "fix": "In Cut, write \"turn off the room-view component or the launcher, unless its acceptance re-records a pin (then widening, as Record says)\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "seat authors. The intent restores as the author of its newest version wrote",
+  "problem": "Intent restores its newest version, to that version's author's agents. Pin version restores the newest qualifying version, and Quarantine restores the newest version not quarantined. When the newest intent version is quarantined or written by a revoked seat, the rules disagree on which version restores and to whose agents.",
+  "fix": "Replace \"its newest version\" with \"its version that restores (Pin version, Quarantine)\" and apply the restore audience of that version's author.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "from recall, the trusted-only export and restore blocks, and landmark text",
+  "problem": "Quarantine only keeps content out of recall, the trusted-only export, restore blocks and landmark text. A post that a trust grant covers reaches the grantor's agents unenveloped, inside OWN-29's template. A quarantined post, or a new post from a quarantined writer or run, therefore keeps being pushed into agents and is never taken out of circulation, which I5 requires.",
+  "fix": "Change the list to: \"from recall, every closed path that carries stored text (restore blocks and OWN-29's template included), the trusted-only export, and landmark text\".",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "and pin versions the seat wrote stop qualifying (Pin), so revoking a device",
+  "problem": "A version another principal stamped keeps restoring to that stamper's agents through the author's edit, unpin or list removal, until the stamper unstamps it. Yet when the author's principal revokes its own seat key, that version stops qualifying. One principal's act then removes a pin from another principal's agents' restore blocks, and the stamper gets no Needs you item. This contradicts \"Only an agent's own principal widens what reaches that agent\".",
+  "fix": "Change to: \"and pin versions the seat wrote stop qualifying unstamped (Pin); a version another principal stamped keeps restoring to its stamper's agents, with a Needs you item for that stamper, until it unstamps it, so revoking a device\".",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "intent before every other pin (LANE-20); qualifying pins fill the pin budget",
+  "problem": "Each version's author sets its pin priority, and the budget fills in priority order alone. So a principal whose pins or intent qualify under a trust grant can write low-number pins that push the grantor's own constraints out of its agents' restore blocks, leaving them named only by id and count. Another principal's acts thus remove the agent's own principal's pin text.",
+  "fix": "Change to: \"qualifying pins fill the pin budget with the agent's own principal's pins and stamped versions first, then those only a trust grant qualifies, each group with the intent first and then in that order\".",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "the room's owner, only as the room's visibility allows",
+  "problem": "Visibility has four values: private (held only on the owner's own nodes), shared, published, and stored on blind peers. None of them says whether the git carrier is allowed; the git carrier keeps a room's segments on a remote, which is not a node. For a private room, or the always-private personal room, one implementer will refuse it and another will send the segments off the machine through B3.",
+  "fix": "Add to Visibility: \"the git carrier is allowed only where the visibility allows blind peers, and never for a personal room\" (or whichever rule the stakeholder chooses).",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "records that, naming for each predecessor's writer the last seq it takes in",
+  "problem": "A backup restore takes a predecessor's events only up to a seal verified against a head receipt kept apart. A node clone's lineage acceptance may name any seq. So unsealed events appended to a copied image or snapshot, such as forged device-seat pin principal acts, would count as this node's own trusted operator events, and their pins would restore to its agents.",
+  "fix": "Change to: \"records that, naming for each predecessor's writer the last seq it takes in, no later than that writer's newest seal that verifies, against a head receipt the principal kept apart where one exists\".",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "the run's later events go there.",
+  "problem": "Seat key says the new run seat inherits no add and, outside the personal room, must join like any other seat. Relations sends a run's events only to a member seat that has work, and otherwise to the personal-room seat. This sentence sends the run's later events straight to the new, non-member seat, so implementers will put events after a revocation in different rooms, and the room's record of what the agent did will differ.",
+  "fix": "the run's later events go there once that seat's join stands and it has work (LANE-23), else to its personal-room seat (Relations).",
+  "severity": "needs-fix",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "LMK-06 may add a **natural-language headline** to a span whose every",
+  "problem": "The headline is created but nothing reads it. It never reaches a restore block, no surface in the room view's closed set shows it, and no recall tool is said to return it.",
+  "fix": "Say where it is shown, e.g. append \"; it is shown with its landmark on Runs and Catch up and returned only by recall, enveloped\", or drop the sentence.",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "**Landmark index**: The current run's landmarks, each with its address range,",
+  "problem": "The landmark index is the only stated reader of landmarks, and it lists the run's landmarks as a flat list. Nothing reads LMK-05's tiers and landmark blocks. One implementer will bound the index by tiers; another will list every landmark until the restore block limit cuts it.",
+  "fix": "**Landmark index**: The current run's landmark tiers (LMK-05), each landmark or collapsed line with its address ranges,",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "link records one for every seat that chains to the invited principal key and",
+  "problem": "A node's device seat joins without admission before it records a principal act there. Role gives the invite's role only to seats that \"join under it\", and any other seat without a role is a viewer. So it is undecided whether an invited collaborator's auto-joined device seat has the pin capability it needs to pin a constraint for its own agents in a shared room.",
+  "fix": "link records one for every seat that chains to the invited principal key and joins, under admission or without it (Join),",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ }
+]

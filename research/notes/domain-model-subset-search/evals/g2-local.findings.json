@@ -1,0 +1,56 @@
+[
+ {
+  "type": "contradiction",
+  "quote": "removes the hook registrations (ADM-02). An unstamp are the exceptions: each withdraws only the acting",
+  "problem": "The rule says any principal act that removes a pin from a restore block is widening, and names one exception in a broken sentence (\"An unstamp are the exceptions: each\"), which implies a dropped second exception. Revoking a run seat's key is classed Cut, yet Pin says a pin stops qualifying when its seat's key is revoked, so it removes stamped run-seat pins from restore blocks and contradicts the rule as written.",
+  "fix": "Write \"An unstamp and revoking a run seat's key are the exceptions: each withdraws only the acting principal's own trust (LANE-32).\"",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "undefined",
+  "quote": "retention policy sends, and the launcher's event about a room's",
+  "problem": "Relations routes an \"erasure request\" and \"the launcher's event about a room's branch\" as events, but neither is an event kind in Event, and neither has a provenance in the closed set. A retention policy purges locally by tombstone and sends nothing, so an erasure request has no sender, recipient or trust level. Two implementers would build different events.",
+  "fix": "Drop \"an erasure request a retention policy sends\", since the policy appends tombstones. Name the launcher's branch event as an event kind with its provenance (for example structural), or remove it from the routing sentence.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "security",
+  "quote": "under a delegation grant, another agent of the same principal, an agent on",
+  "problem": "Delegation and delegate reports reach \"an agent on another of its nodes\", and Delegate report mentions reports \"from another node\". I4 declares only B0 and two B1 loopback or same-user boundaries, with no component that connects between nodes. A cross-node delegated task would send data off the machine through no declared component, and the receiving side has no declared path to take it in.",
+  "fix": "Restrict delegation to agents on the same node: \"another agent of the same principal on this node\". Delete the cross-node clause and the \"one from another node\" clause in Delegate report.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "**Foreign room**: A room this node holds",
+  "problem": "A foreign room is a room whose principal neither owns it nor has a seat in it. The principal always owns its own rooms, even after all its seats leave, and no component here can bring another principal's room or seat onto the node. So no room can ever be foreign. The foreign-room rules in Pin, Relations, Trusted sources, Recall scope and the Room page are unreachable.",
+  "fix": "Remove Foreign room and its dependent clauses. Alternatively, name the path (a component or act) by which another principal's room reaches this node.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "**Presence hint**: An ephemeral sign that a seat is connected, or typing (a",
+  "problem": "A presence hint, a typing hint, a draft shown live, and the room settings that switch them all need another human seat to see them. Only one principal exists, the node has no peer boundary, and agents never receive hints, so nothing can show these signs to anyone.",
+  "fix": "Remove Presence hint, Draft, and the \"drafts show live\" and \"typing shows\" room settings. Alternatively, say which surface shows them and to whom.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "security",
+  "quote": "server's URL (inert text the person opens in their own browser), a build",
+  "problem": "Only the dev-server URL is said to be inert. A build artifact, file or diff an agent presents is untrusted content shown in the outcome window of the browser room view, which is a principal surface holding the origin secret. No rule keeps that content from executing there and sending principal acts, and a forged steer would reach the model through a principal-act path.",
+  "fix": "Add: \"every presentation is shown as inert data, never executed or rendered in the room-view origin\".",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

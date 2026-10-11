@@ -1,0 +1,353 @@
+[
+ {
+  "id": "R3R-1",
+  "real": true,
+  "why": "Real. places.md Foreign room first says \"only its principal's own device-seat pins and the versions it stamped stay trusted and keep restoring to the runs Pin names\". Three lines later it says \"what qualified there for its principal's agents, a trust grant's pins included, keeps restoring as it stood\". That second sentence says the kept pins keep restoring but never says they stay trusted, and the categorical \"only\" list leaves them out. Two other entries defer to this list. Trusted sources admits in a foreign room only \"the pins and stamps Foreign room names\", and Trust grant covers nothing \"in a foreign room, but for the pins a leave, kick or bar keeps there (Foreign room)\". Pin restores only \"by its newest version whose own event is trusted on this node\". So the model is unclear on whether a kept trust-grant pin is trusted, whether it restores and whether it enters a trusted-only export. The SRS answers all three: PRV-02 trusts them.",
+  "settled_by": "PRV-02: \"in a foreign room, only its device-seat pins, stamped versions and the pins PIN-10 keeps restoring there after a leave, kick or bar.\" RCL-10: \"PRV-02 still keeps its principal's device-seat pins and stamped versions there, and the pins PIN-10 keeps after a leave, kick or bar, trusted for restore (PIN-10).\" OWN-29: \"A trust grant MUST cover nothing in a foreign room, whose items recall marks untrusted whatever trust grant covers their keys (RCL-10), but the pins PIN-10 keeps restoring there after a leave, kick or bar.\"",
+  "klass": "settled",
+  "options": [
+   {
+    "label": "Name the kept pins in Foreign room's trusted list, as PRV-02 does",
+    "effect": "Foreign room's 'only' list matches PRV-02. Trusted sources and Trust grant, which defer to what Foreign room names, then cover kept trust-grant pins without change. The pins become trusted for restore, and a trusted-only export takes them as trusted. Recall still marks every item untrusted (RCL-10).",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Settled by PRV-02, RCL-10 and OWN-29, so no SRS edit is needed. Add the kept pins to Foreign room's 'only' list in PRV-02's own words. The edit leaves DM-AE's quote ('keep restoring to the runs Pin names: those that have had a seat in it'), DM-AG's and DM-BC's quotes intact. It is disjoint from R3R-7's edit, so both apply. places.md grows by one line (88 to 89 lines, about 1,550 tokens), well under budget.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "principal's own device-seat pins and the versions it stamped stay trusted and",
+    "new": "principal's own device-seat pins, the versions it stamped and\n  the pins a leave, kick or bar keeps there stay trusted and"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "the pins a leave, kick or bar keeps there stay trusted and"
+  }
+ },
+ {
+  "id": "R3R-7",
+  "real": true,
+  "why": "Real. A succession requires every seat of the owner to have left, so it always makes the room foreign to the former owner. So can a handover the owner offers after its seats left, which LANE-11 allows. In that case two sentences of Foreign room keep the former owner's intent version restoring to its agents. The first says \"only its principal's own device-seat pins and the versions it stamped stay trusted and keep restoring\", and the intent version its device seat authored is such a pin. The freeze sentence says \"what qualified there for its principal's agents ... keeps restoring as it stood ... until that principal's own act changes it\", and the successor's acceptance is not the former owner's act. Intent says the opposite: \"after a change of ownership, a handover or a succession, until the new owner revises it, it restores only to its stampers' agents\". The same applies to a third principal whose trust-grant intent the freeze keeps. In the SRS, LANE-11 states the rule, but PIN-10's freeze clause (\"MUST keep restoring as it stood ... until that principal's own act changes it\") is an unqualified MUST that contradicts it in this case.",
+  "settled_by": "LANE-11: \"After a change of ownership, the former owner's pins MUST keep each version's author and, but for the intent, keep restoring to that owner's agents, and reach the new owner's agents only through the new owner's stamp or trust grant; the intent MUST restore only to its stampers' agents until the new owner revises it (LANE-32).\" Its scenario (features/lane.feature, @LANE-11) already tests succession: \"after which the intent restores only to its stampers' agents until \\\"carol\\\" revises it\".",
+  "klass": "settled",
+  "options": [
+   {
+    "label": "Carry LANE-11's intent exception in Foreign room, and cross-reference it from PIN-10's freeze",
+    "effect": "After a handover or a succession, the intent no longer restores to the agents of a principal the room is foreign to, whether the former owner or a trust grantee, unless it stamped a version. The two Foreign room sentences and PIN-10's freeze stop contradicting Intent and LANE-11. Every other pin the freeze keeps is unchanged.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Settled by LANE-11. The model gets one sentence appended to Foreign room. It is appended rather than spliced into the first sentence, so it covers both the 'only' list and the freeze, and it does not overlap R3R-1's edit. PIN-10 gets a matching clause, a tightening that removes its MUST's conflict with LANE-11. The clause is inserted after the DM-BC quote ('... covers nothing (OWN-29), as in any other room'), which stays an exact substring. PIN-10's behaviour is otherwise unchanged and LANE-11's scenario already covers the case, so no scenario needs to change. PIN-10's cell is the widest in its table, so run `mdsmith fix` after the replace to re-pad the table. places.md grows by two lines, well under budget.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "grant it qualified by covers nothing (Trust grant), as in any other room.",
+    "new": "grant it qualified by covers nothing (Trust grant), as in any other room.\n  But after a change of ownership, the intent restores in a foreign room only\n  as Intent says (LANE-11)."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "covers nothing (OWN-29), as in any other room. Moving a pin",
+    "new": "covers nothing (OWN-29), as in any other room; after a change of ownership, the intent MUST restore in such a room only as LANE-11 says. Moving a pin"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "after a change of ownership, the intent restores in a foreign room only"
+  }
+ },
+ {
+  "id": "R3R-2",
+  "real": true,
+  "why": "Real. PRV-10 says each managed-policy listing and each removal \"MUST be recorded as a structural event that enters the key set of the node that recorded it from its machine's managed policy, and another node's only once the listed principal key countersigns the listing\". A listing has no run, so LANE-01 sends it \"to that device's seat in the personal room of its node\". PEER-02 serves a personal room's segments \"only to its principal's other nodes\". So a listing or a removal reaches the listing principal's own nodes and never another principal's node, and the model's \"and another node's only once the listed key countersigns it\" has no path there. On that node the listed key falls under Principal's \"A principal key never certified counts as a person's\". It can then record a verdict, and Trust grant's refusal of an account \"whose listing is unmarked\" or marked relaying never fires. DM-AA's deferral (OQ-41: \"how a revocation of a device key or an access token, which acts on no room, reaches another principal's node\") names revocations only, so it does not cover this. This is a real routing choice: carry the listing in the listed account's chain, show it by address the way OQ-41 option 2 shows acts, or something else. It can wait: PRV-10 and OWN-29 ship in M7, and no other principal's node gets segments before M8's peer network (PEER-01..07). The model note goes in the Service account entry, where the listing rule lives, and leaves DM-AA's and DM-AP's quoted texts intact. principals-and-agents.md grows from 130 to 131 lines; mdsmith check passed after mdsmith fix in a simulated apply.",
+  "settled_by": "none. The nearest rule only defers revocations, OQ-41: \"and how a revocation of a device key or an access token, which acts on no room, reaches another principal's node that holds a room the revoking principal shares, so that node refuses the revoked key (PRV-10), before M7.\"",
+  "klass": "design",
+  "options": [
+   {
+    "label": "Defer with its sibling to OQ-41, before M7",
+    "effect": "Decides no new route. The SRS and the model say how a listing or a removal reaches another principal's node is open beside revocations, so no implementer invents a path. Nothing that needs it ships before M7.",
+    "invariant_change": false
+   },
+   {
+    "label": "Carry a countersigned listing in the listed account's own seats' writers, like its certificate chain",
+    "effect": "The listing reaches every node that holds a seat of that account. A removal is recorded by the listing machine's node, not the account, so it still has no path. This decides OQ-41's revocation question in part, out of turn.",
+    "invariant_change": false
+   },
+   {
+    "label": "Route a listing and its removal like a principal act on no room, shown by address in each room the listed account has a seat in",
+    "effect": "Reuses LANE-01's show-by-address, but whether such a personal-room event is served to another principal is exactly what OQ-41 holds open, so it settles nothing yet.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Design, deferred: add listings and their removals to OQ-41 beside revocations, with milestone before M7 (PRV-10 and OWN-29 ship in M7; another principal's node gets nothing before M8). No security hole ships before then, and no invariant wording changes.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "listing it ends did (PRV-10). A key",
+    "new": "listing it ends did (PRV-10); how a listing or a removal reaches another\n  principal's node rests on OQ-41. A key"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "a removal wherever the listing it ends entered;",
+    "new": "a removal wherever the listing it ends entered (open for another principal's node: OQ-41);"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "so that node refuses the revoked key (PRV-10), before M7.",
+    "new": "so that node refuses the revoked key (PRV-10), and how a managed-policy listing or its removal, a structural event in the personal room of the node that records it, reaches another principal's node, so that node counts the listed principal key as a service account's, relaying or not (PRV-10, OWN-29), both before M7."
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "how a listing or a removal reaches another principal's node rests on OQ-41"
+  }
+ },
+ {
+  "id": "R3R-3",
+  "real": true,
+  "why": "Real. OWN-24 records every delegation \"on both sides with its delegating agent, its delegation grant when one applies, and the delegated task's address, and its delegate report on the delegating side\". RCL-05 adds \"every writer of its seats, which record its delegate reports\". So the task is an event in a delegating run's writer, and the report must come back from the delegate's node. PEER-02 serves a room's segments only to peers whose principal has a seat in it, \"and to no other\". LANE-29 says a cross-room post \"MUST NOT ... hand any agent a delegated task\". OWN-26 never says the two principals must share a room. Its own scenario has the target's run carry recall taint \"while 'bob''s node holds none of the delegating run's writers\", which no PEER-02 path allows, since the task lives in such a writer. One implementer will demand a shared room; another will carry the task and report over B2 outside room segments, against PEER-02. Both are viable designs, so this is a real choice. It can wait: OWN-26 is P2, in no milestone up to M8 (only M6's separate proposals), and needs its own I2 review (ENG-29). OQ-14 already holds delegation to another principal's agent, with the milestone \"after M8\". trust-and-flow.md grows from 209 to 211 lines; the token budget passed in a simulated apply.",
+  "settled_by": "none",
+  "klass": "design",
+  "options": [
+   {
+    "label": "Defer to OQ-14, before OWN-26 ships (after M8)",
+    "effect": "The model and OWN-26 say the transport is open, so no unreviewed path is built. OWN-26 cannot ship until it closes, and it already waits on its own I2 review.",
+    "invariant_change": false
+   },
+   {
+    "label": "Tighten now: a delegation to another principal's agent travels only within a room where both runs have a seat",
+    "effect": "No new path; PEER-02 already carries both events. The delegate's run must join another principal's room first, and OWN-26's scenario step about bob's node holding none of the delegating run's writers would have to change.",
+    "invariant_change": false
+   },
+   {
+    "label": "A delegation exchange over B2 outside room segments",
+    "effect": "Works with no shared room. PEER-02's 'to no other' gains an exception carrying delegating-run text to another principal's node, which needs its own I2 and I4 review.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Design, deferred: add the transport question to OQ-14, with milestone before OWN-26 ships (P2, after M8). Recommend the shared-room option inside the OQ, since it needs no new path. Nothing ships before then that makes it a security hole, and no invariant wording changes.",
+  "edits": [
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "  another of its nodes, or another principal's agent (OWN-23 to OWN-26).",
+    "new": "  another of its nodes, or another principal's agent (OWN-23 to OWN-26). How\n  a delegated task and its delegate report travel between two principals'\n  nodes rests on OQ-14."
+   },
+   {
+    "file": "docs/srs/05c-principal-and-peer-requirements.md",
+    "old": "marked as from the other principal's agent. This requirement",
+    "new": "marked as from the other principal's agent; how the delegated task and its delegate report travel between the two principals' nodes is open (OQ-14). This requirement"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "roles assigned to the other principal's seats stay open.",
+    "new": "roles assigned to the other principal's seats stay open. Also open, before OWN-26 ships: how such a delegated task and its delegate report travel between the two principals' nodes, since a node serves another principal's node only the segments of rooms that principal has a seat in and the cross-room posts they show (PEER-02), and no cross-room post may hand an agent a delegated task (LANE-29). Options: only within a room where both runs have a seat, which needs no new path (recommended); or a delegation exchange over B2 outside room segments, which PEER-02 would have to name, under its own I2 and I4 review."
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/trust-and-flow.md",
+   "quote": "How a delegated task and its delegate report travel between two principals' nodes rests on OQ-14"
+  }
+ },
+ {
+  "id": "R3R-4",
+  "real": true,
+  "why": "Real. PEER-02 serves each room's segments \"to the enrolled peers whose principal has a seat in that room\", keyed on the principal alone. A token-key-only node's principal is the same principal as every other node of its owner, so the node qualifies for every room that principal has a seat in, including every other node's personal room (\"a personal room's segments go only to its principal's other nodes\"). Yet PEER-06 limits its token key \"to those rooms, the node's own personal room and the expiry\", and the model's Token key entry says the same. Nothing on that node can use more. Its seat keys outside those rooms \"chain to no principal key and [are] refused\" (PEER-06 scenario). An agent is identified by its node, so none inherits rooms from elsewhere. Recall extends only to rooms the agent has a seat in. Serving more only widens what a short-lived cloud environment exposes, against I8. PEER-12's \"or a token-key-only node's token key\" opens the same gap through blind peers, which can read no room metadata and so cannot check it. The fix follows from the token key's existing limit, takes nothing away, and makes no behavioral choice: a tightening, landing with PEER-02 in M8 (\"sync for token-key-only nodes\"). The model sentence sits before the general rule so DM-BE's quoted text stays intact. PEER-02's and PEER-12's scenarios gain a step each. places.md grows to about 93 lines and seats-and-keys.md to 100; mdsmith check passed after mdsmith fix in a simulated apply.",
+  "settled_by": "none. The basis is PEER-06: \"a token key, certified by the issuing node's device key and limited to those rooms, the node's own personal room and the expiry\", but no rule limits what such a node is served.",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "Tighten, in M8 with PEER-02: a node serves a token-key-only node only the segments of the rooms its token key is limited to and the cross-room posts they show, and a blind-peer range is encrypted to its token key only for such a room. Give the edits in the model (Peer, Device key), the SRS (PEER-02, PEER-12) and the two pending scenarios.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "content trusted (PRV-02). A node serves a room's segments only to the peers",
+    "new": "content trusted (PRV-02). A node serves a token-key-only node only the\n  segments of the rooms its token key is limited to and the cross-room posts\n  they show (Token key). A node serves a room's segments only to the peers"
+   },
+   {
+    "file": "docs/domain-model/seats-and-keys.md",
+    "old": "token-key-only node's token key (PEER-12).",
+    "new": "token-key-only node's token key where the rooms it is limited to include\n  that room (PEER-12)."
+   },
+   {
+    "file": "docs/srs/05d-peer-requirements.md",
+    "old": "asks for it (LANE-29). No peer MAY",
+    "new": "asks for it (LANE-29). A token-key-only node MUST get only the segments of the rooms its token key is limited to (PEER-06) and the cross-room posts they show. No peer MAY"
+   },
+   {
+    "file": "docs/srs/05d-peer-requirements.md",
+    "old": "or a token-key-only node's token key, never to seat keys",
+    "new": "or a token-key-only node's token key where the rooms it is limited to (PEER-06) include that room, never to seat keys"
+   },
+   {
+    "file": "features/peer.feature",
+    "old": "    And no other peer and no third-party service took part in enrollment, discovery or relay",
+    "new": "    And a token-key-only node of the principal of \"a\" is served only the segments of the rooms its token key is limited to and the cross-room posts they show, never the personal room of \"a\"\n    And no other peer and no third-party service took part in enrollment, discovery or relay"
+   },
+   {
+    "file": "features/peer.feature",
+    "old": "    And it verifies the seat key's signature over each range before storing it",
+    "new": "    And it stores a range encrypted to a token-key-only node's token key only for a room that token key is limited to\n    And it verifies the seat key's signature over each range before storing it"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "A node serves a token-key-only node only the segments of the rooms its token key is limited to"
+  }
+ },
+ {
+  "id": "R3R-6",
+  "real": true,
+  "why": "Real. PEER-02: \"from any other room's writers, a peer MUST get only a cross-room post, by its address, when a seat of its principal in the room the post targets asks for it\". Nothing excludes a personal room. Every run has a seat there \"from its first event, without a join\". §9.2 says \"`room_post` posts from the room the run is working in, its `room` naming the target of a cross-room post\", so a run working in its personal room cross-posts from it. Another principal's seat in the target room then pulls the run's text to its node with no widening act. Yet LANE-17 says \"A personal room MUST stay private\", and the act classes make \"ask for or accept a join, which sends the run's events to a room other principals' nodes hold\" widening. There is a real choice: never serve such a post; serve it only when the sending run (or a device seat's principal) has a member seat in the target room, whose join is that widening act; or serve it as now. The model already defers the parallel case, a personal-room principal act shown by address (\"Whether it so serves a principal act a room shows by address rests on OQ-41\"), and PEER-02 reads \"and to no other (open: OQ-41)\". It can wait: PEER-02 ships in M8, so nothing reaches another principal's node before then. The deferral must still drop today's positive rule that serves the post. So until OQ-41 closes, a personal room's cross-room posts go only to its principal's other nodes, as its segments already do. That is the safe reading of LANE-17. This edit and R3R-4's touch different lines of the Peer entry and of PEER-02 and apply in either order. DM-BE's quoted texts stay intact. places.md stays near 93 lines.",
+  "settled_by": "none. The nearest decision is DM-BE's closing text (\"from any other room it serves a peer only a cross-room post, by its address\"), which this finding shows does not exclude a personal room.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "Defer to OQ-41 before M8; until then a personal room's cross-room posts go only to its principal's other nodes",
+    "effect": "Safe now, consistent with LANE-17 and with how OQ-41 already holds personal-room acts shown by address. Until it closes, a run working in its personal room cannot reach another principal by a cross-room post.",
+    "invariant_change": false
+   },
+   {
+    "label": "Serve a personal room's cross-room post to another principal's peer only when the sending run, or a sending device seat's principal, has a member seat in the target room",
+    "effect": "Equally safe, since the join was the widening act that sends the run's text to that room's other principals. More useful for a run with a seat in the target room that works on another branch. Decides now what the stakeholder rule says to defer.",
+    "invariant_change": false
+   },
+   {
+    "label": "Never serve a personal room's cross-room post to another principal (the finding's fix, as a final rule)",
+    "effect": "Safest and simplest. It permanently stops such a run from addressing other principals except by working in the target room.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Design, deferred: add the question to OQ-41 with milestone before M8 (when PEER-02 ships), recommending the member-seat option inside the OQ. Until it closes, the model's Peer entry and PEER-02 exclude a personal room from the cross-room clause, which is the fail-safe reading of LANE-17, and the PEER-02 scenario gets a step for it. No security hole ships before M8, and no invariant wording changes.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "  from any other room it serves a peer only a cross-room post, by its address,\n  when a seat of that peer's principal in the room the post targets asks for it",
+    "new": "  from any other room but a personal room it serves a peer only a cross-room\n  post, by its address, when a seat of that peer's principal in the room the\n  post targets asks for it"
+   },
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "address rests on OQ-41. Exchanging",
+    "new": "address, or a personal room's cross-room post to another principal's peer,\n  rests on OQ-41. Exchanging"
+   },
+   {
+    "file": "docs/srs/05d-peer-requirements.md",
+    "old": "so a personal room's segments go only to its principal's other nodes; from any other room's writers, a peer MUST get only a cross-room post",
+    "new": "so a personal room's segments go only to its principal's other nodes, as do its cross-room posts until OQ-41 closes; from any other room's writers but a personal room's, a peer MUST get only a cross-room post"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "| Stakeholder; security review, before M7's room merge",
+    "new": "Also open, before M8: whether a cross-room post written in a personal room reaches another principal's node holding the room it targets (PEER-02, LANE-29), since every run has a seat there from its first event without a join, the widening act that sends a run's events to other principals' nodes; until this closes it goes only to its principal's other nodes, as that room's segments do. Options: only when the sending run, or a sending device seat's principal, has a member seat in the target room (recommended); never; or as from any other room. | Stakeholder; security review, before M7's room merge, a personal room's cross-room posts before M8"
+   },
+   {
+    "file": "features/peer.feature",
+    "old": "and a node of any other principal none of them",
+    "new": "and a node of any other principal none of them, nor a cross-room post written there"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "or a personal room's cross-room post to another principal's peer"
+  }
+ },
+ {
+  "id": "R3R-5",
+  "real": true,
+  "why": "The defect is real. ADM-07 says a tombstone contains \"only addresses, counts, reason and commitments\". REC-17 says the chain and every tombstone \"MUST refer to event content, including its structural fields, only through `C`. Purge and redaction on import MUST erase `k_e` with the content.\" So a purged act loses its structural fields as well as its text. The quarantine set, room state, the key set and pins are derived artifacts rebuilt from the writer logs (I10; §8.2 `quarantine` is \"rebuildable from quarantine events\"; `pins` from \"pin events, stamps and unstamps\"). SEC-22 and REC-15 let a retention policy purge any provenance class, `operator` and `structural` included, and ADM-07 accepts `--provenance`, `--range`, `--writer` and `--before` scopes. Purging a quarantine act therefore drops it from the quarantine set: the content comes back to recall with no recorded release, which OWN-11 classes as widening and I5 requires. Purging an unpin brings the pin back. Purging an unstamp, a trust grant's revocation, a key revocation, a listing's removal or a relaying listing changes the key set or trust grants back. The last one contradicts the model's own Trust grant rule that \"no revocation or removal lifts that\". The model's Purge entry says only \"The only way stored content is destroyed (I1)\" and nothing about what happens to an act's effect. DM-BL covers only a purged pin version counting as absent in PIN-10's choice. The finding's fix (structural fields survive) also conflicts with REC-17 and ADM-07 as they stand, and with the ADM-07 and REC-17 scenarios.",
+  "settled_by": "none. ADM-06 shows the intent only for a backup restore (\"reapply every purge, revocation, quarantine, unpin, unstamp and rule level tightening recorded after the backup was taken or refuse\"). No requirement or ADR says what a purge does to an act's effect.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "A: The tombstone keeps each purged act's effect. The tombstone keeps the structural fields, provenance, origin and recorder, never the text, of each purged act, tombstone and event the key set holds. Every derived artifact derives as before except for the purged content. How a node that never held the act counts the tombstone is deferred to new OQ-44 (before M8).",
+    "effect": "Quarantines, unpins, unstamps, revocations, listing removals and relaying listings survive any purge or retention policy on the node that ran it. A peer that applies the erasure request keeps them from its own copy. Widening acts survive too: a purged trust grant still applies until it is revoked. Every free text is still erased, so nothing confirms a guess at it. A retention policy on `structural` cannot erase a purge's own record, because a tombstone's tombstone keeps it. REC-17 gains one exception, and ADM-07, §4.3, §8.2 and two scenarios change. record.md reaches 2991 of 3000 tokens, so the full rule goes in the hub's Relations section.",
+    "invariant_change": false
+   },
+   {
+    "label": "B: Purge skips narrowing acts. Every purge scope and retention policy leaves out each act or key-set event whose loss would widen: a revocation, a listing's removal, a relaying listing, a trust grant's revocation, an unstamp, an unpin, a quarantine, a leave, kick or bar, an expire act, a rule level's tightening. Each one left out is counted, audited and listed on the purge receipt.",
+    "effect": "No REC-17 change, and the signed acts stay verifiable on every node, so there is no cross-node question. But the text of those acts can never be erased. ADM-07's scopes no longer delete everything they select, which narrows a shipped feature. A closed list has to follow every narrowing act the SRS adds.",
+    "invariant_change": false
+   },
+   {
+    "label": "C: Defer everything to a new open question, to be decided before M3 when ADM-07 ships. No rule until then.",
+    "effect": "M1 ships SEC-12 quarantine and SEC-22's managed-policy retention per provenance class, which purges under ADM-07. A retention policy on `operator` would release every quarantine without a release act. That is a security hole in what ships first, so this question cannot be deferred.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option A. Decide it now, because it cannot wait: SEC-12 (quarantine) and SEC-22 (retention purge per provenance class) ship in M1 and ADM-07 in M3. Without a rule, a purge or retention policy undoes quarantines and unpins in what ships first, against I5 and I2. No invariant wording changes: the rule follows I5 and I10. Only one part is deferred: how a tombstone counts on a node that never held the act it keeps, since that tombstone has no signature of the act's signing key. That goes to new OQ-44 with milestone 'before M8', when peers first exchange segments (bundle import follows in M9). OQ-44's recommended option counts a kept act only where the tombstone's seat chains to the principal key that signed the act. Budget notes: record.md is at 2982 of 3000 heuristic tokens today. The full rule therefore goes in docs/domain-model/index.md Relations (2711 after the edit), and record.md gets a pointer plus two deletions of text that repeats other text: the Derived artifact entry's repeat of I10's list, and Backup's second ADM-06. With those, record.md ends at 2991 of 3000, so any further addition there needs a trim. Renumber OQ-44 if another theme takes that number. Run `mdsmith fix .` to realign the edited SRS tables. On a scratch copy, all edits applied and `mdsmith check .` passed with 0 failures. A changelog row in docs/srs/index.md is left to the round.",
+  "edits": [
+   {
+    "file": "docs/domain-model/index.md",
+    "old": "  shows others by address (LANE-01).\n",
+    "new": "  shows others by address (LANE-01).\n- A purge destroys content, never an act's effect: its tombstone keeps the\n  structural fields, provenance, origin and recorder of each purged act,\n  tombstone and event the key set holds, so room state, the key set, the\n  quarantine set and every other derived artifact derive as before but for the\n  purged content (ADM-07, REC-17); how a node that never held them counts them\n  rests on OQ-44.\n"
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "content is destroyed (I1). A purged pin version counts as absent when PIN-10",
+    "new": "content is destroyed (I1); it never undoes an act's effect, as Relations\n  says. A purged pin version counts as absent when PIN-10"
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "the only way the chain, seals and tombstones refer to content (REC-17).",
+    "new": "the only way the chain, seals and tombstones refer to content, but for what a\n  tombstone keeps (REC-17, Purge)."
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "indexes, the node's principal's Needs you queue among its queues, room state,\n  trust levels, and run and integrity statuses. Results with their evidence",
+    "new": "indexes and the node's principal's Needs you queue among its queues. Results\n  with their evidence"
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "token or at-rest key (ADM-06, SEC-10) (`cairn backup create`, ADM-06); reading",
+    "new": "token or at-rest key (`cairn backup create`, ADM-06, SEC-10); reading"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "MUST refer to event content, including its structural fields, only through `C`.",
+    "new": "MUST refer to event content, including its structural fields, only through `C`, but for the structural fields, provenance, origin and recorder a tombstone keeps under ADM-07."
+   },
+   {
+    "file": "docs/srs/05a-administration-requirements.md",
+    "old": "append a tombstone per purged range containing only addresses, counts, reason and commitments,",
+    "new": "append a tombstone per purged range containing only addresses, counts, reason and commitments, and the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds, never its text, so that room state, the key set, the quarantine set and every other derived artifact derive as before but for the purged content,"
+   },
+   {
+    "file": "docs/srs/04-reference-architecture.md",
+    "old": "events (REC-17, ADM-07), never a hash of the removed content, so rebuilds stay\ndeterministic, purges stay auditable",
+    "new": "events, with the structural fields, provenance, origin and recorder of each\nremoved act, tombstone and event the key set holds (REC-17, ADM-07), never a\nhash of the removed content, so rebuilds stay deterministic, no purge undoes an\nact's effect, purges stay auditable"
+   },
+   {
+    "file": "docs/srs/08-data-and-storage.md",
+    "old": "purge event address, purged range, counts, reason or retention policy, commitments of removed events",
+    "new": "purge event address, purged range, counts, reason or retention policy, commitments of removed events, structural fields, provenance, origin and recorder of each removed act, tombstone and event the key set holds"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "Open questions OQ-01..43 with",
+    "new": "Open questions OQ-01..44 with"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "|\n\n## 13.2 Risks",
+    "new": "|\n| OQ-44 | A purge's tombstone keeps the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds, so the act's effect survives on the node that ran the purge, and on a peer that applies its erasure request, from that peer's own copy (ADM-07, REC-17, PEER-11). How does such a tombstone count on a node that never held what it keeps, such as one that later receives the purged range, when it carries no signature of the key that signed the act? Options: count what it keeps only where the tombstone's seat chains to the principal key that signed the act (recommended); count it only where it narrows what reaches an agent or what the key set accepts; or serve a purged act's range to no node that never held it, which then shows a missing range. | Stakeholder; security review, before M8 |\n\n## 13.2 Risks"
+   },
+   {
+    "file": "features/administration.feature",
+    "old": "    And a tombstone event per purged range carries only addresses, counts, reason and commitments",
+    "new": "    And a tombstone event per purged range carries only addresses, counts, reason and commitments, and the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds, never their text\n    And \"cairn rebuild\" then derives room state, the key set and the quarantine set as before the purge, but for the purged content"
+   },
+   {
+    "file": "features/administration.feature",
+    "old": "      | --provenance web       |",
+    "new": "      | --provenance web       |\n      | --provenance operator  |"
+   },
+   {
+    "file": "features/record.feature",
+    "old": "refer to event content, structural fields included, only through the commitment",
+    "new": "refer to event content, structural fields included, only through the commitment, but for the structural fields, provenance, origin and recorder a tombstone keeps of a purged act, tombstone or event the key set holds"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/index.md",
+   "quote": "A purge destroys content, never an act's effect: its tombstone keeps the"
+  }
+ }
+]

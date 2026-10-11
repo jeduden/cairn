@@ -1,0 +1,56 @@
+[
+ {
+  "type": "security",
+  "quote": "is refused; one naming any other service account shows a warning (OWN-29). Its",
+  "problem": "The refusal of a trust grant rests on the service account's certificate or managed-policy listing marking it as relaying. Revoking the certificate, or unlisting it, is a cut act and leaves the account a service account, but removes the mark, so the account becomes an 'other service account' and a grant naming it only shows a warning. A cut act thus loosens what may reach agents.",
+  "fix": "Add that a service account whose certificate is revoked or whose listing is removed counts as relaying for a trust grant, so the grant is refused.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "by a recorded neutral principal act, so every device shows one order.",
+  "problem": "The only conflict rule (more restrictive act wins, then lower commitment) belongs to the room merge, which derives room state. Principal-level state that is not room state (trust grants and their revocation, delegation and acceptance grants, away policy, focus set, enrollments) has no stated rule for concurrent acts from different devices. Two nodes can then derive different trust levels from the same logs, against I10 and I2.",
+  "fix": "State that principal-level state from principal acts follows the same rule as the room merge: causal order, the more restrictive (cut) act wins over a concurrent widening one, then the lower commitment.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "Acts with no member seat: open (OQ-41).",
+  "problem": "The model leaves open whether a principal act on a room its principal has no member seat in counts in the room merge. A cut act such as an unstamp, a reject of a foreign room or a trust-grant revocation after the principal left would then have no defined effect, and a stamped version stays trusted and keeps restoring in a foreign room.",
+  "fix": "State that a cut or neutral principal act takes effect on its own principal's trust levels from that principal's own logs regardless of membership; only effects on other principals' room state stay open.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "paired phone's rests on OQ-39.",
+  "problem": "A paired phone is a device with no home that signs allow and deny acts (widening principal acts) with its own device key and seals its writer, yet how its device key is certified and where its keys and writer live under I8 are left to an open question. Whether its acts are trusted principal acts under I2, and how I8 holds for it, are undefined.",
+  "fix": "State the rule: the phone's device key is certified by the principal key like any device key and its keys and writer are bound to the principal's home on the node it pairs with, or say the phone's acts are not principal acts until OQ-39 closes.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "**Working view**: Whatever is currently in the model's context window. Never",
+  "problem": "Working view is defined but nothing in the candidate creates, reaches, shows or acts on it. The context lens shows what the context window contained, reconstructed from the record, not the working view.",
+  "fix": "Remove the concept, or name the surface or rule that uses it, for example as the thing the context lens reconstructs.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "**Notification**: A signal to a person: in-page, desktop or terminal on the",
+  "problem": "A desktop notification needs an operating-system call, but the core (B0) opens no socket and the launcher is the only component that starts programs. No component is assigned to emit a desktop notification, so two implementers will place it differently, possibly breaking I4.",
+  "fix": "Name the component that emits a desktop notification and its boundary, or limit notifications to in-page, terminal and the notification bridge.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

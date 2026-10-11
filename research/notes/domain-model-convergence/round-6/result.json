@@ -1,0 +1,250 @@
+{
+ "round": 6,
+ "reviews": [
+  {
+   "lens": "consistency",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "Where a witnessed run's events go while no MCP server holds its run-seat key",
+     "problem": "This open point (OQ-43) is the main M1–M5 path. A witnessed run's first hook events usually arrive before its MCP server holds the key, and the key is lost again on every harness resume or restart. Yet the hub says each event goes to exactly one seat's writer (I1), and the run's personal-room seat exists from its first event with a certificate its key must countersign. The hub's routing rule also still picks the old run seat, which stays a member after its key is lost, while Run seat says the run continues on a new seat.",
+     "fix": "State the rule: \"Until an MCP server holds its run-seat key, a witnessed run's events go to its personal-room seat's writer, certified when that server starts; a seat whose key is lost takes none of the run's events.\" Add \"whose key this node holds\" to the hub's routing clause.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "the home at the change stays in force until a release there (I5, REC-24)",
+     "problem": "A node clone is 'a new node', and its pre-change events are 'another node's'. So the quarantines it carries over are another node's, and they take effect with no request its principal applied. I5 says a quarantine reaches another node only as a quarantine request that node's principal applies.",
+     "fix": "Amend I5: \"A quarantine reaches another node only as a quarantine request that node's principal applies, or as one in force in a home that a node clone or a node identity change carries over.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/index.md",
+     "quote": "A purge destroys content, never an act's effect: its tombstone keeps the",
+     "problem": "Purge says a purged pin version counts as absent when PIN-10 chooses a version. So purging an edit's version makes the version it replaced restore again, which undoes the edit's effect. That breaks 'never an act's effect' and 'derive as before but for the purged content'. One implementer would bring back the older version; another would restore nothing for that pin.",
+     "fix": "In Relations, append: \"...but for the purged content, and a purged pin version counts as absent when PIN-10 chooses a version (Purge)\". Or have Purge say that no older version takes a purged version's place.",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "harness gives no stable agent id, each run is its own agent",
+     "problem": "Agent decides that without a stable agent id each run is its own agent. Run says that for a harness resume starting a new harness session without one, whether it is the resumed run's agent is open (OQ-43). The two cannot both hold.",
+     "fix": "Agent: \"where the harness gives no stable agent id, each run is its own agent, except a harness resume's run, which Run leaves open (OQ-43)\".",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/index.md",
+     "quote": "there first joins it without admission. One that acts on no room, on a room",
+     "problem": "Routing names only 'the room it acts on', no room, or a room with no member seat. A principal act can act on several rooms at once, such as a quarantine, release or purge of a run whose seats span rooms. Which device seat's writer records it is not stated, so implementers write it to different addresses.",
+     "fix": "\"One that acts on no room or on more than one, on a room its principal has no member seat in, or that a paired phone signs, goes to that device seat in the personal room, naming each room\".",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "Transcripts the node's principal ingests from outside `transcript.roots` land",
+     "problem": "The qualifier suggests that ingested runs from inside the transcript roots land somewhere other than the personal room, but no rule says where. By the routing rule, an ingested run joins no room, so all its events go to its personal-room seat.",
+     "fix": "\"An ingested run's events go to its personal-room seat, wherever its transcript lies\", or state where an ingested run from inside the roots goes.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "principal from any of its devices whose device scope allows it, edits the pin,",
+     "problem": "In M1–M5 no device certificate exists, so no device has a device scope. Yet this clause, and the contributor's pin capability, are the only rules that let the principal edit a device-seat pin from a seat other than its author. That case arises after a backup restore mints a new device seat and the author seat's key is gone. Whether a missing device scope allows the edit or forbids it is unstated.",
+     "fix": "Add \"(before PRV-10 ships, from any device seat of the node that wrote it)\" here and in the contributor's pin capability.",
+     "severity": "minor"
+    },
+    {
+     "type": "undefined",
+     "file": "docs/domain-model/places.md",
+     "quote": "the node, by `cairn install`, the plugin or the managed install path, recorded",
+     "problem": "\"The plugin\" and \"the managed install path\" are used as Cairn install paths, which create the personal room and turn capture on, but are never defined. So it is unclear whether they are explicit install operations under I7, and whether removing them records capture off as Capture requires of `cairn uninstall`.",
+     "fix": "Define both as install operations under I7, each showing its change first and each uninstall recording the capture-off act. Otherwise drop them.",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "security",
+   "findings": [
+    {
+     "type": "security",
+     "file": "docs/domain-model/record.md",
+     "quote": "it back is a backup restore. Creating one records no principal act, only an",
+     "problem": "A backup restore on the same node identity leaves the restored events' origin as `witnessed`, so they count as this node's own trusted `operator`, structural and `user` events. Seals are dormant in M1–M5, so nothing authenticates a backup that sat outside the home: anyone who edits it can plant `operator` events and device-seat pins that restore as trusted text, which breaks I2.",
+     "fix": "reading it back is a backup restore, whose events count as received (Origin), as a node clone's earlier events do, so they are trusted only as PRV-02 trusts received events.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/places.md",
+     "quote": "the events recorded before the change are another node's: they count as",
+     "problem": "A node clone copies the home's configuration and the record holding its acceptance, and nothing says another node's acceptance does not take effect on the clone. A clone of an interactive laptop image running pipelines can therefore inherit `interactive` mode, and with it trusted `user` events and loosened redaction, without any act of its principal.",
+     "fix": "Add: \"Configuration takes effect only through an acceptance this node's own device seat recorded; a node clone, or any node whose node identity changed, runs on defaults until its principal accepts again.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/record.md",
+     "quote": "or derived artifact from recall, restore blocks, landmark text (LMK-04 keeps",
+     "problem": "Quarantining an event does not take away the pin candidate built over it: either one Cairn detected from a quarantined `user` event, or an agent's quarantined pin-candidate event. The candidate can still be confirmed, and quarantined text then becomes a device-seat pin that restores, which undoes I5.",
+     "fix": "…from recall, restore blocks, pin candidates (none over a quarantined event is offered for confirmation), landmark text (LMK-04 keeps…",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/srs/invariants.md",
+     "quote": "verbatim and restored verbatim after every compaction, or named by id and",
+     "problem": "I9 makes Cairn fail open except where I2, I4 or I8 would break, and I3 is not on that list. A restore that fails or runs out of time after compaction therefore leaves the agent without its constraints, and no rule restores them later, so I3 and I9 cannot both hold.",
+     "fix": "Append to I3: \"A restore that a Cairn failure prevents (I9) is counted (I6) and made at the run's next hook.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/harness-facts.md",
+     "quote": "In interactive deployment mode its `user` event,",
+     "problem": "The model never limits a trusted `user` event to text a person typed. Content the harness itself puts into a user message, such as a referenced file's contents, a shell command's output or another hook's added context, can be recorded as trusted `user`. That skips recall taint and lands in the trusted-only export. The model handles the same problem for a subagent's task but not here.",
+     "fix": "In interactive deployment mode its `user` event, only the text typed there, never content the harness attaches to it (a file's contents, a command's output, another hook's context, each recorded under its own class) nor the model reply, is a trusted source…",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "branches the room names later by branch links, whose runs' events then go",
+     "problem": "A join counts as consent for every branch the room links later. In a shared room, another principal's contributor seat can link one of this principal's branches that none of its other rooms names, and its runs' events on that branch then go to other principals' nodes with no act of this principal. (Waits for: another principal, admission, and peers and sync.)",
+     "fix": "branches the room names later by branch links its principal's seats wrote, whose runs' events then go",
+     "severity": "later"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/places.md",
+     "quote": "published or stored on blind peers (LANE-17). Changing it is a widening",
+     "problem": "Only changing visibility or admission is a widening act. Nothing sets a room's state at creation, so a run seat's create-room act, which is not a principal act, could open a room as shared or published, or admitting keys, without the owner's widening act. (Waits for: publishing, admission and another principal.)",
+     "fix": "published or stored on blind peers (LANE-17). A room starts private, admitting no other principal's key. Changing it is a widening",
+     "severity": "later"
+    }
+   ]
+  },
+  {
+   "lens": "usefulness",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "Where a witnessed run's events go while no MCP server holds its run-seat key",
+     "problem": "A run's personal-room seat 'exists from its first event', but its seat id and writer id come from a key that only its harness session's MCP server mints and holds. The hook handlers record a run's first events (session start, first prompt) before that server holds the key, and record every event where no server runs, so in M1 those events have no writer and I1 and exact recall of them are undefined.",
+     "fix": "Replace the sentence with: 'Until an MCP server holds its run-seat key, or where none runs, a witnessed run's events go to the recording device seat's personal-room writer, naming the run, and that writer counts among the run's writers for recall.'",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "useless",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "it takes that run's recall taint but none of its rooms",
+     "problem": "Where the harness gives no stable agent id, a harness resume that starts a new harness session, or a harness clear, makes a run that keeps none of its rooms. The pins of the rooms the conversation was working in, the principal's constraints among them, then leave its restore block and stay out after every later compaction until the principal joins the run again, so the resumed conversation loses its constraints.",
+     "fix": "'...and until then it takes that run's recall taint and, for restore only, that run's rooms, filling the pin budget after its own, but no seat in them.'",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "useless",
+     "file": "docs/domain-model/components-and-surfaces.md",
+     "quote": "What shows rooms to a person: the browser, through the",
+     "problem": "A person sees runs, landmarks, results, pin candidates awaiting confirmation and Needs you items only through the room view and its surfaces (Fleet, Room page, Catch up as 'the one surface', Needs you), and the CLI and TUI are defined only as its reduced clients. With the room view and its surfaces dormant in M1 to M5, nothing that ships lets a person see what agents did.",
+     "fix": "Add to Room view: 'Apart from the room view, the core CLI's reading verbs (`get`, `list`, `search`, `expand`) show the node's principal, at a terminal, its runs with their landmarks and events, pin candidates and Needs you items.'",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "Health until acknowledged (`cairn counter ack`, I6, OPS-03)",
+     "problem": "I6 requires every dropped, rejected, redacted, timed-out or failed operation to be visible to the node's principal. Counter names Health as the only place a counter shows, and Health is a room-view surface dormant in M1 to M5, so in M1 to M5 quota crossings, hook-budget cuts, redactions and refusals are counted and logged but shown nowhere.",
+     "fix": "'shown on Health and by `cairn status` until acknowledged (`cairn counter ack`, I6, OPS-03).'",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "useless",
+     "file": "docs/domain-model/record.md",
+     "quote": "event is trusted, made only by a deterministic template over trusted fields",
+     "problem": "A span holds one run's events, and the span of every user turn holds its model reply, of provenance `assistant`, which is never trusted. So no span in which the agent did anything has every event trusted, and the natural-language headline can label only spans with no agent activity.",
+     "fix": "'LMK-06 may add a natural-language headline to a span, made only by a deterministic template over its sanitized structural fields and the fields of its trusted events;'",
+     "severity": "minor"
+    }
+   ]
+  }
+ ],
+ "match": {
+  "matches": [
+   {
+    "lens": "consistency",
+    "index": 0,
+    "theme": "DM-CD",
+    "kind": "closed",
+    "reason": "The quote is the DM-CD closing text verbatim: where a witnessed run's events go before an MCP server holds its run-seat key is deferred to OQ-43 (M1, spike S4). OQ-43's interim rule already says the hook handlers append nothing, leave an ingest marker, and count and audit the run (DM-CG). The finding asks the deferred question to be decided now. Its hub-routing point (the routing rule picking an old run seat whose key is lost) is the DM-D half of OQ-43, also deferred: what a continuing run's seat becomes. SEC-27 and OQ-43 already say the run starts a new seat that names the old one and joins again. Closing OQ-43 would settle the hub clause too, so this is not a new defect."
+   },
+   {
+    "lens": "consistency",
+    "index": 1,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "DM-AH made the home's earlier quarantines stay in force after a node identity change. The finding shows that closing text conflicts with I5's wording: Node says the pre-change events are 'another node's', and I5 lets a quarantine reach another node only as a request that node's principal applies. Fixing DM-AH as closed does not answer this, so it is a new theme. It is a wording question between REC-24 and I5, not a behaviour change."
+   },
+   {
+    "lens": "security",
+    "index": 0,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "No ledger theme covers the origin and trust of events a backup restore reinstates. DM-T covers a node clone, where pre-change events count as received. DM-O covers backup creation, not being a principal act. ADM-06 makes a restore a widening principal act that verifies the copy and its audit chain, and it starts new seats and writers. It says nothing about the origin of the reinstated events. They keep `witnessed` and count as this node's trusted `operator`, structural and `user` events. Seals are M7 (S-2), so the M1-M5 chain is unsigned and `cairn verify` cannot authenticate an edited copy."
+   },
+   {
+    "lens": "usefulness",
+    "index": 0,
+    "theme": "DM-CD",
+    "kind": "closed",
+    "reason": "Same quote and same question as DM-CD: where a witnessed run's events go while no MCP server holds its run-seat key, deferred to OQ-43 (M1, spike S4). The SRS's OQ-43 interim rule already defines the gap the finding calls undefined. The hook handlers append nothing, leave an ingest marker, and count and audit the run until its events reach the record, by the MCP server or by `cairn ingest` (REC-22). Nothing is lost, so I1 holds. The finding proposes one of OQ-43's three listed options in place of the deferral, and a later finding of a closed theme does not reopen it."
+   },
+   {
+    "lens": "usefulness",
+    "index": 1,
+    "theme": "DM-BK",
+    "kind": "closed",
+    "reason": "The quote is the DM-BK closing text: a run that a harness resume starts in a new harness session, where the harness gives no stable agent id, takes the resumed run's recall taint but none of its rooms. Whether such a run belongs to the resumed run's agent is deferred to OQ-43 (M1, spike S4), and the OQ states the interim rule. The finding's fix, restore from the resumed run's rooms, answers that same open question, so it does not show the deferral is wrong."
+   },
+   {
+    "lens": "usefulness",
+    "index": 2,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "No ledger theme covers this. DM-J is about whether some client shows every surface. DM-CJ and DM-CV moved room-view rows to M7 and kept dormant concepts defined. The finding is a consequence of that scope: the model names only the room view's surfaces, dormant in M1-M5, as what shows a person the agents' work, and describes the CLI only as a reduced client of them. Grouped with usefulness index 3, since one clarification of how the shipping CLI stands in until the room view ships answers both."
+   },
+   {
+    "lens": "usefulness",
+    "index": 3,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "The Counter entry names only the Health surface, a room-view surface that is dormant in M1-M5. No ledger theme covers it: DM-O and DM-U concern what a quota does, not where counters are shown. It is the same defect as usefulness index 2, the person-facing displays resting on dormant room-view surfaces with the shipping CLI not named. The SRS already shows the counters in M1: ADM-11 and `cairn status`."
+   }
+  ],
+  "new_themes": [
+   {
+    "id": "NEW-1",
+    "title": "A node clone's carried-over quarantines are 'another node's' and so seem to break I5's rule that a quarantine reaches another node only as a request that node's principal applies",
+    "settled_by": "The behaviour is settled by REC-24: 'every quarantine in force in the home at the change MUST stay in force on the node until a release there (SEC-12, I5)'. The tension with I5 is also settled by existing text, so no I5 amendment is needed. I5 says 'that node's principal', and Node says 'The node's principal is the principal whose home it is'. The clone has the same home and principal, who applied those quarantines. The model only needs to say so."
+   },
+   {
+    "id": "NEW-2",
+    "title": "A backup restore on the same node identity leaves reinstated events with origin `witnessed`, so a doctored backup plants trusted `operator`, structural and `user` events, and nothing authenticates the copy while seals are dormant",
+    "settled_by": "none. Nearest: ADM-06 makes a restore a widening principal act that verifies the copy and its audit chain, but that verification is unauthenticated until REC-18 (seals, M7; stakeholder decision S-2). REC-24 and DM-T treat a changed node identity as 'received' only for that case. T21 and R3 accept a same-user agent writing the store or making a restore, which does not cover a backup edited off the machine."
+   },
+   {
+    "id": "NEW-3",
+    "title": "In M1-M5 the model names only the dormant room view's surfaces (Room view, Health) as what shows a person the agents' work and the counters, and omits the shipping CLI verbs that do",
+    "settled_by": "Mostly settled by the SRS, which the model only needs to carry. ADM-11 (M1): `cairn status` MUST show store locations, sizes, schema version, deployment mode and non-zero failure counters. OPS-03 (M1): `cairn doctor` MUST exit non-zero while a failure counter has risen since `cairn counter ack`. §9.5 rows: `cairn status` shows 'Health, store locations and counters', `cairn event search|expand` and `cairn landmark list`. Stakeholder decision S-1, in §12.2, puts the room view and 'what did my agent do, answered from Catch up alone' in M7. The runs list and the Needs you queue (VIEW-04, VIEW-05) are M7 only."
+   }
+  ]
+ }
+}

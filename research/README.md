@@ -62,3 +62,12 @@ from.
 - [OpenAI dots](notes/openai-agent-ui/dots.md): always-on agents with
   their own cloud computer, launched 29 September 2026, and what
   Cairn's pitch and design take from them.
+- [Domain-model subset search](notes/domain-model-subset-search/README.md):
+  a genetic search, with repairs, for the largest consistent, secure and
+  useful subset of the domain model. It holds the feature genes, the
+  annotated model versions, the assembly and scoring tools, and every
+  blind evaluation so far.
+- [SRS specialist review, round 33](notes/srs-specialist-review-33/README.md):
+  twelve blind reviewers, one per model file plus the domain-model
+  agent, read the SRS and scenarios against the model. Their 129
+  findings are bundled into 112 clusters, not yet applied.

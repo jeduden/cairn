@@ -1,0 +1,307 @@
+[
+ {
+  "id": "R5-1",
+  "real": true,
+  "why": "The defect is real. LANE-16 holds both sides of a conflict: \"The owner's device seat, but a paired phone's, MUST have every capability\" (its listed exceptions are a room summary and some pin edits, never a mute) and \"A mute MUST withhold every capability but read, from one seat or from the whole room; a whole-room mute leaves posting to the roles its room settings name.\" The owner's device seats hold no role, so no room setting can leave them posting, and nothing says a whole-room mute spares them. The model repeats the gap: Mute says \"Withdraws every capability but read from one seat or from the whole room\", and Owner gives the protection only \"Once PRV-10 ships\". LANE-23 and OQ-42 defer that protection until PRV-10. LANE-25 says \"Before PRV-10 ships, only a delegation or acceptance grant or an access token MAY set an expiry\". SEC-32 says an appointed moderator \"MUST NOT mute the whole room\". So before PRV-10 only the owner's own device seat can set a whole-room mute. If that mute covers the seat, no seat holds unmute and no expire act can end it, and the room stays muted for good. After PRV-10, LANE-25's \"No one MAY kick, bar or mute the owner or any key that chains to the owner's principal key\" already spares those keys, so the matcher's lockout after PRV-10 does not follow from the text. Still, neither the model nor LANE-16 says a whole-room mute spares them, and the LANE-25 scenario tests only a mute \"aimed at a seat of the owner\". The fix follows from LANE-16's every-capability rule. It names device seats, not principal keys, so it leaves the OQ-42 deferral as it is. LANE-16, LANE-25 and PRV-10 all ship in M7.",
+  "settled_by": "none. LANE-25 settles only the half after PRV-10: \"No one MAY kick, bar or mute the owner or any key that chains to the owner's principal key.\" LANE-23 then defers it: \"admission, invites, bars and the owner's protection, which name principal keys, apply only once it ships (open: OQ-42)\". LANE-16 states both sides of the conflict: \"The owner's device seat, but a paired phone's, MUST have every capability\" and \"A mute MUST withhold every capability but read, from one seat or from the whole room\". No ledger theme covers it (DM-B covers principal-key chains, DM-H covers expire-act recorders).",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "No mute covers the owner's device seats, before or after PRV-10. Once PRV-10 ships, a whole-room mute also spares every key LANE-25 protects.",
+    "effect": "Settles the LANE-16 conflict in favor of its own every-capability rule. The owner can always unmute: it rejoins if it has no seat there, since its principal key always satisfies admission. No lockout is possible before PRV-10. After PRV-10 the rule spells out what LANE-25 already implies. A whole-room mute keeps its purpose: it still withholds from every seat the owner does not hold.",
+    "invariant_change": false
+   },
+   {
+    "label": "A whole-room mute covers the owner's device seats but leaves them unmute (and posting).",
+    "effect": "Also avoids the lockout, but the owner loses the rest of its capabilities in its own room. This needs a new exception to both LANE-16 and LANE-25 and gains no safety.",
+    "invariant_change": false
+   },
+   {
+    "label": "Defer to OQ-42 (M7) as part of what the owner's protection means before PRV-10.",
+    "effect": "Leaves the LANE-16 conflict in text that ships in M7 with PRV-10. The fix needs no new choice, so deferring buys nothing.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option 1, a tightening with no OQ needed. It ships with LANE-16 in M7. Model: Mute gains \"No mute covers the owner's device seats (Owner).\" Owner gains the full rule and, after LANE-25's sentence (left word for word, since DM-B cites it), \"A whole-room mute spares them too.\" SRS: LANE-16's mute sentence gains \"never the owner's device seats\". No words go into LANE-25: its existing \"No one MAY ... mute ... any key that chains to the owner's principal key\" already covers the case after PRV-10. Scenarios: LANE-16 gains a step, and the LANE-25 step adds the whole-room case. Budget: acts-and-roles.md is at its 3000-token budget (2230 words). This theme offsets its +7 words by deleting the Handover entry's redundant \"Succession is the other path to ownership.\" (Owner says \"Ownership changes only by handover or succession\", and Successor names the succession), so it is budget-neutral alone. 05b-lane-requirements.md is at its 8000-token budget with about 4 words of room. This theme's LANE-16 edit adds 4, so any other theme that adds words there needs an offset. Run `mdsmith fix docs/srs` to re-pad the table. On a scratch copy, mdsmith check passes for docs/srs and docs/domain-model with this theme alone and with R5-5 together.",
+  "edits": [
+   {
+    "file": "docs/domain-model/acts-and-roles.md",
+    "old": "  room; a whole-room mute leaves posting to the roles the owner names (LANE-16).\n",
+    "new": "  room; a whole-room mute leaves posting to the roles the owner names (LANE-16).\n  No mute covers the owner's device seats (Owner).\n"
+   },
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "  Once PRV-10 ships, no one may kick, bar or mute the owner or any key that\n  chains to its principal key (LANE-25). \"Owner\" means nothing else, except in\n  the persona name \"Returning owner\" and where an outside domain qualifies it,\n",
+    "new": "  No mute, a whole-room one included, covers its device seats, which keep their\n  capabilities, so the owner can always unmute (LANE-16).\n  Once PRV-10 ships, no one may kick, bar or mute the owner or any key that\n  chains to its principal key (LANE-25). A whole-room mute spares them too.\n  \"Owner\" means nothing else, except in the persona name \"Returning owner\" and\n  where an outside domain qualifies it,\n"
+   },
+   {
+    "file": "docs/domain-model/acts-and-roles.md",
+    "old": "- **Handover**: Transfers ownership by an offer and an acceptance. Succession is\n  the other path to ownership.\n",
+    "new": "- **Handover**: Transfers ownership by an offer and an acceptance.\n"
+   },
+   {
+    "file": "docs/srs/05b-lane-requirements.md",
+    "old": "A mute MUST withhold every capability but read, from one seat or from the whole room;",
+    "new": "A mute MUST withhold every capability but read, from one seat or the whole room, never the owner's device seats;"
+   },
+   {
+    "file": "features/lane.feature",
+    "old": "    And an appointment of the facilitator by any principal but the owner is refused and audited\n",
+    "new": "    And a mute of one seat or of the whole room leaves each device seat of \"alice\", but a paired phone's, every room capability it had, unmute included\n    And an appointment of the facilitator by any principal but the owner is refused and audited\n"
+   },
+   {
+    "file": "features/lane.feature",
+    "old": "    And a kick, bar or mute aimed at a seat of the owner or a key that chains to the owner's principal key is refused and audited\n",
+    "new": "    And a kick, bar or mute aimed at a seat of the owner or a key that chains to the owner's principal key is refused and audited, and a whole-room mute leaves them unmuted\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "No mute, a whole-room one included, covers its device seats"
+  }
+ },
+ {
+  "id": "R5-5",
+  "real": true,
+  "why": "The defect is real. LANE-32 shows the stamper only \"that version's exact text, its author's seat id and its key fingerprint\", and the model's Stamp entry says the same. PIN-03 stores \"pin type, pin priority\" for each pin, not each version, and the model's Pin version is \"One immutable text of a pin\". PIN-08 fills the pin budget \"in order of pin priority\". No text says whether a pin's priority or type may change after it is written. So a stamp covers a version whose place in the budget (its priority) could change after the stamp, at its author's hand. Worse, a change of type could decide whether it restores at all: LANE-32 restores \"a stamped version of a type that restores\", so a stamped `fact` version whose pin became a `constraint` would start to restore. Even so, the closed act sets name no such change: an edit adds a version, which is \"One immutable text\". The model already says priority is \"An integer the pin's author sets with it\", and PIN-10 sets the precedent \"Moving a pin between rooms MUST be an unpin then a new pin.\" So fixing type and priority when a pin is written restates what the existing rules imply, and showing both at the stamp mirrors the stakeholder's decision I for pin candidates (PIN-05). One correction to the finding: `room_pin` takes `room`, `text`, `type` and `room_edit` takes `room`, `pin`, `text`, so no agent sets or changes a priority. The real exposure is another principal's device-seat pin, or a token-key-only node's pin, that this principal stamps. A nearby gap remains, not raised here: what priority a run-seat pin carries, since `room_pin` takes none.",
+  "settled_by": "none. The closest rules: PIN-05, for the analogous pin-candidate confirmation (DM-I): \"taken only after that principal is shown its exact text, pin type and priority\"; and PIN-10's precedent: \"Moving a pin between rooms MUST be an unpin then a new pin.\" LANE-32 shows only \"that version's exact text, its author's seat id and its key fingerprint\".",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "The stamp shows type and priority. A pin keeps the type and priority it was written with, and changing either takes an unpin and a new pin, as a move between rooms does.",
+    "effect": "A stamp then covers everything that decides where and whether its version restores. This states what the closed act sets already imply, and drops no feature, since no requirement names a change of type or priority. A stamped version keeps restoring after an unpin, as LANE-32 already says, so the stamper's agents keep what it saw.",
+    "invariant_change": false
+   },
+   {
+    "label": "Priority and type belong to the pin version: changing either is an edit that adds an unstamped version, and a stamped version restores at the priority it was stamped with.",
+    "effect": "Equally safe and more convenient, since priority changes in place. But it adds a capability nobody specified and changes PIN-03's storage and the edit tools. It can come later through its own change.",
+    "invariant_change": false
+   },
+   {
+    "label": "Defer to a new OQ before M7.",
+    "effect": "Possible, since stamps ship in M7 and nothing before M7 lets another party's priority reach an agent. But the tightening needs no new choice, and OQ numbering may collide with other round-5 themes.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option 1, a tightening with no OQ needed. The PIN-04 rule ships in M2, and the stamp display ships with LANE-32 in M7. Model: Pin priority gains \"A pin keeps the priority and pin type it was written with: changing either takes an unpin and a new pin, as a move between rooms does (PIN-04, PIN-10).\" Stamp shows \"pin type, priority\". SRS: PIN-04, LANE-32 and the `cairn pin stamp` row change. Scenarios: LANE-32 and PIN-04 change. Budget: acts-and-roles.md is at its 3000-token budget. This theme offsets its +3 words by deleting the Stamp entry's \"a cut principal act,\" (the Principal act entry already classes an unstamp as cut), so it is budget-neutral alone. The LANE-32 edit is worded to add no net words, because 05b-lane-requirements.md is at its 8000-token budget. Run `mdsmith fix docs/srs` to re-pad the edited tables. On a scratch copy, mdsmith check passes for docs/srs and docs/domain-model with this theme alone and with R5-1 together.",
+  "edits": [
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "  seat in, each in that order, then by their creating events' addresses\n  (PIN-08).\n",
+    "new": "  seat in, each in that order, then by their creating events' addresses\n  (PIN-08). A pin keeps the priority and pin type it was written with:\n  changing either takes an unpin and a new pin, as a move between rooms does\n  (PIN-04, PIN-10).\n"
+   },
+   {
+    "file": "docs/domain-model/acts-and-roles.md",
+    "old": "  after being shown its exact text, author and key fingerprint. Once PRV-10\n",
+    "new": "  after being shown its exact text, pin type, priority, author and key\n  fingerprint. Once PRV-10\n"
+   },
+   {
+    "file": "docs/domain-model/acts-and-roles.md",
+    "old": "  restoring until its stamper unstamps it, a cut principal act, or its own\n",
+    "new": "  restoring until its stamper unstamps it or its own\n"
+   },
+   {
+    "file": "docs/srs/05b-lane-requirements.md",
+    "old": "after being shown that version's exact text, its author's seat id and its key fingerprint.",
+    "new": "after being shown that version's exact text, type, priority, author's seat id and key fingerprint."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "Pin versions MUST be immutable; an edit MUST add a new, unstamped pin version, keeping every earlier one.",
+    "new": "Pin versions MUST be immutable; an edit MUST add a new, unstamped pin version, keeping every earlier one and the pin's type and priority; changing a pin's type or priority MUST be an unpin then a new pin, as moving it between rooms is (PIN-10)."
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "after showing its exact text, author and key fingerprint (widening)",
+    "new": "after showing its exact text, type, priority, author and key fingerprint (widening)"
+   },
+   {
+    "file": "features/lane.feature",
+    "old": "after its text, its author's seat id and key fingerprint are shown",
+    "new": "after its text, type, priority, author's seat id and key fingerprint are shown"
+   },
+   {
+    "file": "features/pins.feature",
+    "old": "    And version 2's author is the seat that ran the edit, version 1 keeps its own author, and the pin's author stays version 1's\n",
+    "new": "    And version 2's author is the seat that ran the edit, version 1 keeps its own author, and the pin's author stays version 1's\n    And version 2 keeps the pin's type and priority, and changing either takes an unpin and a new pin\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/pins-and-context.md",
+   "quote": "A pin keeps the priority and pin type it was written with"
+  }
+ },
+ {
+  "id": "R5-2",
+  "real": true,
+  "why": "The defect is real, but nothing that ships before M7 exposes it. The Branch entry (git-and-forge.md) says \"A branch belongs to the first room whose branch link names it, across rooms, in causal order, concurrent ones by the lower commitment (Room merge), counting only this node's principal's rooms\". It also says the branch moves when \"a concurrent branch link with the lower commitment reaches this node later\". DM-AO's exclusion covers only a foreign room. Places says \"**Principal's rooms**: The rooms a principal owns or has a seat in\" and \"A room the principal owns or has a seat in is never foreign\", so a shared room's links count on both principals' nodes. LANE-16 gives a contributor the link capability, so another principal's contributor seat there can write a branch link naming this principal's branch. The author controls both inputs to the tie-break. REC-10 makes causal order rest on \"the heads of the other writers' logs the writer had seen\", which the author reports, so it can leave out the link it saw and make its own concurrent. REC-17's commitment is under `k_e`, \"a random per-event secret\" the author's node mints and nobody can check, so it can try keys until its commitment is the lower. It can even pre-grind a very low one without seeing the rival. The winning link voids the room's own link. Under LANE-01 the later events on that branch of this principal's runs with a seat in the shared room then go to that room and reach the other principal's nodes. Under LANE-28 the room trailers of commits on it name that room. No act of this principal on that branch is involved. The exposure needs another principal's seat in a room: OQ-42's deferral says \"until PRV-10 ships, a room admits no seat of another principal\" (M7), and that principal's acts reach a node only through sync or a bundle import (M8).",
+  "settled_by": "none. LANE-31 fixes the tie-break without saying who may win it: \"of two branch links naming one branch, the first in causal order MUST stand, concurrent ones by the lower commitment\". LANE-01 excludes only foreign rooms: \"a foreign room's branch link MUST void none\". OQ-42 covers only the time before PRV-10: \"until PRV-10 ships, which keys count as another principal's, on which branch ownership ... depend\". DM-AX accepts that a shared room may name a branch on one node and hold a void link to it on another, but says nothing about grinding. No ADR touches it.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "Own principal first among concurrent links (recommended)",
+    "effect": "Among concurrent branch links, one a seat of this node's principal wrote stands over one another principal's seat wrote; the chain to a principal key in the node's key set (PRV-10) decides whose seat wrote it. The lower commitment then decides among the rest. This closes the grind: another principal can still win a tie, but only against another principal's link, never against this principal's own. A link another principal's seat wrote first in causal order still takes the branch, and that conflict is shown. A shared room may name a branch on one principal's node and hold a void link to it on the other's, which DM-AX already allows. I10 holds, because the outcome depends on the node's own key set. It extends the DM-M and DM-AT texts but contradicts neither.",
+    "invariant_change": false
+   },
+   {
+    "label": "Own principal first whatever the causal order",
+    "effect": "A link a seat of this node's principal wrote stands over any link another principal's seat wrote. Causal order, then the lower commitment, decide only among links of one principal. This also stops another principal's seat from naming a branch first and so keeping a room of this principal from naming it later. It changes LANE-31's first-in-causal-order rule for links from two principals. On this node, a collaborator's earlier shared-room link then gives way to this principal's own later link, so the branch moves only by this principal's own act.",
+    "invariant_change": false
+   },
+   {
+    "label": "Hold for a principal act",
+    "effect": "Concurrent links written by seats of two principals leave the branch where it stood, with both links shown. A principal act of this node's principal then picks one. Nothing can be ground, and nothing moves without this principal. The cost is one principal act for each such conflict, a new act kind, and stalled collaboration until someone picks.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Defer this to a new open question, OQ-46, to settle before M7, with PRV-10 and LANE-31's room merge, after stakeholder and security review. The OQ recommends option 1. It can wait: before PRV-10 ships, a room admits no seat of another principal (OQ-42's deferral), and another principal's acts reach a node only through sync or a bundle import (M8). So nothing that ships before M7 can write a rival link, and no invariant's wording is involved; I8 and I10 hold under every option. The edits add the OQ-46 row, put the model's one-line note in the Branch entry, mark LANE-31's tie-break open there, and raise the OQ range in §13's summary and in the SRS index catalog. The new OQ row and the longer LANE-31 cell are not padded, so `mdsmith fix` must realign both tables; the index line is catalog output that `mdsmith fix` would regenerate the same way. git-and-forge.md grows to about 105 lines and 1.8k tokens, well within budget. The edits keep both closing quotes intact: DM-M's (\"...concurrent ones by the lower commitment (Room merge)\") and DM-AT's (\"...a concurrent branch link with the lower commitment reaches this node later\"). The LANE-31 scenario needs no change while the question is open.",
+  "edits": [
+   {
+    "file": "docs/domain-model/git-and-forge.md",
+    "old": "other's.\n- **Commit**: A git commit.",
+    "new": "other's.\n  Whether a link another principal's seat wrote may win a concurrent tie over\n  one a seat of this node's principal wrote is open (OQ-46).\n- **Commit**: A git commit."
+   },
+   {
+    "file": "docs/srs/05b-lane-requirements.md",
+    "old": "the first in causal order MUST stand, concurrent ones by the lower commitment.",
+    "new": "the first in causal order MUST stand, concurrent ones by the lower commitment (open where another principal's seat wrote one: OQ-46)."
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "\n\n## 13.2 Risks",
+    "new": "\n| OQ-46 | Of two concurrent branch links naming one branch from two of this node's principal's rooms, the one with the lower commitment stands (LANE-01, LANE-31). In a room two principals share, a seat of the other principal with the link capability (LANE-16) can win that tie on this principal's node: its node picks the commitment key (REC-17) and the heads of the logs it had seen (REC-10), so it can leave out the link it saw and try commitment keys until its commitment is the lower. The branch then moves to the shared room on this principal's node, the link of this principal's own room is void, and the later events on it of this principal's runs with a seat there, and the room trailers of commits on it (LANE-28), go to that room, with no act of this principal on that branch. Before PRV-10 ships, a room admits no seat of another principal (OQ-42), so no such link exists until then. Options: among concurrent links, one a seat of this node's principal wrote, by the chain to its principal key (PRV-10), stands over one another principal's seat wrote, then the lower commitment, so a shared room may name a branch on one principal's node and hold a void link to it on the other's, as it already may (recommended); a link a seat of this node's principal wrote stands over any link another principal's seat wrote, whatever their causal order, which also lets a later link of this principal's seat stand over an earlier one of another principal's seat; or concurrent links by seats of two principals leave the branch where it stood, both shown, until a principal act of this node's principal picks one. | Stakeholder; security review, with PRV-10, before M7 |\n\n## 13.2 Risks"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "Open questions OQ-01..45 with",
+    "new": "Open questions OQ-01..46 with"
+   },
+   {
+    "file": "docs/srs/index.md",
+    "old": "Open questions OQ-01..45 with",
+    "new": "Open questions OQ-01..46 with"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/git-and-forge.md",
+   "quote": "Whether a link another principal's seat wrote may win a concurrent tie over"
+  }
+ },
+ {
+  "id": "R5-3",
+  "real": true,
+  "why": "Real. The model never names the provenance of a subagent's delegated task as the subagent's run records it. Delegated task says only \"The text of a delegation: a subagent's from its harness, any other in OWN-24's template.\" Provenance lists the classes, and Event calls a message \"the harness's user input or the model's reply\". A subagent's transcript carries the task as a `user` line, which is structurally the same as a typed prompt. Recorded as `user`, the parent model's text (possibly copied from web or tool output) would become a trusted source in `interactive` mode (I2, PRV-02). It would then go into trusted-only exports (ADM-12, MEM-02) and give no recall taint to a run that recalls it (SEC-13).\n\nThe SRS already rules out `user`: PRV-08 says \"A transcript line MUST be classified `user` only when it contains text typed at the harness's input\", and I2 lists \"the model's replies\" as untrusted. But no text names the class, so an implementer working from structural fields can get it wrong.\n\nThe class follows from existing rules. PRV-08 and its scenario give `harness_text` to every user-role line that was not typed and is not a tool result: an `isMeta` line, command output, `last-prompt`, and a line the launcher carried in. Every other delegated task already reaches its delegate as a launcher-carried line, which is `harness_text` (PRV-08, LANE-14), so all delegated tasks end up in one class on the delegate's side.\n\nThe finding (and the research note repair-v1 R4) proposes `assistant` instead. That is just as untrusted (PRV-03). But in the subagent's writer it would present the parent's text as the subagent's own model reply, and the delegating side already records that text as its `tool_call`. The choice does not change trust, so this is a tightening, not a stakeholder choice.\n\nPlacement: the rule goes on the Subagent entry. trust-and-flow.md is at its token budget: mdsmith reports 3023 > 3000 with the sentence added to Delegated task.",
+  "settled_by": "none for the class. Only `user` is ruled out: PRV-08 \"A transcript line MUST be classified `user` only when it contains text typed at the harness's input\"; I2 lists \"the model's replies\" among untrusted content.",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "Tighten. State that a subagent's run records its delegated task as untrusted `harness_text`, never `user`, in three places:\n- the model's Subagent entry (principals-and-agents.md);\n- PRV-08;\n- one new Examples row in PRV-08's scenario.\n\nThe interactive-mode case in that row is the one that matters for security. This upholds I2 and changes no invariant wording.\n\nAfter applying, run `mdsmith fix docs/srs/05-functional-requirements.md`. It re-pads only the PRV-08 row, and `mdsmith check .` then passes (tested on a copy).\n\nThe principals-and-agents.md edit adds 2 lines (139 → 141, about 2100 of 3000 tokens). Delegated task in trust-and-flow.md is left unchanged because that file is at its token budget.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "  its parent's join (LANE-23). It takes a delegated task without a\n  delegation grant.",
+    "new": "  its parent's join (LANE-23). It takes a delegated task without a\n  delegation grant.\n  Its run records that task as untrusted `harness_text`, never `user` (PRV-08),\n  since no one typed it at the harness's own input."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "MUST NOT move it to a trusted one.",
+    "new": "MUST NOT move it to a trusted one. A subagent's delegated task, which its transcript carries as a `user` line, MUST be classified untrusted `harness_text`, never `user` (OWN-24)."
+   },
+   {
+    "file": "features/provenance.feature",
+    "old": "      | a \"user\" line matching the commitment of text the launcher carried in           | harness_text     | untrusted |",
+    "new": "      | a \"user\" line matching the commitment of text the launcher carried in           | harness_text     | untrusted |\n      | a subagent's \"user\" line carrying the delegated task its parent's run wrote     | harness_text     | untrusted |"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "Its run records that task as untrusted `harness_text`, never `user` (PRV-08)"
+  }
+ },
+ {
+  "id": "R5-4",
+  "real": true,
+  "why": "Real gap. The model sets up three facts:\n- Run seat: \"A witnessed run's run-seat key, but for the seat ingest starts, lives only in the memory of its harness session's MCP server\".\n- Seat: \"A run's personal-room seat exists from its first event\".\n- Writer: the writer id is \"derived from the seat's first key\", and Seal has the MCP server sealing \"what the hook handlers appended\".\n\nLANE-01 adds: \"Each event MUST be written to exactly one seat's writer.\" Nothing says where a witnessed run's events go in two cases:\n- Hooks fire before that server holds the key. SessionStart fires at launch.\n- The harness session runs no Cairn MCP server, for example because it failed to start or was disabled, or in a setup that only registers hooks.\n\nWithout the key there is no writer id. Existing text does not cover this:\n- SEC-10 (\"handed over by the harness at launch outside the model's context (ASM-21)\") assumes a server exists.\n- REC-18 only shows unsealed events as unsigned.\n- OQ-43 covers only a key lost with its server mid-run.\n- Blind-23 parked who mints the key on ASM-21 and spike S4.\n- Repair-v1 R13 (the core mints and keeps the key) is a research note, not a decision.\n\nThis is a real design choice: it trades a run-seat key at rest (T29, SEC-10) against witnessed provenance for such runs. It can be deferred. Nothing ships before M1, and OQ-43 already must close with spike S4 before M1. No invariant wording is involved. The interim (append nothing without the key and leave an ingest marker) is what SEC-10 and LANE-01 already imply, so no security hole opens meanwhile.",
+  "settled_by": "none. SEC-10 \"handed over by the harness at launch outside the model's context (ASM-21)\" assumes a server holds the key; OQ-43 covers only \"a continuing run's seat ... when its run-seat key is lost with its MCP server, on a harness resume or a restart\".",
+  "klass": "design",
+  "options": [
+   {
+    "label": "Hook handlers wait for the key; a run no MCP server serves is recorded only by cairn ingest (recommended)",
+    "effect": "The hook handlers append nothing for the run until its MCP server holds the key. They leave an ingest marker and resume from it once the server holds the key. Events of a run no MCP server serves reach the record only through `cairn ingest`, with origin `ingested` (REC-22); until then the run shows `unrecorded` (VIEW-04) and is counted (I6). SEC-10 is unchanged, no run-seat key is ever at rest, and no new seat is needed. Cost: a setup without the MCP server loses witnessed provenance and trusted interactive `user` events for those runs, and recording starts slightly late.",
+    "invariant_change": false
+   },
+   {
+    "label": "Core mints and keeps the run seat's key until the MCP server holds it",
+    "effect": "Every witnessed run is recorded live, even where no server runs. SEC-10 must allow a run-seat key in the platform key store or a file, which the server then loads. A process of the same OS user can then read that key, which widens T29 seat impersonation across agents.",
+    "invariant_change": false
+   },
+   {
+    "label": "Core keeps a second run seat for those events, beside the run seat (the finding's fix)",
+    "effect": "Events are recorded live on a core-kept seat that names the run seat, like the seat ingest starts. It has the same key-at-rest exposure for that seat, plus two personal-room seats per run and a seat rule like REC-19's for the extra seat.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Defer to OQ-43 with milestone spike S4, before M1. Add the question, the options and an interim rule to OQ-43, and a one-line open-question note to the model's Run seat entry. The recommended option inside the OQ is the first: hook handlers wait for the key, and runs no MCP server serves are recorded only through `cairn ingest`, counted and shown. It keeps every witnessed run-seat key in memory only, which is the safer side.\n\nThis need not go to the stakeholder now:\n- nothing ships before M1, when OQ-43 must close anyway;\n- no invariant wording changes;\n- the interim rule follows from SEC-10 and LANE-01, so no hole opens meanwhile.\n\nAfter applying, run `mdsmith fix docs/srs/13-open-questions-and-risks.md`. It re-pads only the OQ-43 row, and `mdsmith check .` then passes (tested on a copy).\n\nThe seats-and-keys.md edit adds 2 lines (100 → 102, about 1570 of 3000 tokens).",
+  "edits": [
+   {
+    "file": "docs/domain-model/seats-and-keys.md",
+    "old": "(open: OQ-43).",
+    "new": "(open: OQ-43).\n  Where a witnessed run's events go while no MCP server holds its run-seat key,\n  before one does or where none runs, is open too (OQ-43)."
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "which it joins again as LANE-23 says.",
+    "new": "which it joins again as LANE-23 says. Also open, before M1 (spike S4): where a witnessed run's events go while no MCP server holds its run-seat key, before its harness session's MCP server holds one or in a harness session where none runs, since the run's writer id derives from that key and only that server seals the writer (SEC-10, REC-19). Options: the hook handlers append nothing for the run until its MCP server holds the key, leaving an ingest marker they resume from once it does, and the events of a run no MCP server serves reach the record only through `cairn ingest`, with origin `ingested` (REC-22), the run shown `unrecorded` (VIEW-04) and counted (I6) until then (recommended); the core mints the run seat's key and keeps it like a device seat's key until the MCP server holds it, or for the whole run where none runs, which SEC-10 would have to allow (T29); or the core keeps a second run seat beside it for those events, as it does the seat ingest starts (REC-19). Until this closes, the hook handlers append nothing for such a run, leaving an ingest marker, and its events reach the record only once its MCP server holds the key or through `cairn ingest`."
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/seats-and-keys.md",
+   "quote": "Where a witnessed run's events go while no MCP server holds its run-seat key"
+  }
+ },
+ {
+  "id": "R5-6",
+  "real": true,
+  "why": "Real, but narrower than the title says. PEER-06 clearly means an ephemeral node to restore the pins of the rooms its access token names. It says the node \"MUST carry that room's qualifying pins (PIN-10) as signed events keeping their provenance ... and until a peer is reached the node's restore blocks MUST say later pins may be missing\". The PEER-06 scenario expects \"its restore block carries the room's qualifying pins (PIN-10) from the access token\". The M8 acceptance starts such a node \"while its issuing peer is offline\". Yet PIN-10 restores only \"the qualifying pins of every room its run has had a seat in during the run ... and of every room its agent's earlier runs had a seat in\". A seat outside the personal room comes only from a join. LANE-23 says \"A run MUST join a room only when its own principal asks for the join or accepts it, both widening principal acts\". PRV-10 says \"A token-key-only node MUST sign no principal or expire acts\". So a fresh token-key-only node's runs can join a named room only by a principal act from another device that reaches them over sync. With the issuer offline, none can. REC-02 does not help either: it names an agent by \"its node, its harness and the harness's agent id\", so a fresh node's agent has no earlier runs. The result: the carried pins never restore, and PEER-06's \"continuing named ones\" does nothing. The finding's other points hold, but they follow from rules already settled. Configuration pins never take effect because ADM-04 takes a pin only \"from the principal's configuration after the widening principal act accepting it records its digest, or from managed policy\". Even accepted, they would need a stamp under PEER-06: \"every pin the node writes MUST restore only once a principal stamps it\". So the only path that is both useful and safe is the token's named rooms, and the gap is the missing join ask. OWN-28 already sets the precedent that a principal act naming a room is the join ask: \"the retry being its principal's ask for that run's join to the room (LANE-23)\". The mint is already a widening principal act of the same principal, and it names the rooms. So making it the ask follows from PEER-06 and LANE-23 with no new behavioral choice. It is a tighten: no new path to the model, since the pins still qualify only under PIN-10, and no change to invariant wording. The token must also carry the ask itself, so that the offline node can derive its run seats' add from what it holds (I10, LANE-25). The finding's \"(nor does the launcher)\" is a separate effect of the same acceptance rule (ADM-04, SEC-19). It concerns no constraint, so this theme leaves it alone; OQ-06's options could take it up. The edit keeps DM-BX's closing sentence intact and appends after it.",
+  "settled_by": "none",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "A: minting the token is the principal's ask for the join of each run the node records to every room the token names to continue, at the run's start, under the room's admission; the token carries that ask and the rooms' qualifying pins",
+    "effect": "The carried pins restore from each run's first restore block, even when the issuer is offline. This is what PEER-06 and its scenario already expect. The mint, already widening, must say it asks for joins that cover branches the room names later (LANE-23). In a room the minting principal owns, the seat gets contributor (LANE-16). Its events go to the room only on a branch the room names (LANE-01).",
+    "invariant_change": false
+   },
+   {
+    "label": "B: the mint only accepts in advance the join requests the node's runs make to the named rooms",
+    "effect": "An agent gets the named room's pins only after it calls `cairn run join`. Until then, and for any agent that never calls it, its restore blocks hold none of the carried pins, so PEER-06's restore-block statement still fails at session start.",
+    "invariant_change": false
+   },
+   {
+    "label": "C: defer, as an addition to OQ-06 at M8, whether and how the mint joins the node's runs",
+    "effect": "Nothing changes before M8, when PEER-06 ships, and the PEER-06 scenario cannot pass as written. Safe, because no run joins, but the ephemeral node's agents start with no constraint.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option A, as a tighten. It follows from PEER-06 (the token names rooms to continue and carries their qualifying pins for the node's restore blocks) and from LANE-23 (a join needs its principal's widening ask). OWN-28's retry is already such an ask. Land it before M8, the milestone that ships PEER-06 and whose acceptance starts the node while the issuer is offline. No invariant wording changes and no ADR is needed. No OQ is needed, because no design choice is left open. The PEER-06 scenario changes with the requirement, still @pending. Size: places.md grows from 98 to 104 lines, about 1,750 tokens, within its limits.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "access token may name the mode is open (OQ-06). Its **node",
+    "new": "access token may name the mode is open (OQ-06). Minting its access token\n  is also its principal's ask for each of its runs to join, at the run's\n  start, every room the token names to continue, as that room's admission\n  permits, and the token carries that ask and those rooms' qualifying pins\n  (LANE-23, PEER-06), so those pins restore to its runs from their first\n  restore block; no configuration pin of its own takes effect, and every pin\n  it writes restores only once stamped. Its **node"
+   },
+   {
+    "file": "docs/srs/05d-peer-requirements.md",
+    "old": "An access token that names a room to continue MUST carry that room's qualifying pins (PIN-10) as signed events keeping their provenance",
+    "new": "Minting an access token that names a room to continue MUST be its principal's ask for each run the node records to join that room at the run's start, as the room's admission permits (LANE-23), and MUST say so; the access token MUST carry that ask as a signed event, and that room's qualifying pins (PIN-10) as signed events keeping their provenance"
+   },
+   {
+    "file": "features/peer.feature",
+    "old": "And its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events",
+    "new": "And each run it records joins room \"room-1\" at the run's start, on the ask the access token carries from its mint (LANE-23), and its restore block carries the room's qualifying pins (PIN-10) from the access token as signed events"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "Minting its access token is also its principal's ask for each of its runs to join, at the run's start, every room the token names to continue"
+  }
+ }
+]

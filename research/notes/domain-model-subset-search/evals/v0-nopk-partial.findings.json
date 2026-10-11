@@ -1,0 +1,164 @@
+[
+ {
+  "type": "contradiction",
+  "quote": "Everything else is untrusted, and so is the free text a cut or neutral",
+  "problem": "I2 counts a pin version a principal stamped as a trusted source for that principal's own agents, and Trust level reads that principal's stamps. The Trusted sources entry lists only operator, structural, harness_meta and interactive user events and calls everything else untrusted. So a stamped run-seat pin version, or one from another principal, is both trusted and untrusted.",
+  "fix": "Insert before \"all trusted only on this node\": \"and, for a principal's own agents, a pin version that principal stamped on this node,\".",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "written from a device seat a device key certified restores to its author's principal's agents",
+  "problem": "Pin, and Intent (\"to that author's principal's agents\"), restore a device-seat pin to all of its author's principal's agents, which includes agents on the principal's other nodes. But I2 and I8 keep anything another node produced untrusted, and a qualifying pin needs its creating event trusted on this node. Nothing says whether that test reads the pin's first event or the version that restores. An edit made from the principal's device seat on another node could restore, or nothing would.",
+  "fix": "In Pin and Intent, say the pin restores \"to the agents of the node whose device seat wrote the restoring version\". In Pin, write \"the event that wrote the restoring version, or its stamp, trusted on this node\".",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "Every seat belongs to one principal and one room; every writer to one seat.",
+  "problem": "There is no principal key, and a seat certificate names only a device key, so no rule ties a seat or device key on another node to a principal. Yet the room merge must decide the same way on every node which device seats are the owner's (they hold every capability and cannot be kicked), which pins 'its principal wrote from a device seat', and which keys are 'its principals' device keys'. The focus set must also order 'every device' the same way.",
+  "fix": "Add a rule saying how a device key is bound to a principal across nodes, for example by a named recorded act. Otherwise, state that each node's device key stands for its own principal and narrow 'its nodes' and 'every device' to match.",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "under a delegation grant, another agent of the same principal, an agent on",
+  "problem": "I2's delegation path needs 'a delegation grant its principal recorded'. For a delegate on another node, both the grant and the delegated task come from another node, which I2 and I8 treat as untrusted and attribute only to its seat key. Nothing lets that node tell that the grant is its own principal's. So either the path cannot work, or any enrolled peer can write a delegated task into the agent.",
+  "fix": "Drop 'an agent on another of its nodes', so grant-based delegation stays on one node. Otherwise, state how the delegate's node attributes a grant to its principal and add that to I2's and I8's exceptions.",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "undefined",
+  "quote": "A device's key with a **device scope** (the kinds of principal act it may",
+  "problem": "Device scope and maximum rule level are properties of a device key, but with no principal key no act or party sets them. A node's own device-key scope and maximum rule level therefore have no source, and implementers will pick different defaults.",
+  "fix": "State who sets a device key's scope and maximum rule level (for example the node's principal at install, as a recorded principal act), or remove scope from node device keys.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "enroll a CI key, retire a writer",
+  "problem": "Enrolling a peer or a blind peer and pairing a phone let more data leave the node, which matches the definition of widening, and I4, Visibility and Paired phone name them. The class list leaves them out, and their removal too. An implementer who treats enrollment as no principal act at all lets it skip widening's presence proof.",
+  "fix": "Add 'enroll a peer or a blind peer, pair a phone' to Widening, and 'remove a peer, unpair a phone' to Cut.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "dismiss a directed post, revoke a seat key, turn capture on",
+  "problem": "Revoking a seat key is a cut act, and a revocation makes peers refuse that writer's segments (Retire a writer). No rule says whose seat keys a principal may revoke, or whether a revocation recorded on another node enters this node's key set. So another principal could cut off a seat's writer.",
+  "fix": "Add to Seat key: 'Only the seat's own principal revokes its key; a node applies a revocation only when the device key that certified that seat signed it.'",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "Exchanging the sealed ranges each may receive is",
+  "problem": "Sync exchanges 'the sealed ranges each may receive', but no rule says who may receive which room. Visibility names private, shared and blind-peer without saying which enrolled peers get a private room's segments (none, or the owner's other nodes), and peers are enrolled per node, not per room.",
+  "fix": "Add to Visibility: a peer receives a room's sealed ranges only when the room is shared and the peer's principal is one of the room's principals, or as a blind peer the visibility allows; a private room's ranges never leave the node.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "undefined",
+  "quote": "which the person, a service manager or an ephemeral node's",
+  "problem": "'Ephemeral node' is used as if it were a kind of node, but Node defines no ephemeral kind.",
+  "fix": "Replace it with 'a container's entrypoint', or define ephemeral node under Node.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "owner stands beside the roles rather than having one: each of its device seats",
+  "problem": "Nothing in the candidate ties another node, its device key or its seats to a principal: a seat certificate names only room and seat kind, and nothing certifies a device key. Yet rules depend on that link: the owner's device seats on other nodes get every room capability, the owner enrolls CI keys, segments are encrypted to the room's principals' device keys, and a node clone's device seat joins the personal room from its first event. An implementer who accepts a claimed principal lets any peer act as owner (kick, assign roles, enroll a CI key to forge `CI attested`) or read git-carrier and blind-peer copies.",
+  "fix": "Add to Seat certificate: \"A seat belongs to the principal of the node whose device key certified it. Another node's device key is never attributed to this node's principal, so the owner's device seats are those certified by the device key whose seat created the room.\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "under a delegation grant, another agent of the same principal, an agent on",
+  "problem": "A delegated task is a closed path into an agent under a grant \"its principal recorded\". For an agent on another node, that grant is a peer-origin `operator` event: the receiving node can neither trust it nor attribute it to its own principal. So the receiving node either writes any peer's delegated task into its agent, or cross-node delegation cannot work.",
+  "fix": "under a delegation grant, another agent of the same principal on the same node, or an agent on another of its nodes only under a grant that the receiving node's own device seat recorded, naming the delegating node's device key",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "the browser room view under SEC-20, the CLI or TUI at a terminal, or a paired",
+  "problem": "The only thing that makes the CLI a principal surface is \"at a terminal\". An agent runs as the same OS user and can run `cairn` under a pseudo-terminal. It can then take widening principal acts (stamp its own pin, endorse a post to itself, loosen a rule level, turn capture off) and read record text with no envelope and no recall event. Nothing says a command a run issues is never a principal surface.",
+  "fix": "the CLI or TUI at a terminal that no run started (a command any run's process issues is that agent's own tool call, acting as its run seat, never a principal surface, whatever its terminal), or a paired",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "recorded while the deployment mode is `interactive`, all trusted only on this",
+  "problem": "I2 lists \"a pin version a principal stamped, for that principal's own agents\" as a trusted source, and Pin lets a stamp trusted on this node make a version qualify. Trusted sources leaves stamped versions out and says \"Everything else is untrusted\". So the trust level, trust mark and taint of a stamped version depend on which text an implementer follows.",
+  "fix": "recorded while the deployment mode is `interactive`, and a pin version that a stamp recorded on this node covers, for the stamping principal's agents, all trusted only on this",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "a **qualifying pin**, its creating event or stamp trusted on this node",
+  "problem": "A pin qualifies when \"its creating event or stamp\" is trusted on this node. The candidate never says which version of an unstamped pin restores, or that the event creating that version must itself be trusted. Under one reading, an edit recorded on another node (untrusted here) of a pin created on this node restores its text verbatim.",
+  "fix": "a **qualifying pin**, the event creating its newest version, or a stamp of the version that restores, trusted on this node",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "detected it), a widening act, makes it a new pin its device seat authors; for",
+  "problem": "Confirming a pin candidate turns text from an agent's model reply into a device-seat pin that restores verbatim as trusted text. A stamp is taken \"after being shown its exact text\" and an endorsement sends text \"exactly as the principal confirmed it\", but pin confirmation has no such rule. A confirmation from a preview can therefore carry hidden injected text into every later restore block.",
+  "fix": "detected it), a widening act taken after being shown its exact text, makes exactly that text a new pin its device seat authors; for",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "the **git carrier**, which keeps segments in a namespaced location of the",
+  "problem": "I4 lets a B3 component exchange data only with hosts the node's principal names. The git carrier pushes segments to \"the principal's remote\", which the act enabling it does not name. An agent can redirect that remote by rewriting the repository's git configuration, sending carried rooms' segments to a host no principal named.",
+  "fix": "the **git carrier**, which keeps segments in a namespaced location of the remote URL named by the principal act that enabled it (a changed URL needs a new enabling act)",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "Revokes a seat's current add. Only that seat's principal may add it",
+  "problem": "No rule says whose consent admits a seat to a room: only the joining run's principal accepts the join. A kick lets \"that seat's principal\" add the seat back at once. Room ids are public in room trailers, so any principal peered with a holder can join or rejoin a shared room and receive its segments, and kick excludes no one.",
+  "fix": "In Join, add: \"Outside the personal room, a join stands only once the owner or a moderator admits it, and a private room admits none.\" In Kick: \"only the owner or a moderator may admit that seat again.\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "never the model reply, is a trusted source on the node whose hook handlers",
+  "problem": "A `user` event is trusted when the hook handlers recorded it, but they ingest it from the harness's transcript file, which the agent's own tool calls can write as the same OS user. Nothing ties a trusted `user` event to text typed at the harness's input, as the turn trigger does for lines the launcher carries in. A line the agent appends therefore becomes a trusted source.",
+  "fix": "never the model reply, is a trusted source on the node whose hook handlers recorded it from the user turn's hook input (a `user` line that ingest reads from a transcript with no matching hook input is untrusted)",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ }
+]

@@ -1,0 +1,32 @@
+{
+  "findings": [
+    {
+      "type": "contradiction",
+      "quote": "registrations found removed without `cairn uninstall` are counted and shown,",
+      "problem": "I1 names the capture-off stretch as the only exception to nothing-is-lost, and Capture defines a capture gap as what a run does between the capture-off and capture-on acts. Yet removed hook registrations, with capture never turned off, are also shown as a node-wide capture gap, so events go missing outside I1's exception list. The model also does not say whether `cairn ingest` backfills that stretch: it appends nothing only while capture is off, so two implementers would build either a permanent gap or a backfill.",
+      "fix": "Extend I1's exception to 'while its principal had capture off or its hook registrations were found removed', and state in Capture whether `cairn ingest` backfills the removed-registration stretch as `ingested` (the gap then shows only until backfilled).",
+      "severity": "needs-fix"
+    },
+    {
+      "type": "gap",
+      "quote": "Acts with no member seat: open (OQ-41).",
+      "problem": "The room merge is the one rule deriving all room state, but it leaves open whether it counts a principal act recorded in the personal room for a room its principal has no member seat in. Acts such as accepting a handover or a succession, or declining or withdrawing from them, can come from a principal with no seat, so two implementers would disagree on who owns the room.",
+      "fix": "State the rule: such an act counts only if its principal has a member seat in the room at that point in causal order, otherwise the merge discards it and shows it on Health (I6); or require the acceptor of a handover or succession to hold a member seat.",
+      "severity": "minor"
+    },
+    {
+      "type": "undefined",
+      "quote": "the managed install path; uninstall runs only at a principal surface (I7,",
+      "problem": "'Managed install path' is used twice as a way to install Cairn that skips the principal-surface rule, but it is never defined. Nothing says who runs it, whether it shows the harness configuration change first as I7 requires, or whether it may trigger the personal room's create room act.",
+      "fix": "Define it beside Managed policy (for example, an install managed policy performs, shown on Setup like any install) or drop it from Principal surface and Personal room.",
+      "severity": "minor"
+    },
+    {
+      "type": "gap",
+      "quote": "It signs with its own device key and seals its device seat's writer",
+      "problem": "I8 binds all local state to one principal's home, but a paired phone is a device with no home that holds a signing key, seals a writer and takes principal acts such as allow. The model leaves where its keys and writer live to OQ-39, so the custody of the key behind those widening acts, and how the node treats the phone's acts before PRV-10, are undefined.",
+      "fix": "Say where the phone's device key and sealing key live (for example, only in the phone's platform key store), and that its acts count as acts of the node's principal because the pairing's access token enrolled that key.",
+      "severity": "minor"
+    }
+  ]
+}

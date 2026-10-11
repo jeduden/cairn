@@ -1,0 +1,413 @@
+[
+ {
+  "id": "R2R-2",
+  "real": true,
+  "why": "The defect is real. The Principal entry says \"every device key, token key and seat key that chains to one principal key through device, token or seat certificates belongs to that principal; a chain never passes through another principal key\". Only the Service account entry asks the certified key to consent: \"A service-account certificate counts only once the certified principal key countersigns it\". Device keys, token keys and seat keys are public, and nothing stops a second principal key from certifying them. So principal X can certify victim P's device key D_P, or X's device key can sign a seat certificate over P's seat key. That key then chains to X as well as to P, and several rules turn that into a breach. Join: \"without it for a device seat whose principal has a member seat there\". With it, X's device seats join every room P's device seat is in without admission. PEER-02 serves segments \"to the enrolled peers whose principal has a seat in that room\", so other nodes replicate P's rooms to X's nodes, which breaks I8's \"nor extends their recall\". PEER-12 encrypts blind-peer ranges to X's device keys. LANE-25 says a bar \"MUST cover every key that chains to it\", so a bar on X also bars P. It also breaks the hub's \"Every seat belongs to one principal\". Reading \"one\" as \"exactly one\" instead lets X strip P's key of its principal. Taking the first certificate that arrives breaks I10, and tying concurrent certificates by commitment can be ground. The finding's fix follows DM-L's and DM-AP's decided direction (consent by countersignature) and only narrows what counts as a chain. I2 and I8 only allow trust for keys a principal certified and never require it, so no invariant wording changes. The secondary rule (a key that countersigned for two principal keys chains to neither) is deterministic and order-independent. Only the key's own holder can cause that case. It keeps \"Every seat belongs to one principal\" true, because LANE-23 and PEER-07 already refuse a seat key that chains to no principal key. PRV-11's seat certificates exist from M1, so the seat-key countersignature belongs in PRV-11 too. The SRS table rows grow, so `mdsmith fix` re-pads the table. Both model files stay well under 250 lines and 3000 tokens (principals-and-agents.md comes to about 123 lines and 8.4k characters).",
+  "settled_by": "none. DM-L's closing text (\"A service-account certificate counts only once the certified principal key countersigns it\") and PRV-10's \"a service-account certificate MUST count only once the certified principal key countersigns it\" cover service-account certificates only. PRV-10's \"that key chains, never through another principal key, to the principal key of this node's principal\" and DM-AP's listing rule do not limit a key to one principal key. No ADR covers device, token or seat certificate consent: ADR-2610072203 §3 covers seat certificates from the first release, and ADR-2610032155 §10 covers device-key certification.",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "Extend DM-L's countersignature rule from service-account certificates to device, token and seat certificates. Each certificate counts only once the key it certifies countersigns it. A key whose countersigned certificates chain it to two principal keys chains to neither. Put the general rule in the Principal entry and PRV-10. Put the seat key's countersignature, which applies from the first release, in the Seat certificate entry and PRV-11.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "or seat certificates belongs to that principal; a chain never passes through\n  another principal key. No key chains to a principal key before PRV-10 ships,",
+    "new": "or seat certificates belongs to that principal, each certificate counting\n  only once the key it certifies countersigns it; a key whose countersigned\n  certificates chain it to two principal keys chains to neither, and a chain\n  never passes through another principal key. No key chains to a principal key\n  before PRV-10 ships,"
+   },
+   {
+    "file": "docs/domain-model/seats-and-keys.md",
+    "old": "  scoped to the seat's room, naming the seat kind, `run` or `device`. The node's\n  device key makes one for every seat the node uses from the first release\n  (PRV-11); once PRV-10 ships every seat key chains to a principal key. A node's",
+    "new": "  scoped to the seat's room, naming the seat kind, `run` or `device`, that the\n  seat key countersigns (Principal). The node's device key makes one for every\n  seat the node uses from the first release (PRV-11); once PRV-10 ships every\n  seat key chains to a principal key. A node's"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "On a token-key-only node, its token key MUST certify each seat key in place of a device key (PRV-11).",
+    "new": "On a token-key-only node, its token key MUST certify each seat key in place of a device key (PRV-11). A device, token or seat certificate MUST count only once the key it certifies countersigns it, and a key whose countersigned certificates chain it to two principal keys MUST chain to neither."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "naming its seat kind, `run` or `device`, when the seat starts;",
+    "new": "naming its seat kind, `run` or `device`, countersigned by the seat key, when the seat starts;"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "only once the key it certifies countersigns it"
+  }
+ },
+ {
+  "id": "R2R-3",
+  "real": true,
+  "why": "The defect is real. This theme extends DM-B's deferral (OQ-42, M7): it is the interim half of that deferral, which DM-B left incomplete. The Principal entry counts principals only by principal key and says \"No key chains to a principal key before PRV-10 ships, so until then a room admits no seat of another principal\". Before PRV-10, then, the model gives no way to tell \"another principal\" apart. Rules that ship from M1 already depend on that answer. LANE-01 (P0, M1) uses \"the first of this node's principal's rooms whose branch link names it\" and \"which a node of a principal with a member seat there first joins without admission\". REC-24 (M1) has a node clone's new seats join \"as any seat does (LANE-23)\". Join allows \"without it for a device seat whose principal has a member seat there\". Foreign room and the `rooms` recall scope both turn on the principal's rooms. One implementer could admit every seat, since no chain differs; another could admit only its own node's seats. The existing text already points to a home-based reading. Places says \"The node's principal is the principal whose home it is\". The personal room is \"carried over to a node clone, which shares it\". The SRS's pre-PRV-10 stand-in is \"this node's own device seat\" (PIN-10, OWN-27) and \"the recording node's\" (LANE-01). I8 keeps what another node wrote \"as theirs\". DM-T already makes carried-over events another node's for trust, not another principal's. The node-only reading (security finding's fix) would take a node clone's own rooms from it, against REC-24. The \"two device keys, two principals\" reading (consistency finding's fix) would do the same. The usefulness finding's fix is the closest, completed here with the token-key-only node. With the edit, a token-key-only node can continue its issuing node's rooms, as PEER-06 allows. The principal's second node stays another principal until PRV-10, which PRV-02 and I8 already imply. Peers (M8) come after PRV-10 (M7) in the execution order, so that costs nothing in practice. No invariant wording changes. principals-and-agents.md stays under its limits (about 123 lines and 8.4k characters, under 3000 tokens with the R2R-2 edit). Follow-up for OQ-42, not raised by the findings: once PRV-10 ships, seats under a replaced device key that no principal key certified stop chaining to the principal.",
+  "settled_by": "none. DM-B's deferral states the interim rule but leaves the term undefined. LANE-23: \"Until PRV-10 ships, a room MUST admit no seat of another principal, and admission, invites, bars and the owner's protection, which name principal keys, apply only once it ships (open: OQ-42)\". Leads that fix only parts: Places' \"The node's principal is the principal whose home it is.\" and the SRS stand-in \"(before PRV-10 ships, this node's own device seat)\" in PIN-10, OWN-27 and §9a.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "A. Complete DM-B's interim rule by home (recommended)",
+    "effect": "Before PRV-10, a node counts as its principal's keys the device keys of its home, replaced ones included (REC-24), the device key that certified its token key, and every key chaining to one of them through token and seat certificates. Every other key is another principal's. A node clone, a node identity change or a backup restore keeps the home's rooms, ownership and join without admission. A token-key-only node can continue its issuing node's rooms (PEER-06). The principal's second node, any peer and any other home count as another principal until PRV-10: no admission, no join without admission, and their rooms are foreign. This matches PRV-02, I8 and DM-T.",
+    "invariant_change": false
+   },
+   {
+    "label": "B. Node-only: only keys this node's current device key or token key certified",
+    "effect": "After a node clone or node identity change, every room the home created except the personal room becomes another principal's room and foreign. The node loses ownership of those rooms and cannot rejoin them before PRV-10. That contradicts REC-24's \"joins as any seat does\" and Places' \"the node's principal is the principal whose home it is\". A token-key-only node cannot continue a named room. It adds no safety over A, because I8 already binds the home to one OS user and principal.",
+    "invariant_change": false
+   },
+   {
+    "label": "C. Extend the OQ-42 deferral to cover what 'another principal' means before PRV-10 (M7)",
+    "effect": "No rule now. LANE-01's branch ownership and join without admission, and REC-24's node clones, all ship in M1 with the term undefined until M7, so implementations diverge on whether a clone owns its pre-clone rooms. It is acceptable only if no room but the personal room can be created before M7.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option A. It completes DM-B's interim rule in its decided, conservative direction: before PRV-10 no other home's seat is admitted. It keeps a node clone's own rooms, as REC-24 and Places already imply. Optionally, also add to OQ-42 how seats under a replaced device key that no principal key certified are attributed once PRV-10 ships.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "then ends its add is open too. A certified service\n  account is still its own principal;",
+    "new": "then ends its add is open too. Until then this node's\n  principal's keys are the device keys of this node's home, replaced ones\n  included (REC-24), the device key that certified this node's token key, and\n  every key chaining to one of them through token and seat certificates; every\n  other key is another principal's. A certified service\n  account is still its own principal;"
+   },
+   {
+    "file": "docs/srs/05b-lane-requirements.md",
+    "old": "apply only once it ships (open: OQ-42). A run MUST join a room only when",
+    "new": "apply only once it ships (open: OQ-42); until then only the device keys of this node's home, replaced ones included (REC-24), the device key that certified this node's token key, and the keys chaining to one of them through token and seat certificates MUST count as this node's principal's, every other key as another principal's. A run MUST join a room only when"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "principal's keys are the device keys of this node's home, replaced ones"
+  }
+ },
+ {
+  "id": "R2R-1",
+  "real": true,
+  "why": "Real. git-and-forge.md Branch says a branch belongs to the first room whose link names it \"in causal order, concurrent ones by the lower commitment (Room merge), counting only this node's principal's rooms\", then says \"No act moves it but one making a room foreign or no longer foreign\". LANE-01 has the same clause: \"no act MAY move it but one making a room foreign or no longer foreign\". That clause contradicts the ownership rule the same entry states. Case 1: a join to a room this node never held. The room is not foreign, because a foreign room is \"A room this node holds\" (places.md), so the join does not end foreignness, yet it adds the room to this node's principal's rooms. If that room's link is concurrent with the owning link and has the lower commitment, LANE-31 makes it the first link. Case 2: a concurrent link reaches this node later, for example from a room created on another node of the principal. I10 requires the result to be \"independent of the order in which logs arrived\", so on one of the two nodes ownership must change when the later link arrives. The finding's problem is also real: the model never says whether events and trailers already written follow the branch. LANE-01 already routes each event \"in this node's room state on recording it\", and LANE-28 adds a trailer to each commit as it is made, so earlier events and commits keep their room. The fix completes the round-2 decision (DM-AO, \"first of this node's principal's rooms\") in its own direction. A join to a room the node never held is the same act as a join that ends foreignness, which the closing text already lets move the branch. One alternative was considered: a later join never takes the branch. It would reopen DM-AO and treat those two joins differently, so this is not offered as an option. Consequence to note: after such a move, the principal's run routes to its personal-room seat unless it has a seat in the new owning room (LANE-01), and its commits get the new room's trailer (LANE-28).",
+  "settled_by": "The direction is settled by LANE-01: \"A branch MUST belong to the first of this node's principal's rooms whose branch link names it\". Also LANE-31: \"of two branch links naming one branch, the first in causal order MUST stand, concurrent ones by the lower commitment\". Also I10: derived artifacts \"are a deterministic function of the set of writer logs a node holds and the node's own key set, independent of the order in which logs arrived\". LANE-01's own clause \"no act MAY move it but one making a room foreign or no longer foreign\" contradicts these three, so the SRS changes too. Earlier events and commits keeping their room is already settled by LANE-01's \"in this node's room state on recording it\" and LANE-28's \"Every commit made on a branch belonging to a room\".",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "Tighten. Replace the \"no act moves it\" clause in the model and in LANE-01: the branch moves only when a room enters or leaves this node's principal's rooms, or when a concurrent branch link with the lower commitment arrives later. The model also says that events recorded and commits made before the move keep their room. The SRS already carries that through LANE-01's routing \"on recording it\" and LANE-28, so it is not repeated there. Budget: docs/srs/05b-lane-requirements.md sits at about 7996 of its 8000 heuristic tokens (MDS028). The LANE-01 edit is word-neutral, from 16 words to 16, and leaves about 3 tokens of headroom. Run `mdsmith fix` afterwards to re-pad the table (MDS025). The model edit keeps the DM-M and DM-AO ledger quotes verbatim after whitespace normalization. git-and-forge.md stays at about 100 lines and about 1500 tokens. The model edit and R2R-8's Branch edit apply in either order.",
+  "edits": [
+   {
+    "file": "docs/domain-model/git-and-forge.md",
+    "old": "  No act moves it but one making a room foreign or no longer foreign, and a\n  branch link of any other of those rooms naming it is void and shown\n  (LANE-01). So only that room takes a run's events on it, and the room trailer\n  of each commit on it names that room (LANE-28).",
+    "new": "  A branch moves only when a room enters or leaves those rooms (such as by a\n  join, a leave, a kick or a bar) or a concurrent branch link with the lower\n  commitment reaches this node later; events recorded and commits made before it\n  moves keep their room. A branch link of any other of those rooms naming it is\n  void and shown (LANE-01). So only that room takes a run's events on it, and\n  the room trailer of each commit on it names that room (LANE-28)."
+   },
+   {
+    "file": "docs/srs/05b-lane-requirements.md",
+    "old": "names it, and no act MAY move it but one making a room foreign or no longer foreign; a foreign room's branch link MUST void none.",
+    "new": "names it, and MAY move only when a room enters or leaves them or concurrent branch links arrive; a foreign room's branch link MUST void none."
+   },
+   {
+    "file": "features/lane.feature",
+    "old": "the one with the lower commitment stands and the other is shown void",
+    "new": "the one with the lower commitment stands and the other is shown void, even when the standing one reaches the node later or only through a later join to its room, the branch then moving for later events and commits only"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/git-and-forge.md",
+   "quote": "A branch moves only when a room enters or leaves those rooms (such as by a join, a leave, a kick or a bar) or a concurrent branch link with the lower commitment reaches this node later"
+  }
+ },
+ {
+  "id": "R2R-8",
+  "real": true,
+  "why": "Real. Branch ownership counts \"only this node's principal's rooms\" (DM-AO, LANE-01). Take room R, which principals A and B share. On A's node, R's link to branch b is void because A's own room R1 linked b first. On B's node, R names b, because R1 is not B's room and B's node may not hold it at all. The Verdict entry says a verdict is bound to \"the heads of every branch the room names\" and \"goes stale when any of them changes\". It never says on which node that set is taken. It also never says whether a branch the room names on another node stales the verdict. One implementer recomputes the set where the verdict is shown, so A's verdict reads stale on B's node and fresh on A's. Another uses the set that was bound. B's node cannot even reconstruct the set A's node bound: that set depends on A's private room R1. So under I10 the verdict must record the branches and heads it was bound to. OWN-27 already limits staleness to what the verdict \"was bound to\". LANE-22 requires that every principal \"see the same ... verdicts\". OWN-21 already handles the ready mark the same way: it is \"recorded with the branch heads it named\". Two alternatives conflict with existing rules, so they are not offered as options. Staling the verdict wherever the room names a branch it does not list would make staleness differ between the principals' nodes, against LANE-22. Binding every branch the room's links name, void or not, would contradict OWN-27's \"the room names\" and the void rule in LANE-01. The same rule covers a branch linked after the verdict. That branch is not a bound head, as for the ready mark (OWN-21). VIEW-21 still shows \"the diff and events since the last verdict\", so the new branch's work stays visible. Two principals share a room only once PRV-10 ships (LANE-23). That is M7, OWN-27's own milestone.",
+  "settled_by": "OWN-27 settles it in part: \"A verdict MUST be shown stale once any branch head, the intent version or the evidence it was bound to changes.\" It binds \"the heads of every branch the room names, and the addresses of the results and evidence shown at that time\". LANE-22: \"Every principal with a seat in the room MUST see the same intent versions, results, criterion links and verdicts.\" OWN-21, the precedent: a ready mark is \"recorded with the branch heads it named. A later change to any of those branch heads MUST return it to Running or Quiet until marked again.\" No rule yet says that a verdict records its heads, or how a branch it does not list counts.",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "Tighten. Changes in the model and OWN-27: a verdict is bound to and recorded with the heads of the branches the room names on the recording node. It goes stale when one of the things it was bound to changes, never because the room names a branch it does not list, on another node or later. The Branch entry gains the consequence that a shared room may name a branch on one principal's node and hold a void link to it on the other's. Both git-and-forge.md edits keep every ledger quote and apply independently of R2R-1's edit. docs/srs/05c-principal-and-peer-requirements.md has ample token headroom. Run `mdsmith fix` afterwards to re-pad the table. The OWN-27 scenario gains one step, still @pending.",
+  "edits": [
+   {
+    "file": "docs/domain-model/git-and-forge.md",
+    "old": "names that room (LANE-28).",
+    "new": "names that room (LANE-28).\n  Since only this node's principal's rooms count, a room two principals share\n  may name a branch on one principal's node and hold a void link to it on the\n  other's."
+   },
+   {
+    "file": "docs/domain-model/git-and-forge.md",
+    "old": "  whose device seat in the room has the pin capability, bound to the intent\n  version, the heads of every branch the room names, and the results and\n  evidence shown. It goes stale when any of them changes. It is never edited: a\n  newer verdict of the same person on the same criterion supersedes it, and\n  unpinning one is neutral. Cairn never derives one; service accounts contribute\n  evidence instead.",
+    "new": "  whose device seat in the room has the pin capability, bound to, and recorded\n  with, the intent version, the heads of every branch the room names on the\n  recording node, and the results and evidence shown. It goes stale when one of\n  them changes, never because the room names a branch it does not list, on\n  another node or later. It is never edited: a newer verdict of the same person\n  on the same criterion supersedes it, and unpinning one is neutral. Cairn never\n  derives one; service accounts contribute evidence instead."
+   },
+   {
+    "file": "docs/srs/05c-principal-and-peer-requirements.md",
+    "old": "and bound to the intent version, the heads of every branch the room names, and the addresses of the results and evidence shown at that time.",
+    "new": "and bound to, and recorded with, the intent version, the heads of every branch the room names on the recording node, and the addresses of the results and evidence shown at that time."
+   },
+   {
+    "file": "docs/srs/05c-principal-and-peer-requirements.md",
+    "old": "A verdict MUST be shown stale once any branch head, the intent version or the evidence it was bound to changes.",
+    "new": "A verdict MUST be shown stale once any branch head, the intent version or the evidence it was bound to changes, and never because the room names a branch it does not list."
+   },
+   {
+    "file": "features/principal-acts.feature",
+    "old": "bound to the intent version, the heads of every branch the room names and the results and evidence shown",
+    "new": "bound to, and recorded with, the intent version, the heads of every branch the room names on her node and the results and evidence shown"
+   },
+   {
+    "file": "features/principal-acts.feature",
+    "old": "    And after the edit the verdict reads stale\n",
+    "new": "    And after the edit the verdict reads stale\n    And a branch the room names that the verdict does not list, linked later or named on another principal's node only, stales it on no node\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/git-and-forge.md",
+   "quote": "It goes stale when one of them changes, never because the room names a branch it does not list, on another node or later."
+  }
+ },
+ {
+  "id": "R2R-4",
+  "real": true,
+  "why": "Real gap; it extends DM-AN's deferral. Leave is 'a seat's room act ending its own add' (acts-and-roles, Join), so the seat's own key must sign it. 'A witnessed run's run-seat key ... lives only in the memory of its harness session's MCP server' (seats-and-keys), so an ended run's seat can never leave, and neither can a lost device's. Only a kick can end that add ('Kick: Revokes a seat's current add'). Revoking the seat key (SEC-27) ends no add, and no other rule does. The model marks this open only for the owner ('where how a seat of the owner whose key is lost, such as an ended run's, then ends its add is open too'), because the owner's protection rules out the kick. Any other principal can still be kicked by a moderator or the owner. It cannot end the add by its own act, though, unless its device seat is a moderator. Until then it stays among 'the room's principals'. The room never becomes foreign through its own leaving ('a room every seat of its principal has left'). The room stays among its rooms for `room`/`rooms` recall (RCL-05), and keeps any branch it names (LANE-01: 'no act MAY move it but one making a room foreign or no longer foreign'). Where `cairn ingest` started a seat beside the run seat, that seat shares the add (REC-19), which covers only some runs. The case arises only once PRV-10 ships: until then 'a room admits no seat of another principal', and the owner, not yet protected, may kick its own seats. So it falls in the same M7 window as OQ-42.",
+  "settled_by": "none. OQ-42 defers only the owner's case: 'Also open, before M7: once that protection applies, how a seat of the owner whose key is lost, such as an ended run's or a lost device's, ends its add, which succession (LANE-11) and an owner's leaving need.' No SRS requirement or ADR covers another principal's seat whose key is lost.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "Extend OQ-42's deferral to every principal's lost-key seat",
+    "effect": "The model's Principal entry and OQ-42 also mark as open, before M7, how another principal's seat whose key is lost ends its add without a kick. No behaviour is decided now. The case first arises when PRV-10 ships, inside OQ-42's M7 window, and DM-AN's closing quotes stay intact.",
+    "invariant_change": false
+   },
+   {
+    "label": "Revoking a seat key ends that seat's add",
+    "effect": "The principal revokes the lost seat key: SEC-27, already a cut principal act, recorded by its device seat in the room as LANE-01 routes it. The room merge then counts the revocation as ending that seat's add (and the ingest seat's shared add), for every principal, the owner included. It is no kick, so the owner's protection does not stop it, and it drops no pin (PIN-10). This closes OQ-42's lost-key sub-question early, which the stakeholder deferred. LANE-25, LANE-31, SEC-27 and the Join/Kick entries would change.",
+    "invariant_change": false
+   },
+   {
+    "label": "A device seat's leave may name its principal's other seat",
+    "effect": "A device seat's leave room act, taken at a principal surface, may end the add of another seat of its own principal in that room whose key is lost. That is a new form of an existing room act, checked against the add. It closes both the owner's case and the others', and needs edits to the Leave definition, LANE-23 and LANE-31.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option 1: extend the deferral. The stakeholder put the owner's lost-key case in OQ-42 for M7, and the other principals' case arises only once PRV-10 ships, in the same milestone, so one open question should carry both. Offer option 2 as the likely resolution of OQ-42: it reuses an existing cut act and adds no new act kind. The OQ-42 table cell grows, so run `mdsmith fix` to re-pad it. A scratch copy with all edits applied and fixed passes `mdsmith check .`.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "such as an ended run's, then ends its add is open too. A certified service\n  account is still its own principal; its **certifier** is whoever certified\n  it. A principal key never",
+    "new": "such as an ended run's, then ends its add is open too, as is how a seat of\n  any other principal whose key is lost ends its add without a kick. A\n  certified service account is still its own principal; its **certifier** is\n  whoever certified it. A principal key never"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "which succession (LANE-11) and an owner's leaving need.",
+    "new": "which succession (LANE-11) and an owner's leaving need, and how a seat of any other principal whose key is lost ends its add without a kick, which that principal's own leaving needs."
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "any other principal whose key is lost ends its add without a kick"
+  }
+ },
+ {
+  "id": "R2R-5",
+  "real": true,
+  "why": "Real. The Service account entry says where a removal enters, but not what a removal or a revocation changes. The Principal entry says only 'a service account whose certificate is revoked stays a service account'. Trust grant says 'A recorded grant covers nothing once the node's key set holds a certificate or listing marking the key it names as relaying ...'. The key set holds 'certificates (...), revocations, and recorded managed-policy listings and their removals', so a revoked certificate is still held. Whether it still 'marks' the key is therefore open. Read one way, the grant revives, and new grants naming the key are no longer refused. A certifier's or managed policy's act would then widen what reaches the grantor's agents, against 'Only an agent's own principal widens what reaches that agent (I2)', and the cut list classes that act as cut ('revoke ... a service account's certificate unless that removes a pin from a restore block'). The other reading makes a revocation a no-op. Then a certifier that learns its account now relays has no way to stop grants covering it: a new certificate marking it relaying counts only once the account countersigns it. Meanwhile the cut list's and §9.5's 'unless it removes a pin from a restore block' has no case for this verb. Separately, the model's 'and another node's only once the listed key countersigns it' can be read as covering the removal too; PRV-10 is clear on that point.",
+  "settled_by": "Partly. PRV-10 settles only the removal's countersignature: 'and another node's only once the listed principal key countersigns the listing, a removal wherever the listing it ends entered'. No SRS requirement, ADR or closing text settles whether a revocation or removal lifts a relaying mark, or what it does to trust grants. DM-AF's 'whatever order they arrived in' and OWN-29 are silent on revocations.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "Persistence only",
+    "effect": "A removal, which needs no countersignature, and a revocation each leave in place any relaying mark the certificate or listing set, an unmarked listing's included. Grants naming the key stay refused and keep covering nothing. Otherwise a revocation leaves trust grants as they stand: it is always cut and never removes a pin through a grant. A certifier cannot stop grants covering an account it no longer vouches for.",
+    "invariant_change": false
+   },
+   {
+    "label": "Persistence, and a revocation or removal voids earlier grants (recommended)",
+    "effect": "As option 1. In addition, a revocation of any certificate of a key, or a removal of any listing of it, makes every trust grant naming that key that does not causally follow that act cover nothing; concurrent grants are voided too. The grantor may record a new grant, with the warning. The certifier's withdrawal thus ends coverage the way DM-AF's relaying marks do. A revocation that thereby removes a pin on the acting node is widening under OWN-11's existing rule, which gives DM-C's and §9.5's 'unless' a case. Rotating a certificate makes grantors record their grants again. The rule rests on causal order in the record, so I10 holds.",
+    "invariant_change": false
+   },
+   {
+    "label": "Persistence, and no certificate or listing in force counts as relaying",
+    "effect": "As option 1, and a service account none of whose certificates or listings is still in force counts as relaying, like DM-L's unmarked listing. This is set-based and survives a certificate rotation. But a later re-certification, by the certifier with the account's countersignature, lets an old grant cover again with no new act by the grantor.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option 2. Lifting the mark on revocation is ruled out, since a certifier's or managed policy's act would widen what reaches another principal's agents. Among the safe options, option 2 is the only one that gives a certifier a working way to withdraw (T28 trust laundering) without letting a third party's act revive coverage. It follows DM-AF's decided direction and DM-L's safe default, and gives the existing 'unless that removes a pin from a restore block' clause for this verb a case. The edits keep every existing ledger quote intact. principals-and-agents.md goes to about 1013 heuristic tokens over 122 lines, and trust-and-flow.md to about 1572 tokens over 203 lines, both well under budget. The table cells in 05c and 09a grow, so run `mdsmith fix`. A scratch copy with the edits applied and fixed passes `mdsmith check .` and `go test ./internal/scenario/`. The OWN-29 scenario gains two steps and stays @pending.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "  as a certificate; a removal enters wherever the listing it ends did (PRV-10).",
+    "new": "  as a certificate; a removal, needing no countersignature, enters wherever the\n  listing it ends did (PRV-10). A key marked as relaying, or listed unmarked,\n  stays relaying once what marked or listed it is revoked or removed; and a\n  revocation of any certificate of a key, or a removal of any listing of it,\n  makes every trust grant naming that key that does not causally follow that\n  act cover nothing (Trust grant)."
+   },
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "  the mark, whatever order they arrived in (I10).",
+    "new": "  the mark, whatever order they arrived in (I10); no revocation or removal\n  lifts that, and a revocation of any certificate of that key, or a removal of\n  any listing of it, leaves every grant naming it that does not causally follow\n  that act covering nothing (Service account)."
+   },
+   {
+    "file": "docs/srs/05c-principal-and-peer-requirements.md",
+    "old": "whatever order they arrived in; naming any other service account MUST show a warning.",
+    "new": "whatever order they arrived in, and no revocation of such a certificate or removal of such a listing MAY lift that; a revocation of any certificate of the principal key a recorded trust grant names, or a removal of any listing of it, MUST make that grant cover nothing unless the grant causally follows it; naming any other service account MUST show a warning."
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "covering nothing once such a certificate or listing arrives after it,",
+    "new": "covering nothing once such a certificate or listing arrives after it, which no revocation or removal lifts, or once a revocation of any certificate of that key, or a removal of any listing of it, that it does not causally follow arrives,"
+   },
+   {
+    "file": "features/principal-acts.feature",
+    "old": "reaches the node covers nothing once it arrives, as if it had arrived first\n",
+    "new": "reaches the node covers nothing once it arrives, as if it had arrived first\n    And no revocation of that certificate or removal of that listing makes the trust grant cover anything again\n    And a revocation of any certificate of a key, or a removal of any listing of it, makes every trust grant naming that key that does not causally follow it cover nothing\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "stays relaying once what marked or listed it is revoked or removed"
+  }
+ },
+ {
+  "id": "R2R-6",
+  "real": true,
+  "why": "trust-and-flow.md says only \"A delegate inherits the delegating run's (OWN-24).\" OWN-24 says the delegate \"MUST inherit the delegating run's recall taint (SEC-13)\" but gives no fallback. The model has fallbacks for two other paths only. For resume: \"carries recall taint from its first event where Cairn cannot tell that run\", and SEC-13 says \"set from such a run's first event where Cairn cannot tell which run it resumes\". For a subagent's report: OWN-25. A node that does not hold the delegating run's recall events arises only under OWN-26. That covers an agent on another of the principal's nodes (PRV-10) and another principal's agent, which is always on another node because I8 binds each home to one principal. A subagent, or another agent of the same principal on this node, always has the delegating run's writers to hand. So under OWN-26 an implementer may take the delegating node's statement, which I8 keeps as another node's content, or may start the delegate untainted. Either way the tightened rule levels silently fail to carry. Deriving the taint on the delegate's node is always at least as strict for this node's own sources, since PRV-02 trusts them \"on the recording node only\". A missing writer means the taint cannot be derived, so the safe default is taint. This completes DM-AK's decided fallback for the one remaining path. OWN-26 is P2, in M6, and gated by its own I2 security review, so the rule lands before that requirement ships.",
+  "settled_by": "none. SEC-13's resume fallback sets the decided direction this extends: \"set from such a run's first event where Cairn cannot tell which run it resumes\". OWN-24 states only the inheritance: \"MUST inherit the delegating run's recall taint (SEC-13)\".",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "A: taint by default where the taint cannot be derived",
+    "effect": "A delegate whose node cannot derive the delegating run's recall taint from the writers it holds carries recall taint from its first event (OWN-26). A node that holds those writers derives the taint itself and never takes another node's word for it. This mirrors SEC-13's resume rule.",
+    "invariant_change": false
+   },
+   {
+    "label": "B: taint every delegate on another node",
+    "effect": "Every delegate under OWN-26 carries recall taint from its first event, whatever its node holds. Simplest and strictest. It tightens the sensitive action classes even for a principal's own node that holds every writer, which costs usefulness for no extra safety.",
+    "invariant_change": false
+   },
+   {
+    "label": "C: trust the delegating node's stated taint",
+    "effect": "The delegate inherits whatever taint the delegating side reports. This would let another node, or another principal's compromised node, clear the taint. I8 keeps such content untrusted, so this option is rejected.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "A. It follows SEC-13's existing resume fallback and I8, and changes nothing for a subagent or a delegate on the same node. The SRS row needs `mdsmith fix` afterwards to re-pad the table (MDS025).",
+  "edits": [
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "  sensitive (OWN-10). A delegate inherits the delegating run's (OWN-24).\n  A delegating run takes on",
+    "new": "  sensitive (OWN-10). A delegate inherits the delegating run's (OWN-24),\n  and carries recall taint from its first event where its node cannot derive\n  that run's from the writers it holds (OWN-26).\n  A delegating run takes on"
+   },
+   {
+    "file": "docs/srs/05c-principal-and-peer-requirements.md",
+    "old": "the only effect before PRV-10 ships. The delegate MUST keep its own principal (OWN-01)",
+    "new": "the only effect before PRV-10 ships. A delegate on another node MUST carry recall taint (SEC-13) from its first event wherever its node cannot derive the delegating run's from the writers it holds. The delegate MUST keep its own principal (OWN-01)"
+   },
+   {
+    "file": "features/principal-acts.feature",
+    "old": "    And the target keeps \"bob\" as its one principal\n",
+    "new": "    And the target keeps \"bob\" as its one principal\n    And the target's run carries recall taint from its first event while \"bob\"'s node holds none of the delegating run's writers\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/trust-and-flow.md",
+   "quote": "carries recall taint from its first event where its node cannot derive that run's from the writers it holds"
+  }
+ },
+ {
+  "id": "R2R-7",
+  "real": true,
+  "why": "record.md defines Quarantine as \"exclusion of an event, span, run, writer or derived artifact from recall, restore blocks and landmark text\". It defines Trusted-only export as \"The JSONL of the events trusted for the principal's agents, with full provenance, that downstream memory systems read (ADM-12, MEM-02)\". A trust level derives from provenance, origin, recorder, writer, deployment mode, the key set, stamps and trust grants, never from the quarantine set. So a quarantined trusted event still selects into the export and leaves marked trusted. An example is a compromised device's pin that the principal took out of restore blocks. SEC-12 says quarantine \"MUST take effect immediately for all recall, landmark and injection operations\", which leaves exports out. ADM-12 selects by trust alone. MEM-02, traced to I2, makes this export the downstream memory systems' only feed. That makes it circulation toward models, and I5's title promises bad data \"can be removed from circulation\". Leaving the event out changes no restore block, so the quarantine's class is unchanged. SEC-26's review step (\"shows included and withheld content by class\") and its signed manifest of withheld ranges keep the withheld event visible (I6). Bundles and renderings were not raised and are left alone. A bundle's receiver derives trust itself, but a principal's own node importing that principal's device-signed pins is a possible follow-up.",
+  "settled_by": "none. SEC-12 covers only \"all recall, landmark and injection operations\", and ADM-12 says only \"SHOULD write trusted events with full provenance as JSONL\".",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "Leave quarantined events out of trusted-only exports",
+    "effect": "A trusted-only export leaves out every quarantined event, and its review step and manifest list each one as withheld. Downstream memory systems never receive quarantined content marked trusted. The record and the forensic view are unchanged.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Apply it. It follows from I5 and MEM-02 and needs no new mechanism. This edit and R2R-9's both touch record.md's Quarantine entry and SEC-12, on separate passages, so they apply in either order. The SRS rows need `mdsmith fix` to re-pad their tables (MDS025).",
+  "edits": [
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "  or derived artifact from recall, restore blocks and landmark text (LMK-04\n  keeps its counts), on the node that records it, and still after its node\n  identity changes (Node), without deletion (I5). On that node,\n",
+    "new": "  or derived artifact from recall, restore blocks, landmark text (LMK-04 keeps\n  its counts) and trusted-only exports, on the node that records it, and still\n  after its node identity changes (Node), without deletion (I5). On that node,\n"
+   },
+   {
+    "file": "docs/srs/06-security.md",
+    "old": "MUST take effect immediately for all recall, landmark and injection operations on the node that records it,",
+    "new": "MUST take effect immediately for all recall, landmark and injection operations and every trusted-only export (ADM-12) on the node that records it,"
+   },
+   {
+    "file": "docs/srs/05a-administration-requirements.md",
+    "old": "`cairn export --trusted-only` SHOULD write trusted events with full provenance as JSONL.",
+    "new": "`cairn export --trusted-only` SHOULD write trusted events with full provenance as JSONL, and MUST NOT write a quarantined one (SEC-12), which its review step shows as withheld (SEC-26)."
+   },
+   {
+    "file": "features/administration.feature",
+    "old": "    And an agent run with a Claude Code transcript \"run-a\" with user turns and web tool results\n    When the person runs \"cairn export --trusted-only\"\n",
+    "new": "    And an agent run with a Claude Code transcript \"run-a\" with user turns and web tool results\n    And one of its trusted events is quarantined\n    When the person runs \"cairn export --trusted-only\"\n"
+   },
+   {
+    "file": "features/administration.feature",
+    "old": "    And no untrusted event appears in the export\n",
+    "new": "    And no untrusted event appears in the export\n    And the quarantined event does not appear in it, and the export's review step shows it as withheld\n"
+   },
+   {
+    "file": "features/security.feature",
+    "old": "    And the matched events are absent from every later recall, landmark and injection on this node\n",
+    "new": "    And the matched events are absent from every later recall, landmark, injection and trusted-only export on this node\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/record.md",
+   "quote": "from recall, restore blocks, landmark text (LMK-04 keeps its counts) and trusted-only exports"
+  }
+ },
+ {
+  "id": "R2R-9",
+  "real": true,
+  "why": "pins-and-context.md says \"Of the versions of one pin that qualify for an agent, only the newest restores to it\". The Pin entry and PIN-10 pick a pin \"by its newest version whose own event is trusted on this node\". For the intent, PIN-10 and LANE-20 restore \"only by its newest version\". Trust levels never read the quarantine set, so a quarantined newest version still qualifies, while Quarantine excludes it from restore blocks. The text then allows two readings. Either the pin falls back to its newest version that is not quarantined, or it drops out of the restore block. The choice also flips the act class. SEC-12 says \"a quarantine that removes a pin or a landmark from a restore block MUST be a widening principal act, and one that removes nothing from a restore block a cut act\". Under the fallback reading the pin stays in the block, so the quarantine reads as cut. A cut act needs only the terminal (OWN-12, risk R7), so it could swap a constraint for an older, possibly looser text. That contradicts the model's definition: \"a cut act only stops, narrows or undoes a widening\". DM-K and DM-S settle which qualifying version restores but not how quarantine interacts with that choice.",
+  "settled_by": "none. DM-K and DM-S's closing texts say which qualifying version restores but say nothing on quarantine. SEC-12 classes only a quarantine that \"removes a pin or a landmark from a restore block\".",
+  "klass": "design",
+  "options": [
+   {
+    "label": "A: a quarantined version counts as absent, and removing one is widening",
+    "effect": "A quarantined pin version never restores. PIN-10 chooses among the rest, the intent included, so the pin restores by its newest remaining qualifying version and leaves the restore block only when none is left. A quarantine that removes a pin version from a restore block is widening. Quarantining a compromised device's bad edit brings back the principal's earlier text with no further act, and no cut act can change what restores.",
+    "invariant_change": false
+   },
+   {
+    "label": "B: a quarantined newest version takes its pin out",
+    "effect": "While a pin's newest qualifying version is quarantined, the pin leaves the restore block and no earlier version restores in its place. That lasts until the quarantine is released or a newer qualifying version arrives. The quarantine is widening under SEC-12's existing classes, since it removes a pin. Superseded text never comes back, but recovering the constraint needs a new edit, another widening act, and the agent runs without the constraint until then.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "A. Quarantine targets events, so B would also withdraw earlier versions nobody quarantined, which goes beyond I5. A also keeps the principal's constraint restoring verbatim (I3) while it recovers from a compromised device's edit. Classing it widening means only an act with widening's checks can change what restores, so safety and usefulness agree. acts-and-roles.md stays exactly at its 3000-token budget (net zero words, checked with mdsmith). The SRS rows need `mdsmith fix` to re-pad their tables (MDS025). mdsmith check, the internal and cmd gate tests, and the ledger's existing quotes all still pass with these edits applied together with R2R-6's and R2R-7's.",
+  "edits": [
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "  and no quarantined delegated task reaches a delegate in OWN-24's template\n  (SEC-12).\n",
+    "new": "  and no quarantined delegated task reaches a delegate in OWN-24's template\n  (SEC-12). A quarantined pin version never restores and counts as absent when\n  PIN-10 chooses which version of a pin restores, the intent's included; a pin\n  left with no qualifying version leaves the restore block.\n"
+   },
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "  never displaces one the agent's principal stamped (LANE-32).\n",
+    "new": "  never displaces one the agent's principal stamped (LANE-32); a quarantined\n  version counts as absent in that choice (Quarantine).\n"
+   },
+   {
+    "file": "docs/domain-model/acts-and-roles.md",
+    "old": "    other than turning it off, quarantine that removes a pin or a landmark from\n    a restore block, release a quarantine, purge or apply an erasure request,\n",
+    "new": "    other than turning it off, quarantine removing a pin, pin version or\n    landmark from a restore block, release a quarantine, purge or apply an\n    erasure request,\n"
+   },
+   {
+    "file": "docs/srs/06-security.md",
+    "old": "a quarantine that removes a pin or a landmark from a restore block MUST be a widening principal act",
+    "new": "a quarantine that removes a pin, a pin version or a landmark from a restore block MUST be a widening principal act"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "MUST NOT displace one the run's principal stamped.",
+    "new": "MUST NOT displace one the run's principal stamped. A quarantined pin version (SEC-12) MUST count as absent wherever this requirement chooses which version of a pin restores, the intent's included."
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "(widening when it removes a pin or a landmark from a restore block, else a cut)",
+    "new": "(widening when it removes a pin, a pin version or a landmark from a restore block, else a cut)"
+   },
+   {
+    "file": "features/security.feature",
+    "old": "    And a quarantine that would remove a pin or a landmark from a restore block takes effect only as a confirmed widening principal act\n",
+    "new": "    And a quarantine that would remove a pin, a pin version or a landmark from a restore block takes effect only as a confirmed widening principal act\n"
+   },
+   {
+    "file": "features/pins.feature",
+    "old": "    And of the edited constraint pin the restore block includes only its newest version\n",
+    "new": "    And of the edited constraint pin the restore block includes only its newest version, or, once a widening principal act quarantines that version, its earlier one\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/record.md",
+   "quote": "A quarantined pin version never restores and counts as absent when PIN-10 chooses which version of a pin restores"
+  }
+ }
+]

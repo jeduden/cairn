@@ -1,0 +1,46 @@
+{
+  "findings": [
+    {
+      "type": "contradiction",
+      "quote": "registrations found removed without `cairn uninstall` are counted and shown,",
+      "problem": "I1 names capture-off as the only loss exception and Capture defines a capture gap as the stretch between the two recorded capture acts, yet removed hook registrations (no capture-off act) are also shown as a node-wide capture gap. That stretch is not an I1 exception, only a counter records it (nothing in the record, so a rebuild cannot reproduce it, I10), and nothing says whether `cairn ingest` backfills it as `ingested`.",
+      "fix": "Add removed hook registrations to I1's exceptions, have the next core component append a structural capture-gap marker naming the last event seen so the gap derives from the record, and say whether `cairn ingest` backfills that stretch as `ingested`.",
+      "severity": "needs-fix"
+    },
+    {
+      "type": "gap",
+      "quote": "Acts with no member seat: open (OQ-41).",
+      "problem": "The room merge is the one rule deriving all room state, but it leaves open whether it counts a principal act for a room its principal has no member seat in. A named successor need not hold a seat, so its acceptance (a succession), a handover acceptance by a seatless principal, and a stamper who left unstamping are exactly such acts; two implementers would derive different owners and stamps from the same logs.",
+      "fix": "State the rule: such an act counts when it is a successor's or handover acceptor's acceptance or a stamper's unstamp, otherwise the merge discards it and shows the count on Health (I6); or require the successor and the acceptor to hold a member seat.",
+      "severity": "needs-fix"
+    },
+    {
+      "type": "security",
+      "quote": "and writer live under I8 rests on OQ-39.",
+      "problem": "I8 binds all local state to one principal's home, but a paired phone is a device with no home that holds a device key, seals a writer and signs allow or deny acts, which are widening principal acts. Where its keys and writer live is deferred, so the candidate's own concept breaks I8 and leaves the custody of a key that signs widening acts undefined.",
+      "fix": "Replace the deferral by a rule: the phone's device key and seal key stay in the phone's platform key store, its writer is held in the home of the node it pairs with (so I8 applies to that home), and the pairing's access token is what enrolls the key as the principal's.",
+      "severity": "needs-fix"
+    },
+    {
+      "type": "undefined",
+      "quote": "the managed install path; uninstall runs only at a principal surface (I7,",
+      "problem": "The managed install path is named twice as an install route that skips the principal-surface rule (and as one that may create the personal room) but is never defined. Nothing says who may run it or that it shows the harness-configuration change first, which I7 requires of every install, and ephemeral nodes depend on it.",
+      "fix": "Define it beside Managed policy (an install an organisation's managed policy performs, shown on Setup like any install, I7 applied) or drop it from Principal surface and Personal room.",
+      "severity": "minor"
+    },
+    {
+      "type": "undefined",
+      "quote": "verbatim and restored verbatim after every compaction, or named by id and",
+      "problem": "I3 and the restore block name an omitted pin by id, and a closed path may carry only Cairn's ids, but no pin id is defined: Pin and Pin version assign none and the only addressing defined is an event's address. Implementers would pick different ids, and a chosen id could carry untrusted text into trusted restore text.",
+      "fix": "Add to Pin: a pin's id is the address of its creating event, assigned by Cairn and never chosen.",
+      "severity": "minor"
+    },
+    {
+      "type": "gap",
+      "quote": "Removing secrets from content before it is stored, on import,",
+      "problem": "I1 allows redaction before storage while I3 requires every restoring pin to be stored and restored verbatim, but Redaction names no exemption for pins and says nothing about a pin whose text matches a secret pattern. One implementer alters the pin (not verbatim), another stores it whole (secret in the store and in every restore block).",
+      "fix": "Say whether pins are exempt from redaction; if not, a pin whose text would be redacted is refused and counted (I6) rather than stored and restored altered.",
+      "severity": "minor"
+    }
+  ]
+}

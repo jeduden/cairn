@@ -1,0 +1,56 @@
+[
+ {
+  "type": "useless",
+  "quote": "**Working view**: Whatever is currently in the model's context window. Never",
+  "problem": "Working view is defined but no other concept, act, surface or rule in the candidate creates, reads or refers to it (the Replay tab's context lens speaks of the context window directly).",
+  "fix": "Drop the Working view entry, or have the context lens name it (\"the context lens shows the Working view at an event\").",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "**Pull-request author**: The outside party whose commits a foreign room's",
+  "problem": "Nothing in the candidate creates a binding statement, matches commits to an author, or shows a pull-request author anywhere (Import, Foreign room and the room view never mention it), so the concept and the binding statement cannot be reached or acted on.",
+  "fix": "Remove the entry, or add the import or room-view rule that uses the match and the binding statement.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "contradiction",
+  "quote": "token, a seat key, turn capture on, and",
+  "problem": "Revoking a seat key is classed as a cut act, yet the candidate says any principal act that removes a pin from a restore block is widening whatever its verb, and revoking a device or peer is widening because it can drop pins and stop acts arriving. A device seat's certified pins qualify through its seat key chain, so revoking that key can drop them in the same way.",
+  "fix": "State that revoking a seat key never removes a pin from a restore block (so it stays cut), or class the revocation of a device seat's key as widening like a device revocation.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "**Quota**: A limit on storage or events, per room, node, writer received from",
+  "problem": "The candidate says nothing about what happens when a quota is reached. I1 allows loss only by redaction, purge or retention policy, and Purge is said to be the only way stored content is destroyed, so an implementer cannot tell whether a quota refuses new local events, evicts, truncates or pauses capture, and the first three break I1.",
+  "fix": "Add: a quota only refuses events received from a peer or bundle or pauses capture with a counter and a capture gap; it never removes or drops an event this node recorded.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "contradiction",
+  "quote": "A paired phone's personal-room seat has no role",
+  "problem": "The same paragraph says a seat with no role, other than the owner's device seats, is a viewer, and Owner excludes a paired phone from the owner's capabilities, so the phone seat is both role-less and, by the default rule, a viewer (with a role request). Two implementers will give it different capabilities.",
+  "fix": "Say \"A paired phone's personal-room seat is a viewer limited to its device scope\" or exempt it from the default-viewer sentence.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "**Delegated task**: The text of a delegation: a subagent's from its harness,",
+  "problem": "A subagent's delegated task is model-written text from the parent run and arrives as the subagent's first input, but no provenance class is stated for it. The `user` events recorded in interactive mode are a trusted source, so recording it as the harness's user input would make parent-model text trusted outside I2's closed paths.",
+  "fix": "Add: a subagent's delegated task is recorded as untrusted `harness_text`, never as a `user` event, since it starts no user turn.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

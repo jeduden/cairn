@@ -1,0 +1,297 @@
+[
+ {
+  "id": "R6R-1",
+  "real": true,
+  "why": "The defect is real. One ADM-06 row says both \"reinstate the segments, payloads and derived artifacts the copy contains\" and \"count every event the copy holds as received and not recorded on this node, even on the node that made the copy\". The copy's trust levels, active pins, quarantine set and natural-language headlines were derived while its events still counted as recorded. Reinstated as they are, they are no longer \"a deterministic function of the set of writer logs a node holds and the node's own key set\" (I10). That breaks ADM-08 (\"Derived artifacts MUST depend only on the set of writer logs held and the node's key set\"). It also fails ADM-09's derived-artifact consistency check, which ADM-06's own \"pass `cairn verify` afterwards\" requires. A copy altered outside the home, before seals ship (OQ-48), could carry an active-pin list or trust levels that keep a pin qualifying for a restore block. That breaks I2 and contradicts the row's list of \"each pin of the copy that will not restore\". The model is silent: Backup only says \"reading it back is a backup restore\". Rebuilding is the only reading that fits I10, so this needs no behavioral choice.",
+  "settled_by": "I10: \"All derived artifacts (indexes, landmarks, active pins, quarantine set, room state, trust levels, run and integrity statuses, queues, evidence and proof classes, stats) are a deterministic function of the set of writer logs a node holds and the node's own key set, independent of the order in which logs arrived. Rebuilding reproduces them exactly.\" ADM-08: \"Derived artifacts MUST depend only on the set of writer logs held and the node's key set, never on the order in which logs or segments arrived.\" Stakeholder decision DM-DE (round 6): every event a backup restore reinstates counts as received.",
+  "klass": "settled",
+  "options": [
+   {
+    "label": "Rebuild every derived artifact; never reinstate the copy's (recommended)",
+    "effect": "A restore reinstates only segments and payloads, then rebuilds trust levels, active pins, the quarantine set (with the copy's quarantines the restore keeps in force), landmarks and indexes from the logs now held and this node's key set. This closes the planted-pin path and keeps `cairn verify` passing. `cairn backup create` still captures derived artifacts, unchanged.",
+    "invariant_change": false
+   },
+   {
+    "label": "Keep reinstating and re-derive only trust levels",
+    "effect": "Leaves the other artifacts (active pins, quarantine set, headlines) derived under the old reading. That still breaks I10 and ADM-08, and leaves the I2 path open. Rejected.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Apply the rebuild reading in ADM-06, in the model's Node entry (places.md, where the backup restore is described; record.md has no room) and as one step in the ADM-06 scenario. ADM-06's traces and tags stay unchanged. Checked on a scratch copy of the repository with R6R-1, R6R-3 and R6R-4 applied: after `mdsmith fix` re-pads the ADM-06 and OQ-45 rows, `mdsmith check .` passes and `go test ./internal/... ./cmd/...` passes, including the ledger's carried-quote test. The edit anchors are disjoint, so the three themes apply in any order or subset. places.md goes from 110 to 117 lines.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "\n- **Device**: A node or a paired phone.",
+    "new": "\n  A backup restore reinstates the copy's segments and payloads, never its\n  derived artifacts: it rebuilds every one from the record and this node's\n  key set (I10, ADM-06).\n- **Device**: A node or a paired phone."
+   },
+   {
+    "file": "docs/srs/05a-administration-requirements.md",
+    "old": "reinstate the segments, payloads and derived artifacts the copy contains,",
+    "new": "reinstate the segments and payloads the copy contains, never its derived artifacts, rebuilding every derived artifact from the writer logs the node holds and its key set (ADM-08, I10),"
+   },
+   {
+    "file": "features/administration.feature",
+    "old": "    And \"cairn verify\" exits 0 on the home after the backup restore\n",
+    "new": "    And no derived artifact the copy contained was reinstated: each was rebuilt from the writer logs the node held and its key set\n    And \"cairn verify\" exits 0 on the home after the backup restore\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "A backup restore reinstates the copy's segments and payloads, never its derived artifacts: it rebuilds every one from the record and this node's key set"
+  }
+ },
+ {
+  "id": "R6R-3",
+  "real": true,
+  "why": "The defect is in the wording; the behavior is settled. ADM-06 lets a restore run anywhere and keeps \"every quarantine in force in the copy (SEC-12, I5)\". The DM-DE decision says the copy's quarantines stay in force. A restore can run on a node other than the one that made the copy, for example a principal restoring a lost laptop's copy on a new machine. There the copy's quarantines were recorded by another node, and I5 says \"A quarantine reaches another node only as a quarantine request that node's principal applies.\" The DM-DD closing text covers only a node clone: \"those quarantines are its own, recorded in its home, not another node's quarantine\". Under DM-DE every reinstated event counts as received even on the node that made the copy, so that reasoning does not carry over. The record.md Quarantine entry also limits the effect to \"the node that records it, and still after its node identity changes (Node)\", so it disagrees with Node and ADM-06. The reconciliation follows from existing rules. ADM-06 makes the restore \"a widening principal act\" of this node's principal. PEER-11 says a principal applies a quarantine request \"by one of the class of the quarantine it applies\", and a widening act covers any class. So confirming the restore is that principal applying each quarantine, which matches I5's letter. Keeping them is also the safe side under I5.",
+  "settled_by": "Stakeholder decision DM-DE (round 6): \"the copy's quarantines stay in force\". ADM-06: \"keep in force on the node, until a release there, every quarantine in force in the copy (SEC-12, I5)\" and \"A backup restore MUST be a widening principal act\". I5: \"A quarantine reaches another node only as a quarantine request that node's principal applies.\" PEER-11: \"a quarantine request by one of the class of the quarantine it applies (SEC-12)\".",
+  "klass": "settled",
+  "options": [
+   {
+    "label": "The restore applies them as its principal applies a quarantine request (recommended)",
+    "effect": "Node, Quarantine and ADM-06 say the copy's quarantines stay in force whichever node made the copy, because the restore, a principal act of this node's principal, applies each one, as I5 requires. No behavior changes. The quarantine set stays derivable from the recorded restore act (I10).",
+    "invariant_change": false
+   },
+   {
+    "label": "Amend I5 to name a backup restore",
+    "effect": "Adds a restore clause to I5. This is barred (never change invariants.md), needs an ADR, and adds nothing the reconciliation does not already give.",
+    "invariant_change": true
+   },
+   {
+    "label": "Drop the copy's quarantines when another node made the copy",
+    "effect": "Puts quarantined content back into recall and restore blocks after a restore. That contradicts DM-DE and is the unsafe side of I5. Rejected.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Carry the reading in Node (places.md), in the Quarantine entry (record.md) and in ADM-06. record.md sits at its budget. To make room, Backup's \"whose events count as received\" is dropped: Origin (\"received from a peer, paired phone or backup\") and Node still say it, and DM-O's quoted sentence is kept, only re-wrapped. Net change to record.md is minus 2 words, leaving about 4 words of headroom under 3000 tokens; any other theme editing Backup or Quarantine must rebase on these lines. The scenario needs no change: it already checks that the copy's quarantine stays in force. Verified together with R6R-1 and R6R-4: `mdsmith check .` and the Go gate tests pass, and the DM-AS, DM-AW, DM-BB, DM-DD, DM-DE and DM-O quotes are still carried.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "every quarantine in force in the\n  copy stays in force until a release there (ADM-06); whether a copy whose\n  seals verify keeps its events as recorded on this node is open (OQ-48).",
+    "new": "every quarantine in force in the\n  copy stays in force until a release there, whichever node made the copy:\n  the restore applies each as its principal applies a quarantine request (I5,\n  ADM-06). Whether a copy whose seals verify keeps its events as recorded on\n  this node is open (OQ-48)."
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "on the node that records it, and still\n  after its node identity changes (Node), without deletion (I5). On that node,\n",
+    "new": "on the node that records it or\n  applies it by a backup restore, also after its node identity changes (Node),\n  without deletion (I5). There,\n"
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "reading it back is a backup\n  restore, whose events count as received (Node). Creating one records no\n  principal act, only an audited event (§9.5), and a copy the principal takes\n  off the machine is its own tool, outside Cairn's components (I4).",
+    "new": "reading it back is a backup\n  restore (Node). Creating one records no principal act, only an audited event\n  (§9.5), and a copy the principal takes off the machine is its own tool,\n  outside Cairn's components (I4)."
+   },
+   {
+    "file": "docs/srs/05a-administration-requirements.md",
+    "old": "every quarantine in force in the copy (SEC-12, I5),",
+    "new": "every quarantine in force in the copy, whichever node made it, each applied by the restore as its principal applies a quarantine request (SEC-12, PEER-11, I5),"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "the restore applies each as its principal applies a quarantine request"
+  }
+ },
+ {
+  "id": "R6R-4",
+  "real": true,
+  "why": "The gap is real: the model never says what a restore of another node's copy does with that node's personal room. The rules do fix the present outcome. A backup restore is a principal act acting on no room, so LANE-01 records it in this node's own personal room. That room must already exist, created at first start (ADM-02), so restoring another node's copy leaves two personal rooms. LANE-01 makes a personal room this node's only if it was \"created by its device seat at Cairn's first start there ... or carried over to a node clone, where every run has a seat from its first event\". A backup restore is neither, so the copy's personal room stays that node's, and this node's runs have no seat in it from their first event. RCL-05's `room` and `rooms` scopes reach only rooms \"the agent has a seat in\". RCL-10 reaches only a foreign room, and this room is the principal's own, not foreign. So no recall call reaches the restored personal-room history, and OQ-45 covers only rooms the agent's seats left. The finding overstates one point: LANE-23 does not bar a run from joining that room on its principal's ask, and those join rules are left as they stand. Agents are also bound to their node (REC-02: \"identified by its node, its harness and the harness's agent id\"), so the old node's agents' rooms never pass to this node's agents anyway. Whether recall should reach such a room, by sharing it as a node clone does or by naming it in a call, is a real usefulness choice. The same choice returns in M8, when PEER-02 serves this node the personal rooms of the principal's other nodes.",
+  "settled_by": "none. The interim already follows from LANE-01 (\"Every principal MUST have one personal room on each of its nodes, created by its device seat at Cairn's first start there ... or carried over to a node clone, where every run has a seat from its first event\"), RCL-05 (\"`room` (one of its principal's rooms the agent has a seat in, through the writers this node holds)\") and RCL-10 (\"Recall MUST reach a foreign room only through a `room` parameter naming it\"). No rule decides whether recall may reach another node's personal room.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "Defer to OQ-45 with the interim the rules already give (recommended)",
+    "effect": "Until OQ-45 closes (M8), a restore of another node's copy shares no personal room: this node's runs get no seat in that node's personal room from their first event, and no call names it. The restored history stays recoverable by address and shown through the CLI (I1, DM-DF), and the copy's pins already will not restore and are named before the restore is confirmed (DM-DE). Recall stays narrower, the safe side of I8 (\"nor extends their recall\"). The M8 decision also covers the personal rooms PEER-02 serves from the principal's other nodes.",
+    "invariant_change": false
+   },
+   {
+    "label": "Share the copy's personal room as a node clone does (the finding's fix), decided now for M3",
+    "effect": "Every run of this node gets a seat in the copy's personal room from its first event, so `room` and `rooms` recall reach it, every item received, enveloped and mostly untrusted. Each run then has two personal-room seats and writers, LANE-01 must say which personal room takes events with no other room, and the M8 case of a peer's personal room is still undecided.",
+    "invariant_change": false
+   },
+   {
+    "label": "Let a call name it as under RCL-10, now",
+    "effect": "Opt-in, pull-only recall of that room: enveloped, logged, every item untrusted and the run tainted (SEC-13). Safe, but it pulls RCL-10 (P2) machinery into M3.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Defer: an addition to OQ-45 (resolution path \"Stakeholder; with RCL-10, before M8\"), so milestone M8. Its recommended option is naming the room in a call as under RCL-10, the safety-first choice that keeps convenience opt-in. This can wait. It is not a security hole in what ships before M8: the interim narrows recall and adds no path to the model. The edits add a one-line open-question note to the Personal room entry, the interim and the open question to ADM-06, the addition to OQ-45, and one scenario step. 05b (LANE-01) is left alone because of its budget. Adding to OQ-45 instead of a new row avoids numbering clashes with other themes in this round, and the OQ file's summary range (OQ-01..48) is unchanged. Verified together with R6R-1 and R6R-3: `mdsmith check .` passes once `mdsmith fix` re-pads OQ-45 and ADM-06, and the Go gates pass.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "  an act recorded here for it, by a principal with no member seat in it, rests\n  on OQ-41.\n",
+    "new": "  an act recorded here for it, by a principal with no member seat in it, rests\n  on OQ-41. Unlike a node clone, a backup restore of a copy another node made\n  does not share that node's personal room: this node's runs get no seat in it\n  from their first event, and how their recall may reach it is open (OQ-45).\n"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "or only the `run` scope reaches it.",
+    "new": "or only the `run` scope reaches it. Also open, with it: the personal room of another of the principal's nodes that this node holds, such as one a backup restore of a copy that node made reinstates (ADM-06) or, once peers sync, one PEER-02 serves, in which no run of this node has a seat from its first event and which, not being foreign, no call may name. Until this closes, a backup restore shares no such room and no call names it. Options: a call may name it, as under RCL-10, enveloped, logged, every item untrusted and the run tainted (SEC-13) (recommended); a backup restore of a copy another node made shares that node's personal room as a node clone does (REC-24), every run of this node having a seat in it from its first event, so the `room` and `rooms` scopes reach it; or no call reaches it."
+   },
+   {
+    "file": "docs/srs/05a-administration-requirements.md",
+    "old": "start a new seat and writer for every local writer the copy contains, audited,",
+    "new": "start a new seat and writer for every local writer the copy contains, audited, give no run of this node a seat from its first event in the personal room of a copy another node made (LANE-01; open: OQ-45),"
+   },
+   {
+    "file": "features/administration.feature",
+    "old": "    And that quarantine stays in force on the node until a release there\n",
+    "new": "    And that quarantine stays in force on the node until a release there\n    And a backup another node of the principal made, restored the same way, gives no run of this node a seat from its first event in that node's personal room\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "a backup restore of a copy another node made does not share that node's personal room: this node's runs get no seat in it from their first event, and how their recall may reach it is open (OQ-45)"
+  }
+ },
+ {
+  "id": "R6R-2",
+  "real": true,
+  "why": "The defect is real. The model's Node entry (places.md) says the events from before a node identity change \"are another node's: they count as received\", and that the events a backup restore reinstates \"count as received in the same way\". It carries over only one kind of principal act: \"every quarantine in force in the home at the change stays in force until a release there\", and the same for the copy. REC-24 and ADM-06 say the same and no more. Nothing in M1–M5 text says whether any other principal act among those events keeps its effect. The live case is a configuration acceptance. ADM-04 (M1) applies a change of deployment mode, a retention policy, looser redaction, flags off or a configuration pin only \"after the widening principal act accepting it records its digest\". It never says that act must be one this node recorded, and the configuration file travels with the home. So a CI node cloned from an image whose builder accepted `node.deployment_mode = 'interactive'` could keep that acceptance. Its pipeline `user` events would then be trusted (PRV-02), which is exactly concern B10, and they would flow into the trusted-only export (ADM-12, M5). The same goes for an acceptance a restored copy holds. OWN-17 does state the governing principle, but it is M8, and it speaks only of acts \"written on another of the principal's nodes\". It does not cover a restore onto the node that made the copy, which ADM-06 counts as received \"even on the node that made the copy\". The cut half is open as well, but in M1–M5 its only live case is the quarantine, which is already carried over. A withdrawn risk acceptance and capture turned back on only undo widening acts that lapse too. Rule level tightening (OWN-10), revocations (SEC-27, PRV-10, PEER-05), unstamps (LANE-32) and trust-grant revocations (OWN-29) all ship in M7 or later. A purge recorded before the change has no effect to lose, because its content is already gone. The scope note's rule applies: the finding concerns REC-24 (M1) and ADM-06 (M3), so its fix may reach later text.",
+  "settled_by": "Partly. I8: \"Content another principal wrote, or another node wrote other than this principal's acts signed by a device key it certified and its posts and pins written from a device seat such a key certified, is kept as theirs: attributed to its seat key, and untrusted unless this principal's own stamp or trust grant covers it. On its own it never makes this principal's agents trust it, nor extends their recall.\" REC-24: \"Every event recorded before the change MUST then count on the node as another node's, received and not recorded there (PRV-02, I8)\". OWN-17 (M8): \"A principal act written on another of the principal's nodes or devices MUST take effect here only under PRV-10\". PRV-04: \"`interactive` MUST be an explicit opt-in in the principal's configuration.\" Stakeholder ruling DM-DE (round-6 verify R6-2): \"until M7, the copy's device-seat pins, principal acts and `user` events are untrusted, so the principal must make its pins again after a restore.\" Together these settle that a widening act among received events must not widen anything. But OWN-17 is M8 and does not cover a same-node restore, and no M1–M5 requirement or model entry carries the rule. Nothing settles the cut and neutral acts beyond quarantines (REC-24, ADM-06, DM-AH, DM-DD).",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "A: widening acts lapse; cut and neutral acts keep their effect, as the quarantines do (recommended)",
+    "effect": "A configuration acceptance, a retention-policy change, a risk acceptance and any other widening act recorded before the change, or held in a restored copy, takes no effect until the principal takes it again on the node. A CI clone therefore runs `automation`, with flags on and no configuration pins, until a local `cairn configuration accept` or managed policy (SEC-22) sets otherwise. Cut and neutral acts in force at the change keep their effect, so a later rule level tightening or revocation never lapses, and acknowledged counters stay acknowledged on runner clones. In M1–M5 the only change from today is the configuration-acceptance case. Whether a signed act may take effect once PRV-10 ships goes to OQ-48 (M7).",
+    "invariant_change": false
+   },
+   {
+    "label": "B: every principal act but the quarantines lapses (the literal reading of OWN-17 before PRV-10)",
+    "effect": "Just as safe in M1–M5, and simpler. From M7 on, though, a rule level tightening or a revocation recorded before a clone or held in a copy would lapse, the unsafe side. Acknowledged counters would also come back on every runner clone and fail `cairn doctor` there.",
+    "invariant_change": false
+   },
+   {
+    "label": "C: every principal act among received events keeps its effect",
+    "effect": "A cloned CI image keeps `interactive` mode, so pipeline input becomes trusted `user` events, and an altered copy can plant an acceptance (OQ-48). That breaks I8's \"never makes this principal's agents trust it\", so it is not open to choose.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Tighten now with option A. It cannot wait: REC-24 and ADM-04 ship in M1 and backup restore in M3, so without the rule an M1 implementer could carry a configuration acceptance onto a cloned CI node and trust its pipeline `user` events (I2, I8, concern B10). No invariant wording changes. The M7 relaxation, whether a widening act a device key signed takes effect once PRV-10 ships, is deferred as an \"Also open, before M7\" addition to OQ-48. Its recommendation there is that a sealed act takes effect as OWN-17 says, except a configuration acceptance, which takes effect only on the node that recorded it. The edits change the model's Node entry, REC-24, ADM-06 and OQ-48, and add two steps each to the pending REC-24 and ADM-06 scenarios. All three SRS edits lengthen a table cell, so run `mdsmith fix` afterwards to re-pad the tables (MDS025). I validated everything on a scratch copy: after `mdsmith fix`, `mdsmith check .` is clean (318 files), and the internal/scenario, internal/srs, internal/ledger and cmd/cairn tests pass. Budgets: places.md grows to 115 lines and about 1750 tokens. docs/srs/05-functional-requirements.md rises to about 7960 of its 8000 tokens, leaving about 40 for any further REC-24 text. Note: one validation command ran my apply script against /home/user/cairn instead of the scratch copy. I reverted all six files by exact reverse replacement, the diff had contained only these edits, and `git status` in the repository is clean.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "  seals verify keeps its events as recorded on this node is open (OQ-48).",
+    "new": "  seals verify keeps its events as recorded on this node is open (OQ-48). Of\n  the other principal acts among events so received, each cut or neutral one\n  in force at the change or in the copy keeps its effect until undone there,\n  and no widening one takes effect on the node, a configuration acceptance\n  included, until its principal takes it there again (I8); whether one a\n  device key signed takes effect once PRV-10 ships is open too (OQ-48)."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "not as a quarantine request from another node (PEER-11).",
+    "new": "not as a quarantine request from another node (PEER-11). Of the other principal acts recorded before the change, each cut or neutral one in force at the change MUST keep its effect likewise until undone there, and no widening one, a configuration acceptance (ADM-04) included, MAY take effect on the node until its principal takes it there again (open: OQ-48)."
+   },
+   {
+    "file": "docs/srs/05a-administration-requirements.md",
+    "old": "every quarantine in force in the copy (SEC-12, I5), never append",
+    "new": "every quarantine in force in the copy (SEC-12, I5), keep likewise, until undone there, the effect of every other cut or neutral principal act in force in the copy and give no other widening one in it any effect, a configuration acceptance (ADM-04) included, until its principal takes it there again (open: OQ-48), never append"
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "or keep every reinstated event received.",
+    "new": "or keep every reinstated event received. Also open, before M7: whether a widening principal act among the events a node identity change (REC-24) or a backup restore makes received, signed by a device key its principal certified, takes effect on the node as one from another of the principal's nodes does (OWN-17), a configuration acceptance included. Options: one a verified seal covers takes effect as OWN-17 says, but a configuration acceptance only on the node that recorded it (recommended); or none takes effect until its principal takes it there again. Until this closes, none does, and each cut or neutral act in force there keeps its effect (REC-24, ADM-06)."
+   },
+   {
+    "file": "features/record.feature",
+    "old": "    And a quarantine in force in the home\n    And <change>",
+    "new": "    And a quarantine in force in the home\n    And a configuration setting \"node.deployment_mode\" to \"interactive\", accepted by \"cairn configuration accept\"\n    And <change>"
+   },
+   {
+    "file": "features/record.feature",
+    "old": "    And that quarantine stays in force on the node until a release there\n    And an audit entry records the node identity change",
+    "new": "    And that quarantine stays in force on the node until a release there\n    And that configuration acceptance takes no effect on the node: the deployment mode stays \"automation\" until the person accepts the configuration there\n    And an audit entry records the node identity change"
+   },
+   {
+    "file": "features/administration.feature",
+    "old": "    And a quarantine in force in the home\n    And a backup taken by \"cairn backup create\"",
+    "new": "    And a quarantine in force in the home\n    And a configuration setting \"node.deployment_mode\" to \"interactive\", accepted by \"cairn configuration accept\"\n    And a backup taken by \"cairn backup create\""
+   },
+   {
+    "file": "features/administration.feature",
+    "old": "    And that quarantine stays in force on the node until a release there\n    And every event and payload outside run \"run-a\"",
+    "new": "    And that quarantine stays in force on the node until a release there\n    And the copy's configuration acceptance takes no effect on the node: the deployment mode stays \"automation\" until the person accepts the configuration there\n    And every event and payload outside run \"run-a\""
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "no widening one takes effect on the node, a configuration acceptance included, until its principal takes it there again"
+  }
+ },
+ {
+  "id": "R6R-5",
+  "real": true,
+  "why": "The defect is real, and it ships before M7. The model's Room view entry says only that the CLI verbs show the record: \"`cairn event search` and `expand`, `cairn landmark list`, `cairn pin list` and `cairn audit` show the principal its agents' runs, events and landmarks, its pins and pin candidates, and the audit log (§9.5)\". It gives no rule for how they write text to a terminal. Agent text reaches those verbs in M2: PIN-02 (P0) says \"Text `pin_candidate_propose` proposes MUST be stored as a pin candidate with provenance `assistant`\". PIN-05 (M5) confirms a candidate \"only after that principal is shown its exact text, pin type and priority\". The confirmation turns the candidate into a pin the principal's device seat authors, which restores as trusted text. If raw ESC/CSI/OSC sequences, a carriage return, or bidirectional, zero-width or tag characters reach the terminal, they can hide, overwrite or reorder that text. The principal then confirms bytes it never saw, and they restore verbatim (I2, I3). Answerback sequences can also type into the controlling terminal, which OWN-12 trusts for widening acts. The rules that exist do not cover this. RCL-04 covers only \"a CLI verb's output that is not a terminal\". SEC-06 carries recalled content as JSON strings, and JSON escapes only U+0000-U+001F, so C1 controls and bidirectional, zero-width and tag characters pass through, and a human rendering decodes even the escaped ones. VIEW-07 (\"Zero-width, bidirectional and tag characters and HTML comments MUST render as visible placeholders with a count\") and SEC-21 (\"The room view MUST render record content as inert text\") are M7 and do not cover C0/C1 controls at a terminal. Threat T16 lists only those M7 rows as controls (\"SEC-21, VIEW-07\"). PRV-07 only flags such Unicode. The trust half of the finding is partly settled already. §9.5 gives search and expand \"the envelope and limits of `event_search` and `event_expand`\", and §9.2's `event_search` returns \"Envelope of hits: `address`, run, provenance, trust, flags, kind, preview, score\". What is missing is any rule that the CLI shows an agent's pin candidate with its provenance when the candidate is listed or confirmed. The ledger's closing texts for DM-I, DM-DF and DM-BJ stay intact: every quote of theirs is still a substring after these edits, which I checked by applying the edits to scratch copies.",
+  "settled_by": "No rule settles the escaping. For search and expand, provenance and trust are already settled by §9.5 (\"The principal's search and expand, with the envelope and limits of `event_search` and `event_expand`\") and §9.2 (`event_search` returns \"Envelope of hits: `address`, run, provenance, trust, flags, kind, preview, score\"). The nearest rendering rules, VIEW-07, VIEW-14 and SEC-21, are M7.",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "A: Tighten now. Extend SEC-06 (P0, M1) to cover terminal output from the CLI and the TUI, add SEC-06 as a T16 control, and have PIN-02 and PIN-05 show an agent's candidate as untrusted `assistant` text wherever it is listed or confirmed. Update the model and the three scenarios.",
+    "effect": "Closes the hole from M1 on. No text Cairn did not ship can rewrite what the principal reads or confirms at a terminal, and the principal sees that an agent's candidate is untrusted before it becomes a trusted pin. Exactness is kept, because each placeholder names its code point. Also covers C0/C1 controls in the M7 TUI, which VIEW-07 misses, and is compatible with VIEW-07's placeholders with a count.",
+    "invariant_change": false
+   },
+   {
+    "label": "B: Same rule as a new SEC row (P0, M1) with its own scenario, plus entries in §12.2's M1 row and in the appendices",
+    "effect": "Same protection, but many more edits and a new id.",
+    "invariant_change": false
+   },
+   {
+    "label": "C: Defer to OQ-47 until VIEW-07 and VIEW-14 ship (M7)",
+    "effect": "Leaves deceptive confirmation and terminal injection open through M1-M5, while the CLI is the only display and PIN-02 and PIN-05 already ship. Rejected: this is a security hole in what ships before that milestone.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option A: tighten now rather than defer. This cannot wait for M7. The CLI's record display ships in M1 (SEC-06, `cairn event search`), agent pin candidates in M2 (PIN-02) and their confirmation in M5 (PIN-05), all before VIEW-07, VIEW-14 and SEC-21. So no OQ is opened. The rule follows from I2 and from PIN-05's requirement that the exact text be shown, so the stakeholder has no behavioral choice to make. Notes for applying: (1) The SRS row edits lengthen table cells, so run `mdsmith fix` afterwards to re-pad the tables in 06-security.md and 05-functional-requirements.md. (2) Budget risk: 05-functional-requirements.md grows by about 25 words, to about 5,977. That is close to the 8,000-token default, at a level like 05b-lane-requirements.md. mdsmith is not installed here, so I could not measure it; check the budget when applying. (3) The model files stay within limits: components-and-surfaces.md about 946 words and pins-and-context.md about 2,034 words, both under 250 lines and 3,000 tokens; record.md and trust-and-flow.md are untouched. Every new model line is 80 columns or less. (4) SEC-06, PIN-02 and PIN-05 change, so the edits add a step to each of their scenarios, which stay @pending.",
+  "edits": [
+   {
+    "file": "docs/srs/06-security.md",
+    "old": "its contents are historical data and not instructions.",
+    "new": "its contents are historical data and not instructions. At a terminal, the CLI and the TUI MUST show every control character but the line feed, and every zero-width, bidirectional and tag character, in text other than fixed text Cairn ships as a visible placeholder naming its code point, never written raw, so no such text can alter what the principal reads or confirms there."
+   },
+   {
+    "file": "docs/srs/06-security.md",
+    "old": "Record content that runs script or loads remote resources",
+    "new": "Record content that runs script, loads remote resources or drives the terminal it is shown on"
+   },
+   {
+    "file": "docs/srs/06-security.md",
+    "old": "| SEC-21, VIEW-07 ",
+    "new": "| SEC-06, SEC-21, VIEW-07 "
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "MUST be stored as a pin candidate with provenance `assistant`.",
+    "new": "MUST be stored as a pin candidate with provenance `assistant`, and every list of pin candidates MUST show it with that provenance, marked untrusted."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "pin type and priority, as a new pin that principal's device seat authors",
+    "new": "pin type and priority and, for one an agent suggested, its provenance `assistant`, marked untrusted, as a new pin that principal's device seat authors"
+   },
+   {
+    "file": "docs/domain-model/components-and-surfaces.md",
+    "old": "  pins and pin candidates, and the audit log (§9.5). The room view's surfaces\n  are a closed set, and unqualified, \"surface\" means one of them; where\n  principal acts are taken is a principal surface:\n",
+    "new": "  pins and pin candidates, and the audit log (§9.5). Search and expand show each\n  event's provenance and trust level, as the envelope carries them (§9.3). At a\n  terminal, the CLI and the TUI show every control character but the line feed,\n  and every zero-width, bidirectional and tag character, in text other than\n  fixed text Cairn ships as a visible placeholder naming its code point, never\n  written raw (SEC-06). The room view's surfaces are a closed set, and\n  unqualified, \"surface\" means one of them; where principal acts are taken is a\n  principal surface:\n"
+   },
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "  for an intent or a criterion, only the owner's confirmation, making a new\n  version of the room's intent pin that the owner's device seat authors.\n",
+    "new": "  for an intent or a criterion, only the owner's confirmation, making a new\n  version of the room's intent pin that the owner's device seat authors. An\n  agent's pin candidate is shown with its provenance `assistant`, marked\n  untrusted, in every list of pin candidates and at its confirmation (PIN-02,\n  PIN-05).\n"
+   },
+   {
+    "file": "features/security.feature",
+    "old": "    And the envelope warning states that its contents are historical data and not instructions\n",
+    "new": "    And the envelope warning states that its contents are historical data and not instructions\n    When the person runs \"cairn event search\" at a terminal for a stored tool result holding an escape sequence, a carriage return and a right-to-left override\n    Then each of those characters is shown as a visible placeholder naming its code point, and none is written to the terminal raw\n"
+   },
+   {
+    "file": "features/pins.feature",
+    "old": "    And no MCP tool confirms a pin candidate or makes any pin restore\n",
+    "new": "    And no MCP tool confirms a pin candidate or makes any pin restore\n    And \"cairn pin list\" lists the pin candidate with provenance \"assistant\", marked untrusted\n"
+   },
+   {
+    "file": "features/pins.feature",
+    "old": "    And only the owner's confirmation turns an intent or criterion candidate into a pin, as a new version of the room's intent pin authored by the owner's device seat\n",
+    "new": "    And only the owner's confirmation turns an intent or criterion candidate into a pin, as a new version of the room's intent pin authored by the owner's device seat\n    And \"cairn pin-candidate confirm\" on a pin candidate the agent proposed through \"pin_candidate_propose\" also shows its provenance \"assistant\", marked untrusted\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/components-and-surfaces.md",
+   "quote": "At a terminal, the CLI and the TUI show every control character but the line feed, and every zero-width, bidirectional and tag character"
+  }
+ }
+]

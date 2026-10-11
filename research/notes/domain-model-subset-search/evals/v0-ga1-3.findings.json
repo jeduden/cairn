@@ -1,0 +1,92 @@
+[
+ {
+  "type": "useless",
+  "quote": "**Presence hint**: An ephemeral sign that a seat is connected, or typing (a",
+  "problem": "The candidate has no live channel between nodes or principals: B0 opens no socket, the only B1 component is the launcher, and the publish component and bundles exchange stored record only, while a presence hint is never stored. A presence hint, a typing hint, a draft shown live and the two room settings that govern them (whether drafts show live, whether typing shows) can be neither created for nor delivered to another seat.",
+  "fix": "Drop presence hint, typing hint, draft and the two room settings, or name the component and boundary that carries them.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "node only as a quarantine request that node's principal applies.",
+  "problem": "I5's only cross-node path depends on a quarantine request that the candidate never defines: it is not among the qualified requests (which says 'request' never stands alone), and no principal act that sends or applies one appears in the cut, neutral or widening classes (only 'apply a purge request' does), so who may send it and how it is classed are open.",
+  "fix": "Add 'quarantine request' to the qualified requests and class its sending and its application in the principal acts; applying one that removes a pin or landmark from a restore block is widening.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "undefined",
+  "quote": "to that seat's own writer (SEC-27). A tombstone, an erasure request a",
+  "problem": "'Erasure request a retention policy sends' is an event kind used in three places and defined nowhere: no sender, recipient or effect is given. I1 allows removal only by the node's principal's purge or a retention policy that principal or managed policy sets, so a receiving node acting on another node's request on its own authority would be a loss path outside I1's exceptions.",
+  "fix": "Define erasure request (who sends it to whom) and state that a receiving node erases only under its own principal's or managed policy's retention policy or when its principal applies it.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "Either names the writer's last accepted seq.",
+  "problem": "'Either' has no antecedent: the definition gives one way to retire a writer ('by a principal act') and then speaks of two. It also does not say whose principal act retires a writer (the seat's principal or any principal of the node).",
+  "fix": "Write: 'Retire a writer: mark a writer retired by its seat's principal's act, naming the writer's last accepted seq.'",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "contradiction",
+  "quote": "boundaries B1 to B3 and the launcher, forbid risk acceptance and certify",
+  "problem": "Boundary and I4 define only B0, B1 and B3, and I4 says managed policy can disable B1 and B3, but this sentence (and the core's 'each B1 to B3 component's own entry point') names a range that includes a boundary B2 that does not exist.",
+  "fix": "Say 'boundaries B1 and B3' here and 'each B1 or B3 component's own entry point' in the Core component.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "**Publish component (B3):** read-only publishing and the segment exchange of",
+  "problem": "I4 says a B3 component is off until turned on, and the core rule says each B1 to B3 component runs only while the act turning it on stands, but only the launcher and the bridge component name that act. The cut list has 'turn off the publish component' with no matching turn-on act, so when publishing and the git carrier's exchange may run is open.",
+  "fix": "State that the publish component runs while a publish or an enabled git carrier stands, naming the widening act, as is done for the bridge component.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "**Working view**: Whatever is currently in the model's context window. Never",
+  "problem": "No other definition, relation or surface uses 'working view'; the Replay tab's context lens shows what the context window contained at an event, built from the record, which is a different thing.",
+  "fix": "Remove the concept, or state which surface or rule reads it.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "Acts with no member seat: open (OQ-41).",
+  "problem": "The room merge is the one rule deriving all room state (I10), yet it leaves open whether an act by a principal with no member seat counts. The candidate also promises such acts, for example a stamper unstamping after the owner left, so two implementers derive different room states and restore blocks.",
+  "fix": "State the rule in the merge (for example, such an act counts only if it is a cut act) in place of leaving it open.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "**Pin version**: One immutable text of a pin; each edit adds one, unstamped.",
+  "problem": "A pin can have several versions that qualify for one agent at once (a stamped older version and a newer version restoring through the author's device seat or a trust grant), but only the intent has a rule for which version restores (the newest). Two implementers would restore all of them, or the newest only, giving duplicated or conflicting constraints in one restore block.",
+  "fix": "Add: 'At most one version of a pin restores to a given agent: the newest version that qualifies for that agent's principal.'",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "contradiction",
+  "quote": "revoke a seat key or a service account's certificate, turn capture on, and",
+  "problem": "The candidate classes revoking a device as widening because it 'can drop pins and stop acts arriving', and any act removing a pin from a restore block as widening whatever its verb, with only unstamp and trust-grant revocation excepted. Revoking a seat key does the same to that seat's pins and acts, yet is listed as cut.",
+  "fix": "Class revoking a seat key as widening, or add it to the stated exceptions with the reason it drops no pin.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

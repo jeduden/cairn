@@ -28,7 +28,7 @@ Spike S2 chose `github.com/ncruces/go-sqlite3`
 four things for M1:
 
 - Task 1 adds the module to `go.mod` and flips
-  [ADR-2609302341](../docs/adr/ADR-2609302341-sqlite-driver.md) to
+  ADR-2609302341 to
   `accepted` in the same change.
 - That change also allow-lists `net/url` and `net/netip`, the
   driver's URI parsers, in the SEC-01 import test. FTS5 is registered

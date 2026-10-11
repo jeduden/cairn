@@ -1,0 +1,17 @@
+[package]
+name = "adr"
+version = "0.0.0"
+description = "Reads the architecture decision records under docs/adr (ENG-26), and the Module tables ENG-18 checks"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+srs.workspace = true
+
+[dev-dependencies]
+testkit.workspace = true
+
+[lints]
+workspace = true

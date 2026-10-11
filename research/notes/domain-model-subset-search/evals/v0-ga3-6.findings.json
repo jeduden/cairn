@@ -1,0 +1,47 @@
+[
+ {
+  "type": "gap",
+  "quote": "and writer live under I8 rests on OQ-39.",
+  "problem": "A paired phone is a device with no home that holds its own device key and seals its own writer, yet I8 binds all local state to one principal's home. The candidate leaves open where the phone's keys live and how they are protected, so two implementers will build different custody and I8 is not upheld for this concept.",
+  "fix": "State the rule: the phone's keys live only in the phone's platform key store, its writer is held in the paired node's home, and the phone keeps no other Cairn state.",
+  "severity": "needs-fix",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "Acts with no member seat: open (OQ-41).",
+  "problem": "The room merge states no rule for acts recorded by a principal with no member seat in the room, although room state must be a deterministic function of the logs (I10). Two nodes could derive different room state from the same logs.",
+  "fix": "Say that the room merge does not count such an act and the room shows it only by address, as it shows a cross-room post.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "gap",
+  "quote": "permission grant, reject a foreign room, decline a join request, tighten a",
+  "problem": "Rejecting a foreign room is classed as a cut principal act, but no entry says what it does (stop recall, quarantine its writers, stop holding it, drop its pins from restore blocks). Its effect is unspecified, and whether it removes a pin from a restore block decides if it is cut or widening.",
+  "fix": "Define the act in the Foreign room entry, for example: rejecting a foreign room quarantines its writers on this node and removes nothing from any restore block.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "security",
+  "quote": "posts and pins written from device seats a device key of that principal",
+  "problem": "Pins and posts of the principal's own agents are trusted only within the signing device key's device scope, but a trust grant covers the grantee's pins and posts without that limit. A narrowly scoped or compromised device of the grantee could then push restoring pins to the grantor's agents that the grantee's own scope would not allow.",
+  "fix": "Add 'within that key's device scope' after 'certified' in the Trust grant entry, and the same limit in I2's trust-grant clause.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ },
+ {
+  "type": "useless",
+  "quote": "Whatever is currently in the model's context window. Never",
+  "problem": "Working view is defined but nothing in the candidate creates, shows, records or acts on it. The context lens shows what the window held at a past event, which is a different thing.",
+  "fix": "Drop the entry, or tie it to a use, for example 'the context lens shows the working view as it stood at an event'.",
+  "severity": "minor",
+  "lens": "all",
+  "model": "sonnet"
+ }
+]

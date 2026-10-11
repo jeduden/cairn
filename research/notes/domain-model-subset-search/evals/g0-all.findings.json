@@ -1,0 +1,306 @@
+[
+ {
+  "type": "contradiction",
+  "quote": "rooms the agent has a seat in and the cross-room posts they show, never to a",
+  "problem": "Recall defaults to the agent's current run, whose history spans all its seats' writers, and the recall hint says the recall tools reach the full history. Yet this limit shuts out a room the run left or was kicked from while its principal keeps another seat there: the room is not foreign, so the call cannot name it, and the run's own events in it cannot be recalled.",
+  "fix": "Append: 'the `run` scope always reaches every writer of the run's own seats, whatever their membership now.'",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "contradiction",
+  "quote": "token, a seat key or a service account's certificate, turn capture on, and",
+  "problem": "Revoking a seat key is classed as cut. But revoking a device seat's key stops that seat's acts arriving and can drop its pins, which are the reasons the candidate gives for keeping device and peer revocation widening, and it says any act that removes a pin from a restore block is widening whatever verb carries it.",
+  "fix": "Keep only a run seat's key under cut, and add 'revoke a device seat's key' to the widening list beside revoking a device.",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "gap",
+  "quote": "device seats, is a viewer; a run's personal-room seat, or its seat in a room",
+  "problem": "No rule gives a role to the run seats of the owner's own agents when they join, rather than create, the owner's room. No invite covers the owner, and each run has a new seat that inherits nothing, so these seats are viewers with no work. Their events then never route to the room unless the owner assigns a role to every new run seat.",
+  "fix": "Add: 'a run seat of the owner's agent that joins at its principal's ask or acceptance is a contributor.'",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "gap",
+  "quote": "ingest starts, lives only in the memory of its harness session's MCP server,",
+  "problem": "If that MCP server exits while the run goes on (a crash, or a restart on harness resume), the run-seat key is lost. A rotation needs the old key, and the only triggers named for minting a new seat key are a node identity change, a node clone and a backup restore. Nothing says whether the run gets a new seat that must rejoin, or its writer stays unsealed.",
+  "fix": "Add to Seat key: 'a run-seat key lost with its MCP server is minted anew, starting a new seat and writer that names the old one, which rejoins as Seat key says.'",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "security",
+  "quote": "An integer the pin's author sets with it, lower first, the",
+  "problem": "Priority belongs to the pin. It is neither shown at stamping (only text, author and key fingerprint are) nor covered by the stamp, which covers one pin version. A run seat or another untrusted author can therefore set or later change a stamped pin's priority and push the principal's own qualifying pins out of the pin budget.",
+  "fix": "'An integer each pin version carries, shown when it is stamped and covered by the stamp; an edit's new priority applies only to the new, unstamped version.'",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "security",
+  "quote": "detected it), a widening act, makes it a new pin its device seat authors; for",
+  "problem": "Confirming a pin candidate turns untrusted text (an `assistant` event, or a `user` event in automation) into a trusted device-seat pin that restores. A stamp happens 'after being shown its exact text', and an endorsement sends a post 'exactly as the principal confirmed it', but nothing requires a confirmation to show the exact text.",
+  "fix": "Insert 'after the principal is shown its exact text, pin type and priority' after 'a widening act'.",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "gap",
+  "quote": "content trusted (PRV-02). Exchanging the sealed ranges each may receive is",
+  "problem": "The candidate never says which sealed ranges each peer may receive, and the personal room 'stays private'. Yet acts on no room land in one node's personal room and must reach the principal's other nodes: an everywhere trust grant, a delegation grant, and the focus set that 'every device shows'. Other rooms also show acts recorded there by address to their holders.",
+  "fix": "Define sync: 'a room's sealed ranges go to the nodes of the room's principals as its visibility allows; a personal room's go only to its principal's own peers; another room's holders pull only the personal-room events it shows by address.'",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "security",
+  "quote": "the browser room view under SEC-20, the CLI or TUI at a terminal, or a paired",
+  "problem": "The CLI at a terminal is a principal surface. The only line drawn between it and the agent is that an agent's read-only CLI verb has output that is not a terminal, which the agent controls. Nothing classes a non-read-only verb the agent runs, or says how the CLI authenticates a person, so an agent could stamp, record a trust grant or loosen a rule level for itself.",
+  "fix": "'the CLI or TUI at a terminal no run started; a CLI verb a run's process invokes is the agent's own tool call and is refused when it would take a principal act.'",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "gap",
+  "quote": "Names a principal key and keeps every key that chains to it out,",
+  "problem": "Before PRV-10 ships, no seat key chains to a principal key. Bars, admission lists, the owner's standing admission and the rule against kicking, barring or muting the owner all match keys by their chain to a principal key, and the candidate never says how a seat's principal is found before then. Until then, a bar matches no seat and keeps no one out.",
+  "fix": "Add: 'before PRV-10 ships, a node's device key stands for its principal's key in bars, admission and the owner's protections.'",
+  "severity": "needs-fix",
+  "lens": "consistency"
+ },
+ {
+  "type": "contradiction",
+  "quote": "`cairn uninstall` records the widening act turning capture off before it",
+  "problem": "A token-key-only node 'signs no principal or expire acts', so on that node uninstall cannot record this widening act. It must either refuse (against I7's explicit uninstall) or remove the hooks with nothing recorded. The candidate gives no stand-in here, though it gives one for turning components on (PEER-01's environment variable).",
+  "fix": "Add: 'on a token-key-only node, a structural event naming the uninstall stands in for that act, as PEER-01's environment variable does.'",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "contradiction",
+  "quote": "A short-lived credential a principal mints to enroll a",
+  "problem": "Before PRV-10 ships, 'no expiry can be set but a grant's'. An access token minted then to enroll a device or peer therefore has no expiry, is not short-lived, and nothing but revocation ends it.",
+  "fix": "In Expire act, list access tokens beside grants: 'before PRV-10 ships, an access token's expiry takes effect as a refused use at the node that minted it.'",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "contradiction",
+  "quote": "Withdraws every capability but read from one seat or from the whole",
+  "problem": "A whole-room mute withdraws capabilities from every seat, but Owner says no one may mute the owner or any key that chains to its principal key. The owner's seats also have no role that 'the roles the owner names' could spare, so implementers will differ on whether the owner and its run seats are muted.",
+  "fix": "'...or from the whole room, except the owner's seats and every key that chains to its principal key; a whole-room mute leaves...'",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "security",
+  "quote": "serves a browser on the principal's phone (OWN-16).",
+  "problem": "I4 keeps B1 on loopback and lists every way data leaves the machine: tool calls, the closed paths, and a B2 or B3 component. The phone-scoped room-view secret exists so that the B1 room-view component's room content reaches another device through the principal's tunnel, a route I4 does not list.",
+  "fix": "Serve a phone's browser only through the peer component (B2), or add the phone-scoped room view to I4's list of ways data leaves the machine.",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "gap",
+  "quote": "A pin the principal's configuration declares, authored",
+  "problem": "Configuration sits beside the record, but a qualifying pin needs a trusted creating event, and active pins must derive from writer logs (I10). The candidate never says when a configuration pin is recorded, or what is recorded when configuration changes or drops it.",
+  "fix": "Add: 'recorded as its device seat's pin act when the configuration declaring it is accepted; a later accepted configuration that changes or drops it records the edit or unpin.'",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "gap",
+  "quote": "run, tied to its parent's run by a parent link, with its own seats and",
+  "problem": "A subagent's run has its own seats, and a run's events reach a room only through a seat it joined at its principal's ask or acceptance. Nothing says a subagent's run joins its parent's rooms, so a subagent's edits on the parent's branch go to the personal room unless the principal accepts a join for each subagent.",
+  "fix": "Add: 'A subagent's run joins every room its parent's run has joined, under the parent's join and with the parent seat's role.'",
+  "severity": "minor",
+  "lens": "consistency"
+ },
+ {
+  "type": "security",
+  "quote": "the browser room view under SEC-20, the CLI or TUI at a terminal, or a paired",
+  "problem": "An agent's shell can run the CLI or TUI on a pseudo-terminal, and nothing else tells that call apart from the principal. A presence proof is defined but never required. So an agent steered by untrusted content can stamp, endorse, record a trust grant, allow, or acknowledge counters. It can also write device-seat posts and pins, which are trusted and reach grantors' agents. Its reads on a terminal skip the envelope, the recall event and the recall taint.",
+  "fix": "the CLI or TUI at a terminal outside every run's tool processes; a CLI or TUI call from inside a run is the agent's own tool call, never a principal act or a device seat's room act, and its reads are recall",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "A pin the principal's configuration declares, authored",
+  "problem": "A configuration pin is a device-seat pin, so it is trusted and restores. Yet only retention policies and the B1 components are said to wait for configuration acceptance. Any process of the OS user, an agent or a witness check included, can therefore add a restoring constraint by editing configuration. It can also switch node.deployment_mode to interactive, which makes pipeline input trusted user events.",
+  "fix": "Every configuration change takes effect only once its configuration is accepted (recording its digest), except one that only cuts; a configuration pin is added by that widening acceptance",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "gap",
+  "quote": "repository's `.cairn.toml`, its **repository configuration**, may only tighten",
+  "problem": "'Tighten' is never defined, and the candidate classes removing a pin from a restore block as widening. An untrusted repository's .cairn.toml could shrink the pin budget, omit restore blocks or declare pins and call it tightening, stripping or adding the principal's constraints.",
+  "fix": "may only tighten: make a change a cut act could make, never one that removes a pin from a restore block or declares a pin",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "sending seat's writer; the target room shows it, and its seats pull it by",
+  "problem": "Nothing requires the sending seat's principal to hold a member seat that may post in the target room. A kicked, barred or muted principal, or any non-member whose writer a node holds, can therefore place its post in that room and in its agents' recall scope. I8 says another principal's content never does that on its own.",
+  "fix": "the target room shows it only while the sending seat's principal has a member seat there that may post, and its seats pull it by",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "service accounts by listing their principal keys, each listing marking, as a",
+  "problem": "A listing is in neither the record nor the node's key set. On every other machine the listed account counts as never certified, which means a person, so a trust grant naming a relaying account passes with no refusal or warning. On its own machine, trust levels then depend on an input I10 does not allow.",
+  "fix": "record each listing and each removal as a structural event that joins the node's key set and travels with the account's seat certificates to every node holding them",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "principal's phone reaches the room view only as the browser room view, through",
+  "problem": "I4 lets data leave the machine only through a B2 or B3 component or the closed agent paths. This path sends room content off the machine from the B1 room-view component, whose phone-scoped secret exists for exactly that, through a tunnel no boundary covers.",
+  "fix": "a browser on the principal's phone reaches the room view only through the peer component (B2); drop the tunnel path and the phone-scoped room-view secret",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "128 random bits its create room act fixes, never chosen",
+  "problem": "Nothing refuses or settles a second create room act that names an existing room id. A principal the room admits, and who learns the id (a room trailer carries it), can sign one as a new seat's first act. No rule says which create fixes the owner, and the lower-commitment tiebreak is under the signer's control, so one implementation can hand over ownership.",
+  "fix": "128 random bits bound to the creating seat's certifying key; a create room act under any other key that names it is refused and counted (I6)",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "the exact commit, with network denied, by a node whose **git identity** (the",
+  "problem": "Only network is denied. A witness check runs code from a branch another principal's agent may have written, as the same OS user. That code can rewrite the home (configuration, record, keys) and the harness configuration, breaking I2 and I7 through code Cairn ran.",
+  "fix": "the exact commit, with network denied and no write access outside the fresh checkout, the home and harness configuration included, by a node whose",
+  "severity": "needs-fix",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "`harness_meta` events its hook handlers recorded, and the `user` events they",
+  "problem": "Trust rests on the recorder being the hook handlers, but `cairn hook` is a CLI entry point any process of the OS user can run, the agent's shell included. Forged hook input then records trusted user and harness_meta events, which feed trusted-only exports and the pin candidates Cairn detects.",
+  "fix": "`harness_meta` events its hook handlers recorded from hook input the harness itself delivered (a hook call from inside a run's tool process is refused and counted), and the `user` events they",
+  "severity": "minor",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "token-key-only nodes or room summaries; never in a foreign room; and a post it",
+  "problem": "Room summaries are excluded because the facilitator relays others' text. The same program's posts are not excluded, so a grant to the facilitator's service account (unless its certificate marks it as relaying) pushes its rewrites of untrusted room content into the grantor's agents.",
+  "fix": "token-key-only nodes, room summaries or the facilitator's posts; never in a foreign room; and a post it",
+  "severity": "minor",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "**room settings** (whether drafts show live, whether typing shows, the roles a",
+  "problem": "The owner's setting sends every member's unsent drafts off that member's node live, without the drafting principal's consent. Drafts are never stored and pass no review step, so redaction never applies to them.",
+  "fix": "**room settings** (whether drafts show live, each draft only from a seat whose own principal turned it on and redacted as a post is, whether typing shows, the roles a",
+  "severity": "minor",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "detected it), a widening act, makes it a new pin its device seat authors; for",
+  "problem": "Confirmation turns model-suggested or detected text into a trusted device-seat pin that restores. Unlike a stamp or an endorsement, nothing requires showing the principal the exact text first, so a truncated preview can carry an injected tail into restore blocks.",
+  "fix": "detected it), a widening act taken after being shown its exact text, makes it a new pin its device seat authors; for",
+  "severity": "minor",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "A run's mark after it recalls untrusted content, or",
+  "problem": "Taint flows only down to delegates. A subagent that recalled untrusted content returns it to its parent as subagent_result, outside recall, and the parent stays untainted. A run can therefore launder recall through a subagent and keep its looser rule levels.",
+  "fix": "A run's mark after it recalls untrusted content, or receives the subagent_result of a subagent that carries recall taint, or",
+  "severity": "minor",
+  "lens": "security"
+ },
+ {
+  "type": "security",
+  "quote": "the browser room view under SEC-20, the CLI or TUI at a terminal, or a paired",
+  "problem": "'At a terminal' is the only thing that makes the CLI a principal surface, and an agent's shell tool can start the CLI under a pseudo-terminal. That lets injected tool output drive the model to add a restoring constraint pin, a trust grant or a looser rule level as a trusted device-seat principal act. The index rule that an agent's tool call is never a principal act has no mechanism behind it, and the same terminal test decides whether a CLI read is enveloped recall.",
+  "fix": "the CLI or TUI at a terminal no run started (a CLI a run's tool call starts, with or without a terminal, is never a principal surface: its reads are recall and its writes are refused)",
+  "severity": "needs-fix",
+  "lens": "usefulness"
+ },
+ {
+  "type": "security",
+  "quote": "A pin the principal's configuration declares, authored",
+  "problem": "Nothing ties a configuration pin to the acceptance of its configuration. Text written into the principal's settings file, for example by an agent's file tool, would then become a trusted device-seat pin that restores verbatim, and implementers will disagree on when the pin event is recorded.",
+  "fix": "A pin the principal's configuration declares, added, edited or unpinned only when that configuration is accepted (ADM-04), that acceptance being the widening principal act, authored by its device seat on that node (PIN-01).",
+  "severity": "needs-fix",
+  "lens": "usefulness"
+ },
+ {
+  "type": "security",
+  "quote": "detected it), a widening act, makes it a new pin its device seat authors; for",
+  "problem": "A stamp shows the exact text, author and key fingerprint, and an endorsement sends exactly what was confirmed. Confirming a pin candidate has no such rule, yet it turns model-suggested or untrusted user text into a trusted pin, authored by the principal's device seat, that restores verbatim to every later run.",
+  "fix": "detected it), after being shown its exact text and its creating event's address, a widening act, makes it a new pin its device seat authors; for",
+  "severity": "needs-fix",
+  "lens": "usefulness"
+ },
+ {
+  "type": "gap",
+  "quote": "ingest starts, lives only in the memory of its harness session's MCP server,",
+  "problem": "A run's personal-room seat and writer exist from its first event, which the hook handlers record (often before the MCP server starts), but the writer id derives from a key that lives only in the MCP server's memory. Nothing says who mints that key then, or where a witnessed run's events go when no MCP server runs (harness managed settings can block it), so capture and recall by address (I1, I9) break or differ between implementations.",
+  "fix": "ingest starts, lives only in the memory of its harness session's MCP server once that server holds it; until then, or when none runs, the core mints and keeps it like a device seat's key and seals the writer,",
+  "severity": "needs-fix",
+  "lens": "usefulness"
+ },
+ {
+  "type": "gap",
+  "quote": "when its principal asks for the join or accepts it (LANE-23). That covers the",
+  "problem": "A token-key-only node signs no principal acts, and the candidate never says how its runs get seats in the rooms its access token names. An ephemeral run can therefore reach the room that holds its principal's constraints only through a remote ask or acceptance the candidate does not define, and its join request sits in that node's private personal room, which no other device is said to hold.",
+  "fix": "when its principal asks for the join or accepts it, or, on a token-key-only node, for a room its access token names, minting that token being the widening act (LANE-23). That covers the",
+  "severity": "needs-fix",
+  "lens": "usefulness"
+ },
+ {
+  "type": "gap",
+  "quote": "A signed statement about a node's record, made to be kept apart",
+  "problem": "No key is named for signing a receipt, and nothing in the candidate makes a head receipt (no act, command or moment). Two implementers would sign and issue receipts differently, and the tamper evidence they carry could not be checked the same way.",
+  "fix": "A statement about a node's record, signed by the node's device key (its token key on a token-key-only node) and made at each purge and on `cairn verify`, made to be kept apart",
+  "severity": "minor",
+  "lens": "usefulness"
+ },
+ {
+  "type": "useless",
+  "quote": "Whatever is currently in the model's context window. Never",
+  "problem": "No rule, surface or act in the candidate uses the working view. The Replay tab's context lens shows the same thing without naming it.",
+  "fix": "In Room page, write \"the Replay tab's context lens showing the working view at an event\".",
+  "severity": "minor",
+  "lens": "usefulness"
+ },
+ {
+  "type": "useless",
+  "quote": "The outside party whose commits a foreign room's",
+  "problem": "Nothing in the candidate reads the match with a binding statement: it grants no trust, gates no act and appears on no surface. Where the binding statement travels (bundle or commit) is also unstated, so the concept has no effect.",
+  "fix": "Append: \"; the room page shows the match beside the foreign room's commits, and it never makes anything trusted.\"",
+  "severity": "minor",
+  "lens": "usefulness"
+ },
+ {
+  "type": "useless",
+  "quote": "The principal's act accepting the residual risks a run",
+  "problem": "The candidate never says what a run without a risk acceptance may not do, or what withdrawing one stops. Accepting it, withdrawing it and managed policy forbidding it therefore change nothing in the model.",
+  "fix": "Append what it gates, e.g. \"; without one, the launcher starts no run whose sandbox state leaves residual risks open\".",
+  "severity": "minor",
+  "lens": "usefulness"
+ },
+ {
+  "type": "useless",
+  "quote": "A hardware-backed, user-verified proof of a person's",
+  "problem": "No act, surface or rule in the candidate requires a presence proof, so enrolling an authenticator changes nothing. Implementers would bind presence proofs to different widening acts, or to none.",
+  "fix": "bound to one widening act, which every widening act at a principal surface carries while an authenticator is enrolled (OWN-11)",
+  "severity": "minor",
+  "lens": "usefulness"
+ }
+]

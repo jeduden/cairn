@@ -1,0 +1,182 @@
+[
+ {
+  "type": "contradiction",
+  "quote": "any other seat belongs to another principal, kept as theirs and untrusted (I8).",
+  "problem": "On a node clone before lineage acceptance, the carried-over personal room's creating device seat was certified by the earlier node's device key, so under this rule it belongs to another principal. Owner then makes the room another principal's, and Member admits only seats 'belonging to the personal room's principal', so the clone's own run and device seats lose membership (and with it recall and restore). That contradicts Node ('the carried-over personal room stays its principal's') and Principal ('the principal of every agent whose runs its nodes record').",
+  "fix": "Keep ownership separate from trust: 'a node clone's carried-over seats belong to this node's principal but are read as another node's until its lineage acceptance; any other seat belongs to another principal, kept as theirs and untrusted (I8).'",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "An authenticated client where principal acts are taken:",
+  "problem": "Room view defines a principal surface as one of the room view's closed set of surfaces (Runs, Pins, Health, Setup) where principal acts are taken, and says that unqualified 'surface' means one of those. Here it is a client instead (the CLI or TUI at a terminal no run started). A principal act is 'marked with the principal surface it was taken at', so one implementer records a surface and another records a client.",
+  "fix": "Choose one meaning. For example, call the client a 'principal client' here and mark principal acts with it, or drop 'where principal acts are taken is a principal surface' from Room view.",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "A pin, edit or unpin room act never adds, changes or removes a restored pin",
+  "problem": "A device seat takes room acts at a principal surface, and its room-act pins are `operator`, so they are trusted. Pin qualifies any pin of a restoring type 'written from one of this node's own device seats' whose creating event is trusted, without requiring that event to be a principal act. So a device seat's signed `pin` room act of type `constraint` qualifies. Principal act also says a signed act is a room act, while Pin calls the same add a widening principal act.",
+  "fix": "Add to Pin: 'a qualifying pin's creating event and restoring version are principal acts; a room act that pins or edits a pin of a type that restores is refused and counted.'",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "or derived artifact from recall and restore blocks, on the node that records it, without deletion (I5).",
+  "problem": "A node clone carries over the earlier node's writers, including its quarantine and release acts (and its configuration acceptances), but another node recorded them. Nothing says whether they hold on the clone before or after its lineage acceptance. One implementer would put quarantined events and pins back into recall and restore blocks on the clone, while another keeps them out.",
+  "fix": "Add: 'On a node clone, carried-over quarantines hold from its start; the releases and configuration acceptances its predecessors recorded take effect once its lineage acceptance stands.'",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "device seat takes the earlier node's seats as predecessors only once a",
+  "problem": "Node makes every seat of the earlier node, run seats included, a predecessor of the clone's device seat. Seat key has a newly minted key name only 'the old one' as its predecessor, and revocation keeps only 'the revoked seat's own predecessor'. Which reading holds decides whether the earlier agents' writes fall under the predecessor exceptions of I2 and I8, and whether Pin's 'written from ... their predecessors ... restores to this node's agents' covers constraint pins an agent wrote.",
+  "fix": "'device seat takes the earlier node's device seat, and that seat's own predecessors, as its predecessors only once a ...'",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "the model's replies, and anything another node or principal produced, except what a predecessor",
+  "problem": "This parenthetical, and Origin's 'reads them as another node's but for what the predecessors ... wrote', exempt everything a predecessor wrote. The trusted-sources sentence admits only predecessors' `operator` and structural events, and only this node's hook handlers' `harness_meta` and `user` events. The earlier node's interactive `user` and `harness_meta` events on a clone are therefore both inside and outside the trusted sources.",
+  "fix": "'except the `operator` and structural events a predecessor of this node's own device seats, however far back, wrote', with the same narrowing in Origin.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "edited or unpinned only by the widening act accepting that configuration",
+  "problem": "Pin says a pin of a restoring type from a device seat is changed by a widening principal act and that 'every other pin is changed by room acts', and Owner lets device-seat room acts edit and unpin any pin its principal wrote from a device seat. Here a configuration pin changes only through configuration acceptance. Nothing says whether a direct principal act or a room act on a configuration pin is refused.",
+  "fix": "Add to Pin: 'except configuration pins, which change only through configuration acceptance; any other act on one is refused and counted.'",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "When concurrent acts conflict, the more restrictive act wins, then the lower",
+  "problem": "'More restrictive' is not defined for the conflicts this candidate can produce. Examples are an agent's edit of its own pin concurrent with its principal's neutral unpin of it, or an edit concurrent with an unpin of a restoring pin, both widening. Implementers can order these differently and derive different room state.",
+  "fix": "'the more restrictive act wins (unpin over edit over pin; a cut principal act over a widening one), then the lower commitment.'",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "edit and unpin its own pins, its **pin capability**, a device seat's own",
+  "problem": "When a run's key is lost with its MCP server or revoked, the run continues in a new run seat that names the old one. A predecessor link has no stated effect for run seats, and 'its own pins' gets a principal-wide meaning only for device seats. Whether the continuing run may still edit or unpin pins it wrote before the re-key is undefined.",
+  "fix": "Add: 'a run seat's own pins being those it or its predecessors in the same run wrote' (or state explicitly that they are not).",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "device seat takes the earlier node's seats as predecessors only once a",
+  "problem": "The rule does not limit predecessors to device seats, so once lineage is accepted on a node clone, the earlier node's run seats become predecessors too. Their agent-written `constraint` and `preference` pins then count as 'written from one of their predecessors' and restore as the principal's constraints. On the original node those pins never qualify, so this opens a path from model-written (possibly injected) text into restore blocks.",
+  "fix": "\"A node clone's device seat takes the earlier node's device seats as predecessors only once a widening principal act ...\", and say the same in Relations (\"whose device seats its device seats take as predecessors\").",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "the CLI or TUI at a terminal that no",
+  "problem": "The test applies to the terminal, and only a run's tool process is excluded. A process the harness itself starts, such as a hook command or an MCP server from untrusted repository harness settings, shares the person's terminal and is not 'from inside a run'. It therefore counts as a principal surface and can take widening acts, for example adding a constraint pin that then restores. That breaks I2.",
+  "fix": "\"the CLI or TUI in a terminal a person opened, from a process that neither the harness nor any run started, directly or through descendants (no hook, MCP server, status line or tool process)\"",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "its digest, except a change that only cuts; that acceptance adds, edits or",
+  "problem": "A cut-only change to the principal's configuration takes effect without acceptance, and that file can change outside any principal act (for example through an agent's file edit). Unlike repository configuration, it is not barred from removing a pin from a restore block. Shrinking the pin budget or restore block limit therefore drops constraints with no widening principal act, contrary to the rule that any removal from a restore block is widening.",
+  "fix": "\"... except a change that only cuts and removes no pin from a restore block; ...\" (and apply the same bar to managed policy's cut-only changes, or state that it is exempt).",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "belongs to this node's principal; any other seat belongs to another principal, kept as theirs and untrusted (I8).",
+  "problem": "Before lineage acceptance, this rule makes the carried-over personal room's creating device seat belong to 'another principal'. Since the owner is 'the principal whose seat created it', that principal owns the room. Node says the carried-over personal room 'stays its principal's'. Implementers will differ on whether the clone's device seats hold owner capabilities before acceptance.",
+  "fix": "Add to Owner: \"a carried-over personal room's owner is the node clone's principal from the clone's first start, whatever its lineage acceptance\" (or, if ownership should wait for acceptance, say so in Node).",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "origin (whether recorded on this node or ingested), recorder and writer, the deployment mode recorded with the event,",
+  "problem": "Trust is derived from fields an event carries about itself, never from seal coverage or integrity status. An event in an unsigned tail ('Events after the newest seal are unsigned') or in a refused segment, which anything that can write the store can append, is therefore shown on Runs as a trusted `user` or `harness_meta` event and misleads the person.",
+  "fix": "Add to Trust level: \"an event that no valid seal covers, or that lies in a refused segment, is untrusted\".",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "without the agent's recall: restore blocks and compaction guidance. No other write to an agent exists (I2),",
+  "problem": "The MCP server's tool names, descriptions, schemas and server instructions reach the model at every harness session start without a recall call. They are not among the closed paths, and no rule limits their content. Either I2 is broken by the MCP server existing, or nothing stops an implementer from putting record or pin text into them.",
+  "fix": "In Recall, add: \"each recall tool's name, description and schema, and the MCP server's instructions, are fixed text Cairn ships\" (and count them under the closed paths).",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "**Owner**: The one principal who owns a room: the principal whose",
+  "problem": "Before lineage acceptance on a node clone, the device seat that created the carried-over personal room was certified by the earlier node's device key. The Relations rule says that seat \"belongs to another principal\", so under Owner that other principal owns the room. Node says the room \"stays its principal's\". As a result the clone's device seat lacks the owner's room capabilities, and with no pin capability the clone's principal cannot add a constraint pin that restores until it accepts lineage.",
+  "fix": "Owner: \"the principal whose seat created it; a personal room carried over to a node clone is owned by the clone's principal from the clone's first start.\"",
+  "severity": "needs-fix",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "What stands where content is missing: a **quarantine marker** for a quarantined address.",
+  "problem": "I1 says each capture-off or pause exception is recorded and shown as a capture gap, but no event marks where in a run's writer the gap falls. seq is gap-free, the ingest position is not part of the record, and the capture-on act sits in the device seat's writer with no causal tie to the run. So neither Runs nor recall can show the gap, and the gap cannot be derived under I10. An agent recalling its history, or a person reading it, takes it for complete.",
+  "fix": "Add: \"a **capture-gap marker**, a structural event the hook handlers append to each affected run's writer when capture comes back on, before moving its ingest position\"; and list capture gaps among what Runs shows.",
+  "severity": "needs-fix",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "**Health:** counters, failures and store locations (I6).",
+  "problem": "The candidate defines integrity status and a refused segment as \"what a room or writer shows\", but the room view's closed set of surfaces (Runs, Pins, Health, Setup) leaves it out. A person therefore has no defined place to see whether the record of their agents' runs is intact.",
+  "fix": "\"**Health:** counters, failures, store locations and each room's and writer's integrity status (I6, VIEW-10).\"",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "off or pausing it is widening (OWN-11), and pausing turns it off until the",
+  "problem": "Pausing capture is defined to do exactly what turning it off does, ending only when the principal turns it on again. Yet I1, the widening class and Capture all name it as a separate act, so the model has two names for one act.",
+  "fix": "Drop \"pause\" from I1, the Widening class and Capture, or say \"pausing is turning capture off; the two words name one act\".",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "**Delegate**: Any agent that receives a delegation",
+  "problem": "In this candidate a delegation always goes to the delegating agent's subagent, and every subagent takes a delegated task. Delegate and Subagent therefore name the same set of agents. \"It keeps its own principal\" adds no rule, since a subagent always has its node's principal. This breaks the hub's rule that every concept has one name.",
+  "fix": "Remove Delegate and say \"In the subagent's run it is recorded with `assistant` provenance\" in Delegated task.",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ }
+]

@@ -1,0 +1,345 @@
+{
+ "round": 3,
+ "reviews": [
+  {
+   "lens": "consistency",
+   "findings": [
+    {
+     "type": "security",
+     "file": "docs/domain-model/places.md",
+     "quote": "trust grant's pins included, keeps restoring as it stood, in causal order,",
+     "problem": "Once a leave, kick or bar makes a room foreign, this rule freezes what restores until the principal itself acts. Other entries let someone else's act stop a pin: Trust grant and Service account say a grant covers nothing after a certificate revocation or a relaying listing, in any arrival order, and Acts says revoking a device can drop pins. So in a foreign room, pins from a revoked (possibly compromised) key or a relaying key either keep restoring or stop, depending on which rule an implementer follows.",
+     "fix": "End the sentence with: \"until that principal's own act changes it, a revocation of the author's key drops it, or the trust grant stops covering that key (Trust grant)\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "or stamps it, it restores only to its stampers' agents.",
+     "problem": "After a handover or succession, the new owner's stamp ends the restriction, so the intent again restores to the former owner's agents and to agents whose trust grant covers the former owner. That is one principal widening what reaches another principal's agents. It breaks Principal (\"Only an agent's own principal widens what reaches that agent\") and Stamp (a stamp restores \"to that principal's own agents only\").",
+     "fix": "Write \"until the new owner revises it, it restores only to its stampers' agents (a new owner's stamp makes it one of them).\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "content trusted (PRV-02). Exchanging the sealed ranges each may receive is",
+     "problem": "The model never says which sealed ranges a peer may receive. In particular it never says whether a private room reaches the principal's own other nodes, and every personal room is private. The hub routes each principal act that acts on no room (enrolling or revoking a device, a trust grant everywhere, a delegation grant) to the recording node's personal room. So whether a device revocation made on one node ever reaches the principal's other nodes, and stops them trusting that device, is undefined.",
+     "fix": "In Visibility, define private as: \"its sealed ranges go only to nodes of its owner\". Personal rooms then sync among the principal's own peers. Otherwise, name where acts that change the key set are recorded.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "changes any restore block: an author's own pin, edit and unpin act only on",
+     "problem": "A restore block also carries the count, room id and key fingerprint of restoring-type pins that do not qualify (PIN-10). So a run seat's pin or unpin room act on a constraint does change the restore block, which this sentence says never happens.",
+     "fix": "Change to \"never changes which pins or pin versions any restore block carries\".",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "(SEC-12). A quarantined pin version never restores and counts as absent when",
+     "problem": "Quarantine has a rule for choosing which pin version restores, but Purge has none. When the newest version of a restoring pin is purged, its text is replaced by a tombstone. The model does not say whether an older version then restores, the pin leaves the restore block, or it is named by id. I3 requires one of verbatim text or id and count.",
+     "fix": "Change to \"A quarantined or purged pin version never restores and counts as absent when PIN-10 chooses ...\".",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "The seat ingest starts takes over the role",
+     "problem": "The add is \"shared\", but the role is \"taken over\". That leaves open whether the run seat keeps its role, and whether later role assignments and mutes of the run seat apply to the ingest seat. If the run seat loses its role, a still-live witnessed run's events stop going to that room, because routing needs a seat with work.",
+     "fix": "Change to \"The seat ingest starts shares the role of the run seat it names, following every later role assignment of that seat\", and match it in Run seat and Seat key.",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "raises one for its author's principal and keeps restoring to every agent it",
+     "problem": "This names the author's principal's unpin as the only thing that stops a list-removed device-seat pin restoring, which fixes its audience at the moment of removal. Elsewhere, a grantor's trust-grant revocation (\"withdraws only the acting principal's own trust\"), a quarantine and a revocation of the author's key also stop a pin restoring. Implementers could freeze the audience or keep re-checking it.",
+     "fix": "Change to \"raises one for its author's principal; the list removal itself stops it restoring to no agent (LANE-26)\".",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "security",
+   "findings": [
+    {
+     "type": "security",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "certificates chain it to two principal keys chains to neither, and a chain",
+     "problem": "A barred principal holding a seat key can mint a principal key, certify a device key with it and countersign a second seat certificate from that device key. The key then chains to neither principal, so the bar stops covering it. A bar ends membership, not the add (Member), so the seat becomes a member again with its old role, a role-assigned moderator's included.",
+     "fix": "certificates chain it to two principal keys chains to neither, and a seat whose key so chains is a member of no room, and a chain",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "over its role, so a kick or leave of either seat ends that one add for both",
+     "problem": "Nothing ties the seat ingest starts to the key that certified the run seat it names, yet that seat shares the run seat's add, passes no admission check and takes over its role. Any node can certify a seat naming another principal's member run seat to gain membership without admission, or leave from it to end that run seat's add.",
+     "fix": "over its role, so a kick or leave of either seat ends that one add for both; only a seat certified by the key that certified the run seat it names is that seat, and any other seat naming a run seat shares no add",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/record.md",
+     "quote": "An event recording a worktree's commit, branch and",
+     "problem": "Provenance gives a class to every event kind the Event list names except the worktree checkpoint, the recall event, the canary event and the backup event. A worktree checkpoint carries an agent-written diff and a recall event carries the agent's query, so an implementer who classes them `structural` makes that text a trusted source on this node and puts it in trusted-only exports.",
+     "fix": "In Provenance add: \"a worktree checkpoint's diff is `file` and its commit and branch are structural fields; a recall event, a canary event and a backup event are `structural`, and a recall event holds the call's text only by commitment\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/record.md",
+     "quote": "The JSONL of the events trusted for the principal's",
+     "problem": "OWN-11 makes the free text of a cut or neutral principal act untrusted even when its event is trusted. But the trusted-only export takes whole trusted events, and Taint judges only per event. So a stated reason, which is untrusted text, reaches downstream memory systems marked trusted.",
+     "fix": "The JSONL of the events trusted for the principal's agents, without the free text of cut or neutral principal acts (OWN-11); and in Taint: \"untrusted when any event it derives from, or any free text of a cut or neutral principal act it carries, is untrusted\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/places.md",
+     "quote": "Exchanging the sealed ranges each may receive is",
+     "problem": "Nothing says which sealed ranges a peer may receive. Principal acts and cross-room posts can sit in a personal-room writer that other principals' seats pull by address, and no rule limits those pulls to the addresses a room shows. Another principal's node could then pull the rest of a private personal room, including unroomed agent activity.",
+     "fix": "Exchanging the sealed ranges each may receive (those of rooms whose visibility includes the peer's principal or that it holds as a blind peer, and from any other writer only the events a room it may receive shows by address) is",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "One of the ways I2 lists by which Cairn writes to an agent",
+     "problem": "Some tool calls are not recall: room act tools such as `room_join` or `room_post`, delegation tools, a CLI verb that acts. Their results and errors reach the model, but neither Closed path nor Recall says what they may carry. An implementer may echo a room title, another seat's pin text or a post without an envelope, outside I2's closed paths.",
+     "fix": "Add to Recall: \"The result of any other tool call, its errors included, carries only fixed text Cairn ships, ids, counts and sanitized structural fields, or enveloped content as recall does.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/record.md",
+     "quote": "or from what an export's, a publish's or an invite's review step sends,",
+     "problem": "When drafts show live, a draft goes to other principals' nodes over B2 before it is posted and is never stored, so no redaction applies. A secret pasted into a composer leaves the node unredacted, and the owner's room setting decides this, not the person drafting.",
+     "fix": "or from what an export's, a publish's or an invite's review step sends, or from a draft before it shows live,",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "that terminal, which the launcher hosts but never carries, so what the",
+     "problem": "Keystrokes in the terminal the launcher hosts become `user` events, trusted in interactive mode, but the model never says who may type there. If the launcher lets a person attach to a hosted run over its loopback endpoint, another run or another OS user could also attach and create trusted input. The launcher would then carry text the core did not build.",
+     "fix": "that terminal, which the launcher hosts but never carries and which only the terminal `cairn launch` runs in reaches, so what the",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "An integer the pin's author sets with it, lower first, the",
+     "problem": "The author sets the priority, and priority orders pins across rooms. A principal that a trust grant covers can give many pins low priorities and push the agent's own principal's pins out of the pin budget, so they appear only by id and count. Another principal then decides what restores verbatim.",
+     "fix": "In Pin priority, after \"each in that order\": \"the pins of the agent's principal and the versions it stamped before those only a trust grant qualifies, each in that order\".",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "Its expiry ends it by the expire act the minting",
+     "problem": "Only the minting node records the expire act. While that node is offline or lost, every other node keeps honouring the access token after its expiry, along with its token key's seat certificates and its invite link. The token is short-lived only on the minting node.",
+     "fix": "Its expiry ends it by the expire act the minting node, or any other node of its principal with a device key, records (and the same in Expire act)",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "repository configuration declares none (ADM-04).",
+     "problem": "Managed policy is the one settings layer that overrides the principal's settings, yet the model never says it declares no pin, or that a pin it declares waits for the principal's acceptance. Such a pin, authored as `operator` by the device seat, would restore without any principal act.",
+     "fix": "repository configuration and managed policy declare none (ADM-04).",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "principal's own device-seat pins and the versions it stamped stay trusted and",
+     "problem": "This sentence says only the principal's own device-seat pins and stamped versions stay trusted and keep restoring from a foreign room. The next sentence and Trust grant keep a trust grant's pins restoring there after a leave, kick or bar. Implementers will differ on whether granted pins still restore.",
+     "fix": "principal's own device-seat pins, the versions it stamped and the trust-grant pins a leave, kick or bar keeps stay trusted and",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "usefulness",
+   "findings": [
+    {
+     "type": "useless",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "run, of the same agent only where the harness gives a stable agent id.",
+     "problem": "When a harness resume starts a new harness session and the harness gives no stable agent id, the resumed conversation counts as a new agent whose only seat is in the personal room. Its restore block at that resume (INJ-02), and after its next compaction, leaves out every pin of the shared rooms the resumed run worked in, the intent included, and does not even count them as non-qualifying; recall cannot reach those rooms either. Cairn can tell which run it resumes, since it already carries that run's recall taint (SEC-13), so the constraint journey fails for no reason the model states.",
+     "fix": "run, of the same agent where the harness gives a stable agent id or, for a harness resume, where Cairn can tell the run it resumes (SEC-13).",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "**Purge**: Deletion of content, appending a **tombstone** naming the purged",
+     "problem": "The model never says what a restore block does when a purge (a principal act, a retention policy, or an applied erasure request) destroys the text of a qualifying pin's newest version or of its first version. Quarantine has an explicit rule (the version counts as absent), but purge has none. One implementer will fall back to an older version, possibly a superseded constraint; another will drop the pin, or restore a tombstone. I3's verbatim restore then differs between implementations.",
+     "fix": "Add: \"A purged pin version counts as absent when PIN-10 chooses which version of a pin restores, as a quarantined one does; a pin left with no version leaves the restore block, named by id and count.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "joins under it, run seats included, though a run seat an invite names",
+     "problem": "Before recording a principal act, a node joins a non-owner's device seat 'without admission' when that principal already has a member seat, such as its run's seat. The model does not say whether that seat takes the invite's role. If it does not, the seat is a viewer without pin capability, and an invited principal cannot record a verdict, confirm its agent's pin candidate or add a constraint pin there. Implementers will read the rule differently.",
+     "fix": "\"...and joins under it, or joins as its device seat without admission, run seats included, though a run seat an invite names...\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "A restore block's **room summary pointer** names the latest room",
+     "problem": "A restore block carries pins from several rooms, yet it names a single room summary pointer, 'the latest room summary, in causal order'. Causal order is partial across rooms, and across two facilitators' writers after a re-appointment, so 'latest' is undefined. Implementers will put different pointers in front of the agent.",
+     "fix": "\"A restore block's room summary pointer names, for each room whose pins it carries, that room's latest room summary in causal order, concurrent ones by the lower commitment, by its id.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "by its device seat on that node (PIN-01), which takes effect only once the",
+     "problem": "A configuration pin takes effect only after the principal's widening act accepts the configuration, but a token-key-only node signs no principal acts. The same blocks the launcher and the room view, which turn on through accepted configuration. The model gives an ephemeral node a stand-in only for turning on the peer component (PEER-01's environment variable). So it is undefined whether configuration pins can ever take effect on such a node, or who accepts its configuration.",
+     "fix": "Add: \"On a token-key-only node, the access token that certifies its seats names the configuration digest it accepts, standing in for the acceptance as PEER-01's variable does for the peer component\", or state that such a node's configuration pins never take effect.",
+     "severity": "minor"
+    }
+   ]
+  }
+ ],
+ "match": {
+  "matches": [
+   {
+    "lens": "consistency",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "Nearest is DM-AG (fixed), but its closing text (a leave, kick or bar drops no pin; the pins keep restoring until the principal's own act) is what the finding shows incomplete. PIN-10's freeze clause and Foreign room conflict with the unconditional stop rules in PRV-10 (key revoked) and OWN-29 (DM-AF/DM-BA relaying mark or revocation), which DM-AG's text never reconciled."
+   },
+   {
+    "lens": "consistency",
+    "index": 1,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "Not DM-K, DM-R or DM-S, which fix which version restores and the stamp rule before PRV-10. This is the handover clause at the end of the Intent entry: 'until the new owner revises or stamps it' lets the new owner's stamp lift the restriction and restore the old version to the former owner's agents. No ledger theme covers it, and round 2 rated the same point minor, so it never became a theme."
+   },
+   {
+    "lens": "consistency",
+    "index": 2,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "Not DM-AA (deferred, OQ-41), which is only how a revocation that acts on no room reaches another principal's node. This asks which sealed ranges a peer may receive at all, including the principal's own other nodes, and the Peer entry never says. Same sentence and same defect as security finding 4."
+   },
+   {
+    "lens": "security",
+    "index": 0,
+    "theme": "NEW-4",
+    "kind": "new",
+    "reason": "Nearest is DM-AU (fixed: a certificate counts only once the certified key countersigns it). That text is what the finding shows incomplete: a key can still countersign two certificates, and the 'chains to neither' rule then takes it out of every bar. Not DM-B (bars before PRV-10)."
+   },
+   {
+    "lens": "security",
+    "index": 1,
+    "theme": "NEW-5",
+    "kind": "new",
+    "reason": "Not DM-D (deferred, OQ-43), whose new run seat names the old one but inherits no add. The seat ingest starts shares the named run seat's add and takes its role, and nothing binds that seat to the key that certified the run seat it names. REC-19 and LANE-25 do not require it either."
+   },
+   {
+    "lens": "security",
+    "index": 2,
+    "theme": "NEW-6",
+    "kind": "new",
+    "reason": "Not DM-O, which classes a backup as no principal act and does not give any event a provenance. The Provenance entry gives no class to a worktree checkpoint, recall event, canary event or backup event, so a wrong class can make agent-written text a trusted source."
+   },
+   {
+    "lens": "security",
+    "index": 3,
+    "theme": "NEW-7",
+    "kind": "new",
+    "reason": "Not DM-AW, which is quarantine keeping content out of trusted-only exports. This is the free text of a cut or neutral principal act (OWN-11), untrusted inside a trusted event, that the export writes as trusted. Trust level says the free text is untrusted whatever the event's level, but Taint and the export judge only per event."
+   },
+   {
+    "lens": "security",
+    "index": 4,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "Same sentence and defect as consistency finding 2: the Peer entry never says which sealed ranges a peer may receive. This finding adds that a personal-room writer holding principal acts and cross-room posts can be pulled by address by another principal's node, so the definition must also limit pulls from any other writer."
+   },
+   {
+    "lens": "security",
+    "index": 5,
+    "theme": "NEW-8",
+    "kind": "new",
+    "reason": "No ledger theme covers tool results. DM-AR is recall taint flowing up from a subagent, and DM-AV is a delegate's taint. Closed path and Recall are silent on what the result or error of a non-recall tool call (room_join_request, room_post, delegation tools, a CLI verb that acts) may carry."
+   },
+   {
+    "lens": "usefulness",
+    "index": 0,
+    "theme": "NEW-9",
+    "kind": "new",
+    "reason": "Nearest is DM-E (fixed: no stable agent id means each run is its own agent). The finding shows that text leaves a harness resume that starts a new harness session without its rooms' pins. It also rests on DM-AK's fact, added after DM-E closed, that Cairn can derive the resumed run for recall taint (SEC-13). The two closing texts do not agree, so DM-E's text does not answer it. It does not re-argue a closed theme, but it does reopen a stakeholder decision."
+   },
+   {
+    "lens": "usefulness",
+    "index": 1,
+    "theme": "NEW-10",
+    "kind": "new",
+    "reason": "Nearest is DM-BB (fixed), but its closing text covers a quarantined pin version only (Quarantine entry and the PIN-10 sentence). Purge, whether by a principal act, a retention policy or an applied erasure request, has no equivalent rule when PIN-10 chooses which version restores."
+   }
+  ],
+  "new_themes": [
+   {
+    "id": "NEW-1",
+    "title": "The foreign-room freeze (a leave, kick or bar drops no pin; pins keep restoring as they stood) also keeps restoring pins of a revoked key or a key the key set marks relaying",
+    "settled_by": "PRV-10 (a pin is trusted only while its key is not revoked), OWN-29 and the closing texts of DM-AF and DM-BA (a trust grant covers nothing after a relaying mark or a revocation, whatever the arrival order, I10) state the stop unconditionally. Only PIN-10's last-but-one sentence and Foreign room (places.md) omit it, so the fix is a tightening. Round-1 REG-3 option 1, which wrote the freeze, names only the agent's own principal's acts as ending it and never weighed revocation, and CLAUDE.md says to pick safety."
+   },
+   {
+    "id": "NEW-2",
+    "title": "After a handover or succession, the new owner's stamp lifts the intent's restriction and restores the old version to the former owner's agents",
+    "settled_by": "LANE-11 and round-22 Q19 (domain-model-review-blind-22.md): after a change of ownership the intent restores only to its stampers' agents. Principal (only an agent's own principal widens what reaches that agent) and Stamp (a stamp restores to the stamper's own agents only, LANE-32) settle that the new owner's stamp adds only the new owner's agents. The wording 'revises or stamps it' in the Intent entry and LANE-11 is the ambiguity, so the fix is a clarification in both."
+   },
+   {
+    "id": "NEW-3",
+    "title": "The model never says which sealed ranges a peer may receive: whether a private (personal) room syncs to the principal's own other nodes, and which ranges of other writers another principal's node may pull",
+    "settled_by": "PEER-02 (serve a room's segments only to enrolled peers whose principal has a seat in that room, and to blind peers holding it, 'and to no other'), LANE-17 (a personal room stays private), LANE-29 (a cross-room post is pulled by address only when a seat of the target room asks) and PRV-10 (revocations replicate like any other signed event). The residue, principal acts that act on a room where the principal has no member seat and are held in the personal room, is deferred in OQ-41 (M7). The model's Peer, Visibility and Personal room entries need to carry PEER-02."
+   },
+   {
+    "id": "NEW-4",
+    "title": "A seat key whose countersigned certificates chain it to two principal keys chains to neither, so a barred principal can take its seat out of the bar, kick and owner protection and stay a member",
+    "settled_by": "none. PRV-10 states the 'chains to neither' rule, and LANE-25 says a bar covers every key that chains to the barred principal key. Neither says what a seat that chains to neither is. Needs a rule such as: it is a member of no room."
+   },
+   {
+    "id": "NEW-5",
+    "title": "The seat ingest starts shares the named run seat's add and takes over its role, but nothing ties it to the key that certified that run seat",
+    "settled_by": "none. REC-19, LANE-25 and PRV-11 define the shared add and the seat certificate, but no requirement binds the seat that names a run seat to the run seat's certifier. Needs a rule that only a seat certified by the same key is that seat."
+   },
+   {
+    "id": "NEW-6",
+    "title": "The Provenance entry gives no class to a worktree checkpoint, recall event, canary event or backup event",
+    "settled_by": "Partly. REC-20 gives the worktree checkpoint provenance `file`, and RCL-07 gives the recall event provenance `assistant` for the query with the returned addresses. The finding's `structural` for a recall event conflicts with RCL-07. None for the canary event (OPS-04) and the backup event (ADM-06, 'audited event'), whose classes no requirement states."
+   },
+   {
+    "id": "NEW-7",
+    "title": "The trusted-only export writes whole trusted events, so the untrusted free text of a cut or neutral principal act (a stated reason) reaches downstream memory systems marked trusted",
+    "settled_by": "OWN-11 and Trust level (trust-and-flow.md): the free text of a cut or neutral principal act is untrusted whatever its event's trust level. Neither says what ADM-12's export (SEC-26 review step) does with it, so extending OWN-11 to the export and to Taint is a tightening."
+   },
+   {
+    "id": "NEW-8",
+    "title": "The results and errors of tool calls that are not recall (room act tools, delegation tools, acting CLI verbs) have no rule on what they may carry",
+    "settled_by": "I2 (no write to an agent outside a recall tool's envelope and the closed paths; 'No other write to an agent exists') and §9.2 (a refused act returns an error naming only its reason class and the causing act's id; room_join_request returns a seat id; room_get without an id returns an envelope marked structural) settle the rule in principle. No Recall or Closed path entry or requirement states it for every other tool result."
+   },
+   {
+    "id": "NEW-9",
+    "title": "A harness resume that starts a new harness session where the harness gives no stable agent id is a new agent whose restore block and recall omit the resumed run's rooms",
+    "settled_by": "none for the proposed change. REC-02 and decision E (stakeholder, round 1 NEW-10, option 1: restore stays per run, later runs inherit rooms by the harness's stable agent id, otherwise each run is its own agent) settle the current rule, which the finding asks to reopen for resumes. REG-7 (round-1 regression-verify.json) noted the hook gives only the new session id, so Cairn may be unable to tell which run a resume resumes. Nothing decides inferring the resumed run, so it is a stakeholder choice."
+   },
+   {
+    "id": "NEW-10",
+    "title": "A purged pin version (by a principal act, a retention policy or an applied erasure request) has no rule when PIN-10 chooses which version of a pin restores",
+    "settled_by": "DM-BB by analogy: the stakeholder decided that a quarantined pin version counts as absent when PIN-10 chooses which version restores, and a pin left with none leaves the restore block (Quarantine entry, PIN-10). ADM-07 and SEC-31 say nothing about a purged pin version, so no text yet applies it to purge."
+   }
+  ]
+ }
+}

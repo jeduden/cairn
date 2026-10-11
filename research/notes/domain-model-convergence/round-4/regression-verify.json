@@ -1,0 +1,135 @@
+[
+ {
+  "id": "R4R-1",
+  "real": true,
+  "why": "Real in the model, not in the SRS. The Deployment mode entry (trust-and-flow.md) says only \"set per node (PRV-02, `node.deployment_mode`); changing it, loosening redaction or turning flags off applies only once its configuration is accepted (ADM-04)\". It names no default. It also leaves open what happens on a token-key-only node, which per Token key \"signs no principal or expire acts\" and so can never record the acceptance ADM-04 requires. Token key also says the node's \"own events are trusted on that node as that node's trusted sources\". So on such a node an `interactive` mode would make a pipeline's input trusted `user` events (I2). The SRS already closes this. PRV-04 sets `automation` by default. ADM-04 lets a mode change apply only from an accepted configuration or from managed policy. PRV-10 says a token-key-only node signs no principal act. SEC-22 lets managed policy fix the mode. Together they keep a token-key-only node on `automation` unless managed policy sets otherwise, so there is no security hole now; the model just does not say it. One question remains open and is a real choice: may the access token whose token key certifies the node's seat keys name the mode, the way PEER-01's environment variable stands in for turning on the peer component? PEER-06 lists no such field, and no ADR or plan note settles it. Token-key-only nodes ship only with M8 (\u00a712: \"sync for token-key-only nodes\"), so the question can wait under the defer-first rule.",
+  "settled_by": "Partly settled. PRV-04: \"The deployment mode (`node.deployment_mode`) MUST be `automation` by default, in which `user` is untrusted. `interactive` MUST be an explicit opt-in in the principal's configuration.\" ADM-04: \"A settings change that adds, edits or unpins a pin, changes the deployment mode ... MUST be accepted only from the principal's configuration after the widening principal act accepting it records its digest, or from managed policy\". PRV-10: \"A token-key-only node MUST sign no principal or expire acts\". SEC-22: \"Managed policy MUST be able to ... fix the deployment mode\". \u00a79.6 also gives `node.deployment_mode` the default `automation`. Not settled: whether the access token may name the mode (PEER-06 names no such field).",
+  "klass": "design",
+  "options": [
+   {
+    "label": "Carry the settled rule and defer the access-token source to OQ-06, before M8 (recommended)",
+    "effect": "The model gains three things: the default (`automation`, PRV-04) in Deployment mode; the rule that a token-key-only node stays `automation` unless managed policy fixes it, in Node; and an open-question note pointing at OQ-06. PEER-06 states the same rule as a MUST. OQ-06 gains an 'Also open, before M8' clause with options. Nothing is decided beyond what PRV-04, ADM-04, PRV-10 and SEC-22 already imply.",
+    "invariant_change": false
+   },
+   {
+    "label": "Carry the settled rule and close the question: only managed policy ever sets a token-key-only node's mode",
+    "effect": "Safest. But where a person types at a harness in a cloud environment, every `user` event stays untrusted: PIN-05 detects no pin candidates there, recalling those events sets recall taint, and trusted-only exports leave them out.",
+    "invariant_change": false
+   },
+   {
+    "label": "Decide now: the access token names the mode, minting it being the widening act",
+    "effect": "Interactive ephemeral sessions get trusted `user` events. PEER-06 gains an access-token field, and PRV-04's 'explicit opt-in in the principal's configuration' gains a second source. This needs its own I2 review with PEER-06.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option 1: defer to OQ-06 with milestone M8. The question can wait. Token-key-only nodes arrive in M8, and until then and after it the SRS already keeps such a node on `automation` (PRV-04, ADM-04, PRV-10, SEC-22), so nothing that ships earlier has a hole, and no invariant's wording is involved. The model change is a tightening that carries existing rules. The token-key-only clause goes into places.md's Node entry, next to PEER-01's environment-variable stand-in, and not into Deployment mode, for a budget reason. Checked on a scratch copy: trust-and-flow.md sits about 7 words under its 3000-token mdsmith budget, and after this edit about 3. Its one-line change adds only the default, so any further words there will overflow it. After applying the edits, run `mdsmith fix` to re-pad the PEER and OQ tables. On a scratch copy with all edits applied (R4R-3's included), `mdsmith check .` passed with 0 failures. The PEER-06 scenario stays @pending. DM-BT's closing text is kept intact.",
+  "edits": [
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "  `automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`);\n",
+    "new": "  `automation` (a pipeline does, the default), set per node (PRV-02, PRV-04,\n  `node.deployment_mode`);\n"
+   },
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "  component; minting its access token is the widening act. Its **node\n",
+    "new": "  component; minting its access token is the widening act. A token-key-only\n  node signs no principal act to accept its configuration, so its deployment\n  mode stays `automation` unless managed policy fixes it (SEC-22); whether its\n  access token may name the mode is open (OQ-06). Its **node\n"
+   },
+   {
+    "file": "docs/srs/05d-peer-requirements.md",
+    "old": "allows it (PRV-10), and no trust grant covers its posts or pins (OWN-29).",
+    "new": "allows it (PRV-10), no trust grant covers its posts or pins (OWN-29), and the node's deployment mode MUST stay `automation` unless managed policy fixes it (PRV-04, ADM-04, SEC-22; open: OQ-06)."
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "declared in `node.deployment_mode`?",
+    "new": "declared in `node.deployment_mode`? Also open, before M8: a token-key-only node signs no principal act, so no acceptance of its configuration can change its deployment mode, which stays `automation` unless managed policy fixes it (PRV-04, ADM-04, SEC-22, PEER-06), even where a person types at its harness. May the access token whose token key certifies its seat keys name the mode, minting it being the widening act, as it already is for turning on the node's peer component (PEER-01)? Options: the access token names the mode, shown when it is minted and recorded with it, `automation` when it names none (recommended); only managed policy sets it; or the access token carries a configuration whose digest the minting principal accepted. Until this closes, such a node stays `automation` unless managed policy fixes the mode."
+   },
+   {
+    "file": "docs/srs/13-open-questions-and-risks.md",
+    "old": "| S4 ",
+    "new": "| S4; a token-key-only node's mode: stakeholder, before M8 "
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "A token-key-only node signs no principal act to accept its configuration, so its deployment mode stays `automation` unless managed policy fixes it"
+  }
+ },
+ {
+  "id": "R4R-3",
+  "real": true,
+  "why": "Real. The Agent entry (principals-and-agents.md) says \"Its later runs inherit its rooms for recall (the `rooms` scope), for restore and for its directed posts\". The one undefined phrase 'its rooms' covers sets the SRS keeps apart. For restore, PIN-10 gives \"every room its agent's earlier runs had a seat in\", and its \"a leave, a kick or a bar MUST NOT drop a pin\" keeps rooms whose seats all left. The hub says the same: \"a leave, kick or bar keeps them\". For recall, RCL-05 reaches only \"one of its principal's rooms the agent has a seat in\", and leaves a room every run seat of the agent has left to OQ-45. Read one way, the `rooms` scope reaches left rooms, against RCL-05 and OQ-45; read the other way, restore loses left rooms, against PIN-10 and DM-AG. Directed posts: LANE-12 puts no seat condition on a directed post entering the target agent's principal's Needs you queue, and the post reaches the agent only through endorsement, a principal act (OWN-08, I2). So grouping directed posts with restore's set restates the SRS and narrows nothing. DM-BW (OQ-45) leaves open only whether a recall call may name a left room, so it does not answer this phrase.",
+  "settled_by": "PIN-10: \"A restore block MUST contain the qualifying pins of every room its run has had a seat in during the run, its personal room included, and of every room its agent's earlier runs had a seat in (REC-02)\" and \"A branch switch, a leave, a kick or a bar MUST NOT drop a pin from any restore block\". RCL-05: \"Extending it to `room` (one of its principal's rooms the agent has a seat in, through the writers this node holds) or `rooms` (every such room)\" and \"Whether a call may name a room of its principal's that every run seat of the agent has left or lost to a kick or a bar, which neither scope reaches, is open (OQ-45)\". LANE-12: \"only a directed post MUST enter the target agent's principal's Needs you queue\", with no seat condition. REC-02 already ties each use to its own requirement: \"inherit its rooms for recall (RCL-05), for restore (PIN-10) and for its directed posts (LANE-12)\".",
+  "klass": "settled",
+  "options": [
+   {
+    "label": "Define 'its rooms' per use: restore and directed posts reach every room its earlier runs had a seat in, left ones included; recall reaches only rooms where a seat of its runs is still a member; a left room of the principal's rests on OQ-45 (recommended)",
+    "effect": "States what PIN-10, RCL-05, OQ-45 and LANE-12 already say. No behavior changes. The existing sentence is kept, so the closing texts of DM-E and DM-AC stay intact.",
+    "invariant_change": false
+   },
+   {
+    "label": "Group directed posts with recall (member rooms only) instead",
+    "effect": "Adds a seat condition that LANE-12 does not have, so directed posts in a room the agent's seats left would stop reaching its principal's queue. No rule requires this. Not recommended.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option 1. Append one sentence to the Agent entry and one to REC-02, and change nothing else. DM-E's and DM-AC's quoted texts in the model and in REC-02 stay byte-identical. After applying, run `mdsmith fix` to re-pad the REC table. principals-and-agents.md stays well within its limits (139 lines, about 1556 words, about 2070 heuristic tokens). On a scratch copy with these edits and R4R-1's applied, `mdsmith check .` passed with 0 failures. The REC-02 scenario stays @pending.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "  directed posts, never a seat, add or role: a new run joins only as Join says\n  (REC-02, PIN-10).\n",
+    "new": "  directed posts, never a seat, add or role: a new run joins only as Join says\n  (REC-02, PIN-10). For restore and for its directed posts, its rooms are every\n  room its earlier runs had a seat in, even one their seats all left or lost to\n  a kick or a bar (PIN-10, LANE-12); for recall, only the rooms where a seat of\n  its runs is still a member (RCL-05), and a room of the principal's their\n  seats all left rests on OQ-45.\n"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "never a seat, add or role, and join only under LANE-23.",
+    "new": "never a seat, add or role, and join only under LANE-23. For restore and directed posts, its rooms MUST be every room its earlier runs had a seat in, even one their seats all left or lost to a kick or a bar, and for recall only the rooms where a seat of its runs is still a member (RCL-05; open: OQ-45)."
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "even one their seats all left or lost to a kick or a bar (PIN-10, LANE-12); for recall, only the rooms where a seat of its runs is still a member (RCL-05)"
+  }
+ },
+ {
+  "id": "R4R-2",
+  "real": true,
+  "why": "Real. The current text says who may record the expire act that retires a writer, but not whose principal act may retire one. Model, record.md: \"Mark a writer retired, by a principal act or the expire act ending the access token whose token key certified its seat key, naming its last accepted seq.\" PEER-05 says the same: \"A writer MUST be marked retired by a principal act or by the expire act ...\". The CLI row only says \"retire a writer (PEER-05); widening\". The Expire act entry bounds the token path (\"It ends an access token, recorded by the node that minted it (PEER-05)\"). Nothing bounds the principal-act path. A principal act is recorded on the acting principal's device seat in the room, and room state counts other principals' principal acts (appointments, invites, handover offers), so another node can count the retirement. That means any principal holding a room could retire another principal's writer, the owner's included, and name a low last accepted seq. Everything past that seq is then marked \"delivered after retirement\". While OQ-41 is open, its acts may drop out of the room merge (OQ-41's recommended option: \"no act past that seq counts\"). That gets around LANE-25's owner protection. PRV-10's trust rule (\"A principal act another node's device key signed ... MUST be trusted only when that key chains ... to the principal key of this node's principal\") governs I2 trust, not authority over room state, so it does not close the gap. Retirement ships with PEER-05 in M8, after PRV-10 (M7), when other principals' seats are already in rooms, so the hole would ship. This is tighten, not design. The narrow rule follows from existing rules: LANE-25 says \"Only a seat's own principal MAY add it.\" and \"No one MAY kick, bar or mute the owner or any key that chains to the owner's principal key\". I8 says content another principal wrote \"is kept as theirs: attributed to its seat key\". The token path already limits retirement to the certifying (minting) node. The only alternative, letting the room owner also retire non-owner writers, is not needed: a kick already ends such a seat's add, with its own audit and limits. Where usefulness and safety conflict, safety wins. No deferral is needed. No invariant wording changes. record.md stays at about 215 lines and about 1693 heuristic tokens.",
+  "settled_by": "none",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "Only the principal the writer's seat key chains to retires it by a principal act (before PRV-10 ships, only one recorded on the node whose device key certified that seat key or the token key that certified it); any other principal act retiring it is void and shown",
+    "effect": "Closes the gap that let another principal, owner included, retire a writer and neutralize its later acts. It matches the token path's limit to the minting node, and the owner stays protected as LANE-25 intends. The ephemeral-node feature stays whole: the writer's own principal and the minting node's expire act still retire it, and a revocation still refuses later segments. A key that chains to two principal keys can then be retired only by the expire act or ended by a revocation.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Tighten now with the single option: a writer can be retired by a principal act only from the principal its seat key chains to. Before PRV-10 ships, only a principal act recorded on the node whose device key certified that seat key, or the token key that certified it, can retire it. Any other principal act retiring it is void and shown (I6). Make the change in the model (record.md), in PEER-05, in the CLI row for `cairn writer retire`, and in the pending PEER-05 scenario. No deferral is needed: this is a tightening that follows from LANE-25, I8 and the expire-act limit. Run `mdsmith fix` afterwards to realign the PEER-05 and CLI table rows the longer cells shift. DM-BV's quote (\"marked delivered after retirement (open for the room merge: OQ-41)\") and DM-G's quotes stay intact.",
+  "edits": [
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "- **Retire a writer**: Mark a writer retired, by a principal act or the\n  expire act ending the access token whose token key certified its seat key,\n  naming its last accepted seq. A peer still accepts segments past it that\n  continue its chain without a fork, marked delivered after retirement (open\n  for the room merge: OQ-41); only a revocation refuses them (PEER-05).",
+    "new": "- **Retire a writer**: Mark a writer retired, by a principal act or the\n  expire act ending the access token whose token key certified its seat key,\n  naming its last accepted seq. Only the principal its seat key chains to\n  retires it by a principal act (before PRV-10 ships, only one recorded on the\n  node whose device key certified that seat key or the token key that\n  certified it); any other principal act retiring it is void and shown. A\n  peer still accepts segments past it that continue its chain without a fork,\n  marked delivered after retirement (open for the room merge: OQ-41); only a\n  revocation refuses them (PEER-05)."
+   },
+   {
+    "file": "docs/srs/05d-peer-requirements.md",
+    "old": "Either act MUST name the writer's last accepted `seq`, and no derivation reads a clock.",
+    "new": "Either act MUST name the writer's last accepted `seq`, and no derivation reads a clock. Only the principal a writer's seat key chains to MAY retire it by a principal act (before PRV-10 ships, only one recorded on the node whose device key certified that seat key or the token key that certified it); any other principal act retiring it MUST be void and shown."
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "retire a writer (PEER-05); widening",
+    "new": "retire one of the principal's own writers (PEER-05); widening"
+   },
+   {
+    "file": "features/peer.feature",
+    "old": "And the writer is marked retired by that expire act, and no derivation reads a clock",
+    "new": "And the writer is marked retired by that expire act, and no derivation reads a clock\n    And a principal act retiring that writer counts only from the principal its seat key chains to, and any other principal act retiring it is void and shown"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/record.md",
+   "quote": "any other principal act retiring it is void and shown"
+  }
+ }
+]

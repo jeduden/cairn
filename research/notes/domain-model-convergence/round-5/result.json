@@ -1,0 +1,266 @@
+{
+ "round": 5,
+ "reviews": [
+  {
+   "lens": "consistency",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "room; a whole-room mute leaves posting to the roles the owner names (LANE-16).",
+     "problem": "The owner's device seats hold no role, so the model never says whether a whole-room mute covers them. A whole-room mute also takes unmute away from every moderator. Before PRV-10 the owner's protection does not apply and no mute can carry an expiry, so a whole-room mute can leave no seat able to lift it. After PRV-10, implementers will split on whether 'no one may mute the owner' exempts the owner's seats from a whole-room mute.",
+     "fix": "room; a whole-room mute leaves posting to the roles the owner names and never covers the owner's device seats, which may always unmute (LANE-16).",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "link names it, across rooms, in causal order, concurrent ones by the lower",
+     "problem": "Another principal never sees a room only this principal holds, so its branch link in a shared room is always concurrent with the private room's link. A commitment uses a random key the writer picks, so any member of a shared room the run joined can win that race. The run's later events on a branch its private room named first then move into the shared room, which defeats the 'first room' rule.",
+     "fix": "link names it, across rooms, in causal order, concurrent ones first to a room no other principal has a seat in, then by the lower",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/index.md",
+     "quote": "records it, in the room it acts on; a node of a principal with a member seat",
+     "problem": "The model never defines 'the room it acts on'. Some principal acts name a room but change only the principal's own state: a focus-set change, an overlap acknowledgement, a notice opt-in, a dismissal, a one-room trust grant. One implementer will write these to that room's writer, and so to every other principal's node holding the room; another will write them to the personal room.",
+     "fix": "records it, in the room it acts on (one whose room state, per Room merge, it changes); a node of a principal with a member seat",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "a principal act of the principal its seat key chains to (any other is void",
+     "problem": "Before PRV-10 ships no key chains to a principal key (Principal), so by this rule every retirement is void. Yet 'retire a writer' is listed as a widening act with no PRV-10 gate. Implementers will differ on whether a node's principal can retire its own writers before PRV-10.",
+     "fix": "a principal act of the principal its seat key chains to (before PRV-10 ships, of the node whose device key certified that seat key; any other is void",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "harness gives no stable agent id, each run is its own agent. Its later runs",
+     "problem": "Agent says that without a stable agent id each run is its own agent. Run says that in that case whether a resumed run belongs to the resumed run's agent is still open (OQ-43). Both cannot hold as stated.",
+     "fix": "harness gives no stable agent id, each run is its own agent until OQ-43 closes. Its later runs",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "resume that starts a new harness session, or a **harness clear**, starts a new",
+     "problem": "A run is keyed by harness session and agent id, yet a harness clear starts a new run, and the model never says that a clear starts a new harness session. For a harness that keeps its session across a clear, two runs share one key.",
+     "fix": "resume that starts a new harness session, or a **harness clear**, which Cairn treats as starting a new harness session, starts a new",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "The principal act of a principal with a seat in the room,",
+     "problem": "Agent keeps an agent's directed posts coming from every room its earlier runs had a seat in, even one their seats all left, and Directed post says each one waits in Needs you for an endorsement. Endorsement requires a seat in the room, so a directed post from a room the principal has left can only be dismissed. Implementers will split on whether endorsing it is allowed.",
+     "fix": "The principal act of a principal with a seat in the room, or of the principal of the agent a directed post names,",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "security",
+   "findings": [
+    {
+     "type": "security",
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "link names it, across rooms, in causal order, concurrent ones by the lower",
+     "problem": "Two links are concurrent whenever an act's author leaves out what it saw, and the author picks its own commitment key, so it can grind a lower commitment. So another principal's seat in a shared room can make its branch link concurrent with this principal's own room's link and win the tie. That voids the room's link and pulls in the events of this principal's runs that have a seat there, with no act of this principal.",
+     "fix": "\"...in causal order, concurrent ones preferring a link a seat of this node's principal wrote, then by the lower commitment (Room merge)...\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "branches the room names later by branch links, whose runs' events then go",
+     "problem": "A join's consent covers branches that any contributor of the room links later. Another principal's seat, or that principal's injected agent, can link a branch this principal's run will work on that none of this principal's rooms names yet. The run's events on that branch (tool output, diffs) then go to that principal's nodes with no act of this principal.",
+     "fix": "\"That covers the branches its own principal's seats link there later; a branch link another principal's seat adds moves this principal's runs' events only once this principal accepts it.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "facilitator that it reads untrusted room text, which its posts never quote",
+     "problem": "The facilitator's program reads untrusted room text and posts with no principal surface. Never quoting does not stop it restating an injected instruction in its own words. A trust grant over it then delivers that text automatically in OWN-29's template, and I2's device-seat-post source makes it trusted, with no recall taint, for the service account's own agents.",
+     "fix": "\"is refused for a service account whose device seat is a room's facilitator, whose posts are no trusted source; one naming any other service account shows a warning\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "or derived artifact from recall, restore blocks, landmark text (LMK-04 keeps",
+     "problem": "The model never says whether a quarantined act (a stamp, trust grant, unstamp, revocation or unpin) still takes effect in room state and trust levels. If it does not, quarantining a cut act would put pins back into restore blocks through a quarantine classed as cut, and implementers will split.",
+     "fix": "Add: \"A quarantined act keeps its effect on room state, trust levels and the key set, as a purged one does (Relations).\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "A recorded grant covers nothing once the node's key set holds a certificate",
+     "problem": "A third party's certificate, listing, revocation or removal can make a grant cover nothing, which drops the trusted principal's pins from the grantor's agents' restore blocks. No rule tells the grantor, whereas an unpin or a list removal that changes what restores raises a Needs you item.",
+     "fix": "\"...whatever order they arrived in (I10), and raises a Needs you item for the grantor naming the grant and the pins that stop restoring;\"",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/record.md",
+     "quote": "names, such as lowering a limit or turning an injection path off, never",
+     "problem": "Restore blocks, including the on-prompt one, are injection paths, and the restore block limit is a limit. The examples therefore let an untrusted repository's .cairn.toml drop pins from restore blocks, which the same sentence forbids. \"Injection path\" is also never defined.",
+     "fix": "\"such as lowering a limit that bounds no restore block or turning off opt-in notices, never ...\"",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "usefulness",
+   "findings": [
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "The text of a delegation: a subagent's from its harness,",
+     "problem": "The model never says what provenance a subagent's run records for the delegated task its harness hands it. Event calls \"the harness's user input\" a message, so one implementer records that task as `user`, which is a trusted source in interactive mode, while another records it as model-written. In the first case, text the parent model wrote, possibly copied from web or tool output, becomes trusted, goes into trusted-only exports and taints no run that recalls it.",
+     "fix": "Add to Delegated task (or to Provenance in record.md): \"a subagent's delegated task, as its run records it, is `assistant` (its parent's model wrote it), never `user`.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "lives only in the memory of its harness session's MCP server,",
+     "problem": "A run's personal-room seat and writer exist from its first event, and the writer id derives from the seat's first key. That key lives only in the MCP server's memory. No rule says where a witnessed run's events go when hooks fire before that server holds a key, or when the harness session runs no Cairn MCP server. The seat ingest starts needs that run seat to exist, so in a hook-only setup the events are either lost (I1) or written to a writer the model does not define.",
+     "fix": "Add to Run seat: \"Until its harness session's MCP server holds its run-seat key, or where none runs, a witnessed run's events go to a run seat whose key the core keeps, as an ingested run's, and the core seals its writer.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "after being shown its exact text, author and key fingerprint.",
+     "problem": "Pin priority decides which qualifying pins fill the pin budget first. The pin's author sets it, it is not part of the immutable pin version a stamp covers, and the stamper is not shown it (nor the pin type, unlike a pin candidate's confirmation). An agent's stamped run-seat pin can then carry a priority that pushes the principal's own constraints out of the restore block to id and count only. The model also does not say whether priority can change after the stamp.",
+     "fix": "Change to \"after being shown its exact text, pin type, priority, author and key fingerprint\", and in Pin version: \"One immutable text and priority of a pin; each edit, a priority change included, adds one, unstamped.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "useless",
+     "file": "docs/domain-model/places.md",
+     "quote": "node signs no principal act to accept its configuration, so its deployment",
+     "problem": "On a fresh token-key-only node, configuration is never accepted, so its configuration pins never take effect (nor does the launcher). Its device seat's pins restore only once stamped from another device, and its runs join a room only through a principal act taken for each run. So an ephemeral node's agents start with no constraint and get none back after compaction unless a person acts from another device after the node starts. The model settles the deployment mode for this case but not constraints.",
+     "fix": "Add: \"Minting its access token also asks for the join of each of that node's runs to the rooms the token names\", or state outright that a token-key-only node's agents get constraints only from the rooms their runs join.",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/components-and-surfaces.md",
+     "quote": "Replay tab's **context lens** showing what the model's context window",
+     "problem": "Apart from the launcher's turn trigger, no rule records what Cairn wrote to an agent through a closed path: a restore block, an opt-in notice, compaction guidance or a fixed template a hook handler returned. A restore block depends on what the node held at that moment, which the record does not fix. So the context lens cannot show what an agent was told, and a person cannot see it either.",
+     "fix": "Add to Restore block (and Closed path): \"Each closed-path write is recorded as a structural event in the run's writer, naming by id the pins, versions and template it carried, and its text by commitment.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "A restore block's **room summary pointer** names the latest room",
+     "problem": "A restore block carries the pins of several rooms, but the pointer names \"the latest room summary\" without saying which room's. One implementer would point to a single summary across all rooms and another to one per room.",
+     "fix": "\"names, for each room whose pins it carries, that room's latest room summary, in causal order, by its id.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "useless",
+     "file": "docs/domain-model/record.md",
+     "quote": "LMK-06 may add a **natural-language headline** to a span whose every",
+     "problem": "A span starts at every user turn, every turn ends in a model reply, and model replies are never trusted. So almost no span has every event trusted, and the natural-language headline can practically never be made, even though its deterministic template already uses only trusted fields.",
+     "fix": "\"LMK-06 may add a natural-language headline to any span, made only by a deterministic template over its sanitized structural fields\", or drop the concept.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "principal or managed policy, that purges content per room and provenance class",
+     "problem": "A retention policy covering `operator` content also purges the versions of the principal's own constraints. Those versions then never restore, and the restore block names only budget omissions and pins that do not qualify, so a long-standing constraint can quietly leave every restore block. The model does not say whether a retention policy spares pin versions that restore.",
+     "fix": "Add \"sparing every pin version that restores\" after \"after a time\", or add \"a restore block names by id each pin a purge removed from it\".",
+     "severity": "minor"
+    }
+   ]
+  }
+ ],
+ "match": {
+  "matches": [
+   {
+    "lens": "consistency",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "No ledger theme covers whether a whole-room mute reaches the owner's device seats. DM-B (deferred, OQ-42) is only about principal-key chains before PRV-10, and DM-H only about which node records an expire act. Closing either would not answer this. LANE-16 (a mute withholds every capability but read; the owner's device seat has every capability) and LANE-25 (no one mutes the owner) each state half the rule. Neither says a whole-room mute spares the owner's seats, and a whole-room mute withholds unmute from every moderator, so the lockout exists after PRV-10 too."
+   },
+   {
+    "lens": "security",
+    "index": 0,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "The quote is DM-M's closing text, and DM-AO and DM-AT rest on the same tie-break. The finding shows that text incomplete. DM-AO excludes only foreign rooms, but a shared room is one of the principal's own rooms, so another principal's seat there can ground a lower commitment and win a concurrent tie. The author picks its own commitment key (Commitment, REC-17). Closing DM-M, DM-AO or DM-AT as written would not answer this. LANE-01 and LANE-31 fix the lower-commitment tie-break but say nothing about grinding it. DM-AX only says the result differs per node."
+   },
+   {
+    "lens": "usefulness",
+    "index": 0,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "No ledger theme gives a provenance class to a subagent's delegated task. DM-BH covers other event kinds (worktree checkpoint, recall, canary, backup). DM-AR covers recall taint flowing up with the delegate report, and DM-Y and DM-AM cover the subagent's seat. Closing any of them would not say whether the task is recorded `user` or `assistant`. PRV-01, PRV-02 and OWN-24 give the delegation's recall taint but no class for a subagent's task. REC-13 makes hook handlers ingest the subagent's transcript as witnessed events, so a `user` class would be trusted in interactive mode."
+   },
+   {
+    "lens": "usefulness",
+    "index": 1,
+    "theme": "NEW-4",
+    "kind": "new",
+    "reason": "The finding is about where a witnessed run's events go before its MCP server holds the run-seat key, or when no Cairn MCP server runs. DM-D (deferred, OQ-43) covers a key lost with its MCP server while a run continues, on a resume or a restart. Closing DM-D would not say where hook-recorded events go at run start or in a hook-only setup. REC-18 only says events after the newest seal show as unsigned. Blind-23 section 3 parked 'who mints a run seat's key before the MCP server starts' on ASM-21 and spike S4, which tests only that the server can hold the keys. The repair-v1 ruling R13 drafted a fix (core mints and keeps the key until the server holds it) that never reached docs/."
+   },
+   {
+    "lens": "usefulness",
+    "index": 2,
+    "theme": "NEW-5",
+    "kind": "new",
+    "reason": "DM-I closed what a pin-candidate confirmation shows (exact text, pin type and priority). The stamp is a different act, and its text (LANE-32, Stamp) shows only exact text, author and key fingerprint. Closing DM-I would not change it. Priority is stored per pin (PIN-03), is set by the author, and orders the pin budget (PIN-08). It is not part of the immutable pin version a stamp covers, and no text says whether a priority change after a stamp is allowed. DM-S, DM-K, DM-AL and DM-BB concern which version or room restores first, not priority."
+   },
+   {
+    "lens": "usefulness",
+    "index": 3,
+    "theme": "NEW-6",
+    "kind": "new",
+    "reason": "The quote is DM-BX's closing text, but the defect differs. DM-BX and OQ-06 ask about a token-key-only node's deployment mode. Their recommended option (the access token names the mode) would leave configuration pins and the launcher with no acceptance, and a node's runs with no join. Only OQ-06's third option (the token carries a configuration whose digest the minting principal accepted) touches pins. DM-F and DM-BT closed the acceptance rule that makes the gap. PEER-06 has a token naming a room to continue carry that room's qualifying pins, but no text makes minting a token the ask for its runs' join (LANE-23, DM-AC)."
+   }
+  ],
+  "new_themes": [
+   {
+    "id": "NEW-1",
+    "title": "A whole-room mute may cover the owner's device seats, which hold no role, and leave no seat able to unmute",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-2",
+    "title": "The lower-commitment tie-break between concurrent branch links lets another principal's seat in a shared room grind a win and take the branch from this principal's own room",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-3",
+    "title": "The provenance of a subagent's delegated task, as its run records it, is unstated and could be recorded as trusted `user`",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-4",
+    "title": "Where a witnessed run's events go before its harness session's MCP server holds its run-seat key, or when no Cairn MCP server runs",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-5",
+    "title": "A stamp does not show or cover the pin priority that orders the pin budget, and whether priority can change after a stamp is unstated",
+    "settled_by": "none"
+   },
+   {
+    "id": "NEW-6",
+    "title": "A token-key-only node accepts no configuration, so its configuration pins never take effect and its runs join no room, leaving its agents with no constraints",
+    "settled_by": "none"
+   }
+  ]
+ }
+}

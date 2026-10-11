@@ -1,0 +1,114 @@
+---
+title: "1.3 Invariants"
+summary: >-
+  The single source of Cairn's ten invariants, I1 to I10, which every
+  requirement serves; other files include it through mdsmith.
+---
+# 1.3 Invariants
+
+The invariants are Cairn's contract. Every requirement serves at least one of
+them. A change that would break an invariant is a design change requiring
+security review and a new major version, not a bug fix.
+
+- **I1 — Nothing is lost.** Every event an agent saw or produced remains
+  recoverable by its stable address, (writer, seq), across any number of
+  compactions and agent runs⟦f:segment-exchange⟧, on every node that holds its writer's log⟦/f⟧. The
+  only exceptions are secrets removed by redaction before storage⟦f:bundle-import⟧⟦f:export-bundles⟧ or on import⟦/f⟧⟦/f⟧⟦f:purge-retention⟧,
+  data the node's principal explicitly purges, or removes under a retention
+  policy that principal or managed policy sets,⟦/f⟧ and the events of a run while
+  its principal had capture off or paused, the latter each shown as a capture gap. Every
+  exception is recorded.
+- **I2 — No automatic path from untrusted content to the model.** Content that
+  originates outside the trusted sources (tool output, web, MCP servers, files,
+  the model's replies, and anything another node or principal produced, except what a predecessor
+  of this node's own device seats, however far back, wrote⟦f:principal-keys⟧,
+  the agent's principal's acts signed by a device key it certified, ⟦f:conversation⟧posts and
+  ⟦/f⟧pins written from a device seat such a key certified⟦f:stamps⟧, a pin version that
+  principal stamped⟦/f⟧⟦f:trust-grants⟧, or what a trust grant of that principal covers⟦/f⟧⟦/f⟧) reaches the
+  model only inside an untrusted-data envelope when the agent explicitly calls a
+  recall tool⟦f:launcher⟧, or through one of the closed paths below that a principal act
+  names⟦/f⟧. The trusted sources are this node's own `operator` and structural
+  events and those the predecessors of its own device seats, however far back,
+  wrote, the
+  `harness_meta` events its hook handlers recorded, and the `user`
+  events they recorded while the deployment mode is `interactive`⟦f:principal-keys⟧, and, once
+  PRV-10 ships, principal acts signed by a device key the agent's principal
+  certified and ⟦f:conversation⟧posts and ⟦/f⟧pins written from a device seat such a key certified,
+  within that key's scope⟦/f⟧⟦f:stamps⟧, a pin version a principal stamped, for that
+  principal's own agents⟦/f⟧⟦f:trust-grants⟧, and the ⟦f:conversation⟧posts and ⟦/f⟧pins a trust grant of the agent's
+  principal covers⟦/f⟧. Cairn writes to an agent only through a closed set of paths⟦f:launcher⟧.
+  Without a principal act⟦/f⟧: restore blocks (INJ-01, INJ-02, INJ-04), built only
+  from qualifying pins, trusted structural fields and fixed text Cairn ships;
+  and ⟦f:notices⟧opt-in notices (INJ-10), ⟦/f⟧compaction guidance (PIN-07)⟦f:held-requests⟧ and the fixed
+  templates of OWN-04⟦f:away-policy⟧ and OWN-07⟦/f⟧⟦/f⟧, each built only from fixed text Cairn ships,
+  trusted structural fields and ids.⟦f:launcher⟧ On a principal act recorded at that time:
+  through the harness's own input, only principal-typed text, a fixed template
+  that references ids⟦f:endorsement⟧⟦f:conversation⟧, or a post a principal endorsed exactly as shown inside
+  the template of OWN-08⟦/f⟧⟦/f⟧.⟦/f⟧⟦f:delegation-grants⟧ Under a delegation grant its principal recorded
+  (OWN-23)⟦f:acceptance-grants⟧, and, for an agent of another principal, an acceptance grant that
+  agent's principal recorded (OWN-26)⟦/f⟧: a delegated task inside the fixed
+  template of OWN-24.⟦/f⟧⟦f:trust-grants⟧ Once its requirements ship, a principal may also trust
+  another principal by key for its own agents, in one room or everywhere; the
+  pins that principal wrote from device seats one of its device keys certified⟦f:principal-keys⟧,
+  within that key's device scope,⟦/f⟧ then restore to those agents⟦f:conversation⟧, and its posts
+  so written reach them inside the fixed
+  template of OWN-29⟦/f⟧. Cairn applies such grants and never grants trust itself.⟦/f⟧
+  No other write to an agent exists.
+- **I3 — Constraints are never summarized.** Every pin that restores is stored
+  verbatim and restored verbatim after every compaction, or named by id and
+  count when the budget omits it.
+- **I4 — Each component stays inside one declared network boundary, and only the
+  core builds what reaches the model.** B0, the core (hook handlers, the MCP
+  server⟦f:compute-kernel⟧, the kernel worker⟦/f⟧, the CLI, the TUI and everything that builds what
+  reaches the model), opens no socket and makes no outbound connection.⟦f:launcher⟧ B1,
+  machine: the launcher may listen only on loopback or on a local endpoint only
+  the same OS user can reach, connects nowhere else, and carries into the
+  harness's input only text the core built; managed policy can disable it.⟦/f⟧⟦f:browser-room-view⟧
+  B1, machine: the room-view component may listen only on loopback or on a
+  local endpoint only the same OS user can reach, and connects nowhere else;
+  managed policy can disable it.⟦/f⟧⟦f:peer-sync⟧ B2, peer: encrypted,
+  mutually authenticated connections to nodes⟦f:paired-phone⟧ and paired phones⟦/f⟧ the node's
+  principal enrolled by key, off until that principal turns it on and while
+  managed policy disables it; what the peer component brings in is trusted only
+  as I2 allows.⟦/f⟧⟦f:git-carrier⟧ B3, public: the publish component's
+  ⟦f:publishing⟧read-only publishing and ⟦/f⟧outbound exchange with hosts the node's principal
+  names, off until turned on and while managed policy disables it; what it
+  brings in is trusted only as I2 allows.⟦/f⟧⟦f:bridges⟧ B3, public: the bridge
+  component's outbound exchange with hosts the node's principal names, off until
+  turned on and while managed policy disables it; what it brings in is trusted
+  only as I2 allows.⟦/f⟧ No
+  component sends telemetry or depends on a central or third-party service.
+  Cairn's components send data off the machine only as recalled content an agent
+  receives through a tool call, or as what Cairn writes to an agent through I2's
+  closed paths, both of which the harness sends to its model⟦f:peer-sync⟧, or through
+  the peer component⟦/f⟧⟦f:git-carrier⟧, or through the publish component⟦/f⟧⟦f:bridges⟧, or
+  through the bridge component⟦/f⟧.
+- **I5 — Bad data can be removed from circulation without destroying the
+  record.** Any event⟦f:landmarks⟧, span⟦/f⟧, run, writer or derived artifact can be
+  quarantined from recall immediately on the node that records the quarantine,
+  while the record stays intact for forensics.⟦f:segment-exchange⟧ A quarantine reaches another
+  node only as a quarantine request that node's principal applies.⟦/f⟧
+- **I6 — No silent failures.** Every dropped, rejected, redacted, timed-out,
+  or failed operation is counted, logged, and visible to the node's principal.
+- **I7 — Harness configuration changes only on explicit instruction.** Cairn
+  changes harness configuration only through explicit install and uninstall
+  operations, shows the change first, and never overrides managed policy or the
+  harness's managed settings.
+- **I8 — Isolation follows the principal.** All local state is bound to one
+  principal's home with strict permissions, and Cairn refuses to operate on a
+  home that does not belong to the OS user running it. Content another principal
+  wrote, or another node wrote other than what a predecessor of this node's own
+  device seats, however far back, wrote⟦f:principal-keys⟧, this principal's acts signed by a
+  device key it certified and its ⟦f:conversation⟧posts and ⟦/f⟧pins written from a device seat such
+  a key certified⟦/f⟧, is kept as theirs: attributed to its seat key, and untrusted⟦f:stamps⟧
+  unless this principal's own stamp⟦f:trust-grants⟧ or trust grant⟦/f⟧ covers it⟦/f⟧. On its own it
+  never makes this principal's agents trust it, nor extends their recall.
+- **I9 — Cairn never degrades the agent.** A Cairn failure never blocks or
+  slows the agent beyond defined budgets. Cairn fails open, except where
+  continuing would violate I2, I4, or I8.
+- **I10 — Everything derived is rebuildable.** All derived artifacts (indexes⟦f:landmarks⟧,
+  landmarks⟦/f⟧, active pins, quarantine set, room state, trust levels, run and
+  integrity statuses⟦f:needs-you⟧, queues⟦/f⟧⟦f:work-rooms⟧, ⟦f:results-and-verdicts⟧evidence and ⟦/f⟧proof classes⟦/f⟧⟦f:landmarks⟧, stats⟦/f⟧) are a
+  deterministic function of the set of writer logs a node holds and the node's
+  own key set⟦f:segment-exchange⟧, independent of the order in which logs arrived⟦/f⟧. Rebuilding
+  reproduces them exactly.

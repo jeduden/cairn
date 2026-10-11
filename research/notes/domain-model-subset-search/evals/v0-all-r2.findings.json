@@ -1,0 +1,209 @@
+[
+ {
+  "type": "gap",
+  "quote": "Cairn counts principals by principal key: every device key,",
+  "problem": "Ownership, admission (\"The owner's principal key always satisfies its room's admission, for its device and run seats alike\"), invites, bars and the owner's protection from kick, bar and mute are all defined by keys that chain to a principal key. But \"Before PRV-10 ships no principal key certifies a device key\", so before PRV-10 no seat chains to any principal key and none of these rules can be evaluated, not even a second run of the owner joining the owner's own room. One implementer would refuse every join and invite, another would substitute some other identity.",
+  "fix": "Add: \"Before PRV-10 ships, a node's device key stands in for its principal's principal key when counting principals and for admission, invites, bars and ownership\" (or say that rooms with other seats than their creating one need PRV-10).",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "undefined",
+  "quote": "A worker a harness runs for exactly one principal: the principal of",
+  "problem": "A run is keyed by the harness session and the harness's agent id, but nothing says what makes two runs the same agent (after a harness clear, or in another harness session). Yet several rules work at the level of the agent: \"an agent has a seat in a room through its runs' seats\", the recall scope `rooms` (\"the principal's rooms the agent has a seat in\"), a directed post goes \"to one agent\", and an endorsement goes to \"one of the principal's own agents\". Implementers could treat each run as its own agent or group runs some other way, and would get different recall scopes.",
+  "fix": "Define an agent's identity, for example: \"An agent is identified by its node, harness and the harness's agent id across harness sessions; where the harness gives no stable id, each run is its own agent.\"",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "token, a seat key or a service account's certificate, turn capture on, and",
+  "problem": "Revoking a seat key or an access token is classed as cut. But revoking a device or a peer \"stays widening ... since it can drop pins and stop acts arriving\", and the same is true of a seat-key or access-token revocation: \"only a revocation refuses\" a writer's later segments, which stops that seat's acts arriving, its cut acts included. Before PRV-10, a device-seat pin also rests on its seat key's seal, and \"Any principal act that removes a pin from a restore block ... is widening whatever verb carries it\".",
+  "fix": "Class \"revoke an access token or a seat key\" as widening next to revoking a device or peer, or state that these revocations never drop a pin and never stop an act that a device key signed.",
+  "severity": "needs-fix",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "A pin, edit or unpin room act never changes any restore block",
+  "problem": "A restore block carries \"the count, room id and key fingerprint of pins of a type that restores that do not qualify (PIN-10)\". So another seat's pin or unpin room act on a `constraint` pin changes that count in every restore block of a run with a seat in the room. The two statements cannot both hold.",
+  "fix": "Change it to: \"A pin, edit or unpin room act never changes which pins a restore block carries; only PIN-10's count of pins that do not qualify can move.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "bar, a mute or a handover offer (LANE-25). It ends an access token, recorded",
+  "problem": "The node that records the expire act is named for an access token and for the grants, but not for a bar, a mute or a handover offer. Because the definition says only \"an act a node with a device key records\", any member's node could record the act that ends a bar, although only the bar's setter, the setter's appointer or the owner may unbar.",
+  "fix": "Add: \"It ends a bar, a mute or a handover offer, recorded by the node of the principal whose act set that expiry.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "grant (OWN-23, OWN-26). Before PRV-10 ships no expiry can be set but a",
+  "problem": "An access token is \"short-lived\" and enrolls devices and peers (PEER-06) and carries invite links (LANE-18), and an expire act is what ends it. Before PRV-10, though, no expiry other than a grant's can be set and no expire act exists, so before PRV-10 an access token or invite link never expires.",
+  "fix": "Say \"no expiry can be set but a grant's or an access token's, each then taking effect only as a refusal by the node that set it\", or state that access tokens need PRV-10.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "whose owner left keeps its pins as they were, but a stamper may still unstamp",
+  "problem": "It does not say which acts this freezes. Role still lets contributors pin, edit and unpin by room acts and lets moderators make list removals, and principals can still add device-seat pins. One implementer would refuse every pin act while the owner is away, another would freeze only the intent.",
+  "fix": "Name exactly what is frozen, for example: \"no pin, edit, unpin or list removal takes effect, whether a room act or a principal act, except an unstamp\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "undefined",
+  "quote": "permission grant, reject a foreign room, decline a join request, tighten a",
+  "problem": "\"Reject a foreign room\" appears only in the list of cut acts, and nothing says what it does: stop holding the room, drop it from named recall, or stop the pins that Foreign room keeps restoring. If it does the last, the rule on removing a pin from a restore block makes it widening, not cut.",
+  "fix": "Define it, for example: \"Reject a foreign room: stop receiving its segments and refuse it as a named recall scope; it never removes a pin from a restore block.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "no acceptance and which `cairn configuration accept` records as the cut act",
+  "problem": "A configuration that turns off the room-view component or the launcher \"applies\" without acceptance, but its cut act is recorded only when `cairn configuration accept` runs, while the component \"runs only while the act turning it on stands\". Until someone accepts, the record still shows the turn-on act standing, so implementers will differ on whether the component stops, and the record misses the change.",
+  "fix": "Change it to: \"which needs no acceptance; Cairn records the cut act turning it off when that configuration applies\".",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "Whether a room is private, shared with the room's principals,",
+  "problem": "Visibility and admission are separate settings, and only the personal room is explicitly closed to invites. Nothing says what happens when the owner of a `private` room invites another principal: one implementer would refuse the invite or join, another would admit the seat but never sync segments to its node.",
+  "fix": "Add: \"A private room has no member seats of other principals; inviting or admitting another principal's seat needs visibility `shared`\" (or state the opposite rule).",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "that device seat in the personal room, naming the room, and that room shows it",
+  "problem": "The personal room \"stays private\", yet a principal act recorded there for another room (the principal has no member seat there, or a paired phone signed it) must be shown in that room by address. Other principals' nodes can do that only by receiving part of the personal room's writer, and peers exchange whole sealed ranges. The candidate does not say what of the personal room is served to them.",
+  "fix": "Say that such an event is served to the named room's nodes as that single sealed event, fetched by its address, and that the rest of the personal-room writer stays private.",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "- **Configuration pin**: A pin the principal's configuration declares, authored",
+  "problem": "A repository's `.cairn.toml` \"may only tighten\" the principal's configuration, and adding a `constraint` pin reads naturally as tightening. Nothing says whether repository configuration may declare pins. If it may, text from a repository file, which is untrusted under I2, would become a device-seat `operator` pin that restores verbatim.",
+  "fix": "Append: \"Repository configuration declares no pins.\"",
+  "severity": "minor",
+  "lens": "consistency",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "CLI; a skill's call is the agent's own tool call, never a principal act.",
+  "problem": "A run-seat key lives only in the MCP server, and a room act counts \"wherever it is taken\". So when an agent's tool call runs `cairn`, the only key it can sign with is the device seat's, and nothing forbids that. Model output then becomes device-seat posts and pins. Before PRV-10 those pins are trusted `operator` events. Once PRV-10 ships, the posts are trusted for the principal's agents and reach trust-grantors' agents inside OWN-29's template, which breaks I2.",
+  "fix": "CLI; a skill's call is the agent's own tool call, never a principal act, and it never signs with a device seat's key: it acts as the run's seat or is refused.",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "or a read-only CLI verb the agent runs whose output is not a",
+  "problem": "Enveloping depends only on whether the output is a terminal. An agent's tool call can run `cairn` under a pseudo-terminal and get stored untrusted history back raw. That content reaches the model with no envelope, against I2.",
+  "fix": "or a read-only CLI verb an agent's tool call runs, whatever its output",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "detected it), a widening act, makes it a new pin its device seat authors; for",
+  "problem": "An agent-suggested candidate is model output. Confirming it makes a device-seat pin that is trusted and restores verbatim after every compaction. A stamp requires showing the exact text and endorsement sends it exactly as confirmed, but no such rule covers this confirmation. A truncated or summarised prompt could therefore make injected text a lasting restored constraint.",
+  "fix": "detected it), a widening act taken after being shown its exact text and who suggested it, makes it a new pin its device seat authors; for",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "A pin the principal's configuration declares, authored",
+  "problem": "A configuration pin is authored by the device seat, so it is trusted and restores. Repository configuration 'only tightens', and adding a constraint pin reads as tightening. Nothing stops a repository's `.cairn.toml`, a file and so untrusted under I2, from declaring one that then restores verbatim as trusted text.",
+  "fix": "A pin the principal's configuration declares, never repository configuration, authored",
+  "severity": "needs-fix",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "past it that continue its chain without a fork, marked delivered after",
+  "problem": "The candidate never says what events past a retired writer's last accepted seq may do: count in the room merge, qualify as pins, or be trusted. When an expired access token retires the writer, a lost ephemeral node can keep appending room acts (posts, branch links, an appointed moderator's kicks). Peers accept them, and two implementers would count them differently.",
+  "fix": "Add: events past it are kept for I1 but count in no room merge, qualify no pin and are untrusted.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "security",
+  "quote": "It posts and writes room summaries, answering summary requests",
+  "problem": "The facilitator's job is to restate other seats' text, yet trust grants exclude only its room summaries. If its certifier marks it non-relaying, a trust grant to its service account is warned but not refused. Its posts, which can carry another seat's injected text, then reach the grantor's agents inside OWN-29's template.",
+  "fix": "Add: a facilitator's service account counts as relaying text others wrote, whatever its certificate marks.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "contradiction",
+  "quote": "token, a seat key or a service account's certificate, turn capture on, and",
+  "problem": "Turning capture on resumes recording the node's runs' events into rooms other principals' nodes hold. The candidate's own definition calls that widening ('lets more ... leave the node'), and a cut act 'only' stops, narrows or undoes. It still classes this as cut, unlike revoking a device, which 'stays widening although it undoes an enrollment'.",
+  "fix": "Move 'turn capture on' to Widening: turning capture on or off is widening, whichever way it goes.",
+  "severity": "minor",
+  "lens": "security",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "branches the room names later by branch links, whose runs' events then go",
+  "problem": "A harness resume that starts a new harness session, a harness clear and a retry each start a new run. A new run has a seat only in its personal room until it joins. The candidate never says whether the principal's earlier ask or acceptance also covers the run that continues the work. This sentence reads as covering every run on a named branch, but Relations sends a run's events only to a room that run itself joined or created. On the per-run reading, after a resume the agent's events leave the room, and every later compaction restores none of that room's constraints until the principal asks for a join again.",
+  "fix": "Add to Join: \"A run that a harness resume, a harness clear or a retry starts on the same branch takes a run seat in every room where the run it follows had a member seat, under that run's ask or acceptance.\"",
+  "severity": "needs-fix",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "gap",
+  "quote": "A worker a harness runs for exactly one principal: the principal of",
+  "problem": "No rule says which runs belong to one agent. A run is keyed by harness session and harness agent id, but a resume in a new harness session or a harness clear starts a new run, apparently of the same agent. Several rules depend on that answer: which rooms an agent 'has a seat in' through its runs' seats, so what the `rooms` recall scope reaches; which agent a directed post targets; and who counts as 'one of the principal's own agents' for endorsement and delegation. Two implementers could reasonably build different recall reach.",
+  "fix": "Add to Agent: \"An agent's runs are the run its harness session starts and every run a harness resume or harness clear continues from it; a subagent is its own agent.\"",
+  "severity": "needs-fix",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "Whatever is currently in the model's context window. Never",
+  "problem": "Nothing else in the candidate uses Working view. The Replay tab's context lens describes the same thing ('what the model's context window contained at an event') without the term, so the concept has no use here.",
+  "fix": "Use the term where it applies (\"the Replay tab's context lens showing the run's working view at an event\"), or drop the entry.",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ },
+ {
+  "type": "useless",
+  "quote": "repository's **git directory** is git's own store of objects and refs.",
+  "problem": "Git directory is defined but never used. Bundles as git refs and the git carrier's segments are placed in the repository or the principal's remote, never in the git directory, so nothing creates, reads or acts on it.",
+  "fix": "Drop the clause \"its repository's git directory is git's own store of objects and refs\" from Worktree.",
+  "severity": "minor",
+  "lens": "usefulness",
+  "model": "default"
+ }
+]

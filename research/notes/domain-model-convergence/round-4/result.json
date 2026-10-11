@@ -1,0 +1,242 @@
+{
+ "round": 4,
+ "reviews": [
+  {
+   "lens": "consistency",
+   "findings": [
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/places.md",
+     "quote": "the home at the change stays in force until a release there (I5, REC-24).",
+     "problem": "A node clone is a new node, and Node makes everything recorded before the change another node's. Yet the quarantines that earlier node recorded stay in force on the clone without any request, while I5 says a quarantine reaches another node only as a quarantine request that node's principal applies.",
+     "fix": "On such a node, every quarantine in force in the home at the change counts as a quarantine request the node's principal applied there, recorded at the change, and stays in force until a release there (I5, REC-24).",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "its parent's join (LANE-23)",
+     "problem": "A subagent joins every room its parent's run seat is a member of 'under its parent's join'. A parent's seat in a room it created has no join, though: its add is the create room act. Seat's list of adds names only a join the principal asked for or accepted, so it is undefined whether the subagent's seat in such a room has an add that stands.",
+     "fix": "Write 'under its parent's join, or its parent's create room act where the parent created the room', and add 'a subagent's join under its parent's add' to Seat's list of adds.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "Reading a bundle into this node's record (`cairn import`, REC-23).",
+     "problem": "Acts and roles says every principal act a requirement names is classed there, and it lists the cut 'reject a foreign room'. Yet no class holds importing a bundle, and the model never says import is no principal act. One implementer will let an agent's CLI call import a bundle; another will require a widening act at a principal surface.",
+     "fix": "Add 'import a bundle' to the widening class in acts-and-roles.md, or state in Import: 'Import is no principal act.'",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "the part that recorded it (the hook handlers, the CLI, the TUI, the MCP",
+     "problem": "The recorder list, and Seal's OQ-40 sentence, leave out the peer component, yet only that component receives segments. So the structural event that Integrity status records for each refused segment has no recorder and no sealer the model names. Implementers will differ on which part records it and how the trust policy, which reads the recorder, treats it.",
+     "fix": "Add 'the peer component' to the recorder list and to Seal's OQ-40 sentence, or state that the core records a refused segment when it stores what the peer component received.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "its **exporter**, which chains to the **bundle's",
+     "problem": "Principal says no key chains to a principal key before PRV-10 ships. Yet a bundle's exporter must chain to the bundle's principal key, which a pull-request author's binding statement names. The model never says whether exporting, importing and publishing bundles wait for PRV-10, or what stands in for the bundle's principal key until then.",
+     "fix": "Write 'which, once PRV-10 ships, chains to the bundle's principal key; before then a bundle carries only its exporter's device key', or state that bundles wait for PRV-10.",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "forensics; the node's principal chooses which fork to keep (PEER-10).",
+     "problem": "The entry keeps both forks, yet has the principal choose 'which fork to keep'. With both kept, (writer, seq) names two events, though it is the model's only meaning of address and I1's stable address. The model never says which event an address resolves to, so recall by address will differ between implementations.",
+     "fix": "...both kept for forensics; the node's principal chooses which fork the writer continues from; an address names that fork, and the other stays recoverable in the forensic view (PEER-10).",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/git-and-forge.md",
+     "quote": "join, a leave, a kick or a bar) or a concurrent branch link with the lower",
+     "problem": "A branch belongs to the first branch link in causal order, then to the one with the lower commitment, and I10 makes that independent of arrival order. A link that is earlier in causal order can still reach this node after its causal successor from another writer. The 'moves only when' list then forbids the move that the causal-order rule requires.",
+     "fix": "...or a branch link that comes earlier in causal order, or a concurrent one with the lower commitment, reaches this node later;",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "every pin version it writes is likewise in its",
+     "problem": "Device seat exempts only the facilitator's room acts from the principal-surface rule. A device-seat pin of a type that restores is a widening principal act, yet Facilitator says it writes pin versions, and Trust grant expects grants to cover its pins. Whether its program may take that principal act through its node's CLI is undefined.",
+     "fix": "State either 'its program takes only room acts: every pin version it writes is of a type that does not restore' or 'its program may also take, through that CLI, the pin acts its device scope allows (SEC-32)'.",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "security",
+   "findings": [
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "`automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`).",
+     "problem": "The deployment mode decides whether `user` events are trusted, and the record definition implies the principal's own configuration can also change the trust policy and turn off redaction or flags. The model never says these changes are widening or take effect only from accepted configuration, which it does say for retention policy, configuration pins and the launcher. An agent that edits the configuration file could switch automation to interactive, so pipeline text, possibly carrying untrusted issue content, becomes a trusted source. It could also turn redaction off before events sync over B2.",
+     "fix": "Add: \"Changing it, the trust policy, redaction or flags is a widening act and applies only once its configuration is accepted (ADM-04); the hook handlers record the accepted mode with each event.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "every pin version it writes is likewise in its",
+     "problem": "The facilitator writes pins through its node's CLI, and Device seat exempts only its room acts from the principal surface. Adding a pin of a restoring type from a device seat is a widening principal act, which needs a principal surface. So the model leaves open whether the program, which reads untrusted room text and which any agent on that node can imitate (R7), may author constraint or preference pins that restore as trusted to grantors' agents.",
+     "fix": "Add: \"its program writes no pin of a type that restores; such a pin of the facilitator's is a principal act taken at a principal surface.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/record.md",
+     "quote": "past it that continue its chain without a fork, marked delivered after",
+     "problem": "Retiring a writer, including through the expire act that ends an access token, still accepts later segments, but the model never says whether acts in them (posts, links, pins, kicks, bars) count in the room merge. One implementer would let an expired ephemeral node's seat keep governing rooms until someone revokes it; another would ignore those acts.",
+     "fix": "Append: \"; no act past that seq counts in the room merge.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/record.md",
+     "quote": "- **Redaction**: Removing secrets from content before it is stored, on import,",
+     "problem": "A draft shown live under the owner's room setting leaves the member's node over B2. It is never stored, so none of the listed redaction points applies, and the member's own principal takes no act to send it. A secret pasted into an unsent post would stream unredacted to other principals' nodes because of another principal's setting.",
+     "fix": "Add \"or from a draft before it shows live\" to Redaction. In Post add: \"a draft shows live only while its principal also allows it.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "pin budget first from the rooms the run has had a seat in during the run, its",
+     "problem": "Pins fill the pin budget in the priority order their authors set. A principal covered only by a trust grant can therefore give its pins the lowest priorities and push the grantor's own constraints out of the restore block, leaving them named only by id and count. The model forbids that kind of displacement only between versions of one pin (LANE-32).",
+     "fix": "Add: \"a pin qualifying only through a trust grant fills the budget after every pin its agent's principal wrote or stamped.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "A recorded grant covers nothing once the node's key set holds a certificate",
+     "problem": "A relaying mark, or another party's revocation or removal, can make a grant cover nothing. That silently drops the granted pins from the grantor's agents' restore blocks and stops the granted posts. The agent sees only a count, and unlike unpin and list removal, the principal is shown nothing.",
+     "fix": "Add: \"A grant that comes to cover nothing raises a Needs you item for its grantor.\"",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "usefulness",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/index.md",
+     "quote": "rooms the agent has a seat in and the cross-room posts they show",
+     "problem": "The model doesn't say whether the default `run` scope is bound by this rule. It also leaves out a room of the principal's that the agent's run seats have left: that room is neither in scope nor foreign, so no call can reach it. Yet the restore block keeps that room's pins and its landmark index lists the current run's address ranges in that room's writers, while a foreign room can still be named.",
+     "fix": "Rewrite as: \"... never to a foreign room, or to a room of the principal's that its runs' seats have left, unless the call names it; the `run` scope reaches every event of the current run, whatever room holds it.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "exact text, pin type and priority, makes it a new pin its device seat authors;",
+     "problem": "Each device seat belongs to one room, and the room decides which runs a pin restores to: the personal room reaches every run on the node, any other room only that room's runs. Yet the confirmation, a widening act, neither names nor shows the room the new pin lands in, so implementers will place confirmed constraints in different rooms.",
+     "fix": "Rewrite as: \"exact text, pin type, priority and room (the room its candidate names, else its event's room), makes it a new pin its device seat in that room authors;\"",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/pins-and-context.md",
+     "quote": "this node's own device seat to this node's agents)",
+     "problem": "Read literally, this pre-PRV-10 clause lets a token-key-only node's device-seat pins restore on that node. The same entry ('a token-key-only node's restores only once stamped') and Token key say such pins restore only once stamped, and a stamp has effect only once PRV-10 ships. Access tokens, and so ephemeral nodes, exist before PRV-10, so implementers will differ on whether those nodes' agents get any constraint back at all.",
+     "fix": "Write \"(before PRV-10 ships, a pin from this node's own device seat, other than a token-key-only node's, to this node's agents)\", and add the same exception to the \"Adding, editing or unpinning\" parenthetical.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/seats-and-keys.md",
+     "quote": "to an access token's rooms, the rooms it may create, its node's own personal",
+     "problem": "A run on a token-key-only node joins one of its access token's rooms only when its principal asks for or accepts the join (Join), and that node can sign no principal act. No rule says that minting the token is that ask, so an unattended ephemeral run never gets a seat there. Those rooms' pins then never restore to it, recall can't reach them, and its events never go there.",
+     "fix": "Rewrite as: \"to an access token's rooms, whose joins by that node's runs minting the token asks for (Join), the rooms it may create, its node's own personal room ...\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/places.md",
+     "quote": "Whether a room is private, shared with the room's principals,",
+     "problem": "No rule gives 'private' an effect apart from 'shared with the room's principals'. Peer serves a room's segments to every peer whose principal has a seat in it, and Admission and invites never consult visibility. So one implementer lets a private room with an invited principal behave as shared, and another refuses the invite.",
+     "fix": "Rewrite as: \"Whether a room is private (admitting no other principal's seat, as a personal room admits none), shared with the room's principals, ...\"",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "after being shown its exact text, author and key fingerprint.",
+     "problem": "Once PRV-10 ships, a stamped version restores to the stamper's agents only if its pin type restores. It is ordered in their pin budget by the priority its author set, and that author may be an agent's run seat or another principal, so a stamp can push the stamper's own constraints out of the restore block. A pin candidate's confirmation shows type and priority; the stamp shows neither.",
+     "fix": "Rewrite as: \"after being shown its exact text, pin type, priority, author and key fingerprint.\"",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/record.md",
+     "quote": "Removing secrets from content before it is stored, on import,",
+     "problem": "Redaction changes content before it is stored and makes no exception for pins. I3 requires every pin that restores to be stored and restored verbatim, and its only exception is a pin the budget omits. A constraint whose text matches a secret pattern therefore restores altered under one implementation and is exempted under another.",
+     "fix": "Add: \"a pin version whose text redaction would change is refused and counted, never stored altered.\"",
+     "severity": "minor"
+    }
+   ]
+  }
+ ],
+ "match": {
+  "matches": [
+   {
+    "lens": "security",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "DM-F's closing texts cover only repository configuration (it may not change the deployment mode, trust policy, redaction or flags) and configuration pins. Nothing in the model says a change by the principal's own configuration to the deployment mode, redaction or flags is widening and applies only once accepted, as it says for retention policy and pins. The finding is about an agent editing that file, so it shows DM-F's closing text is incomplete."
+   },
+   {
+    "lens": "security",
+    "index": 1,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "DM-AJ's closing text only requires the facilitator's pin versions to be in its own words. It does not say whether the facilitator's program, which reads untrusted room text, may author a pin of a type that restores at all, or that such a pin is a widening principal act at a principal surface. The finding quotes DM-AJ's own closing sentence as incomplete. DM-Q and DM-V are different defects (the terminal-test exemption, and posts)."
+   },
+   {
+    "lens": "security",
+    "index": 2,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "No ledger theme covers a retired writer's later segments. DM-G and DM-H concern access-token expiry and who records an expire act, not whether acts delivered after retirement count in the room merge."
+   },
+   {
+    "lens": "usefulness",
+    "index": 0,
+    "theme": "NEW-4",
+    "kind": "new",
+    "reason": "DM-AC closes how a later run inherits its agent's rooms for recall and restore, and DM-AG closes that a leave, kick or bar drops no pin. Neither says what recall does for a room of the principal's that the current run's own seats have left. That room is not foreign, but the 'has a seat in' rule excludes it, while its pins still restore. The finding also asks whether the default `run` scope is bound by the rule. This is a different defect from both."
+   }
+  ],
+  "new_themes": [
+   {
+    "id": "NEW-1",
+    "title": "The deployment mode, trust policy, redaction and flags change only through accepted configuration; the model says it only for retention policy, pins and repository configuration",
+    "settled_by": "ADM-04 (a settings change that changes the deployment mode or loosens redaction is accepted only from the principal's configuration, after the widening act accepting it records its digest) and PRV-04 (interactive is an explicit opt-in in the principal's configuration). SEC-11 and the §9.6 table bar repository configuration from these keys. Partly: ADM-04 names neither the trust policy, which has no settings key, nor flags (flag.enabled is only 'true' in repository configuration)."
+   },
+   {
+    "id": "NEW-2",
+    "title": "The facilitator's program may author a pin of a type that restores, a widening principal act, with no principal surface",
+    "settled_by": "OWN-12 with the §9.5 pin-verb row in 09a-command-line-interface.md: adding a pin of a type that restores from a device seat is a widening principal act, and the terminal-test exemption for the facilitator's program (SEC-32) covers verbs that write a room act only. R7 accepts an agent imitating the program. SEC-32 adds only the own-words rule."
+   },
+   {
+    "id": "NEW-3",
+    "title": "Whether acts in a retired writer's later segments (delivered after retirement) count in the room merge",
+    "settled_by": "none. PEER-05 accepts those segments and marks them delivered after retirement, and LANE-31 and I10 derive room state from the set of acts held. Neither says whether acts past the retirement seq count, and no OQ covers it."
+   },
+   {
+    "id": "NEW-4",
+    "title": "Recall scope for the default `run` scope and for a room of the principal's that the run's seats have left (neither in scope nor foreign)",
+    "settled_by": "none for the left room. RCL-05 settles only that the default `run` scope is the current run through every writer of its seats, and REC-02 and PIN-10 settle restore only. No requirement says what `room` or `rooms` recall does for a non-foreign room the run's seats have left."
+   }
+  ]
+ }
+}

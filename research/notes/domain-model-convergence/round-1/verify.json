@@ -1,0 +1,570 @@
+[
+ {
+  "id": "NEW-1",
+  "real": true,
+  "why": "Real. The Pin entry lets a stamped version restore with no PRV-10 condition: \"any version of a type that restores restores to the agents of a principal who stamped it, its stamp trusted on this node\". PIN-10 (P0, M2) does the same: \"or a version the run's principal stamped, whose stamp is so trusted\", and so do the Stamp entry and LANE-32. Before PRV-10 the stamp is this node's own principal act, so \"its stamp trusted on this node\" holds. The stamped text, though, may be a run seat's `assistant` event. I2 lists \"a pin version a principal stamped, for that principal's own agents\" as a trusted source only \"once PRV-10 ships\". Trusted sources says the same: \"and, once PRV-10 ships, ... a pin version its principal stamped\". Restore blocks are the closed path \"Without a principal act\", \"built only from qualifying pins, trusted structural fields and fixed text Cairn ships\". So before PRV-10 an untrusted stamped version would reach the model with no envelope. PRV-02's \"; and, for one principal's agents, ... the pin versions that principal stamped\" can be read on either side of its \"once PRV-10 ships\". Gating loses nothing. §12.2 puts LANE-32 (stamps) and PRV-10 both in M7. Before PRV-10, a pin candidate's confirmation (PIN-05) already turns agent text the principal reviewed into a device-seat pin. The finding's other option widens I2's pre-PRV-10 trusted sources, which is an invariant change, so it is not proposed.",
+  "settled_by": "none",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "Gate the stamp path on PRV-10 wherever it is stated: the model's Pin and Stamp entries, PIN-10, LANE-32, §9.4's trust sentence, plus a clarifying \"once PRV-10 ships\" in PRV-02. No invariant changes, because I2 and Trusted sources already say \"once PRV-10 ships\". After applying, run `mdsmith fix` to re-pad the SRS tables. acts-and-roles.md goes to 2973 of its 3000 heuristic tokens with this theme alone, and 2990 with NEW-2 as well.",
+  "edits": [
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "  any version of a type that restores restores to the agents of a principal who\n  stamped it, its stamp trusted on this node. Adding, editing or unpinning a pin\n",
+    "new": "  once PRV-10 ships, any version of a type that restores restores to the agents\n  of a principal who stamped it, its stamp trusted on this node. Adding, editing\n  or unpinning a pin\n"
+   },
+   {
+    "file": "docs/domain-model/acts-and-roles.md",
+    "old": "  after being shown its exact text, author and key fingerprint. A stamped\n  version of a type that restores restores word for word to that principal's own\n  agents only. An edit, an unpin or a list removal leaves a stamped version\n",
+    "new": "  after being shown its exact text, author and key fingerprint. Once PRV-10\n  ships, a stamped version of a type that restores restores word for word to\n  that principal's own agents only. An edit, an unpin or a list removal leaves\n  a stamped version\n"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "or a version the run's principal stamped, whose stamp is so trusted",
+    "new": "or, once PRV-10 ships, a version the run's principal stamped, whose stamp is so trusted"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "; and, for one principal's agents, the posts and pins its trust grant covers and the pin versions that principal stamped;",
+    "new": "; and, once PRV-10 ships, for one principal's agents, the posts and pins its trust grant covers and the pin versions that principal stamped;"
+   },
+   {
+    "file": "docs/srs/05b-lane-requirements.md",
+    "old": "A stamped version of a type that restores MUST restore word for word to the stamper's own agents only",
+    "new": "Once PRV-10 ships (PIN-10), a stamped version of a type that restores MUST restore word for word to the stamper's own agents only"
+   },
+   {
+    "file": "docs/srs/09-interfaces.md",
+    "old": "names certified, never a token-key-only node's (OWN-29), are trusted for that\nprincipal's own agents only (I2).",
+    "new": "names certified, never a token-key-only node's (OWN-29), are trusted, once\nPRV-10 ships, for that principal's own agents only (I2)."
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/pins-and-context.md",
+   "quote": "once PRV-10 ships, any version of a type that restores restores to the agents"
+  }
+ },
+ {
+  "id": "NEW-2",
+  "real": true,
+  "why": "Real. The Pin entry gives an agent two independent ways to reach a pin. One is \"by its newest version whose own event is trusted on this node, to its author's principal's agents ... and to agents whose principal's trust grant covers its author's principal\". The other is \"any version of a type that restores restores to the agents of a principal who stamped it\". LANE-32 adds: \"the stamped version MUST keep restoring until the stamper unstamps it\". Take Q, who stamped v1 and holds a trust grant covering the author, who then edits to v2. Read literally, Q's agents get both v1 and v2: two texts of one constraint, possibly in conflict. PIN-08 orders by \"pin priority, then of their creating events' addresses\". Two versions of one pin share both, so where the budget cuts between them is undefined (I10). LANE-32's \"MAY stamp one version of a pin\" does not say whether one principal may stamp two versions, so it does not settle this. Nothing in the SRS or the ADRs does.",
+  "settled_by": "none",
+  "klass": "design",
+  "options": [
+   {
+    "label": "A: newest qualifying version only",
+    "effect": "One version per pin per agent, ordered without ties. An author's edit under the stamper's own trust grant replaces the text the stamper reviewed, with no new review. LANE-32's 'keep restoring until the stamper unstamps it' needs the exception 'or a newer version of the pin restores to its agents'. Simplest wording.",
+    "invariant_change": false
+   },
+   {
+    "label": "B: every qualifying version restores",
+    "effect": "Matches the literal text; LANE-32 stays as written. The agent sees two texts of one constraint, possibly contradicting each other, and the pin budget pays for both. PIN-08 needs a version-number tie-break and must handle a budget that cuts one version of a pin but not another.",
+    "invariant_change": false
+   },
+   {
+    "label": "C: newest, but a trust grant never displaces a stamp",
+    "effect": "One version per pin per agent. A stamp holds against every other principal's act, as it already holds against unpins and list removals (ADR-2610061900: 'the stamped version keeps restoring until its stamper unstamps it'). Only the stamper's unstamp, or its own newer stamp or edit, replaces it. The Needs you item LANE-32 raises on the edit lets the stamper follow the change, so following the author becomes opt-in. Owners still see their own revisions, LANE-11 included.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "C. It prefers safety: text the stamper reviewed word for word is not silently replaced under a blanket trust grant. It keeps LANE-32's and the ADR's rule that only the stamper ends its stamp's effect. It avoids option B's conflicting texts and the PIN-08 tie. Edits go to the Pin version entry, the Stamp entry, PIN-10 and LANE-32. Run `mdsmith fix` to re-pad the SRS tables. acts-and-roles.md goes to 2990 of its 3000 heuristic tokens with NEW-1 applied too, which is tight. The pending LANE-32 scenario should gain a step for a stamper's own newer stamp when it is written.",
+  "edits": [
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "- **Pin version**: One immutable text of a pin; each edit adds one, unstamped.\n  What a stamp covers.\n",
+    "new": "- **Pin version**: One immutable text of a pin; each edit adds one, unstamped.\n  What a stamp covers. Of the versions of one pin that qualify for an agent,\n  only the newest restores to it, but one qualifying only through a trust grant\n  never displaces one the agent's principal stamped (LANE-32).\n"
+   },
+   {
+    "file": "docs/domain-model/acts-and-roles.md",
+    "old": "  restoring until its stamper unstamps it, a cut principal act (LANE-32).\n",
+    "new": "  restoring until its stamper unstamps it, a cut principal act, or its own\n  stamp or edit puts a newer version in its place (LANE-32).\n"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "either of a type that restores, MAY restore. Any other pin",
+    "new": "either of a type that restores, MAY restore; of the versions of one pin that so qualify for a run, only the newest MAY restore, but one qualifying only through a trust grant MUST NOT displace one the run's principal stamped. Any other pin"
+   },
+   {
+    "file": "docs/srs/05b-lane-requirements.md",
+    "old": "the stamped version MUST keep restoring until the stamper unstamps it, a cut principal act.",
+    "new": "the stamped version MUST keep restoring until the stamper unstamps it, a cut principal act, or the stamper's own stamp or edit makes a newer version of the pin restore to its agents (PIN-10)."
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/pins-and-context.md",
+   "quote": "only the newest restores to it, but one qualifying only through a trust grant"
+  }
+ },
+ {
+  "id": "NEW-13",
+  "real": true,
+  "why": "Real for the pin budget, not for the restore block limit. The record.md text says repository configuration \"may only tighten: ... such as lowering a limit or turning an injection path off\", and §9.6 marks `pin_budget.max_model_tokens` \"Only lower\". PIN-08 then leaves out pins over the budget and \"MUST name the omitted pins in the restore block by id and count\". `.cairn.toml` belongs to the \"Repository's commit authors\" (§6.1 \"Controls repository files, including `.cairn.toml`\"), and an agent can write it in its worktree. A tiny pin budget there therefore cuts the principal's constraints down to ids and a count after every compaction, with no principal act. That breaks the rule that removing a pin from a restore block is security-relevant. OWN-11 says \"Any principal act that removes a pin from a restore block ... MUST be widening whatever verb carries it\", and ADM-04 accepts a settings change that \"adds, edits or unpins a pin\" only from configuration the principal accepted. The model's Budget entry names the pin budget a budget, not a limit, so \"lowering a limit\" stays right. Lowering the restore block limit drops no pin: INJ-07 says \"MUST NOT reduce pins below the PIN-08 rule\". Turning `restore_block.on_prompt` off also takes no pin out of a restore block, because pins still restore at compaction, run start and resume.",
+  "settled_by": "none (only the restore-block-limit half is settled, by INJ-07: \"MUST NOT reduce pins below the PIN-08 rule\")",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "Make the pin budget not settable in repository configuration (§9.6 'No', SEC-11, the model's Configuration entry). Add 'lowers the pin budget' to ADM-04's list of settings changes accepted only from accepted configuration. That list then catches the principal's own configuration as well, as OWN-11's 'whatever verb carries it' implies, and ADM-04 already ignores, audits and counts the repository key. Add a pending example row to the SEC-11 scenario. Run `mdsmith fix` to re-pad the SRS tables. record.md stays under budget: 196 lines, 2785 heuristic tokens.",
+  "edits": [
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "  enabling injection, extending recall scope, changing the trust policy or the\n  deployment mode, or disabling redaction or flags (SEC-11).",
+    "new": "  enabling injection, lowering the pin budget or otherwise removing a pin from\n  a restore block, extending recall scope, changing the trust policy or the\n  deployment mode, or disabling redaction or flags (SEC-11)."
+   },
+   {
+    "file": "docs/srs/06-security.md",
+    "old": "it MUST NOT enable any injection, extend recall scope,",
+    "new": "it MUST NOT enable any injection, lower the pin budget or otherwise remove a pin from a restore block (OWN-11), extend recall scope,"
+   },
+   {
+    "file": "docs/srs/05a-administration-requirements.md",
+    "old": "or a retention policy, loosens redaction",
+    "new": "or a retention policy, lowers the pin budget, loosens redaction"
+   },
+   {
+    "file": "docs/srs/09-interfaces.md",
+    "old": "| `pin_budget.max_model_tokens`                                                                | 1000                     | Only lower                           |",
+    "new": "| `pin_budget.max_model_tokens`                                                                | 1000                     | No                                   |"
+   },
+   {
+    "file": "features/security.feature",
+    "old": "      | redaction.extra_patterns         | []          |\n",
+    "new": "      | redaction.extra_patterns         | []          |\n      | pin_budget.max_model_tokens      | 100         |\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/record.md",
+   "quote": "enabling injection, lowering the pin budget or otherwise removing a pin from"
+  }
+ },
+ {
+  "id": "NEW-5",
+  "real": true,
+  "why": "Partly real. The model routes the act to the personal room: \"One that acts on no room, on a room its principal has no member seat in, or that a paired phone signs, goes to that device seat in the personal room, naming the room\" (index.md Relations; LANE-01 says the same). PEER-02 serves a room only \"to the enrolled peers whose principal has a seat in that room ... and to no other\", and OQ-41 says \"PEER-02 serves the personal room to no other principal\". The finding says the personal room never leaves its node. That is wrong: the principal's own nodes hold it under PEER-02. So: (1) Revoking an everywhere trust grant is NOT a defect. A grant governs only the grantor's agents (OWN-29: \"trusted for the grantor's agents\"), and those run on the grantor's own nodes, which receive its personal rooms. (2) Revoking a device key IS a defect, and so is revoking an access token, which PRV-10 says \"MUST revoke every seat key its token key certified\". Another principal's node that holds a shared room never receives the revocation. PRV-10's guard (trusted only when \"the key is not revoked\") and its refusal rule (\"Once a node holds a revocation, it MUST refuse every event by the revoked key\") never fire there. That node keeps accepting room acts, posts and pins from seats the revoked key certified, and keeps trusting them under a trust grant (I2, I8). It also derives room state that differs from the principal's own nodes. (3) Revoking a service-account certificate changes no trust on another principal's node, since a chain \"never through another principal key\" (PRV-10), and the account stays a service account (OWN-27). Its reach matters only where the certificate itself has arrived. Related gap, to raise as its own finding: certifying a service account is also a principal act that acts on no room, so the certificate never reaches other principals' nodes either. There the account's key counts as \"never certified\", which is a person's, so OWN-29's relaying refusal and OWN-27's verdict rule cannot apply. The mechanism is a real choice: per-room copies, an exchange outside rooms, or deferral.",
+  "settled_by": "none. PRV-10: \"Revocations MUST be signed events that replicate like any other.\" That states the intent but routes nothing. LANE-01 sends an act that acts on no room \"to that device seat in the personal room\". OQ-41 covers only \"An act on a room by a principal with no member seat there\", not acts on no room. No ADR covers it.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "A: also record the revocation as a principal act on each room it affects",
+    "effect": "A device key's or an access token's revocation is also recorded as a principal act on each room the recording node holds where its principal has a member seat. LANE-01 routes it to the signing device's seat there, which joins without admission (LANE-23). Every node holding such a room then receives it with the room's segments under PEER-02, and PRV-10's refusal and trust rule apply there. No new carrier is needed and SEC-24 and PEER-02 are unchanged. Remaining gap: a room the recording node does not hold receives it only once that node holds the room.",
+    "invariant_change": false
+   },
+   {
+    "label": "B: exchange revocations with every enrolled peer outside rooms",
+    "effect": "Reaches peers whether or not they share a room. It needs a new carrier, such as a key-set writer (a new concept), and changes to SEC-24 (\"B2 MUST carry only sealed ranges\") and PEER-02. It also shows the principal's key inventory to peers that share no room with it.",
+    "invariant_change": false
+   },
+   {
+    "label": "C: leave routing unchanged and add this to OQ-41 before M7's room merge",
+    "effect": "Nothing changes now. Until the question closes, other principals' nodes keep accepting events from seats a revoked device key or access token certified, and keep trusting their posts and pins under a trust grant. This is the least safe option.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option A. It uses only existing machinery (LANE-01 routing and LANE-23's join without admission for a principal act) and closes the gap on every node that holds a shared room. Do not add the everywhere trust grant: it is not a defect. Do not add the service-account certificate's revocation either: raise the certificate's own reach to other principals' nodes as a separate finding. After applying, run `mdsmith fix` on docs/srs/05-functional-requirements.md to repad its table (MDS025). Tested on a scratch copy: with that repad, `mdsmith check .` and `go test ./internal/...` (including TestFindingLedgerIsCarried) pass. index.md grows to 166 lines and about 1226 tokens.",
+  "edits": [
+   {
+    "file": "docs/domain-model/index.md",
+    "old": "seat, the room merge counting it rests on OQ-41. A seat key's rotation goes\n  to that seat's own writer (SEC-27). A tombstone, an erasure request a",
+    "new": "seat, the room merge counting it rests on OQ-41. A device key's or an access\n  token's revocation is also recorded as a principal act on each room the\n  recording node holds where its principal has a member seat, since PEER-02\n  serves a personal room to no other principal (PRV-10). A seat key's rotation\n  goes to that seat's own writer (SEC-27). A tombstone, an erasure request a"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "Revocations MUST be signed events that replicate like any other.",
+    "new": "Revocations MUST be signed events that replicate like any other, and a device key's or an access token's revocation MUST also be recorded as a principal act on each room the recording node holds where its principal has a member seat (LANE-01), since PEER-02 serves a personal room to no other principal."
+   },
+   {
+    "file": "features/provenance.feature",
+    "old": "    And every revocation is a signed event that replicates like any other\n",
+    "new": "    And every revocation is a signed event that replicates like any other\n    And the laptop's device key's revocation is also recorded as a principal act on each room the recording node holds where this principal has a member seat, so another principal's node holding that room refuses later events by seat keys the laptop's device key certified\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/index.md",
+   "quote": "revocation is also recorded as a principal act on each room the"
+  }
+ },
+ {
+  "id": "NEW-7",
+  "real": true,
+  "why": "The defect is real in the model, which omits the rules that settle it. The Trust grant entry only says \"one naming any other service account shows a warning (OWN-29)\", and the Facilitator entry only says \"It posts and writes room summaries\". Read alone, the model lets a facilitator's posts, written while its program reads untrusted room text, reach agents as trusted behind a generic warning. The SRS already decides this, and the finding's fix contradicts it. SEC-32 holds every appointed moderator's posts, the facilitator's included, to its own words, never quoting or embedding a marked range. OWN-29 requires a specific warning about the facilitator. T27 (\"posts that sway the agents of a principal who trusts the facilitator\") lists SEC-32, LANE-16 and OWN-29 as mitigations. The OWN-29 scenario requires that a trust grant naming the facilitator \"covers its posts but never its room summaries\". Excluding the facilitator's posts would drop a decided feature, so the model only needs to carry the warning and the own-words rule. The SRS needs no edit.",
+  "settled_by": "SEC-32: \"Its posts MUST be in its own words only, shown as its own statements, that point by range link to the marked range each names and never quote or embed it, so it relays no third party's text; they MUST NOT reach as trusted any agent whose own principal has recorded no trust grant for its principal (OWN-29).\" OWN-29: \"granting a facilitator MUST first show the grantor that the facilitator reads untrusted room text (T27)\". The OWN-29 scenario (features/principal-acts.feature): \"a trust grant naming the room's facilitator is recorded only after \\\"alice\\\" is shown that the facilitator reads untrusted room text, and covers its posts but never its room summaries\".",
+  "klass": "settled",
+  "options": [],
+  "recommendation": "Carry the SRS's rules into the model: OWN-29's facilitator warning in the Trust grant entry, and SEC-32's own-words rule in the Facilitator entry. Reject the finding's fix, which would exclude the facilitator's posts from trust grants: it contradicts OWN-29, SEC-32 and the OWN-29 scenario. No SRS edit is needed. trust-and-flow.md grows to 186 lines and about 1429 tokens; principals-and-agents.md to 103 lines.",
+  "edits": [
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "  is refused; one naming any other service account shows a warning (OWN-29). Its\n  revocation is cut.",
+    "new": "  is refused; one naming any other service account shows a warning, for a\n  facilitator that it reads untrusted room text, which its posts never quote\n  (Facilitator, OWN-29). Its revocation is cut."
+   },
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "  write`). It posts and writes room summaries, answering summary requests\n  (LANE-33).",
+    "new": "  write`). It posts only in its own words, pointing by range link to any\n  marked range it names and never quoting or embedding it, so it relays no\n  third party's text (SEC-32), and writes room summaries, answering summary\n  requests (LANE-33)."
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/trust-and-flow.md",
+   "quote": "facilitator that it reads untrusted room text, which its posts never quote"
+  }
+ },
+ {
+  "id": "NEW-8",
+  "real": true,
+  "why": "Real. The model's Trusted sources entry limits the principal's own device-seat posts and pins to \"within that key's scope\", and Qualifying pin says \"within that key's device scope\". The Trust grant entry, though, covers \"posts and pins written from device seats a device key of that principal certified\" with no scope limit. OWN-29 has the same gap: it \"covers only the posts and pins that principal wrote from device seats a device key of that principal certified\", and its later \"written in its scope\" means the grant's room-or-everywhere scope. Read alone, a trust-granted post that a narrowly scoped device key's seat wrote outside its device scope would reach the grantor's agents through OWN-29's template, although it is untrusted even for its own principal's agents. PRV-10 already forbids this. The finding's paired-phone example cannot happen: a paired phone never joins a room or posts (OWN-17). A node device key with a narrow scope is the real case.",
+  "settled_by": "PRV-10: \"A principal act another node's device key signed, or a post or pin from a device seat it certified, MUST be trusted only when that key chains, never through another principal key, to the principal key of this node's principal, or, for a post or pin, of a principal its trust grant covers, the act, post or pin lies within the scope and the rule level, and the key is not revoked.\"",
+  "klass": "settled",
+  "options": [],
+  "recommendation": "Add PRV-10's device-scope condition to the model's Trust grant entry and to OWN-29's coverage sentence, and add one step to the OWN-29 scenario. After applying, run `mdsmith fix` on docs/srs/05c-principal-and-peer-requirements.md to repad its table (MDS025). Tested on a scratch copy together with NEW-5 and NEW-7: `mdsmith check .` and `go test ./internal/...` pass.",
+  "edits": [
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "  posts and pins written from device seats a device key of that principal\n  certified, never a cross-room post shown in another room, run seats,",
+    "new": "  posts and pins written from device seats a device key of that principal\n  certified, within that key's device scope (PRV-10), never a cross-room post\n  shown in another room, run seats,"
+   },
+   {
+    "file": "docs/srs/05c-principal-and-peer-requirements.md",
+    "old": "covers only the posts and pins that principal wrote from device seats a device key of that principal certified;",
+    "new": "covers only the posts and pins that principal wrote from device seats a device key of that principal certified, within that key's device scope (PRV-10);"
+   },
+   {
+    "file": "features/principal-acts.feature",
+    "old": "    And it does not cover a post or pin \"carol\" writes from a token-key-only node\n",
+    "new": "    And it does not cover a post or pin \"carol\" writes from a token-key-only node\n    And it does not cover a post or pin \"carol\" writes from a device seat outside the device scope of the device key that certified it\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/trust-and-flow.md",
+   "quote": "within that key's device scope (PRV-10), never a cross-room post"
+  }
+ },
+ {
+  "id": "NEW-3",
+  "real": true,
+  "why": "Real gap. places.md says a node clone is \"a new node, with its own device key, or a token key, and its own device seat, that mints new seat keys and shares the carried-over personal room (REC-24)\". record.md's Origin defines `witnessed` as \"recorded live on this node\" and says \"the trust policy reads only whether an event was recorded on this node, ingested or received\". The copied home's events keep their stored origin, because §8.2 makes `events` rows \"immutable except content removal by purge\". So a clone holds `witnessed` rows it never recorded. No model or SRS text says whether the clone reads them as its own, and two implementers could choose differently. The invariants already decide the trust question. I8 says \"Content another principal wrote, or another node wrote other than this principal's acts signed by a device key it certified ... is kept as theirs ... and untrusted\". I2's trusted sources are \"this node's own `operator` and structural events, the `harness_meta` events its hook handlers recorded\". PRV-02 trusts them \"on the recording node only\". Round 27 Q1 settled that a node clone is a new node. What is missing is the explicit rule and the origin the clone shows (RCL-09). Cairn cannot tell a clone from any other changed identity: REC-24 says \"an unavailable value MUST count as a changed identity\", and its scenario lists \"the node identity value is unavailable\". So the rule has to cover every node identity change. This agrees with seats-and-keys.md, which already says \"a device seat's pins qualify only on its own node\" before PRV-10. The cost: before PRV-10, the old device seat's pins and the old configuration acceptance stop counting on the clone until the principal confirms them there. That is safe, and it is opt-in. Applied to a copy of the repository, the edits pass `mdsmith check`, and places.md grows to 74 lines and about 601 tokens. The REC-24 row needs `mdsmith fix .` to re-pad its table.",
+  "settled_by": "No rule says it outright. It follows from I8: \"Content another principal wrote, or another node wrote other than this principal's acts signed by a device key it certified and its posts and pins written from a device seat such a key certified, is kept as theirs: attributed to its seat key, and untrusted unless this principal's own stamp or trust grant covers it.\" It also follows from PRV-02, \"on the recording node only\", and from the round-27 Q1 decision: \"a node clone has its own node identity, device key and device seat, mints new seat keys, and shares the carried-over personal room\".",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "A: events recorded before the change count as another node's (received)",
+    "effect": "On a clone, and on any node whose identity changed, the earlier events read as received: a `witnessed` one reads as `peer`. They are trusted only as PRV-02 trusts received events. Before PRV-10, the old device seat's pins and configuration acceptance stop counting there until the principal acts on the new node. Once PRV-10 ships, they count again through the certified old device key.",
+    "invariant_change": false
+   },
+   {
+    "label": "B: carried-over events stay trusted on the clone",
+    "effect": "Pins and configuration acceptance survive a clone. But every golden image or copied volume would carry its `operator` events and pins into every clone's restore blocks. That is content another node wrote, which goes against I8 and I2's \"this node's own\". It needs an invariant ADR.",
+    "invariant_change": true
+   }
+  ],
+  "recommendation": "A. It is the only reading the current I2, I8 and PRV-02 allow, and it is the safe one. Cairn cannot tell a clone from another identity change, so the rule covers both. Apply the edits, then run `mdsmith fix .` to re-pad the REC-24 table row.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "  personal room (REC-24). The node's principal is the principal whose home it\n  is.\n",
+    "new": "  personal room (REC-24). On it, as on any node whose node identity changed,\n  the events recorded before the change are another node's: they count as\n  received, a `witnessed` one read as `peer`, and are trusted only as PRV-02\n  trusts received events (I8). The node's principal is the principal whose\n  home it is.\n"
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "  `bundle` (read by import) or `peer` (received from a peer or a paired phone)\n  (RCL-09);",
+    "new": "  `bundle` (read by import) or `peer` (received from a peer or a paired phone,\n  or recorded `witnessed` before this node's node identity changed, Node)\n  (RCL-09);"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "audit the change, and append nothing under an old key.",
+    "new": "audit the change, and append nothing under an old key. Every event recorded before the change MUST then count on the node as another node's, received and not recorded there (PRV-02, I8), a `witnessed` one reading as origin `peer`."
+   },
+   {
+    "file": "features/record.feature",
+    "old": "    And the personal room keeps its room id\n",
+    "new": "    And the personal room keeps its room id\n    And every event recorded before the change counts on the node as another node's, received, a \"witnessed\" one reading as origin \"peer\", and is trusted only as PRV-02 trusts received events\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "the events recorded before the change are another node's: they count as received, a `witnessed` one read as `peer`"
+  }
+ },
+ {
+  "id": "NEW-4",
+  "real": true,
+  "why": "Real contradiction with I10. trust-and-flow.md says a quota excess \"goes on, counted and raised as a Needs you item (I1, I6)\". record.md lists \"the node's principal's Needs you queue among its queues\" as a derived artifact. VIEW-05 requires the queue \"as a deterministic function of the record\". §9.7.4 puts \"a quota crossed\" in Q3, ordered by \"causal order of raising\". But a crossing depends on `quota.*`, which lives in configuration or managed policy beside the record and not in it. It also depends on storage use, which writer logs do not determine, since segments merge (REC-25) and payloads sit apart. So a rebuild cannot reproduce the item or its causal position. REC-21 solves the same problem for refused segments: they are \"recorded as a structural event in this node's device seat in its personal room, once per writer and reason ... `cairn rebuild` MUST only read these events and MUST append none (I10)\". ADM-15 applies that only to what is received (\"recording each refused segment as REC-21 says\"), not to this node's own recording. The fix copies REC-21's pattern, which leaves no real behavioral choice. Keying it per quota and limit stops a new event on every excess event and raises the item again when someone changes the limit. LANE-01 routes an event with no run to the personal-room device seat. DM-O's closing text stays word for word, and the edit only appends to it. Applied to a copy, trust-and-flow.md comes to 187 lines and about 1442 tokens, and `mdsmith check` passes after `mdsmith fix .` re-pads the ADM-15 row. ADM-15's traces (I6, I9, I1) could also gain I10. I left that out because it would also need the scenario's tag line and Appendix B in the same change.",
+  "settled_by": "none. The rule follows from VIEW-05 (\"as a deterministic function of the record\") and from I10, mirroring REC-21 (\"recorded as a structural event in this node's device seat in its personal room, once per writer and reason ... `cairn rebuild` MUST only read these events and MUST append none (I10)\").",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "A: record the first crossing per quota and limit as a structural event",
+    "effect": "The Needs you item and its causal position derive from the record, and a rebuild appends nothing. Every later excess is still counted and audited (I6).",
+    "invariant_change": false
+   },
+   {
+    "label": "B: record every excess event as a structural event",
+    "effect": "It also derives from the record. But it adds an event to the record for every event over a storage quota and floods the personal room.",
+    "invariant_change": false
+   },
+   {
+    "label": "C: drop the Needs you item and keep only the counter",
+    "effect": "It derives trivially. But it drops a feature that §9.7.4 lists, and edits may not drop a feature.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "A, as REC-21 does for refused segments. Apply the edits, then run `mdsmith fix .` to re-pad the ADM-15 table row.",
+  "edits": [
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "  goes on, counted and raised as a Needs you item (I1, I6).\n",
+    "new": "  goes on, counted and raised as a Needs you item (I1, I6). Its first crossing\n  by this node's own recording, at each limit set for it, is recorded as a\n  structural event in this node's device seat's personal-room writer, as a\n  refused segment is, and that item derives from it (I10).\n"
+   },
+   {
+    "file": "docs/srs/05a-administration-requirements.md",
+    "old": "This node's own recording over a quota MUST raise a failure counter and a Needs you item and keep recording.",
+    "new": "This node's own recording over a quota MUST raise a failure counter and a Needs you item and keep recording. Its first crossing of each quota, at each limit set for it, MUST be recorded as a structural event in this node's device seat in its personal room, carrying only the quota's key, its scope and that limit, and the Needs you item MUST derive from that event; `cairn rebuild` MUST only read these events and MUST append none (I10)."
+   },
+   {
+    "file": "features/administration.feature",
+    "old": "    And every event accepted before is still stored and recallable\n",
+    "new": "    And every event accepted before is still stored and recallable\n    And where this node's own recording crossed the quota, that first crossing at the quota's limit is a structural event in its device seat's personal-room writer, from which the Needs you item derives, and a rebuild appends none\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/trust-and-flow.md",
+   "quote": "Its first crossing by this node's own recording, at each limit set for it, is recorded as a structural event in this node's device seat's personal-room writer"
+  }
+ },
+ {
+  "id": "NEW-9",
+  "real": true,
+  "why": "Real security gap. seats-and-keys.md says \"**Room id**: 128 random bits its create room act fixes, never chosen (LANE-01)\". LANE-01 says \"128 random bits minted by the creating node, never chosen by a seat\". Only an honest node obeys that, and a receiving node has no way to check it. Ownership comes from the create room act: LANE-01 says \"a room an agent creates MUST be owned by its principal\", and LANE-25 says \"an add is its create room act\". Here is the attack. A modified node records a create room act naming an existing room id, from a new seat, as that writer's first act, and claims it saw nothing, so it is concurrent with the original. LANE-31 breaks ties \"among equally restrictive acts\" by \"the act whose event has the lower commitment\". The commitment key is \"a per-event random key\" that the writing node picks (REC-17), so the attacker can grind it until it wins. That makes its principal the owner and bypasses LANE-11's \"Ownership MUST change only by a handover or a succession\". The attack needs another principal's seat, which LANE-23 admits only once PRV-10 ships. Before then a principal can only attack itself, but the rule should land with the id format, before data exists. DM-M covers branch links, not create room. The fix binds the id to the creating seat's first key, which makes \"never chosen\" checkable when an act arrives: forging a matching id needs a hash preimage. The seat id still derives from the room id and the first key, with no circularity. A node clone keeps the personal room's id (REC-24), because no new create room act is recorded there. \"Void and shown\" repeats LANE-01's own wording for branch links. Applied to a copy, seats-and-keys.md comes to 95 lines and about 823 tokens. The LANE-01 cell is the widest in its table, so `mdsmith fix .` must re-pad it. I checked this: after the fix, `mdsmith check .` passes.",
+  "settled_by": "none. LANE-01's \"never chosen by a seat\" states the goal, but no rule voids a second create room act naming an existing id.",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "A: derive the room id from the creating seat's first key and 128 random bits; void a create room act whose seat's first key does not derive it",
+    "effect": "No other seat can create a room under an existing id, so ownership moves only by handover or succession. The merge rules are unchanged, and the cost is one hash check per create room act.",
+    "invariant_change": false
+   },
+   {
+    "label": "B: make the room id the hash of the create room act itself",
+    "effect": "Equally binding. But the seat certificate scoped to the room, and the seat id, must exist before the act is sealed, which makes it circular.",
+    "invariant_change": false
+   },
+   {
+    "label": "C: keep random ids and void every create room act concurrent with another naming the same id",
+    "effect": "Any member's node could then void a room it can see (denial of service), and nothing decides which act is the real one.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "A. Apply the edits, then run `mdsmith fix .` to re-pad the LANE-01 table.",
+  "edits": [
+   {
+    "file": "docs/domain-model/seats-and-keys.md",
+    "old": "- **Room id**: 128 random bits its create room act fixes, never chosen\n  (LANE-01).\n",
+    "new": "- **Room id**: A room's id, derived from the creating seat's first key and 128\n  random bits its create room act fixes, never chosen; a create room act whose\n  seat's first key does not derive the room id it names is void and shown\n  (LANE-01).\n"
+   },
+   {
+    "file": "docs/srs/05b-lane-requirements.md",
+    "old": "A room id MUST be fixed by the room's create room act: 128 random bits minted by the creating node, never chosen by a seat; renaming a room MUST NOT change its id.",
+    "new": "A room id MUST be fixed by the room's create room act: derived from the creating seat's first key and 128 random bits minted by the creating node, never chosen by a seat, and a create room act whose seat's first key does not derive the room id it names MUST be void and shown; renaming a room MUST NOT change its id."
+   },
+   {
+    "file": "features/lane.feature",
+    "old": "has an id of 128 random bits minted by the creating node, and its create room act is the first act of the creating seat's writer and that seat's add\n",
+    "new": "has an id derived from the creating seat's first key and 128 random bits minted by the creating node, and its create room act is the first act of the creating seat's writer and that seat's add, while a create room act naming that id from a seat whose first key does not derive it is void and shown\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/seats-and-keys.md",
+   "quote": "a create room act whose seat's first key does not derive the room id it names is void and shown"
+  }
+ },
+ {
+  "id": "NEW-10",
+  "real": true,
+  "why": "Partly real, and mostly a consequence of decision E rather than a contradiction. Restore follows the run's own seats: Relations says \"A restore block carries the qualifying pins of every room its run has had a seat in during the run, its personal room included (PIN-10)\". Run says \"a harness resume that starts a new harness session, or a **harness clear**, starts a new run\". Agent says later runs inherit rooms \"for recall (the `rooms` scope) and its directed posts, never a seat, add or role: a new run joins only as Join says (REC-02)\". So until its principal accepts a new join, a later run's restore blocks, and its first SessionStart restore (INJ-02), carry only its personal room's pins. The model never says this; a reader has to derive it. The retry case is a real inconsistency. trust-and-flow defines a retry as \"a new run from a worktree checkpoint (OWN-28)\", and OWN-28 promises that run is \"given the intent pin in force through its restore block (INJ-02)\". Nothing gives that run a seat in the room, so PIN-10 cannot put the intent in its restore block. The finding's second fix (\"starts a new run of the same agent\") is wrong in general: Agent says \"where the harness gives no stable agent id, each run is its own agent\", and appendix A C7 notes compaction hooks lack the harness's agent id. Its remark that nothing links such runs is decision E itself, so it is settled. Whether restore, like recall, should follow the agent is a real choice that decision E left open. Residual, not fixed here: the retry's join is recorded by the new run's MCP server, so the SessionStart startup restore may be built before it.",
+  "settled_by": "none. Decision E (REC-02: \"an agent's later runs inherit its rooms for recall (RCL-05) and its directed posts (LANE-12), never a seat, add or role, and join only under LANE-23\") together with PIN-10 (\"A restore block MUST contain the qualifying pins of every room its run has had a seat in during the run, its personal room included\") implies the current behaviour, but no requirement or decision chooses whether restore follows the agent. OWN-28's \"given the intent pin in force through its restore block (INJ-02)\" needs the retry run to have joined, which nothing provides.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "1. Restore stays per run; a later run gets a room's pins once it rejoins; the retry act is the join ask",
+    "effect": "Nothing new reaches a run without its principal's act. After a harness clear or a new-session resume, Cairn may suggest joining the later run to its agent's rooms; once the principal accepts, that room's pins restore from then on. Before that, a compaction restores only the personal room's pins, and the room's pins stay reachable through `rooms` recall, enveloped. The retry act counts as its principal's ask for the new run's join, so OWN-28's intent restore holds. That costs one widening act per later run per room.",
+    "invariant_change": false
+   },
+   {
+    "label": "2. Restore follows the agent: also carry qualifying pins of rooms the agent has a member seat in",
+    "effect": "Constraints survive a clear or new-session resume with no act on the later run, but only where the harness gives a stable agent id; the retry and main runs without one gain nothing. The automatic restore path widens beyond the run's own seats. A room's pins keep reaching every later run of the agent until all its seats leave, so restore blocks grow with every room an earlier run joined and PIN-08 omissions rise. This goes past decision E's line that later runs get no seat; PIN-10 (P0) changes, but not I2's or I3's wording.",
+    "invariant_change": false
+   },
+   {
+    "label": "3. A later run's restore block names its agent's other rooms by room id and qualifying-pin count only",
+    "effect": "The agent learns that constraints exist and can recall them under `rooms`, and the principal sees which joins to accept. The pin text reaches the run only through its own recall, as enveloped data, which weakens constraints into information until a join. This adds a new kind of restore-block content (ids and counts, trusted structural fields) to INJ-01, INJ-02 and PIN-10.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option 1. It keeps restore tied to seats, as decision E kept seats per run, and prefers safety where the two conflict. It makes the consequence explicit in Agent and REC-02, and fixes the retry inconsistency, which every option needs. After applying, run `mdsmith fix` so MDS025 realigns the SRS requirement tables. In a scratch copy, the model, SRS and features then pass `mdsmith check`.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "  inherit its rooms for recall (the `rooms` scope) and its directed posts, never\n  a seat, add or role: a new run joins only as Join says (REC-02).",
+    "new": "  inherit its rooms for recall (the `rooms` scope) and its directed posts, never\n  a seat, add or role: a new run joins only as Join says, which Cairn may\n  suggest, and its restore blocks carry those rooms' pins only once it has\n  joined them (REC-02, LANE-23, PIN-10)."
+   },
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "  run. It has run seats and carries",
+    "new": "  run, of the same agent only where the harness gives a stable agent id. It has\n  run seats and carries"
+   },
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "  template, or a new run from a worktree checkpoint (OWN-28).",
+    "new": "  template, or a new run from a worktree checkpoint, whose join to the room the\n  retry itself asks for (OWN-28, LANE-23)."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "never a seat, add or role, and join only under LANE-23.",
+    "new": "never a seat, add or role, and join only under LANE-23, which Cairn MAY suggest; a later run's restore block MUST NOT carry the pins of a room only its agent's earlier runs have a seat in (PIN-10)."
+   },
+   {
+    "file": "docs/srs/05c-principal-and-peer-requirements.md",
+    "old": "in a new worktree at a recorded worktree checkpoint, given the intent pin in force",
+    "new": "in a new worktree at a recorded worktree checkpoint, the retry being its principal's ask for that run's join to the room (LANE-23), given the intent pin in force"
+   },
+   {
+    "file": "features/record.feature",
+    "old": "but holds no seat, add or role there until it joins under LANE-23",
+    "new": "but holds no seat, add or role there, and its restore blocks carry none of those rooms' pins, until it joins under LANE-23"
+   },
+   {
+    "file": "features/principal-acts.feature",
+    "old": "    And the retry starts a new run through the launcher in a new worktree at that worktree checkpoint, given",
+    "new": "    And the retry starts a new run through the launcher in a new worktree at that worktree checkpoint, joined to the room since the retry is her ask for that join, given"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "its restore blocks carry those rooms' pins only once it has joined them"
+  }
+ },
+ {
+  "id": "NEW-11",
+  "real": true,
+  "why": "Real. Role says \"A seat with none, other than the owner's device seats, is a viewer; a run's personal-room seat, or its seat in a room it created, is a contributor\". LANE-16 adds \"No role MAY follow from joining\" and \"a seat with no role assignment or appointment MUST be a viewer\". Relations routes a run's events to a room seat only \"while that seat is a member and has work (its role, no mute)\". So a run of the owner's own agent that joins the owner's room is a viewer: it cannot post, pin or work, and its events stay in the personal room. That contradicts Join (\"whose runs' events then go there (LANE-01)\") and the widening class, which justifies the act as \"ask for or accept a join, which sends the run's events to a room other principals' nodes hold\". Before PRV-10 every join is the owner's (LANE-23: \"a room MUST admit no seat of another principal\"), so every join hits this. The only role-assignment surface, `cairn role assign`, is P2 while joins are P1. In P1 a joined run can get work only by being appointed moderator, which over-grants kick, bar and mute. An invited principal's run seats get the invite's role automatically (LANE-10), so the owner's own agents are worse off than an invitee's. LANE-16, the matcher's lead, states the viewer default that causes the defect; it does not settle it.",
+  "settled_by": "none. LANE-16 (\"No role MAY follow from joining or from presence hints\" ... \"a seat with no role assignment or appointment MUST be a viewer, but a run's personal-room seat and its seat in a room it created MUST have the contributor role\") produces the defect; no requirement or decision says whether the owner's join act gives work.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "A. The owner's ask for or acceptance of its own run's join records a contributor role assignment for the seat the run joins with, and says so",
+    "effect": "The owner's agents work in its rooms after the one widening act that already admits them, as an invite does for an invitee's runs. The role comes from the owner's act, so LANE-16's \"no role follows from joining\" and \"only the owner gives roles\" still hold. The owner can revoke it with a cut act. A run seat never gets moderator this way. There is no I2 effect: run-seat posts stay untrusted and run-seat pins restore only once stamped. Other principals' runs still get roles only from an invite or the owner.",
+    "invariant_change": false
+   },
+   {
+    "label": "B. The ask or acceptance names the role, viewer or contributor (never moderator), recorded as the owner's role assignment",
+    "effect": "Same as A, and the owner can keep a run reading only, such as a reviewer agent. It adds a choice to every join prompt and in effect makes each join act a role assignment as well.",
+    "invariant_change": false
+   },
+   {
+    "label": "C. Keep joined run seats as viewers; reword Join and the widening class; raise `cairn role assign` to P1",
+    "effect": "Takes two widening acts per run per room, repeated for every later run and every re-minted seat key. It makes no new grant, but until the priority moves, P1 owners will appoint agents moderator just to let them work, which is less safe.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option A. The join is already a widening act at a principal surface, and the owner has already consented, in that act, to sending the run's events to the room. Recording contributor makes that consent true without inventing a role from joining. It also removes the moderator-appointment workaround, so it is the safer outcome. After applying, acts-and-roles.md sits at about 2,998 of its 3,000-token budget (about 3 words to spare), so another theme's addition there needs a compensating trim. If it does, the same sentence fits in principals-and-agents.md's Owner entry, after \"while its agents' run seats have only their role and any appointment\". 05b-lane-requirements.md is left about 5 words under its 8,000-token budget. Run `mdsmith fix` to realign LANE-23's table row. In a scratch copy, everything then passes `mdsmith check`.",
+  "edits": [
+   {
+    "file": "docs/domain-model/acts-and-roles.md",
+    "old": "  moderator is a contributor. A paired phone's personal-room seat has no role",
+    "new": "  moderator is a contributor; the owner's ask for or acceptance of its agent's\n  run's join records a contributor one for the seat it joins with. A paired\n  phone's personal-room seat has no role"
+   },
+   {
+    "file": "docs/srs/05b-lane-requirements.md",
+    "old": "both widening principal acts that MUST say they cover branches the room names later,",
+    "new": "both widening principal acts that MUST say they cover branches the room names later and, when that principal owns the room, MUST record a contributor role assignment for the seat the run joins with, and say so (LANE-16),"
+   },
+   {
+    "file": "features/lane.feature",
+    "old": "since the owner's principal key always satisfies its room's admission, for its device and run seats alike",
+    "new": "since the owner's principal key always satisfies its room's admission, for its device and run seats alike, and his acceptance, saying so, records a contributor role assignment for the seat that run joins with"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/acts-and-roles.md",
+   "quote": "the owner's ask for or acceptance of its agent's run's join records a contributor one for the seat it joins with"
+  }
+ },
+ {
+  "id": "NEW-12",
+  "real": true,
+  "why": "The consequence is real, but deliberate. Subagent says it has \"its own run, tied to its parent's run by a parent link, with its own seats and writers\". Join says \"A run joins only when its principal asks for the join or accepts it (LANE-23)\". So a subagent of a run working in a room has only its personal-room seat until its principal accepts its join: no restore of that room's pins, no `room`/`rooms` recall of it, and its events go to the personal room. The SRS chose this explicitly. LANE-23 lets Cairn suggest joining a subagent to its parent's rooms and forbids joining it without acceptance. The LANE-23 scenario has \"When a subagent of that run joins on \\\"alice\\\"'s acceptance / Then it gets its own seat id\". The 4 October stakeholder decisions (concepts.md) say \"a subagent follows the same, plus the pins of rooms its person adds it to\". The finding's fix (automatic seats sharing the parent's add and role) contradicts LANE-23. It would also send events to rooms other nodes hold with no principal act. The model's only real gap is that Subagent does not carry LANE-23's rule.",
+  "settled_by": "LANE-23: \"Cairn MAY suggest joining a run to a room that names its worktree's branch, and a subagent to its parent's rooms, and MUST NOT join either without that acceptance.\" and \"A subagent that joins MUST get its own seat id, tied to its parent's run by its parent link\"; stakeholder decisions of 4 October 2026 (plan concepts.md): \"a subagent follows the same, plus the pins of rooms its person adds it to\".",
+  "klass": "settled",
+  "options": [],
+  "recommendation": "Carry LANE-23's subagent rule in the model's Subagent entry and reject the automatic-seat fix. The SRS already states the rule, so no SRS edit is needed. With NEW-11's option A, a subagent joined on the owner's acceptance also gets contributor and so works in the room. If the stakeholder later wants less friction, a separate proposal could let a run's join acceptance say it also covers that run's subagents. That would be a new design question, not part of this fix.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "  run, tied to its parent's run by a parent link, with its own seats and\n  writers. It takes a delegated task without a delegation grant.",
+    "new": "  run, tied to its parent's run by a parent link, with its own seats and\n  writers, and no seat in its parent's rooms but those it joins as Join says,\n  which Cairn may suggest (LANE-23). It takes a delegated task without a\n  delegation grant."
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "no seat in its parent's rooms but those it joins as Join says, which Cairn may suggest (LANE-23)"
+  }
+ },
+ {
+  "id": "NEW-6",
+  "real": true,
+  "why": "Real. The model's Witness check entry (docs/domain-model/git-and-forge.md) confines the check only by network: \"on a fresh checkout of the exact commit, with network denied, by a node whose **git identity** ... Where the platform cannot deny network, Cairn refuses the witness check (OWN-18).\" Nothing in the model mentions HOME or the principal's home (a grep for HOME finds only CAIRN_HOME in places.md). The entry also leaves out OWN-18's \"outside any agent context\". The check runs code from a branch others wrote, possibly a stranger's (the oss-maintainer persona's round-2 finding 3). Read as written, that code can reach the device key and the seat keys. SEC-10 keeps those keys \"in a platform key store ... in an entry named per home ... or else in a file only the principal's OS user can read\". With them the code can sign principal acts or device-seat pins that restore (R3: \"signs events with the node's device key or a seat key\"), a path into the model that I2 forbids. It can also write HOME (for example the harness's settings, I7). OWN-18 already covers half of this: HOME and the principal's home are \"denied by default\". The other half is still open in the SRS. Where the platform cannot deny them, OWN-18 only requires that \"the room view MUST say which before confirmation\", and the check then runs. The round-30 decision Q4 chose this (\"each denied by default, and the room view says which it cannot deny\"). Three more gaps: no settings key or act lifts \"by default\" (§9.6 has none); filesystem denial alone does not cover the platform key-store entries bound to the home; and the model carries none of it. Carrying the home denial is settled. Whether to refuse rather than warn is a real behavioral choice that reverses a prior decision, so this is a design theme. A residual risk is still accepted: a same-user process reading a run-seat key from MCP server memory (T29, R3), which only a sandbox removes.",
+  "settled_by": "Partly OWN-18 (docs/srs/05c-principal-and-peer-requirements.md): \"A witness check MUST run only through the launcher (`cairn witness-check start`), outside any agent context, on a fresh checkout of the exact commit, by a node whose git identity authored no commit on the branch since it left its base (LANE-05), with network denied, and the OS user's home directory (`HOME`) and the principal's home denied by default ... Where the platform cannot deny it network, Cairn MUST refuse the witness check; where it cannot deny either, the room view MUST say which before confirmation.\" Also boundary register row 25: \"`HOME` and the principal's home denied by default, or the room view says which it cannot\", and the round-30 decision Q4 (domain-model-review-blind-30.md): \"Yes: `HOME` and the principal's home, each denied by default, and the room view says which it cannot deny (OWN-18).\" No rule makes Cairn refuse when the homes cannot be denied, and none names the platform key store. No ADR or ledger theme (DM-A..DM-Q) covers witness-check confinement.",
+  "klass": "design",
+  "options": [
+   {
+    "label": "A. Carry OWN-18 as it stands (model only)",
+    "effect": "The model gains OWN-18's \"outside any agent context\", the default denial of HOME and of the principal's home, and the room view's disclosure. Behavior does not change. Where the platform can deny network but not the homes, the person can still confirm after being told which, and the branch's code can then read the device key or key file and forge principal acts or pins that restore (I2, I8). It can also edit harness settings under HOME (I7). The key-store entries stay uncovered.",
+    "invariant_change": false
+   },
+   {
+    "label": "B. Refuse unless network, HOME and the principal's home (its platform key-store entries included) are all denied; drop \"by default\"",
+    "effect": "Closes the path. Branch code started through the launcher never reaches the keys, the store or HOME. Where the platform cannot confine the check this way, no witness check runs: Cairn refuses before confirmation and says which it cannot deny. Results there stay `own check` or `CI attested`, so no feature is dropped, only made unavailable where it is unsafe. Safety wins, as CLAUDE.md and I9's exception for I2 and I8 ask. OWN-18, register row 25, the `cairn witness-check start` row and the OWN-18 scenario change together. Round-30 Q4 is superseded.",
+    "invariant_change": false
+   },
+   {
+    "label": "C. Refuse unless network and the principal's home (its key-store entries included) are denied; only disclose for HOME",
+    "effect": "Protects the keys and the store (I2, I8), so a witness check still runs on more platforms. Writes to HOME (harness settings and hooks, shell start files) remain possible after a disclosed confirmation. That is an indirect harness-configuration change by code Cairn started (I7) and a later route into the model.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "B. A witness check deliberately runs code that people other than the principal wrote, on the principal's node, and the person confirms only the command's text, not the code. Warning before confirmation leaves the device key, and with it forged principal acts and pins that restore, one click away. Refusing costs only the witness-check evidence class on platforms that cannot confine the check, and own checks and CI attestations remain. Dropping \"by default\" removes an override that no settings key defines and that would reopen the path. No invariant wording changes. Applying it supersedes round-30 Q4, so the round note should say so.",
+  "edits": [
+   {
+    "file": "docs/domain-model/git-and-forge.md",
+    "old": "- **Witness check**: A check re-run through the launcher on a fresh checkout of\n  the exact commit, with network denied, by a node whose **git identity** (the\n  author and commit-signing identities its git configuration sets) authored no\n  commit on the branch since it left its base (a **commit author** is git's\n  author of a commit, never a seat). Where the platform cannot deny network,\n  Cairn refuses the witness check (OWN-18).",
+    "new": "- **Witness check**: A check re-run through the launcher, outside any agent\n  context, on a fresh checkout of the exact commit, with network, the OS user's\n  home directory (`HOME`) and the principal's home (its platform key-store\n  entries included) denied, by a node whose **git identity** (the author and\n  commit-signing identities its git configuration sets) authored no commit on\n  the branch since it left its base (a **commit author** is git's author of a\n  commit, never a seat). Unless the platform can deny all three, Cairn refuses\n  the witness check before confirmation and says which it cannot deny (OWN-18)."
+   },
+   {
+    "file": "docs/srs/05c-principal-and-peer-requirements.md",
+    "old": "with network denied, and the OS user's home directory (`HOME`) and the principal's home denied by default, and MUST record its command by commitment, exit status and tree hash as a `structural` event. Where the platform cannot deny it network, Cairn MUST refuse the witness check; where it cannot deny either, the room view MUST say which before confirmation.",
+    "new": "with network, the OS user's home directory (`HOME`) and the principal's home (its platform key-store entries included, SEC-10) denied, and MUST record its command by commitment, exit status and tree hash as a `structural` event. Unless the platform can deny it all three, Cairn MUST refuse the witness check before confirmation and say which it cannot deny.  "
+   },
+   {
+    "file": "docs/srs/06b-boundary-register.md",
+    "old": "a program the launcher starts; fresh checkout; network denied, or Cairn refuses the check; `HOME` and the principal's home denied by default, or the room view says which it cannot      ",
+    "new": "a program the launcher starts; fresh checkout; network, `HOME` and the principal's home (its key-store entries included) denied, or Cairn refuses the check and says which it cannot deny"
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "with network denied, refused where the platform cannot deny it, as a witness check (LANE-05), after showing the command's exact text and recording its confirmation (OWN-18); widening                                      ",
+    "new": "with network, `HOME` and the principal's home denied, refused unless the platform can deny all three, as a witness check (LANE-05), after showing the command's exact text and recording its confirmation (OWN-18); widening"
+   },
+   {
+    "file": "features/principal-acts.feature",
+    "old": "with network, the OS user's home directory (`HOME`) and the principal's home denied\n",
+    "new": "with network, the OS user's home directory (`HOME`) and the principal's home (its platform key-store entries included) denied\n"
+   },
+   {
+    "file": "features/principal-acts.feature",
+    "old": "    And where the platform cannot deny the check network, Cairn refuses the witness check\n    And where the platform cannot deny `HOME` or the principal's home, the room view says which before confirmation\n",
+    "new": "    And unless the platform can deny the check network, `HOME` and the principal's home with its key-store entries, Cairn refuses the witness check before confirmation\n    And the refusal says which of them the platform cannot deny\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/git-and-forge.md",
+   "quote": "Unless the platform can deny all three, Cairn refuses"
+  }
+ }
+]

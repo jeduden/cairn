@@ -1,0 +1,472 @@
+[
+ {
+  "id": "REG-1",
+  "real": true,
+  "why": "The defect is real. In places.md, Foreign room says the principal's own device-seat pins and stamped versions \"stay trusted and keep restoring, to runs that had a seat in it\". Pin says a pin restores \"to runs that have had a seat in its room during the run, or whose agent's earlier runs had one (REC-02)\". The index.md relation carries \"every room its agent's earlier runs had a seat in (PIN-10, REC-02)\" and defers to Foreign room only for which pins restore (\"once the room is foreign only those Foreign room names\"). Agent says later runs inherit rooms for restore but \"never a seat\". So a later run of the agent, which holds no seat in the foreign room, gets these pins under Pin and the hub relation and loses them under Foreign room. DM-AC's closing texts never reached places.md, so the round-1 closing text is incomplete. PIN-10, REC-02 and the PIN-10 scenario already settle the rule: the foreign-room limit narrows only which pins qualify, not which runs get them. The scenario's later run has no seat in the foreign room \"L5\" and still gets that room's pins.",
+  "settled_by": "PIN-10: \"A restore block MUST contain the qualifying pins of every room its run has had a seat in during the run, its personal room included, and of every room its agent's earlier runs had a seat in (REC-02)\". REC-02: \"an agent's later runs inherit its rooms for recall (RCL-05), for restore (PIN-10) and for its directed posts (LANE-12), never a seat, add or role\". PIN-10 scenario, features/pins.feature: \"a later run of the same agent, by the harness's stable agent id, with no seat in \"L1\", \"L2\" or \"L5\", gets the same pins of those rooms in its restore block\" (\"L5\" is the foreign room). Stakeholder round 1: an agent's later runs, by the stable harness agent id, inherit its rooms for restore as for recall.",
+  "klass": "settled",
+  "options": [
+   {
+    "label": "Foreign room uses the runs Pin names",
+    "effect": "Foreign room restores its principal's own device-seat pins and stamped versions to the same runs as Pin, PIN-10 and REC-02: the runs that had a seat in the room, and the later runs of their agents. The RCL-10 scenario's wording is aligned to match. No behavior changes beyond what PIN-10 already requires.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Settled by PIN-10, REC-02 and the PIN-10 scenario, so only the model needs to carry it. Replace the narrower run set in Foreign room with the runs Pin names. Align the RCL-10 scenario's \"left-room\" line to the same wording. The SRS rows need no change. The places.md edit stays clear of REG-3's edit to the same entry: this one ends at \"(PIN-10, REC-02).\" and REG-3 anchors on the next line, so both can be applied in either order (checked). places.md stays at about 1,100 of 3,000 tokens.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "keep restoring, to runs that had a seat in it.",
+    "new": "keep restoring to the runs Pin names: those that have had a seat in it\n  during the run, or whose agent's earlier runs had one (PIN-10,\n  REC-02)."
+   },
+   {
+    "file": "features/recall.feature",
+    "old": "though that pin still restores to the runs that had a seat in \"left-room\" (PIN-10)",
+    "new": "though that pin still restores to the runs that had a seat in \"left-room\" and to their agents' later runs (PIN-10, REC-02)"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "keep restoring to the runs Pin names: those that have had a seat in it"
+  }
+ },
+ {
+  "id": "REG-8",
+  "real": true,
+  "why": "The defect is real. DM-AC's closing text in index.md makes a restore block carry \"the qualifying pins of every room its run has had a seat in during the run, its personal room included, and of every room its agent's earlier runs had a seat in (PIN-10, REC-02)\", and a leave, kick or bar keeps them. Nothing orders these rooms against each other. The only fill order is Pin priority's \"the intent before every other pin (LANE-20); qualifying pins fill the pin budget in that order, then by their creating events' addresses (PIN-08)\". In the SRS, PIN-08 says \"Cairn MUST inject pins in order of pin priority, then of their creating events' addresses (writer, then `seq`)\", and LANE-20 sets every intent \"at the highest priority\". The default pin budget is 1,000 model tokens. For a long-lived agent with a stable harness agent id, every inherited room's intent, and any inherited pin with a lower priority number, comes before the current room's constraints. Those constraints then show only by id and count. I3 still holds, since omitted pins are named by id and count, so this is a usefulness gap, not an invariant break. Which room's pins go first is still undecided, so the round-1 closing text is incomplete.",
+  "settled_by": "none",
+  "klass": "design",
+  "options": [
+   {
+    "label": "The run's own rooms first (tiered)",
+    "effect": "The rooms the run has had a seat in during the run, its personal room included, fill the pin budget first. Rooms only the agent's earlier runs had a seat in come after. Within each group, PIN-08's order applies: pin priority, then creating event address. The current room's intent and constraints are never crowded out, and the principal's cross-cutting constraints stay in the first group through the personal room. Inherited pins that do not fit are named by id, count and room id (PIN-08, PIN-10) and can be reached through the `rooms` recall scope. The inheritance itself is unchanged.",
+    "invariant_change": false
+   },
+   {
+    "label": "Pin priority first; the run's own rooms only break ties",
+    "effect": "The pin author's priority stays dominant, and the run's own rooms win only among pins of equal priority, before creating address. Every inherited room's intent still sits at the highest priority and comes before the current room's constraints, so the crowding stays for intents.",
+    "invariant_change": false
+   },
+   {
+    "label": "Bound the inheritance",
+    "effect": "Only the rooms of the agent's latest earlier run, or a set number of rooms, carry over. That reduces crowding but narrows the stakeholder's round-1 decision that later runs inherit every room (REC-02, PIN-10, DM-AC). Pins of older rooms would leave restore blocks without being named at all.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option 1, the run's own rooms first. It completes DM-AC in the direction already decided: the inheritance stays, and only the fill order is added. It keeps the constraints the run is working under now, including the personal room's, ahead of rooms the agent has moved on from. Edits: Pin priority in the model, the hub relation, the SRS's PIN-08, and PIN-08's scenario so it exercises the new order. The new PIN-08 row needs `mdsmith fix .` to realign the table. pins-and-context.md rises to about 2,560 of 3,000 tokens and index.md to about 2,620 (checked with mdsmith). The index.md edit ends before \"; a leave, kick or\" so it never overlaps REG-3's edit.",
+  "edits": [
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "  intent before every other pin (LANE-20); qualifying pins fill the pin budget\n  in that order, then by their creating events' addresses (PIN-08).",
+    "new": "  intent before every other pin of its room (LANE-20). Qualifying pins fill the\n  pin budget first from the rooms the run has had a seat in during the run, its\n  personal room included, then from those only its agent's earlier runs had a\n  seat in, each in that order, then by their creating events' addresses\n  (PIN-08)."
+   },
+   {
+    "file": "docs/domain-model/index.md",
+    "old": "agent's earlier runs had a seat in (PIN-10, REC-02)",
+    "new": "agent's earlier runs had a seat in, whose pins fill the pin budget\n  only after those of the rooms the run itself has had a seat in\n  (PIN-08, PIN-10, REC-02)"
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "Cairn MUST inject pins in order of pin priority, then of their creating events' addresses (writer, then `seq`),",
+    "new": "Cairn MUST inject first the pins of the rooms the run has had a seat in during the run, its personal room included, then those of rooms only its agent's earlier runs had a seat in (PIN-10, REC-02), each in order of pin priority, then of their creating events' addresses (writer, then `seq`),"
+   },
+   {
+    "file": "features/pins.feature",
+    "old": "And 6 qualifying constraint pins of 250 estimated model tokens each, against the default pin budget of 1,000 model tokens",
+    "new": "And 6 qualifying constraint pins of 250 estimated model tokens each, against the default pin budget of 1,000 model tokens: 4 in the run's personal room, and 2, each with a lower pin priority number than any of those 4, in a room only an earlier run of the same agent had a seat in"
+   },
+   {
+    "file": "features/pins.feature",
+    "old": "Then the restore block includes 4 of the pins, ordered by pin priority, then by creating address, writer then seq",
+    "new": "Then the restore block includes the 4 personal-room pins, ordered by pin priority, then by creating address, writer then seq, and not the 2 of the earlier run's room"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/pins-and-context.md",
+   "quote": "pin budget first from the rooms the run has had a seat in during the run, its"
+  }
+ },
+ {
+  "id": "REG-3",
+  "real": true,
+  "why": "The defect is real. It applies once PRV-10 ships, when other principals' seats and trust grants exist.\n\nHow a room act drops pins:\n- Foreign room counts \"a room every seat of its principal has left or lost to a kick or a bar\" as foreign. There, only \"its principal's own device-seat pins and the versions it stamped stay trusted and keep restoring\".\n- The index.md relation says \"a leave, kick or bar keeps them, but once the room is foreign only those Foreign room names\".\n- Room act says \"A leave, kick or bar never drops a room's qualifying pins from a run's restore block, within the foreign-room limit of Relations\".\n- An agent leaves by its own tool call: `room_leave` \"records the seat's leave (LANE-23)\".\n\nA principal's only member seat in another principal's room is often a run seat; a trust grant that covers every room is recorded in the personal room, so the principal's device seat never joins. Then two things each make the room foreign and remove every trust-granted pin from every restore block of that principal's agents, including the leaving run's own:\n- an agent steered by untrusted content calls `room_leave`;\n- another principal, such as an appointed moderator, kicks or bars that last seat.\n\nWhy this contradicts the rest of the model:\n- OWN-11 and Acts and roles: \"Any principal act that removes a pin from a restore block ... is widening whatever verb carries it\".\n- \"A pin, edit or unpin room act never changes any restore block\".\n- Room acts \"on their own ... never widen what reaches an agent\".\n- LANE-26: \"a device-seat pin it removes MUST raise a Needs you item for its author's principal and keep restoring to every agent it restored to until that principal unpins it\".\n- SEC-32: an appointed moderator \"MUST NOT change another seat's pin or make a list removal\".\n\nEarlier rounds settled the parts but not this combination:\n- Round 20 Q1: a leave, kick or bar drops no pin.\n- Round 21 Q1: trust-granted pins stop in a foreign room.\n- Round 30 Q3: a room every seat left or lost is foreign.\n- The PIN-10 scenario's \"L5\" case asserts that a kick drops the trust-granted pin.\n\nNo requirement or ADR decides whether a room act that the principal did not take may cause that drop. The foreign-room carve-out was added as a consistency fix (round 22), not as a security decision.",
+  "settled_by": "none",
+  "klass": "design",
+  "options": [
+   {
+    "label": "No leave, kick or bar drops a pin; what qualified is kept as it stood",
+    "effect": "A leave, kick or bar never drops a pin from any restore block. In a room it makes foreign, the pins that qualified for the principal's agents keep restoring to the runs PIN-10 names, trust-granted pins included. They keep the state they had in causal order before that act, which is deterministic (I10). They stay until the principal's own act changes them: revoking the grant (OWN-11 already excepts that cut), unstamping, quarantining or rejoining. Versions written after the act gain nothing from a trust grant, so round 21 Q1's limit still holds for anything new, and recall still marks the room untrusted (RCL-10). This closes both the injected `room_leave` path and the other-principal kick or bar path, consistent with round 20 Q1, LANE-26 and SEC-32. The PIN-10 scenario's \"L5\" outcome changes: the trust-granted pin restores by its version from before the kick.",
+    "invariant_change": false
+   },
+   {
+    "label": "Close only the agent's path",
+    "effect": "A run seat's `room_leave` that would leave its principal with no member seat in a room it does not own is refused, audited and counted. It goes ahead only if its principal asks for it at a principal surface, a widening principal act like asking for a join (LANE-23). Kicks and bars keep today's effect, and each raises a Needs you item naming the trust-granted pins that stop restoring, which the principal may keep by stamping them. The PIN-10 scenario and rounds 21 and 30 stay as they are. Another principal's room act can still remove pins from this principal's agents. Agents can no longer leave such rooms on their own, and the principal-asked leave is a new act the model must take in.",
+    "invariant_change": false
+   },
+   {
+    "label": "Keep the rule and make it visible",
+    "effect": "No behavior change. A leave, kick or bar that makes a room foreign is audited and raises a Needs you item naming the trust-granted pins that stop, which a stamp can keep. An injected `room_leave` still removes those constraints until the principal acts, which still contradicts OWN-11's rule that removing a pin from a restore block needs a widening act of the agent's own principal.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option 1. It is the safe choice, because no act the agent's own principal did not take can remove constraints from its agents' restore blocks. It also gives one rule, consistent with round 20 Q1, LANE-26's list removal, SEC-32 and OWN-11. Round 21 Q1 and round 30 Q3 still apply to everything written after the act, so no new text from another principal becomes trusted in a foreign room. No invariant wording changes: I2 and I8 already trust what a standing trust grant covers.\n\nThe edits cover the model (Foreign room, the hub relation, Room act, Trust grant, Pin, Intent), the SRS (PIN-10, OWN-29, PRV-02, RCL-10, VIEW-07) and the scenarios (PIN-10's \"L5\" case and the foreign-room line of PRV-02's scenario). Trusted sources already defers to Foreign room. Run `mdsmith fix .` afterwards to realign the changed SRS table rows.\n\nSize: acts-and-roles.md is at 2,990 of 3,000 tokens. The Room-act edit keeps the same word count, and mdsmith still reads 2,990 after all edits. With every REG-1, REG-8 and REG-3 edit applied in any order, every model file passes mdsmith; only the SRS tables need `mdsmith fix`. All new lines are 80 columns or fewer.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "has a seat in is never foreign.",
+    "new": "has a seat in is never foreign. Yet a leave, kick or bar that makes a room\n  foreign drops no pin: what qualified there for its principal's agents, a\n  trust grant's pins included, keeps restoring as it stood, in causal order,\n  before that act, until that principal's own act changes it (PIN-10)."
+   },
+   {
+    "file": "docs/domain-model/index.md",
+    "old": "bar keeps them, but once the room is foreign only those Foreign room names.",
+    "new": "bar keeps them, and where it makes the room foreign, as Foreign room says."
+   },
+   {
+    "file": "docs/domain-model/acts-and-roles.md",
+    "old": "A leave, kick\n  or bar never drops a room's qualifying pins from a run's restore block, within\n  the foreign-room limit of Relations.",
+    "new": "A leave, kick\n  or bar never drops a pin from any restore block, even where it makes the room\n  foreign (Foreign room)."
+   },
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "token-key-only nodes or room summaries; never in a foreign room; and a post it",
+    "new": "token-key-only nodes or room summaries; never in a foreign room, but for the\n  pins a leave, kick or bar keeps there (Foreign room); and a post it"
+   },
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "principal's trust grant covers its author's principal outside a foreign room;",
+    "new": "principal's trust grant covers its author's principal outside a foreign room\n  or as Foreign room keeps it;"
+   },
+   {
+    "file": "docs/domain-model/pins-and-context.md",
+    "old": "author's principal outside a foreign room; after a change of ownership, a\n  handover or a succession, until the new owner revises or stamps it, it\n  restores only to its stampers' agents.",
+    "new": "author's principal outside a foreign room or as Foreign room keeps it; after a\n  change of ownership, a handover or a succession, until the new owner revises\n  or stamps it, it restores only to its stampers' agents."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "A branch switch MUST NOT drop a pin from a run's restore block; moving a pin between rooms MUST be an unpin then a new pin.",
+    "new": "A branch switch, a leave, a kick or a bar MUST NOT drop a pin from any restore block: where every seat of the run's principal in a room has left it or lost it to a kick or a bar, what qualified there for that principal's agents, a trust grant's pins included, MUST keep restoring as it stood, in causal order, before the act that ended its last member seat there, until that principal's own act changes it. Moving a pin between rooms MUST be an unpin then a new pin."
+   },
+   {
+    "file": "docs/srs/05c-principal-and-peer-requirements.md",
+    "old": "A trust grant MUST cover nothing in a foreign room, whose items recall marks untrusted whatever trust grant covers their keys (RCL-10).",
+    "new": "A trust grant MUST cover nothing in a foreign room, whose items recall marks untrusted whatever trust grant covers their keys (RCL-10), but the pins PIN-10 keeps restoring there after a leave, kick or bar."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "in a foreign room, only its device-seat pins and stamped versions.",
+    "new": "in a foreign room, only its device-seat pins, stamped versions and the pins PIN-10 keeps restoring there after a leave, kick or bar."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "PRV-02 still keeps its principal's device-seat pins and stamped versions there trusted for restore (PIN-10).",
+    "new": "PRV-02 still keeps its principal's device-seat pins and stamped versions there, and the pins PIN-10 keeps after a leave, kick or bar, trusted for restore (PIN-10)."
+   },
+   {
+    "file": "docs/srs/05b-room-view-requirements.md",
+    "old": "and in a foreign room only its own device-seat pins and the versions it stamped;",
+    "new": "and in a foreign room only its own device-seat pins, the versions it stamped and the pins PIN-10 keeps there after a leave, kick or bar;"
+   },
+   {
+    "file": "features/pins.feature",
+    "old": "before every seat of the principal in \"L5\" was kicked, so that \"L5\" is now a foreign room",
+    "new": "before every seat of the principal in \"L5\" was kicked, so that \"L5\" is now a foreign room, and a version the third principal added to that pin after the kick"
+   },
+   {
+    "file": "features/pins.feature",
+    "old": "And of the foreign room \"L5\" the restore block includes the principal's device-seat pin and the stamped version, and not the pin the trust grant covers",
+    "new": "And of the foreign room \"L5\" the restore block includes the principal's device-seat pin, the stamped version and the pin the second trust grant covers, by its version from before the kick, and not the version added after it"
+   },
+   {
+    "file": "features/pins.feature",
+    "old": "the other principal's unstamped constraint pin, the third principal's pin in \"L5\" and each token-key-only node's unstamped pin",
+    "new": "the other principal's unstamped constraint pin and each token-key-only node's unstamped pin"
+   },
+   {
+    "file": "features/provenance.feature",
+    "old": "a post or pin a trust grant of this principal covers are untrusted, while",
+    "new": "a post or pin a trust grant of this principal covers are untrusted, but for a pin PIN-10 keeps restoring there after a leave, kick or bar, while"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "foreign drops no pin: what qualified there for its principal's agents, a"
+  }
+ },
+ {
+  "id": "REG-2",
+  "real": true,
+  "why": "Real. The model's Trust grant entry (docs/domain-model/trust-and-flow.md) says only that a grant naming a service account \"whose certificate or managed-policy listing marks it as relaying text others wrote, or whose listing is unmarked, is refused\". OWN-29 says the same, and only as a rule on recording: \"It MUST NOT name a service account its certificate or managed-policy listing marks as relaying text others wrote ... a listing without the mark counting as relaying\". Two cases slip through. (1) The grant is recorded while the key set holds no certificate for the key, so \"A principal key never certified counts as a person's\" (principals-and-agents.md), and a relay-marked certificate or an unmarked managed-policy listing arrives later. (2) The grant replicates to another of the grantor's nodes whose key set already holds such a certificate or listing. In both cases nothing stops coverage. Yet the Trust level entry says trust is \"derived ... from ... the node's key set ... and that principal's stamps and trust grants as its writer logs carry them (I10)\", and I10 requires the result to be \"independent of the order in which logs arrived\". So coverage that depends on what arrived first breaks I10, and a relaying account's third-party text would then reach the grantor's agents as trusted (I2, T28). DM-L's closing text puts listings into the key set (\"each managed-policy listing and each removal of one is recorded as a structural event that enters the node's key set\"). That makes a derived, order-free rule possible but does not state one. The fix says \"holds\", and the key set already includes revocations, so a certificate revoked later still counts. That keeps revoking a certificate, a cut act, from ever widening what a grant covers.",
+  "settled_by": "ADR-2610061700 decision 2 (I2, what a trust grant carries), approved by the stakeholder: \"It never covers run seats or relaying service accounts, so no agent's text becomes trusted through it.\" With I10: \"a deterministic function of the set of writer logs a node holds and the node's own key set, independent of the order in which logs arrived.\" The SRS (OWN-29, PRV-10) states only the refusal at record time and the marking, so the model and the SRS need to carry the standing rule.",
+  "klass": "settled",
+  "options": [],
+  "recommendation": "Carry ADR-2610061700's \"never covers relaying service accounts\" as a derived, standing condition in the Trust grant entry, in OWN-29 and in the `cairn trust-grant record` row. Keep the refusal at record time. Add one OWN-29 scenario step so the rule is executable; it stays @pending. OWN-29's traces (I2, I6, I8) are left alone and I10 is cited only in the model, so no tag or appendix B change is needed. The OWN-29 and 09a table rows grow, so run `mdsmith fix .` afterwards to re-pad those tables. I checked this in a scratch copy: after the fix, `mdsmith check .` and `go test ./internal/... ./cmd/...` pass, the ledger gate included. trust-and-flow.md grows by about 35 words (now about 2120 words, 193 lines) and stays under 3000 tokens and 250 lines. These edits do not overlap REG-6's edit to the same entry, and the two can be applied in either order.",
+  "edits": [
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "Its revocation is cut.\n- **Delegation**: One agent",
+    "new": "Its revocation is cut.\n  A recorded grant covers nothing once the node's key set holds a certificate\n  or listing marking the key it names as relaying, or a listing of it without\n  the mark, whatever order they arrived in (I10).\n- **Delegation**: One agent"
+   },
+   {
+    "file": "docs/srs/05c-principal-and-peer-requirements.md",
+    "old": "a listing without the mark counting as relaying; naming any other service account MUST show a warning.",
+    "new": "a listing without the mark counting as relaying, and a recorded trust grant MUST cover nothing once the node's key set holds such a certificate or listing for the principal key it names, whatever order they arrived in; naming any other service account MUST show a warning."
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "a listing without the mark counting as relaying, and showing a warning first for any other service account's key;",
+    "new": "a listing without the mark counting as relaying, covering nothing once such a certificate or listing arrives after it, and showing a warning first for any other service account's key;"
+   },
+   {
+    "file": "features/principal-acts.feature",
+    "old": "is refused and audited, while one naming any other service account shows a warning\n",
+    "new": "is refused and audited, while one naming any other service account shows a warning\n    And a trust grant recorded before a certificate or managed-policy listing marking its key as relaying, or a listing of that key without the mark, reaches the node covers nothing once it arrives, as if it had arrived first\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/trust-and-flow.md",
+   "quote": "A recorded grant covers nothing once the node's key set holds a certificate or listing marking the key it names as relaying"
+  }
+ },
+ {
+  "id": "REG-6",
+  "real": true,
+  "why": "Real. The facilitator's device seat is an appointed moderator (Facilitator entry: \"making that device seat an appointed moderator (SEC-32)\"). An appointed moderator has \"moderator capabilities only within SEC-32's limits\" (LANE-16), and a moderator has \"a contributor's capabilities\", which include \"pin, edit and unpin its own pins, its pin capability\" (acts-and-roles.md Role). SEC-32 forbids only changing another seat's pin (\"MUST NOT change another seat's pin or make a list removal\"), so the facilitator may pin. OWN-29 covers \"the posts and pins that principal wrote from device seats a device key of that principal certified\", and its pins \"MUST restore to them as the grantor's own pins would\" (PIN-10). The own-words rule is stated for posts only. In SEC-32: \"Its posts MUST be in its own words only ... never quote or embed it, so it relays no third party's text\". In the model: \"It posts only in its own words ... so it relays no third party's text (SEC-32)\". The grant warning in the Trust grant entry says only \"which its posts never quote\". A facilitator reads untrusted room text by design (T27), so a swayed one can pin a marked range word for word. Under a grant that pin then restores verbatim as trusted in the grantor's restore blocks after every compaction (I3), the strongest channel I2 allows. That defeats the stated purpose of DM-V's closing text (\"so it relays no third party's text\") and is T28's trust laundering through a pin. Room summaries are already excluded (LANE-33: \"no trust grant MAY cover it\"), but pins are not. The DM-V cited texts are kept intact: the new text is added beside them, not reworded into them.",
+  "settled_by": "none. No SRS row or ADR limits the facilitator's pin text. SEC-32's own-words rule names posts only (\"Its posts MUST be in its own words only, shown as its own statements, that point by range link to the marked range each names and never quote or embed it, so it relays no third party's text\"), and its purpose clause is the direction this edit completes.",
+  "klass": "tighten",
+  "options": [
+   {
+    "label": "A. The own-words rule covers the facilitator's pin versions too (recommended)",
+    "effect": "Completes DM-V in the direction already decided. Every pin version the facilitator writes must be in its own words, quoting or embedding no marked range, as its posts are. A trust grant keeps covering its pins, and the warning shown at grant time stays true for them. No feature is dropped.",
+    "invariant_change": false
+   },
+   {
+    "label": "B. No trust grant covers the facilitator's pins",
+    "effect": "Handled like room summaries: a facilitator's pin restores to another principal's agents only once that principal stamps a version after being shown its exact text (LANE-32). This closes the restore-block channel without relying on the program's discipline, and narrows OWN-29 the way its existing exclusions (run seats, token-key-only nodes, foreign rooms) already do.",
+    "invariant_change": false
+   },
+   {
+    "label": "C. The facilitator's device seat writes no pin of a type that restores",
+    "effect": "Removes the channel entirely. It also takes away a capability the facilitator has today through its moderator appointment, which comes close to dropping a feature.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Apply A. It finishes DM-V's closing text instead of reopening it, follows SEC-32's own purpose clause (\"so it relays no third party's text\"), and drops nothing. Keep B as the fallback if the stakeholder judges own words unenforceable for restore blocks. Add the own-words rule for pins in the Facilitator entry and at the end of SEC-32, extend the grant warning in the Trust grant entry, add pins to T27, and add one SEC-32 scenario step, which stays @pending. The edits leave every ledger-cited substring intact: DM-V's three quotes and DM-Q's. principals-and-agents.md gains about 8 words (109 lines). The SEC-32 and T27 rows grow, so run `mdsmith fix .` to re-pad the tables. I checked this in a scratch copy, alone and with REG-2 in both orders: after the fix, `mdsmith check .` passes, as do the ledger, scenario, srs and cmd/cairn tests.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "  third party's text (SEC-32), and writes room summaries, answering summary\n  requests (LANE-33). An agent on that node can act through its CLI as the\n  program does: §6.1's residual risk R7, which only a sandbox removes.\n",
+    "new": "  third party's text (SEC-32); every pin version it writes is likewise in its\n  own words. It writes room summaries, answering summary requests\n  (LANE-33). An agent on that node can act through its CLI as the program\n  does: §6.1's residual risk R7, which only a sandbox removes.\n"
+   },
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "which its posts never quote\n  (Facilitator, OWN-29).",
+    "new": "which its posts never quote\n  and its pins never carry (Facilitator, OWN-29)."
+   },
+   {
+    "file": "docs/srs/06-security.md",
+    "old": "recorded no trust grant for its principal (OWN-29).",
+    "new": "recorded no trust grant for its principal (OWN-29). Every pin version the facilitator writes MUST likewise be in its own words only, quoting or embedding no marked range, so no trust grant restores a third party's text through it (OWN-29)."
+   },
+   {
+    "file": "docs/srs/06-security.md",
+    "old": "into posts that sway the agents of a principal who trusts the facilitator",
+    "new": "into posts or pins that sway the agents of a principal who trusts the facilitator"
+   },
+   {
+    "file": "features/security.feature",
+    "old": "    And each such post is in the facilitator's own words and points by range link to the marked range it names, quoting none of it\n",
+    "new": "    And each such post is in the facilitator's own words and points by range link to the marked range it names, quoting none of it\n    And each pin version the facilitator writes is in its own words, quoting and embedding no marked range\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "every pin version it writes is likewise in its own words"
+  }
+ },
+ {
+  "id": "REG-4",
+  "real": true,
+  "why": "The defect is real. DM-T's closing text in places.md says that on a node whose node identity changed \"the events recorded before the change are another node's: they count as received ... and are trusted only as PRV-02 trusts received events (I8)\". REC-24 says the same: \"Every event recorded before the change MUST then count on the node as another node's, received and not recorded there\". A quarantine is an `operator` event in the home's old device-seat writer, and it applies only \"on the node that records it\" (record.md Quarantine; SEC-12: \"MUST take effect immediately for all recall, landmark and injection operations on the node that records it\"). I5 adds: \"A quarantine reaches another node only as a quarantine request that node's principal applies.\" So once the change makes the home's own quarantines another node's, the quarantine set (I10) stops deriving them. Quarantined content returns to recall. Once PRV-10 ships, a quarantined device-seat pin also returns to restore blocks, because its seat certificate chains to the principal key. The principal took no act for either. No rule says the home's quarantines survive the change. The SRS already decides the same lapse the other way for a backup restore: ADM-06 must \"reinstate the segments, payloads and derived artifacts the copy contains\" (the quarantine set is one) and \"reapply every purge, revocation, quarantine ... recorded after the backup was taken or refuse\". So completing DM-T in that direction is a tightening, not a new choice. Keeping the quarantines that were in force at the change keeps the principal's own home as it was. No quarantine reaches the node by exchange (PEER-11), and nothing widens: a release there stays a widening principal act (SEC-12). I5's wording therefore stands, and no ADR is needed. The finding's wider fix, \"and other cut acts\", is not adopted. Applying cut acts while the widening acts before them lapse could leave a rule level looser than the default. A neighbouring gap is outside this theme: before PRV-10, rule-level tightenings made before the change also lapse, because OWN-02 counts only \"this node's own device seat\". If a reviewer raises it, it should be its own theme. Size: places.md grows to 75 lines (about 618 heuristic tokens) and record.md to 198 lines. A trial copy passes `mdsmith check .`, and its Go gate tests pass.",
+  "settled_by": "none. The nearest rule is ADM-06, which covers only a backup restore: \"reinstate the segments, payloads and derived artifacts the copy contains, reapply every purge, revocation, quarantine, unpin, unstamp and rule level tightening recorded after the backup was taken or refuse\".",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "Say in the model (places.md Node, record.md Quarantine) and in REC-24 that every quarantine in force in the home at a node identity change stays in force on the node until a release there. Add the matching Given and Then steps to REC-24's pending scenario. After the string replace, run `mdsmith fix` on docs/srs/05-functional-requirements.md so the table row is re-padded; only that row changes. REC-24's Traces column (I1, I8, I10) can stay; adding I5 is optional and would also need an @I5 tag on the scenario and an Appendix B entry.",
+  "edits": [
+   {
+    "file": "docs/domain-model/places.md",
+    "old": "  trusts received events (I8). The node's principal is the principal whose\n  home it is.",
+    "new": "  trusts received events (I8). On such a node, every quarantine in force in\n  the home at the change stays in force until a release there (I5, REC-24).\n  The node's principal is the principal whose home it is."
+   },
+   {
+    "file": "docs/domain-model/record.md",
+    "old": "  keeps its counts), on the node that records it, without deletion (I5).",
+    "new": "  keeps its counts), on the node that records it, and still after its node\n  identity changes (Node), without deletion (I5)."
+   },
+   {
+    "file": "docs/srs/05-functional-requirements.md",
+    "old": "a `witnessed` one reading as origin `peer`.",
+    "new": "a `witnessed` one reading as origin `peer`; every quarantine in force in the home at the change MUST stay in force on the node until a release there (SEC-12, I5)."
+   },
+   {
+    "file": "features/record.feature",
+    "old": "    And a device key and a seat key bound to the node identity read, from outside the home, on the node the home was created on\n",
+    "new": "    And a device key and a seat key bound to the node identity read, from outside the home, on the node the home was created on\n    And a quarantine in force in the home\n"
+   },
+   {
+    "file": "features/record.feature",
+    "old": "    And every event recorded before the change counts on the node as another node's, received, a \"witnessed\" one reading as origin \"peer\", and is trusted only as PRV-02 trusts received events\n",
+    "new": "    And every event recorded before the change counts on the node as another node's, received, a \"witnessed\" one reading as origin \"peer\", and is trusted only as PRV-02 trusts received events\n    And that quarantine stays in force on the node until a release there\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/places.md",
+   "quote": "every quarantine in force in the home at the change stays in force until a release there"
+  }
+ },
+ {
+  "id": "REG-7",
+  "real": true,
+  "why": "The defect is real. The Run entry in principals-and-agents.md says \"a harness resume that starts a new harness session, or a harness clear, starts a new run\", and that a run \"carries its recall taint (SEC-13)\". Recall taint (trust-and-flow.md) is \"A run's mark after it recalls untrusted content, or inherited from the delegating run (OWN-24)\". SEC-13 sets it only \"when untrusted content has been returned to that run\". A resume that starts a new harness session (§2: SessionStart with `source` = `resume` carries \"a new one when it starts a new harness session\") carries the resumed conversation into the new run. That includes the enveloped untrusted content the earlier run recalled. Yet nothing taints the new run, so OWN-10's \"A recall-tainted run (SEC-13) MUST have the action classes SEC-13 configures as sensitive tightened one level\" stops applying exactly while that content is still in the agent's context. OWN-24 already sets the direction: the taint follows the context, and a delegate \"MUST inherit the delegating run's recall taint (SEC-13)\". The other cases need no change. A harness clear carries no context, only a trusted restore block. A retry from a worktree checkpoint carries \"no content of the earlier run except what the new run recalls\" (OWN-28). A resume that keeps its harness session, including one that loses its run-seat key (DM-D, OQ-43), stays the same run and keeps its taint. The hook gives only the new session id, so Cairn may not be able to tell which run a resume resumes. In that case CLAUDE.md's rule \"Where usefulness and safety conflict, pick safety\" settles it: the run carries taint from its first event. This is a tightening that follows from SEC-13, OWN-10 and OWN-24, not a stakeholder choice. It does not touch DM-E's agent-identity decision. Size: trust-and-flow.md grows to 193 lines (about 1489 heuristic tokens). A trial copy passes `mdsmith check .` and the Go gate tests.",
+  "settled_by": "none. SEC-13 sets taint only \"when untrusted content has been returned to that run\", and OWN-24 covers only delegates: \"MUST inherit the delegating run's recall taint (SEC-13)\". No requirement covers a harness resume that starts a new harness session.",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "State in the model's Recall taint entry, and in SEC-13 (keeping its SHOULD), that a run a harness resume starts carries the recall taint of the run it resumes, and carries taint from its first event when Cairn cannot tell which run that is. Add both cases as Then steps to SEC-13's pending scenario. After the string replace, run `mdsmith fix` on docs/srs/06-security.md so the table row is re-padded. The Run entry needs no change, since it already defers to recall taint (SEC-13).",
+  "edits": [
+   {
+    "file": "docs/domain-model/trust-and-flow.md",
+    "old": "- **Recall taint**: A run's mark after it recalls untrusted content, or\n  inherited from the delegating run (OWN-24), which tightens the rule levels of\n  the action classes SEC-13 configures as sensitive (OWN-10).",
+    "new": "- **Recall taint**: A run's mark after it recalls untrusted content, which\n  tightens the rule levels of the action classes SEC-13 configures as\n  sensitive (OWN-10). A delegate inherits the delegating run's (OWN-24). A run\n  a harness resume starts carries the recall taint of the run it resumes, and\n  carries recall taint from its first event where Cairn cannot tell that run\n  (SEC-13)."
+   },
+   {
+    "file": "docs/srs/06-security.md",
+    "old": "set when untrusted content has been returned to that run, queryable by",
+    "new": "set when untrusted content has been returned to that run, carried into a run a harness resume starts (REC-02) from the run it resumes, and set from such a run's first event where Cairn cannot tell which run it resumes, queryable by"
+   },
+   {
+    "file": "features/security.feature",
+    "old": "    And the example PreToolUse hook handler requires approval for an action of a class it configures as sensitive\n",
+    "new": "    And the example PreToolUse hook handler requires approval for an action of a class it configures as sensitive\n    And a run that a harness resume of \"r-1\" starts in a new harness session carries recall taint from its first event\n    And a run a harness resume starts in a new harness session, where Cairn cannot tell which run it resumes, carries recall taint from its first event\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/trust-and-flow.md",
+   "quote": "A run a harness resume starts carries the recall taint of the run it resumes"
+  }
+ },
+ {
+  "id": "REG-5",
+  "real": true,
+  "why": "Real. The model says a witness check runs \"with network, the OS user's home directory (`HOME`) and the principal's home (its platform key-store entries included) denied\" and \"Unless the platform can deny all three, Cairn refuses\". OWN-18, boundary register row 25 (\"network, `HOME` and the principal's home (its key-store entries included) denied\") and the `cairn witness-check start` row in 09a say the same. So the check's code, which comes from an untrusted commit and runs outside any agent sandbox, keeps every other write the OS user has. ADM-13 lets the launcher make fresh checkouts and new worktrees that add no ref, so a checkout can share the repository's git directory. The code can then write `hooks/` or `config` there, or edit a sibling worktree outside `HOME`, and that code later runs unconfined when the person commits or builds. That is a way out of the sandbox for a sandboxed agent. ADM-13 and SEC-18 do not close it: they bind only Cairn's own writes (\"Cairn MUST NOT write to any git repository or worktree ... except ... the launcher's fresh checkouts\"), not the program the launcher starts, which row 25 lists as its own process. The same escape exists through local endpoints. The check runs as the same OS user, so 'network denied' (a network namespace) still lets it reach Unix-socket endpoints: the container runtime's socket, the ssh agent, or the launcher's own same-UID endpoint (SEC-29, T21). Through those it can start code unconfined. The edit therefore denies local endpoints too. That is the same class of escape, so the rule is completed in the direction DM-AB already took (deny it, or refuse the check), not reopened. Mechanical checks: mdsmith check passes on a scratch copy with these edits and `mdsmith fix` (table re-padding). git-and-forge.md becomes 94 lines and about 1,350 tokens. DM-AB's ledger quotes from the model and OWN-18 (\"Unless the platform can deny all three ...\", \"Unless the platform can deny it all three ...\") no longer match and must be re-pointed to the new wording; its 06b quote still matches.",
+  "settled_by": "none. ADM-13 (\"Cairn MUST NOT write to any git repository or worktree (objects, refs, notes, git configuration, git hooks or files), except ... the launcher's fresh checkouts and new worktrees outside the run's worktree\") and SEC-18 (\"Cairn MUST NOT write inside the run's repository except where ADM-13 allows\") bind only Cairn's own writes, not the witness-check command the launcher starts (06b row 25).",
+  "klass": "tighten",
+  "options": [],
+  "recommendation": "Complete DM-AB's closing text in its own direction. Besides network, `HOME` and the principal's home, also deny local endpoints and every write outside the fresh checkout, the repository's git directory and its other worktrees included. Cairn still refuses before confirmation, naming what the platform cannot deny. Apply the same rule in the model (Witness check), OWN-18, 06b row 25, the 09a `cairn witness-check start` row and the OWN-18 scenario, which gains a step proving that a write to the git directory or to another worktree changes nothing. Run `mdsmith fix` to re-pad the 06b and 09a tables, and re-point DM-AB's two ledger quotes to the new text. The \"local endpoints\" part goes beyond the finding's quote. If the stakeholder wants this theme scoped to writes only, drop it and raise it as its own finding.",
+  "edits": [
+   {
+    "file": "docs/domain-model/git-and-forge.md",
+    "old": "  context, on a fresh checkout of the exact commit, with network, the OS user's\n  home directory (`HOME`) and the principal's home (its platform key-store\n  entries included) denied, by a node whose **git identity** (the author and\n  commit-signing identities its git configuration sets) authored no commit on\n  the branch since it left its base (a **commit author** is git's author of a\n  commit, never a seat). Unless the platform can deny all three, Cairn refuses\n  the witness check before confirmation and says which it cannot deny (OWN-18).",
+    "new": "  context, on a fresh checkout of the exact commit, with network, local\n  endpoints, the OS user's home directory (`HOME`), the principal's home (its\n  platform key-store entries included) and every write outside that checkout\n  (the repository's git directory and its other worktrees included) denied, by\n  a node whose **git identity** (the author and commit-signing identities its\n  git configuration sets) authored no commit on the branch since it left its\n  base (a **commit author** is git's author of a commit, never a seat). Unless\n  the platform can deny all of them, Cairn refuses the witness check before\n  confirmation and says which it cannot deny (OWN-18)."
+   },
+   {
+    "file": "docs/srs/05c-principal-and-peer-requirements.md",
+    "old": "with network, the OS user's home directory (`HOME`) and the principal's home (its platform key-store entries included, SEC-10) denied, and MUST record its command by commitment, exit status and tree hash as a `structural` event. Unless the platform can deny it all three, Cairn MUST refuse",
+    "new": "with network, local endpoints, the OS user's home directory (`HOME`), the principal's home (its platform key-store entries included, SEC-10) and every write outside that checkout (the repository's git directory and its other worktrees included) denied, and MUST record its command by commitment, exit status and tree hash as a `structural` event. Unless the platform can deny it all of them, Cairn MUST refuse"
+   },
+   {
+    "file": "docs/srs/06b-boundary-register.md",
+    "old": "network, `HOME` and the principal's home (its key-store entries included) denied, or Cairn refuses",
+    "new": "network, local endpoints, `HOME`, the principal's home (its key-store entries included) and writes outside the checkout (the git directory included) denied, or Cairn refuses"
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "with network, `HOME` and the principal's home denied, refused unless the platform can deny all three,",
+    "new": "with network, local endpoints, `HOME`, the principal's home and writes outside the checkout denied, refused unless the platform can deny all of them,"
+   },
+   {
+    "file": "features/principal-acts.feature",
+    "old": "with network, the OS user's home directory (`HOME`) and the principal's home (its platform key-store entries included) denied\n    And the launcher records its command by commitment",
+    "new": "with network, local endpoints, the OS user's home directory (`HOME`), the principal's home (its platform key-store entries included) and every write outside that checkout (the repository's git directory and its other worktrees included) denied\n    And a check whose code writes to the repository's git directory, a git hook included, or to another of its worktrees leaves both byte-identical\n    And the launcher records its command by commitment"
+   },
+   {
+    "file": "features/principal-acts.feature",
+    "old": "And unless the platform can deny the check network, `HOME` and the principal's home with its key-store entries, Cairn refuses",
+    "new": "And unless the platform can deny the check network, local endpoints, `HOME`, the principal's home with its key-store entries and every write outside its checkout, Cairn refuses"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/git-and-forge.md",
+   "quote": "every write outside that checkout (the repository's git directory and its other worktrees included) denied"
+  }
+ },
+ {
+  "id": "REG-9",
+  "real": true,
+  "why": "Real. The model says a subagent has \"no seat in its parent's rooms but those it joins as Join says, which Cairn may suggest (LANE-23)\". LANE-23 requires an ask or acceptance per run (\"MUST NOT join either without that acceptance\") and says nothing about one act covering a run's subagents. LANE-01 routes a run's events \"to its run seat in the room it works in, one it joined or created ... while that seat is a member with work ...; else to its personal-room seat, never refused\". So until its principal accepts a join for that one subagent run, usually after the short-lived subagent has ended, the subagent's events, edits and checks on the room's branch land in the private personal room. They stay outside the room's history and results, and the room's pins never reach its restore block. Commits it makes still carry the room trailer (LANE-28), so other principals see commits whose work they cannot read. An event goes to exactly one writer for good, so a later acceptance cannot move these events. Whether one act may cover a run's subagents is a real choice. Earlier rulings frame it: the stakeholder held that a subagent joins its parent's rooms only on acceptance, that later runs of an agent inherit no seat, and that joining stays explicit. Any fix must keep the join an explicit act of the principal. Mechanical checks: 05b-lane-requirements.md is at about 7,997 of its 8,000-token mdsmith budget. The SRS edit is kept word-neutral by dropping LANE-23's restatement \"tied to its parent's run by its parent link, as MUST any other joining run\", which REC-02 already states (\"each subagent as a separate run, tied to its parent's run by a parent link\"). With that trim, mdsmith check passes on a scratch copy at 7,999 tokens, so any other theme that adds to 05b must trim too. principals-and-agents.md becomes 111 lines and about 1,630 tokens. The Owner entry and LANE-16 need no change. A covering act of the owner is the owner's act joining its own (subagent) run, so DM-AD's \"its act joining its own run assigns that seat contributor (LANE-16)\" already gives each covered seat contributor. The scenario checks this, and DM-Y's and DM-AD's ledger quotes stay intact.",
+  "settled_by": "none. LANE-23 says only \"Cairn MAY suggest joining a run to a room that names its worktree's branch, and a subagent to its parent's rooms, and MUST NOT join either without that acceptance\" and \"A subagent that joins MUST get its own seat id\". It is silent on whether one ask or acceptance may cover a run's subagents. The stakeholder ruled (round 1) that \"a subagent joins its parent's rooms only on acceptance (LANE-23)\".",
+  "klass": "design",
+  "options": [
+   {
+    "label": "A. Opt-in cover on the run's join (recommended)",
+    "effect": "An ask for, or acceptance of, a run's join is a widening principal act. It may say that it also covers the run's subagents. Each subagent then joins by that act, with its own seat id and seat key, under the room's admission, but only while the parent run's seat is a member, so a kick or leave of the parent stops further subagent joins. Where the act is the owner's for its own run, LANE-16 gives each covered seat contributor; another principal's covered seats get the role an invite names, or viewer. An act that does not say so covers no subagent, and Cairn may still suggest each subagent's join. Joining stays explicit, and only the agent's own principal widens what reaches the subagent (I2).",
+    "invariant_change": false
+   },
+   {
+    "label": "B. Per-subagent acceptance only (status quo, made explicit)",
+    "effect": "No new act. The model and LANE-23 state that a subagent's events stay in its personal room until its principal accepts that subagent's own join. This is the safest option and adds no surface, but a short-lived subagent's work on the room's branch stays outside the room's history and results, and the room's pins never reach its restore block. The finding stays open as a known usefulness gap.",
+    "invariant_change": false
+   },
+   {
+    "label": "C. Subagents join their parent's rooms automatically",
+    "effect": "Every subagent of a run with a seat in a room joins that room at its start, with no principal act naming the cover. All of the room's work is recorded in the room, but this reverses the stakeholder's ruling that a subagent joins only on acceptance and LANE-23's \"joining any room MUST stay explicit\". It widens what reaches each subagent (room pins, directed posts) without any act of its principal that names the cover.",
+    "invariant_change": false
+   }
+  ],
+  "recommendation": "Option A. It finishes DM-Y in the direction already decided: a subagent still joins only on its principal's explicit acceptance, which may now be given in advance on the run's join and is shown and recorded as a widening principal act. It is off unless that act says so, and holds only while the parent run's seat is a member, so a kick or leave cannot be bypassed through subagents. Edits: the model's Subagent entry; LANE-23, with a word-neutral trim of a clause REC-02 already states, because 05b is at its token budget; `--subagents` on `cairn run join` and `cairn join-request accept` in 09a; and the LANE-23 scenario. Run `mdsmith fix` afterwards to re-pad the 09a table.",
+  "edits": [
+   {
+    "file": "docs/domain-model/principals-and-agents.md",
+    "old": "  which Cairn may suggest (LANE-23). It takes a delegated task without a\n  delegation grant.",
+    "new": "  which Cairn may suggest (LANE-23). A join its principal asks for or accepts\n  for a run may say it also covers that run's subagents, each then joining by\n  that act, with its own seat id, while that run's seat is a member. It takes a\n  delegated task without a delegation grant."
+   },
+   {
+    "file": "docs/srs/05b-lane-requirements.md",
+    "old": "both widening principal acts that MUST say they cover branches the room names later, and only",
+    "new": "both widening principal acts that MUST say they cover branches the room names later, and MAY say they cover the run's subagents, joining each while the run's seat is a member, and only"
+   },
+   {
+    "file": "docs/srs/05b-lane-requirements.md",
+    "old": "A subagent that joins MUST get its own seat id, tied to its parent's run by its parent link, as MUST any other joining run;",
+    "new": "Each joining run MUST get its own seat id;"
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "| `cairn run join <run> <room>`",
+    "new": "| `cairn run join <run> <room> [--subagents]`"
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "which then needs no further acceptance, only the room's admission (LANE-23); widening",
+    "new": "which then needs no further acceptance, only the room's admission; with `--subagents` it also covers the run's subagents, joining each while the run's seat is a member (LANE-23); widening"
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "| `cairn join-request accept\\|decline <join-request>`",
+    "new": "| `cairn join-request accept [--subagents]\\|decline <join-request>`"
+   },
+   {
+    "file": "docs/srs/09a-command-line-interface.md",
+    "old": "accept a join request one of the principal's runs made without its ask (LANE-23; widening)",
+    "new": "accept a join request one of the principal's runs made without its ask, with `--subagents` also covering that run's subagents (LANE-23; widening)"
+   },
+   {
+    "file": "features/lane.feature",
+    "old": "    Then it gets its own seat id, and its run is tied to its parent's run by a parent link\n",
+    "new": "    Then it gets its own seat id, and its run is tied to its parent's run by a parent link\n    When \"bob\" asks for another of his runs' join, saying it also covers that run's subagents\n    Then each subagent that run starts while its seat is a member joins by that act with its own seat id, and with a contributor role assignment since the act is the owner's\n    And a join that does not say so covers no subagent, and a subagent no join covers joins only on its own principal's ask or acceptance\n"
+   }
+  ],
+  "ledger_quote": {
+   "file": "docs/domain-model/principals-and-agents.md",
+   "quote": "A join its principal asks for or accepts for a run may say it also covers that run's subagents"
+  }
+ }
+]

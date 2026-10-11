@@ -1,0 +1,1172 @@
+[
+ {
+  "id": "acts-and-roles: Room act",
+  "indent": 0,
+  "line": 13
+ },
+ {
+  "id": "acts-and-roles: Principal act",
+  "indent": 0,
+  "line": 29
+ },
+ {
+  "id": "acts-and-roles: Cut:",
+  "indent": 2,
+  "line": 38
+ },
+ {
+  "id": "acts-and-roles: Neutral:",
+  "indent": 2,
+  "line": 49
+ },
+ {
+  "id": "acts-and-roles: Widening:",
+  "indent": 2,
+  "line": 57
+ },
+ {
+  "id": "acts-and-roles: Expire act",
+  "indent": 0,
+  "line": 99
+ },
+ {
+  "id": "acts-and-roles: Role",
+  "indent": 0,
+  "line": 107
+ },
+ {
+  "id": "acts-and-roles: Viewer:",
+  "indent": 2,
+  "line": 119
+ },
+ {
+  "id": "acts-and-roles: Contributor:",
+  "indent": 2,
+  "line": 120
+ },
+ {
+  "id": "acts-and-roles: Moderator:",
+  "indent": 2,
+  "line": 124
+ },
+ {
+  "id": "acts-and-roles: Capability",
+  "indent": 0,
+  "line": 127
+ },
+ {
+  "id": "acts-and-roles: Work",
+  "indent": 0,
+  "line": 130
+ },
+ {
+  "id": "acts-and-roles: Appointment",
+  "indent": 0,
+  "line": 134
+ },
+ {
+  "id": "acts-and-roles: Join",
+  "indent": 0,
+  "line": 139
+ },
+ {
+  "id": "acts-and-roles: Kick",
+  "indent": 0,
+  "line": 151
+ },
+ {
+  "id": "acts-and-roles: Bar",
+  "indent": 0,
+  "line": 153
+ },
+ {
+  "id": "acts-and-roles: Mute",
+  "indent": 0,
+  "line": 156
+ },
+ {
+  "id": "acts-and-roles: Present",
+  "indent": 0,
+  "line": 158
+ },
+ {
+  "id": "acts-and-roles: Pick",
+  "indent": 0,
+  "line": 159
+ },
+ {
+  "id": "acts-and-roles: Admission",
+  "indent": 0,
+  "line": 160
+ },
+ {
+  "id": "acts-and-roles: Successor",
+  "indent": 0,
+  "line": 166
+ },
+ {
+  "id": "acts-and-roles: Handover",
+  "indent": 0,
+  "line": 171
+ },
+ {
+  "id": "acts-and-roles: Stamp",
+  "indent": 0,
+  "line": 173
+ },
+ {
+  "id": "acts-and-roles: Active pin",
+  "indent": 0,
+  "line": 178
+ },
+ {
+  "id": "acts-and-roles: Room merge",
+  "indent": 0,
+  "line": 179
+ },
+ {
+  "id": "acts-and-roles: Concurrent",
+  "indent": 0,
+  "line": 194
+ },
+ {
+  "id": "acts-and-roles: Room state",
+  "indent": 0,
+  "line": 196
+ },
+ {
+  "id": "components-and-surfaces: Component",
+  "indent": 0,
+  "line": 9
+ },
+ {
+  "id": "components-and-surfaces: Core (B0):",
+  "indent": 2,
+  "line": 12
+ },
+ {
+  "id": "components-and-surfaces: harness adapter",
+  "indent": 2,
+  "line": 26
+ },
+ {
+  "id": "components-and-surfaces: Room-view component (B1):",
+  "indent": 2,
+  "line": 31
+ },
+ {
+  "id": "components-and-surfaces: Launcher (B1):",
+  "indent": 2,
+  "line": 38
+ },
+ {
+  "id": "components-and-surfaces: Peer component (B2):",
+  "indent": 2,
+  "line": 44
+ },
+ {
+  "id": "components-and-surfaces: Publish component (B3):",
+  "indent": 2,
+  "line": 47
+ },
+ {
+  "id": "components-and-surfaces: Bridge component (B3):",
+  "indent": 2,
+  "line": 50
+ },
+ {
+  "id": "components-and-surfaces: Boundary",
+  "indent": 0,
+  "line": 54
+ },
+ {
+  "id": "components-and-surfaces: Room view",
+  "indent": 0,
+  "line": 57
+ },
+ {
+  "id": "components-and-surfaces: Fleet:",
+  "indent": 2,
+  "line": 63
+ },
+ {
+  "id": "components-and-surfaces: Room page:",
+  "indent": 2,
+  "line": 65
+ },
+ {
+  "id": "components-and-surfaces: Catch up:",
+  "indent": 2,
+  "line": 71
+ },
+ {
+  "id": "components-and-surfaces: Needs you:",
+  "indent": 2,
+  "line": 73
+ },
+ {
+  "id": "components-and-surfaces: Health:",
+  "indent": 2,
+  "line": 74
+ },
+ {
+  "id": "components-and-surfaces: Setup:",
+  "indent": 4,
+  "line": 75
+ },
+ {
+  "id": "components-and-surfaces: Peers:",
+  "indent": 2,
+  "line": 77
+ },
+ {
+  "id": "components-and-surfaces: Outcome window",
+  "indent": 0,
+  "line": 78
+ },
+ {
+  "id": "git-and-forge: Repository",
+  "indent": 0,
+  "line": 9
+ },
+ {
+  "id": "git-and-forge: Branch",
+  "indent": 0,
+  "line": 15
+ },
+ {
+  "id": "git-and-forge: Commit",
+  "indent": 0,
+  "line": 18
+ },
+ {
+  "id": "git-and-forge: Worktree",
+  "indent": 0,
+  "line": 19
+ },
+ {
+  "id": "git-and-forge: Forge",
+  "indent": 0,
+  "line": 21
+ },
+ {
+  "id": "git-and-forge: Pull request",
+  "indent": 0,
+  "line": 24
+ },
+ {
+  "id": "git-and-forge: Check",
+  "indent": 0,
+  "line": 25
+ },
+ {
+  "id": "git-and-forge: Result",
+  "indent": 0,
+  "line": 30
+ },
+ {
+  "id": "git-and-forge: Evidence",
+  "indent": 0,
+  "line": 35
+ },
+ {
+  "id": "git-and-forge: Evidence class",
+  "indent": 0,
+  "line": 36
+ },
+ {
+  "id": "git-and-forge: Own check",
+  "indent": 0,
+  "line": 38
+ },
+ {
+  "id": "git-and-forge: Witness check",
+  "indent": 0,
+  "line": 41
+ },
+ {
+  "id": "git-and-forge: CI attestation",
+  "indent": 0,
+  "line": 47
+ },
+ {
+  "id": "git-and-forge: Landing",
+  "indent": 0,
+  "line": 50
+ },
+ {
+  "id": "git-and-forge: Landing link",
+  "indent": 0,
+  "line": 53
+ },
+ {
+  "id": "git-and-forge: Proof class",
+  "indent": 0,
+  "line": 56
+ },
+ {
+  "id": "git-and-forge: Room trailer",
+  "indent": 0,
+  "line": 59
+ },
+ {
+  "id": "git-and-forge: Qualified links",
+  "indent": 0,
+  "line": 63
+ },
+ {
+  "id": "git-and-forge: Comparison",
+  "indent": 0,
+  "line": 72
+ },
+ {
+  "id": "git-and-forge: Outcome",
+  "indent": 0,
+  "line": 74
+ },
+ {
+  "id": "git-and-forge: Presentation",
+  "indent": 0,
+  "line": 76
+ },
+ {
+  "id": "git-and-forge: Verdict",
+  "indent": 0,
+  "line": 79
+ },
+ {
+  "id": "harness-facts: Harness",
+  "indent": 0,
+  "line": 12
+ },
+ {
+  "id": "harness-facts: Harness session",
+  "indent": 0,
+  "line": 17
+ },
+ {
+  "id": "harness-facts: Transcript",
+  "indent": 0,
+  "line": 20
+ },
+ {
+  "id": "harness-facts: Hook",
+  "indent": 0,
+  "line": 28
+ },
+ {
+  "id": "harness-facts: Turn",
+  "indent": 0,
+  "line": 31
+ },
+ {
+  "id": "harness-facts: Compaction",
+  "indent": 0,
+  "line": 41
+ },
+ {
+  "id": "pins-and-context: Pin",
+  "indent": 0,
+  "line": 9
+ },
+ {
+  "id": "pins-and-context: Pin version",
+  "indent": 0,
+  "line": 31
+ },
+ {
+  "id": "pins-and-context: Pin candidate",
+  "indent": 0,
+  "line": 33
+ },
+ {
+  "id": "pins-and-context: Configuration pin",
+  "indent": 0,
+  "line": 41
+ },
+ {
+  "id": "pins-and-context: Pin priority",
+  "indent": 0,
+  "line": 43
+ },
+ {
+  "id": "pins-and-context: Budget",
+  "indent": 0,
+  "line": 46
+ },
+ {
+  "id": "pins-and-context: Pin type",
+  "indent": 0,
+  "line": 56
+ },
+ {
+  "id": "pins-and-context: Unpin",
+  "indent": 0,
+  "line": 59
+ },
+ {
+  "id": "pins-and-context: List removal",
+  "indent": 0,
+  "line": 65
+ },
+ {
+  "id": "pins-and-context: Intent",
+  "indent": 0,
+  "line": 71
+ },
+ {
+  "id": "pins-and-context: Criterion",
+  "indent": 0,
+  "line": 79
+ },
+ {
+  "id": "pins-and-context: Stake",
+  "indent": 0,
+  "line": 80
+ },
+ {
+  "id": "pins-and-context: Title, labels",
+  "indent": 0,
+  "line": 83
+ },
+ {
+  "id": "pins-and-context: Assignment",
+  "indent": 0,
+  "line": 87
+ },
+ {
+  "id": "pins-and-context: Post",
+  "indent": 0,
+  "line": 89
+ },
+ {
+  "id": "pins-and-context: Directed post",
+  "indent": 0,
+  "line": 96
+ },
+ {
+  "id": "pins-and-context: Room summary",
+  "indent": 0,
+  "line": 98
+ },
+ {
+  "id": "pins-and-context: Compaction summary",
+  "indent": 0,
+  "line": 105
+ },
+ {
+  "id": "pins-and-context: Envelope",
+  "indent": 0,
+  "line": 107
+ },
+ {
+  "id": "pins-and-context: Envelope warning",
+  "indent": 0,
+  "line": 112
+ },
+ {
+  "id": "pins-and-context: Trusted text",
+  "indent": 0,
+  "line": 114
+ },
+ {
+  "id": "pins-and-context: Restore block",
+  "indent": 0,
+  "line": 119
+ },
+ {
+  "id": "pins-and-context: Landmark index",
+  "indent": 0,
+  "line": 128
+ },
+ {
+  "id": "pins-and-context: Recall hint",
+  "indent": 0,
+  "line": 130
+ },
+ {
+  "id": "pins-and-context: Opt-in notice",
+  "indent": 0,
+  "line": 132
+ },
+ {
+  "id": "pins-and-context: Model",
+  "indent": 0,
+  "line": 137
+ },
+ {
+  "id": "pins-and-context: Working view",
+  "indent": 0,
+  "line": 141
+ },
+ {
+  "id": "pins-and-context: Held request",
+  "indent": 0,
+  "line": 143
+ },
+ {
+  "id": "pins-and-context: Qualified requests",
+  "indent": 0,
+  "line": 150
+ },
+ {
+  "id": "pins-and-context: Notification",
+  "indent": 0,
+  "line": 158
+ },
+ {
+  "id": "places: Home",
+  "indent": 0,
+  "line": 9
+ },
+ {
+  "id": "places: Node",
+  "indent": 0,
+  "line": 15
+ },
+ {
+  "id": "places: Device",
+  "indent": 0,
+  "line": 25
+ },
+ {
+  "id": "places: Paired phone",
+  "indent": 0,
+  "line": 28
+ },
+ {
+  "id": "places: Sandbox",
+  "indent": 0,
+  "line": 33
+ },
+ {
+  "id": "places: Room",
+  "indent": 0,
+  "line": 35
+ },
+ {
+  "id": "places: Personal room",
+  "indent": 0,
+  "line": 38
+ },
+ {
+  "id": "places: Foreign room",
+  "indent": 0,
+  "line": 48
+ },
+ {
+  "id": "places: Principal's rooms",
+  "indent": 0,
+  "line": 57
+ },
+ {
+  "id": "places: Visibility",
+  "indent": 0,
+  "line": 58
+ },
+ {
+  "id": "places: Peer",
+  "indent": 0,
+  "line": 62
+ },
+ {
+  "id": "places: Blind peer",
+  "indent": 0,
+  "line": 66
+ },
+ {
+  "id": "principals-and-agents: Principal",
+  "indent": 0,
+  "line": 9
+ },
+ {
+  "id": "principals-and-agents: Person",
+  "indent": 0,
+  "line": 21
+ },
+ {
+  "id": "principals-and-agents: Service account",
+  "indent": 0,
+  "line": 23
+ },
+ {
+  "id": "principals-and-agents: Managed policy",
+  "indent": 0,
+  "line": 28
+ },
+ {
+  "id": "principals-and-agents: Agent",
+  "indent": 0,
+  "line": 38
+ },
+ {
+  "id": "principals-and-agents: Run",
+  "indent": 0,
+  "line": 41
+ },
+ {
+  "id": "principals-and-agents: Subagent",
+  "indent": 0,
+  "line": 49
+ },
+ {
+  "id": "principals-and-agents: Ingested run",
+  "indent": 0,
+  "line": 52
+ },
+ {
+  "id": "principals-and-agents: Facilitator",
+  "indent": 0,
+  "line": 56
+ },
+ {
+  "id": "principals-and-agents: Author",
+  "indent": 0,
+  "line": 62
+ },
+ {
+  "id": "principals-and-agents: Member",
+  "indent": 0,
+  "line": 64
+ },
+ {
+  "id": "principals-and-agents: Owner",
+  "indent": 0,
+  "line": 72
+ },
+ {
+  "id": "principals-and-agents: Pull-request author",
+  "indent": 0,
+  "line": 84
+ },
+ {
+  "id": "principals-and-agents: Delegate",
+  "indent": 0,
+  "line": 89
+ },
+ {
+  "id": "record: Record",
+  "indent": 0,
+  "line": 9
+ },
+ {
+  "id": "record: Writer",
+  "indent": 0,
+  "line": 16
+ },
+ {
+  "id": "record: Retire a writer",
+  "indent": 0,
+  "line": 20
+ },
+ {
+  "id": "record: Event",
+  "indent": 0,
+  "line": 25
+ },
+ {
+  "id": "record: seq",
+  "indent": 0,
+  "line": 32
+ },
+ {
+  "id": "record: Address",
+  "indent": 0,
+  "line": 34
+ },
+ {
+  "id": "record: Payload",
+  "indent": 0,
+  "line": 43
+ },
+ {
+  "id": "record: Segment",
+  "indent": 0,
+  "line": 46
+ },
+ {
+  "id": "record: Seal",
+  "indent": 0,
+  "line": 53
+ },
+ {
+  "id": "record: Commitment",
+  "indent": 0,
+  "line": 60
+ },
+ {
+  "id": "record: Provenance",
+  "indent": 0,
+  "line": 63
+ },
+ {
+  "id": "record: Origin",
+  "indent": 0,
+  "line": 78
+ },
+ {
+  "id": "record: Span",
+  "indent": 0,
+  "line": 94
+ },
+ {
+  "id": "record: Landmark",
+  "indent": 0,
+  "line": 97
+ },
+ {
+  "id": "record: Structural field",
+  "indent": 0,
+  "line": 104
+ },
+ {
+  "id": "record: Structural event",
+  "indent": 0,
+  "line": 108
+ },
+ {
+  "id": "record: Capture",
+  "indent": 0,
+  "line": 113
+ },
+ {
+  "id": "record: Ingest marker",
+  "indent": 0,
+  "line": 115
+ },
+ {
+  "id": "record: Worktree checkpoint",
+  "indent": 0,
+  "line": 122
+ },
+ {
+  "id": "record: Derived artifact",
+  "indent": 0,
+  "line": 124
+ },
+ {
+  "id": "record: Redaction",
+  "indent": 0,
+  "line": 131
+ },
+ {
+  "id": "record: Retention policy",
+  "indent": 0,
+  "line": 134
+ },
+ {
+  "id": "record: Flag",
+  "indent": 0,
+  "line": 138
+ },
+ {
+  "id": "record: Quarantine",
+  "indent": 0,
+  "line": 140
+ },
+ {
+  "id": "record: Purge",
+  "indent": 0,
+  "line": 143
+ },
+ {
+  "id": "record: Gap marker",
+  "indent": 0,
+  "line": 147
+ },
+ {
+  "id": "record: Integrity status",
+  "indent": 0,
+  "line": 152
+ },
+ {
+  "id": "record: Receipt",
+  "indent": 0,
+  "line": 158
+ },
+ {
+  "id": "record: Backup",
+  "indent": 0,
+  "line": 163
+ },
+ {
+  "id": "record: At-rest key",
+  "indent": 0,
+  "line": 166
+ },
+ {
+  "id": "record: Bundle",
+  "indent": 0,
+  "line": 168
+ },
+ {
+  "id": "record: Trusted-only export",
+  "indent": 0,
+  "line": 171
+ },
+ {
+  "id": "record: Export",
+  "indent": 0,
+  "line": 174
+ },
+ {
+  "id": "record: Rendering",
+  "indent": 0,
+  "line": 179
+ },
+ {
+  "id": "record: Import",
+  "indent": 0,
+  "line": 181
+ },
+ {
+  "id": "record: Kernel",
+  "indent": 0,
+  "line": 184
+ },
+ {
+  "id": "seats-and-keys: Seat",
+  "indent": 0,
+  "line": 9
+ },
+ {
+  "id": "seats-and-keys: Run seat",
+  "indent": 0,
+  "line": 22
+ },
+ {
+  "id": "seats-and-keys: Device seat",
+  "indent": 0,
+  "line": 33
+ },
+ {
+  "id": "seats-and-keys: Room id",
+  "indent": 0,
+  "line": 37
+ },
+ {
+  "id": "seats-and-keys: Seat id",
+  "indent": 0,
+  "line": 39
+ },
+ {
+  "id": "seats-and-keys: Seat key",
+  "indent": 0,
+  "line": 41
+ },
+ {
+  "id": "seats-and-keys: Device key",
+  "indent": 0,
+  "line": 50
+ },
+ {
+  "id": "seats-and-keys: Principal key",
+  "indent": 0,
+  "line": 58
+ },
+ {
+  "id": "seats-and-keys: Token key",
+  "indent": 0,
+  "line": 64
+ },
+ {
+  "id": "seats-and-keys: Seat certificate",
+  "indent": 0,
+  "line": 71
+ },
+ {
+  "id": "seats-and-keys: Access token",
+  "indent": 0,
+  "line": 77
+ },
+ {
+  "id": "seats-and-keys: Authenticator",
+  "indent": 0,
+  "line": 81
+ },
+ {
+  "id": "seats-and-keys: CI key",
+  "indent": 0,
+  "line": 82
+ },
+ {
+  "id": "trust-and-flow: Trust level",
+  "indent": 0,
+  "line": 9
+ },
+ {
+  "id": "trust-and-flow: Trusted sources",
+  "indent": 0,
+  "line": 17
+ },
+ {
+  "id": "trust-and-flow: Deployment mode",
+  "indent": 0,
+  "line": 28
+ },
+ {
+  "id": "trust-and-flow: Trust policy",
+  "indent": 0,
+  "line": 30
+ },
+ {
+  "id": "trust-and-flow: Trust mark",
+  "indent": 0,
+  "line": 31
+ },
+ {
+  "id": "trust-and-flow: Taint",
+  "indent": 0,
+  "line": 33
+ },
+ {
+  "id": "trust-and-flow: Recall taint",
+  "indent": 0,
+  "line": 37
+ },
+ {
+  "id": "trust-and-flow: Principal surface",
+  "indent": 0,
+  "line": 40
+ },
+ {
+  "id": "trust-and-flow: Presence proof",
+  "indent": 0,
+  "line": 45
+ },
+ {
+  "id": "trust-and-flow: Recall",
+  "indent": 0,
+  "line": 47
+ },
+ {
+  "id": "trust-and-flow: Closed path",
+  "indent": 0,
+  "line": 55
+ },
+ {
+  "id": "trust-and-flow: Recall scope",
+  "indent": 0,
+  "line": 63
+ },
+ {
+  "id": "trust-and-flow: Endorsement",
+  "indent": 0,
+  "line": 66
+ },
+ {
+  "id": "trust-and-flow: Trust grant",
+  "indent": 0,
+  "line": 70
+ },
+ {
+  "id": "trust-and-flow: Delegation",
+  "indent": 0,
+  "line": 80
+ },
+ {
+  "id": "trust-and-flow: Delegated task",
+  "indent": 0,
+  "line": 83
+ },
+ {
+  "id": "trust-and-flow: Delegate report",
+  "indent": 0,
+  "line": 85
+ },
+ {
+  "id": "trust-and-flow: Delegation grant",
+  "indent": 0,
+  "line": 89
+ },
+ {
+  "id": "trust-and-flow: Acceptance grant",
+  "indent": 0,
+  "line": 94
+ },
+ {
+  "id": "trust-and-flow: Permission grant",
+  "indent": 0,
+  "line": 99
+ },
+ {
+  "id": "trust-and-flow: Notice allowance, notice opt-in",
+  "indent": 0,
+  "line": 102
+ },
+ {
+  "id": "trust-and-flow: Rule level",
+  "indent": 0,
+  "line": 104
+ },
+ {
+  "id": "trust-and-flow: Quota",
+  "indent": 0,
+  "line": 108
+ },
+ {
+  "id": "trust-and-flow: Spend",
+  "indent": 0,
+  "line": 111
+ },
+ {
+  "id": "trust-and-flow: Away policy",
+  "indent": 0,
+  "line": 113
+ },
+ {
+  "id": "trust-and-flow: Residual risk",
+  "indent": 0,
+  "line": 116
+ },
+ {
+  "id": "trust-and-flow: Sandbox state",
+  "indent": 0,
+  "line": 117
+ },
+ {
+  "id": "trust-and-flow: Risk acceptance",
+  "indent": 0,
+  "line": 120
+ },
+ {
+  "id": "trust-and-flow: Hand-off, hand-back",
+  "indent": 0,
+  "line": 122
+ },
+ {
+  "id": "trust-and-flow: Run controls",
+  "indent": 0,
+  "line": 125
+ },
+ {
+  "id": "trust-and-flow: Fixed template",
+  "indent": 0,
+  "line": 131
+ },
+ {
+  "id": "trust-and-flow: Correction, retry",
+  "indent": 0,
+  "line": 136
+ },
+ {
+  "id": "trust-and-flow: Counter",
+  "indent": 0,
+  "line": 138
+ },
+ {
+  "id": "trust-and-flow: Canary",
+  "indent": 0,
+  "line": 142
+ },
+ {
+  "id": "trust-and-flow: Stat",
+  "indent": 0,
+  "line": 144
+ },
+ {
+  "id": "trust-and-flow: Run status",
+  "indent": 0,
+  "line": 146
+ },
+ {
+  "id": "trust-and-flow: Room status",
+  "indent": 0,
+  "line": 152
+ },
+ {
+  "id": "trust-and-flow: Queue class",
+  "indent": 0,
+  "line": 157
+ },
+ {
+  "id": "trust-and-flow: Focus set",
+  "indent": 0,
+  "line": 159
+ },
+ {
+  "id": "trust-and-flow: Open room",
+  "indent": 0,
+  "line": 161
+ },
+ {
+  "id": "trust-and-flow: Exposure",
+  "indent": 0,
+  "line": 164
+ },
+ {
+  "id": "trust-and-flow: Overlap",
+  "indent": 0,
+  "line": 166
+ },
+ {
+  "id": "trust-and-flow: Fork",
+  "indent": 0,
+  "line": 169
+ },
+ {
+  "id": "trust-and-flow: Presence hint",
+  "indent": 0,
+  "line": 171
+ },
+ {
+  "id": "trust-and-flow: Watchdog observation",
+  "indent": 0,
+  "line": 173
+ },
+ {
+  "id": "trust-and-flow: Petname",
+  "indent": 0,
+  "line": 176
+ },
+ {
+  "id": "hub-relation: A principal owns any number",
+  "indent": 0,
+  "line": 56
+ },
+ {
+  "id": "hub-relation: A run has its personal-room",
+  "indent": 0,
+  "line": 58
+ },
+ {
+  "id": "hub-relation: A restore block carries the",
+  "indent": 0,
+  "line": 61
+ },
+ {
+  "id": "hub-relation: Ingest splits one transcript by",
+  "indent": 0,
+  "line": 64
+ },
+ {
+  "id": "hub-relation: Every seat belongs to one",
+  "indent": 0,
+  "line": 65
+ },
+ {
+  "id": "hub-relation: Each event goes to exactly",
+  "indent": 0,
+  "line": 66
+ },
+ {
+  "id": "hub-relation: A run's history spans its",
+  "indent": 0,
+  "line": 87
+ },
+ {
+  "id": "hub-relation: Principals and agents create rooms;",
+  "indent": 0,
+  "line": 90
+ },
+ {
+  "id": "hub-relation: A pin naming no room",
+  "indent": 0,
+  "line": 94
+ },
+ {
+  "id": "hub-relation: Recall extends only to the",
+  "indent": 0,
+  "line": 96
+ }
+]

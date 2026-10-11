@@ -63,6 +63,7 @@ rules:
       - "plan/*.md"
       - "plan/*/plan.md"
       - "docs/adr/*.md"
+      - "docs/use-cases/UC-*.md"
     exclude:
       - "plan/proto.md"
 
@@ -110,6 +111,29 @@ kinds:
         - heading: "Decision"
         - heading: "Alternatives"
         - heading: "Consequences"
+  use-case:
+    # One pending use case per file under docs/use-cases, front matter
+    # and a title only: the docs/use-cases.md index generates its table
+    # from the front matter. The summary is the use case itself, one
+    # sentence of at most 40 words, so an entry stays a use case and
+    # never grows into a design.
+    path-pattern: "docs/use-cases/UC-*.md"
+    schema:
+      filename: "UC-[0-9][0-9][0-9].md"
+      frontmatter:
+        id: '=~"^UC-[0-9]{3}$"'
+        title: nonEmpty
+        summary: '=~"^[^ ]+( [^ ]+){0,39}$" & !~"[.!?;] "'
+        personas: '=~"^U[1-9](, U[1-9])*$"'
+        milestone: '=~"^(M[1-9]( to M[1-9])?|unplanned)$"'
+        status: '"pending" | "specified" | "shipped"'
+        "requirements?": '=~"^[A-Z]+-[0-9]{2}(, [A-Z]+-[0-9]{2})*$"'
+      closed: true
+      sections:
+        - heading: null
+    rules:
+      max-file-length:
+        max: 20
   skill:
     # The plan-* skills `frit skills` writes into .claude/skills. A
     # skill loads into a working session, so every line is paid for:
@@ -136,7 +160,14 @@ kinds:
     # persona reviewer. Skills hold objective procedures; agents hold
     # subjective viewpoints. A subagent's file loads into its own
     # context, not the session's, so its caps are looser than a skill's.
+    # Every agent here reviews: it reads, and never writes, runs or
+    # fetches.
     path-pattern: ".claude/agents/*.md"
+    schema:
+      frontmatter:
+        name: '=~"^[a-z][a-z-]*$"'
+        description: nonEmpty
+        tools: '"Read, Grep, Glob"'
     rules:
       required-frontmatter:
         fields: [name, description]
@@ -155,10 +186,10 @@ kinds:
     # quietly: they are what requirement work tends to lose.
     path-pattern: ".claude/agents/persona-*.md"
     schema:
+      filename: "persona-*.md"
       frontmatter:
         name: '=~"^persona-[a-z-]+$"'
         description: nonEmpty
-        # Persona reviewers read; they never write, run or fetch.
         tools: '"Read, Grep, Glob"'
       closed: false
       sections:
@@ -168,6 +199,63 @@ kinds:
         - heading: "Your journeys"
         - heading: "When you give up"
         - heading: "How you review"
+  domain-model:
+    # docs/domain-model/index.md is the hub of the domain model: its
+    # intro, the catalog of concept files, and the parts that span every
+    # group. Its sections cannot be dropped quietly.
+    path-pattern: "docs/domain-model/index.md"
+    schema:
+      closed: true
+      sections:
+        - heading: null
+        - heading: "Concepts"
+        - heading: "Relations"
+        - heading: "Names follow the model"
+        - heading: "Not Cairn concepts"
+        - heading: "Changing the model"
+    rules:
+      token-budget:
+        mode: heuristic
+        max: 3000
+  domain-model-concepts:
+    # One group of the domain model's concepts per file, one concept per
+    # list item. Each carries the title, order and summary the hub's
+    # catalog reads, and holds no sub-sections.
+    path-pattern: "docs/domain-model/*.md"
+    schema:
+      frontmatter:
+        title: nonEmpty
+        order: nonEmpty
+        summary: nonEmpty
+      closed: true
+      sections:
+        - heading: null
+    rules:
+      max-file-length:
+        max: 250
+      token-budget:
+        mode: heuristic
+        max: 3000
+  domain-model-agent:
+    # The domain-model agent holds instructions only; the model itself
+    # is docs/domain-model/. Its name is pinned to its file, and its
+    # sections (when it is consulted, how it reviews a change, how it
+    # reviews a change to the model itself, and how it reports) cannot
+    # be dropped quietly.
+    path-pattern: ".claude/agents/domain-model.md"
+    schema:
+      filename: "domain-model.md"
+      frontmatter:
+        name: '"domain-model"'
+        description: nonEmpty
+        tools: '"Read, Grep, Glob"'
+      closed: true
+      sections:
+        - heading: null
+        - heading: "When you are consulted"
+        - heading: "How you review"
+        - heading: "When the model changes"
+        - heading: "How you report"
   proto:
     # proto.md leads with directives and placeholder headings rather
     # than real content; the structural rules step aside for it.
@@ -229,6 +317,12 @@ kinds:
 kind-assignment:
   - glob: ["docs/**/*.md", "!docs/srs/*.md", "!docs/adr/*.md"]
     kinds: [doc]
+  - glob: ["docs/use-cases/UC-*.md"]
+    kinds: [use-case]
+  - glob: ["docs/domain-model/index.md"]
+    kinds: [domain-model]
+  - glob: ["docs/domain-model/*.md", "!docs/domain-model/index.md"]
+    kinds: [domain-model-concepts]
   - glob: ["docs/adr/*.md"]
     kinds: [adr]
   - glob: ["docs/srs/*.md"]
@@ -239,6 +333,8 @@ kind-assignment:
     kinds: [agent]
   - glob: [".claude/agents/persona-*.md"]
     kinds: [persona]
+  - glob: [".claude/agents/domain-model.md"]
+    kinds: [domain-model-agent]
   - glob: ["**/proto.md"]
     kinds: [proto]
   - glob: ["plan/*.md", "plan/*/plan.md"]
@@ -260,7 +356,6 @@ overrides:
       paragraph-readability: false
       paragraph-structure: false
       max-file-length: false
-      cross-file-reference-integrity: false
       required-structure: false
       # Companion analyses such as requirement traces are wide
       # matrices, as research notes are.

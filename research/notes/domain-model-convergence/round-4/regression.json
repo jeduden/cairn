@@ -1,0 +1,164 @@
+{
+ "round": "4-regression",
+ "reviews": [
+  {
+   "lens": "consistency",
+   "findings": [
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "inherit its rooms for recall (the `rooms` scope), for restore and for its",
+     "problem": "One undefined phrase, \"its rooms\", covers both restore and recall. For restore it has to include rooms where every run seat of the agent left or was kicked, since the hub says a leave, kick or bar keeps them. Read that way, the `rooms` scope already reaches those rooms by default, but the hub limits recall to the principal's rooms the agent still has a seat in and leaves even naming such a room open (OQ-45). Read the other way, restore loses rooms the agent left, against the hub's restore relation.",
+     "fix": "Its later runs inherit, for restore and for its directed posts, every room its earlier runs had a seat in, and for recall (the `rooms` scope) only the principal's rooms the agent still has a seat in (OQ-45), never a seat, add or role: ...",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "changing it, loosening redaction or turning flags off applies only once",
+     "problem": "Accepting configuration is a widening principal act, and a token-key-only node signs no principal acts, so no deployment-mode change can ever apply there. The model gives no default and nothing that stands in for the acceptance, the way PEER-01's environment variable stands in for turning on the peer component. Implementers will diverge on an ephemeral node's mode, and one left `interactive` trusts its pipeline's input as `user` events (I2).",
+     "fix": "Add: \"A token-key-only node, which accepts no configuration, takes its deployment mode from managed policy or the access token that certified it, else `automation`.\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "its configuration is accepted (ADM-04).",
+     "problem": "\"Changing it\" covers any settings layer, but \"configuration\" means the principal's settings. If a managed-policy change also waits for the principal's acceptance, Cairn overrides managed policy until then, against I7. The Retention policy entry avoids this by scoping its rule to \"the principal's change\".",
+     "fix": "the principal's change of it, loosening redaction or turning flags off applies only once its configuration is accepted (ADM-04); a managed-policy change applies as set.",
+     "severity": "minor"
+    },
+    {
+     "type": "gap",
+     "file": "docs/domain-model/principals-and-agents.md",
+     "quote": "the terminal test only for room acts (OWN-12)",
+     "problem": "The exemption does not say whose room acts it covers. Read broadly, the program, and through R7 any agent on that node, can take every room act of the service account's device seats in any room without a principal surface. That includes joins, posts, pins and moderation in rooms where it is not the facilitator, which Device seat otherwise forbids, and it changes which pins the program may write.",
+     "fix": "and the program is exempt from the terminal test only for the room acts of its appointed device seat in that room (OWN-12).",
+     "severity": "minor"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "seat, then any other moderator, then the owner, VIEW-22). Acts with no member",
+     "problem": "Room merge, the one rule deriving room state, names only acts with no member seat as open. Read on its own, it counts every act of a member seat in causal order, including acts in a retired writer's late segments, while Retire a writer says whether those count is open (OQ-41).",
+     "fix": "Acts with no member seat, and acts in segments past a retired writer's last accepted seq: open (OQ-41).",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "security",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "`automation` (a pipeline does), set per node (PRV-02, `node.deployment_mode`);",
+     "problem": "The model gives no default deployment mode. A change now applies only once a configuration acceptance records it, and a token-key-only node signs no principal acts, so an ephemeral node can never leave the default. If the default is `interactive`, every line a pipeline types on an ephemeral CI node becomes a trusted `user` event: recalling it sets no recall taint, and it goes into trusted-only exports.",
+     "fix": "Append: \"it is `automation` until an accepted configuration or managed policy sets `interactive`; a token-key-only node, which accepts no configuration, takes it only from managed policy or the access token that certified it\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "changing it, loosening redaction or turning flags off applies only once",
+     "problem": "\"Changing it\" also delays the narrowing change to `automation`. A principal who hands a node to a pipeline keeps the pipeline's input trusted as `user` events until it takes a widening act (accepting configuration). A configuration turning a component off, by contrast, applies without acceptance.",
+     "fix": "\"changing it to `interactive`, loosening redaction or turning flags off applies only once its configuration is accepted (ADM-04); a change to `automation` applies at once, as a configuration turning a component off does\"",
+     "severity": "minor"
+    },
+    {
+     "type": "security",
+     "file": "docs/domain-model/record.md",
+     "quote": "Mark a writer retired, by a principal act or the",
+     "problem": "The model limits who may record the expire act that retires a writer, but not whose principal act may retire one. Any principal holding a room can retire another principal's writer, the owner's included, and name a low last accepted seq. Every later segment of that writer is then marked delivered after retirement, and while OQ-41 is open its acts may drop out of room state. That bypasses LANE-25's protection of the owner.",
+     "fix": "\"Mark a writer retired, by a principal act of the principal whose seat the writer is, or the expire act ending the access token whose token key certified its seat key, ...\"",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/acts-and-roles.md",
+     "quote": "seat: open (OQ-41).",
+     "problem": "Room merge calls itself the one rule deriving all room state and leaves open only acts with no member seat. A retired writer's seat stays a member, so Room merge counts acts past its last accepted seq, while Retire a writer leaves exactly those acts open under OQ-41. Implementers following different entries derive different room state from late room acts of a retired, possibly leaked, ephemeral writer.",
+     "fix": "\"Acts with no member seat, and acts past a retired writer's last accepted seq: open (OQ-41).\"",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "lens": "usefulness",
+   "findings": [
+    {
+     "type": "gap",
+     "file": "docs/domain-model/trust-and-flow.md",
+     "quote": "changing it, loosening redaction or turning flags off applies only once",
+     "problem": "A token-key-only node signs no principal acts (Token key, Device seat), so it can never accept configuration. Under this rule its deployment mode therefore never changes from a default the model doesn't name. One implementer will apply an ephemeral node's `node.deployment_mode` without acceptance, and another will pin it to some default. If that default is `interactive`, a CI pipeline's prompts on such a node are recorded as trusted `user` events (I2).",
+     "fix": "Append: \"; a token-key-only node, which accepts no configuration, takes the mode named by the access token that certifies it (minting that token is the widening act), else `automation`\".",
+     "severity": "needs-fix"
+    },
+    {
+     "type": "contradiction",
+     "file": "docs/domain-model/index.md",
+     "quote": "whatever room each seat belongs to (RCL-05). It extends only to",
+     "problem": "The sentence first lists everything recall extends to: rooms of the principal's where the agent has a seat, and foreign rooms a call names. That list already rules out naming a room of the principal's that every run seat of the agent has left, yet the OQ-45 clause calls that case open. Under the 'only' reading, that room's pins keep restoring (a leave or kick keeps them), but over-budget ones are named only by id, and the agent can never fetch them.",
+     "fix": "State the interim rule in the OQ-45 clause, e.g. \"...rests on OQ-45; until it closes, a call may name it as it names a foreign room, every item marked untrusted\", or, if refusal is intended, \"...rests on OQ-45; until it closes, such a call is refused\".",
+     "severity": "minor"
+    }
+   ]
+  }
+ ],
+ "match": {
+  "matches": [
+   {
+    "lens": "consistency",
+    "index": 0,
+    "theme": "NEW-3",
+    "kind": "new",
+    "reason": "The quoted phrase is the closing text of DM-E and DM-AC, and the finding shows it is ambiguous. One undefined 'its rooms' covers recall and restore, which reach different sets: restore includes rooms every run seat left, recall does not. DM-BW (OQ-45, deferred) does not answer it, because it leaves open only whether a call may name a left room and says nothing about this phrase."
+   },
+   {
+    "lens": "consistency",
+    "index": 1,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "The quoted text is DM-BT's closing text. The finding shows it is incomplete: a token-key-only node signs no principal acts and so can accept no configuration, and the model names no mode for it. DM-BT only required that a change needs acceptance."
+   },
+   {
+    "lens": "security",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "Same defect as the consistency finding on the deployment mode: the model gives no default, and a token-key-only node can never accept a change. The finding quotes the Deployment mode entry that DM-BT's closing text edited, so it shows that text is incomplete."
+   },
+   {
+    "lens": "security",
+    "index": 2,
+    "theme": "NEW-2",
+    "kind": "new",
+    "reason": "The model limits who may record the expire act that retires a writer but not whose principal act may retire one, so any room-holding principal could retire another principal's writer. DM-H covers only the node that records the expire act ending a bar, mute or handover offer. DM-BV (OQ-41) covers only whether acts in a retired writer's later segments count in the room merge. Neither answers the authorization gap."
+   },
+   {
+    "lens": "usefulness",
+    "index": 0,
+    "theme": "NEW-1",
+    "kind": "new",
+    "reason": "Same defect as the other two deployment-mode findings: a token-key-only node can never accept configuration, so its mode never changes from a default the model does not name. The quoted text is DM-BT's closing text, and the finding shows it is incomplete."
+   }
+  ],
+  "new_themes": [
+   {
+    "id": "NEW-1",
+    "title": "The deployment mode of a token-key-only node, which signs no principal acts and so accepts no configuration, has no stated default or source, and an interactive default would trust a pipeline's input as user events (I2)",
+    "settled_by": "Partly. PRV-04 and the §9.6 settings table (docs/srs/09-interfaces.md) default node.deployment_mode to `automation` and make `interactive` an explicit opt-in. ADM-04 lets a mode change apply only after a widening principal act records the accepted configuration's digest, or from managed policy. SEC-22 lets managed policy fix the mode. Together these leave a token-key-only node on `automation` unless managed policy fixes it. The model's Deployment mode entry (docs/domain-model/trust-and-flow.md) just does not say so. No requirement, ADR or plan note says whether the access token that certifies the node may name the mode (PEER-06 lists no such field), so that source is unsettled."
+   },
+   {
+    "id": "NEW-2",
+    "title": "The model does not say whose principal act may retire a writer, so a principal holding a room could retire another principal's writer, the owner's included, name a low last accepted seq, and bypass LANE-25's protection",
+    "settled_by": "none. PEER-05 and CLI `cairn writer retire` say only 'a principal act' and class it widening. The Retire a writer entry in docs/domain-model/record.md names no authorizing principal. LANE-25 protects the owner from kick, bar and mute but not from retirement. The plan notes (domain-model-review-blind-5, -7, -29, -30) record only that the entry was added, moved to record.md and extended to access-token expiry, with no authorization decision."
+   },
+   {
+    "id": "NEW-3",
+    "title": "The Agent entry's 'its rooms' covers recall, restore and directed posts with one phrase, though restore reaches rooms every run seat left and recall reaches only rooms the agent still has a seat in",
+    "settled_by": "Yes for the intent, and the Agent entry needs only to say so. RCL-05 limits recall (`room` and `rooms` scopes) to the principal's rooms the agent has a seat in, and OQ-45 leaves open naming a room every run seat left. PIN-08, PIN-10 and REC-02 give restore every room the agent's earlier runs had a seat in, and a leave, kick or bar keeps those pins (DM-AG). The hub (docs/domain-model/index.md) states both sets. Nothing settles the Agent entry's wording."
+   }
+  ]
+ }
+}
