@@ -182,9 +182,9 @@ jobs:
           version: v0.55.1
       - run: cargo test --locked -p drift --test suite -- --ignored
 
-  # ENG-19 and CON-02: the release build, on every change and not first
-  # on release day. Every target is built by two independent builders,
-  # compared bit for bit, and run once on its own platform.
+  # CON-02: the release build, on every change and not first on
+  # release day. Every target is built and run once on its own
+  # platform.
   build:
     uses: ./.github/workflows/build.yml
     with:

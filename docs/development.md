@@ -1,8 +1,8 @@
 ---
 summary: >-
   Build commands, static analysis and supply-chain checks, and how CI,
-  the nightly fuzz job and the reproducible, signed release pipeline
-  work. Testing has its own page, docs/testing.md.
+  the nightly fuzz job and the signed release pipeline work. Testing
+  has its own page, docs/testing.md.
 ---
 # Development
 
@@ -63,7 +63,7 @@ proposes the bumps after a seven-day cooldown.
 [ci.yml](../.github/workflows/ci.yml) runs on every push and pull
 request to `main`. It runs every test and scenario, clippy and
 rustfmt, cargo-deny and cargo-audit, and the drift suite, and the
-release build of every target (NFR-10, ENG-19). It also runs
+release build of every target (NFR-10, CON-02). It also runs
 `mdsmith check .` and zizmor over the workflows themselves. A final
 job named `CI` passes only when every other job passed. It is the one
 check the branch and release-tag rulesets require, because GitHub
@@ -77,17 +77,16 @@ that adds it pins the nightly and the run. The crash-consistency test
 contract test (ENG-17) join it as their plans land.
 
 [build.yml](../.github/workflows/build.yml) is the release build.
-CI runs it on every change, and the release workflow runs it too. An
-x86_64 and an arm64 Linux runner each build `linux/amd64` and
-`linux/arm64`, linked statically against musl with the rust-lld Rust
-ships (CON-02). The same two runners build `windows/amd64` with
-mingw-w64, pinned to Ubuntu 24.04's exact packages. An arm64 and an
-x86_64 macOS runner each build `darwin/arm64`. `--remap-path-prefix`
-keeps the builder's paths out. `CAIRN_VERSION` and `CAIRN_COMMIT`
-stamp the version and the commit (ENG-01). A last job compares the
-two builders of each target and stops on any difference (ENG-19).
-Each binary also runs once on its own platform and must report what
-it was stamped with.
+CI runs it on every change, and the release workflow runs it too. One
+x86_64 Linux runner builds `linux/amd64` and `linux/arm64`, linked
+statically against musl with the rust-lld Rust ships (CON-02), and
+`windows/amd64` with mingw-w64, pinned to Ubuntu 24.04's exact
+packages. One arm64 macOS runner builds `darwin/arm64`.
+`--remap-path-prefix` keeps the builder's paths out. `CAIRN_VERSION`
+and `CAIRN_COMMIT` stamp the version and the commit (ENG-01). Each
+binary then runs once on its own platform and must report what it
+was stamped with. Each target is built once: the release build is not
+checked for reproducibility.
 
 [review.yml](../.github/workflows/review.yml) reviews each pull
 request from a branch of this repository once its CI passes (ENG-21,
@@ -110,8 +109,8 @@ deliberately not the trigger: a failed build would leave a public tag
 pointing at nothing. The workflow takes these steps:
 
 1. Validate the version and run the whole suite.
-2. Run the release build above, with the version stamped, and stop on
-   any difference between the builders (ENG-19).
+2. Run the release build above, with the version stamped, and stop
+   when any binary fails to report it.
 3. Generate an SPDX SBOM, attest build provenance and the SBOM, and
    sign `checksums.txt` keylessly with cosign (ENG-20).
 4. Create the tag and publish the release, only now that everything

@@ -4,9 +4,9 @@ title: "The core executable in Rust; Go removed"
 status: "✅"
 result: true
 summary: >-
-  `cairn version` is the Rust core executable, built reproducibly by
-  one workflow CI and the release share: two Linux builders, three
-  targets, compared bit for bit. Its clippy config and reach test hold
+  `cairn version` is the Rust core executable, built by one workflow
+  CI and the release share: one Linux and one macOS builder, four
+  targets, each run on its own platform. Its clippy config and reach test hold
   it to no socket, no program start and no linked crate. Go is gone
   outside the archived spike S2 benchmark; SRS 2.32-draft drops the Go
   clauses.
@@ -24,7 +24,9 @@ summary: >-
   builders' SHA-256 sums, and runs each binary on its own platform.
   Locally, two checkouts at different paths gave identical bytes for
   all three targets; `-Wl,-S` keeps object timestamps out of the
-  Mach-O UUID.
+  Mach-O UUID. Later, zig left, `windows/amd64` joined, and with
+  ENG-19 withdrawn each target is built once, so the second builders
+  and the comparison are gone.
 - ENG-01's scenario checks `--remap-path-prefix`, `CAIRN_COMMIT` and
   both musl targets in the release workflow and the workflow it calls,
   comments left out.

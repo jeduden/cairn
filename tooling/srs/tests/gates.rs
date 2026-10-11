@@ -28,7 +28,7 @@ fn specification_parses() {
 
     assert_eq!(
         reqs.len(),
-        234 + 15 + 29 + 21,
+        234 + 15 + 28 + 21,
         "§5–§6, NFR, ENG and ASM rows"
     );
 }
