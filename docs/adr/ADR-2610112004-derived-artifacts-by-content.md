@@ -90,18 +90,20 @@ With it, SRS 3.0-draft changes these requirements:
   certificate names it an ingest seat, then `bundle` or `peer` from the
   arrival events, then `witnessed` for a writer whose seat key a key
   named by a key event after the newest node identity change event
-  certified. No
-  stored origin value, and no origin another node derived, decides it.
+  certified, or any key event when none exists. No stored origin value,
+  and no origin another node derived, decides it.
 - **SEC-10 and REC-24** record a key event for every device key or
-  token key a node starts using, and a node identity change event for
-  each change, which takes a fresh access token. `witnessed` holds for a
-  writer whose seat key a key named after the newest change certified,
-  so a lost and re-minted key keeps earlier writers `witnessed`, and a
+  token key a node starts using: minted, minted anew after a loss,
+  rotated or carried by an access token. Each node identity change
+  event, on which the node mints a new device key or uses the token key
+  a fresh access token carries, is followed by the new key's key event.
+  So a key lost and minted anew keeps earlier writers `witnessed`, and a
   clone never does. "Last changed" comes from the record, never from
   the audit log, which I10 does not read.
 - **REC-17, ADM-07 and §8.2.** A tombstone no longer keeps a purged
   event's origin; each node derives it from the writer's seat
-  certificate, the arrival events and the node identity change events.
+  certificate, the arrival events, the key events and the node identity
+  change events, none of which a purge covers.
 - **PEER-03.** Two peers holding the same segments derive room state and
   a search index identical in content, apart from each event's trust
   level and origin. Each node derives those for itself and never takes
@@ -200,6 +202,7 @@ everything the record holds.
   write-ahead log with `TRUNCATE`, or rebuilds the search index.
 - M1's schema may keep trust levels and origin apart from the parts
   every node shares, so PEER-03's shared parts compare directly.
-- M1 derives origin from the record. M3, M8 and M9, which bring backup
-  restore, peers and paired phones, and bundles, write the arrival
-  events they need.
+- M1 derives origin from the record and writes key events and node
+  identity change events. M3, M8 and M9, which bring backup restore,
+  peers and paired phones, and bundles, write the arrival events they
+  need.

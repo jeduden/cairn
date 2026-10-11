@@ -102,14 +102,14 @@ for a device seat and `assistant` for a run seat (LANE-31, PRV-01). A purge
 under a retention policy is not an act: the node records it naming the policy,
 whose setting was the act (ADM-04), and an erasure request it sends peers is
 `structural`, where one a principal act sends is `operator`. Every tombstone,
-refused-segment event, arrival event and node identity change event is a
-`structural` event (PRV-01, REC-21, REC-24, REC-26). Everything else in the
-store (the search index, spans, landmarks, active pins, quarantine set, room
-state, origins, trust levels, run statuses but for their time-relative freshness
-marks, integrity statuses, queues, evidence and proof classes, stats) is a
-derived artifact whose content `cairn rebuild` reproduces exactly, whatever its
-storage layout, from the writer logs the node holds and the node's own key set
-(I10). Purge, the only way stored content is destroyed, removes content but
+refused-segment event, arrival event, node identity change event and key event
+is a `structural` event (PRV-01, REC-21, REC-24, REC-26, SEC-10). Everything
+else in the store (the search index, spans, landmarks, active pins, quarantine
+set, room state, origins, trust levels, run statuses but for their time-relative
+freshness marks, integrity statuses, queues, evidence and proof classes, stats)
+is a derived artifact whose content `cairn rebuild` reproduces exactly, whatever
+its storage layout, from the writer logs the node holds and the node's own key
+set (I10). Purge, the only way stored content is destroyed, removes content but
 leaves a tombstone event carrying the removed addresses, counts, reason, the
 principal or retention policy that purged, and the commitments of the removed
 events, with the structural fields, provenance and recorder of each removed act,
