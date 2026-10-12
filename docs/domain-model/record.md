@@ -65,7 +65,7 @@ summary: >-
   OWN-18 and PEER-11 class the events they name; PRV-01 lists the structural
   ones.
 - **Origin**: How an event reached this node's record (RCL-09), derived from the
-  record and the node's key set alone (REC-26): `ingested` (in the writer of a
+  record and the node's key set alone (REC-27): `ingested` (in the writer of a
   seat whose seat certificate names it an ingest seat, REC-19), `bundle`
   (imported, whatever other arrival event names it) or `peer` (received from a
   peer, paired phone or backup, as an arrival event names it), `witnessed`

@@ -27,7 +27,7 @@ summary: >-
   core keeps that seat's key, and an ingested run's, like a device seat's key
   and seals their writers (SEC-10). An **ingest seat** is a run seat `cairn
   ingest` starts or mints, the one beside a run seat and an ingested run's
-  included, which its seat certificate names so (REC-19, REC-26). A run-seat key
+  included, which its seat certificate names so (REC-19, REC-27). A run-seat key
   is lost with the MCP server that holds it, and a run that continues on a
   harness resume or a restart does so on a new run seat (Seat key; open: OQ-43).
   A witnessed run records nothing until its MCP server holds its run-seat key,
@@ -92,7 +92,7 @@ summary: >-
   and the inception that replaces its newest key. A log other than the genesis
   log certifies no `witnessed` writer until a `recovered` rotation joins it, a
   principal act names it, or, for a token key, the device key that made the
-  replaced token key's token certificate made its own (REC-26). A log with two
+  replaced token key's token certificate made its own (REC-27). A log with two
   newest key events, or two inceptions that replace one key, are **duplicity**,
   which only a principal act, or a rotation that voids both inceptions,
   resolves. Revoking a key on the current log keeps the writers it certified

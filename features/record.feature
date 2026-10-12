@@ -339,7 +339,7 @@ Feature: Record (REC)
     And every address, commitment and chain head is unchanged
     And "cairn verify" exits 0
 
-  @REC-26 @P0 @I2 @I10 @pending
+  @REC-27 @P0 @I2 @I10 @pending
   Scenario: origin derives from the record and the key set, never from a stored value
     Given an isolated Cairn home
     And a witnessed run, an ingested run, a sealed range received from a peer, one imported in a bundle, one reinstated by a backup restore of this node's own copy, and one range that arrived both from a peer and in a bundle

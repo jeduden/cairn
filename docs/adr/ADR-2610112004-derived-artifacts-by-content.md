@@ -84,7 +84,7 @@ With it, SRS 3.0-draft changes these requirements:
   in the home.
 - **ENG-08.** Its property test compares canonical digests after any
   sequence of appends and lifecycle events.
-- **REC-26, new.** Each range a node accepts from a peer, a paired phone,
+- **REC-27, new.** Each range a node accepts from a peer, a paired phone,
   a bundle or a backup restore is recorded as an arrival event in its
   device seat in its personal room, once per way it arrived: writer id,
   seq range, digest and how it arrived. An event's origin derives from
@@ -135,7 +135,7 @@ With it, SRS 3.0-draft changes these requirements:
     to bring its writers from `peer` to `witnessed`.
   - "Current" and "newest" come from the record's hash links, never
     from a clock, arrival order or the audit log.
-- **REC-26** also takes origin `ingested` from a transcript source and
+- **REC-27** also takes origin `ingested` from a transcript source and
   ingest position, stores each range only with its arrival event, takes
   the arrival event's digest over commitments and headers, never
   content, and refuses a range that extends one of this node's own
@@ -183,8 +183,8 @@ miss, and what answers each:
 | a trigger, view or extra index, or a changed tokenizer or ranking configuration | the schema and settings are part of the digest; verify refuses unknown schema objects   |
 | an index that disagrees with the table it indexes                               | ADM-08's integrity checks of the store and the search index                             |
 | output whose order follows storage                                              | ADM-08: every read orders its output by values                                          |
-| a stored origin changed from `peer` to `witnessed`, making the event trusted    | REC-26 derives origin from the record; verify compares it with the rest of I10          |
-| a node's own backup restored and read as `witnessed`                            | REC-26 reads arrival events before the node's own writers                               |
+| a stored origin changed from `peer` to `witnessed`, making the event trusted    | REC-27 derives origin from the record; verify compares it with the rest of I10          |
+| a node's own backup restored and read as `witnessed`                            | REC-27 reads arrival events before the node's own writers                               |
 | a purge of the events origin derives from, turning `peer` back into `witnessed` | ADM-07: no purge scope covers arrival, node identity change or key events               |
 | a key event another process forges to make its own writer `witnessed`           | PRV-12: a rotation needs the recovery key, a later log a widening principal act         |
 | a clone that keeps its source's writers `witnessed`                             | REC-24, PRV-12: an identity change starts a new, unconfirmed key event log              |
@@ -218,7 +218,7 @@ either from another node.
 Before this change, origin was a stored per-event value outside the
 hash chain. Trust levels derive from it, so changing a peer event's
 origin to `witnessed` would have made it trusted (I2), and nothing would
-have noticed. REC-26 closes that: origin now derives from the record and
+have noticed. REC-27 closes that: origin now derives from the record and
 the key set, as I10 lists it. Until seals ship (REC-18), a node's own
 writers are anchored by head receipts alone. That limit is the same for
 everything the record holds.
