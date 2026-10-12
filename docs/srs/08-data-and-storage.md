@@ -27,8 +27,10 @@ $CAIRN_HOME/                          0700, belonging to one OS user       (N)
 
 A home contains one store, `store.db` with its payload store, partitioned by
 writer, never by repository or room (N). Names in the home MUST NOT reveal a
-repository's path or identity (N). The storage engine MUST keep its temporary
-storage in memory or in a directory in the home, never elsewhere (N).
+repository's path or identity (N). Cairn and its storage engine MUST keep every
+temporary file in memory or in a directory in the home, never elsewhere, and,
+while encryption at rest is on, in memory or encrypted under the at-rest key
+(N).
 
 ## 8.2 Logical schema
 
@@ -55,11 +57,12 @@ Canonicalization Scheme (RFC 8785) over a documented field set, with SHA-256
 **(N)**. The field set and encoding version are recorded in `meta` so that
 future changes remain verifiable.
 
-The **canonical digest** of a derived artifact (ADM-08) MUST be SHA-256 over
-the canonical encoding of its content: every value any read of it can return,
-row by row in key order, together with its schema and every stored setting
-that decides what a read returns, such as the search index's tokenizer and
-ranking configuration. Its field set and version are recorded in `meta` **(N)**.
+The [canonical digest](../domain-model/record.md) of a derived artifact
+(ADM-08) MUST be SHA-256 over the canonical encoding of its content: every
+value any read of it can return, row by row in key order, together with its
+schema and every stored setting that decides what a read returns, such as the
+search index's tokenizer and ranking configuration. Its field set and version
+are recorded in `meta` **(N)**.
 
 ## 8.4 Model-token estimation
 
@@ -74,7 +77,9 @@ sample **(N)**.
 
 The grid names, for each lifecycle event that ships in M1 to M5, the
 requirement that decides what it does to each derived artifact I10
-lists, to provenance and to room membership. An event a lifecycle event
+lists, to provenance and to room membership. Origins follow PRV-13 in every
+row: an event's origin changes only when a node identity change, a backup
+restore or an arrival changes what PRV-13 reads. An event a lifecycle event
 appends is indexed, counted and shown like any other; a cell names only
 what goes beyond that, and a dash means no effect. Run status (VIEW-04),
 the Needs you queue (VIEW-05), evidence classes (LANE-05) and proof

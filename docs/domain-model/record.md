@@ -71,20 +71,20 @@ summary: >-
   device seat and `assistant` for a run seat (PRV-01, OWN-02). REC-20, RCL-07,
   OWN-18 and PEER-11 class the events they name; PRV-01 lists the structural
   ones.
-- **Origin**: How an event reached this node's record (RCL-09), derived from the
-  record and the node's key set alone (PRV-13): `ingested` (in the writer of a
-  seat whose seat certificate names it an ingest seat, REC-19), `bundle`
-  (imported, whatever other arrival event names it) or `peer` (received from a
-  peer, paired phone or backup, as an arrival event names it), `witnessed`
-  (otherwise, in a writer whose seat certificate a key on this node's current
-  key event log made, as Key event says) or `peer` (otherwise, such as in a
-  writer whose seat key was certified by a key on a log whose newest key an
-  inception replaced, as after a node identity change, Node, REC-24); a
-  quarantine never changes it; the trust policy reads `bundle` as `peer`
-  (PRV-02); origin is independent of provenance. An **arrival event** is the
-  structural event this node's device seat in its personal room records for each
-  range it accepts, once per way it arrived, naming the writer, the seq range,
-  the range's digest and how it arrived. A **witnessed run** is one this node's
+- **Origin**: Where and how an event entered this node's record (RCL-09),
+  derived from the record and the node's key set alone, in this order (PRV-13):
+  `bundle` (imported, as an arrival event names it, whatever other one does);
+  else `peer` (received from a peer, paired phone or backup restore, as an
+  arrival event names it); else `ingested` (in the writer of an ingest seat);
+  else `witnessed`; else `peer` (such as a writer whose seat key a key that a
+  node identity change replaced certified, Node, REC-24). Only arrival events,
+  ingest seats and writers whose seats a key of this node's own certified count
+  (Key event). A quarantine never changes it; the trust policy reads `bundle`
+  as `peer` (PRV-02); origin is independent of provenance. An **arrival event**
+  is the structural event this node's device seat in its personal room records
+  the first time it accepts a sealed range by a way, naming the writer, the seq
+  range, a digest of the range's chained headers, never of its content, and how
+  it arrived. A **witnessed run** is one this node's
   capture recorded live. Every event but one from a peer or a bundle also
   records its **recorder**, the part that recorded it: the hook handlers, CLI,
   TUI, MCP server, launcher, room-view component or bridge component.
@@ -124,8 +124,9 @@ summary: >-
 - **Derived artifact**: Anything computed from the record and the node's key
   set, such as those I10 lists, the **search index** over event text among them.
   A derived artifact is its content, never its storage layout: two copies are
-  the same when their **canonical digest**, a digest of their content that no
-  storage layout, insertion history or arrival order affects (§8.3), matches
+  the same when their **canonical digest**, a digest of their content, schema
+  and the stored settings that decide what a read returns, that no storage
+  layout, insertion history or arrival order affects (§8.3), matches
   (ADM-08). Unqualified, "content" is an event's content; a derived artifact's
   content is always said of the artifact. The **quarantine set** is what a node
   holds quarantined.
@@ -145,7 +146,8 @@ summary: >-
   range, which views show in its place (ADM-07): by a principal act, or by the
   node under a retention policy (REC-15), which ages events by **time marks**,
   structural events the node records at intervals. The only way stored content
-  is destroyed (I1), never undoing an act's effect (Relations).
+  is destroyed (I1), never undoing an act's effect (Relations); no purge scope
+  covers an arrival event, node identity change event or key event (ADM-07).
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
   range, a **quarantine marker** for a quarantined address, or a **truncation
   marker** on capped kernel output. A **missing range** is part of a writer this

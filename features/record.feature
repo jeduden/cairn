@@ -65,7 +65,7 @@ Feature: Record (REC)
     And home "B" ingests "forked-run", then "parent-run"
     Then in both homes each of the 40 repeated lines is one event in the writer of the run of "parent-run", and the run of "forked-run" records a repeat reference to its address, never a copy
     And in home "B" the repeated lines of "forked-run" were held at an ingest marker until "parent-run" was ingested
-    And the run membership and the derived artifacts of the two homes are byte-identical
+    And the run membership of the two homes is identical, and each derived artifact is identical in content apart from each home's own writer ids
     Given two fresh isolated Cairn homes "C" and "D" with no "SessionStart" hook observation for either transcript
     When home "C" ingests "parent-run", then "forked-run"
     And home "D" ingests "forked-run", then "parent-run"
@@ -274,8 +274,8 @@ Feature: Record (REC)
     Then the run's MCP server sealed each of its run seats' writers with that seat's key within 2 s of any unsealed append, covering what the hook handlers had appended
     And it seals those writers again when the run stops, and events after the newest seal are shown as "unsigned"
     And what "cairn ingest" later appends for the run, whether or not its MCP server still runs, goes to one run seat and writer it starts beside each run seat it extends, in that seat's room, which a second "cairn ingest" extends without starting another, whose key the core keeps like a device seat's key, never in the MCP server, and whose writer the core seals, naming that run seat, taking over its role and sharing its add where it has one, so a kick or leave of either seat ends that one add for both, and the one beside the run's personal-room seat is a member as long as that seat is
-    And once the device key that certified a run seat, or the key of the seat "cairn ingest" started beside it, is missing with the node identity unchanged, "cairn ingest" appends what remains of that run to such a seat in the personal room, certified by a key on the node's current key event log by a seat certificate naming it an ingest seat, and stops counting the run
-    And only a seat that the key which certified the run seat it names, or the key that replaced it on the node's current key event log, certified by a seat certificate naming it an ingest seat beside that run seat shares that run seat's add and role; a seat another node's key certified naming that run seat, or a new run seat naming it after its run-seat key was lost, shares no add or role
+    And once the device key that certified a run seat, or the key of the seat "cairn ingest" started beside it, is missing with the node identity unchanged, "cairn ingest" appends what remains of that run to such a seat in the personal room, certified by the device key minted anew by a seat certificate naming it an ingest seat, and stops counting the run
+    And only a seat that the key which certified the run seat it names, or the key a "rotated" key event names in its place, certified by a seat certificate naming it an ingest seat beside that run seat shares that run seat's add and role; a seat another node's key certified naming that run seat, or a new run seat naming it after its run-seat key was lost, shares no add or role
     And a segment was closed once 30 s had passed though no turn had ended, and the open segment is closed at <moment>
     And a second run, whose "SessionStart" hook handler ran before any MCP server held its run-seat key, appended nothing, and its MCP server appended the hook observation from the ingest marker once it held that key
     And a third harness session, for whose "SessionStart" hook observation no MCP server took the session binding within 30 s, is counted and audited as a failure once, by whichever of its next hook handler, "cairn status" and "cairn ingest" finds it first
@@ -369,9 +369,8 @@ Feature: Record (REC)
     And that quarantine stays in force on the node until a release there
     And that configuration acceptance takes no effect on the node: the deployment mode stays "automation" until the person accepts the configuration there
     And an audit entry records the node identity change
-    And a structural node identity change event in the new device seat in the personal room carries only the fingerprints of the replaced and new device key or token key, followed by the new key's inception, which starts a new key event log rather than rotating the one before the change
+    And a structural node identity change event in the new device seat in the personal room carries only the fingerprints of the replaced and new device key or token key, followed by a key event naming the new key
     And no event is appended under the old device key or the old seat key
-    And the new seat's writer reads origin "peer" until the person runs "cairn device-key confirm" naming the new key event log's inception, then "witnessed"
     And an unavailable node identity value read again within the hook budgets and found unchanged counts as no change
 
     Examples:

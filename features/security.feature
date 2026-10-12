@@ -124,7 +124,7 @@ Feature: Security (SEC)
     And the status says the key is a file an unsandboxed agent of the same OS user could read
     And the at-rest key is read from its secret reference on each use, not from the environment
     And no key or credential value appears in the store, a segment, a derived artifact, a backup, an export, the audit log or any log output
-    And the device key's recovery key is kept like the device key, in an entry of its own, and appears in no store, segment, backup, export, log or output
+    And a structural key event in the device seat in the personal room carries only the device key's fingerprint and "minted", and after the device key is removed and minted anew, another carries only the new fingerprint, "minted anew" and the removed key's fingerprint
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
     And a run ingested by "cairn ingest --path" has a seat key that ingest minted, kept like the device key in a file only the person's OS user can read
     And the seat "cairn ingest" starts beside a witnessed run's run seat has a seat key the core keeps the same way
@@ -392,6 +392,9 @@ Feature: Security (SEC)
     And ingesting its transcript positions again from the harness transcript is refused with an audit entry
     And a signed purge receipt names the scope, the ranges, the copies erased and every known copy Cairn cannot erase
     And every prompt commitment whose prompt_id a purged event's line carries, matched or not, is erased with its key, and the receipt counts them
+    And after a retention purge, and after a backup restore that reapplies the purge, no file in the home, decrypted, holds the purged events' canary token, their commitment keys or a search index entry naming them
+    And while a purge has residue, "cairn doctor" exits non-zero even after "cairn counter ack", the Needs you queue and Catch up show it, and once a retry clears it a further purge receipt is written
+    And no audit entry or log line carries the purged events' canary token
 
   @SEC-32 @P1 @I2 @I6 @pending
   Scenario: the facilitator moderates within its appointment's limits and reaches no agent as trusted without a trust grant

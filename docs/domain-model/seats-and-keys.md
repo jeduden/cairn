@@ -2,7 +2,7 @@
 title: "Seats and keys"
 order: "06"
 summary: >-
-  Seats and the keys behind them: run and device seats, room and seat ids, seat, device, principal and token keys, key events and key event logs, recovery keys, certificates, access tokens, authenticators and CI keys.
+  Seats and the keys behind them: run and device seats, room and seat ids, seat, device, principal and token keys, key events, certificates, access tokens, authenticators and CI keys.
 ---
 # Seats and keys
 
@@ -21,8 +21,8 @@ summary: >-
   writers (SEC-10). What `cairn ingest` appends for a witnessed run goes to the
   one run seat ingest starts beside each run seat it extends, in its room,
   naming it, sharing its add, where it has one, and taking over its role,
-  certified only by the key that certified that run seat or the key that
-  replaced it on the node's current key event log, by a seat certificate naming
+  certified only by the key that certified that run seat or the key a `rotated`
+  key event names in its place, by a seat certificate naming
   it so; any other seat naming a run seat shares no add or role (REC-19). The
   core keeps that seat's key, and an ingested run's, like a device seat's key
   and seals their writers (SEC-10). An **ingest seat** is a run seat `cairn
@@ -67,44 +67,19 @@ summary: >-
   principal or expire acts, and every pin it writes restores only once stamped
   (PEER-06, PRV-10), though its own events are trusted on that node as that
   node's trusted sources.
-- **Key event**: The structural event a node records, in a device seat in its
-  personal room that a key of the event's log certified, for a device key or, on
-  a token-key-only node, a token key. It carries only its kind, the key's
-  fingerprint, the digest of its recovery key, the digest of the key event it
-  follows, the fingerprint of each key it replaces and its signatures, and what
-  PRV-12 adds for a rotation, a `recovered` rotation or a `token key adopted`.
-  Only the key events this node recorded, none an arrival event names, form its
-  logs, and a void one counts for nothing. An **inception** starts a **key event
-  log** and follows none: `minted`, `token key adopted`, or `minted anew` in
-  place of a missing device key. A node's **genesis log** is the one whose
-  inception is the first event of the device seat that created its personal
-  room; any other inception replaces one key, the one it names or the one the
-  node identity change event right before it names. A **rotation**, `rotated` or
-  `recovered`, follows a key event of its log, signed by the recovery key that
-  event committed to, and names a freshly minted key; a `recovered` rotation
-  also joins to its log the `minted anew` inception that replaced its key. Each
-  next key is a **recovery key**: a device key's leaves the node only by `cairn
-  device-key write-recovery-key`, encrypted, to a file the principal names; a
-  token key's stays with the node that issued its access token until a later
-  access token carries it. An inception whose replaced key a key event of its
-  own log follows is void, unless a `recovered` rotation names it. A node's
-  **current key event log** is its genesis log, followed through its rotations
-  and the inception that replaces its newest key. A log other than the genesis
-  log certifies no `witnessed` writer until a `recovered` rotation joins it, a
-  principal act names it, or, for a token key, the device key that made the
-  replaced token key's token certificate made its own (PRV-13). A log with two
-  newest key events, or two inceptions that replace one key, are **duplicity**,
-  which only a principal act, or a rotation that voids both inceptions,
-  resolves. Revoking a key on the current log keeps the writers it certified
-  before `witnessed`.
+- **Key event**: The structural event a node records in its device seat in its
+  personal room when it starts using a device key or token key, carrying only
+  the key's fingerprint, its kind (`minted`, `minted anew` after a loss,
+  `rotated`, or `token key adopted` from an access token) and the fingerprint
+  of the key it replaces (SEC-10). A device key or token key a key event this
+  node recorded names, and no node identity change event this node recorded
+  replaces, directly or through the key events that led to it, is a key of
+  this node's own: only seats it certified read `witnessed` (PRV-13). How key
+  events are anchored against forgery is open (OQ-52).
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room and naming its seat kind and whether it is an ingest
-  seat, that the seat key countersigns (PRV-10, PRV-11). Its **certificate
-  record**, the structural event holding its digest in the device seat that
-  recorded its log's newest key event, makes it count for `witnessed` until a
-  rotation replaces its key, and after that only if the record lies at or before
-  the chain head the rotation carries (PRV-12). A node's **key set** is the
-  keys, certificates (a service-account certificate once countersigned),
+  seat, that the seat key countersigns (PRV-10, PRV-11). A node's **key set** is
+  the keys, certificates (a service-account certificate once countersigned),
   revocations, and recorded managed-policy listings and their removals it holds
   (I10), a listing only as Service account says.
 - **Access token**: A short-lived credential a principal mints to enroll a

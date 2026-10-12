@@ -44,7 +44,7 @@ row: "- [{title}]({filename}) — {summary}"
 - [Places](places.md) — Where Cairn's state lives and is shared: homes, nodes, devices and paired phones, sandboxes, rooms and their kinds, visibility, peers and blind peers.
 - [Record](record.md) — The record and what derives from it: writers, events, addresses, segments, seals, provenance and origin, spans and landmarks, quarantine and purge, receipts, backups, bundles and exports.
 - [Pins and context](pins-and-context.md) — What may reach a model: pins and their versions, types and budget, the intent, stakes, posts, room summaries, envelopes, restore blocks, opt-in notices and held requests.
-- [Seats and keys](seats-and-keys.md) — Seats and the keys behind them: run and device seats, room and seat ids, seat, device, principal and token keys, key events and key event logs, recovery keys, certificates, access tokens, authenticators and CI keys.
+- [Seats and keys](seats-and-keys.md) — Seats and the keys behind them: run and device seats, room and seat ids, seat, device, principal and token keys, key events, certificates, access tokens, authenticators and CI keys.
 - [Acts and roles](acts-and-roles.md) — The three act kinds and what they may do: room acts, principal acts and their classes, expire acts, roles, appointments, joins, moderation, handover, stamps and the room merge.
 - [Git and forge](git-and-forge.md) — Repositories, branches and commits, the forge, results with their evidence and proof classes, qualified links, comparisons, outcomes and verdicts.
 - [Trust and flow](trust-and-flow.md) — Trust and how content reaches an agent: trust levels and sources, recall, endorsement, trust grants, delegation, rule levels, away policies, fixed templates, sandbox state and risk acceptance, quotas and spend, counters, canary and stats, run status and room status, the Needs you queue and focus set, overlap, forks, presence hints and petnames.
@@ -56,8 +56,8 @@ row: "- [{title}]({filename}) — {summary}"
 - A principal owns any number of rooms; an agent's principal follows from its
   node.
 - A run has its personal-room seat from its first event, plus a run seat per
-  room it joined or created, a new one per seat key minted anew, and the seat
-  ingest starts beside any of them (Run seat).
+  room it joined or created, a new one per seat key minted in place of a lost
+  one, and the seat ingest starts beside any of them (Run seat).
 - A restore block carries the qualifying pins of every room its run or its
   agent's earlier runs had a seat in, and a leave, kick or bar drops none
   (PIN-08, PIN-10, REC-02).

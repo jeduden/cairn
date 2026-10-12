@@ -38,8 +38,8 @@ Feature: Peer network (PEER)
     And two peers receiving the same closed segments and sealed prefix of an open one, in different orders and partitions
     And a third node cut off from every peer
     When both peers rebuild their room state and search index
-    Then the room state and search index are identical in content on both peers, apart from each event's trust level and origin
-    And on each peer every event the other peer's writers wrote reads with the trust level and origin that peer's own key set gives it under PRV-02, whichever order the segments arrived in
+    Then the room state and search index are identical in content on both peers by a canonical digest over every value but each event's trust level and origin and the taint derived from them
+    And on each peer every event the other peer's writers wrote reads with the trust level and origin the reading peer's own record and key set give it under PRV-02 and PRV-13, whichever order the segments arrived in
     And of two concurrent branch links naming one branch from two rooms, the one with the lower commitment stands on both peers, even when it reaches a peer later or only through a later join to its room, the branch then moving for later events and commits only
     And only sealed ranges of writer logs were exchanged
     And nothing in an exchanged range lets a peer confirm a guess at a redacted secret, or at a payload's content from its payload name

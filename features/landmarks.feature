@@ -64,8 +64,8 @@ Feature: Landmarks (LMK)
     And an agent run with a Claude Code transcript "seventy-spans"
     When the person runs "cairn landmark list --json"
     Then no tier contains more than 8 landmark blocks
-    And the newest landmark block keeps full detail while older landmark blocks collapse to one line each and merge into the next tier
-    And the landmark list contains O(k log_k n) landmark blocks for n = 70 spans
+    And the newest landmark block keeps full detail while older landmark blocks collapse to one line each and merge into one landmark block of the next tier
+    And the run's tiers, and so its landmark index, hold at most 24 landmark blocks: 3 tiers of k = 8 for n = 70 spans
 
   @LMK-06 @P2 @I2 @pending
   Scenario: natural-language headlines appear only on all-trusted spans

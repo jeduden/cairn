@@ -79,7 +79,7 @@ Feature: Administration and lifecycle (ADM)
     And a configuration setting "node.deployment_mode" to "interactive", accepted by "cairn configuration accept"
     And a backup taken by "cairn backup create", followed by a purge of run "run-a" and the unpin of a pin
     When the person runs "cairn backup restore" as a widening principal act
-    Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device, recovery or at-rest key, and an audit entry recorded it
+    Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device or at-rest key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was reinstated
     And before it was confirmed, the backup restore named each pin of the copy that will not restore once its events count as received
     And every event the copy holds counts on the node as received, each deriving origin "peer" or "bundle", never "witnessed", and is trusted only as PRV-02 trusts received events
@@ -96,6 +96,7 @@ Feature: Administration and lifecycle (ADM)
   Scenario Outline: purge removes a scope everywhere, erases its commitment keys and leaves a tombstone
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a" in room "room-a"
+    And a range received from a peer, with its arrival event, a node identity change, and the key events it caused, all in this node's personal room
     When the person runs "cairn purge <scope>"
     Then the command exits 0
     And the purged events are gone from the segments, events, the search index, derived artifacts, the payload store and every copy of their content
@@ -104,9 +105,9 @@ Feature: Administration and lifecycle (ADM)
     And "cairn rebuild" then derives room state, the key set and the quarantine set as before the purge, but for the purged content
     And the store is vacuumed and "cairn verify" exits 0
     And once the purge reports the range erased, with encryption at rest on and off, no file in the home or the storage engine's temporary directory, read decrypted, contains a canary token only the purged events carried, their commitment keys or a search index entry naming a purged address
-    And while another process holds a read transaction on the store, the purge does not report the range erased before that holds, and audits and counts each residue it cannot yet remove
+    And while another process holds a read transaction on the store, the purge does not report the range erased and audits and counts each residue; once that transaction closes, the purge reports the range erased and the residue check passes
     And the audit log records the purge with its scope, ranges, reason and the principal act behind it, never the purged content
-    And no arrival event, node identity change event, key event or certificate record is purged, whatever the scope, and the origin of every remaining event derives as before
+    And no arrival event, node identity change event or key event is purged, whatever the scope, and the origin of every remaining event derives as before
 
     Examples:
       | scope                  |
@@ -118,6 +119,8 @@ Feature: Administration and lifecycle (ADM)
       | --before 2026-01-01    |
       | --provenance web       |
       | --provenance operator  |
+      | --provenance structural |
+      | --room personal-room   |
 
   @ADM-08 @P0 @I10 @pending
   Scenario: rebuild regenerates derived artifacts identical in content whatever order the logs arrived in
@@ -127,7 +130,13 @@ Feature: Administration and lifecycle (ADM)
     When the person runs "cairn rebuild" in each home
     Then the command exits 0 in each home
     And "cairn verify" confirms every derived artifact is identical in content to its state before rebuild, by a canonical digest of that content
-    And the derived artifacts of the two homes are identical in content
+    And the derived artifacts of the two homes are identical in content, apart from what each home's own arrival events derive
+    And the restore block, recall results, the landmark list and an export are byte-identical across the two homes
+    And no canonical digest appears in the audit log, a log, a receipt, a backup or an export, and none is kept once "cairn verify" completes
+    When a purge covers events a kept canonical digest covers, between "cairn rebuild" and "cairn verify"
+    Then "cairn verify" names that purge and does not report the comparison passed
+    When SQLite's "secure_delete" is turned off in the store
+    Then "cairn verify" fails
 
   @ADM-09 @P0 @I6 @I10 @pending
   Scenario Outline: verify exits non-zero on any integrity failure

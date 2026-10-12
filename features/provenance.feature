@@ -16,7 +16,7 @@ Feature: Provenance and trust (PRV)
     When the person runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
     And the Bash tool result carries provenance "tool_result:Bash"
-    And the principal act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", and the tombstone, the canary event and the backup event carry "structural"
+    And the principal act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", and the tombstone, the canary event, the backup event and the device key's "minted" key event carry "structural"
     And every provenance class is one of:
       | user               |
       | assistant          |
@@ -251,50 +251,31 @@ Feature: Provenance and trust (PRV)
     And the person runs "cairn verify --json"
     Then the device key has certified the run seat's key with a seat certificate scoped to that room and naming the seat kind "run"
     And the device key has certified the device seat's key with a seat certificate scoped to that room and naming the seat kind "device"
+    And each seat certificate names whether its seat is an ingest seat, and neither the run seat's nor the device seat's names it one
     And the output reports, for each seat, its seat certificate and the seat kind it names, taken only from that seat certificate, never from a field in its events
     And a recorded I2 security review of this requirement exists before it ships
-
-  @PRV-12 @P0 @I2 @I6 @I10 @pending
-  Scenario: the node's device keys form a key event log that only a recovery key or a principal act extends
-    Given an isolated Cairn home
-    When Cairn starts for the first time
-    Then a "minted" key event, the first event of the device seat that created the personal room, starts the genesis log and carries only its kind, the device key's fingerprint and the digest of its recovery key
-    And "cairn status" says the recovery key is on the node
-    When the person runs "cairn device-key write-recovery-key" at the controlling terminal, naming a new file outside every worktree and the home, and types a passphrase
-    Then the recovery key is written once to that file, encrypted under the passphrase and readable only by the person's OS user, checked against the committed digest, and erased from the node
-    And the principal act is recorded with provenance "operator" before any key event, and the command refuses without a controlling terminal
-    When the person runs "cairn device-key rotate" at the controlling terminal with that file
-    Then a "rotated" key event follows the newest one, carries the recovery key and the device seat writer's chain head, is signed by the recovery key and by the key it replaces, and names a freshly minted device key, never the recovery key
-    And each seat certificate has a certificate record, those of the replaced key at or before the carried chain head still count for "witnessed", and one recorded after counts for none
-    When another process appends a "rotated" key event not signed by the committed recovery key, and a "minted anew" inception naming a key a rotation has replaced
-    Then both are void, audited and counted, count for nothing, and "cairn status" and "cairn verify" show them
-    When another process appends a "minted anew" inception naming the current device key
-    Then the current key event log moves to it, every writer reads origin "peer", and the new log certifies no "witnessed" writer
-    And "cairn device-key rotate" with the new recovery key, written out first, voids that inception and makes the earlier log current again, every change of the current key event log audited and counted
-    When the device key goes missing, a "minted anew" inception replaces it, and "cairn device-key rotate" records a "recovered" rotation naming that inception
-    Then that inception stays counted, its log joins the earlier one, its own recovery key is void, and both logs' writers read "witnessed"
-    When a peer delivers a "minted anew" inception naming this node's device key
-    Then it counts for nothing here and causes no duplicity
-    When two inceptions in different device seats replace one key
-    Then "cairn status" and "cairn verify" report duplicity, and no key after it certifies a "witnessed" writer until "cairn device-key choose" keeps one branch
-    And a backup restore records a "minted anew" inception its principal act names, which starts the current key event log in place of every earlier log, and a later "cairn rebuild" derives the same current key event log
-    And on a node that issued an access token, the token key's recovery key is kept like its device key, appears only in the later access token "cairn access-token rotate" mints, and is erased and audited once the access token expires
-    And a "token key adopted" inception whose token key an earlier key event names is void
-    When the person revokes a device key on the current key event log
-    Then every writer it certified before the revocation still reads origin "witnessed", and a certificate record of that key after the revocation counts for nothing
 
   @PRV-13 @P0 @I2 @I10 @pending
   Scenario: origin derives from the record and the key set, never from a stored value
     Given an isolated Cairn home
-    And a witnessed run, an ingested run, a sealed range received from a peer, one imported in a bundle, one reinstated by a backup restore of this node's own copy, and one range that arrived both from a peer and in a bundle
+    And a witnessed run and an ingested run on this node
+    And a sealed range received from a peer, one imported in a bundle, one reinstated by a backup restore of this node's own copy, one range that arrived first from a peer and then in a bundle, and one that arrived first in a bundle and then from a peer
     When the person runs "cairn rebuild"
-    Then each sealed range the node accepted is named by exactly one arrival event per way it arrived in its device seat in its personal room, carrying only the writer id, seq range, digest and how it arrived
-    And the witnessed run's events read origin "witnessed", the ingested run's "ingested", the peer's "peer", the bundle's "bundle", the restored range's "peer", and the range that came both ways "bundle" whichever way came first
-    And after the origin the store keeps derived for a peer event is changed to "witnessed", "cairn verify" fails until "cairn rebuild" derives "peer" again
-    And after the node identity changes, a node identity change event carries only the fingerprints of the replaced and new device keys, the events of its earlier writers read origin "peer", and its new writers read "peer" until "cairn device-key confirm" names the new key event log's inception
-    And an event that carries a transcript source and ingest position reads origin "ingested" whatever its seat certificate names, and a quarantine and its release change no origin
-    And each arrival event's digest covers the range's commitments and headers, never its content, a range is stored only with its arrival event, and a range extending one of this node's own writers is refused, audited and counted
-    And after a device key is lost and minted anew, the events of its earlier writers read origin "peer" and its new writers read "peer" too, until "cairn device-key rotate" with the lost key's recovery key records a "recovered" rotation joining the key minted anew, after which both read "witnessed"
-    And on a token-key-only node, its own writers' events read origin "witnessed" through the inception naming its token key as "token key adopted", a later access token carrying that token key's recovery key rotates the log and keeps them "witnessed", and after its node identity changes, it uses the token key a fresh access token carries in a new inception, its earlier writers' events read origin "peer", and its new writers read "witnessed" once that token key's token certificate was made by the device key that made the earlier one
-    And every seat certificate of a seat "cairn ingest" started or minted, the ingested run's included, names it an ingest seat
+    Then each sealed range is named by exactly one arrival event per way it arrived, in this node's device seat in its personal room, carrying only the writer id, the seq range, a digest of the range's chained headers and how it arrived
+    And the witnessed run's events read origin "witnessed", the ingested run's "ingested", the peer's "peer", the bundle's "bundle", the restored range's "peer", and both ranges that came both ways "bundle"
     And "cairn rebuild" appends no arrival event
+    When the origin the store keeps for a peer event is changed to "witnessed"
+    And the person runs "cairn verify"
+    Then it exits 3 naming the check "derived artifact consistency", until "cairn rebuild" derives "peer" again
+    When a peer delivers a range of another node's device seat holding only that node's arrival events, one of which names this node's witnessed run
+    Then this node records no arrival event for that range, and the witnessed run's events still read origin "witnessed"
+    When a bundle carries a writer whose seat certificate, made by a key no key event of this node names, claims an ingest seat
+    Then that writer's events read origin "bundle"
+    When a range from a peer extends one of this node's own writers
+    Then it is refused, audited and counted as REC-21 says, and a range extending a writer the backup restore reinstated is accepted with its arrival event
+    When the device key is removed and minted anew
+    Then a "minted anew" key event names the removed key, and the events of the writers either key certified read origin "witnessed"
+    When the node identity changes
+    Then a node identity change event names the replaced and the new device key, the events of the writers the replaced key certified read origin "peer", and those the new key certifies read "witnessed"
+    And a quarantine and its release change no origin
+    And a recorded I2 security review of this requirement exists before it ships

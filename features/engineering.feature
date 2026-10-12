@@ -82,7 +82,7 @@ Feature: Engineering quality (ENG)
       | within each writer's log, seq is strictly increasing and gap-free, so no two events share an address (writer, seq)                                            |
       | ingest twice equals ingest once                                                                                                                               |
       | every order of ingesting a harness fork's transcripts, with a fork observation, records each repeated line in the same writer with the same repeat references |
-      | after any sequence of appends and lifecycle events, each derived artifact's canonical digest equals a rebuild's                                               |
+      | after any sequence of appends and lifecycle events, each derived artifact's canonical digest equals that of a rebuild from nothing                            |
       | envelope encoding round-trips any byte sequence                                                                                                               |
       | sanitized fields never contain restore delimiters                                                                                                             |
 
