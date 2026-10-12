@@ -264,3 +264,5 @@ Feature: Provenance and trust (PRV)
     And a backup restore records a "minted anew" inception its principal act names, which starts the current key event log in place of every earlier log, and a later "cairn rebuild" derives the same current key event log
     And on a node that issued an access token, the token key's recovery key is kept like its device key, appears only in the later access token "cairn access-token rotate" mints, and is erased and audited once the access token expires
     And a "token key adopted" inception whose token key an earlier key event names is void
+    When the person revokes a device key on the current key event log
+    Then every writer it certified before the revocation still reads origin "witnessed", and a certificate record of that key after the revocation counts for nothing

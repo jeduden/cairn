@@ -127,6 +127,12 @@ With it, SRS 3.0-draft changes these requirements:
   - Each seat certificate gets a certificate record. Each rotation
     carries the chain head of the writer it follows, and a retired
     key's certificates count only at or before that head.
+  - Revoking a key on the current log keeps the writers it certified
+    before `witnessed`; its certificate records after the revocation
+    count for nothing.
+  - On a node identity change, Cairn may retry reading an unavailable
+    identity value first. Otherwise the principal confirms the new log
+    to bring its writers from `peer` to `witnessed`.
   - "Current" and "newest" come from the record's hash links, never
     from a clock, arrival order or the audit log.
 - **REC-26** also takes origin `ingested` from a transcript source and

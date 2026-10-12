@@ -79,23 +79,24 @@ summary: >-
   place of a missing device key. A node's **genesis log** is the one whose
   inception is the first event of the device seat that created its personal
   room; any other inception replaces one key, the one it names or the one the
-  node identity change event right before it names. A **rotation**, `rotated`
-  or `recovered`, follows a key event of its log, signed by the recovery key
-  that event committed to, and names a freshly minted key; a `recovered`
-  rotation also joins to its log the `minted anew` inception that replaced its
-  key. Each next key is a **recovery key**: a device key's leaves the node only
-  by `cairn device-key write-recovery-key`, encrypted, to a file the principal
-  names; a token key's stays with the node that issued its access token until a
-  later access token carries it. An inception whose replaced key a key event of
-  its own log follows is void, unless a `recovered` rotation names it. A node's
+  node identity change event right before it names. A **rotation**, `rotated` or
+  `recovered`, follows a key event of its log, signed by the recovery key that
+  event committed to, and names a freshly minted key; a `recovered` rotation
+  also joins to its log the `minted anew` inception that replaced its key. Each
+  next key is a **recovery key**: a device key's leaves the node only by `cairn
+  device-key write-recovery-key`, encrypted, to a file the principal names; a
+  token key's stays with the node that issued its access token until a later
+  access token carries it. An inception whose replaced key a key event of its
+  own log follows is void, unless a `recovered` rotation names it. A node's
   **current key event log** is its genesis log, followed through its rotations
   and the inception that replaces its newest key. A log other than the genesis
   log certifies no `witnessed` writer until a `recovered` rotation joins it, a
   principal act names it, or, for a token key, the device key that made the
   replaced token key's token certificate made its own (REC-26). A log with two
-  newest key events, or two inceptions that replace one key, are
-  **duplicity**, which only a principal act, or a rotation that voids both
-  inceptions, resolves.
+  newest key events, or two inceptions that replace one key, are **duplicity**,
+  which only a principal act, or a rotation that voids both inceptions,
+  resolves. Revoking a key on the current log keeps the writers it certified
+  before `witnessed`.
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room and naming its seat kind and whether it is an ingest
   seat, that the seat key countersigns (PRV-10, PRV-11). Its **certificate

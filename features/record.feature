@@ -320,13 +320,15 @@ Feature: Record (REC)
     And an audit entry records the node identity change
     And a structural node identity change event in the new device seat in the personal room carries only the fingerprints of the replaced and new device key or token key, followed by the new key's inception, which starts a new key event log rather than rotating the one before the change
     And no event is appended under the old device key or the old seat key
+    And the new seat's writer reads origin "peer" until the person runs "cairn device-key confirm" naming the new key event log's inception, then "witnessed"
+    And an unavailable node identity value read again within the hook budgets and found unchanged counts as no change
 
     Examples:
       | change                                                       |
       | the home is part of a cloned runner image on another machine |
       | the home is a copied volume mounted on another machine       |
       | the home is recovered from a snapshot on another machine     |
-      | the node identity value is unavailable                       |
+      | the node identity value is unavailable on every read        |
 
   @REC-25 @P1 @I1 @I10 @pending
   Scenario: closed segments are merged later, outside every hook budget, so a writer has at most 48 segments a day
