@@ -1046,7 +1046,7 @@
     },
     {
      "file": "docs/srs/05e-provenance-requirements.md",
-     "quote": "Hook observations, seat-key rotations (SEC-27), key events (SEC-10), tombstones, canary events (OPS-04), backup events (ADM-06), arrival events (PRV-13), node identity change events (REC-24), refused-segment events (REC-21) and time marks (REC-15) MUST carry `structural`"
+     "quote": "Hook observations, seat-key rotations (SEC-27), key events and certificate records (PRV-12), tombstones, canary events (OPS-04), backup events (ADM-06), arrival events (PRV-13), node identity change events (REC-24), refused-segment events (REC-21) and time marks (REC-15) MUST carry `structural`"
     }
    ]
   },
