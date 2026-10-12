@@ -422,11 +422,11 @@
    "texts": [
     {
      "file": "docs/srs/05a-administration-requirements.md",
-     "quote": "each of their events MUST count as received and not recorded on the node, a `witnessed` one reading as origin `peer`"
+     "quote": "each of their events MUST count as received and not recorded on the node, each deriving origin `peer` or `bundle` (PRV-13), never `witnessed`"
     },
     {
      "file": "docs/domain-model/record.md",
-     "quote": "or recorded `witnessed` before this node's node identity changed, Node)"
+     "quote": "else `peer` (such as a writer whose seat key a key that a node identity change replaced certified, Node, REC-24)"
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",
@@ -434,7 +434,7 @@
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",
-     "quote": "each of their events MUST count as received and not recorded on the node, a `witnessed` one reading as origin `peer`, so PRV-02 trusts it only as a received event (I2, I8)"
+     "quote": "each of their events MUST count as received and not recorded on the node, each deriving origin `peer` or `bundle` (PRV-13), never `witnessed`, so PRV-02 trusts it only as a received event (I2, I8)"
     }
    ]
   },
@@ -1031,7 +1031,7 @@
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "which only the key that certified the run seat it names, or the key a rotation replaced it with, MAY certify"
+     "quote": "which only the key that certified the run seat it names, or the key a `rotated` key event names in its place (SEC-10), MAY certify"
     }
    ]
   },
@@ -1046,7 +1046,7 @@
     },
     {
      "file": "docs/srs/05e-provenance-requirements.md",
-     "quote": "Hook observations, key rotations, tombstones, canary events (OPS-04), backup events (ADM-06) and time marks (REC-15) MUST carry `structural`"
+     "quote": "Hook observations, seat-key rotations (SEC-27), key events (SEC-10), tombstones, canary events (OPS-04), backup events (ADM-06), arrival events (PRV-13), node identity change events (REC-24), refused-segment events (REC-21) and time marks (REC-15) MUST carry `structural`"
     }
    ]
   },
@@ -1199,7 +1199,7 @@
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",
-     "quote": "and the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds"
+     "quote": "and the structural fields, provenance and recorder of each purged act, tombstone and event the key set holds"
     }
    ]
   },
@@ -1477,7 +1477,7 @@
     },
     {
      "file": "docs/srs/12-delivery-plan.md",
-     "quote": "Do two writers' closed segments, merged in either order"
+     "quote": "Do two writers' closed segments, received in either order"
     }
    ]
   },

@@ -16,7 +16,7 @@ Feature: Provenance and trust (PRV)
     When the person runs "cairn ingest --all"
     Then every event carries its writer and exactly one provenance class
     And the Bash tool result carries provenance "tool_result:Bash"
-    And the principal act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", and the tombstone, the canary event and the backup event carry "structural"
+    And the principal act and the device-seat pin carry provenance "operator", the post carries "post", the run-seat pin and the run seat's room act carry "assistant", and the tombstone, the canary event, the backup event and the device key's "minted" key event carry "structural"
     And every provenance class is one of:
       | user               |
       | assistant          |
@@ -251,5 +251,31 @@ Feature: Provenance and trust (PRV)
     And the person runs "cairn verify --json"
     Then the device key has certified the run seat's key with a seat certificate scoped to that room and naming the seat kind "run"
     And the device key has certified the device seat's key with a seat certificate scoped to that room and naming the seat kind "device"
+    And each seat certificate names whether its seat is an ingest seat, and neither the run seat's nor the device seat's names it one
     And the output reports, for each seat, its seat certificate and the seat kind it names, taken only from that seat certificate, never from a field in its events
+    And a recorded I2 security review of this requirement exists before it ships
+
+  @PRV-13 @P0 @I2 @I10 @pending
+  Scenario: origin derives from the record and the key set, never from a stored value
+    Given an isolated Cairn home
+    And a witnessed run and an ingested run on this node
+    And a sealed range received from a peer, one imported in a bundle, one reinstated by a backup restore of this node's own copy, one range that arrived first from a peer and then in a bundle, and one that arrived first in a bundle and then from a peer
+    When the person runs "cairn rebuild"
+    Then each sealed range is named by exactly one arrival event per way it arrived, in this node's device seat in its personal room, carrying only the writer id, the seq range, a digest of the range's chained headers and how it arrived
+    And the witnessed run's events read origin "witnessed", the ingested run's "ingested", the peer's "peer", the bundle's "bundle", the restored range's "peer", and both ranges that came both ways "bundle"
+    And "cairn rebuild" appends no arrival event
+    When the origin the store keeps for a peer event is changed to "witnessed"
+    And the person runs "cairn verify"
+    Then it exits 3 naming the check "derived artifact consistency", until "cairn rebuild" derives "peer" again
+    When a peer delivers a range of another node's device seat holding only that node's arrival events, one of which names this node's witnessed run
+    Then this node records no arrival event for that range, and the witnessed run's events still read origin "witnessed"
+    When a bundle carries a writer whose seat certificate, made by a key no key event of this node names, claims an ingest seat
+    Then that writer's events read origin "bundle"
+    When a range from a peer extends one of this node's own writers
+    Then it is refused, audited and counted as REC-21 says, and a range extending a writer the backup restore reinstated is accepted with its arrival event
+    When the device key is removed and minted anew
+    Then a "minted anew" key event names the removed key, and the events of the writers either key certified read origin "witnessed"
+    When the node identity changes
+    Then a node identity change event names the replaced and the new device key, the events of the writers the replaced key certified read origin "peer", and those the new key certifies read "witnessed"
+    And a quarantine and its release change no origin
     And a recorded I2 security review of this requirement exists before it ships

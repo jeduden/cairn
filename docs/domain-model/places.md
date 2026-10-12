@@ -13,17 +13,21 @@ summary: >-
 - **Node**: One home on one machine, container or cloud environment, for one
   principal, with its own device key; an **ephemeral node**, one in a
   short-lived cloud environment, may have only a token key, a **token-key-only
-  node**, which signs no principal act (Token key). Minting its access token
-  is also its principal's ask for each of its runs to join, at the run's start,
+  node**, which signs no principal act (Token key). Minting its access token is
+  also its principal's ask for each of its runs to join, at the run's start,
   every room the token names to continue, as that room's admission permits, and
   the token carries that ask and those rooms' qualifying pins (PEER-06), so
   those pins restore to its runs from their first restore block. Its **node
   identity** is a value outside the home that a cloned image or a restored
-  snapshot cannot carry over (REC-24). A **node clone** is a copy of a home
-  started where its node identity differs: a new node, with new keys and seats,
-  that shares the carried-over personal room (REC-24). On any node whose node
-  identity changed, as after a backup restore, the record from before carries
-  over only as ADM-06 says (open: OQ-48).
+  snapshot cannot carry over (REC-24). A **node identity change event** is the
+  structural event a node whose node identity changed records in its new device
+  seat in its personal room, carrying only the fingerprints of the device key or
+  token key it replaces and of the new one, followed by the new key's key event
+  (REC-24, SEC-10). A **node clone** is a copy of a home started where its node
+  identity differs: a new node, with new keys and seats, that shares the
+  carried-over personal room (REC-24). On any node whose node identity changed,
+  and after a backup restore, the record from before carries over only as ADM-06
+  says (open: OQ-48).
 - **Device**: A node or a paired phone.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
   denying held permission requests within its device scope, reaching its node

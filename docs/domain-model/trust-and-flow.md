@@ -8,9 +8,9 @@ summary: >-
 
 - **Trust level**: `trusted` or `untrusted`, per event for one principal's
   agents on one node, derived by the trust policy from the event's provenance,
-  origin (whether recorded on this node, ingested or received), recorder,
-  writer and recorded deployment mode, the node's key set, and that principal's
-  stamps and trust grants as its writer logs carry them (PRV-02, I10).
+  origin (as Origin derives it, PRV-13), recorder, writer
+  and recorded deployment mode, the node's key set, and that principal's stamps
+  and trust grants as its writer logs carry them (PRV-02, I10).
 - **Trusted sources**: The sources I2 lists, whose events the trust policy
   classifies as `trusted` (PRV-02), narrowed in a foreign room (RCL-10);
   everything else is untrusted.
@@ -131,7 +131,8 @@ summary: >-
   timed-out or failed operations of one kind, each written to the node's
   append-only **audit log** of Cairn's own operations (OPS-01), shown by
   `cairn status` (ADM-11), failing `cairn doctor` until acknowledged
-  (`cairn counter ack`, I6, OPS-03).
+  (`cairn counter ack`, I6, OPS-03). The audit log also records every purge
+  (ADM-07).
 - **Canary**: `cairn canary`'s end-to-end test: it writes a **canary event**
   through capture's ingest path and recalls it through the MCP server (OPS-04).
 - **Stat**: A count derived from the record within a recall scope, such as

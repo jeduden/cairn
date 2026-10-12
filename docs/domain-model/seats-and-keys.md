@@ -2,7 +2,7 @@
 title: "Seats and keys"
 order: "06"
 summary: >-
-  Seats and the keys behind them: run and device seats, room and seat ids, seat, device, principal and token keys, certificates, access tokens, authenticators and CI keys.
+  Seats and the keys behind them: run and device seats, room and seat ids, seat, device, principal and token keys, key events, certificates, access tokens, authenticators and CI keys.
 ---
 # Seats and keys
 
@@ -21,14 +21,17 @@ summary: >-
   writers (SEC-10). What `cairn ingest` appends for a witnessed run goes to the
   one run seat ingest starts beside each run seat it extends, in its room,
   naming it, sharing its add, where it has one, and taking over its role,
-  certified only by the key that certified that run seat or the key a rotation
-  replaced it with, by a seat certificate naming it so; any other seat naming a
-  run seat shares no add or role (REC-19). The core keeps that seat's key, and
-  an ingested run's, like a device seat's key and seals their writers (SEC-10).
-  A run-seat key is lost with the MCP server that holds it, and a run that
-  continues on a harness resume or a restart does so on a new run seat (Seat
-  key; open: OQ-43). A witnessed run records nothing until its MCP server holds
-  its run-seat key, and one no MCP server serves is ingested (REC-19).
+  certified only by the key that certified that run seat or the key a `rotated`
+  key event names in its place, by a seat certificate naming
+  it so; any other seat naming a run seat shares no add or role (REC-19). The
+  core keeps that seat's key, and an ingested run's, like a device seat's key
+  and seals their writers (SEC-10). An **ingest seat** is a run seat `cairn
+  ingest` starts or mints, the one beside a run seat and an ingested run's
+  included, which its seat certificate names so (REC-19, PRV-13). A run-seat key
+  is lost with the MCP server that holds it, and a run that continues on a
+  harness resume or a restart does so on a new run seat (Seat key; open: OQ-43).
+  A witnessed run records nothing until its MCP server holds its run-seat key,
+  and one no MCP server serves is ingested (REC-19).
 - **Device seat**: A principal's seat for one device, a node or a paired phone.
   The one seat kind for acting without a run. Its room acts are taken only at a
   principal surface, as principal acts are, but those its node takes on its own
@@ -41,10 +44,10 @@ summary: >-
 - **Seat id**: A seat's id, derived from the room id and the seat's first key.
   Nobody chooses it.
 - **Seat key**: A seat's one current key. It signs the seat's room acts and
-  seals its writer. A rotation, signed by the old and the new key, keeps the
-  seat's id and writer (SEC-27). Any other key minted in its place starts a new
-  seat and writer that names the old one, inherits no add, role or appointment
-  and is a member only as Seat says (SEC-27).
+  seals its writer. A **seat-key rotation**, signed by the old and the new key,
+  keeps the seat's id and writer (SEC-27). Any other key minted in its place
+  starts a new seat and writer that names the old one, inherits no add, role or
+  appointment and is a member only as Seat says (SEC-27).
 - **Device key**: A device's key, certified by a principal key's **device
   certificate**, with a **device scope** (the kinds of principal act it may
   sign, and of post and pin its seats may write) and a maximum rule level. It
@@ -64,12 +67,21 @@ summary: >-
   principal or expire acts, and every pin it writes restores only once stamped
   (PEER-06, PRV-10), though its own events are trusted on that node as that
   node's trusted sources.
+- **Key event**: The structural event a node records in its device seat in its
+  personal room when it starts using a device key or token key, carrying only
+  the key's fingerprint, its kind (`minted`, `minted anew` after a loss,
+  `rotated`, or `token key adopted` from an access token) and the fingerprint
+  of the key it replaces (SEC-10). A device key or token key a key event this
+  node recorded names, and no node identity change event this node recorded
+  replaces, directly or through the key events that led to it, is a key of
+  this node's own: only seats it certified read `witnessed` (PRV-13). How key
+  events are anchored against forgery is open (OQ-52).
 - **Seat certificate**: A device key's or token key's signature over a seat key,
-  scoped to the seat's room and naming its seat kind, that the seat key
-  countersigns (PRV-10, PRV-11). A node's **key set** is the keys, certificates
-  (a service-account certificate once countersigned), revocations, and recorded
-  managed-policy listings and their removals it holds (I10), a listing only as
-  Service account says.
+  scoped to the seat's room and naming its seat kind and whether it is an ingest
+  seat, that the seat key countersigns (PRV-10, PRV-11). A node's **key set** is
+  the keys, certificates (a service-account certificate once countersigned),
+  revocations, and recorded managed-policy listings and their removals it holds
+  (I10), a listing only as Service account says.
 - **Access token**: A short-lived credential a principal mints to enroll a
   device or peer, certify an ephemeral node's seats or carry an invite link
   (PEER-06, PRV-10, LANE-18). Its expiry ends it by the expire act the minting

@@ -27,7 +27,10 @@ $CAIRN_HOME/                          0700, belonging to one OS user       (N)
 
 A home contains one store, `store.db` with its payload store, partitioned by
 writer, never by repository or room (N). Names in the home MUST NOT reveal a
-repository's path or identity (N).
+repository's path or identity (N). Cairn and its storage engine MUST keep every
+temporary file in memory or in a directory in the home, never elsewhere, and,
+while encryption at rest is on, in memory or encrypted under the at-rest key
+(N).
 
 ## 8.2 Logical schema
 
@@ -35,13 +38,13 @@ repository's path or identity (N).
 | -------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `meta`               | state      | schema version, home id                                                                                                                                                                                                                                                                                                     | single row                                                                                                                                                                                                     |
 | `transcript_sources` | state      | path, generation, the harness's transcript id, the runs it contains (a harness session's transcripts contain its main agent's run and one per subagent, a subagent's possibly in its own file, ASM-03), each with its parent run and the harness's agent id, ingest position (byte offset and consumed-prefix hash), status | UNIQUE(path, generation) **(N)**                                                                                                                                                                               |
-| `events`             | **record** | writer, `seq`, run, transcript source, generation, transcript line, kind, provenance, origin, recorder, tool name, inline text or preview, payload reference and size, commitment (REC-17), model-token estimate, flags, transcript timestamp, `prev_hash`, `hash`, redaction count                                         | (writer, `seq`) PRIMARY KEY, `seq` strictly increasing and gap-free per writer **(N)**; UNIQUE(transcript source, generation, transcript line) **(N)**; rows immutable except content removal by purge **(N)** |
+| `events`             | **record** | writer, `seq`, run, transcript source, generation, transcript line, kind, provenance, recorder, tool name, inline text or preview, payload reference and size, commitment (REC-17), model-token estimate, flags, transcript timestamp, `prev_hash`, `hash`, redaction count                                                 | (writer, `seq`) PRIMARY KEY, `seq` strictly increasing and gap-free per writer **(N)**; UNIQUE(transcript source, generation, transcript line) **(N)**; rows immutable except content removal by purge **(N)** |
 | `events_fts`         | derived    | FTS5 over event text                                                                                                                                                                                                                                                                                                        | rebuildable **(N)**                                                                                                                                                                                            |
 | `spans`              | derived    | run, address range, span boundary kind                                                                                                                                                                                                                                                                                      | rebuildable **(N)**                                                                                                                                                                                            |
 | `landmarks`          | derived    | tier, address range, rendered text, taint                                                                                                                                                                                                                                                                                   | rebuildable **(N)**                                                                                                                                                                                            |
 | `pins`               | derived    | creating address, pin version, type, priority, room, text, creating event's commitment, each version's author, stamps, active                                                                                                                                                                                               | rebuildable from pin events (`operator` for device-seat pins, `assistant` for run-seat pins), stamps and unstamps **(N)**                                                                                      |
 | `quarantine`         | derived    | creating address, selector, active                                                                                                                                                                                                                                                                                          | rebuildable from quarantine events **(N)**                                                                                                                                                                     |
-| `tombstones`         | derived    | purge event address, purged range, counts, reason or retention policy, commitments of removed events, structural fields, provenance, origin and recorder of each removed act, tombstone and event the key set holds                                                                                                         | rebuildable **(N)**                                                                                                                                                                                            |
+| `tombstones`         | derived    | purge event address, purged range, counts, reason or retention policy, commitments of removed events, structural fields, provenance and recorder of each removed act, tombstone and event the key set holds                                                                                                                 | rebuildable **(N)**                                                                                                                                                                                            |
 
 Purge replaces event content with nothing and keeps the row's address, `hash`,
 and `prev_hash`, so the chain stays verifiable and each writer's `seq` stays
@@ -53,6 +56,13 @@ The hash chain (REC-10) and the audit chain (OPS-02) MUST use the JSON
 Canonicalization Scheme (RFC 8785) over a documented field set, with SHA-256
 **(N)**. The field set and encoding version are recorded in `meta` so that
 future changes remain verifiable.
+
+The [canonical digest](../domain-model/record.md) of a derived artifact
+(ADM-08) MUST be SHA-256 over the canonical encoding of its content: every
+value any read of it can return, row by row in key order, together with its
+schema and every stored setting that decides what a read returns, such as the
+search index's tokenizer and ranking configuration. Its field set and version
+are recorded in `meta` **(N)**.
 
 ## 8.4 Model-token estimation
 
@@ -67,7 +77,9 @@ sample **(N)**.
 
 The grid names, for each lifecycle event that ships in M1 to M5, the
 requirement that decides what it does to each derived artifact I10
-lists, to provenance and to room membership. An event a lifecycle event
+lists, to provenance and to room membership. Origins follow PRV-13 in every
+row: an event's origin changes only when a node identity change, a backup
+restore or an arrival changes what PRV-13 reads. An event a lifecycle event
 appends is indexed, counted and shown like any other; a cell names only
 what goes beyond that, and a dash means no effect. Run status (VIEW-04),
 the Needs you queue (VIEW-05), evidence classes (LANE-05) and proof
@@ -76,7 +88,7 @@ already derive. The final review and M1's scenarios check against the
 grid, and each later milestone's review adds the events it ships
 (OQ-47).
 
-| Event                                       | Index          | Landmarks      | Active pins             | Quarantine set | Room state             | Trust levels   | Run status | Integrity status | Queues | Evidence classes | Proof classes | Stats           | Provenance     | Room membership         |
+| Event                                       | Search index   | Landmarks      | Active pins             | Quarantine set | Room state             | Trust levels   | Run status | Integrity status | Queues | Evidence classes | Proof classes | Stats           | Provenance     | Room membership         |
 | ------------------------------------------- | -------------- | -------------- | ----------------------- | -------------- | ---------------------- | -------------- | ---------- | ---------------- | ------ | ---------------- | ------------- | --------------- | -------------- | ----------------------- |
 | Node identity change                        | —              | LMK-01         | ADM-06, PIN-10          | ADM-06         | REC-24, ADM-06         | ADM-06, PRV-02 | —          | —                | —      | —                | —             | REC-24          | ADM-06, REC-19 | REC-24, LANE-01         |
 | Node clone                                  | —              | LMK-01         | ADM-06, PIN-10          | ADM-06         | REC-24, ADM-06         | ADM-06, PRV-02 | —          | —                | —      | —                | —             | REC-24          | ADM-06, REC-19 | REC-24, LANE-01         |

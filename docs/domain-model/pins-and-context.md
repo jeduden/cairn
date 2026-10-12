@@ -99,8 +99,8 @@ summary: >-
   `restore_block.on_prompt` is on (INJ-04): qualifying pins, a landmark index, a
   recall hint and what else INJ-01, PIN-08, PIN-10, PIN-11, PEER-06, LANE-30 and
   LANE-33 add.
-- **Landmark index**: The current run's landmarks, each with its address range,
-  as a restore block lists them (INJ-01).
+- **Landmark index**: The current run's tiers of landmark blocks (LMK-05),
+  each landmark with its address range, as a restore block lists them (INJ-01).
 - **Recall hint**: The one fixed line in a restore block saying that the recall
   tools reach the full history (INJ-01).
 - **Opt-in notice**: Trusted text, only fixed text Cairn ships and what LANE-30

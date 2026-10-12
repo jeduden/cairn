@@ -82,7 +82,7 @@ Feature: Administration and lifecycle (ADM)
     Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device or at-rest key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was reinstated
     And before it was confirmed, the backup restore named each pin of the copy that will not restore once its events count as received
-    And every event the copy holds counts on the node as received, a "witnessed" one reading as origin "peer", and is trusted only as PRV-02 trusts received events
+    And every event the copy holds counts on the node as received, each deriving origin "peer" or "bundle", never "witnessed", and is trusted only as PRV-02 trusts received events
     And that quarantine stays in force on the node until a release there
     And the copy's configuration acceptance takes no effect on the node: the deployment mode stays "automation" until the person accepts the configuration there
     And a backup another node of the principal made, restored the same way, gives no run of this node a seat from its first event in that node's personal room
@@ -96,13 +96,18 @@ Feature: Administration and lifecycle (ADM)
   Scenario Outline: purge removes a scope everywhere, erases its commitment keys and leaves a tombstone
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "run-a" in room "room-a"
+    And a range received from a peer, with its arrival event, a node identity change, and the key events it caused, all in this node's personal room
     When the person runs "cairn purge <scope>"
     Then the command exits 0
     And the purged events are gone from the segments, events, the search index, derived artifacts, the payload store and every copy of their content
     And the commitment key and payload reference of every purged event are erased
-    And a tombstone event per purged range carries only addresses, counts, reason and commitments, and the structural fields, provenance, origin and recorder of each purged act, tombstone and event the key set holds, never their text
+    And a tombstone event per purged range carries only addresses, counts, reason and commitments, and the structural fields, provenance and recorder of each purged act, tombstone and event the key set holds, never their text
     And "cairn rebuild" then derives room state, the key set and the quarantine set as before the purge, but for the purged content
     And the store is vacuumed and "cairn verify" exits 0
+    And once the purge reports the range erased, with encryption at rest on and off, no file in the home or the storage engine's temporary directory, read decrypted, contains a canary token only the purged events carried, their commitment keys or a search index entry naming a purged address
+    And while another process holds a read transaction on the store, the purge does not report the range erased and audits and counts each residue; once that transaction closes, the purge reports the range erased and the residue check passes
+    And the audit log records the purge with its scope, ranges, reason and the principal act behind it, never the purged content
+    And no arrival event, node identity change event or key event is purged, whatever the scope, and the origin of every remaining event derives as before
 
     Examples:
       | scope                  |
@@ -114,15 +119,24 @@ Feature: Administration and lifecycle (ADM)
       | --before 2026-01-01    |
       | --provenance web       |
       | --provenance operator  |
+      | --provenance structural |
+      | --room personal-room   |
 
   @ADM-08 @P0 @I10 @pending
-  Scenario: rebuild regenerates derived artifacts byte-identically whatever order the logs arrived in
+  Scenario: rebuild regenerates derived artifacts identical in content whatever order the logs arrived in
     Given an isolated Cairn home
     And a second isolated Cairn home with the same key set, the two nodes holding the same writer logs with pins, quarantine and landmarks, received in opposite orders
+    And a configuration acceptance, a withdrawn risk acceptance and a released quarantine, each recorded after the events they affect were indexed
     When the person runs "cairn rebuild" in each home
     Then the command exits 0 in each home
-    And "cairn verify" confirms every derived artifact is byte-identical to its state before rebuild
-    And the derived artifacts of the two homes are byte-identical
+    And "cairn verify" confirms every derived artifact is identical in content to its state before rebuild, by a canonical digest of that content
+    And the derived artifacts of the two homes are identical in content, apart from what each home's own arrival events derive
+    And the restore block, recall results, the landmark list and an export are byte-identical across the two homes
+    And no canonical digest appears in the audit log, a log, a receipt, a backup or an export, and none is kept once "cairn verify" completes
+    When a purge covers events a kept canonical digest covers, between "cairn rebuild" and "cairn verify"
+    Then "cairn verify" names that purge and does not report the comparison passed
+    When SQLite's "secure_delete" is turned off in the store
+    Then "cairn verify" fails
 
   @ADM-09 @P0 @I6 @I10 @pending
   Scenario Outline: verify exits non-zero on any integrity failure
@@ -134,11 +148,15 @@ Feature: Administration and lifecycle (ADM)
     And the output names the failed check "<check>"
 
     Examples:
-      | damage                                     | check                          |
-      | the transcript has lines not in the record | transcript source completeness |
-      | an event row's hash has been altered       | hash chain                     |
-      | a payload file's bytes have been altered   | payload integrity              |
-      | a landmark row has been altered            | derived artifact consistency   |
+      | damage                                                          | check                          |
+      | the transcript has lines not in the record                      | transcript source completeness |
+      | an event row's hash has been altered                            | hash chain                     |
+      | a payload file's bytes have been altered                        | payload integrity              |
+      | a landmark row has been altered                                 | derived artifact consistency   |
+      | a trust level has been altered in place                         | derived artifact consistency   |
+      | a schema object Cairn does not ship has been added to the store | derived artifact consistency   |
+      | the search index's ranking configuration has been altered       | derived artifact consistency   |
+      | a search index entry names an event whose text lacks the term   | derived artifact consistency   |
 
   @ADM-10 @P0 @I7 @pending
   Scenario: doctor is read-only and doctor --fix shows each change first

@@ -277,8 +277,8 @@ fn review_cases() -> Vec<Case> {
             "ENG-29",
             Injection::replace(
                 "docs/srs/10-engineering-quality.md",
-                "(PRV-10, PRV-11)",
-                "(PRV-10)",
+                "(PRV-10, PRV-11, PRV-13)",
+                "(PRV-10, PRV-13)",
             ),
             cargo_test(
                 "review-bundle",
