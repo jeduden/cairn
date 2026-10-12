@@ -21,17 +21,22 @@ Feature: Record (REC)
       | sets transcript.roots to ["~/runner-transcripts"] | ~/runner-transcripts |
 
   @REC-02 @P0 @I1 @pending
-  Scenario: a subagent is ingested as its own run, tied to its parent's run by a parent link, and a harness resume continues the run only when it keeps its harness session
+  Scenario: a subagent is ingested as its own run, tied to its parent's run by a parent link, a harness resume continues the run only when it keeps its harness session, and a harness fork starts a new one
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "parent-run"
     And a subagent transcript "explore-agent" of "parent-run" naming the agent "Explore"
     And "parent-run" continues after a harness resume that kept its harness session
     And a harness resume of "parent-run" that started a new harness session, with the transcript "new-harness-session-run"
+    And a harness fork of "parent-run", with the transcript "forked-run"
+    And a compaction of "parent-run" whose summary the harness wrote with an agent of its own
     When the person runs "cairn ingest --all"
     Then the run ingested from "explore-agent" is tied to the run of "parent-run" by a parent link, not a delegation link
     And the run ingested from "explore-agent" records the harness's agent id "Explore"
     And the events "parent-run" gained after the harness resume that kept its harness session belong to the run of "parent-run"
     And the events of "new-harness-session-run" belong to a new run, not to the run of "parent-run"
+    And the events "forked-run" adds after the lines it repeats belong to a new run, not to the run of "parent-run"
+    And the run count of the recorded Claude Code 2.1.296 harness session "subagent-compaction" is its main run plus its one subagent, none for the harness's own call that wrote each compaction summary
+    And after a harness clear of "parent-run", its later events belong to a new run
     And that new run belongs to the agent of "parent-run" only when the harness gives an agent id stable across harness sessions, else it is its own agent
     And a later run of an agent reaches the agent's rooms through the "rooms" recall scope and its restore blocks, but holds no seat, add or role there until it joins under LANE-23
 
@@ -45,14 +50,48 @@ Feature: Record (REC)
     Then the record contains exactly 50 events, one per line of "main-run"
     And the ingest position of "main-run" stores its byte length and the SHA-256 of its consumed prefix
 
-  @REC-04 @P0 @I1 @pending
-  Scenario: events are attributed to the run of their transcript, not the hook input
+  @REC-04 @P0 @I1 @I10 @pending
+  Scenario: events are attributed to the run of their transcript, not the hook input, and a line a harness fork repeats is recorded once, in its owning run's writer, whichever transcript is ingested first
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "parent-run"
     And a subagent transcript "explore-agent" of "parent-run" naming the agent "Explore"
-    When the hook "PostToolUse" runs with the session_id of "parent-run" and the transcript_path of "explore-agent"
+    When the hook "SessionStart" runs with the session_id of "parent-run" and the transcript_path of "explore-agent"
+    And the person runs "cairn ingest --all"
     Then every event read from "explore-agent" is attributed to the subagent run of "explore-agent"
     And no event read from "explore-agent" is attributed to "parent-run"
+    Given two fresh isolated Cairn homes "A" and "B"
+    And a harness fork of "parent-run" with the transcript "forked-run", whose harness session id sorts before that of "parent-run", which repeats 40 lines of "parent-run" with their uuids, and whose "SessionStart" hook observation with source "fork" both homes recorded
+    When home "A" ingests "parent-run", then "forked-run"
+    And home "B" ingests "forked-run", then "parent-run"
+    Then in both homes each of the 40 repeated lines is one event in the writer of the run of "parent-run", and the run of "forked-run" records a repeat reference to its address, never a copy
+    And in home "B" the repeated lines of "forked-run" were held at an ingest marker until "parent-run" was ingested
+    And the run membership and the derived artifacts of the two homes are byte-identical
+    Given two fresh isolated Cairn homes "C" and "D" with no "SessionStart" hook observation for either transcript
+    When home "C" ingests "parent-run", then "forked-run"
+    And home "D" ingests "forked-run", then "parent-run"
+    Then in each home each of the 40 repeated lines is one event in the writer of the run that first recorded it there, "parent-run"'s in "C" and "forked-run"'s in "D", the other run recording a repeat reference, and a structural event records and audits that choice
+    Given a fresh isolated Cairn home "E" where "cairn ingest" recorded "parent-run"
+    When the MCP server of "forked-run" ingests it live
+    Then the 40 repeated lines are events of their own in the writer of the run of "forked-run", never repeat references to the ingested events, each audited
+    Given a fresh isolated Cairn home "F" on an injected clock, where no MCP server holds a session binding for "parent-run"
+    When the MCP server of "forked-run" ingests its repeated lines live
+    Then they go at once into the writer of the run of "forked-run", audited, with no hold
+    Given a fresh isolated Cairn home "G" on an injected clock, where an MCP server holds the session binding for "parent-run" but has not ingested the repeated lines
+    When the MCP server of "forked-run" ingests them live
+    Then the hold is counted and shown by "cairn status"
+    And once the clock passes 30 s the lines are released into the writer of the run of "forked-run" and audited
+    Given a fresh isolated Cairn home "H" where the lines of "forked-run" are held for "parent-run"
+    When the transcript of "parent-run" is deleted
+    Then the held lines are released into the writer of the run of "forked-run" and audited (REC-08)
+    Given a fresh isolated Cairn home "I" where two witnessed transcripts that repeat each other's lines were recorded by different recorders
+    When both are ingested
+    Then the repeated lines are events of their own in each run's writer, never repeat references, each audited
+    Given a transcript "planted-run" in the transcript directory of "parent-run" that repeats the uuid of a line of "parent-run" with other text
+    When the person runs "cairn ingest --all"
+    Then that line of "planted-run" is recorded as its own event, the counter "repeat_conflicts" increases by 1 and an audit entry records the conflict
+    Given the person purged the events of the 40 repeated lines from the run of "parent-run"
+    When a harness fork of "parent-run" with the transcript "late-fork", repeating those 40 lines, is ingested
+    Then none of those lines is recorded again, each refusal is counted and audited, and the record keeps only their uuids beside the tombstones
 
   @REC-05 @P0 @I1 @I6 @pending
   Scenario: unreadable transcript lines are kept as redacted unparsed events
@@ -69,7 +108,7 @@ Feature: Record (REC)
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run" whose writer has appended seq 1 to 20 and purged seq 5-9
     And an append transaction of that writer that rolled back
-    When the person runs "cairn ingest --all" while the hook handler for "PostToolUse" ingests "main-run" concurrently
+    When the person runs "cairn ingest --all" while the run's MCP server ingests "main-run" concurrently
     Then every event carries the address (writer, seq) of the writer that appended it
     And that writer's new events continue from seq 21 with no gap and no repeat, and no seq is reused
     And each seq was assigned by its writer inside the append transaction that wrote its event
@@ -147,22 +186,32 @@ Feature: Record (REC)
     And a second fresh home that ingests "main-run" under the same writer id derives the same chain head hash
     And "cairn event expand" returns line 10 before line 11
 
-  @REC-13 @P1 @I9 @pending
-  Scenario Outline: hook handlers for tool-use, stop and permission hooks ingest incrementally within their hook budget and mark the remainder
+  @REC-13 @P0 @I1 @I9 @pending
+  Scenario Outline: the harness session's MCP server ingests its transcripts as they grow, once bound to its harness session, and marks what it leaves when it stops
     Given an isolated Cairn home
-    And an agent run with a Claude Code transcript "main-run"
-    And "main-run" has 50,000 unread lines, more than one hook budget can ingest
-    When the hook "<hook>" runs with the session_id and transcript_path of "main-run"
-    Then the hook handler exits 0 within its hook budget
-    And the events ingested so far are a prefix of "main-run"
-    And an ingest marker records the remainder of "main-run"
+    And an agent run with a Claude Code transcript "main-run" and a subagent transcript "explore-agent"
+    And the "SessionStart" hook handler of the run's harness process recorded the session binding at line 12 of "main-run"
+    And a neighbouring transcript "other-run" in the same transcript directory
+    And a session binding another harness process's "SessionStart" hook handler recorded in the home for "other-run"
+    When the harness session's MCP server starts before any session binding exists, and the harness appends 5 lines to "main-run"
+    Then none of those lines is ingested as witnessed
+    When the MCP server takes the session binding of its own harness process, ignoring the one for "other-run"
+    And the harness appends 200 lines to "main-run" and 50 to "explore-agent"
+    Then the events of the first 120 lines of "main-run" are in the record before the MCP server stops
+    And nothing of "other-run" is ingested as witnessed
+    When <stop>
+    Then the events ingested are a prefix of each transcript, in its order
+    And the event the "SessionStart" hook input made sits at line 12 of "main-run"
+    And an ingest marker records the remainder of each transcript ingest did not reach
+    And <resume> resumes from the ingest marker, and the record then holds every line once
+    And <auditor> audits the stop under a named counter that is not a failure counter, shown by "cairn status"
+    When after its session binding is checked, the subagent transcript "explore-agent" is replaced by a symlink to "~/.ssh/id_ed25519"
+    Then the MCP server refuses to read it, audited, and opened no socket throughout
 
     Examples:
-      | hook              |
-      | PostToolUse       |
-      | Stop              |
-      | SubagentStop      |
-      | PermissionRequest |
+      | stop                                                             | resume                             | auditor                                   |
+      | the MCP server stops after ingesting 120 lines of "main-run"     | the next MCP server for "main-run" | the MCP server                            |
+      | the MCP server is killed after ingesting 120 lines of "main-run" | "cairn ingest --all"               | "cairn ingest --all", finding the marker, |
 
   @REC-14 @P1 @I1 @pending
   Scenario: Claude Agent SDK transcripts are ingested from configurable roots
@@ -217,29 +266,31 @@ Feature: Record (REC)
   @REC-19 @P1 @I1 @I6 @pending
   Scenario Outline: a witnessed run's MCP server seals each of its run seats' writers within 2 s of any unsealed append and when the run stops, and the open segment closes at every stop and every 30 s
     Given an isolated Cairn home
-    And an active run with seats in its personal room and in room "L1", whose hook handlers have appended events to both run seats' writers in "PostToolUse" hooks for 31 s, while its MCP server served calls
+    And an active run with seats in its personal room and in room "L1", whose MCP server has ingested events into both run seats' writers for 31 s while it served calls, and whose "SessionStart" hook handler appended a hook observation to each run seat's writer
     And another writer whose chain ended without a closed segment
     And a paired phone whose device seat's writer this node holds
     And an ingested run whose run seat's writer this node holds
-    When the hook "<hook>" runs and appends events
+    When <moment>
     Then the run's MCP server sealed each of its run seats' writers with that seat's key within 2 s of any unsealed append, covering what the hook handlers had appended
     And it seals those writers again when the run stops, and events after the newest seal are shown as "unsigned"
     And what "cairn ingest" later appends for the run, whether or not its MCP server still runs, goes to one run seat and writer it starts beside each run seat it extends, in that seat's room, which a second "cairn ingest" extends without starting another, whose key the core keeps like a device seat's key, never in the MCP server, and whose writer the core seals, naming that run seat, taking over its role and sharing its add where it has one, so a kick or leave of either seat ends that one add for both, and the one beside the run's personal-room seat is a member as long as that seat is
     And once the device key that certified a run seat, or the key of the seat "cairn ingest" started beside it, is missing with the node identity unchanged, "cairn ingest" appends what remains of that run to such a seat in the personal room, certified by the device key minted anew, and stops counting the run
     And only a seat that the key which certified the run seat it names, or the key a rotation replaced it with, certified by a seat certificate naming it the seat "cairn ingest" starts beside that run seat shares that run seat's add and role; a seat another node's key certified naming that run seat, or a new run seat naming it after its run-seat key was lost, shares no add or role
-    And a segment was closed once 30 s had passed though no hook closed one, and the open segment is closed at "<hook>" within the hook budgets
+    And a segment was closed once 30 s had passed though no turn had ended, and the open segment is closed at <moment>
+    And a second run, whose "SessionStart" hook handler ran before any MCP server held its run-seat key, appended nothing, and its MCP server appended the hook observation from the ingest marker once it held that key
+    And a third harness session, for whose "SessionStart" hook observation no MCP server took the session binding within 30 s, is counted and audited as a failure once, by whichever of its next hook handler, "cairn status" and "cairn ingest" finds it first
     And "cairn verify" and "cairn status" each report the other writer's chain as ended without a closed segment
     And the paired phone sealed its device seat's writer with that seat's key after each append to it
     And the core sealed every writer but the witnessed run's run seats' and the paired phone's, the ingested run's run seat's writer and this node's device seat's writer included, after each append to it
 
     Examples:
-      | hook         |
-      | Stop         |
-      | SubagentStop |
-      | SessionEnd   |
+      | moment                                                             |
+      | a turn end the run's transcript records                            |
+      | a subagent end the parent's transcript records                     |
+      | the end of the harness session, when its MCP server's input closes |
 
   @REC-20 @P1 @I1 @pending
-  Scenario Outline: worktree checkpoints record the commit, branch and redacted diff at every Stop, SessionEnd, hand-back and branch-head rewrite
+  Scenario Outline: worktree checkpoints record the commit, branch and redacted diff at every turn end, harness session end, hand-back and branch-head rewrite
     Given an isolated Cairn home
     And a run on a git worktree with a previous worktree checkpoint, a tracked change containing an API key, an untracked file and an ignored file
     When <moment>
@@ -247,13 +298,13 @@ Feature: Record (REC)
     And the diff covers the tracked change and the untracked file but not the ignored file, with the API key redacted
     And a worktree checkpoint taken for a rewrite of the branch head keeps the replaced head
     And purging content a worktree checkpoint contains erases or tombstones that copy, and the purge receipt names it
-    And Cairn obtained the worktree state and git data inside the core, with no socket opened and no program started, within the hook budget, leaving any rest to an ingest marker
+    And Cairn obtained the worktree state and git data inside the core, with no socket opened and no program started, leaving any rest to an ingest marker
     And it read the worktree's files, "README.md" among them, only inside the run's worktree and its repository's git directory, and wrote nothing in the repository
 
     Examples:
       | moment                                        |
-      | the hook "Stop" runs                          |
-      | the hook "SessionEnd" runs                    |
+      | the run's transcript records a turn end       |
+      | the run's harness session ends                |
       | the principal hands control back to the agent |
       | the branch head is rewritten by a rebase      |
 
@@ -335,3 +386,25 @@ Feature: Record (REC)
     Then the writer has at most 48 stored segments for that day
     And every address, commitment and chain head is unchanged
     And "cairn verify" exits 0
+
+  @REC-26 @P0 @I1 @I2 @I6 @pending
+  Scenario Outline: a transcript line or hook input whose shape differs from its harness version's is kept, counted and audited as format drift
+    Given an isolated Cairn home
+    And deployment mode "interactive"
+    And the shapes recorded for the supported Claude Code versions
+    And an agent run with a Claude Code transcript "main-run", served by its harness session's MCP server
+    When <drift>, carrying an AWS access key
+    Then <kept>
+    And the stored text contains no AWS access key
+    And the counter "<counter>" increases by 1 and the audit log names the harness version and what differed
+    And "cairn status" shows the format drift
+    And ingest goes on with the next line of "main-run"
+    And regenerating the shapes from "testdata/claude-code" reproduces the recorded ones byte for byte, and a drift case fails when they differ
+
+    Examples:
+      | drift                                                                                                            | kept                                                                                                                     | counter      |
+      | the harness appends a line of a type no supported version records                                                | the line is stored as an "unparsed" event, counted as format drift too, and the counter "events_unparsed" increases by 1 | format_drift |
+      | the harness appends an "assistant" line without the "message" key                                                | the line is stored whole as an untrusted "harness_text" event                                                            | format_drift |
+      | the harness appends a "user" line typed at the input, matching a prompt, whose "version" is no supported version | the line is stored whole as an untrusted "harness_text" event, never "user"                                              | format_drift |
+      | the harness appends a "user" line typed at the input, matching a prompt, with a key no recorded shape has        | the line is stored whole as an untrusted "harness_text" event, never "user"                                              | format_drift |
+      | the hook "SessionStart" runs with a hook input that lacks "source"                                               | the hook handler gives the empty answer and exits 0                                                                      | format_drift |

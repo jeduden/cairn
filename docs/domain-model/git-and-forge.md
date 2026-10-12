@@ -39,7 +39,8 @@ summary: >-
 - **Evidence**: The checks, CI attestations or text a result rests on.
 - **Evidence class**: Of a result, ranked: `claim` < `own check` < `witness
   check` < `CI attested` (LANE-05).
-- **Own check**: A check the hook handlers recorded on the editing run's node,
+- **Own check**: A check capture recorded from the editing run's transcript on
+  that run's node,
   on the latest worktree checkpoint plus the edits recorded since (LANE-05).
 - **Witness check**: A check re-run through the launcher, outside any agent
   context, on a fresh checkout of the exact commit, by a node whose **git

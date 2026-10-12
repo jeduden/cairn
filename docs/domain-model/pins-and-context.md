@@ -92,8 +92,8 @@ summary: >-
 - **Trusted text** (`TrustedText`): Text only the core's restore-block code
   constructs, the only text the **restore builder** accepts, built only from
   qualifying pins, sanitized structural fields and fixed text Cairn ships
-  (INJ-03): restore blocks, opt-in notices, compaction guidance and the fixed
-  templates of OWN-04 and OWN-07.
+  (INJ-03): restore blocks, opt-in notices and the fixed templates of OWN-04
+  and OWN-07.
 - **Restore block**: Deterministic trusted text Cairn injects after compaction
   (INJ-01), at a run's start or harness resume (INJ-02), and on a prompt while
   `restore_block.on_prompt` is on (INJ-04): qualifying pins, a landmark index, a

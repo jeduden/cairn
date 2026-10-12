@@ -42,29 +42,29 @@ Every concern raised during research and review, mapped to Cairn's response.
 
 ## C. Context-management research
 
-| #   | Concern                                                                                   | Cairn's response                                                                                | Requirements           |
-| --- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-| C1  | Summaries lose exact detail (Scroll 73.1 → 19.9)                                          | Immutable record; exact `event_expand` and `event_get`                                          | REC-06, REC-09, RCL-03 |
-| C2  | Compaction erases constraints, including those stated mid-run                             | Verbatim pins restored after every compaction; pin candidate detection; compaction guidance     | PIN-01..09, INJ-01     |
-| C3  | Context rot: effective context is smaller than the window                                 | Small, capped restore block; landmarks; recall on demand; kernel keeps bulk data out            | INJ-07, LMK-05, CMP-06 |
-| C4  | Native compaction can't be reliably disabled                                              | Coexist in v1; compaction control evaluated in S6                                               | NG1, OQ-01             |
-| C5  | Context mutations break prompt caching                                                    | Byte-deterministic restore blocks; cache-hit rate is an acceptance metric                       | INJ-06, §11.1          |
-| C6  | Transcripts deleted after `cleanupPeriodDays`                                             | Record independent of transcript sources; missing-transcript-source detection                   | REC-08                 |
-| C7  | Subagent transcripts carry much of the data; compaction hooks lack the harness's agent id | Subagent ingestion and parent links; attribution from the transcript source; pins-only fallback | REC-02, REC-04, INJ-05 |
-| C8  | Model-directed vs deterministic control unsettled                                         | Deterministic for safety-relevant state; model-directed recall                                  | ADR-03, ADR-10, §1.3   |
-| C9  | Published benchmarks uncontrolled and mostly on other models                              | Acceptance measured on production Claude models only                                            | §11.1                  |
-| C10 | The agent may not use recall tools                                                        | Recall hint in the restore block; tool-use metric; versioned tool descriptions                  | INJ-01, §9.2, §11.1    |
-| C11 | Multi-run reasoning weak for all systems                                                  | Tracked as known weakness; kernel aggregation                                                   | §11.1, §13.2           |
-| C12 | Code-based access beats serialized history                                                | Hermetic kernel with read-only record access                                                    | CMP-01..07             |
+| #   | Concern                                                                                   | Cairn's response                                                                                | Requirements                       |
+| --- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------- |
+| C1  | Summaries lose exact detail (Scroll 73.1 → 19.9)                                          | Immutable record; exact `event_expand` and `event_get`                                          | REC-06, REC-09, RCL-03             |
+| C2  | Compaction erases constraints, including those stated mid-run                             | Verbatim pins restored after every compaction; pin candidate detection                          | PIN-01..06, PIN-08, PIN-09, INJ-01 |
+| C3  | Context rot: effective context is smaller than the window                                 | Small, capped restore block; landmarks; recall on demand; kernel keeps bulk data out            | INJ-07, LMK-05, CMP-06             |
+| C4  | Native compaction can't be reliably disabled                                              | Coexist in v1; compaction control evaluated in S6                                               | NG1, OQ-01                         |
+| C5  | Context mutations break prompt caching                                                    | Byte-deterministic restore blocks; cache-hit rate is an acceptance metric                       | INJ-06, §11.1                      |
+| C6  | Transcripts deleted after `cleanupPeriodDays`                                             | Record independent of transcript sources; missing-transcript-source detection                   | REC-08                             |
+| C7  | Subagent transcripts carry much of the data; compaction hooks lack the harness's agent id | Subagent ingestion and parent links; attribution from the transcript source; pins-only fallback | REC-02, REC-04, INJ-05             |
+| C8  | Model-directed vs deterministic control unsettled                                         | Deterministic for safety-relevant state; model-directed recall                                  | ADR-03, ADR-10, §1.3               |
+| C9  | Published benchmarks uncontrolled and mostly on other models                              | Acceptance measured on production Claude models only                                            | §11.1                              |
+| C10 | The agent may not use recall tools                                                        | Recall hint in the restore block; tool-use metric; versioned tool descriptions                  | INJ-01, §9.2, §11.1                |
+| C11 | Multi-run reasoning weak for all systems                                                  | Tracked as known weakness; kernel aggregation                                                   | §11.1, §13.2                       |
+| C12 | Code-based access beats serialized history                                                | Hermetic kernel with read-only record access                                                    | CMP-01..07                         |
 
 ## D. Deployment and operations
 
-| #   | Concern                                                                   | Cairn's response                                                                               | Requirements           |
-| --- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------- |
-| D1  | The model runs at the provider, so recalled content leaves the network    | Stated in I4; redaction before storage; scope limits and quarantine bound what can be recalled | SEC-08, RCL-05, SEC-12 |
-| D2  | Short harness timeouts (`SessionEnd` ≈ 1.5 s)                             | Hook budgets and ingest markers; crash-safe store                                              | NFR-01, NFR-02, NFR-07 |
-| D3  | Runner state must survive pause and resume                                | Home on durable volumes; verified in S4                                                        | §2.2, S4               |
-| D4  | Installation on runners without overriding the harness's managed settings | Plugin or runner-image installation; the harness's managed settings respected                  | ADM-01, ADM-03         |
+| #   | Concern                                                                              | Cairn's response                                                                                                                                                 | Requirements                   |
+| --- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| D1  | The model runs at the provider, so recalled content leaves the network               | Stated in I4; redaction before storage; scope limits and quarantine bound what can be recalled                                                                   | SEC-08, RCL-05, SEC-12         |
+| D2  | Short harness timeouts, and a `Stop` handler at its timeout suppressing `SessionEnd` | Only the hooks that write to an agent, with hook budgets and start markers; ingest by the MCP server from the transcripts, with ingest markers; crash-safe store | NFR-01, NFR-02, NFR-07, REC-13 |
+| D3  | Runner state must survive pause and resume                                           | Home on durable volumes; verified in S4                                                                                                                          | §2.2, S4                       |
+| D4  | Installation on runners without overriding the harness's managed settings            | Plugin or runner-image installation; the harness's managed settings respected                                                                                    | ADM-01, ADM-03                 |
 
 ## E. Prior art: sottochat's transcript parser
 

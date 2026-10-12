@@ -13,10 +13,12 @@ summary: >-
     (`cairn`, but for `cairn ui`, `cairn launch` and each B1 to B3 component's
     own entry point, SEC-01), each harness adapter's transcript and hook part
     among them, the **MCP server** (the MCP tools of §9.2, one per harness
-    session, serving its runs), the **kernel worker** (running the kernel's
-    executions), the **TUI** (the terminal room view), the **commit hook**
-    (LANE-28, run as the CLI), and everything that builds what reaches the
-    model.
+    session, serving its runs and ingesting their transcripts once it holds its
+    **session binding**: the harness session id and transcript path a
+    `SessionStart` hook handler of its own harness process recorded, REC-13),
+    the **kernel worker** (running the kernel's executions), the **TUI** (the
+    terminal room view), the **commit hook** (LANE-28, run as the CLI), and
+    everything that builds what reaches the model.
   - The **harness adapter** is no component: Cairn's code for one harness, its
     transcript and hook part in the core and its run part in the launcher.
   - **Room-view component (B1):** serves the browser room view on loopback only

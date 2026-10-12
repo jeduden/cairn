@@ -1,0 +1,11 @@
+#!/bin/sh
+# cc — run claude isolated under $REC_ROOT: HOME and CLAUDE_CONFIG_DIR point
+# into it, and the variables of any enclosing Claude Code session are dropped.
+# Copy the credentials into "$REC_ROOT/home/.claude" first; never point this
+# at the real ~/.claude.
+: "${REC_ROOT:?set REC_ROOT to a scratch directory}"
+exec env -u CLAUDECODE -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_CHILD_SESSION \
+  -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN \
+  -u CLAUDE_PID -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_EFFORT -u CLAUDE_CODE_EXECPATH -u AI_AGENT \
+  HOME="$REC_ROOT/home" CLAUDE_CONFIG_DIR="${CC_CFG:-$REC_ROOT/home/.claude}" \
+  REC_OUT="${REC_OUT:-$REC_ROOT/out}" claude "$@"
