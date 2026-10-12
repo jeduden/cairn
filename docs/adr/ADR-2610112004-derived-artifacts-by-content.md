@@ -105,20 +105,30 @@ With it, SRS 3.0-draft changes these requirements:
     `witnessed` writer until a `recovered` rotation joins it, the
     principal confirms it at the controlling terminal
     (`cairn device-key confirm`), or, for a token key, the same device
-    key made its token certificate.
+    key made its token certificate, which names the token key it
+    succeeds.
   - A device key's recovery key leaves the node once, encrypted under a
     passphrase, through `cairn device-key write-recovery-key`, a
-    widening principal act at the controlling terminal. A token key's
-    stays with the node that issued its access token.
+    widening principal act at the controlling terminal, under a key a
+    memory-hard function derives from the passphrase. A token key's
+    stays with the node that issued its access token until a later
+    access token carries it.
   - A node identity change always starts a new log, so a clone never
-    stays `witnessed`. A backup restore starts one too.
-  - Two key events following one, or two inceptions replacing one key,
-    are duplicity. Only `cairn device-key choose`, or a rotation that
-    voids both inceptions, resolves it.
-  - A seat certificate counts only when the log's device seat records
-    it before its key is rotated, so a retired key certifies nothing new.
+    stays `witnessed`. A backup restore starts one in place of every
+    earlier log, since the restored record reads `peer` anyway.
+  - Voidness is decided first, along the hash links: a key event that
+    breaks the rules counts for nothing, and so does an inception whose
+    replaced key its own log has rotated, unless a `recovered` rotation
+    names it.
+  - Two newest key events in one log, or two inceptions replacing one
+    key, are duplicity. Only key events this node recorded count, so a
+    peer cannot cause it. Only `cairn device-key choose`, or a rotation
+    that voids both inceptions, resolves it.
+  - Each seat certificate gets a certificate record. Each rotation
+    carries the chain head of the writer it follows, and a retired
+    key's certificates count only at or before that head.
   - "Current" and "newest" come from the record's hash links, never
-    from a clock or the audit log, which I10 does not read.
+    from a clock, arrival order or the audit log.
 - **REC-26** also takes origin `ingested` from a transcript source and
   ingest position, stores each range only with its arrival event, takes
   the arrival event's digest over commitments and headers, never
@@ -170,7 +180,7 @@ miss, and what answers each:
 | a stored origin changed from `peer` to `witnessed`, making the event trusted    | REC-26 derives origin from the record; verify compares it with the rest of I10          |
 | a node's own backup restored and read as `witnessed`                            | REC-26 reads arrival events before the node's own writers                               |
 | a purge of the events origin derives from, turning `peer` back into `witnessed` | ADM-07: no purge scope covers arrival, node identity change or key events               |
-| a key event another process forges to make its own writer `witnessed`           | PRV-12: a rotation needs the recovery key, a later log the principal's confirmation     |
+| a key event another process forges to make its own writer `witnessed`           | PRV-12: a rotation needs the recovery key, a later log a widening principal act         |
 | a clone that keeps its source's writers `witnessed`                             | REC-24, PRV-12: an identity change starts a new, unconfirmed key event log              |
 | two conflicting rotations of one key event log                                  | PRV-12: duplicity stops `witnessed` until the principal or the recovery key resolves it |
 
@@ -214,11 +224,19 @@ counts only once the principal confirms it at the controlling terminal
 or the recovery key joins it. A process that only appends can still
 start a new log. Every writer then reads `peer` until the principal
 acts, which is a loud denial rather than silent trust: it is audited,
-counted and shown, and a rotation with the recovery key voids it. What
-stays open is an attacker who holds the home and the controlling
-terminal, which the same OS user's boundary (I8) already concedes, and
-the window before the recovery key leaves the node, which
-`cairn status` shows.
+counted and shown, and a rotation with the recovery key voids it.
+
+What stays open: `cairn device-key confirm` and `choose` are widening
+principal acts, and in the record a principal act is an event like any
+other. Where the principal or managed policy requires an authenticator,
+each carries a presence proof bound to its digest (OWN-11), which an
+appender cannot make. Where none is required, the controlling terminal
+is checked only by the CLI, so a process that can write the home and
+the device seat's key can forge a confirmation, as it can forge every
+other widening act. This is the same OS user's boundary that I8 already
+concedes, and no weaker than for any principal act. Also open is the
+window before the recovery key leaves the node, which `cairn status`
+shows.
 
 ## Alternatives
 
