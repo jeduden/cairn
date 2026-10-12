@@ -426,7 +426,7 @@
     },
     {
      "file": "docs/domain-model/record.md",
-     "quote": "in a writer whose seat key was certified by a key named only by key events before that node identity change event"
+     "quote": "key was certified by a key on a log a node identity change replaced"
     },
     {
      "file": "docs/srs/05a-administration-requirements.md",

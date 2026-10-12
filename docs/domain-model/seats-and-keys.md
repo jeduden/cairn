@@ -68,12 +68,20 @@ summary: >-
   (PEER-06, PRV-10), though its own events are trusted on that node as that
   node's trusted sources.
 - **Key event**: The structural event a node records in its device seat in its
-  personal room when it starts using a device key or token key: minted, minted
-  anew after a loss, rotated (SEC-27), or carried by an access token. It carries
-  only the key's fingerprint and why it started (`minted`, `minted anew`,
-  `rotated` or `token key adopted`, SEC-10). The key events after a node's
-  newest node identity change event name the keys whose seats' events read
-  `witnessed`, or every key event does where none exists (REC-26).
+  personal room for a device key or token key, carrying only the key's
+  fingerprint, the digest of its next key, the digest of the key event before it
+  and why (SEC-10). An **inception** starts a **key event log**, a node's chain
+  of key events: `minted`, `token key adopted`, or `minted anew` in place of a
+  missing device key, naming it; an inception replaces the key it names or the
+  node identity change event before it names. A **rotation** (`rotated`, or
+  `recovered` when the key it replaces is missing) reveals the next key the key
+  event before it committed to, signed by it. A device key's next key is its
+  **backup key**, which `cairn device-key backup` moves off the node to a file
+  the principal keeps offsite; a token key's next key stays with the node that
+  issued its access token. Two key events that follow one key event, or two
+  inceptions that replace one key, are **duplicity**. A node's **current key
+  event log** is the one whose newest key no inception replaces; its keys, up
+  to any duplicity, are those whose seats' events read `witnessed` (REC-26).
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room and naming its seat kind and whether it is an ingest
   seat, that the seat key countersigns (PRV-10, PRV-11). A node's **key set** is

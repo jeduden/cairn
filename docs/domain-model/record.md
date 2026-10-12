@@ -69,11 +69,10 @@ summary: >-
   seat whose seat certificate names it an ingest seat, REC-19), `bundle`
   (imported, whatever other arrival event names it) or `peer` (received from a
   peer, paired phone or backup, as an arrival event names it), `witnessed`
-  (otherwise, in a writer whose seat key was certified by a key a key event
-  names after this node's newest node identity change event, or any key event
-  when none exists) or `peer` (otherwise, such as in a writer whose seat key was
-  certified by a key named only by key events before that node identity change
-  event, Node, REC-24); the trust policy reads `bundle` as `peer` (PRV-02);
+  (otherwise, in a writer whose seat key was certified by a key on this node's
+  current key event log) or `peer` (otherwise, such as in a writer whose seat
+  key was certified by a key on a log a node identity change replaced, Node,
+  REC-24); the trust policy reads `bundle` as `peer` (PRV-02);
   origin is independent of provenance. An **arrival event** is the structural
   event this node's device seat in its personal room records for each range it
   accepts, once per way it arrived, naming the writer, the seq range, the

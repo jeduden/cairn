@@ -22,7 +22,8 @@ summary: >-
   snapshot cannot carry over (REC-24). A **node identity change event** is the
   structural event a node whose node identity changed records in its new device
   seat in its personal room, carrying only the fingerprints of the device key or
-  token key it replaces and of the new one (REC-24). A **node clone** is a copy
+  token key it replaces and of the new one, followed by the new key's inception,
+  which starts a new key event log (REC-24, SEC-10). A **node clone** is a copy
   of a home started where its node identity differs: a new node, with new keys
   and seats, that shares the carried-over personal room (REC-24). On any node
   whose node identity changed, as after a backup restore, the record from before
