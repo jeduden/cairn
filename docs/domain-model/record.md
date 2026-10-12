@@ -69,17 +69,18 @@ summary: >-
   seat whose seat certificate names it an ingest seat, REC-19), `bundle`
   (imported, whatever other arrival event names it) or `peer` (received from a
   peer, paired phone or backup, as an arrival event names it), `witnessed`
-  (otherwise, in a writer whose seat key was certified by a key on this node's
-  current key event log) or `peer` (otherwise, such as in a writer whose seat
-  key was certified by a key on a log a node identity change replaced, Node,
-  REC-24); the trust policy reads `bundle` as `peer` (PRV-02);
-  origin is independent of provenance. An **arrival event** is the structural
-  event this node's device seat in its personal room records for each range it
-  accepts, once per way it arrived, naming the writer, the seq range, the
-  range's digest and how it arrived. A **witnessed run** is one this node's hook
-  handlers watched. Every event but one from a peer or a bundle also records its
-  **recorder**, the part that recorded it: the hook handlers, CLI, TUI, MCP
-  server, launcher, room-view component or bridge component.
+  (otherwise, in a writer whose seat certificate a key on this node's current
+  key event log made, as Key event says) or `peer` (otherwise, such as in a
+  writer whose seat key was certified by a key on a log a node identity change
+  replaced, Node, REC-24); a quarantine never changes it; the trust policy reads
+  `bundle` as `peer` (PRV-02); origin is independent of provenance. An **arrival
+  event** is the structural event this node's device seat in its personal room
+  records for each range it accepts, once per way it arrived, naming the writer,
+  the seq range, the range's digest and how it arrived. A **witnessed run** is
+  one this node's hook handlers watched. Every event but one from a peer or a
+  bundle also records its **recorder**, the part that recorded it: the hook
+  handlers, CLI, TUI, MCP server, launcher, room-view component or bridge
+  component.
 - **Span**: A contiguous range of one run's events in one writer, bounded as
   LMK-01 says.
 - **Landmark**: A structural headline over one span, bound to its address range

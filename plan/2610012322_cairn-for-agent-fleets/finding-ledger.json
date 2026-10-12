@@ -1031,7 +1031,7 @@
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "which only the key that certified the run seat it names, or the key a rotation replaced it with, MAY certify"
+     "quote": "which only the key that certified the run seat it names, or the key that replaced it on the node's current key event log (PRV-12), MAY certify"
     }
    ]
   },
@@ -1046,7 +1046,7 @@
     },
     {
      "file": "docs/srs/05e-provenance-requirements.md",
-     "quote": "Hook observations, key rotations, key events (SEC-10), tombstones, canary events (OPS-04), backup events (ADM-06), arrival events (REC-26), node identity change events (REC-24), refused-segment events (REC-21) and time marks (REC-15) MUST carry `structural`"
+     "quote": "Hook observations, seat-key rotations (SEC-27), key events (PRV-12), tombstones, canary events (OPS-04), backup events (ADM-06), arrival events (REC-26), node identity change events (REC-24), refused-segment events (REC-21) and time marks (REC-15) MUST carry `structural`"
     }
    ]
   },

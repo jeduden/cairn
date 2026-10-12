@@ -93,25 +93,37 @@ With it, SRS 3.0-draft changes these requirements:
   arrival events, then `witnessed` for a writer whose seat key a key on
   the node's current key event log certified, else `peer`. No stored
   origin value, and no origin another node derived, decides it.
-- **SEC-10, REC-24 and PEER-06** make the node's device keys and token
-  keys a key event log with pre-rotation, as KERI does ([KERI][keri],
-  [identity-keys research][ik]). Each key event carries the key's
-  fingerprint, the digest of its next key and the digest of the key
-  event before it. An inception starts a log: `minted`, `token key
-  adopted`, or `minted anew` in place of a missing device key. A
-  rotation, `rotated` or `recovered`, must reveal the committed next key
-  and be signed by it. A device key's next key is its backup key, which
-  `cairn device-key backup` writes once to a file the principal keeps
-  offsite and erases from the node. A token key's next key stays with
-  the node that issued its access token. A node identity change always
-  starts a new log, so a clone never stays `witnessed`. The current key
-  event log is the one whose newest key no inception replaces. Two key
-  events following one, or two inceptions replacing one key, are
-  duplicity: reported, counted, and no key after it certifies a
-  `witnessed` writer. A lost device key minted anew starts a new log,
-  and earlier writers read `peer` until the backup key recovers it.
-  "Current" comes from the record's own hash links, never from a clock
-  or the audit log, which I10 does not read.
+- **PRV-12, new, with SEC-10, REC-24 and PEER-06,** makes the node's
+  device keys, or a token-key-only node's token keys, a key event log in
+  which each key commits to its next key by digest, as KERI's
+  pre-rotation does ([KERI][keri], [identity-keys research][ik]).
+  - An inception starts a log: `minted`, `token key adopted`, or
+    `minted anew` in place of a missing device key. A rotation,
+    `rotated` or `recovered`, must reveal the committed next key, the
+    recovery key, be signed by it, and name a freshly minted key.
+  - The genesis log is taken on trust. Any later log certifies no
+    `witnessed` writer until a `recovered` rotation joins it, the
+    principal confirms it at the controlling terminal
+    (`cairn device-key confirm`), or, for a token key, the same device
+    key made its token certificate.
+  - A device key's recovery key leaves the node once, encrypted under a
+    passphrase, through `cairn device-key write-recovery-key`, a
+    widening principal act at the controlling terminal. A token key's
+    stays with the node that issued its access token.
+  - A node identity change always starts a new log, so a clone never
+    stays `witnessed`. A backup restore starts one too.
+  - Two key events following one, or two inceptions replacing one key,
+    are duplicity. Only `cairn device-key choose`, or a rotation that
+    voids both inceptions, resolves it.
+  - A seat certificate counts only when the log's device seat records
+    it before its key is rotated, so a retired key certifies nothing new.
+  - "Current" and "newest" come from the record's hash links, never
+    from a clock or the audit log, which I10 does not read.
+- **REC-26** also takes origin `ingested` from a transcript source and
+  ingest position, stores each range only with its arrival event, takes
+  the arrival event's digest over commitments and headers, never
+  content, and refuses a range that extends one of this node's own
+  writers.
 - **REC-17, ADM-07 and §8.2.** A tombstone no longer keeps a purged
   event's origin; each node derives it from the writer's seat
   certificate, the arrival events, the key events and the node identity
@@ -147,20 +159,20 @@ A byte comparison never held for a store kept per append, so part of
 what it promised was never real. What a content digest alone would
 miss, and what answers each:
 
-| A byte comparison would catch                                                   | What answers it now                                                                   |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| purged text or postings left in free pages or FTS5's index tables               | SEC-31's no-residue rule, checked on the decrypted raw files                          |
-| residue from retention, applied erasure requests or a backup restore            | SEC-31 covers every way stored content is removed                                     |
-| a plaintext copy in a temporary file, such as `VACUUM`'s                        | §8.1 keeps the storage engine's temporary storage in the home                         |
-| a trigger, view or extra index, or a changed tokenizer or ranking configuration | the schema and settings are part of the digest; verify refuses unknown schema objects |
-| an index that disagrees with the table it indexes                               | ADM-08's integrity checks of the store and the search index                           |
-| output whose order follows storage                                              | ADM-08: every read orders its output by values                                        |
-| a stored origin changed from `peer` to `witnessed`, making the event trusted    | REC-26 derives origin from the record; verify compares it with the rest of I10        |
-| a node's own backup restored and read as `witnessed`                            | REC-26 reads arrival events before the node's own writers                             |
-| a purge of the events origin derives from, turning `peer` back into `witnessed` | ADM-07: no purge scope covers arrival, node identity change or key events             |
-| a key event another process forges to make its own writer `witnessed`           | SEC-10: a rotation must be signed by the backup key the log committed to              |
-| a clone that keeps its source's writers `witnessed`                             | REC-24: an identity change starts a new key event log, never a rotation               |
-| two conflicting rotations of one key event log                                  | SEC-10: duplicity is reported, and no key after it certifies a `witnessed` writer     |
+| A byte comparison would catch                                                   | What answers it now                                                                     |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| purged text or postings left in free pages or FTS5's index tables               | SEC-31's no-residue rule, checked on the decrypted raw files                            |
+| residue from retention, applied erasure requests or a backup restore            | SEC-31 covers every way stored content is removed                                       |
+| a plaintext copy in a temporary file, such as `VACUUM`'s                        | §8.1 keeps the storage engine's temporary storage in the home                           |
+| a trigger, view or extra index, or a changed tokenizer or ranking configuration | the schema and settings are part of the digest; verify refuses unknown schema objects   |
+| an index that disagrees with the table it indexes                               | ADM-08's integrity checks of the store and the search index                             |
+| output whose order follows storage                                              | ADM-08: every read orders its output by values                                          |
+| a stored origin changed from `peer` to `witnessed`, making the event trusted    | REC-26 derives origin from the record; verify compares it with the rest of I10          |
+| a node's own backup restored and read as `witnessed`                            | REC-26 reads arrival events before the node's own writers                               |
+| a purge of the events origin derives from, turning `peer` back into `witnessed` | ADM-07: no purge scope covers arrival, node identity change or key events               |
+| a key event another process forges to make its own writer `witnessed`           | PRV-12: a rotation needs the recovery key, a later log the principal's confirmation     |
+| a clone that keeps its source's writers `witnessed`                             | REC-24, PRV-12: an identity change starts a new, unconfirmed key event log              |
+| two conflicting rotations of one key event log                                  | PRV-12: duplicity stops `witnessed` until the principal or the recovery key resolves it |
 
 The digest is itself a risk: kept past a purge, it would let anyone
 holding the other content confirm a guess at the purged content. ADM-08
@@ -195,15 +207,18 @@ the key set, as I10 lists it. Until seals ship (REC-18), a node's own
 writers are anchored by head receipts alone. That limit is the same for
 everything the record holds.
 
-Without pre-rotation, any process that could append a key event could
-add its own key to the set that reads `witnessed`. With it, adding a key
-to the current log needs the backup key, which is off the node. A
-process that only appends can start a new log, but that is an
-inception: every earlier writer then reads `peer`, and the status,
-the audit log and the counters show it. What stays open is an attacker
-holding the current device key and the home, which the same OS user's
-boundary (I8) already concedes. While the backup key has not left the
-node, `cairn status` says so, and that protection is not yet in place.
+Without a committed next key, any process that could append a key event
+could add its own key to the set that reads `witnessed`. With PRV-12, a
+rotation needs the recovery key, which is off the node, and a new log
+counts only once the principal confirms it at the controlling terminal
+or the recovery key joins it. A process that only appends can still
+start a new log. Every writer then reads `peer` until the principal
+acts, which is a loud denial rather than silent trust: it is audited,
+counted and shown, and a rotation with the recovery key voids it. What
+stays open is an attacker who holds the home and the controlling
+terminal, which the same OS user's boundary (I8) already concedes, and
+the window before the recovery key leaves the node, which
+`cairn status` shows.
 
 ## Alternatives
 
@@ -212,13 +227,17 @@ node, `cairn status` says so, and that protection is not yet in place.
   the store would need a second index lifecycle.
 - **Keep byte identity and rebuild instead of indexing per append.** It
   breaks NFR-15: a full rebuild of 10M events takes about five minutes.
-- **Key events without pre-rotation.** A transition rule between keys
+- **Key events without a committed next key.** A transition rule between keys
   needs a signature only the node holds, so any process on it could
   forge one. It also needs an order of key events, and only the hash
   links give one without a clock.
+- **Let any new log count at once, and only report it.** A forger's
+  writers would read `witnessed` until someone noticed.
+- **Heal duplicity by any new inception.** Anyone who can append could
+  choose which branch wins.
 - **Keep a key lost and minted anew `witnessed`.** Nothing proves the
   new key is the principal's, so a forged `minted anew` would make its
-  writer trusted. The backup key's `recovered` rotation proves it.
+  writer trusted. The recovery key's `recovered` rotation proves it.
 - **Keep PEER-03 byte-identical but require the same key set.** Each
   peer holds its own keys, so two peers' key sets seldom match, and the
   requirement would seldom apply.
@@ -235,7 +254,7 @@ node, `cairn status` says so, and that protection is not yet in place.
 - M1's schema may keep trust levels and origin apart from the parts
   every node shares, so PEER-03's shared parts compare directly.
 - M1 derives origin from the record, keeps the device key's key event
-  log with its backup key, and writes node identity change events. M3,
+  log with its recovery key, and writes node identity change events. M3,
   M8 and M9, which bring backup restore, peers and paired phones, and
   bundles, write the arrival events they need. M8 carries a token key's
   next key in its access token.

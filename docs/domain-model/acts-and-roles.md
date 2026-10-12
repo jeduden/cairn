@@ -64,7 +64,8 @@ exactly one kind (LANE-31).
     version, name a successor, offer a handover, record a trust grant, allow
     notices for a room or opt in to them, enable a bridge, set a room setting,
     publish, apply a purge request, change a retention policy, accept
-    configuration (ADM-04), enroll a CI key, rotate a device key, retire a
+    configuration (ADM-04), enroll a CI key, rotate a device key, write its
+    recovery key, confirm a key event log or choose its branch, retire a
     writer, turn capture off or pause it, enroll or revoke a device, peer or
     authenticator, mint or rotate an access token, start a witness check
     (OWN-18), and a backup restore. Revoking a device or a peer stays widening
