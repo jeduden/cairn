@@ -49,8 +49,8 @@ Feature: Peer network (PEER)
   Scenario: an event written on one connected peer reaches every connected peer within 5 s
     Given an isolated Cairn home
     And connected peers "a", "b" and "c", where "c" reaches "a" only through "b"
-    When the hook handlers on "a" append an event to a run seat's writer
-    Then the harness session's MCP server seals the run seat's writer within 2 s of that unsealed append, covering what the hook handler appended, and the event is carried as part of a sealed range
+    When the MCP server on "a" ingests a transcript line into a run seat's writer
+    Then the harness session's MCP server seals the run seat's writer within 2 s of that unsealed append, and the event is carried as part of a sealed range
     And an event after the newest seal stays unsigned and is not carried
     And it appears in the room view of "b" and of "c" within 5 s of being written
     And it reaches "c" across at most one relay hop through an enrolled peer
@@ -59,8 +59,8 @@ Feature: Peer network (PEER)
   Scenario: an ephemeral node offers its sealed tail often and a retired writer's lost tail shows as a missing range
     Given an isolated Cairn home
     And an ephemeral node connected to a peer and running an agent
-    When the run is active for 65 s, passes "Stop", "SubagentStop" and "SessionEnd", and the ephemeral node's access token expires
-    Then the open segment was sealed and offered at each of those hooks and at least every 30 s, each sealed range as soon as it was sealed
+    When the run is active for 65 s, its transcripts record a turn end and a subagent end, its harness session ends, and the ephemeral node's access token expires
+    Then the open segment was sealed and offered at the turn end, the subagent end and the harness session's end, and at least every 30 s, each sealed range as soon as it was sealed
     And once its clock passes the expiry, the node that minted the access token records the expire act ending it, naming the writer's last accepted seq
     And the writer is marked retired by that expire act, and no derivation reads a clock
     And a principal act retiring that writer counts only from the principal its seat key chains to, and any other principal act retiring it is void and shown

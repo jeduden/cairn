@@ -70,16 +70,16 @@ at once (ADM-04, SEC-01).
 
 The core's parts:
 
-| Part of the core      | Responsibility                                                                                                                                                                                                                                                                                                                       |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `cairn hook <hook>`   | The hook handlers: read hook input from stdin, perform bounded processing within the hook budget, write hook output to stdout, always fail open (I9).                                                                                                                                                                                |
-| `cairn mcp`           | The MCP server, one per harness session over stdio, serving its runs (the main run and its subagents' runs) and keeping their run-seat keys (SEC-10); it exposes recall, landmarks, pins, room and kernel tools. Read-mostly.                                                                                                        |
-| `cairn kernel-worker` | The kernel worker, a child process of `cairn mcp` running the hermetic kernel under OS resource limits with a read-only store handle.                                                                                                                                                                                                |
-| CLI                   | Install, verify, rebuild, quarantine, purge, backup creation and backup restore, migrate, counters, audit, doctor, and principal acts at a terminal (OWN-12).                                                                                                                                                                        |
-| Commit hook           | Run as the CLI from git's commit hook: adds the `Cairn-Room:` room trailer and any `Cairn-Link:` trailer links to each commit on a branch that belongs to a room (LANE-01, LANE-28).                                                                                                                                                 |
-| TUI                   | A reduced client of the room view on a terminal (VIEW-14) and, like the CLI, a principal surface there (OWN-02).                                                                                                                                                                                                                     |
-| Core library          | All logic; no global state; every blocking operation takes a deadline, directly or through a cancellation signal a deadline fires.                                                                                                                                                                                                   |
-| Harness adapter       | Not a component: Cairn's code for one harness, split between the core and the launcher. Its transcript and hook part, among the core's hook handlers and CLI, parses transcript formats and hook I/O for Claude Code (and later other harnesses), opening no socket and starting no process; its run part sits in the launcher (B1). |
+| Part of the core      | Responsibility                                                                                                                                                                                                                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cairn hook <hook>`   | The hook handlers for `SessionStart`, `UserPromptSubmit` and `PermissionRequest`, the hooks through which Cairn writes to an agent (§9.1): read hook input from stdin, perform bounded processing within the hook budget, write hook output to stdout, always fail open (I9).                                                                    |
+| `cairn mcp`           | The MCP server, one per harness session over stdio, serving its runs (the main run and its subagents' runs) and keeping their run-seat keys (SEC-10); it exposes recall, landmarks, pins, room and kernel tools. It ingests its harness session's transcripts as they grow (REC-13).                                                             |
+| `cairn kernel-worker` | The kernel worker, a child process of `cairn mcp` running the hermetic kernel under OS resource limits with a read-only store handle.                                                                                                                                                                                                            |
+| CLI                   | Install, verify, rebuild, quarantine, purge, backup creation and backup restore, migrate, counters, audit, doctor, and principal acts at a terminal (OWN-12).                                                                                                                                                                                    |
+| Commit hook           | Run as the CLI from git's commit hook: adds the `Cairn-Room:` room trailer and any `Cairn-Link:` trailer links to each commit on a branch that belongs to a room (LANE-01, LANE-28).                                                                                                                                                             |
+| TUI                   | A reduced client of the room view on a terminal (VIEW-14) and, like the CLI, a principal surface there (OWN-02).                                                                                                                                                                                                                                 |
+| Core library          | All logic; no global state; every blocking operation takes a deadline, directly or through a cancellation signal a deadline fires.                                                                                                                                                                                                               |
+| Harness adapter       | Not a component: Cairn's code for one harness, split between the core and the launcher. Its transcript and hook part, among the core's hook handlers, MCP server and CLI, parses transcript formats and hook I/O for Claude Code (and later other harnesses), opening no socket and starting no process; its run part sits in the launcher (B1). |
 
 ## 4.3 Event-sourced state
 
@@ -103,7 +103,7 @@ under a retention policy is not an act: the node records it naming the policy,
 whose setting was the act (ADM-04), and an erasure request it sends peers is
 `structural`, where one a principal act sends is `operator`. Every tombstone,
 refused-segment event, arrival event, node identity change event and key event
-is a `structural` event (PRV-01, REC-21, REC-24, REC-27, SEC-10). Everything
+is a `structural` event (PRV-01, REC-21, REC-24, PRV-13, SEC-10). Everything
 else in the store (the search index, spans, landmarks, active pins, quarantine
 set, room state, origins, trust levels, run statuses but for their time-relative
 freshness marks, integrity statuses, queues, evidence and proof classes, stats)
@@ -122,17 +122,17 @@ purged. Room status and a check's state are computed where shown, never stored.
 
 ### Compaction (the core loop)
 
-1. Context approaches its limit; Claude Code fires `PreCompact`.
-2. The hook handler, `cairn hook PreCompact`, ingests the transcript up to
-   now (bounded), closes the current span, updates landmarks, and returns
-   compaction guidance if supported: fixed text Cairn ships, never record
-   content (PIN-07, I2).
-3. Claude Code compacts. `PostCompact` fires; Cairn records `compact_summary` as
-   a `harness_text` event.
-4. Claude Code fires `SessionStart` with `source = compact`. Cairn returns the
+1. Context approaches its limit, and Claude Code compacts it. Cairn sends it
+   nothing for the compaction.
+2. Claude Code fires `SessionStart` with `source = compact`. Cairn returns the
    **restore block**: the qualifying pins (PIN-10, verbatim), the landmark
-   index, and the recall hint.
-5. Later, the agent needs a detail that compaction dropped. It calls
+   index, and the recall hint. No transcript names the compacting run yet
+   (ASM-06), so INJ-05 decides whose pins it may hold.
+3. Once the hook returns, the harness writes the compaction to the transcript.
+   The harness session's MCP server, which ingests the transcript as it grows,
+   records the compaction and its summary as a `harness_text` event, closes the
+   current span and updates landmarks (REC-13).
+4. Later, the agent needs a detail that compaction dropped. It calls
    `event_search`, then `event_expand` on the returned address
    range, and receives the exact original inside an untrusted-data envelope.
 

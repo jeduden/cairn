@@ -218,11 +218,11 @@ Feature: Administration and lifecycle (ADM)
     And where this node's own recording crossed the quota, that first crossing at the quota's limit is a structural event in its device seat's personal-room writer, from which the Needs you item derives, and a rebuild appends none
 
     Examples:
-      | quota               | arrival                                             | expected                                                                                  |
-      | received writer     | a peer offers another event of that writer          | the event is refused and an audit entry records it                                        |
-      | peer                | the peer offers another segment                     | the segment is refused, and a structural event and an audit entry record the refusal      |
-      | worktree checkpoint | the hook "Stop" records another worktree checkpoint | the worktree checkpoint is recorded, a failure counter rises and a Needs you item appears |
-      | node                | the run appends another event                       | the event is recorded, a failure counter rises and a Needs you item appears               |
+      | quota               | arrival                                                                             | expected                                                                                  |
+      | received writer     | a peer offers another event of that writer                                          | the event is refused and an audit entry records it                                        |
+      | peer                | the peer offers another segment                                                     | the segment is refused, and a structural event and an audit entry record the refusal      |
+      | worktree checkpoint | the run's transcript records a turn end and another worktree checkpoint is recorded | the worktree checkpoint is recorded, a failure counter rises and a Needs you item appears |
+      | node                | the run appends another event                                                       | the event is recorded, a failure counter rises and a Needs you item appears               |
 
   @ADM-16 @P1 @I6 @pending
   Scenario Outline: status and doctor report the launcher and every other component outside the core, peer lag, open chains and boundaries
@@ -239,3 +239,18 @@ Feature: Administration and lifecycle (ADM)
       | command |
       | status  |
       | doctor  |
+
+  @ADM-17 @P1 @I2 @pending
+  Scenario Outline: the hook commands Cairn installs carry no secret, home path or record content
+    Given an isolated Cairn home whose path lies under the OS user's home directory
+    And a record holding events and pins
+    When Cairn is installed by <path>
+    Then each hook command and the MCP server command it registers, with their arguments and environment, names the core executable through the plugin's root variable or on "PATH"
+    And none of them spells a path under the OS user's home directory, the Cairn home's included
+    And none of them carries a secret, a key, a token or any text from the record
+
+    Examples:
+      | path                          |
+      | running "cairn install --yes" |
+      | the Claude Code plugin        |
+      | the managed install path      |
