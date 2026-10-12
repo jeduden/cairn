@@ -70,10 +70,10 @@ mutable file, a gap-free `seq` and one hash chain per store. The
 candidate this plan tests keeps ADR-02's event sourcing but splits
 it in two:
 
-| Layer  | Form                                                                                         |
-| ------ | -------------------------------------------------------------------------------------------- |
-| Record | append-only, content-addressed, hash-chained log segments, one writer per origin             |
-| Index  | local SQLite with FTS5, rebuilt from the segments a node holds (I10), on S2's ncruces driver |
+| Layer  | Form                                                                                     |
+| ------ | ---------------------------------------------------------------------------------------- |
+| Record | append-only, content-addressed, hash-chained log segments, one writer per origin         |
+| Index  | local SQLite with FTS5, rebuilt from the segments a node holds (I10), on S2's `rusqlite` |
 
 Each origin (node and session) writes only its own log, so the
 record has no write conflicts and needs no conflict-free merge
@@ -97,7 +97,8 @@ What was searched and weighed:
 - The S2 harness under
   [bench](../2609292004_spike-s2-sqlite-driver/bench-go/main.go) is
   reused for the index side: its corpus, its FTS5 probes and its
-  measurements.
+  measurements. Spike S12's proving slice ([report](slice/report.md))
+  reads the corpus of S2's Rust port where it lives.
 
 The changes touch §1, §2, §4.5, §6, §8 and the invariants, so they wait
 for the stakeholder. A change that weakens I1–I10 needs a security
@@ -160,21 +161,23 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                           |
-| --- | ------ | --------------------------------------------------------------- |
-| 1   | 🔳     | [Scope proposal and the record/index proving slice](phase-1.md) |
+| #   | Status | Phase                                                                                                                                                                                                                                                   |
+| --- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ✅     | [Scope proposal and the record/index proving slice](phase-1.md)                                                                                                                                                                                         |
+|     | ↳      | Spike S12 passes: on each node, two writers' segments in either order rebuild a byte-identical index file, foreign events stay untrusted, one branch link stands, a purge leaves nothing confirming a guess. Byte-identity per append needs a decision. |
 <?/catalog?>
 
 ## Acceptance Criteria
 
 - [x] The scope proposal names, for each fleet setting, what Cairn
   does, which invariant governs it, and what stays out of scope
-- [ ] Two origins' segments, merged in either order, rebuild a
-  byte-identical index, and foreign events stay untrusted
+- [x] Two origins' segments, merged in either order, rebuild a
+  byte-identical index, and foreign events stay untrusted (spike S12,
+  [report](slice/report.md))
 - [x] The SRS changes are proposed, in pull request #16 (SRS
   2.0-draft); the invariant changes are approved in ADR-2610032155,
   accepted on 4 October 2026
 - [ ] M1 is re-planned on the approved identity model
-- [ ] All tests pass: `go test ./...` at the root and in the
-  prototype's own module
-- [ ] `mdsmith check .` is clean
+- [x] All tests pass: `cargo test --workspace` at the root and
+  `cargo test` in the proving slice's own crate
+- [x] `mdsmith check .` is clean
