@@ -79,7 +79,7 @@ Feature: Administration and lifecycle (ADM)
     And a configuration setting "node.deployment_mode" to "interactive", accepted by "cairn configuration accept"
     And a backup taken by "cairn backup create", followed by a purge of run "run-a" and the unpin of a pin
     When the person runs "cairn backup restore" as a widening principal act
-    Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device or at-rest key, and an audit entry recorded it
+    Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device, recovery or at-rest key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was reinstated
     And before it was confirmed, the backup restore named each pin of the copy that will not restore once its events count as received
     And every event the copy holds counts on the node as received, each deriving origin "peer" or "bundle", never "witnessed", and is trusted only as PRV-02 trusts received events
@@ -106,7 +106,7 @@ Feature: Administration and lifecycle (ADM)
     And once the purge reports the range erased, with encryption at rest on and off, no file in the home or the storage engine's temporary directory, read decrypted, contains a canary token only the purged events carried, their commitment keys or a search index entry naming a purged address
     And while another process holds a read transaction on the store, the purge does not report the range erased before that holds, and audits and counts each residue it cannot yet remove
     And the audit log records the purge with its scope, ranges, reason and the principal act behind it, never the purged content
-    And no arrival event, node identity change event or key event is purged, whatever the scope, and the origin of every remaining event derives as before
+    And no arrival event, node identity change event, key event or certificate record is purged, whatever the scope, and the origin of every remaining event derives as before
 
     Examples:
       | scope                  |
@@ -139,15 +139,15 @@ Feature: Administration and lifecycle (ADM)
     And the output names the failed check "<check>"
 
     Examples:
-      | damage                                     | check                          |
-      | the transcript has lines not in the record | transcript source completeness |
-      | an event row's hash has been altered       | hash chain                     |
-      | a payload file's bytes have been altered   | payload integrity              |
-      | a landmark row has been altered            | derived artifact consistency   |
-      | a trust level has been altered in place    | derived artifact consistency   |
-      | a schema object Cairn does not ship has been added to the store | derived artifact consistency |
-      | the search index's ranking configuration has been altered | derived artifact consistency |
-      | a search index entry names an event whose text lacks the term | derived artifact consistency |
+      | damage                                                          | check                          |
+      | the transcript has lines not in the record                      | transcript source completeness |
+      | an event row's hash has been altered                            | hash chain                     |
+      | a payload file's bytes have been altered                        | payload integrity              |
+      | a landmark row has been altered                                 | derived artifact consistency   |
+      | a trust level has been altered in place                         | derived artifact consistency   |
+      | a schema object Cairn does not ship has been added to the store | derived artifact consistency   |
+      | the search index's ranking configuration has been altered       | derived artifact consistency   |
+      | a search index entry names an event whose text lacks the term   | derived artifact consistency   |
 
   @ADM-10 @P0 @I7 @pending
   Scenario: doctor is read-only and doctor --fix shows each change first

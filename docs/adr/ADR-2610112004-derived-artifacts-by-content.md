@@ -140,6 +140,9 @@ With it, SRS 3.0-draft changes these requirements:
   the arrival event's digest over commitments and headers, never
   content, and refuses a range that extends one of this node's own
   writers.
+- **PRV-11.** A seat certificate also names whether its seat is an
+  ingest seat, which PRV-13 reads for origin `ingested`. PRV-11's I2
+  security review is part of this record's.
 - **REC-17, ADM-07 and §8.2.** A tombstone no longer keeps a purged
   event's origin; each node derives it from the writer's seat
   certificate, the arrival events, the key events and the node identity
@@ -163,18 +166,19 @@ SHA-256 is:
 
 That text also holds the changes to I2 and I3 that
 [ADR-2610112209](ADR-2610112209-invariants-after-s1-s3.md) proposes.
-This record approves only I10; the hash names the whole text in force
-once both records are accepted.
+The two are approved in a fixed order: ADR-2610112209 first, on its
+own text, then this record. This record approves only I10, and its hash
+names the text in force once both are accepted. Until ADR-2610112209 is
+accepted, this record cannot be.
 
 The stakeholder, @jeduden, approves this record as security reviewer
 (ENG-29) by a comment on the pull request that adds it. The comment
 names the record's id, the hash above and the commit it approves. The
 approval covers I10 and the requirements listed above as worded in that
 commit. Weakening any of them reopens this record under ENG-29. On that
-approval the record becomes accepted, and its hash replaces as the
-approved text that of
-[ADR-2610091555](ADR-2610091555-initial-invariants.md) or of
-ADR-2610112209, whichever is accepted last.
+approval the record becomes accepted, and its hash replaces
+ADR-2610112209's as the approved text, which in turn replaced
+[ADR-2610091555](ADR-2610091555-initial-invariants.md)'s.
 
 ### Security review
 
