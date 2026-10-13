@@ -18,7 +18,9 @@ mod engineering;
 mod engineering_adr;
 mod engineering_boundary;
 mod engineering_drift;
+mod engineering_protection;
 mod engineering_reach;
+mod engineering_release;
 mod engineering_review;
 
 use std::env;

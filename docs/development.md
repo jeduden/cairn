@@ -138,6 +138,27 @@ deterministic one, on the reviewed head, with `CI` green there;
 otherwise it requests changes.
 [ADR-2609301941](adr/ADR-2609301941-agent-review.md) records why.
 
+Main's protection is committed as a ruleset,
+[main.json](../.github/rulesets/main.json), in GitHub's export format
+(ENG-21). It allows no direct push and no bypass, requires signed
+commits, `CI` and one approval from a reviewer other than the author,
+and a code owner's approval where [CODEOWNERS](../.github/CODEOWNERS)
+names one. The ENG-21 gate tests read it, and CODEOWNERS: the
+stakeholder owns the requirement text and every path that enforces it,
+mapped from the classes the ENG-21 row names, and nothing else is owned
+but the decision records, the supply-chain policy and the
+security-sensitive crates. A ruleset is a setting on GitHub, so applying
+it is the stakeholder's act. The `protection` job in
+[nightly.yml](../.github/workflows/nightly.yml) fetches the live ruleset
+and runs `protection-check`, which fails when the live one is weaker
+than the committed one. GitHub shows a ruleset's bypass actors only to a
+caller with write access to it, so the workflow's token cannot see them.
+A ruleset also holds one approval count for the whole branch, and
+CODEOWNERS asks one owner per path, so neither can require two
+approvals for the security-sensitive crates alone. That part of ENG-21
+is open, and its scenario stays pending until a required check,
+`Security approvals`, enforces it.
+
 [release.yml](../.github/workflows/release.yml) runs from the Actions
 "Run workflow" button with a version like `v0.1.0`. A pushed tag is
 deliberately not the trigger: a failed build would leave a public tag
@@ -146,15 +167,27 @@ pointing at nothing. The workflow takes these steps:
 1. Validate the version and run the whole suite.
 2. Run the release build above, with the version stamped, and stop
    when any binary fails to report it.
-3. Generate an SPDX SBOM, attest build provenance and the SBOM, and
-   sign `checksums.txt` keylessly with cosign (ENG-20).
+3. Generate an SPDX SBOM, attest it to every binary, and sign
+   `checksums.txt` keylessly with cosign (ENG-20).
 4. Create the tag and publish the release, only now that everything
    above succeeded.
+5. Verify the release as published: a last `verify` job downloads the
+   release's own assets and checks the checksum bundle with
+   `cosign verify-blob`, then each binary with `gh attestation verify`,
+   for its build provenance and for its SBOM attestation (ENG-20).
 
-GitHub's build-provenance attestation meets SLSA Build Level 2. Level
-3 needs the build isolated in a reusable workflow; that step keeps
-ENG-20 pending. [SECURITY.md](../SECURITY.md) has the verification
-commands.
+The build provenance is attested in `build.yml`, not in the release
+workflow. The release workflow calls it with `attest: true` and grants
+the two permissions a signature needs (`id-token` and `attestations`
+write), which a caller must grant to what it calls. Its `attest` job
+runs no repository code: it downloads the binaries that were built and
+run, and attests them. The signer recorded in each attestation is
+therefore `build.yml`, isolated from the caller, which is what SLSA
+Build Level 3 asks of GitHub's artifact attestations. CI calls the same
+workflow without `attest`, so its builds attest nothing. The ENG-20
+scenario reads these workflows, since a checkout holds no release; the
+`verify` job is the check against a release that exists.
+[SECURITY.md](../SECURITY.md) has the verification commands.
 
 ## Review
 

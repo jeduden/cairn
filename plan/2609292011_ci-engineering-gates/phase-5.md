@@ -1,7 +1,7 @@
 ---
 n: 5
 title: "SLSA Build Level 3 provenance (ENG-20)"
-status: "🔲"
+status: "✅"
 result: false
 ---
 # Phase 5: sLSA Build Level 3 provenance (ENG-20)

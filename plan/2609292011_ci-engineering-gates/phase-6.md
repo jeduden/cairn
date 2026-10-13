@@ -1,7 +1,7 @@
 ---
 n: 6
 title: "Main's protection and CODEOWNERS (ENG-21)"
-status: "🔲"
+status: "🔳"
 result: false
 ---
 # Phase 6: main's protection and CODEOWNERS (ENG-21)

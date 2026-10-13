@@ -9,6 +9,22 @@ const TEST_STACK: &str = "docs/adr/ADR-2610101913-test-stack-after-go.md";
 /// The decision [`TEST_STACK`] superseded.
 const OLD_TEST_STACK: &str = "docs/adr/ADR-2610101442-rust-test-stack.md";
 
+/// The release workflow the ENG-20 cases drift.
+const RELEASE_WORKFLOW: &str = ".github/workflows/release.yml";
+
+/// The reusable build workflow the ENG-20 cases drift.
+const BUILD_WORKFLOW: &str = ".github/workflows/build.yml";
+
+/// The step the release workflow attests its SBOM with.
+const ATTEST_SBOM_STEP: &str =
+    "        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0\n";
+
+/// The ruleset for main the ENG-21 cases drift.
+const RULESET: &str = ".github/rulesets/main.json";
+
+/// The code owners the ENG-21 cases drift.
+const CODEOWNERS: &str = ".github/CODEOWNERS";
+
 /// The workflow the ENG-28 cases drift.
 const REVIEW_WORKFLOW: &str = ".github/workflows/review.yml";
 
@@ -33,6 +49,8 @@ pub fn cases() -> Vec<Case> {
         product_crate_cases(),
         confinement_cases(),
         static_analysis_cases(),
+        release_cases(),
+        protection_cases(),
     ]
     .concat()
 }
@@ -743,6 +761,217 @@ fn static_analysis_cases() -> Vec<Case> {
             ),
             check("derived_code_is_refused_a_clock_or_randomness_at_build_time"),
             "derived code may read a clock or randomness: crate cairn: crates/cairn/clippy.toml does not ban std::time::Instant::now in disallowed-methods",
+        ),
+    ]
+}
+
+/// The drifts ENG-20 exists to catch: provenance not signed by the
+/// reusable build workflow, a missing check of the published release,
+/// and an SBOM that is not attested.
+fn release_cases() -> Vec<Case> {
+    vec![
+        case(
+            "build provenance attested outside the reusable build workflow",
+            "ENG-20",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                ATTEST_SBOM_STEP,
+                "        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2\n        with:\n          subject-path: \"dist/cairn-*\"\n      - name: Attest the SBOM again\n        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0\n",
+            ),
+            scenario("ENG-20"),
+            "release.yml attests provenance outside the reusable build workflow, in job publish",
+        ),
+        case(
+            "the reusable build workflow no longer attesting provenance",
+            "ENG-20",
+            Injection::replace(
+                BUILD_WORKFLOW,
+                "uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2",
+                "uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1",
+            ),
+            scenario("ENG-20"),
+            "build.yml does not attest build provenance",
+        ),
+        case(
+            "the release workflow not asking the build workflow to attest",
+            "ENG-20",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "      attest: true\n",
+                "      attest: false\n",
+            ),
+            scenario("ENG-20"),
+            "calls the build workflow without attest: true",
+        ),
+        case(
+            "no job verifying the published release",
+            "ENG-20",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "  verify:\n    needs: publish\n",
+                "  verify:\n    needs: build\n",
+            ),
+            scenario("ENG-20"),
+            "no job verifies the published release after job publish",
+        ),
+        case(
+            "the published provenance not checked against the build workflow",
+            "ENG-20",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "--signer-workflow jeduden/cairn/.github/workflows/build.yml",
+                "--signer-workflow jeduden/cairn/.github/workflows/release.yml",
+            ),
+            scenario("ENG-20"),
+            "does not verify provenance with --repo jeduden/cairn --signer-workflow jeduden/cairn/.github/workflows/build.yml",
+        ),
+        case(
+            "the checksum bundle no longer verified",
+            "ENG-20",
+            Injection::replace(RELEASE_WORKFLOW, "cosign verify-blob", "cosign version"),
+            scenario("ENG-20"),
+            "does not run cosign verify-blob",
+        ),
+        case(
+            "the SBOM generated but not attested",
+            "ENG-20",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                ATTEST_SBOM_STEP,
+                "        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1\n",
+            ),
+            scenario("ENG-20"),
+            "release.yml does not attest the SBOM",
+        ),
+        case(
+            "the SBOM left off the release",
+            "ENG-20",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "cairn-* cairn.spdx.json checksums.txt checksums.txt.sigstore.json",
+                "cairn-* checksums.txt checksums.txt.sigstore.json",
+            ),
+            scenario("ENG-20"),
+            "the release does not attach the SBOM cairn.spdx.json",
+        ),
+        case(
+            "the SBOM attestation no longer verified",
+            "ENG-20",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                " --predicate-type https://spdx.dev/Document/v2.3",
+                "",
+            ),
+            scenario("ENG-20"),
+            "does not verify the SBOM attestation",
+        ),
+    ]
+}
+
+/// A case for ENG-21: its scenario stays pending, so each drift is
+/// caught by the gate test that reads the same records.
+fn protection_case(
+    name: &'static str,
+    injection: Injection,
+    test: &'static str,
+    want: &'static str,
+) -> Case {
+    case(
+        name,
+        "ENG-21",
+        injection,
+        cargo_test("engineering", "checkout", test),
+        want,
+    )
+}
+
+/// The drifts ENG-21 exists to catch: main's committed ruleset or
+/// CODEOWNERS weaker than the requirement says.
+fn protection_cases() -> Vec<Case> {
+    vec![
+        protection_case(
+            "commits no longer required to be signed",
+            Injection::replace(RULESET, "    { \"type\": \"required_signatures\" },\n", ""),
+            "the_checkout_s_ruleset_requires_signed_commits",
+            "the ruleset has no required_signatures rule",
+        ),
+        protection_case(
+            "an actor allowed to bypass the ruleset",
+            Injection::replace(
+                RULESET,
+                "\"bypass_actors\": [],",
+                "\"bypass_actors\": [{ \"actor_id\": 5, \"actor_type\": \"RepositoryRole\", \"bypass_mode\": \"always\" }],",
+            ),
+            "the_checkout_s_ruleset_rejects_direct_pushes",
+            "the ruleset lets an actor bypass it",
+        ),
+        protection_case(
+            "the ruleset no longer enforced",
+            Injection::replace(
+                RULESET,
+                "\"enforcement\": \"active\"",
+                "\"enforcement\": \"evaluate\"",
+            ),
+            "the_checkout_s_ruleset_rejects_direct_pushes",
+            "the ruleset's enforcement is not active",
+        ),
+        protection_case(
+            "no approval required",
+            Injection::replace(
+                RULESET,
+                "\"required_approving_review_count\": 1",
+                "\"required_approving_review_count\": 0",
+            ),
+            "the_checkout_s_ruleset_needs_an_approval_from_another_reviewer",
+            "the pull_request rule requires no approving review",
+        ),
+        protection_case(
+            "a code owner's approval no longer required",
+            Injection::replace(
+                RULESET,
+                "\"require_code_owner_review\": true",
+                "\"require_code_owner_review\": false",
+            ),
+            "the_checkout_s_ruleset_needs_an_approval_from_another_reviewer",
+            "the pull_request rule does not set require_code_owner_review",
+        ),
+        protection_case(
+            "the requirement text without the stakeholder",
+            Injection::replace(CODEOWNERS, "/docs/srs/                    @jeduden\n", ""),
+            "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
+            "docs/srs/ (`docs/srs/`) is owned by [], want @jeduden",
+        ),
+        protection_case(
+            "the agent instructions without the stakeholder",
+            Injection::replace(CODEOWNERS, "/CLAUDE.md                    @jeduden\n", ""),
+            "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
+            "CLAUDE.md (the agent instructions) is owned by [], want @jeduden",
+        ),
+        protection_case(
+            "an owner on a path outside the allowed classes",
+            Injection::replace(
+                CODEOWNERS,
+                "/SECURITY.md                  @jeduden\n",
+                "/SECURITY.md                  @jeduden\n/crates/cairn/src/            @jeduden\n",
+            ),
+            "the_checkout_s_codeowners_name_no_owner_on_any_other_path",
+            "/crates/cairn/src/ names an owner on a path outside the allowed classes",
+        ),
+        protection_case(
+            "a security-sensitive crate without the security reviewer",
+            Injection::replace(CODEOWNERS, "/crates/pin/                  @jeduden\n", ""),
+            "the_checkout_s_security_crates_belong_to_the_security_reviewer",
+            "crates/pin/ is not owned by @jeduden",
+        ),
+        protection_case(
+            "the nightly no longer comparing the live ruleset",
+            Injection::replace(
+                ".github/workflows/nightly.yml",
+                "protection-check -- --committed",
+                "protection-check -- --help",
+            ),
+            "the_checkout_s_nightly_compares_the_live_ruleset_with_the_committed_one",
+            "protection-check -- --committed .github/rulesets/main.json --live live.json",
         ),
     ]
 }

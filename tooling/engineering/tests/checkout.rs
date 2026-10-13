@@ -85,3 +85,103 @@ fn no_product_crate_keeps_mutable_global_state() {
 
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
+
+/// The workflows that publish a release sign its checksums keyless
+/// (ENG-20).
+#[test]
+fn the_checkout_s_release_signs_its_checksums_keyless() {
+    let release = engineering::release_provenance::load(&checkout()).unwrap_or_default();
+
+    assert_eq!(release.checksums_signed_keyless(), Vec::<String>::new());
+}
+
+/// The reusable build workflow attests the binaries' provenance, and
+/// the release workflow verifies what it published (ENG-20).
+#[test]
+fn the_checkout_s_release_attests_provenance_in_the_build_workflow() {
+    let release = engineering::release_provenance::load(&checkout()).unwrap_or_default();
+
+    assert_eq!(
+        release.provenance_from_the_build_workflow(),
+        Vec::<String>::new()
+    );
+}
+
+/// The release attaches and attests an SPDX SBOM (ENG-20).
+#[test]
+fn the_checkout_s_release_attaches_and_attests_an_sbom() {
+    let release = engineering::release_provenance::load(&checkout()).unwrap_or_default();
+
+    assert_eq!(release.sbom_attached_and_attested(), Vec::<String>::new());
+}
+
+fn ruleset() -> serde_json::Value {
+    engineering::branch_protection::load(&checkout()).unwrap_or_default()
+}
+
+/// The committed ruleset for main rejects direct pushes (ENG-21).
+#[test]
+fn the_checkout_s_ruleset_rejects_direct_pushes() {
+    let problems = engineering::branch_protection::direct_pushes_rejected(&ruleset());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// The committed ruleset requires signed commits (ENG-21).
+#[test]
+fn the_checkout_s_ruleset_requires_signed_commits() {
+    let problems = engineering::branch_protection::commits_signed(&ruleset());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// The committed ruleset needs an approval from another reviewer
+/// (ENG-21).
+#[test]
+fn the_checkout_s_ruleset_needs_an_approval_from_another_reviewer() {
+    let problems = engineering::branch_protection::approval_from_another_reviewer(&ruleset());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// CODEOWNERS names the stakeholder on the requirement text and on the
+/// paths that enforce it (ENG-21).
+#[test]
+fn the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths() {
+    let problems = engineering::codeowners::stakeholder_owns_the_enforcing_paths(&checkout());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// CODEOWNERS names no owner on any other path (ENG-21).
+#[test]
+fn the_checkout_s_codeowners_name_no_owner_on_any_other_path() {
+    let problems = engineering::codeowners::no_owner_on_any_other_path(&checkout());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// The security-sensitive crates are owned by the security reviewer
+/// before they exist (ENG-21).
+#[test]
+fn the_checkout_s_security_crates_belong_to_the_security_reviewer() {
+    let problems =
+        engineering::codeowners::security_crates_owned_by_the_security_reviewer(&checkout());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// The nightly workflow compares the live ruleset with the committed
+/// one (ENG-21).
+#[test]
+fn the_checkout_s_nightly_compares_the_live_ruleset_with_the_committed_one() {
+    let c = checkout();
+
+    assert_eq!(
+        c.contains(
+            ".github/workflows/nightly.yml",
+            "protection-check -- --committed .github/rulesets/main.json --live live.json"
+        ),
+        Ok(())
+    );
+}

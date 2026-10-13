@@ -182,7 +182,7 @@ Feature: Engineering quality (ENG)
     And the direct dependencies stay within the target the ENG-18 requirement states
     And "DEPENDENCIES.md" lists every ADR that names a module
 
-  @ENG-20 @P0 @pending
+  @ENG-20 @P0
   Scenario: release artifacts are signed and carry provenance and an SBOM
     Given a published release
     Then the checksum file verifies with its keyless Sigstore bundle
