@@ -6,8 +6,9 @@ summary: >-
   PRV-12 makes a node's device keys, or a token-key-only node's token
   keys, a hash-linked key event log whose keys commit to an offsite
   recovery key, closing OQ-52. A process that can append to the store
-  can no longer make its own writers `witnessed`. Proposed until the
-  security reviewer approves it (ENG-29).
+  but cannot use the device key or produce a presence proof can no
+  longer make its own writers `witnessed`. Proposed until the security
+  reviewer approves it (ENG-29).
 ---
 # ADR-2610122234: A node's keys form a key event log
 
@@ -29,7 +30,8 @@ this record:
 - A key lost and minted anew keeps the earlier writers `witnessed`;
   only the new key's writers wait.
 - A headless node can be confirmed from another device of its principal,
-  or by managed policy, without a terminal on the node.
+  or by a confirmation key managed policy names, without a terminal on
+  the node.
 - An unconfirmed log, a duplicity or a recovery key still on the node
   shows in the Needs you queue, Catch up and `cairn doctor`, not only in
   `cairn status`.
@@ -40,48 +42,54 @@ this record:
 ## Decision
 
 PRV-12 is added. Key events form a key event log in which each key
-commits, by digest, to a recovery key:
+commits, by digest, to a recovery key. The stakeholder's rulings of 13
+October 2026 on its review shape it:
 
 - **Inceptions and rotations.** An inception (`minted`,
-  `token key adopted`, `minted anew`) starts a log. A rotation
+  `token key adopted`, `minted anew`) starts a key event log. A rotation
   (`rotated`, `recovered`) carries the committed recovery key, is signed
   by it and names a freshly minted key, never the recovery key itself.
-- **The current log.** The genesis log is the one the device seat that
-  created the personal room started. The current key event log follows
-  it through its rotations and the inception that replaces its newest
-  key. "Current" and "newest" come from hash links, never from a clock
-  or arrival order.
-- **Counting a later log.** A log other than the genesis log certifies
-  no `witnessed` writer until one of these happens:
-  - a `recovered` rotation joins it;
-  - `cairn key-event-log confirm` names its inception, at the
-    controlling terminal or, once PRV-10 ships, from another device of
-    the principal;
-  - for a token key, the same issuing device key, or one its rotations
-    led to, made its token certificate;
-  - managed policy marks the node ephemeral.
-- **Lost keys.** A `minted anew` carries the chain head of the log it
-  replaces. Seat certificates whose certificate records lie at or before
-  that head keep counting, so earlier writers stay `witnessed`.
-- **Duplicity.** Two newest key events of one log, or two inceptions
-  replacing one key, stop `witnessed` after them. Only
-  `cairn key-event-log choose`, or a rotation that voids both inceptions,
-  resolves it.
-- **Robustness.** Confirm and choose take effect whatever their own
-  writer derives. Recording key events is serialized across a home's
-  processes. A locked key store is never a missing key.
-- **The recovery key.** `cairn recovery-key write`, a widening act at the
-  controlling terminal, writes it once, encrypted under a
-  passphrase-derived key or to a recipient key managed policy names, to
-  a new file outside every worktree and the Cairn home. Its principal act
-  never names the file.
-- **Surfacing.** While a log is unconfirmed, a duplicity stands or a
-  recovery key is on the node, `cairn doctor` exits non-zero, the Needs
-  you queue holds a Q2 item, Catch up lists the key events, and restore
-  blocks name each withheld pin with its reason.
+  "Current" and "newest" come from hash links, never from a clock or
+  arrival order.
+- **An inception counts only with proof.** Other than the genesis log's,
+  an inception replaces nothing and certifies no `witnessed` writer
+  until a `recovered` rotation joins it, a confirm names it, or, for a
+  token key, the same issuing device key made its token certificate.
+- **Confirm, choose and reject need a proof the forger lacks.** Each
+  counts only with an OWN-11 presence proof bound to its digest, or a
+  signature by a key that counts independently of the key event log it
+  names: the key it replaces, another device of the principal once
+  PRV-10 ships, or a confirmation key managed policy names. Each takes
+  effect whatever origin its own writer derives.
+- **Reject.** `cairn key-event-log reject`, a cut act, voids an
+  inception no confirm has counted. The principal sees, before any of
+  the three acts, which seat recorded the inception, whether the key it
+  replaces is still in the key store, and which pins would change.
+- **Lost keys keep their writers.** A key a counting inception replaced
+  stays a key of the node's own for its certificate records up to the
+  chain head that replaced it. A `minted anew` whose chain head is older
+  than a certificate record of the key it replaces is void and reported
+  as tampering.
+- **The recovery key comes from off the node when it can.** Where an
+  authenticator is enrolled or managed policy names a recipient key,
+  its public half comes from there and its private half never touches
+  the node. Otherwise `cairn recovery-key write` writes it once,
+  encrypted, and `cairn device-key rotate` writes the next one in the
+  same act. A token key's stays with the issuing node, which signs the
+  rotation a later access token carries.
+- **Robustness.** Checking for a missing key and recording a key event
+  happen under one lock, re-read under it, never past a hook's budget.
+  A locked key store is never a missing key.
+- **Surfacing, by milestone.** In M1, `cairn status`, `cairn verify` and
+  `cairn doctor` show an inception awaiting a confirm, a duplicity, a
+  void key event and a stalled key store, each counted. The Needs you
+  queue (reject offered before confirm), Catch up and restore blocks
+  that name withheld pins follow with VIEW-05, VIEW-08 and PIN-10.
 
-SEC-10, SEC-27, REC-24, PRV-01, PRV-13, ADM-06, ADM-07, PEER-06, the CLI
-table, ENG-29's list and the domain model follow. OQ-52 is closed.
+SEC-10, SEC-22, SEC-27, REC-19, REC-24, PRV-01, PRV-13, ADM-06, ADM-07,
+PEER-06, ENG-08, the CLI table, ENG-29's list and the domain model
+follow. OQ-52 is closed, and OQ-53 tracks a token-key node resumed
+without its issuing node.
 
 The stakeholder, `@jeduden`, is to approve this record as security
 reviewer (ENG-29) by a comment on the pull request that adds it, naming
@@ -93,48 +101,50 @@ Approval: pending.
 ### Security analysis (author)
 
 This is the author's analysis for the security reviewer, not the review
-itself. Each row names what must hold; the PRV-12 scenario, still
-`@pending`, is to prove it.
+itself. The attacker it assumes can append to the store but can neither
+use the device key nor produce a presence proof. The PRV-12 scenario,
+still `@pending`, is to prove each row.
 
-| Attack                                                           | What answers it                                                                  |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| a process forges a rotation to add its own key                   | a rotation needs the recovery key, which is off the node                         |
-| a process appends a `minted anew` to make its writers trusted    | a later log certifies no `witnessed` writer until confirmed or joined            |
-| the same forgery strips the principal's pins                     | earlier certificate records keep counting; withheld pins are named, never silent |
-| a node clone keeps its source's writers `witnessed`              | a node identity change starts a new log; the clone's keys are no longer its own  |
-| a retired or revoked key certifies new seats                     | certificate records count only at or before the chain head that replaced the key |
-| a peer or bundle delivers key events naming this node's key      | only key events this node recorded count                                         |
-| ten processes mint at once and cause a duplicity                 | recording key events is serialized across a home's processes                     |
-| a locked key store turns into a lost key                         | a locked store is never a missing key; appends wait at an ingest marker          |
-| the recovery key leaks into a backup, log or the model's context | its own key-store entry, never backed up or logged; written only at a terminal   |
+| Attack                                                          | What answers it                                                                    |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| forge a rotation to add one's own key                           | a rotation needs the recovery key, off the node where an authenticator gives it    |
+| append a `minted anew` and a confirm for it                     | the confirm needs a presence proof or an independent key, so it counts for nothing |
+| use the same forgery to strip the principal's pins              | an uncounted inception replaces nothing; earlier writers keep counting             |
+| backdate a `minted anew`'s chain head to demote later seats     | a chain head older than a certificate record of the replaced key voids it          |
+| keep a node clone's source writers `witnessed`                  | a node identity change starts a new key event log that counts only when confirmed  |
+| certify new seats with a retired or revoked key                 | certificate records count only up to the chain head that replaced or revoked it    |
+| deliver key events naming this node's key from a peer or bundle | only key events this node recorded count                                           |
+| cause a duplicity by starting ten processes at once             | the missing-key check and the key event are recorded under one lock                |
+| turn a locked key store into a lost key                         | a locked store is never a missing key; appends wait at an ingest marker            |
 
-What stays open: confirm and choose are widening principal acts. Where
-the principal or managed policy requires an authenticator, each carries
-a presence proof bound to its digest (OWN-11). Where none is required,
-a process that can write the home and use the device seat's key can
-forge one, as it can every widening act: residual risks R3 and R7
-(§6.1), which only a sandbox removes. Also open is the window before a
-recovery key leaves the node, which `cairn doctor` and the Needs you
-queue show.
+What stays open: a process that can use the device key or read the key
+store, residual risk R3 (§6.1). It can certify seats directly, and
+where the recovery key was minted on the node, read it until it leaves.
+An authenticator or a managed-policy recipient key closes the second.
+Only a sandbox closes the first.
 
 ## Alternatives
 
 - **Simple key events, as SEC-10 had them.** Any process that can append
   could add its own key (OQ-52).
-- **Demote every earlier writer after a lost key.** Strictest, but one
-  stray process or a locked key store would strip every agent's pins
-  until a person acts. The stakeholder rejected it.
-- **Confirm only at the node's own terminal.** Headless runners, cloud
-  sandboxes and home servers would never return to `witnessed`.
+- **Confirm at the terminal alone.** It leaves nothing in the record a
+  forger cannot also write.
+- **Demote every earlier writer after a lost key.** One stray process or
+  a locked key store would strip every agent's pins.
+- **Always mint the recovery key on the node.** It would sit beside the
+  device key after every rotation.
 - **Resolve duplicity by any new inception.** Anyone who can append
   could choose which side wins.
 
 ## Consequences
 
-- M1 keeps the device key's key event log, its certificate records and
-  its recovery key, and ships `cairn recovery-key write`,
-  `cairn key-event-log confirm` and `choose`.
-- M8 carries a token key's recovery key in its access token; PRV-10
-  brings confirmation from another device.
-- Restore blocks, the Needs you queue, Catch up and `cairn doctor` gain
-  the states PRV-12 names.
+- M1 ships the device key's key event log, its certificate records, its
+  recovery key, `cairn recovery-key write`, `cairn device-key rotate`
+  and `cairn key-event-log confirm|choose|reject`, surfaced through
+  `cairn status`, `cairn verify` and `cairn doctor`.
+- M3 brings the backup restore's `minted anew`, M8 token keys, and
+  PRV-10 confirmation from another device; VIEW-05, VIEW-08 and PIN-10
+  bring the Needs you, Catch up and restore-block clauses.
+- Property tests prove that arrival order never changes the key event
+  logs, and that key events no recovery key, presence proof or
+  independent key signed never add a `witnessed` writer (ENG-08).

@@ -130,6 +130,7 @@ errors and logs use the model's words.
 | presence check; unqualified token; Needs you as a run or room status; work marker | Replaced by presence proof, access token or model token, Asking, and ingest marker.                     | Nowhere else.                                                                                                            |
 | hide                                                                              | Removed by the stakeholder; say the UI does not show it.                                                | The cryptographic term "hiding commitment" (REC-17).                                                                     |
 | git carrier                                                                       | Removed by the stakeholder; peers exchange segments, and Cairn writes no room segments to a git remote. | Nowhere else.                                                                                                            |
+| next key; pre-rotation; fork or branch of a key event log                         | KERI's names; Cairn says recovery key, rotation and duplicity.                                          | Only in ADR-2610122234's citation of KERI and in research notes.                                                         |
 
 Every excluded term may still appear in **historical records**: the SRS change
 log, accepted ADRs and plan records, which keep the words of their time.

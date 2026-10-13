@@ -1031,7 +1031,7 @@
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "which only the key that certified the run seat it names, or the key a `rotated` key event names in its place (SEC-10), MAY certify"
+     "quote": "which only the key that certified the run seat it names, or the key a rotation names in its place (PRV-12), MAY certify"
     }
    ]
   },

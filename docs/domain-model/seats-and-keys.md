@@ -78,31 +78,36 @@ summary: >-
   (`rotated`, or `recovered` when the replaced key is missing), each signed by
   the recovery key the key event before it committed to and naming a freshly
   minted key. Unqualified, "rotation" means this; a seat key's is a seat-key
-  rotation, and an access token's or a log file's is always said of it. A
-  node's **genesis log** is the one the device seat that created its personal
-  room started; its **current key event log** is the genesis log followed
-  through its rotations and the inception that replaces its newest key. A
-  **key of this node's own** is a key of that log from its last such inception
-  on, or of a log a `recovered` rotation joined; only seats it certified, by a
-  counting certificate record, read `witnessed` (PRV-13). A log other than the
-  genesis log certifies no `witnessed` writer until the principal confirms it
-  or a `recovered` rotation joins it. Two newest key events of one log, or two
-  inceptions that replace one key, are a **duplicity**, which only the
-  principal's choice of the key event to keep, or a rotation that voids both
-  inceptions, resolves (PRV-12).
+  rotation, and an access token's or a log file's is always said of it; a bare
+  "log" is never a key event log. A node's **genesis log** is the key event log
+  the device seat that created its personal room started. An inception other
+  than the genesis log's counts only once the principal confirms it with a proof
+  a forger lacks, a `recovered` rotation joins it, or, for a token key, the same
+  issuing device key made its token certificate; until then it replaces
+  nothing, and the principal may reject it. The **current key event log** is
+  the genesis log followed through its rotations and the counting inception
+  that replaces its newest key. A **key of this node's own** is a key of that
+  key event log from its genesis inception, or the last inception after a node
+  identity change, on; a key it replaced, for its certificate records up to the
+  chain head that replaced it; or a key of a key event log a `recovered`
+  rotation joined. Only seats such a key certified read `witnessed` (PRV-13).
+  Two newest key events of one key event log, or two counting inceptions that
+  replace one key, are a **duplicity**, which only the principal's choice of the
+  key event to keep, a reject, or a rotation resolves (PRV-12).
 - **Recovery key**: The key each inception and rotation commits to by its
   public key's digest, which signs only the rotation that follows and never
-  becomes the new key. A device key's leaves the node once, encrypted, by
-  `cairn recovery-key write` to a file the principal keeps offsite; a token
-  key's stays with the node that issued its access token until a later access
-  token carries it or that access token ends (PRV-12).
+  becomes the new key. Where an authenticator or a managed-policy recipient key
+  supplies it, its private half never touches the node; otherwise a device
+  key's leaves the node once, encrypted, by `cairn recovery-key write`. A token
+  key's stays with the node that issued its access token, which signs the
+  rotation a later access token carries (PRV-12).
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room and naming its seat kind and whether it is an ingest
   seat, that the seat key countersigns (PRV-10, PRV-11). Its **certificate
   record**, the structural event holding its digest in the device seat that
-  recorded its log's newest key event, is needed for it to count for
-  `witnessed`, and counts only until a rotation or `minted anew` replaces its
-  key, or at or before the chain head that one carries (PRV-12). A node's **key
+  recorded its key event log's newest key event, is needed for it to count
+  for `witnessed`, and counts only at or before the chain head of any rotation,
+  counting `minted anew` or revocation of its key (PRV-12). A node's **key
   set** is the keys, certificates (a service-account certificate once
   countersigned), revocations, and recorded managed-policy listings and their
   removals it holds (I10), a listing only as Service account says.

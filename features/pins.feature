@@ -122,6 +122,7 @@ Feature: Pins (PIN)
     And the restore block includes no pin of "L4"
     And the restore block names "L1", "L2" and the personal room by id
     And a later run of the same agent, by the harness's stable agent id, with no seat in "L1" or "L2", gets the same pins of those rooms in its restore block
+    And a restore block names by id, with the reason class "key event log unconfirmed", every pin of the run's principal it withholds because its writer's seat key is a key no confirm has counted (PRV-12)
 
   @PIN-11 @P2 @I3 @I6 @pending
   Scenario Outline: a pin that qualifies on another of the principal's nodes but not here is stated by count and reason
