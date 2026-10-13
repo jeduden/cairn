@@ -44,7 +44,7 @@ Feature: Recall (RCL)
     When the agent calls the MCP tool "event_expand" with range "A1:1-400"
     Then the recall result is wrapped in the envelope
     And the items carry the exact post-redaction content with payload references resolved
-    And the envelope is at most 8,000 model tokens with "truncated" true and a "next_cursor"
+    And the envelope is at most 8,000 estimated model tokens with "truncated" true and a "next_cursor"
     And calling "event_expand" with that cursor returns the following events without gap or overlap
 
   @RCL-04 @P0 @I2 @pending
