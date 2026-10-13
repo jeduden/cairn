@@ -34,6 +34,18 @@ them, Cairn changes only harness configuration, under I7.
   the hooks through which it writes to an agent: `SessionStart`,
   `UserPromptSubmit` and `PermissionRequest`. Git's hooks are always qualified,
   as the commit hook.
+- **Attended mark**: The harness's mark, in each hook handler's environment,
+  that a harness session runs in the harness's own terminal interface, not in
+  print mode or the Agent SDK (Claude Code: `CLAUDE_CODE_SESSION_ATTENDED` set
+  to `1`, ASM-22). The harness sets it whatever started it; the MCP server gets
+  none of its own and inherits what started the harness, so only a hook handler
+  reads it. A `UserPromptSubmit` hook observation records it as a structural
+  field, which can only keep `user` untrusted, never make anything trusted
+  (PRV-04).
+- **Tool-use id**: The harness's id for one tool call, carried by the call's
+  transcript line and by its MCP call (Claude Code: `_meta`
+  `claudecode/toolUseId`). The MCP server finds the run that made a call only by
+  the transcript line carrying it (PRV-14).
 - **Turn**: One exchange between the harness and the model, from an input to the
   model reply that ends it. A **user turn** is the turn that text typed at the
   harness's own input starts (its prompt, or the terminal the launcher hosts): a
@@ -41,8 +53,9 @@ them, Cairn changes only harness configuration, under I7.
   `automation`. A line the launcher carried in starts no user turn: the launcher
   records the carried text's commitment as its **turn trigger** (what started a
   turn, LANE-14). Only that typed text is `user`, trusted only when matched to
-  the prompt commitment of the text a `UserPromptSubmit` hook got, while no run
-  on the node leaves R3 or R8 open (PRV-08). Other free text the harness writes
+  the prompt commitment of the text a `UserPromptSubmit` hook got and its hook
+  handler found the attended mark (PRV-04), while no run on the node leaves R3
+  or R8 open (PRV-08). Other free text the harness writes
   or adds to the model's input is `harness_text`, never `user` and never
   trusted, unless it is a turn's model reply, a tool result, a file's or an MCP
   server's text or a subagent's report (PRV-08, PRV-03).

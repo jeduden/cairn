@@ -4,6 +4,7 @@
 //! through the `harness-contract` checks. A version's `manifest.json`
 //! names its recordings by role.
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -11,7 +12,7 @@ use cucumber::{given, then, when};
 use engineering::outcome;
 use harness_contract::measured::{self, Measurement};
 use harness_contract::transcript_tree::{self, Tree};
-use harness_contract::{hook_input, recording, snapshot, text, transcript};
+use harness_contract::{hook_input, plugin, recording, snapshot, text, transcript};
 use serde_json::Value;
 
 use crate::World;
@@ -47,6 +48,17 @@ struct Version {
     timeouts: Value,
     cleanup: (Vec<measured::Aged>, Vec<measured::Aged>),
     cleanup_doc: Value,
+    /// The hook events the stub Cairn plugin registers, its name and its
+    /// MCP server's (S4).
+    registered: BTreeSet<String>,
+    plugin: (String, String),
+    /// The init message of one plugin target's harness session.
+    init: Value,
+    /// One plugin recording's directory, and the environment each of its
+    /// hook handlers and its MCP server saw (ASM-22).
+    target: PathBuf,
+    hook_envs: Vec<BTreeMap<String, String>>,
+    server_env: BTreeMap<String, String>,
 }
 
 impl Version {
@@ -931,5 +943,157 @@ fn thinking_is_signed_and_empty(w: &mut World) -> Result<(), String> {
             problems.push("no thinking block".into());
         }
         Ok(problems)
+    })
+}
+
+// ASM-07: the plugin on each target (S4).
+
+/// Reads the plugin target the manifest names at `key` into `v`: its
+/// hook inputs and init message.
+fn read_target(v: &mut Version, key: &str) -> Result<(), String> {
+    let target = v.path(key)?;
+    v.inputs = recording::files(&target.join("hooks"), ".json")?
+        .iter()
+        .map(|p| recording::json(p))
+        .collect::<Result<_, _>>()?;
+    let init = target.join("init.json");
+    v.init = if init.exists() {
+        recording::json(&init)?
+    } else {
+        Value::Null
+    };
+    Ok(())
+}
+
+#[given(
+    regex = r#"^the stub Cairn plugin recorded for Claude Code "([^"]+)", bundling Cairn's hooks and a stub MCP server$"#
+)]
+fn the_stub_plugin(w: &mut World, version: String) -> Result<(), String> {
+    open_versions(w, &version)?;
+    each(w, |v| {
+        let kit = v.path("plugin.kit")?;
+        v.registered = plugin::registered(&recording::json(&kit.join("hooks/hooks.json"))?)?;
+        let name = text(
+            &recording::json(&kit.join(".claude-plugin/plugin.json"))?,
+            "name",
+        )
+        .to_owned();
+        let servers = plugin::servers(&recording::json(&kit.join(".mcp.json"))?)?;
+        let problems = none_unless(servers.len() == 1, || {
+            format!("the plugin bundles {} MCP servers, not one", servers.len())
+        });
+        v.plugin = (name, servers.concat());
+        Ok(problems)
+    })
+}
+
+#[when(regex = r#"^it is installed on "([^"]+)"$"#)]
+fn installed_on(w: &mut World, target: String) -> Result<(), String> {
+    each(w, |v| {
+        read_target(v, &format!("plugin.targets.{target}"))?;
+        Ok(none_unless(!v.init.is_null(), || {
+            format!("{target}: no init message recorded")
+        }))
+    })
+}
+
+#[then(regex = r"^the recorded harness session shows every hook the stub plugin registers firing$")]
+fn every_registered_hook_fired(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        Ok(plugin::unfired(&v.registered, &plugin::fired(&v.inputs)))
+    })
+}
+
+#[then(regex = r"^the recorded harness session lists the stub plugin's MCP tools$")]
+fn lists_the_cairn_tools(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        let (name, server) = (v.plugin.0.as_str(), v.plugin.1.as_str());
+        let mut problems = none_unless(plugin::connected(&v.init, name, server), || {
+            format!("the MCP server {server} of plugin {name} is not connected")
+        });
+        if plugin::tools(&v.init, name, server).is_empty() {
+            problems.push(format!(
+                "no tool of the MCP server {server} of plugin {name}"
+            ));
+        }
+        Ok(problems)
+    })
+}
+
+// ASM-22: the harness's attended mark (S4).
+
+#[given(regex = r#"^the stub Cairn plugin's recording "([^"]+)" for Claude Code "([^"]+)"$"#)]
+fn a_plugin_recording(w: &mut World, recording: String, version: String) -> Result<(), String> {
+    open_versions(w, &version)?;
+    each(w, |v| {
+        let target = format!("plugin.targets.{recording}");
+        let key = if recording::named(&v.manifest, &target).is_ok() {
+            target
+        } else {
+            format!("plugin.{}", recording.replace('-', "_"))
+        };
+        v.target = v.path(&key)?;
+        Ok(Vec::new())
+    })
+}
+
+#[when(regex = r"^the environment its hook handlers and its MCP server saw is read$")]
+fn environments_are_read(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        v.hook_envs = recording::files(&v.target.join("hooks"), ".env")?
+            .iter()
+            .map(|p| {
+                fs::read_to_string(p)
+                    .map(|t| plugin::environment(&t))
+                    .map_err(|e| format!("read {}: {e}", p.display()))
+            })
+            .collect::<Result<_, _>>()?;
+        v.server_env = plugin::server_environment(&recording::lines(&v.target.join("mcp.jsonl"))?)?;
+        Ok(none_unless(!v.hook_envs.is_empty(), || {
+            "no hook handler's environment recorded".into()
+        }))
+    })
+}
+
+#[then(
+    regex = r#"^every hook handler saw "([^"]+)" set to "([^"]+)" and "([^"]+)" set to "([^"]+)"$"#
+)]
+fn every_hook_handler_saw(
+    w: &mut World,
+    first: String,
+    first_value: String,
+    second: String,
+    second_value: String,
+) -> Result<(), String> {
+    each(w, |v| {
+        let mut problems = Vec::new();
+        for (n, env) in v.hook_envs.iter().enumerate() {
+            for (name, want) in [(&first, &first_value), (&second, &second_value)] {
+                let got = plugin::value(env, name);
+                if got != Some(want.as_str()) {
+                    problems.push(format!(
+                        "hook handler {}: {name} is {got:?}, not {want:?}",
+                        n + 1
+                    ));
+                }
+            }
+        }
+        Ok(problems)
+    })
+}
+
+#[then(regex = r#"^the MCP server saw "([^"]+)" (unset|set to "([^"]+)")$"#)]
+fn the_mcp_server_saw(
+    w: &mut World,
+    name: String,
+    how: String,
+    want: String,
+) -> Result<(), String> {
+    let want = (how != "unset").then_some(want);
+    each(w, |v| {
+        let got = plugin::value(&v.server_env, &name);
+        Ok(none_unless(got == want.as_deref(), || {
+            format!("the MCP server's {name} is {got:?}, not {want:?}")
+        }))
     })
 }

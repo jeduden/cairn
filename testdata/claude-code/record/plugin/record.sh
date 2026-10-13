@@ -1,0 +1,121 @@
+#!/bin/sh
+# record.sh BASE SDK_DIR [TARGET...] — spike S4: install the stub Cairn plugin
+# on each target and record one harness session per target under BASE/<target>:
+#   workstation   `claude plugin marketplace add` and `claude plugin install`
+#   runner-image  a ~/.claude baked as an image build would: settings.json declares
+#                 the marketplace and enables the plugin; no install command
+#   sdk-worker    an Agent SDK worker loading the plugin by path
+#   interactive   the workstation install, driven through tmux (OQ-06)
+#   launch-key    the workstation install, started with a stand-in run-seat key
+#                 in the harness's environment, as a hand-over at launch would
+#                 put it (SEC-10); the prompt asks the model to print it (OQ-55)
+#   forged-env    the workstation install in print mode, started with
+#                 CLAUDE_CODE_SESSION_ATTENDED=1 and CLAUDE_CODE_ENTRYPOINT=cli
+#                 set, to see whether the harness keeps them (OQ-06)
+# Without TARGETs it records them all. BASE must be a scratch directory; every
+# target gets its own HOME inside it.
+set -eu
+BASE="${1:?scratch directory}"; SDK="${2:?directory holding the Agent SDK}"
+shift 2
+TARGETS="${*:-workstation runner-image sdk-worker interactive launch-key forged-env}"
+HERE=$(cd "$(dirname "$0")" && pwd)
+TOOL=mcp__plugin_cairn_cairn__event_search
+PROMPT="Do these steps in order. 1) Call the tool $TOOL with query \"alpha\". \
+2) Use the Agent tool to start one general-purpose subagent whose only job is to \
+call $TOOL with query \"beta\" and report its result. 3) Run the Bash command: \
+touch denied.txt 4) Reply with the word done."
+
+prepare() { # TARGET — a fresh HOME and work directory, and the marketplace
+  export REC_ROOT="$BASE/$1" REC_OUT="$BASE/$1/out"
+  rm -rf "$REC_ROOT"; mkdir -p "$REC_ROOT/home/.claude" "$REC_ROOT/w/ws" "$REC_OUT"
+  cp -r "$HERE" "$REC_ROOT/src"
+}
+
+print_mode() { # run the prompt in print mode, the stream to out/stream.jsonl
+  (cd "$REC_ROOT/w/ws" && timeout 300 "$REC_ROOT/src/run" -p "$PROMPT" \
+    --model sonnet --permission-mode default --output-format stream-json --verbose \
+    --allowedTools "$TOOL,Agent" </dev/null >"$REC_OUT/stream.jsonl" 2>"$REC_OUT/stderr")
+}
+
+install_plugin() { # the workstation install into the prepared HOME
+  "$REC_ROOT/src/run" plugin marketplace add "$REC_ROOT/src" >"$REC_OUT/install.txt"
+  "$REC_ROOT/src/run" plugin install cairn@cairn-s4 >>"$REC_OUT/install.txt"
+}
+
+workstation() {
+prepare workstation
+install_plugin
+"$REC_ROOT/src/run" plugin list >>"$REC_OUT/install.txt"
+print_mode
+}
+
+runner_image() {
+prepare runner-image
+cat >"$REC_ROOT/home/.claude/settings.json" <<JSON
+{
+  "extraKnownMarketplaces": {
+    "cairn-s4": { "source": { "source": "directory", "path": "$REC_ROOT/src" } }
+  },
+  "enabledPlugins": { "cairn@cairn-s4": true }
+}
+JSON
+print_mode
+}
+
+sdk_worker() {
+prepare sdk-worker
+(cd "$REC_ROOT/w/ws" && REC_BIN=node timeout 300 "$REC_ROOT/src/run" \
+  "$REC_ROOT/src/sdk-worker.mjs" "$SDK" "$REC_ROOT/src/cairn" "$PROMPT" \
+  </dev/null >"$REC_OUT/stream.jsonl" 2>"$REC_OUT/stderr")
+}
+
+interactive() {
+prepare interactive
+install_plugin
+python3 - "$REC_ROOT" <<'PY'  # skip the first-run screens and the trust dialog
+import json, os, sys
+root = sys.argv[1]; path = f"{root}/home/.claude/.claude.json"
+state = json.load(open(path)) if os.path.exists(path) else {}
+state.update(hasCompletedOnboarding=True, theme="dark")
+state.setdefault("projects", {})[f"{root}/w/ws"] = {
+    "hasTrustDialogAccepted": True, "hasCompletedProjectOnboarding": True}
+json.dump(state, open(path, "w"))
+PY
+T=cairn-s4-$$
+tmux new-session -d -s "$T" -x 200 -y 50 -c "$REC_ROOT/w/ws" \
+  "REC_ROOT='$REC_ROOT' REC_OUT='$REC_OUT' '$REC_ROOT/src/run' --model sonnet --permission-mode default --allowedTools '$TOOL'"
+sleep 10
+tmux send-keys -t "$T" -l "Call the tool $TOOL with query \"gamma\", then run the Bash command: touch denied.txt"
+sleep 1; tmux send-keys -t "$T" C-m      # C-m submits; a plain Enter does not
+sleep 30
+tmux send-keys -t "$T" Escape; sleep 2   # refuse the Bash permission prompt
+tmux capture-pane -p -t "$T" >"$REC_OUT/screen.txt"
+tmux send-keys -t "$T" -l "/exit"; sleep 1; tmux send-keys -t "$T" C-m; sleep 5
+tmux kill-session -t "$T" 2>/dev/null || true
+}
+
+launch_key() {
+prepare launch-key
+install_plugin
+key="S4-FAKE-LAUNCH-KEY-$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')"
+(cd "$REC_ROOT/w/ws" && REC_ENV="CAIRN_S4_RUN_KEY=$key" timeout 300 "$REC_ROOT/src/run" \
+  -p "Call the tool $TOOL with query \"delta\". Then run the Bash command: printenv CAIRN_S4_RUN_KEY and reply with its output." \
+  --model sonnet --permission-mode default --output-format stream-json --verbose \
+  --allowedTools "$TOOL,Bash(printenv:*)" </dev/null >"$REC_OUT/stream.jsonl" 2>"$REC_OUT/stderr")
+}
+
+forged_env() {
+prepare forged-env
+install_plugin
+(cd "$REC_ROOT/w/ws" && REC_ENV="CLAUDE_CODE_SESSION_ATTENDED=1 CLAUDE_CODE_ENTRYPOINT=cli" \
+  timeout 300 "$REC_ROOT/src/run" -p "Reply with the single word ok." --model sonnet \
+  --permission-mode default --output-format stream-json --verbose \
+  </dev/null >"$REC_OUT/stream.jsonl" 2>"$REC_OUT/stderr")
+}
+
+for t in $TARGETS; do
+  case "$t" in
+    workstation|runner-image|sdk-worker|interactive|launch-key|forged-env) "$(echo "$t" | tr - _)" ;;
+    *) echo "record.sh: unknown target $t" >&2; exit 2 ;;
+  esac
+done

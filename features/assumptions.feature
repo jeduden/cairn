@@ -98,12 +98,12 @@ Feature: Assumptions register (ASM)
       | the main agent's, while a background subagent ran, | SessionStart | "source" set to "compact" | no transcript of the harness session held the compaction's boundary when its hooks ran |
       | the main agent's, while a background subagent ran, | PostCompact  | "trigger" set to "auto"   | no transcript of the harness session held the compaction's boundary when its hooks ran |
 
-  @ASM-07 @pending
+  @ASM-07
   Scenario Outline: a plugin bundling hooks and an MCP server loads on each target (S4)
-    Given the Cairn plugin bundling its hook handlers and the "cairn mcp" server
+    Given the stub Cairn plugin recorded for Claude Code "supported", bundling Cairn's hooks and a stub MCP server
     When it is installed on "<target>"
-    Then the recorded harness session shows every hook Cairn registered firing
-    And the recorded harness session lists the Cairn MCP tools
+    Then the recorded harness session shows every hook the stub plugin registers firing
+    And the recorded harness session lists the stub plugin's MCP tools
 
     Examples:
       | target           |
@@ -112,11 +112,11 @@ Feature: Assumptions register (ASM)
       | Agent SDK worker |
 
   @ASM-08 @pending
-  Scenario: self-hosted runners seed ~/.claude into each harness session under one user account (S4)
+  Scenario: self-hosted runners seed ~/.claude into each harness session under one OS user (S4)
     Given a recorded self-hosted runner harness session for Claude Code "supported"
-    When the harness session's HOME directory and the user account of its process are inspected
+    When the harness session's HOME directory and the OS user of its process are inspected
     Then the harness session's "~/.claude/" was seeded from the runner host's "~/.claude/"
-    And every harness session on the runner ran as the same one user account
+    And every harness session on the runner ran as the same one OS user
 
   @ASM-09 @pending
   Scenario: whether a PreCompact hook exiting 2 blocks compaction is recorded (S6)
@@ -234,3 +234,17 @@ Feature: Assumptions register (ASM)
     Then one MCP server serves both runs and keeps the run-seat keys of the main run and the subagent's run
     And each key reached it through a channel the harness keeps out of the model's context
     And no transcript line, hook input or tool result of either run carries a private key
+
+  @ASM-22
+  Scenario Outline: the harness puts its attended mark only in its hook handlers' environment, and only in its own terminal interface (S4)
+    Given the stub Cairn plugin's recording "<recording>" for Claude Code "supported"
+    When the environment its hook handlers and its MCP server saw is read
+    Then every hook handler saw "CLAUDE_CODE_SESSION_ATTENDED" set to "<attended>" and "CLAUDE_CODE_ENTRYPOINT" set to "<entrypoint>"
+    And the MCP server saw "CLAUDE_CODE_SESSION_ATTENDED" <server>
+
+    Examples:
+      | recording        | attended | entrypoint | server       |
+      | interactive      | 1        | cli        | unset        |
+      | workstation      | 0        | sdk-cli    | unset        |
+      | Agent SDK worker | 0        | sdk-ts     | unset        |
+      | forged-env       | 0        | sdk-cli    | set to "1"   |

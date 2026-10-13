@@ -1,0 +1,5 @@
+{
+  "name": "cairn",
+  "version": "0.0.0-s4",
+  "description": "Spike S4 stub of the Cairn plugin: Cairn's three hooks and a stub MCP server"
+}

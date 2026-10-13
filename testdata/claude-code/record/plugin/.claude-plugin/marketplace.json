@@ -1,0 +1,11 @@
+{
+  "name": "cairn-s4",
+  "owner": { "name": "Cairn" },
+  "plugins": [
+    {
+      "name": "cairn",
+      "source": "./cairn",
+      "description": "Spike S4 stub of the Cairn plugin: Cairn's three hooks and a stub MCP server"
+    }
+  ]
+}

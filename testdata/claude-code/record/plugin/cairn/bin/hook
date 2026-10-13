@@ -1,0 +1,17 @@
+#!/bin/sh
+# hook EVENT — spike S4's stub of a Cairn hook handler: save the hook input and
+# what the handler's process sees under $REC_OUT/hooks, answer nothing, exit 0.
+ev="$1"; out="${REC_OUT:-/tmp/cairn-s4}/hooks"; mkdir -p "$out"
+f="$out/$(date +%s%N)-$ev"
+cat > "$f.json"
+{
+  printf 'pid=%s ppid=%s uid=%s\n' "$$" "$PPID" "$(id -u)"
+  printf 'harness_tty=%s\n' "$(ps -o tty= -p "$PPID" 2>/dev/null | tr -d ' ')"
+  for v in CLAUDE_CODE_ENTRYPOINT CLAUDE_CODE_SESSION_ATTENDED CLAUDE_CODE_CHILD_SESSION \
+    AI_AGENT CLAUDECODE CLAUDE_PLUGIN_ROOT CLAUDE_PLUGIN_DATA CLAUDE_PROJECT_DIR \
+    CLAUDE_CODE_SESSION_ID CLAUDE_ENV_FILE TERM; do
+    eval "printf '%s=%s\n' $v \"\${$v-<unset>}\""
+  done
+  printf 'names='; env | sed 's/=.*//' | sort | tr '\n' ' '; printf '\n'
+} > "$f.env"
+exit 0

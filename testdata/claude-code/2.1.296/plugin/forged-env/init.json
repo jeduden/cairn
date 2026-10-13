@@ -1,0 +1,64 @@
+{
+  "type": "system",
+  "subtype": "init",
+  "claude_code_version": "2.1.296",
+  "permissionMode": "default",
+  "tools": [
+    "Task",
+    "Bash",
+    "CronCreate",
+    "CronDelete",
+    "CronList",
+    "DesignSync",
+    "Edit",
+    "EnterWorktree",
+    "ExitWorktree",
+    "ListAgents",
+    "Monitor",
+    "NotebookEdit",
+    "PushNotification",
+    "Read",
+    "RemoteTrigger",
+    "ReportFindings",
+    "ScheduleWakeup",
+    "SendMessage",
+    "Skill",
+    "TaskStop",
+    "ToolSearch",
+    "WebFetch",
+    "WebSearch",
+    "Workflow",
+    "Write",
+    "mcp__plugin_cairn_cairn__event_search"
+  ],
+  "mcp_servers": [
+    {
+      "name": "plugin:cairn:cairn",
+      "status": "connected",
+      "source": "plugin"
+    }
+  ],
+  "plugins": [
+    {
+      "name": "cairn",
+      "path": "/opt/rec/plugin/cairn",
+      "source": "cairn@cairn-s4",
+      "version": "0.0.0-s4"
+    },
+    {
+      "name": "cc-plugin-agents-md",
+      "path": "builtin",
+      "source": "cc-plugin-agents-md@builtin"
+    },
+    {
+      "name": "cc-plugin-telemetry",
+      "path": "builtin",
+      "source": "cc-plugin-telemetry@builtin"
+    },
+    {
+      "name": "cc-plugin-plugin-authoring",
+      "path": "builtin",
+      "source": "cc-plugin-plugin-authoring@builtin"
+    }
+  ]
+}

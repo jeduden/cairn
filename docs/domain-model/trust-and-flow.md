@@ -9,10 +9,12 @@ summary: >-
 - **Trust level**: `trusted` or `untrusted`, per event for one principal's
   agents on one node, derived by the trust policy from the event's provenance,
   origin (as Origin derives it, PRV-13), recorder, writer
-  and recorded deployment mode, the node's key set, and that principal's stamps
-  and trust grants as its writer logs carry them (PRV-02, I10).
+  and recorded deployment mode, for `user` the attended mark its hook
+  observation recorded, the node's key set, and that principal's stamps and
+  trust grants as its writer logs carry them (PRV-02, PRV-04, I10).
 - **Trusted sources**: The sources I2 lists, whose events the trust policy
-  classifies as `trusted` (PRV-02), narrowed in a foreign room (RCL-10);
+  classifies as `trusted` (PRV-02), narrowed in a foreign room (RCL-10) and by a
+  missing attended mark (PRV-04);
   everything else is untrusted.
 - **Deployment mode**: `interactive` (a person types at the harness) or
   `automation` (a pipeline does, the default), set per node by managed policy

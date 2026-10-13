@@ -22,7 +22,8 @@ fn versions() -> Result<Vec<(PathBuf, Value)>, String> {
 }
 
 /// Every path a manifest names: its strings, except its version, the
-/// flow descriptions, the markers, and the probes' nonces and answers.
+/// flow descriptions, the notes, the markers, and the probes' nonces and
+/// answers.
 fn named_paths(manifest: &Value) -> Vec<String> {
     let mut out = Vec::new();
     collect(manifest, "", &mut out);
@@ -31,7 +32,7 @@ fn named_paths(manifest: &Value) -> Vec<String> {
 
 /// The manifest keys whose strings are not paths, matched as whole
 /// segments of a key's dotted path.
-const NOT_PATHS: [&str; 7] = [
+const NOT_PATHS: [&str; 8] = [
     "claude_code",
     "hook_flows",
     "markers",
@@ -39,6 +40,7 @@ const NOT_PATHS: [&str; 7] = [
     "answer",
     "answered_on",
     "sources",
+    "notes",
 ];
 
 fn collect(v: &Value, key: &str, out: &mut Vec<String>) {
