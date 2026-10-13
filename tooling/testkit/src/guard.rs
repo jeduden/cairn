@@ -4,9 +4,13 @@
 //! directory is real state, and resolving it aborts the process before
 //! a path to it exists.
 
+use std::env;
 use std::ffi::OsString;
-use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::fmt;
+use std::fs;
+use std::io::{self, Write};
+use std::path::{Component, Path, PathBuf};
+use std::process;
 
 /// Something a test must never reach for real.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -51,20 +55,97 @@ impl Place {
     /// The name a probe takes this place by.
     #[must_use]
     pub fn name(self) -> &'static str {
-        ""
+        match self {
+            Self::Home => "home",
+            Self::CairnHome => "cairn-home",
+            Self::ClaudeConfig => "claude-config",
+            Self::ClaudeJson => "claude-json",
+        }
     }
 
     /// The place a probe names, if any.
     #[must_use]
-    pub fn parse(_name: &str) -> Option<Self> {
-        None
+    pub fn parse(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|p| p.name() == name)
+    }
+
+    /// What the place is, as a refusal says it.
+    fn describe(self) -> &'static str {
+        match self {
+            Self::Home => "the home",
+            Self::CairnHome => "the Cairn home",
+            Self::ClaudeConfig => "Claude Code's configuration directory",
+            Self::ClaudeJson => "Claude Code's state file",
+        }
     }
 }
 
-impl std::fmt::Display for Refusal {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "")
+impl fmt::Display for Refusal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Unset => write!(f, "refusing to resolve a path: HOME is not set (ENG-14)"),
+            Self::Outside { place, path, temp } => write!(
+                f,
+                "refusing to resolve {} at {}: it is not under the temporary directory {}; \
+                 point HOME and CAIRN_HOME at a testkit::TempDir first (ENG-14)",
+                place.describe(),
+                path.display(),
+                temp.display()
+            ),
+        }
     }
+}
+
+/// Where `place` lies according to `var`, real or not.
+fn locate(place: Place, var: Var<'_>) -> Result<PathBuf, Refusal> {
+    let home = || var("HOME").map(PathBuf::from).ok_or(Refusal::Unset);
+    let config = || var("CLAUDE_CONFIG_DIR").map(PathBuf::from);
+    match place {
+        Place::Home => home(),
+        Place::CairnHome => match var("CAIRN_HOME") {
+            Some(cairn) => Ok(PathBuf::from(cairn)),
+            None => home().map(|h| h.join(".cairn")),
+        },
+        Place::ClaudeConfig => match config() {
+            Some(dir) => Ok(dir),
+            None => home().map(|h| h.join(".claude")),
+        },
+        Place::ClaudeJson => match config() {
+            Some(dir) => Ok(dir.join(".claude.json")),
+            None => home().map(|h| h.join(".claude.json")),
+        },
+    }
+}
+
+/// `path` with every symlink on its way resolved, as far as it exists:
+/// the rest follows as written.
+fn resolved(path: &Path) -> PathBuf {
+    let mut rest = Vec::new();
+    let mut base = path;
+    loop {
+        if let Ok(real) = fs::canonicalize(base) {
+            return rest.iter().rev().fold(real, |p, name| p.join(name));
+        }
+        match (base.parent(), base.file_name()) {
+            (Some(parent), Some(name)) => {
+                rest.push(name);
+                base = parent;
+            }
+            _ => return path.to_path_buf(),
+        }
+    }
+}
+
+/// Whether `path` lies strictly under `temp`, by where it really leads:
+/// absolute, with no `..`, and no symlink out.
+fn under(path: &Path, temp: &Path) -> bool {
+    let climbs = path.components().any(|c| c == Component::ParentDir);
+    if !path.is_absolute() || climbs {
+        return false;
+    }
+    let (path, temp) = (resolved(path), resolved(temp));
+
+    path != temp && path.starts_with(temp)
 }
 
 /// Resolves `place` from `var` and requires it to lie under `temp`.
@@ -72,26 +153,49 @@ impl std::fmt::Display for Refusal {
 /// # Errors
 ///
 /// Refuses a place that is real state, or has no home to resolve from.
-pub fn check(_place: Place, _var: Var<'_>, _temp: &Path) -> Result<PathBuf, Refusal> {
-    Ok(PathBuf::new())
+pub fn check(place: Place, var: Var<'_>, temp: &Path) -> Result<PathBuf, Refusal> {
+    let path = locate(place, var)?;
+    if under(&path, temp) {
+        Ok(path)
+    } else {
+        Err(Refusal::Outside {
+            place,
+            path,
+            temp: temp.to_path_buf(),
+        })
+    }
 }
 
 /// [`check`], and on a refusal writes it to `report` and calls `abort`.
 pub fn check_or_abort(
-    _place: Place,
-    _var: Var<'_>,
-    _temp: &Path,
-    _report: &mut dyn Write,
-    _abort: fn() -> !,
+    place: Place,
+    var: Var<'_>,
+    temp: &Path,
+    report: &mut dyn Write,
+    abort: fn() -> !,
 ) -> PathBuf {
-    PathBuf::new()
+    match check(place, var, temp) {
+        Ok(path) => path,
+        Err(refusal) => {
+            // The process is about to abort; a report that cannot be
+            // written changes nothing about that.
+            let _ = writeln!(report, "{refusal}");
+            abort()
+        }
+    }
 }
 
 /// Resolves `place` for this process, aborting it when the place is
 /// real state.
 #[must_use]
-pub fn resolve(_place: Place) -> PathBuf {
-    PathBuf::new()
+pub fn resolve(place: Place) -> PathBuf {
+    check_or_abort(
+        place,
+        &|name| env::var_os(name),
+        &env::temp_dir(),
+        &mut io::stderr(),
+        process::abort,
+    )
 }
 
 #[cfg(test)]
