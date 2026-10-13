@@ -17,7 +17,7 @@ for f in "$@"; do
     -e "s#$S/out#/opt/rec/out#g" \
     -e 's#[A-Za-z0-9._%+-]*@gmail\.com#user@example.com#g' \
     -e 's#"organizationUuid":"[0-9a-f-]*"#"organizationUuid":"00000000-0000-0000-0000-000000000000"#g' \
-    -e 's#Linux [0-9][0-9.]*+deb[0-9]*-amd64#Linux#g' \
+    -e 's#Linux [0-9][0-9.]*[-+][A-Za-z0-9._+-]*#Linux#g' \
     -e 's#/tmp/claude-[0-9]*/#/tmp/claude-u/#g' \
     -e 's#Google Calendar#Connector B#g; s#Google_Calendar#Connector_B#g' \
     -e 's#Google Drive#Connector C#g; s#Google_Drive#Connector_C#g' \
