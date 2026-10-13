@@ -1,7 +1,7 @@
 ---
 id: 2609292006
 title: "Spike S4: prove plugin distribution"
-status: "🔲"
+status: "✅"
 summary: >-
   Install a stub Cairn plugin on a workstation, a runner image and
   the Agent SDK, and check how runners seed ~/.claude.
@@ -17,19 +17,57 @@ names, so ADM-01 and NFR-12 rest on a working install.
 
 ## Context
 
-Resolves ASM-07 and ASM-08, and informs OQ-06.
+Resolves ASM-07, ASM-08 and ASM-21, and informs OQ-06.
 
 ## Tasks
 
-1. Package a plugin that registers a no-op hook and a stub MCP server
-2. Install it on a workstation, a self-hosted runner image and an Agent
-   SDK worker
-3. Check how the runner seeds `~/.claude` and which user it runs as
-4. Check whether interactive mode can be detected (OQ-06)
+1. [x] Package a plugin that registers a no-op hook and a stub MCP server
+2. [x] Install it on a workstation, a self-hosted runner image and an
+   Agent SDK worker
+3. [x] Check how the runner seeds `~/.claude` and which OS user it runs as
+4. [x] Check whether the `interactive` deployment mode can be detected
+   (OQ-06)
+
+## Outcome
+
+The [report](report.md) holds the observations. The stub plugin, its
+recorder and its exporter live in the `record/plugin` kit under
+[testdata/claude-code](../../testdata/claude-code/2.1.296/manifest.json);
+the fixtures, recorded from Claude Code 2.1.296 and Agent SDK 0.3.296
+in isolated `HOME` directories and redacted, under its `plugin` directory. The
+`harness-contract` crate reads them, and @ASM-07 and @ASM-21 replay
+them.
+
+- ASM-07 is verified: the plugin's hooks fired and its MCP tools were
+  listed on a workstation, on a `~/.claude` baked as a runner image would
+  bake it, with settings alone, and in an Agent SDK worker.
+- ASM-21 is verified: one MCP server served the main run and a
+  subagent, and the keys it minted reached no transcript, hook input or
+  tool result. A tool call names no run, so OQ-54 asks how the server
+  binds a call to its run.
+- ASM-08 is re-planned: no self-hosted runner was available.
+- OQ-06 has S4's findings and a recommendation; the stakeholder rules.
+
+Deviations from the tasks:
+
+- Task 1 registered §9.1's three hooks, not one, so every hook Cairn
+  installs is shown firing.
+- Task 2's runner image is a `~/.claude` baked with settings alone, as
+  an image build would bake it, not a self-hosted runner.
+- Task 3 could not run: S4 ran in Anthropic's cloud environment. ASM-08
+  waits for a recording on a self-hosted runner.
+- ASM-21 joined the spike from the delivery plan's S4 row.
+
+Handed on:
+
+- ASM-08: record a self-hosted runner before ADM-01 ships there.
+- OQ-54: the stakeholder picks how the MCP server binds a tool call to
+  its run, before LANE-24 ships.
 
 ## Acceptance Criteria
 
-- [ ] ASM-07 and ASM-08 marked verified or re-planned in the SRS
-- [ ] Scenarios @ASM-07 and @ASM-08 pass against recorded install
-  evidence
-- [ ] OQ-06 has an answer or a stated follow-up
+- [x] ASM-07 and ASM-08 marked verified or re-planned in the SRS
+- [x] Scenarios @ASM-07 and @ASM-08 pass against recorded install
+  evidence: @ASM-07 and @ASM-21 do; @ASM-08 stays `@pending` with
+  its re-plan
+- [x] OQ-06 has an answer or a stated follow-up
