@@ -31,6 +31,9 @@ SEC-11.
 4. Plugin distribution, install and uninstall, read-only doctor, and
    installed commands free of secrets and home paths: ADM-01 to ADM-03,
    ADM-10, ADM-17
+5. M2's initial targets (§12.3): answer OQ-56, then freeze PIN-03's
+   pin size, PIN-08's pin budget and INJ-07's restore block limit,
+   each with its evidence, removing its † and its §12.3 row
 
 ## Acceptance Criteria
 

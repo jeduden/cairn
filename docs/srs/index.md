@@ -89,8 +89,8 @@ summary: >-
 - **Verification method:** **T** = automated test; **I** = inspection or review;
   **A** = analysis or measurement; **D** = demonstration.
 - **Traces** link each requirement to the invariants (I1–I10) it serves.
-- Every numeric target marked † is an **initial target**, to be calibrated with
-  measurements during milestone M0 and then frozen.
+- A numeric target marked † is an **initial target**; §12.3 names what freezes
+  it.
 
 ## Sections
 
@@ -124,8 +124,8 @@ row: "- [{title}]({filename}) — {summary}"
 - [9.7 Room vocabulary](09b-lane-vocabulary.md) — The one vocabulary every surface uses (VIEW-14): run status and freshness, room status, evidence and proof classes, the Needs you order, integrity status, trust marks and the keymap. Part of §9.
 - [10. Engineering quality (ENG)](10-engineering-quality.md) — Engineering quality requirements ENG-01..29: code organisation, testing, static analysis, supply chain, and process.
 - [11. Verification and acceptance](11-verification-and-acceptance.md) — The evaluation plan with baselines and acceptance targets, and the definition of done for v1.0.
-- [12. Delivery plan](12-delivery-plan.md) — Milestone M0 spikes S1–S12 and milestones M1–M9 with their scope and exit criteria.
-- [13. Open questions and risks](13-open-questions-and-risks.md) — Open questions OQ-01..55 with their resolution path, and the risk register with mitigations.
+- [12. Delivery plan](12-delivery-plan.md) — Milestone M0 spikes S1–S13 and milestones M1–M9 with their scope and exit criteria; what freezes each initial target.
+- [13. Open questions and risks](13-open-questions-and-risks.md) — Open questions OQ-01..56 with their resolution path, and the risk register with mitigations.
 - [14. References](14-references.md) — The papers, issues, and standards the specification cites.
 - [Appendix A — Concern traceability](appendix-a-concern-traceability.md) — Every concern raised during research and review, mapped to the requirements that answer it.
 - [Appendix B — Invariant coverage](appendix-b-invariant-coverage.md) — Which requirements serve each invariant, generated from the Traces column of §5–§6, plus the requirement count by priority. A gate test keeps both in step with the tables.

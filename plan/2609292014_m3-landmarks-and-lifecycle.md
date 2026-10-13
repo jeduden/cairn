@@ -28,6 +28,9 @@ Milestone M3. Scope: LMK P0, ADM-06 to ADM-08 and SEC-14.
 3. Backup and restore: ADM-06
 4. Purge with tombstones and secure delete: ADM-07, SEC-14
 5. Rebuild: ADM-08
+6. M3's initial targets (§12.3): freeze LMK-03's field length,
+   LMK-05's tier size and REC-25's segments per day, each with its
+   evidence, removing its † and its §12.3 row
 
 ## Acceptance Criteria
 

@@ -90,9 +90,9 @@ Feature: Restore and injection (INJ)
   Scenario: a restore block over its total limit drops landmark detail deterministically
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "long-multi-tier"
-    And qualifying pins totalling 900 model tokens
+    And qualifying pins totalling 900 estimated model tokens
     When the hook "SessionStart" runs with source "compact"
-    Then the restore block is at most 2,000 model tokens
+    Then the restore block is at most 2,000 estimated model tokens
     And landmark detail is removed finest tier first, the coarsest tier last
     And every pin the PIN-08 rule admits is still present verbatim
     And with "restore_block.max_model_tokens" set to 300 in repository configuration, the restore block holds every pin the PIN-08 rule admits verbatim, names the omitted pins by id and count, holds no landmark detail, and an audit entry and a counter record it over its total limit
