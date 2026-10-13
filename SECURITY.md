@@ -41,15 +41,27 @@ minor releases get no fixes; upgrade to the latest.
 ## Verifying a release
 
 Each release attaches a `checksums.txt` signed keylessly with
-Sigstore, build provenance for every binary, and an SPDX SBOM. The
-release workflow notes carry the exact commands. In short:
+Sigstore, with its Sigstore bundle, build provenance for every binary,
+and an SPDX SBOM. A release runs only from `main`, so each signer is
+pinned to its exact workflow at `refs/heads/main`: the build provenance
+to `release-build.yml`, the checksums and the SBOM to `release.yml`. An
+attestation a branch made names that branch, and fails. In short:
 
 ```sh
-gh attestation verify cairn-linux-amd64 -R jeduden/cairn
+commit="$(gh api repos/jeduden/cairn/commits/v0.1.0 --jq .sha)"
+gh attestation verify cairn-linux-amd64 --repo jeduden/cairn \
+  --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \
+  --source-ref refs/heads/main --source-digest "$commit" \
+  --deny-self-hosted-runners
 cosign verify-blob --bundle checksums.txt.sigstore.json \
-  --certificate-identity-regexp \
-  '^https://github.com/jeduden/cairn/.github/workflows/release.yml@' \
+  --certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   checksums.txt
 sha256sum -c checksums.txt --ignore-missing
 ```
+
+Replace `v0.1.0` with the release's tag: `--source-digest` ties the
+provenance to the commit that tag names, so a binary attested from
+`main` at another commit fails. The SBOM attestation verifies the same
+way. Use the `release.yml` identity and
+`--predicate-type https://spdx.dev/Document/v2.3`.

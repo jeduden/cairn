@@ -9,6 +9,32 @@ const TEST_STACK: &str = "docs/adr/ADR-2610101913-test-stack-after-go.md";
 /// The decision [`TEST_STACK`] superseded.
 const OLD_TEST_STACK: &str = "docs/adr/ADR-2610101442-rust-test-stack.md";
 
+/// The release workflow the ENG-20 cases drift.
+const RELEASE_WORKFLOW: &str = ".github/workflows/release.yml";
+
+/// The release-only reusable workflow the ENG-20 cases drift.
+const RELEASE_BUILD_WORKFLOW: &str = ".github/workflows/release-build.yml";
+
+/// The reusable build workflow the ENG-20 cases drift.
+const BUILD_WORKFLOW: &str = ".github/workflows/build.yml";
+
+/// The CI workflow the ENG-20 cases drift.
+const CI_WORKFLOW: &str = ".github/workflows/ci.yml";
+
+/// The pinned action that attests build provenance.
+const ATTEST_PROVENANCE: &str =
+    "uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2";
+
+/// The step the release workflow attests its SBOM with.
+const ATTEST_SBOM_STEP: &str =
+    "        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0\n";
+
+/// The ruleset for main the ENG-21 cases drift.
+const RULESET: &str = ".github/rulesets/main.json";
+
+/// The code owners the ENG-21 cases drift.
+const CODEOWNERS: &str = ".github/CODEOWNERS";
+
 /// The workflow the ENG-28 cases drift.
 const REVIEW_WORKFLOW: &str = ".github/workflows/review.yml";
 
@@ -31,6 +57,13 @@ pub fn cases() -> Vec<Case> {
         ledger_cases(),
         reach_cases(),
         product_crate_cases(),
+        confinement_cases(),
+        static_analysis_cases(),
+        release_cases(),
+        protection_cases(),
+        architecture_cases(),
+        benchmark_cases(),
+        isolation_cases(),
     ]
     .concat()
 }
@@ -552,6 +585,57 @@ fn reach_cases() -> Vec<Case> {
     ]
 }
 
+/// The drifts ENG-02 exists to catch: a crate depending where its
+/// manifest's declared directions forbid, and a manifest leaving out a
+/// direction or a responsibility. The edits keep Cargo.lock as it is,
+/// so the checks run under `--locked`.
+fn architecture_cases() -> Vec<Case> {
+    const GATE: &str = "the_workspace_keeps_its_declared_directions";
+    let gate = || cargo_test("engineering", "checkout", GATE);
+    vec![
+        case(
+            "the core executable depending on a tooling crate",
+            "ENG-02",
+            Injection::replace(
+                "crates/cairn/Cargo.toml",
+                "[dev-dependencies]\nserde_json.workspace = true\ntestkit.workspace = true\n",
+                "[dependencies]\ntestkit.workspace = true\n\n[dev-dependencies]\nserde_json.workspace = true\n",
+            ),
+            scenario("ENG-02"),
+            "product crate cairn depends on tooling crate testkit, which a product crate never does",
+        ),
+        case(
+            "a tooling crate depending where its declared directions forbid",
+            GATE,
+            Injection::replace(
+                "tooling/adr/Cargo.toml",
+                "may-depend-on = [\"srs\"]",
+                "may-depend-on = []",
+            ),
+            gate(),
+            "crate adr depends on crate srs, which its declared directions forbid",
+        ),
+        case(
+            "a crate declaring no directions",
+            GATE,
+            Injection::replace("tooling/drift/Cargo.toml", "may-depend-on = []\n", ""),
+            gate(),
+            "crate drift declares no may-depend-on directions",
+        ),
+        case(
+            "a library crate declaring no responsibility",
+            "ENG-02",
+            Injection::replace(
+                "tooling/srs/Cargo.toml",
+                "responsibility = \"Reads the SRS requirement tables, appendices and personas for the gates\"\n",
+                "",
+            ),
+            scenario("ENG-02"),
+            "library crate srs declares no responsibility",
+        ),
+    ]
+}
+
 /// The drifts the product crates' bans exist to catch: a crate's
 /// clippy.toml dropping one (I4, I10), the core reading a clock or a
 /// random order (I10), and mutable global state (ENG-03).
@@ -612,6 +696,69 @@ fn product_crate_cases() -> Vec<Case> {
             "use of a disallowed type `std::collections::HashMap`",
         ),
         case(
+            "a product crate's clippy.toml dropping a deadline ban",
+            "the_product_crates_ban_every_wait_with_no_deadline",
+            Injection::replace(
+                "crates/cairn/clippy.toml",
+                "  { path = \"std::sync::mpsc::Receiver::recv\", reason = \"it waits with no deadline; use recv_timeout (ENG-03)\" },\n",
+                "",
+            ),
+            cargo_test(
+                "engineering",
+                "checkout",
+                "the_product_crates_ban_every_wait_with_no_deadline",
+            ),
+            "crates/cairn/clippy.toml does not ban std::sync::mpsc::Receiver::recv in disallowed-methods",
+        ),
+        case(
+            "a product crate's clippy.toml dropping the file lock's deadline ban",
+            "the_product_crates_ban_every_wait_with_no_deadline",
+            Injection::replace(
+                "crates/cairn/clippy.toml",
+                "  { path = \"std::fs::File::lock\", reason = \"it waits for another process with no deadline; poll try_lock up to a deadline (ENG-03)\" },\n",
+                "",
+            ),
+            cargo_test(
+                "engineering",
+                "checkout",
+                "the_product_crates_ban_every_wait_with_no_deadline",
+            ),
+            "crates/cairn/clippy.toml does not ban std::fs::File::lock in disallowed-methods",
+        ),
+        case(
+            "the core waiting on a channel with no deadline",
+            "ENG-03",
+            Injection::replace(
+                LIB,
+                AT,
+                "use std::io::Write;\n\npub fn wait(rx: &std::sync::mpsc::Receiver<u8>) -> Option<u8> {\n    rx.recv().ok()\n}",
+            ),
+            clippy("cairn"),
+            "use of a disallowed method `std::sync::mpsc::Receiver::recv`",
+        ),
+        case(
+            "the core joining a thread with no deadline",
+            "ENG-03",
+            Injection::replace(
+                LIB,
+                AT,
+                "use std::io::Write;\n\npub fn wait(h: std::thread::JoinHandle<()>) {\n    let _ = h.join();\n}",
+            ),
+            clippy("cairn"),
+            "use of a disallowed method `std::thread::JoinHandle::join`",
+        ),
+        case(
+            "the core reading standard input with no deadline",
+            "ENG-03",
+            Injection::replace(
+                LIB,
+                AT,
+                "use std::io::Write;\n\npub fn input() -> std::io::Stdin {\n    std::io::stdin()\n}",
+            ),
+            clippy("cairn"),
+            "use of a disallowed method `std::io::stdin`",
+        ),
+        case(
             "a product crate keeping mutable global state",
             "no_product_crate_keeps_mutable_global_state",
             Injection::replace(
@@ -625,6 +772,584 @@ fn product_crate_cases() -> Vec<Case> {
                 "no_product_crate_keeps_mutable_global_state",
             ),
             "crates/cairn/src/lib.rs:10: mutable global state: pub static SEQ",
+        ),
+    ]
+}
+
+/// The drifts ENG-12's core row exists to catch: the core started
+/// outside the end-to-end suite's confinement, and the core opening a
+/// socket, which the confined suite fails naming the core and the test.
+fn confinement_cases() -> Vec<Case> {
+    vec![
+        case(
+            "the core started outside the end-to-end suite's confinement",
+            "the_core_s_tests_start_it_confined",
+            Injection::replace(
+                "crates/cairn/tests/e2e_cairn.rs",
+                "use testkit::boundary::{Component, Confinement};",
+                "use testkit::boundary::{Component, Confinement};\n\nfn _unconfined() -> std::process::Command {\n    std::process::Command::new(env!(\"CARGO_BIN_EXE_cairn\"))\n}",
+            ),
+            cargo_test(
+                "engineering",
+                "confinement",
+                "the_core_s_tests_start_it_confined",
+            ),
+            "crates/cairn/tests/e2e_cairn.rs starts a component's executable outside the end-to-end suite's confinement (ENG-12)",
+        ),
+        case(
+            "the core opening a socket in the confined suite",
+            "ENG-12",
+            Injection::replace(
+                "crates/cairn/src/lib.rs",
+                "        Some(\"version\") => version(args, build, stdout, stderr),",
+                "        Some(\"version\") => {\n            let _ = std::net::UdpSocket::bind((\"127.0.0.1\", 0));\n            version(args, build, stdout, stderr)\n        }",
+            ),
+            cargo_test("cairn", "e2e_cairn", "version_prints_the_build_s_version"),
+            "ENG-12: the core opened a socket outside its boundary, which denies all network; started by version_prints_the_build_s_version",
+        ),
+    ]
+}
+
+/// The drifts ENG-16's core row exists to catch: CI no longer gating on
+/// a static check, a crate switching the unsafe ban off, and the core's
+/// reach evidence or the determinism bans going missing.
+fn static_analysis_cases() -> Vec<Case> {
+    const CI: &str = ".github/workflows/ci.yml";
+    const CLIPPY: &str = "crates/cairn/clippy.toml";
+    let check = |name| cargo_test("engineering", "static_analysis", name);
+    let gates = || check("the_ci_workflow_gates_on_the_static_checks");
+    let unsafe_ban = || check("every_crate_forbids_unsafe_code");
+    let reach = || check("the_core_s_reach_evidence_is_present_and_gated");
+    vec![
+        case(
+            "CI no longer running cargo-audit",
+            "the_ci_workflow_gates_on_the_static_checks",
+            Injection::replace(CI, "      - run: cargo audit\n", ""),
+            gates(),
+            "no CI job runs cargo-audit: cargo audit",
+        ),
+        case(
+            "a static check's job left out of the ci job",
+            "the_ci_workflow_gates_on_the_static_checks",
+            Injection::replace(CI, "coverage, lint, supply-chain", "coverage, supply-chain"),
+            gates(),
+            "job lint runs cargo fmt, but the ci job does not need it",
+        ),
+        case(
+            "a static check's job allowed to fail",
+            "the_ci_workflow_gates_on_the_static_checks",
+            Injection::replace(
+                CI,
+                "  lint:\n    runs-on: ubuntu-latest\n",
+                "  lint:\n    runs-on: ubuntu-latest\n    continue-on-error: true\n",
+            ),
+            gates(),
+            "job lint runs cargo fmt, but may fail without failing CI: continue-on-error",
+        ),
+        case(
+            "the ci job passing after a failed job",
+            "the_ci_workflow_gates_on_the_static_checks",
+            Injection::replace(CI, "    if: ${{ always() }}\n    needs: [", "    needs: ["),
+            gates(),
+            "the ci job does not run after a failed job",
+        ),
+        case(
+            "a crate no longer inheriting the workspace lints",
+            "every_crate_forbids_unsafe_code",
+            Injection::replace("crates/cairn/Cargo.toml", "[lints]\nworkspace = true\n", ""),
+            unsafe_ban(),
+            "crate crates/cairn neither inherits the workspace lints nor forbids unsafe code in src/lib.rs",
+        ),
+        case(
+            "the workspace lints no longer forbidding unsafe code",
+            "every_crate_forbids_unsafe_code",
+            Injection::replace(
+                "Cargo.toml",
+                "unsafe_code = \"forbid\"",
+                "unsafe_code = \"deny\"",
+            ),
+            unsafe_ban(),
+            "the workspace lints do not forbid unsafe_code",
+        ),
+        case(
+            "the core's reach test removed",
+            "the_core_s_reach_evidence_is_present_and_gated",
+            Injection::remove("crates/cairn/tests/reach.rs"),
+            reach(),
+            "the core's reach evidence is missing: read crates/cairn/tests/reach.rs",
+        ),
+        case(
+            "the core's clippy.toml no longer banning a program start",
+            "the_core_s_reach_evidence_is_present_and_gated",
+            Injection::replace(
+                CLIPPY,
+                "  { path = \"std::process::Command\", reason = \"the core starts no program but its kernel worker (SEC-01, CMP-05)\" },\n",
+                "",
+            ),
+            reach(),
+            "the core's reach evidence is missing: crates/cairn/clippy.toml does not ban std::process::Command",
+        ),
+        case(
+            "code that computes derived artifacts no longer refused the monotonic clock",
+            "derived_code_is_refused_a_clock_or_randomness_at_build_time",
+            Injection::replace(
+                CLIPPY,
+                "  { path = \"std::time::Instant::now\", reason = \"derived artifacts read no clock (I10)\" },\n",
+                "",
+            ),
+            check("derived_code_is_refused_a_clock_or_randomness_at_build_time"),
+            "code that computes derived artifacts may read a clock or randomness: crate cairn: crates/cairn/clippy.toml does not ban std::time::Instant::now in disallowed-methods",
+        ),
+    ]
+}
+
+/// A case for ENG-20 caught by the gate test that reads the same
+/// workflows as the scenario.
+fn release_case(
+    name: &'static str,
+    injection: Injection,
+    test: &'static str,
+    want: &'static str,
+) -> Case {
+    case(
+        name,
+        test,
+        injection,
+        cargo_test("engineering", "checkout", test),
+        want,
+    )
+}
+
+/// The gate test of ENG-20's keyless checksum signature.
+const CHECKSUMS_GATE: &str = "the_checkout_s_release_signs_its_checksums_keyless";
+
+/// The gate test of ENG-20's build provenance.
+const PROVENANCE_GATE: &str =
+    "the_checkout_s_release_attests_provenance_only_in_the_release_build_workflow";
+
+/// The gate test of ENG-20's SBOM.
+const SBOM_GATE: &str = "the_checkout_s_release_attaches_and_attests_an_sbom";
+
+/// The drifts ENG-20 exists to catch: provenance signed anywhere but
+/// the release-only reusable workflow, a signing permission granted to
+/// the build CI runs, a verification that accepts a signer at any ref,
+/// a missing check of the published release, and an SBOM that is not
+/// attested.
+fn release_cases() -> Vec<Case> {
+    [release_signer_cases(), release_verify_cases()].concat()
+}
+
+/// The ENG-20 drifts in who signs the build provenance, and with what.
+/// The first is caught by the scenario itself, the rest by the gate
+/// tests that read the same workflows.
+fn release_signer_cases() -> Vec<Case> {
+    vec![
+        case(
+            "ci.yml granting attestations to its build call",
+            "ENG-20",
+            Injection::replace(
+                CI_WORKFLOW,
+                "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n",
+                "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n      attestations: write\n",
+            ),
+            scenario("ENG-20"),
+            "ci.yml job build grants attestations: write to build.yml",
+        ),
+        release_case(
+            "build provenance attested outside the release build workflow",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                ATTEST_SBOM_STEP,
+                "        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2\n        with:\n          subject-path: \"dist/cairn-*\"\n      - name: Attest the SBOM again\n        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0\n",
+            ),
+            PROVENANCE_GATE,
+            "release.yml attests build provenance outside release-build.yml, in job publish",
+        ),
+        release_case(
+            "the build workflow CI runs attesting build provenance",
+            Injection::replace(
+                BUILD_WORKFLOW,
+                "        run: scripts/check-stamp.sh dist/cairn-windows-amd64.exe \"$VERSION\" \"$COMMIT\"\n",
+                "        run: scripts/check-stamp.sh dist/cairn-windows-amd64.exe \"$VERSION\" \"$COMMIT\"\n\n  attest:\n    needs: windows\n    runs-on: ubuntu-latest\n    permissions:\n      id-token: write\n      attestations: write\n    steps:\n      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2\n        with:\n          subject-path: \"dist/cairn-*\"\n",
+            ),
+            PROVENANCE_GATE,
+            "build.yml attests build provenance in job attest; only release-build.yml may",
+        ),
+        release_case(
+            "ci.yml granting id-token to its build call",
+            Injection::replace(
+                CI_WORKFLOW,
+                "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n",
+                "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n      id-token: write\n",
+            ),
+            PROVENANCE_GATE,
+            "ci.yml job build grants id-token: write to build.yml",
+        ),
+        release_case(
+            "the release build workflow no longer attesting provenance",
+            Injection::replace(
+                RELEASE_BUILD_WORKFLOW,
+                ATTEST_PROVENANCE,
+                "uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1",
+            ),
+            PROVENANCE_GATE,
+            "release-build.yml does not attest build provenance",
+        ),
+        release_case(
+            "the attest job checking out the repository's code",
+            Injection::replace(
+                RELEASE_BUILD_WORKFLOW,
+                "    steps:\n      - uses: actions/download-artifact@",
+                "    steps:\n      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1\n      - uses: actions/download-artifact@",
+            ),
+            PROVENANCE_GATE,
+            "release-build.yml job attest checks out the repository's code",
+        ),
+        release_case(
+            "the release building through build.yml directly",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "uses: ./.github/workflows/release-build.yml",
+                "uses: ./.github/workflows/build.yml",
+            ),
+            PROVENANCE_GATE,
+            "release.yml does not call release-build.yml",
+        ),
+        release_case(
+            "a release dispatched from any ref",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "if [ \"$GITHUB_REF\" != refs/heads/main ]; then",
+                "if false; then",
+            ),
+            PROVENANCE_GATE,
+            "release.yml builds without refusing a ref other than refs/heads/main",
+        ),
+    ]
+}
+
+/// The ENG-20 drifts in what the release publishes and how its verify
+/// job checks it.
+fn release_verify_cases() -> Vec<Case> {
+    vec![
+        release_case(
+            "no job verifying the published release",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "  verify:\n    needs: publish\n",
+                "  verify:\n    needs: build\n",
+            ),
+            PROVENANCE_GATE,
+            "no job verifies the published release after job publish",
+        ),
+        release_case(
+            "an unpinned verify: --signer-workflow without a ref",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "              --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \\\n              --source-ref refs/heads/main --source-digest \"$GITHUB_SHA\" \\\n",
+                "              --signer-workflow jeduden/cairn/.github/workflows/release-build.yml \\\n",
+            ),
+            PROVENANCE_GATE,
+            "job verify verifies an attestation with --signer-workflow, which pins no ref",
+        ),
+        release_case(
+            "the provenance verified against an identity at another ref",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "release-build.yml@refs/heads/main",
+                "release-build.yml@refs/heads/feature",
+            ),
+            PROVENANCE_GATE,
+            "job verify does not verify build provenance with --repo jeduden/cairn --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main --source-ref refs/heads/main --deny-self-hosted-runners",
+        ),
+        release_case(
+            "the checksum bundle no longer verified",
+            Injection::replace(RELEASE_WORKFLOW, "cosign verify-blob", "cosign version"),
+            CHECKSUMS_GATE,
+            "does not run cosign verify-blob",
+        ),
+        release_case(
+            "the checksum bundle verified at any ref",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "--certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
+                "--certificate-identity-regexp '^https://github.com/jeduden/cairn/.github/workflows/release.yml@'",
+            ),
+            CHECKSUMS_GATE,
+            "job verify does not pin the certificate identity to https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
+        ),
+        release_case(
+            "the SBOM generated but not attested",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                ATTEST_SBOM_STEP,
+                "        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1\n",
+            ),
+            SBOM_GATE,
+            "release.yml does not attest the SBOM",
+        ),
+        release_case(
+            "the SBOM left off the release",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "cairn-* cairn.spdx.json checksums.txt checksums.txt.sigstore.json",
+                "cairn-* checksums.txt checksums.txt.sigstore.json",
+            ),
+            SBOM_GATE,
+            "the release does not attach the SBOM cairn.spdx.json",
+        ),
+        release_case(
+            "the SBOM attestation no longer verified",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                " --predicate-type https://spdx.dev/Document/v2.3",
+                "",
+            ),
+            SBOM_GATE,
+            "does not verify the SBOM attestation",
+        ),
+    ]
+}
+
+/// A case for ENG-21: its scenario stays pending, so each drift is
+/// caught by the gate test that reads the same records.
+fn protection_case(
+    name: &'static str,
+    injection: Injection,
+    test: &'static str,
+    want: &'static str,
+) -> Case {
+    case(
+        name,
+        test,
+        injection,
+        cargo_test("engineering", "checkout", test),
+        want,
+    )
+}
+
+/// The drifts ENG-21 exists to catch: main's committed ruleset or
+/// CODEOWNERS weaker than the requirement says.
+fn protection_cases() -> Vec<Case> {
+    vec![
+        protection_case(
+            "commits no longer required to be signed",
+            Injection::replace(RULESET, "    { \"type\": \"required_signatures\" },\n", ""),
+            "the_checkout_s_ruleset_requires_signed_commits",
+            "the ruleset has no required_signatures rule",
+        ),
+        protection_case(
+            "an actor allowed to bypass the ruleset",
+            Injection::replace(
+                RULESET,
+                "\"bypass_actors\": [],",
+                "\"bypass_actors\": [{ \"actor_id\": 5, \"actor_type\": \"RepositoryRole\", \"bypass_mode\": \"always\" }],",
+            ),
+            "the_checkout_s_ruleset_rejects_direct_pushes",
+            "the ruleset lets a bypass actor bypass it",
+        ),
+        protection_case(
+            "the ruleset no longer enforced",
+            Injection::replace(
+                RULESET,
+                "\"enforcement\": \"active\"",
+                "\"enforcement\": \"evaluate\"",
+            ),
+            "the_checkout_s_ruleset_rejects_direct_pushes",
+            "the ruleset's enforcement is not active",
+        ),
+        protection_case(
+            "no approval required",
+            Injection::replace(
+                RULESET,
+                "\"required_approving_review_count\": 1",
+                "\"required_approving_review_count\": 0",
+            ),
+            "the_checkout_s_ruleset_needs_an_approval_from_another_reviewer",
+            "the pull_request rule requires no approving review",
+        ),
+        protection_case(
+            "a code owner's approval no longer required",
+            Injection::replace(
+                RULESET,
+                "\"require_code_owner_review\": true",
+                "\"require_code_owner_review\": false",
+            ),
+            "the_checkout_s_ruleset_needs_an_approval_from_another_reviewer",
+            "the pull_request rule does not set require_code_owner_review",
+        ),
+        protection_case(
+            "the requirement text without the stakeholder",
+            Injection::replace(CODEOWNERS, "/docs/srs/                    @jeduden\n", ""),
+            "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
+            "docs/srs/ (`docs/srs/`) is owned by [], want @jeduden",
+        ),
+        protection_case(
+            "the agent instructions without the stakeholder",
+            Injection::replace(CODEOWNERS, "/CLAUDE.md                    @jeduden\n", ""),
+            "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
+            "CLAUDE.md (the agent instructions) is owned by [], want @jeduden",
+        ),
+        protection_case(
+            "an owner on a path outside the allowed classes",
+            Injection::replace(
+                CODEOWNERS,
+                "/SECURITY.md                  @jeduden\n",
+                "/SECURITY.md                  @jeduden\n/crates/cairn/src/            @jeduden\n",
+            ),
+            "the_checkout_s_codeowners_name_no_owner_on_any_other_path",
+            "/crates/cairn/src/ names an owner on a path outside the allowed classes",
+        ),
+        protection_case(
+            "a security-sensitive crate without the security reviewer",
+            Injection::replace(CODEOWNERS, "/crates/pin/                  @jeduden\n", ""),
+            "the_checkout_s_security_crates_belong_to_the_security_reviewer",
+            "crates/pin/ is not owned by @jeduden",
+        ),
+        protection_case(
+            "the nightly no longer comparing the live ruleset",
+            Injection::replace(
+                ".github/workflows/nightly.yml",
+                "protection-check -- --committed",
+                "protection-check -- --help",
+            ),
+            "the_checkout_s_nightly_compares_the_live_ruleset_with_the_committed_one",
+            "protection-check -- --committed .github/rulesets/main.json --live live.json",
+        ),
+    ]
+}
+
+/// The drifts ENG-15's gate tests exist to catch while its scenario is
+/// pending: an NFR id ENG-15 names dropped from the benchmark suite's
+/// registry, and the benchmark job no longer gating CI.
+fn benchmark_cases() -> Vec<Case> {
+    const SUITE: &str = "tooling/benchmark/src/suite.rs";
+    const CI: &str = ".github/workflows/ci.yml";
+    const REGISTERED: &str = "the_benchmark_suite_registers_every_nfr_id_eng_15_names";
+    const GATED: &str = "ci_gates_on_the_benchmark_job";
+    vec![
+        case(
+            "an NFR id ENG-15 names dropped from the benchmark suite",
+            REGISTERED,
+            Injection::replace(
+                SUITE,
+                "requirement: \"NFR-04\",",
+                "requirement: \"NFR-40\",",
+            ),
+            cargo_test("engineering", "benchmark_gate", REGISTERED),
+            "NFR-04 has no benchmark of real code and is not declared awaiting one",
+        ),
+        case(
+            "the benchmark job no longer running the gate",
+            GATED,
+            Injection::replace(CI, "\"$head/benchmark\" gate --base", "true --base"),
+            cargo_test("engineering", "benchmark_gate", GATED),
+            "job benchmark does not run",
+        ),
+        case(
+            "the benchmark job left out of the CI aggregator",
+            GATED,
+            Injection::replace(CI, ", benchmark", ""),
+            cargo_test("engineering", "benchmark_gate", GATED),
+            "job ci does not need benchmark",
+        ),
+    ]
+}
+
+/// The drifts the isolation guard and the instruction scan exist to
+/// catch (ENG-14): the guard letting real state through, or refusing
+/// every place; a read of real state that bypasses it; and an agent
+/// instruction directing a destructive command at real state.
+fn isolation_cases() -> Vec<Case> {
+    const GUARD: &str = "tooling/testkit/src/guard.rs";
+    const UNDER: &str = "    path != temp && path.starts_with(temp)";
+    let reads = || {
+        cargo_test(
+            "engineering",
+            "isolation",
+            "only_the_isolation_guard_reads_the_home",
+        )
+    };
+    let instructions = || {
+        cargo_test(
+            "engineering",
+            "isolation",
+            "the_agent_instructions_direct_no_destructive_command_at_real_state",
+        )
+    };
+    vec![
+        case(
+            "the isolation guard letting real state through",
+            "ENG-14",
+            Injection::replace(GUARD, UNDER, "    let _ = (&path, &temp);\n    true"),
+            scenario("ENG-14"),
+            "resolved real state instead of aborting",
+        ),
+        case(
+            "the isolation guard refusing every place",
+            "ENG-14",
+            Injection::replace(GUARD, UNDER, "    let _ = (&path, &temp);\n    false"),
+            scenario("ENG-14"),
+            "refused an isolated place",
+        ),
+        case(
+            "a test helper reading real state around the guard",
+            "only_the_isolation_guard_reads_the_home",
+            Injection::replace(
+                "tooling/testkit/src/lib.rs",
+                "/// The repository checkout the tests inspect",
+                "pub fn real_home() -> Option<OsString> {\n    std::env::var_os(\"HOME\")\n}\n\n/// The repository checkout the tests inspect",
+            ),
+            reads(),
+            "reads real state outside testkit::guard",
+        ),
+        case(
+            "CI running the suite with the real `HOME`",
+            "the_ci_test_job_runs_with_a_decoy_home",
+            Injection::replace(
+                ".github/workflows/ci.yml",
+                "HOME=\"$decoy\" cargo test --workspace --locked",
+                "cargo test --workspace --locked",
+            ),
+            cargo_test(
+                "engineering",
+                "isolation",
+                "the_ci_test_job_runs_with_a_decoy_home",
+            ),
+            ".github/workflows/ci.yml does not contain",
+        ),
+        case(
+            "the instructions no longer forbidding a command at real state",
+            "ENG-14",
+            Injection::replace(
+                "CLAUDE.md",
+                "Never run a command that writes to, deletes from, or purges the real `~/.cairn`,",
+                "Run a command that writes to, deletes from, or purges the real `~/.cairn`,",
+            ),
+            scenario("ENG-14"),
+            "CLAUDE.md:",
+        ),
+        case(
+            "a skill telling agents to delete the real Cairn home",
+            "the_agent_instructions_direct_no_destructive_command_at_real_state",
+            Injection::replace(
+                ".claude/skills/plan-tidy/SKILL.md",
+                "## Read the mess\n",
+                "## Read the mess\n\n```sh\nrm -rf ~/.cairn\n```\n",
+            ),
+            instructions(),
+            ".claude/skills/plan-tidy/SKILL.md:",
+        ),
+        case(
+            "a hook in the settings clearing Claude Code's configuration",
+            "ENG-14",
+            Injection::replace(
+                ".claude/settings.json",
+                "  \"enabledPlugins\": {",
+                "  \"hooks\": {\"Stop\": [{\"command\": \"rm -rf ~/.claude/projects\"}]},\n  \"enabledPlugins\": {",
+            ),
+            scenario("ENG-14"),
+            ".claude/settings.json:",
         ),
     ]
 }

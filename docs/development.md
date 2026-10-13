@@ -29,6 +29,10 @@ installs it on the first `cargo` command.
   gate` — the gates alone
 - `cargo run -p coverage` — line coverage per test layer and per crate,
   held to the floors (see [testing.md](testing.md))
+- `cargo build --release -p cairn && cargo run --release -p benchmark
+  -- run --core target/release/cairn` — sample the benchmark suite;
+  `cargo run -p benchmark -- gate --base FILE --head FILE` decides
+  from two samples files (ENG-15, see [testing.md](testing.md))
 - `cargo fmt --all --check` and `cargo clippy --workspace --all-targets
   -- -D warnings` — layout and lint (ENG-16)
 - `cargo deny check licenses bans sources` and `cargo audit` — the
@@ -46,13 +50,80 @@ with every warning denied, and rustfmt.
 license allow-list, each exception named, and to crates.io as the
 only source. cargo-audit refuses a crate with a known vulnerability.
 
+Crates may only depend on the crates they declare (ENG-02). Each
+crate's `Cargo.toml` holds a `cairn` metadata table with three keys:
+
+- `responsibility`: the one thing the library crate does.
+- `may-depend-on`: the workspace crates it may depend on, an empty
+  list included.
+- `may-dev-depend-on`: the workspace crates its tests may depend on.
+
+The architecture check (`engineering::architecture`) reads every
+workspace manifest through `cargo metadata`. It fails naming both
+crates when a dependency is not declared, and when a declaration names
+a crate that is no workspace member. It also fails when a library
+crate declares no responsibility or several, or when two crates
+declare the same one. The tooling crates fall under the same table.
+
+One rule needs no declaration. A product crate under `crates/` never
+depends on a tooling crate under `tooling/` as a normal or build
+dependency; only its tests may, as declared. The manifests are the
+stakeholder's paths in CODEOWNERS, so changing a direction waits for
+the stakeholder. The browser room view client, a TypeScript package,
+does not exist yet (M7); its dependency boundary joins this check
+when it lands.
+
 The core executable's reach is held two ways (SEC-01, ENG-16). Its
 own [clippy.toml](../crates/cairn/clippy.toml) refuses the
 `std::net` socket types and `std::process::Command` in its code, and
 [its reach test](../crates/cairn/tests/reach.rs) refuses any crate
 linked into it, so neither can arrive through a dependency. Both are
-the build-time half of SEC-01; the network-deny sandbox half is
-ENG-12, still pending.
+the build-time half of SEC-01. With unsafe code forbidden, the core's
+own code cannot add code that runs as the process starts either.
+
+The gate tests in the `engineering` crate's `static_analysis` target
+hold this in place. CI gates on clippy, rustfmt, cargo-deny,
+cargo-audit and `cargo test --workspace`. Each runs in a job the `CI`
+job needs, and none may fail. Every workspace crate inherits the
+workspace's lints (`[lints] workspace = true`), or forbids unsafe code
+in its own crate roots. The core's bans and reach test are in place.
+Every product crate's clippy.toml refuses the clocks and the random
+order of the hash collections. These checks are ENG-16's core row,
+each with its drift case. The ENG-16 scenario stays pending until the
+browser room view client (M7), the other components (M7 to M9) and
+TrustedText (plan 2609292013) land.
+
+The run-time half is ENG-12's core row. Every end-to-end test of the
+core starts it through the testkit's `boundary` confinement: in a
+user and network namespace of its own (`unshare --map-current-user
+--net`), under `strace -f`, which fails every `socket`, `socketpair`
+and `io_uring_setup` with `EACCES` and records every network call.
+Any recorded call fails the test, naming the core and the test that
+started it. The gate test `the_core_s_tests_start_it_confined` refuses
+a test that starts the core any other way. It needs Linux, `unshare`
+from util-linux with unprivileged user namespaces, and `strace`; a
+machine without them fails the end-to-end tests with what is missing.
+Outside CI, `CAIRN_E2E_UNCONFINED=1` runs them unconfined instead, on
+a machine that cannot confine; CI refuses it.
+
+The same clippy.toml holds the rest of ENG-03 in the product crates.
+It bans the clocks and the hash collections, so derived artifacts
+read no wall clock and no random order (I10). It also bans each
+blocking call that waits with no deadline, and names the form that
+takes one: `recv` for `recv_timeout`, `Child::wait` for polling
+`try_wait`, `File::lock` for `try_lock`, and so on. A thread join,
+a read of standard input and a wait on a condition variable or a
+barrier are on the list too. A call site that has to block says so
+with an `expect` and a reason, which review reads.
+
+Local file reads and writes are not on that list. The disk bounds
+them, and the hook's time budget (I9) covers them. Nor are
+`std::thread::sleep`, which carries its own bound, and the in-process
+`Mutex` and `RwLock`. The engineering gate test
+`the_product_crates_keep_their_bans` requires every product crate's
+clippy.toml to carry every ban. The ENG-03 scenario reads the same
+bans, and stays `@pending` until the stakeholder rules on what the
+list exempts.
 
 ## CI, nightly and release
 
@@ -61,20 +132,25 @@ to a commit SHA with its version in a trailing comment, and dependabot
 proposes the bumps after a seven-day cooldown.
 
 [ci.yml](../.github/workflows/ci.yml) runs on every push and pull
-request to `main`. It runs every test and scenario, clippy and
-rustfmt, cargo-deny and cargo-audit, and the drift suite, and the
-release build of every target (NFR-10, CON-02). It also runs
-`mdsmith check .` and zizmor over the workflows themselves. A final
+request to `main`. It runs every test and scenario, with `HOME`
+pointed at an empty decoy that must stay empty (ENG-14), the core's
+end-to-end tests confined (ENG-12), clippy and rustfmt, cargo-deny and
+cargo-audit, the drift suite, the benchmark gate, and the release build
+of every target (NFR-10, CON-02). It also runs `mdsmith check .` and
+zizmor over the workflows themselves. A final
 job named `CI` passes only when every other job passed. It is the one
 check the branch and release-tag rulesets require, because GitHub
 names a required check after a job, never after the workflow.
 
+The `benchmark` job (ENG-15) is described in
+[testing.md](testing.md#benchmarks-and-the-regression-gate).
+
 [nightly.yml](../.github/workflows/nightly.yml) is where
 cargo-fuzz runs every target under `fuzz/` (ENG-07). There are none
 yet; the job fails the night a `fuzz/` crate appears until the plan
-that adds it pins the nightly and the run. The crash-consistency test
-(ENG-06), the concurrency soak (ENG-09) and the live Claude Code
-contract test (ENG-17) join it as their plans land.
+that adds it pins the nightly and adds the cargo-fuzz step. The
+crash-consistency test (ENG-06), the concurrency soak (ENG-09) and the
+live Claude Code contract test (ENG-17) join it as their plans land.
 
 [build.yml](../.github/workflows/build.yml) is the release build.
 CI runs it on every change, and the release workflow runs it too. One
@@ -112,23 +188,56 @@ deterministic one, on the reviewed head, with `CI` green there;
 otherwise it requests changes.
 [ADR-2609301941](adr/ADR-2609301941-agent-review.md) records why.
 
-[release.yml](../.github/workflows/release.yml) runs from the Actions
-"Run workflow" button with a version like `v0.1.0`. A pushed tag is
-deliberately not the trigger: a failed build would leave a public tag
-pointing at nothing. The workflow takes these steps:
+Main's protection is committed as a ruleset,
+[main.json](../.github/rulesets/main.json), in GitHub's export format
+(ENG-21). It allows no direct push and no bypass, requires signed
+commits, `CI` and one approval from a reviewer other than the author,
+and a code owner's approval where [CODEOWNERS](../.github/CODEOWNERS)
+names one. The ENG-21 gate tests read it, and CODEOWNERS: the
+stakeholder owns the requirement text and every path that enforces it,
+mapped from the classes the ENG-21 row names, and nothing else is owned
+but the decision records, the supply-chain policy and the
+security-sensitive crates. A ruleset is a setting on GitHub. The
+stakeholder applies the committed ruleset. The `protection` job in
+[nightly.yml](../.github/workflows/nightly.yml) fetches the live ruleset
+and runs `protection-check`, which fails when the live one is weaker
+than the committed one. GitHub shows a ruleset's bypass actors only to a
+caller with write access to it, so the workflow's token cannot see them.
+A ruleset also holds one approval count for the whole branch, and
+CODEOWNERS asks one owner per path, so neither can require two
+approvals for the security-sensitive crates alone. That part of ENG-21
+is open, and its scenario stays pending until a required check,
+`Security approvals`, enforces it.
 
-1. Validate the version and run the whole suite.
+[release.yml](../.github/workflows/release.yml) runs from the Actions
+"Run workflow" button on `main`, with a version like `v0.1.0`. A pushed
+tag is deliberately not the trigger: a failed build would leave a
+public tag pointing at nothing. The workflow takes these steps:
+
+1. Validate the version, refuse any ref but `main`, run the suite.
 2. Run the release build above, with the version stamped, and stop
-   when any binary fails to report it.
-3. Generate an SPDX SBOM, attest build provenance and the SBOM, and
-   sign `checksums.txt` keylessly with cosign (ENG-20).
+   when any binary fails to report it; then attest its provenance.
+3. Generate an SPDX SBOM, attest it to every binary, and sign
+   `checksums.txt` keylessly with cosign (ENG-20).
 4. Create the tag and publish the release, only now that everything
    above succeeded.
+5. Verify the release as published: a last `verify` job downloads the
+   release's own assets and checks the checksum bundle with
+   `cosign verify-blob`, then each binary with `gh attestation verify`,
+   for its provenance and its SBOM attestation (ENG-20).
 
-GitHub's build-provenance attestation meets SLSA Build Level 2. Level
-3 needs the build isolated in a reusable workflow; that step keeps
-ENG-20 pending. [SECURITY.md](../SECURITY.md) has the verification
-commands.
+Only the release calls
+[release-build.yml](../.github/workflows/release-build.yml). It calls
+`build.yml` and grants it nothing. Its `attest` job alone holds
+`id-token` and `attestations` write; it runs no repository code and
+attests the binaries. CI's call of `build.yml` holds neither. A
+certificate names its workflow at the dispatched ref, and any branch
+can be that ref. So `verify` pins each signer's exact `--cert-identity`
+at `refs/heads/main`, with `--source-ref` and
+`--deny-self-hosted-runners`. The tag cannot be that ref: the release
+creates it last. The ENG-20 gate tests read these workflows. Its
+scenario stays `@pending` until the stakeholder rules, as a checkout
+holds no release. [SECURITY.md](../SECURITY.md) has the commands.
 
 ## Review
 
@@ -144,10 +253,14 @@ What CI decides, on every pull request:
 - dependencies and their ADRs (ENG-18) and the decision records
   (ENG-26);
 - rustfmt and clippy, with each product crate's bans on sockets and
-  program starts (I4) and on clocks and hash order (I10), and the
+  program starts (I4), on clocks and hash order (I10) and on waits with
+  no deadline (ENG-03), and the
   reach test;
+- the crates' declared dependency directions and responsibilities
+  (ENG-02);
 - no mutable global state in a product crate (ENG-03);
-- coverage per test layer (ENG-11), and every live scenario.
+- coverage per test layer (ENG-11), and every live scenario;
+- the benchmark gate (ENG-15).
 
 What `review-bundle` decides, comparing the pull request with main:
 
@@ -179,7 +292,8 @@ new reach (I4), content of another principal (I8), errors and seams
 no lint sees, and the domain model's terms. Persona reviews belong to
 plans and SRS changes (the `persona-review` skill), not to each pull
 request. The nightly job takes what is too slow for a pull request:
-fuzzing, crash consistency, soak and benchmarks, as their plans land.
+fuzzing, crash consistency, soak and slow benchmarks, as their plans
+land.
 
 ## The plan catalog and its merge driver
 

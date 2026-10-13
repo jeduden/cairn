@@ -13,3 +13,11 @@ testkit.workspace = true
 
 [lints]
 workspace = true
+
+# ENG-02: the one thing this crate does, and the workspace crates it may
+# depend on (a product crate never depends on tooling, tests aside). The
+# architecture check reads both.
+[package.metadata.cairn]
+responsibility = "Runs the core executable: the hook handlers, the MCP server and the CLI"
+may-depend-on = []
+may-dev-depend-on = ["testkit"]

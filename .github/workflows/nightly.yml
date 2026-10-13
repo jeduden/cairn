@@ -3,7 +3,8 @@ name: Nightly
 # The long-running gates that do not fit a pull request's budget:
 # coverage-guided fuzzing (ENG-07), the crash-consistency harness
 # (ENG-06), the concurrency soak (ENG-09) and the live Claude Code run
-# (ENG-17), each as its plan lands.
+# (ENG-17), each as its plan lands. It also checks main's branch
+# protection (ENG-21), which is a setting no pull request can change.
 on:
   schedule:
     - cron: "17 3 * * *"
@@ -27,8 +28,8 @@ jobs:
       # ENG-07: cargo-fuzz runs every target under fuzz/, on the exact
       # dated nightly ENG-01 pins for it. Neither exists yet; the plan
       # that adds the first fuzz target pins the nightly and puts the
-      # run here, and until then this step fails rather than skip a
-      # target it cannot run.
+      # cargo-fuzz step here, and until then this step fails rather than
+      # skip a target it cannot run.
       - name: Fuzz every target
         shell: bash
         run: |
@@ -43,3 +44,36 @@ jobs:
         with:
           name: fuzz-crashers
           path: fuzz/artifacts/
+
+  # ENG-21: main's ruleset is a setting of the repository on GitHub, not
+  # a file, so it can weaken without a pull request. The ruleset the
+  # repository commits is the one it wants; this job fetches the live
+  # one and fails when the live one is weaker. It reads with the
+  # workflow's own token. GitHub shows a ruleset's bypass actors only to
+  # a caller with write access to the ruleset, which this token never
+  # has, so a bypass actor allowed to bypass the live ruleset shows here only
+  # when the API reveals it. The stakeholder applies the committed
+  # ruleset, and until it is applied this job is red.
+  protection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned Rust toolchain
+        run: >-
+          rustup toolchain install
+          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          --profile minimal --no-self-update
+      - name: Fetch the live ruleset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          id="$(gh api "repos/$GITHUB_REPOSITORY/rulesets" --jq '.[] | select(.name == "main") | .id')"
+          if [ -z "$id" ]; then
+            echo "::error::the repository has no ruleset named main"
+            exit 1
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/rulesets/$id" > live.json
+      - name: Compare it with the committed ruleset
+        run: cargo run --locked --quiet -p engineering --bin protection-check -- --committed .github/rulesets/main.json --live live.json

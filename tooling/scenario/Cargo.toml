@@ -29,3 +29,9 @@ harness = false
 
 [lints]
 workspace = true
+
+# ENG-02: see crates/cairn/Cargo.toml.
+[package.metadata.cairn]
+responsibility = "Reads features into scenarios, keeps them in step with the SRS and runs them"
+may-depend-on = ["srs"]
+may-dev-depend-on = ["adr", "drift", "engineering", "harness-contract", "testkit"]

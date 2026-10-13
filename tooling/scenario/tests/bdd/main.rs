@@ -16,23 +16,34 @@
 mod assumptions;
 mod engineering;
 mod engineering_adr;
+mod engineering_analyzers;
+mod engineering_architecture;
+mod engineering_benchmark;
+mod engineering_boundary;
 mod engineering_drift;
+mod engineering_isolation;
+mod engineering_protection;
+mod engineering_reach;
+mod engineering_release;
 mod engineering_review;
 
 use std::env;
+use std::ffi::OsStr;
 use std::fmt;
 use std::io;
 use std::path::PathBuf;
 use std::process::{Command, ExitCode};
 
+use ::engineering::isolation_guard;
 use cucumber::World as _;
 use cucumber::writer::Stats as _;
 use scenario::runner;
 use testkit::TempDir;
+use testkit::guard::{self, Place};
 
 /// The state one scenario threads through its steps, with its own
 /// fresh `HOME` and `CAIRN_HOME` (ENG-14): a step that starts a process
-/// points it at these, never at the real home.
+/// points it at these, never at real state.
 #[derive(cucumber::World)]
 #[world(init = Self::new)]
 pub struct World {
@@ -72,6 +83,19 @@ impl World {
 }
 
 fn main() -> ExitCode {
+    // ENG-12: started as the boundary probe, it opens a socket and
+    // exits, standing in for a component that reaches out.
+    if env::args_os()
+        .nth(1)
+        .is_some_and(|a| a == testkit::boundary::PROBE)
+    {
+        return ExitCode::from(u8::from(testkit::boundary::probe().is_err()));
+    }
+    // ENG-14: started as the isolation guard's probe, it resolves one
+    // place through the guard and prints it.
+    if let Some(place) = env::var_os(isolation_guard::PROBE) {
+        return probe(&place);
+    }
     let (home, marker) = (env::var_os("HOME"), env::var_os(runner::ISOLATED_HOME));
     if runner::is_isolated(home.as_deref(), marker.as_deref(), &env::temp_dir()) {
         run()
@@ -80,9 +104,26 @@ fn main() -> ExitCode {
     }
 }
 
+/// Resolves the place `name` through the isolation guard and prints it,
+/// as the test the ENG-14 scenario probes does. With a `HOME` the guard
+/// refuses, the process aborts before it prints anything.
+fn probe(name: &OsStr) -> ExitCode {
+    match name.to_str().and_then(Place::parse) {
+        Some(place) => {
+            println!("{}", guard::resolve(place).display());
+            ExitCode::SUCCESS
+        }
+        None => {
+            eprintln!("bdd: no place {name:?} to probe");
+            ExitCode::from(2)
+        }
+    }
+}
+
 /// Runs this same executable again with `HOME` and `CAIRN_HOME` pointed
 /// at a fresh temporary directory, so nothing the scenarios run can
-/// reach the real home or Claude Code configuration (ENG-14).
+/// reach the real `HOME`, a Cairn home or Claude Code's configuration
+/// (ENG-14).
 fn isolate() -> ExitCode {
     let started = TempDir::new().and_then(|home| {
         let mut command = Command::new(env::current_exe()?);

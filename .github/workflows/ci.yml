@@ -44,7 +44,39 @@ jobs:
           "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
           --profile minimal --component clippy,rustfmt,llvm-tools-preview
           --no-self-update
-      - run: cargo test --workspace --locked
+      # ENG-12: the end-to-end suite starts the core in a user and
+      # network namespace of its own, under strace, and fails on any
+      # socket. The runner's AppArmor refuses unprivileged user
+      # namespaces, and its image may lack strace. A runner that still
+      # cannot confine fails the end-to-end tests, never skips them.
+      - name: Let the end-to-end suite confine the core
+        run: |
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          command -v strace >/dev/null || {
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
+          }
+      # ENG-14: the suite runs with HOME pointed at an empty decoy
+      # directory, the toolchain keeping its own homes. The isolation
+      # guard (testkit::guard) aborts a test that resolves real
+      # state. The decoy catches a test that writes under the user's
+      # HOME without going through the guard: a trace left under it
+      # fails the job. A read, or a write through a path built before
+      # HOME was swapped, leaves none; the guard and the
+      # one-resolver gate test carry those.
+      - name: Run the tests with a decoy HOME
+        run: |
+          decoy="$RUNNER_TEMP/decoy-home"
+          mkdir "$decoy"
+          export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
+          export RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
+          HOME="$decoy" cargo test --workspace --locked
+          if [ -n "$(ls -A "$decoy")" ]; then
+            echo "::error::a test left files under the real HOME"
+            ls -lA "$decoy"
+            exit 1
+          fi
       # The pending backlog, counted. A measurement, not a gate.
       - name: Count scenarios
         if: ${{ !cancelled() }}
@@ -75,6 +107,19 @@ jobs:
           --no-self-update
       # An exact version from crates.io, built against its own
       # lockfile. Bump it by hand, the way the zizmor version is.
+      # ENG-12: the end-to-end suite starts the core in a user and
+      # network namespace of its own, under strace, and fails on any
+      # socket. The runner's AppArmor refuses unprivileged user
+      # namespaces, and its image may lack strace. A runner that still
+      # cannot confine fails the end-to-end tests, never skips them.
+      - name: Let the end-to-end suite confine the core
+        run: |
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          command -v strace >/dev/null || {
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
+          }
       - run: cargo install --locked cargo-llvm-cov@0.9.1
       - run: cargo run --locked -p coverage
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -180,13 +225,112 @@ jobs:
       - uses: jeduden/mdsmith@0ca0d2f7c95ab53e3e9ed8851150af98b95088fb # v0.55.1
         with:
           version: v0.55.1
+      # ENG-12: the end-to-end suite starts the core in a user and
+      # network namespace of its own, under strace, and fails on any
+      # socket. The runner's AppArmor refuses unprivileged user
+      # namespaces, and its image may lack strace. A runner that still
+      # cannot confine fails the end-to-end tests, never skips them.
+      - name: Let the end-to-end suite confine the core
+        run: |
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          command -v strace >/dev/null || {
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
+          }
       - run: cargo test --locked -p drift --test suite -- --ignored
+
+  # ENG-15: the benchmark gate. The base is the head's first parent:
+  # the main a pull request's merge commit sits on, or main before a
+  # push. Both sides' suites run on this one runner, interleaved round
+  # by round and alternating which side goes first, so a drift in the
+  # runner's speed lands on both alike. The head's gate then fails
+  # naming each benchmark whose median is more than 10% slower with
+  # significance (one-sided Mann-Whitney U, alpha 0.01). The suite
+  # times the core's start-up today, a second or two of sampling after
+  # two small release builds, so it gates every pull request rather
+  # than waiting for the nightly job.
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ROUNDS: 30
+      SAMPLES: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # The head and its first parent, the base.
+          fetch-depth: 2
+      - name: Check out the base beside the head
+        run: git worktree add --detach "$RUNNER_TEMP/base" HEAD^1
+      # Each side builds with the release its own rust-toolchain.toml
+      # names (ENG-01).
+      - name: Install the pinned Rust toolchains
+        shell: bash
+        run: |
+          for side in "$GITHUB_WORKSPACE" "$RUNNER_TEMP/base"; do
+            rustup toolchain install \
+              "$(sed -n 's/^channel = "\(.*\)"$/\1/p' "$side/rust-toolchain.toml")" \
+              --profile minimal --component clippy,rustfmt,llvm-tools-preview \
+              --no-self-update
+          done
+      - name: Build the head's suite and core
+        run: cargo build --release --locked -p benchmark -p cairn
+      # Until the suite reaches main, the base has none to build.
+      - name: Build the base's suite and core
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP/base"
+          if [ -f tooling/benchmark/Cargo.toml ]; then
+            cargo build --release --locked -p benchmark -p cairn
+          fi
+      - name: Sample both sides and gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          head="$GITHUB_WORKSPACE/target/release"
+          base="$RUNNER_TEMP/base/target/release"
+          out="$RUNNER_TEMP/samples"
+          mkdir -p "$out"
+          if [ ! -x "$base/benchmark" ]; then
+            "$head/benchmark" run --core "$head/cairn" --samples "$SAMPLES" > "$out/head.samples"
+            msg="the base has no benchmark suite to compare with; the head's suite ran"
+            echo "::warning::$msg"
+            echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          for round in $(seq "$ROUNDS"); do
+            order="base head"
+            [ $((round % 2)) -eq 0 ] && order="head base"
+            for side in $order; do
+              bin="$head"
+              [ "$side" = base ] && bin="$base"
+              "$bin/benchmark" run --core "$bin/cairn" --samples "$SAMPLES" >> "$out/$side.samples"
+            done
+          done
+          status=0
+          "$head/benchmark" gate --base "$out/base.samples" --head "$out/head.samples" \
+            > "$out/report.md" 2> "$out/failures.txt" || status=$?
+          tee -a "$GITHUB_STEP_SUMMARY" < "$out/report.md"
+          while IFS= read -r line; do
+            echo "::error title=benchmark gate::${line#benchmark: }"
+          done < "$out/failures.txt"
+          exit "$status"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: benchmark-samples
+          path: ${{ runner.temp }}/samples/
 
   # CON-02: the release build, on every change and not first on
   # release day. Every target is built and run once on its own
-  # platform.
+  # platform. It is granted nothing to sign with: only the release
+  # workflow's release-build.yml attests build provenance (ENG-20).
   build:
     uses: ./.github/workflows/build.yml
+    permissions:
+      contents: read
     with:
       version: v0.0.0-ci
 
@@ -223,7 +367,8 @@ jobs:
           # scanning: the check itself is the gate.
           advanced-security: false
 
-  # The one check the branch and release-tag rulesets require. GitHub
+  # The one check the branch and release-tag rulesets require (main's is
+  # committed as .github/rulesets/main.json, ENG-21). GitHub
   # names a required check after a job, never after the workflow, so
   # this job carries the name "CI" and passes only when every job above
   # passed. A job added later joins `needs:` here and the rulesets stay
@@ -233,7 +378,7 @@ jobs:
   ci:
     name: CI
     if: ${{ always() }}
-    needs: [test, coverage, lint, supply-chain, drift, build, markdown, workflows]
+    needs: [test, coverage, lint, supply-chain, drift, benchmark, build, markdown, workflows]
     runs-on: ubuntu-latest
     steps:
       - name: Fail unless every job passed

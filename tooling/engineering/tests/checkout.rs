@@ -78,10 +78,137 @@ fn the_product_crates_keep_their_bans() {
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
 
+/// Every product crate's clippy.toml refuses each blocking call that
+/// waits with no deadline (ENG-03).
+#[test]
+fn the_product_crates_ban_every_wait_with_no_deadline() {
+    let wanted = engineering::product_crates::deadline_bans();
+    let problems = engineering::product_crates::crates_keep_bans(&checkout(), &wanted);
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// Every workspace crate keeps the dependency directions its manifest
+/// declares, and every library crate declares one responsibility
+/// (ENG-02).
+#[test]
+fn the_workspace_keeps_its_declared_directions() {
+    let home = testkit::TempDir::new().unwrap();
+    let cargo = std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
+    let manifest = testkit::repo_root().join("Cargo.toml");
+    let metadata = engineering::dependencies::cargo_metadata(&cargo, &manifest, home.path());
+
+    let problems = engineering::architecture::problems(&metadata.unwrap());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
 /// No product crate keeps mutable global state (ENG-03).
 #[test]
 fn no_product_crate_keeps_mutable_global_state() {
     let problems = engineering::product_crates::no_mutable_globals(&checkout());
 
     assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// The workflows that publish a release sign its checksums keyless
+/// (ENG-20).
+#[test]
+fn the_checkout_s_release_signs_its_checksums_keyless() {
+    let release = engineering::release_provenance::load(&checkout()).unwrap_or_default();
+
+    assert_eq!(release.checksums_signed_keyless(), Vec::<String>::new());
+}
+
+/// Only the release-only `release-build.yml` attests the binaries'
+/// provenance, `build.yml` and CI's call of it hold nothing to sign
+/// with, and the release workflow verifies what it published against
+/// the signer's exact identity at main (ENG-20).
+#[test]
+fn the_checkout_s_release_attests_provenance_only_in_the_release_build_workflow() {
+    let release = engineering::release_provenance::load(&checkout()).unwrap_or_default();
+
+    assert_eq!(
+        release.provenance_from_the_release_build_workflow(),
+        Vec::<String>::new()
+    );
+}
+
+/// The release attaches and attests an SPDX SBOM (ENG-20).
+#[test]
+fn the_checkout_s_release_attaches_and_attests_an_sbom() {
+    let release = engineering::release_provenance::load(&checkout()).unwrap_or_default();
+
+    assert_eq!(release.sbom_attached_and_attested(), Vec::<String>::new());
+}
+
+fn ruleset() -> serde_json::Value {
+    engineering::branch_protection::load(&checkout()).unwrap_or_default()
+}
+
+/// The committed ruleset for main rejects direct pushes (ENG-21).
+#[test]
+fn the_checkout_s_ruleset_rejects_direct_pushes() {
+    let problems = engineering::branch_protection::direct_pushes_rejected(&ruleset());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// The committed ruleset requires signed commits (ENG-21).
+#[test]
+fn the_checkout_s_ruleset_requires_signed_commits() {
+    let problems = engineering::branch_protection::commits_signed(&ruleset());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// The committed ruleset needs an approval from another reviewer
+/// (ENG-21).
+#[test]
+fn the_checkout_s_ruleset_needs_an_approval_from_another_reviewer() {
+    let problems = engineering::branch_protection::approval_from_another_reviewer(&ruleset());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// CODEOWNERS names the stakeholder on the requirement text and on the
+/// paths that enforce it (ENG-21).
+#[test]
+fn the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths() {
+    let problems = engineering::codeowners::stakeholder_owns_the_enforcing_paths(&checkout());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// CODEOWNERS names no owner on any other path (ENG-21).
+#[test]
+fn the_checkout_s_codeowners_name_no_owner_on_any_other_path() {
+    let problems = engineering::codeowners::no_owner_on_any_other_path(&checkout());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// The security-sensitive crates are owned by the security reviewer
+/// before they exist (ENG-21).
+#[test]
+fn the_checkout_s_security_crates_belong_to_the_security_reviewer() {
+    let problems =
+        engineering::codeowners::security_crates_owned_by_the_security_reviewer(&checkout());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// The nightly workflow compares the live ruleset with the committed
+/// one (ENG-21).
+#[test]
+fn the_checkout_s_nightly_compares_the_live_ruleset_with_the_committed_one() {
+    let c = checkout();
+
+    assert_eq!(
+        c.contains(
+            ".github/workflows/nightly.yml",
+            "protection-check -- --committed .github/rulesets/main.json --live live.json"
+        ),
+        Ok(())
+    );
 }

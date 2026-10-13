@@ -7,8 +7,13 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[[bin]]
+name = "protection-check"
+path = "src/main.rs"
+
 [dependencies]
 adr.workspace = true
+benchmark.workspace = true
 drift.workspace = true
 review-gate.workspace = true
 scenario.workspace = true
@@ -20,3 +25,9 @@ testkit.workspace = true
 
 [lints]
 workspace = true
+
+# ENG-02: see crates/cairn/Cargo.toml.
+[package.metadata.cairn]
+responsibility = "Checks the repository against the requirements of SRS section 10 for the bound scenarios"
+may-depend-on = ["adr", "benchmark", "drift", "review-gate", "scenario", "srs"]
+may-dev-depend-on = ["testkit"]

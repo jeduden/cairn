@@ -23,6 +23,7 @@ serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 
 adr = { path = "tooling/adr" }
+benchmark = { path = "tooling/benchmark" }
 drift = { path = "tooling/drift" }
 coverage = { path = "tooling/coverage" }
 engineering = { path = "tooling/engineering" }

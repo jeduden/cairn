@@ -1,7 +1,10 @@
-//! Test-only helpers the tooling crates share: a temporary directory
-//! and the path of the repository the tests inspect. Only test code
+//! Test-only helpers the tooling crates share: a temporary directory,
+//! the path of the repository the tests inspect, and the confinement
+//! the end-to-end suite starts each component in (ENG-12). Only test code
 //! depends on this crate; nothing here links into a shipped
 //! executable.
+
+pub mod guard;
 
 use std::ffi::OsString;
 use std::fs;
@@ -9,6 +12,8 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+pub mod boundary;
 
 /// How many names a [`TempDir`] tries before it gives up.
 const ATTEMPTS: u32 = 1000;
@@ -21,8 +26,8 @@ pub fn repo_root() -> PathBuf {
 }
 
 /// Points `command` at `home` (ENG-14): its `HOME`, and a `CAIRN_HOME`
-/// inside it, so an executable a test starts cannot reach the real home
-/// or Claude Code configuration.
+/// inside it, so an executable a test starts cannot reach the real `HOME`,
+/// a Cairn home or Claude Code's configuration.
 pub fn isolate<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
     command
         .env("HOME", home)

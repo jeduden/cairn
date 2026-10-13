@@ -24,6 +24,7 @@ empty: |
 
 | ID         | Model  | Title                                                                                                              |
 | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------ |
+| 2609292011 | sonnet | [The remaining engineering gates in CI](plan/2609292011_ci-engineering-gates/plan.md)                              |
 | 2609292156 | sonnet | [The repository's knowledge follows Cairn's layers](plan/2609292156_knowledge-follows-cairn-layers/plan.md)        |
 | 2610012322 | opus   | [Scope Cairn for agent fleets: shared, real-time, public sessions](plan/2610012322_cairn-for-agent-fleets/plan.md) |
 <?/catalog?>
@@ -60,7 +61,7 @@ empty: |
 | 2609292008 | ✅     | sonnet | [Spike S6: can compaction be deferred](plan/2609292008_spike-s6-compaction-control/plan.md)                        |
 | 2609292009 | ✅     | sonnet | [Spike S7: the Rust MCP SDK or an in-house server](plan/2609292009_spike-s7-mcp-sdk/plan.md)                       |
 | 2609292010 | ✅     | sonnet | [Spike S8: calibrate the token estimator and freeze the targets](plan/2609292010_spike-s8-token-estimator/plan.md) |
-| 2609292011 | 🔲     | sonnet | [The remaining engineering gates in CI](plan/2609292011_ci-engineering-gates.md)                                   |
+| 2609292011 | 🔳     | sonnet | [The remaining engineering gates in CI](plan/2609292011_ci-engineering-gates/plan.md)                              |
 | 2609292012 | 🔲     | opus   | [M1: record and recall](plan/2609292012_m1-record-and-recall.md)                                                   |
 | 2609292013 | 🔲     | opus   | [M2: pins and restore](plan/2609292013_m2-pins-and-restore.md)                                                     |
 | 2609292014 | 🔲     | opus   | [M3: landmarks and lifecycle](plan/2609292014_m3-landmarks-and-lifecycle.md)                                       |

@@ -16,7 +16,7 @@ Feature: Engineering quality (ENG)
     And the release workflow builds with "x86_64-unknown-linux-musl"
     And the release workflow builds with "aarch64-unknown-linux-musl"
 
-  @ENG-02 @P0 @pending
+  @ENG-02 @P0
   Scenario: dependency directions between the workspace crates are declared and enforced
     Given the declared dependency directions for the workspace crates
     When a crate depends on a crate its direction forbids
@@ -127,7 +127,7 @@ Feature: Engineering quality (ENG)
     When mutation testing runs
     Then the mutation score is at least 70%
 
-  @ENG-14 @P0 @pending
+  @ENG-14 @P0
   Scenario: tests cannot touch the real `HOME` or Claude Code configuration
     Given a test that resolves a path under the real `HOME`
     When the suite runs
@@ -182,12 +182,13 @@ Feature: Engineering quality (ENG)
     And the direct dependencies stay within the target the ENG-18 requirement states
     And "DEPENDENCIES.md" lists every ADR that names a module
 
-  @ENG-20 @P0 @pending
-  Scenario: release artifacts are signed and carry provenance and an SBOM
-    Given a published release
-    Then the checksum file verifies with its keyless Sigstore bundle
-    And every binary carries SLSA Build Level 3 provenance
-    And an SPDX SBOM is attached and attested
+  @ENG-20 @P0
+  Scenario: the release workflows sign, attest and verify every release they publish
+    Given the repository checkout
+    When the release workflows are read
+    Then the checksum file is signed keyless with Sigstore and verified once published
+    And only the release-only build workflow publishes each binary's SLSA Build Level 3 provenance as a GitHub artifact attestation, verified against that workflow's signing identity at main
+    And an SPDX SBOM is attached, published as a GitHub artifact attestation and verified once published
 
   @ENG-21 @P0 @pending
   Scenario: main only moves through reviewed, signed pull requests

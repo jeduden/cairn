@@ -10,6 +10,10 @@
     reason = "the test runs cargo metadata; the shipped code starts no program"
 )]
 #![allow(
+    clippy::disallowed_methods,
+    reason = "the test waits for cargo metadata; the test run's own limit bounds it"
+)]
+#![allow(
     clippy::unwrap_used,
     reason = "a test's helpers unwrap: a failure is the assertion"
 )]
