@@ -182,6 +182,89 @@ jobs:
           version: v0.55.1
       - run: cargo test --locked -p drift --test suite -- --ignored
 
+  # ENG-15: the benchmark gate. The base is the head's first parent:
+  # the main a pull request's merge commit sits on, or main before a
+  # push. Both sides' suites run on this one runner, interleaved round
+  # by round and alternating which side goes first, so a drift in the
+  # runner's speed lands on both alike. The head's gate then fails
+  # naming each benchmark whose median is more than 10% slower with
+  # significance (one-sided Mann-Whitney U, alpha 0.01). The suite
+  # times the core's start-up today, a second or two of sampling after
+  # two small release builds, so it gates every pull request rather
+  # than waiting for the nightly job.
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ROUNDS: 30
+      SAMPLES: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # The head and its first parent, the base.
+          fetch-depth: 2
+      - name: Check out the base beside the head
+        run: git worktree add --detach "$RUNNER_TEMP/base" HEAD^1
+      # Each side builds with the release its own rust-toolchain.toml
+      # names (ENG-01).
+      - name: Install the pinned Rust toolchains
+        shell: bash
+        run: |
+          for side in "$GITHUB_WORKSPACE" "$RUNNER_TEMP/base"; do
+            rustup toolchain install \
+              "$(sed -n 's/^channel = "\(.*\)"$/\1/p' "$side/rust-toolchain.toml")" \
+              --profile minimal --component clippy,rustfmt,llvm-tools-preview \
+              --no-self-update
+          done
+      - name: Build the head's suite and core
+        run: cargo build --release --locked -p benchmark -p cairn
+      # Until the suite reaches main, the base has none to build.
+      - name: Build the base's suite and core
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP/base"
+          if [ -f tooling/benchmark/Cargo.toml ]; then
+            cargo build --release --locked -p benchmark -p cairn
+          fi
+      - name: Sample both sides and gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          head="$GITHUB_WORKSPACE/target/release"
+          base="$RUNNER_TEMP/base/target/release"
+          out="$RUNNER_TEMP/samples"
+          mkdir -p "$out"
+          if [ ! -x "$base/benchmark" ]; then
+            "$head/benchmark" run --core "$head/cairn" --samples "$SAMPLES" > "$out/head.samples"
+            msg="the base has no benchmark suite to compare with; the head's suite ran"
+            echo "::warning::$msg"
+            echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          for round in $(seq "$ROUNDS"); do
+            order="base head"
+            [ $((round % 2)) -eq 0 ] && order="head base"
+            for side in $order; do
+              bin="$head"
+              [ "$side" = base ] && bin="$base"
+              "$bin/benchmark" run --core "$bin/cairn" --samples "$SAMPLES" >> "$out/$side.samples"
+            done
+          done
+          status=0
+          "$head/benchmark" gate --base "$out/base.samples" --head "$out/head.samples" \
+            > "$out/report.md" 2> "$out/failures.txt" || status=$?
+          tee -a "$GITHUB_STEP_SUMMARY" < "$out/report.md"
+          while IFS= read -r line; do
+            echo "::error title=benchmark gate::${line#benchmark: }"
+          done < "$out/failures.txt"
+          exit "$status"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: benchmark-samples
+          path: ${{ runner.temp }}/samples/
+
   # CON-02: the release build, on every change and not first on
   # release day. Every target is built and run once on its own
   # platform.
@@ -233,7 +316,7 @@ jobs:
   ci:
     name: CI
     if: ${{ always() }}
-    needs: [test, coverage, lint, supply-chain, drift, build, markdown, workflows]
+    needs: [test, coverage, lint, supply-chain, drift, benchmark, build, markdown, workflows]
     runs-on: ubuntu-latest
     steps:
       - name: Fail unless every job passed
