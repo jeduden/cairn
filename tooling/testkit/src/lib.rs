@@ -1,5 +1,6 @@
-//! Test-only helpers the tooling crates share: a temporary directory
-//! and the path of the repository the tests inspect. Only test code
+//! Test-only helpers the tooling crates share: a temporary directory,
+//! the path of the repository the tests inspect, and the confinement
+//! the end-to-end suite starts each component in (ENG-12). Only test code
 //! depends on this crate; nothing here links into a shipped
 //! executable.
 
@@ -9,6 +10,8 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+pub mod boundary;
 
 /// How many names a [`TempDir`] tries before it gives up.
 const ATTEMPTS: u32 = 1000;
