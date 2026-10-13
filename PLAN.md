@@ -72,5 +72,8 @@ empty: |
 | 2610022338 | 🔲     | opus   | [Cairn's lane experience and peer network: no central service](plan/2610022338_cairn-network-side/plan.md)         |
 | 2610031222 | 🔲     | opus   | [Sandboxed agents: the boundary Cairn's owner acts rest on](plan/2610031222_agent-sandboxing/plan.md)              |
 | 2610050706 | ✅     | sonnet | [Move the whole toolchain from Go to Rust](plan/2610050706_toolchain-to-rust/plan.md)                              |
+| 2610112057 | 🔲     | opus   | [M7: standalone room view](plan/2610112057_m7-standalone-room-view.md)                                             |
+| 2610112058 | 🔲     | opus   | [M8: peer network](plan/2610112058_m8-peer-network.md)                                                             |
+| 2610112059 | 🔲     | opus   | [M9: review, publishing, bridges](plan/2610112059_m9-review-publishing-bridges.md)                                 |
 | 2610112203 | ✅     | sonnet | [Spike S13: can a hook tell which run compacted](plan/2610112203_spike-s13-compaction-ambiguity/plan.md)           |
 <?/catalog?>

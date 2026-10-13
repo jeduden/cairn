@@ -5,6 +5,7 @@ status: "🔲"
 summary: >-
   The append-only record, provenance and trust, pull-only recall
   over MCP, and the security and operations floor under them.
+milestone-order: 1
 model: opus
 depends-on: [2609292003, 2609292004, 2609292005, 2609292009, 2609292010, 2609292011, 2610012322]
 ---

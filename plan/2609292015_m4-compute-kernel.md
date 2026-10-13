@@ -5,6 +5,7 @@ status: "🔲"
 summary: >-
   A per-session Starlark kernel in a resource-limited worker with
   read-only, quarantine-aware access to the record.
+milestone-order: 5
 model: opus
 depends-on: [2609292012, 2609292007]
 ---

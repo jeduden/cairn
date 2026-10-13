@@ -5,6 +5,7 @@ status: "🔲"
 summary: >-
   Verbatim pins and the deterministic, TrustedText-only restore
   block after compaction, plus plugin install.
+milestone-order: 2
 model: opus
 depends-on: [2609292012, 2609292006]
 ---

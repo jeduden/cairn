@@ -1,32 +1,77 @@
 # Cairn
 
-A lossless, security-first context layer for long-running Claude
-agents.
+Your Claude agents as part of your team: work with them at your pace,
+see what they build while they build it, and point at exactly what you
+mean.
 
-Long agent runs compact, and compaction forgets. Cairn keeps an
-append-only, provenance-tagged record of every agent run. It restores
-the constraints you pinned, verbatim, after every compaction. The
-agent recalls exact history on demand through MCP tools, always wrapped
-as untrusted data. It does this without opening a new attack surface: no
-automatic path from untrusted content to the model, a daemonless core
-that never touches the network, every other component off until you
-turn it on, strict per-principal isolation.
+## Vision
+
+- **At your pace.** Work with your agents and other people live, after
+  the fact or asynchronously: watch runs as they happen, see what waits
+  on you, or come back to a Catch up that links each line to the events
+  behind it and shows every gap.
+- **From every angle.** Understand what is being built while it is
+  being built: the conversation, each changed file beside the events
+  that changed it, and what backs each result, from a bare claim to a
+  check.
+- **By reference.** Link your posts to the exact events you mean, by
+  address, and find any of them again by a word you remember, so people
+  and agents know what you are talking about.
+
+Underneath, every run stays on your machines unless you turn on peers.
+Your pinned constraints come back word for word after each compaction,
+or named when the budget leaves them out. Agents recall history only
+when they ask, each item enveloped with its trust level, and nothing
+untrusted reaches them unless they ask or you act.
+
+## Milestones
+
+Specified, not built yet. Each milestone is a plan, listed here in
+delivery order from its own front matter (`milestone-order`);
+[§12](docs/srs/12-delivery-plan.md) holds its scope. M7's scope is
+provisional, and each M9 item lands through its own proposal.
+
+<?catalog
+glob:
+  - "plan/*.md"
+  - "plan/*/plan.md"
+where: '"milestone-order": int'
+sort: 'numeric:"milestone-order"'
+header: |
+  | Milestone | Status | What it brings |
+  |-----------|--------|----------------|
+row: "| [{title}]({filename}) | {status} | {summary} |"
+?>
+| Milestone                                                                          | Status | What it brings                                                                                                                                                                                    |
+| ---------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [M1: record and recall](plan/2609292012_m1-record-and-recall.md)                   | 🔲     | The append-only record, provenance and trust, pull-only recall over MCP, and the security and operations floor under them.                                                                        |
+| [M2: pins and restore](plan/2609292013_m2-pins-and-restore.md)                     | 🔲     | Verbatim pins and the deterministic, TrustedText-only restore block after compaction, plus plugin install.                                                                                        |
+| [M3: landmarks and lifecycle](plan/2609292014_m3-landmarks-and-lifecycle.md)       | 🔲     | Structural landmarks with tiered roll-up, backup and restore, purge with tombstones, and a rebuild identical in content.                                                                          |
+| [M7: standalone room view](plan/2610112057_m7-standalone-room-view.md)             | 🔲     | The room view on one machine: Needs you, Catch up, search, integrity status, overlaps and review with what backs each result, plus the launcher, seals and the principal surfaces behind them.    |
+| [M4: the hermetic compute kernel](plan/2609292015_m4-compute-kernel.md)            | 🔲     | A per-session Starlark kernel in a resource-limited worker with read-only, quarantine-aware access to the record.                                                                                 |
+| [M5: hardening and evaluation](plan/2609292016_m5-hardening-and-evaluation.md)     | 🔲     | The remaining P1 requirements, the full §11 evaluation, an external security review and a two-week pilot.                                                                                         |
+| [M8: peer network](plan/2610112058_m8-peer-network.md)                             | 🔲     | Peers enrolled by key: machines and other principals sync rooms after any partition with no central service, ephemeral nodes hand over their record, and invites, directed posts and endorsement. |
+| [M9: review, publishing, bridges](plan/2610112059_m9-review-publishing-bridges.md) | 🔲     | Forge review beside the room, handover, bundles that carry a room with a pull request, read-only publishing and outbound bridges, each through its own proposal.                                  |
+<?/catalog?>
+
+Marking part of an event or an image, and sharing that mark, are
+pending use cases ([UC-002, UC-003](docs/use-cases.md)) aimed at M7 to
+M9 but not yet specified.
 
 ## Status
 
-Pre-implementation. This repository contains:
+This repository holds:
 
 - the [Software Requirements Specification](docs/srs/index.md), the
-  normative source;
+  normative source, and the [domain model](docs/domain-model/index.md)
+  that defines its terms;
 - one Gherkin scenario per requirement under `features/`, almost all
   `@pending`, kept in step with the SRS by a gate test;
-- CI (tests, coverage per test layer, clippy, cargo-deny and
-  cargo-audit, the drift suite, the release build,
-  Markdown, workflow audit), a nightly job, and a signed release
-  pipeline, all in Rust;
+- the `cairn` core executable, with `cairn version` and `cairn help`
+  so far;
+- CI, a nightly fuzz job, an agent review of every pull request and a
+  signed release pipeline, every gate written in Rust;
 - the delivery plans in [PLAN.md](PLAN.md).
-
-`cairn version` is the only command so far.
 
 <?include
 file: docs/srs/invariants.md

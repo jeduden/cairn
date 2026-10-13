@@ -5,6 +5,7 @@ status: "🔲"
 summary: >-
   Structural landmarks with tiered roll-up, backup and restore,
   purge with tombstones, and a rebuild identical in content.
+milestone-order: 3
 model: opus
 depends-on: [2609292013]
 ---
