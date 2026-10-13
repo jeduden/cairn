@@ -147,7 +147,8 @@ summary: >-
   node under a retention policy (REC-15), which ages events by **time marks**,
   structural events the node records at intervals. The only way stored content
   is destroyed (I1), never undoing an act's effect (Relations); no purge scope
-  covers an arrival event, node identity change event or key event (ADM-07).
+  covers an arrival event, node identity change event, key event or certificate
+  record (ADM-07).
 - **Gap marker**: What stands where content is missing: a tombstone for a purged
   range, a **quarantine marker** for a quarantined address, or a **truncation
   marker** on capped kernel output. A **missing range** is part of a writer this

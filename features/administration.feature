@@ -79,7 +79,7 @@ Feature: Administration and lifecycle (ADM)
     And a configuration setting "node.deployment_mode" to "interactive", accepted by "cairn configuration accept"
     And a backup taken by "cairn backup create", followed by a purge of run "run-a" and the unpin of a pin
     When the person runs "cairn backup restore" as a widening principal act
-    Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device or at-rest key, and an audit entry recorded it
+    Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device, token, recovery or at-rest key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was reinstated
     And before it was confirmed, the backup restore named each pin of the copy that will not restore once its events count as received
     And every event the copy holds counts on the node as received, each deriving origin "peer" or "bundle", never "witnessed", and is trusted only as PRV-02 trusts received events
@@ -91,6 +91,7 @@ Feature: Administration and lifecycle (ADM)
     And each local seat the copy contains is followed by a new seat and writer under a newly minted seat key, which names the old seat and inherits no add or role of it, audited, and no reinstated writer's log gains an event or reuses a seq
     And no derived artifact the copy contained was reinstated: each was rebuilt from the writer logs the node held and its key set
     And "cairn verify" exits 0 on the home after the backup restore
+    And the backup restore recorded a "minted anew" its principal act names, whose writers read origin "peer" until it counts as PRV-12 says, as when a confirm signed by a managed-policy confirmation key names it, and a later "cairn rebuild" derives the same current key event log (PRV-12)
 
   @ADM-07 @P0 @I1 @I5 @pending
   Scenario Outline: purge removes a scope everywhere, erases its commitment keys and leaves a tombstone
@@ -107,7 +108,7 @@ Feature: Administration and lifecycle (ADM)
     And once the purge reports the range erased, with encryption at rest on and off, no file in the home or the storage engine's temporary directory, read decrypted, contains a canary token only the purged events carried, their commitment keys or a search index entry naming a purged address
     And while another process holds a read transaction on the store, the purge does not report the range erased and audits and counts each residue; once that transaction closes, the purge reports the range erased and the residue check passes
     And the audit log records the purge with its scope, ranges, reason and the principal act behind it, never the purged content
-    And no arrival event, node identity change event or key event is purged, whatever the scope, and the origin of every remaining event derives as before
+    And no arrival event, node identity change event, key event or certificate record is purged, whatever the scope, and the origin of every remaining event derives as before
 
     Examples:
       | scope                  |

@@ -124,7 +124,8 @@ Feature: Security (SEC)
     And the status says the key is a file an unsandboxed agent of the same OS user could read
     And the at-rest key is read from its secret reference on each use, not from the environment
     And no key or credential value appears in the store, a segment, a derived artifact, a backup, an export, the audit log or any log output
-    And a structural key event in the device seat in the personal room carries only the device key's fingerprint and "minted", and after the device key is removed and minted anew, another carries only the new fingerprint, "minted anew" and the removed key's fingerprint
+    And a structural key event in the device seat in the personal room carries only its kind "minted", the device key's fingerprint, the digest of its recovery key's public key and its signatures
+    And the device key's recovery key is kept in an entry of its own, and no file in the home, backup or export, and no log or output line, contains its bytes raw, hex or base64
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
     And a run ingested by "cairn ingest --path" has a seat key that ingest minted, kept like the device key in a file only the person's OS user can read
     And the seat "cairn ingest" starts beside a witnessed run's run seat has a seat key the core keeps the same way

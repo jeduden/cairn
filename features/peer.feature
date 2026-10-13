@@ -84,6 +84,7 @@ Feature: Peer network (PEER)
     And revoking the access token with "cairn access-token revoke" is a cut principal act, since it removes no pin from a restore block
     And discovery alone enrolls no peer, while enrolling one verifies the key on both nodes by matching words or a scanned code
     And "cairn uninstall" lists each enrollment, with an offer to remove it
+    And the token key's recovery key is minted and kept on the issuing node, the access token carries only its digest and names the token key it succeeds, if any, and a later access token minted by "cairn access-token rotate" carries the rotation the issuing node signed, never the recovery key (PRV-12)
 
   @PEER-07 @P2 @I2 @I8 @pending
   Scenario Outline: a relayed segment is accepted only when its seat key chains to a principal key in its key set

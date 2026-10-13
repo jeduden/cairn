@@ -227,6 +227,7 @@ Feature: Provenance and trust (PRV)
     And a principal act the laptop's device key signed, and a post or pin from a device seat it certified, derives the same trust level on each node of this principal holding the same writer logs
     And an "operator" event a writer of another principal wrote is untrusted
     And a device key certified by a service account's principal key that this principal's principal key certified does not chain to this principal's principal key, since a chain runs through device, token or seat certificates and never through another principal key
+    And a "revoked" key event of a key on the current key event log, signed by its principal key, carries the device seat writer's chain head, and that key's certificate records after it count for nothing (PRV-12)
     And a recorded I2 security review of this requirement exists before it ships
 
     Examples:
@@ -255,6 +256,78 @@ Feature: Provenance and trust (PRV)
     And the output reports, for each seat, its seat certificate and the seat kind it names, taken only from that seat certificate, never from a field in its events
     And a recorded I2 security review of this requirement exists before it ships
 
+  @PRV-12 @P0 @I2 @I6 @I10 @pending
+  Scenario: the node's device keys form a key event log that only a recovery key or a proof the forger lacks extends
+    Given an isolated Cairn home with no authenticator
+    And a managed-policy listing, recorded as a structural event, naming a confirmation key held off the node
+    When Cairn starts for the first time
+    Then a "minted" key event, the first event of the device seat that created the personal room, starts the genesis log, committing to the digest of its recovery key's public key
+    And "cairn status" shows a recovery key awaiting "cairn recovery-key write"
+    Given a witnessed run whose run seat the device key certified, with a certificate record, and a pin "P" written from the device seat
+    And another process that can append to the store but cannot use the device key or the confirmation key
+    When that process appends a "minted anew" naming the current device key, starts a seat certified by its own key, and appends a confirm naming its inception, signed by its own key
+    Then the inception replaces nothing, the confirm counts for nothing and is audited and counted, the process's seat reads origin "peer", the witnessed run still reads "witnessed", and "P" still qualifies
+    And "cairn doctor" exits non-zero, and "cairn status" shows the inception awaiting a confirm and the seat that recorded it
+    When the person runs "cairn key-event-log reject" naming that inception, signed by the key it replaces
+    Then the inception is void and "cairn doctor" exits 0
+    When that process appends a node identity change event naming the current device key, and a "minted" after it
+    Then "cairn status" shows the node identity change awaiting a confirm or reject, and "cairn doctor" exits non-zero
+    When the person runs "cairn key-event-log reject" naming that node identity change event, signed by the key it replaces
+    Then the event is void, stops nothing, and the witnessed run still reads "witnessed"
+    When that process appends a "revoked" of the current device key signed by none of the revoked key, its recovery key or a principal key
+    Then it is void, audited and counted, and later certificate records of that key still count
+    When that process appends a "rotated" key event not signed by the committed recovery key
+    Then it is void, audited and counted, and "cairn verify" exits non-zero naming it
+    When the person runs "cairn key-event-log reject" acknowledging that void key event, signed by the current device key
+    Then "cairn verify" still reports it and exits 0
+    When the person runs "cairn device-key rotate" at the controlling terminal
+    Then a "rotated" key event follows the newest one, carries the recovery key's public key and the device seat writer's chain head, is signed by the recovery key and by the key it replaces, names a freshly minted device key, and a new recovery key is minted and written in the same act
+    And certificate records of the replaced key at or before the carried chain head still count for "witnessed"
+    When another process appends a certificate record of the replaced key after that chain head
+    Then it counts for nothing, and the uncounted certificate record is audited and counted
+    When the device key goes missing with the node identity unchanged, and Cairn records a "minted anew" carrying the device seat writer's chain head
+    Then every writer the missing key certified still reads origin "witnessed", and the new key's writers read "peer"
+    When a confirm naming that inception, signed by the managed-policy confirmation key, is recorded
+    Then the new key's writers read "witnessed", the confirm is audited, and "cairn doctor" exits 0
+    When the confirm's signature is copied into a reject or a choose naming the same inception
+    Then each verifies as nothing, since every signature names its kind, and each is audited and counted
+    When a confirm and a reject of one inception, neither following the other, are both signed by the confirmation key
+    Then they are a duplicity in which the reject holds, the inception's writers read "peer", and "cairn doctor" exits non-zero until a choose
+    When a "minted anew" carries a chain head at a lower seq than a certificate record of the key it replaces
+    Then it is void, and "cairn verify" reports it as tampering
+    When two "minted anew" inceptions in different device seats replace one key and both are confirmed
+    Then "cairn status" and "cairn verify" report a duplicity, it is counted and audited, "cairn doctor" exits non-zero, and no key after it certifies a "witnessed" writer
+    When a choose naming the key event to keep, signed by the confirmation key, is recorded
+    Then the duplicity is resolved and "cairn doctor" exits 0
+    When two "minted anew" inceptions wait, and the person runs "cairn device-key rotate" to record a "recovered"
+    Then it is refused until the person names one "minted anew" by digest, after Cairn shows the seat that recorded each, whether the replaced key is in the key store and each pin that would start restoring
+    When ten processes of the home find the device key missing at once
+    Then each checks and records under one lock, re-reading the key event logs under it, exactly one "minted anew" is recorded, and no hook handler waits on the lock beyond its budget
+    When the device key's file exists but cannot be read
+    Then no "minted anew" is recorded, appends wait at an ingest marker, counted and audited, and "cairn doctor" exits non-zero
+    When the file becomes readable again
+    Then the waiting appends land and no "minted anew" was recorded
+    Given a second isolated Cairn home with no authenticator and no managed-policy recipient key
+    When Cairn starts there for the first time
+    Then its recovery key is kept in an entry of its own, and "cairn status" shows it is on the node
+    When the person runs "cairn recovery-key write" at the controlling terminal, naming a new file outside every worktree and the Cairn home, and types a passphrase twice
+    Then the file is created exclusively, readable only by the person's OS user, holds none of the recovery key's bytes raw, hex or base64, its header names the key derivation's parameters, it is read back and checked against the committed digest, and only then is the recovery key erased from the node
+    And the principal act is recorded with provenance "operator" and names no file
+    When "cairn recovery-key write" runs without a controlling terminal, or names a file that exists, or a path inside a worktree or the Cairn home
+    Then it is refused, audited and counted, and the recovery key stays on the node
+    When the read-back does not match
+    Then the recovery key stays on the node, and the failure is counted and audited
+    When the person runs "cairn device-key rotate" with that file and a wrong passphrase
+    Then it is refused, counted and audited
+    When a managed-policy listing naming a recipient key and a directory is recorded
+    Then each new recovery key is written at once, encrypted to the recipient key, to a new file in that directory, audited, and erased from the node
+    Given a token-key-only node whose token key's token certificate the issuing node's device key made
+    When the node records a "token key adopted" from a later access token whose token certificate that same device key made, naming the token key it succeeds and this node's personal room
+    Then the new token key replaces its predecessor and certifies "witnessed" writers
+    When the node records a "token key adopted" from an access token whose token certificate another device key made, or names another personal room
+    Then it replaces nothing until a confirm or a "recovered" counts it, and its writers read "peer"
+    And a recorded I2 security review of this requirement exists before it ships
+
   @PRV-13 @P0 @I2 @I10 @pending
   Scenario: origin derives from the record and the key set, never from a stored value
     Given an isolated Cairn home
@@ -268,14 +341,14 @@ Feature: Provenance and trust (PRV)
     And the person runs "cairn verify"
     Then it exits 3 naming the check "derived artifact consistency", until "cairn rebuild" derives "peer" again
     When a peer delivers a range of another node's device seat holding only that node's arrival events, one of which names this node's witnessed run
-    Then this node records no arrival event for that range, and the witnessed run's events still read origin "witnessed"
+    Then this node records no arrival event for that range, the witnessed run's events still read origin "witnessed", and a "minted anew" in that range naming this node's device key counts for nothing here
     When a bundle carries a writer whose seat certificate, made by a key no key event of this node names, claims an ingest seat
     Then that writer's events read origin "bundle"
     When a range from a peer extends one of this node's own writers
     Then it is refused, audited and counted as REC-21 says, and a range extending a writer the backup restore reinstated is accepted with its arrival event
     When the device key is removed and minted anew
-    Then a "minted anew" key event names the removed key, and the events of the writers either key certified read origin "witnessed"
+    Then a "minted anew" key event names the removed key, the events of the writers the removed key certified still read origin "witnessed", and those the new key certifies read "peer" until a confirm counted under PRV-12 names its inception or a "recovered" rotation joins it
     When the node identity changes
-    Then a node identity change event names the replaced and the new device key, the events of the writers the replaced key certified read origin "peer", and those the new key certifies read "witnessed"
+    Then a node identity change event names the replaced and the new device key, the events of the writers the replaced key certified read origin "peer", and those the new key certifies read "peer" until a confirm counted under PRV-12 names the new key's inception
     And a quarantine and its release change no origin
     And a recorded I2 security review of this requirement exists before it ships

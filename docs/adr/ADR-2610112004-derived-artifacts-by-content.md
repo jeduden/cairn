@@ -1,14 +1,14 @@
 ---
 id: ADR-2610112004
 title: "Derived artifacts are compared by content, not by storage layout"
-status: proposed
+status: accepted
 summary: >-
   I10 now says a rebuild reproduces derived artifacts' content exactly,
   whatever their storage layout, and ADM-08's verify compares each one's
   canonical digest. Removing stored content must leave no residue in any
   file. Spike S12 found that a search index kept per append never matches
-  a rebuild byte for byte. Proposed until the security reviewer approves
-  it.
+  a rebuild byte for byte. The security reviewer approved it on 13
+  October 2026.
 ---
 # ADR-2610112004: Derived artifacts are compared by content
 
@@ -159,7 +159,17 @@ the record becomes accepted, and its hash replaces ADR-2610112209's as
 the approved text, which in turn replaced
 [ADR-2610091555](ADR-2610091555-initial-invariants.md)'s.
 
-Approval: pending.
+The stakeholder approved this record as security reviewer on 13 October
+2026 by a [comment on jeduden/cairn#39][approval], after
+ADR-2610112209 in the same comment, naming the record's id. The comment
+came at that pull request's head commit `de59777`, where invariants.md
+has the hash above, and on a later pull request than the one that adds
+this record. It names neither the hash nor the commit, so this record
+binds the approval to both from the pull request's state at that time.
+
+Approval: [given][approval].
+
+[approval]: https://github.com/jeduden/cairn/pull/39#issuecomment-6149850310
 
 ### Security analysis (author)
 

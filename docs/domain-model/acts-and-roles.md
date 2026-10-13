@@ -32,12 +32,13 @@ exactly one kind (LANE-31).
     room, quarantine content without removing anything from a restore block,
     withdraw a risk acceptance, revoke a trust grant, end a delegation grant or
     an acceptance grant, turn an away policy off, withdraw a named successor,
-    revoke an appointment, unstamp a pin version, turn notices off, decline a
-    handover, withdraw as successor, dismiss a directed post, revoke an access
-    token, a seat key or a service account's certificate unless that removes a
-    pin from a restore block or stops principal acts arriving (SEC-27, PEER-06),
-    turn capture on, and turn off a B1 to B3 component or a bridge, refusing no
-    act (Component).
+    revoke an appointment, unstamp a pin version, turn notices off, reject an
+    inception no confirm or `recovered` rotation has counted, a node identity
+    change event or a void key event (PRV-12), decline a handover, withdraw as
+    successor, dismiss a directed post, revoke an access token, a seat key or a
+    service account's certificate unless that removes a pin from a restore block
+    or stops principal acts arriving (SEC-27, PEER-06), turn capture on, and
+    turn off a B1 to B3 component or a bridge, refusing no act (Component).
   - **Neutral:** mark a room ready, its **ready mark**, or abandoned, its
     **abandoned mark** (OWN-21), acknowledge an overlap, record a `met`, `not
     met` or `needs changes` verdict, unpin a verdict, open the forensic view,
@@ -64,9 +65,11 @@ exactly one kind (LANE-31).
     version, name a successor, offer a handover, record a trust grant, allow
     notices for a room or opt in to them, enable a bridge, set a room setting,
     publish, apply a purge request, change a retention policy, accept
-    configuration (ADM-04), enroll a CI key, rotate a device key, retire a
-    writer, turn capture off or pause it, enroll or revoke a device, peer or
-    authenticator, mint or rotate an access token, start a witness check
+    configuration (ADM-04), enroll a CI key, rotate a device key, write a
+    recovery key, confirm an inception, choose which key event of a duplicity
+    to keep, retire a writer, turn capture off or pause it, enroll or revoke a
+    device, peer or authenticator, mint or rotate an access token, start a
+    witness check
     (OWN-18), and a backup restore. Revoking a device or a peer stays widening
     although it undoes an enrollment, since it can drop pins and stop principal
     acts arriving.
