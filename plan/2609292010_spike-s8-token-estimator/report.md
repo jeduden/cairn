@@ -34,8 +34,9 @@ new §12.3.
   1M-event store, ten appending processes and the room view reading,
   `UserPromptSubmit` takes 3.2 ms and `SessionStart` 4.2 ms at p95,
   against 50 and 150 ms. Each peaks at 10.8 MiB RSS against 50 MiB.
-- **Frozen:** 17 † targets, with their values unchanged. **Re-planned:**
-  the 36 left, each in §12.3 with what freezes it.
+- **Frozen:** 9 † targets, the ones S2 and S8 measured and M1 needs
+  from its start, values unchanged. **Re-planned:** the 44 left, each in
+  §12.3 with what freezes it; a target freezes as late as it can.
 - **One target does not fit its neighbour.** A 1,000-character pin
   (PIN-03) in Korean or Chinese estimates above PIN-08's whole pin
   budget, so it could never restore. OQ-56 asks M2 to bound pins in
@@ -247,30 +248,33 @@ over the transcript of the harness session that ran this spike:
 
 ## Every † target
 
-Frozen, value unchanged:
+The stakeholder's rule: a target freezes as late as it can, when the
+spike or milestone that first uses or measures it is built. So S8 froze
+only what it or S2 measured and M1 needs from its start, values
+unchanged:
 
-| Target                                              | Evidence                                                              |
-| --------------------------------------------------- | --------------------------------------------------------------------- |
-| REC-09 payload threshold 8 KiB, preview ≤ 512 bytes | input limits above                                                    |
-| REC-17 per-event secret ≥ 256 bits                  | a security floor, not a measurement                                   |
-| PIN-08 pin budget 1,000 model tokens                | the estimator; what the budgets and limits hold                       |
-| RCL-02 at most 50 hits                              | S2's bounded ranking keeps the best of the newest 2,000 within NFR-03 |
-| RCL-03 recall output cap 8,000 model tokens         | the estimator; what the budgets and limits hold                       |
-| INJ-07 restore block limit 2,000 model tokens       | the estimator; the `SessionStart` timing                              |
-| CMP-06 printed output 8,000 model tokens            | the estimator, as RCL-03                                              |
-| SEC-04 16 terms of at most 64 characters            | input limits above                                                    |
-| SEC-04 query deadline 2 s                           | S2: bounded search p99 548 ms, interrupt within 1.2 ms                |
-| SEC-05 hook stdin 1 MiB, JSON depth 64              | input limits above                                                    |
-| NFR-01 store of 1M events                           | NFR-01 above                                                          |
-| NFR-03 at 10M events                                | S2                                                                    |
-| NFR-04 on one core                                  | S2                                                                    |
-| NFR-09 hook peak RSS 50 MiB                         | S2 and NFR-01 above                                                   |
+| Target                                              | Evidence                                               |
+| --------------------------------------------------- | ------------------------------------------------------ |
+| REC-09 payload threshold 8 KiB, preview ≤ 512 bytes | input limits above                                     |
+| SEC-04 query deadline 2 s                           | S2: bounded search p99 548 ms, interrupt within 1.2 ms |
+| SEC-05 hook stdin 1 MiB, JSON depth 64              | input limits above                                     |
+| NFR-01 store of 1M events                           | NFR-01 above                                           |
+| NFR-03 at 10M events                                | S2                                                     |
+| NFR-04 on one core                                  | S2                                                     |
+| NFR-09 hook peak RSS 50 MiB                         | S2 and NFR-01 above                                    |
 
-These are 17 numbers that lost their †. The remaining 36 are listed in
-§12.3 with what freezes them: six with S9, two with M1, one with M2
-(OQ-56), three with M3, two with M4, three with M5, and nineteen with
-M7, M8 and M9, which build seals, the room view, the launcher, the peer
-network and the publish and bridge components.
+These are 9 numbers that lost their †. The policy choices S8 has
+evidence for but no measurement of stay initial, the evidence above
+handed to the milestone that first uses them: REC-17's 256 bits,
+RCL-02's 50 hits, RCL-03's 8,000-model-token cap and SEC-04's 16 terms
+of 64 characters to M1; PIN-08's pin budget and INJ-07's restore block
+limit to M2, with OQ-56; CMP-06's output cap to M4.
+
+The remaining 44 are listed in §12.3 with what freezes them: six with
+S9, seven with M1, three with M2, three with M3, three with M4, three
+with M5, and nineteen with M7, M8 and M9, which build seals, the room
+view, the launcher, the peer network and the publish and bridge
+components.
 
 ## Handed on
 

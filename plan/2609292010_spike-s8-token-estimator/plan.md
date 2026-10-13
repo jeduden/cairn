@@ -45,15 +45,19 @@ timings. In short:
 - On emulated reference hardware with a 1M-event store under write
   load, `UserPromptSubmit` takes 3.2 ms and `SessionStart` 4.2 ms at
   p95, each under 11 MiB RSS.
-- 17 † targets are frozen at their values. The 36 others are listed
-  in the SRS's new §12.3 with the spike or milestone that freezes
-  each, and §1's convention now points there.
+- 9 † targets are frozen at their values: those S2 and S8 measured
+  and M1 needs from its start. The 44 others are listed in the SRS's
+  new §12.3 with the spike or milestone that freezes each, and §1's
+  convention now points there.
 
 Deviations from the tasks:
 
-- Task 4 froze no number at a new value: each frozen target held. The
-  ones the spike could not measure, because what measures them is not
-  built, were re-planned instead, as the acceptance criteria allow.
+- Task 4 froze no number at a new value: each frozen target held. On
+  the stakeholder's ruling (13 October 2026) a target freezes as late
+  as it can, so the spike froze only what it measured and M1 needs from
+  its start. Every other target was re-planned, as the acceptance
+  criteria allow, to the spike or milestone that first uses or
+  measures it.
 - A 1,000-character pin (PIN-03) in Korean, Chinese or emoji estimates
   above PIN-08's whole pin budget. Rather than rewrite PIN-03 here,
   OQ-56 asks M2 to bound pins in estimated model tokens too.
