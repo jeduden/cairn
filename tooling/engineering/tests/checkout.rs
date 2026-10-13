@@ -120,14 +120,16 @@ fn the_checkout_s_release_signs_its_checksums_keyless() {
     assert_eq!(release.checksums_signed_keyless(), Vec::<String>::new());
 }
 
-/// The reusable build workflow attests the binaries' provenance, and
-/// the release workflow verifies what it published (ENG-20).
+/// Only the release-only `release-build.yml` attests the binaries'
+/// provenance, `build.yml` and CI's call of it hold nothing to sign
+/// with, and the release workflow verifies what it published against
+/// the signer's exact identity at main (ENG-20).
 #[test]
-fn the_checkout_s_release_attests_provenance_in_the_build_workflow() {
+fn the_checkout_s_release_attests_provenance_only_in_the_release_build_workflow() {
     let release = engineering::release_provenance::load(&checkout()).unwrap_or_default();
 
     assert_eq!(
-        release.provenance_from_the_build_workflow(),
+        release.provenance_from_the_release_build_workflow(),
         Vec::<String>::new()
     );
 }

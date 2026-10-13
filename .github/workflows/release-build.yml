@@ -1,0 +1,56 @@
+name: Release build
+
+# The release build, and the build provenance of every binary it made
+# (ENG-20). Only release.yml calls this workflow; CI calls build.yml
+# directly and grants it nothing to sign with.
+#
+# SLSA Build Level 3 wants the provenance signed by a workflow the
+# caller cannot alter. The attest job below is that signer: each
+# attestation's certificate names this file at the ref the release was
+# dispatched from. The release workflow refuses any ref but main, which
+# only reviewed pull requests move, and its verify job accepts only
+# that exact identity and ref. A branch that edits this file signs as
+# itself at its own ref, which the verification refuses.
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "The version stamped into the executable, e.g. v0.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  # Every target built and run once on its own platform, by the same
+  # workflow CI runs on every change. It runs the repository's code,
+  # so it holds nothing it could sign with.
+  build:
+    uses: ./.github/workflows/build.yml
+    permissions:
+      contents: read
+    with:
+      version: ${{ inputs.version }}
+
+  # ENG-20: SLSA Build Level 3 provenance. It runs after every binary
+  # was built and ran on its own platform, and it runs none of the
+  # repository's code: it fetches the binaries and attests them. It is
+  # the only job here that holds the signing identity.
+  attest:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: "*-cairn"
+          path: dist
+          merge-multiple: true
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: "dist/cairn-*"

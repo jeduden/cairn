@@ -8,21 +8,30 @@ use crate::Checkout;
 const LOCAL_WORKFLOW: &str = "uses: ./.github/workflows/";
 
 /// The release build as the release workflow runs it: `workflow`'s
-/// text, followed by each workflow of this repository it calls, YAML
-/// comments left out so a flag only a comment names does not count.
+/// text, followed by each workflow of this repository it calls, and
+/// each one those call in turn, every file read once, YAML comments
+/// left out so a flag only a comment names does not count.
 ///
 /// # Errors
 ///
 /// Fails when `workflow` or a workflow it calls cannot be read.
 pub fn release_build(checkout: &Checkout, workflow: &str) -> Result<String, String> {
-    let mut text = uncommented(&checkout.read(workflow)?);
-    let called: Vec<String> = text
-        .lines()
-        .filter_map(|line| line.trim().strip_prefix(LOCAL_WORKFLOW))
-        .map(|name| format!(".github/workflows/{}", name.trim()))
-        .collect();
-    for file in called {
-        text.push_str(&uncommented(&checkout.read(&file)?));
+    let mut text = String::new();
+    let mut read = std::collections::BTreeSet::new();
+    let mut queue = vec![workflow.to_owned()];
+    while let Some(file) = queue.pop() {
+        if !read.insert(file.clone()) {
+            continue;
+        }
+        let body = uncommented(&checkout.read(&file)?);
+        // Reversed, so the stack reads the calls in the order they stand.
+        let called = body
+            .lines()
+            .rev()
+            .filter_map(|line| line.trim().strip_prefix(LOCAL_WORKFLOW))
+            .map(|name| format!(".github/workflows/{}", name.trim()));
+        queue.extend(called);
+        text.push_str(&body);
     }
 
     Ok(text)

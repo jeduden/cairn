@@ -45,6 +45,37 @@ fn release_build_reads_the_workflow_and_the_workflows_it_calls() {
 }
 
 #[test]
+fn release_build_follows_a_called_workflow_s_own_calls_once_each() {
+    let (_dir, c) = crate::tests::checkout(&[
+        (
+            ".github/workflows/release.yml",
+            "jobs:\n  build:\n    uses: ./.github/workflows/release-build.yml\n",
+        ),
+        (
+            ".github/workflows/release-build.yml",
+            "jobs:\n  build:\n    uses: ./.github/workflows/build.yml\n  again:\n    uses: ./.github/workflows/release.yml\n",
+        ),
+        (
+            ".github/workflows/build.yml",
+            "run: cargo build --remap-path-prefix\n",
+        ),
+    ]);
+
+    let text = release_build(&c, ".github/workflows/release.yml").unwrap();
+
+    assert!(text.contains("--remap-path-prefix"));
+    assert_eq!(
+        text.matches("uses: ./.github/workflows/build.yml").count(),
+        1
+    );
+    assert_eq!(
+        text.matches("uses: ./.github/workflows/release.yml")
+            .count(),
+        1
+    );
+}
+
+#[test]
 fn release_build_names_a_called_workflow_it_cannot_read() {
     let (_dir, c) = crate::tests::checkout(&[(
         ".github/workflows/release.yml",

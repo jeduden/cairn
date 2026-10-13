@@ -18,8 +18,8 @@ fn published(w: &mut World) -> &mut Published {
 }
 
 /// "A published release" is read from the workflows that publish it:
-/// `release.yml` and the reusable `build.yml` it calls, in this
-/// checkout. A checkout holds no release, so the steps hold those
+/// `release.yml`, the release-only `release-build.yml` it calls, the
+/// `build.yml` that one calls, and `ci.yml`, in this checkout. A checkout holds no release, so the steps hold those
 /// workflows to the shape that makes every release they publish
 /// verifiable. Checking an actual release is the workflow's own
 /// `verify` job, which downloads what it published and verifies it
@@ -39,7 +39,11 @@ fn checksums_verify(w: &mut World) -> Result<(), String> {
 
 #[then(regex = r"^every binary carries SLSA Build Level 3 provenance$")]
 fn binaries_carry_provenance(w: &mut World) -> Result<(), String> {
-    outcome(published(w).release.provenance_from_the_build_workflow())
+    outcome(
+        published(w)
+            .release
+            .provenance_from_the_release_build_workflow(),
+    )
 }
 
 #[then(regex = r"^an SPDX SBOM is attached and attested$")]

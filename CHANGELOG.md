@@ -18,9 +18,11 @@ its upgrade notes (ENG-23). Cairn follows semantic versioning.
   omitted for run ambiguity; approved in ADR-2610112209.
 - I10 says rebuilding reproduces derived artifacts' content exactly,
   whatever their storage layout; approved in ADR-2610112004.
-- The reusable build workflow attests release provenance (SLSA Build
-  Level 3). The release attaches its SBOM. A last job verifies the
-  published release (ENG-20).
+- A release-only reusable workflow, `release-build.yml`, attests each
+  binary's build provenance (SLSA Build Level 3); the build CI runs
+  attests nothing. A release runs only from `main`. The release attaches
+  its SBOM, and a last job verifies the published release against each
+  signer's exact identity at `refs/heads/main` (ENG-20).
 
 ### Upgrade notes
 

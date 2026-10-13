@@ -209,13 +209,13 @@ is open, and its scenario stays pending until a required check,
 `Security approvals`, enforces it.
 
 [release.yml](../.github/workflows/release.yml) runs from the Actions
-"Run workflow" button with a version like `v0.1.0`. A pushed tag is
-deliberately not the trigger: a failed build would leave a public tag
-pointing at nothing. The workflow takes these steps:
+"Run workflow" button on `main`, with a version like `v0.1.0`. A pushed
+tag is deliberately not the trigger: a failed build would leave a
+public tag pointing at nothing. The workflow takes these steps:
 
-1. Validate the version and run the whole suite.
+1. Validate the version, refuse any ref but `main`, run the suite.
 2. Run the release build above, with the version stamped, and stop
-   when any binary fails to report it.
+   when any binary fails to report it; then attest its provenance.
 3. Generate an SPDX SBOM, attest it to every binary, and sign
    `checksums.txt` keylessly with cosign (ENG-20).
 4. Create the tag and publish the release, only now that everything
@@ -223,20 +223,20 @@ pointing at nothing. The workflow takes these steps:
 5. Verify the release as published: a last `verify` job downloads the
    release's own assets and checks the checksum bundle with
    `cosign verify-blob`, then each binary with `gh attestation verify`,
-   for its build provenance and for its SBOM attestation (ENG-20).
+   for its provenance and its SBOM attestation (ENG-20).
 
-The build provenance is attested in `build.yml`, not in the release
-workflow. The release workflow calls it with `attest: true` and grants
-the two permissions a signature needs (`id-token` and `attestations`
-write), which a caller must grant to what it calls. Its `attest` job
-runs no repository code: it downloads the binaries that were built and
-run, and attests them. The signer recorded in each attestation is
-therefore `build.yml`, isolated from the caller, which is what SLSA
-Build Level 3 asks of GitHub's artifact attestations. CI calls the same
-workflow without `attest`, so its builds attest nothing. The ENG-20
-scenario reads these workflows, since a checkout holds no release; the
-`verify` job is the check against a release that exists.
-[SECURITY.md](../SECURITY.md) has the verification commands.
+Only the release calls
+[release-build.yml](../.github/workflows/release-build.yml). It calls
+`build.yml` and grants it nothing. Its `attest` job alone holds
+`id-token` and `attestations` write; it runs no repository code and
+attests the binaries. CI's call of `build.yml` holds neither. A
+certificate names its workflow at the dispatched ref, and any branch
+can be that ref. So `verify` pins each signer's exact `--cert-identity`
+at `refs/heads/main`, with `--source-ref` and
+`--deny-self-hosted-runners`. The tag cannot be that ref: the release
+creates it last. The ENG-20 gate tests read these workflows. Its
+scenario stays `@pending` until the stakeholder rules, as a checkout
+holds no release. [SECURITY.md](../SECURITY.md) has the commands.
 
 ## Review
 

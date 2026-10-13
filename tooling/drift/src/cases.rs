@@ -12,8 +12,18 @@ const OLD_TEST_STACK: &str = "docs/adr/ADR-2610101442-rust-test-stack.md";
 /// The release workflow the ENG-20 cases drift.
 const RELEASE_WORKFLOW: &str = ".github/workflows/release.yml";
 
+/// The release-only reusable workflow the ENG-20 cases drift.
+const RELEASE_BUILD_WORKFLOW: &str = ".github/workflows/release-build.yml";
+
 /// The reusable build workflow the ENG-20 cases drift.
 const BUILD_WORKFLOW: &str = ".github/workflows/build.yml";
+
+/// The CI workflow the ENG-20 cases drift.
+const CI_WORKFLOW: &str = ".github/workflows/ci.yml";
+
+/// The pinned action that attests build provenance.
+const ATTEST_PROVENANCE: &str =
+    "uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2";
 
 /// The step the release workflow attests its SBOM with.
 const ATTEST_SBOM_STEP: &str =
@@ -889,104 +899,197 @@ fn static_analysis_cases() -> Vec<Case> {
     ]
 }
 
-/// The drifts ENG-20 exists to catch: provenance not signed by the
-/// reusable build workflow, a missing check of the published release,
-/// and an SBOM that is not attested.
+/// A case for ENG-20: its scenario waits on the stakeholder's ruling,
+/// so each drift is caught by the gate test that reads the same
+/// workflows.
+fn release_case(
+    name: &'static str,
+    injection: Injection,
+    test: &'static str,
+    want: &'static str,
+) -> Case {
+    case(
+        name,
+        test,
+        injection,
+        cargo_test("engineering", "checkout", test),
+        want,
+    )
+}
+
+/// The gate test of ENG-20's keyless checksum signature.
+const CHECKSUMS_GATE: &str = "the_checkout_s_release_signs_its_checksums_keyless";
+
+/// The gate test of ENG-20's build provenance.
+const PROVENANCE_GATE: &str =
+    "the_checkout_s_release_attests_provenance_only_in_the_release_build_workflow";
+
+/// The gate test of ENG-20's SBOM.
+const SBOM_GATE: &str = "the_checkout_s_release_attaches_and_attests_an_sbom";
+
+/// The drifts ENG-20 exists to catch: provenance signed anywhere but
+/// the release-only reusable workflow, a signing permission granted to
+/// the build CI runs, a verification that accepts a signer at any ref,
+/// a missing check of the published release, and an SBOM that is not
+/// attested.
 fn release_cases() -> Vec<Case> {
+    [release_signer_cases(), release_verify_cases()].concat()
+}
+
+/// The ENG-20 drifts in who signs the build provenance, and with what.
+fn release_signer_cases() -> Vec<Case> {
     vec![
-        case(
-            "build provenance attested outside the reusable build workflow",
-            "ENG-20",
+        release_case(
+            "build provenance attested outside the release build workflow",
             Injection::replace(
                 RELEASE_WORKFLOW,
                 ATTEST_SBOM_STEP,
                 "        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2\n        with:\n          subject-path: \"dist/cairn-*\"\n      - name: Attest the SBOM again\n        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0\n",
             ),
-            scenario("ENG-20"),
-            "release.yml attests build provenance outside the reusable build workflow, in job publish",
+            PROVENANCE_GATE,
+            "release.yml attests build provenance outside release-build.yml, in job publish",
         ),
-        case(
-            "the reusable build workflow no longer attesting provenance",
-            "ENG-20",
+        release_case(
+            "the build workflow CI runs attesting build provenance",
             Injection::replace(
                 BUILD_WORKFLOW,
-                "uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2",
+                "        run: scripts/check-stamp.sh dist/cairn-windows-amd64.exe \"$VERSION\" \"$COMMIT\"\n",
+                "        run: scripts/check-stamp.sh dist/cairn-windows-amd64.exe \"$VERSION\" \"$COMMIT\"\n\n  attest:\n    needs: windows\n    runs-on: ubuntu-latest\n    permissions:\n      id-token: write\n      attestations: write\n    steps:\n      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2\n        with:\n          subject-path: \"dist/cairn-*\"\n",
+            ),
+            PROVENANCE_GATE,
+            "build.yml attests build provenance in job attest; only release-build.yml may",
+        ),
+        release_case(
+            "ci.yml granting id-token to its build call",
+            Injection::replace(
+                CI_WORKFLOW,
+                "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n",
+                "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n      id-token: write\n",
+            ),
+            PROVENANCE_GATE,
+            "ci.yml job build grants id-token: write to build.yml",
+        ),
+        release_case(
+            "the release build workflow no longer attesting provenance",
+            Injection::replace(
+                RELEASE_BUILD_WORKFLOW,
+                ATTEST_PROVENANCE,
                 "uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1",
             ),
-            scenario("ENG-20"),
-            "build.yml does not attest build provenance",
+            PROVENANCE_GATE,
+            "release-build.yml does not attest build provenance",
         ),
-        case(
-            "the release workflow not asking the build workflow to attest",
-            "ENG-20",
+        release_case(
+            "the attest job checking out the repository's code",
+            Injection::replace(
+                RELEASE_BUILD_WORKFLOW,
+                "    steps:\n      - uses: actions/download-artifact@",
+                "    steps:\n      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1\n      - uses: actions/download-artifact@",
+            ),
+            PROVENANCE_GATE,
+            "release-build.yml job attest checks out the repository's code",
+        ),
+        release_case(
+            "the release building through build.yml directly",
             Injection::replace(
                 RELEASE_WORKFLOW,
-                "      attest: true\n",
-                "      attest: false\n",
+                "uses: ./.github/workflows/release-build.yml",
+                "uses: ./.github/workflows/build.yml",
             ),
-            scenario("ENG-20"),
-            "calls the build workflow without attest: true",
+            PROVENANCE_GATE,
+            "release.yml does not call release-build.yml",
         ),
-        case(
+        release_case(
+            "a release dispatched from any ref",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "if [ \"$GITHUB_REF\" != refs/heads/main ]; then",
+                "if false; then",
+            ),
+            PROVENANCE_GATE,
+            "release.yml builds without refusing a ref other than refs/heads/main",
+        ),
+    ]
+}
+
+/// The ENG-20 drifts in what the release publishes and how its verify
+/// job checks it.
+fn release_verify_cases() -> Vec<Case> {
+    vec![
+        release_case(
             "no job verifying the published release",
-            "ENG-20",
             Injection::replace(
                 RELEASE_WORKFLOW,
                 "  verify:\n    needs: publish\n",
                 "  verify:\n    needs: build\n",
             ),
-            scenario("ENG-20"),
+            PROVENANCE_GATE,
             "no job verifies the published release after job publish",
         ),
-        case(
-            "the published provenance not checked against the build workflow",
-            "ENG-20",
+        release_case(
+            "an unpinned verify: --signer-workflow without a ref",
             Injection::replace(
                 RELEASE_WORKFLOW,
-                "--signer-workflow jeduden/cairn/.github/workflows/build.yml",
-                "--signer-workflow jeduden/cairn/.github/workflows/release.yml",
+                "              --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \\\n              --source-ref refs/heads/main --source-digest \"$GITHUB_SHA\" \\\n",
+                "              --signer-workflow jeduden/cairn/.github/workflows/release-build.yml \\\n",
             ),
-            scenario("ENG-20"),
-            "does not verify build provenance with --repo jeduden/cairn --signer-workflow jeduden/cairn/.github/workflows/build.yml",
+            PROVENANCE_GATE,
+            "job verify verifies an attestation with --signer-workflow, which pins no ref",
         ),
-        case(
+        release_case(
+            "the provenance verified against an identity at another ref",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "release-build.yml@refs/heads/main",
+                "release-build.yml@refs/heads/feature",
+            ),
+            PROVENANCE_GATE,
+            "job verify does not verify build provenance with --repo jeduden/cairn --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main --source-ref refs/heads/main --deny-self-hosted-runners",
+        ),
+        release_case(
             "the checksum bundle no longer verified",
-            "ENG-20",
             Injection::replace(RELEASE_WORKFLOW, "cosign verify-blob", "cosign version"),
-            scenario("ENG-20"),
+            CHECKSUMS_GATE,
             "does not run cosign verify-blob",
         ),
-        case(
+        release_case(
+            "the checksum bundle verified at any ref",
+            Injection::replace(
+                RELEASE_WORKFLOW,
+                "--certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
+                "--certificate-identity-regexp '^https://github.com/jeduden/cairn/.github/workflows/release.yml@'",
+            ),
+            CHECKSUMS_GATE,
+            "job verify does not pin the certificate identity to https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
+        ),
+        release_case(
             "the SBOM generated but not attested",
-            "ENG-20",
             Injection::replace(
                 RELEASE_WORKFLOW,
                 ATTEST_SBOM_STEP,
                 "        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1\n",
             ),
-            scenario("ENG-20"),
+            SBOM_GATE,
             "release.yml does not attest the SBOM",
         ),
-        case(
+        release_case(
             "the SBOM left off the release",
-            "ENG-20",
             Injection::replace(
                 RELEASE_WORKFLOW,
                 "cairn-* cairn.spdx.json checksums.txt checksums.txt.sigstore.json",
                 "cairn-* checksums.txt checksums.txt.sigstore.json",
             ),
-            scenario("ENG-20"),
+            SBOM_GATE,
             "the release does not attach the SBOM cairn.spdx.json",
         ),
-        case(
+        release_case(
             "the SBOM attestation no longer verified",
-            "ENG-20",
             Injection::replace(
                 RELEASE_WORKFLOW,
                 " --predicate-type https://spdx.dev/Document/v2.3",
                 "",
             ),
-            scenario("ENG-20"),
+            SBOM_GATE,
             "does not verify the SBOM attestation",
         ),
     ]

@@ -5,19 +5,52 @@ name: Build
 on:
   workflow_call:
     inputs:
-      attest:
-        type: boolean
+      version:
+        type: string
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
-  attest:
-    if: ${{ inputs.attest }}
-    needs: [build]
+    steps:
+      - run: cargo build
+";
+
+const RELEASE_BUILD_YML: &str = "\
+name: Release build
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
     permissions:
+      contents: read
+  attest:
+    needs: build
+    permissions:
+      contents: read
       id-token: write
       attestations: write
     steps:
+      - uses: actions/download-artifact@abc
       - uses: actions/attest-build-provenance@abc # v4
+";
+
+const CI_YML: &str = "\
+name: CI
+on:
+  push:
+jobs:
+  coverage:
+    permissions:
+      id-token: write
+  build:
+    uses: ./.github/workflows/build.yml
+    permissions:
+      contents: read
 ";
 
 const RELEASE_YML: &str = "\
@@ -25,13 +58,16 @@ name: Release
 on:
   workflow_dispatch:
 jobs:
+  preflight:
+    steps:
+      - run: |
+          if [ \"$GITHUB_REF\" != refs/heads/main ]; then exit 1; fi
   build:
-    uses: ./.github/workflows/build.yml
+    needs: preflight
+    uses: ./.github/workflows/release-build.yml
     permissions:
       id-token: write
       attestations: write
-    with:
-      attest: true
   publish:
     needs: build
     permissions:
@@ -55,34 +91,60 @@ jobs:
     steps:
       - run: |
           cosign verify-blob --bundle checksums.txt.sigstore.json \\
-            --certificate-identity-regexp '^https://github.com/jeduden/cairn/.github/workflows/release.yml@' \\
+            --certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \\
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \\
             checksums.txt
           for bin in cairn-*; do
-            gh attestation verify \"$bin\" --repo jeduden/cairn --signer-workflow jeduden/cairn/.github/workflows/build.yml
-            gh attestation verify \"$bin\" --repo jeduden/cairn --predicate-type https://spdx.dev/Document/v2.3
+            gh attestation verify \"$bin\" --repo jeduden/cairn \\
+              --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \\
+              --source-ref refs/heads/main --deny-self-hosted-runners
+            gh attestation verify \"$bin\" --repo jeduden/cairn \\
+              --cert-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \\
+              --source-ref refs/heads/main --predicate-type https://spdx.dev/Document/v2.3
           done
 ";
 
-fn release(release: &str, build: &str) -> Release {
-    Release {
-        release: parse(release),
-        build: parse(build),
-    }
+/// The verify job's check of the build provenance, as it stands in
+/// [`RELEASE_YML`].
+const PINNED: &str = "--cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \\
+              --source-ref refs/heads/main";
+
+/// Which of the four workflows a drift edits.
+#[derive(Clone, Copy)]
+enum File {
+    Release,
+    ReleaseBuild,
+    Build,
+    Ci,
 }
 
 fn good() -> Release {
-    release(RELEASE_YML, BUILD_YML)
+    Release {
+        release: parse(RELEASE_YML),
+        release_build: parse(RELEASE_BUILD_YML),
+        build: parse(BUILD_YML),
+        ci: parse(CI_YML),
+    }
+}
+
+fn edited(file: File, from: &str, to: &str) -> Release {
+    let edit = |body: &str| {
+        assert!(body.contains(from), "{from}");
+        parse(&body.replace(from, to))
+    };
+    let mut r = good();
+    match file {
+        File::Release => r.release = edit(RELEASE_YML),
+        File::ReleaseBuild => r.release_build = edit(RELEASE_BUILD_YML),
+        File::Build => r.build = edit(BUILD_YML),
+        File::Ci => r.ci = edit(CI_YML),
+    }
+
+    r
 }
 
 fn drifted(from: &str, to: &str) -> Release {
-    assert!(RELEASE_YML.contains(from), "{from}");
-    release(&RELEASE_YML.replace(from, to), BUILD_YML)
-}
-
-fn build_drifted(from: &str, to: &str) -> Release {
-    assert!(BUILD_YML.contains(from), "{from}");
-    release(RELEASE_YML, &BUILD_YML.replace(from, to))
+    edited(File::Release, from, to)
 }
 
 fn has(problems: &[String], want: &str) {
@@ -92,83 +154,186 @@ fn has(problems: &[String], want: &str) {
     );
 }
 
+fn provenance(file: File, from: &str, to: &str) -> Vec<String> {
+    edited(file, from, to).provenance_from_the_release_build_workflow()
+}
+
 #[test]
 fn a_good_release_has_no_problem() {
     let r = good();
 
     assert_eq!(r.checksums_signed_keyless(), Vec::<String>::new());
-    assert_eq!(r.provenance_from_the_build_workflow(), Vec::<String>::new());
+    assert_eq!(
+        r.provenance_from_the_release_build_workflow(),
+        Vec::<String>::new()
+    );
     assert_eq!(r.sbom_attached_and_attested(), Vec::<String>::new());
 }
 
 #[test]
-fn load_reads_both_workflows_or_names_the_missing_one() {
-    let (_dir, c) = crate::tests::checkout(&[(RELEASE, RELEASE_YML), (BUILD, BUILD_YML)]);
+fn load_reads_the_four_workflows_or_names_the_missing_one() {
+    let all = [
+        (RELEASE, RELEASE_YML),
+        (RELEASE_BUILD, RELEASE_BUILD_YML),
+        (BUILD, BUILD_YML),
+        (CI, CI_YML),
+    ];
+    let (_dir, c) = crate::tests::checkout(&all);
     assert_eq!(load(&c).unwrap(), good());
 
-    let (_dir, c) = crate::tests::checkout(&[(RELEASE, RELEASE_YML)]);
-    assert!(load(&c).unwrap_err().starts_with(&format!("read {BUILD}")));
+    for missing in [RELEASE_BUILD, BUILD, CI] {
+        let rest: Vec<_> = all.into_iter().filter(|(p, _)| *p != missing).collect();
+        let (_dir, c) = crate::tests::checkout(&rest);
+        assert!(
+            load(&c)
+                .unwrap_err()
+                .starts_with(&format!("read {missing}"))
+        );
+    }
 }
 
 #[test]
-fn provenance_attested_in_the_release_workflow_is_outside_the_build_workflow() {
-    let r = drifted(
+fn identity_names_a_workflow_at_the_release_ref() {
+    assert_eq!(
+        identity("release.yml"),
+        "https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main"
+    );
+}
+
+#[test]
+fn provenance_attested_in_the_release_workflow_is_outside_the_release_build_workflow() {
+    let problems = provenance(
+        File::Release,
         "      - uses: actions/attest-sbom@abc\n",
         "      - uses: actions/attest-build-provenance@abc\n",
     );
 
     has(
-        &r.provenance_from_the_build_workflow(),
-        "release.yml attests build provenance outside the reusable build workflow, in job publish",
+        &problems,
+        "release.yml attests build provenance outside release-build.yml, in job publish",
     );
 }
 
 #[test]
-fn provenance_missing_from_the_build_workflow_is_named() {
-    let r = build_drifted("actions/attest-build-provenance@", "actions/other@");
-
+fn the_build_workflow_ci_runs_attests_nothing_and_asks_for_no_signing_permission() {
+    let problems = provenance(
+        File::Build,
+        "      - run: cargo build\n",
+        "      - run: cargo build\n  attest:\n    permissions:\n      id-token: write\n    steps:\n      - uses: actions/attest-build-provenance@abc\n",
+    );
     has(
-        &r.provenance_from_the_build_workflow(),
-        "build.yml does not attest build provenance",
+        &problems,
+        "build.yml attests build provenance in job attest; only release-build.yml may",
+    );
+    has(&problems, "build.yml job attest asks for id-token: write");
+
+    let problems = provenance(
+        File::Build,
+        "      version:\n",
+        "      attest:\n        type: boolean\n      version:\n",
+    );
+    has(&problems, "build.yml takes an attest input");
+}
+
+#[test]
+fn the_release_build_workflow_builds_through_build_yml_and_attests_after_it() {
+    let problems = provenance(
+        File::ReleaseBuild,
+        "uses: ./.github/workflows/build.yml",
+        "uses: x/y@z",
+    );
+    has(&problems, "release-build.yml does not call build.yml");
+
+    let problems = provenance(
+        File::ReleaseBuild,
+        "actions/attest-build-provenance@",
+        "actions/other@",
+    );
+    has(
+        &problems,
+        "release-build.yml does not attest build provenance",
+    );
+
+    let problems = provenance(File::ReleaseBuild, "    needs: build\n", "");
+    has(
+        &problems,
+        "release-build.yml job attest does not wait for job build",
     );
 }
 
 #[test]
-fn the_attest_job_needs_both_permissions_and_the_callers_ask() {
-    let r = build_drifted("      attestations: write\n", "");
-    has(
-        &r.provenance_from_the_build_workflow(),
-        "job attest lacks attestations: write",
-    );
+fn the_attest_job_holds_both_permissions_and_runs_no_repository_code() {
+    let problems = provenance(File::ReleaseBuild, "      attestations: write\n", "");
+    has(&problems, "job attest lacks attestations: write");
 
-    let r = build_drifted("    if: ${{ inputs.attest }}\n", "");
+    let problems = provenance(
+        File::ReleaseBuild,
+        "      - uses: actions/download-artifact@abc\n",
+        "      - uses: actions/checkout@abc\n",
+    );
     has(
-        &r.provenance_from_the_build_workflow(),
-        "attests whether or not the caller asks",
+        &problems,
+        "release-build.yml job attest checks out the repository's code",
     );
 }
 
 #[test]
-fn the_caller_must_ask_and_grant() {
-    let r = drifted("      attest: true\n", "      attest: false\n");
-    has(
-        &r.provenance_from_the_build_workflow(),
-        "job build calls the build workflow without attest: true",
+fn the_build_call_inside_the_release_build_workflow_is_granted_no_signing_permission() {
+    let problems = provenance(
+        File::ReleaseBuild,
+        "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n",
+        "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n      attestations: write\n",
     );
 
-    let r = drifted(
-        "    uses: ./.github/workflows/build.yml\n    permissions:\n      id-token: write\n",
-        "    uses: ./.github/workflows/build.yml\n    permissions:\n",
+    has(
+        &problems,
+        "release-build.yml job build grants attestations: write to build.yml",
+    );
+}
+
+#[test]
+fn ci_grants_its_build_call_no_signing_permission_and_never_calls_the_release_build() {
+    let problems = provenance(
+        File::Ci,
+        "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n",
+        "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n      id-token: write\n",
     );
     has(
-        &r.provenance_from_the_build_workflow(),
-        "job build lacks id-token: write",
+        &problems,
+        "ci.yml job build grants id-token: write to build.yml",
     );
 
-    let r = drifted("uses: ./.github/workflows/build.yml", "uses: x/y@z");
+    let problems = provenance(
+        File::Ci,
+        "uses: ./.github/workflows/build.yml",
+        "uses: ./.github/workflows/release-build.yml",
+    );
     has(
-        &r.provenance_from_the_build_workflow(),
-        "release.yml does not call the reusable build workflow",
+        &problems,
+        "ci.yml job build calls release-build.yml, which only release.yml may call",
+    );
+}
+
+#[test]
+fn the_release_calls_the_release_build_granting_both_permissions_from_main_only() {
+    let problems = provenance(
+        File::Release,
+        "uses: ./.github/workflows/release-build.yml",
+        "uses: ./.github/workflows/build.yml",
+    );
+    has(&problems, "release.yml does not call release-build.yml");
+
+    let problems = provenance(
+        File::Release,
+        "    uses: ./.github/workflows/release-build.yml\n    permissions:\n      id-token: write\n",
+        "    uses: ./.github/workflows/release-build.yml\n    permissions:\n",
+    );
+    has(&problems, "job build lacks id-token: write");
+
+    let problems = provenance(File::Release, "!= refs/heads/main", "= refs/heads/x");
+    has(
+        &problems,
+        "release.yml builds without refusing a ref other than refs/heads/main",
     );
 }
 
@@ -180,7 +345,7 @@ fn a_release_without_a_verify_job_is_named_by_every_check() {
     );
     let want = "no job verifies the published release after job publish";
 
-    has(&r.provenance_from_the_build_workflow(), want);
+    has(&r.provenance_from_the_release_build_workflow(), want);
     has(&r.checksums_signed_keyless(), want);
     has(&r.sbom_attached_and_attested(), want);
 }
@@ -191,25 +356,70 @@ fn a_release_nobody_creates_has_no_publish_job() {
     let want = "no job in release.yml creates the release";
 
     has(&r.checksums_signed_keyless(), want);
-    has(&r.provenance_from_the_build_workflow(), want);
+    has(&r.provenance_from_the_release_build_workflow(), want);
     has(&r.sbom_attached_and_attested(), want);
 }
 
 #[test]
-fn the_verify_job_pins_the_build_workflow_as_signer_for_every_binary() {
-    let r = drifted(
-        "--signer-workflow jeduden/cairn/.github/workflows/build.yml",
-        "--signer-workflow jeduden/cairn/.github/workflows/release.yml",
+fn the_verify_job_pins_the_release_build_workflow_s_identity_and_ref() {
+    let want = "job verify does not verify build provenance with --repo jeduden/cairn \
+                --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \
+                --source-ref refs/heads/main --deny-self-hosted-runners";
+
+    let problems = provenance(
+        File::Release,
+        PINNED,
+        "--signer-workflow jeduden/cairn/.github/workflows/release-build.yml",
     );
+    has(&problems, want);
     has(
-        &r.provenance_from_the_build_workflow(),
-        "does not verify build provenance with --repo jeduden/cairn --signer-workflow jeduden/cairn/.github/workflows/build.yml",
+        &problems,
+        "job verify verifies an attestation with --signer-workflow, which pins no ref",
     );
 
-    let r = drifted("for bin in cairn-*; do", "for bin in cairn-linux-amd64; do");
+    let problems = provenance(
+        File::Release,
+        "release-build.yml@refs/heads/main",
+        "release-build.yml@refs/heads/x",
+    );
+    has(&problems, want);
+
+    let problems = provenance(
+        File::Release,
+        "release-build.yml@refs/heads/main",
+        "release-build.yml@refs/heads/main-x",
+    );
+    has(&problems, want);
+
+    let problems = provenance(
+        File::Release,
+        PINNED,
+        "--cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main",
+    );
+    has(&problems, want);
+
+    let problems = provenance(File::Release, " --deny-self-hosted-runners", "");
+    has(&problems, want);
+
+    let problems = provenance(
+        File::Release,
+        "for bin in cairn-*; do",
+        "for bin in cairn-linux-amd64; do",
+    );
+    has(&problems, "does not verify every binary (cairn-*)");
+}
+
+#[test]
+fn a_verify_by_regular_expression_is_named_unpinned() {
+    let problems = provenance(
+        File::Release,
+        "--cert-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
+        "--cert-identity-regex '^https://github.com/jeduden/cairn/'",
+    );
+
     has(
-        &r.provenance_from_the_build_workflow(),
-        "does not verify every binary (cairn-*)",
+        &problems,
+        "job verify verifies an attestation with --cert-identity-regex, which pins no ref",
     );
 }
 
@@ -245,7 +455,10 @@ fn the_checksums_are_signed_keyless_and_published_with_their_bundle() {
 }
 
 #[test]
-fn the_verify_job_checks_the_bundle_against_the_release_workflows_identity() {
+fn the_verify_job_checks_the_bundle_against_the_release_workflow_s_identity_at_main() {
+    let want = "job verify does not pin the certificate identity to \
+                https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main";
+
     let r = drifted("cosign verify-blob", "cosign version");
     has(
         &r.checksums_signed_keyless(),
@@ -253,13 +466,16 @@ fn the_verify_job_checks_the_bundle_against_the_release_workflows_identity() {
     );
 
     let r = drifted(
+        "--certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
         "--certificate-identity-regexp '^https://github.com/jeduden/cairn/.github/workflows/release.yml@'",
-        "--certificate-identity-regexp '^https://github.com/other/'",
     );
-    has(
-        &r.checksums_signed_keyless(),
-        "does not pin the certificate identity to jeduden/cairn/.github/workflows/release.yml",
+    has(&r.checksums_signed_keyless(), want);
+
+    let r = drifted(
+        "--certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
+        "--certificate-identity=https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/x",
     );
+    has(&r.checksums_signed_keyless(), want);
 
     let r = drifted(
         "--certificate-oidc-issuer https://token.actions.githubusercontent.com",
@@ -317,12 +533,31 @@ fn the_sbom_is_generated_as_spdx_attested_and_attached() {
         &r.sbom_attached_and_attested(),
         "the release does not attach the SBOM cairn.spdx.json",
     );
+}
+
+#[test]
+fn the_sbom_attestation_is_verified_against_the_release_workflow_at_main() {
+    let want = "job verify does not verify the SBOM attestation \
+                (--predicate-type https://spdx.dev/Document/v2.3) with \
+                --cert-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \
+                --source-ref refs/heads/main";
 
     let r = drifted(" --predicate-type https://spdx.dev/Document/v2.3", "");
-    has(
-        &r.sbom_attached_and_attested(),
-        "does not verify the SBOM attestation (--predicate-type https://spdx.dev/Document/v2.3)",
+    has(&r.sbom_attached_and_attested(), want);
+
+    let r = drifted(
+        "--source-ref refs/heads/main --predicate-type",
+        "--predicate-type",
     );
+    has(&r.sbom_attached_and_attested(), want);
+}
+
+#[test]
+fn flag_value_reads_a_separate_or_joined_value_without_quotes() {
+    assert_eq!(flag_value("a --x 'v' b", "--x").as_deref(), Some("v"));
+    assert_eq!(flag_value("a --x=\"v\" b", "--x").as_deref(), Some("v"));
+    assert_eq!(flag_value("a --xy v", "--x"), None);
+    assert_eq!(flag_value("a --x", "--x"), None);
 }
 
 #[test]
