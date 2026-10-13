@@ -88,7 +88,7 @@ there. Option (c), a proxy, stays outside the core under I4.
 
 The stakeholder closed OQ-01 this way on 13 October 2026, and kept
 three options for later under UC-006: a bounded veto, compaction the
-launcher drives, and (c).
+launcher asks the harness for, and (c).
 
 ## Prior art
 
@@ -103,11 +103,11 @@ describe it on 13 October 2026:
   `PreCompact` and inject again through `SessionStart` after a
   compaction: also (a).
 - The [`PreCompact` veto pattern][veto] blocks only automatic
-  compactions mid-task, lets one through at a checkpoint and forces one
+  compactions mid-task, lets one through at a safe point and forces one
   after three blocks. It warns that an indefinite block exhausts the
   window, as S6 recorded.
 - [Hyperhive][hyperhive] turns Claude Code's auto-compaction off through
-  `--settings`. After a turn above a token watermark, 150k by default,
+  `--settings`. After a turn above a model-token watermark, 150k by default,
   it has the agent write its state to files and then sends `/compact`;
   on "Prompt is too long" it compacts at once and retries the turn.
 

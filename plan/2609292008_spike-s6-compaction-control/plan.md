@@ -42,9 +42,9 @@ exported by `record/export-defer.sh`, under
 - OQ-01 is closed by the stakeholder on S6's findings: v1 coexists
   with native compaction, option (a), and NG1 stands. Blocking only
   moves native compaction to the full context window and blocks the
-  agent there (I9). A bounded veto, compaction the launcher drives,
-  and the proxy (c) are kept for later as UC-006, with the prior art
-  the report lists.
+  agent there (I9). A bounded veto, compaction the launcher asks the
+  harness for, and the proxy (c) are kept for later as UC-006, with the
+  prior art the report lists.
 
 Deviations from the tasks:
 

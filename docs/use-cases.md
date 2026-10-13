@@ -49,5 +49,5 @@ row: "| [{id}]({filename}) | {summary} | {personas} | \
 | [UC-003](use-cases/UC-003.md) | Share a marked range and its comment by an address that carries only ids and opens only where the room's visibility allows                                   | U2, U5, U6 | M7 to M9  | pending |              |
 | [UC-004](use-cases/UC-004.md) | Start runs on a schedule, such as nightly, under a principal act the agent's principal recorded in advance, with no person present                           | U1, U2     | unplanned | pending |              |
 | [UC-005](use-cases/UC-005.md) | Start a run or post in a room when the forge reports a change, such as a new issue or a merged pull request                                                  | U2, U5, U7 | unplanned | pending |              |
-| [UC-006](use-cases/UC-006.md) | Have an agent compacted when its task reaches a safe point, not midway through an edit or a failing test, and never left stalled at a full context window    | U2, U9     | unplanned | pending |              |
+| [UC-006](use-cases/UC-006.md) | Have an agent compacted at a safe point in what it is doing, not midway through an edit or a failing test, and never left stalled at a full context window   | U2, U9     | unplanned | pending |              |
 <?/catalog?>
