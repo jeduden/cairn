@@ -15,3 +15,9 @@ testkit.workspace = true
 
 [lints]
 workspace = true
+
+# ENG-02: see crates/cairn/Cargo.toml.
+[package.metadata.cairn]
+responsibility = "Reads the recorded harness hook inputs and transcripts and checks the assumptions register against them"
+may-depend-on = []
+may-dev-depend-on = ["testkit"]

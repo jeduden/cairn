@@ -15,3 +15,9 @@ testkit.workspace = true
 
 [lints]
 workspace = true
+
+# ENG-02: see crates/cairn/Cargo.toml.
+[package.metadata.cairn]
+responsibility = "Reads the architecture decision records and the module tables ENG-18 checks"
+may-depend-on = ["srs"]
+may-dev-depend-on = ["testkit"]

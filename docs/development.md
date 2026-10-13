@@ -46,6 +46,29 @@ with every warning denied, and rustfmt.
 license allow-list, each exception named, and to crates.io as the
 only source. cargo-audit refuses a crate with a known vulnerability.
 
+Crates may only depend on the crates they declare (ENG-02). Each
+crate's `Cargo.toml` holds a `cairn` metadata table with three keys:
+
+- `responsibility`: the one thing the library crate does.
+- `may-depend-on`: the workspace crates it may depend on, an empty
+  list included.
+- `may-dev-depend-on`: the workspace crates its tests may depend on.
+
+The architecture check (`engineering::architecture`) reads every
+workspace manifest through `cargo metadata`. It fails naming both
+crates when a dependency is not declared, and when a declaration names
+a crate that is no workspace member. It also fails when a library
+crate declares no responsibility or several, or when two crates
+declare the same one. The tooling crates fall under the same table.
+
+One rule needs no declaration. A product crate under `crates/` never
+depends on a tooling crate under `tooling/` as a normal or build
+dependency; only its tests may, as declared. The manifests are the
+stakeholder's paths in CODEOWNERS, so changing a direction waits for
+the stakeholder. The browser room view client, a TypeScript package,
+does not exist yet (M7); its dependency boundary joins this check
+when it lands.
+
 The core executable's reach is held two ways (SEC-01, ENG-16). Its
 own [clippy.toml](../crates/cairn/clippy.toml) refuses the
 `std::net` socket types and `std::process::Command` in its code, and
@@ -78,6 +101,24 @@ from util-linux with unprivileged user namespaces, and `strace`; a
 machine without them fails the end-to-end tests with what is missing.
 Outside CI, `CAIRN_E2E_UNCONFINED=1` runs them unconfined instead, on
 a machine that cannot confine; CI refuses it.
+
+The same clippy.toml holds the rest of ENG-03 in the product crates.
+It bans the clocks and the hash collections, so derived artifacts
+read no wall clock and no random order (I10). It also bans each
+blocking call that waits with no deadline, and names the form that
+takes one: `recv` for `recv_timeout`, `Child::wait` for polling
+`try_wait`, `File::lock` for `try_lock`, and so on. A thread join,
+a read of standard input and a wait on a condition variable or a
+barrier are on the list too. A call site that has to block says so
+with an `expect` and a reason, which review reads.
+
+Local file reads and writes are not on that list. The disk bounds
+them, and the hook's time budget (I9) covers them. Nor are
+`std::thread::sleep`, which carries its own bound, and the in-process
+`Mutex` and `RwLock`. The engineering gate test
+`the_product_crates_keep_their_bans` requires every product crate's
+clippy.toml to carry every ban, and the ENG-03 scenario reads the same
+bans beside the check for mutable global state.
 
 ## CI, nightly and release
 
@@ -203,8 +244,11 @@ What CI decides, on every pull request:
 - dependencies and their ADRs (ENG-18) and the decision records
   (ENG-26);
 - rustfmt and clippy, with each product crate's bans on sockets and
-  program starts (I4) and on clocks and hash order (I10), and the
+  program starts (I4), on clocks and hash order (I10) and on waits with
+  no deadline (ENG-03), and the
   reach test;
+- the crates' declared dependency directions and responsibilities
+  (ENG-02);
 - no mutable global state in a product crate (ENG-03);
 - coverage per test layer (ENG-11), and every live scenario.
 

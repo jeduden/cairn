@@ -8,7 +8,12 @@ fn every_ban() -> Vec<(&'static str, &'static str)> {
     let types = REACH_BANS.iter().chain(&DETERMINISM_TYPES);
     types
         .map(|b| (TYPES, *b))
-        .chain(DETERMINISM_METHODS.iter().map(|b| (METHODS, *b)))
+        .chain(
+            DETERMINISM_METHODS
+                .iter()
+                .chain(&DEADLINE_METHODS)
+                .map(|b| (METHODS, *b)),
+        )
         .collect()
 }
 
@@ -19,7 +24,7 @@ fn full() -> String {
         body.push_str(&format!("  {{ path = \"{b}\", reason = \"r\" }},\n"));
     }
     body.push_str("]\n\ndisallowed-methods = [\n");
-    for b in DETERMINISM_METHODS {
+    for b in DETERMINISM_METHODS.iter().chain(&DEADLINE_METHODS) {
         body.push_str(&format!("  {{ path = \"{b}\", reason = \"r\" }},\n"));
     }
     body.push_str("]\n");
@@ -102,6 +107,67 @@ fn missing_bans_names_each_absent_one_and_its_table() {
 }
 
 #[test]
+fn the_ban_classes_make_up_every_ban() {
+    assert_eq!(all_bans(), every_ban());
+    assert_eq!(
+        deadline_bans(),
+        DEADLINE_METHODS
+            .iter()
+            .map(|b| (METHODS, *b))
+            .collect::<Vec<_>>()
+    );
+    for ban in determinism_bans().into_iter().chain(deadline_bans()) {
+        assert!(all_bans().contains(&ban), "{ban:?}");
+    }
+    assert_eq!(
+        determinism_bans().len(),
+        DETERMINISM_TYPES.len() + DETERMINISM_METHODS.len()
+    );
+}
+
+#[test]
+fn the_deadline_bans_name_the_calls_that_wait_with_no_deadline() {
+    for call in [
+        "std::sync::mpsc::Receiver::recv",
+        "std::thread::JoinHandle::join",
+        "std::process::Child::wait",
+        "std::fs::File::lock",
+        "std::io::stdin",
+    ] {
+        assert!(DEADLINE_METHODS.contains(&call), "{call}");
+    }
+    for call in ["std::thread::sleep", "std::sync::Mutex::lock"] {
+        assert!(!DEADLINE_METHODS.contains(&call), "{call}");
+    }
+}
+
+#[test]
+fn missing_among_names_only_the_bans_it_is_asked_for() {
+    let without = full().replace("std::thread::park", "x");
+
+    assert!(missing_among(&without, &determinism_bans()).is_empty());
+    assert_eq!(
+        missing_among(&without, &deadline_bans()),
+        [(METHODS, "std::thread::park")]
+    );
+    assert_eq!(missing_among(&without, &all_bans()), missing_bans(&without));
+}
+
+#[test]
+fn crates_keep_bans_checks_the_class_it_is_given() {
+    let (_d, c) = checkout(Some(&full().replace("std::thread::park", "x")), &[]);
+
+    assert!(crates_keep_bans(&c, &determinism_bans()).is_empty());
+    assert_eq!(
+        crates_keep_bans(&c, &deadline_bans()),
+        [
+            "crate core: crates/core/clippy.toml does not ban std::thread::park in disallowed-methods"
+        ]
+    );
+    assert_eq!(crates_keep_their_bans(&c).len(), 1);
+}
+
+#[test]
 fn missing_bans_skips_a_commented_ban() {
     let commented = full().replace(
         "  { path = \"std::net::UdpSocket\"",
@@ -135,6 +201,7 @@ fn missing_bans_reads_one_line_arrays() {
         .collect();
     let methods: Vec<String> = DETERMINISM_METHODS
         .iter()
+        .chain(&DEADLINE_METHODS)
         .map(|b| format!("{{ path = \"{b}\" }}"))
         .collect();
     let body = format!(

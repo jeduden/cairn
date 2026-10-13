@@ -16,14 +16,14 @@ Feature: Engineering quality (ENG)
     And the release workflow builds with "x86_64-unknown-linux-musl"
     And the release workflow builds with "aarch64-unknown-linux-musl"
 
-  @ENG-02 @P0 @pending
+  @ENG-02 @P0
   Scenario: dependency directions between the workspace crates are declared and enforced
     Given the declared dependency directions for the workspace crates
     When a crate depends on a crate its direction forbids
     Then the architecture check fails naming both crates
     And every library crate has exactly one declared responsibility
 
-  @ENG-03 @P0 @pending
+  @ENG-03 @P0
   Scenario: no mutable global state, injectable I/O and deadlines everywhere
     Given the repository's code
     When the static analyzers run

@@ -1,7 +1,7 @@
 ---
 n: 2
 title: "Declared dependency directions between crates (ENG-02)"
-status: "🔲"
+status: "✅"
 result: false
 ---
 # Phase 2: declared dependency directions between crates (ENG-02)

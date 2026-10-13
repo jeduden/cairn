@@ -78,6 +78,31 @@ fn the_product_crates_keep_their_bans() {
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
 
+/// Every product crate's clippy.toml refuses each blocking call that
+/// waits with no deadline (ENG-03).
+#[test]
+fn the_product_crates_ban_every_wait_with_no_deadline() {
+    let wanted = engineering::product_crates::deadline_bans();
+    let problems = engineering::product_crates::crates_keep_bans(&checkout(), &wanted);
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// Every workspace crate keeps the dependency directions its manifest
+/// declares, and every library crate declares one responsibility
+/// (ENG-02).
+#[test]
+fn the_workspace_keeps_its_declared_directions() {
+    let home = testkit::TempDir::new().unwrap();
+    let cargo = std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
+    let manifest = testkit::repo_root().join("Cargo.toml");
+    let metadata = engineering::dependencies::cargo_metadata(&cargo, &manifest, home.path());
+
+    let problems = engineering::architecture::problems(&metadata.unwrap());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
 /// No product crate keeps mutable global state (ENG-03).
 #[test]
 fn no_product_crate_keeps_mutable_global_state() {

@@ -51,6 +51,7 @@ pub fn cases() -> Vec<Case> {
         static_analysis_cases(),
         release_cases(),
         protection_cases(),
+        architecture_cases(),
     ]
     .concat()
 }
@@ -561,6 +562,57 @@ fn reach_cases() -> Vec<Case> {
     ]
 }
 
+/// The drifts ENG-02 exists to catch: a crate depending where its
+/// manifest's declared directions forbid, and a manifest leaving out a
+/// direction or a responsibility. The edits keep Cargo.lock as it is,
+/// so the checks run under `--locked`.
+fn architecture_cases() -> Vec<Case> {
+    const GATE: &str = "the_workspace_keeps_its_declared_directions";
+    let gate = || cargo_test("engineering", "checkout", GATE);
+    vec![
+        case(
+            "the core executable depending on a tooling crate",
+            "ENG-02",
+            Injection::replace(
+                "crates/cairn/Cargo.toml",
+                "[dev-dependencies]\nserde_json.workspace = true\ntestkit.workspace = true\n",
+                "[dependencies]\ntestkit.workspace = true\n\n[dev-dependencies]\nserde_json.workspace = true\n",
+            ),
+            scenario("ENG-02"),
+            "product crate cairn depends on tooling crate testkit, which a product crate never does",
+        ),
+        case(
+            "a tooling crate depending where its declared directions forbid",
+            GATE,
+            Injection::replace(
+                "tooling/adr/Cargo.toml",
+                "may-depend-on = [\"srs\"]",
+                "may-depend-on = []",
+            ),
+            gate(),
+            "crate adr depends on crate srs, which its declared directions forbid",
+        ),
+        case(
+            "a crate declaring no directions",
+            GATE,
+            Injection::replace("tooling/drift/Cargo.toml", "may-depend-on = []\n", ""),
+            gate(),
+            "crate drift declares no may-depend-on directions",
+        ),
+        case(
+            "a library crate declaring no responsibility",
+            "ENG-02",
+            Injection::replace(
+                "tooling/srs/Cargo.toml",
+                "responsibility = \"Reads the SRS requirement tables, appendices and personas for the gates\"\n",
+                "",
+            ),
+            scenario("ENG-02"),
+            "library crate srs declares no responsibility",
+        ),
+    ]
+}
+
 /// The drifts the product crates' bans exist to catch: a crate's
 /// clippy.toml dropping one (I4, I10), the core reading a clock or a
 /// random order (I10), and mutable global state (ENG-03).
@@ -619,6 +671,65 @@ fn product_crate_cases() -> Vec<Case> {
             ),
             clippy("cairn"),
             "use of a disallowed type `std::collections::HashMap`",
+        ),
+        case(
+            "a product crate's clippy.toml dropping a deadline ban",
+            "the_product_crates_ban_every_wait_with_no_deadline",
+            Injection::replace(
+                "crates/cairn/clippy.toml",
+                "  { path = \"std::sync::mpsc::Receiver::recv\", reason = \"it waits with no deadline; use recv_timeout (ENG-03)\" },\n",
+                "",
+            ),
+            cargo_test(
+                "engineering",
+                "checkout",
+                "the_product_crates_ban_every_wait_with_no_deadline",
+            ),
+            "crates/cairn/clippy.toml does not ban std::sync::mpsc::Receiver::recv in disallowed-methods",
+        ),
+        case(
+            "a product crate's clippy.toml dropping the file lock's deadline ban",
+            "ENG-03",
+            Injection::replace(
+                "crates/cairn/clippy.toml",
+                "  { path = \"std::fs::File::lock\", reason = \"it waits for another process with no deadline; poll try_lock up to a deadline (ENG-03)\" },\n",
+                "",
+            ),
+            scenario("ENG-03"),
+            "crates/cairn/clippy.toml does not ban std::fs::File::lock in disallowed-methods",
+        ),
+        case(
+            "the core waiting on a channel with no deadline",
+            "ENG-03",
+            Injection::replace(
+                LIB,
+                AT,
+                "use std::io::Write;\n\npub fn wait(rx: &std::sync::mpsc::Receiver<u8>) -> Option<u8> {\n    rx.recv().ok()\n}",
+            ),
+            clippy("cairn"),
+            "use of a disallowed method `std::sync::mpsc::Receiver::recv`",
+        ),
+        case(
+            "the core joining a thread with no deadline",
+            "ENG-03",
+            Injection::replace(
+                LIB,
+                AT,
+                "use std::io::Write;\n\npub fn wait(h: std::thread::JoinHandle<()>) {\n    let _ = h.join();\n}",
+            ),
+            clippy("cairn"),
+            "use of a disallowed method `std::thread::JoinHandle::join`",
+        ),
+        case(
+            "the core reading standard input with no deadline",
+            "ENG-03",
+            Injection::replace(
+                LIB,
+                AT,
+                "use std::io::Write;\n\npub fn input() -> std::io::Stdin {\n    std::io::stdin()\n}",
+            ),
+            clippy("cairn"),
+            "use of a disallowed method `std::io::stdin`",
         ),
         case(
             "a product crate keeping mutable global state",
