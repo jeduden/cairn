@@ -78,7 +78,7 @@ removes its row and its †.
 | PIN-03's 1,000 characters per pin (OQ-56)                                                                           | M2                                               |
 | LMK-03's 80-character structural field (S8 saw an 85-character file path in a real run)                             | M3                                               |
 | LMK-05's tier size k = 8 and REC-25's 48 segments per day                                                           | M3                                               |
-| CMP-05's 10 s and 512 MiB kernel limits; CMP-06's 8,000-model-token output cap                                      | M4, after S5                                     |
+| CMP-05's 10 s and 512 MiB kernel limits; CMP-06's 8,000-model-token output cap                                      | M4                                               |
 | §11's 95% of planted values recalled exactly, 0.9 flagging precision, recall tools called in 80% of tasks           | M5's evaluation                                  |
 | REC-19's 2 s seal, 30 s to take the session binding and 30 s segment close; OQ-20's 30 s cadence                    | M7, with seals (REC-18) and worktree checkpoints |
 | VIEW-08's ten rooms and VIEW-15's 20 posts                                                                          | M7                                               |
