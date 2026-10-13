@@ -342,7 +342,7 @@ fn refused(text: &str) -> Value {
 }
 
 #[test]
-fn replies_after_reads_the_answers_that_follow_a_line_holding_the_text() {
+fn model_replies_after_reads_the_model_replies_that_follow_a_line_holding_the_text() {
     let lines = [
         said("before word"),
         json!({"type": "system", "subtype": "local_command", "content": "word"}),
@@ -352,19 +352,19 @@ fn replies_after_reads_the_answers_that_follow_a_line_holding_the_text() {
         said("ok"),
     ];
 
-    assert_eq!(replies_after(&lines, "word"), ["word", "ok"]);
-    assert!(replies_after(&lines, "absent").is_empty());
+    assert_eq!(model_replies_after(&lines, "word"), ["word", "ok"]);
+    assert!(model_replies_after(&lines, "absent").is_empty());
 }
 
 #[test]
 fn replies_after_skips_assistant_lines_holding_the_text() {
     let lines = [said("word"), said("ok")];
 
-    assert!(replies_after(&lines, "word").is_empty());
+    assert!(model_replies_after(&lines, "word").is_empty());
 }
 
 #[test]
-fn refusals_name_the_harness_errors_and_any_answer_after_the_first() {
+fn refusals_name_the_harness_errors_and_any_model_reply_after_the_first() {
     let lines = [
         said("file 1"),
         refused("Prompt is too long"),
@@ -376,9 +376,9 @@ fn refusals_name_the_harness_errors_and_any_answer_after_the_first() {
         refusals(&lines),
         ["Prompt is too long", "Prompt is too long"]
     );
-    assert!(!answered_after_refusal(&lines));
+    assert!(!model_replied_after_refusal(&lines));
 
     let answered = [refused("Prompt is too long"), said("ok")];
-    assert!(answered_after_refusal(&answered));
-    assert!(!answered_after_refusal(&[said("ok")]));
+    assert!(model_replied_after_refusal(&answered));
+    assert!(!model_replied_after_refusal(&[said("ok")]));
 }

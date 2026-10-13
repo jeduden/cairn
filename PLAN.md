@@ -57,7 +57,7 @@ empty: |
 | 2609292005 | ✅     | sonnet | [Spike S3: catalogue the transcript formats](plan/2609292005_spike-s3-transcript-formats/plan.md)                  |
 | 2609292006 | ✅     | sonnet | [Spike S4: prove plugin distribution](plan/2609292006_spike-s4-plugin-distribution/plan.md)                        |
 | 2609292007 | 🔲     | opus   | [Spike S5: Starlark or Python for the kernel](plan/2609292007_spike-s5-kernel-language.md)                         |
-| 2609292008 | 🔲     | sonnet | [Spike S6: can compaction be deferred](plan/2609292008_spike-s6-compaction-control.md)                             |
+| 2609292008 | ✅     | sonnet | [Spike S6: can compaction be deferred](plan/2609292008_spike-s6-compaction-control/plan.md)                        |
 | 2609292009 | ✅     | sonnet | [Spike S7: the Rust MCP SDK or an in-house server](plan/2609292009_spike-s7-mcp-sdk/plan.md)                       |
 | 2609292010 | 🔲     | sonnet | [Spike S8: calibrate the token estimator and freeze the targets](plan/2609292010_spike-s8-token-estimator.md)      |
 | 2609292011 | 🔲     | sonnet | [The remaining engineering gates in CI](plan/2609292011_ci-engineering-gates.md)                                   |
