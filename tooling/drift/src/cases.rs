@@ -644,7 +644,7 @@ fn benchmark_cases() -> Vec<Case> {
             GATED,
             Injection::replace(CI, "\"$head/benchmark\" gate --base", "true --base"),
             cargo_test("engineering", "benchmark_gate", GATED),
-            r#"job benchmark does not run "benchmark\" gate --base""#,
+            "job benchmark does not run",
         ),
         case(
             "the benchmark job left out of the CI aggregator",
