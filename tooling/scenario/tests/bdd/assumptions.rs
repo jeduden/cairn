@@ -4,6 +4,7 @@
 //! through the `harness-contract` checks. A version's `manifest.json`
 //! names its recordings by role.
 
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -11,7 +12,7 @@ use cucumber::{given, then, when};
 use engineering::outcome;
 use harness_contract::measured::{self, Measurement};
 use harness_contract::transcript_tree::{self, Tree};
-use harness_contract::{hook_input, recording, snapshot, text, transcript};
+use harness_contract::{hook_input, plugin, recording, snapshot, text, transcript};
 use serde_json::Value;
 
 use crate::World;
@@ -47,6 +48,15 @@ struct Version {
     timeouts: Value,
     cleanup: (Vec<measured::Aged>, Vec<measured::Aged>),
     cleanup_doc: Value,
+    /// The hook events the stub Cairn plugin registers, its name and its
+    /// MCP server's (S4).
+    registered: BTreeSet<String>,
+    plugin: (String, String),
+    /// One plugin target's recording: its directory, the init message
+    /// of its harness session and its MCP server's log.
+    target: PathBuf,
+    init: Value,
+    server: plugin::ServerLog,
 }
 
 impl Version {
@@ -930,6 +940,170 @@ fn thinking_is_signed_and_empty(w: &mut World) -> Result<(), String> {
         if n == 0 {
             problems.push("no thinking block".into());
         }
+        Ok(problems)
+    })
+}
+
+// ASM-07, ASM-21: the plugin on each target (S4).
+
+/// Reads the plugin target the manifest names at `key` into `v`: its
+/// hook inputs, transcripts, init message and MCP server log.
+fn read_target(v: &mut Version, key: &str) -> Result<(), String> {
+    v.target = v.path(key)?;
+    v.inputs = recording::files(&v.target.join("hooks"), ".json")?
+        .iter()
+        .map(|p| recording::json(p))
+        .collect::<Result<_, _>>()?;
+    v.transcripts = recording::files(&v.target.join("transcripts"), ".jsonl")?;
+    v.read_transcripts()?;
+    v.server = plugin::server_log(&recording::lines(&v.target.join("mcp.jsonl"))?);
+    let init = v.target.join("init.json");
+    v.init = if init.exists() {
+        recording::json(&init)?
+    } else {
+        Value::Null
+    };
+    Ok(())
+}
+
+/// The runs a target's transcripts record, each named by its file
+/// stem: the harness session id for the main agent's run, `agent-<id>`
+/// for a subagent's.
+fn runs(v: &Version) -> Vec<String> {
+    v.transcripts
+        .iter()
+        .map(|p| plugin::run_of_transcript(&p.to_string_lossy()).to_owned())
+        .collect()
+}
+
+#[given(
+    regex = r#"^the stub Cairn plugin recorded for Claude Code "([^"]+)", bundling Cairn's hooks and a stub MCP server$"#
+)]
+fn the_stub_plugin(w: &mut World, version: String) -> Result<(), String> {
+    open_versions(w, &version)?;
+    each(w, |v| {
+        let kit = v.path("plugin.kit")?;
+        v.registered = plugin::registered(&recording::json(&kit.join("hooks/hooks.json"))?)?;
+        let name = text(
+            &recording::json(&kit.join(".claude-plugin/plugin.json"))?,
+            "name",
+        )
+        .to_owned();
+        let servers = plugin::servers(&recording::json(&kit.join(".mcp.json"))?)?;
+        let problems = none_unless(servers.len() == 1, || {
+            format!("the plugin bundles {} MCP servers, not one", servers.len())
+        });
+        v.plugin = (name, servers.concat());
+        Ok(problems)
+    })
+}
+
+#[when(regex = r#"^it is installed on "([^"]+)"$"#)]
+fn installed_on(w: &mut World, target: String) -> Result<(), String> {
+    each(w, |v| {
+        read_target(v, &format!("plugin.targets.{target}"))?;
+        Ok(none_unless(!v.init.is_null(), || {
+            format!("{target}: no init message recorded")
+        }))
+    })
+}
+
+#[then(regex = r"^the recorded harness session shows every hook the stub plugin registers firing$")]
+fn every_registered_hook_fired(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        Ok(plugin::unfired(&v.registered, &plugin::fired(&v.inputs)))
+    })
+}
+
+#[then(regex = r"^the recorded harness session lists the stub plugin's MCP tools$")]
+fn lists_the_cairn_tools(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        let (name, server) = (v.plugin.0.as_str(), v.plugin.1.as_str());
+        let mut problems = none_unless(plugin::connected(&v.init, name, server), || {
+            format!("the MCP server {server} of plugin {name} is not connected")
+        });
+        if plugin::tools(&v.init, name, server).is_empty() {
+            problems.push(format!(
+                "no tool of the MCP server {server} of plugin {name}"
+            ));
+        }
+        Ok(problems)
+    })
+}
+
+#[given(
+    regex = r#"^a recorded harness session of Claude Code "([^"]+)" with the stub plugin's MCP server$"#
+)]
+fn a_plugin_session(w: &mut World, version: String) -> Result<(), String> {
+    open_versions(w, &version)?;
+    each(w, |v| {
+        read_target(v, "plugin.subagent_session")?;
+        Ok(Vec::new())
+    })
+}
+
+#[when(regex = r"^the harness session's main run starts a subagent$")]
+fn main_run_starts_a_subagent(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        let subagents = v
+            .transcripts
+            .iter()
+            .filter(|p| p.to_string_lossy().contains("/subagents/"))
+            .count();
+        Ok(none_unless(
+            subagents == 1 && v.transcripts.len() == 2,
+            || {
+                format!(
+                    "{} transcripts, {subagents} of a subagent: want the main run's and one subagent's",
+                    v.transcripts.len()
+                )
+            },
+        ))
+    })
+}
+
+#[then(
+    regex = r"^one MCP server serves both runs and keeps the run-seat keys of the main run and the subagent's run$"
+)]
+fn one_server_keeps_both_keys(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        let mut problems = none_unless(v.server.pids.len() == 1, || {
+            format!("{} MCP server processes served", v.server.pids.len())
+        });
+        let keyed: BTreeSet<&str> = v.server.keys.iter().map(|(r, _)| r.as_str()).collect();
+        let runs = runs(v);
+        let runs: BTreeSet<&str> = runs.iter().map(String::as_str).collect();
+        if keyed != runs {
+            problems.push(format!(
+                "keys for runs {keyed:?}, transcripts of runs {runs:?}"
+            ));
+        }
+        Ok(problems)
+    })
+}
+
+#[then(
+    regex = r"^each key stayed in the MCP server, bound to its run by the transcript holding the calling tool use's id$"
+)]
+fn each_key_bound_by_transcript(w: &mut World) -> Result<(), String> {
+    each(w, |v| Ok(plugin::unbound_keys(&v.server)))
+}
+
+#[then(
+    regex = r"^no transcript line, hook input or tool result of either run carries a run-seat key it minted$"
+)]
+fn no_key_leaves_the_server(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        let mut places = Vec::new();
+        let hooks = recording::files(&v.target.join("hooks"), "")?;
+        for path in v.transcripts.iter().chain(&hooks) {
+            let body =
+                fs::read_to_string(path).map_err(|e| format!("read {}: {e}", path.display()))?;
+            places.push((path.display().to_string(), body));
+        }
+        let keys: Vec<String> = v.server.keys.iter().map(|(_, k)| k.clone()).collect();
+        let mut problems = none_unless(!keys.is_empty(), || "the MCP server minted no key".into());
+        problems.extend(plugin::carriers(&places, &keys));
         Ok(problems)
     })
 }

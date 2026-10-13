@@ -1,0 +1,10 @@
+Adding marketplace…√ Successfully added marketplace: cairn-s4 (declared in user settings)
+Installing plugin "cairn@cairn-s4"...√ Successfully installed plugin: cairn@cairn-s4 (scope: user)
+Installed plugins:
+
+  > cairn@cairn-s4
+    Version: 0.0.0-s4
+    Read from: /opt/rec/plugin/cairn
+    Scope: user
+    Status: √ enabled
+

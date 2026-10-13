@@ -9,6 +9,7 @@
 
 pub mod hook_input;
 pub mod measured;
+pub mod plugin;
 pub mod recording;
 pub mod snapshot;
 pub mod transcript;

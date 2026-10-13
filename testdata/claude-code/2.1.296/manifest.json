@@ -137,5 +137,22 @@
       "startup",
       "resume"
     ]
+  },
+  "plugin": {
+    "kit": "../record/plugin/cairn",
+    "targets": {
+      "workstation": "plugin/workstation",
+      "runner image": "plugin/runner-image",
+      "Agent SDK worker": "plugin/sdk-worker"
+    },
+    "interactive": "plugin/interactive",
+    "subagent_session": "plugin/workstation",
+    "notes": {
+      "about": "spike S4: the stub Cairn plugin (record/plugin) installed on each target by record/plugin/record.sh, exported by record/plugin/export.sh; each print-mode target ran one prompt that called the stub MCP tool from the main run and from a foreground subagent, then a Bash command no permission rule allowed",
+      "workstation": "claude plugin marketplace add, then claude plugin install, in a scratch HOME",
+      "runner image": "a ~/.claude baked as an image build would: settings.json declares the marketplace (extraKnownMarketplaces) and enables the plugin (enabledPlugins); no install command ran",
+      "Agent SDK worker": "Agent SDK 0.3.296 query() with plugins: [{type: local, path}] and settingSources: [], starting the claude executable",
+      "interactive": "the workstation install, driven through tmux, for OQ-06; no subagent"
+    }
   }
 }
