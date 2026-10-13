@@ -96,14 +96,19 @@ Feature: Provenance and trust (PRV)
       | the restore block Cairn returned, written back into the transcript | harness_text |
 
   @PRV-04 @P0 @I2 @pending
-  Scenario: "automation" is the default deployment mode and "interactive" is an opt-in of the person's own configuration
+  Scenario Outline: "automation" is the default deployment mode, and "interactive" an opt-in of the person's own configuration that holds only while the harness marks the harness session attended
     Given an isolated Cairn home
-    And the person's configuration sets no deployment mode
-    And the repository's ".cairn.toml" sets "node.deployment_mode" to "interactive"
-    When this node's capture records a user turn matched to a prompt its "UserPromptSubmit" hook handler got
-    Then the deployment mode is "automation"
-    And the event is stored with provenance "user" and its trust level is "untrusted"
-    And an audit entry records "rejected repository setting node.deployment_mode"
+    And <configuration>
+    When this node's capture records a user turn matched to a prompt its "UserPromptSubmit" hook handler got <mark>
+    Then the event is stored with provenance "user" and its trust level is "<trust>"
+    And <audit>
+
+    Examples:
+      | configuration                                                                                                                       | mark                                   | trust     | audit                                                                              |
+      | the person's configuration sets no deployment mode, and the repository's ".cairn.toml" sets "node.deployment_mode" to "interactive" | with the harness's attended mark       | untrusted | an audit entry records "rejected repository setting node.deployment_mode"          |
+      | the person's configuration sets "node.deployment_mode" to "interactive"                                                              | without the harness's attended mark    | untrusted | the counter "harness session not attended" increases by 1 and an audit entry names it |
+      | the person's configuration sets "node.deployment_mode" to "interactive", and the MCP server's environment carries the attended mark   | without the harness's attended mark    | untrusted | the counter "harness session not attended" increases by 1 and an audit entry names it |
+      | the person's configuration sets "node.deployment_mode" to "interactive"                                                              | with the harness's attended mark       | trusted   | no audit entry names the deployment mode                                           |
 
   @PRV-05 @P0 @I2 @pending
   Scenario Outline: no settings layer can trust a provenance class beyond the default policy
@@ -352,3 +357,23 @@ Feature: Provenance and trust (PRV)
     Then a node identity change event names the replaced and the new device key, the events of the writers the replaced key certified read origin "peer", and those the new key certifies read "peer" until a confirm counted under PRV-12 names the new key's inception
     And a quarantine and its release change no origin
     And a recorded I2 security review of this requirement exists before it ships
+
+  @PRV-14 @P0 @I2 @I6 @pending
+  Scenario Outline: the MCP server finds the run that made a tool call only by the transcript line holding its tool-use id
+    Given an isolated Cairn home
+    And a harness session whose main run and one subagent's run each call "event_search", served by its harness session's MCP server
+    When <case>
+    Then <outcome>
+    And the log names the call's tool-use id and <logged>
+
+    Examples:
+      | case                                                                     | outcome                                                                                                   | logged                                    |
+      | ingest has read the call's transcript line before the call arrives       | the call is served under the run whose transcript holds that line, without being held                    | that run and no hold                      |
+      | the call's line reaches the transcript 0.5 s after the call              | the call is held until ingest reads the line, then served under that line's run                           | that run and how long the call was held   |
+      | no line holds the call's tool-use id within 2 s                          | the call is refused with an explicit error, and the counter "tool call run not found" increases by 1     | the cause and how long the call was held  |
+      | the call carries no tool-use id                                          | the call is refused with an explicit error, and the counter "tool call without tool-use id" increases by 1 | the cause                               |
+      | the transcripts of both runs hold the call's tool-use id                 | the call is refused with an explicit error, and the counter "tool call run ambiguous" increases by 1      | the cause                                 |
+      | the call's arguments name the other run                                  | the call is served under the run whose transcript holds its line, not the run its arguments name         | the run its line names                    |
+      | the subagent runs in the background                                      | the call is served under the subagent's run                                                              | the subagent's run                        |
+      | both runs call at the same moment                                        | each call is served under its own run                                                                    | each call's own run                       |
+      | the MCP server restarts after the line was written and before the call   | ingest resumes from its ingest marker and the call is served under that line's run                       | that run                                  |

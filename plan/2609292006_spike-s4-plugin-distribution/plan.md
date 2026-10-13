@@ -48,7 +48,13 @@ in isolated `HOME` directories and redacted, under its `plugin` directory. The
   model. A tool call names no run, so OQ-54 asks how the server binds
   a call to its run. @ASM-21 stays `@pending` as written.
 - ASM-08 is re-planned: no self-hosted runner was available.
-- OQ-06 has S4's findings and a recommendation; the stakeholder rules.
+- OQ-06 is closed by the stakeholder on S4's findings: the deployment
+  mode stays declared, and a `user` event of a harness session the
+  harness does not mark attended stays untrusted (PRV-04). ASM-22
+  records the mark, and @ASM-22 replays it.
+- OQ-54 is closed by the stakeholder: the MCP server finds a tool call's
+  run through the ingested transcript, logging each call and testing
+  the edge cases (PRV-14, @PRV-14 `@pending`).
 
 Deviations from the tasks:
 
@@ -63,8 +69,8 @@ Deviations from the tasks:
 Handed on:
 
 - ASM-08: record a self-hosted runner before ADM-01 ships there.
-- OQ-54: the stakeholder picks how the MCP server binds a tool call to
-  its run, before LANE-24 ships.
+- PRV-14 and PRV-04's attended mark: implemented with M1's MCP server
+  and hook handlers, taking @PRV-14 and @PRV-04 off `@pending`.
 - OQ-55: the stakeholder and a security review pick the channel for a
   run-seat key at launch, before SEC-10's run-seat keys ship. Then
   @ASM-21 can come off `@pending`.
@@ -75,4 +81,5 @@ Handed on:
 - [ ] Scenarios @ASM-07 and @ASM-08 pass against recorded install
   evidence: only @ASM-07 does; @ASM-08 and @ASM-21 stay `@pending`
   with their re-plans, as the deviations say
-- [x] OQ-06 has an answer or a stated follow-up
+- [x] OQ-06 has an answer or a stated follow-up: closed into PRV-04
+  and ASM-22

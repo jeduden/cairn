@@ -68,10 +68,12 @@ and `CLAUDE_CODE_ENTRYPOINT=cli` set.
 - Signing a room act with the calling run's seat key needs the call
   bound to its run first, and the harness does not name it. Finding
   the run through the ingested transcript waits for the tool-use line;
-  OQ-54 puts the options to the stakeholder.
+  OQ-54 put the options to the stakeholder, who chose that, with each
+  call logged and the edge cases tested (PRV-14).
 - The harness's entry point is reliable; a person's presence is not.
-  OQ-06 keeps `node.deployment_mode` declared, and the recommendation
-  lets an unattended harness session only tighten it.
+  The stakeholder closed OQ-06: `node.deployment_mode` stays declared,
+  and a harness session the harness does not mark attended keeps its
+  `user` events untrusted (PRV-04, ASM-22).
 - ASM-08 needs a self-hosted runner. Anthropic's cloud environment, the
   only one S4 had, is not one.
 

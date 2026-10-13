@@ -234,3 +234,17 @@ Feature: Assumptions register (ASM)
     Then one MCP server serves both runs and keeps the run-seat keys of the main run and the subagent's run
     And each key reached it through a channel the harness keeps out of the model's context
     And no transcript line, hook input or tool result of either run carries a private key
+
+  @ASM-22
+  Scenario Outline: the harness marks a harness session attended only in its interactive terminal, and only for its hook handlers (S4)
+    Given the stub Cairn plugin's recording "<recording>" for Claude Code "supported"
+    When the environment its hook handlers and its MCP server saw is read
+    Then every hook handler saw "CLAUDE_CODE_SESSION_ATTENDED" set to "<attended>" and "CLAUDE_CODE_ENTRYPOINT" set to "<entrypoint>"
+    And the MCP server saw "CLAUDE_CODE_SESSION_ATTENDED" <server>
+
+    Examples:
+      | recording        | attended | entrypoint | server       |
+      | interactive      | 1        | cli        | unset        |
+      | workstation      | 0        | sdk-cli    | unset        |
+      | Agent SDK worker | 0        | sdk-ts     | unset        |
+      | forged-env       | 0        | sdk-cli    | set to "1"   |
