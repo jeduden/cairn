@@ -227,9 +227,9 @@ Feature: Provenance and trust (PRV)
     And a principal act the laptop's device key signed, and a post or pin from a device seat it certified, derives the same trust level on each node of this principal holding the same writer logs
     And an "operator" event a writer of another principal wrote is untrusted
     And a device key certified by a service account's principal key that this principal's principal key certified does not chain to this principal's principal key, since a chain runs through device, token or seat certificates and never through another principal key
+    And a "revoked" key event of a key on the current key event log, signed by its principal key, carries the device seat writer's chain head, and that key's certificate records after it count for nothing (PRV-12)
     And a recorded I2 security review of this requirement exists before it ships
 
-    And a "revoked" key event of a key on the current key event log, signed by its principal key, carries the device seat writer's chain head, and that key's certificate records after it count for nothing (PRV-12)
     Examples:
       | event                                                                                                                          | expected                                                                                   |
       | by the token-key-only node's run seat key, adding a constraint pin within its access token's rooms                             | untrusted until a principal stamps it from one of its devices whose device scope allows it |
@@ -289,6 +289,10 @@ Feature: Provenance and trust (PRV)
     Then every writer the missing key certified still reads origin "witnessed", and the new key's writers read "peer"
     When a confirm naming that inception, signed by the managed-policy confirmation key, is recorded
     Then the new key's writers read "witnessed", the confirm is audited, and "cairn doctor" exits 0
+    When the confirm's signature is copied into a reject or a choose naming the same inception
+    Then each verifies as nothing, since every signature names its kind, and each is audited and counted
+    When a confirm and a reject of one inception, neither following the other, are both signed by the confirmation key
+    Then they are a duplicity in which the reject holds, the inception's writers read "peer", and "cairn doctor" exits non-zero until a choose
     When a "minted anew" carries a chain head at a lower seq than a certificate record of the key it replaces
     Then it is void, and "cairn verify" reports it as tampering
     When two "minted anew" inceptions in different device seats replace one key and both are confirmed
@@ -297,6 +301,8 @@ Feature: Provenance and trust (PRV)
     Then the duplicity is resolved and "cairn doctor" exits 0
     When two "minted anew" inceptions wait, and the person runs "cairn device-key rotate" to record a "recovered"
     Then it is refused until the person names one "minted anew" by digest, after Cairn shows the seat that recorded each, whether the replaced key is in the key store and each pin that would start restoring
+    When ten processes of the home find the device key missing at once
+    Then each checks and records under one lock, re-reading the key event logs under it, exactly one "minted anew" is recorded, and no hook handler waits on the lock beyond its budget
     When the device key's file exists but cannot be read
     Then no "minted anew" is recorded, appends wait at an ingest marker, counted and audited, and "cairn doctor" exits non-zero
     When the file becomes readable again
@@ -315,6 +321,11 @@ Feature: Provenance and trust (PRV)
     Then it is refused, counted and audited
     When a managed-policy listing naming a recipient key and a directory is recorded
     Then each new recovery key is written at once, encrypted to the recipient key, to a new file in that directory, audited, and erased from the node
+    Given a token-key-only node whose token key's token certificate the issuing node's device key made
+    When the node records a "token key adopted" from a later access token whose token certificate that same device key made, naming the token key it succeeds and this node's personal room
+    Then the new token key replaces its predecessor and certifies "witnessed" writers
+    When the node records a "token key adopted" from an access token whose token certificate another device key made, or names another personal room
+    Then it replaces nothing until a confirm or a "recovered" counts it, and its writers read "peer"
     And a recorded I2 security review of this requirement exists before it ships
 
   @PRV-13 @P0 @I2 @I10 @pending

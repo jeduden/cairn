@@ -91,7 +91,7 @@ Feature: Administration and lifecycle (ADM)
     And each local seat the copy contains is followed by a new seat and writer under a newly minted seat key, which names the old seat and inherits no add or role of it, audited, and no reinstated writer's log gains an event or reuses a seq
     And no derived artifact the copy contained was reinstated: each was rebuilt from the writer logs the node held and its key set
     And "cairn verify" exits 0 on the home after the backup restore
-    And the backup restore recorded a "minted anew" its principal act names, whose writers read origin "peer" until a confirm with a presence proof counts it, and a later "cairn rebuild" derives the same current key event log (PRV-12)
+    And the backup restore recorded a "minted anew" its principal act names, whose writers read origin "peer" until it counts as PRV-12 says, as when a confirm signed by a managed-policy confirmation key names it, and a later "cairn rebuild" derives the same current key event log (PRV-12)
 
   @ADM-07 @P0 @I1 @I5 @pending
   Scenario Outline: purge removes a scope everywhere, erases its commitment keys and leaves a tombstone
