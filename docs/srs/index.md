@@ -5,15 +5,15 @@ summary: >-
 ---
 # Cairn — Software Requirements Specification
 
-|                             |                                                                                                                                               |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Product**                 | Cairn — lossless, security-first context layer for long-running Claude agents                                                                 |
-| **Document**                | Software Requirements Specification (SRS)                                                                                                     |
-| **Version**                 | 3.0-draft                                                                                                                                     |
-| **Status**                  | Draft; the invariants (§1.3) are proposed in [ADR-2610112004](../adr/ADR-2610112004-derived-artifacts-by-content.md), pending ENG-29 approval |
-| **Date**                    | 2026-10-11                                                                                                                                    |
-| **Implementation language** | Rust; TypeScript for the UI page ([ADR-2610050528](../adr/ADR-2610050528-language-rust-typescript.md))                                        |
-| **Stakeholder**             | @jeduden, also the security reviewer                                                                                                          |
+|                             |                                                                                                                               |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Product**                 | Cairn — lossless, security-first context layer for long-running Claude agents                                                 |
+| **Document**                | Software Requirements Specification (SRS)                                                                                     |
+| **Version**                 | 3.0-draft                                                                                                                     |
+| **Status**                  | Draft; the invariants (§1.3) are approved in [ADR-2610112004](../adr/ADR-2610112004-derived-artifacts-by-content.md) (ENG-29) |
+| **Date**                    | 2026-10-11                                                                                                                    |
+| **Implementation language** | Rust; TypeScript for the UI page ([ADR-2610050528](../adr/ADR-2610050528-language-rust-typescript.md))                        |
+| **Stakeholder**             | @jeduden, also the security reviewer                                                                                          |
 
 ## Change log
 

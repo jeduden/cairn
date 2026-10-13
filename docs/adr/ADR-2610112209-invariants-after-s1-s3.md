@@ -1,14 +1,14 @@
 ---
 id: ADR-2610112209
 title: "I2 and I3 after the rulings on spikes S1 and S3"
-status: proposed
+status: accepted
 summary: >-
-  A proposed record, for the security reviewer's approval, of three
+  The security reviewer's record, approved on 13 October 2026, of three
   changes to I2 and I3 that the
   stakeholder's rulings of 11 October 2026 on spikes S1 and S3 (OQ-51)
   need: trusted user events matched to a prompt, compaction guidance
   dropped from the closed paths, and pins omitted for run ambiguity.
-  Supersedes ADR-2610091555 once accepted.
+  Supersedes ADR-2610091555.
 ---
 # ADR-2610112209: I2 and I3 after the rulings on spikes S1 and S3
 
@@ -91,9 +91,16 @@ f23fa79e1b9ff27414ce35d90fae1c33764ca2e1f12540aede2dda129ea6ac5c
 ```
 
 Until a security reviewer is named, the stakeholder holds that role.
-This record becomes `accepted` when the stakeholder approves it by a
-comment on the pull request that adds it. The comment names the
-record's id and the hash above.
+The stakeholder, `@jeduden`, approved this record as security reviewer
+on 13 October 2026 by a [comment on jeduden/cairn#39][approval] naming
+the record's id, first of the three records it approves. The comment
+came on a later pull request than jeduden/cairn#38, which adds this
+record and had merged. It names
+neither the hash above nor a commit, so the hash binds the approval to
+the text in force when this record was added. That comment is the
+approval ENG-29 asks for, and it can be checked apart from this record.
+
+[approval]: https://github.com/jeduden/cairn/pull/39#issuecomment-6149850310
 
 ## Alternatives
 
@@ -125,5 +132,5 @@ record's id and the hash above.
   transcript stays an untrusted `user` event.
 - **Risk acceptance.** R8 joins the residual risks OWN-22 tracks: while a run
   leaves it open, widening acts need the principal's risk acceptance naming it.
-- **Supersession.** This record supersedes ADR-2610091555 once accepted
-  (ENG-26), and the hash above replaces that record's as the approved text.
+- **Supersession.** This record supersedes ADR-2610091555 (ENG-26), and
+  the hash above replaces that record's as the approved text.

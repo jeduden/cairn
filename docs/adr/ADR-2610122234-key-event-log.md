@@ -1,15 +1,15 @@
 ---
 id: ADR-2610122234
 title: "A node's keys form a key event log anchored by recovery keys"
-status: proposed
+status: accepted
 summary: >-
   PRV-12 makes a node's device keys, or a token-key-only node's token
   keys, a hash-linked key event log whose keys commit to an offsite
   recovery key, closing OQ-52. A process that can append to the store,
   but can neither use the device key, drive Cairn's CLI at the
   principal's terminal, nor produce a presence proof, can no longer make
-  its own writers `witnessed` or strip the principal's pins. Proposed
-  until the security reviewer approves it (ENG-29).
+  its own writers `witnessed` or strip the principal's pins. The
+  security reviewer approved it on 13 October 2026 (ENG-29).
 ---
 # ADR-2610122234: A node's keys form a key event log
 
@@ -114,7 +114,15 @@ reviewer (ENG-29) by a comment on the pull request that adds it, naming
 the record's id and the pull request's head commit. The approval covers
 PRV-12 and the requirements listed above as worded there.
 
-Approval: pending.
+The stakeholder approved this record on 13 October 2026 by a [comment
+on the pull request that adds it][approval], naming the record's id.
+The comment came at head commit `de59777` and names no commit, so this
+record binds the approval to that commit's wording of PRV-12 and the
+requirements listed above.
+
+Approval: [given][approval].
+
+[approval]: https://github.com/jeduden/cairn/pull/39#issuecomment-6149850310
 
 ### Security analysis (author)
 

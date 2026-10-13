@@ -1,7 +1,8 @@
 ---
 id: ADR-2610091555
 title: "The initial invariants"
-status: accepted
+status: superseded
+superseded-by: ADR-2610112209
 summary: >-
   The security reviewer's record of Cairn's ten invariants as they stand
   in docs/srs/invariants.md: the initial contract, approved by the
