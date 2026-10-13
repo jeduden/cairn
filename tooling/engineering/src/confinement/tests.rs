@@ -12,19 +12,25 @@ fn a_test_starting_a_component_through_the_confinement_is_confined() {
 
 #[test]
 fn a_test_starting_no_component_is_none_of_its_business() {
-    assert!(!starts_unconfined("use std::process::Command;\nfn f() { Command::new(\"cargo\"); }\n"));
+    assert!(!starts_unconfined(
+        "use std::process::Command;\nfn f() { Command::new(\"cargo\"); }\n"
+    ));
 }
 
 #[test]
 fn a_test_naming_a_command_beside_a_component_starts_it_unconfined() {
-    let body = format!("{CONFINED}fn g() {{ std::process::Command::new(env!(\"CARGO_BIN_EXE_cairn\")); }}\n");
+    let body = format!(
+        "{CONFINED}fn g() {{ std::process::Command::new(env!(\"CARGO_BIN_EXE_cairn\")); }}\n"
+    );
 
     assert!(starts_unconfined(&body));
 }
 
 #[test]
 fn a_test_starting_a_component_without_the_confinement_starts_it_unconfined() {
-    assert!(starts_unconfined("fn f() { run(env!(\"CARGO_BIN_EXE_cairn\")); }\n"));
+    assert!(starts_unconfined(
+        "fn f() { run(env!(\"CARGO_BIN_EXE_cairn\")); }\n"
+    ));
 }
 
 /// A checkout with the test files `files` under `crates/`.
@@ -44,7 +50,10 @@ fn every_test_of_a_product_crate_is_read() {
     let (_dir, c) = checkout(&[
         ("cairn/Cargo.toml", ""),
         ("cairn/tests/e2e_cairn.rs", CONFINED),
-        ("cairn/tests/deep/e2e_more.rs", "fn f() { run(env!(\"CARGO_BIN_EXE_cairn\")); }\n"),
+        (
+            "cairn/tests/deep/e2e_more.rs",
+            "fn f() { run(env!(\"CARGO_BIN_EXE_cairn\")); }\n",
+        ),
         ("cairn/tests/notes.txt", "CARGO_BIN_EXE_cairn"),
         ("cairn/src/lib.rs", "CARGO_BIN_EXE_cairn"),
         ("other/Cargo.toml", ""),
@@ -52,7 +61,9 @@ fn every_test_of_a_product_crate_is_read() {
 
     assert_eq!(
         unconfined_starts(&c),
-        ["crates/cairn/tests/deep/e2e_more.rs starts a component's executable outside the end-to-end suite's confinement (ENG-12)"]
+        [
+            "crates/cairn/tests/deep/e2e_more.rs starts a component's executable outside the end-to-end suite's confinement (ENG-12)"
+        ]
     );
 }
 

@@ -36,7 +36,8 @@ fn gating() -> Workflow {
 
 #[test]
 fn needs_reads_an_inline_list_and_a_single_job() {
-    let flow = parse("jobs:\n  ci:\n    needs: [a, b-c]\n  one:\n    needs: a\n  none:\n    runs-on: x\n");
+    let flow =
+        parse("jobs:\n  ci:\n    needs: [a, b-c]\n  one:\n    needs: a\n  none:\n    runs-on: x\n");
 
     assert_eq!(needs(&flow.jobs[0]), ["a", "b-c"]);
     assert_eq!(needs(&flow.jobs[1]), ["a"]);
@@ -72,10 +73,7 @@ fn a_static_check_no_job_runs_fails() {
 #[test]
 fn a_static_check_outside_the_aggregator_fails() {
     let mut flow = gating();
-    flow.jobs
-        .last_mut()
-        .unwrap()
-        .text = flow.jobs.last().unwrap().text.replace(", audit]", "]");
+    flow.jobs.last_mut().unwrap().text = flow.jobs.last().unwrap().text.replace(", audit]", "]");
 
     assert_eq!(
         ci_gates(&flow),
@@ -118,9 +116,11 @@ fn a_workflow_without_an_aggregator_fails() {
     );
 }
 
-/// A checkout with a root manifest `root` and the crates `crates`,
-/// each a directory, its manifest and its `src` files.
-fn checkout(root: &str, crates: &[(&str, &str, &[(&str, &str)])]) -> (TempDir, Checkout) {
+/// One crate: its directory, its manifest and its `src` files.
+type Crate<'a> = (&'a str, &'a str, &'a [(&'a str, &'a str)]);
+
+/// A checkout with a root manifest `root` and the crates `crates`.
+fn checkout(root: &str, crates: &[Crate<'_>]) -> (TempDir, Checkout) {
     let dir = TempDir::new().unwrap();
     fs::write(dir.path().join("Cargo.toml"), root).unwrap();
     for (path, manifest, src) in crates {
@@ -162,8 +162,12 @@ fn the_workspace_lints_forbid_unsafe_code() {
 fn a_crate_inherits_the_workspace_lints_only_from_its_lints_table() {
     assert!(inherits_workspace_lints(INHERITS));
     assert!(inherits_workspace_lints("[lints]\nworkspace=true # yes\n"));
-    assert!(!inherits_workspace_lints("[lints.rust]\nworkspace = true\n"));
-    assert!(!inherits_workspace_lints("[package]\nworkspace = true\n[lints]\n"));
+    assert!(!inherits_workspace_lints(
+        "[lints.rust]\nworkspace = true\n"
+    ));
+    assert!(!inherits_workspace_lints(
+        "[package]\nworkspace = true\n[lints]\n"
+    ));
     assert!(!inherits_workspace_lints("[lints]\nworkspace = false\n"));
 }
 
@@ -197,7 +201,11 @@ fn every_crate_inheriting_the_lints_forbids_unsafe_code() {
         &[("crates/a", INHERITS, &[]), ("tools/one", INHERITS, &[])],
     );
 
-    assert!(crates_forbid_unsafe(&c).is_empty(), "{:?}", crates_forbid_unsafe(&c));
+    assert!(
+        crates_forbid_unsafe(&c).is_empty(),
+        "{:?}",
+        crates_forbid_unsafe(&c)
+    );
 }
 
 #[test]
@@ -208,7 +216,11 @@ fn a_crate_with_its_own_lints_forbids_unsafe_in_each_crate_root() {
         ROOT,
         &[
             ("crates/a", own, &[("lib.rs", forbid), ("main.rs", forbid)]),
-            ("crates/b", own, &[("lib.rs", forbid), ("main.rs", "fn main() {}\n")]),
+            (
+                "crates/b",
+                own,
+                &[("lib.rs", forbid), ("main.rs", "fn main() {}\n")],
+            ),
             ("crates/c", own, &[]),
             ("tools/one", INHERITS, &[]),
         ],
@@ -226,7 +238,10 @@ fn a_crate_with_its_own_lints_forbids_unsafe_in_each_crate_root() {
 #[test]
 fn a_workspace_that_stops_forbidding_unsafe_code_fails() {
     let root = ROOT.replace("\"forbid\"", "\"warn\"");
-    let (_dir, c) = checkout(&root, &[("crates/a", INHERITS, &[]), ("tools/one", INHERITS, &[])]);
+    let (_dir, c) = checkout(
+        &root,
+        &[("crates/a", INHERITS, &[]), ("tools/one", INHERITS, &[])],
+    );
 
     assert_eq!(
         crates_forbid_unsafe(&c),
@@ -250,7 +265,10 @@ fn an_unreadable_member_is_named() {
     let problems = crates_forbid_unsafe(&c);
 
     assert_eq!(problems.len(), 1, "{problems:?}");
-    assert!(problems[0].starts_with("read tools/one/Cargo.toml: "), "{problems:?}");
+    assert!(
+        problems[0].starts_with("read tools/one/Cargo.toml: "),
+        "{problems:?}"
+    );
 }
 
 /// A checkout holding the core's crate with the clippy.toml `clippy`
@@ -304,7 +322,9 @@ fn the_core_s_reach_evidence_missing_its_reach_test_fails() {
 
     assert_eq!(problems.len(), 1, "{problems:?}");
     assert!(
-        problems[0].starts_with("the core's reach evidence is missing: read crates/cairn/tests/reach.rs: "),
+        problems[0].starts_with(
+            "the core's reach evidence is missing: read crates/cairn/tests/reach.rs: "
+        ),
         "{problems:?}"
     );
 }
@@ -315,7 +335,9 @@ fn the_core_s_reach_test_must_hold_its_test() {
 
     assert_eq!(
         core_reach_evidence(&c, &gating()),
-        ["the core's reach evidence is missing: crates/cairn/tests/reach.rs has no test the_core_executable_links_only_crates_its_reach_allows"]
+        [
+            "the core's reach evidence is missing: crates/cairn/tests/reach.rs has no test the_core_executable_links_only_crates_its_reach_allows"
+        ]
     );
 }
 
@@ -326,7 +348,9 @@ fn the_core_s_reach_evidence_needs_every_reach_ban() {
 
     assert_eq!(
         core_reach_evidence(&c, &gating()),
-        ["the core's reach evidence is missing: crates/cairn/clippy.toml does not ban std::process::Command"]
+        [
+            "the core's reach evidence is missing: crates/cairn/clippy.toml does not ban std::process::Command"
+        ]
     );
 }
 
@@ -375,4 +399,32 @@ fn derived_code_names_a_checkout_without_crates() {
 
     assert_eq!(problems.len(), 1, "{problems:?}");
     assert!(problems[0].starts_with("list crates: "), "{problems:?}");
+}
+
+#[test]
+fn a_core_without_a_clippy_configuration_names_the_one_it_reads() {
+    let (_dir, c) = core(&every_ban(), Some(REACH));
+    fs::remove_file(c.root.join("crates/cairn/clippy.toml")).unwrap();
+
+    let reach = core_reach_evidence(&c, &gating());
+    let derived = derived_code_gated(&c, &gating());
+
+    assert_eq!(reach.len(), 1, "{reach:?}");
+    assert!(
+        reach[0].starts_with("the core's reach evidence is missing: read clippy.toml: "),
+        "{reach:?}"
+    );
+    assert_eq!(derived.len(), 1, "{derived:?}");
+    assert!(derived[0].starts_with("read clippy.toml: "), "{derived:?}");
+}
+
+#[test]
+fn a_member_glob_that_cannot_be_listed_is_named() {
+    let (_dir, c) = checkout(
+        "[workspace]\nmembers = [\"gone/*\"]\n[workspace.lints.rust]\nunsafe_code = \"forbid\"\n",
+        &[],
+    );
+
+    assert_eq!(crates_forbid_unsafe(&c).len(), 1);
+    assert!(crates_forbid_unsafe(&c)[0].starts_with("list gone: "));
 }
