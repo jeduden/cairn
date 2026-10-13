@@ -46,6 +46,29 @@ with every warning denied, and rustfmt.
 license allow-list, each exception named, and to crates.io as the
 only source. cargo-audit refuses a crate with a known vulnerability.
 
+Crates may only depend on the crates they declare (ENG-02). Each
+crate's `Cargo.toml` holds a `cairn` metadata table with three keys:
+
+- `responsibility`: the one thing the library crate does.
+- `may-depend-on`: the workspace crates it may depend on, an empty
+  list included.
+- `may-dev-depend-on`: the workspace crates its tests may depend on.
+
+The architecture check (`engineering::architecture`) reads every
+workspace manifest through `cargo metadata`. It fails naming both
+crates when a dependency is not declared, and when a declaration names
+a crate that is no workspace member. It also fails when a library
+crate declares no responsibility or several, or when two crates
+declare the same one. The tooling crates fall under the same table.
+
+One rule needs no declaration. A product crate under `crates/` never
+depends on a tooling crate under `tooling/` as a normal or build
+dependency; only its tests may, as declared. The manifests are the
+stakeholder's paths in CODEOWNERS, so changing a direction waits for
+the stakeholder. The browser room view client, a TypeScript package,
+does not exist yet (M7); its dependency boundary joins this check
+when it lands.
+
 The core executable's reach is held two ways (SEC-01, ENG-16). Its
 own [clippy.toml](../crates/cairn/clippy.toml) refuses the
 `std::net` socket types and `std::process::Command` in its code, and
@@ -146,6 +169,8 @@ What CI decides, on every pull request:
 - rustfmt and clippy, with each product crate's bans on sockets and
   program starts (I4) and on clocks and hash order (I10), and the
   reach test;
+- the crates' declared dependency directions and responsibilities
+  (ENG-02);
 - no mutable global state in a product crate (ENG-03);
 - coverage per test layer (ENG-11), and every live scenario.
 

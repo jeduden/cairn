@@ -16,7 +16,7 @@ Feature: Engineering quality (ENG)
     And the release workflow builds with "x86_64-unknown-linux-musl"
     And the release workflow builds with "aarch64-unknown-linux-musl"
 
-  @ENG-02 @P0 @pending
+  @ENG-02 @P0
   Scenario: dependency directions between the workspace crates are declared and enforced
     Given the declared dependency directions for the workspace crates
     When a crate depends on a crate its direction forbids

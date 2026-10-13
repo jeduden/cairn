@@ -31,6 +31,7 @@ pub fn cases() -> Vec<Case> {
         ledger_cases(),
         reach_cases(),
         product_crate_cases(),
+        architecture_cases(),
     ]
     .concat()
 }
@@ -537,6 +538,57 @@ fn reach_cases() -> Vec<Case> {
             ),
             clippy("cairn"),
             "use of a disallowed type `std::net::TcpStream`",
+        ),
+    ]
+}
+
+/// The drifts ENG-02 exists to catch: a crate depending where its
+/// manifest's declared directions forbid, and a manifest leaving out a
+/// direction or a responsibility. The edits keep Cargo.lock as it is,
+/// so the checks run under `--locked`.
+fn architecture_cases() -> Vec<Case> {
+    const GATE: &str = "the_workspace_keeps_its_declared_directions";
+    let gate = || cargo_test("engineering", "checkout", GATE);
+    vec![
+        case(
+            "the core executable depending on a tooling crate",
+            "ENG-02",
+            Injection::replace(
+                "crates/cairn/Cargo.toml",
+                "[dev-dependencies]\nserde_json.workspace = true\ntestkit.workspace = true\n",
+                "[dependencies]\ntestkit.workspace = true\n\n[dev-dependencies]\nserde_json.workspace = true\n",
+            ),
+            scenario("ENG-02"),
+            "product crate cairn depends on tooling crate testkit, which a product crate never does",
+        ),
+        case(
+            "a tooling crate depending where its declared directions forbid",
+            GATE,
+            Injection::replace(
+                "tooling/adr/Cargo.toml",
+                "may-depend-on = [\"srs\"]",
+                "may-depend-on = []",
+            ),
+            gate(),
+            "crate adr depends on crate srs, which its declared directions forbid",
+        ),
+        case(
+            "a crate declaring no directions",
+            GATE,
+            Injection::replace("tooling/drift/Cargo.toml", "may-depend-on = []\n", ""),
+            gate(),
+            "crate drift declares no may-depend-on directions",
+        ),
+        case(
+            "a library crate declaring no responsibility",
+            "ENG-02",
+            Injection::replace(
+                "tooling/srs/Cargo.toml",
+                "responsibility = \"Reads the SRS requirement tables, appendices and personas for the gates\"\n",
+                "",
+            ),
+            scenario("ENG-02"),
+            "library crate srs declares no responsibility",
         ),
     ]
 }

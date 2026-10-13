@@ -73,7 +73,11 @@ fn workspace_reads_each_crate_and_its_declarations() {
                 "may-depend-on": ["kit"],
                 "may-dev-depend-on": ["probe"],
             }),
-            &[("kit", None), ("probe", Some("dev")), ("gen", Some("build"))],
+            &[
+                ("kit", None),
+                ("probe", Some("dev")),
+                ("gen", Some("build")),
+            ],
         ),
         json!({
             "name": "bare",
@@ -253,8 +257,12 @@ fn directions_let_a_product_crate_depend_on_a_product_crate() {
         ..Member::default()
     });
     member(&mut members, "core").may_depend_on = Some(vec!["store".into()]);
-    member(&mut members, "core").links.push(link("store", false));
-    member(&mut members, "store").links.push(link("core", false));
+    member(&mut members, "core")
+        .links
+        .push(link("store", false));
+    member(&mut members, "store")
+        .links
+        .push(link("core", false));
 
     assert_eq!(
         directions(&members),
@@ -294,4 +302,53 @@ fn responsibilities_are_not_shared_and_not_asked_of_a_binary() {
         responsibilities(&members),
         ["crates core and kit declare the same responsibility: runs the hooks"]
     );
+}
+
+#[test]
+fn a_forbidden_dependency_is_one_the_check_refuses_naming_both_crates() {
+    let (broken, from, on) = with_forbidden_dependency(&sample()).unwrap();
+
+    assert_eq!((from.as_str(), on.as_str()), ("core", "gate"));
+    let found = directions(&broken);
+    assert_eq!(names_both(&found, &from, &on), Ok(()));
+    assert_eq!(directions(&sample()), Vec::<String>::new());
+}
+
+#[test]
+fn a_forbidden_dependency_needs_a_product_and_a_tooling_crate() {
+    let want = Err("the workspace needs a product crate and a tooling crate".to_owned());
+    let tooling_only: Vec<Member> = sample().into_iter().filter(|m| m.is_tooling()).collect();
+    let product_only: Vec<Member> = sample().into_iter().filter(|m| m.is_product()).collect();
+
+    assert_eq!(with_forbidden_dependency(&tooling_only).map(|_| ()), want);
+    assert_eq!(with_forbidden_dependency(&product_only).map(|_| ()), want);
+}
+
+#[test]
+fn names_both_wants_whole_crate_names_on_one_line() {
+    let found = vec!["crate core depends on crate gate, which no".to_owned()];
+
+    assert_eq!(names_both(&found, "core", "gate"), Ok(()));
+    assert!(names_both(&found, "cor", "gate").is_err());
+    assert!(names_both(&found, "core", "kit").is_err());
+    let apart = vec!["crate core".to_owned(), "crate gate".to_owned()];
+    assert!(names_both(&apart, "core", "gate").is_err());
+}
+
+#[test]
+fn problems_gather_both_checks_or_the_one_it_cannot_read() {
+    let packages = [
+        package("core", "crates/core", &declares("a", &["kit"]), &[]),
+        package("kit", "tooling/kit", &declares("", &[]), &[("core", None)]),
+    ];
+
+    assert_eq!(
+        problems(&metadata(&packages)),
+        [
+            "crate kit depends on crate core, which its declared directions forbid",
+            "product crate core may depend on tooling crate kit, which a product crate never does",
+            "library crate kit declares an empty responsibility",
+        ]
+    );
+    assert!(problems("not json")[0].starts_with("read cargo metadata"));
 }

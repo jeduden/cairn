@@ -16,6 +16,7 @@
 mod assumptions;
 mod engineering;
 mod engineering_adr;
+mod engineering_architecture;
 mod engineering_drift;
 mod engineering_review;
 
