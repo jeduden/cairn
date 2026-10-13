@@ -19,6 +19,12 @@ const BUILD_WORKFLOW: &str = ".github/workflows/build.yml";
 const ATTEST_SBOM_STEP: &str =
     "        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0\n";
 
+/// The ruleset for main the ENG-21 cases drift.
+const RULESET: &str = ".github/rulesets/main.json";
+
+/// The code owners the ENG-21 cases drift.
+const CODEOWNERS: &str = ".github/CODEOWNERS";
+
 /// The workflow the ENG-28 cases drift.
 const REVIEW_WORKFLOW: &str = ".github/workflows/review.yml";
 
@@ -42,6 +48,7 @@ pub fn cases() -> Vec<Case> {
         reach_cases(),
         product_crate_cases(),
         release_cases(),
+        protection_cases(),
     ]
     .concat()
 }
@@ -728,6 +735,114 @@ fn release_cases() -> Vec<Case> {
             ),
             scenario("ENG-20"),
             "does not verify the SBOM attestation",
+        ),
+    ]
+}
+
+/// A case for ENG-21: its scenario stays pending, so each drift is
+/// caught by the gate test that reads the same records.
+fn protection_case(
+    name: &'static str,
+    injection: Injection,
+    test: &'static str,
+    want: &'static str,
+) -> Case {
+    case(
+        name,
+        "ENG-21",
+        injection,
+        cargo_test("engineering", "checkout", test),
+        want,
+    )
+}
+
+/// The drifts ENG-21 exists to catch: main's committed ruleset or
+/// CODEOWNERS weaker than the requirement says.
+fn protection_cases() -> Vec<Case> {
+    vec![
+        protection_case(
+            "commits no longer required to be signed",
+            Injection::replace(RULESET, "    { \"type\": \"required_signatures\" },\n", ""),
+            "the_checkout_s_ruleset_requires_signed_commits",
+            "the ruleset has no required_signatures rule",
+        ),
+        protection_case(
+            "an actor allowed to bypass the ruleset",
+            Injection::replace(
+                RULESET,
+                "\"bypass_actors\": [],",
+                "\"bypass_actors\": [{ \"actor_id\": 5, \"actor_type\": \"RepositoryRole\", \"bypass_mode\": \"always\" }],",
+            ),
+            "the_checkout_s_ruleset_rejects_direct_pushes",
+            "the ruleset lets an actor bypass it",
+        ),
+        protection_case(
+            "the ruleset no longer enforced",
+            Injection::replace(
+                RULESET,
+                "\"enforcement\": \"active\"",
+                "\"enforcement\": \"evaluate\"",
+            ),
+            "the_checkout_s_ruleset_rejects_direct_pushes",
+            "the ruleset's enforcement is not active",
+        ),
+        protection_case(
+            "no approval required",
+            Injection::replace(
+                RULESET,
+                "\"required_approving_review_count\": 1",
+                "\"required_approving_review_count\": 0",
+            ),
+            "the_checkout_s_ruleset_needs_an_approval_from_another_reviewer",
+            "the pull_request rule requires no approving review",
+        ),
+        protection_case(
+            "a code owner's approval no longer required",
+            Injection::replace(
+                RULESET,
+                "\"require_code_owner_review\": true",
+                "\"require_code_owner_review\": false",
+            ),
+            "the_checkout_s_ruleset_needs_an_approval_from_another_reviewer",
+            "the pull_request rule does not set require_code_owner_review",
+        ),
+        protection_case(
+            "the requirement text without the stakeholder",
+            Injection::replace(CODEOWNERS, "/docs/srs/                    @jeduden\n", ""),
+            "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
+            "docs/srs/ (`docs/srs/`) is owned by [], want @jeduden",
+        ),
+        protection_case(
+            "the agent instructions without the stakeholder",
+            Injection::replace(CODEOWNERS, "/CLAUDE.md                    @jeduden\n", ""),
+            "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
+            "CLAUDE.md (the agent instructions) is owned by [], want @jeduden",
+        ),
+        protection_case(
+            "an owner on a path outside the allowed classes",
+            Injection::replace(
+                CODEOWNERS,
+                "/SECURITY.md                  @jeduden\n",
+                "/SECURITY.md                  @jeduden\n/crates/cairn/src/            @jeduden\n",
+            ),
+            "the_checkout_s_codeowners_name_no_owner_on_any_other_path",
+            "/crates/cairn/src/ names an owner on a path outside the allowed classes",
+        ),
+        protection_case(
+            "a security-sensitive crate without the security reviewer",
+            Injection::replace(CODEOWNERS, "/crates/pin/                  @jeduden\n", ""),
+            "the_checkout_s_security_crates_belong_to_the_security_reviewer",
+            "crates/pin/ is not owned by @jeduden",
+        ),
+        protection_case(
+            "the nightly no longer comparing the live ruleset",
+            Injection::replace(
+                ".github/workflows/nightly.yml",
+                "protection-check -- --committed",
+                "protection-check -- --help",
+            ),
+            "the_checkout_s_nightly_compares_the_live_ruleset_with_the_committed_one",
+            "protection-check -- --committed .github/rulesets/main.json --live live.json",
         ),
     ]
 }
