@@ -39,10 +39,12 @@ exported by `record/export-defer.sh`, under
   full context window included. On a manual compaction the model reads the
   handler's command and stderr; at the full context window the harness refuses
   every prompt with "Prompt is too long", before any `Stop` hook.
-- OQ-01 has S6's findings and a recommendation: keep (a), coexisting
-  with native compaction, and drop (b), since blocking only moves
-  native compaction to the full context window and blocks the agent there (I9).
-  The stakeholder closes it; NG1 stands until then.
+- OQ-01 is closed by the stakeholder on S6's findings: v1 coexists
+  with native compaction, option (a), and NG1 stands. Blocking only
+  moves native compaction to the full context window and blocks the
+  agent there (I9). A bounded veto, compaction the launcher drives,
+  and the proxy (c) are kept for later as UC-006, with the prior art
+  the report lists.
 
 Deviations from the tasks:
 

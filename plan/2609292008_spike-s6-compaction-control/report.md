@@ -83,8 +83,40 @@ override, and that the harness takes the same path at it either way.
 Keep option (a), coexisting with native compaction, as v1 does, and
 NG1 as it stands. Drop option (b): deferring compaction through
 `PreCompact` is possible, but without a way to evict it only moves
-native compaction to the full context window and blocks the agent there.
-Option (c), a proxy, stays outside the core under I4.
+native compaction to the full context window and blocks the agent
+there. Option (c), a proxy, stays outside the core under I4.
+
+The stakeholder closed OQ-01 this way on 13 October 2026, and kept
+three options for later under UC-006: a bounded veto, compaction the
+launcher drives, and (c).
+
+## Prior art
+
+How others handle the same harness behaviour, as their public pages
+describe it on 13 October 2026:
+
+- [Omnigent][omnigent], Databricks' meta-harness, moved "compaction
+  ownership" from its runner back to each wrapped harness in v0.3.0,
+  surfaces compaction failures, and restores compaction and transcript
+  on resume: it coexists, as (a).
+- Memory plugins such as [claude-mem][claude-mem] snapshot in
+  `PreCompact` and inject again through `SessionStart` after a
+  compaction: also (a).
+- The [`PreCompact` veto pattern][veto] blocks only automatic
+  compactions mid-task, lets one through at a checkpoint and forces one
+  after three blocks. It warns that an indefinite block exhausts the
+  window, as S6 recorded.
+- [Hyperhive][hyperhive] turns Claude Code's auto-compaction off through
+  `--settings`. After a turn above a token watermark, 150k by default,
+  it has the agent write its state to files and then sends `/compact`;
+  on "Prompt is too long" it compacts at once and retries the turn.
+
+[omnigent]: https://omnigent.ai/releases/0.3.0
+[claude-mem]: https://docs.claude-mem.ai/configuration/hooks
+[veto]:
+  https://agentpatterns.ai/tool-engineering/precompact-hook-compaction-veto/
+[hyperhive]:
+  https://git.berlin.ccc.de/vinzenz/hyperhive/commit/9cbb05bb862aa4fa60b488c6638455c0849a7887
 
 ## Fixtures
 
