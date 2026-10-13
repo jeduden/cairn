@@ -17,6 +17,7 @@ mod assumptions;
 mod engineering;
 mod engineering_adr;
 mod engineering_drift;
+mod engineering_protection;
 mod engineering_release;
 mod engineering_review;
 

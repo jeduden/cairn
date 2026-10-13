@@ -7,6 +7,10 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[[bin]]
+name = "protection-check"
+path = "src/main.rs"
+
 [dependencies]
 adr.workspace = true
 drift.workspace = true

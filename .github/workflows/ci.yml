@@ -232,7 +232,8 @@ jobs:
           # scanning: the check itself is the gate.
           advanced-security: false
 
-  # The one check the branch and release-tag rulesets require. GitHub
+  # The one check the branch and release-tag rulesets require (main's is
+  # committed as .github/rulesets/main.json, ENG-21). GitHub
   # names a required check after a job, never after the workflow, so
   # this job carries the name "CI" and passes only when every job above
   # passed. A job added later joins `needs:` here and the rulesets stay

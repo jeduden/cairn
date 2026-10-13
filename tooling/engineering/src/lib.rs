@@ -5,6 +5,8 @@
 //! them at once. It is repository tooling and never links into a
 //! shipped executable.
 
+pub mod branch_protection;
+pub mod codeowners;
 pub mod decisions;
 pub mod dependencies;
 pub mod product_crates;
