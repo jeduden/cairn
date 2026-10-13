@@ -9,6 +9,7 @@ publish.workspace = true
 
 [dependencies]
 adr.workspace = true
+benchmark.workspace = true
 drift.workspace = true
 review-gate.workspace = true
 scenario.workspace = true
