@@ -667,6 +667,21 @@ fn isolation_cases() -> Vec<Case> {
             "reads the real home outside testkit::guard",
         ),
         case(
+            "CI running the suite with the real home",
+            "the_ci_test_job_runs_with_a_decoy_home",
+            Injection::replace(
+                ".github/workflows/ci.yml",
+                "HOME=\"$decoy\" cargo test --workspace --locked",
+                "cargo test --workspace --locked",
+            ),
+            cargo_test(
+                "engineering",
+                "isolation",
+                "the_ci_test_job_runs_with_a_decoy_home",
+            ),
+            ".github/workflows/ci.yml does not contain",
+        ),
+        case(
             "the instructions no longer forbidding a command at the real home",
             "ENG-14",
             Injection::replace(

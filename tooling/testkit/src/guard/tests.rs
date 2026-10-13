@@ -215,6 +215,39 @@ fn a_real_claude_code_configuration_is_refused_under_an_isolated_home() {
 }
 
 #[test]
+fn a_refusal_says_which_place_it_kept_out() {
+    let temp = TempDir::new().unwrap();
+    let real = Path::new("/home/x");
+    let var = vars(&[("HOME", real)]);
+
+    for (place, what) in [
+        (Place::CairnHome, "the Cairn home at /home/x/.cairn"),
+        (
+            Place::ClaudeConfig,
+            "Claude Code's configuration directory at /home/x/.claude",
+        ),
+        (
+            Place::ClaudeJson,
+            "Claude Code's state file at /home/x/.claude.json",
+        ),
+    ] {
+        let got = refused(place, &var, temp.path()).to_string();
+
+        assert!(
+            got.starts_with(&format!("refusing to resolve {what}: ")),
+            "{got}"
+        );
+    }
+}
+
+#[test]
+fn a_path_with_no_existing_ancestor_resolves_as_written() {
+    let path = Path::new("no-such-dir-here/below");
+
+    assert_eq!(resolved(path), path);
+}
+
+#[test]
 fn a_place_is_named_and_parsed_both_ways() {
     for place in Place::ALL {
         assert_eq!(Place::parse(place.name()), Some(place));
@@ -288,6 +321,9 @@ fn resolve_reads_the_environment_of_the_process() {
         .env("HOME", &home)
         .env("TMPDIR", temp.path())
         .env(CHILD, &home)
+        // A coverage run measures the child too, if it can find where
+        // to write its profile.
+        .envs(env::var_os("LLVM_PROFILE_FILE").map(|file| ("LLVM_PROFILE_FILE", file)))
         .output()
         .unwrap();
 

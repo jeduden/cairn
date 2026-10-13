@@ -152,6 +152,44 @@ temporary directory. Each world gets its own fresh `HOME` and
 State a section tracks lives in its own struct, reached through
 `World::section::<T>()`, never as a new field on the world.
 
+## Keeping tests off the real home
+
+ENG-14 holds in three layers, so a test cannot touch the real `HOME`, a
+real Cairn home or real Claude Code configuration.
+
+- **The guard.** A test resolves the home, the Cairn home or Claude
+  Code's configuration through
+  [`testkit::guard`](../tooling/testkit/src/guard.rs), which aborts the
+  process when the answer is not under the system's temporary directory
+  (`..` and symlinks included). The testkit is test-only, so being linked
+  arms the guard; no test can opt out of it. The ENG-14 scenario runs
+  the scenario runner as a probe test that resolves each place, once
+  with a stand-in real home, which must abort before it prints a path,
+  and once with an isolated one, which must resolve.
+- **One resolver.** A gate test (`only_the_isolation_guard_reads_the_home`)
+  fails when a Rust source reads `HOME`, `CAIRN_HOME`,
+  `CLAUDE_CONFIG_DIR`, `USERPROFILE` or the standard library's home
+  lookup anywhere but the guard and the scenario runner's own start.
+  That is what makes the guard cover every test. A product crate that
+  later resolves a home in shipped code joins that list with its plan,
+  and the stakeholder approves it (`tooling/` is a code-owner path).
+- **The decoy.** CI's `test` job runs the suite with `HOME` pointed at
+  an empty directory and fails if anything appears there. The guard
+  stops a test that asks for the home; the decoy finds one that went
+  around it, such as a program a test started without `isolate`.
+
+ENG-14 also bars agent instructions that direct a destructive command
+at real state. The `engineering` crate's `agent_instructions` scan reads
+every `CLAUDE.md` and `AGENTS.md` and everything under a `.claude/`
+directory. A statement is flagged when it names a way to delete or
+overwrite (`rm`, `purge`, `uninstall`, `git clean`, `-delete`, `tee`,
+a `>` redirect and the like) and the real home (`~`, `HOME`,
+`CAIRN_HOME`, `CLAUDE_CONFIG_DIR`), unless prose forbids the act
+("never", "do not") or the statement first points `HOME` at a temporary
+directory (`HOME=$(mktemp -d)`, "a temporary directory"). A code line is
+never excused by a word inside it. Paths relative to the repository,
+such as `rm -rf target`, are not the real home.
+
 ## The test-engineer agents
 
 The `test-engineer` agent reviews the pyramid as a whole. Three

@@ -61,7 +61,8 @@ to a commit SHA with its version in a trailing comment, and dependabot
 proposes the bumps after a seven-day cooldown.
 
 [ci.yml](../.github/workflows/ci.yml) runs on every push and pull
-request to `main`. It runs every test and scenario, clippy and
+request to `main`. It runs every test and scenario, with `HOME`
+pointed at an empty decoy that must stay empty (ENG-14), clippy and
 rustfmt, cargo-deny and cargo-audit, and the drift suite, and the
 release build of every target (NFR-10, CON-02). It also runs
 `mdsmith check .` and zizmor over the workflows themselves. A final

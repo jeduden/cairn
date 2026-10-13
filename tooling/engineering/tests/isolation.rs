@@ -28,6 +28,25 @@ fn the_agent_instructions_scan_reads_the_repository_s_files() {
     assert!(files.iter().any(|f| f.starts_with(".claude/skills/")));
 }
 
+/// CI runs the suite with `HOME` pointed at a decoy, and fails when a
+/// test left anything under it (ENG-14): the guard stops a test that
+/// resolves the real home, the decoy finds one that went around it.
+#[test]
+fn the_ci_test_job_runs_with_a_decoy_home() {
+    let c = checkout();
+    let wants = [
+        r#"HOME="$decoy" cargo test --workspace --locked"#,
+        r#"[ -n "$(ls -A "$decoy")" ]"#,
+    ];
+
+    let problems: Vec<String> = wants
+        .iter()
+        .filter_map(|want| c.contains(".github/workflows/ci.yml", want).err())
+        .collect();
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
 /// Nothing reads the home but the isolation guard (ENG-14): a test
 /// that resolves it goes through `testkit::guard`, so the guard covers
 /// every test and not only those that opt in.
