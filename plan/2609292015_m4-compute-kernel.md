@@ -29,6 +29,9 @@ by the S5 decision (ADR-04), on the core's SQLite.
 4. Hermeticity: CMP-04
 5. Capped, enveloped, tainted rows of the last row-returning statement:
    CMP-06
+6. M4's initial targets (§12.3): freeze CMP-05's limits and CMP-06's
+   output cap, each with its evidence, removing its † and its §12.3
+   row
 
 ## Acceptance Criteria
 

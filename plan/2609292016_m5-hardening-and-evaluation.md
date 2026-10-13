@@ -34,6 +34,8 @@ evaluation, the external review and the pilot.
 6. Mutation testing and the maintainer runbook: ENG-13, ENG-25
 7. Run the §11.1 evaluation and publish it
 8. External security review and the two-week pilot
+9. M5's initial targets (§12.3): freeze §11's evaluation targets from
+   the evaluation's results, removing their † and their §12.3 row
 
 ## Acceptance Criteria
 

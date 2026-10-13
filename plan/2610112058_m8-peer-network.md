@@ -39,6 +39,8 @@ Scope, by requirement family:
    LANE-10, LANE-12, OWN-08
 4. Foreign-room recall and its visibility: RCL-10, RCL-11
 5. Erasure requests and refused segments: PEER-11, SEC-30
+6. M8's initial targets (§12.3): freeze each with its evidence,
+   removing its † and its §12.3 row
 
 ## Acceptance Criteria
 

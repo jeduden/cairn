@@ -44,6 +44,12 @@ proposed). It leaves five things for M1:
   events per commit met NFR-04 over 1M events at 26.1k events per
   second, while one event per commit ran at 4.2k.
 
+Spike S8 calibrated the conservative model-token estimator §8.4 asks
+for ([report](2609292010_spike-s8-token-estimator/report.md)) and
+froze the targets it measured that M1 needs from its start. On the
+stakeholder's ruling that a target freezes as late as it can, §12.3
+lists six more for M1 to freeze when it builds what uses them (task 9).
+
 Spike S7 chose an in-house stdio MCP server on `serde_json`
 ([report](2609292009_spike-s7-mcp-sdk/report.md),
 [ADR-2610102211](../docs/adr/ADR-2610102211-mcp-server-in-house.md)).
@@ -90,6 +96,13 @@ explain them. They leave four things for M1:
 7. Quarantine: SEC-12
 8. Audit log, counters, configuration, verify and status: OPS-01 to
    OPS-03, ADM-04, ADM-09, ADM-11
+9. The model-token estimator and M1's initial targets: port spike S8's
+   estimator into the core with its unit tests, move its weights'
+   source and the committed sample out of `plan/` into `testdata/`,
+   and prove §8.4's bound on the sample in a test; then freeze, each
+   with its evidence, removing its † and its §12.3 row: NFR-09's store
+   overhead, REC-11's indexing cap, REC-17's secret, RCL-02's hits,
+   RCL-03's cap and SEC-04's term limits
 
 ## Acceptance Criteria
 

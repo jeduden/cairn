@@ -34,6 +34,8 @@ of SEC-26; SEC-28.
    SEC-26
 4. Read-only publishing and the forge, CI and notification bridges:
    SEC-26, SEC-28
+5. M9's initial targets (§12.3): freeze each with its evidence,
+   removing its † and its §12.3 row
 
 ## Acceptance Criteria
 

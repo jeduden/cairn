@@ -110,7 +110,8 @@ summary: >-
 - **Model**: The language model behind an agent; "the model" means it wherever
   the domain model's files, or the domain-model agent's instructions, are not
   speaking of the domain model. Its output in a turn is a **model reply**; a
-  **model token** is its unit of text for budgets.
+  **model token** is its unit of text for budgets, counted by §8.4's estimate;
+  spend counts the model's own count.
 - **Working view**: Whatever is currently in the model's context window. Never
   part of the record, never authoritative.
 - **Held request**: A permission request, question or hand-off with a stable id,

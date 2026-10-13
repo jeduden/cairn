@@ -76,7 +76,7 @@ Feature: Compute kernel (CMP)
     And an agent run with a Claude Code transcript "run-a" containing an untrusted "web" event
     When the agent calls the MCP tool "kernel_exec" with code "CREATE TEMP TABLE r AS SELECT * FROM event_search('web'); WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 10000) SELECT r.* FROM r, n"
     Then the kernel output is wrapped in the envelope
-    And the rows are capped at 8,000 model tokens with a truncation marker stating that kernel variables persist
+    And the rows are capped at 8,000 estimated model tokens with a truncation marker stating that kernel variables persist
     And the envelope is tainted "untrusted" by the web event read during the execution
     And a later "kernel_exec" with code "SELECT * FROM r LIMIT 1", which reads no event, is tainted "untrusted" by that web event too
     And nothing other than the last row-returning statement's rows is returned
