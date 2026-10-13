@@ -10,3 +10,6 @@
 
 # Cargo build output
 /target/
+
+# Coverage profiles a test process writes where it runs
+*.profraw

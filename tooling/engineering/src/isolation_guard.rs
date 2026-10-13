@@ -10,6 +10,7 @@
 //! for a read of the home that bypasses the guard, so the guard covers
 //! every test and not only those that opt in.
 
+use std::env;
 use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -64,7 +65,8 @@ pub struct Probe {
 
 /// Runs `exe` as a probe for `place`: with nothing but `HOME` set to
 /// `home`, the temporary directory set to `temp`, and [`PROBE`] naming
-/// the place.
+/// the place. A coverage run's profile file is kept, so the probe's
+/// profile lands with the others and not where it runs.
 ///
 /// # Errors
 ///
@@ -81,6 +83,7 @@ pub fn run_probe(
         .env("HOME", home)
         .env("TMPDIR", temp)
         .env(PROBE, place)
+        .envs(env::var_os("LLVM_PROFILE_FILE").map(|file| ("LLVM_PROFILE_FILE", file)))
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
