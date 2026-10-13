@@ -190,7 +190,11 @@ fn compare(name: &str, base: Option<&[u64]>, head: Option<&[u64]>, retired: bool
         (Some(base), Some(head)) => {
             let z = stats::mann_whitney_z(base, head);
             c.z = Some(z);
-            if slower_than_threshold(c.base, c.head) && z > Z_CRITICAL {
+            let slower = c
+                .base
+                .zip(c.head)
+                .is_some_and(|(base, head)| slower_than_threshold(base, head));
+            if slower && z > Z_CRITICAL {
                 Status::Regressed
             } else {
                 Status::Held
@@ -202,14 +206,10 @@ fn compare(name: &str, base: Option<&[u64]>, head: Option<&[u64]>, retired: bool
 }
 
 /// Whether the head's median is more than [`THRESHOLD_PERCENT`] above
-/// the base's, in exact integer arithmetic.
-fn slower_than_threshold(base: Option<u128>, head: Option<u128>) -> bool {
-    match (base, head) {
-        (Some(base), Some(head)) => {
-            head.saturating_mul(100) > base.saturating_mul(100 + THRESHOLD_PERCENT)
-        }
-        _ => false,
-    }
+/// the base's, both given as twice their value, in exact integer
+/// arithmetic.
+fn slower_than_threshold(base: u128, head: u128) -> bool {
+    head.saturating_mul(100) > base.saturating_mul(100 + THRESHOLD_PERCENT)
 }
 
 /// One line per failing comparison, each naming its benchmark; and one

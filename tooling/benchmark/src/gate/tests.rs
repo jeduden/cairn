@@ -191,3 +191,37 @@ fn the_report_has_a_row_per_benchmark() {
          | gone | 1.0 µs | – | – | – | missing on the head |\n"
     );
 }
+
+#[test]
+fn each_status_has_its_words_in_the_report() {
+    let words: Vec<&str> = [
+        Status::Held,
+        Status::Regressed,
+        Status::Missing,
+        Status::Retired,
+        Status::New,
+        Status::TooFew,
+    ]
+    .into_iter()
+    .map(Status::describe)
+    .collect();
+
+    assert_eq!(
+        words,
+        [
+            "held",
+            "regressed",
+            "missing on the head",
+            "retired",
+            "new on the head",
+            "too few samples",
+        ]
+    );
+}
+
+#[test]
+fn the_threshold_compares_medians_exactly_and_saturates() {
+    assert!(!slower_than_threshold(2000, 2200));
+    assert!(slower_than_threshold(2000, 2201));
+    assert!(!slower_than_threshold(u128::MAX, u128::MAX));
+}
