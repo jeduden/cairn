@@ -112,16 +112,18 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                                      |
-| --- | ------ | -------------------------------------------------------------------------- |
-| 1   | 🔲     | [The isolation guard and the agent instruction check (ENG-14)](phase-1.md) |
-| 2   | 🔲     | [Declared dependency directions between crates (ENG-02)](phase-2.md)       |
-| 3   | 🔲     | [Deadlines on every blocking operation (ENG-03)](phase-3.md)               |
-| 4   | 🔲     | [The benchmark gate (ENG-15)](phase-4.md)                                  |
-| 5   | 🔲     | [SLSA Build Level 3 provenance (ENG-20)](phase-5.md)                       |
-| 6   | 🔲     | [Main's protection and CODEOWNERS (ENG-21)](phase-6.md)                    |
-| 7   | 🔲     | [The core confined in the end-to-end suite (ENG-12)](phase-7.md)           |
-| 8   | 🔲     | [The core's reach evidence and unsafe code (ENG-16)](phase-8.md)           |
+| #   | Status | Phase                                                                                                                                                                                                   |
+| --- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 🔲     | [The isolation guard and the agent instruction check (ENG-14)](phase-1.md)                                                                                                                              |
+| 2   | 🔲     | [Declared dependency directions between crates (ENG-02)](phase-2.md)                                                                                                                                    |
+| 3   | 🔲     | [Deadlines on every blocking operation (ENG-03)](phase-3.md)                                                                                                                                            |
+| 4   | 🔲     | [The benchmark gate (ENG-15)](phase-4.md)                                                                                                                                                               |
+| 5   | 🔲     | [SLSA Build Level 3 provenance (ENG-20)](phase-5.md)                                                                                                                                                    |
+| 6   | 🔲     | [Main's protection and CODEOWNERS (ENG-21)](phase-6.md)                                                                                                                                                 |
+| 7   | 🔳     | [The core confined in the end-to-end suite (ENG-12)](phase-7.md)                                                                                                                                        |
+|     | ↳      | The core's end-to-end tests run it with all network denied, and a socket probe fails the suite naming the core and the caller; the CI wiring awaits its first run on the hosted runner.                 |
+| 8   | ✅     | [The core's reach evidence and unsafe code (ENG-16)](phase-8.md)                                                                                                                                        |
+|     | ↳      | Gate tests prove the core row: CI gates on the static checks under the ci job, every crate keeps the unsafe ban, the core's reach evidence and the determinism bans are in place; ENG-16 stays pending. |
 <?/catalog?>
 
 ## Acceptance Criteria
