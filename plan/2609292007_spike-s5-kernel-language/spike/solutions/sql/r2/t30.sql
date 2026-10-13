@@ -1,0 +1,11 @@
+WITH r AS (
+  SELECT run, seq,
+         SUM(tokens) OVER (PARTITION BY run ORDER BY seq ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running
+  FROM events
+  WHERE run IS NOT NULL
+)
+SELECT run, MIN(seq) AS seq
+FROM r
+WHERE running >= 50000
+GROUP BY run
+ORDER BY run ASC;
