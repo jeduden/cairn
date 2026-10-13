@@ -186,6 +186,17 @@ fn repository_cases() -> Vec<Case> {
             r#"does not contain "90-day coordinated disclosure""#,
         ),
         case(
+            "S6's finding dropped from OQ-01",
+            "ASM-09",
+            Injection::replace(
+                "docs/srs/13-open-questions-and-risks.md",
+                "every automatic one (ASM-09)",
+                "every automatic one",
+            ),
+            scenario("ASM-09"),
+            "the OQ-01 row does not record that exit status 2 blocks every compaction (ASM-09)",
+        ),
+        case(
             "the drift suite dropped from CI",
             "ENG-27",
             Injection::replace(

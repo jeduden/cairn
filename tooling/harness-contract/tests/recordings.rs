@@ -201,3 +201,31 @@ fn the_hook_context_transcripts_hold_hook_context() {
         }
     }
 }
+
+/// The lines of the blocked compaction the manifest names at `key`.
+fn blocked(dir: &std::path::Path, manifest: &Value, key: &str) -> Result<Vec<Value>, String> {
+    let rel = recording::named(manifest, &format!("compaction_blocked.{key}.transcript"))?;
+    recording::lines(&dir.join(rel))
+}
+
+#[test]
+fn a_blocked_manual_compaction_shows_as_command_output_and_is_answered() {
+    for (dir, manifest) in versions().unwrap() {
+        let lines = blocked(&dir, &manifest, "manual").unwrap();
+        let shown = transcript::where_shown(&lines, "Compaction blocked by PreCompact hook");
+        assert!(shown.contains(&transcript::Shown::CommandOutput));
+        assert!(!transcript::has_compaction(&lines));
+        assert!(transcript::refusals(&lines).is_empty());
+        assert!(!transcript::model_replies_after(&lines, "Compaction blocked").is_empty());
+    }
+}
+
+#[test]
+fn the_full_context_window_ends_in_refusals_no_model_reply_follows() {
+    for (dir, manifest) in versions().unwrap() {
+        let lines = blocked(&dir, &manifest, "full_window").unwrap();
+        assert!(!transcript::has_compaction(&lines));
+        assert!(!transcript::refusals(&lines).is_empty());
+        assert!(!transcript::model_replied_after_refusal(&lines));
+    }
+}
