@@ -127,7 +127,7 @@ Feature: Engineering quality (ENG)
     When mutation testing runs
     Then the mutation score is at least 70%
 
-  @ENG-14 @P0 @pending
+  @ENG-14 @P0
   Scenario: tests cannot touch the real `HOME` or Claude Code configuration
     Given a test that resolves a path under the real `HOME`
     When the suite runs

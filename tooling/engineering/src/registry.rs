@@ -15,8 +15,10 @@ pub const CHECKOUT_STEP: &str = "the repository checkout";
 /// case: the parse gates of the SRS and the ADRs, the requirement–scenario gate, the Appendix B check, the
 /// persona gates of Appendix C and §2.5, the finding ledger's check
 /// that every closed domain-model finding stays in the text, and the
-/// core executable's dependency reach (SEC-01).
-pub const GATE_TESTS: [&str; 8] = [
+/// core executable's dependency reach (SEC-01), and the two isolation
+/// gates of ENG-14: the scan for a read of the home around the guard
+/// and the scan of the agent instruction files.
+pub const GATE_TESTS: [&str; 10] = [
     "specification_parses",
     "decision_records_parse",
     "specification_and_features_agree",
@@ -25,6 +27,8 @@ pub const GATE_TESTS: [&str; 8] = [
     "personas_match_the_agents",
     "finding_ledger_is_carried",
     "the_core_executable_links_only_crates_its_reach_allows",
+    "only_the_isolation_guard_reads_the_home",
+    "the_agent_instructions_direct_no_destructive_command_at_real_state",
 ];
 
 /// Refuses a case whose injection no longer finds its target, so a case
