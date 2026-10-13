@@ -85,3 +85,32 @@ fn no_product_crate_keeps_mutable_global_state() {
 
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
+
+/// The workflows that publish a release sign its checksums keyless
+/// (ENG-20).
+#[test]
+fn the_checkout_s_release_signs_its_checksums_keyless() {
+    let release = engineering::release_provenance::load(&checkout()).unwrap_or_default();
+
+    assert_eq!(release.checksums_signed_keyless(), Vec::<String>::new());
+}
+
+/// The reusable build workflow attests the binaries' provenance, and
+/// the release workflow verifies what it published (ENG-20).
+#[test]
+fn the_checkout_s_release_attests_provenance_in_the_build_workflow() {
+    let release = engineering::release_provenance::load(&checkout()).unwrap_or_default();
+
+    assert_eq!(
+        release.provenance_from_the_build_workflow(),
+        Vec::<String>::new()
+    );
+}
+
+/// The release attaches and attests an SPDX SBOM (ENG-20).
+#[test]
+fn the_checkout_s_release_attaches_and_attests_an_sbom() {
+    let release = engineering::release_provenance::load(&checkout()).unwrap_or_default();
+
+    assert_eq!(release.sbom_attached_and_attested(), Vec::<String>::new());
+}
