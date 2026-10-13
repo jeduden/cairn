@@ -16,7 +16,9 @@
 mod assumptions;
 mod engineering;
 mod engineering_adr;
+mod engineering_boundary;
 mod engineering_drift;
+mod engineering_reach;
 mod engineering_review;
 
 use std::env;
@@ -72,6 +74,14 @@ impl World {
 }
 
 fn main() -> ExitCode {
+    // ENG-12: started as the boundary probe, it opens a socket and
+    // exits, standing in for a component that reaches out.
+    if env::args_os()
+        .nth(1)
+        .is_some_and(|a| a == testkit::boundary::PROBE)
+    {
+        return ExitCode::from(u8::from(testkit::boundary::probe().is_err()));
+    }
     let (home, marker) = (env::var_os("HOME"), env::var_os(runner::ISOLATED_HOME));
     if runner::is_isolated(home.as_deref(), marker.as_deref(), &env::temp_dir()) {
         run()

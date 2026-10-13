@@ -34,10 +34,10 @@ use crate::{TempDir, isolate};
 /// The opt-out: set, outside CI, the end-to-end tests run unconfined.
 pub const UNCONFINED: &str = "CAIRN_E2E_UNCONFINED";
 
-/// Set, an executable that hosts a probe runs [`probe`] instead of
-/// itself: the scenario runner's way to stand in for a component that
-/// opens a socket.
-pub const PROBE: &str = "CAIRN_BOUNDARY_PROBE";
+/// Given as its first argument, an executable that hosts the probe
+/// runs [`probe`] instead of itself: the scenario runner's way to stand
+/// in for a component that opens a socket.
+pub const PROBE: &str = "--cairn-boundary-probe";
 
 /// The variable CI sets.
 const CI: &str = "CI";
