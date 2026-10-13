@@ -170,6 +170,9 @@ fn decide_orders_its_comparisons_by_benchmark() {
     assert_eq!(names, ["a", "b", "c"]);
 }
 
+/// Ten 1000s against ten 1500s: U = 100 against a mean of 50, and the
+/// two runs of ten ties give a variance of
+/// 100 / 12 * (21 - 1980 / 380), so z = 49.5 / sqrt(131.58) = 4.32.
 #[test]
 fn the_report_has_a_row_per_benchmark() {
     let base = Samples::from([
@@ -184,7 +187,7 @@ fn the_report_has_a_row_per_benchmark() {
         report,
         "| Benchmark | Base median | Head median | Change | z | Result |\n\
          | --- | --- | --- | --- | --- | --- |\n\
-         | core_start_up | 1.0 µs | 1.5 µs | +50.0% | 4.24 | regressed |\n\
+         | core_start_up | 1.0 µs | 1.5 µs | +50.0% | 4.32 | regressed |\n\
          | gone | 1.0 µs | – | – | – | missing on the head |\n"
     );
 }

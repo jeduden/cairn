@@ -45,7 +45,8 @@
 //! is a reviewed change to the suite. A benchmark only the head sampled
 //! is new: it has nothing to be compared with, and the report says so.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
+use std::fmt::Write as _;
 
 use crate::samples::Samples;
 use crate::stats;
@@ -60,6 +61,9 @@ pub const Z_CRITICAL: f64 = 2.326_347_874_040_841;
 
 /// The fewest samples a side needs for the normal approximation.
 pub const MIN_SAMPLES: usize = 10;
+
+/// What the report shows for a value a side does not have.
+const NONE: &str = "–";
 
 /// What the gate decided for one benchmark.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -76,6 +80,21 @@ pub enum Status {
     New,
     /// A side has fewer than [`MIN_SAMPLES`]: no decision, so it fails.
     TooFew,
+}
+
+impl Status {
+    /// The report's words for the status.
+    #[must_use]
+    pub fn describe(self) -> &'static str {
+        match self {
+            Self::Held => "held",
+            Self::Regressed => "regressed",
+            Self::Missing => "missing on the head",
+            Self::Retired => "retired",
+            Self::New => "new on the head",
+            Self::TooFew => "too few samples",
+        }
+    }
 }
 
 /// One benchmark's comparison.
@@ -96,7 +115,42 @@ impl Comparison {
     /// Whether this comparison fails the gate.
     #[must_use]
     pub fn fails(&self) -> bool {
-        false
+        matches!(
+            self.status,
+            Status::Regressed | Status::Missing | Status::TooFew
+        )
+    }
+
+    /// The change from the base's median to the head's, in percent.
+    #[must_use]
+    pub fn change_percent(&self) -> Option<f64> {
+        match (self.base, self.head) {
+            (Some(base), Some(head)) if base > 0 => Some((nanos(head) / nanos(base) - 1.0) * 100.0),
+            _ => None,
+        }
+    }
+
+    /// Why this comparison fails, naming its benchmark; `None` when it
+    /// does not.
+    #[must_use]
+    pub fn failure(&self) -> Option<String> {
+        let name = &self.benchmark;
+        match self.status {
+            Status::Regressed => Some(format!(
+                "{name} regressed by {:.1}%: median {} on the base, {} on the head, z = {:.2} above {Z_CRITICAL:.2}",
+                self.change_percent().unwrap_or_default(),
+                micros(self.base),
+                micros(self.head),
+                self.z.unwrap_or_default(),
+            )),
+            Status::Missing => Some(format!(
+                "{name} was sampled on the base but not on the head"
+            )),
+            Status::TooFew => Some(format!(
+                "{name} has too few samples to decide: the gate needs {MIN_SAMPLES} on each side"
+            )),
+            Status::Held | Status::Retired | Status::New => None,
+        }
     }
 }
 
@@ -104,8 +158,58 @@ impl Comparison {
 /// `retired` names the benchmarks the head's suite retired.
 #[must_use]
 pub fn decide(base: &Samples, head: &Samples, retired: &[&str]) -> Vec<Comparison> {
-    let _ = (base, head, retired, BTreeSet::<()>::new(), BTreeMap::<(), ()>::new());
-    Vec::new()
+    let names: BTreeSet<&String> = base.keys().chain(head.keys()).collect();
+
+    names
+        .into_iter()
+        .map(|name| {
+            compare(
+                name,
+                base.get(name).map(Vec::as_slice),
+                head.get(name).map(Vec::as_slice),
+                retired.contains(&name.as_str()),
+            )
+        })
+        .collect()
+}
+
+/// Compares one benchmark's samples on each side.
+fn compare(name: &str, base: Option<&[u64]>, head: Option<&[u64]>, retired: bool) -> Comparison {
+    let mut c = Comparison {
+        benchmark: name.to_owned(),
+        status: Status::Held,
+        base: base.and_then(stats::twice_median),
+        head: head.and_then(stats::twice_median),
+        z: None,
+    };
+    c.status = match (base, head) {
+        (_, None) if retired => Status::Retired,
+        (_, None) => Status::Missing,
+        (None, Some(_)) => Status::New,
+        (Some(base), Some(head)) if base.len().min(head.len()) < MIN_SAMPLES => Status::TooFew,
+        (Some(base), Some(head)) => {
+            let z = stats::mann_whitney_z(base, head);
+            c.z = Some(z);
+            if slower_than_threshold(c.base, c.head) && z > Z_CRITICAL {
+                Status::Regressed
+            } else {
+                Status::Held
+            }
+        }
+    };
+
+    c
+}
+
+/// Whether the head's median is more than [`THRESHOLD_PERCENT`] above
+/// the base's, in exact integer arithmetic.
+fn slower_than_threshold(base: Option<u128>, head: Option<u128>) -> bool {
+    match (base, head) {
+        (Some(base), Some(head)) => {
+            head.saturating_mul(100) > base.saturating_mul(100 + THRESHOLD_PERCENT)
+        }
+        _ => false,
+    }
 }
 
 /// One line per failing comparison, each naming its benchmark; and one
@@ -113,15 +217,50 @@ pub fn decide(base: &Samples, head: &Samples, retired: &[&str]) -> Vec<Compariso
 /// nothing (I6).
 #[must_use]
 pub fn failures(comparisons: &[Comparison]) -> Vec<String> {
-    let _ = comparisons;
-    Vec::new()
+    if comparisons.is_empty() {
+        return vec!["no benchmark was sampled on the base or the head".to_owned()];
+    }
+
+    comparisons.iter().filter_map(Comparison::failure).collect()
 }
 
 /// The comparisons as a Markdown table, for the CI job's summary.
 #[must_use]
 pub fn report(comparisons: &[Comparison]) -> String {
-    let _ = (comparisons, stats::twice_median(&[]));
-    String::new()
+    let mut out = String::from(
+        "| Benchmark | Base median | Head median | Change | z | Result |\n\
+         | --- | --- | --- | --- | --- | --- |\n",
+    );
+    for c in comparisons {
+        let change = c
+            .change_percent()
+            .map_or_else(|| NONE.to_owned(), |p| format!("{p:+.1}%"));
+        let z = c.z.map_or_else(|| NONE.to_owned(), |z| format!("{z:.2}"));
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {change} | {z} | {} |",
+            c.benchmark,
+            micros(c.base),
+            micros(c.head),
+            c.status.describe(),
+        );
+    }
+
+    out
+}
+
+/// Twice a median, in nanoseconds, as the median in nanoseconds. Only
+/// the report and the change it shows read it, rounded to a tenth.
+fn nanos(twice: u128) -> f64 {
+    twice as f64 / 2.0
+}
+
+/// Twice a median, in nanoseconds, as microseconds for the report.
+fn micros(twice: Option<u128>) -> String {
+    twice.map_or_else(
+        || NONE.to_owned(),
+        |t| format!("{:.1} µs", nanos(t) / 1000.0),
+    )
 }
 
 #[cfg(test)]
