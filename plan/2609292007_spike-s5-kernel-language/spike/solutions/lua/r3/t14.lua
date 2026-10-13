@@ -1,0 +1,18 @@
+local evs = cairn.events()
+local result_ts = {}
+for _, e in ipairs(evs) do
+  if e.kind == "tool_result" and e.call_id ~= nil and result_ts[e.call_id] == nil then
+    result_ts[e.call_id] = e.ts
+  end
+end
+local best_id, best_d = nil, nil
+for _, e in ipairs(evs) do
+  if e.kind == "tool_call" and e.call_id ~= nil and result_ts[e.call_id] ~= nil then
+    local d = result_ts[e.call_id] - e.ts
+    if best_d == nil or d > best_d or (d == best_d and e.call_id < best_id) then
+      best_d = d
+      best_id = e.call_id
+    end
+  end
+end
+return best_id
