@@ -21,21 +21,25 @@ mod engineering_architecture;
 mod engineering_benchmark;
 mod engineering_boundary;
 mod engineering_drift;
+mod engineering_isolation;
 mod engineering_protection;
 mod engineering_reach;
 mod engineering_release;
 mod engineering_review;
 
 use std::env;
+use std::ffi::OsStr;
 use std::fmt;
 use std::io;
 use std::path::PathBuf;
 use std::process::{Command, ExitCode};
 
+use ::engineering::isolation_guard;
 use cucumber::World as _;
 use cucumber::writer::Stats as _;
 use scenario::runner;
 use testkit::TempDir;
+use testkit::guard::{self, Place};
 
 /// The state one scenario threads through its steps, with its own
 /// fresh `HOME` and `CAIRN_HOME` (ENG-14): a step that starts a process
@@ -87,11 +91,32 @@ fn main() -> ExitCode {
     {
         return ExitCode::from(u8::from(testkit::boundary::probe().is_err()));
     }
+    // ENG-14: started as the isolation guard's probe, it resolves one
+    // place through the guard and prints it.
+    if let Some(place) = env::var_os(isolation_guard::PROBE) {
+        return probe(&place);
+    }
     let (home, marker) = (env::var_os("HOME"), env::var_os(runner::ISOLATED_HOME));
     if runner::is_isolated(home.as_deref(), marker.as_deref(), &env::temp_dir()) {
         run()
     } else {
         isolate()
+    }
+}
+
+/// Resolves the place `name` through the isolation guard and prints it,
+/// as the test the ENG-14 scenario probes does. With a home the guard
+/// refuses, the process aborts before it prints anything.
+fn probe(name: &OsStr) -> ExitCode {
+    match name.to_str().and_then(Place::parse) {
+        Some(place) => {
+            println!("{}", guard::resolve(place).display());
+            ExitCode::SUCCESS
+        }
+        None => {
+            eprintln!("bdd: no place {name:?} to probe");
+            ExitCode::from(2)
+        }
     }
 }
 

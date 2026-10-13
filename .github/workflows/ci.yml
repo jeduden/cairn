@@ -57,7 +57,23 @@ jobs:
           command -v strace >/dev/null || {
             sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
           }
-      - run: cargo test --workspace --locked
+      # ENG-14: the suite runs with HOME pointed at an empty decoy
+      # directory, the toolchain keeping its own homes. The isolation
+      # guard (testkit::guard) aborts a test that resolves the real
+      # home; the decoy finds one that went around it, by any path: a
+      # trace left under it fails the job.
+      - name: Run the tests with a decoy HOME
+        run: |
+          decoy="$RUNNER_TEMP/decoy-home"
+          mkdir "$decoy"
+          export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
+          export RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
+          HOME="$decoy" cargo test --workspace --locked
+          if [ -n "$(ls -A "$decoy")" ]; then
+            echo "::error::a test left files under the real HOME"
+            ls -lA "$decoy"
+            exit 1
+          fi
       # The pending backlog, counted. A measurement, not a gate.
       - name: Count scenarios
         if: ${{ !cancelled() }}

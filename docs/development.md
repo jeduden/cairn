@@ -131,7 +131,8 @@ to a commit SHA with its version in a trailing comment, and dependabot
 proposes the bumps after a seven-day cooldown.
 
 [ci.yml](../.github/workflows/ci.yml) runs on every push and pull
-request to `main`. It runs every test and scenario, the core's
+request to `main`. It runs every test and scenario, with `HOME`
+pointed at an empty decoy that must stay empty (ENG-14), the core's
 end-to-end tests confined (ENG-12), clippy and rustfmt, cargo-deny and
 cargo-audit, the drift suite, the benchmark gate, and the release build
 of every target (NFR-10, CON-02). It also runs `mdsmith check .` and
@@ -140,18 +141,8 @@ job named `CI` passes only when every other job passed. It is the one
 check the branch and release-tag rulesets require, because GitHub
 names a required check after a job, never after the workflow.
 
-The `benchmark` job (ENG-15) compares the head with its first
-parent: the `main` a pull request's merge commit sits on, or `main`
-before a push. It builds both sides' benchmark suites and cores in
-release mode on one runner and samples them interleaved, thirty rounds
-of ten samples a side, alternating which side goes first, so a drift
-in the runner's speed lands on both. The head's gate then writes its
-report into the job summary and fails naming each benchmark that
-regressed more than 10% with significance. The suite samples in a
-second or two, so it gates every pull request; a benchmark too slow
-for that, such as one on a store of 10M events, would run nightly
-instead. Until the suite reaches `main`, the base has none, and the
-job warns and runs the head's alone.
+The `benchmark` job (ENG-15) is described in
+[testing.md](testing.md#benchmarks-and-the-regression-gate).
 
 [nightly.yml](../.github/workflows/nightly.yml) is where
 cargo-fuzz runs every target under `fuzz/` (ENG-07). There are none

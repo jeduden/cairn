@@ -4,6 +4,8 @@
 //! depends on this crate; nothing here links into a shipped
 //! executable.
 
+pub mod guard;
+
 use std::ffi::OsString;
 use std::fs;
 use std::io;

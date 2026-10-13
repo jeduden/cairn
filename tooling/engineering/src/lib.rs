@@ -5,6 +5,7 @@
 //! them at once. It is repository tooling and never links into a
 //! shipped executable.
 
+pub mod agent_instructions;
 pub mod architecture;
 pub mod benchmarks;
 pub mod branch_protection;
@@ -12,6 +13,7 @@ pub mod codeowners;
 pub mod confinement;
 pub mod decisions;
 pub mod dependencies;
+pub mod isolation_guard;
 pub mod product_crates;
 pub mod registry;
 pub mod release_provenance;
