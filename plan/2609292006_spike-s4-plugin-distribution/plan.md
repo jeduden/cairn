@@ -35,16 +35,18 @@ recorder and its exporter live in the `record/plugin` kit under
 [testdata/claude-code](../../testdata/claude-code/2.1.296/manifest.json);
 the fixtures, recorded from Claude Code 2.1.296 and Agent SDK 0.3.296
 in isolated `HOME` directories and redacted, under its `plugin` directory. The
-`harness-contract` crate reads them, and @ASM-07 and @ASM-21 replay
-them.
+`harness-contract` crate reads them, and @ASM-07 replays them.
 
 - ASM-07 is verified: the plugin's hooks fired and its MCP tools were
   listed on a workstation, on a `~/.claude` baked as a runner image would
   bake it, with settings alone, and in an Agent SDK worker.
-- ASM-21 is verified: one MCP server served the main run and a
+- ASM-21 is re-planned: one MCP server served the main run and a
   subagent, and the keys it minted reached no transcript, hook input or
-  tool result. A tool call names no run, so OQ-54 asks how the server
-  binds a call to its run.
+  tool result. But a key handed over at launch in the harness's
+  environment reached the Bash tool, and the model printed it, so
+  OQ-55 asks how SEC-10's hand-over at launch keeps a key from the
+  model. A tool call names no run, so OQ-54 asks how the server binds
+  a call to its run. @ASM-21 stays `@pending` as written.
 - ASM-08 is re-planned: no self-hosted runner was available.
 - OQ-06 has S4's findings and a recommendation; the stakeholder rules.
 
@@ -63,11 +65,14 @@ Handed on:
 - ASM-08: record a self-hosted runner before ADM-01 ships there.
 - OQ-54: the stakeholder picks how the MCP server binds a tool call to
   its run, before LANE-24 ships.
+- OQ-55: the stakeholder and a security review pick the channel for a
+  run-seat key at launch, before SEC-10's run-seat keys ship. Then
+  @ASM-21 can come off `@pending`.
 
 ## Acceptance Criteria
 
 - [x] ASM-07 and ASM-08 marked verified or re-planned in the SRS
 - [x] Scenarios @ASM-07 and @ASM-08 pass against recorded install
-  evidence: @ASM-07 and @ASM-21 do; @ASM-08 stays `@pending` with
-  its re-plan
+  evidence: @ASM-07 does; @ASM-08 and @ASM-21 stay `@pending` with
+  their re-plans
 - [x] OQ-06 has an answer or a stated follow-up
