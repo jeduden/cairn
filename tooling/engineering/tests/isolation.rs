@@ -1,7 +1,7 @@
 //! ENG-14's checks against the repository checkout itself: the agent
 //! instruction files, and the one place tests resolve the real home.
 
-use engineering::{Checkout, agent_instructions};
+use engineering::{Checkout, agent_instructions, isolation_guard};
 
 fn checkout() -> Checkout {
     Checkout::new(&testkit::repo_root())
@@ -26,4 +26,14 @@ fn the_agent_instructions_scan_reads_the_repository_s_files() {
     }
     assert!(files.iter().any(|f| f.starts_with(".claude/agents/")));
     assert!(files.iter().any(|f| f.starts_with(".claude/skills/")));
+}
+
+/// Nothing reads the home but the isolation guard (ENG-14): a test
+/// that resolves it goes through `testkit::guard`, so the guard covers
+/// every test and not only those that opt in.
+#[test]
+fn only_the_isolation_guard_reads_the_home() {
+    let problems = isolation_guard::no_unguarded_reads(&checkout());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
 }

@@ -8,6 +8,7 @@
 pub mod agent_instructions;
 pub mod decisions;
 pub mod dependencies;
+pub mod isolation_guard;
 pub mod product_crates;
 pub mod registry;
 pub mod review_workflow;
