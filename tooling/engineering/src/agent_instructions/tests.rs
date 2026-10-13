@@ -231,10 +231,10 @@ fn a_blank_line_ends_a_paragraph() {
 }
 
 #[test]
-fn front_matter_is_read_like_the_rest_of_the_file() {
+fn front_matter_is_read_as_a_paragraph_from_its_first_key() {
     let body = "---\nname: x\ndescription: rm -rf ~/.cairn\n---\nBody.\n";
 
-    assert_eq!(flagged(body), vec![3]);
+    assert_eq!(flagged(body), vec![2]);
 }
 
 #[test]
