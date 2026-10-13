@@ -28,6 +28,9 @@ pub struct Assumptions {
     cwds: Vec<String>,
     /// The compaction a step named: its key under `subagent_compaction`.
     compaction: String,
+    /// The blocked compaction a step named: its key under
+    /// `compaction_blocked` (S6).
+    blocked: String,
 }
 
 /// One recorded Claude Code version and what a step read from it.
@@ -748,6 +751,201 @@ fn no_boundary_at_hook_time(w: &mut World) -> Result<(), String> {
         problems.extend(snapshot::early_boundaries(&hooks));
         Ok(problems)
     })
+}
+
+// ASM-09: a PreCompact hook exiting 2 (S6).
+
+#[given(
+    regex = r#"^a PreCompact hook whose handler exits 2, recorded in the "(manual|full window)" recording$"#
+)]
+fn a_blocking_pre_compact(w: &mut World, recording: String) -> Result<(), String> {
+    asm(w).blocked = format!("compaction_blocked.{}", recording.replace(' ', "_"));
+    let base = asm(w).blocked.clone();
+    each(w, |v| {
+        let flow = recording::named(&v.manifest, &format!("{base}.hooks"))?.to_owned();
+        v.inputs = recording::hook_inputs(&v.dir, &flow)?;
+        v.transcripts = vec![v.path(&format!("{base}.transcript"))?];
+        v.read_transcripts()?;
+        Ok(Vec::new())
+    })
+}
+
+#[when(
+    regex = r#"^compaction is triggered (manually, by "/compact"|automatically, on to the full context window)$"#
+)]
+fn compaction_is_triggered(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        Ok(none_unless(
+            !hook_input::of_event(&v.inputs, "PreCompact").is_empty(),
+            || "the recording holds no PreCompact hook input".into(),
+        ))
+    })
+}
+
+#[then(regex = r#"^every "PreCompact" hook input of the recording carries (".+)$"#)]
+fn every_pre_compact_carries(w: &mut World, extra: String) -> Result<(), String> {
+    let expects = hook_input::parse(&extra)?;
+    each(w, |v| {
+        Ok(hook_input::of_event(&v.inputs, "PreCompact")
+            .into_iter()
+            .flat_map(|i| hook_input::unmet(i, &expects))
+            .collect())
+    })
+}
+
+#[then(regex = r#"^no transcript of the recording holds a "compact_boundary" line$"#)]
+fn no_boundary(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        Ok(none_unless(!transcript::has_compaction(&v.lines), || {
+            "the transcript holds a compact_boundary line".into()
+        }))
+    })
+}
+
+#[then(
+    regex = r#"^no "PostCompact" hook fired, nor a "SessionStart" hook with "source" set to "compact"$"#
+)]
+fn no_compaction_hooks(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        let mut problems = none_unless(
+            hook_input::of_event(&v.inputs, "PostCompact").is_empty(),
+            || "a PostCompact hook fired".into(),
+        );
+        if hook_input::of_event(&v.inputs, "SessionStart")
+            .iter()
+            .any(|i| text(i, "source") == "compact")
+        {
+            problems.push("a SessionStart hook fired with source compact".into());
+        }
+        Ok(problems)
+    })
+}
+
+/// The words the recording's PreCompact handler wrote to stderr.
+fn stderr_words(v: &Version, base: &str) -> Result<Vec<String>, String> {
+    let words: Vec<String> = harness_contract::at(&v.manifest, &format!("{base}.nonces"))
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .map(str::to_owned)
+        .collect();
+    if words.is_empty() {
+        return Err(format!("{}: the manifest names no {base}.nonces", v.name()));
+    }
+    Ok(words)
+}
+
+#[then(
+    regex = r"^the words the PreCompact handler wrote to stderr reached the model in the command's output, and the next model reply repeated them$"
+)]
+fn stderr_reached_the_model(w: &mut World) -> Result<(), String> {
+    let base = asm(w).blocked.clone();
+    each(w, |v| {
+        let mut problems = Vec::new();
+        for word in stderr_words(v, &base)? {
+            let shown = BTreeSet::from([
+                transcript::Shown::CommandOutput,
+                transcript::Shown::Other("assistant".into()),
+            ]);
+            if transcript::where_shown(&v.lines, &word) != shown {
+                problems.push(format!(
+                    "{word} shows elsewhere than in command output and a model reply"
+                ));
+            }
+            if transcript::model_replies_after(&v.lines, &word).first() != Some(&word.as_str()) {
+                problems.push(format!("the next model reply does not repeat {word}"));
+            }
+        }
+        Ok(problems)
+    })
+}
+
+#[then(regex = r"^the words the PreCompact handler wrote to stderr reached no transcript$")]
+fn stderr_reached_no_transcript(w: &mut World) -> Result<(), String> {
+    let base = asm(w).blocked.clone();
+    each(w, |v| {
+        Ok(stderr_words(v, &base)?
+            .into_iter()
+            .filter(|word| !transcript::where_shown(&v.lines, word).is_empty())
+            .map(|word| format!("{word} reached the transcript"))
+            .collect())
+    })
+}
+
+#[then(regex = r"^the model replied to the next prompt without a compaction$")]
+fn replied_without_compaction(w: &mut World) -> Result<(), String> {
+    each(w, |v| {
+        let resumed = hook_input::ordered(&v.inputs, "PreCompact", "UserPromptSubmit");
+        let mut problems = none_unless(resumed, || {
+            "no prompt followed the blocked compaction".into()
+        });
+        if !transcript::refusals(&v.lines).is_empty() {
+            problems.push("the harness refused a prompt".into());
+        }
+        if transcript::model_replies_after(&v.lines, "Compaction blocked by PreCompact hook")
+            .is_empty()
+        {
+            problems.push("no model reply followed the blocked compaction".into());
+        }
+        Ok(problems)
+    })
+}
+
+#[then(
+    regex = r#"^each prompt at the full context window was refused with "([^"]+)", and no "Stop" hook fired$"#
+)]
+fn refused_at_full_context_window(w: &mut World, refusal: String) -> Result<(), String> {
+    each(w, |v| {
+        let refusals = transcript::refusals(&v.lines);
+        let prompts = hook_input::of_event(&v.inputs, "UserPromptSubmit").len();
+        let mut problems = none_unless(refusals.len() == prompts && prompts > 1, || {
+            format!("{} refusals for {prompts} prompts", refusals.len())
+        });
+        problems.extend(
+            refusals
+                .iter()
+                .filter(|r| **r != refusal)
+                .map(|r| format!("a refusal reads {r:?}")),
+        );
+        if transcript::model_replied_after_refusal(&v.lines) {
+            problems.push("a model reply followed the first refusal".into());
+        }
+        if !hook_input::of_event(&v.inputs, "Stop").is_empty() {
+            problems.push("a Stop hook fired".into());
+        }
+        Ok(problems)
+    })
+}
+
+/// What ASM-09's recordings showed, as the OQ-01 row must say it, and
+/// the finding each phrase records.
+const S6_FINDINGS: [(&str, &str); 2] = [
+    (
+        "blocks a manual compaction and every automatic one (ASM-09)",
+        "exit status 2 blocks every compaction (ASM-09)",
+    ),
+    (
+        "refuses every later prompt",
+        "the full context window refuses every prompt",
+    ),
+];
+
+#[then(regex = r"^the OQ-01 row of SRS §13 records what ASM-09's recordings showed$")]
+fn oq_01_records_s6(_w: &mut World) -> Result<(), String> {
+    let path = testkit::repo_root().join("docs/srs/13-open-questions-and-risks.md");
+    let body = fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let row = body
+        .lines()
+        .find(|l| l.starts_with("| OQ-01 "))
+        .ok_or("SRS §13 holds no OQ-01 row")?;
+    outcome(
+        S6_FINDINGS
+            .iter()
+            .filter(|(said, _)| !row.contains(said))
+            .map(|(_, finding)| format!("the OQ-01 row does not record that {finding}"))
+            .collect(),
+    )
 }
 
 // ASM-10: harness timeouts.

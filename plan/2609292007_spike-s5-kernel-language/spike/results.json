@@ -1,0 +1,1802 @@
+[
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t01",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t02",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t03",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t04",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t05",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t06",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t07",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t08",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t09",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t10",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t11",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t12",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t13",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t14",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t15",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t16",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t17",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t18",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t19",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t20",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t21",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t22",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t23",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t24",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t25",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t26",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t27",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t28",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t29",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 1,
+  "task": "t30",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t01",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t02",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t03",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t04",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t05",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t06",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t07",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t08",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t09",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t10",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t11",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t12",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t13",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t14",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t15",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t16",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t17",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t18",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t19",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t20",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t21",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t22",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t23",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t24",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t25",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t26",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t27",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t28",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t29",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 2,
+  "task": "t30",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t01",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t02",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t03",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t04",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t05",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t06",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t07",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t08",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t09",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t10",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t11",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t12",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t13",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t14",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t15",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t16",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t17",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t18",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t19",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t20",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t21",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t22",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t23",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t24",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t25",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t26",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t27",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t28",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t29",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "lua",
+  "rep": 3,
+  "task": "t30",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t01",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t02",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t03",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t04",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t05",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t06",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t07",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t08",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t09",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t10",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t11",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t12",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t13",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t14",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t15",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t16",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t17",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t18",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t19",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t20",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t21",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t22",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t23",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t24",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t25",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t26",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t27",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t28",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t29",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 1,
+  "task": "t30",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t01",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t02",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t03",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t04",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t05",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t06",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t07",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t08",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t09",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t10",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t11",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t12",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t13",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t14",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t15",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t16",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t17",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t18",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t19",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t20",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t21",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t22",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t23",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t24",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t25",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t26",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t27",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t28",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t29",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 2,
+  "task": "t30",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t01",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t02",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t03",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t04",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t05",
+  "category": "count",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t06",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t07",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t08",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t09",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t10",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t11",
+  "category": "group",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t12",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t13",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t14",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t15",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t16",
+  "category": "join",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t17",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t18",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t19",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t20",
+  "category": "time",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t21",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t22",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t23",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t24",
+  "category": "text",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t25",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t26",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t27",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t28",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t29",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ },
+ {
+  "lang": "sql",
+  "rep": 3,
+  "task": "t30",
+  "category": "stateful",
+  "first": "pass",
+  "first_detail": null,
+  "repaired": "pass",
+  "repaired_detail": null
+ }
+]

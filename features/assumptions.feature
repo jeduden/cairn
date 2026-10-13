@@ -118,13 +118,22 @@ Feature: Assumptions register (ASM)
     Then the harness session's "~/.claude/" was seeded from the runner host's "~/.claude/"
     And every harness session on the runner ran as the same one OS user
 
-  @ASM-09 @pending
-  Scenario: whether a PreCompact hook exiting 2 blocks compaction is recorded (S6)
+  @ASM-09
+  Scenario Outline: a PreCompact hook handler exiting 2 blocks compaction, manual and automatic, up to the full context window (S6)
     Given a recorded hook input for Claude Code "supported"
-    And a PreCompact hook that exits 2
-    When compaction is triggered manually and at a full window
-    Then the recorded transcript shows whether compaction was blocked or proceeded
-    And the observed behaviour is written into the OQ-01 recommendation
+    And a PreCompact hook whose handler exits 2, recorded in the "<recording>" recording
+    When compaction is triggered <how>
+    Then every "PreCompact" hook input of the recording carries "trigger" set to "<trigger>"
+    And no transcript of the recording holds a "compact_boundary" line
+    And no "PostCompact" hook fired, nor a "SessionStart" hook with "source" set to "compact"
+    And the words the PreCompact handler wrote to stderr <reach>
+    And <outcome>
+    And the OQ-01 row of SRS §13 records what ASM-09's recordings showed
+
+    Examples:
+      | recording   | how                                          | trigger | reach                                                                             | outcome                                                                                                |
+      | manual      | manually, by "/compact"                      | manual  | reached the model in the command's output, and the next model reply repeated them | the model replied to the next prompt without a compaction                                              |
+      | full window | automatically, on to the full context window | auto    | reached no transcript                                                             | each prompt at the full context window was refused with "Prompt is too long", and no "Stop" hook fired |
 
   @ASM-10
   Scenario Outline: each hook's harness timeout is its own, and SessionEnd's defaults to about 1.5 s (S1)

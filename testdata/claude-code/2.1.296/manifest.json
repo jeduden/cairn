@@ -12,7 +12,9 @@
     "interactive": "an interactive harness session: three prompts, a rewind, a partial compaction, /exit",
     "directories": "one harness session in each of /w/my_app, /w/my.app and /w/my-app",
     "subagent-compaction-background": "spike S13: a background subagent (run_in_background) compacted automatically, with record/snap.sh snapshotting every transcript at each hook (.snap beside each input)",
-    "compaction-during-background": "spike S13: the main agent compacted automatically while a background subagent ran, with snapshots as above"
+    "compaction-during-background": "spike S13: the main agent compacted automatically while a background subagent ran, with snapshots as above",
+    "compact-blocked": "spike S6: print mode, /compact on --resume with a PreCompact handler (record/block.sh) that writes a word to stderr and exits 2, then a prompt asking for the word",
+    "full-window": "spike S6: print mode, one prompt reading twelve files with the PreCompact handler of compact-blocked, past the automatic compaction's threshold (CLAUDE_CODE_AUTO_COMPACT_WINDOW=100000, CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=40) to the full window, lowered by CLAUDE_CODE_BLOCKING_LIMIT_OVERRIDE=60000; then a prompt on --resume asking for the words"
   },
   "hook_context": [
     "transcripts/projects/-w-my-app/205beaae-e4b8-4798-a1aa-cdf50c807136.jsonl"
@@ -158,6 +160,28 @@
       "subagent_session": "the workstation recording: the main run and a foreground subagent each called the stub tool; the stub MCP server's log (mcp.jsonl) shows one process, the tool-use id it found each call's run by, and the key it minted for each run",
       "launch_key": "the workstation install, started with a stand-in run-seat key in the harness's environment (CAIRN_S4_RUN_KEY), as a hand-over at launch would put it; the stub MCP server received it, and the model, asked to, printed it through the Bash tool (OQ-55)",
       "forged_env": "the workstation install in print mode, started with CLAUDE_CODE_SESSION_ATTENDED=1 and CLAUDE_CODE_ENTRYPOINT=cli; each hook handler saw 0 and sdk-cli (OQ-06)"
+    }
+  },
+  "compaction_blocked": {
+    "notes": {
+      "about": "spike S6: record/defer.sh recorded, record/export-defer.sh exported; nonces are the words record/block.sh wrote to stderr, one per PreCompact it answered"
+    },
+    "manual": {
+      "hooks": "compact-blocked",
+      "transcript": "transcripts/projects/-w-defer/2d499f9f-a0a4-46d9-b32c-f47bc4ce0f47.jsonl",
+      "nonces": [
+        "ecb3b847e44a"
+      ]
+    },
+    "full_window": {
+      "hooks": "full-window",
+      "transcript": "transcripts/projects/-w-defer-full/9f1c927a-854d-406c-b031-3747e9031f6f.jsonl",
+      "nonces": [
+        "efc8b8fb5477",
+        "fc12864fadf1",
+        "8bf8a21d4a85",
+        "b48b1d295b2b"
+      ]
     }
   }
 }

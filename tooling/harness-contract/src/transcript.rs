@@ -142,9 +142,59 @@ fn shown(line: &Value) -> Shown {
         ("user", _) if text(line, "message.content").contains(COMMAND_OUTPUT) => {
             Shown::CommandOutput
         }
+        ("system", "local_command") => Shown::CommandOutput,
         (kind, "") => Shown::Other(kind.to_owned()),
         (kind, sub) => Shown::Other(format!("{kind}/{sub}")),
     }
+}
+
+/// The text of each model reply after the first line other than an
+/// assistant line that holds `needle`: the assistant lines that follow
+/// it, the harness's refusals left out.
+#[must_use]
+pub fn model_replies_after<'a>(lines: &'a [Value], needle: &str) -> Vec<&'a str> {
+    let Some(first) = lines
+        .iter()
+        .position(|l| text(l, "type") != "assistant" && l.to_string().contains(needle))
+    else {
+        return Vec::new();
+    };
+    model_replies(&lines[first..]).collect()
+}
+
+/// The text of each refusal the harness recorded in place of a model
+/// reply:
+/// an assistant line marked `isApiErrorMessage`.
+#[must_use]
+pub fn refusals(lines: &[Value]) -> Vec<&str> {
+    assistant(lines)
+        .filter(|l| is_refusal(l))
+        .map(reply_text)
+        .collect()
+}
+
+/// Whether a model reply followed the harness's first refusal.
+#[must_use]
+pub fn model_replied_after_refusal(lines: &[Value]) -> bool {
+    lines
+        .iter()
+        .position(|l| text(l, "type") == "assistant" && is_refusal(l))
+        .is_some_and(|first| model_replies(&lines[first..]).next().is_some())
+}
+
+fn model_replies(lines: &[Value]) -> impl Iterator<Item = &str> {
+    assistant(lines).filter(|l| !is_refusal(l)).map(reply_text)
+}
+
+fn is_refusal(line: &Value) -> bool {
+    line.get("isApiErrorMessage") == Some(&Value::Bool(true))
+}
+
+fn reply_text(line: &Value) -> &str {
+    blocks(line)
+        .map(|b| text(b, "text"))
+        .next()
+        .unwrap_or_default()
 }
 
 fn compaction(lines: &[Value]) -> Option<usize> {

@@ -1,0 +1,19 @@
+[package]
+name = "s5-runner"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+mlua = { version = "0.12.2", features = ["lua54", "vendored"] }
+rusqlite = { version = "0.40.2", features = ["bundled", "functions", "hooks", "limits"] }
+regex = "1"
+fallible-iterator = "0.3"
+serde_json = "1"
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+
+# Standalone: kept out of the cairn workspace.
+[workspace]
