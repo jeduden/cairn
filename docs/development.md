@@ -77,6 +77,24 @@ linked into it, so neither can arrive through a dependency. Both are
 the build-time half of SEC-01; the network-deny sandbox half is
 ENG-12, still pending.
 
+The same clippy.toml holds the rest of ENG-03 in the product crates.
+It bans the clocks and the hash collections, so derived artifacts
+read no wall clock and no random order (I10). It also bans each
+blocking call that waits with no deadline, and names the form that
+takes one: `recv` for `recv_timeout`, `Child::wait` for polling
+`try_wait`, `File::lock` for `try_lock`, and so on. A thread join,
+a read of standard input and a wait on a condition variable or a
+barrier are on the list too. A call site that has to block says so
+with an `expect` and a reason, which review reads.
+
+Local file reads and writes are not on that list. The disk bounds
+them, and the hook's time budget (I9) covers them. Nor are
+`std::thread::sleep`, which carries its own bound, and the in-process
+`Mutex` and `RwLock`. The engineering gate test
+`the_product_crates_keep_their_bans` requires every product crate's
+clippy.toml to carry every ban, and the ENG-03 scenario reads the same
+bans beside the check for mutable global state.
+
 ## CI, nightly and release
 
 Every workflow lives in `.github/workflows`. Every action is fixed
@@ -167,7 +185,8 @@ What CI decides, on every pull request:
 - dependencies and their ADRs (ENG-18) and the decision records
   (ENG-26);
 - rustfmt and clippy, with each product crate's bans on sockets and
-  program starts (I4) and on clocks and hash order (I10), and the
+  program starts (I4), on clocks and hash order (I10) and on waits with
+  no deadline (ENG-03), and the
   reach test;
 - the crates' declared dependency directions and responsibilities
   (ENG-02);

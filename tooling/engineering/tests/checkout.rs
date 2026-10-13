@@ -78,6 +78,16 @@ fn the_product_crates_keep_their_bans() {
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
 
+/// Every product crate's clippy.toml refuses each blocking call that
+/// waits with no deadline (ENG-03).
+#[test]
+fn the_product_crates_ban_every_wait_with_no_deadline() {
+    let wanted = engineering::product_crates::deadline_bans();
+    let problems = engineering::product_crates::crates_keep_bans(&checkout(), &wanted);
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
 /// Every workspace crate keeps the dependency directions its manifest
 /// declares, and every library crate declares one responsibility
 /// (ENG-02).

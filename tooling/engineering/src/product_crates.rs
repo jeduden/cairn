@@ -1,10 +1,12 @@
-//! The product crates under `crates/` keep two promises a compiler can
-//! hold: the core's reach (I4, SEC-01) and derived artifacts that read
-//! no clock or random order (I10, ENG-03). Every crate there serves the
+//! The product crates under `crates/` keep three promises a compiler can
+//! hold: the core's reach (I4, SEC-01), derived artifacts that read no
+//! clock or random order (I10, ENG-03) and no blocking call that waits
+//! with no deadline (ENG-03). Every crate there serves the
 //! core today; a B1 to B3 component's crate weighs its own reach when
 //! its ADR lands (ENG-29), and this gate changes with it. Each crate's clippy.toml
 //! carries the bans, so clippy refuses a socket, a program start, a
-//! clock read or a hash map's random order; a call site that needs one
+//! clock read, a hash map's random order or a wait with no deadline; a
+//! call site that needs one
 //! says so with an `expect` and a reason, under review. And no crate
 //! keeps mutable global state (ENG-03), which no lint refuses, so this
 //! reads the source for it.
@@ -164,24 +166,58 @@ pub fn banned(clippy_toml: &str) -> BTreeMap<String, BTreeSet<String>> {
     out
 }
 
-/// The bans `clippy_toml` lacks, each with the table it belongs in:
-/// [`REACH_BANS`] and [`DETERMINISM_TYPES`] in [`TYPES`],
-/// [`DETERMINISM_METHODS`] in [`METHODS`].
+/// A ban and the clippy.toml table it belongs in.
+pub type Ban = (&'static str, &'static str);
+
+/// The bans that keep derived artifacts reproducible (I10, ENG-03): the
+/// hash collections and the clocks.
 #[must_use]
-pub fn missing_bans(clippy_toml: &str) -> Vec<(&'static str, &'static str)> {
-    let have = banned(clippy_toml);
-    let types = REACH_BANS
-        .iter()
-        .chain(&DETERMINISM_TYPES)
-        .map(|b| (TYPES, *b));
-    let methods = DETERMINISM_METHODS
-        .iter()
-        .chain(&DEADLINE_METHODS)
-        .map(|b| (METHODS, *b));
-    types
+pub fn determinism_bans() -> Vec<Ban> {
+    let types = DETERMINISM_TYPES.iter().map(|b| (TYPES, *b));
+    let methods = DETERMINISM_METHODS.iter().map(|b| (METHODS, *b));
+    types.chain(methods).collect()
+}
+
+/// The bans that keep a blocking call from waiting with no deadline
+/// (ENG-03).
+#[must_use]
+pub fn deadline_bans() -> Vec<Ban> {
+    DEADLINE_METHODS.iter().map(|b| (METHODS, *b)).collect()
+}
+
+/// Every ban a product crate's clippy.toml carries: [`REACH_BANS`] and
+/// [`DETERMINISM_TYPES`] in [`TYPES`]; [`DETERMINISM_METHODS`] and
+/// [`DEADLINE_METHODS`] in [`METHODS`].
+#[must_use]
+pub fn all_bans() -> Vec<Ban> {
+    let reach = REACH_BANS.iter().map(|b| (TYPES, *b));
+    let determinism = determinism_bans();
+    let (types, methods): (Vec<Ban>, Vec<Ban>) = determinism
+        .into_iter()
+        .partition(|(table, _)| *table == TYPES);
+
+    reach
+        .chain(types)
         .chain(methods)
-        .filter(|(table, b)| !have.get(*table).is_some_and(|set| set.contains(*b)))
+        .chain(deadline_bans())
         .collect()
+}
+
+/// The bans among `wanted` that `clippy_toml` lacks.
+#[must_use]
+pub fn missing_among(clippy_toml: &str, wanted: &[Ban]) -> Vec<Ban> {
+    let have = banned(clippy_toml);
+    wanted
+        .iter()
+        .filter(|(table, b)| !have.get(*table).is_some_and(|set| set.contains(*b)))
+        .copied()
+        .collect()
+}
+
+/// The bans `clippy_toml` lacks, each with the table it belongs in.
+#[must_use]
+pub fn missing_bans(clippy_toml: &str) -> Vec<Ban> {
+    missing_among(clippy_toml, &all_bans())
 }
 
 /// What follows `static ` on a line that declares one, under any
@@ -264,6 +300,13 @@ fn clippy_config(c: &Checkout, name: &str) -> String {
 /// its own or one in a directory above it, to carry every ban.
 #[must_use]
 pub fn crates_keep_their_bans(c: &Checkout) -> Vec<String> {
+    crates_keep_bans(c, &all_bans())
+}
+
+/// Requires the clippy configuration each product crate builds with to
+/// carry the bans among `wanted`.
+#[must_use]
+pub fn crates_keep_bans(c: &Checkout, wanted: &[Ban]) -> Vec<String> {
     let names = match crates(c) {
         Ok(names) => names,
         Err(e) => return vec![e],
@@ -274,7 +317,7 @@ pub fn crates_keep_their_bans(c: &Checkout) -> Vec<String> {
         match c.read(&file) {
             Err(e) => problems.push(e),
             Ok(body) => problems.extend(
-                missing_bans(&body)
+                missing_among(&body, wanted)
                     .into_iter()
                     .map(|(table, b)| format!("crate {name}: {file} does not ban {b} in {table}")),
             ),
