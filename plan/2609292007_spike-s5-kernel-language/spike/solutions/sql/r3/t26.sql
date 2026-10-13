@@ -1,0 +1,6 @@
+SELECT COALESCE(SUM(CASE WHEN p IS NULL OR ts - p > 1800 THEN 1 ELSE 0 END), 0) AS sessions
+FROM (
+  SELECT ts, LAG(ts) OVER (PARTITION BY run ORDER BY seq) AS p
+  FROM events
+  WHERE run IS NOT NULL
+);
