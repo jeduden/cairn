@@ -48,9 +48,10 @@ to `release-build.yml`, the checksums and the SBOM to `release.yml`. An
 attestation a branch made names that branch, and fails. In short:
 
 ```sh
+commit="$(gh api repos/jeduden/cairn/commits/v0.1.0 --jq .sha)"
 gh attestation verify cairn-linux-amd64 --repo jeduden/cairn \
   --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \
-  --source-ref refs/heads/main \
+  --source-ref refs/heads/main --source-digest "$commit" \
   --deny-self-hosted-runners
 cosign verify-blob --bundle checksums.txt.sigstore.json \
   --certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \
@@ -59,7 +60,8 @@ cosign verify-blob --bundle checksums.txt.sigstore.json \
 sha256sum -c checksums.txt --ignore-missing
 ```
 
-Add `--source-digest` with the SHA of the commit the release's tag
-names to tie the provenance to it. The SBOM attestation verifies the
-same way. Use the `release.yml` identity and
+Replace `v0.1.0` with the release's tag: `--source-digest` ties the
+provenance to the commit that tag names, so a binary attested from
+`main` at another commit fails. The SBOM attestation verifies the same
+way. Use the `release.yml` identity and
 `--predicate-type https://spdx.dev/Document/v2.3`.

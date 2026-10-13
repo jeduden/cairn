@@ -35,7 +35,8 @@ What landed:
   hold them, registered in the drift registry's gate tests; sixteen
   drift cases guard them, among them an unpinned `--signer-workflow`
   verify and `ci.yml` granting `id-token` to its build call.
-- The stakeholder ruled on 2026-10-13 to reword the scenario to what
+- The stakeholder ruled on 2026-10-13
+  ([ruling]) to reword the scenario to what
   a checkout can show: "the release workflows sign, attest and verify
   every release they publish". `engineering_release.rs` binds it and
   `@ENG-20` is off `@pending`; the `verify` job is the check against a
@@ -45,3 +46,5 @@ What remains: the first real
 release run is the first live test of the `verify` job and of the SPDX
 predicate type `https://spdx.dev/Document/v2.3`; adjust it there if the
 attest-sbom action names another.
+
+[ruling]: https://github.com/jeduden/cairn/pull/44#issuecomment-6157262395

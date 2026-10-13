@@ -136,10 +136,10 @@ footer: |
 
 - [x] Scenarios @ENG-02, @ENG-14 and @ENG-20 pass, off `@pending`;
   ENG-20 reworded to the workflows it reads, on the stakeholder's
-  ruling of 2026-10-13
+  ruling of 2026-10-13 ([ruling])
 - [ ] @ENG-03 passes, off `@pending`: its gate tests pass and its
   drift cases are caught; the stakeholder accepted its exemptions on
-  2026-10-13 and keeps it pending until M1 adds injectable I/O traits
+  2026-10-13 ([ruling]) and keeps it pending until M1 adds injectable I/O traits
 - [ ] @ENG-21 passes, off `@pending`: its first six steps pass; the
   last, two approvals on the security-sensitive crates, needs a
   required check that reads a pull request's reviews, which waits on
@@ -155,3 +155,5 @@ footer: |
 - [x] `cargo clippy --workspace --all-targets --locked -- -D warnings`
   and `cargo fmt --all --check` are clean
 - [x] `mdsmith check .` is clean
+
+[ruling]: https://github.com/jeduden/cairn/pull/44#issuecomment-6157262395

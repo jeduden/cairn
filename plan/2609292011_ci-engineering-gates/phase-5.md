@@ -25,7 +25,10 @@ GREEN: the attestation moved, the verification job, a drift case.
 
 Gate: `@ENG-20` passes.
 
-Status: done. The stakeholder ruled on 2026-10-13 to reword the
+Status: done. The stakeholder ruled on 2026-10-13
+([ruling]) to reword the
 scenario to what it checks: the release workflows sign, attest and
 verify every release they publish. `@ENG-20` is off `@pending` with
 that wording.
+
+[ruling]: https://github.com/jeduden/cairn/pull/44#issuecomment-6157262395

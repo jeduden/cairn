@@ -27,9 +27,11 @@ What landed:
   and clock steps to the existing checks, but stays `@pending`. Its
   deadline step is a ban list that exempts local file I/O, in-process
   locks and standard output. The stakeholder accepted those exemptions
-  on 2026-10-13, and kept the scenario pending until M1 adds the
+  on 2026-10-13 ([ruling]), and kept the scenario pending until M1 adds the
   injectable I/O traits the row also requires.
 
 What remains: "all I/O through injectable traits" has no mechanical
 check, and a crate's own blocking loop or a dependency's is not seen by
 the list.
+
+[ruling]: https://github.com/jeduden/cairn/pull/44#issuecomment-6157262395
