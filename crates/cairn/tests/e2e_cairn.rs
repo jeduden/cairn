@@ -25,8 +25,9 @@ use testkit::boundary::{Component, Confinement};
 fn cairn(args: &[&str]) -> Output {
     let home = testkit::TempDir::new().unwrap();
 
-    Confinement::of(Component::Core)
-        .and_then(|c| c.run(Path::new(env!("CARGO_BIN_EXE_cairn")), args, home.path()))
+    let core = Confinement::of(Component::Core).unwrap_or_else(|e| panic!("{e}"));
+
+    core.run(Path::new(env!("CARGO_BIN_EXE_cairn")), args, home.path())
         .unwrap_or_else(|e| panic!("{e}"))
 }
 

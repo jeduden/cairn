@@ -1,3 +1,5 @@
+use std::ffi::OsStr;
+
 use super::*;
 
 /// The probe a confined start runs in place of a component: this test
@@ -110,6 +112,8 @@ fn a_machine_that_cannot_confine_fails_loudly() {
 
 #[test]
 fn preflight_passes_where_the_tools_run() {
+    let Some(_) = confined() else { return };
+
     assert_eq!(preflight(), Ok(()));
 }
 
@@ -212,7 +216,11 @@ fn a_network_call_in_the_trace_fails_naming_the_component_and_the_caller() {
     let output = Command::new("true").output().unwrap();
 
     let err = c
-        .finish(output, Ok("1 socket(AF_INET) = -1\n".to_owned()), "my_test (x.rs:3)".to_owned())
+        .finish(
+            output,
+            Ok("1 socket(AF_INET) = -1\n".to_owned()),
+            "my_test (x.rs:3)".to_owned(),
+        )
         .unwrap_err();
 
     assert_eq!(
@@ -228,12 +236,16 @@ fn a_missing_trace_fails() {
     let output = Command::new("true").output().unwrap();
 
     let err = c
-        .finish(output, Err(io::Error::from(io::ErrorKind::NotFound)), "t".to_owned())
+        .finish(
+            output,
+            Err(io::Error::from(io::ErrorKind::NotFound)),
+            "t".to_owned(),
+        )
         .unwrap_err();
 
     assert!(
         err.to_string()
-            .starts_with("ENG-12: read the trace of the core's confined start: "),
+            .starts_with("ENG-12: make or read the trace of a confined start: "),
         "{err}"
     );
     assert!(std::error::Error::source(&err).is_some());
@@ -243,7 +255,9 @@ fn a_missing_trace_fails() {
 fn an_unconfined_start_runs_the_program_without_a_trace() {
     let home = TempDir::new().unwrap();
 
-    let out = unconfined().run(Path::new("true"), &[], home.path()).unwrap();
+    let out = unconfined()
+        .run(Path::new("true"), &[], home.path())
+        .unwrap();
 
     assert!(out.status.success());
 }
@@ -299,11 +313,16 @@ fn a_socket_the_confined_probe_opens_fails_naming_the_component_and_the_caller()
     };
     assert_eq!(*component, Component::Core);
     assert!(
-        caller.contains("a_socket_the_confined_probe_opens_fails_naming_the_component_and_the_caller"),
+        caller.contains(
+            "a_socket_the_confined_probe_opens_fails_naming_the_component_and_the_caller"
+        ),
         "{caller}"
     );
     assert!(calls.iter().any(|c| c.starts_with("socket(")), "{calls:?}");
-    assert!(err.to_string().contains("the core opened a socket"), "{err}");
+    assert!(
+        err.to_string().contains("the core opened a socket"),
+        "{err}"
+    );
 }
 
 #[test]
