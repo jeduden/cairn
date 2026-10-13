@@ -22,8 +22,11 @@ kept. Build and CI commands are in [development.md](development.md).
   boundary. They live in a crate's `tests/`.
 - **End-to-end tests** guard requirements through the entry points:
   the `bdd` scenario runner, and every `tests/e2e*` target, which runs
-  a built executable as a process. ENG-12's confined suite and ENG-17's
-  live test join this test layer when they land.
+  a built executable as a process. Each start of the core runs it
+  confined to its boundary, all network denied, and a socket it opens
+  fails the test, naming the core and the test (ENG-12's core row; see
+  [development.md](development.md#static-analysis)). ENG-17's live
+  test joins this test layer when it lands.
 
 ## Coverage and shape
 

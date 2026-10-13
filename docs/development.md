@@ -51,8 +51,33 @@ own [clippy.toml](../crates/cairn/clippy.toml) refuses the
 `std::net` socket types and `std::process::Command` in its code, and
 [its reach test](../crates/cairn/tests/reach.rs) refuses any crate
 linked into it, so neither can arrive through a dependency. Both are
-the build-time half of SEC-01; the network-deny sandbox half is
-ENG-12, still pending.
+the build-time half of SEC-01. With unsafe code forbidden, the core's
+own code cannot add code that runs as the process starts either.
+
+The gate tests in the `engineering` crate's `static_analysis` target
+hold this in place. CI gates on clippy, rustfmt, cargo-deny,
+cargo-audit and `cargo test --workspace`. Each runs in a job the `CI`
+job needs, and none may fail. Every workspace crate inherits the
+workspace's lints (`[lints] workspace = true`), or forbids unsafe code
+in its own crate roots. The core's bans and reach test are in place.
+Every product crate's clippy.toml refuses the clocks and the random
+order of the hash collections. These checks are ENG-16's core row,
+each with its drift case. The ENG-16 scenario stays pending until the
+browser room view client (M7), the other components (M7 to M9) and
+TrustedText (plan 2609292013) land.
+
+The run-time half is ENG-12's core row. Every end-to-end test of the
+core starts it through the testkit's `boundary` confinement: in a
+user and network namespace of its own (`unshare --map-current-user
+--net`), under `strace -f`, which fails every `socket`, `socketpair`
+and `io_uring_setup` with `EACCES` and records every network call.
+Any recorded call fails the test, naming the core and the test that
+started it. The gate test `the_core_s_tests_start_it_confined` refuses
+a test that starts the core any other way. It needs Linux, `unshare`
+from util-linux with unprivileged user namespaces, and `strace`; a
+machine without them fails the end-to-end tests with what is missing.
+Outside CI, `CAIRN_E2E_UNCONFINED=1` runs them unconfined instead, on
+a machine that cannot confine; CI refuses it.
 
 ## CI, nightly and release
 
@@ -61,8 +86,9 @@ to a commit SHA with its version in a trailing comment, and dependabot
 proposes the bumps after a seven-day cooldown.
 
 [ci.yml](../.github/workflows/ci.yml) runs on every push and pull
-request to `main`. It runs every test and scenario, clippy and
-rustfmt, cargo-deny and cargo-audit, and the drift suite, and the
+request to `main`. It runs every test and scenario, the core's
+end-to-end tests confined (ENG-12), clippy and rustfmt, cargo-deny and
+cargo-audit, and the drift suite, and the
 release build of every target (NFR-10, CON-02). It also runs
 `mdsmith check .` and zizmor over the workflows themselves. A final
 job named `CI` passes only when every other job passed. It is the one
