@@ -84,17 +84,42 @@ pub fn needs(job: &Job) -> Vec<String> {
         .collect()
 }
 
-/// Whether `job` runs `command`: a line of it, a `run:` key left out,
-/// that is the command, or the command followed by more arguments.
+/// Whether `job` runs `command`: a line of it, a `run:` key and any
+/// environment assignments before the command left out, that is the
+/// command, or the command followed by more arguments.
 #[must_use]
 pub fn runs(job: &Job, command: &str) -> bool {
     job.text.lines().any(|line| {
         let l = line.trim();
         let l = l.strip_prefix("- ").unwrap_or(l);
-        let l = l.strip_prefix("run:").unwrap_or(l).trim();
+        let l = without_assignments(l.strip_prefix("run:").unwrap_or(l).trim());
         l.strip_prefix(command)
             .is_some_and(|rest| rest.is_empty() || rest.starts_with(' '))
     })
+}
+
+/// A shell command line without the `NAME=value` assignments before
+/// its command, such as `HOME="$decoy" cargo test`. A value may be
+/// quoted, spaces and all.
+#[must_use]
+pub fn without_assignments(line: &str) -> &str {
+    let mut rest = line;
+    while let Some((name, value)) = rest.split_once('=') {
+        let is_name = name.starts_with(|c: char| c.is_ascii_alphabetic() || c == '_')
+            && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_');
+        if !is_name {
+            break;
+        }
+        let end = match value.chars().next() {
+            Some(q @ ('"' | '\'')) => value[1..].find(q).map(|i| i + 2),
+            _ => Some(value.find(' ').unwrap_or(value.len())),
+        };
+        match end {
+            Some(end) => rest = value[end..].trim_start(),
+            None => break,
+        }
+    }
+    rest
 }
 
 /// Whether `job` may fail without failing the workflow.

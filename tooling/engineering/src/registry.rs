@@ -12,14 +12,17 @@ use scenario::Scenario;
 pub const CHECKOUT_STEP: &str = "the repository checkout";
 
 /// The gate tests outside the scenarios that ENG-27 holds to a drift
-/// case: the parse gates of the SRS and the ADRs, the requirement–scenario gate, the Appendix B check, the
-/// persona gates of Appendix C and §2.5, the finding ledger's check
-/// that every closed domain-model finding stays in the text, and the
-/// core executable's dependency reach (SEC-01), and the three isolation
-/// gates of ENG-14: the scan for a read of the home around the guard,
-/// the decoy home CI runs the suite with, and the scan of the agent
-/// instruction files.
-pub const GATE_TESTS: [&str; 11] = [
+/// case: the parse gates of the SRS and the ADRs, the
+/// requirement–scenario gate, the Appendix B check, the persona gates
+/// of Appendix C and §2.5, the finding ledger's check that every closed
+/// domain-model finding stays in the text, and the core executable's
+/// dependency reach (SEC-01); the three isolation gates of ENG-14: the
+/// scan for a read of the home around the guard, the decoy home CI runs
+/// the suite with, and the scan of the agent instruction files; and the
+/// gates that prove what a pending scenario cannot yet: the core rows
+/// of ENG-12 and ENG-16, ENG-15's benchmark gate, and ENG-21's ruleset
+/// and CODEOWNERS.
+pub const GATE_TESTS: [&str; 25] = [
     "specification_parses",
     "decision_records_parse",
     "specification_and_features_agree",
@@ -31,6 +34,20 @@ pub const GATE_TESTS: [&str; 11] = [
     "only_the_isolation_guard_reads_the_home",
     "the_ci_test_job_runs_with_a_decoy_home",
     "the_agent_instructions_direct_no_destructive_command_at_real_state",
+    "the_core_s_tests_start_it_confined",
+    "the_ci_workflow_gates_on_the_static_checks",
+    "every_crate_forbids_unsafe_code",
+    "the_core_s_reach_evidence_is_present_and_gated",
+    "derived_code_is_refused_a_clock_or_randomness_at_build_time",
+    "the_benchmark_suite_registers_every_nfr_id_eng_15_names",
+    "ci_gates_on_the_benchmark_job",
+    "the_checkout_s_ruleset_rejects_direct_pushes",
+    "the_checkout_s_ruleset_requires_signed_commits",
+    "the_checkout_s_ruleset_needs_an_approval_from_another_reviewer",
+    "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
+    "the_checkout_s_codeowners_name_no_owner_on_any_other_path",
+    "the_checkout_s_security_crates_belong_to_the_security_reviewer",
+    "the_checkout_s_nightly_compares_the_live_ruleset_with_the_committed_one",
 ];
 
 /// Refuses a case whose injection no longer finds its target, so a case

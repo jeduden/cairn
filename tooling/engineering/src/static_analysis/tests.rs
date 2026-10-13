@@ -56,6 +56,32 @@ fn runs_matches_a_whole_command_on_a_run_line() {
 }
 
 #[test]
+fn without_assignments_drops_the_assignments_before_a_command() {
+    assert_eq!(without_assignments("cargo audit"), "cargo audit");
+    assert_eq!(without_assignments("A=1 B_2=x cargo audit"), "cargo audit");
+    assert_eq!(without_assignments("HOME=\"a b\" cargo"), "cargo");
+    assert_eq!(without_assignments("H='x' cargo"), "cargo");
+    assert_eq!(without_assignments("A=1"), "");
+    assert_eq!(
+        without_assignments("HOME=\"open cargo"),
+        "HOME=\"open cargo"
+    );
+    assert_eq!(without_assignments("1A=x cargo"), "1A=x cargo");
+    assert_eq!(without_assignments("echo A=x cargo"), "echo A=x cargo");
+}
+
+#[test]
+fn runs_matches_a_command_behind_environment_assignments() {
+    let flow = parse(
+        "jobs:\n  a:\n    steps:\n      - run: |\n          HOME=\"$decoy\" A=1 cargo test --workspace --locked\n  b:\n    steps:\n      - run: echo HOME=x cargo audit\n  c:\n    steps:\n      - run: HOME=\"a b\" cargo audit\n",
+    );
+
+    assert!(runs(&flow.jobs[0], "cargo test --workspace --locked"));
+    assert!(!runs(&flow.jobs[1], "cargo audit"));
+    assert!(runs(&flow.jobs[2], "cargo audit"));
+}
+
+#[test]
 fn a_workflow_running_every_static_check_under_the_aggregator_gates() {
     assert!(ci_gates(&gating()).is_empty(), "{:?}", ci_gates(&gating()));
 }

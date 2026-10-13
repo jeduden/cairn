@@ -991,7 +991,7 @@ fn protection_case(
 ) -> Case {
     case(
         name,
-        "ENG-21",
+        test,
         injection,
         cargo_test("engineering", "checkout", test),
         want,

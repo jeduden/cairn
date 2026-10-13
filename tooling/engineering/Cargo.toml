@@ -29,5 +29,5 @@ workspace = true
 # ENG-02: see crates/cairn/Cargo.toml.
 [package.metadata.cairn]
 responsibility = "Checks the repository against the requirements of SRS section 10 for the bound scenarios"
-may-depend-on = ["adr", "drift", "review-gate", "scenario", "srs"]
+may-depend-on = ["adr", "benchmark", "drift", "review-gate", "scenario", "srs"]
 may-dev-depend-on = ["testkit"]
