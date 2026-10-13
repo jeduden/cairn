@@ -28,7 +28,7 @@ fn a_home_under_the_temporary_directory_resolves() {
     let temp = TempDir::new().unwrap();
     let home = temp.path().join("home");
 
-    let got = check(Place::Home, &vars(&[("HOME", &home)]), temp.path());
+    let got = check(Place::UserHome, &vars(&[("HOME", &home)]), temp.path());
 
     assert_eq!(got, Ok(home));
 }
@@ -38,12 +38,12 @@ fn a_real_home_is_refused_with_the_path_it_would_have_reached() {
     let temp = TempDir::new().unwrap();
     let real = Path::new("/home/someone");
 
-    let got = refused(Place::Home, &vars(&[("HOME", real)]), temp.path());
+    let got = refused(Place::UserHome, &vars(&[("HOME", real)]), temp.path());
 
     assert_eq!(
         got,
         Refusal::Outside {
-            place: Place::Home,
+            place: Place::UserHome,
             path: real.to_path_buf(),
             temp: temp.path().to_path_buf()
         }
@@ -51,7 +51,7 @@ fn a_real_home_is_refused_with_the_path_it_would_have_reached() {
     assert_eq!(
         got.to_string(),
         format!(
-            "refusing to resolve the home at /home/someone: it is not under the temporary directory {}; point HOME and CAIRN_HOME at a testkit::TempDir first (ENG-14)",
+            "refusing to resolve the user's `HOME` directory at /home/someone: it is not under the temporary directory {}; point HOME and CAIRN_HOME at a testkit::TempDir first (ENG-14)",
             temp.path().display()
         )
     );
@@ -74,7 +74,11 @@ fn an_unset_home_is_refused() {
 fn the_temporary_directory_itself_is_no_home() {
     let temp = TempDir::new().unwrap();
 
-    let got = refused(Place::Home, &vars(&[("HOME", temp.path())]), temp.path());
+    let got = refused(
+        Place::UserHome,
+        &vars(&[("HOME", temp.path())]),
+        temp.path(),
+    );
 
     assert!(matches!(got, Refusal::Outside { .. }));
 }
@@ -84,7 +88,7 @@ fn a_relative_home_is_refused() {
     let temp = TempDir::new().unwrap();
 
     let got = refused(
-        Place::Home,
+        Place::UserHome,
         &vars(&[("HOME", Path::new("home"))]),
         temp.path(),
     );
@@ -97,7 +101,7 @@ fn a_home_that_climbs_out_of_the_temporary_directory_is_refused() {
     let temp = TempDir::new().unwrap();
     let sneaky = temp.path().join("a/../../elsewhere");
 
-    let got = refused(Place::Home, &vars(&[("HOME", &sneaky)]), temp.path());
+    let got = refused(Place::UserHome, &vars(&[("HOME", &sneaky)]), temp.path());
 
     assert!(matches!(got, Refusal::Outside { .. }));
 }
@@ -109,9 +113,9 @@ fn a_home_that_is_a_symlink_out_of_the_temporary_directory_is_refused() {
     let link = temp.path().join("home");
     std::os::unix::fs::symlink(outside.path(), &link).unwrap();
 
-    let at_link = refused(Place::Home, &vars(&[("HOME", &link)]), temp.path());
+    let at_link = refused(Place::UserHome, &vars(&[("HOME", &link)]), temp.path());
     let below = link.join("not/yet/there");
-    let below_link = refused(Place::Home, &vars(&[("HOME", &below)]), temp.path());
+    let below_link = refused(Place::UserHome, &vars(&[("HOME", &below)]), temp.path());
 
     assert!(matches!(at_link, Refusal::Outside { .. }));
     assert!(matches!(below_link, Refusal::Outside { .. }));
@@ -122,7 +126,7 @@ fn a_home_that_does_not_exist_yet_resolves_inside_the_temporary_directory() {
     let temp = TempDir::new().unwrap();
     let home = temp.path().join("not/yet/there");
 
-    let got = check(Place::Home, &vars(&[("HOME", &home)]), temp.path());
+    let got = check(Place::UserHome, &vars(&[("HOME", &home)]), temp.path());
 
     assert_eq!(got, Ok(home));
 }
@@ -266,7 +270,13 @@ fn a_refusal_is_reported_and_aborts() {
     let var = vars(&[("HOME", Path::new("/home/x"))]);
 
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        check_or_abort(Place::Home, &var, temp.path(), &mut report, abort_by_panic)
+        check_or_abort(
+            Place::UserHome,
+            &var,
+            temp.path(),
+            &mut report,
+            abort_by_panic,
+        )
     }));
 
     assert!(result.is_err(), "the guard returned a path");
@@ -280,7 +290,7 @@ fn an_isolated_place_is_returned_without_a_report() {
     let mut report = Vec::new();
 
     let got = check_or_abort(
-        Place::Home,
+        Place::UserHome,
         &vars(&[("HOME", &home)]),
         temp.path(),
         &mut report,
@@ -302,7 +312,7 @@ const CHILD: &str = "CAIRN_TESTKIT_GUARD_CHILD";
 fn resolve_reads_the_environment_of_the_process() {
     if let Some(home) = env::var_os(CHILD) {
         let home = PathBuf::from(home);
-        assert_eq!(resolve(Place::Home), home);
+        assert_eq!(resolve(Place::UserHome), home);
         assert_eq!(resolve(Place::CairnHome), home.join(".cairn"));
         assert_eq!(resolve(Place::ClaudeConfig), home.join(".claude"));
         assert_eq!(resolve(Place::ClaudeJson), home.join(".claude.json"));

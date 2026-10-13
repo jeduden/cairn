@@ -24,14 +24,14 @@ fn one(name: &str, samples: Vec<u64>) -> Samples {
     Samples::from([(name.to_owned(), samples)])
 }
 
-fn compare(base: Vec<u64>, head: Vec<u64>) -> Comparison {
+fn compare(base: Vec<u64>, head: Vec<u64>) -> Delta {
     let mut all = decide(&one(NAME, base), &one(NAME, head), &[]);
     assert_eq!(all.len(), 1);
     all.remove(0)
 }
 
 #[test]
-fn nine_percent_slower_with_significance_holds() {
+fn nine_percent_slower_with_significance_is_within_the_threshold() {
     let base = clean(10_000, 30);
     let head = scaled(&base, 109);
     assert!(
@@ -41,12 +41,12 @@ fn nine_percent_slower_with_significance_holds() {
 
     let c = compare(base, head);
 
-    assert_eq!(c.status, Status::Held);
+    assert_eq!(c.status, Status::Within);
     assert!(!c.fails());
 }
 
 #[test]
-fn eleven_percent_slower_but_noisy_holds() {
+fn eleven_percent_slower_but_noisy_is_within_the_threshold() {
     let base = noisy();
     let head = scaled(&base, 111);
     assert_eq!(
@@ -58,7 +58,7 @@ fn eleven_percent_slower_but_noisy_holds() {
 
     let c = compare(base, head);
 
-    assert_eq!(c.status, Status::Held);
+    assert_eq!(c.status, Status::Within);
     assert!(failures(&[c]).is_empty());
 }
 
@@ -79,11 +79,11 @@ fn eleven_percent_slower_and_clean_fails_naming_the_benchmark() {
 }
 
 #[test]
-fn a_faster_head_holds() {
+fn a_faster_head_is_within_the_threshold() {
     let base = clean(10_000, 30);
     let head = scaled(&base, 80);
 
-    assert_eq!(compare(base, head).status, Status::Held);
+    assert_eq!(compare(base, head).status, Status::Within);
 }
 
 #[test]
@@ -91,7 +91,7 @@ fn exactly_ten_percent_slower_holds_since_the_gate_wants_more() {
     let base = vec![1000; 20];
     let head = vec![1100; 20];
 
-    assert_eq!(compare(base, head).status, Status::Held);
+    assert_eq!(compare(base, head).status, Status::Within);
 }
 
 #[test]
@@ -195,7 +195,7 @@ fn the_report_has_a_row_per_benchmark() {
 #[test]
 fn each_status_has_its_words_in_the_report() {
     let words: Vec<&str> = [
-        Status::Held,
+        Status::Within,
         Status::Regressed,
         Status::Missing,
         Status::Retired,
@@ -209,7 +209,7 @@ fn each_status_has_its_words_in_the_report() {
     assert_eq!(
         words,
         [
-            "held",
+            "within the threshold",
             "regressed",
             "missing on the head",
             "retired",

@@ -410,7 +410,7 @@ fn derived_code_may_not_lose_a_determinism_ban() {
     assert_eq!(
         derived_code_gated(&c, &flow),
         [
-            "derived code may read a clock or randomness: crate cairn: crates/cairn/clippy.toml does not ban std::time::Instant::now in disallowed-methods",
+            "code that computes derived artifacts may read a clock or randomness: crate cairn: crates/cairn/clippy.toml does not ban std::time::Instant::now in disallowed-methods",
             "no CI job runs cargo clippy: cargo clippy --workspace --all-targets --locked -- -D warnings",
         ]
     );

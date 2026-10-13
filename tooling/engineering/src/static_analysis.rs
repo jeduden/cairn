@@ -1,8 +1,8 @@
 //! ENG-16's core row: CI gates on the static checks (clippy with
 //! warnings denied, rustfmt, cargo-deny, cargo-audit and the custom
 //! checks), every crate forbids unsafe code, a build-time check refuses
-//! derived code a clock or a random order, and the core's build-time
-//! reach evidence is present and gated. That evidence is the core's
+//! code that computes derived artifacts a clock or a random order, and
+//! the core's build-time reach evidence is present and gated. That evidence is the core's
 //! clippy bans on sockets and program starts (its own code) and its
 //! reach test, which refuses any crate linked into it (dependencies and
 //! the code they run as the process starts). Unsafe code being
@@ -362,8 +362,8 @@ pub fn core_reach_evidence(c: &Checkout, flow: &Workflow) -> Vec<String> {
     problems
 }
 
-/// Requires a build-time check that refuses derived code a clock or a
-/// random order: every product crate's clippy configuration bans them,
+/// Requires a build-time check that refuses code that computes derived
+/// artifacts a clock or a random order: every product crate's clippy configuration bans them,
 /// and CI gates on clippy.
 #[must_use]
 pub fn derived_code_gated(c: &Checkout, flow: &Workflow) -> Vec<String> {
@@ -383,7 +383,7 @@ pub fn derived_code_gated(c: &Checkout, flow: &Workflow) -> Vec<String> {
                     .filter(|(_, b)| determinism(b))
                     .map(|(table, b)| {
                         format!(
-                            "derived code may read a clock or randomness: crate {name}: {file} does not ban {b} in {table}"
+                            "code that computes derived artifacts may read a clock or randomness: crate {name}: {file} does not ban {b} in {table}"
                         )
                     }),
             ),

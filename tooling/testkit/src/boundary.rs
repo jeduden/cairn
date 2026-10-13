@@ -15,7 +15,7 @@
 //! peer, publish and bridge components join with their own rows as M7
 //! to M9 build them.
 //!
-//! A machine that cannot confine fails every start, loudly. A person
+//! A machine that cannot confine fails every start, loudly. A developer
 //! whose machine lacks the tools (not Linux, no `strace`, or user
 //! namespaces turned off) may set [`UNCONFINED`] to run the end-to-end
 //! tests unconfined there; CI refuses it, so the gate holds where it
@@ -45,7 +45,7 @@ const CI: &str = "CI";
 /// The tool that makes the namespace.
 const UNSHARE: &str = "unshare";
 
-/// The namespace: the person's own user, and a network of its own.
+/// The namespace: the current OS user, and a network of its own.
 const NAMESPACE: [&str; 3] = ["--map-current-user", "--net", "--"];
 
 /// The trace, up to its output file: every process followed, attach
@@ -67,8 +67,7 @@ const TRACE: [&str; 10] = [
 /// A component the end-to-end suite starts confined.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Component {
-    /// B0: the hook handlers, the CLI, the MCP server, the kernel
-    /// worker and the TUI.
+    /// B0, the core, as ENG-12 and §6.3 list it.
     Core,
 }
 

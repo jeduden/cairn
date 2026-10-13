@@ -28,8 +28,8 @@ jobs:
       # ENG-07: cargo-fuzz runs every target under fuzz/, on the exact
       # dated nightly ENG-01 pins for it. Neither exists yet; the plan
       # that adds the first fuzz target pins the nightly and puts the
-      # run here, and until then this step fails rather than skip a
-      # target it cannot run.
+      # cargo-fuzz step here, and until then this step fails rather than
+      # skip a target it cannot run.
       - name: Fuzz every target
         shell: bash
         run: |
@@ -51,9 +51,9 @@ jobs:
   # one and fails when the live one is weaker. It reads with the
   # workflow's own token. GitHub shows a ruleset's bypass actors only to
   # a caller with write access to the ruleset, which this token never
-  # has, so an actor allowed to bypass the live ruleset shows here only
-  # when the API reveals it. Applying the committed ruleset is the
-  # stakeholder's act, and until it is applied this job is red.
+  # has, so a bypass actor allowed to bypass the live ruleset shows here only
+  # when the API reveals it. The stakeholder applies the committed
+  # ruleset, and until it is applied this job is red.
   protection:
     runs-on: ubuntu-latest
     steps:

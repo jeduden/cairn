@@ -113,7 +113,7 @@ fn run_refuses_a_sample_count_that_is_not_positive() {
 }
 
 #[test]
-fn gate_holds_and_reports_when_nothing_regressed() {
+fn gate_passes_and_reports_when_nothing_regressed() {
     let (code, out, err) = invoke(
         &["gate", "--base", "base", "--head", "head"],
         &gate_files(1000, 1050),
@@ -122,7 +122,7 @@ fn gate_holds_and_reports_when_nothing_regressed() {
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
     assert!(out.starts_with("| Benchmark |"), "{out}");
     assert!(out.contains("| core_start_up |"), "{out}");
-    assert!(out.ends_with("| held |\n"), "{out}");
+    assert!(out.ends_with("| within the threshold |\n"), "{out}");
 }
 
 #[test]

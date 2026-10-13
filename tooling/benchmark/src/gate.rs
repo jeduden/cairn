@@ -21,8 +21,8 @@
 //!   works on ranks, so it assumes no distribution and an outlier counts
 //!   as one rank however far it lies. Its normal approximation, with
 //!   ties corrected, is a closed form: no resampling and no random seed,
-//!   so the decision is a pure function of the samples, as derived
-//!   tooling must be (I10's spirit, ENG-03). A bootstrap confidence
+//!   so the decision is a pure function of the samples: deterministic, in
+//!   I10's spirit (ENG-03). A bootstrap confidence
 //!   interval on the ratio of medians was the alternative; with a fixed
 //!   seed it is deterministic too, but its answer still depends on the
 //!   seed and the resample count chosen, and it costs thousands of
@@ -36,7 +36,7 @@
 //! from about ten samples a side, so fewer is no decision, and no
 //! decision fails ([`MIN_SAMPLES`]).
 //!
-//! The 10% is "more than": a head exactly 10% slower holds.
+//! The 10% is "more than": a head exactly 10% slower is within the threshold.
 //!
 //! # Benchmarks on one side only
 //!
@@ -68,8 +68,8 @@ const NONE: &str = "–";
 /// What the gate decided for one benchmark.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
-    /// Not more than the threshold slower, or not significantly.
-    Held,
+    /// Within the threshold: not more than it slower, or not significantly.
+    Within,
     /// More than the threshold slower, significantly: fails.
     Regressed,
     /// Sampled on the base, not on the head and not retired: fails.
@@ -87,7 +87,7 @@ impl Status {
     #[must_use]
     pub fn describe(self) -> &'static str {
         match self {
-            Self::Held => "held",
+            Self::Within => "within the threshold",
             Self::Regressed => "regressed",
             Self::Missing => "missing on the head",
             Self::Retired => "retired",
@@ -99,7 +99,7 @@ impl Status {
 
 /// One benchmark's comparison.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Comparison {
+pub struct Delta {
     pub benchmark: String,
     pub status: Status,
     /// Twice the base's median, in nanoseconds, when the base sampled it.
@@ -111,7 +111,7 @@ pub struct Comparison {
     pub z: Option<f64>,
 }
 
-impl Comparison {
+impl Delta {
     /// Whether this comparison fails the gate.
     #[must_use]
     pub fn fails(&self) -> bool {
@@ -149,7 +149,7 @@ impl Comparison {
             Status::TooFew => Some(format!(
                 "{name} has too few samples to decide: the gate needs {MIN_SAMPLES} on each side"
             )),
-            Status::Held | Status::Retired | Status::New => None,
+            Status::Within | Status::Retired | Status::New => None,
         }
     }
 }
@@ -157,7 +157,7 @@ impl Comparison {
 /// Compares every benchmark either side sampled, in name order.
 /// `retired` names the benchmarks the head's suite retired.
 #[must_use]
-pub fn decide(base: &Samples, head: &Samples, retired: &[&str]) -> Vec<Comparison> {
+pub fn decide(base: &Samples, head: &Samples, retired: &[&str]) -> Vec<Delta> {
     let names: BTreeSet<&String> = base.keys().chain(head.keys()).collect();
 
     names
@@ -174,10 +174,10 @@ pub fn decide(base: &Samples, head: &Samples, retired: &[&str]) -> Vec<Compariso
 }
 
 /// Compares one benchmark's samples on each side.
-fn compare(name: &str, base: Option<&[u64]>, head: Option<&[u64]>, retired: bool) -> Comparison {
-    let mut c = Comparison {
+fn compare(name: &str, base: Option<&[u64]>, head: Option<&[u64]>, retired: bool) -> Delta {
+    let mut c = Delta {
         benchmark: name.to_owned(),
-        status: Status::Held,
+        status: Status::Within,
         base: base.and_then(stats::twice_median),
         head: head.and_then(stats::twice_median),
         z: None,
@@ -197,7 +197,7 @@ fn compare(name: &str, base: Option<&[u64]>, head: Option<&[u64]>, retired: bool
             if slower && z > Z_CRITICAL {
                 Status::Regressed
             } else {
-                Status::Held
+                Status::Within
             }
         }
     };
@@ -216,17 +216,17 @@ fn slower_than_threshold(base: u128, head: u128) -> bool {
 /// when nothing was compared at all, since a gate over nothing proves
 /// nothing (I6).
 #[must_use]
-pub fn failures(comparisons: &[Comparison]) -> Vec<String> {
+pub fn failures(comparisons: &[Delta]) -> Vec<String> {
     if comparisons.is_empty() {
         return vec!["no benchmark was sampled on the base or the head".to_owned()];
     }
 
-    comparisons.iter().filter_map(Comparison::failure).collect()
+    comparisons.iter().filter_map(Delta::failure).collect()
 }
 
 /// The comparisons as a Markdown table, for the CI job's summary.
 #[must_use]
-pub fn report(comparisons: &[Comparison]) -> String {
+pub fn report(comparisons: &[Delta]) -> String {
     let mut out = String::from(
         "| Benchmark | Base median | Head median | Change | z | Result |\n\
          | --- | --- | --- | --- | --- | --- |\n",

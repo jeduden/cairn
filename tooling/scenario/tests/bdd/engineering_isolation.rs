@@ -1,5 +1,5 @@
 //! The ENG-14 steps: the isolation guard aborts a test that resolves
-//! the real home, and no agent instruction file directs a destructive
+//! real state, and no agent instruction file directs a destructive
 //! command at non-isolated state.
 
 use std::env;
@@ -23,7 +23,7 @@ fn isolation(w: &mut World) -> &mut Isolation {
 }
 
 #[given(regex = r"^a test that resolves a path under the real `HOME`$")]
-fn a_test_resolves_the_real_home(w: &mut World) {
+fn a_test_resolves_the_real_user_home(w: &mut World) {
     isolation(w).places = Place::ALL.iter().map(|p| p.name()).collect();
 }
 

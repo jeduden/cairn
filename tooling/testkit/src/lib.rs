@@ -26,8 +26,8 @@ pub fn repo_root() -> PathBuf {
 }
 
 /// Points `command` at `home` (ENG-14): its `HOME`, and a `CAIRN_HOME`
-/// inside it, so an executable a test starts cannot reach the real home
-/// or Claude Code configuration.
+/// inside it, so an executable a test starts cannot reach the real `HOME`,
+/// a Cairn home or Claude Code's configuration.
 pub fn isolate<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
     command
         .env("HOME", home)

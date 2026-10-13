@@ -1,5 +1,5 @@
 //! ENG-14's checks against the repository checkout itself: the agent
-//! instruction files, and the one place tests resolve the real home.
+//! instruction files, and the one place tests resolve real state.
 
 use engineering::{Checkout, agent_instructions, isolation_guard};
 
@@ -30,7 +30,7 @@ fn the_agent_instructions_scan_reads_the_repository_s_files() {
 
 /// CI runs the suite with `HOME` pointed at a decoy, and fails when a
 /// test left anything under it (ENG-14): the guard stops a test that
-/// resolves the real home, the decoy finds one that went around it.
+/// resolves real state, the decoy finds one that went around it.
 #[test]
 fn the_ci_test_job_runs_with_a_decoy_home() {
     let c = checkout();

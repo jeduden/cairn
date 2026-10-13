@@ -31,7 +31,7 @@ const TOOLING: &str = "tooling/";
 /// One workspace crate as `cargo metadata` and its manifest's
 /// `[package.metadata.cairn]` table describe it.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Member {
+pub struct WorkspaceCrate {
     pub name: String,
     /// The crate's directory, relative to the workspace root.
     pub dir: String,
@@ -49,7 +49,7 @@ pub struct Link {
     pub dev: bool,
 }
 
-impl Member {
+impl WorkspaceCrate {
     fn is_product(&self) -> bool {
         self.dir.starts_with(PRODUCT)
     }
@@ -66,7 +66,7 @@ impl Member {
 ///
 /// Fails when `metadata` is not cargo's JSON or a declaration is not
 /// of the shape the module documents.
-pub fn workspace(metadata: &str) -> Result<Vec<Member>, String> {
+pub fn workspace(metadata: &str) -> Result<Vec<WorkspaceCrate>, String> {
     let value: Value =
         serde_json::from_str(metadata).map_err(|e| format!("read cargo metadata: {e}"))?;
     let root = value["workspace_root"]
@@ -85,7 +85,7 @@ pub fn workspace(metadata: &str) -> Result<Vec<Member>, String> {
 }
 
 /// One package of the metadata.
-fn member(root: &str, package: &Value) -> Result<Member, String> {
+fn member(root: &str, package: &Value) -> Result<WorkspaceCrate, String> {
     let name = package["name"].as_str().unwrap_or_default().to_owned();
     let manifest = package["manifest_path"].as_str().unwrap_or_default();
     let dir = manifest
@@ -96,7 +96,7 @@ fn member(root: &str, package: &Value) -> Result<Member, String> {
     let declared = &package["metadata"]["cairn"];
     let lists = |key| list_of_names(declared, key).map_err(|e| format!("crate {name}: {e}"));
 
-    Ok(Member {
+    Ok(WorkspaceCrate {
         dir,
         library: is_library(package),
         responsibility: responsibility(declared).map_err(|e| format!("crate {name}: {e}"))?,
@@ -183,8 +183,8 @@ pub fn problems(metadata: &str) -> Vec<String> {
 ///
 /// Fails when the workspace has no product crate or no tooling crate.
 pub fn with_forbidden_dependency(
-    members: &[Member],
-) -> Result<(Vec<Member>, String, String), String> {
+    members: &[WorkspaceCrate],
+) -> Result<(Vec<WorkspaceCrate>, String, String), String> {
     let product = members.iter().find(|m| m.is_product());
     let tooling = members.iter().find(|m| m.is_tooling());
     let (Some(product), Some(tooling)) = (product, tooling) else {
@@ -221,9 +221,10 @@ pub fn names_both(problems: &[String], a: &str, b: &str) -> Result<(), String> {
 /// The dependencies that break the declared directions, one line each,
 /// naming both crates.
 #[must_use]
-pub fn directions(members: &[Member]) -> Vec<String> {
+pub fn directions(members: &[WorkspaceCrate]) -> Vec<String> {
     let known: BTreeSet<&str> = members.iter().map(|m| m.name.as_str()).collect();
-    let by_name: BTreeMap<&str, &Member> = members.iter().map(|m| (m.name.as_str(), m)).collect();
+    let by_name: BTreeMap<&str, &WorkspaceCrate> =
+        members.iter().map(|m| (m.name.as_str(), m)).collect();
     let mut problems = BTreeSet::new();
     for m in members {
         problems.extend(declaration_problems(m, &known, &by_name));
@@ -235,9 +236,9 @@ pub fn directions(members: &[Member]) -> Vec<String> {
 
 /// What is wrong with the directions `m` declares.
 fn declaration_problems(
-    m: &Member,
+    m: &WorkspaceCrate,
     known: &BTreeSet<&str>,
-    by_name: &BTreeMap<&str, &Member>,
+    by_name: &BTreeMap<&str, &WorkspaceCrate>,
 ) -> Vec<String> {
     let Some(may) = &m.may_depend_on else {
         return vec![format!(
@@ -268,7 +269,11 @@ fn declaration_problems(
 }
 
 /// What is wrong with the dependency `l` of `m`, if anything.
-fn link_problem(m: &Member, l: &Link, by_name: &BTreeMap<&str, &Member>) -> Option<String> {
+fn link_problem(
+    m: &WorkspaceCrate,
+    l: &Link,
+    by_name: &BTreeMap<&str, &WorkspaceCrate>,
+) -> Option<String> {
     let on_tooling = by_name.get(l.on.as_str()).is_some_and(|c| c.is_tooling());
     if m.is_product() && on_tooling && !l.dev {
         return Some(format!(
@@ -295,7 +300,7 @@ fn link_problem(m: &Member, l: &Link, by_name: &BTreeMap<&str, &Member>) -> Opti
 /// The library crates that do not declare exactly one responsibility,
 /// and the crates that declare the same one.
 #[must_use]
-pub fn responsibilities(members: &[Member]) -> Vec<String> {
+pub fn responsibilities(members: &[WorkspaceCrate]) -> Vec<String> {
     let mut problems = Vec::new();
     let mut by_text: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
     for m in members.iter().filter(|m| m.library) {

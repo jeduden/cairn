@@ -5,8 +5,8 @@
 //! ruleset in GitHub's export format, [`RULESET`]. The scenario's steps
 //! read that file, and CODEOWNERS (see [`crate::codeowners`]). The
 //! `protection-check` executable compares the committed ruleset with
-//! the live one, so the setting cannot weaken unseen. Applying the
-//! committed ruleset is the stakeholder's act.
+//! the live one, so the setting cannot weaken unseen. The stakeholder
+//! applies the committed ruleset.
 
 pub mod cli;
 
@@ -93,9 +93,9 @@ fn has(ruleset: &Value, kind: &str) -> bool {
 }
 
 /// Problems that let a push reach main without a pull request: the
-/// ruleset is not active, does not govern the default branch, lets an
-/// actor bypass it, or lacks a rule that closes a way around the pull
-/// request (deleting the branch, rewriting its history, merging
+/// ruleset is not active, does not govern the default branch, lets a
+/// bypass actor bypass it, or lacks a rule that closes a way around the
+/// pull request (deleting the branch, rewriting its history, merging
 /// without CI).
 #[must_use]
 pub fn direct_pushes_rejected(ruleset: &Value) -> Vec<String> {
@@ -121,7 +121,7 @@ pub fn direct_pushes_rejected(ruleset: &Value) -> Vec<String> {
         .and_then(Value::as_array)
         .is_some_and(|a| !a.is_empty())
     {
-        problems.push("the ruleset lets an actor bypass it".to_owned());
+        problems.push("the ruleset lets a bypass actor bypass it".to_owned());
     }
     for kind in ["pull_request", "non_fast_forward", "deletion"] {
         if !has(ruleset, kind) {
@@ -195,7 +195,7 @@ pub fn security_crates_need_two_approvals(ruleset: &Value) -> Vec<String> {
 /// Problems where `live`, the ruleset GitHub holds, is weaker than
 /// `committed`: an inactive ruleset, a missing rule, a lower approval
 /// count, a flag switched off, a required check dropped, a branch
-/// excluded or an actor allowed to bypass it. Stronger is not a
+/// excluded or a bypass actor allowed to bypass it. Stronger is not a
 /// problem. GitHub shows `bypass_actors` only to a caller with write
 /// access to the ruleset, so a live ruleset without it is not judged
 /// on that.
@@ -231,7 +231,7 @@ pub fn weaker_than(committed: &Value, live: &Value) -> Vec<String> {
         .and_then(Value::as_array)
         .is_some_and(|a| !a.is_empty())
     {
-        problems.push("live lets an actor bypass the ruleset".to_owned());
+        problems.push("live lets a bypass actor bypass the ruleset".to_owned());
     }
 
     problems

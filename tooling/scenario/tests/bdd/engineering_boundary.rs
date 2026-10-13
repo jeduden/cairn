@@ -19,7 +19,7 @@ use crate::World;
 #[derive(Debug, Default)]
 pub struct Boundary {
     confinement: Option<Confinement>,
-    outcome: Option<Result<Output, boundary::Error>>,
+    ended: Option<Result<Output, boundary::Error>>,
 }
 
 impl Boundary {
@@ -59,7 +59,7 @@ fn opens_a_socket(w: &mut World, name: String) -> Result<(), String> {
         ));
     }
     let probe = env::current_exe().map_err(|e| format!("find the probe: {e}"))?;
-    b.outcome = Some(confinement.run(&probe, &[boundary::PROBE], &home));
+    b.ended = Some(confinement.run(&probe, &[boundary::PROBE], &home));
     Ok(())
 }
 
@@ -67,7 +67,7 @@ fn opens_a_socket(w: &mut World, name: String) -> Result<(), String> {
 fn fails_naming(w: &mut World) -> Result<(), String> {
     let b = boundary(w);
     let name = b.confinement()?.component().name();
-    match b.outcome.take() {
+    match b.ended.take() {
         None => Err("no step started the probe".to_owned()),
         Some(Ok(_)) => Err(format!("the suite let the {name}'s socket through")),
         Some(Err(err @ boundary::Error::Socket { .. })) => {

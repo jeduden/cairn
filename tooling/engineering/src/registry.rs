@@ -17,7 +17,7 @@ pub const CHECKOUT_STEP: &str = "the repository checkout";
 /// of Appendix C and §2.5, the finding ledger's check that every closed
 /// domain-model finding stays in the text, and the core executable's
 /// dependency reach (SEC-01); the three isolation gates of ENG-14: the
-/// scan for a read of the home around the guard, the decoy home CI runs
+/// scan for a read of real state around the guard, the decoy `HOME` CI runs
 /// the suite with, and the scan of the agent instruction files; and the
 /// gates that prove what a pending scenario cannot yet: the core rows
 /// of ENG-12 and ENG-16, ENG-15's benchmark gate, and ENG-21's ruleset

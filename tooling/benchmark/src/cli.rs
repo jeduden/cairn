@@ -17,7 +17,7 @@ use std::time::Duration;
 
 use crate::{gate, measure, samples, suite};
 
-/// The command did what it was asked, and the gate, if it ran, held.
+/// The command did what it was asked, and the gate, if it ran, found every benchmark within the threshold.
 pub const EXIT_OK: u8 = 0;
 /// A sample could not be taken, or the gate failed.
 pub const EXIT_FAILURE: u8 = 1;

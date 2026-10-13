@@ -43,7 +43,7 @@ use testkit::guard::{self, Place};
 
 /// The state one scenario threads through its steps, with its own
 /// fresh `HOME` and `CAIRN_HOME` (ENG-14): a step that starts a process
-/// points it at these, never at the real home.
+/// points it at these, never at real state.
 #[derive(cucumber::World)]
 #[world(init = Self::new)]
 pub struct World {
@@ -105,7 +105,7 @@ fn main() -> ExitCode {
 }
 
 /// Resolves the place `name` through the isolation guard and prints it,
-/// as the test the ENG-14 scenario probes does. With a home the guard
+/// as the test the ENG-14 scenario probes does. With a `HOME` the guard
 /// refuses, the process aborts before it prints anything.
 fn probe(name: &OsStr) -> ExitCode {
     match name.to_str().and_then(Place::parse) {
@@ -122,7 +122,8 @@ fn probe(name: &OsStr) -> ExitCode {
 
 /// Runs this same executable again with `HOME` and `CAIRN_HOME` pointed
 /// at a fresh temporary directory, so nothing the scenarios run can
-/// reach the real home or Claude Code configuration (ENG-14).
+/// reach the real `HOME`, a Cairn home or Claude Code's configuration
+/// (ENG-14).
 fn isolate() -> ExitCode {
     let started = TempDir::new().and_then(|home| {
         let mut command = Command::new(env::current_exe()?);

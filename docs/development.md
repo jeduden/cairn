@@ -147,9 +147,9 @@ The `benchmark` job (ENG-15) is described in
 [nightly.yml](../.github/workflows/nightly.yml) is where
 cargo-fuzz runs every target under `fuzz/` (ENG-07). There are none
 yet; the job fails the night a `fuzz/` crate appears until the plan
-that adds it pins the nightly and the run. The crash-consistency test
-(ENG-06), the concurrency soak (ENG-09) and the live Claude Code
-contract test (ENG-17) join it as their plans land.
+that adds it pins the nightly and adds the cargo-fuzz step. The
+crash-consistency test (ENG-06), the concurrency soak (ENG-09) and the
+live Claude Code contract test (ENG-17) join it as their plans land.
 
 [build.yml](../.github/workflows/build.yml) is the release build.
 CI runs it on every change, and the release workflow runs it too. One
@@ -196,8 +196,8 @@ names one. The ENG-21 gate tests read it, and CODEOWNERS: the
 stakeholder owns the requirement text and every path that enforces it,
 mapped from the classes the ENG-21 row names, and nothing else is owned
 but the decision records, the supply-chain policy and the
-security-sensitive crates. A ruleset is a setting on GitHub, so applying
-it is the stakeholder's act. The `protection` job in
+security-sensitive crates. A ruleset is a setting on GitHub. The
+stakeholder applies the committed ruleset. The `protection` job in
 [nightly.yml](../.github/workflows/nightly.yml) fetches the live ruleset
 and runs `protection-check`, which fails when the live one is weaker
 than the committed one. GitHub shows a ruleset's bypass actors only to a

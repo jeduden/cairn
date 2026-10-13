@@ -103,7 +103,7 @@ fn direct_pushes_need_an_active_ruleset_on_main_with_no_way_round() {
 
     let mut r = good();
     r["bypass_actors"] = json!([{"actor_id": 5}]);
-    has(&direct_pushes_rejected(&r), "lets an actor bypass");
+    has(&direct_pushes_rejected(&r), "lets a bypass actor bypass");
 
     for kind in ["pull_request", "non_fast_forward", "deletion"] {
         has(
@@ -248,7 +248,10 @@ fn a_live_ruleset_weaker_than_the_committed_one_is_named() {
 
     let mut live = good();
     live["bypass_actors"] = json!([{"actor_id": 5}]);
-    has(&weaker_than(&committed, &live), "live lets an actor bypass");
+    has(
+        &weaker_than(&committed, &live),
+        "live lets a bypass actor bypass",
+    );
 }
 
 #[test]

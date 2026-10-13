@@ -3,9 +3,9 @@
 //! repository carries: every `CLAUDE.md` and `AGENTS.md`, and
 //! everything under a `.claude/` directory (agents, skills, settings).
 //! A statement in them directs a destructive command when it names a
-//! way to delete or overwrite, names the real home (`~`, `HOME`,
+//! way to delete or overwrite, names real state (`~`, `HOME`,
 //! `CAIRN_HOME`, Claude Code's configuration directory), and neither
-//! forbids the act nor first points `HOME` at a temporary directory.
+//! forbids it nor first points `HOME` at a temporary directory.
 //!
 //! A statement is a line of a code block, a line of a file that is not
 //! Markdown, or a sentence of prose. A paragraph, a list item, a table
@@ -33,7 +33,7 @@ const OTHER_CHECKOUTS: &str = "worktrees";
 /// A developer's own settings, kept out of the repository.
 const PRIVATE: &str = "settings.local.json";
 
-/// What names the real home in a statement, as a word.
+/// What names real state in a statement, as a word.
 const HOME_NAMES: [&str; 4] = ["HOME", "CAIRN_HOME", "CLAUDE_CONFIG_DIR", "USERPROFILE"];
 
 /// Words that delete or overwrite, whole.
@@ -301,7 +301,7 @@ fn sentences(text: &str) -> Vec<String> {
     out
 }
 
-/// Whether `statement` directs a destructive command at the real home.
+/// Whether `statement` directs a destructive command at real state.
 fn directs(statement: &Statement) -> bool {
     let text = &statement.text;
 
@@ -356,7 +356,7 @@ fn assigns_temp_home(text: &str) -> bool {
     })
 }
 
-/// Whether `text` names the real home: `~`, or one of [`HOME_NAMES`].
+/// Whether `text` names real state: `~`, or one of [`HOME_NAMES`].
 fn names_real_home(text: &str) -> bool {
     has_tilde(text)
         || text
@@ -364,7 +364,7 @@ fn names_real_home(text: &str) -> bool {
             .any(|w| HOME_NAMES.contains(&w))
 }
 
-/// Whether `text` holds a `~` that stands for the home: at the start
+/// Whether `text` holds a `~` that stands for the user's `HOME`: at the start
 /// of a path, and alone or followed by a `/`.
 fn has_tilde(text: &str) -> bool {
     let chars: Vec<char> = text.chars().collect();
@@ -377,13 +377,13 @@ fn has_tilde(text: &str) -> bool {
     })
 }
 
-/// Whether a `~` followed by `next` is the home and not part of a word.
+/// Whether a `~` followed by `next` is the user's `HOME` and not part of a word.
 fn path_ends_after(next: Option<char>) -> bool {
     next.is_none_or(|c| c == '/' || c.is_whitespace() || "`\"')],.;:".contains(c))
 }
 
-/// Whether `text` redirects output (`>`, `>>`, `>|`) into the real
-/// home.
+/// Whether `text` redirects output (`>`, `>>`, `>|`) into real
+/// state.
 fn redirects_to_home(text: &str) -> bool {
     text.match_indices('>').any(|(i, _)| {
         let before = text[..i].chars().next_back();
@@ -392,7 +392,7 @@ fn redirects_to_home(text: &str) -> bool {
     })
 }
 
-/// Whether `rest` starts with the real home: `~`, or a variable of
+/// Whether `rest` starts with real state: `~`, or a variable of
 /// [`HOME_NAMES`].
 fn starts_at_home(rest: &str) -> bool {
     match rest.strip_prefix('~') {

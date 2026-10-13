@@ -90,13 +90,13 @@ fn gate(dir: &TempDir, head_ns: u64) -> Output {
 }
 
 #[test]
-fn gate_holds_within_the_threshold_and_fails_naming_the_benchmark_beyond_it() {
+fn gate_passes_within_the_threshold_and_fails_naming_the_benchmark_beyond_it() {
     let dir = TempDir::new().unwrap();
 
-    let held = gate(&dir, 840_000);
+    let within = gate(&dir, 840_000);
 
-    assert!(held.status.success(), "{}", text(&held.stderr));
-    assert!(text(&held.stdout).ends_with("| held |\n"));
+    assert!(within.status.success(), "{}", text(&within.stderr));
+    assert!(text(&within.stdout).ends_with("| within the threshold |\n"));
 
     let regressed = gate(&dir, 960_000);
 

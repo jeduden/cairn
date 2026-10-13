@@ -13,7 +13,7 @@ use crate::review_workflow::{Job, Workflow, parse};
 /// The release workflow.
 pub const RELEASE: &str = ".github/workflows/release.yml";
 
-/// The reusable workflow that builds, and signs the provenance.
+/// The reusable workflow that builds, and signs the build provenance.
 pub const BUILD: &str = ".github/workflows/build.yml";
 
 /// The repository the release belongs to, as `gh attestation verify`
@@ -21,7 +21,7 @@ pub const BUILD: &str = ".github/workflows/build.yml";
 const REPO: &str = "jeduden/cairn";
 
 /// How `gh attestation verify` names the workflow that must have signed
-/// each binary's provenance.
+/// each binary's build provenance.
 const BUILD_SIGNER: &str = "jeduden/cairn/.github/workflows/build.yml";
 
 /// How a certificate identity names the release workflow, the signer of
@@ -40,7 +40,7 @@ const ATTEST_SBOM: &str = "actions/attest-sbom@";
 /// The action that generates the SBOM.
 const MAKE_SBOM: &str = "anchore/sbom-action@";
 
-/// The bundle that carries the checksum file's signature.
+/// The Sigstore bundle that carries the checksum file's signature.
 const BUNDLE: &str = "checksums.txt.sigstore.json";
 
 /// The OIDC issuer of GitHub Actions' keyless identity.
@@ -89,7 +89,7 @@ impl Release {
         problems
     }
 
-    /// Problems with the binaries' provenance: it is attested inside the
+    /// Problems with the binaries' build provenance: it is attested inside the
     /// reusable build workflow and nowhere else, only when the caller
     /// asks, and a later job verifies it against that workflow as the
     /// signer.
@@ -102,7 +102,7 @@ impl Release {
             .filter(|j| j.text.contains(PROVENANCE))
             .map(|j| {
                 format!(
-                    "release.yml attests provenance outside the reusable build workflow, in job {}",
+                    "release.yml attests build provenance outside the reusable build workflow, in job {}",
                     j.name
                 )
             })
@@ -288,7 +288,7 @@ fn cosign_problems(verify: &Job) -> Vec<String> {
 }
 
 /// Problems with the job in the build workflow that attests the
-/// provenance.
+/// build provenance.
 fn attest_job_problems(job: &Job) -> Vec<String> {
     let mut problems = permission_problems(job);
     let condition = job
@@ -328,7 +328,7 @@ fn permission_problems(job: &Job) -> Vec<String> {
         .collect()
 }
 
-/// Problems with the verify job's check of every binary's provenance.
+/// Problems with the verify job's check of every binary's build provenance.
 fn provenance_verify_problems(verify: &Job) -> Vec<String> {
     let mut problems = Vec::new();
     let signer = format!("--signer-workflow {BUILD_SIGNER}");
@@ -338,7 +338,7 @@ fn provenance_verify_problems(verify: &Job) -> Vec<String> {
         .any(|c| c.contains(&signer) && c.contains(&repo));
     if !verifies {
         problems.push(format!(
-            "job {} does not verify provenance with {repo} {signer}",
+            "job {} does not verify build provenance with {repo} {signer}",
             verify.name
         ));
     }

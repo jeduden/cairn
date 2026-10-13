@@ -3,7 +3,7 @@
 //! one responsibility.
 
 use cucumber::{given, then, when};
-use engineering::architecture::{self, Member};
+use engineering::architecture::{self, WorkspaceCrate};
 use engineering::{dependencies, outcome};
 
 use crate::World;
@@ -13,7 +13,7 @@ use crate::World;
 /// joined.
 #[derive(Debug, Default)]
 pub struct Architecture {
-    members: Vec<Member>,
+    members: Vec<WorkspaceCrate>,
     forbidden: Option<Forbidden>,
 }
 
@@ -21,7 +21,7 @@ pub struct Architecture {
 /// crates it joins.
 #[derive(Debug)]
 struct Forbidden {
-    members: Vec<Member>,
+    members: Vec<WorkspaceCrate>,
     from: String,
     on: String,
 }

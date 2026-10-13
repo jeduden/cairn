@@ -1,6 +1,6 @@
-//! The isolation guard (ENG-14). Test code resolves the home, a Cairn
-//! home and Claude Code's configuration through [`resolve`] and nowhere
-//! else. Anything that does not lie under the system's temporary
+//! The isolation guard (ENG-14). Test code resolves the user's `HOME`, a
+//! Cairn home and Claude Code's configuration through [`resolve`] and
+//! nowhere else. Anything that does not lie under the system's temporary
 //! directory is real state, and resolving it aborts the process before
 //! a path to it exists.
 
@@ -15,15 +15,15 @@ use std::process;
 /// Something a test must never reach for real.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Place {
-    /// The user's home: `HOME`.
-    Home,
-    /// Cairn's home: `CAIRN_HOME`, else `.cairn` in the home.
+    /// The user's `HOME` directory.
+    UserHome,
+    /// A Cairn home: `CAIRN_HOME`, else `.cairn` in the user's `HOME`.
     CairnHome,
     /// Claude Code's configuration directory: `CLAUDE_CONFIG_DIR`, else
-    /// `.claude` in the home.
+    /// `.claude` in the user's `HOME`.
     ClaudeConfig,
     /// Claude Code's global state file: `.claude.json` in the
-    /// configuration directory, else in the home.
+    /// configuration directory, else in the user's `HOME`.
     ClaudeJson,
 }
 
@@ -46,7 +46,7 @@ pub type Var<'a> = &'a dyn Fn(&str) -> Option<OsString>;
 impl Place {
     /// Every place the guard keeps tests out of.
     pub const ALL: [Self; 4] = [
-        Self::Home,
+        Self::UserHome,
         Self::CairnHome,
         Self::ClaudeConfig,
         Self::ClaudeJson,
@@ -56,7 +56,7 @@ impl Place {
     #[must_use]
     pub fn name(self) -> &'static str {
         match self {
-            Self::Home => "home",
+            Self::UserHome => "user-home",
             Self::CairnHome => "cairn-home",
             Self::ClaudeConfig => "claude-config",
             Self::ClaudeJson => "claude-json",
@@ -72,7 +72,7 @@ impl Place {
     /// What the place is, as a refusal says it.
     fn describe(self) -> &'static str {
         match self {
-            Self::Home => "the home",
+            Self::UserHome => "the user's `HOME` directory",
             Self::CairnHome => "the Cairn home",
             Self::ClaudeConfig => "Claude Code's configuration directory",
             Self::ClaudeJson => "Claude Code's state file",
@@ -101,7 +101,7 @@ fn locate(place: Place, var: Var<'_>) -> Result<PathBuf, Refusal> {
     let home = || var("HOME").map(PathBuf::from).ok_or(Refusal::Unset);
     let config = || var("CLAUDE_CONFIG_DIR").map(PathBuf::from);
     match place {
-        Place::Home => home(),
+        Place::UserHome => home(),
         Place::CairnHome => match var("CAIRN_HOME") {
             Some(cairn) => Ok(PathBuf::from(cairn)),
             None => home().map(|h| h.join(".cairn")),
@@ -152,7 +152,7 @@ fn under(path: &Path, temp: &Path) -> bool {
 ///
 /// # Errors
 ///
-/// Refuses a place that is real state, or has no home to resolve from.
+/// Refuses a place that is real state, or has no `HOME` to resolve from.
 pub fn check(place: Place, var: Var<'_>, temp: &Path) -> Result<PathBuf, Refusal> {
     let path = locate(place, var)?;
     if under(&path, temp) {

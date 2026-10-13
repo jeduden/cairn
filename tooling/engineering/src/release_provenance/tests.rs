@@ -119,7 +119,7 @@ fn provenance_attested_in_the_release_workflow_is_outside_the_build_workflow() {
 
     has(
         &r.provenance_from_the_build_workflow(),
-        "release.yml attests provenance outside the reusable build workflow, in job publish",
+        "release.yml attests build provenance outside the reusable build workflow, in job publish",
     );
 }
 
@@ -203,7 +203,7 @@ fn the_verify_job_pins_the_build_workflow_as_signer_for_every_binary() {
     );
     has(
         &r.provenance_from_the_build_workflow(),
-        "does not verify provenance with --repo jeduden/cairn --signer-workflow jeduden/cairn/.github/workflows/build.yml",
+        "does not verify build provenance with --repo jeduden/cairn --signer-workflow jeduden/cairn/.github/workflows/build.yml",
     );
 
     let r = drifted("for bin in cairn-*; do", "for bin in cairn-linux-amd64; do");

@@ -160,7 +160,7 @@ fn the_gate_fails_naming_a_benchmark_slowed_by_more_than_ten_percent() {
 }
 
 #[test]
-fn gate_fails_naming_refuses_a_gate_that_held() {
+fn gate_fails_naming_refuses_a_gate_that_stayed_within_the_threshold() {
     let (base, head) = slowed("core_start_up", 5);
 
     let err = gate_fails_naming(&base, &head, "core_start_up").unwrap_err();

@@ -35,14 +35,14 @@ pub fn mann_whitney_z(base: &[u64], head: &[u64]) -> f64 {
         .collect();
     pooled.sort_unstable();
 
-    // Each run of equal samples takes the mean of the ranks it spans,
+    // Each tie group of equal samples takes the mean of the ranks it spans,
     // and adds t^3 - t to the tie correction.
     let (mut ranked, mut head_ranks, mut ties) = (0.0, 0.0, 0.0);
-    for run in pooled.chunk_by(|a, b| a.0 == b.0) {
-        let t = count(run.len());
+    for tie_group in pooled.chunk_by(|a, b| a.0 == b.0) {
+        let t = count(tie_group.len());
         let mean_rank = ranked + (t + 1.0) / 2.0;
         ranked += t;
-        head_ranks += mean_rank * count(run.iter().filter(|(_, on_head)| *on_head).count());
+        head_ranks += mean_rank * count(tie_group.iter().filter(|(_, on_head)| *on_head).count());
         ties += t * t * t - t;
     }
 

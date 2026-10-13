@@ -1,14 +1,15 @@
-//! ENG-14: a guard aborts any test that touches the real home, and
-//! nothing resolves the real home but the guard.
+//! ENG-14: a guard aborts any test that touches real state, and nothing
+//! resolves the real `HOME`, a Cairn home or Claude Code's configuration
+//! but the guard.
 //!
-//! The guard is `testkit::guard`: a test asks it for the home, a Cairn
-//! home or Claude Code's configuration, and it aborts the process when
-//! the answer is not under the temporary directory. This module holds
-//! the two checks that make the guard binding. The probe runs a test
-//! executable that resolves each place, once with a home the guard must
-//! refuse and once with one it must allow. The scan reads the sources
-//! for a read of the home that bypasses the guard, so the guard covers
-//! every test and not only those that opt in.
+//! The guard is `testkit::guard`: a test asks it for the user's `HOME`,
+//! a Cairn home or Claude Code's configuration, and it aborts the
+//! process when the answer is not under the temporary directory. This
+//! module holds the two checks that make the guard binding. The probe
+//! runs a test executable that resolves each place, once with a `HOME`
+//! the guard must refuse and once with one it must allow. The scan reads
+//! the sources for a read of real state that bypasses the guard, so the
+//! guard covers every test and not only those that opt in.
 
 use std::env;
 use std::fs;
@@ -34,7 +35,7 @@ const POLL: Duration = Duration::from_millis(5);
 /// other failure.
 const REFUSAL: &str = "(ENG-14)";
 
-/// The sources that may read the home themselves: the guard, and the
+/// The sources that may read the user's `HOME` themselves: the guard, and the
 /// scenario runner's own decision to start isolated.
 pub const RESOLVERS: [&str; 2] = [
     "tooling/testkit/src/guard.rs",
@@ -47,7 +48,7 @@ const SOURCES: [&str; 2] = ["crates", "tooling"];
 /// What reads an environment variable, as it ends before the name.
 const READS: [&str; 4] = ["var(", "var_os(", "env!(", "option_env!("];
 
-/// The variables that lead to the real home, quoted.
+/// The variables that lead to real state, quoted.
 const NAMES: [&str; 4] = [
     "\"HOME\"",
     "\"CAIRN_HOME\"",
@@ -117,7 +118,7 @@ fn wait_within(child: &mut Child, limit: Duration) -> Result<ExitStatus, String>
 }
 
 /// Everything `pipe` holds. A pipe that fails mid-read leaves the text
-/// so far, which is all a probe's verdict needs.
+/// so far, which is all a probe needs.
 fn drain(mut pipe: impl Read) -> String {
     let mut text = String::new();
     let _ = pipe.read_to_string(&mut text);
@@ -125,13 +126,13 @@ fn drain(mut pipe: impl Read) -> String {
     text
 }
 
-/// What is wrong with `probe`, run for `place` with a home the guard
+/// What is wrong with `probe`, run for `place` with a `HOME` the guard
 /// must refuse: it must end without success, print no path, and say the
 /// guard refused.
 #[must_use]
 pub fn not_refused(place: &str, probe: &Probe) -> Option<String> {
     let problem = if probe.success {
-        "resolved the real home instead of aborting"
+        "resolved real state instead of aborting"
     } else if !probe.stdout.trim().is_empty() {
         "printed a path before aborting"
     } else if !probe.stderr.contains(REFUSAL) {
@@ -147,7 +148,7 @@ pub fn not_refused(place: &str, probe: &Probe) -> Option<String> {
     ))
 }
 
-/// What is wrong with `probe`, run for `place` with an isolated home:
+/// What is wrong with `probe`, run for `place` with an isolated `HOME`:
 /// it must succeed and print a path under `home`.
 #[must_use]
 pub fn not_allowed(place: &str, probe: &Probe, home: &Path) -> Option<String> {
@@ -157,22 +158,22 @@ pub fn not_allowed(place: &str, probe: &Probe, home: &Path) -> Option<String> {
     }
 
     Some(format!(
-        "place {place}: refused an isolated home: stdout {:?}, stderr {:?}",
+        "place {place}: refused an isolated place: stdout {:?}, stderr {:?}",
         probe.stdout.trim(),
         probe.stderr.trim()
     ))
 }
 
-/// Runs `exe` as a probe for each of `places`, with a real home it must
+/// Runs `exe` as a probe for each of `places`, with a real `HOME` it must
 /// abort on and an isolated one it must resolve, both under `scratch`.
-/// The real home is a stand-in: any home outside the temporary
+/// The real `HOME` is a stand-in: any `HOME` outside the temporary
 /// directory the probe is given is real to the guard.
 #[must_use]
 pub fn guard_holds(exe: &Path, scratch: &Path, places: &[&str]) -> Vec<String> {
     let (real, temp) = (scratch.join("real-home"), scratch.join("tmp"));
     let isolated = temp.join("home");
     if let Err(e) = fs::create_dir_all(&real).and_then(|()| fs::create_dir_all(&isolated)) {
-        return vec![format!("create the probe's homes: {e}")];
+        return vec![format!("create the probe's directories: {e}")];
     }
 
     let mut problems = Vec::new();
@@ -191,10 +192,10 @@ pub fn guard_holds(exe: &Path, scratch: &Path, places: &[&str]) -> Vec<String> {
     problems
 }
 
-/// The reads of the home in `body`, the text of the Rust source `file`
+/// The reads of real state in `body`, the text of the Rust source `file`
 /// that is not a resolver: a read of `HOME`, `CAIRN_HOME`, Claude Code's
 /// configuration directory or the profile directory by name, or a call
-/// to the standard library's home lookup. Each is a line: `file:line: ...`.
+/// to the standard library's `HOME` lookup. Each is a line: `file:line: ...`.
 #[must_use]
 pub fn unguarded_reads(file: &str, body: &str) -> Vec<String> {
     let lookup = concat!("home", "_dir(");
@@ -212,7 +213,7 @@ pub fn unguarded_reads(file: &str, body: &str) -> Vec<String> {
         .into_iter()
         .map(|n| {
             let text = body.lines().nth(n - 1).unwrap_or_default().trim();
-            format!("{file}:{n}: reads the real home outside testkit::guard: {text}")
+            format!("{file}:{n}: reads real state outside testkit::guard: {text}")
         })
         .collect()
 }
@@ -223,7 +224,7 @@ fn line_of(body: &str, at: usize) -> usize {
 }
 
 /// Requires every Rust source under `crates/` and `tooling/`, but the
-/// [`RESOLVERS`], to leave the home to the guard.
+/// [`RESOLVERS`], to leave real state to the guard.
 #[must_use]
 pub fn no_unguarded_reads(c: &Checkout) -> Vec<String> {
     let mut files = Vec::new();

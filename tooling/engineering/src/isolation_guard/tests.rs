@@ -12,19 +12,19 @@ fn probe(success: bool, stdout: &str, stderr: &str) -> Probe {
 
 #[test]
 fn a_refusal_that_prints_nothing_and_says_so_is_what_the_guard_does() {
-    let got = not_refused("home", &probe(false, "", "refusing ... (ENG-14)\n"));
+    let got = not_refused("user-home", &probe(false, "", "refusing ... (ENG-14)\n"));
 
     assert_eq!(got, None);
 }
 
 #[test]
 fn a_probe_that_resolved_the_real_home_was_not_refused() {
-    let got = not_refused("home", &probe(true, "/real\n", ""));
+    let got = not_refused("user-home", &probe(true, "/real\n", ""));
 
     assert_eq!(
         got,
         Some(
-            "place home: resolved the real home instead of aborting: stdout \"/real\", stderr \"\""
+            "place user-home: resolved real state instead of aborting: stdout \"/real\", stderr \"\""
                 .to_owned()
         )
     );
@@ -32,14 +32,14 @@ fn a_probe_that_resolved_the_real_home_was_not_refused() {
 
 #[test]
 fn a_probe_that_printed_a_path_before_failing_was_not_refused() {
-    let got = not_refused("home", &probe(false, "/real", "(ENG-14)"));
+    let got = not_refused("user-home", &probe(false, "/real", "(ENG-14)"));
 
     assert!(got.is_some_and(|p| p.contains("printed a path before aborting")));
 }
 
 #[test]
 fn a_probe_that_failed_for_another_reason_was_not_refused() {
-    let got = not_refused("home", &probe(false, "", "panicked at main.rs"));
+    let got = not_refused("user-home", &probe(false, "", "panicked at main.rs"));
 
     assert!(got.is_some_and(|p| p.contains("ended without the guard's refusal")));
 }
@@ -47,7 +47,7 @@ fn a_probe_that_failed_for_another_reason_was_not_refused() {
 #[test]
 fn a_probe_that_printed_a_path_under_the_isolated_home_was_allowed() {
     let got = not_allowed(
-        "home",
+        "user-home",
         &probe(true, "/t/home/.cairn\n", ""),
         Path::new("/t/home"),
     );
@@ -64,10 +64,10 @@ fn a_probe_that_failed_or_printed_another_path_was_not_allowed() {
         probe(true, "/elsewhere", ""),
         probe(true, "", ""),
     ] {
-        let got = not_allowed("home", &p, home);
+        let got = not_allowed("user-home", &p, home);
 
         assert!(
-            got.is_some_and(|m| m.starts_with("place home: refused an isolated home: ")),
+            got.is_some_and(|m| m.starts_with("place user-home: refused an isolated place: ")),
             "{p:?}"
         );
     }
@@ -126,7 +126,8 @@ fn a_probe_runs_with_nothing_but_its_home_its_temporary_directory_and_its_place(
     assert_eq!(
         got.stdout
             .lines()
-            .filter(|l| !l.starts_with("PWD="))
+            // A coverage run's profile file, which the probe keeps.
+            .filter(|l| !l.starts_with("PWD=") && !l.starts_with("LLVM_PROFILE_FILE="))
             .collect::<Vec<_>>(),
         ["CAIRN_GUARD_PROBE=cairn-home", "HOME=/h", "TMPDIR=/t"]
     );
@@ -140,7 +141,7 @@ fn a_probe_reports_how_it_ended_and_what_it_said() {
 
     let got = run_probe(
         &exe,
-        "home",
+        "user-home",
         dir.path(),
         dir.path(),
         Duration::from_secs(30),
@@ -156,7 +157,7 @@ fn a_probe_that_cannot_start_is_named() {
 
     let err = run_probe(
         &dir.path().join("missing"),
-        "home",
+        "user-home",
         dir.path(),
         dir.path(),
         Duration::from_secs(30),
@@ -174,7 +175,7 @@ fn a_probe_that_outlives_its_deadline_is_killed() {
 
     let err = run_probe(
         &exe,
-        "home",
+        "user-home",
         dir.path(),
         dir.path(),
         Duration::from_millis(50),
@@ -192,7 +193,7 @@ fn a_guard_that_refuses_the_real_home_and_allows_an_isolated_one_holds() {
     let exe = script(dir.path(), "guard.sh", GOOD_GUARD);
     let scratch = dir.path().join("scratch");
 
-    let got = guard_holds(&exe, &scratch, &["home", "claude-json"]);
+    let got = guard_holds(&exe, &scratch, &["user-home", "claude-json"]);
 
     assert_eq!(got, Vec::<String>::new());
 }
@@ -204,11 +205,11 @@ fn a_guard_that_lets_the_real_home_through_does_not_hold() {
     let exe = script(dir.path(), "open.sh", r#"echo "$HOME""#);
     let scratch = dir.path().join("scratch");
 
-    let got = guard_holds(&exe, &scratch, &["home", "cairn-home"]);
+    let got = guard_holds(&exe, &scratch, &["user-home", "cairn-home"]);
 
     assert_eq!(got.len(), 2, "{got:?}");
-    assert!(got[0].starts_with("place home: resolved the real home"));
-    assert!(got[1].starts_with("place cairn-home: resolved the real home"));
+    assert!(got[0].starts_with("place user-home: resolved real state"));
+    assert!(got[1].starts_with("place cairn-home: resolved real state"));
 }
 
 #[cfg(unix)]
@@ -217,10 +218,10 @@ fn a_guard_that_refuses_everything_does_not_hold() {
     let dir = TempDir::new().unwrap();
     let exe = script(dir.path(), "shut.sh", r#"echo "no (ENG-14)" >&2; exit 134"#);
 
-    let got = guard_holds(&exe, &dir.path().join("scratch"), &["home"]);
+    let got = guard_holds(&exe, &dir.path().join("scratch"), &["user-home"]);
 
     assert_eq!(got.len(), 1, "{got:?}");
-    assert!(got[0].starts_with("place home: refused an isolated home"));
+    assert!(got[0].starts_with("place user-home: refused an isolated place"));
 }
 
 #[test]
@@ -230,7 +231,7 @@ fn a_probe_executable_that_is_missing_fails_every_run() {
     let got = guard_holds(
         &dir.path().join("missing"),
         &dir.path().join("scratch"),
-        &["home"],
+        &["user-home"],
     );
 
     assert_eq!(got.len(), 2, "{got:?}");
@@ -243,10 +244,13 @@ fn homes_that_cannot_be_created_are_reported() {
     let blocker = dir.path().join("file");
     fs::write(&blocker, "x").unwrap();
 
-    let got = guard_holds(Path::new("/bin/true"), &blocker, &["home"]);
+    let got = guard_holds(Path::new("/bin/true"), &blocker, &["user-home"]);
 
     assert_eq!(got.len(), 1);
-    assert!(got[0].starts_with("create the probe's homes: "), "{got:?}");
+    assert!(
+        got[0].starts_with("create the probe's directories: "),
+        "{got:?}"
+    );
 }
 
 #[test]
@@ -256,7 +260,7 @@ fn a_read_of_the_home_by_name_is_found_with_its_line() {
     assert_eq!(
         unguarded_reads("x.rs", body),
         vec![
-            "x.rs:2: reads the real home outside testkit::guard: let h = std::env::var_os(\"HOME\");"
+            "x.rs:2: reads real state outside testkit::guard: let h = std::env::var_os(\"HOME\");"
                 .to_owned()
         ]
     );

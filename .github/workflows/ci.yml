@@ -59,8 +59,8 @@ jobs:
           }
       # ENG-14: the suite runs with HOME pointed at an empty decoy
       # directory, the toolchain keeping its own homes. The isolation
-      # guard (testkit::guard) aborts a test that resolves the real
-      # home; the decoy finds one that went around it, by any path: a
+      # guard (testkit::guard) aborts a test that resolves real
+      # state; the decoy finds one that went around it, by any path: a
       # trace left under it fails the job.
       - name: Run the tests with a decoy HOME
         run: |

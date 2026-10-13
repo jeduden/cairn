@@ -27,7 +27,7 @@ fn declares(responsibility: &str, may: &[&str]) -> Value {
 }
 
 /// A product crate `core` and the tooling crates `kit` and `gate`.
-fn sample() -> Vec<Member> {
+fn sample() -> Vec<WorkspaceCrate> {
     let packages = [
         package(
             "core",
@@ -51,7 +51,7 @@ fn sample() -> Vec<Member> {
     workspace(&metadata(&packages)).unwrap()
 }
 
-fn member<'a>(members: &'a mut [Member], name: &str) -> &'a mut Member {
+fn member<'a>(members: &'a mut [WorkspaceCrate], name: &str) -> &'a mut WorkspaceCrate {
     members.iter_mut().find(|m| m.name == name).unwrap()
 }
 
@@ -93,12 +93,12 @@ fn workspace_reads_each_crate_and_its_declarations() {
     assert_eq!(
         got,
         [
-            Member {
+            WorkspaceCrate {
                 name: "bare".into(),
                 dir: "crates/bare".into(),
-                ..Member::default()
+                ..WorkspaceCrate::default()
             },
-            Member {
+            WorkspaceCrate {
                 name: "gate".into(),
                 dir: "tooling/gate".into(),
                 library: true,
@@ -249,12 +249,12 @@ fn directions_hold_a_product_crate_to_what_it_declares_for_its_tests() {
 #[test]
 fn directions_let_a_product_crate_depend_on_a_product_crate() {
     let mut members = sample();
-    members.push(Member {
+    members.push(WorkspaceCrate {
         name: "store".into(),
         dir: "crates/store".into(),
         library: true,
         may_depend_on: Some(vec![]),
-        ..Member::default()
+        ..WorkspaceCrate::default()
     });
     member(&mut members, "core").may_depend_on = Some(vec!["store".into()]);
     member(&mut members, "core")
@@ -292,10 +292,10 @@ fn responsibilities_want_exactly_one_per_library_crate() {
 fn responsibilities_are_not_shared_and_not_asked_of_a_binary() {
     let mut members = sample();
     member(&mut members, "kit").responsibility = vec!["runs the hooks".into()];
-    members.push(Member {
+    members.push(WorkspaceCrate {
         name: "tool".into(),
         dir: "tooling/tool".into(),
-        ..Member::default()
+        ..WorkspaceCrate::default()
     });
 
     assert_eq!(
@@ -317,8 +317,10 @@ fn a_forbidden_dependency_is_one_the_check_refuses_naming_both_crates() {
 #[test]
 fn a_forbidden_dependency_needs_a_product_and_a_tooling_crate() {
     let want = Err("the workspace needs a product crate and a tooling crate".to_owned());
-    let tooling_only: Vec<Member> = sample().into_iter().filter(|m| m.is_tooling()).collect();
-    let product_only: Vec<Member> = sample().into_iter().filter(|m| m.is_product()).collect();
+    let tooling_only: Vec<WorkspaceCrate> =
+        sample().into_iter().filter(|m| m.is_tooling()).collect();
+    let product_only: Vec<WorkspaceCrate> =
+        sample().into_iter().filter(|m| m.is_product()).collect();
 
     assert_eq!(with_forbidden_dependency(&tooling_only).map(|_| ()), want);
     assert_eq!(with_forbidden_dependency(&product_only).map(|_| ()), want);

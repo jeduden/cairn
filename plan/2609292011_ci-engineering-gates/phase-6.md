@@ -13,9 +13,9 @@ requirement text and what enforces it. Security-sensitive crates need
 two approvals, one from the designated security reviewer.
 
 Branch protection is a repository setting, so it becomes a committed
-ruleset that a check compares with the live one; applying it is the
-stakeholder's act. The security reviewer is still to be named, so the
-stakeholder holds that role in CODEOWNERS.
+ruleset that a check compares with the live one; the stakeholder
+applies the committed ruleset. The security reviewer is still to be
+named, so the stakeholder holds that role in CODEOWNERS.
 
 BDD coverage: `@ENG-21` comes off `@pending`. Its steps read the
 committed ruleset and CODEOWNERS. Direct pushes are refused and

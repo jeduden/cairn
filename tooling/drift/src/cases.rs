@@ -865,7 +865,7 @@ fn static_analysis_cases() -> Vec<Case> {
             "the core's reach evidence is missing: crates/cairn/clippy.toml does not ban std::process::Command",
         ),
         case(
-            "derived code no longer refused the monotonic clock",
+            "code that computes derived artifacts no longer refused the monotonic clock",
             "derived_code_is_refused_a_clock_or_randomness_at_build_time",
             Injection::replace(
                 CLIPPY,
@@ -873,7 +873,7 @@ fn static_analysis_cases() -> Vec<Case> {
                 "",
             ),
             check("derived_code_is_refused_a_clock_or_randomness_at_build_time"),
-            "derived code may read a clock or randomness: crate cairn: crates/cairn/clippy.toml does not ban std::time::Instant::now in disallowed-methods",
+            "code that computes derived artifacts may read a clock or randomness: crate cairn: crates/cairn/clippy.toml does not ban std::time::Instant::now in disallowed-methods",
         ),
     ]
 }
@@ -892,7 +892,7 @@ fn release_cases() -> Vec<Case> {
                 "        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2\n        with:\n          subject-path: \"dist/cairn-*\"\n      - name: Attest the SBOM again\n        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0\n",
             ),
             scenario("ENG-20"),
-            "release.yml attests provenance outside the reusable build workflow, in job publish",
+            "release.yml attests build provenance outside the reusable build workflow, in job publish",
         ),
         case(
             "the reusable build workflow no longer attesting provenance",
@@ -936,7 +936,7 @@ fn release_cases() -> Vec<Case> {
                 "--signer-workflow jeduden/cairn/.github/workflows/release.yml",
             ),
             scenario("ENG-20"),
-            "does not verify provenance with --repo jeduden/cairn --signer-workflow jeduden/cairn/.github/workflows/build.yml",
+            "does not verify build provenance with --repo jeduden/cairn --signer-workflow jeduden/cairn/.github/workflows/build.yml",
         ),
         case(
             "the checksum bundle no longer verified",
@@ -1016,7 +1016,7 @@ fn protection_cases() -> Vec<Case> {
                 "\"bypass_actors\": [{ \"actor_id\": 5, \"actor_type\": \"RepositoryRole\", \"bypass_mode\": \"always\" }],",
             ),
             "the_checkout_s_ruleset_rejects_direct_pushes",
-            "the ruleset lets an actor bypass it",
+            "the ruleset lets a bypass actor bypass it",
         ),
         protection_case(
             "the ruleset no longer enforced",
@@ -1127,9 +1127,9 @@ fn benchmark_cases() -> Vec<Case> {
 }
 
 /// The drifts the isolation guard and the instruction scan exist to
-/// catch (ENG-14): the guard letting the real home through, or refusing
-/// every home; a read of the home that bypasses it; and an agent
-/// instruction directing a destructive command at the real home.
+/// catch (ENG-14): the guard letting real state through, or refusing
+/// every place; a read of real state that bypasses it; and an agent
+/// instruction directing a destructive command at real state.
 fn isolation_cases() -> Vec<Case> {
     const GUARD: &str = "tooling/testkit/src/guard.rs";
     const UNDER: &str = "    path != temp && path.starts_with(temp)";
@@ -1149,21 +1149,21 @@ fn isolation_cases() -> Vec<Case> {
     };
     vec![
         case(
-            "the isolation guard letting the real home through",
+            "the isolation guard letting real state through",
             "ENG-14",
             Injection::replace(GUARD, UNDER, "    let _ = (&path, &temp);\n    true"),
             scenario("ENG-14"),
-            "resolved the real home instead of aborting",
+            "resolved real state instead of aborting",
         ),
         case(
-            "the isolation guard refusing every home",
+            "the isolation guard refusing every place",
             "ENG-14",
             Injection::replace(GUARD, UNDER, "    let _ = (&path, &temp);\n    false"),
             scenario("ENG-14"),
-            "refused an isolated home",
+            "refused an isolated place",
         ),
         case(
-            "a test helper reading the home around the guard",
+            "a test helper reading real state around the guard",
             "only_the_isolation_guard_reads_the_home",
             Injection::replace(
                 "tooling/testkit/src/lib.rs",
@@ -1171,10 +1171,10 @@ fn isolation_cases() -> Vec<Case> {
                 "pub fn real_home() -> Option<OsString> {\n    std::env::var_os(\"HOME\")\n}\n\n/// The repository checkout the tests inspect",
             ),
             reads(),
-            "reads the real home outside testkit::guard",
+            "reads real state outside testkit::guard",
         ),
         case(
-            "CI running the suite with the real home",
+            "CI running the suite with the real `HOME`",
             "the_ci_test_job_runs_with_a_decoy_home",
             Injection::replace(
                 ".github/workflows/ci.yml",
@@ -1189,7 +1189,7 @@ fn isolation_cases() -> Vec<Case> {
             ".github/workflows/ci.yml does not contain",
         ),
         case(
-            "the instructions no longer forbidding a command at the real home",
+            "the instructions no longer forbidding a command at real state",
             "ENG-14",
             Injection::replace(
                 "CLAUDE.md",
