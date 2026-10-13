@@ -39,6 +39,32 @@ pub const DETERMINISM_TYPES: [&str; 3] = [
 pub const DETERMINISM_METHODS: [&str; 2] =
     ["std::time::SystemTime::now", "std::time::Instant::now"];
 
+/// The calls that block with no deadline (ENG-03): each waits for
+/// another thread, process or file lock, and has a form that takes a
+/// deadline, or a non-blocking one a deadline loop polls. A call site
+/// that has to block says so with an `expect` and a reason, under
+/// review. Local file reads and writes are not on the list: the disk
+/// bounds them and the hook's time budget (I9) covers them. Nor are
+/// `std::thread::sleep`, which carries its own bound, and the in-process
+/// `Mutex` and `RwLock` locks, which guard short critical sections.
+pub const DEADLINE_METHODS: [&str; 15] = [
+    "std::sync::mpsc::Receiver::recv",
+    "std::sync::mpsc::Receiver::iter",
+    "std::sync::mpsc::SyncSender::send",
+    "std::sync::Condvar::wait",
+    "std::sync::Condvar::wait_while",
+    "std::sync::Barrier::wait",
+    "std::thread::JoinHandle::join",
+    "std::thread::park",
+    "std::process::Child::wait",
+    "std::process::Child::wait_with_output",
+    "std::process::Command::output",
+    "std::process::Command::status",
+    "std::fs::File::lock",
+    "std::fs::File::lock_shared",
+    "std::io::stdin",
+];
+
 /// The clippy.toml table that bans a type.
 pub const TYPES: &str = "disallowed-types";
 
@@ -148,7 +174,10 @@ pub fn missing_bans(clippy_toml: &str) -> Vec<(&'static str, &'static str)> {
         .iter()
         .chain(&DETERMINISM_TYPES)
         .map(|b| (TYPES, *b));
-    let methods = DETERMINISM_METHODS.iter().map(|b| (METHODS, *b));
+    let methods = DETERMINISM_METHODS
+        .iter()
+        .chain(&DEADLINE_METHODS)
+        .map(|b| (METHODS, *b));
     types
         .chain(methods)
         .filter(|(table, b)| !have.get(*table).is_some_and(|set| set.contains(*b)))

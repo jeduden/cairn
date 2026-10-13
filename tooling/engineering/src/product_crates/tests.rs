@@ -8,7 +8,12 @@ fn every_ban() -> Vec<(&'static str, &'static str)> {
     let types = REACH_BANS.iter().chain(&DETERMINISM_TYPES);
     types
         .map(|b| (TYPES, *b))
-        .chain(DETERMINISM_METHODS.iter().map(|b| (METHODS, *b)))
+        .chain(
+            DETERMINISM_METHODS
+                .iter()
+                .chain(&DEADLINE_METHODS)
+                .map(|b| (METHODS, *b)),
+        )
         .collect()
 }
 
@@ -19,7 +24,7 @@ fn full() -> String {
         body.push_str(&format!("  {{ path = \"{b}\", reason = \"r\" }},\n"));
     }
     body.push_str("]\n\ndisallowed-methods = [\n");
-    for b in DETERMINISM_METHODS {
+    for b in DETERMINISM_METHODS.iter().chain(&DEADLINE_METHODS) {
         body.push_str(&format!("  {{ path = \"{b}\", reason = \"r\" }},\n"));
     }
     body.push_str("]\n");
@@ -135,6 +140,7 @@ fn missing_bans_reads_one_line_arrays() {
         .collect();
     let methods: Vec<String> = DETERMINISM_METHODS
         .iter()
+        .chain(&DEADLINE_METHODS)
         .map(|b| format!("{{ path = \"{b}\" }}"))
         .collect();
     let body = format!(
