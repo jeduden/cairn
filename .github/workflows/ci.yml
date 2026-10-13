@@ -60,8 +60,11 @@ jobs:
       # ENG-14: the suite runs with HOME pointed at an empty decoy
       # directory, the toolchain keeping its own homes. The isolation
       # guard (testkit::guard) aborts a test that resolves real
-      # state; the decoy finds one that went around it, by any path: a
-      # trace left under it fails the job.
+      # state. The decoy catches a test that writes under the user's
+      # HOME without going through the guard: a trace left under it
+      # fails the job. A read, or a write through a path built before
+      # HOME was swapped, leaves none; the guard and the
+      # one-resolver gate test carry those.
       - name: Run the tests with a decoy HOME
         run: |
           decoy="$RUNNER_TEMP/decoy-home"

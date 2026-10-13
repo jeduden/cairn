@@ -30,7 +30,8 @@ fn the_agent_instructions_scan_reads_the_repository_s_files() {
 
 /// CI runs the suite with `HOME` pointed at a decoy, and fails when a
 /// test left anything under it (ENG-14): the guard stops a test that
-/// resolves real state, the decoy finds one that went around it.
+/// resolves real state, and the decoy catches a test that writes under
+/// the user's `HOME` without going through the guard.
 #[test]
 fn the_ci_test_job_runs_with_a_decoy_home() {
     let c = checkout();

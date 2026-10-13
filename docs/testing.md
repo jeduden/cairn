@@ -226,8 +226,11 @@ real Cairn home or real Claude Code configuration.
   and the stakeholder approves it (`tooling/` is a code-owner path).
 - **The decoy.** CI's `test` job runs the suite with `HOME` pointed at
   an empty directory and fails if anything appears there. The guard
-  stops a test that asks for the user's `HOME`; the decoy finds one that went
-  around it, such as a program a test started without `isolate`.
+  stops a test that asks for the user's `HOME`. The decoy catches a test
+  that writes under the user's `HOME` without going through the guard,
+  such as a program a test started without `isolate`. A read, or a write
+  through a path built before `HOME` was swapped, leaves no trace there;
+  the guard and the one-resolver gate test carry those.
 
 ENG-14 also bars agent instructions that direct a destructive command
 at real state. The `engineering` crate's `agent_instructions` scan reads
