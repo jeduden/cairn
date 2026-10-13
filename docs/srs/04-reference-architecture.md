@@ -102,8 +102,9 @@ for a device seat and `assistant` for a run seat (LANE-31, PRV-01). A purge
 under a retention policy is not an act: the node records it naming the policy,
 whose setting was the act (ADM-04), and an erasure request it sends peers is
 `structural`, where one a principal act sends is `operator`. Every tombstone,
-refused-segment event, arrival event, node identity change event and key event
-is a `structural` event (PRV-01, REC-21, REC-24, PRV-13, SEC-10). Every derived
+refused-segment event, arrival event, node identity change event, key event and
+certificate record is a `structural` event (PRV-01, REC-21, REC-24, PRV-13,
+PRV-12). Every derived
 table in the store (the search index, spans, landmarks, active pins, quarantine
 set, room state, origins, trust levels, run statuses but for their time-relative
 freshness marks, integrity statuses, queues, evidence and proof classes, stats)

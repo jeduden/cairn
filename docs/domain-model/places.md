@@ -22,12 +22,13 @@ summary: >-
   snapshot cannot carry over (REC-24). A **node identity change event** is the
   structural event a node whose node identity changed records in its new device
   seat in its personal room, carrying only the fingerprints of the device key or
-  token key it replaces and of the new one, followed by the new key's inception,
-  which starts a new key event log (REC-24, PRV-12). A **node clone** is a copy
-  of a home started where its node identity differs: a new node, with new keys
-  and seats, that shares the carried-over personal room (REC-24). On any node
-  whose node identity changed, and after a backup restore, the record from
-  before carries over only as ADM-06 says (open: OQ-48).
+  token key it replaces and of the new one and the chain head of the key event
+  log it leaves, followed by the new key's inception; both count only as PRV-12
+  says, and a reject the replaced key signs voids them (REC-24, PRV-12). A
+  **node clone** is a copy of a home started where its node identity differs: a
+  new node, with new keys and seats, that shares the carried-over personal room
+  (REC-24). On any node whose node identity changed, and after a backup restore,
+  the record from before carries over only as ADM-06 says (open: OQ-48).
 - **Device**: A node or a paired phone.
 - **Paired phone**: A device with no home, limited to reading and to allowing or
   denying held permission requests within its device scope, reaching its node

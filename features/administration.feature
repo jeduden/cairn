@@ -79,7 +79,7 @@ Feature: Administration and lifecycle (ADM)
     And a configuration setting "node.deployment_mode" to "interactive", accepted by "cairn configuration accept"
     And a backup taken by "cairn backup create", followed by a purge of run "run-a" and the unpin of a pin
     When the person runs "cairn backup restore" as a widening principal act
-    Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device, recovery or at-rest key, and an audit entry recorded it
+    Then the backup contained every segment, the open segment, the payload store, derived artifacts and the audit log with its chain, no seat, device, token, recovery or at-rest key, and an audit entry recorded it
     And "cairn verify" passed on the copy and its audit chain before anything was reinstated
     And before it was confirmed, the backup restore named each pin of the copy that will not restore once its events count as received
     And every event the copy holds counts on the node as received, each deriving origin "peer" or "bundle", never "witnessed", and is trusted only as PRV-02 trusts received events

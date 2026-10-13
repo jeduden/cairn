@@ -5,10 +5,11 @@ status: proposed
 summary: >-
   PRV-12 makes a node's device keys, or a token-key-only node's token
   keys, a hash-linked key event log whose keys commit to an offsite
-  recovery key, closing OQ-52. A process that can append to the store
-  but cannot use the device key or produce a presence proof can no
-  longer make its own writers `witnessed`. Proposed until the security
-  reviewer approves it (ENG-29).
+  recovery key, closing OQ-52. A process that can append to the store,
+  but can neither use the device key, drive Cairn's CLI at the
+  principal's terminal, nor produce a presence proof, can no longer make
+  its own writers `witnessed` or strip the principal's pins. Proposed
+  until the security reviewer approves it (ENG-29).
 ---
 # ADR-2610122234: A node's keys form a key event log
 
@@ -29,12 +30,12 @@ this record:
 
 - A key lost and minted anew keeps the earlier writers `witnessed`;
   only the new key's writers wait.
-- A headless node can be confirmed from another device of its principal,
-  or by a confirmation key managed policy names, without a terminal on
-  the node.
-- An unconfirmed log, a duplicity or a recovery key still on the node
-  shows in the Needs you queue, Catch up and `cairn doctor`, not only in
-  `cairn status`.
+- A headless node's inception can be confirmed from another device of
+  its principal, or by a confirmation key managed policy names, without
+  a terminal on the node.
+- An inception awaiting a confirm, a duplicity or a recovery key still
+  on the node shows in the Needs you queue, Catch up and `cairn doctor`,
+  not only in `cairn status`.
 
 [keri]: https://trustoverip.github.io/kswg-keri-specification/
 [ik]: ../../research/notes/identity-keys/identity-keys.md
@@ -58,31 +59,48 @@ October 2026 on its review shape it:
 - **Confirm, choose and reject need a proof the forger lacks.** Each
   counts only with an OWN-11 presence proof bound to its digest, or a
   signature by a key that counts independently of the key event log it
-  names: the key it replaces, another device of the principal once
-  PRV-10 ships, or a confirmation key managed policy names. Each takes
-  effect whatever origin its own writer derives.
+  names: another device of the principal once PRV-10 ships, or a
+  confirmation key a recorded managed-policy listing names. The key an
+  inception replaces may sign a reject, or a choose keeping its own
+  side, never a confirm. Each takes effect whatever origin its own
+  writer derives, and a concurrent confirm and reject leave the reject
+  holding until a choose. Every signature names its kind, so one kind
+  never verifies as another.
 - **Reject.** `cairn key-event-log reject`, a cut act, voids an
-  inception no confirm has counted. The principal sees, before any of
-  the three acts, which seat recorded the inception, whether the key it
-  replaces is still in the key store, and which pins would change.
+  inception no confirm or `recovered` has counted, voids a node identity
+  change event the key it replaces signs it for, and acknowledges a void
+  key event. Before a confirm, choose, reject or `recovered`, the
+  principal sees which seat recorded the inception, whether the key it
+  replaces is still in the key store, and which pins would change; a
+  `recovered` names its `minted anew` by digest.
 - **Lost keys keep their writers.** A key a counting inception replaced
-  stays a key of the node's own for its certificate records up to the
-  chain head that replaced it. A `minted anew` whose chain head is older
-  than a certificate record of the key it replaces is void and reported
-  as tampering.
+  stays a key of the node's own for its certificate records at or
+  before the chain head that replaced it. A `minted anew` whose chain
+  head is at a lower seq than a certificate record of the key it
+  replaces is void and reported as tampering.
+- **Node identity changes and revocations are anchored.** A node
+  identity change event carries the chain head of the key event log it
+  leaves, and a reject the replaced key signs voids it. A `revoked`
+  counts only when the revoked key, its recovery key or its principal
+  key signed it. A backup restore's effects on origin wait until its
+  `minted anew` counts.
 - **The recovery key comes from off the node when it can.** Where an
-  authenticator is enrolled or managed policy names a recipient key,
-  its public half comes from there and its private half never touches
-  the node. Otherwise `cairn recovery-key write` writes it once,
-  encrypted, and `cairn device-key rotate` writes the next one in the
-  same act. A token key's stays with the issuing node, which signs the
+  authenticator is enrolled, its public half comes from there and its
+  private half never touches the node. Where managed policy names a
+  recipient key, Cairn writes each new recovery key at once, encrypted
+  to it. Otherwise `cairn recovery-key write` writes it once, encrypted
+  under a passphrase, and `cairn device-key rotate` writes the new one
+  in the same act. A token key's stays with the issuing node, which signs the
   rotation a later access token carries.
 - **Robustness.** Checking for a missing key and recording a key event
   happen under one lock, re-read under it, never past a hook's budget.
   A locked key store is never a missing key.
 - **Surfacing, by milestone.** In M1, `cairn status`, `cairn verify` and
   `cairn doctor` show an inception awaiting a confirm, a duplicity, a
-  void key event and a stalled key store, each counted. The Needs you
+  void key event and a stalled key store, each counted. There are no
+  presence proofs before M7, so in M1 a confirm needs a managed-policy
+  confirmation key, or a `recovered` rotation brings a key back. The
+  Needs you
   queue (reject offered before confirm), Catch up and restore blocks
   that name withheld pins follow with VIEW-05, VIEW-08 and PIN-10.
 
@@ -102,26 +120,36 @@ Approval: pending.
 
 This is the author's analysis for the security reviewer, not the review
 itself. The attacker it assumes can append to the store but can neither
-use the device key nor produce a presence proof. The PRV-12 scenario,
-still `@pending`, is to prove each row.
+use the device key, drive Cairn's CLI at the principal's terminal, nor
+produce a presence proof. The PRV-12 scenario, still `@pending`, is to
+prove each row.
 
 | Attack                                                          | What answers it                                                                    |
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | forge a rotation to add one's own key                           | a rotation needs the recovery key, off the node where an authenticator gives it    |
 | append a `minted anew` and a confirm for it                     | the confirm needs a presence proof or an independent key, so it counts for nothing |
+| sign that confirm with the key the inception replaces           | the replaced key may reject, never confirm                                         |
+| append a node identity change event to demote every writer      | a reject signed by the key it replaces voids it                                    |
+| append a `revoked` to stop later certificate records counting   | a `revoked` counts only signed by the revoked key, its recovery key or principal   |
+| append a backup restore act to demote reinstated writers        | the restore's effects on origin wait until its `minted anew` counts                |
+| lure the principal into a `recovered` joining a forgery         | `recovered` names its `minted anew` by digest, after Cairn shows what it changes   |
+| adopt another node's token key from the same issuer             | a token certificate must name the token key it succeeds and this personal room     |
 | use the same forgery to strip the principal's pins              | an uncounted inception replaces nothing; earlier writers keep counting             |
-| backdate a `minted anew`'s chain head to demote later seats     | a chain head older than a certificate record of the replaced key voids it          |
+| backdate a `minted anew`'s chain head to demote later seats     | a chain head below a certificate record of the replaced key voids it               |
 | keep a node clone's source writers `witnessed`                  | a node identity change starts a new key event log that counts only when confirmed  |
-| certify new seats with a retired or revoked key                 | certificate records count only up to the chain head that replaced or revoked it    |
+| certify new seats with a replaced or revoked key                | certificate records count only at or before the chain head that replaced it        |
 | deliver key events naming this node's key from a peer or bundle | only key events this node recorded count                                           |
 | cause a duplicity by starting ten processes at once             | the missing-key check and the key event are recorded under one lock                |
 | turn a locked key store into a lost key                         | a locked store is never a missing key; appends wait at an ingest marker            |
 
-What stays open: a process that can use the device key or read the key
-store, residual risk R3 (§6.1). It can certify seats directly, and
-where the recovery key was minted on the node, read it until it leaves.
-An authenticator or a managed-policy recipient key closes the second.
-Only a sandbox closes the first.
+What stays open: a process that can use the device key, read the key
+store or drive Cairn's CLI at the principal's terminal, residual risks
+R3 and R7 (§6.1). It can certify seats directly, sign as the replaced
+key, and, where the recovery key was minted on the node, read it until
+it leaves. M1 leaves R3 open for every run, so until sandboxes ship
+this record raises the bar for an append-only attacker, not for a
+process that runs as the principal. An authenticator closes the
+recovery-key window; only a sandbox closes the rest.
 
 ## Alternatives
 
@@ -145,6 +173,7 @@ Only a sandbox closes the first.
 - M3 brings the backup restore's `minted anew`, M8 token keys, and
   PRV-10 confirmation from another device; VIEW-05, VIEW-08 and PIN-10
   bring the Needs you, Catch up and restore-block clauses.
-- Property tests prove that arrival order never changes the key event
-  logs, and that key events no recovery key, presence proof or
-  independent key signed never add a `witnessed` writer (ENG-08).
+- Property tests prove that the order a rebuild reads key events in
+  never changes the key event logs, and that key events no committed
+  recovery key signed, or confirms, chooses and rejects without a proof
+  the forger lacks, never add a `witnessed` writer (ENG-08).

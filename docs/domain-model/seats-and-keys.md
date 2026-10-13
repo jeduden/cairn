@@ -21,7 +21,7 @@ summary: >-
   writers (SEC-10). What `cairn ingest` appends for a witnessed run goes to the
   one run seat ingest starts beside each run seat it extends, in its room,
   naming it, sharing its add, where it has one, and taking over its role,
-  certified only by the key that certified that run seat or the key a `rotated`
+  certified only by the key that certified that run seat or the key a rotation
   key event names in its place, by a seat certificate naming
   it so; any other seat naming a run seat shares no add or role (REC-19). The
   core keeps that seat's key, and an ingested run's, like a device seat's key
@@ -71,36 +71,42 @@ summary: >-
   personal room for a device key or, on a token-key-only node, a token key,
   carrying only its kind, the key's fingerprint, the digest of its recovery
   key's public key, the digest of the key event it follows, the fingerprint of
-  each key it replaces and its signatures, with what PRV-12 adds per kind. Only
-  key events this node recorded, none an arrival event names, count. Key events
-  form a **key event log**, started by an **inception** (`minted`, `token key
-  adopted`, or `minted anew` after a loss) and continued by **rotations**
-  (`rotated`, or `recovered` when the replaced key is missing), each signed by
-  the recovery key the key event before it committed to and naming a freshly
-  minted key. Unqualified, "rotation" means this; a seat key's is a seat-key
-  rotation, and an access token's or a log file's is always said of it; a bare
-  "log" is never a key event log. A node's **genesis log** is the key event log
-  the device seat that created its personal room started. An inception other
-  than the genesis log's counts only once the principal confirms it with a proof
-  a forger lacks, a `recovered` rotation joins it, or, for a token key, the same
-  issuing device key made its token certificate; until then it replaces
-  nothing, and the principal may reject it. The **current key event log** is
-  the genesis log followed through its rotations and the counting inception
-  that replaces its newest key. A **key of this node's own** is a key of that
-  key event log from its genesis inception, or the last inception after a node
-  identity change, on; a key it replaced, for its certificate records up to the
+  each key it replaces and its signatures, with what PRV-12 adds per kind, a
+  rotation also its recovery key's public key. Only key events this node
+  recorded, none an arrival event names, count, judged in the order the hash
+  links give. Key events form a **key event log**, started by an **inception**
+  (`minted`, `token key adopted`, or `minted anew` after a loss), continued by
+  **rotations** (`rotated`, or `recovered` when the replaced key is missing),
+  each signed by the recovery key the key event before it committed to and
+  naming a freshly minted key, and marked by `revoked`. Unqualified, "rotation"
+  means this; a seat key's is a seat-key rotation, and an access token's or a
+  log file's is always said of it; a bare "log" is never a key event log. A
+  node's **genesis log** is the key event log the device seat that created its
+  personal room started. An inception other than the genesis log's counts only
+  once a confirm with a proof a forger lacks names it, a `recovered` rotation
+  joins it, or, for a token key, the same issuing device key made its token
+  certificate; until then it replaces nothing, and a reject may void it. The
+  **current key event log** is the genesis log followed through its rotations
+  and the counting inception that replaces its newest key. A **key of this
+  node's own** is a key of that key event log from the last inception after a
+  node identity change or, if none, its genesis inception, on; a key a rotation
+  or counting `minted anew` replaced, for its certificate records up to the
   chain head that replaced it; or a key of a key event log a `recovered`
   rotation joined. Only seats such a key certified read `witnessed` (PRV-13).
-  Two newest key events of one key event log, or two counting inceptions that
-  replace one key, are a **duplicity**, which only the principal's choice of the
-  key event to keep, a reject, or a rotation resolves (PRV-12).
+  Two newest key events of one key event log, two counting inceptions that
+  replace one key, or two node identity change events that leave one key
+  event log, are a **duplicity**, which only a choose, a reject or a rotation
+  resolves (PRV-12).
 - **Recovery key**: The key each inception and rotation commits to by its
   public key's digest, which signs only the rotation that follows and never
-  becomes the new key. Where an authenticator or a managed-policy recipient key
-  supplies it, its private half never touches the node; otherwise a device
-  key's leaves the node once, encrypted, by `cairn recovery-key write`. A token
-  key's stays with the node that issued its access token, which signs the
-  rotation a later access token carries (PRV-12).
+  becomes the new key. Where an authenticator supplies it, its private half
+  never touches the node. Otherwise a device key's leaves the node once:
+  encrypted to a **recipient key** a recorded managed-policy listing names, or
+  by `cairn recovery-key write` under a passphrase. A token key's stays with
+  the node that issued its access token, which signs the rotation a later
+  access token carries (PRV-12). A **confirmation key** is a key a recorded
+  managed-policy listing names whose signature lets a confirm, choose or reject
+  count without a presence proof (SEC-22, PRV-12).
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room and naming its seat kind and whether it is an ingest
   seat, that the seat key countersigns (PRV-10, PRV-11). Its **certificate
@@ -116,9 +122,10 @@ summary: >-
   (PEER-06, PRV-10, LANE-18). Its expiry ends it by the expire act the minting
   node records, or before PRV-10 ships only as that node's refusal of every
   later use of it (PEER-05). Rotating one (`cairn access-token rotate`) mints a
-  later access token that carries its token key's recovery key, for that
-  key's rotation (PRV-12). "Token" is always an access token, a model token,
-  an access token's token key, a token certificate or a token-key-only node.
+  later access token that carries the rotation of its token key the issuing node
+  signed, never the recovery key (PRV-12). "Token" is always an access token, a
+  model token, an access token's token key, a token certificate or a
+  token-key-only node.
 - **Authenticator**: A hardware-backed key that gives presence proofs (OWN-11).
 - **CI key**: A key the room's owner enrolled in the room to sign CI
   attestations.

@@ -39,7 +39,7 @@ summary: >-
   signing outside Cairn's code is R3, which only a sandbox removes (Sandbox
   state).
 - **Presence proof**: A hardware-backed, user-verified proof of a person's
-  presence, bound to one widening act (OWN-11).
+  presence, bound to one principal act (OWN-11, PRV-12).
 - **Recall**: An agent's call to a **recall tool**: an MCP tool that returns
   enveloped content (§9.2), such as `event_search` or `kernel_exec` with its
   built-ins (CMP-03), or a read-only CLI verb whose output is not a terminal
