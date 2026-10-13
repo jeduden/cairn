@@ -236,7 +236,7 @@ Feature: Assumptions register (ASM)
     And no transcript line, hook input or tool result of either run carries a private key
 
   @ASM-22
-  Scenario Outline: the harness marks a harness session attended only in its interactive terminal, and only for its hook handlers (S4)
+  Scenario Outline: the harness puts its attended mark only in its hook handlers' environment, and only in its own terminal interface (S4)
     Given the stub Cairn plugin's recording "<recording>" for Claude Code "supported"
     When the environment its hook handlers and its MCP server saw is read
     Then every hook handler saw "CLAUDE_CODE_SESSION_ATTENDED" set to "<attended>" and "CLAUDE_CODE_ENTRYPOINT" set to "<entrypoint>"
