@@ -25,9 +25,10 @@ by the S5 decision (ADR-04), on the core's SQLite.
 
 1. Kernel worker with step, wall-clock and memory limits: CMP-05
 2. Persistent namespace and the MCP tools: CMP-01, CMP-02
-3. Read-only recall functions honoring quarantine and scope: CMP-03, CMP-07
+3. Read-only table functions honoring quarantine and scope: CMP-03, CMP-07
 4. Hermeticity: CMP-04
-5. Capped, enveloped, tainted result rows: CMP-06
+5. Capped, enveloped, tainted rows of the last row-returning statement:
+   CMP-06
 
 ## Acceptance Criteria
 

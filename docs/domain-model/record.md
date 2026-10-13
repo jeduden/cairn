@@ -184,7 +184,9 @@ summary: >-
 - **Import**: Reading a bundle into this node's record (`cairn import`, REC-23).
   A transcript is ingested and a peer's segments are received; neither is
   imported.
-- **Kernel**: The hermetic environment where an agent runs SQL over
-  the record (CMP-01, ADR-04); each run's **kernel variables**, the
-  temporary tables and views its SQL creates, live in its own namespace,
-  reset when what it read is quarantined or purged (CMP-07).
+- **Kernel**: The hermetic environment where an agent runs code over
+  the record: SQL by default (CMP-01, ADR-04), Python only as CMP-08's
+  opt-in. Each run's **kernel variables** (in the SQL kernel, the
+  temporary tables and views its SQL creates) live in its own **kernel
+  namespace** (CMP-02), reset when what it read is quarantined or purged
+  (CMP-07).

@@ -43,10 +43,11 @@ summary: >-
 - **Presence proof**: A hardware-backed, user-verified proof of a person's
   presence, bound to one principal act (OWN-11, PRV-12).
 - **Recall**: An agent's call to a **recall tool**: an MCP tool that returns
-  enveloped content (§9.2), such as `event_search` or `kernel_exec` with its
-  built-ins (CMP-03), or a read-only CLI verb whose output is not a terminal
-  (OWN-12); each records a recall event (RCL-07). Pull-only, defaulting to the
-  agent's current run. A recall tool that stops at its per-call cap returns a
+  enveloped content (§9.2), such as `event_search`, or `kernel_exec` through
+  its table functions (CMP-03), each call of which is a recall, or a
+  read-only CLI verb whose output is not a terminal (OWN-12); each records
+  a recall event (RCL-07). Pull-only, defaulting to the agent's current
+  run. A recall tool that stops at its per-call cap returns a
   **continuation cursor** (`next_cursor`); passed back as `cursor`, it
   continues without gap or overlap (RCL-03). What else a tool call may return,
   RCL-04 says.
