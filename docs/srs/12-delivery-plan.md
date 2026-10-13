@@ -63,25 +63,27 @@ targets it measured and M1 needs from its start. Each target still
 marked † is listed here with what freezes it; the plan that freezes it
 removes its row and its †.
 
-| Target                                                                                                              | Frozen by                                        |
-| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| REC-04's 30 s wait at an ingest marker for a repeated line                                                          | S9, with the transcript flush lag                |
-| PRV-14's 2 s wait for a tool call's transcript line                                                                 | S9                                               |
-| VIEW-02's 2 s from transcript line to room view                                                                     | S9                                               |
-| NFR-01's `PermissionRequest` targets: 50 ms beyond the wait, 10 s below the harness timeout                         | S9, with the held-request behaviour              |
-| NFR-09's store overhead ≤ 1.5× stored text (S2 measured 1.96× before payload files and commitments)                 | M1, on its schema and payload store              |
-| REC-11's 1 MiB indexing cap per event                                                                               | M1, with the cost of indexing one capped event   |
-| REC-17's 256-bit per-event secret                                                                                   | M1, with the commitment                          |
-| RCL-02's 50 hits and RCL-03's 8,000-model-token cap                                                                 | M1, with recall                                  |
-| SEC-04's 16 terms of at most 64 characters                                                                          | M1, with the query compiler                      |
-| PIN-08's 1,000-model-token pin budget and INJ-07's 2,000-model-token restore block limit                            | M2, with OQ-56                                   |
-| PIN-03's 1,000 characters per pin (OQ-56)                                                                           | M2                                               |
-| LMK-03's 80-character structural field (S8 saw an 85-character file path in a real run)                             | M3                                               |
-| LMK-05's tier size k = 8 and REC-25's 48 segments per day                                                           | M3                                               |
-| CMP-05's 10 s and 512 MiB kernel limits; CMP-06's 8,000-model-token output cap                                      | M4                                               |
-| §11's 95% of planted values recalled exactly, 0.9 flagging precision, recall tools called in 80% of tasks           | M5's evaluation                                  |
-| REC-19's 2 s seal, 30 s to take the session binding and 30 s segment close; OQ-20's 30 s cadence                    | M7, with seals (REC-18) and worktree checkpoints |
-| VIEW-08's ten rooms and VIEW-15's 20 posts                                                                          | M7                                               |
-| NFR-09's room-view and launcher footprint (256 MiB, 5% of one core idle, 10 ms keystroke-to-echo); NFR-15's targets | M7                                               |
-| NFR-09's peer component footprint; PEER-04's 5 s and PEER-05's 30 s; LANE-10's 3 s                                  | M8                                               |
-| NFR-09's publish and bridge component footprint; LANE-11's 7 days                                                   | M9                                               |
+| Target                                                                                                            | Frozen by                                                                               |
+| ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| REC-04's 30 s wait at an ingest marker for a repeated line                                                        | S9, with the transcript flush lag                                                       |
+| PRV-14's 2 s wait for a tool call's transcript line                                                               | S9                                                                                      |
+| VIEW-02's 2 s from transcript line to room view                                                                   | S9                                                                                      |
+| NFR-01's `PermissionRequest` targets: 50 ms beyond the wait, 10 s below the harness timeout                       | S9, with the held-request behaviour                                                     |
+| NFR-09's store overhead ≤ 1.5× stored text (S2 measured 1.96× before payload files and commitments)               | M1, on its schema and payload store                                                     |
+| REC-11's 1 MiB indexing cap per event                                                                             | M1, with the cost of indexing one capped event                                          |
+| REC-17's 256-bit per-event secret                                                                                 | M1, with the commitment                                                                 |
+| RCL-02's 50 hits and RCL-03's 8,000-model-token cap                                                               | M1, with recall                                                                         |
+| SEC-04's 16 terms of at most 64 characters                                                                        | M1, with the query compiler                                                             |
+| PIN-08's 1,000-model-token pin budget and INJ-07's 2,000-model-token restore block limit                          | M2, with OQ-56                                                                          |
+| PIN-03's 1,000 characters per pin (OQ-56)                                                                         | M2                                                                                      |
+| LMK-03's 80-character structural field (S8 saw an 85-character file path in a real run)                           | M3                                                                                      |
+| LMK-05's tier size k = 8 and REC-25's 48 segments per day                                                         | M3                                                                                      |
+| CMP-05's 10 s and 512 MiB kernel limits; CMP-06's 8,000-model-token output cap                                    | M4                                                                                      |
+| §11's 95% of planted values recalled exactly, 0.9 flagging precision, recall tools called in 80% of tasks         | M5's evaluation                                                                         |
+| REC-19's 2 s seal, 30 s to take the session binding and 30 s segment close; OQ-20's 30 s cadence                  | M7, with seals (REC-18) and worktree checkpoints                                        |
+| VIEW-08's ten rooms and VIEW-15's 20 posts                                                                        | M7                                                                                      |
+| NFR-09's footprint (256 MiB, 5% of one core idle) of the room-view, launcher, peer, publish and bridge components | M7, M8 and M9, each for the components it builds; the last of them removes the shared † |
+| NFR-09's 10 ms the launcher adds to keystroke-to-echo latency                                                     | M7                                                                                      |
+| NFR-15's targets                                                                                                  | M7                                                                                      |
+| PEER-04's 5 s and PEER-05's 30 s; LANE-10's 3 s                                                                   | M8                                                                                      |
+| LANE-11's 7 days                                                                                                  | M9                                                                                      |

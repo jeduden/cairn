@@ -39,7 +39,12 @@ timings. In short:
   each switch between lowercase, uppercase and digit. It is at or
   above Claude's count for all 646 samples, and for 99.85% under
   five-fold cross validation, overcounting 1.40× overall. Haiku,
-  Sonnet and Opus 5.5 and Fable 5.1 share one tokenizer.
+  Sonnet and Opus 5.5 gave the same count on every sample measured
+  on more than one of them; Fable 5.1 did too, except on two random
+  samples where it reported thousands of extra input tokens, more
+  than any tokenization of those texts gives. Counted with those two,
+  the estimator covers 49 of Fable's 51 samples, under §8.4's 99%;
+  the report explains why they are not text tokens.
 - Claude's tokenizer runs at 1.3 to 3.0 bytes per model token, so
   "bytes divided by four" undercounts 97.4% of the sample.
 - On emulated reference hardware with a 1M-event store under write
