@@ -24,7 +24,6 @@ empty: |
 
 | ID         | Model  | Title                                                                                                              |
 | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------ |
-| 2609292007 | opus   | [Spike S5: Lua or SQL for the kernel](plan/2609292007_spike-s5-kernel-language/plan.md)                            |
 | 2609292156 | sonnet | [The repository's knowledge follows Cairn's layers](plan/2609292156_knowledge-follows-cairn-layers/plan.md)        |
 | 2610012322 | opus   | [Scope Cairn for agent fleets: shared, real-time, public sessions](plan/2610012322_cairn-for-agent-fleets/plan.md) |
 <?/catalog?>
@@ -57,7 +56,7 @@ empty: |
 | 2609292004 | ✅     | opus   | [Spike S2: the SQLite driver for the Rust core](plan/2609292004_spike-s2-sqlite-driver/plan.md)                    |
 | 2609292005 | ✅     | sonnet | [Spike S3: catalogue the transcript formats](plan/2609292005_spike-s3-transcript-formats/plan.md)                  |
 | 2609292006 | ✅     | sonnet | [Spike S4: prove plugin distribution](plan/2609292006_spike-s4-plugin-distribution/plan.md)                        |
-| 2609292007 | 🔳     | opus   | [Spike S5: Lua or SQL for the kernel](plan/2609292007_spike-s5-kernel-language/plan.md)                            |
+| 2609292007 | ✅     | opus   | [Spike S5: Lua or SQL for the kernel](plan/2609292007_spike-s5-kernel-language/plan.md)                            |
 | 2609292008 | 🔲     | sonnet | [Spike S6: can compaction be deferred](plan/2609292008_spike-s6-compaction-control.md)                             |
 | 2609292009 | ✅     | sonnet | [Spike S7: the Rust MCP SDK or an in-house server](plan/2609292009_spike-s7-mcp-sdk/plan.md)                       |
 | 2609292010 | 🔲     | sonnet | [Spike S8: calibrate the token estimator and freeze the targets](plan/2609292010_spike-s8-token-estimator.md)      |
