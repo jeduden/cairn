@@ -6,6 +6,7 @@
 //! shipped executable.
 
 pub mod architecture;
+pub mod benchmarks;
 pub mod branch_protection;
 pub mod codeowners;
 pub mod confinement;

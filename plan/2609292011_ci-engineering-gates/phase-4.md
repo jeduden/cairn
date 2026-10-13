@@ -1,7 +1,7 @@
 ---
 n: 4
 title: "The benchmark gate (ENG-15)"
-status: "🔲"
+status: "🔳"
 result: false
 ---
 # Phase 4: the benchmark gate (ENG-15)

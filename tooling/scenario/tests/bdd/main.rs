@@ -18,6 +18,7 @@ mod engineering;
 mod engineering_adr;
 mod engineering_analyzers;
 mod engineering_architecture;
+mod engineering_benchmark;
 mod engineering_boundary;
 mod engineering_drift;
 mod engineering_protection;

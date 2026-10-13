@@ -132,6 +132,42 @@ A new check lands with its drift case in the same change. A scenario
 put back on `@pending` skips, so its drift cases go uncaught and the
 suite fails: re-pending shows up here too.
 
+## Benchmarks and the regression gate
+
+ENG-15 asks for a benchmark suite covering NFR-01..05 and a CI gate
+that fails on a statistically significant regression greater than
+10%. The `benchmark` tooling crate holds both.
+
+- **The suite** registers each benchmark against the NFR id it
+  measures toward, in
+  [tooling/benchmark/src/suite.rs](../tooling/benchmark/src/suite.rs).
+  A benchmark measures real code: one of an NFR's target covers it,
+  and one of a cost the target's subject pays is only a floor. Each
+  NFR id ENG-15 names without a benchmark of real code is declared
+  awaiting one, with what it waits on.
+- **Today** the suite times the core executable's start-up, a floor
+  every hook handler pays and not a hook handler. NFR-01..05 await the
+  hook handlers, the MCP tools, ingestion and the store, so the ENG-15
+  scenario stays `@pending`. Its steps are bound; its first fails
+  naming each NFR id and what it awaits.
+- **The gate** fails a benchmark when the head's median is more than
+  10% above the base's and a one-sided Mann–Whitney U test finds the
+  head slower at α = 0.01. Both conditions must hold: significance
+  alone would fail a precise 1% slowdown, the threshold alone medians
+  a noisy runner pushed apart by chance. The test works on ranks, so
+  a spike counts as one rank, and is closed form, so the decision is a
+  pure function of the samples. A benchmark the head stopped sampling
+  fails unless the suite retired it, and so does one with fewer than
+  ten samples a side.
+- **The checks:** two gate tests in `engineering`'s `benchmark_gate`
+  target hold the suite to every NFR id ENG-15 names and CI to the
+  job, each with its drift cases.
+
+`cargo run -p benchmark -- run --core target/release/cairn` samples
+the suite; `cargo run -p benchmark -- gate --base FILE --head FILE`
+decides from two samples files. CI's `benchmark` job runs both
+(see [development.md](development.md)).
+
 ## Adding or writing a scenario
 
 A new requirement lands in the SRS table and in its section's feature
