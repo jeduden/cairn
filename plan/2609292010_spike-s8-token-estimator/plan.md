@@ -68,8 +68,9 @@ Deviations from the tasks:
 
 Handed on:
 
-- M1 and M2 port the estimator into the core with its tests, and keep
-  it passing on the sample.
+- M1 ports the estimator into the core with its tests and moves the
+  sample into `testdata/` (its task 9). Each milestone plan has a task
+  to freeze the targets §12.3 gives it.
 - M2 answers OQ-56.
 - M1 sets NFR-09's store overhead on its schema.
 - M3 decides LMK-03's field length.

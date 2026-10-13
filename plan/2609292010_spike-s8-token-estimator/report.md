@@ -278,8 +278,10 @@ components.
 
 ## Handed on
 
-- M1 and M2 port [estimate.rs](bench/src/estimate.rs) into the core with
-  its unit tests, and keep `s8bench verify` passing on the sample. A
+- M1 ports [estimate.rs](bench/src/estimate.rs) into the core with its
+  unit tests, moves the committed sample out of `plan/` into
+  `testdata/`, and proves §8.4's bound on it in a test, so the
+  normative estimator does not live in a plan folder (M1's task 9). A
   new tokenizer is a new calibration: rerun
   [measure.py](calibrate/measure.py) and [fit.py](calibrate/fit.py) and
   check the bound.

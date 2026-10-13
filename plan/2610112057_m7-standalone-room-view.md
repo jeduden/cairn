@@ -48,6 +48,8 @@ Scope, by requirement family:
 5. Seals, head receipts and integrity: REC-18, SEC-27, VIEW-10
 6. Quotas, budgets and the B1 boundary: ADM-15, ADM-16, NFR rows,
    SEC-20, SEC-21, ENG-12, ENG-16
+7. The initial targets §12.3 gives S9 and M7: freeze each with its
+   evidence, removing its † and its §12.3 row
 
 ## Acceptance Criteria
 
