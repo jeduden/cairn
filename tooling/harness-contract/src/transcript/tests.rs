@@ -320,3 +320,65 @@ fn context_per_compaction_counts_each_stretch() {
     );
     assert_eq!(context_per_compaction(&[], "SessionStart", "word"), [0]);
 }
+
+#[test]
+fn where_shown_counts_a_local_command_line_as_command_output() {
+    let lines = [json!({"type": "system", "subtype": "local_command",
+                        "content": "<local-command-stderr>word</local-command-stderr>"})];
+
+    assert_eq!(
+        where_shown(&lines, "word"),
+        BTreeSet::from([Shown::CommandOutput])
+    );
+}
+
+fn said(text: &str) -> Value {
+    json!({"type": "assistant", "message": {"content": [{"type": "text", "text": text}]}})
+}
+
+fn refused(text: &str) -> Value {
+    json!({"type": "assistant", "isApiErrorMessage": true,
+           "message": {"content": [{"type": "text", "text": text}]}})
+}
+
+#[test]
+fn replies_after_reads_the_answers_that_follow_a_line_holding_the_text() {
+    let lines = [
+        said("before word"),
+        json!({"type": "system", "subtype": "local_command", "content": "word"}),
+        said("word"),
+        refused("Prompt is too long"),
+        json!({"type": "user", "message": {"content": "word again"}}),
+        said("ok"),
+    ];
+
+    assert_eq!(replies_after(&lines, "word"), ["word", "ok"]);
+    assert!(replies_after(&lines, "absent").is_empty());
+}
+
+#[test]
+fn replies_after_skips_assistant_lines_holding_the_text() {
+    let lines = [said("word"), said("ok")];
+
+    assert!(replies_after(&lines, "word").is_empty());
+}
+
+#[test]
+fn refusals_name_the_harness_errors_and_any_answer_after_the_first() {
+    let lines = [
+        said("file 1"),
+        refused("Prompt is too long"),
+        json!({"type": "user", "message": {"content": "next"}}),
+        refused("Prompt is too long"),
+    ];
+
+    assert_eq!(
+        refusals(&lines),
+        ["Prompt is too long", "Prompt is too long"]
+    );
+    assert!(!answered_after_refusal(&lines));
+
+    let answered = [refused("Prompt is too long"), said("ok")];
+    assert!(answered_after_refusal(&answered));
+    assert!(!answered_after_refusal(&[said("ok")]));
+}
