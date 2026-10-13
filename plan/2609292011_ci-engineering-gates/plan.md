@@ -134,15 +134,20 @@ footer: |
 
 ## Acceptance Criteria
 
-- [ ] Scenarios @ENG-02, @ENG-03, @ENG-14, @ENG-20 and @ENG-21 pass,
-  off `@pending`
-- [ ] @ENG-15 passes once benchmarks cover NFR-01..05; until then its
-  gate is unit-proven and runs in CI
-- [ ] The core rows of @ENG-12 and @ENG-16 are proven; both outlines
-  stay `@pending` until M7 to M9 build their other components and plan
-  2609292013 defines TrustedText
-- [ ] Every new check has a drift case that proves it fails (ENG-27)
-- [ ] All tests pass: `cargo test --workspace`
-- [ ] `cargo clippy --workspace --all-targets --locked -- -D warnings`
+- [x] Scenarios @ENG-02, @ENG-03, @ENG-14 and @ENG-20 pass, off
+  `@pending`
+- [ ] @ENG-21 passes, off `@pending`: its first six steps pass; the
+  last, two approvals on the security-sensitive crates, needs a
+  required check that reads a pull request's reviews, which waits on
+  the stakeholder's ruling
+- [ ] @ENG-15 passes once benchmarks cover NFR-01..05; its gate is
+  unit-proven, and its job waits on a first green run on GitHub
+- [ ] The core rows of @ENG-12 and @ENG-16 are proven, and CI runs the
+  confined suite on GitHub; both outlines stay `@pending` until M7 to
+  M9 build their other components and plan 2609292013 defines
+  TrustedText
+- [x] Every new check has a drift case that proves it fails (ENG-27)
+- [x] All tests pass: `cargo test --workspace`
+- [x] `cargo clippy --workspace --all-targets --locked -- -D warnings`
   and `cargo fmt --all --check` are clean
-- [ ] `mdsmith check .` is clean
+- [x] `mdsmith check .` is clean
