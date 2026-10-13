@@ -73,14 +73,29 @@ fn a_probe_that_failed_or_printed_another_path_was_not_allowed() {
     }
 }
 
-/// An executable shell script holding `body`, in `dir`.
+/// An executable shell script holding `body`, in `dir`, that has
+/// started once and can start again.
+///
+/// A fork another test thread makes can hold the new file open for
+/// writing until it execs, and starting the script meanwhile fails with
+/// "text file busy". The script exits at once when asked to `--warm`
+/// up, and is started that way until the start succeeds.
 #[cfg(unix)]
 fn script(dir: &Path, name: &str, body: &str) -> PathBuf {
     use std::os::unix::fs::PermissionsExt;
 
     let path = dir.join(name);
-    fs::write(&path, format!("#!/bin/sh\n{body}\n")).unwrap();
+    let text = format!("#!/bin/sh\n[ \"$1\" = --warm ] && exit 0\n{body}\n");
+    fs::write(&path, text).unwrap();
     fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+    for _ in 0..500 {
+        match Command::new(&path).arg("--warm").status() {
+            Err(e) if e.kind() == std::io::ErrorKind::ExecutableFileBusy => {
+                thread::sleep(Duration::from_millis(10));
+            }
+            _ => break,
+        }
+    }
     path
 }
 
