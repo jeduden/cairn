@@ -6,7 +6,8 @@ reads, with its own pid and what its process sees, to $REC_OUT/mcp/<pid>.jsonl.
 A tool call names no run, only its tool-use id, so the server finds the run by
 the transcript that holds that id, waiting up to two seconds for it. Each run
 gets a fake run-seat key, minted and kept here, logged only to that file and
-never returned to the harness.
+never returned to the harness. A key handed over at launch in the
+environment, as CAIRN_S4_RUN_KEY, is logged the same way.
 """
 import json
 import os
@@ -94,6 +95,9 @@ def main():
         argv=sys.argv, cwd=os.getcwd(),
         env={k: os.environ.get(k, "<unset>") for k in SEEN},
         names=sorted(os.environ))
+    if os.environ.get("CAIRN_S4_RUN_KEY"):
+        log("key", run="launch", key=os.environ["CAIRN_S4_RUN_KEY"],
+            channel="environment")
     for line in sys.stdin:
         try:
             msg = json.loads(line)

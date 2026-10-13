@@ -2,7 +2,8 @@
 # run ARGS... — spike S4: run claude under $REC_ROOT with a clean environment,
 # so no variable of an enclosing harness session or its host reaches the
 # recorded one. HOME and CLAUDE_CONFIG_DIR point into $REC_ROOT; never point
-# this at the real ~/.claude. Only the variables named below pass through.
+# this at the real ~/.claude. Only the variables named below pass through,
+# and the NAME=VALUE words of $REC_ENV.
 : "${REC_ROOT:?set REC_ROOT to a scratch directory}"
 exec env -i PATH="$PATH" HOME="$REC_ROOT/home" \
   CLAUDE_CONFIG_DIR="${CC_CFG:-$REC_ROOT/home/.claude}" \
@@ -12,4 +13,4 @@ exec env -i PATH="$PATH" HOME="$REC_ROOT/home" \
   ${HTTPS_PROXY:+HTTPS_PROXY="$HTTPS_PROXY"} ${NO_PROXY:+NO_PROXY="$NO_PROXY"} \
   ${NODE_EXTRA_CA_CERTS:+NODE_EXTRA_CA_CERTS="$NODE_EXTRA_CA_CERTS"} \
   ${SSL_CERT_FILE:+SSL_CERT_FILE="$SSL_CERT_FILE"} \
-  "${REC_BIN:-claude}" "$@"
+  ${REC_ENV:-} "${REC_BIN:-claude}" "$@"

@@ -1,13 +1,15 @@
 #!/bin/sh
-# export.sh BASE DEST — spike S4: copy what record.sh recorded under BASE into
+# export.sh BASE DEST [TARGET...] — spike S4: copy what record.sh recorded under BASE into
 # fixtures under DEST/<target>: the hook inputs and what each handler saw,
 # numbered in firing order; the MCP server's log; the harness session's
 # transcripts; the init message of the stream, trimmed to the plugin's view;
 # and the install output. Then redact scratch paths as ../redact.sh does.
 set -eu
 BASE="${1:?scratch directory record.sh wrote}"; DEST="${2:?fixture directory}"
+shift 2
+TARGETS="${*:-workstation runner-image sdk-worker interactive launch-key forged-env}"
 KIT=$(cd "$(dirname "$0")/.." && pwd)
-for t in workstation runner-image sdk-worker interactive; do
+for t in $TARGETS; do
   src="$BASE/$t"; out="$DEST/$t"; rm -rf "$out"; mkdir -p "$out/hooks" "$out/transcripts"
   n=0
   for f in $(ls "$src/out/hooks" | grep '\.json$' | sort); do

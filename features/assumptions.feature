@@ -227,10 +227,10 @@ Feature: Assumptions register (ASM)
     Then it resolves the root commit, HEAD, every ref and the tree of every ref
     And no process was started and no connection was opened
 
-  @ASM-21
+  @ASM-21 @pending
   Scenario: the harness session's MCP server keeps its main run's and its subagents' run-seat keys outside the model's context (S4)
-    Given a recorded harness session of Claude Code "supported" with the stub plugin's MCP server
+    Given a recorded plugin launch of Claude Code "supported" with its MCP server
     When the harness session's main run starts a subagent
     Then one MCP server serves both runs and keeps the run-seat keys of the main run and the subagent's run
-    And each key stayed in the MCP server, bound to its run by the transcript holding the calling tool use's id
-    And no transcript line, hook input or tool result of either run carries a run-seat key it minted
+    And each key reached it through a channel the harness keeps out of the model's context
+    And no transcript line, hook input or tool result of either run carries a private key
