@@ -101,3 +101,40 @@ fn servers_refuses_a_plugin_without_one() {
             .contains("no MCP server")
     );
 }
+
+#[test]
+fn environment_reads_each_name_value_line() {
+    let env = environment("pid=7 ppid=6 uid=0\nA=1\nB=<unset>\nC=x=y\nnot a pair\n");
+
+    assert_eq!(value(&env, "A"), Some("1"));
+    assert_eq!(value(&env, "C"), Some("x=y"));
+    assert_eq!(value(&env, "B"), None);
+    assert_eq!(value(&env, "D"), None);
+}
+
+#[test]
+fn server_environment_reads_the_start_entry() {
+    let lines = [
+        json!({"kind": "in", "msg": {}}),
+        json!({"kind": "start", "env": {"A": "1", "B": "<unset>"}}),
+    ];
+
+    let env = server_environment(&lines).unwrap();
+
+    assert_eq!(value(&env, "A"), Some("1"));
+    assert_eq!(value(&env, "B"), None);
+}
+
+#[test]
+fn server_environment_refuses_a_log_without_a_start() {
+    assert!(
+        server_environment(&[json!({"kind": "in"})])
+            .unwrap_err()
+            .contains("holds no start")
+    );
+    assert!(
+        server_environment(&[json!({"kind": "start", "env": {"A": 1}})])
+            .unwrap_err()
+            .contains("holds no start")
+    );
+}

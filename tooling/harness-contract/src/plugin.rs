@@ -1,9 +1,10 @@
 //! What spike S4 recorded of the stub Cairn plugin on each target
 //! (ASM-07): the hooks its `hooks/hooks.json` registers, the MCP
 //! servers its `.mcp.json` bundles, and the hook inputs and the init
-//! message of each harness session it loaded into.
+//! message of each harness session it loaded into, and the environment
+//! its hook handlers and its MCP server saw (ASM-22).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::Value;
 
@@ -86,6 +87,45 @@ pub fn connected(init: &Value, plugin: &str, server: &str) -> bool {
         .flatten()
         .any(|s| crate::text(s, "name") == name && crate::text(s, "status") == "connected")
 }
+
+/// What a stub hook handler's `.env` record says it saw: one
+/// `NAME=VALUE` per line; a line without `=` is skipped.
+#[must_use]
+pub fn environment(text: &str) -> BTreeMap<String, String> {
+    text.lines()
+        .filter_map(|line| line.split_once('='))
+        .map(|(name, value)| (name.to_owned(), value.to_owned()))
+        .collect()
+}
+
+/// What the stub MCP server saw at its start, from its log.
+///
+/// # Errors
+///
+/// Fails when the log holds no start entry with an environment of
+/// strings.
+pub fn server_environment(lines: &[Value]) -> Result<BTreeMap<String, String>, String> {
+    lines
+        .iter()
+        .filter(|line| crate::text(line, "kind") == "start")
+        .find_map(|line| {
+            line.get("env")?
+                .as_object()?
+                .iter()
+                .map(|(name, value)| Some((name.clone(), value.as_str()?.to_owned())))
+                .collect()
+        })
+        .ok_or_else(|| "the MCP server's log holds no start with its environment".into())
+}
+
+/// The value `name` had, or `None` when it was unset.
+#[must_use]
+pub fn value<'a>(env: &'a BTreeMap<String, String>, name: &str) -> Option<&'a str> {
+    env.get(name).map(String::as_str).filter(|v| *v != UNSET)
+}
+
+/// How the stub records a name that was not set.
+const UNSET: &str = "<unset>";
 
 #[cfg(test)]
 mod tests;
