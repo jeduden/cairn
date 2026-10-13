@@ -15,6 +15,9 @@
 //!
 //! It is repository tooling and never links into a shipped executable.
 
+pub mod cli;
 pub mod gate;
+pub mod measure;
 pub mod samples;
 pub mod stats;
+pub mod suite;
