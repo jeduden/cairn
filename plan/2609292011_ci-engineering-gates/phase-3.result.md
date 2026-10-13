@@ -4,7 +4,7 @@ title: "Deadlines on every blocking operation (ENG-03)"
 status: "🔳"
 result: true
 summary: >-
-  The core's clippy configuration bans 15 blocking calls that take no deadline and a gate test holds every product crate to them; the ENG-03 scenario stays pending until the stakeholder rules on what the list exempts.
+  The core's clippy configuration bans 15 blocking calls that take no deadline and a gate test holds every product crate to them; the stakeholder accepted its exemptions, and the ENG-03 scenario stays pending until M1 adds injectable I/O traits.
 ---
 ## Handoff
 
@@ -26,8 +26,9 @@ What landed:
 - `@ENG-03` is bound in `engineering_analyzers.rs`, its global-state
   and clock steps to the existing checks, but stays `@pending`. Its
   deadline step is a ban list that exempts local file I/O, in-process
-  locks and standard output, so it does not prove the whole row. The
-  stakeholder rules on whether that list closes the requirement.
+  locks and standard output. The stakeholder accepted those exemptions
+  on 2026-10-13, and kept the scenario pending until M1 adds the
+  injectable I/O traits the row also requires.
 
 What remains: "all I/O through injectable traits" has no mechanical
 check, and a crate's own blocking loop or a dependency's is not seen by

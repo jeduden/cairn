@@ -119,11 +119,11 @@ footer: |
 | 2   | ✅     | [Declared dependency directions between crates (ENG-02)](phase-2.md)                                                                                                                                                                                                                 |
 |     | ↳      | Each crate's manifest declares its one responsibility and the crates it may depend on; a gate test fails naming both crates on a forbidden direction, and the ENG-02 scenario is off pending.                                                                                        |
 | 3   | 🔳     | [Deadlines on every blocking operation (ENG-03)](phase-3.md)                                                                                                                                                                                                                         |
-|     | ↳      | The core's clippy configuration bans 15 blocking calls that take no deadline and a gate test holds every product crate to them; the ENG-03 scenario stays pending until the stakeholder rules on what the list exempts.                                                              |
+|     | ↳      | The core's clippy configuration bans 15 blocking calls that take no deadline and a gate test holds every product crate to them; the stakeholder accepted its exemptions, and the ENG-03 scenario stays pending until M1 adds injectable I/O traits.                                  |
 | 4   | 🔳     | [The benchmark gate (ENG-15)](phase-4.md)                                                                                                                                                                                                                                            |
 |     | ↳      | The benchmark harness, its unit-proven Mann-Whitney gate and the PR job landed; ENG-15 stays pending until NFR-01..05 have benchmarks of real code.                                                                                                                                  |
-| 5   | 🔳     | [SLSA Build Level 3 provenance (ENG-20)](phase-5.md)                                                                                                                                                                                                                                 |
-|     | ↳      | Only the release-only release-build.yml attests build provenance, a verify job checks the published release against each signer's exact identity at main, and the ENG-20 scenario stays pending until the stakeholder rules.                                                         |
+| 5   | ✅     | [SLSA Build Level 3 provenance (ENG-20)](phase-5.md)                                                                                                                                                                                                                                 |
+|     | ↳      | Only the release-only release-build.yml attests build provenance, a verify job checks the published release against each signer's exact identity at main, and the ENG-20 scenario, reworded to the workflows it reads, is off pending.                                               |
 | 6   | 🔳     | [Main's protection and CODEOWNERS (ENG-21)](phase-6.md)                                                                                                                                                                                                                              |
 |     | ↳      | Main's ruleset is committed and checked against the live one nightly, CODEOWNERS is checked against the paths that enforce the SRS, and ENG-21 stays pending on the two-approval rule.                                                                                               |
 | 7   | 🔳     | [The core confined in the end-to-end suite (ENG-12)](phase-7.md)                                                                                                                                                                                                                     |
@@ -134,12 +134,12 @@ footer: |
 
 ## Acceptance Criteria
 
-- [x] Scenarios @ENG-02 and @ENG-14 pass, off `@pending`
-- [ ] @ENG-03 and @ENG-20 pass, off `@pending`: their gate tests pass
-  and their drift cases are caught, but their bindings do not exercise
-  the whole row (ENG-03's deadline step is a ban list with exemptions,
-  ENG-20's steps read the workflows, not a published release), so both
-  wait on the stakeholder's ruling
+- [x] Scenarios @ENG-02, @ENG-14 and @ENG-20 pass, off `@pending`;
+  ENG-20 reworded to the workflows it reads, on the stakeholder's
+  ruling of 2026-10-13
+- [ ] @ENG-03 passes, off `@pending`: its gate tests pass and its
+  drift cases are caught; the stakeholder accepted its exemptions on
+  2026-10-13 and keeps it pending until M1 adds injectable I/O traits
 - [ ] @ENG-21 passes, off `@pending`: its first six steps pass; the
   last, two approvals on the security-sensitive crates, needs a
   required check that reads a pull request's reviews, which waits on

@@ -1,7 +1,7 @@
 ---
 n: 5
 title: "SLSA Build Level 3 provenance (ENG-20)"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 5: sLSA Build Level 3 provenance (ENG-20)
@@ -25,8 +25,7 @@ GREEN: the attestation moved, the verification job, a drift case.
 
 Gate: `@ENG-20` passes.
 
-Status: open. The workflows, their gate tests and drift cases landed.
-But `@ENG-20` is back on `@pending` until the stakeholder rules. Its
-steps "Given a published release" and "the checksum file verifies…"
-read the release workflows, not a published release. So the binding
-does not exercise the whole row.
+Status: done. The stakeholder ruled on 2026-10-13 to reword the
+scenario to what it checks: the release workflows sign, attest and
+verify every release they publish. `@ENG-20` is off `@pending` with
+that wording.

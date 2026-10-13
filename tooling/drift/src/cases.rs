@@ -903,9 +903,8 @@ fn static_analysis_cases() -> Vec<Case> {
     ]
 }
 
-/// A case for ENG-20: its scenario waits on the stakeholder's ruling,
-/// so each drift is caught by the gate test that reads the same
-/// workflows.
+/// A case for ENG-20 caught by the gate test that reads the same
+/// workflows as the scenario.
 fn release_case(
     name: &'static str,
     injection: Injection,
@@ -941,8 +940,21 @@ fn release_cases() -> Vec<Case> {
 }
 
 /// The ENG-20 drifts in who signs the build provenance, and with what.
+/// The first is caught by the scenario itself, the rest by the gate
+/// tests that read the same workflows.
 fn release_signer_cases() -> Vec<Case> {
     vec![
+        case(
+            "ci.yml granting attestations to its build call",
+            "ENG-20",
+            Injection::replace(
+                CI_WORKFLOW,
+                "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n",
+                "    uses: ./.github/workflows/build.yml\n    permissions:\n      contents: read\n      attestations: write\n",
+            ),
+            scenario("ENG-20"),
+            "ci.yml job build grants attestations: write to build.yml",
+        ),
         release_case(
             "build provenance attested outside the release build workflow",
             Injection::replace(

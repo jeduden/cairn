@@ -1,10 +1,10 @@
 ---
 n: 5
 title: "SLSA Build Level 3 provenance (ENG-20)"
-status: "🔳"
+status: "✅"
 result: true
 summary: >-
-  Only the release-only release-build.yml attests build provenance, a verify job checks the published release against each signer's exact identity at main, and the ENG-20 scenario stays pending until the stakeholder rules.
+  Only the release-only release-build.yml attests build provenance, a verify job checks the published release against each signer's exact identity at main, and the ENG-20 scenario, reworded to the workflows it reads, is off pending.
 ---
 ## Handoff
 
@@ -35,12 +35,13 @@ What landed:
   hold them, registered in the drift registry's gate tests; sixteen
   drift cases guard them, among them an unpinned `--signer-workflow`
   verify and `ci.yml` granting `id-token` to its build call.
-- `engineering_release.rs` binds the scenario, but `@ENG-20` stays
-  `@pending` until the stakeholder rules: "Given a published release"
-  reads the workflows, since a checkout holds no release; the `verify`
-  job is the check against a real one.
+- The stakeholder ruled on 2026-10-13 to reword the scenario to what
+  a checkout can show: "the release workflows sign, attest and verify
+  every release they publish". `engineering_release.rs` binds it and
+  `@ENG-20` is off `@pending`; the `verify` job is the check against a
+  real release, and a drift case run through the scenario guards it.
 
-What remains: the stakeholder's ruling on the binding. The first real
+What remains: the first real
 release run is the first live test of the `verify` job and of the SPDX
 predicate type `https://spdx.dev/Document/v2.3`; adjust it there if the
 attest-sbom action names another.

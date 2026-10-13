@@ -26,8 +26,8 @@ deadline check, the bindings, a drift case.
 Gate: `@ENG-03` passes; a deadline-less blocking call is a caught
 drift.
 
-Status: open. The deadline check and its drift cases landed. But
-`@ENG-03` is back on `@pending` until the stakeholder rules. Its step
-"every public blocking operation takes a deadline" is bound to a ban
-list. The list exempts local file I/O, in-process locks and standard
-output, so the binding does not exercise the whole row.
+Status: open. The deadline check and its drift cases landed. The
+stakeholder ruled on 2026-10-13: the ban list's exemptions (local file
+I/O, in-process locks, standard output) are accepted. `@ENG-03` stays
+`@pending` until M1 adds the injectable I/O traits the row also
+requires, which no step checks yet.

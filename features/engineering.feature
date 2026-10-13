@@ -182,12 +182,13 @@ Feature: Engineering quality (ENG)
     And the direct dependencies stay within the target the ENG-18 requirement states
     And "DEPENDENCIES.md" lists every ADR that names a module
 
-  @ENG-20 @P0 @pending
-  Scenario: release artifacts are signed and carry provenance and an SBOM
-    Given a published release
-    Then the checksum file verifies with its keyless Sigstore bundle
-    And every binary carries SLSA Build Level 3 provenance
-    And an SPDX SBOM is attached and attested
+  @ENG-20 @P0
+  Scenario: the release workflows sign, attest and verify every release they publish
+    Given the repository checkout
+    When the release workflows are read
+    Then the checksum file is signed keyless with Sigstore and verified once published
+    And only the release-only build workflow publishes each binary's SLSA Build Level 3 provenance as a GitHub artifact attestation, verified against that workflow's signing identity at main
+    And an SPDX SBOM is attached, published as a GitHub artifact attestation and verified once published
 
   @ENG-21 @P0 @pending
   Scenario: main only moves through reviewed, signed pull requests

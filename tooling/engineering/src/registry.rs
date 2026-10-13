@@ -21,8 +21,8 @@ pub const CHECKOUT_STEP: &str = "the repository checkout";
 /// the suite with, and the scan of the agent instruction files; and the
 /// gates that prove what a pending scenario cannot yet: the core rows
 /// of ENG-12 and ENG-16, ENG-15's benchmark gate, and ENG-21's ruleset
-/// and CODEOWNERS; and the gates behind ENG-03 and ENG-20 while their
-/// scenarios wait on the stakeholder's ruling.
+/// and CODEOWNERS; and the gates behind ENG-03, pending until M1 adds
+/// injectable I/O traits, and ENG-20's three workflow gates.
 pub const GATE_TESTS: [&str; 31] = [
     "specification_parses",
     "decision_records_parse",
