@@ -31,6 +31,7 @@ pub fn cases() -> Vec<Case> {
         ledger_cases(),
         reach_cases(),
         product_crate_cases(),
+        benchmark_cases(),
     ]
     .concat()
 }
@@ -614,6 +615,43 @@ fn product_crate_cases() -> Vec<Case> {
                 "no_product_crate_keeps_mutable_global_state",
             ),
             "crates/cairn/src/lib.rs:10: mutable global state: pub static SEQ",
+        ),
+    ]
+}
+
+/// The drifts ENG-15's gate tests exist to catch while its scenario is
+/// pending: an NFR id ENG-15 names dropped from the benchmark suite's
+/// registry, and the benchmark job no longer gating CI.
+fn benchmark_cases() -> Vec<Case> {
+    const SUITE: &str = "tooling/benchmark/src/suite.rs";
+    const CI: &str = ".github/workflows/ci.yml";
+    const REGISTERED: &str = "the_benchmark_suite_registers_every_nfr_id_eng_15_names";
+    const GATED: &str = "ci_gates_on_the_benchmark_job";
+    vec![
+        case(
+            "an NFR id ENG-15 names dropped from the benchmark suite",
+            REGISTERED,
+            Injection::replace(
+                SUITE,
+                "requirement: \"NFR-04\",",
+                "requirement: \"NFR-40\",",
+            ),
+            cargo_test("engineering", "benchmark_gate", REGISTERED),
+            "NFR-04 has no benchmark of real code and is not declared awaiting one",
+        ),
+        case(
+            "the benchmark job no longer running the gate",
+            GATED,
+            Injection::replace(CI, "\"$head/benchmark\" gate --base", "true --base"),
+            cargo_test("engineering", "benchmark_gate", GATED),
+            r#"job benchmark does not run "benchmark\" gate --base""#,
+        ),
+        case(
+            "the benchmark job left out of the CI aggregator",
+            GATED,
+            Injection::replace(CI, ", benchmark", ""),
+            cargo_test("engineering", "benchmark_gate", GATED),
+            "job ci does not need benchmark",
         ),
     ]
 }

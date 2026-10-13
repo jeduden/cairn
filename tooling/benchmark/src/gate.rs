@@ -31,8 +31,8 @@
 //!
 //! The level is one-sided α = 0.01 ([`Z_CRITICAL`]). The two conditions
 //! guard each other: significance alone would fail a real 1% slowdown
-//! measured precisely, and the threshold alone would fail a noisy run
-//! whose medians drift apart by chance. The normal approximation holds
+//! measured precisely, and the threshold alone would fail medians a
+//! noisy runner pushed apart by chance. The normal approximation holds
 //! from about ten samples a side, so fewer is no decision, and no
 //! decision fails ([`MIN_SAMPLES`]).
 //!

@@ -29,6 +29,10 @@ installs it on the first `cargo` command.
   gate` — the gates alone
 - `cargo run -p coverage` — line coverage per test layer and per crate,
   held to the floors (see [testing.md](testing.md))
+- `cargo build --release -p cairn && cargo run --release -p benchmark
+  -- run --core target/release/cairn` — sample the benchmark suite;
+  `cargo run -p benchmark -- gate --base FILE --head FILE` decides
+  from two samples files (ENG-15, see [testing.md](testing.md))
 - `cargo fmt --all --check` and `cargo clippy --workspace --all-targets
   -- -D warnings` — layout and lint (ENG-16)
 - `cargo deny check licenses bans sources` and `cargo audit` — the
@@ -62,12 +66,25 @@ proposes the bumps after a seven-day cooldown.
 
 [ci.yml](../.github/workflows/ci.yml) runs on every push and pull
 request to `main`. It runs every test and scenario, clippy and
-rustfmt, cargo-deny and cargo-audit, and the drift suite, and the
-release build of every target (NFR-10, CON-02). It also runs
-`mdsmith check .` and zizmor over the workflows themselves. A final
+rustfmt, cargo-deny and cargo-audit, the drift suite, the benchmark
+gate, and the release build of every target (NFR-10, CON-02). It also
+runs `mdsmith check .` and zizmor over the workflows themselves. A final
 job named `CI` passes only when every other job passed. It is the one
 check the branch and release-tag rulesets require, because GitHub
 names a required check after a job, never after the workflow.
+
+The `benchmark` job (ENG-15) compares the head with its first
+parent: the `main` a pull request's merge commit sits on, or `main`
+before a push. It builds both sides' benchmark suites and cores in
+release mode on one runner and samples them interleaved, thirty rounds
+of ten samples a side, alternating which side goes first, so a drift
+in the runner's speed lands on both. The head's gate then writes its
+report into the job summary and fails naming each benchmark that
+regressed more than 10% with significance. The suite samples in a
+second or two, so it gates every pull request; a benchmark too slow
+for that, such as one on a store of 10M events, would run nightly
+instead. Until the suite reaches `main`, the base has none, and the
+job warns and runs the head's alone.
 
 [nightly.yml](../.github/workflows/nightly.yml) is where
 cargo-fuzz runs every target under `fuzz/` (ENG-07). There are none
@@ -147,7 +164,8 @@ What CI decides, on every pull request:
   program starts (I4) and on clocks and hash order (I10), and the
   reach test;
 - no mutable global state in a product crate (ENG-03);
-- coverage per test layer (ENG-11), and every live scenario.
+- coverage per test layer (ENG-11), and every live scenario;
+- the benchmark gate (ENG-15).
 
 What `review-bundle` decides, comparing the pull request with main:
 
@@ -179,7 +197,8 @@ new reach (I4), content of another principal (I8), errors and seams
 no lint sees, and the domain model's terms. Persona reviews belong to
 plans and SRS changes (the `persona-review` skill), not to each pull
 request. The nightly job takes what is too slow for a pull request:
-fuzzing, crash consistency, soak and benchmarks, as their plans land.
+fuzzing, crash consistency, soak and slow benchmarks, as their plans
+land.
 
 ## The plan catalog and its merge driver
 
