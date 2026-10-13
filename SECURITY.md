@@ -45,7 +45,8 @@ Sigstore, build provenance for every binary, and an SPDX SBOM. The
 release workflow notes carry the exact commands. In short:
 
 ```sh
-gh attestation verify cairn-linux-amd64 -R jeduden/cairn
+gh attestation verify cairn-linux-amd64 -R jeduden/cairn \
+  --signer-workflow jeduden/cairn/.github/workflows/build.yml
 cosign verify-blob --bundle checksums.txt.sigstore.json \
   --certificate-identity-regexp \
   '^https://github.com/jeduden/cairn/.github/workflows/release.yml@' \

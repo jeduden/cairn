@@ -7,6 +7,12 @@ name: Build
 # the rust-lld Rust ships, the Windows target with mingw-w64 on the
 # same Linux builder, and the darwin target with the runner's own
 # Apple linker. Each binary then runs once on its own platform.
+#
+# The release workflow also asks this workflow to attest the binaries'
+# build provenance (ENG-20). SLSA Build Level 3 wants the provenance
+# made by a workflow the caller cannot alter, so the attestation is
+# signed here, in the reusable workflow, and its signer is this file,
+# not the caller. CI leaves `attest` off and builds as before.
 on:
   workflow_call:
     inputs:
@@ -14,6 +20,11 @@ on:
         description: "The version stamped into the executable, e.g. v0.1.0"
         required: true
         type: string
+      attest:
+        description: "Attest the binaries' build provenance; the caller must grant id-token and attestations write"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -37,6 +48,10 @@ env:
 jobs:
   build:
     name: build (${{ matrix.builder }})
+    # The jobs that run the repository's code hold no more than this;
+    # only the attest job below holds the signing identity.
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -141,3 +156,30 @@ jobs:
           VERSION: ${{ inputs.version }}
           COMMIT: ${{ github.sha }}
         run: scripts/check-stamp.sh dist/cairn-windows-amd64.exe "$VERSION" "$COMMIT"
+
+  # ENG-20: SLSA Build Level 3 provenance. It runs only when the caller
+  # asks, after every binary was built and ran on its own platform, and
+  # it runs none of the repository's code: it fetches the binaries and
+  # attests them. The signer recorded in each attestation is therefore
+  # this workflow file. The caller must grant the two write
+  # permissions, which no caller can widen from inside. Verify with:
+  #   gh attestation verify cairn-linux-amd64 -R jeduden/cairn \
+  #     --signer-workflow jeduden/cairn/.github/workflows/build.yml
+  attest:
+    if: ${{ inputs.attest }}
+    needs: [build, linux-arm64, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: "*-cairn"
+          path: dist
+          merge-multiple: true
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: "dist/cairn-*"
