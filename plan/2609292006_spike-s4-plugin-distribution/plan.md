@@ -72,7 +72,7 @@ Handed on:
 ## Acceptance Criteria
 
 - [x] ASM-07 and ASM-08 marked verified or re-planned in the SRS
-- [x] Scenarios @ASM-07 and @ASM-08 pass against recorded install
-  evidence: @ASM-07 does; @ASM-08 and @ASM-21 stay `@pending` with
-  their re-plans
+- [ ] Scenarios @ASM-07 and @ASM-08 pass against recorded install
+  evidence: only @ASM-07 does; @ASM-08 and @ASM-21 stay `@pending`
+  with their re-plans, as the deviations say
 - [x] OQ-06 has an answer or a stated follow-up
