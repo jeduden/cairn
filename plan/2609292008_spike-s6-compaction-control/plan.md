@@ -57,8 +57,7 @@ Handed on:
 
 - On a harness resume, earlier `Read` results did not reach the model
   again, without a compaction or any hook. The report notes it as seen,
-  not recorded; M2's restore assumes content leaves context only
-  through a compaction.
+  not recorded, and SRS §13.2 tracks it as a risk for M2's restore.
 
 Scenarios taken off `@pending`: @ASM-09.
 

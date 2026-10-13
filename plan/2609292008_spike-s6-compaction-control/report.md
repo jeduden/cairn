@@ -57,8 +57,8 @@ override, and that the harness takes the same path at it either way.
   near 30k tokens: on a harness resume, the earlier `Read` results did
   not reach the model again, without any compaction or hook. Content
   can leave the agent's context with no compaction for Cairn to see.
-  No requirement rests on this yet; it is worth recording before M2's
-  restore relies on compaction alone.
+  SRS §13.2 tracks it as a risk, to be recorded before M2's restore
+  relies on compaction alone.
 
 ## What it means for Cairn
 

@@ -883,6 +883,11 @@ fn replied_without_compaction(w: &mut World) -> Result<(), String> {
         if !transcript::refusals(&v.lines).is_empty() {
             problems.push("the harness refused a prompt".into());
         }
+        if transcript::model_replies_after(&v.lines, "Compaction blocked by PreCompact hook")
+            .is_empty()
+        {
+            problems.push("no model reply followed the blocked compaction".into());
+        }
         Ok(problems)
     })
 }
@@ -913,6 +918,19 @@ fn refused_at_full_context_window(w: &mut World, refusal: String) -> Result<(), 
     })
 }
 
+/// What ASM-09's recordings showed, as the OQ-01 row must say it, and
+/// the finding each phrase records.
+const S6_FINDINGS: [(&str, &str); 2] = [
+    (
+        "blocks a manual compaction and every automatic one (ASM-09)",
+        "exit status 2 blocks every compaction (ASM-09)",
+    ),
+    (
+        "refuses every later prompt",
+        "the full context window refuses every prompt",
+    ),
+];
+
 #[then(regex = r"^the OQ-01 row of SRS §13 records what ASM-09's recordings showed$")]
 fn oq_01_records_s6(_w: &mut World) -> Result<(), String> {
     let path = testkit::repo_root().join("docs/srs/13-open-questions-and-risks.md");
@@ -921,10 +939,13 @@ fn oq_01_records_s6(_w: &mut World) -> Result<(), String> {
         .lines()
         .find(|l| l.starts_with("| OQ-01 "))
         .ok_or("SRS §13 holds no OQ-01 row")?;
-    outcome(none_unless(
-        row.contains("ASM-09") && row.contains("S6"),
-        || "the OQ-01 row does not record S6's finding on ASM-09".into(),
-    ))
+    outcome(
+        S6_FINDINGS
+            .iter()
+            .filter(|(said, _)| !row.contains(said))
+            .map(|(_, finding)| format!("the OQ-01 row does not record that {finding}"))
+            .collect(),
+    )
 }
 
 // ASM-10: harness timeouts.
