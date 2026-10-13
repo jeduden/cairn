@@ -340,3 +340,30 @@ fn the_unconfined_probe_opens_its_socket_unseen() {
 fn the_probe_opens_a_socket_on_loopback() {
     assert!(probe().is_ok());
 }
+
+#[test]
+fn a_confinement_names_its_component() {
+    assert_eq!(unconfined().component(), Component::Core);
+}
+
+#[test]
+fn only_a_failed_start_or_trace_has_a_cause() {
+    let causeless = [
+        Error::NoConfinement {
+            component: "launcher".to_owned(),
+        },
+        Error::Refused,
+        Error::Unavailable {
+            reason: "r".to_owned(),
+        },
+        Error::Socket {
+            component: Component::Core,
+            caller: "c".to_owned(),
+            calls: Vec::new(),
+        },
+    ];
+
+    for err in causeless {
+        assert!(std::error::Error::source(&err).is_none(), "{err}");
+    }
+}
