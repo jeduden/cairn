@@ -1,7 +1,7 @@
 ---
 n: 5
 title: "SLSA Build Level 3 provenance (ENG-20)"
-status: "✅"
+status: "🔳"
 result: false
 ---
 # Phase 5: sLSA Build Level 3 provenance (ENG-20)
@@ -24,3 +24,9 @@ RED: the scenario fails on provenance attested outside `build.yml`.
 GREEN: the attestation moved, the verification job, a drift case.
 
 Gate: `@ENG-20` passes.
+
+Status: open. The workflows, their gate tests and drift cases landed.
+But `@ENG-20` is back on `@pending` until the stakeholder rules. Its
+steps "Given a published release" and "the checksum file verifies…"
+read the release workflows, not a published release. So the binding
+does not exercise the whole row.

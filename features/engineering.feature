@@ -23,7 +23,7 @@ Feature: Engineering quality (ENG)
     Then the architecture check fails naming both crates
     And every library crate has exactly one declared responsibility
 
-  @ENG-03 @P0
+  @ENG-03 @P0 @pending
   Scenario: no mutable global state, injectable I/O and deadlines everywhere
     Given the repository's code
     When the static analyzers run
@@ -182,7 +182,7 @@ Feature: Engineering quality (ENG)
     And the direct dependencies stay within the target the ENG-18 requirement states
     And "DEPENDENCIES.md" lists every ADR that names a module
 
-  @ENG-20 @P0
+  @ENG-20 @P0 @pending
   Scenario: release artifacts are signed and carry provenance and an SBOM
     Given a published release
     Then the checksum file verifies with its keyless Sigstore bundle

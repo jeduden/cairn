@@ -712,13 +712,17 @@ fn product_crate_cases() -> Vec<Case> {
         ),
         case(
             "a product crate's clippy.toml dropping the file lock's deadline ban",
-            "ENG-03",
+            "the_product_crates_ban_every_wait_with_no_deadline",
             Injection::replace(
                 "crates/cairn/clippy.toml",
                 "  { path = \"std::fs::File::lock\", reason = \"it waits for another process with no deadline; poll try_lock up to a deadline (ENG-03)\" },\n",
                 "",
             ),
-            scenario("ENG-03"),
+            cargo_test(
+                "engineering",
+                "checkout",
+                "the_product_crates_ban_every_wait_with_no_deadline",
+            ),
             "crates/cairn/clippy.toml does not ban std::fs::File::lock in disallowed-methods",
         ),
         case(

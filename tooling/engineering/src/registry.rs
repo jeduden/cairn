@@ -21,8 +21,9 @@ pub const CHECKOUT_STEP: &str = "the repository checkout";
 /// the suite with, and the scan of the agent instruction files; and the
 /// gates that prove what a pending scenario cannot yet: the core rows
 /// of ENG-12 and ENG-16, ENG-15's benchmark gate, and ENG-21's ruleset
-/// and CODEOWNERS.
-pub const GATE_TESTS: [&str; 25] = [
+/// and CODEOWNERS; and the gates behind ENG-03 and ENG-20 while their
+/// scenarios wait on the stakeholder's ruling.
+pub const GATE_TESTS: [&str; 31] = [
     "specification_parses",
     "decision_records_parse",
     "specification_and_features_agree",
@@ -48,6 +49,12 @@ pub const GATE_TESTS: [&str; 25] = [
     "the_checkout_s_codeowners_name_no_owner_on_any_other_path",
     "the_checkout_s_security_crates_belong_to_the_security_reviewer",
     "the_checkout_s_nightly_compares_the_live_ruleset_with_the_committed_one",
+    "the_product_crates_keep_their_bans",
+    "the_product_crates_ban_every_wait_with_no_deadline",
+    "no_product_crate_keeps_mutable_global_state",
+    "the_checkout_s_release_signs_its_checksums_keyless",
+    "the_checkout_s_release_attests_provenance_only_in_the_release_build_workflow",
+    "the_checkout_s_release_attaches_and_attests_an_sbom",
 ];
 
 /// Refuses a case whose injection no longer finds its target, so a case

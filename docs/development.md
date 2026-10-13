@@ -121,8 +121,9 @@ them, and the hook's time budget (I9) covers them. Nor are
 `std::thread::sleep`, which carries its own bound, and the in-process
 `Mutex` and `RwLock`. The engineering gate test
 `the_product_crates_keep_their_bans` requires every product crate's
-clippy.toml to carry every ban, and the ENG-03 scenario reads the same
-bans beside the check for mutable global state.
+clippy.toml to carry every ban. The ENG-03 scenario reads the same
+bans, and stays `@pending` until the stakeholder rules on what the
+list exempts.
 
 ## CI, nightly and release
 

@@ -1,7 +1,7 @@
 ---
 n: 3
 title: "Deadlines on every blocking operation (ENG-03)"
-status: "✅"
+status: "🔳"
 result: false
 ---
 # Phase 3: deadlines on every blocking operation (ENG-03)
@@ -25,3 +25,9 @@ deadline check, the bindings, a drift case.
 
 Gate: `@ENG-03` passes; a deadline-less blocking call is a caught
 drift.
+
+Status: open. The deadline check and its drift cases landed. But
+`@ENG-03` is back on `@pending` until the stakeholder rules. Its step
+"every public blocking operation takes a deadline" is bound to a ban
+list. The list exempts local file I/O, in-process locks and standard
+output, so the binding does not exercise the whole row.
