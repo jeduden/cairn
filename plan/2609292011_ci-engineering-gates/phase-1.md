@@ -1,7 +1,7 @@
 ---
 n: 1
 title: "The isolation guard and the agent instruction check (ENG-14)"
-status: "🔲"
+status: "✅"
 result: false
 ---
 # Phase 1: the isolation guard and the agent instruction check (ENG-14)
