@@ -202,7 +202,7 @@ pub fn mutable_globals(file: &str, body: &str) -> Vec<String> {
 }
 
 /// Every product crate's directory name under `crates/`, sorted.
-fn crates(c: &Checkout) -> Result<Vec<String>, String> {
+pub(crate) fn crates(c: &Checkout) -> Result<Vec<String>, String> {
     let dir = c.root.join(CRATES);
     let entries = fs::read_dir(&dir).map_err(|e| format!("list {CRATES}: {e}"))?;
     let mut out = Vec::new();
@@ -222,7 +222,7 @@ fn crates(c: &Checkout) -> Result<Vec<String>, String> {
 /// `clippy.toml` in the crate's directory, then in each directory above
 /// it up to the root. The root's `clippy.toml` when there is none, so a
 /// missing file is named.
-fn clippy_config(c: &Checkout, name: &str) -> String {
+pub(crate) fn clippy_config(c: &Checkout, name: &str) -> String {
     let crate_dir = format!("{CRATES}/{name}/");
     let dirs = [crate_dir.as_str(), "crates/", ""];
     dirs.iter()

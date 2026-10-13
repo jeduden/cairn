@@ -31,6 +31,8 @@ pub fn cases() -> Vec<Case> {
         ledger_cases(),
         reach_cases(),
         product_crate_cases(),
+        confinement_cases(),
+        static_analysis_cases(),
     ]
     .concat()
 }
@@ -614,6 +616,133 @@ fn product_crate_cases() -> Vec<Case> {
                 "no_product_crate_keeps_mutable_global_state",
             ),
             "crates/cairn/src/lib.rs:10: mutable global state: pub static SEQ",
+        ),
+    ]
+}
+
+/// The drifts ENG-12's core row exists to catch: the core started
+/// outside the end-to-end suite's confinement, and the core opening a
+/// socket, which the confined suite fails naming the core and the test.
+fn confinement_cases() -> Vec<Case> {
+    vec![
+        case(
+            "the core started outside the end-to-end suite's confinement",
+            "the_core_s_tests_start_it_confined",
+            Injection::replace(
+                "crates/cairn/tests/e2e_cairn.rs",
+                "use testkit::boundary::{Component, Confinement};",
+                "use testkit::boundary::{Component, Confinement};\n\nfn _unconfined() -> std::process::Command {\n    std::process::Command::new(env!(\"CARGO_BIN_EXE_cairn\"))\n}",
+            ),
+            cargo_test(
+                "engineering",
+                "confinement",
+                "the_core_s_tests_start_it_confined",
+            ),
+            "crates/cairn/tests/e2e_cairn.rs starts a component's executable outside the end-to-end suite's confinement (ENG-12)",
+        ),
+        case(
+            "the core opening a socket in the confined suite",
+            "ENG-12",
+            Injection::replace(
+                "crates/cairn/src/lib.rs",
+                "        Some(\"version\") => version(args, build, stdout, stderr),",
+                "        Some(\"version\") => {\n            let _ = std::net::UdpSocket::bind((\"127.0.0.1\", 0));\n            version(args, build, stdout, stderr)\n        }",
+            ),
+            cargo_test("cairn", "e2e_cairn", "version_prints_the_build_s_version"),
+            "ENG-12: the core opened a socket outside its boundary, which denies all network; started by version_prints_the_build_s_version",
+        ),
+    ]
+}
+
+/// The drifts ENG-16's core row exists to catch: CI no longer gating on
+/// a static check, a crate switching the unsafe ban off, and the core's
+/// reach evidence or the determinism bans going missing.
+fn static_analysis_cases() -> Vec<Case> {
+    const CI: &str = ".github/workflows/ci.yml";
+    const CLIPPY: &str = "crates/cairn/clippy.toml";
+    let check = |name| cargo_test("engineering", "static_analysis", name);
+    let gates = || check("the_ci_workflow_gates_on_the_static_checks");
+    let unsafe_ban = || check("every_crate_forbids_unsafe_code");
+    let reach = || check("the_core_s_reach_evidence_is_present_and_gated");
+    vec![
+        case(
+            "CI no longer running cargo-audit",
+            "the_ci_workflow_gates_on_the_static_checks",
+            Injection::replace(CI, "      - run: cargo audit\n", ""),
+            gates(),
+            "no CI job runs cargo-audit: cargo audit",
+        ),
+        case(
+            "a static check's job left out of the ci job",
+            "the_ci_workflow_gates_on_the_static_checks",
+            Injection::replace(CI, "coverage, lint, supply-chain", "coverage, supply-chain"),
+            gates(),
+            "job lint runs cargo fmt, but the ci job does not need it",
+        ),
+        case(
+            "a static check's job allowed to fail",
+            "the_ci_workflow_gates_on_the_static_checks",
+            Injection::replace(
+                CI,
+                "  lint:\n    runs-on: ubuntu-latest\n",
+                "  lint:\n    runs-on: ubuntu-latest\n    continue-on-error: true\n",
+            ),
+            gates(),
+            "job lint runs cargo fmt, but may fail without failing CI: continue-on-error",
+        ),
+        case(
+            "the ci job passing after a failed job",
+            "the_ci_workflow_gates_on_the_static_checks",
+            Injection::replace(CI, "    if: ${{ always() }}\n    needs: [", "    needs: ["),
+            gates(),
+            "the ci job does not run after a failed job",
+        ),
+        case(
+            "a crate no longer inheriting the workspace lints",
+            "every_crate_forbids_unsafe_code",
+            Injection::replace("crates/cairn/Cargo.toml", "[lints]\nworkspace = true\n", ""),
+            unsafe_ban(),
+            "crate crates/cairn neither inherits the workspace lints nor forbids unsafe code in src/lib.rs",
+        ),
+        case(
+            "the workspace lints no longer forbidding unsafe code",
+            "every_crate_forbids_unsafe_code",
+            Injection::replace(
+                "Cargo.toml",
+                "unsafe_code = \"forbid\"",
+                "unsafe_code = \"deny\"",
+            ),
+            unsafe_ban(),
+            "the workspace lints do not forbid unsafe_code",
+        ),
+        case(
+            "the core's reach test removed",
+            "the_core_s_reach_evidence_is_present_and_gated",
+            Injection::remove("crates/cairn/tests/reach.rs"),
+            reach(),
+            "the core's reach evidence is missing: read crates/cairn/tests/reach.rs",
+        ),
+        case(
+            "the core's clippy.toml no longer banning a program start",
+            "the_core_s_reach_evidence_is_present_and_gated",
+            Injection::replace(
+                CLIPPY,
+                "  { path = \"std::process::Command\", reason = \"the core starts no program but its kernel worker (SEC-01, CMP-05)\" },\n",
+                "",
+            ),
+            reach(),
+            "the core's reach evidence is missing: crates/cairn/clippy.toml does not ban std::process::Command",
+        ),
+        case(
+            "derived code no longer refused the monotonic clock",
+            "derived_code_is_refused_a_clock_or_randomness_at_build_time",
+            Injection::replace(
+                CLIPPY,
+                "  { path = \"std::time::Instant::now\", reason = \"derived artifacts read no clock (I10)\" },\n",
+                "",
+            ),
+            check("derived_code_is_refused_a_clock_or_randomness_at_build_time"),
+            "derived code may read a clock or randomness: crate cairn: crates/cairn/clippy.toml does not ban std::time::Instant::now in disallowed-methods",
         ),
     ]
 }

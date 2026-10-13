@@ -44,6 +44,19 @@ jobs:
           "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
           --profile minimal --component clippy,rustfmt,llvm-tools-preview
           --no-self-update
+      # ENG-12: the end-to-end suite starts the core in a user and
+      # network namespace of its own, under strace, and fails on any
+      # socket. The runner's AppArmor refuses unprivileged user
+      # namespaces, and its image may lack strace. A runner that still
+      # cannot confine fails the end-to-end tests, never skips them.
+      - name: Let the end-to-end suite confine the core
+        run: |
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          command -v strace >/dev/null || {
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
+          }
       - run: cargo test --workspace --locked
       # The pending backlog, counted. A measurement, not a gate.
       - name: Count scenarios
@@ -75,6 +88,19 @@ jobs:
           --no-self-update
       # An exact version from crates.io, built against its own
       # lockfile. Bump it by hand, the way the zizmor version is.
+      # ENG-12: the end-to-end suite starts the core in a user and
+      # network namespace of its own, under strace, and fails on any
+      # socket. The runner's AppArmor refuses unprivileged user
+      # namespaces, and its image may lack strace. A runner that still
+      # cannot confine fails the end-to-end tests, never skips them.
+      - name: Let the end-to-end suite confine the core
+        run: |
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          command -v strace >/dev/null || {
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
+          }
       - run: cargo install --locked cargo-llvm-cov@0.9.1
       - run: cargo run --locked -p coverage
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -180,6 +206,19 @@ jobs:
       - uses: jeduden/mdsmith@0ca0d2f7c95ab53e3e9ed8851150af98b95088fb # v0.55.1
         with:
           version: v0.55.1
+      # ENG-12: the end-to-end suite starts the core in a user and
+      # network namespace of its own, under strace, and fails on any
+      # socket. The runner's AppArmor refuses unprivileged user
+      # namespaces, and its image may lack strace. A runner that still
+      # cannot confine fails the end-to-end tests, never skips them.
+      - name: Let the end-to-end suite confine the core
+        run: |
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          command -v strace >/dev/null || {
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
+          }
       - run: cargo test --locked -p drift --test suite -- --ignored
 
   # CON-02: the release build, on every change and not first on

@@ -1,24 +1,34 @@
-//! The built `cairn` executable, as a person or a hook runs it.
+//! The built `cairn` executable, as a person or a hook runs it,
+//! confined to the core's boundary: all network denied (ENG-12). Every
+//! start goes through the testkit's confinement, so a socket the core
+//! opens fails the test that started it, naming the core and the test.
+//! This file names no `std::process::Command`: the crate's clippy.toml
+//! refuses one, so the core cannot be started here unconfined.
 
-#![allow(
-    clippy::disallowed_types,
-    reason = "the test starts the built executable; the shipped code starts no program"
-)]
 #![allow(
     clippy::unwrap_used,
     reason = "a test's helpers unwrap: a failure is the assertion"
 )]
+#![allow(
+    clippy::panic,
+    reason = "a start the confinement refuses fails the test with its message"
+)]
 
-use std::process::{Command, Output};
+use std::path::Path;
+use std::process::Output;
 
+use testkit::boundary::{Component, Confinement};
+
+/// Runs the core with `args`, confined and with a fresh home. A socket
+/// it opens fails the calling test, named.
+#[track_caller]
 fn cairn(args: &[&str]) -> Output {
     let home = testkit::TempDir::new().unwrap();
-    let mut command = Command::new(env!("CARGO_BIN_EXE_cairn"));
-    command.args(args);
 
-    testkit::isolate(&mut command, home.path())
-        .output()
-        .unwrap()
+    let core = Confinement::of(Component::Core).unwrap_or_else(|e| panic!("{e}"));
+
+    core.run(Path::new(env!("CARGO_BIN_EXE_cairn")), args, home.path())
+        .unwrap_or_else(|e| panic!("{e}"))
 }
 
 #[test]
