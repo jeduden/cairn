@@ -74,3 +74,10 @@ fn create_fails_where_a_file_stands() {
 
     assert!(matches!(err, AdminError::Io { .. }), "{err}");
 }
+
+#[test]
+fn a_first_start_stages_its_genesis_in_one_directory_of_keys() {
+    let home = Home::locate(Some(OsStr::new("/c")), None).unwrap();
+
+    assert_eq!(home.genesis(), Path::new("/c/keys/genesis"));
+}

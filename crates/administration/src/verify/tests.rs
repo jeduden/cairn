@@ -64,15 +64,17 @@ impl Fixture {
 fn an_intact_record_verifies_and_counts_its_writers_and_events() {
     let f = fixture();
 
-    let report = verify(&f.store).unwrap();
+    let report = verify(&f.store, &f.node.device().public()).unwrap();
 
-    assert_eq!(
-        report,
-        Report {
-            writers: 2,
-            events: 7
-        }
-    );
+    assert_eq!((report.writers, report.events), (2, 7));
+    assert_eq!(report.order.len(), 7);
+    let ingest: Vec<u64> = report
+        .order
+        .iter()
+        .filter(|a| a.writer == f.ingest.writer)
+        .map(|a| a.seq.get())
+        .collect();
+    assert_eq!(ingest, [1, 2, 3]);
 }
 
 #[test]
@@ -87,7 +89,7 @@ fn a_changed_header_byte_is_named_by_its_full_address() {
         f.ingest.writer
     ));
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert_eq!(
         err.to_string(),
@@ -106,12 +108,12 @@ fn content_that_does_not_open_its_commitment_is_named() {
         f.ingest.writer
     ));
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert_eq!(
         err.to_string(),
         format!(
-            "chain broken at {}: the content does not open its commitment",
+            "the content at {} does not open its commitment",
             f.at(3).full(&f.node.personal_room())
         )
     );
@@ -127,12 +129,12 @@ fn content_removed_with_no_tombstone_is_named() {
         f.ingest.writer
     ));
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert_eq!(
         err.to_string(),
         format!(
-            "chain broken at {}: its content was removed, and no tombstone records it",
+            "the content at {} was removed, and no tombstone records it",
             f.at(3).full(&f.node.personal_room())
         )
     );
@@ -146,11 +148,10 @@ fn a_commitment_key_without_its_content_does_not_open_its_commitment() {
         f.ingest.writer
     ));
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert!(
-        err.to_string()
-            .ends_with("the content does not open its commitment"),
+        err.to_string().ends_with("does not open its commitment"),
         "{err}"
     );
 }
@@ -163,7 +164,7 @@ fn a_row_that_does_not_parse_is_named() {
         f.ingest.writer
     ));
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert!(
         err.to_string().starts_with(&format!(
@@ -179,7 +180,7 @@ fn a_changed_cited_head_changes_the_hash_of_the_event_citing_it() {
     let f = fixture();
     f.sql("UPDATE event_heads SET other_seq = 1");
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert_eq!(
         err.to_string(),
@@ -208,7 +209,7 @@ fn a_cited_head_naming_no_event_is_named_even_when_the_chain_is_rehashed() {
         ));
     }
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert!(
         err.to_string()
@@ -223,7 +224,7 @@ fn a_writer_without_a_seat_certificate_is_named() {
     let stray = WriterId::derive(&[9; 32]);
     f.store.append(stray, &[new_event(1)]).unwrap();
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert_eq!(
         err.to_string(),
@@ -241,7 +242,7 @@ fn a_changed_seat_certificate_is_named() {
         f.ingest.writer
     ));
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert_eq!(
         err.to_string(),
@@ -261,7 +262,7 @@ fn a_seat_certificate_naming_another_seat_or_room_is_named() {
         f.ingest.writer
     ));
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert_eq!(
         err.to_string(),
@@ -287,12 +288,12 @@ fn a_seat_certificate_no_certificate_record_holds_is_named() {
     };
     f.store.add_seat(&record).unwrap();
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert_eq!(
         err.to_string(),
         format!(
-            "writer {}: no device seat holds a certificate record of its seat certificate",
+            "writer {}: no certificate record in this node's genesis device seat holds its seat certificate",
             record.writer
         )
     );
@@ -319,12 +320,12 @@ fn a_seat_certificate_from_a_key_with_no_minted_key_event_is_named() {
     };
     f.store.add_seat(&record).unwrap();
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert_eq!(
         err.to_string(),
         format!(
-            "writer {}: no minted key event of this node names its certifying_key",
+            "writer {}: its seat certificate was certified by a key that is not this node's own",
             record.writer
         )
     );
@@ -336,12 +337,12 @@ fn a_removed_key_event_is_named_as_lost() {
     let device = f.node.device_writer();
     f.sql(&format!("UPDATE events SET content = NULL, commitment_key = NULL WHERE seq = 1 AND writer = '{device}'"));
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert_eq!(
         err.to_string(),
         format!(
-            "chain broken at {}: its content was removed, and no tombstone records it",
+            "the content at {} was removed, and no tombstone records it",
             Address::new(device, Seq::FIRST).full(&f.node.personal_room())
         )
     );
@@ -355,7 +356,7 @@ fn a_seat_certificate_that_does_not_parse_is_named() {
         f.ingest.writer
     ));
     assert!(
-        verify(&f.store)
+        verify(&f.store, &f.node.device().public())
             .unwrap_err()
             .to_string()
             .contains("its seat certificate: malformed")
@@ -367,7 +368,10 @@ fn a_store_error_is_passed_on() {
     let f = fixture();
     f.sql("UPDATE seats SET room = 'x'");
 
-    assert!(matches!(verify(&f.store), Err(VerifyError::Store(_))));
+    assert!(matches!(
+        verify(&f.store, &f.node.device().public()),
+        Err(VerifyError::Corrupt(_))
+    ));
     let broken = VerifyError::Broken {
         address: "a".into(),
         reason: "r".into(),
@@ -394,7 +398,7 @@ fn a_key_event_whose_content_is_no_key_event_is_named() {
         )
         .unwrap();
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert!(
         err.to_string()
@@ -408,11 +412,10 @@ fn content_without_its_commitment_key_does_not_open_its_commitment() {
     let f = fixture();
     f.sql("UPDATE events SET commitment_key = NULL WHERE seq = 3");
 
-    let err = verify(&f.store).unwrap_err();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 
     assert!(
-        err.to_string()
-            .ends_with("the content does not open its commitment"),
+        err.to_string().ends_with("does not open its commitment"),
         "{err}"
     );
 }
@@ -425,5 +428,187 @@ fn a_store_error_reading_a_log_is_passed_on() {
         f.ingest.writer
     ));
 
-    assert!(matches!(verify(&f.store), Err(VerifyError::Store(_))));
+    assert!(matches!(
+        verify(&f.store, &f.node.device().public()),
+        Err(VerifyError::Corrupt(_))
+    ));
+}
+
+#[test]
+fn a_record_checked_against_another_nodes_key_has_no_genesis() {
+    let f = fixture();
+    let stranger = DeviceKey::mint(&mut OsEntropy).unwrap();
+
+    let err = verify(&f.store, &stranger.public()).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        "no device seat of this node's device key begins with its minted key event"
+    );
+    assert_eq!((err.class(), err.address()), ("genesis", None));
+}
+
+#[test]
+fn the_personal_room_derives_from_the_device_seat_key_and_the_acts_nonce() {
+    let key = SeatKey::mint(&mut OsEntropy).unwrap().public();
+    let room = RoomId::derive(key.as_bytes(), &[7; 16]);
+    let act = json!({"room": room.to_string(), "nonce": "07".repeat(16)});
+
+    assert_eq!(derived_room(&key, &act), Some(room));
+    let other = json!({"room": room.to_string(), "nonce": "08".repeat(16)});
+    assert_eq!(derived_room(&key, &other), None);
+    assert_eq!(derived_room(&key, &json!({"room": room.to_string()})), None);
+}
+
+#[test]
+fn a_create_room_act_whose_room_does_not_derive_is_named() {
+    let f = fixture();
+    // Another create room act stands second in a rebuilt genesis: the
+    // whole device seat is rewritten so only the room is wrong.
+    let device = f.node.device_writer();
+    let stored = f
+        .store
+        .event(Address::new(device, Seq::new(2).unwrap()))
+        .unwrap()
+        .unwrap();
+    let mut act = stored.content.clone().unwrap();
+    act["nonce"] = json!("00".repeat(16));
+    let key = stored.commitment_key.clone().unwrap();
+    let commitment = record::commitment::commit(&key, &act).unwrap();
+    f.sql(&format!(
+        "UPDATE events SET content = '{act}', commitment = '{commitment}' WHERE writer = '{device}' AND seq = 2"
+    ));
+    rehash(&f, device);
+
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        "the personal room's id does not derive from its device seat's key and the nonce its create room act records"
+    );
+}
+
+/// Rewrites `writer`'s chain over the headers the store now holds.
+fn rehash(f: &Fixture, writer: WriterId) {
+    let mut prev = Digest::ZERO;
+    for stored in f.store.log(writer).unwrap() {
+        let mut header = stored.link.header.clone();
+        header.prev_hash = prev;
+        prev = header.hash();
+        f.sql(&format!(
+            "UPDATE events SET prev_hash = '{}', hash = '{prev}' WHERE writer = '{writer}' AND seq = {}",
+            header.prev_hash, header.address.seq
+        ));
+    }
+}
+
+#[test]
+fn a_certificate_record_naming_a_seat_this_node_does_not_hold_is_named() {
+    let mut f = fixture();
+    let device = f.node.device_writer();
+    let stray = WriterId::derive(&[9; 32]);
+    let at = f
+        .store
+        .append(
+            device,
+            &[NewEvent {
+                kind: EventKind::CertificateRecord,
+                provenance: Provenance::Structural,
+                content: json!({"certificate": "0".repeat(64), "seat": "0".repeat(64), "writer": stray.to_string()}),
+                commitment_key: CommitmentKey::from_bytes([1; 32]),
+            }],
+        )
+        .unwrap()[0];
+
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+
+    let full = at.full(&f.node.personal_room());
+    assert_eq!(
+        err.to_string(),
+        format!("the certificate record at {full} names a seat this node does not hold")
+    );
+    assert_eq!(
+        (err.class(), err.address()),
+        ("certificate_record", Some(full.as_str()))
+    );
+}
+
+#[test]
+fn trusted_provenance_outside_a_device_seat_is_named() {
+    let mut f = fixture();
+    let at = f
+        .store
+        .append(
+            f.ingest.writer,
+            &[NewEvent {
+                kind: EventKind::UnparsedLine,
+                provenance: Provenance::Operator,
+                content: json!({"line": 4, "text": "x"}),
+                commitment_key: CommitmentKey::from_bytes([1; 32]),
+            }],
+        )
+        .unwrap()[0];
+
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        format!(
+            "the event at {} is of operator provenance, which only a device seat records",
+            at.full(&f.node.personal_room())
+        )
+    );
+    assert_eq!(err.class(), "provenance");
+}
+
+#[test]
+fn each_failure_names_its_class_and_where_it_is() {
+    let at = |e: VerifyError| (e.class(), e.address().map(str::to_owned));
+    let a = || "a".to_owned();
+    let r = || "r".to_owned();
+    let w = WriterId::derive(&[1; 32]);
+
+    assert_eq!(
+        at(VerifyError::Broken {
+            address: a(),
+            reason: r()
+        }),
+        ("chain", Some(a()))
+    );
+    assert_eq!(
+        at(VerifyError::Content {
+            address: a(),
+            removed: true
+        }),
+        ("content", Some(a()))
+    );
+    assert_eq!(
+        at(VerifyError::KeyEvent {
+            address: a(),
+            reason: r()
+        }),
+        ("key_event", Some(a()))
+    );
+    assert_eq!(
+        at(VerifyError::Provenance {
+            address: a(),
+            provenance: r()
+        }),
+        ("provenance", Some(a()))
+    );
+    assert_eq!(
+        at(VerifyError::Seat {
+            writer: w,
+            reason: r()
+        }),
+        ("seat", None)
+    );
+    assert_eq!(
+        at(VerifyError::Corrupt(store::StoreError::Full(w))),
+        ("corrupt", None)
+    );
+    assert_eq!(
+        at(VerifyError::Store(store::StoreError::Full(w))),
+        ("store", None)
+    );
 }

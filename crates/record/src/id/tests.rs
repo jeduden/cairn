@@ -33,9 +33,18 @@ fn ids_show_and_parse_as_hex() {
     assert_eq!(WriterId::parse(&writer.to_string()), Ok(writer));
     assert_eq!(RoomId::parse(&room.to_string()), Ok(room));
     assert_eq!(SeatId::parse(&seat.to_string()), Ok(seat));
-    assert_eq!(WriterId::parse("x"), Err(HexError::Length(1)));
-    assert_eq!(RoomId::parse("x"), Err(HexError::Length(1)));
-    assert_eq!(SeatId::parse("x"), Err(HexError::Length(1)));
+    assert_eq!(
+        WriterId::parse("x"),
+        Err(HexError::Length { want: 64, got: 1 })
+    );
+    assert_eq!(
+        RoomId::parse("x"),
+        Err(HexError::Length { want: 64, got: 1 })
+    );
+    assert_eq!(
+        SeatId::parse("x"),
+        Err(HexError::Length { want: 64, got: 1 })
+    );
     assert_eq!(format!("{writer:?}"), format!("WriterId({writer})"));
     assert_eq!(format!("{room:?}"), format!("RoomId({room})"));
     assert_eq!(format!("{seat:?}"), format!("SeatId({seat})"));

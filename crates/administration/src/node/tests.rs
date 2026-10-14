@@ -202,3 +202,94 @@ fn a_store_that_fails_mid_start_is_returned() {
         Err(AdminError::Key(_))
     ));
 }
+
+#[test]
+fn a_first_start_interrupted_after_staging_completes_on_the_next_start() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let mut store = Store::open(&home.store()).unwrap();
+    stage(&home, &mut OsEntropy).unwrap();
+    assert!(!home.device_key().exists());
+
+    let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+
+    assert!(home.device_key().is_file());
+    assert!(!home.genesis().exists());
+    assert_eq!(store.log(node.device_writer()).unwrap().len(), 3);
+    assert!(crate::verify::verify(&store, &node.device().public()).is_ok());
+}
+
+#[test]
+fn a_first_start_interrupted_after_recording_places_its_keys_on_the_next_start() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let mut store = Store::open(&home.store()).unwrap();
+    stage(&home, &mut OsEntropy).unwrap();
+    let genesis = Genesis::load(&home).unwrap();
+    genesis.record(&mut store, &mut OsEntropy).unwrap();
+    // A crash after the seat key was placed, before the others.
+    genesis.place_seat_key(&home).unwrap();
+
+    let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+
+    assert_eq!(node.device().public(), genesis.device.public());
+    assert_eq!(store.log(node.device_writer()).unwrap().len(), 3);
+    assert!(!home.genesis().exists());
+    assert!(crate::verify::verify(&store, &node.device().public()).is_ok());
+}
+
+#[test]
+fn a_staged_genesis_that_does_not_read_is_refused() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let mut store = Store::open(&home.store()).unwrap();
+    stage(&home, &mut OsEntropy).unwrap();
+    std::fs::remove_file(home.genesis().join("nonce")).unwrap();
+    key::file::write_secret(&home.genesis().join("nonce"), "zz").unwrap();
+
+    let err = Node::open(&home, &mut store, &mut OsEntropy).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        "the staged genesis nonce is not 32 hex digits"
+    );
+}
+
+#[test]
+fn a_first_start_whose_random_source_fails_records_nothing() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let mut store = Store::open(&home.store()).unwrap();
+
+    let err = Node::open(&home, &mut store, &mut Failing).unwrap_err();
+
+    assert!(
+        matches!(err, AdminError::Key(key::KeyError::Entropy(_))),
+        "{err}"
+    );
+    assert!(store.seats().unwrap().is_empty());
+}
+
+#[test]
+fn the_personal_room_is_the_one_whose_device_seat_holds_the_genesis() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let mut store = Store::open(&home.store()).unwrap();
+    let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+    // Device seats the device key certified in other rooms, as joins
+    // will add, with no genesis of their own.
+    for n in 0..5u8 {
+        let seat = SeatKey::mint(&mut OsEntropy).unwrap();
+        let room = RoomId::derive(&[n; 32], &[n; 16]);
+        let cert =
+            SeatCertificate::issue(node.device(), &seat, room, SeatKind::Device, false).unwrap();
+        store.add_seat(&seat_record(&cert)).unwrap();
+    }
+
+    let again = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+
+    assert_eq!(
+        (again.device_writer(), again.personal_room()),
+        (node.device_writer(), node.personal_room())
+    );
+}

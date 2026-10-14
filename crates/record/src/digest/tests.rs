@@ -22,19 +22,36 @@ fn hex_round_trips_and_shows_in_display_and_debug() {
 
 #[test]
 fn from_hex_refuses_a_wrong_length_or_a_digit_outside_lowercase_hex() {
-    assert_eq!(Digest::from_hex("ab"), Err(HexError::Length(2)));
+    assert_eq!(
+        Digest::from_hex("ab"),
+        Err(HexError::Length { want: 64, got: 2 })
+    );
     let upper = "A".repeat(64);
     assert_eq!(Digest::from_hex(&upper), Err(HexError::Digit('A')));
     let mut mixed = "0".repeat(63);
     mixed.push('g');
     assert_eq!(Digest::from_hex(&mixed), Err(HexError::Digit('g')));
     assert_eq!(
-        HexError::Length(2).to_string(),
+        HexError::Length { want: 64, got: 2 }.to_string(),
         "want 64 lowercase hex digits, got 2 characters"
     );
     assert_eq!(
         HexError::Digit('g').to_string(),
-        "want 64 lowercase hex digits, got 'g'"
+        "want lowercase hex digits, got 'g'"
+    );
+}
+
+#[test]
+fn unhex_reads_as_many_bytes_as_its_type_holds() {
+    assert_eq!(unhex::<2>("00ff"), Ok([0x00, 0xff]));
+    assert_eq!(unhex::<16>(&"ab".repeat(16)), Ok([0xab; 16]));
+    assert_eq!(
+        unhex::<16>(&"ab".repeat(32)),
+        Err(HexError::Length { want: 32, got: 64 })
+    );
+    assert_eq!(
+        HexError::Length { want: 32, got: 1 }.to_string(),
+        "want 32 lowercase hex digits, got 1 characters"
     );
 }
 
