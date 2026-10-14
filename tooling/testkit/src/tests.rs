@@ -120,3 +120,10 @@ fn an_executable_is_found_beside_the_running_test_s_deps_directory() {
         "the running test bdd lies in no deps directory"
     );
 }
+
+#[test]
+fn core_executable_looks_beside_the_running_test() {
+    let test = std::env::current_exe().unwrap();
+
+    assert_eq!(core_executable(), sibling_executable(&test, "cairn"));
+}

@@ -1,7 +1,7 @@
 ---
 id: 2609292012
 title: "M1: record and recall"
-status: "🔲"
+status: "🔳"
 summary: >-
   The append-only record of writer logs under seat keys a node's
   device key certifies, provenance, trust and origin, pull-only recall
@@ -263,9 +263,10 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                                       |
-| --- | ------ | --------------------------------------------------------------------------- |
-| 1   | 🔲     | [Proving slice: one transcript recorded, recalled and verified](phase-1.md) |
+| #   | Status | Phase                                                                                                                                                                                                  |
+| --- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | ✅     | [Proving slice: one transcript recorded, recalled and verified](phase-1.md)                                                                                                                            |
+|     | ↳      | @REC-10 off @pending and passing. A recorded transcript is ingested, recalled through event_get in the envelope and verified, end to end and confined; a flipped header byte exits 3 naming the event. |
 <?/catalog?>
 
 ## Acceptance Criteria

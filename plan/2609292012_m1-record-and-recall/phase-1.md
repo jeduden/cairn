@@ -1,7 +1,7 @@
 ---
 n: 1
 title: "Proving slice: one transcript recorded, recalled and verified"
-status: "🔲"
+status: "✅"
 result: false
 ---
 # Phase 1: one transcript recorded, recalled and verified
@@ -16,11 +16,14 @@ The slice runs one Claude Code 2.1.296 transcript from
 
 - At its first start, the node mints its device key, kept in a `0600`
   file for now; phase 5 builds the key stores the plan's ruling 2
-  names, and records their ADR. The device seat records the personal
-  room's create room act, then the genesis log's `minted` key event.
-- `cairn ingest <transcript>` starts an ingest seat in the personal
-  room. Its seat certificate is signed by the device key and
-  countersigned by the seat key.
+  names, and records their ADR. The device seat records the genesis
+  log's `minted` key event, its first event (PRV-12), then the
+  personal room's create room act, then the certificate record of its
+  own seat certificate (PRV-11).
+- `cairn ingest --path <transcript>` (§9.5) starts an ingest seat in
+  the personal room. Its seat certificate is signed by the device key
+  and countersigned by the seat key, and its certificate record lands
+  in the device seat.
 - Each line becomes one event in that seat's writer. Its header holds
   the address, event kind, provenance class, `prev_hash`, the other
   writers' chain heads it has seen, and the commitment under its
@@ -28,9 +31,11 @@ The slice runs one Claude Code 2.1.296 transcript from
   RFC 8785 over SHA-256.
 - Events land in `store.db` through `rusqlite`, 100 per transaction.
 - `cairn mcp` over stdio answers `event_get` for an address with the
-  event's content inside the envelope of §9.3.
+  event's content inside the envelope of §9.3. Until phase 9 binds a
+  session the server serves no run, so it answers only an explicit
+  `scope` of `room` and shows the event's run as `other`.
 - `cairn verify` checks every writer's chain and seat certificate,
-  exits 0, and exits non-zero naming the event when one header byte
+  exits 0, and exits 3 (§9.5) naming the event when one header byte
   changes.
 
 The slice fixes what later phases copy. It splits the crates, with
@@ -54,9 +59,9 @@ writers recorded under clocks an hour apart, and `cairn verify`. The
 other rows stay pending until their phases.
 
 RED, each test failing first. Unit tests cover the header encoding,
-the commitment and the certificate check. Integration tests in the
-core crate's `tests/` cover the store's 100-event transaction and
-`event_get`'s envelope. Then the `@REC-10` steps, and one thin
+the commitment and the certificate check. Integration tests cover the
+store's 100-event transaction (`crates/store/tests`) and `event_get`'s
+envelope (`crates/mcp/tests`). Then the `@REC-10` steps, and one thin
 end-to-end test of the whole slice.
 
 GREEN: the crates, the store's first schema, `cairn ingest`, `cairn
