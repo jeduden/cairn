@@ -11,9 +11,15 @@ fn each_role_mints_its_own_key_and_shows_its_public_half() {
 
     assert_ne!(device.public(), seat.public());
     assert_ne!(seat.public(), recovery.public());
-    assert_eq!(format!("{device:?}"), format!("DeviceKey({})", device.public()));
+    assert_eq!(
+        format!("{device:?}"),
+        format!("DeviceKey({})", device.public())
+    );
     assert_eq!(format!("{seat:?}"), format!("SeatKey({})", seat.public()));
-    assert_eq!(format!("{recovery:?}"), format!("RecoveryKey({})", recovery.public()));
+    assert_eq!(
+        format!("{recovery:?}"),
+        format!("RecoveryKey({})", recovery.public())
+    );
 }
 
 #[test]
@@ -23,9 +29,21 @@ fn a_key_round_trips_through_its_seed() {
     let again = SeatKey::from_seed(&key.seed_hex()).unwrap();
 
     assert_eq!(again.public(), key.public());
-    assert!(matches!(SeatKey::from_seed("zz"), Err(KeyError::Malformed(_))));
-    assert!(DeviceKey::from_seed(&DeviceKey::mint(&mut Counted::default()).unwrap().seed_hex()).is_ok());
-    assert!(RecoveryKey::from_seed(&RecoveryKey::mint(&mut Counted::default()).unwrap().seed_hex()).is_ok());
+    assert!(matches!(
+        SeatKey::from_seed("zz"),
+        Err(KeyError::Malformed(_))
+    ));
+    assert!(
+        DeviceKey::from_seed(&DeviceKey::mint(&mut Counted::default()).unwrap().seed_hex()).is_ok()
+    );
+    assert!(
+        RecoveryKey::from_seed(
+            &RecoveryKey::mint(&mut Counted::default())
+                .unwrap()
+                .seed_hex()
+        )
+        .is_ok()
+    );
 }
 
 #[test]
@@ -55,7 +73,10 @@ fn a_body_without_a_canonical_encoding_is_refused() {
     let key = SeatKey::mint(&mut Counted::default()).unwrap();
     let body = json!(0.5);
 
-    assert!(matches!(key.sign(SignatureKind::KeyEvent, &body), Err(KeyError::Encoding(_))));
+    assert!(matches!(
+        key.sign(SignatureKind::KeyEvent, &body),
+        Err(KeyError::Encoding(_))
+    ));
     let sig = key.sign(SignatureKind::KeyEvent, &json!(1)).unwrap();
     assert!(matches!(
         verify(&key.public(), SignatureKind::KeyEvent, &body, &sig),
@@ -75,14 +96,26 @@ fn public_keys_and_signatures_round_trip_through_hex() {
     let public = key.public();
     let sig = key.sign(SignatureKind::KeyEvent, &json!(1)).unwrap();
 
-    assert_eq!(PublicKey::from_hex(&public.to_string()), Ok(public));
+    assert_eq!(PublicKey::from_hex(&public.to_string()).unwrap(), public);
     assert_eq!(format!("{public:?}"), format!("PublicKey({public})"));
-    assert_eq!(public.fingerprint(), record::digest::Digest::of(&[b"cairn key fingerprint v1\0", public.as_bytes()]));
-    assert_eq!(Signature::from_hex(&sig.to_string()), Ok(sig));
+    assert_eq!(
+        public.fingerprint(),
+        record::digest::Digest::of(&[b"cairn key fingerprint v1\0", public.as_bytes()])
+    );
+    assert_eq!(Signature::from_hex(&sig.to_string()).unwrap(), sig);
     assert_eq!(format!("{sig:?}"), format!("Signature({sig})"));
-    assert!(matches!(PublicKey::from_hex("zz"), Err(KeyError::Malformed(_))));
-    assert!(matches!(Signature::from_hex("zz"), Err(KeyError::Malformed(_))));
-    assert!(matches!(Signature::from_hex(&"g".repeat(128)), Err(KeyError::Malformed(_))));
+    assert!(matches!(
+        PublicKey::from_hex("zz"),
+        Err(KeyError::Malformed(_))
+    ));
+    assert!(matches!(
+        Signature::from_hex("zz"),
+        Err(KeyError::Malformed(_))
+    ));
+    assert!(matches!(
+        Signature::from_hex(&"g".repeat(128)),
+        Err(KeyError::Malformed(_))
+    ));
 }
 
 #[test]
@@ -94,14 +127,22 @@ fn a_public_key_off_the_curve_verifies_nothing() {
     bytes[0] = 2;
 
     assert!(matches!(
-        verify(&PublicKey::from_bytes(bytes), SignatureKind::KeyEvent, &json!(1), &sig),
+        verify(
+            &PublicKey::from_bytes(bytes),
+            SignatureKind::KeyEvent,
+            &json!(1),
+            &sig
+        ),
         Err(KeyError::Signature(SignatureKind::KeyEvent))
     ));
 }
 
 #[test]
 fn errors_explain_themselves() {
-    assert_eq!(KeyError::Entropy("x".into()).to_string(), "draw random bytes: x");
+    assert_eq!(
+        KeyError::Entropy("x".into()).to_string(),
+        "draw random bytes: x"
+    );
     assert_eq!(
         KeyError::Signature(SignatureKind::SeatCertificate).to_string(),
         "a seat_certificate signature does not verify"

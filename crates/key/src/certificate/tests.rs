@@ -17,7 +17,10 @@ fn an_issued_certificate_checks_and_names_its_seat_and_writer() {
     let cert = SeatCertificate::issue(&device, &seat, room, SeatKind::Run, true).unwrap();
 
     assert!(cert.check().is_ok());
-    assert_eq!(cert.seat_id(), SeatId::derive(&room, seat.public().as_bytes()));
+    assert_eq!(
+        cert.seat_id(),
+        SeatId::derive(&room, seat.public().as_bytes())
+    );
     assert_eq!(cert.writer_id(), WriterId::derive(seat.public().as_bytes()));
     assert_eq!(cert.certifier, device.public());
     assert!(cert.ingest_seat);
@@ -30,7 +33,12 @@ fn a_certificate_round_trips_through_its_value() {
         let cert = SeatCertificate::issue(&device, &seat, room, kind, ingest).unwrap();
 
         assert_eq!(SeatCertificate::from_value(&cert.to_value()).unwrap(), cert);
-        assert_eq!(cert.digest(), Digest::of(&[record::canonical::encode(&cert.to_value()).unwrap().as_bytes()]));
+        assert_eq!(
+            cert.digest(),
+            Digest::of(&[record::canonical::encode(&cert.to_value())
+                .unwrap()
+                .as_bytes()])
+        );
     }
 }
 
