@@ -37,7 +37,10 @@ fn every_line_becomes_one_unparsed_event_of_a_new_ingest_seat() {
     for (i, (stored, text)) in log.iter().zip(["{\"a\":1}", "{\"b\":2}"]).enumerate() {
         assert_eq!(stored.link.header.kind, EventKind::UnparsedLine);
         assert_eq!(stored.link.header.provenance, Provenance::Unparsed);
-        assert_eq!(stored.content, Some(serde_json::json!({"line": i + 1, "text": text})));
+        assert_eq!(
+            stored.content,
+            Some(serde_json::json!({"line": i + 1, "text": text}))
+        );
     }
     let seat = store.seat(ingested.writer).unwrap().unwrap();
     assert_eq!((seat.seat, seat.room), (ingested.seat, ingested.room));
@@ -64,15 +67,30 @@ fn an_unreadable_empty_or_non_utf8_transcript_records_nothing() {
 
     let missing = ingest_path(&home, &dir.path().join("none"), &mut OsEntropy).unwrap_err();
     assert!(matches!(missing, IngestError::Read { .. }), "{missing}");
-    assert!(missing.to_string().starts_with("read the transcript "), "{missing}");
+    assert!(
+        missing.to_string().starts_with("read the transcript "),
+        "{missing}"
+    );
     assert!(std::error::Error::source(&missing).is_some());
 
     let empty = ingest_path(&home, &transcript(&dir, ""), &mut OsEntropy).unwrap_err();
-    assert_eq!(empty.to_string(), format!("the transcript {} holds no line", dir.path().join("t.jsonl").display()));
+    assert_eq!(
+        empty.to_string(),
+        format!(
+            "the transcript {} holds no line",
+            dir.path().join("t.jsonl").display()
+        )
+    );
 
     std::fs::write(dir.path().join("t.jsonl"), [0xff, b'\n']).unwrap();
     let bytes = ingest_path(&home, &dir.path().join("t.jsonl"), &mut OsEntropy).unwrap_err();
-    assert_eq!(bytes.to_string(), format!("the transcript {} is not UTF-8", dir.path().join("t.jsonl").display()));
+    assert_eq!(
+        bytes.to_string(),
+        format!(
+            "the transcript {} is not UTF-8",
+            dir.path().join("t.jsonl").display()
+        )
+    );
     assert!(std::error::Error::source(&bytes).is_none());
 
     assert!(!home.store().exists());
@@ -100,9 +118,14 @@ fn a_store_that_cannot_open_or_a_random_source_that_fails_is_returned() {
     ingest_path(&home, &path, &mut OsEntropy).unwrap();
 
     let err = ingest_path(&home, &path, &mut Failing).unwrap_err();
-    assert!(matches!(err, IngestError::Admin(_)), "{err}");
+    assert!(matches!(err, IngestError::Key(_)), "{err}");
+    assert!(std::error::Error::source(&err).is_some());
 
-    std::fs::write(home.store(), "not a database at all, but long enough to read a header").unwrap();
+    std::fs::write(
+        home.store(),
+        "not a database at all, but long enough to read a header",
+    )
+    .unwrap();
     let err = ingest_path(&home, &path, &mut OsEntropy).unwrap_err();
     assert!(matches!(err, IngestError::Store(_)), "{err}");
     assert!(std::error::Error::source(&err).is_some());
