@@ -116,7 +116,6 @@ pub fn unhex<const N: usize>(text: &str) -> Result<[u8; N], HexError> {
             got: count,
         });
     }
-    let mut out = [0; N];
     let digits: Vec<u8> = text
         .chars()
         .map(|c| match c {
@@ -124,11 +123,12 @@ pub fn unhex<const N: usize>(text: &str) -> Result<[u8; N], HexError> {
             _ => Err(HexError::Digit(c)),
         })
         .collect::<Result<_, _>>()?;
-    for (byte, pair) in out.iter_mut().zip(digits.as_chunks::<2>().0) {
-        *byte = pair[0] << 4 | pair[1];
-    }
 
-    Ok(out)
+    // Each byte from its two digits; the length check above makes
+    // every index exist.
+    Ok(std::array::from_fn(|i| {
+        digits.get(2 * i).map_or(0, |hi| hi << 4) | digits.get(2 * i + 1).copied().unwrap_or(0)
+    }))
 }
 
 /// HMAC-SHA-256 (RFC 2104) of `message`, given in parts, under `key`.
