@@ -355,25 +355,36 @@ fn committed_names_a_missing_directory_or_a_malformed_ruleset() {
 }
 
 #[test]
-fn every_committed_ruleset_names_itself_and_its_target_once() {
+fn every_committed_ruleset_names_itself_its_target_and_its_refs_once() {
+    let refs = json!({"ref_name": {"include": ["~ALL"]}});
     let ok = [
         (
             "a.json".to_owned(),
-            json!({"name": "main", "target": "branch"}),
+            json!({"name": "main", "target": "branch", "conditions": refs}),
         ),
         (
             "b.json".to_owned(),
-            json!({"name": "tags", "target": "tag"}),
+            json!({"name": "tags", "target": "tag", "conditions": refs}),
         ),
     ];
     assert!(rulesets_named(&ok).is_empty());
 
     let bad = [
-        ("a.json".to_owned(), json!({"target": "branch"})),
-        ("b.json".to_owned(), json!({"name": "tags"})),
+        (
+            "a.json".to_owned(),
+            json!({"target": "branch", "conditions": refs}),
+        ),
+        (
+            "b.json".to_owned(),
+            json!({"name": "tags", "conditions": refs}),
+        ),
         (
             "c.json".to_owned(),
-            json!({"name": "tags", "target": "tag"}),
+            json!({"name": "tags", "target": "tag", "conditions": refs}),
+        ),
+        (
+            "d.json".to_owned(),
+            json!({"name": "none", "target": "tag", "conditions": {"ref_name": {"include": []}}}),
         ),
     ];
     assert_eq!(
@@ -382,6 +393,7 @@ fn every_committed_ruleset_names_itself_and_its_target_once() {
             "a.json names no ruleset",
             "b.json names no target",
             "c.json repeats the ruleset name tags",
+            "d.json includes no ref, so it applies to nothing",
         ]
     );
 }
