@@ -15,9 +15,9 @@ The slice runs one Claude Code 2.1.296 transcript from
 `CAIRN_HOME`:
 
 - At its first start, the node mints its device key, kept in a `0600`
-  file for now (phase 5 decides the key stores). The device seat
-  records the personal room's create room act, then the genesis log's
-  `minted` key event.
+  file for now; phase 5 builds the key stores the plan's ruling 2
+  names, and records their ADR. The device seat records the personal
+  room's create room act, then the genesis log's `minted` key event.
 - `cairn ingest <transcript>` starts an ingest seat in the personal
   room. Its seat certificate is signed by the device key and
   countersigned by the seat key.
