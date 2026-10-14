@@ -39,7 +39,7 @@ pub struct Ingested {
     pub events: usize,
 }
 
-/// Why an ingest recorded nothing, or stopped.
+/// Why an ingest recorded nothing, or stopped part way.
 #[derive(Debug)]
 pub enum IngestError {
     /// The transcript cannot be read.
@@ -57,6 +57,14 @@ pub enum IngestError {
     Admin(AdminError),
     /// The store failed.
     Store(StoreError),
+    /// The store failed after `landed` of the transcript's `lines`
+    /// lines were recorded in `writer`'s log; those stay.
+    Partial {
+        writer: WriterId,
+        landed: usize,
+        lines: usize,
+        source: StoreError,
+    },
 }
 
 impl fmt::Display for IngestError {
@@ -70,6 +78,15 @@ impl fmt::Display for IngestError {
             Self::Key(e) => write!(f, "{e}"),
             Self::Admin(e) => write!(f, "{e}"),
             Self::Store(e) => write!(f, "{e}"),
+            Self::Partial {
+                writer,
+                landed,
+                lines,
+                source,
+            } => write!(
+                f,
+                "writer {writer} recorded {landed} of {lines} lines before the store failed: {source}"
+            ),
         }
     }
 }
@@ -80,7 +97,7 @@ impl std::error::Error for IngestError {
             Self::Read { source, .. } => Some(source),
             Self::Key(e) => Some(e),
             Self::Admin(e) => Some(e),
-            Self::Store(e) => Some(e),
+            Self::Store(e) | Self::Partial { source: e, .. } => Some(e),
             Self::NotUtf8(_) | Self::Empty(_) => None,
         }
     }
@@ -123,9 +140,19 @@ pub fn ingest_path(
     let seat = node
         .certify_ingest_seat(home, &mut store, entropy)
         .map_err(IngestError::Admin)?;
-    store
-        .append(seat.writer, &new_events)
-        .map_err(IngestError::Store)?;
+    // A transaction at a time, so a failure can say what landed.
+    let mut landed = 0;
+    for chunk in new_events.chunks(store::BATCH) {
+        store
+            .append(seat.writer, chunk)
+            .map_err(|source| IngestError::Partial {
+                writer: seat.writer,
+                landed,
+                lines: new_events.len(),
+                source,
+            })?;
+        landed += chunk.len();
+    }
 
     Ok(Ingested {
         writer: seat.writer,

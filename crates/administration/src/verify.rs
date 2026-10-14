@@ -39,6 +39,23 @@ pub struct Report {
     pub writers: usize,
     pub events: usize,
     pub order: Vec<Address>,
+    /// The room each writer's seat is in.
+    pub rooms: BTreeMap<WriterId, RoomId>,
+}
+
+impl Report {
+    /// The causal order, each event by its full address.
+    #[must_use]
+    pub fn full_order(&self) -> Vec<String> {
+        self.order
+            .iter()
+            .map(|a| {
+                self.rooms
+                    .get(&a.writer)
+                    .map_or_else(|| a.to_string(), |r| a.full(r))
+            })
+            .collect()
+    }
 }
 
 /// Where and how the record fails verification.
@@ -246,6 +263,7 @@ pub fn verify(store: &Store, node_key: &PublicKey) -> Result<Report, VerifyError
         writers: writers.len(),
         events: order.len(),
         order,
+        rooms: certs.iter().map(|(w, c)| (*w, c.room)).collect(),
     })
 }
 

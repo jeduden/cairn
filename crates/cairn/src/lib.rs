@@ -12,6 +12,7 @@ use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
 use administration::home::Home;
+use administration::node::Node;
 use administration::verify::{VerifyError, verify};
 use key::random::OsEntropy;
 use key::signing::DeviceKey;
@@ -53,7 +54,7 @@ const USAGE: &str = "usage: cairn <command> [flags]
 commands:
   ingest --path P [--json]   record the transcript at P
   mcp                        serve the MCP tools over stdio
-  verify [--json]            check every chain and seat certificate
+  verify [--json]            check the record against this node's key
   version [--json]           print the build version
   help                       print this message
 ";
@@ -234,13 +235,27 @@ fn mcp(
         let _ = writeln!(stderr, "cairn mcp: unknown flag {arg:?}");
         return EXIT_USAGE;
     }
-    let store = ctx
-        .home()
+    let home = match ctx.home() {
+        Ok(home) => home,
+        Err(e) => return failed("mcp", &e, stderr),
+    };
+    // Recall reads a record a start made; it makes no home or store.
+    if !home.store().exists() {
+        let why = format!(
+            "no store at {}: run cairn ingest first",
+            home.store().display()
+        );
+        return failed("mcp", &why, stderr);
+    }
+    let served = Store::open(&home.store())
         .map_err(|e| e.to_string())
-        .and_then(|home| home.create().map(|()| home).map_err(|e| e.to_string()))
-        .and_then(|home| Store::open(&home.store()).map_err(|e| e.to_string()));
-    let mut server = match store {
-        Ok(store) => mcp::Server::new(store, ctx.build.version),
+        .and_then(|store| {
+            let node = Node::find(&home, &store).map_err(|e| e.to_string())?;
+            let (key, room) = (node.device().public(), node.personal_room());
+            Ok(mcp::Server::new(store, ctx.build.version, key, room))
+        });
+    let mut server = match served {
+        Ok(server) => server,
         Err(e) => return failed("mcp", &e, stderr),
     };
     match mcp::serve(&mut server, &(ctx.input)(), stdout, IDLE) {
@@ -249,8 +264,9 @@ fn mcp(
     }
 }
 
-/// `cairn verify [--json]`: checks every chain and seat certificate,
-/// exiting 3 at the first break, which it names.
+/// `cairn verify [--json]`: checks the record against this node's
+/// device key, exiting 3 at the first failure, which it names. No log
+/// is signed yet, so a record that passes is `unsigned` (§9.7.5).
 fn verify_command(
     args: impl Iterator<Item = String>,
     ctx: &Context,
@@ -271,22 +287,32 @@ fn verify_command(
             stderr,
         );
     }
+    let store = match Store::open(&home.store()) {
+        Ok(store) => store,
+        Err(e) => return failed("verify", &e, stderr),
+    };
     let device = match DeviceKey::load(&home.device_key()) {
         Ok(device) => device,
         Err(e) => return failed("verify", &e, stderr),
     };
-    let checked = Store::open(&home.store())
-        .map_err(VerifyError::from)
-        .and_then(|s| verify(&s, &device.public()));
+    let checked = verify(&store, &device.public());
     let (code, line) = match checked {
         Ok(r) if as_json => (
             EXIT_OK,
-            json!({"writers": r.writers, "events": r.events, "broken": null}).to_string(),
+            json!({
+                "integrity": "unsigned",
+                "writers": r.writers,
+                "events": r.events,
+                "order": r.full_order(),
+                "broken": null,
+            })
+            .to_string(),
         ),
         Ok(r) => (
             EXIT_OK,
             format!(
-                "verified {} writers and {} events: every chain and seat certificate checks",
+                "checked {} writers and {} events: every chain, commitment and seat certificate \
+                 holds; integrity unsigned, as no log is signed yet",
                 r.writers, r.events
             ),
         ),
@@ -296,9 +322,21 @@ fn verify_command(
             if !as_json {
                 return EXIT_INTEGRITY;
             }
+            let failure = json!({
+                "class": broken.class(),
+                "address": broken.address(),
+                "message": broken.to_string(),
+            });
             (
                 EXIT_INTEGRITY,
-                json!({"writers": null, "events": null, "broken": broken.to_string()}).to_string(),
+                json!({
+                    "integrity": "broken",
+                    "writers": null,
+                    "events": null,
+                    "order": null,
+                    "broken": failure,
+                })
+                .to_string(),
             )
         }
     };

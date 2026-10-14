@@ -67,7 +67,38 @@ impl Node {
             sync_directory(&dir).map_err(|source| io(&dir, source))?;
         }
 
-        find(home, store)
+        Self::find(home, store)
+    }
+
+    /// The node whose device key `home` holds, by the device seat whose
+    /// log begins with that key's `minted` key event: its genesis. It
+    /// writes nothing, so it finds only a node a start made.
+    ///
+    /// # Errors
+    ///
+    /// Fails when the device key cannot be read, the store fails, or
+    /// the store holds no genesis of the device key.
+    pub fn find(home: &Home, store: &Store) -> Result<Self, AdminError> {
+        let device = DeviceKey::load(&home.device_key())?;
+        let key = device.public();
+        for seat in store.seats()? {
+            let cert = SeatCertificate::from_value(&seat.certificate)?;
+            if cert.seat_kind != SeatKind::Device || cert.certifying_key != key {
+                continue;
+            }
+            let first = store.event(Address::new(seat.writer, Seq::FIRST))?;
+            if begins_genesis(first.as_ref(), &key) {
+                return Ok(Self {
+                    device,
+                    device_writer: seat.writer,
+                    room: seat.room,
+                });
+            }
+        }
+
+        Err(AdminError::Node(
+            "the home holds a device key but the store no device seat it certified",
+        ))
     }
 
     /// The device key.
@@ -252,31 +283,6 @@ fn place(
     }
 
     Ok(save(path)?)
-}
-
-/// The node whose device key `home` holds, by the device seat whose log
-/// begins with that key's `minted` key event: its genesis.
-fn find(home: &Home, store: &Store) -> Result<Node, AdminError> {
-    let device = DeviceKey::load(&home.device_key())?;
-    let key = device.public();
-    for seat in store.seats()? {
-        let cert = SeatCertificate::from_value(&seat.certificate)?;
-        if cert.seat_kind != SeatKind::Device || cert.certifying_key != key {
-            continue;
-        }
-        let first = store.event(Address::new(seat.writer, Seq::FIRST))?;
-        if begins_genesis(first.as_ref(), &key) {
-            return Ok(Node {
-                device,
-                device_writer: seat.writer,
-                room: seat.room,
-            });
-        }
-    }
-
-    Err(AdminError::Node(
-        "the home holds a device key but the store no device seat it certified",
-    ))
 }
 
 /// Whether `first`, a device seat's first event, is the `minted` key

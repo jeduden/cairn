@@ -136,6 +136,7 @@ fn logs(w: &mut World) -> Result<BTreeMap<WriterId, Vec<Link>>, String> {
 )]
 fn hash_over_prev_and_header(w: &mut World) -> Result<(), String> {
     for (writer, links) in logs(w)? {
+        chain::check_writer(writer, &links).map_err(|e| e.to_string())?;
         let mut prev = Digest::ZERO;
         for link in links {
             let h = &link.header;
@@ -244,15 +245,26 @@ fn header_fields(w: &mut World) -> Result<(), String> {
 fn causal_not_wall_clock(w: &mut World) -> Result<(), String> {
     let record = logs(w)?;
     let writers = rec(w).writers.clone();
-    let order = chain::causal_order(&record).map_err(|e| e.to_string())?;
     // The order the writers took turns in: the first's event i, then
     // the second's.
     let turns: Vec<Address> = (0..writers[0].1.len())
         .flat_map(|i| writers.iter().map(move |(writer, _)| (*writer, i)))
         .filter_map(|(writer, i)| record[&writer].get(i).map(|l| l.header.address))
         .collect();
+    // The order `cairn verify` reports, of the two writers' events.
+    let ours: Vec<WriterId> = writers.iter().map(|(writer, _)| *writer).collect();
+    let order: Vec<Address> = verified_order(w)?
+        .into_iter()
+        .filter(|a| ours.contains(&a.writer))
+        .collect();
     if order != turns {
-        return Err("the causal order is not the order the writers' cited heads give".to_owned());
+        return Err(format!(
+            "cairn verify orders the {} events otherwise than their cited heads do",
+            turns.len()
+        ));
+    }
+    if chain::causal_order(&record).map_err(|e| e.to_string())? != order {
+        return Err("the record's causal order is not the one cairn verify reports".to_owned());
     }
     let mut by_clock: Vec<(String, Address)> = writers
         .iter()
@@ -270,9 +282,29 @@ fn causal_not_wall_clock(w: &mut World) -> Result<(), String> {
             "wall-clock time gives the same order, so the scenario proves nothing".to_owned(),
         );
     }
-    // The order is computed here, through the record's own laws, from
-    // the record `cairn verify` checked, every cited head against the
-    // event it names: nothing in the product orders events across
-    // writers yet.
+
     Ok(())
+}
+
+/// The causal order `cairn verify --json` reports, run confined.
+fn verified_order(w: &World) -> Result<Vec<Address>, String> {
+    let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
+    let exe = testkit::core_executable()?;
+    let out = core
+        .run(&exe, &["verify", "--json"], &w.home)
+        .map_err(|e| e.to_string())?;
+    let report: serde_json::Value =
+        serde_json::from_slice(&out.stdout).map_err(|e| format!("cairn verify --json: {e}"))?;
+    let order = report["order"]
+        .as_array()
+        .ok_or_else(|| format!("cairn verify --json reports no order: {report}"))?;
+    order
+        .iter()
+        .map(|a| {
+            let text = a.as_str().ok_or("an address in the order is no string")?;
+            Address::parse(text)
+                .map(|(address, _)| address)
+                .map_err(|e| e.to_string())
+        })
+        .collect()
 }

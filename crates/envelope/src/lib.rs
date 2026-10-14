@@ -117,6 +117,29 @@ pub struct Item {
 }
 
 impl Item {
+    /// The item as JSON text, its content last.
+    fn render(&self) -> String {
+        let fields = [
+            ("address", Value::from(self.address.as_str())),
+            ("writer", Value::from(self.writer.as_str())),
+            ("author", Value::from(self.author.as_str())),
+            ("origin", Value::from(self.origin.as_str())),
+            ("run", Value::from(self.run.as_str())),
+            ("kind", Value::from(self.kind.as_str())),
+            ("provenance", Value::from(self.provenance.as_str())),
+            ("trust", Value::from(self.trust.as_str())),
+            ("flags", json!(self.flags)),
+            ("integrity", Value::from(self.integrity.as_str())),
+            ("content", Value::from(self.content.as_str())),
+        ];
+        let fields: Vec<String> = fields
+            .iter()
+            .map(|(name, value)| format!("\"{name}\":{value}"))
+            .collect();
+
+        format!("{{{}}}", fields.join(","))
+    }
+
     fn to_value(&self) -> Value {
         json!({
             "address": self.address,
@@ -159,10 +182,21 @@ impl Envelope {
         })
     }
 
-    /// The envelope as JSON text.
+    /// The envelope as JSON text, its fields in the order §9.3 shows:
+    /// the warning before any item, and each item's closed fields
+    /// before its content, so a model reads where the content came from
+    /// and how far to trust it before the content itself.
     #[must_use]
     pub fn render(&self) -> String {
-        self.to_value().to_string()
+        let items: Vec<String> = self.items.iter().map(Item::render).collect();
+
+        format!(
+            "{{\"cairn_envelope\":{VERSION},\"warning\":{},\"items\":[{}],\"tombstones\":[],\"truncated\":{},\"next_cursor\":{}}}",
+            Value::from(WARNING),
+            items.join(","),
+            self.truncated,
+            json!(self.next_cursor),
+        )
     }
 }
 

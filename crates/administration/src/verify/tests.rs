@@ -76,6 +76,14 @@ fn an_intact_record_verifies_and_counts_its_writers_and_events() {
         .map(|a| a.seq.get())
         .collect();
     assert_eq!(ingest, [1, 2, 3]);
+    let full = report.full_order();
+    assert_eq!(full.len(), 7);
+    assert!(full.contains(&f.at(3).full(&f.node.personal_room())));
+    let bare = Report {
+        rooms: BTreeMap::new(),
+        ..report
+    };
+    assert_eq!(bare.full_order()[0], bare.order[0].to_string());
 }
 
 #[test]
