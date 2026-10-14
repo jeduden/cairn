@@ -357,15 +357,24 @@ fn committed_names_a_missing_directory_or_a_malformed_ruleset() {
 #[test]
 fn every_committed_ruleset_names_itself_and_its_target_once() {
     let ok = [
-        ("a.json".to_owned(), json!({"name": "main", "target": "branch"})),
-        ("b.json".to_owned(), json!({"name": "tags", "target": "tag"})),
+        (
+            "a.json".to_owned(),
+            json!({"name": "main", "target": "branch"}),
+        ),
+        (
+            "b.json".to_owned(),
+            json!({"name": "tags", "target": "tag"}),
+        ),
     ];
     assert!(rulesets_named(&ok).is_empty());
 
     let bad = [
         ("a.json".to_owned(), json!({"target": "branch"})),
         ("b.json".to_owned(), json!({"name": "tags"})),
-        ("c.json".to_owned(), json!({"name": "tags", "target": "tag"})),
+        (
+            "c.json".to_owned(),
+            json!({"name": "tags", "target": "tag"}),
+        ),
     ];
     assert_eq!(
         rulesets_named(&bad),

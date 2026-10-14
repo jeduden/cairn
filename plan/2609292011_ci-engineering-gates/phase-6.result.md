@@ -26,6 +26,13 @@ What landed:
   CODEOWNERS conforms; nothing in it was changed.
 - Ten drift cases, six integration gate tests for the ruleset and
   CODEOWNERS, and an end-to-end test of the executable.
+- After the merge, the two live tag rulesets were committed beside
+  main's: `releases-semver` keeps each `v*.*.*` tag fixed on a signed
+  commit that passed `CI`, and `no-other-tags-allowed` refuses every
+  other tag. The nightly job compares every file under
+  `.github/rulesets` with the live ruleset of its name, and
+  `protection-check` also refuses a live ruleset on another target or
+  with a `do_not_` flag switched on.
 
 Scenario: `@ENG-21` stays `@pending`. Its first five `Then` steps pass
 when run without the tag. The last, two approvals on the
@@ -39,7 +46,7 @@ it.
 For the stakeholder:
 
 - Apply `.github/rulesets/main.json` on GitHub; until then the nightly
-  `protection` job is red.
+  `protection` job is red. Applied on 2026-10-14; the job passed.
 - Decide how a pull request the stakeholder authors on an owned path
   merges: GitHub never counts an author's own approval, and the ruleset
   has no bypass actor.

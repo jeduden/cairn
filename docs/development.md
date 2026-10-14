@@ -190,24 +190,22 @@ otherwise it requests changes.
 
 Main's protection is committed as a ruleset,
 [main.json](../.github/rulesets/main.json), in GitHub's export format
-(ENG-21). It allows no direct push and no bypass, requires signed
-commits, `CI` and one approval from a reviewer other than the author,
-and a code owner's approval where [CODEOWNERS](../.github/CODEOWNERS)
-names one. The ENG-21 gate tests read it, and CODEOWNERS: the
-stakeholder owns the requirement text and every path that enforces it,
-mapped from the classes the ENG-21 row names, and nothing else is owned
-but the decision records, the supply-chain policy and the
-security-sensitive crates. A ruleset is a setting on GitHub. The
-stakeholder applies the committed ruleset. The `protection` job in
-[nightly.yml](../.github/workflows/nightly.yml) fetches the live ruleset
-and runs `protection-check`, which fails when the live one is weaker
-than the committed one. GitHub shows a ruleset's bypass actors only to a
-caller with write access to it, so the workflow's token cannot see them.
-A ruleset also holds one approval count for the whole branch, and
-CODEOWNERS asks one owner per path, so neither can require two
+(ENG-21). It allows no direct push and no bypass, and requires signed
+commits, `CI`, one approval from a reviewer other than the author, and
+a code owner's approval where [CODEOWNERS](../.github/CODEOWNERS) names
+one. The ENG-21 gate tests read it, and CODEOWNERS: the stakeholder
+owns the requirement text and every path that enforces it, and nothing
+else is owned but the decision records, the supply-chain policy and the
+security-sensitive crates. Two tag rulesets sit beside it.
+`releases-semver` keeps each `v*.*.*` tag fixed on a signed commit that
+passed `CI`. `no-other-tags-allowed` refuses every other tag. The
+stakeholder applies the rulesets on GitHub. The nightly `protection`
+job runs `protection-check` on each file under `.github/rulesets`. It
+fails when the live ruleset of that name is missing or weaker. The
+workflow's token cannot see a ruleset's bypass actors. One approval
+count holds for the whole branch, so no ruleset can require two
 approvals for the security-sensitive crates alone. That part of ENG-21
-is open, and its scenario stays pending until a required check,
-`Security approvals`, enforces it.
+stays open until a required check, `Security approvals`, enforces it.
 
 [release.yml](../.github/workflows/release.yml) runs from the Actions
 "Run workflow" button on `main`, with a version like `v0.1.0`. A pushed
