@@ -17,7 +17,7 @@ use record::digest::hex;
 use record::event::{EventKind, Provenance};
 use record::id::{RoomId, WriterId};
 use serde_json::{Value, json};
-use store::{Draft, SeatRecord, Store};
+use store::{NewEvent, Store, StoredSeat};
 
 use crate::AdminError;
 use crate::home::Home;
@@ -62,27 +62,27 @@ impl Node {
         let minted = KeyEvent::minted(&device, &recovery.public())?;
         let keys: [[u8; 32]; 3] = [draw(entropy)?, draw(entropy)?, draw(entropy)?];
         let room_act = json!({"room": room.to_string(), "nonce": hex(&nonce)});
-        let drafts = [
-            draft(
+        let new_events = [
+            new_event(
                 keys[0],
                 EventKind::KeyEvent,
                 Provenance::Structural,
                 minted.to_value(),
             ),
-            draft(
+            new_event(
                 keys[1],
                 EventKind::CreateRoom,
                 Provenance::Operator,
                 room_act,
             ),
-            draft(
+            new_event(
                 keys[2],
                 EventKind::CertificateRecord,
                 Provenance::Structural,
                 certificate_record(&cert),
             ),
         ];
-        store.append(record.writer, &drafts)?;
+        store.append(record.writer, &new_events)?;
 
         Ok(Self {
             device,
@@ -105,7 +105,7 @@ impl Node {
 
     /// The personal room.
     #[must_use]
-    pub fn room(&self) -> RoomId {
+    pub fn personal_room(&self) -> RoomId {
         self.room
     }
 
@@ -121,7 +121,7 @@ impl Node {
         home: &Home,
         store: &mut Store,
         entropy: &mut dyn Entropy,
-    ) -> Result<SeatRecord, AdminError> {
+    ) -> Result<StoredSeat, AdminError> {
         let seat = SeatKey::mint(entropy)?;
         let key = draw(entropy)?;
         let cert = SeatCertificate::issue(&self.device, &seat, self.room, SeatKind::Run, true)?;
@@ -129,13 +129,13 @@ impl Node {
         let record = seat_record(&cert);
         store.add_seat(&record)?;
         let content = certificate_record(&cert);
-        let drafts = [draft(
+        let new_events = [new_event(
             key,
             EventKind::CertificateRecord,
             Provenance::Structural,
             content,
         )];
-        store.append(self.device_writer, &drafts)?;
+        store.append(self.device_writer, &new_events)?;
 
         Ok(record)
     }
@@ -147,7 +147,7 @@ fn find(home: &Home, store: &Store) -> Result<Node, AdminError> {
     let device = DeviceKey::load(&home.device_key())?;
     for seat in store.seats()? {
         let cert = SeatCertificate::from_value(&seat.certificate)?;
-        if cert.seat_kind == SeatKind::Device && cert.certifier == device.public() {
+        if cert.seat_kind == SeatKind::Device && cert.certifying_key == device.public() {
             return Ok(Node {
                 device,
                 device_writer: seat.writer,
@@ -162,8 +162,8 @@ fn find(home: &Home, store: &Store) -> Result<Node, AdminError> {
 }
 
 /// The store's record of the seat `cert` certifies.
-fn seat_record(cert: &SeatCertificate) -> SeatRecord {
-    SeatRecord {
+fn seat_record(cert: &SeatCertificate) -> StoredSeat {
+    StoredSeat {
         writer: cert.writer_id(),
         seat: cert.seat_id(),
         room: cert.room,
@@ -181,9 +181,9 @@ fn certificate_record(cert: &SeatCertificate) -> Value {
     })
 }
 
-/// A draft of `content`, under the commitment key `key`.
-fn draft(key: [u8; 32], kind: EventKind, provenance: Provenance, content: Value) -> Draft {
-    Draft {
+/// A new event of `content`, under the commitment key `key`.
+fn new_event(key: [u8; 32], kind: EventKind, provenance: Provenance, content: Value) -> NewEvent {
+    NewEvent {
         kind,
         provenance,
         content,

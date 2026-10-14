@@ -16,7 +16,7 @@ use record::commitment::commit;
 use record::digest::Digest;
 use record::event::EventKind;
 use record::id::{Address, RoomId, WriterId};
-use store::{SeatRecord, Store, StoreError, Stored};
+use store::{Store, StoreError, Stored, StoredSeat};
 
 /// What a verified record holds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -72,7 +72,7 @@ impl From<StoreError> for VerifyError {
 ///
 /// Fails at the first break, naming it, or when the store fails.
 pub fn verify(store: &Store) -> Result<Report, VerifyError> {
-    let seats: BTreeMap<WriterId, SeatRecord> =
+    let seats: BTreeMap<WriterId, StoredSeat> =
         store.seats()?.into_iter().map(|s| (s.writer, s)).collect();
     let rooms: BTreeMap<WriterId, RoomId> = seats.iter().map(|(w, s)| (*w, s.room)).collect();
     let full = |a: Address| {
@@ -120,12 +120,12 @@ pub fn verify(store: &Store) -> Result<Report, VerifyError> {
             writer: *writer,
             reason: reason.to_owned(),
         };
-        let certifier_minted = minted
-            .get(&cert.certifier.fingerprint())
-            .is_some_and(|e| e.check_minted(&cert.certifier).is_ok());
-        if !certifier_minted {
+        let certifying_key_minted = minted
+            .get(&cert.certifying_key.fingerprint())
+            .is_some_and(|e| e.check_minted(&cert.certifying_key).is_ok());
+        if !certifying_key_minted {
             return Err(seat_error(
-                "no minted key event of this node names its certifier",
+                "no minted key event of this node names its certifying_key",
             ));
         }
         if !recorded.contains(&cert.digest()) {
@@ -160,7 +160,7 @@ fn unopened(stored: &Stored) -> Option<&'static str> {
 /// seat.
 fn certificates(
     writers: &[WriterId],
-    seats: &BTreeMap<WriterId, SeatRecord>,
+    seats: &BTreeMap<WriterId, StoredSeat>,
 ) -> Result<BTreeMap<WriterId, SeatCertificate>, VerifyError> {
     let mut out = BTreeMap::new();
     for writer in writers {

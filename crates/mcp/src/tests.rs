@@ -294,7 +294,7 @@ fn a_store_failure_or_a_writer_without_a_seat_is_a_tool_error() {
     store
         .append(
             stray,
-            &[store::Draft {
+            &[store::NewEvent {
                 kind: record::event::EventKind::UnparsedLine,
                 provenance: record::event::Provenance::Unparsed,
                 content: json!({"text": "x"}),

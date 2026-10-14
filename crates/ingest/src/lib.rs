@@ -1,10 +1,12 @@
 //! `cairn ingest` (REC-01's first step): reads one transcript into the
-//! record. Each run of it starts an ingest seat in the personal room,
+//! record. Each `cairn ingest` starts an ingest seat in the personal room,
 //! certified by the node's device key, and appends every line of the
 //! transcript to that seat's writer as one event: kind `unparsed_line`,
 //! provenance `unparsed`, its content the line's number and text. The
 //! transcript parser that classes each line lands with phase 7 of plan
-//! 2609292012; until then no line is classed or trusted.
+//! 2609292012; until then no line is classed or trusted, and the one
+//! ingest seat stands in for all of the transcript's runs, which that
+//! parser splits it by.
 //!
 //! The transcript is read, and every commitment key drawn, before
 //! anything is recorded, so a transcript that cannot be read records
@@ -23,7 +25,7 @@ use record::commitment::CommitmentKey;
 use record::event::{EventKind, Provenance};
 use record::id::{RoomId, SeatId, WriterId};
 use serde_json::json;
-use store::{Draft, Store, StoreError};
+use store::{NewEvent, Store, StoreError};
 
 /// What one ingest recorded.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -106,9 +108,9 @@ pub fn ingest_path(
     if lines.is_empty() {
         return Err(IngestError::Empty(path.to_path_buf()));
     }
-    let mut drafts = Vec::with_capacity(lines.len());
+    let mut new_events = Vec::with_capacity(lines.len());
     for (n, line) in (1u64..).zip(&lines) {
-        drafts.push(Draft {
+        new_events.push(NewEvent {
             kind: EventKind::UnparsedLine,
             provenance: Provenance::Unparsed,
             content: json!({"line": n, "text": line}),
@@ -122,14 +124,14 @@ pub fn ingest_path(
         .certify_ingest_seat(home, &mut store, entropy)
         .map_err(IngestError::Admin)?;
     store
-        .append(seat.writer, &drafts)
+        .append(seat.writer, &new_events)
         .map_err(IngestError::Store)?;
 
     Ok(Ingested {
         writer: seat.writer,
         seat: seat.seat,
         room: seat.room,
-        events: drafts.len(),
+        events: new_events.len(),
     })
 }
 

@@ -23,7 +23,7 @@ use administration::node::Node;
 use cucumber::{given, then, when};
 use key::random::OsEntropy;
 use serde_json::json;
-use store::{Draft, Store};
+use store::{NewEvent, Store};
 use testkit::boundary::{Component, Confinement};
 
 use crate::World;
@@ -31,15 +31,15 @@ use crate::World;
 /// What the record steps track: the last command's outcome, and the
 /// writers a scenario's record holds with their transcript times.
 #[derive(Debug, Default)]
-pub struct Record {
+pub struct RecordSteps {
     ran: Option<Output>,
     /// Each writer the scenario built, in the order it was built, with
     /// the wall-clock time its transcript gave each of its events.
     writers: Vec<(WriterId, Vec<String>)>,
 }
 
-fn rec(w: &mut World) -> &mut Record {
-    w.section::<Record>()
+fn rec(w: &mut World) -> &mut RecordSteps {
+    w.section::<RecordSteps>()
 }
 
 /// The scenario's home, as the core finds it.
@@ -81,7 +81,7 @@ fn two_writers(w: &mut World, count: usize) -> Result<(), String> {
         for (n, (writer, times)) in writers.iter_mut().enumerate() {
             let time = format!("2026-10-14T{:02}:00:{i:02}Z", 12 - n);
             let line = json!({"type": "user", "timestamp": time}).to_string();
-            let draft = Draft {
+            let new = NewEvent {
                 kind: EventKind::UnparsedLine,
                 provenance: Provenance::Unparsed,
                 content: json!({"line": i + 1, "text": line}),
@@ -89,7 +89,7 @@ fn two_writers(w: &mut World, count: usize) -> Result<(), String> {
                     key::random::draw(&mut OsEntropy).map_err(|e| e.to_string())?,
                 ),
             };
-            store.append(*writer, &[draft]).map_err(|e| e.to_string())?;
+            store.append(*writer, &[new]).map_err(|e| e.to_string())?;
             times.push(time);
         }
     }

@@ -14,7 +14,7 @@ use std::io::{self, Write};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::Duration;
 
-use envelope::{Envelope, Integrity, Item, Origin, Run, Trust};
+use envelope::{Envelope, IntegrityStatus, Item, Origin, Run, TrustLevel};
 use key::certificate::SeatCertificate;
 use record::id::{Address, RoomId};
 use serde_json::{Value, json};
@@ -160,9 +160,9 @@ impl Server {
             run: Run::Other,
             kind: header.kind.as_str().to_owned(),
             provenance: header.provenance.name(),
-            trust: Trust::Untrusted,
+            trust: TrustLevel::Untrusted,
             flags: Vec::new(),
-            integrity: Integrity::Unsigned,
+            integrity: IntegrityStatus::Unsigned,
             content,
         };
 

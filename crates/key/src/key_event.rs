@@ -4,7 +4,7 @@
 //! and the other kinds land with phase 5.
 //!
 //! A key event carries only its kind, the key's fingerprint, the
-//! fingerprint of its recovery key's public key, the digest of the key
+//! digest of its recovery key's public key, the digest of the key
 //! event it follows, the fingerprint of each key it replaces and its
 //! signatures.
 
@@ -62,7 +62,7 @@ pub struct KeyEvent {
     pub kind: KeyEventKind,
     /// The key's fingerprint.
     pub key: Digest,
-    /// The fingerprint of its recovery key's public key.
+    /// The digest of its recovery key's public key.
     pub recovery: Digest,
     /// The digest of the key event it follows; none for an inception.
     pub follows: Option<Digest>,
@@ -83,7 +83,7 @@ impl KeyEvent {
         let mut event = Self {
             kind: KeyEventKind::Minted,
             key: device.public().fingerprint(),
-            recovery: recovery.fingerprint(),
+            recovery: recovery.digest(),
             follows: None,
             replaces: Vec::new(),
             signatures: Vec::new(),

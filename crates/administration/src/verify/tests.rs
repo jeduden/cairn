@@ -7,7 +7,7 @@ use record::commitment::CommitmentKey;
 use record::event::{EventKind, Provenance};
 use record::id::Seq;
 use serde_json::json;
-use store::{Draft, SeatRecord};
+use store::{NewEvent, StoredSeat};
 use testkit::TempDir;
 
 struct Fixture {
@@ -15,11 +15,11 @@ struct Fixture {
     home: Home,
     store: Store,
     node: Node,
-    ingest: SeatRecord,
+    ingest: StoredSeat,
 }
 
-fn draft(n: u8) -> Draft {
-    Draft {
+fn new_event(n: u8) -> NewEvent {
+    NewEvent {
         kind: EventKind::UnparsedLine,
         provenance: Provenance::Unparsed,
         content: json!({"line": n, "text": format!("line {n}")}),
@@ -38,7 +38,7 @@ fn fixture() -> Fixture {
         .certify_ingest_seat(&home, &mut store, &mut OsEntropy)
         .unwrap();
     store
-        .append(ingest.writer, &[draft(1), draft(2), draft(3)])
+        .append(ingest.writer, &[new_event(1), new_event(2), new_event(3)])
         .unwrap();
     Fixture {
         _dir: dir,
@@ -93,7 +93,7 @@ fn a_changed_header_byte_is_named_by_its_full_address() {
         err.to_string(),
         format!(
             "chain broken at {}: the stored hash does not match the event's header",
-            f.at(2).full(&f.node.room())
+            f.at(2).full(&f.node.personal_room())
         )
     );
 }
@@ -112,7 +112,7 @@ fn content_that_does_not_open_its_commitment_is_named() {
         err.to_string(),
         format!(
             "chain broken at {}: the content does not open its commitment",
-            f.at(3).full(&f.node.room())
+            f.at(3).full(&f.node.personal_room())
         )
     );
 }
@@ -133,7 +133,7 @@ fn content_removed_with_no_tombstone_is_named() {
         err.to_string(),
         format!(
             "chain broken at {}: its content was removed, and no tombstone records it",
-            f.at(3).full(&f.node.room())
+            f.at(3).full(&f.node.personal_room())
         )
     );
 }
@@ -168,7 +168,7 @@ fn a_row_that_does_not_parse_is_named() {
     assert!(
         err.to_string().starts_with(&format!(
             "chain broken at {}: ",
-            f.at(2).full(&f.node.room())
+            f.at(2).full(&f.node.personal_room())
         )),
         "{err}"
     );
@@ -185,7 +185,7 @@ fn a_changed_cited_head_changes_the_hash_of_the_event_citing_it() {
         err.to_string(),
         format!(
             "chain broken at {}: the stored hash does not match the event's header",
-            f.at(1).full(&f.node.room())
+            f.at(1).full(&f.node.personal_room())
         )
     );
 }
@@ -221,7 +221,7 @@ fn a_cited_head_naming_no_event_is_named_even_when_the_chain_is_rehashed() {
 fn a_writer_without_a_seat_certificate_is_named() {
     let mut f = fixture();
     let stray = WriterId::derive(&[9; 32]);
-    f.store.append(stray, &[draft(1)]).unwrap();
+    f.store.append(stray, &[new_event(1)]).unwrap();
 
     let err = verify(&f.store).unwrap_err();
 
@@ -277,8 +277,9 @@ fn a_seat_certificate_no_certificate_record_holds_is_named() {
     let mut f = fixture();
     let device = DeviceKey::load(&f.home.device_key()).unwrap();
     let seat = SeatKey::mint(&mut OsEntropy).unwrap();
-    let cert = SeatCertificate::issue(&device, &seat, f.node.room(), SeatKind::Run, true).unwrap();
-    let record = SeatRecord {
+    let cert = SeatCertificate::issue(&device, &seat, f.node.personal_room(), SeatKind::Run, true)
+        .unwrap();
+    let record = StoredSeat {
         writer: cert.writer_id(),
         seat: cert.seat_id(),
         room: cert.room,
@@ -302,9 +303,15 @@ fn a_seat_certificate_from_a_key_with_no_minted_key_event_is_named() {
     let mut f = fixture();
     let stranger = DeviceKey::mint(&mut OsEntropy).unwrap();
     let seat = SeatKey::mint(&mut OsEntropy).unwrap();
-    let cert =
-        SeatCertificate::issue(&stranger, &seat, f.node.room(), SeatKind::Run, true).unwrap();
-    let record = SeatRecord {
+    let cert = SeatCertificate::issue(
+        &stranger,
+        &seat,
+        f.node.personal_room(),
+        SeatKind::Run,
+        true,
+    )
+    .unwrap();
+    let record = StoredSeat {
         writer: cert.writer_id(),
         seat: cert.seat_id(),
         room: cert.room,
@@ -317,7 +324,7 @@ fn a_seat_certificate_from_a_key_with_no_minted_key_event_is_named() {
     assert_eq!(
         err.to_string(),
         format!(
-            "writer {}: no minted key event of this node names its certifier",
+            "writer {}: no minted key event of this node names its certifying_key",
             record.writer
         )
     );
@@ -335,7 +342,7 @@ fn a_removed_key_event_is_named_as_lost() {
         err.to_string(),
         format!(
             "chain broken at {}: its content was removed, and no tombstone records it",
-            Address::new(device, Seq::FIRST).full(&f.node.room())
+            Address::new(device, Seq::FIRST).full(&f.node.personal_room())
         )
     );
 }
@@ -378,7 +385,7 @@ fn a_key_event_whose_content_is_no_key_event_is_named() {
     f.store
         .append(
             device,
-            &[Draft {
+            &[NewEvent {
                 kind: EventKind::KeyEvent,
                 provenance: Provenance::Structural,
                 content: json!({}),

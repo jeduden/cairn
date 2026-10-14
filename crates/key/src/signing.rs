@@ -1,4 +1,4 @@
-//! Ed25519 keys in their roles, and the signatures they make. Every
+//! Ed25519 keys of each kind, and the signatures they make. Every
 //! signature names its kind (PRV-12): it signs a label, the kind's name
 //! and the body's canonical encoding, so a signature of one kind never
 //! verifies as another.
@@ -109,6 +109,13 @@ impl PublicKey {
         Digest::of(&[FINGERPRINT, &self.0])
     }
 
+    /// Its digest: SHA-256 over the key's bytes, which an inception and
+    /// a rotation commit to for their recovery key (PRV-12).
+    #[must_use]
+    pub fn digest(&self) -> Digest {
+        Digest::of(&[&self.0])
+    }
+
     /// The public key 64 lowercase hex digits spell.
     ///
     /// # Errors
@@ -208,7 +215,7 @@ pub fn verify(
     .map_err(|_| KeyError::Signature(kind))
 }
 
-macro_rules! role {
+macro_rules! signing_key {
     ($(#[$doc:meta])* $name:ident) => {
         $(#[$doc])*
         pub struct $name(SigningKey);
@@ -284,18 +291,18 @@ macro_rules! role {
     };
 }
 
-role!(
+signing_key!(
     /// A node's device key: it certifies the node's seat keys and signs
     /// its key events.
     DeviceKey
 );
-role!(
+signing_key!(
     /// A seat's key: it countersigns its seat certificate, and later
     /// signs the seat's room acts and seals its writer.
     SeatKey
 );
-role!(
-    /// The key a key event commits to by its public key's fingerprint,
+signing_key!(
+    /// The key a key event commits to by its public key's digest,
     /// which signs only the rotation that follows (PRV-12).
     RecoveryKey
 );

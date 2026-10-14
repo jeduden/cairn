@@ -20,8 +20,9 @@ use std::process::Output;
 use serde_json::{Value, json};
 use testkit::boundary::{Component, Confinement};
 
-/// The transcript the slice records: a startup session of the
-/// `my-app` project, 57 lines.
+/// The transcript the slice records: a harness session's transcript,
+/// started fresh, under the harness's `projects/-w-my-app` path, 57
+/// lines.
 const TRANSCRIPT: &str = "testdata/claude-code/2.1.296/transcripts/projects/-w-my-app/686aa14f-b535-45bc-9ed0-5400ea84bec7.jsonl";
 
 fn transcript() -> PathBuf {

@@ -1,7 +1,7 @@
 //! The store's append transaction (REC-06, §8.2), through its public
 //! API and a real file: a writer's events land a hundred to a
-//! transaction, each committed hundred durable on its own, so a draft
-//! that fails costs only the transaction it falls in.
+//! transaction, each committed hundred visible to a fresh connection,
+//! so a new event that fails costs only the transaction it falls in.
 
 #![allow(
     clippy::unwrap_used,
@@ -13,11 +13,11 @@ use record::commitment::CommitmentKey;
 use record::event::{EventKind, Provenance};
 use record::id::WriterId;
 use serde_json::json;
-use store::{Draft, Store, StoreError};
+use store::{NewEvent, Store, StoreError};
 use testkit::TempDir;
 
-fn draft(n: usize) -> Draft {
-    Draft {
+fn new_event(n: usize) -> NewEvent {
+    NewEvent {
         kind: EventKind::UnparsedLine,
         provenance: Provenance::Unparsed,
         content: json!({"text": format!("line {n}")}),
@@ -26,12 +26,12 @@ fn draft(n: usize) -> Draft {
 }
 
 #[test]
-fn a_failed_draft_rolls_back_its_own_hundred_and_keeps_the_hundred_before_it() {
+fn a_failed_new_event_rolls_back_its_own_hundred_and_keeps_the_hundred_before_it() {
     let dir = TempDir::new().unwrap();
     let path = dir.path().join("store.db");
     let writer = WriterId::derive(&[1; 32]);
-    let mut batch: Vec<Draft> = (1..=250).map(draft).collect();
-    // Draft 160 fails: a hundred to a transaction keeps 100, where fifty
+    let mut batch: Vec<NewEvent> = (1..=250).map(new_event).collect();
+    // NewEvent 160 fails: a hundred to a transaction keeps 100, where fifty
     // would keep 150 and two hundred none.
     batch[159].content = json!({"x": 0.5});
 
@@ -56,7 +56,7 @@ fn a_second_connection_sees_each_committed_transaction() {
     let reader = Store::open(&path).unwrap();
 
     appender
-        .append(writer, &(1..=150).map(draft).collect::<Vec<_>>())
+        .append(writer, &(1..=150).map(new_event).collect::<Vec<_>>())
         .unwrap();
 
     assert_eq!(reader.log(writer).unwrap().len(), 150);

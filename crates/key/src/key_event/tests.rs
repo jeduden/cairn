@@ -16,7 +16,11 @@ fn a_minted_key_event_carries_only_its_kind_fingerprints_and_signature() {
 
     assert_eq!(event.kind, KeyEventKind::Minted);
     assert_eq!(event.key, device.public().fingerprint());
-    assert_eq!(event.recovery, recovery.public().fingerprint());
+    assert_eq!(event.recovery, recovery.public().digest());
+    assert_eq!(
+        recovery.public().digest(),
+        record::digest::Digest::of(&[recovery.public().as_bytes()])
+    );
     assert_eq!(event.follows, None);
     assert!(event.replaces.is_empty());
     assert_eq!(event.signatures.len(), 1);

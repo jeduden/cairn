@@ -4,8 +4,9 @@ title: "The signatures: Ed25519 through ed25519-dalek"
 status: accepted
 scope: dependencies
 summary: >-
-  Device, seat and recovery keys are Ed25519 keys, and every signature
-  Cairn makes is Ed25519 through ed25519-dalek, verified strictly. Each
+  Device and seat keys, and the recovery keys Cairn mints, are Ed25519
+  keys; every signature Cairn makes is Ed25519 through ed25519-dalek,
+  verified strictly. Each
   signature signs a label, its kind and the canonical body, so one kind
   never verifies as another (PRV-12).
 ---
@@ -14,8 +15,9 @@ summary: >-
 ## Context
 
 A node's device key certifies each seat key by a seat certificate the
-seat key countersigns (PRV-11), and key events are signed by the keys
-they name (PRV-12). Seat keys will sign room acts and seal writers
+seat key countersigns (PRV-11). An inception key event is signed by
+its key, and a rotation by the recovery key the key event before it
+committed to (PRV-12). Seat keys will sign room acts and seal writers
 (REC-18). PRV-12 asks that every signature name its kind, so a
 signature of one kind never verifies as another. The core opens no
 socket and starts no program (I4). Phase 1 of plan

@@ -85,7 +85,7 @@ pub enum StoreError {
         address: Option<Address>,
         what: String,
     },
-    /// A draft's content has no canonical encoding.
+    /// A new event's content has no canonical encoding.
     Encoding(canonical::Error),
     /// A writer has used every seq.
     Full(WriterId),
@@ -134,7 +134,7 @@ impl From<rusqlite::Error> for StoreError {
 /// An event to append: everything but what its writer's append
 /// transaction assigns.
 #[derive(Debug, Clone)]
-pub struct Draft {
+pub struct NewEvent {
     pub kind: EventKind,
     pub provenance: Provenance,
     pub content: Value,
@@ -153,7 +153,7 @@ pub struct Stored {
 /// A seat that writes in this store: its writer, id, room and seat
 /// certificate, kept as the certificate's own JSON.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SeatRecord {
+pub struct StoredSeat {
     pub writer: WriterId,
     pub seat: SeatId,
     pub room: RoomId,
@@ -254,7 +254,7 @@ impl Store {
     /// # Errors
     ///
     /// Fails when SQLite does, its writer or seat already recorded.
-    pub fn add_seat(&mut self, seat: &SeatRecord) -> Result<(), StoreError> {
+    pub fn add_seat(&mut self, seat: &StoredSeat) -> Result<(), StoreError> {
         self.conn.execute(
             "INSERT INTO seats (writer, seat, room, certificate) VALUES (?1, ?2, ?3, ?4)",
             params![
@@ -273,7 +273,7 @@ impl Store {
     /// # Errors
     ///
     /// Fails when SQLite does or the row does not parse.
-    pub fn seat(&self, writer: WriterId) -> Result<Option<SeatRecord>, StoreError> {
+    pub fn seat(&self, writer: WriterId) -> Result<Option<StoredSeat>, StoreError> {
         Ok(self
             .seat_rows("WHERE writer = ?1", &writer.to_string())?
             .pop())
@@ -284,11 +284,11 @@ impl Store {
     /// # Errors
     ///
     /// Fails when SQLite does or a row does not parse.
-    pub fn seats(&self) -> Result<Vec<SeatRecord>, StoreError> {
+    pub fn seats(&self) -> Result<Vec<StoredSeat>, StoreError> {
         self.seat_rows("WHERE ?1 = ?1", "")
     }
 
-    fn seat_rows(&self, filter: &str, arg: &str) -> Result<Vec<SeatRecord>, StoreError> {
+    fn seat_rows(&self, filter: &str, arg: &str) -> Result<Vec<StoredSeat>, StoreError> {
         let mut statement = self.conn.prepare(&format!(
             "SELECT writer, seat, room, certificate FROM seats {filter} ORDER BY writer"
         ))?;
@@ -306,7 +306,7 @@ impl Store {
                 address: None,
                 what: format!("seat {what}"),
             };
-            Ok(SeatRecord {
+            Ok(StoredSeat {
                 writer: WriterId::parse(&writer).map_err(|_| corrupt("writer"))?,
                 seat: SeatId::parse(&seat).map_err(|_| corrupt("seat"))?,
                 room: RoomId::parse(&room).map_err(|_| corrupt("room"))?,
@@ -337,7 +337,7 @@ impl Store {
         .collect()
     }
 
-    /// Appends `drafts` to `writer`'s log, a hundred to an immediate
+    /// Appends `new_events` to `writer`'s log, a hundred to an immediate
     /// transaction. Each transaction reads the writer's newest event,
     /// numbers and chains its events after it, and has its first event
     /// cite every other writer's head that advanced since the writer
@@ -345,16 +345,16 @@ impl Store {
     ///
     /// # Errors
     ///
-    /// Fails when SQLite does, when a draft's content has no canonical
+    /// Fails when SQLite does, when a new event's content has no canonical
     /// encoding, or when the writer runs out of seqs. The transaction
     /// the failure falls in is rolled back; those before it stay.
     pub fn append(
         &mut self,
         writer: WriterId,
-        drafts: &[Draft],
+        new_events: &[NewEvent],
     ) -> Result<Vec<Address>, StoreError> {
-        let mut out = Vec::with_capacity(drafts.len());
-        for chunk in drafts.chunks(BATCH) {
+        let mut out = Vec::with_capacity(new_events.len());
+        for chunk in new_events.chunks(BATCH) {
             let tx = self
                 .conn
                 .transaction_with_behavior(TransactionBehavior::Immediate)?;
@@ -489,11 +489,11 @@ struct Row {
     commitment_key: Option<String>,
 }
 
-/// Appends one transaction's drafts to `writer`.
+/// Appends one transaction's new_events to `writer`.
 fn append_chunk(
     tx: &Transaction<'_>,
     writer: WriterId,
-    drafts: &[Draft],
+    new_events: &[NewEvent],
 ) -> Result<Vec<Address>, StoreError> {
     let id = writer.to_string();
     let newest: Option<(i64, String)> = tx
@@ -514,17 +514,16 @@ fn append_chunk(
         None => (1, Digest::ZERO),
     };
     let mut heads = advanced_heads(tx, writer)?;
-    let mut out = Vec::with_capacity(drafts.len());
-    for draft in drafts {
+    let mut out = Vec::with_capacity(new_events.len());
+    for new in new_events {
         let seq = Seq::new(next).ok_or(StoreError::Full(writer))?;
         let header = EventHeader {
             address: Address::new(writer, seq),
-            kind: draft.kind,
-            provenance: draft.provenance.clone(),
+            kind: new.kind,
+            provenance: new.provenance.clone(),
             prev_hash,
             heads: std::mem::take(&mut heads),
-            commitment: commit(&draft.commitment_key, &draft.content)
-                .map_err(StoreError::Encoding)?,
+            commitment: commit(&new.commitment_key, &new.content).map_err(StoreError::Encoding)?,
         };
         let hash = header.hash();
         tx.execute(
@@ -538,8 +537,8 @@ fn append_chunk(
                 prev_hash.to_hex(),
                 header.commitment.to_string(),
                 hash.to_hex(),
-                draft.content.to_string(),
-                draft.commitment_key.to_hex()
+                new.content.to_string(),
+                new.commitment_key.to_hex()
             ],
         )?;
         for seen in &header.heads {

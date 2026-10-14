@@ -3,7 +3,7 @@ use crate::random::Counted;
 use serde_json::json;
 
 #[test]
-fn each_role_mints_its_own_key_and_shows_its_public_half() {
+fn each_kind_of_key_mints_its_own_key_and_shows_its_public_half() {
     let mut e = Counted::default();
     let device = DeviceKey::mint(&mut e).unwrap();
     let seat = SeatKey::mint(&mut e).unwrap();

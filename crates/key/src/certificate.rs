@@ -46,10 +46,10 @@ pub struct SeatCertificate {
     pub seat_kind: SeatKind,
     pub ingest_seat: bool,
     /// The device key that certified the seat key.
-    pub certifier: PublicKey,
-    /// The certifier's signature over the body.
+    pub certifying_key: PublicKey,
+    /// The certifying_key's signature over the body.
     pub signature: Signature,
-    /// The seat key's signature over the body and the certifier's
+    /// The seat key's signature over the body and the certifying_key's
     /// signature.
     pub countersignature: Signature,
 }
@@ -69,8 +69,8 @@ impl SeatCertificate {
         seat_kind: SeatKind,
         ingest_seat: bool,
     ) -> Result<Self, KeyError> {
-        let (seat_key, certifier) = (seat.public(), device.public());
-        let body = body(room, seat_key, seat_kind, ingest_seat, certifier);
+        let (seat_key, certifying_key) = (seat.public(), device.public());
+        let body = body(room, seat_key, seat_kind, ingest_seat, certifying_key);
         let kind = SignatureKind::SeatCertificate;
         let signature = device.sign(kind, &body)?;
         let countersignature = seat.sign(kind, &countersigned(&body, &signature))?;
@@ -80,7 +80,7 @@ impl SeatCertificate {
             seat_key,
             seat_kind,
             ingest_seat,
-            certifier,
+            certifying_key,
             signature,
             countersignature,
         })
@@ -97,10 +97,10 @@ impl SeatCertificate {
             self.seat_key,
             self.seat_kind,
             self.ingest_seat,
-            self.certifier,
+            self.certifying_key,
         );
         let kind = SignatureKind::SeatCertificate;
-        verify(&self.certifier, kind, &body, &self.signature)?;
+        verify(&self.certifying_key, kind, &body, &self.signature)?;
         verify(
             &self.seat_key,
             kind,
@@ -129,7 +129,7 @@ impl SeatCertificate {
             "seat_key": self.seat_key.to_string(),
             "seat_kind": self.seat_kind.as_str(),
             "ingest_seat": self.ingest_seat,
-            "certifier": self.certifier.to_string(),
+            "certifying_key": self.certifying_key.to_string(),
             "signature": self.signature.to_string(),
             "countersignature": self.countersignature.to_string(),
         })
@@ -163,8 +163,8 @@ impl SeatCertificate {
             seat_key: PublicKey::from_hex(text("seat_key")?).map_err(|e| named("seat_key", e))?,
             seat_kind,
             ingest_seat,
-            certifier: PublicKey::from_hex(text("certifier")?)
-                .map_err(|e| named("certifier", e))?,
+            certifying_key: PublicKey::from_hex(text("certifying_key")?)
+                .map_err(|e| named("certifying_key", e))?,
             signature: Signature::from_hex(text("signature")?)
                 .map_err(|e| named("signature", e))?,
             countersignature: Signature::from_hex(text("countersignature")?)
@@ -183,24 +183,24 @@ impl SeatCertificate {
     }
 }
 
-/// What the certifier signs.
+/// What the certifying_key signs.
 fn body(
     room: RoomId,
     seat_key: PublicKey,
     seat_kind: SeatKind,
     ingest_seat: bool,
-    certifier: PublicKey,
+    certifying_key: PublicKey,
 ) -> Value {
     json!({
         "room": room.to_string(),
         "seat_key": seat_key.to_string(),
         "seat_kind": seat_kind.as_str(),
         "ingest_seat": ingest_seat,
-        "certifier": certifier.to_string(),
+        "certifying_key": certifying_key.to_string(),
     })
 }
 
-/// What the seat key countersigns: the body and the certifier's
+/// What the seat key countersigns: the body and the certifying_key's
 /// signature.
 fn countersigned(body: &Value, signature: &Signature) -> Value {
     let mut out = body.clone();

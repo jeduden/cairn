@@ -37,11 +37,11 @@ fn the_first_start_mints_the_device_key_and_records_the_personal_room() {
     let cert = SeatCertificate::from_value(&seat.certificate).unwrap();
     assert_eq!(
         (cert.seat_kind, cert.ingest_seat, cert.room),
-        (SeatKind::Device, false, node.room())
+        (SeatKind::Device, false, node.personal_room())
     );
     assert_eq!(
         log[1].content.as_ref().unwrap()["room"],
-        node.room().to_string()
+        node.personal_room().to_string()
     );
     assert_eq!(
         log[2].content.as_ref().unwrap()["certificate"],
@@ -72,7 +72,7 @@ fn the_room_id_derives_from_the_device_seat_key_and_the_recorded_nonce() {
     }
     assert_eq!(
         RoomId::derive(cert.seat_key.as_bytes(), &bytes),
-        node.room()
+        node.personal_room()
     );
 }
 
@@ -86,8 +86,8 @@ fn a_later_start_finds_the_same_node() {
     let again = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
 
     assert_eq!(
-        (again.device_writer(), again.room()),
-        (first.device_writer(), first.room())
+        (again.device_writer(), again.personal_room()),
+        (first.device_writer(), first.personal_room())
     );
     assert_eq!(again.device().public(), first.device().public());
     assert_eq!(store.log(first.device_writer()).unwrap().len(), 3);
@@ -131,8 +131,8 @@ fn certify_starts_an_ingest_seat_in_the_personal_room_and_records_its_certificat
     assert!(cert.check().is_ok());
     assert_eq!((cert.seat_kind, cert.ingest_seat), (SeatKind::Run, true));
     assert_eq!(
-        (seat.room, cert.certifier),
-        (node.room(), node.device().public())
+        (seat.room, cert.certifying_key),
+        (node.personal_room(), node.device().public())
     );
     assert_eq!(store.seat(seat.writer).unwrap(), Some(seat.clone()));
     assert!(SeatKey::load(&home.seat_key(seat.seat)).is_ok());

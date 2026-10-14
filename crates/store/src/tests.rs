@@ -8,8 +8,8 @@ fn writer(n: u8) -> WriterId {
     WriterId::derive(&[n; 32])
 }
 
-fn draft(n: u64) -> Draft {
-    Draft {
+fn new_event(n: u64) -> NewEvent {
+    NewEvent {
         kind: EventKind::UnparsedLine,
         provenance: Provenance::Unparsed,
         content: json!({"text": format!("line {n}")}),
@@ -17,8 +17,8 @@ fn draft(n: u64) -> Draft {
     }
 }
 
-fn drafts(n: u64) -> Vec<Draft> {
-    (1..=n).map(draft).collect()
+fn new_events(n: u64) -> Vec<NewEvent> {
+    (1..=n).map(new_event).collect()
 }
 
 fn open(dir: &TempDir) -> Store {
@@ -60,7 +60,7 @@ fn the_store_file_is_readable_only_by_its_owner() {
 #[test]
 fn a_store_reopens_with_what_it_held() {
     let dir = TempDir::new().unwrap();
-    open(&dir).append(writer(1), &drafts(3)).unwrap();
+    open(&dir).append(writer(1), &new_events(3)).unwrap();
 
     let store = open(&dir);
 
@@ -130,8 +130,8 @@ fn append_numbers_each_writer_from_1_and_chains_its_events() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
 
-    let a = store.append(writer(1), &drafts(3)).unwrap();
-    let b = store.append(writer(1), &drafts(2)).unwrap();
+    let a = store.append(writer(1), &new_events(3)).unwrap();
+    let b = store.append(writer(1), &new_events(2)).unwrap();
 
     let seqs: Vec<u64> = a.iter().chain(&b).map(|x| x.seq.get()).collect();
     assert_eq!(seqs, [1, 2, 3, 4, 5]);
@@ -146,13 +146,13 @@ fn append_numbers_each_writer_from_1_and_chains_its_events() {
 fn an_event_keeps_its_content_and_commitment_key_beside_the_header() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
-    let [address] = store.append(writer(1), &[draft(7)]).unwrap()[..] else {
+    let [address] = store.append(writer(1), &[new_event(7)]).unwrap()[..] else {
         panic!("one address")
     };
 
     let stored = store.event(address).unwrap().unwrap();
 
-    let d = draft(7);
+    let d = new_event(7);
     assert_eq!(stored.content, Some(d.content.clone()));
     assert_eq!(stored.commitment_key, Some(d.commitment_key.clone()));
     assert_eq!(
@@ -175,11 +175,11 @@ fn the_first_event_of_a_transaction_cites_the_heads_that_advanced_since_its_writ
     let mut store = open(&dir);
     let (a, b) = (writer(1), writer(2));
 
-    store.append(a, &drafts(2)).unwrap();
-    store.append(b, &drafts(2)).unwrap();
-    store.append(b, &drafts(1)).unwrap();
-    store.append(a, &drafts(2)).unwrap();
-    store.append(a, &drafts(1)).unwrap();
+    store.append(a, &new_events(2)).unwrap();
+    store.append(b, &new_events(2)).unwrap();
+    store.append(b, &new_events(1)).unwrap();
+    store.append(a, &new_events(2)).unwrap();
+    store.append(a, &new_events(1)).unwrap();
 
     let la = store.log(a).unwrap();
     let lb = store.log(b).unwrap();
@@ -203,10 +203,10 @@ fn the_first_event_of_a_transaction_cites_the_heads_that_advanced_since_its_writ
 }
 
 #[test]
-fn a_draft_without_a_canonical_encoding_rolls_back_its_transaction_alone() {
+fn a_new_event_without_a_canonical_encoding_rolls_back_its_transaction_alone() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
-    let mut batch = drafts(150);
+    let mut batch = new_events(150);
     batch[120].content = json!({"x": 0.5});
 
     let err = store.append(writer(1), &batch).unwrap_err();
@@ -221,7 +221,7 @@ fn seats_are_kept_by_writer() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
     let room = RoomId::derive(&[1; 32], &[2; 16]);
-    let seat = SeatRecord {
+    let seat = StoredSeat {
         writer: writer(1),
         seat: SeatId::derive(&room, &[1; 32]),
         room,
@@ -240,8 +240,8 @@ fn seats_are_kept_by_writer() {
 fn writers_lists_every_writer_with_an_event_or_a_seat() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
-    store.append(writer(2), &drafts(1)).unwrap();
-    store.append(writer(1), &drafts(1)).unwrap();
+    store.append(writer(2), &new_events(1)).unwrap();
+    store.append(writer(1), &new_events(1)).unwrap();
 
     let mut want = vec![writer(1), writer(2)];
     want.sort();
@@ -272,7 +272,7 @@ fn a_stored_row_that_does_not_parse_is_corrupt_and_names_its_event() {
     ] {
         let dir = TempDir::new().unwrap();
         let mut store = open(&dir);
-        store.append(writer(1), &drafts(3)).unwrap();
+        store.append(writer(1), &new_events(3)).unwrap();
         set(&store, column, value);
 
         let err = store.log(writer(1)).unwrap_err();
@@ -301,8 +301,8 @@ fn a_stored_row_that_does_not_parse_is_corrupt_and_names_its_event() {
 fn a_cited_head_that_does_not_parse_is_corrupt() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
-    store.append(writer(1), &drafts(1)).unwrap();
-    store.append(writer(2), &drafts(1)).unwrap();
+    store.append(writer(1), &new_events(1)).unwrap();
+    store.append(writer(2), &new_events(1)).unwrap();
     store
         .conn
         .execute("UPDATE event_heads SET other_hash = 'x'", [])
@@ -345,7 +345,7 @@ fn a_seat_row_or_writer_id_that_does_not_parse_is_corrupt() {
     let mut store = open(&dir);
     let room = RoomId::derive(&[1; 32], &[2; 16]);
     store
-        .add_seat(&SeatRecord {
+        .add_seat(&StoredSeat {
             writer: writer(1),
             seat: SeatId::derive(&room, &[1; 32]),
             room,
@@ -368,7 +368,7 @@ fn a_seat_row_or_writer_id_that_does_not_parse_is_corrupt() {
             "{column}: {err}"
         );
     }
-    store.append(writer(1), &drafts(1)).unwrap();
+    store.append(writer(1), &new_events(1)).unwrap();
     store
         .conn
         .execute("UPDATE events SET writer = 'x'", [])
@@ -380,7 +380,7 @@ fn a_seat_row_or_writer_id_that_does_not_parse_is_corrupt() {
 fn a_purged_event_keeps_its_header_without_content() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
-    store.append(writer(1), &drafts(1)).unwrap();
+    store.append(writer(1), &new_events(1)).unwrap();
     store
         .conn
         .execute(
@@ -422,7 +422,7 @@ fn errors_explain_themselves() {
 fn a_stored_seq_outside_the_seqs_is_corrupt() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
-    store.append(writer(1), &drafts(1)).unwrap();
+    store.append(writer(1), &new_events(1)).unwrap();
     store
         .conn
         .execute("UPDATE events SET seq = -1", [])
@@ -440,13 +440,13 @@ fn a_stored_seq_outside_the_seqs_is_corrupt() {
 fn an_append_after_a_corrupt_newest_hash_is_refused() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
-    store.append(writer(1), &drafts(2)).unwrap();
+    store.append(writer(1), &new_events(2)).unwrap();
     store
         .conn
         .execute("UPDATE events SET hash = 'x' WHERE seq = 2", [])
         .unwrap();
 
-    let err = store.append(writer(1), &drafts(1)).unwrap_err();
+    let err = store.append(writer(1), &new_events(1)).unwrap_err();
 
     let at = Address::new(writer(1), Seq::new(2).unwrap());
     assert!(
@@ -459,13 +459,13 @@ fn an_append_after_a_corrupt_newest_hash_is_refused() {
 fn an_append_that_would_cite_a_corrupt_head_is_refused() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
-    store.append(writer(1), &drafts(1)).unwrap();
+    store.append(writer(1), &new_events(1)).unwrap();
     store
         .conn
         .execute("UPDATE events SET hash = 'x'", [])
         .unwrap();
 
-    let err = store.append(writer(2), &drafts(1)).unwrap_err();
+    let err = store.append(writer(2), &new_events(1)).unwrap_err();
 
     let at = Address::new(writer(1), Seq::FIRST);
     assert!(

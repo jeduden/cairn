@@ -54,12 +54,12 @@ impl Run {
 
 /// An item's trust level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Trust {
+pub enum TrustLevel {
     Trusted,
     Untrusted,
 }
 
-impl Trust {
+impl TrustLevel {
     /// The name the envelope shows.
     #[must_use]
     pub fn as_str(self) -> &'static str {
@@ -72,7 +72,7 @@ impl Trust {
 
 /// The integrity status of an item's writer (§9.7.5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Integrity {
+pub enum IntegrityStatus {
     Verified,
     Unsigned,
     Incomplete,
@@ -82,7 +82,7 @@ pub enum Integrity {
     Equivocated,
 }
 
-impl Integrity {
+impl IntegrityStatus {
     /// The name the envelope shows.
     #[must_use]
     pub fn as_str(self) -> &'static str {
@@ -109,9 +109,9 @@ pub struct Item {
     pub run: Run,
     pub kind: String,
     pub provenance: String,
-    pub trust: Trust,
+    pub trust: TrustLevel,
     pub flags: Vec<String>,
-    pub integrity: Integrity,
+    pub integrity: IntegrityStatus,
     /// The event's original content.
     pub content: String,
 }

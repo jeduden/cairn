@@ -22,7 +22,7 @@ fn an_issued_certificate_checks_and_names_its_seat_and_writer() {
         SeatId::derive(&room, seat.public().as_bytes())
     );
     assert_eq!(cert.writer_id(), WriterId::derive(seat.public().as_bytes()));
-    assert_eq!(cert.certifier, device.public());
+    assert_eq!(cert.certifying_key, device.public());
     assert!(cert.ingest_seat);
 }
 
@@ -73,7 +73,7 @@ fn a_malformed_value_is_refused_naming_the_field() {
         ("seat_key", serde_json::json!(1)),
         ("seat_kind", serde_json::json!("ingest")),
         ("ingest_seat", serde_json::json!("yes")),
-        ("certifier", serde_json::json!("x")),
+        ("certifying_key", serde_json::json!("x")),
         ("signature", serde_json::json!("x")),
         ("countersignature", serde_json::json!(null)),
     ] {
