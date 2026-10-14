@@ -255,6 +255,39 @@ fn a_live_ruleset_weaker_than_the_committed_one_is_named() {
 }
 
 #[test]
+fn a_live_ruleset_on_another_target_is_weaker() {
+    let mut live = good();
+    live["target"] = json!("tag");
+
+    has(
+        &weaker_than(&good(), &live),
+        "target is \"tag\" live, \"branch\" committed",
+    );
+}
+
+#[test]
+fn a_do_not_flag_set_live_but_not_committed_is_weaker() {
+    let mut committed = good();
+    for rule in committed["rules"].as_array_mut().unwrap() {
+        if rule["type"] == "required_status_checks" {
+            rule["parameters"]["do_not_enforce_on_create"] = json!(false);
+        }
+    }
+    let mut live = committed.clone();
+    for rule in live["rules"].as_array_mut().unwrap() {
+        if rule["type"] == "required_status_checks" {
+            rule["parameters"]["do_not_enforce_on_create"] = json!(true);
+        }
+    }
+
+    has(
+        &weaker_than(&committed, &live),
+        "live required_status_checks sets do_not_enforce_on_create",
+    );
+    assert!(weaker_than(&committed, &committed).is_empty());
+}
+
+#[test]
 fn a_stronger_live_ruleset_or_one_without_bypass_actors_is_not_weaker() {
     let committed = good();
 
