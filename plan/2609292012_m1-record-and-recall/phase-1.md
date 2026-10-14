@@ -22,10 +22,10 @@ The slice runs one Claude Code 2.1.296 transcript from
   room. Its seat certificate is signed by the device key and
   countersigned by the seat key.
 - Each line becomes one event in that seat's writer. Its header holds
-  the address, event kind, provenance class, `prev_hash`, the other writers'
-  chain heads it has seen, and the commitment under its commitment
-  key, never content.
-  The header is hashed as §8.3 says: RFC 8785 over SHA-256.
+  the address, event kind, provenance class, `prev_hash`, the other
+  writers' chain heads it has seen, and the commitment under its
+  commitment key, never content. The header is hashed as §8.3 says:
+  RFC 8785 over SHA-256.
 - Events land in `store.db` through `rusqlite`, 100 per transaction.
 - `cairn mcp` over stdio answers `event_get` for an address with the
   event's content inside the envelope of §9.3.
@@ -42,16 +42,16 @@ Dependencies. The ADRs for the hash, the signatures and the random
 source are written and accepted with their modules (ENG-18, ENG-26).
 ADR-2610110553 (`rusqlite`) and ADR-2610102211 (`serde_json` in the
 core) are accepted when their modules land, and the reach test allows
-their crates. First, list the direct set M1 needs, with each crate's
-license and transitive count. If it exceeds ENG-18's ten, stop and ask
-the stakeholder before adding an eleventh.
+their crates. ENG-18's ten counts only crates linked into a shipped
+executable, on the stakeholder's ruling of 14 October 2026; the slice
+adds four of the core's nine.
 
 Names. Ask the domain-model agent before naming a crate, type, CLI
 verb or MCP tool. Names follow ENG-02's list and the domain model.
 
 BDD coverage: `@REC-10` comes off `@pending`. Its steps bind two
-writers recorded under clocks an hour apart, and `cairn verify`. The other rows
-stay pending until their phases.
+writers recorded under clocks an hour apart, and `cairn verify`. The
+other rows stay pending until their phases.
 
 RED, each test failing first. Unit tests cover the header encoding,
 the commitment and the certificate check. Integration tests in the
