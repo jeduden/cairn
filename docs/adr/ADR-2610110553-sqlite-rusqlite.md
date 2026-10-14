@@ -1,13 +1,13 @@
 ---
 id: ADR-2610110553
 title: "The SQLite driver: rusqlite with SQLite bundled, extension loading compiled out"
-status: proposed
+status: accepted
 scope: dependencies
 summary: >-
   The store reaches SQLite and FTS5 through rusqlite with SQLite
   bundled and default features off, built without extension loading.
   Spike S2, rerun for the Rust core, measured it at 10M events.
-  Proposed until the M1 change that links the store accepts it.
+  Accepted with the M1 change that links the store.
 ---
 # ADR-2610110553: The SQLite driver
 

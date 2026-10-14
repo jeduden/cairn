@@ -36,7 +36,7 @@ const REACHABLE: [&str; 44] = [
     "mcp",
     "record",
     "store",
-    // SHA-256 (ADR-2610142154): pure computation over bytes, with its
+    // SHA-256 (ADR-2610142218): pure computation over bytes, with its
     // digest traits and the CPU feature probe of its fast paths.
     "sha2",
     "digest",
@@ -47,7 +47,7 @@ const REACHABLE: [&str; 44] = [
     "const-oid",
     "cpufeatures",
     "cfg-if",
-    // Ed25519 (ADR-2610142155): curve arithmetic and signatures, pure
+    // Ed25519 (ADR-2610142219): curve arithmetic and signatures, pure
     // computation; zeroize wipes secret keys, subtle compares in
     // constant time. Its derive macro, like every proc macro below,
     // runs only at build time.
@@ -59,7 +59,7 @@ const REACHABLE: [&str; 44] = [
     "fiat-crypto",
     "subtle",
     "zeroize",
-    // The OS's random source (ADR-2610142156): the getrandom system
+    // The OS's random source (ADR-2610142220): the getrandom system
     // call, or its platform's equivalent, through libc's declarations;
     // r-efi only on UEFI targets.
     "getrandom",
@@ -74,7 +74,7 @@ const REACHABLE: [&str; 44] = [
     "smallvec",
     "fallible-iterator",
     "fallible-streaming-iterator",
-    // JSON (ADR-2610142157): parsing and writing text in memory.
+    // JSON (ADR-2610142221): parsing and writing text in memory.
     "serde_json",
     "serde_core",
     "itoa",

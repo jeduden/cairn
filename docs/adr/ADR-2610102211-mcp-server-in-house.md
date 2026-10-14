@@ -1,7 +1,7 @@
 ---
 id: ADR-2610102211
 title: "The MCP server: Cairn's own stdio server on serde_json, not rmcp"
-status: proposed
+status: accepted
 summary: >-
   `cairn mcp` speaks MCP through a minimal stdio server of Cairn's own,
   reading and writing JSON through serde_json. The Rust MCP SDK rmcp
