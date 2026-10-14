@@ -229,7 +229,8 @@ fn mcp(
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> u8 {
-    if json_flag("mcp", args, stderr) != Some(false) {
+    if let Some(arg) = args.into_iter().next() {
+        let _ = writeln!(stderr, "cairn mcp: unknown flag {arg:?}");
         return EXIT_USAGE;
     }
     let store = ctx

@@ -246,9 +246,11 @@ fn feed(command: &mut Command, input: &[u8]) -> io::Result<Output> {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()?;
-    if let Some(mut stdin) = child.stdin.take() {
-        stdin.write_all(input)?;
-    }
+    // The stdin was piped above, so it is there; dropping it closes it.
+    child
+        .stdin
+        .take()
+        .map_or(Ok(()), |mut stdin| stdin.write_all(input))?;
 
     child.wait_with_output()
 }

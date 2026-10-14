@@ -146,7 +146,7 @@ impl Server {
                 fields["text"].as_str().unwrap_or_default().to_owned()
             }
             Some(other) => other.to_string(),
-            None => String::new(),
+            None => return Err(format!("the content of {address} was removed")),
         };
         let item = Item {
             address: address.full(&seat.room),

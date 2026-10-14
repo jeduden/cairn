@@ -30,11 +30,12 @@ fn stdin_lines() -> Receiver<io::Result<String>> {
             reason = "the reading thread blocks on stdin; its reader waits with recv_timeout"
         )]
         let stdin = io::stdin();
-        for line in stdin.lock().lines() {
-            if tx.send(line).is_err() {
-                break;
-            }
-        }
+        // Reading stops once the reader is gone.
+        stdin
+            .lock()
+            .lines()
+            .map_while(|line| tx.send(line).ok())
+            .for_each(drop);
     });
 
     rx

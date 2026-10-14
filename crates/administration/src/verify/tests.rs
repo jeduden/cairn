@@ -324,7 +324,7 @@ fn a_seat_certificate_from_a_key_with_no_minted_key_event_is_named() {
 }
 
 #[test]
-fn a_key_event_that_does_not_parse_or_check_is_named() {
+fn a_removed_key_event_is_named_as_lost() {
     let f = fixture();
     let device = f.node.device_writer();
     f.sql(&format!("UPDATE events SET content = NULL, commitment_key = NULL WHERE seq = 1 AND writer = '{device}'"));
@@ -334,10 +334,15 @@ fn a_key_event_that_does_not_parse_or_check_is_named() {
     assert_eq!(
         err.to_string(),
         format!(
-            "the key event at {} does not check: its content was removed",
+            "chain broken at {}: its content was removed, and no tombstone records it",
             Address::new(device, Seq::FIRST).full(&f.node.room())
         )
     );
+}
+
+#[test]
+fn a_seat_certificate_that_does_not_parse_is_named() {
+    let f = fixture();
     f.sql(&format!(
         "UPDATE seats SET certificate = '{{}}' WHERE writer = '{}'",
         f.ingest.writer

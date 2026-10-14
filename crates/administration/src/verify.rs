@@ -102,9 +102,8 @@ pub fn verify(store: &Store) -> Result<Report, VerifyError> {
         };
         let links: Vec<Link> = log.iter().map(|s| s.link.clone()).collect();
         chain::check_writer(*writer, &links).map_err(|e| broken(e.address, e.fault.to_string()))?;
-        if let Some(s) = log.iter().find(|s| !opens(s)) {
-            let reason = "the content does not open its commitment".to_owned();
-            return Err(broken(s.link.header.address, reason));
+        if let Some((s, reason)) = log.iter().find_map(|s| unopened(s).map(|r| (s, r))) {
+            return Err(broken(s.link.header.address, reason.to_owned()));
         }
         logs.insert(*writer, log);
     }
@@ -142,16 +141,19 @@ pub fn verify(store: &Store) -> Result<Report, VerifyError> {
     })
 }
 
-/// Whether a stored event's content opens its commitment; content
-/// removed with its key, as purge removes it, has nothing to open.
-fn opens(stored: &Stored) -> bool {
-    match (&stored.content, &stored.commitment_key) {
+/// Why a stored event's content does not open its commitment, if it
+/// does not. Content removed with its key is a loss until purge records
+/// a tombstone for it (ADM-07), so it is named too.
+fn unopened(stored: &Stored) -> Option<&'static str> {
+    let opens = match (&stored.content, &stored.commitment_key) {
         (Some(content), Some(key)) => {
             commit(key, content).is_ok_and(|c| c == stored.link.header.commitment)
         }
-        (None, None) => true,
+        (None, None) => return Some("its content was removed, and no tombstone records it"),
         _ => false,
-    }
+    };
+
+    (!opens).then_some("the content does not open its commitment")
 }
 
 /// Every writer's seat certificate, each checked and naming its own
@@ -204,10 +206,9 @@ fn device_records(
                     address: full(header.address),
                     reason,
                 };
-                let content = stored
-                    .content
-                    .as_ref()
-                    .ok_or_else(|| failed("its content was removed".to_owned()))?;
+                // Content removed with no tombstone failed the chain
+                // check already; a key event's is never removed.
+                let content = stored.content.as_ref().unwrap_or(&serde_json::Value::Null);
                 let event = KeyEvent::from_value(content).map_err(|e| failed(e.to_string()))?;
                 minted.insert(event.key, event);
             }
