@@ -310,7 +310,11 @@ jobs:
             done
           done
           status=0
+          # A regression the head's record accepts, and the base's does
+          # not yet, passes as accepted (ENG-15).
           "$head/benchmark" gate --base "$out/base.samples" --head "$out/head.samples" \
+            --accepted "$GITHUB_WORKSPACE/tooling/benchmark/accepted.txt" \
+            --accepted-on-base "$RUNNER_TEMP/base/tooling/benchmark/accepted.txt" \
             > "$out/report.md" 2> "$out/failures.txt" || status=$?
           tee -a "$GITHUB_STEP_SUMMARY" < "$out/report.md"
           while IFS= read -r line; do

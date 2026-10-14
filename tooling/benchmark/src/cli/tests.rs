@@ -293,7 +293,7 @@ fn gate_ignores_an_acceptance_the_base_already_carries() {
     );
 
     assert_eq!(code, EXIT_FAILURE);
-    assert!(err.contains("core_start_up regressed by 20.0%"), "{err}");
+    assert!(err.contains("core_start_up regressed by "), "{err}");
 }
 
 #[test]

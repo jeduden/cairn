@@ -1283,6 +1283,21 @@ fn benchmark_cases() -> Vec<Case> {
             cargo_test("engineering", "benchmark_gate", GATED),
             "job ci does not need benchmark",
         ),
+        case(
+            "an accepted regression recorded with no reason",
+            "the_accepted_regressions_parse",
+            Injection::replace(
+                "tooling/benchmark/accepted.txt",
+                "core_start_up 30 the core links",
+                "core_start_up\n30 the core links",
+            ),
+            cargo_test(
+                "benchmark",
+                "accepted_file",
+                "the_accepted_regressions_parse",
+            ),
+            "want <benchmark> <percent> <reason>",
+        ),
     ]
 }
 

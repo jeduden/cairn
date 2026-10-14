@@ -163,6 +163,16 @@ that fails on a statistically significant regression greater than
   target hold the suite to every NFR id ENG-15 names and CI to the
   job, each with its drift cases.
 
+- **Accepted regressions:** a change that makes Cairn slower on
+  purpose, with the stakeholder's acceptance, records it in
+  [tooling/benchmark/accepted.txt](../tooling/benchmark/accepted.txt):
+  the benchmark, a ceiling in percent and the reason. The gate passes
+  that benchmark as accepted while the head's median stays within the
+  ceiling, and only while the base does not carry the same line, so
+  an acceptance lasts the one change that adds it and the step becomes
+  the next change's base. A drift case proves the record's check
+  fails on a malformed line.
+
 `cargo run -p benchmark -- run --core target/release/cairn` samples
 the suite; `cargo run -p benchmark -- gate --base FILE --head FILE`
 decides from two samples files. CI's `benchmark` job runs both.
