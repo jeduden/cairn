@@ -76,3 +76,25 @@ fn a_key_file_others_can_read_is_refused() {
         )
     );
 }
+
+#[test]
+fn a_key_file_appears_whole_or_not_at_all_and_a_crash_s_leftover_does_not_block_it() {
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("device.key");
+    // What a crash mid-write leaves: the temporary file, half written.
+    fs::write(staging(&path), "half").unwrap();
+
+    write_secret(&path, "whole").unwrap();
+
+    assert_eq!(read_secret(&path).unwrap(), "whole");
+    assert!(!staging(&path).exists());
+}
+
+#[test]
+fn a_key_file_in_a_missing_directory_is_refused() {
+    let dir = TempDir::new().unwrap();
+
+    let err = write_secret(&dir.path().join("no/such/device.key"), "x").unwrap_err();
+
+    assert!(matches!(err, KeyError::File { .. }), "{err}");
+}
