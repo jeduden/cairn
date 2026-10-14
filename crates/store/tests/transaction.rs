@@ -33,7 +33,10 @@ fn a_failed_draft_rolls_back_its_own_hundred_and_keeps_the_hundreds_before_it() 
     let mut batch: Vec<Draft> = (1..=250).map(draft).collect();
     batch[229].content = json!({"x": 0.5});
 
-    let err = Store::open(&path).unwrap().append(writer, &batch).unwrap_err();
+    let err = Store::open(&path)
+        .unwrap()
+        .append(writer, &batch)
+        .unwrap_err();
 
     assert!(matches!(err, StoreError::Encoding(_)), "{err}");
     let log = Store::open(&path).unwrap().log(writer).unwrap();
@@ -50,7 +53,9 @@ fn a_second_connection_sees_each_committed_transaction() {
     let mut appender = Store::open(&path).unwrap();
     let reader = Store::open(&path).unwrap();
 
-    appender.append(writer, &(1..=150).map(draft).collect::<Vec<_>>()).unwrap();
+    appender
+        .append(writer, &(1..=150).map(draft).collect::<Vec<_>>())
+        .unwrap();
 
     assert_eq!(reader.log(writer).unwrap().len(), 150);
 }

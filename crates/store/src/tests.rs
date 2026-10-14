@@ -31,8 +31,14 @@ fn a_new_store_records_its_version_and_the_header_field_set() {
     let store = open(&dir);
 
     assert_eq!(store.meta("schema_version").unwrap().as_deref(), Some("1"));
-    assert_eq!(store.meta("header_field_set").unwrap().as_deref(), Some(FIELD_SET));
-    assert_eq!(store.meta("header_encoding").unwrap().as_deref(), Some(ENCODING));
+    assert_eq!(
+        store.meta("header_field_set").unwrap().as_deref(),
+        Some(FIELD_SET)
+    );
+    assert_eq!(
+        store.meta("header_encoding").unwrap().as_deref(),
+        Some(ENCODING)
+    );
     assert_eq!(store.meta("nothing").unwrap(), None);
     assert!(store.writers().unwrap().is_empty());
 }
@@ -44,7 +50,10 @@ fn the_store_file_is_readable_only_by_its_owner() {
     let dir = TempDir::new().unwrap();
     drop(open(&dir));
 
-    let mode = std::fs::metadata(dir.path().join("store.db")).unwrap().permissions().mode();
+    let mode = std::fs::metadata(dir.path().join("store.db"))
+        .unwrap()
+        .permissions()
+        .mode();
     assert_eq!(mode & 0o777, 0o600);
 }
 
@@ -64,14 +73,20 @@ fn a_store_of_a_newer_version_is_refused_and_named() {
     let store = open(&dir);
     store
         .conn
-        .execute("UPDATE meta SET value = '2' WHERE key = 'schema_version'", [])
+        .execute(
+            "UPDATE meta SET value = '2' WHERE key = 'schema_version'",
+            [],
+        )
         .unwrap();
     drop(store);
 
     let err = Store::open(&dir.path().join("store.db")).unwrap_err();
 
     assert!(matches!(err, StoreError::Newer { found: 2 }), "{err}");
-    assert_eq!(err.to_string(), "the store is format version 2, newer than this cairn's 1");
+    assert_eq!(
+        err.to_string(),
+        "the store is format version 2, newer than this cairn's 1"
+    );
 }
 
 #[test]
@@ -80,19 +95,29 @@ fn a_store_whose_version_does_not_parse_is_refused() {
     let store = open(&dir);
     store
         .conn
-        .execute("UPDATE meta SET value = 'x' WHERE key = 'schema_version'", [])
+        .execute(
+            "UPDATE meta SET value = 'x' WHERE key = 'schema_version'",
+            [],
+        )
         .unwrap();
     drop(store);
 
     let err = Store::open(&dir.path().join("store.db")).unwrap_err();
 
-    assert!(matches!(err, StoreError::Corrupt { address: None, .. }), "{err}");
+    assert!(
+        matches!(err, StoreError::Corrupt { address: None, .. }),
+        "{err}"
+    );
 }
 
 #[test]
 fn a_file_that_is_no_database_is_refused() {
     let dir = TempDir::new().unwrap();
-    std::fs::write(dir.path().join("store.db"), "not sqlite at all, but long enough to read a header from it").unwrap();
+    std::fs::write(
+        dir.path().join("store.db"),
+        "not sqlite at all, but long enough to read a header from it",
+    )
+    .unwrap();
 
     let err = Store::open(&dir.path().join("store.db")).unwrap_err();
 
@@ -136,7 +161,12 @@ fn an_event_keeps_its_content_and_commitment_key_beside_the_header() {
     );
     assert_eq!(stored.link.header.kind, EventKind::UnparsedLine);
     assert_eq!(stored.link.header.provenance, Provenance::Unparsed);
-    assert_eq!(store.event(Address::new(writer(1), Seq::new(2).unwrap())).unwrap(), None);
+    assert_eq!(
+        store
+            .event(Address::new(writer(1), Seq::new(2).unwrap()))
+            .unwrap(),
+        None
+    );
 }
 
 #[test]
@@ -154,33 +184,22 @@ fn the_first_event_of_a_transaction_cites_the_heads_that_advanced_since_its_writ
     let la = store.log(a).unwrap();
     let lb = store.log(b).unwrap();
     let cites = |s: &Stored| s.link.header.heads.clone();
-    assert_eq!(cites(&lb[0]), [SeenHead::new(la[1].link.header.address, la[1].link.hash)]);
+    assert_eq!(
+        cites(&lb[0]),
+        [SeenHead::new(la[1].link.header.address, la[1].link.hash)]
+    );
     assert!(cites(&lb[1]).is_empty());
     assert!(cites(&lb[2]).is_empty(), "a's head did not advance");
-    assert_eq!(cites(&la[2]), [SeenHead::new(lb[2].link.header.address, lb[2].link.hash)]);
+    assert_eq!(
+        cites(&la[2]),
+        [SeenHead::new(lb[2].link.header.address, lb[2].link.hash)]
+    );
     assert!(cites(&la[3]).is_empty());
     assert!(cites(&la[4]).is_empty(), "b's head did not advance");
     let mut all = std::collections::BTreeMap::new();
     all.insert(a, la.iter().map(|s| s.link.clone()).collect());
     all.insert(b, lb.iter().map(|s| s.link.clone()).collect());
     assert_eq!(record::chain::check_heads(&all), Ok(()));
-}
-
-#[test]
-fn append_commits_a_hundred_events_per_transaction() {
-    let dir = TempDir::new().unwrap();
-    let mut store = open(&dir);
-    let commits = std::rc::Rc::new(std::cell::Cell::new(0));
-    let counted = commits.clone();
-    store.conn.commit_hook(Some(move || {
-        counted.set(counted.get() + 1);
-        false
-    })).unwrap();
-
-    store.append(writer(1), &drafts(250)).unwrap();
-
-    assert_eq!(BATCH, 100);
-    assert_eq!(commits.get(), 3);
 }
 
 #[test]
@@ -193,6 +212,7 @@ fn a_draft_without_a_canonical_encoding_rolls_back_its_transaction_alone() {
     let err = store.append(writer(1), &batch).unwrap_err();
 
     assert!(matches!(err, StoreError::Encoding(_)), "{err}");
+    assert_eq!(BATCH, 100);
     assert_eq!(store.log(writer(1)).unwrap().len(), 100);
 }
 
@@ -212,7 +232,7 @@ fn seats_are_kept_by_writer() {
 
     assert_eq!(store.seat(writer(1)).unwrap(), Some(seat.clone()));
     assert_eq!(store.seat(writer(2)).unwrap(), None);
-    assert_eq!(store.seats().unwrap(), [seat.clone()]);
+    assert_eq!(store.seats().unwrap(), std::slice::from_ref(&seat));
     assert!(matches!(store.add_seat(&seat), Err(StoreError::Sqlite(_))));
 }
 
@@ -232,7 +252,10 @@ fn writers_lists_every_writer_with_an_event_or_a_seat() {
 fn set(store: &Store, column: &str, value: &str) {
     store
         .conn
-        .execute(&format!("UPDATE events SET {column} = ?1 WHERE seq = 2"), [value])
+        .execute(
+            &format!("UPDATE events SET {column} = ?1 WHERE seq = 2"),
+            [value],
+        )
         .unwrap();
 }
 
@@ -256,13 +279,20 @@ fn a_stored_row_that_does_not_parse_is_corrupt_and_names_its_event() {
 
         let at = Address::new(writer(1), Seq::new(2).unwrap());
         match &err {
-            StoreError::Corrupt { address: Some(a), what } => {
+            StoreError::Corrupt {
+                address: Some(a),
+                what,
+            } => {
                 assert_eq!(*a, at, "{column}");
                 assert!(what.contains(column), "{column}: {what}");
             }
             other => panic!("{column}: {other}"),
         }
-        assert!(err.to_string().starts_with(&format!("the stored event {at} is corrupt: ")), "{err}");
+        assert!(
+            err.to_string()
+                .starts_with(&format!("the stored event {at} is corrupt: ")),
+            "{err}"
+        );
         assert!(store.event(at).is_err(), "{column}");
     }
 }
@@ -273,13 +303,40 @@ fn a_cited_head_that_does_not_parse_is_corrupt() {
     let mut store = open(&dir);
     store.append(writer(1), &drafts(1)).unwrap();
     store.append(writer(2), &drafts(1)).unwrap();
-    store.conn.execute("UPDATE event_heads SET other_hash = 'x'", []).unwrap();
+    store
+        .conn
+        .execute("UPDATE event_heads SET other_hash = 'x'", [])
+        .unwrap();
 
-    assert!(matches!(store.log(writer(2)), Err(StoreError::Corrupt { address: Some(_), .. })));
-    store.conn.execute("UPDATE event_heads SET other_writer = 'x'", []).unwrap();
-    assert!(matches!(store.log(writer(2)), Err(StoreError::Corrupt { address: Some(_), .. })));
-    store.conn.execute("UPDATE event_heads SET other_seq = 0", []).unwrap();
-    assert!(matches!(store.log(writer(2)), Err(StoreError::Corrupt { address: Some(_), .. })));
+    assert!(matches!(
+        store.log(writer(2)),
+        Err(StoreError::Corrupt {
+            address: Some(_),
+            ..
+        })
+    ));
+    store
+        .conn
+        .execute("UPDATE event_heads SET other_writer = 'x'", [])
+        .unwrap();
+    assert!(matches!(
+        store.log(writer(2)),
+        Err(StoreError::Corrupt {
+            address: Some(_),
+            ..
+        })
+    ));
+    store
+        .conn
+        .execute("UPDATE event_heads SET other_seq = 0", [])
+        .unwrap();
+    assert!(matches!(
+        store.log(writer(2)),
+        Err(StoreError::Corrupt {
+            address: Some(_),
+            ..
+        })
+    ));
 }
 
 #[test]
@@ -295,13 +352,27 @@ fn a_seat_row_or_writer_id_that_does_not_parse_is_corrupt() {
             certificate: json!({}),
         })
         .unwrap();
-    for (column, value) in [("certificate", "{"), ("room", "x"), ("seat", "x"), ("writer", "x")] {
-        store.conn.execute(&format!("UPDATE seats SET {column} = ?1"), [value]).unwrap();
+    for (column, value) in [
+        ("certificate", "{"),
+        ("room", "x"),
+        ("seat", "x"),
+        ("writer", "x"),
+    ] {
+        store
+            .conn
+            .execute(&format!("UPDATE seats SET {column} = ?1"), [value])
+            .unwrap();
         let err = store.seats().unwrap_err();
-        assert!(matches!(&err, StoreError::Corrupt { address: None, what } if what.contains(column)), "{column}: {err}");
+        assert!(
+            matches!(&err, StoreError::Corrupt { address: None, what } if what.contains(column)),
+            "{column}: {err}"
+        );
     }
     store.append(writer(1), &drafts(1)).unwrap();
-    store.conn.execute("UPDATE events SET writer = 'x'", []).unwrap();
+    store
+        .conn
+        .execute("UPDATE events SET writer = 'x'", [])
+        .unwrap();
     assert!(matches!(store.writers(), Err(StoreError::Corrupt { .. })));
 }
 
@@ -312,7 +383,10 @@ fn a_purged_event_keeps_its_header_without_content() {
     store.append(writer(1), &drafts(1)).unwrap();
     store
         .conn
-        .execute("UPDATE events SET content = NULL, commitment_key = NULL", [])
+        .execute(
+            "UPDATE events SET content = NULL, commitment_key = NULL",
+            [],
+        )
         .unwrap();
 
     let stored = store.log(writer(1)).unwrap().remove(0);
@@ -322,15 +396,90 @@ fn a_purged_event_keeps_its_header_without_content() {
 
 #[test]
 fn errors_explain_themselves() {
-    let corrupt = StoreError::Corrupt { address: None, what: "x".into() };
+    let corrupt = StoreError::Corrupt {
+        address: None,
+        what: "x".into(),
+    };
     assert_eq!(corrupt.to_string(), "the store is corrupt: x");
     let enc = record::canonical::Error::Number("0.5".into());
-    assert_eq!(StoreError::Encoding(enc.clone()).to_string(), enc.to_string());
+    assert_eq!(
+        StoreError::Encoding(enc.clone()).to_string(),
+        enc.to_string()
+    );
     assert!(std::error::Error::source(&StoreError::Encoding(enc)).is_some());
     assert!(std::error::Error::source(&corrupt).is_none());
     let full = StoreError::Full(writer(1));
-    assert_eq!(full.to_string(), format!("writer {} has no seq left", writer(1)));
+    assert_eq!(
+        full.to_string(),
+        format!("writer {} has no seq left", writer(1))
+    );
     let io = StoreError::Io(std::io::Error::other("x"));
     assert_eq!(io.to_string(), "the store file: x");
     assert!(std::error::Error::source(&io).is_some());
+}
+
+#[test]
+fn a_stored_seq_outside_the_seqs_is_corrupt() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &drafts(1)).unwrap();
+    store
+        .conn
+        .execute("UPDATE events SET seq = -1", [])
+        .unwrap();
+
+    let err = store.log(writer(1)).unwrap_err();
+
+    assert!(
+        matches!(&err, StoreError::Corrupt { address: None, what } if what.contains("seq -1")),
+        "{err}"
+    );
+}
+
+#[test]
+fn an_append_after_a_corrupt_newest_hash_is_refused() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &drafts(2)).unwrap();
+    store
+        .conn
+        .execute("UPDATE events SET hash = 'x' WHERE seq = 2", [])
+        .unwrap();
+
+    let err = store.append(writer(1), &drafts(1)).unwrap_err();
+
+    let at = Address::new(writer(1), Seq::new(2).unwrap());
+    assert!(
+        matches!(err, StoreError::Corrupt { address: Some(a), .. } if a == at),
+        "{err}"
+    );
+}
+
+#[test]
+fn an_append_that_would_cite_a_corrupt_head_is_refused() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &drafts(1)).unwrap();
+    store
+        .conn
+        .execute("UPDATE events SET hash = 'x'", [])
+        .unwrap();
+
+    let err = store.append(writer(2), &drafts(1)).unwrap_err();
+
+    let at = Address::new(writer(1), Seq::FIRST);
+    assert!(
+        matches!(err, StoreError::Corrupt { address: Some(a), .. } if a == at),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_store_shows_its_path_and_a_sqlite_error_its_cause() {
+    let dir = TempDir::new().unwrap();
+    let store = open(&dir);
+
+    assert!(format!("{store:?}").contains("store.db"));
+    let err = StoreError::Sqlite(rusqlite::Error::InvalidQuery);
+    assert!(err.to_string().starts_with("the store: "), "{err}");
 }
