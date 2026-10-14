@@ -106,6 +106,7 @@ fn a_home_that_cannot_be_made_is_returned() {
     let err = ingest_path(&home, &path, &mut OsEntropy).unwrap_err();
 
     assert!(matches!(err, IngestError::Admin(_)), "{err}");
+    assert!(err.to_string().starts_with(&dir.path().join("f").display().to_string()), "{err}");
     assert!(std::error::Error::source(&err).is_some());
 }
 
@@ -119,6 +120,7 @@ fn a_store_that_cannot_open_or_a_random_source_that_fails_is_returned() {
 
     let err = ingest_path(&home, &path, &mut Failing).unwrap_err();
     assert!(matches!(err, IngestError::Key(_)), "{err}");
+    assert_eq!(err.to_string(), "draw random bytes: none");
     assert!(std::error::Error::source(&err).is_some());
 
     std::fs::write(
@@ -128,6 +130,7 @@ fn a_store_that_cannot_open_or_a_random_source_that_fails_is_returned() {
     .unwrap();
     let err = ingest_path(&home, &path, &mut OsEntropy).unwrap_err();
     assert!(matches!(err, IngestError::Store(_)), "{err}");
+    assert!(err.to_string().starts_with("the store: "), "{err}");
     assert!(std::error::Error::source(&err).is_some());
 }
 
