@@ -212,11 +212,15 @@ fn the_checkout_s_nightly_compares_every_committed_ruleset() {
     );
 }
 
-/// Every committed ruleset names itself and its target, once, and the
-/// tag rulesets are committed beside main's (ENG-21).
+/// Every committed ruleset names itself, its target and the refs it
+/// includes, once, and the tag rulesets are committed beside main's
+/// (ENG-21).
 #[test]
-fn the_checkout_s_rulesets_each_name_themselves_and_their_target() {
-    let rulesets = branch_protection::committed(&checkout()).unwrap_or_default();
+fn the_checkout_s_rulesets_each_name_themselves_their_target_and_refs() {
+    let rulesets = match branch_protection::committed(&checkout()) {
+        Ok(rulesets) => rulesets,
+        Err(e) => panic!("{e}"),
+    };
     let names: Vec<&str> = rulesets
         .iter()
         .filter_map(|(_, r)| r.get("name").and_then(serde_json::Value::as_str))

@@ -51,9 +51,12 @@ const COMPARE_EACH: &str = "protection-check -- --committed \"$committed\"";
 pub fn committed(checkout: &Checkout) -> Result<Vec<(String, Value)>, String> {
     let entries =
         fs::read_dir(checkout.root.join(RULESETS)).map_err(|e| format!("read {RULESETS}: {e}"))?;
-    let files: BTreeSet<String> = entries
-        .filter_map(Result::ok)
-        .map(|e| e.file_name().to_string_lossy().into_owned())
+    let names = entries
+        .map(|e| e.map(|e| e.file_name().to_string_lossy().into_owned()))
+        .collect::<Result<Vec<String>, _>>()
+        .map_err(|e| format!("read {RULESETS}: {e}"))?;
+    let files: BTreeSet<String> = names
+        .into_iter()
         .filter(|name| name.ends_with(".json"))
         .map(|name| format!("{RULESETS}/{name}"))
         .collect();
@@ -71,8 +74,9 @@ pub fn committed(checkout: &Checkout) -> Result<Vec<(String, Value)>, String> {
 }
 
 /// Problems with the committed rulesets: each names itself and its
-/// target, and no two share a name, since the nightly job finds each
-/// live ruleset by its name.
+/// target, and includes at least one ref, since GitHub applies a ruleset
+/// only to the refs its include patterns match; and no two share a name,
+/// since the nightly job finds each live ruleset by its name.
 #[must_use]
 pub fn rulesets_named(rulesets: &[(String, Value)]) -> Vec<String> {
     let mut seen = BTreeSet::new();
@@ -87,6 +91,9 @@ pub fn rulesets_named(rulesets: &[(String, Value)]) -> Vec<String> {
         }
         if ruleset.get("target").and_then(Value::as_str).is_none() {
             problems.push(format!("{file} names no target"));
+        }
+        if strings(ruleset, &["conditions", "ref_name", "include"]).is_empty() {
+            problems.push(format!("{file} includes no ref, so it applies to nothing"));
         }
     }
 

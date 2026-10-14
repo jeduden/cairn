@@ -49,7 +49,7 @@ pub const GATE_TESTS: [&str; 32] = [
     "the_checkout_s_codeowners_name_no_owner_on_any_other_path",
     "the_checkout_s_security_crates_belong_to_the_security_reviewer",
     "the_checkout_s_nightly_compares_every_committed_ruleset",
-    "the_checkout_s_rulesets_each_name_themselves_and_their_target",
+    "the_checkout_s_rulesets_each_name_themselves_their_target_and_refs",
     "the_product_crates_keep_their_bans",
     "the_product_crates_ban_every_wait_with_no_deadline",
     "no_product_crate_keeps_mutable_global_state",

@@ -1227,13 +1227,23 @@ fn protection_cases() -> Vec<Case> {
             "nightly.yml does not compare each one",
         ),
         protection_case(
+            "a tag ruleset that includes no ref",
+            Injection::replace(
+                ".github/rulesets/no-other-tags-allowed.json",
+                "\"include\": [\"~ALL\"]",
+                "\"include\": []",
+            ),
+            "the_checkout_s_rulesets_each_name_themselves_their_target_and_refs",
+            "no-other-tags-allowed.json includes no ref, so it applies to nothing",
+        ),
+        protection_case(
             "two committed rulesets sharing a name",
             Injection::replace(
                 ".github/rulesets/no-other-tags-allowed.json",
                 "\"name\": \"no-other-tags-allowed\",",
                 "\"name\": \"releases-semver\",",
             ),
-            "the_checkout_s_rulesets_each_name_themselves_and_their_target",
+            "the_checkout_s_rulesets_each_name_themselves_their_target_and_refs",
             "repeats the ruleset name releases-semver",
         ),
     ]

@@ -32,7 +32,10 @@ What landed:
   other tag. The nightly job compares every file under
   `.github/rulesets` with the live ruleset of its name, and
   `protection-check` also refuses a live ruleset on another target or
-  with a `do_not_` flag switched on.
+  with a `do_not_` flag switched on. The live `no-other-tags-allowed`
+  included no ref, so it applied to nothing; the committed one includes
+  `~ALL` but the release tags, and a gate test refuses a ruleset with
+  no include. The stakeholder applies it on GitHub again.
 
 Scenario: `@ENG-21` stays `@pending`. Its first five `Then` steps pass
 when run without the tag. The last, two approvals on the
