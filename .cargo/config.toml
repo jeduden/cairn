@@ -1,0 +1,5 @@
+# Every build of the workspace, local, CI and release alike, compiles
+# SQLite without the code that loads extensions (ADR-2610110553): no
+# `dlopen` links into the core, so it can load no foreign native code.
+[env]
+LIBSQLITE3_FLAGS = "-USQLITE_ENABLE_LOAD_EXTENSION -DSQLITE_OMIT_LOAD_EXTENSION"
