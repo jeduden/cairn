@@ -1,0 +1,20 @@
+{
+  "name": "no-other-tags-allowed",
+  "target": "tag",
+  "source_type": "Repository",
+  "source": "jeduden/cairn",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "exclude": ["refs/tags/v*.*.*"],
+      "include": ["~ALL"]
+    }
+  },
+  "bypass_actors": [],
+  "rules": [
+    { "type": "deletion" },
+    { "type": "non_fast_forward" },
+    { "type": "creation" },
+    { "type": "update" }
+  ]
+}

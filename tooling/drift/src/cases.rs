@@ -1207,14 +1207,44 @@ fn protection_cases() -> Vec<Case> {
             "crates/pin/ is not owned by @jeduden",
         ),
         protection_case(
-            "the nightly no longer comparing the live ruleset",
+            "the nightly comparing main's ruleset alone",
+            Injection::replace(
+                ".github/workflows/nightly.yml",
+                "for committed in .github/rulesets/*.json; do",
+                "for committed in .github/rulesets/main.json; do",
+            ),
+            "the_checkout_s_nightly_compares_every_committed_ruleset",
+            "nightly.yml does not loop over every committed ruleset",
+        ),
+        protection_case(
+            "the nightly no longer comparing the live rulesets",
             Injection::replace(
                 ".github/workflows/nightly.yml",
                 "protection-check -- --committed",
                 "protection-check -- --help",
             ),
-            "the_checkout_s_nightly_compares_the_live_ruleset_with_the_committed_one",
-            "protection-check -- --committed .github/rulesets/main.json --live live.json",
+            "the_checkout_s_nightly_compares_every_committed_ruleset",
+            "nightly.yml does not compare each one",
+        ),
+        protection_case(
+            "a tag ruleset that includes no ref",
+            Injection::replace(
+                ".github/rulesets/no-other-tags-allowed.json",
+                "\"include\": [\"~ALL\"]",
+                "\"include\": []",
+            ),
+            "the_checkout_s_rulesets_each_name_themselves_their_target_and_refs",
+            "no-other-tags-allowed.json includes no ref, so it applies to nothing",
+        ),
+        protection_case(
+            "two committed rulesets sharing a name",
+            Injection::replace(
+                ".github/rulesets/no-other-tags-allowed.json",
+                "\"name\": \"no-other-tags-allowed\",",
+                "\"name\": \"releases-semver\",",
+            ),
+            "the_checkout_s_rulesets_each_name_themselves_their_target_and_refs",
+            "repeats the ruleset name releases-semver",
         ),
     ]
 }

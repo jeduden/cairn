@@ -1,7 +1,7 @@
 //! The checks' public API against the repository checkout itself: its
 //! files, its SRS and its review workflow.
 
-use engineering::{Checkout, review_workflow, toolchain};
+use engineering::{Checkout, branch_protection, review_workflow, toolchain};
 
 fn checkout() -> Checkout {
     Checkout::new(&testkit::repo_root())
@@ -198,17 +198,37 @@ fn the_checkout_s_security_crates_belong_to_the_security_reviewer() {
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
 
-/// The nightly workflow compares the live ruleset with the committed
-/// one (ENG-21).
+/// The nightly workflow compares every committed ruleset with the live
+/// one of the same name (ENG-21).
 #[test]
-fn the_checkout_s_nightly_compares_the_live_ruleset_with_the_committed_one() {
-    let c = checkout();
+fn the_checkout_s_nightly_compares_every_committed_ruleset() {
+    let nightly = checkout()
+        .read(".github/workflows/nightly.yml")
+        .unwrap_or_default();
 
     assert_eq!(
-        c.contains(
-            ".github/workflows/nightly.yml",
-            "protection-check -- --committed .github/rulesets/main.json --live live.json"
-        ),
-        Ok(())
+        branch_protection::nightly_compares_every_ruleset(&nightly),
+        Vec::<String>::new()
     );
+}
+
+/// Every committed ruleset names itself, its target and the refs it
+/// includes, once, and the tag rulesets are committed beside main's
+/// (ENG-21).
+#[test]
+fn the_checkout_s_rulesets_each_name_themselves_their_target_and_refs() {
+    let rulesets = match branch_protection::committed(&checkout()) {
+        Ok(rulesets) => rulesets,
+        Err(e) => panic!("{e}"),
+    };
+    let names: Vec<&str> = rulesets
+        .iter()
+        .filter_map(|(_, r)| r.get("name").and_then(serde_json::Value::as_str))
+        .collect();
+
+    assert_eq!(
+        branch_protection::rulesets_named(&rulesets),
+        Vec::<String>::new()
+    );
+    assert_eq!(names, ["main", "no-other-tags-allowed", "releases-semver"]);
 }

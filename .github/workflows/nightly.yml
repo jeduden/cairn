@@ -45,15 +45,16 @@ jobs:
           name: fuzz-crashers
           path: fuzz/artifacts/
 
-  # ENG-21: main's ruleset is a setting of the repository on GitHub, not
-  # a file, so it can weaken without a pull request. The ruleset the
-  # repository commits is the one it wants; this job fetches the live
-  # one and fails when the live one is weaker. It reads with the
-  # workflow's own token. GitHub shows a ruleset's bypass actors only to
-  # a caller with write access to the ruleset, which this token never
-  # has, so a bypass actor allowed to bypass the live ruleset shows here only
-  # when the API reveals it. The stakeholder applies the committed
-  # ruleset, and until it is applied this job is red.
+  # ENG-21: the rulesets, main's and the tag rulesets, are settings of
+  # the repository on GitHub, not files, so they can weaken without a
+  # pull request. The rulesets the repository commits under
+  # .github/rulesets are the ones it wants; this job fetches each live
+  # one by name and fails when one is missing or weaker. It reads with
+  # the workflow's own token. GitHub shows a ruleset's bypass actors only
+  # to a caller with write access to the ruleset, which this token never
+  # has, so a bypass actor shows here only when the API reveals it. The
+  # stakeholder applies the committed rulesets, and until they are
+  # applied this job is red.
   protection:
     runs-on: ubuntu-latest
     steps:
@@ -65,15 +66,24 @@ jobs:
           rustup toolchain install
           "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
           --profile minimal --no-self-update
-      - name: Fetch the live ruleset
+      # Every committed ruleset, main's and the tag rulesets, against
+      # the live one of the same name. A missing or weaker one fails the
+      # job, after every ruleset was compared.
+      - name: Compare every live ruleset with its committed one
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          id="$(gh api "repos/$GITHUB_REPOSITORY/rulesets" --jq '.[] | select(.name == "main") | .id')"
-          if [ -z "$id" ]; then
-            echo "::error::the repository has no ruleset named main"
-            exit 1
-          fi
-          gh api "repos/$GITHUB_REPOSITORY/rulesets/$id" > live.json
-      - name: Compare it with the committed ruleset
-        run: cargo run --locked --quiet -p engineering --bin protection-check -- --committed .github/rulesets/main.json --live live.json
+          gh api "repos/$GITHUB_REPOSITORY/rulesets" > live-rulesets.json
+          status=0
+          for committed in .github/rulesets/*.json; do
+            name="$(jq -r .name "$committed")"
+            id="$(jq -r --arg name "$name" '.[] | select(.name == $name) | .id' live-rulesets.json)"
+            if [ -z "$id" ]; then
+              echo "::error::the repository has no ruleset named $name"
+              status=1
+              continue
+            fi
+            gh api "repos/$GITHUB_REPOSITORY/rulesets/$id" > live.json
+            cargo run --locked --quiet -p engineering --bin protection-check -- --committed "$committed" --live live.json || status=1
+          done
+          exit "$status"

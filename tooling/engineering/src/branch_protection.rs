@@ -1,14 +1,19 @@
 //! ENG-21: main only moves through reviewed, signed pull requests.
 //!
 //! Branch protection is a setting of the forge, not a file of the
-//! repository, so the repository commits the protection it wants as a
-//! ruleset in GitHub's export format, [`RULESET`]. The scenario's steps
-//! read that file, and CODEOWNERS (see [`crate::codeowners`]). The
-//! `protection-check` executable compares the committed ruleset with
-//! the live one, so the setting cannot weaken unseen. The stakeholder
-//! applies the committed ruleset.
+//! repository, so the repository commits the protection it wants as
+//! rulesets in GitHub's export format, one file each under
+//! [`RULESETS`]: main's, [`RULESET`], and the tag rulesets that keep
+//! release tags fixed and refuse every other tag. The scenario's steps
+//! read main's, and CODEOWNERS (see [`crate::codeowners`]). The
+//! `protection-check` executable compares each committed ruleset with
+//! the live one of the same name, so no setting can weaken unseen. The
+//! stakeholder applies the committed rulesets.
 
 pub mod cli;
+
+use std::collections::BTreeSet;
+use std::fs;
 
 use serde_json::Value;
 
@@ -26,6 +31,94 @@ pub const CI_CHECK: &str = "CI";
 /// branch, so a per-path count has to come from a required check that
 /// reads the pull request's reviews; no such check exists yet.
 pub const SECURITY_CHECK: &str = "Security approvals";
+
+/// Where the repository commits its rulesets, one JSON file each.
+pub const RULESETS: &str = ".github/rulesets";
+
+/// The loop in the nightly workflow over every committed ruleset.
+const EVERY_RULESET: &str = "for committed in .github/rulesets/*.json";
+
+/// The comparison the loop runs for each committed ruleset.
+const COMPARE_EACH: &str = "protection-check -- --committed \"$committed\"";
+
+/// Every committed ruleset under [`RULESETS`], by its path, in name
+/// order.
+///
+/// # Errors
+///
+/// Fails when the directory cannot be read, or a ruleset cannot be read
+/// or is not a JSON object.
+pub fn committed(checkout: &Checkout) -> Result<Vec<(String, Value)>, String> {
+    let entries =
+        fs::read_dir(checkout.root.join(RULESETS)).map_err(|e| format!("read {RULESETS}: {e}"))?;
+    let names = entries
+        .map(|e| e.map(|e| e.file_name().to_string_lossy().into_owned()))
+        .collect::<Result<Vec<String>, _>>()
+        .map_err(|e| format!("read {RULESETS}: {e}"))?;
+    let files: BTreeSet<String> = names
+        .into_iter()
+        .filter(|name| name.ends_with(".json"))
+        .map(|name| format!("{RULESETS}/{name}"))
+        .collect();
+
+    files
+        .into_iter()
+        .map(|file| {
+            let ruleset = checkout
+                .read(&file)
+                .and_then(|text| parse(&text))
+                .map_err(|e| format!("{file}: {e}"))?;
+            Ok((file, ruleset))
+        })
+        .collect()
+}
+
+/// Problems with the committed rulesets: each names itself and its
+/// target, and includes at least one ref, since GitHub applies a ruleset
+/// only to the refs its include patterns match; and no two share a name,
+/// since the nightly job finds each live ruleset by its name.
+#[must_use]
+pub fn rulesets_named(rulesets: &[(String, Value)]) -> Vec<String> {
+    let mut seen = BTreeSet::new();
+    let mut problems = Vec::new();
+    for (file, ruleset) in rulesets {
+        match ruleset.get("name").and_then(Value::as_str) {
+            None => problems.push(format!("{file} names no ruleset")),
+            Some(name) if !seen.insert(name) => {
+                problems.push(format!("{file} repeats the ruleset name {name}"));
+            }
+            Some(_) => {}
+        }
+        if ruleset.get("target").and_then(Value::as_str).is_none() {
+            problems.push(format!("{file} names no target"));
+        }
+        if strings(ruleset, &["conditions", "ref_name", "include"]).is_empty() {
+            problems.push(format!("{file} includes no ref, so it applies to nothing"));
+        }
+    }
+
+    problems
+}
+
+/// Problems with the nightly workflow's comparison: it loops over every
+/// committed ruleset and compares each with the live one, rather than
+/// one ruleset alone.
+#[must_use]
+pub fn nightly_compares_every_ruleset(nightly: &str) -> Vec<String> {
+    let mut problems = Vec::new();
+    if !nightly.contains(EVERY_RULESET) {
+        problems.push(format!(
+            "nightly.yml does not loop over every committed ruleset: {EVERY_RULESET}"
+        ));
+    }
+    if !nightly.contains(COMPARE_EACH) {
+        problems.push(format!(
+            "nightly.yml does not compare each one: {COMPARE_EACH}"
+        ));
+    }
+
+    problems
+}
 
 /// Reads and parses the committed ruleset.
 ///
@@ -193,15 +286,23 @@ pub fn security_crates_need_two_approvals(ruleset: &Value) -> Vec<String> {
 }
 
 /// Problems where `live`, the ruleset GitHub holds, is weaker than
-/// `committed`: an inactive ruleset, a missing rule, a lower approval
-/// count, a flag switched off, a required check dropped, a branch
-/// excluded or a bypass actor allowed to bypass it. Stronger is not a
+/// `committed`: another target, an inactive ruleset, a missing rule, a
+/// lower approval count, a flag switched off or a `do_not_` flag
+/// switched on, a required check dropped, a ref excluded or a bypass
+/// actor allowed to bypass it. Stronger is not a
 /// problem. GitHub shows `bypass_actors` only to a caller with write
 /// access to the ruleset, so a live ruleset without it is not judged
 /// on that.
 #[must_use]
 pub fn weaker_than(committed: &Value, live: &Value) -> Vec<String> {
     let mut problems = Vec::new();
+    if committed.get("target") != live.get("target") {
+        problems.push(format!(
+            "target is {} live, {} committed",
+            show(live.get("target")),
+            show(committed.get("target"))
+        ));
+    }
     if committed.get("enforcement") != live.get("enforcement") {
         problems.push(format!(
             "enforcement is {} live, {} committed",
@@ -273,6 +374,8 @@ fn weaker_parameters(committed: &Value, live: &Value, kind: &str) -> Vec<String>
             }
         } else if want.as_bool() == Some(true) && got.and_then(Value::as_bool) != Some(true) {
             problems.push(format!("live {kind} does not set {name}"));
+        } else if name.starts_with("do_not_") && got.and_then(Value::as_bool) == Some(true) {
+            problems.push(format!("live {kind} sets {name}"));
         }
     }
     if kind == "required_status_checks" {

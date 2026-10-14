@@ -23,7 +23,7 @@ pub const CHECKOUT_STEP: &str = "the repository checkout";
 /// of ENG-12 and ENG-16, ENG-15's benchmark gate, and ENG-21's ruleset
 /// and CODEOWNERS; and the gates behind ENG-03, pending until M1 adds
 /// injectable I/O traits, and ENG-20's three workflow gates.
-pub const GATE_TESTS: [&str; 31] = [
+pub const GATE_TESTS: [&str; 32] = [
     "specification_parses",
     "decision_records_parse",
     "specification_and_features_agree",
@@ -48,7 +48,8 @@ pub const GATE_TESTS: [&str; 31] = [
     "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
     "the_checkout_s_codeowners_name_no_owner_on_any_other_path",
     "the_checkout_s_security_crates_belong_to_the_security_reviewer",
-    "the_checkout_s_nightly_compares_the_live_ruleset_with_the_committed_one",
+    "the_checkout_s_nightly_compares_every_committed_ruleset",
+    "the_checkout_s_rulesets_each_name_themselves_their_target_and_refs",
     "the_product_crates_keep_their_bans",
     "the_product_crates_ban_every_wait_with_no_deadline",
     "no_product_crate_keeps_mutable_global_state",
