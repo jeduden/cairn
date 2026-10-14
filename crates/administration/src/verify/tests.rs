@@ -626,4 +626,8 @@ fn each_failure_names_its_class_and_where_it_is() {
         at(VerifyError::Store(store::StoreError::Full(w))),
         ("store", None)
     );
+    assert!(matches!(
+        VerifyError::from(store::StoreError::Full(w)),
+        VerifyError::Store(_)
+    ));
 }

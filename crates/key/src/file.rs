@@ -57,9 +57,7 @@ pub fn staging(path: &Path) -> std::path::PathBuf {
 /// Fails when the directory cannot be opened or synced.
 pub fn sync_directory(path: &Path) -> std::io::Result<()> {
     #[cfg(unix)]
-    if let Some(parent) = path.parent() {
-        fs::File::open(parent)?.sync_all()?;
-    }
+    fs::File::open(path.parent().unwrap_or(path))?.sync_all()?;
     #[cfg(not(unix))]
     let _ = path;
 

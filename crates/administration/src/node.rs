@@ -213,13 +213,8 @@ impl Genesis {
     fn certificate(&self) -> Result<SeatCertificate, AdminError> {
         let room = RoomId::derive(self.seat.public().as_bytes(), &self.nonce);
 
-        Ok(SeatCertificate::issue(
-            &self.device,
-            &self.seat,
-            room,
-            SeatKind::Device,
-            false,
-        )?)
+        SeatCertificate::issue(&self.device, &self.seat, room, SeatKind::Device, false)
+            .map_err(AdminError::from)
     }
 
     /// Records the device seat and its first three events in one

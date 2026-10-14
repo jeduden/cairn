@@ -223,19 +223,9 @@ impl Store {
         let tx = self
             .conn
             .transaction_with_behavior(TransactionBehavior::Immediate)?;
-        if !tx.query_row(HAS_META, [], |r| r.get::<_, bool>(0))? {
-            tx.execute_batch(SCHEMA)?;
-            for (key, value) in [
-                ("schema_version", SCHEMA_VERSION.to_string()),
-                ("header_field_set", FIELD_SET.to_owned()),
-                ("header_encoding", ENCODING.to_owned()),
-            ] {
-                tx.execute(
-                    "INSERT INTO meta (key, value) VALUES (?1, ?2)",
-                    params![key, value],
-                )?;
-            }
-        }
+        // Another opener may have made the store since the first look.
+        let fresh = !tx.query_row(HAS_META, [], |r| r.get::<_, bool>(0))?;
+        fresh.then(|| create(&tx)).transpose()?;
         tx.commit()?;
 
         self.check_format()
@@ -566,6 +556,21 @@ fn insert_seat(conn: &Connection, seat: &StoredSeat) -> Result<(), StoreError> {
             seat.certificate.to_string()
         ],
     )?;
+
+    Ok(())
+}
+
+/// Makes the store's tables and records its format in `meta`.
+fn create(tx: &rusqlite::Transaction<'_>) -> Result<(), StoreError> {
+    tx.execute_batch(SCHEMA)?;
+    let mut insert = tx.prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
+    for (key, value) in [
+        ("schema_version", SCHEMA_VERSION.to_string()),
+        ("header_field_set", FIELD_SET.to_owned()),
+        ("header_encoding", ENCODING.to_owned()),
+    ] {
+        insert.execute(params![key, value])?;
+    }
 
     Ok(())
 }

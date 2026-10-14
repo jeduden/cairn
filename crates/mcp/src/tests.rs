@@ -417,8 +417,10 @@ fn an_event_that_does_not_check_against_its_chain_is_refused() {
         "UPDATE events SET kind = 'create_room' WHERE seq = 1",
         // A predecessor whose hash the event's prev_hash no longer names.
         "UPDATE events SET hash = '0000000000000000000000000000000000000000000000000000000000000000' WHERE seq = 1",
+        // Content kept without the key that opens its commitment.
+        "UPDATE events SET commitment_key = NULL WHERE seq = 1",
     ];
-    for (statement, seq) in tamper.into_iter().zip([1, 1, 2]) {
+    for (statement, seq) in tamper.into_iter().zip([1, 1, 2, 1]) {
         let f = fixture();
         f.sql(&format!("{statement} AND writer = '{}'", f.ingested.writer));
         let mut server = f.server();

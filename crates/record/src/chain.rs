@@ -188,11 +188,12 @@ pub fn causal_order(record: &BTreeMap<WriterId, Vec<Link>>) -> Result<Vec<Addres
     while let Some(next) = ready.pop_first() {
         waiting.remove(&next);
         for follower in followers.remove(&next).unwrap_or_default() {
-            if let Some(n) = waiting.get_mut(&follower) {
+            let freed = waiting.get_mut(&follower).is_some_and(|n| {
                 *n -= 1;
-                if *n == 0 {
-                    ready.insert(follower);
-                }
+                *n == 0
+            });
+            if freed {
+                ready.insert(follower);
             }
         }
         order.push(next);

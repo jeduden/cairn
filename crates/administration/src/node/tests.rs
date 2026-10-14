@@ -277,14 +277,21 @@ fn the_personal_room_is_the_one_whose_device_seat_holds_the_genesis() {
     let mut store = Store::open(&home.store()).unwrap();
     let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
     // Device seats the device key certified in other rooms, as joins
-    // will add, with no genesis of their own.
-    for n in 0..5u8 {
+    // will add, with no genesis of their own; the store lists seats by
+    // writer, so at least one must come before the genesis.
+    let mut before = 0;
+    for n in 0..64u8 {
         let seat = SeatKey::mint(&mut OsEntropy).unwrap();
         let room = RoomId::derive(&[n; 32], &[n; 16]);
         let cert =
             SeatCertificate::issue(node.device(), &seat, room, SeatKind::Device, false).unwrap();
+        before += usize::from(cert.writer_id() < node.device_writer());
         store.add_seat(&seat_record(&cert)).unwrap();
+        if before > 0 && n >= 4 {
+            break;
+        }
     }
+    assert!(before > 0, "no device seat sorts before the genesis");
 
     let again = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
 
@@ -309,4 +316,20 @@ fn find_reads_the_node_a_start_made_and_writes_nothing() {
         (found.device_writer(), found.personal_room()),
         (node.device_writer(), node.personal_room())
     );
+}
+
+#[test]
+fn a_staging_directory_that_cannot_be_cleared_is_returned() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let mut store = Store::open(&home.store()).unwrap();
+    std::fs::write(key::file::staging(&home.genesis()), "x").unwrap();
+
+    let err = Node::open(&home, &mut store, &mut OsEntropy).unwrap_err();
+
+    assert!(matches!(err, AdminError::Io { .. }), "{err}");
+    assert!(err.to_string().starts_with(&format!(
+        "{}: ",
+        key::file::staging(&home.genesis()).display()
+    )));
 }

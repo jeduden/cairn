@@ -406,6 +406,22 @@ fn verify_reports_a_store_error_met_while_checking() {
 }
 
 #[test]
+fn verify_reports_a_store_that_fails_while_checking() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute("DROP TABLE event_heads", []).unwrap();
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        err.starts_with("cairn verify: the store: no such table"),
+        "{err}"
+    );
+}
+
+#[test]
 fn verify_of_a_home_without_its_device_key_fails() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);

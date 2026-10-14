@@ -801,6 +801,7 @@ dependencies = [
  "administration",
  "key",
  "record",
+ "rusqlite",
  "serde_json",
  "store",
  "testkit",
