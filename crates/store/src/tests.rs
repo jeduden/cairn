@@ -206,13 +206,14 @@ fn the_first_event_of_a_transaction_cites_the_heads_that_advanced_since_its_writ
 fn a_new_event_without_a_canonical_encoding_rolls_back_its_transaction_alone() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
-    let mut batch = new_events(150);
-    batch[120].content = json!({"x": 0.5});
+    let mut batch = new_events(250);
+    // Event 160 fails: a hundred to a transaction keeps 100, where fifty
+    // would keep 150 and two hundred none.
+    batch[159].content = json!({"x": 0.5});
 
     let err = store.append(writer(1), &batch).unwrap_err();
 
     assert!(matches!(err, StoreError::Encoding(_)), "{err}");
-    assert_eq!(BATCH, 100);
     assert_eq!(store.log(writer(1)).unwrap().len(), 100);
 }
 
@@ -298,45 +299,29 @@ fn a_stored_row_that_does_not_parse_is_corrupt_and_names_its_event() {
 }
 
 #[test]
-fn a_cited_head_that_does_not_parse_is_corrupt() {
-    let dir = TempDir::new().unwrap();
-    let mut store = open(&dir);
-    store.append(writer(1), &new_events(1)).unwrap();
-    store.append(writer(2), &new_events(1)).unwrap();
-    store
-        .conn
-        .execute("UPDATE event_heads SET other_hash = 'x'", [])
-        .unwrap();
+fn a_cited_head_that_does_not_parse_is_corrupt_naming_its_column() {
+    for (column, value, what) in [
+        ("other_hash", "'x'", "cited head hash"),
+        ("other_writer", "'x'", "cited head writer"),
+        ("other_seq", "0", "cited head seq"),
+    ] {
+        let dir = TempDir::new().unwrap();
+        let mut store = open(&dir);
+        store.append(writer(1), &new_events(1)).unwrap();
+        store.append(writer(2), &new_events(1)).unwrap();
+        store
+            .conn
+            .execute(&format!("UPDATE event_heads SET {column} = {value}"), [])
+            .unwrap();
 
-    assert!(matches!(
-        store.log(writer(2)),
-        Err(StoreError::Corrupt {
-            address: Some(_),
-            ..
-        })
-    ));
-    store
-        .conn
-        .execute("UPDATE event_heads SET other_writer = 'x'", [])
-        .unwrap();
-    assert!(matches!(
-        store.log(writer(2)),
-        Err(StoreError::Corrupt {
-            address: Some(_),
-            ..
-        })
-    ));
-    store
-        .conn
-        .execute("UPDATE event_heads SET other_seq = 0", [])
-        .unwrap();
-    assert!(matches!(
-        store.log(writer(2)),
-        Err(StoreError::Corrupt {
-            address: Some(_),
-            ..
-        })
-    ));
+        let err = store.log(writer(2)).unwrap_err();
+
+        let at = Address::new(writer(2), Seq::FIRST);
+        assert!(
+            matches!(&err, StoreError::Corrupt { address: Some(a), what: w } if *a == at && w == what),
+            "{column}: {err}"
+        );
+    }
 }
 
 #[test]
@@ -364,7 +349,7 @@ fn a_seat_row_or_writer_id_that_does_not_parse_is_corrupt() {
             .unwrap();
         let err = store.seats().unwrap_err();
         assert!(
-            matches!(&err, StoreError::Corrupt { address: None, what } if what.contains(column)),
+            matches!(&err, StoreError::Corrupt { address: None, what } if *what == format!("seat {column}")),
             "{column}: {err}"
         );
     }
@@ -482,4 +467,162 @@ fn a_store_shows_its_path_and_a_sqlite_error_its_cause() {
     assert!(format!("{store:?}").contains("store.db"));
     let err = StoreError::Sqlite(rusqlite::Error::InvalidQuery);
     assert!(err.to_string().starts_with("the store: "), "{err}");
+}
+
+fn seat_in(room: RoomId, n: u8) -> StoredSeat {
+    StoredSeat {
+        writer: writer(n),
+        seat: SeatId::derive(&room, &[n; 32]),
+        room,
+        certificate: json!({"n": n}),
+    }
+}
+
+#[test]
+fn an_event_cites_only_the_heads_of_writers_in_its_own_room() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let (here, there) = (RoomId::derive(&[1; 32], &[1; 16]), RoomId::derive(&[2; 32], &[2; 16]));
+    for seat in [seat_in(here, 1), seat_in(here, 2), seat_in(there, 3)] {
+        store.add_seat(&seat).unwrap();
+    }
+    store.append(writer(1), &new_events(1)).unwrap();
+    store.append(writer(3), &new_events(1)).unwrap();
+
+    store.append(writer(2), &new_events(1)).unwrap();
+
+    let cited: Vec<WriterId> = store.log(writer(2)).unwrap()[0]
+        .link
+        .header
+        .heads
+        .iter()
+        .map(|s| s.address.writer)
+        .collect();
+    assert_eq!(cited, [writer(1)]);
+}
+
+#[test]
+fn a_store_whose_header_field_set_or_encoding_differs_is_refused() {
+    for key in ["header_field_set", "header_encoding"] {
+        let dir = TempDir::new().unwrap();
+        let store = open(&dir);
+        store
+            .conn
+            .execute("UPDATE meta SET value = 'other' WHERE key = ?1", [key])
+            .unwrap();
+        drop(store);
+
+        let err = Store::open(&dir.path().join("store.db")).unwrap_err();
+
+        assert!(matches!(&err, StoreError::Format { key: k, found } if k == key && found == "other"), "{err}");
+        assert_eq!(
+            err.to_string(),
+            format!("the store records {key} \"other\", which this cairn does not write")
+        );
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn a_new_store_file_is_created_readable_only_by_its_owner_before_sqlite_opens_it() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("store.db");
+
+    create_owner_only(&path).unwrap();
+    create_owner_only(&path).unwrap();
+
+    let mode = std::fs::metadata(&path).unwrap().permissions().mode();
+    assert_eq!(mode & 0o777, 0o600);
+    assert!(matches!(
+        create_owner_only(&dir.path().join("no/such/dir/store.db")),
+        Err(StoreError::Io(_))
+    ));
+}
+
+#[test]
+fn a_snapshot_reads_the_store_as_it_stood_when_it_began() {
+    let dir = TempDir::new().unwrap();
+    let mut reader = open(&dir);
+    let mut writer_side = open(&dir);
+    reader.append(writer(1), &new_events(1)).unwrap();
+
+    let seen = reader
+        .snapshot(|store| {
+            writer_side.append(writer(2), &new_events(1))?;
+            store.writers()
+        })
+        .unwrap();
+
+    assert_eq!(seen, [writer(1)]);
+    assert_eq!(reader.writers().unwrap().len(), 2);
+}
+
+#[test]
+fn a_snapshot_passes_on_its_closure_s_error() {
+    let dir = TempDir::new().unwrap();
+    let store = open(&dir);
+
+    let err = store
+        .snapshot(|_| -> Result<(), StoreError> { Err(StoreError::Full(writer(1))) })
+        .unwrap_err();
+
+    assert!(matches!(err, StoreError::Full(_)));
+    assert!(store.writers().is_ok(), "the snapshot ended");
+}
+
+#[test]
+fn a_seat_and_its_writer_s_first_events_land_in_one_transaction() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let room = RoomId::derive(&[1; 32], &[1; 16]);
+    let seat = seat_in(room, 1);
+    let mut bad = new_events(2);
+    bad[1].content = json!({"x": 0.5});
+
+    let err = store.add_seat_and_append(&seat, writer(9), &bad).unwrap_err();
+
+    assert!(matches!(err, StoreError::Encoding(_)));
+    assert_eq!(store.seats().unwrap(), []);
+    assert!(store.log(writer(9)).unwrap().is_empty());
+
+    let addresses = store.add_seat_and_append(&seat, writer(9), &new_events(2)).unwrap();
+
+    assert_eq!(addresses.len(), 2);
+    assert_eq!(store.seats().unwrap(), [seat.clone()]);
+    assert!(matches!(
+        store.add_seat_and_append(&seat, writer(9), &new_events(1)),
+        Err(StoreError::Sqlite(_))
+    ));
+    assert_eq!(store.log(writer(9)).unwrap().len(), 2);
+}
+
+#[test]
+fn a_writer_at_the_last_seq_appends_nothing_more() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &new_events(1)).unwrap();
+    store
+        .conn
+        .execute(&format!("UPDATE events SET seq = {}", record::canonical::MAX_SAFE), [])
+        .unwrap();
+
+    let err = store.append(writer(1), &new_events(1)).unwrap_err();
+
+    assert!(matches!(err, StoreError::Full(w) if w == writer(1)), "{err}");
+}
+
+#[test]
+fn sqlite_is_built_without_extension_loading() {
+    let dir = TempDir::new().unwrap();
+    let store = open(&dir);
+
+    let omitted: i64 = store
+        .conn
+        .query_row("SELECT sqlite_compileoption_used('OMIT_LOAD_EXTENSION')", [], |r| r.get(0))
+        .unwrap();
+    let call = store.conn.query_row("SELECT load_extension('x')", [], |r| r.get::<_, i64>(0));
+
+    assert_eq!(omitted, 1);
+    assert!(call.unwrap_err().to_string().contains("no such function"));
 }
