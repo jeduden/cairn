@@ -3,6 +3,18 @@
 version = 4
 
 [[package]]
+name = "administration"
+version = "0.0.0"
+dependencies = [
+ "key",
+ "record",
+ "rusqlite",
+ "serde_json",
+ "store",
+ "testkit",
+]
+
+[[package]]
 name = "adr"
 version = "0.0.0"
 dependencies = [
