@@ -1,0 +1,27 @@
+[package]
+name = "ingest"
+version = "0.0.0"
+description = "cairn ingest: a transcript read into an ingest seat's writer"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+administration.workspace = true
+key.workspace = true
+record.workspace = true
+serde_json.workspace = true
+store.workspace = true
+
+[dev-dependencies]
+testkit.workspace = true
+
+[lints]
+workspace = true
+
+# ENG-02: see crates/cairn/Cargo.toml.
+[package.metadata.cairn]
+responsibility = "Reads harness transcripts into the record"
+may-depend-on = ["administration", "key", "record", "store"]
+may-dev-depend-on = ["testkit"]
