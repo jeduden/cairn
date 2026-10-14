@@ -212,10 +212,31 @@ fn ingest_records_each_line_and_names_the_writer() {
     let (code, out, err) = p.invoke(&["ingest", "--path", &path], &DEV);
 
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
-    assert!(
-        out.starts_with(&format!("ingested 2 lines of {path} into writer ")),
-        "{out}"
+    assert!(out.starts_with("ingested 2 lines into writer "), "{out}");
+    assert!(!out.contains(&path), "the output repeats no path: {out}");
+}
+
+#[test]
+fn a_release_build_records_no_transcript_until_redaction_lands() {
+    let p = Process::new();
+    let path = p.transcript("a\n");
+    let release = Build {
+        version: "1.0.0",
+        commit: Some("abc"),
+    };
+
+    let (code, out, err) = p.invoke(&["ingest", "--path", &path], &release);
+
+    assert_eq!(
+        (code, out.as_str(), err.as_str()),
+        (
+            EXIT_FAILURE,
+            "",
+            "cairn ingest: a release build records no transcript until redaction before \
+             storage (SEC-08) lands; use a development build\n"
+        )
     );
+    assert!(!p.cairn_home().exists());
 }
 
 #[test]
