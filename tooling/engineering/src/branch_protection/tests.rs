@@ -318,3 +318,77 @@ fn an_unreadable_ruleset_has_no_rules() {
     assert!(required_checks(&r).is_empty());
     assert_eq!(show(None), "absent");
 }
+
+#[test]
+fn committed_reads_every_json_ruleset_in_name_order() {
+    let dir = testkit::TempDir::new().unwrap();
+    let rulesets = dir.path().join(RULESETS);
+    std::fs::create_dir_all(&rulesets).unwrap();
+    std::fs::write(rulesets.join("b.json"), r#"{"name": "b"}"#).unwrap();
+    std::fs::write(rulesets.join("a.json"), r#"{"name": "a"}"#).unwrap();
+    std::fs::write(rulesets.join("notes.md"), "not a ruleset").unwrap();
+
+    let got = committed(&Checkout::new(dir.path())).unwrap();
+
+    assert_eq!(
+        got,
+        [
+            (format!("{RULESETS}/a.json"), json!({"name": "a"})),
+            (format!("{RULESETS}/b.json"), json!({"name": "b"})),
+        ]
+    );
+}
+
+#[test]
+fn committed_names_a_missing_directory_or_a_malformed_ruleset() {
+    let dir = testkit::TempDir::new().unwrap();
+    let missing = committed(&Checkout::new(dir.path())).unwrap_err();
+    assert!(missing.starts_with("read .github/rulesets: "), "{missing}");
+
+    let rulesets = dir.path().join(RULESETS);
+    std::fs::create_dir_all(&rulesets).unwrap();
+    std::fs::write(rulesets.join("bad.json"), "[]").unwrap();
+    assert_eq!(
+        committed(&Checkout::new(dir.path())).unwrap_err(),
+        ".github/rulesets/bad.json: the ruleset is not a JSON object"
+    );
+}
+
+#[test]
+fn every_committed_ruleset_names_itself_and_its_target_once() {
+    let ok = [
+        ("a.json".to_owned(), json!({"name": "main", "target": "branch"})),
+        ("b.json".to_owned(), json!({"name": "tags", "target": "tag"})),
+    ];
+    assert!(rulesets_named(&ok).is_empty());
+
+    let bad = [
+        ("a.json".to_owned(), json!({"target": "branch"})),
+        ("b.json".to_owned(), json!({"name": "tags"})),
+        ("c.json".to_owned(), json!({"name": "tags", "target": "tag"})),
+    ];
+    assert_eq!(
+        rulesets_named(&bad),
+        [
+            "a.json names no ruleset",
+            "b.json names no target",
+            "c.json repeats the ruleset name tags",
+        ]
+    );
+}
+
+#[test]
+fn the_nightly_compares_every_committed_ruleset() {
+    let good = "for committed in .github/rulesets/*.json; do\n  cargo run -p engineering --bin protection-check -- --committed \"$committed\" --live live.json\ndone\n";
+    assert!(nightly_compares_every_ruleset(good).is_empty());
+
+    assert_eq!(
+        nightly_compares_every_ruleset(
+            "cargo run -p engineering --bin protection-check -- --committed .github/rulesets/main.json --live live.json"
+        ),
+        [
+            "nightly.yml does not loop over every committed ruleset: for committed in .github/rulesets/*.json",
+            "nightly.yml does not compare each one: protection-check -- --committed \"$committed\"",
+        ]
+    );
+}
