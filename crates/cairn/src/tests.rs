@@ -281,14 +281,33 @@ fn verify_checks_the_record_and_counts_it() {
         text,
         (
             EXIT_OK,
-            "verified 2 writers and 6 events: every chain and seat certificate checks\n".into(),
+            "checked 2 writers and 6 events: every chain, commitment and seat certificate holds; \
+             integrity unsigned, as no log is signed yet\n"
+                .into(),
             String::new()
         )
     );
     assert_eq!(json.0, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&json.1).unwrap();
     assert_eq!(
-        serde_json::from_str::<serde_json::Value>(&json.1).unwrap(),
-        serde_json::json!({"writers": 2, "events": 6, "broken": null})
+        (&v["integrity"], &v["writers"], &v["events"], &v["broken"]),
+        (
+            &serde_json::json!("unsigned"),
+            &serde_json::json!(2),
+            &serde_json::json!(6),
+            &serde_json::Value::Null
+        )
+    );
+    let order: Vec<&str> = v["order"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|a| a.as_str().unwrap())
+        .collect();
+    assert_eq!(order.len(), 6);
+    assert!(
+        order.iter().all(|a| a.starts_with("cairn:room/")),
+        "{order:?}"
     );
 }
 
@@ -319,8 +338,23 @@ fn verify_exits_3_naming_where_the_chain_breaks() {
     assert_eq!(json_code, EXIT_INTEGRITY);
     let v: serde_json::Value = serde_json::from_str(&json).unwrap();
     assert_eq!(
-        format!("cairn verify: {}\n", v["broken"].as_str().unwrap()),
+        format!(
+            "cairn verify: {}\n",
+            v["broken"]["message"].as_str().unwrap()
+        ),
         err
+    );
+    assert_eq!(
+        (&v["integrity"], &v["broken"]["class"], &v["order"]),
+        (
+            &serde_json::json!("broken"),
+            &serde_json::json!("chain"),
+            &serde_json::Value::Null
+        )
+    );
+    assert!(
+        err.contains(v["broken"]["address"].as_str().unwrap()),
+        "{v}"
     );
 }
 
@@ -357,12 +391,30 @@ fn verify_reports_a_store_error_met_while_checking() {
     conn.execute("UPDATE seats SET room = 'x'", []).unwrap();
 
     let (code, _, err) = p.invoke(&["verify"], &DEV);
+    let (_, json, _) = p.invoke(&["verify", "--json"], &DEV);
 
-    assert_eq!(code, EXIT_FAILURE);
+    assert_eq!(code, EXIT_INTEGRITY);
     assert!(
         err.starts_with("cairn verify: the store is corrupt"),
         "{err}"
     );
+    let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(
+        (&v["broken"]["class"], &v["broken"]["address"]),
+        (&serde_json::json!("corrupt"), &serde_json::Value::Null)
+    );
+}
+
+#[test]
+fn verify_of_a_home_without_its_device_key_fails() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    std::fs::remove_file(p.cairn_home().join("keys/device.key")).unwrap();
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("device.key"), "{err}");
 }
 
 #[test]
@@ -380,6 +432,7 @@ fn verify_refuses_an_unknown_flag() {
 #[test]
 fn mcp_answers_each_line_of_input() {
     let mut p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     p.lines = vec![
         r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#.into(),
         r#"{"jsonrpc":"2.0","id":2,"method":"ping"}"#.into(),
@@ -421,8 +474,31 @@ fn mcp_refuses_flags_and_reports_a_store_it_cannot_open() {
 }
 
 #[test]
+fn mcp_without_a_store_or_a_node_fails_and_makes_nothing() {
+    let p = Process::new();
+
+    let (code, _, err) = p.invoke(&["mcp"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert_eq!(
+        err,
+        format!(
+            "cairn mcp: no store at {}: run cairn ingest first\n",
+            p.cairn_home().join("store.db").display()
+        )
+    );
+    assert!(!p.cairn_home().exists());
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    std::fs::remove_file(p.cairn_home().join("keys/device.key")).unwrap();
+    let (code, _, err) = p.invoke(&["mcp"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("device.key"), "{err}");
+}
+
+#[test]
 fn mcp_reports_a_reply_it_cannot_write() {
     let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     let lines = vec![r#"{"jsonrpc":"2.0","id":2,"method":"ping"}"#.to_owned()];
     let input = move || {
         let (tx, rx) = mpsc::channel();

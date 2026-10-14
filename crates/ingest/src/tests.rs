@@ -147,3 +147,33 @@ impl key::random::Entropy for Failing {
         Err(key::KeyError::Entropy("none".into()))
     }
 }
+
+#[test]
+fn a_store_that_fails_part_way_names_the_writer_and_what_landed() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    ingest_path(&home, &transcript(&dir, "x\n"), &mut OsEntropy).unwrap();
+    let conn = rusqlite::Connection::open(home.store()).unwrap();
+    conn.execute_batch(
+        "CREATE TRIGGER refuse BEFORE INSERT ON events WHEN NEW.seq = 150 \
+         BEGIN SELECT RAISE(ABORT, 'refused'); END",
+    )
+    .unwrap();
+    let text: String = (1..=250).map(|n| format!("line {n}\n")).collect();
+
+    let err = ingest_path(&home, &transcript(&dir, &text), &mut OsEntropy).unwrap_err();
+
+    let IngestError::Partial { writer, landed, .. } = &err else {
+        panic!("{err}");
+    };
+    assert_eq!(*landed, 100);
+    let store = Store::open(&home.store()).unwrap();
+    assert_eq!(store.log(*writer).unwrap().len(), 100);
+    assert!(
+        err.to_string().starts_with(&format!(
+            "writer {writer} recorded 100 of 250 lines before the store failed: the store: "
+        )),
+        "{err}"
+    );
+    assert!(std::error::Error::source(&err).is_some());
+}

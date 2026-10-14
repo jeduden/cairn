@@ -293,3 +293,20 @@ fn the_personal_room_is_the_one_whose_device_seat_holds_the_genesis() {
         (node.device_writer(), node.personal_room())
     );
 }
+
+#[test]
+fn find_reads_the_node_a_start_made_and_writes_nothing() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let mut store = Store::open(&home.store()).unwrap();
+    assert!(matches!(Node::find(&home, &store), Err(AdminError::Key(_))));
+    assert!(!home.genesis().exists());
+    let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+
+    let found = Node::find(&home, &store).unwrap();
+
+    assert_eq!(
+        (found.device_writer(), found.personal_room()),
+        (node.device_writer(), node.personal_room())
+    );
+}

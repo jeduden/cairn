@@ -15,6 +15,7 @@ serde_json.workspace = true
 store.workspace = true
 
 [dev-dependencies]
+rusqlite.workspace = true
 testkit.workspace = true
 
 [lints]
