@@ -1161,13 +1161,17 @@ dependencies = [
 name = "scenario"
 version = "0.0.0"
 dependencies = [
+ "administration",
  "adr",
  "cucumber",
  "drift",
  "engineering",
  "harness-contract",
+ "key",
+ "record",
  "serde_json",
  "srs",
+ "store",
  "testkit",
 ]
 
