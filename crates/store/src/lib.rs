@@ -80,6 +80,9 @@ pub enum StoreError {
     Io(std::io::Error),
     /// The store is of a newer format version than this cairn's.
     Newer { found: u32 },
+    /// The store records a header field set or encoding this cairn does
+    /// not write, so its hashes would not check here.
+    Format { key: String, found: String },
     /// A stored value does not parse; the event it belongs to, if any.
     Corrupt {
         address: Option<Address>,
@@ -99,6 +102,10 @@ impl fmt::Display for StoreError {
             Self::Newer { found } => write!(
                 f,
                 "the store is format version {found}, newer than this cairn's {SCHEMA_VERSION}"
+            ),
+            Self::Format { key, found } => write!(
+                f,
+                "the store records {key} {found:?}, which this cairn does not write"
             ),
             Self::Corrupt {
                 address: Some(a),
@@ -193,6 +200,7 @@ impl Store {
     /// Fails when SQLite cannot open it, when it is of a newer format
     /// version, or when its version does not parse.
     pub fn open(path: &Path) -> Result<Self, StoreError> {
+        create_owner_only(path)?;
         let conn = Connection::open(path)?;
         restrict(path)?;
         conn.busy_timeout(BUSY)?;
@@ -207,34 +215,78 @@ impl Store {
     /// Creates the schema in a new store, or checks an existing one's
     /// version.
     fn migrate(&mut self) -> Result<(), StoreError> {
+        // Reading needs no write lock; only creating the schema does,
+        // and that checks again under it.
+        if self.conn.query_row(HAS_META, [], |r| r.get::<_, bool>(0))? {
+            return self.check_format();
+        }
         let tx = self
             .conn
             .transaction_with_behavior(TransactionBehavior::Immediate)?;
-        let exists: bool = tx.query_row(HAS_META, [], |r| r.get(0))?;
-        if exists {
-            let version: String = tx.query_row(VERSION, [], |r| r.get(0))?;
-            let found: u32 = version.parse().map_err(|_| StoreError::Corrupt {
-                address: None,
-                what: format!("schema_version {version:?}"),
-            })?;
-            if found > SCHEMA_VERSION {
-                return Err(StoreError::Newer { found });
+        if !tx.query_row(HAS_META, [], |r| r.get::<_, bool>(0))? {
+            tx.execute_batch(SCHEMA)?;
+            for (key, value) in [
+                ("schema_version", SCHEMA_VERSION.to_string()),
+                ("header_field_set", FIELD_SET.to_owned()),
+                ("header_encoding", ENCODING.to_owned()),
+            ] {
+                tx.execute(
+                    "INSERT INTO meta (key, value) VALUES (?1, ?2)",
+                    params![key, value],
+                )?;
             }
-            return Ok(());
         }
-        tx.execute_batch(SCHEMA)?;
-        for (key, value) in [
-            ("schema_version", SCHEMA_VERSION.to_string()),
-            ("header_field_set", FIELD_SET.to_owned()),
-            ("header_encoding", ENCODING.to_owned()),
+        tx.commit()?;
+
+        self.check_format()
+    }
+
+    /// Checks the store's format version, header field set and encoding
+    /// against this cairn's (§8.3, ADM-05).
+    fn check_format(&self) -> Result<(), StoreError> {
+        let version: String = self.conn.query_row(VERSION, [], |r| r.get(0))?;
+        let found: u32 = version.parse().map_err(|_| StoreError::Corrupt {
+            address: None,
+            what: format!("schema_version {version:?}"),
+        })?;
+        if found > SCHEMA_VERSION {
+            return Err(StoreError::Newer { found });
+        }
+        for (key, want) in [
+            ("header_field_set", FIELD_SET),
+            ("header_encoding", ENCODING),
         ] {
-            tx.execute(
-                "INSERT INTO meta (key, value) VALUES (?1, ?2)",
-                params![key, value],
-            )?;
+            let found = self.meta(key)?.unwrap_or_default();
+            if found != want {
+                return Err(StoreError::Format {
+                    key: key.to_owned(),
+                    found,
+                });
+            }
         }
 
-        Ok(tx.commit()?)
+        Ok(())
+    }
+
+    /// Runs `read` on one snapshot of the store: every read it makes
+    /// sees the store as it stood when the snapshot began, whatever
+    /// another connection appends meanwhile.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite cannot begin or end the snapshot, or with what
+    /// `read` fails with.
+    pub fn snapshot<T>(
+        &self,
+        read: impl FnOnce(&Self) -> Result<T, StoreError>,
+    ) -> Result<T, StoreError> {
+        self.conn.execute_batch("BEGIN DEFERRED")?;
+        // The snapshot is fixed by the first read.
+        let begun = self.conn.query_row(HAS_META, [], |r| r.get::<_, bool>(0));
+        let out = begun.map_err(StoreError::from).and_then(|_| read(self));
+        self.conn.execute_batch("COMMIT")?;
+
+        out
     }
 
     /// The value `meta` holds under `key`.
@@ -255,17 +307,31 @@ impl Store {
     ///
     /// Fails when SQLite does, its writer or seat already recorded.
     pub fn add_seat(&mut self, seat: &StoredSeat) -> Result<(), StoreError> {
-        self.conn.execute(
-            "INSERT INTO seats (writer, seat, room, certificate) VALUES (?1, ?2, ?3, ?4)",
-            params![
-                seat.writer.to_string(),
-                seat.seat.to_string(),
-                seat.room.to_string(),
-                seat.certificate.to_string()
-            ],
-        )?;
+        insert_seat(&self.conn, seat)
+    }
 
-        Ok(())
+    /// Records `seat` and appends `new_events` to `writer`, in one
+    /// immediate transaction: both land, or neither does.
+    ///
+    /// # Errors
+    ///
+    /// Fails, recording nothing, when SQLite does, when the seat is
+    /// already recorded, or when a new event's content has no canonical
+    /// encoding.
+    pub fn add_seat_and_append(
+        &mut self,
+        seat: &StoredSeat,
+        writer: WriterId,
+        new_events: &[NewEvent],
+    ) -> Result<Vec<Address>, StoreError> {
+        let tx = self
+            .conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        insert_seat(&tx, seat)?;
+        let out = append_chunk(&tx, writer, new_events)?;
+        tx.commit()?;
+
+        Ok(out)
     }
 
     /// The seat `writer` belongs to.
@@ -489,7 +555,22 @@ struct Row {
     commitment_key: Option<String>,
 }
 
-/// Appends one transaction's new_events to `writer`.
+/// Inserts the row of `seat`.
+fn insert_seat(conn: &Connection, seat: &StoredSeat) -> Result<(), StoreError> {
+    conn.execute(
+        "INSERT INTO seats (writer, seat, room, certificate) VALUES (?1, ?2, ?3, ?4)",
+        params![
+            seat.writer.to_string(),
+            seat.seat.to_string(),
+            seat.room.to_string(),
+            seat.certificate.to_string()
+        ],
+    )?;
+
+    Ok(())
+}
+
+/// Appends one transaction's new events to `writer`.
 fn append_chunk(
     tx: &Transaction<'_>,
     writer: WriterId,
@@ -555,14 +636,19 @@ fn append_chunk(
     Ok(out)
 }
 
-/// Every other writer's newest event that lies beyond what `writer`
-/// last cited of it.
+/// Every other writer's newest event, of a writer whose seat is in
+/// `writer`'s room, that lies beyond what `writer` last cited of it. A
+/// writer never cites a head of another room, so no room's record
+/// names another's writers, and a node holding one room verifies its
+/// heads.
 fn advanced_heads(tx: &Transaction<'_>, writer: WriterId) -> Result<Vec<SeenHead>, StoreError> {
     let mut statement = tx.prepare(
         "SELECT e.writer, e.seq, e.hash FROM events e
          JOIN (SELECT writer, max(seq) AS seq FROM events WHERE writer != ?1 GROUP BY writer) n
            ON e.writer = n.writer AND e.seq = n.seq
-         WHERE e.seq > coalesce(
+         WHERE (SELECT room FROM seats s WHERE s.writer = e.writer)
+               IS (SELECT room FROM seats s WHERE s.writer = ?1)
+           AND e.seq > coalesce(
            (SELECT max(other_seq) FROM event_heads h WHERE h.writer = ?1 AND h.other_writer = e.writer), 0)
          ORDER BY e.writer",
     )?;
@@ -587,6 +673,18 @@ fn advanced_heads(tx: &Transaction<'_>, writer: WriterId) -> Result<Vec<SeenHead
         Ok(SeenHead::new(address.ok_or_else(corrupt)?, head))
     })
     .collect()
+}
+
+/// Creates the store file, readable only by its owner, before SQLite
+/// opens it, so neither it nor the WAL and shared-memory files SQLite
+/// makes beside it with its mode are ever readable by others (§8.1).
+/// An existing file is left as it is.
+fn create_owner_only(path: &Path) -> Result<(), StoreError> {
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create(true).truncate(false);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+    options.open(path).map(drop).map_err(StoreError::Io)
 }
 
 /// Makes the store file readable only by its owner (§8.1).

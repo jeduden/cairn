@@ -482,7 +482,10 @@ fn seat_in(room: RoomId, n: u8) -> StoredSeat {
 fn an_event_cites_only_the_heads_of_writers_in_its_own_room() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
-    let (here, there) = (RoomId::derive(&[1; 32], &[1; 16]), RoomId::derive(&[2; 32], &[2; 16]));
+    let (here, there) = (
+        RoomId::derive(&[1; 32], &[1; 16]),
+        RoomId::derive(&[2; 32], &[2; 16]),
+    );
     for seat in [seat_in(here, 1), seat_in(here, 2), seat_in(there, 3)] {
         store.add_seat(&seat).unwrap();
     }
@@ -514,7 +517,10 @@ fn a_store_whose_header_field_set_or_encoding_differs_is_refused() {
 
         let err = Store::open(&dir.path().join("store.db")).unwrap_err();
 
-        assert!(matches!(&err, StoreError::Format { key: k, found } if k == key && found == "other"), "{err}");
+        assert!(
+            matches!(&err, StoreError::Format { key: k, found } if k == key && found == "other"),
+            "{err}"
+        );
         assert_eq!(
             err.to_string(),
             format!("the store records {key} \"other\", which this cairn does not write")
@@ -580,16 +586,20 @@ fn a_seat_and_its_writer_s_first_events_land_in_one_transaction() {
     let mut bad = new_events(2);
     bad[1].content = json!({"x": 0.5});
 
-    let err = store.add_seat_and_append(&seat, writer(9), &bad).unwrap_err();
+    let err = store
+        .add_seat_and_append(&seat, writer(9), &bad)
+        .unwrap_err();
 
     assert!(matches!(err, StoreError::Encoding(_)));
     assert_eq!(store.seats().unwrap(), []);
     assert!(store.log(writer(9)).unwrap().is_empty());
 
-    let addresses = store.add_seat_and_append(&seat, writer(9), &new_events(2)).unwrap();
+    let addresses = store
+        .add_seat_and_append(&seat, writer(9), &new_events(2))
+        .unwrap();
 
     assert_eq!(addresses.len(), 2);
-    assert_eq!(store.seats().unwrap(), [seat.clone()]);
+    assert_eq!(store.seats().unwrap(), std::slice::from_ref(&seat));
     assert!(matches!(
         store.add_seat_and_append(&seat, writer(9), &new_events(1)),
         Err(StoreError::Sqlite(_))
@@ -604,25 +614,16 @@ fn a_writer_at_the_last_seq_appends_nothing_more() {
     store.append(writer(1), &new_events(1)).unwrap();
     store
         .conn
-        .execute(&format!("UPDATE events SET seq = {}", record::canonical::MAX_SAFE), [])
+        .execute(
+            &format!("UPDATE events SET seq = {}", record::canonical::MAX_SAFE),
+            [],
+        )
         .unwrap();
 
     let err = store.append(writer(1), &new_events(1)).unwrap_err();
 
-    assert!(matches!(err, StoreError::Full(w) if w == writer(1)), "{err}");
-}
-
-#[test]
-fn sqlite_is_built_without_extension_loading() {
-    let dir = TempDir::new().unwrap();
-    let store = open(&dir);
-
-    let omitted: i64 = store
-        .conn
-        .query_row("SELECT sqlite_compileoption_used('OMIT_LOAD_EXTENSION')", [], |r| r.get(0))
-        .unwrap();
-    let call = store.conn.query_row("SELECT load_extension('x')", [], |r| r.get::<_, i64>(0));
-
-    assert_eq!(omitted, 1);
-    assert!(call.unwrap_err().to_string().contains("no such function"));
+    assert!(
+        matches!(err, StoreError::Full(w) if w == writer(1)),
+        "{err}"
+    );
 }

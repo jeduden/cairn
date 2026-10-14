@@ -2,4 +2,6 @@
 # SQLite without the code that loads extensions (ADR-2610110553): no
 # `dlopen` links into the core, so it can load no foreign native code.
 [env]
-LIBSQLITE3_FLAGS = "-USQLITE_ENABLE_LOAD_EXTENSION -DSQLITE_OMIT_LOAD_EXTENSION"
+# Forced, so a LIBSQLITE3_FLAGS a builder's environment sets cannot
+# turn extension loading back on; the store's tests prove it is gone.
+LIBSQLITE3_FLAGS = { value = "-USQLITE_ENABLE_LOAD_EXTENSION -DSQLITE_OMIT_LOAD_EXTENSION", force = true }

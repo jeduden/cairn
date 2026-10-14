@@ -1284,6 +1284,21 @@ fn benchmark_cases() -> Vec<Case> {
             "job ci does not need benchmark",
         ),
         case(
+            "SQLite built with extension loading",
+            "sqlite_is_built_without_extension_loading",
+            Injection::replace(
+                ".cargo/config.toml",
+                "LIBSQLITE3_FLAGS = {",
+                "UNUSED_SQLITE_FLAGS = {",
+            ),
+            cargo_test(
+                "store",
+                "sqlite_build",
+                "sqlite_is_built_without_extension_loading",
+            ),
+            "SQLite was built with extension loading",
+        ),
+        case(
             "an accepted regression recorded with no reason",
             "the_accepted_regressions_parse",
             Injection::replace(
