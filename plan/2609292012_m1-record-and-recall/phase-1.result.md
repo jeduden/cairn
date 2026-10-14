@@ -72,6 +72,8 @@ Parked:
 - The testkit's fed start has no deadline (ENG-03).
 - `store.db` holds content and commitment keys in clear, accepted
   until M5's SEC-09.
+- A release build refuses `cairn ingest` until phase 4's redaction
+  lands, which lifts it.
 - From the review panel, to their phases: every failure listed, unheld
   heads told from contradicted ones, re-ingest dedupe (REC-03), size
   limits and cursors (SEC-08), typed failure counters (I6), the home's

@@ -40,11 +40,22 @@ pub struct Build<'a> {
     pub commit: Option<&'a str>,
 }
 
+/// The version a build reports when the release pipeline stamps none.
+const BUILD_DEV: &str = "dev";
+
+/// Why a release build refuses `cairn ingest`: until redaction before
+/// storage (SEC-08) lands, an ingested secret would stay in the
+/// append-only record with no purge (ADM-07) to remove it. A
+/// development build still ingests, as the tests and the proving slice
+/// need.
+const RELEASE_INGEST: &str = "a release build records no transcript until redaction before \
+                              storage (SEC-08) lands; use a development build";
+
 /// This executable's build.
 pub const BUILD: Build<'static> = Build {
     version: match option_env!("CAIRN_VERSION") {
         Some(v) => v,
-        None => "dev",
+        None => BUILD_DEV,
     },
     commit: option_env!("CAIRN_COMMIT"),
 };
@@ -195,6 +206,9 @@ fn ingest(
     let Some(path) = path else {
         return usage(stderr, "want --path P");
     };
+    if ctx.build.version != BUILD_DEV {
+        return failed("ingest", &RELEASE_INGEST, stderr);
+    }
     let ingested = match ctx.home() {
         Ok(home) => {
             ingest::ingest_path(&home, Path::new(&path), &mut OsEntropy).map_err(|e| e.to_string())
@@ -215,7 +229,7 @@ fn ingest(
         .to_string()
     } else {
         format!(
-            "ingested {} lines of {path} into writer {}",
+            "ingested {} lines into writer {}",
             ingested.events, ingested.writer
         )
     };

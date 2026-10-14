@@ -16,7 +16,8 @@
 //! hash, and its `prev_hash` names its predecessor. Its origin comes
 //! from its seat certificate, checked against this node's device key; a
 //! seat that key did not certify shows as `peer`. A refusal is fixed
-//! text and never repeats what the call passed.
+//! text, naming at most an address it parsed and renders anew; it never
+//! repeats what the call passed (RCL-04).
 
 use std::io::{self, Write};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};

@@ -169,7 +169,8 @@ changed M1's row in §12.2.
    the configuration parser's fuzz target
 4. Redaction before anything is written, input limits and paths:
    SEC-05, SEC-08, SEC-18; logs through redaction (ENG-05); the
-   redactor's fuzz target
+   redactor's fuzz target. It lifts phase 1's refusal of `cairn ingest`
+   in a release build
 5. Keys, seats and the personal room: PRV-09, PRV-11, PRV-12 in part,
    SEC-10, SEC-27, LANE-16 and LANE-23 in part, REC-24; the
    key-store ADR and the three key stores, with Miri over the Windows
