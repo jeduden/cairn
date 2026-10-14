@@ -99,7 +99,9 @@ fn an_executable_is_found_beside_the_running_test_s_deps_directory() {
     let deps = dir.path().join("debug/deps");
     fs::create_dir_all(&deps).unwrap();
     let test = deps.join("bdd-0123");
-    let exe = dir.path().join(format!("debug/cairn{}", std::env::consts::EXE_SUFFIX));
+    let exe = dir
+        .path()
+        .join(format!("debug/cairn{}", std::env::consts::EXE_SUFFIX));
 
     let missing = sibling_executable(&test, "cairn").unwrap_err();
     fs::write(&exe, "").unwrap();
@@ -108,7 +110,10 @@ fn an_executable_is_found_beside_the_running_test_s_deps_directory() {
     assert_eq!(found, exe);
     assert_eq!(
         missing,
-        format!("no cairn executable at {}: build it first, with cargo build -p cairn", exe.display())
+        format!(
+            "no cairn executable at {}: build it first, with cargo build -p cairn",
+            exe.display()
+        )
     );
     assert_eq!(
         sibling_executable(Path::new("bdd"), "cairn").unwrap_err(),

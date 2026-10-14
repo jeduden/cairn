@@ -386,7 +386,12 @@ fn a_confined_start_hands_its_input_to_the_program() {
     let home = TempDir::new().unwrap();
 
     let out = c
-        .run_with_input(Path::new("sh"), &["-c", "cat"], home.path(), b"to the core\n")
+        .run_with_input(
+            Path::new("sh"),
+            &["-c", "cat"],
+            home.path(),
+            b"to the core\n",
+        )
         .unwrap();
 
     assert!(out.status.success());
