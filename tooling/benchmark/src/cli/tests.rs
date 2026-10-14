@@ -242,3 +242,115 @@ fn a_refused_write_fails_the_command() {
 fn refusing_flushes_nothing() {
     assert!(Refusing.flush().is_ok());
 }
+
+#[test]
+fn gate_accepts_a_regression_a_fresh_acceptance_covers() {
+    let mut files = gate_files(1000, 1200);
+    files.insert(
+        "accepted",
+        "core_start_up 30 the core links the store\n".to_owned(),
+    );
+
+    let (code, out, err) = invoke(
+        &[
+            "gate",
+            "--base",
+            "base",
+            "--head",
+            "head",
+            "--accepted",
+            "accepted",
+            "--accepted-on-base",
+            "none",
+        ],
+        &files,
+    );
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(out.ends_with("| accepted |\n"), "{out}");
+}
+
+#[test]
+fn gate_ignores_an_acceptance_the_base_already_carries() {
+    let mut files = gate_files(1000, 1200);
+    let entry = "core_start_up 30 the core links the store\n".to_owned();
+    files.insert("accepted", entry.clone());
+    files.insert("accepted-base", entry);
+
+    let (code, _, err) = invoke(
+        &[
+            "gate",
+            "--base",
+            "base",
+            "--head",
+            "head",
+            "--accepted",
+            "accepted",
+            "--accepted-on-base",
+            "accepted-base",
+        ],
+        &files,
+    );
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("core_start_up regressed by 20.0%"), "{err}");
+}
+
+#[test]
+fn gate_refuses_an_acceptance_file_it_cannot_read_or_parse() {
+    let mut files = gate_files(1000, 1000);
+    files.insert("bad", "core_start_up 5 too small\n".to_owned());
+
+    let (missing, _, err_missing) = invoke(
+        &[
+            "gate",
+            "--base",
+            "base",
+            "--head",
+            "head",
+            "--accepted",
+            "none",
+        ],
+        &files,
+    );
+    let (bad, _, err_bad) = invoke(
+        &[
+            "gate",
+            "--base",
+            "base",
+            "--head",
+            "head",
+            "--accepted",
+            "bad",
+        ],
+        &files,
+    );
+    let (bad_base, _, err_bad_base) = invoke(
+        &[
+            "gate",
+            "--base",
+            "base",
+            "--head",
+            "head",
+            "--accepted-on-base",
+            "bad",
+        ],
+        &files,
+    );
+
+    assert_eq!(missing, EXIT_FAILURE);
+    assert!(
+        err_missing.starts_with("benchmark: read none: "),
+        "{err_missing}"
+    );
+    assert_eq!(bad, EXIT_FAILURE);
+    assert!(
+        err_bad.starts_with("benchmark: bad: line 1: 5% is no more"),
+        "{err_bad}"
+    );
+    assert_eq!(bad_base, EXIT_FAILURE);
+    assert!(
+        err_bad_base.starts_with("benchmark: bad: line 1:"),
+        "{err_bad_base}"
+    );
+}
