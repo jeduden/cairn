@@ -22,12 +22,13 @@ The slice runs one Claude Code 2.1.296 transcript from
   room. Its seat certificate is signed by the device key and
   countersigned by the seat key.
 - Each line becomes one event in that seat's writer. Its header holds
-  the address, kind, provenance class, `prev_hash`, the other writers'
-  heads it has seen, and the commitment `C` under `k_e`, never content.
+  the address, event kind, provenance class, `prev_hash`, the other writers'
+  chain heads it has seen, and the commitment under its commitment
+  key, never content.
   The header is hashed as §8.3 says: RFC 8785 over SHA-256.
 - Events land in `store.db` through `rusqlite`, 100 per transaction.
 - `cairn mcp` over stdio answers `event_get` for an address with the
-  event's text inside the envelope of §9.3.
+  event's content inside the envelope of §9.3.
 - `cairn verify` checks every writer's chain and seat certificate,
   exits 0, and exits non-zero naming the event when one header byte
   changes.
@@ -49,16 +50,18 @@ Names. Ask the domain-model agent before naming a crate, type, CLI
 verb or MCP tool. Names follow ENG-02's list and the domain model.
 
 BDD coverage: `@REC-10` comes off `@pending`. Its steps bind two
-writers with a clock an hour apart, and `cairn verify`. The other rows
+writers recorded under clocks an hour apart, and `cairn verify`. The other rows
 stay pending until their phases.
 
-RED: the slice's end-to-end test, the `@REC-10` steps, and unit tests
-of the header encoding, the commitment and the certificate check.
-Each fails first.
+RED, each test failing first. Unit tests cover the header encoding,
+the commitment and the certificate check. Integration tests in the
+core crate's `tests/` cover the store's 100-event transaction and
+`event_get`'s envelope. Then the `@REC-10` steps, and one thin
+end-to-end test of the whole slice.
 
 GREEN: the crates, the store's first schema, `cairn ingest`, `cairn
 mcp`'s `event_get` and `cairn verify`, through the core executable.
 
 Gate: the slice's end-to-end test passes in an isolated home, and
 `@REC-10` passes. A flipped header byte fails `cairn verify`, which
-names the writer and `seq`.
+names the event's address.
