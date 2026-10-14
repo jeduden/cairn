@@ -52,29 +52,32 @@ land in full:
 
 - REC P0, PRV P0 (PRV-01 to PRV-06, PRV-08, PRV-09, PRV-11, PRV-14)
   and RCL P0, with RCL-08
-- MEM-01, SEC-02 to SEC-08, SEC-10, SEC-12, SEC-15 to SEC-19 and SEC-22
-- OPS-01 to OPS-03, ADM-04, ADM-09, ADM-11 and ADM-13
-- LANE-01, LANE-02 and OWN-01
+- MEM-01, SEC-02 to SEC-08, SEC-12, SEC-15 to SEC-19 and SEC-22
+- OPS-01 to OPS-03, ADM-04, ADM-09 and ADM-11
+- LANE-02 and OWN-01
 
 These land in part, as §12.2 bounds them or as their scenarios reach past M1:
 
-| Row            | M1's part                                                               | The rest                            |
-| -------------- | ----------------------------------------------------------------------- | ----------------------------------- |
-| REC-19         | ingest seats, holding a run's events, closing segments, verify's report | sealing, M7                         |
-| LANE-16        | the owner's device seat, a run seat's contributor role                  | other roles, M7                     |
-| LANE-23        | how a seat id derives                                                   | joins, M2 and M7                    |
-| LANE-31        | the rule for two branch links naming one branch                         | room state, M7                      |
-| SEC-01         | the core's row: no socket, no program start, one component per process  | the B1 components, M7               |
-| SEC-27         | the new seat and writer a key minted in place starts                    | rotation, M7                        |
-| OWN-11, OWN-12 | the act classes; widening acts only through the CLI at a terminal       | other surfaces, M7                  |
-| OWN-22         | the precondition: every run counts as unsandboxed                       | sandbox state, M7                   |
-| PRV-12         | the key event log, rotation and recovery                                | M3, M7, M8, PRV-10                  |
-| PRV-13         | origin from the record and the key set                                  | arrival, M3, M8, M9                 |
-| ENG-08         | every property but the restore delimiters'                              | restore delimiters, M2              |
-| ENG-10         | the envelope's golden files                                             | the restore block's, M2             |
-| ENG-17         | the contract replay, drift and residual-identifier checks               | the nightly run through restore, M2 |
-| ADM-05         | versions, and the refusal of a newer one                                | migration and its backup, M3        |
-| ADM-07         | `cairn purge --range`                                                   | other scopes, SEC-31, seals, M3     |
+| Row            | M1's part                                                               | The rest                             |
+| -------------- | ----------------------------------------------------------------------- | ------------------------------------ |
+| REC-19         | ingest seats, holding a run's events, closing segments, verify's report | sealing, M7                          |
+| LANE-16        | the owner's device seat, a run seat's contributor role                  | other roles, M7                      |
+| LANE-23        | how a seat id derives                                                   | joins, M2 and M7                     |
+| LANE-31        | the rule for two branch links naming one branch                         | room state, M7                       |
+| SEC-01         | the core's row: no socket, no program start, one component per process  | the B1 components, M7                |
+| SEC-27         | the new seat and writer a key minted in place starts                    | rotation, M7                         |
+| OWN-11, OWN-12 | the act classes; widening acts only through the CLI at a terminal       | other surfaces, M7                   |
+| OWN-22         | the precondition: every run counts as unsandboxed                       | sandbox state, M7                    |
+| PRV-12         | the key event log, rotation and recovery                                | M3, M7, M8, PRV-10                   |
+| PRV-13         | origin from the record and the key set                                  | arrival, M3, M8, M9                  |
+| ENG-08         | every property but the restore delimiters'                              | restore delimiters, M2               |
+| ENG-10         | the envelope's golden files                                             | the restore block's, M2              |
+| ENG-17         | the contract replay, drift and residual-identifier checks               | the nightly run through restore, M2  |
+| ADM-05         | versions, and the refusal of a newer one                                | migration and its backup, M3         |
+| ADM-07         | `cairn purge --range`                                                   | other scopes, SEC-31, seals, M3      |
+| SEC-10         | keys kept per ruling 2; no key in the store, a log or output            | backup M3, at-rest key M5, launch M7 |
+| LANE-01        | routing to personal-room and device seats; branch links                 | joins, M2 and M7                     |
+| ADM-13         | the core writes to no git repository                                    | install M2; commit hook, launcher M7 |
 
 A scenario of a row that lands in part stays `@pending`, its M1 part
 proven by its bound steps or by named tests. That follows the pattern
@@ -118,11 +121,16 @@ record's laws (REC-06, REC-10, ENG-08) prove CON-05.
 
 ### The stakeholder's rulings of 14 October 2026
 
+The stakeholder ruled on these in the session that re-planned M1, and
+consents to them on [pull request #46][pr46]. Rulings 3 and 4 also
+changed M1's row in §12.2.
+
 1. **The dependency budget (ENG-18).** ENG-18's target of ten counts
    only direct dependencies linked into a shipped executable. Test,
    fuzz and tooling crates still need an accepted ADR and an allowed
-   license, but do not count. Phase 2 rewords ENG-18 and its gate, with
-   a drift case, before the core's crates pass ten workspace-wide. The
+   license, but do not count. ENG-18 and its gate are stakeholder
+   paths, so their rewording, with a drift case, lands as its own pull
+   request before phases 4, 5 and 7 add crates past ten. The
    core then holds about nine: `rusqlite`, `serde_json`, `tracing`,
    `toml`, `sha2`, `ed25519-dalek`, `getrandom` and one key-store crate
    per OS.
@@ -133,7 +141,9 @@ record's laws (REC-06, REC-10, ENG-08) prove CON-05.
    Service needs D-Bus, a socket the core may not open (I4), and its
    kernel keyring does not survive a reboot. Linux therefore keeps
    keys in `0600` files, and `cairn status` says so. Phase 5 records
-   this in an ADR, and `@SEC-10` closes in M1.
+   this in an ADR. `@SEC-10`'s scenario also needs a backup (M3), the
+   at-rest key (SEC-09, M5) and keys handed over at launch (M7), so
+   SEC-10 lands in part.
 3. **Migrations (ADM-05).** M1 ships format version 1, so nothing
    migrates yet. M1 versions every segment and the store, and refuses
    and names anything newer; `cairn status` then exits 3. `cairn
@@ -153,8 +163,7 @@ record's laws (REC-06, REC-10, ENG-08) prove CON-05.
    seat's writer and recalled through `event_get` in the envelope, the
    chain checked by `cairn verify`
 2. The home, the audit log and counters: SEC-02, SEC-03, OPS-02,
-   OPS-03; typed errors per counted failure class (ENG-04); ENG-18 and
-   its gate reworded to count only shipped crates
+   OPS-03; typed errors per counted failure class (ENG-04)
 3. Principal acts at the terminal, configuration and managed policy:
    OWN-11, OWN-12 and OWN-22 in part, ADM-04, PRV-04, PRV-05, SEC-22;
    the configuration parser's fuzz target
@@ -162,7 +171,7 @@ record's laws (REC-06, REC-10, ENG-08) prove CON-05.
    SEC-05, SEC-08, SEC-18; logs through redaction (ENG-05); the
    redactor's fuzz target
 5. Keys, seats and the personal room: PRV-09, PRV-11, PRV-12 in part,
-   SEC-10, SEC-27 in part, REC-24, LANE-16 and LANE-23 in part; the
+   SEC-10, SEC-27, LANE-16 and LANE-23 in part, REC-24; the
    key-store ADR and the three key stores, with Miri over the Windows
    shim (ENG-09)
 6. The store: writer logs, commitments, payloads, segments and format
@@ -187,8 +196,8 @@ record's laws (REC-06, REC-10, ENG-08) prove CON-05.
     memory (SEC-10), concurrent appends (REC-06), with the gap-free
     `seq` property rerun under concurrency
 11. Trust, origin, branch links and repository identity: PRV-02,
-    PRV-06, PRV-13 in part, LANE-01, LANE-02, LANE-31 in part, OWN-01,
-    MEM-01, ADM-13; the field sanitizer's fuzz target
+    PRV-06, PRV-13, LANE-01 and LANE-31 in part, LANE-02, OWN-01,
+    MEM-01, ADM-13 in part; the field sanitizer's fuzz target
 12. Search: REC-11, SEC-04, RCL-02 with bounded BM25; the query
     parser's fuzz target; the rebuild-digest property (ENG-08); the
     NFR-03 benchmark; freeze REC-11's cap, RCL-02's hits and SEC-04's
@@ -207,24 +216,26 @@ record's laws (REC-06, REC-10, ENG-08) prove CON-05.
 
 ## Execution
 
-Phase 1 runs first and fixes the test approach the others copy. Then
-four tracks run in parallel: 2 then 3; 4; 5 then 6; 7. Phases 8 to 16
-follow in order, but 12 may start once 8 lands. Each later phase's
-spec is written once the phase before it hands off.
+Phase 1 runs first and fixes the test approach the others copy.
+ENG-18's rewording (ruling 1) lands as its own pull request before
+phases 4, 5 and 7. Then four tracks run in parallel: 2 then 3; 4; 5
+then 6; 7. Phases 8 to 16 follow in order, but 12 may start once 8
+lands. Each later phase's spec is written once the phase before it
+hands off.
 
 | Phase | Model  | Gate                                                                                                                                                    |
 | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1     | opus   | The slice's end-to-end test in an isolated home; `@REC-10` passes                                                                                       |
-| 2     | sonnet | `@SEC-02`, `@SEC-03`, `@OPS-02`, `@OPS-03`, `@ENG-04` and `@ENG-18` pass                                                                                |
+| 2     | sonnet | `@SEC-02`, `@SEC-03`, `@OPS-02`, `@OPS-03` and `@ENG-04` pass                                                                                           |
 | 3     | opus   | `@ADM-04`, `@PRV-04`, `@PRV-05` and `@SEC-22` pass; OWN-11, OWN-12 and OWN-22's M1 steps bound and passing                                              |
 | 4     | sonnet | `@SEC-05`, `@SEC-08`, `@SEC-18` and `@ENG-05` pass; no fixture secret reaches the store or a log                                                        |
-| 5     | opus   | `@PRV-09`, `@PRV-11`, `@SEC-10` and `@REC-24` pass; PRV-12, SEC-27, LANE-16 and LANE-23's M1 steps bound and passing                                    |
+| 5     | opus   | `@PRV-09`, `@PRV-11` and `@REC-24` pass; PRV-12, SEC-10, SEC-27, LANE-16 and LANE-23's M1 steps bound and passing                                       |
 | 6     | opus   | `@REC-09` and `@REC-12` pass; REC-19's segment steps pass; a newer segment or store is refused; the crash-consistency job runs nightly                  |
 | 7     | opus   | `@PRV-01`, `@PRV-03`, `@PRV-08`, `@REC-05` and `@REC-26` pass; the parser's fuzz target and the residual-identifier drift case run                      |
 | 8     | opus   | `@REC-01` to `@REC-04`, `@REC-07`, `@REC-08` and `@REC-22` pass; both properties hold; NFR-04 benchmarked                                               |
 | 9     | opus   | `@SEC-16` passes; REC-19's holding steps pass; a hook handler fails open within its budget; NFR-01 and NFR-02 benchmarked                               |
 | 10    | opus   | `@REC-06`, `@REC-13` and `@PRV-14` pass against a live MCP server                                                                                       |
-| 11    | opus   | `@PRV-02`, `@PRV-06`, `@LANE-01`, `@LANE-02`, `@OWN-01`, `@MEM-01` and `@ADM-13` pass; PRV-13 and LANE-31's M1 steps bound and passing                  |
+| 11    | opus   | `@PRV-02`, `@PRV-06`, `@LANE-02`, `@OWN-01` and `@MEM-01` pass; PRV-13, LANE-01, LANE-31 and ADM-13's M1 steps pass                                     |
 | 12    | sonnet | `@REC-11`, `@SEC-04` and `@RCL-02` pass; NFR-03 benchmarked                                                                                             |
 | 13    | opus   | `@RCL-01`, `@RCL-03` to `@RCL-05`, `@RCL-07`, `@RCL-08`, `@SEC-06` and `@SEC-07` pass; the envelope's golden files match                                |
 | 14    | opus   | `@SEC-12`, `@RCL-06` and `@REC-17` pass; a purged event leaves nothing confirming a guess                                                               |
@@ -288,3 +299,4 @@ footer: |
 [ADR-2610042341]: ../../docs/adr/ADR-2610042341-app-shell-tauri.md
 [ADR-2610110553]: ../../docs/adr/ADR-2610110553-sqlite-rusqlite.md
 [ADR-2610102211]: ../../docs/adr/ADR-2610102211-mcp-server-in-house.md
+[pr46]: https://github.com/jeduden/cairn/pull/46

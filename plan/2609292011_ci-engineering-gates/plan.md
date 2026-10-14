@@ -139,13 +139,16 @@ footer: |
   ruling of 2026-10-13 ([ruling])
 - [ ] @ENG-03 passes, off `@pending`: its gate tests pass and its
   drift cases are caught; the stakeholder accepted its exemptions on
-  2026-10-13 ([ruling]) and keeps it pending until M1 adds injectable I/O traits
+  2026-10-13 ([ruling]) and keeps it pending until M1 adds injectable
+  I/O traits; M1's phase 16 ([plan 2609292012][m1]) closes it
 - [ ] @ENG-21 passes, off `@pending`: its first six steps pass; the
   last, two approvals on the security-sensitive crates, needs a
   required check that reads a pull request's reviews, which waits on
   the stakeholder's ruling
 - [ ] @ENG-15 passes once benchmarks cover NFR-01..05; its gate is
-  unit-proven, and its job waits on a first green run on GitHub
+  unit-proven, and its job waits on a first green run on GitHub. M1
+  adds those benchmarks and its phase 16 closes this ([plan
+  2609292012][m1])
 - [ ] The core rows of @ENG-12 and @ENG-16 are proven, and CI runs the
   confined suite on GitHub; both outlines stay `@pending` until M7 to
   M9 build their other components and plan 2609292013 defines
@@ -157,3 +160,4 @@ footer: |
 - [x] `mdsmith check .` is clean
 
 [ruling]: https://github.com/jeduden/cairn/pull/44#issuecomment-6157262395
+[m1]: ../2609292012_m1-record-and-recall/plan.md
