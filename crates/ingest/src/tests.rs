@@ -106,7 +106,11 @@ fn a_home_that_cannot_be_made_is_returned() {
     let err = ingest_path(&home, &path, &mut OsEntropy).unwrap_err();
 
     assert!(matches!(err, IngestError::Admin(_)), "{err}");
-    assert!(err.to_string().starts_with(&dir.path().join("f").display().to_string()), "{err}");
+    assert!(
+        err.to_string()
+            .starts_with(&dir.path().join("f").display().to_string()),
+        "{err}"
+    );
     assert!(std::error::Error::source(&err).is_some());
 }
 

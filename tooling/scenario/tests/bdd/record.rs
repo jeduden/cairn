@@ -85,7 +85,9 @@ fn two_writers(w: &mut World, count: usize) -> Result<(), String> {
                 kind: EventKind::UnparsedLine,
                 provenance: Provenance::Unparsed,
                 content: json!({"line": i + 1, "text": line}),
-                commitment_key: CommitmentKey::from_bytes(key::random::draw(&mut OsEntropy).map_err(|e| e.to_string())?),
+                commitment_key: CommitmentKey::from_bytes(
+                    key::random::draw(&mut OsEntropy).map_err(|e| e.to_string())?,
+                ),
             };
             store.append(*writer, &[draft]).map_err(|e| e.to_string())?;
             times.push(time);
@@ -138,12 +140,18 @@ fn hash_over_prev_and_header(w: &mut World) -> Result<(), String> {
         for link in links {
             let h = &link.header;
             if h.prev_hash != prev {
-                return Err(format!("{}: prev_hash is not its writer's previous event's hash", h.address));
+                return Err(format!(
+                    "{}: prev_hash is not its writer's previous event's hash",
+                    h.address
+                ));
             }
             let encoded = canonical::encode(&h.to_value()).map_err(|e| e.to_string())?;
             let want = Digest::of(&[prev.as_bytes(), encoded.as_bytes()]);
             if link.hash != want {
-                return Err(format!("{}: its hash is not SHA-256 over prev_hash and its canonical header", h.address));
+                return Err(format!(
+                    "{}: its hash is not SHA-256 over prev_hash and its canonical header",
+                    h.address
+                ));
             }
             prev = link.hash;
         }
@@ -158,22 +166,45 @@ fn hash_over_prev_and_header(w: &mut World) -> Result<(), String> {
     regex = r"^the header contains only the address, kind, provenance class, prev_hash, the heads of the other writers' logs the writer had seen, and the commitment$"
 )]
 fn header_fields(w: &mut World) -> Result<(), String> {
-    let want = ["address", "commitment", "heads", "kind", "prev_hash", "provenance"];
+    let want = [
+        "address",
+        "commitment",
+        "heads",
+        "kind",
+        "prev_hash",
+        "provenance",
+    ];
     let store = Store::open(&home(w)?.store()).map_err(|e| e.to_string())?;
-    if store.meta("header_field_set").map_err(|e| e.to_string())?.as_deref() != Some(FIELD_SET) {
+    if store
+        .meta("header_field_set")
+        .map_err(|e| e.to_string())?
+        .as_deref()
+        != Some(FIELD_SET)
+    {
         return Err("the store's meta does not record the header's field set".to_owned());
     }
     let times: Vec<String> = rec(w).writers.iter().flat_map(|(_, t)| t.clone()).collect();
     for (writer, links) in logs(w)? {
         for (i, link) in links.iter().enumerate() {
             let value = link.header.to_value();
-            let fields: Vec<&str> = value.as_object().into_iter().flatten().map(|(k, _)| k.as_str()).collect();
+            let fields: Vec<&str> = value
+                .as_object()
+                .into_iter()
+                .flatten()
+                .map(|(k, _)| k.as_str())
+                .collect();
             if fields != want {
-                return Err(format!("{}: the header holds {fields:?}", link.header.address));
+                return Err(format!(
+                    "{}: the header holds {fields:?}",
+                    link.header.address
+                ));
             }
             let encoded = canonical::encode(&value).map_err(|e| e.to_string())?;
             if times.iter().any(|t| encoded.contains(t.as_str())) {
-                return Err(format!("{}: the header carries content", link.header.address));
+                return Err(format!(
+                    "{}: the header carries content",
+                    link.header.address
+                ));
             }
             let cites_other = link.header.heads.iter().all(|s| s.address.writer != writer);
             if !cites_other || (i > 0 && link.header.heads.is_empty()) {
@@ -187,7 +218,9 @@ fn header_fields(w: &mut World) -> Result<(), String> {
     Ok(())
 }
 
-#[then(regex = r"^events of the two writers are ordered by the heads each cites, never by wall-clock time$")]
+#[then(
+    regex = r"^events of the two writers are ordered by the heads each cites, never by wall-clock time$"
+)]
 fn causal_not_wall_clock(w: &mut World) -> Result<(), String> {
     let record = logs(w)?;
     let writers = rec(w).writers.clone();
@@ -203,12 +236,19 @@ fn causal_not_wall_clock(w: &mut World) -> Result<(), String> {
     }
     let mut by_clock: Vec<(String, Address)> = writers
         .iter()
-        .flat_map(|(writer, times)| times.iter().cloned().zip(record[writer].iter().map(|l| l.header.address)))
+        .flat_map(|(writer, times)| {
+            times
+                .iter()
+                .cloned()
+                .zip(record[writer].iter().map(|l| l.header.address))
+        })
         .collect();
     by_clock.sort();
     let clock: Vec<Address> = by_clock.into_iter().map(|(_, a)| a).collect();
     if clock == order {
-        return Err("wall-clock time gives the same order, so the scenario proves nothing".to_owned());
+        return Err(
+            "wall-clock time gives the same order, so the scenario proves nothing".to_owned(),
+        );
     }
     // `cairn verify` checked every cited head against the event it
     // names; a head that named no event would have failed it.

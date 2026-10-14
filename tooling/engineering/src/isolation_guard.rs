@@ -35,11 +35,16 @@ const POLL: Duration = Duration::from_millis(5);
 /// other failure.
 const REFUSAL: &str = "(ENG-14)";
 
-/// The sources that may read the user's `HOME` themselves: the guard, and the
-/// scenario runner's own decision to start isolated.
-pub const RESOLVERS: [&str; 2] = [
+/// The sources that may read the user's `HOME` themselves: the guard,
+/// the scenario runner's own decision to start isolated, and the core
+/// executable's entry point, which finds the home the person runs it
+/// in. No test reaches that read: a unit test hands `cairn::run` its
+/// home, and every start of the executable goes through the testkit's
+/// isolation.
+pub const RESOLVERS: [&str; 3] = [
     "tooling/testkit/src/guard.rs",
     "tooling/scenario/tests/bdd/main.rs",
+    "crates/cairn/src/main.rs",
 ];
 
 /// The directories whose Rust sources the scan reads.
