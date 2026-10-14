@@ -26,12 +26,14 @@ fn draft(n: usize) -> Draft {
 }
 
 #[test]
-fn a_failed_draft_rolls_back_its_own_hundred_and_keeps_the_hundreds_before_it() {
+fn a_failed_draft_rolls_back_its_own_hundred_and_keeps_the_hundred_before_it() {
     let dir = TempDir::new().unwrap();
     let path = dir.path().join("store.db");
     let writer = WriterId::derive(&[1; 32]);
     let mut batch: Vec<Draft> = (1..=250).map(draft).collect();
-    batch[229].content = json!({"x": 0.5});
+    // Draft 160 fails: a hundred to a transaction keeps 100, where fifty
+    // would keep 150 and two hundred none.
+    batch[159].content = json!({"x": 0.5});
 
     let err = Store::open(&path)
         .unwrap()
@@ -40,7 +42,7 @@ fn a_failed_draft_rolls_back_its_own_hundred_and_keeps_the_hundreds_before_it() 
 
     assert!(matches!(err, StoreError::Encoding(_)), "{err}");
     let log = Store::open(&path).unwrap().log(writer).unwrap();
-    assert_eq!(log.len(), 200);
+    assert_eq!(log.len(), 100);
     let links: Vec<_> = log.into_iter().map(|s| s.link).collect();
     assert_eq!(chain::check_writer(writer, &links), Ok(()));
 }

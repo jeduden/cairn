@@ -94,3 +94,36 @@ fn changing_any_field_changes_the_hash() {
         assert_ne!(h.hash(), base, "{h:?}");
     }
 }
+
+#[test]
+fn a_fixed_header_encodes_and_hashes_to_its_golden_values() {
+    // The canonical text is written out by hand, and the hash was
+    // computed outside this code (Python's hashlib over prev_hash's
+    // bytes then the text), so neither rests on the encoder under test.
+    let hex = |c: char| c.to_string().repeat(64);
+    let h = EventHeader {
+        address: Address::new(WriterId::parse(&hex('a')).unwrap(), seq(5)),
+        kind: EventKind::UnparsedLine,
+        provenance: Provenance::Unparsed,
+        prev_hash: Digest::from_hex(&hex('b')).unwrap(),
+        heads: vec![SeenHead::new(
+            Address::new(WriterId::parse(&hex('c')).unwrap(), seq(2)),
+            Digest::from_hex(&hex('d')).unwrap(),
+        )],
+        commitment: Commitment::from_hex(&hex('e')).unwrap(),
+    };
+    let want = format!(
+        "{{\"address\":{{\"seq\":5,\"writer\":\"{a}\"}},\"commitment\":\"{e}\",\"heads\":[{{\"head\":\"{d}\",\"seq\":2,\"writer\":\"{c}\"}}],\"kind\":\"unparsed_line\",\"prev_hash\":\"{b}\",\"provenance\":\"unparsed\"}}",
+        a = hex('a'),
+        b = hex('b'),
+        c = hex('c'),
+        d = hex('d'),
+        e = hex('e'),
+    );
+
+    assert_eq!(h.canonical(), want);
+    assert_eq!(
+        h.hash().to_hex(),
+        "bb4135c9505d8f36333d9ffbbc01ad26e71474772024e8cc1d3d5c8e4edf5fd0"
+    );
+}

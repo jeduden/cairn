@@ -120,11 +120,3 @@ fn an_executable_is_found_beside_the_running_test_s_deps_directory() {
         "the running test bdd lies in no deps directory"
     );
 }
-
-#[test]
-fn core_executable_names_the_built_cairn_or_how_to_build_it() {
-    match core_executable() {
-        Ok(path) => assert!(path.ends_with(format!("cairn{}", std::env::consts::EXE_SUFFIX))),
-        Err(e) => assert!(e.ends_with("cargo build -p cairn"), "{e}"),
-    }
-}

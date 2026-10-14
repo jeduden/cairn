@@ -359,7 +359,7 @@ fn serve_waits_past_an_idle_deadline_and_stops_on_a_read_error() {
 }
 
 #[test]
-fn a_purged_event_shows_no_content() {
+fn an_event_whose_content_was_removed_is_refused() {
     let f = fixture();
     let conn = rusqlite::Connection::open(f.home.store()).unwrap();
     conn.execute(
@@ -374,5 +374,8 @@ fn a_purged_event_shows_no_content() {
         json!({"address": format!("{}:1", f.ingested.writer), "scope": "room"}),
     );
 
-    assert_eq!(result["structuredContent"]["items"][0]["content"], "");
+    assert_eq!(
+        refusal(&result),
+        format!("the content of {}:1 was removed", f.ingested.writer)
+    );
 }

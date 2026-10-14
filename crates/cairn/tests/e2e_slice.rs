@@ -126,6 +126,9 @@ fn one_transcript_is_recorded_recalled_in_the_envelope_and_verified() {
         String::from_utf8_lossy(&verified.stderr)
     );
     let report: Value = serde_json::from_slice(&verified.stdout).unwrap();
+    // The device seat holds four: the minted key event, the create room
+    // act, and the certificate records of its own seat and the ingest
+    // seat.
     assert_eq!(report["events"], lines.len() + 4);
 }
 
@@ -135,6 +138,11 @@ fn a_changed_header_byte_fails_verify_naming_the_event_s_address() {
     let ingest = cairn(
         home.path(),
         &["ingest", "--path", transcript().to_str().unwrap(), "--json"],
+    );
+    assert!(
+        ingest.status.success(),
+        "{}",
+        String::from_utf8_lossy(&ingest.stderr)
     );
     let ingested: Value = serde_json::from_slice(&ingest.stdout).unwrap();
     let (writer, room) = (

@@ -184,8 +184,11 @@ fn header_fields(w: &mut World) -> Result<(), String> {
         return Err("the store's meta does not record the header's field set".to_owned());
     }
     let times: Vec<String> = rec(w).writers.iter().flat_map(|(_, t)| t.clone()).collect();
-    for (writer, links) in logs(w)? {
-        for (i, link) in links.iter().enumerate() {
+    let record = logs(w)?;
+    let writers: Vec<WriterId> = rec(w).writers.iter().map(|(writer, _)| *writer).collect();
+    for (n, &writer) in writers.iter().enumerate() {
+        let other = &record[&writers[1 - n]];
+        for (i, link) in record[&writer].iter().enumerate() {
             let value = link.header.to_value();
             let fields: Vec<&str> = value
                 .as_object()
@@ -206,10 +209,27 @@ fn header_fields(w: &mut World) -> Result<(), String> {
                     link.header.address
                 ));
             }
-            let cites_other = link.header.heads.iter().all(|s| s.address.writer != writer);
-            if !cites_other || (i > 0 && link.header.heads.is_empty()) {
+            // The writers took turns, the first writer first: its event
+            // i had seen the other's event i - 1, and the second's event
+            // i the first's event i. Each cites that head, by address
+            // and hash, and nothing of its own writer.
+            let seen = if n == 0 { i.checked_sub(1) } else { Some(i) };
+            if let Some(head) = seen.and_then(|j| other.get(j)) {
+                let cited = link
+                    .header
+                    .heads
+                    .iter()
+                    .any(|s| s.address == head.header.address && s.head == head.hash);
+                if !cited {
+                    return Err(format!(
+                        "{}: the header does not cite {}, the other writer's head it had seen",
+                        link.header.address, head.header.address
+                    ));
+                }
+            }
+            if link.header.heads.iter().any(|s| s.address.writer == writer) {
                 return Err(format!(
-                    "{}: the header does not cite the other writer's head it had seen",
+                    "{}: the header cites its own writer",
                     link.header.address
                 ));
             }
@@ -250,7 +270,9 @@ fn causal_not_wall_clock(w: &mut World) -> Result<(), String> {
             "wall-clock time gives the same order, so the scenario proves nothing".to_owned(),
         );
     }
-    // `cairn verify` checked every cited head against the event it
-    // names; a head that named no event would have failed it.
+    // The order is computed here, through the record's own laws, from
+    // the record `cairn verify` checked, every cited head against the
+    // event it names: nothing in the product orders events across
+    // writers yet.
     Ok(())
 }

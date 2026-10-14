@@ -398,14 +398,16 @@ fn mcp_answers_each_line_of_input() {
 
 #[test]
 fn mcp_refuses_flags_and_reports_a_store_it_cannot_open() {
-    assert_eq!(
-        invoke(&["mcp", "--x"], &DEV),
-        (
-            EXIT_USAGE,
-            String::new(),
-            "cairn mcp: unknown flag \"--x\"\n".into()
-        )
-    );
+    for flag in ["--x", "--json"] {
+        assert_eq!(
+            invoke(&["mcp", flag], &DEV),
+            (
+                EXIT_USAGE,
+                String::new(),
+                format!("cairn mcp: unknown flag {flag:?}\n")
+            )
+        );
+    }
     let p = Process::new();
     std::fs::create_dir_all(p.cairn_home()).unwrap();
     std::fs::write(

@@ -118,14 +118,41 @@ fn content_that_does_not_open_its_commitment_is_named() {
 }
 
 #[test]
-fn a_purged_event_is_not_held_to_its_commitment() {
+fn content_removed_with_no_tombstone_is_named() {
+    // Purge, which records a tombstone for what it removes, lands with
+    // ADM-07; until then removed content is a loss verify reports (I1).
     let f = fixture();
     f.sql(&format!(
         "UPDATE events SET content = NULL, commitment_key = NULL WHERE seq = 3 AND writer = '{}'",
         f.ingest.writer
     ));
 
-    assert!(verify(&f.store).is_ok());
+    let err = verify(&f.store).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        format!(
+            "chain broken at {}: its content was removed, and no tombstone records it",
+            f.at(3).full(&f.node.room())
+        )
+    );
+}
+
+#[test]
+fn a_commitment_key_without_its_content_does_not_open_its_commitment() {
+    let f = fixture();
+    f.sql(&format!(
+        "UPDATE events SET content = NULL WHERE seq = 3 AND writer = '{}'",
+        f.ingest.writer
+    ));
+
+    let err = verify(&f.store).unwrap_err();
+
+    assert!(
+        err.to_string()
+            .ends_with("the content does not open its commitment"),
+        "{err}"
+    );
 }
 
 #[test]
