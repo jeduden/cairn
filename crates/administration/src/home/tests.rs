@@ -5,7 +5,9 @@ use testkit::TempDir;
 #[test]
 fn the_home_is_cairn_home_when_set_else_dot_cairn_in_home() {
     assert_eq!(
-        Home::locate(Some(OsStr::new("/c")), Some(OsStr::new("/h"))).unwrap().root(),
+        Home::locate(Some(OsStr::new("/c")), Some(OsStr::new("/h")))
+            .unwrap()
+            .root(),
         Path::new("/c")
     );
     assert_eq!(
@@ -13,7 +15,9 @@ fn the_home_is_cairn_home_when_set_else_dot_cairn_in_home() {
         Path::new("/h/.cairn")
     );
     assert_eq!(
-        Home::locate(Some(OsStr::new("")), Some(OsStr::new("/h"))).unwrap().root(),
+        Home::locate(Some(OsStr::new("")), Some(OsStr::new("/h")))
+            .unwrap()
+            .root(),
         Path::new("/h/.cairn")
     );
 }
@@ -35,7 +39,10 @@ fn a_home_names_its_files() {
     assert_eq!(home.store(), Path::new("/c/store.db"));
     assert_eq!(home.device_key(), Path::new("/c/keys/device.key"));
     assert_eq!(home.recovery_key(), Path::new("/c/keys/recovery.key"));
-    assert_eq!(home.seat_key(seat), PathBuf::from(format!("/c/keys/seat-{seat}.key")));
+    assert_eq!(
+        home.seat_key(seat),
+        PathBuf::from(format!("/c/keys/seat-{seat}.key"))
+    );
 }
 
 #[test]

@@ -2,8 +2,10 @@ use super::*;
 use crate::home::Home;
 use crate::node::Node;
 use key::random::OsEntropy;
+use key::signing::{DeviceKey, SeatKey};
 use record::commitment::CommitmentKey;
 use record::event::{EventKind, Provenance};
+use record::id::Seq;
 use serde_json::json;
 use store::{Draft, SeatRecord};
 use testkit::TempDir;
@@ -32,9 +34,19 @@ fn fixture() -> Fixture {
     home.create().unwrap();
     let mut store = Store::open(&home.store()).unwrap();
     let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
-    let ingest = node.certify_ingest_seat(&home, &mut store, &mut OsEntropy).unwrap();
-    store.append(ingest.writer, &[draft(1), draft(2), draft(3)]).unwrap();
-    Fixture { _dir: dir, home, store, node, ingest }
+    let ingest = node
+        .certify_ingest_seat(&home, &mut store, &mut OsEntropy)
+        .unwrap();
+    store
+        .append(ingest.writer, &[draft(1), draft(2), draft(3)])
+        .unwrap();
+    Fixture {
+        _dir: dir,
+        home,
+        store,
+        node,
+        ingest,
+    }
 }
 
 impl Fixture {
@@ -54,7 +66,13 @@ fn an_intact_record_verifies_and_counts_its_writers_and_events() {
 
     let report = verify(&f.store).unwrap();
 
-    assert_eq!(report, Report { writers: 2, events: 7 });
+    assert_eq!(
+        report,
+        Report {
+            writers: 2,
+            events: 7
+        }
+    );
 }
 
 #[test]
@@ -64,7 +82,10 @@ fn a_changed_header_byte_is_named_by_its_full_address() {
     let mut flipped = stored.link.header.commitment.to_string();
     let last = if flipped.ends_with('0') { "1" } else { "0" };
     flipped.replace_range(63.., last);
-    f.sql(&format!("UPDATE events SET commitment = '{flipped}' WHERE seq = 2 AND writer = '{}'", f.ingest.writer));
+    f.sql(&format!(
+        "UPDATE events SET commitment = '{flipped}' WHERE seq = 2 AND writer = '{}'",
+        f.ingest.writer
+    ));
 
     let err = verify(&f.store).unwrap_err();
 
@@ -99,7 +120,10 @@ fn content_that_does_not_open_its_commitment_is_named() {
 #[test]
 fn a_purged_event_is_not_held_to_its_commitment() {
     let f = fixture();
-    f.sql("UPDATE events SET content = NULL, commitment_key = NULL WHERE seq = 3");
+    f.sql(&format!(
+        "UPDATE events SET content = NULL, commitment_key = NULL WHERE seq = 3 AND writer = '{}'",
+        f.ingest.writer
+    ));
 
     assert!(verify(&f.store).is_ok());
 }
@@ -107,26 +131,63 @@ fn a_purged_event_is_not_held_to_its_commitment() {
 #[test]
 fn a_row_that_does_not_parse_is_named() {
     let f = fixture();
-    f.sql(&format!("UPDATE events SET kind = 'x' WHERE seq = 2 AND writer = '{}'", f.ingest.writer));
+    f.sql(&format!(
+        "UPDATE events SET kind = 'x' WHERE seq = 2 AND writer = '{}'",
+        f.ingest.writer
+    ));
 
     let err = verify(&f.store).unwrap_err();
 
     assert!(
-        err.to_string().starts_with(&format!("chain broken at {}: ", f.at(2).full(&f.node.room()))),
+        err.to_string().starts_with(&format!(
+            "chain broken at {}: ",
+            f.at(2).full(&f.node.room())
+        )),
         "{err}"
     );
 }
 
 #[test]
-fn a_broken_cited_head_is_named() {
+fn a_changed_cited_head_changes_the_hash_of_the_event_citing_it() {
     let f = fixture();
     f.sql("UPDATE event_heads SET other_seq = 1");
-    // The ingest seat's first event cited the device seat's newest
-    // event, its fourth; seq 1 there has another hash.
 
     let err = verify(&f.store).unwrap_err();
 
-    assert!(err.to_string().contains("which no event of another writer matches"), "{err}");
+    assert_eq!(
+        err.to_string(),
+        format!(
+            "chain broken at {}: the stored hash does not match the event's header",
+            f.at(1).full(&f.node.room())
+        )
+    );
+}
+
+#[test]
+fn a_cited_head_naming_no_event_is_named_even_when_the_chain_is_rehashed() {
+    let f = fixture();
+    // The ingest seat's first event cited the device seat's fourth
+    // event; point it at the first, and rehash the ingest seat's chain
+    // after it so only the cited head is wrong.
+    f.sql("UPDATE event_heads SET other_seq = 1");
+    let mut prev = Digest::ZERO;
+    for stored in f.store.log(f.ingest.writer).unwrap() {
+        let mut header = stored.link.header.clone();
+        header.prev_hash = prev;
+        prev = header.hash();
+        f.sql(&format!(
+            "UPDATE events SET prev_hash = '{}', hash = '{prev}' WHERE writer = '{}' AND seq = {}",
+            header.prev_hash, f.ingest.writer, header.address.seq
+        ));
+    }
+
+    let err = verify(&f.store).unwrap_err();
+
+    assert!(
+        err.to_string()
+            .ends_with("which no event of another writer matches"),
+        "{err}"
+    );
 }
 
 #[test]
@@ -137,7 +198,10 @@ fn a_writer_without_a_seat_certificate_is_named() {
 
     let err = verify(&f.store).unwrap_err();
 
-    assert_eq!(err.to_string(), format!("writer {stray}: no seat certificate names it"));
+    assert_eq!(
+        err.to_string(),
+        format!("writer {stray}: no seat certificate names it")
+    );
 }
 
 #[test]
@@ -145,13 +209,19 @@ fn a_changed_seat_certificate_is_named() {
     let f = fixture();
     let mut cert = f.ingest.certificate.clone();
     cert["ingest_seat"] = json!(false);
-    f.sql(&format!("UPDATE seats SET certificate = '{cert}' WHERE writer = '{}'", f.ingest.writer));
+    f.sql(&format!(
+        "UPDATE seats SET certificate = '{cert}' WHERE writer = '{}'",
+        f.ingest.writer
+    ));
 
     let err = verify(&f.store).unwrap_err();
 
     assert_eq!(
         err.to_string(),
-        format!("writer {}: its seat certificate: a seat_certificate signature does not verify", f.ingest.writer)
+        format!(
+            "writer {}: its seat certificate: a seat_certificate signature does not verify",
+            f.ingest.writer
+        )
     );
 }
 
@@ -159,13 +229,19 @@ fn a_changed_seat_certificate_is_named() {
 fn a_seat_certificate_naming_another_seat_or_room_is_named() {
     let f = fixture();
     let other = RoomId::derive(&[1; 32], &[1; 16]);
-    f.sql(&format!("UPDATE seats SET room = '{other}' WHERE writer = '{}'", f.ingest.writer));
+    f.sql(&format!(
+        "UPDATE seats SET room = '{other}' WHERE writer = '{}'",
+        f.ingest.writer
+    ));
 
     let err = verify(&f.store).unwrap_err();
 
     assert_eq!(
         err.to_string(),
-        format!("writer {}: its seat certificate names another seat", f.ingest.writer)
+        format!(
+            "writer {}: its seat certificate names another seat",
+            f.ingest.writer
+        )
     );
 }
 
@@ -187,7 +263,10 @@ fn a_seat_certificate_no_certificate_record_holds_is_named() {
 
     assert_eq!(
         err.to_string(),
-        format!("writer {}: no device seat holds a certificate record of its seat certificate", record.writer)
+        format!(
+            "writer {}: no device seat holds a certificate record of its seat certificate",
+            record.writer
+        )
     );
 }
 
@@ -196,7 +275,8 @@ fn a_seat_certificate_from_a_key_with_no_minted_key_event_is_named() {
     let mut f = fixture();
     let stranger = DeviceKey::mint(&mut OsEntropy).unwrap();
     let seat = SeatKey::mint(&mut OsEntropy).unwrap();
-    let cert = SeatCertificate::issue(&stranger, &seat, f.node.room(), SeatKind::Run, true).unwrap();
+    let cert =
+        SeatCertificate::issue(&stranger, &seat, f.node.room(), SeatKind::Run, true).unwrap();
     let record = SeatRecord {
         writer: cert.writer_id(),
         seat: cert.seat_id(),
@@ -209,7 +289,10 @@ fn a_seat_certificate_from_a_key_with_no_minted_key_event_is_named() {
 
     assert_eq!(
         err.to_string(),
-        format!("writer {}: no minted key event of this node names its certifier", record.writer)
+        format!(
+            "writer {}: no minted key event of this node names its certifier",
+            record.writer
+        )
     );
 }
 
@@ -217,14 +300,27 @@ fn a_seat_certificate_from_a_key_with_no_minted_key_event_is_named() {
 fn a_key_event_that_does_not_parse_or_check_is_named() {
     let f = fixture();
     let device = f.node.device_writer();
-    f.sql(&format!("UPDATE events SET content = '{{}}', commitment_key = NULL WHERE seq = 1 AND writer = '{device}'"));
+    f.sql(&format!("UPDATE events SET content = NULL, commitment_key = NULL WHERE seq = 1 AND writer = '{device}'"));
 
     let err = verify(&f.store).unwrap_err();
 
-    assert!(err.to_string().starts_with(&format!(
-        "chain broken at {}: its key event: ",
-        Address::new(device, Seq::FIRST).full(&f.node.room())
-    )), "{err}");
+    assert_eq!(
+        err.to_string(),
+        format!(
+            "the key event at {} does not check: its content was removed",
+            Address::new(device, Seq::FIRST).full(&f.node.room())
+        )
+    );
+    f.sql(&format!(
+        "UPDATE seats SET certificate = '{{}}' WHERE writer = '{}'",
+        f.ingest.writer
+    ));
+    assert!(
+        verify(&f.store)
+            .unwrap_err()
+            .to_string()
+            .contains("its seat certificate: malformed")
+    );
 }
 
 #[test]
@@ -233,7 +329,62 @@ fn a_store_error_is_passed_on() {
     f.sql("UPDATE seats SET room = 'x'");
 
     assert!(matches!(verify(&f.store), Err(VerifyError::Store(_))));
+    let broken = VerifyError::Broken {
+        address: "a".into(),
+        reason: "r".into(),
+    };
+    assert!(std::error::Error::source(&broken).is_none());
     let err = VerifyError::Store(store::StoreError::Full(f.ingest.writer));
     assert!(std::error::Error::source(&err).is_some());
     assert!(err.to_string().contains("no seq left"));
+}
+
+#[test]
+fn a_key_event_whose_content_is_no_key_event_is_named() {
+    let mut f = fixture();
+    let device = f.node.device_writer();
+    f.store
+        .append(
+            device,
+            &[Draft {
+                kind: EventKind::KeyEvent,
+                provenance: Provenance::Structural,
+                content: json!({}),
+                commitment_key: CommitmentKey::from_bytes([1; 32]),
+            }],
+        )
+        .unwrap();
+
+    let err = verify(&f.store).unwrap_err();
+
+    assert!(
+        err.to_string()
+            .contains("does not check: malformed key event"),
+        "{err}"
+    );
+}
+
+#[test]
+fn content_without_its_commitment_key_does_not_open_its_commitment() {
+    let f = fixture();
+    f.sql("UPDATE events SET commitment_key = NULL WHERE seq = 3");
+
+    let err = verify(&f.store).unwrap_err();
+
+    assert!(
+        err.to_string()
+            .ends_with("the content does not open its commitment"),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_store_error_reading_a_log_is_passed_on() {
+    let f = fixture();
+    f.sql(&format!(
+        "UPDATE events SET seq = -1 WHERE seq = 3 AND writer = '{}'",
+        f.ingest.writer
+    ));
+
+    assert!(matches!(verify(&f.store), Err(VerifyError::Store(_))));
 }
