@@ -49,8 +49,13 @@ pub fn staging(path: &Path) -> std::path::PathBuf {
     path.with_file_name(name)
 }
 
-/// Syncs the directory holding `path`, so the link survives a crash.
-fn sync_directory(path: &Path) -> std::io::Result<()> {
+/// Syncs the directory holding `path`, so a link or rename there
+/// survives a crash.
+///
+/// # Errors
+///
+/// Fails when the directory cannot be opened or synced.
+pub fn sync_directory(path: &Path) -> std::io::Result<()> {
     #[cfg(unix)]
     if let Some(parent) = path.parent() {
         fs::File::open(parent)?.sync_all()?;

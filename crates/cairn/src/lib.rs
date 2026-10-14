@@ -14,6 +14,7 @@ use std::time::Duration;
 use administration::home::Home;
 use administration::verify::{VerifyError, verify};
 use key::random::OsEntropy;
+use key::signing::DeviceKey;
 use serde_json::json;
 use store::Store;
 
@@ -270,9 +271,13 @@ fn verify_command(
             stderr,
         );
     }
+    let device = match DeviceKey::load(&home.device_key()) {
+        Ok(device) => device,
+        Err(e) => return failed("verify", &e, stderr),
+    };
     let checked = Store::open(&home.store())
-        .map_err(VerifyError::Store)
-        .and_then(|s| verify(&s));
+        .map_err(VerifyError::from)
+        .and_then(|s| verify(&s, &device.public()));
     let (code, line) = match checked {
         Ok(r) if as_json => (
             EXIT_OK,

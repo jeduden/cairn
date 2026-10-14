@@ -62,6 +62,13 @@ impl Home {
         self.keys().join(format!("seat-{seat}.key"))
     }
 
+    /// The directory a first start stages its keys and its personal
+    /// room's nonce in before it records anything.
+    #[must_use]
+    pub fn genesis(&self) -> PathBuf {
+        self.keys().join("genesis")
+    }
+
     fn keys(&self) -> PathBuf {
         self.root.join("keys")
     }

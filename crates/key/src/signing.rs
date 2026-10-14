@@ -159,7 +159,7 @@ impl Signature {
             )));
         }
         let (a, b) = text.split_at(64);
-        let (a, b) = (
+        let (a, b): ([u8; 32], [u8; 32]) = (
             unhex(a).map_err(|e| malformed(e.to_string()))?,
             unhex(b).map_err(|e| malformed(e.to_string()))?,
         );

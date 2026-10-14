@@ -158,7 +158,9 @@ pub fn check_heads(record: &BTreeMap<WriterId, Vec<Link>>) -> Result<(), ChainEr
 ///
 /// Fails when cited heads form a cycle, naming the least event on it.
 pub fn causal_order(record: &BTreeMap<WriterId, Vec<Link>>) -> Result<Vec<Address>, ChainError> {
-    let mut waits: BTreeMap<Address, BTreeSet<Address>> = BTreeMap::new();
+    // How many events each still waits for, and who waits for each.
+    let mut waiting: BTreeMap<Address, usize> = BTreeMap::new();
+    let mut followers: BTreeMap<Address, Vec<Address>> = BTreeMap::new();
     for links in record.values() {
         for link in links {
             let h = &link.header;
@@ -171,22 +173,31 @@ pub fn causal_order(record: &BTreeMap<WriterId, Vec<Link>>) -> Result<Vec<Addres
                     .get(&a.writer)
                     .is_some_and(|l| l.len() as u64 >= a.seq.get())
             });
-            waits.insert(h.address, before);
+            waiting.insert(h.address, before.len());
+            for a in before {
+                followers.entry(a).or_default().push(h.address);
+            }
         }
     }
-    let mut order = Vec::with_capacity(waits.len());
-    while let Some(next) = waits
+    let mut ready: BTreeSet<Address> = waiting
         .iter()
-        .find(|(_, before)| before.is_empty())
+        .filter(|(_, n)| **n == 0)
         .map(|(a, _)| *a)
-    {
-        waits.remove(&next);
-        for before in waits.values_mut() {
-            before.remove(&next);
+        .collect();
+    let mut order = Vec::with_capacity(waiting.len());
+    while let Some(next) = ready.pop_first() {
+        waiting.remove(&next);
+        for follower in followers.remove(&next).unwrap_or_default() {
+            if let Some(n) = waiting.get_mut(&follower) {
+                *n -= 1;
+                if *n == 0 {
+                    ready.insert(follower);
+                }
+            }
         }
         order.push(next);
     }
-    match waits.keys().next() {
+    match waiting.keys().next() {
         Some(stuck) => Err(ChainError::new(*stuck, Fault::Cycle)),
         None => Ok(order),
     }

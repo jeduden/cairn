@@ -4,6 +4,7 @@ use crate::node::Node;
 use key::random::OsEntropy;
 use key::signing::{DeviceKey, SeatKey};
 use record::commitment::CommitmentKey;
+use record::digest::Digest;
 use record::event::{EventKind, Provenance};
 use record::id::Seq;
 use serde_json::json;
@@ -479,6 +480,12 @@ fn a_create_room_act_whose_room_does_not_derive_is_named() {
         "UPDATE events SET content = '{act}', commitment = '{commitment}' WHERE writer = '{device}' AND seq = 2"
     ));
     rehash(&f, device);
+    // The ingest seat cites the device seat's head: follow it.
+    f.sql(
+        "UPDATE event_heads SET other_hash = (SELECT hash FROM events e \
+         WHERE e.writer = event_heads.other_writer AND e.seq = event_heads.other_seq)",
+    );
+    rehash(&f, f.ingest.writer);
 
     let err = verify(&f.store, &f.node.device().public()).unwrap_err();
 

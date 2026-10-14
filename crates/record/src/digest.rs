@@ -68,11 +68,11 @@ impl fmt::Debug for Digest {
     }
 }
 
-/// Why text spells no 32 bytes.
+/// Why text spells none of the bytes asked for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HexError {
-    /// It is not 64 characters long.
-    Length(usize),
+    /// It is not `want` characters long but `got`.
+    Length { want: usize, got: usize },
     /// It holds a character that is no lowercase hex digit.
     Digit(char),
 }
@@ -80,8 +80,10 @@ pub enum HexError {
 impl fmt::Display for HexError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Length(n) => write!(f, "want 64 lowercase hex digits, got {n} characters"),
-            Self::Digit(c) => write!(f, "want 64 lowercase hex digits, got {c:?}"),
+            Self::Length { want, got } => {
+                write!(f, "want {want} lowercase hex digits, got {got} characters")
+            }
+            Self::Digit(c) => write!(f, "want lowercase hex digits, got {c:?}"),
         }
     }
 }
@@ -101,17 +103,20 @@ pub fn hex(bytes: &[u8]) -> String {
     out
 }
 
-/// The 32 bytes 64 lowercase hex digits spell.
+/// The `N` bytes `2 * N` lowercase hex digits spell.
 ///
 /// # Errors
 ///
 /// Fails on any other text.
-pub fn unhex(text: &str) -> Result<[u8; 32], HexError> {
+pub fn unhex<const N: usize>(text: &str) -> Result<[u8; N], HexError> {
     let count = text.chars().count();
-    if count != 64 {
-        return Err(HexError::Length(count));
+    if count != 2 * N {
+        return Err(HexError::Length {
+            want: 2 * N,
+            got: count,
+        });
     }
-    let mut out = [0; 32];
+    let mut out = [0; N];
     let digits: Vec<u8> = text
         .chars()
         .map(|c| match c {
