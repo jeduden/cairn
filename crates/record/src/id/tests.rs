@@ -8,8 +8,14 @@ fn ids_derive_from_keys_under_their_own_labels() {
     let room = RoomId::derive(&KEY, &[1; 16]);
     let seat = SeatId::derive(&room, &KEY);
 
-    assert_eq!(writer.digest(), &Digest::of(&[b"cairn writer id v1\0", &KEY]));
-    assert_eq!(room.digest(), &Digest::of(&[b"cairn room id v1\0", &KEY, &[1; 16]]));
+    assert_eq!(
+        writer.digest(),
+        &Digest::of(&[b"cairn writer id v1\0", &KEY])
+    );
+    assert_eq!(
+        room.digest(),
+        &Digest::of(&[b"cairn room id v1\0", &KEY, &[1; 16]])
+    );
     assert_eq!(
         seat.digest(),
         &Digest::of(&[b"cairn seat id v1\0", room.digest().as_bytes(), &KEY])
@@ -54,7 +60,10 @@ fn an_address_shows_in_its_ascii_and_full_forms() {
     let address = Address::new(writer, Seq::new(48213).unwrap());
 
     assert_eq!(address.to_string(), format!("{writer}:48213"));
-    assert_eq!(address.full(&room), format!("cairn:room/{room}/w/{writer}/48213"));
+    assert_eq!(
+        address.full(&room),
+        format!("cairn:room/{room}/w/{writer}/48213")
+    );
 }
 
 #[test]
@@ -87,11 +96,7 @@ fn a_malformed_address_is_refused_naming_the_forms() {
         format!("cairn:room/{room}/w/zz/1"),
         format!("cairn:room/{room}/w/{writer}/0"),
     ] {
-        assert_eq!(
-            Address::parse(&bad),
-            Err(AddressError::new(&bad)),
-            "{bad}"
-        );
+        assert_eq!(Address::parse(&bad), Err(AddressError::new(&bad)), "{bad}");
     }
 }
 
@@ -103,5 +108,9 @@ fn an_address_error_names_the_input_shortened_and_the_forms() {
         AddressError::new("a:b").to_string(),
         "not an address: \"a:b\"; want <writer id>:<seq> or cairn:room/<room id>/w/<writer id>/<seq>"
     );
-    assert!(AddressError::new(&long).to_string().contains(&format!("\"{}…\"", "x".repeat(80))));
+    assert!(
+        AddressError::new(&long)
+            .to_string()
+            .contains(&format!("\"{}…\"", "x".repeat(80)))
+    );
 }

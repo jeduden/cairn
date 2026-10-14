@@ -87,7 +87,10 @@ fn a_gap_a_foreign_event_or_a_broken_link_is_named() {
     let foreign = two_writers(3).remove(&writer(2)).unwrap();
     assert_eq!(
         check_writer(a, &foreign),
-        Err(ChainError::new(Address::new(writer(2), seq(1)), Fault::Writer))
+        Err(ChainError::new(
+            Address::new(writer(2), seq(1)),
+            Fault::Writer
+        ))
     );
 
     let mut relinked = base.clone();
@@ -112,7 +115,7 @@ fn a_cited_head_must_name_an_event_of_another_writer_by_its_hash() {
     );
 
     let mut missing = two_writers(2);
-    missing.get_mut(&a).unwrap().truncate(0);
+    missing.get_mut(&a).unwrap().clear();
     assert_eq!(
         check_heads(&missing),
         Err(ChainError::new(Address::new(b, seq(1)), Fault::Head(cited)))
@@ -170,7 +173,10 @@ fn causal_order_breaks_ties_by_writer_id_then_seq() {
 
     assert_eq!(
         causal_order(&record),
-        Ok(vec![Address::new(first, seq(1)), Address::new(second, seq(1))])
+        Ok(vec![
+            Address::new(first, seq(1)),
+            Address::new(second, seq(1))
+        ])
     );
 }
 
@@ -191,16 +197,37 @@ fn heads_that_cite_each_other_in_a_cycle_have_no_causal_order() {
 fn faults_explain_themselves() {
     let cited = Address::new(writer(2), seq(4));
     for (fault, want) in [
-        (Fault::Seq(3), "want seq 3 here: the writer's log has a gap".to_owned()),
-        (Fault::Writer, "the event belongs to another writer".to_owned()),
-        (Fault::PrevHash, "prev_hash does not name the writer's previous event".to_owned()),
-        (Fault::Hash, "the stored hash does not match the event's header".to_owned()),
-        (Fault::Head(cited), format!("it cites {cited}, which no event of another writer matches")),
-        (Fault::HeadBackward(cited), format!("it cites {cited}, behind a head its writer cited before")),
+        (
+            Fault::Seq(3),
+            "want seq 3 here: the writer's log has a gap".to_owned(),
+        ),
+        (
+            Fault::Writer,
+            "the event belongs to another writer".to_owned(),
+        ),
+        (
+            Fault::PrevHash,
+            "prev_hash does not name the writer's previous event".to_owned(),
+        ),
+        (
+            Fault::Hash,
+            "the stored hash does not match the event's header".to_owned(),
+        ),
+        (
+            Fault::Head(cited),
+            format!("it cites {cited}, which no event of another writer matches"),
+        ),
+        (
+            Fault::HeadBackward(cited),
+            format!("it cites {cited}, at or behind a head its writer cited before"),
+        ),
         (Fault::Cycle, "its cited heads form a cycle".to_owned()),
     ] {
         assert_eq!(fault.to_string(), want);
     }
     let err = ChainError::new(cited, Fault::Writer);
-    assert_eq!(err.to_string(), format!("{cited}: the event belongs to another writer"));
+    assert_eq!(
+        err.to_string(),
+        format!("{cited}: the event belongs to another writer")
+    );
 }

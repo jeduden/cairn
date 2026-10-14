@@ -47,7 +47,10 @@ fn the_header_holds_exactly_its_field_set_with_heads_ordered_by_writer() {
         "commitment": h.commitment.to_string(),
     });
     assert_eq!(h.to_value(), want);
-    assert_eq!(FIELD_SET, "address{writer,seq},kind,provenance,prev_hash,heads[{writer,seq,head}],commitment");
+    assert_eq!(
+        FIELD_SET,
+        "address{writer,seq},kind,provenance,prev_hash,heads[{writer,seq,head}],commitment"
+    );
     assert_eq!(ENCODING, "rfc8785+sha256/1");
 }
 

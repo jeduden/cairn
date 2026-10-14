@@ -9,12 +9,19 @@ fn literals_and_integers_encode_as_json_writes_them() {
     assert_eq!(encode(&json!(0)).unwrap(), "0");
     assert_eq!(encode(&json!(-42)).unwrap(), "-42");
     assert_eq!(encode(&json!(MAX_SAFE)).unwrap(), "9007199254740991");
-    assert_eq!(encode(&json!(-9_007_199_254_740_991_i64)).unwrap(), "-9007199254740991");
+    assert_eq!(
+        encode(&json!(-9_007_199_254_740_991_i64)).unwrap(),
+        "-9007199254740991"
+    );
 }
 
 #[test]
 fn a_number_past_the_safe_integers_or_with_a_fraction_is_refused() {
-    for n in [json!(MAX_SAFE + 1), json!(-9_007_199_254_740_992_i64), json!(1.5)] {
+    for n in [
+        json!(MAX_SAFE + 1),
+        json!(-9_007_199_254_740_992_i64),
+        json!(1.5),
+    ] {
         assert_eq!(encode(&n), Err(Error::Number(n.to_string())), "{n}");
     }
     assert_eq!(

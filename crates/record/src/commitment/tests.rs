@@ -17,7 +17,10 @@ fn commit_is_hmac_sha256_over_the_canonical_content_under_the_commitment_key() {
 
 #[test]
 fn a_commitment_binds_the_content_and_hides_it_behind_the_key() {
-    let (a, b) = (CommitmentKey::from_bytes([1; 32]), CommitmentKey::from_bytes([2; 32]));
+    let (a, b) = (
+        CommitmentKey::from_bytes([1; 32]),
+        CommitmentKey::from_bytes([2; 32]),
+    );
     let content = json!({"text": "x"});
 
     assert_ne!(commit(&a, &content), commit(&b, &content));
