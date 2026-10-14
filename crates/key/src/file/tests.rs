@@ -98,3 +98,16 @@ fn a_key_file_in_a_missing_directory_is_refused() {
 
     assert!(matches!(err, KeyError::File { .. }), "{err}");
 }
+
+#[test]
+fn a_leftover_that_cannot_be_removed_is_refused() {
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("device.key");
+    fs::create_dir(staging(&path)).unwrap();
+    fs::write(staging(&path).join("inside"), "").unwrap();
+
+    let err = write_secret(&path, "x").unwrap_err();
+
+    assert!(matches!(err, KeyError::File { .. }), "{err}");
+    assert!(!path.exists());
+}
