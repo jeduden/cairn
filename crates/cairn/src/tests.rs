@@ -43,7 +43,12 @@ impl Process {
             input: &input,
         };
         let (mut out, mut err) = (Vec::new(), Vec::new());
-        let code = run(args.iter().map(|a| (*a).to_owned()), &ctx, &mut out, &mut err);
+        let code = run(
+            args.iter().map(|a| (*a).to_owned()),
+            &ctx,
+            &mut out,
+            &mut err,
+        );
 
         (
             code,
@@ -178,7 +183,12 @@ fn a_failed_write_is_a_failure() {
             input: &input,
         };
 
-        let code = run(args.iter().map(|a| (*a).to_owned()), &ctx, &mut Closed, &mut err);
+        let code = run(
+            args.iter().map(|a| (*a).to_owned()),
+            &ctx,
+            &mut Closed,
+            &mut err,
+        );
 
         assert_eq!(code, EXIT_FAILURE, "{args:?}");
         assert!(
@@ -202,7 +212,10 @@ fn ingest_records_each_line_and_names_the_writer() {
     let (code, out, err) = p.invoke(&["ingest", "--path", &path], &DEV);
 
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
-    assert!(out.starts_with(&format!("ingested 2 lines of {path} into writer ")), "{out}");
+    assert!(
+        out.starts_with(&format!("ingested 2 lines of {path} into writer ")),
+        "{out}"
+    );
 }
 
 #[test]
@@ -224,9 +237,18 @@ fn ingest_json_names_the_writer_seat_room_and_count() {
 fn ingest_refuses_a_wrong_command_line() {
     for (args, want) in [
         (&["ingest"][..], "cairn ingest: want --path P\n"),
-        (&["ingest", "--path"], "cairn ingest: --path needs a transcript\n"),
-        (&["ingest", "--all"], "cairn ingest: --all is not supported yet; pass --path\n"),
-        (&["ingest", "--yaml"], "cairn ingest: unknown flag \"--yaml\"\n"),
+        (
+            &["ingest", "--path"],
+            "cairn ingest: --path needs a transcript\n",
+        ),
+        (
+            &["ingest", "--all"],
+            "cairn ingest: --all is not supported yet; pass --path\n",
+        ),
+        (
+            &["ingest", "--yaml"],
+            "cairn ingest: unknown flag \"--yaml\"\n",
+        ),
     ] {
         let (code, _, err) = invoke(args, &DEV);
         assert_eq!((code, err.as_str()), (EXIT_USAGE, want), "{args:?}");
@@ -240,7 +262,10 @@ fn ingest_reports_a_transcript_it_cannot_read() {
     let (code, _, err) = p.invoke(&["ingest", "--path", "/nonexistent/t.jsonl"], &DEV);
 
     assert_eq!(code, EXIT_FAILURE);
-    assert!(err.starts_with("cairn ingest: read the transcript /nonexistent/t.jsonl: "), "{err}");
+    assert!(
+        err.starts_with("cairn ingest: read the transcript /nonexistent/t.jsonl: "),
+        "{err}"
+    );
 }
 
 #[test]
@@ -254,7 +279,11 @@ fn verify_checks_the_record_and_counts_it() {
 
     assert_eq!(
         text,
-        (EXIT_OK, "verified 2 writers and 6 events: every chain and seat certificate checks\n".into(), String::new())
+        (
+            EXIT_OK,
+            "verified 2 writers and 6 events: every chain and seat certificate checks\n".into(),
+            String::new()
+        )
     );
     assert_eq!(json.0, EXIT_OK);
     assert_eq!(
@@ -269,17 +298,30 @@ fn verify_exits_3_naming_where_the_chain_breaks() {
     let path = p.transcript("a\nb\n");
     p.invoke(&["ingest", "--path", &path], &DEV);
     let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
-    conn.execute("UPDATE events SET provenance = 'user' WHERE kind = 'unparsed_line' AND seq = 2", []).unwrap();
+    conn.execute(
+        "UPDATE events SET provenance = 'user' WHERE kind = 'unparsed_line' AND seq = 2",
+        [],
+    )
+    .unwrap();
 
     let (code, out, err) = p.invoke(&["verify"], &DEV);
     let (json_code, json, _) = p.invoke(&["verify", "--json"], &DEV);
 
     assert_eq!((code, out.as_str()), (EXIT_INTEGRITY, ""));
-    assert!(err.starts_with("cairn verify: chain broken at cairn:room/"), "{err}");
-    assert!(err.ends_with("/2: the stored hash does not match the event's header\n"), "{err}");
+    assert!(
+        err.starts_with("cairn verify: chain broken at cairn:room/"),
+        "{err}"
+    );
+    assert!(
+        err.ends_with("/2: the stored hash does not match the event's header\n"),
+        "{err}"
+    );
     assert_eq!(json_code, EXIT_INTEGRITY);
     let v: serde_json::Value = serde_json::from_str(&json).unwrap();
-    assert_eq!(format!("cairn verify: {}\n", v["broken"].as_str().unwrap()), err);
+    assert_eq!(
+        format!("cairn verify: {}\n", v["broken"].as_str().unwrap()),
+        err
+    );
 }
 
 #[test]
@@ -288,10 +330,20 @@ fn verify_without_a_store_or_with_a_failing_one_fails() {
 
     let (code, _, err) = p.invoke(&["verify"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
-    assert_eq!(err, format!("cairn verify: no store at {}\n", p.cairn_home().join("store.db").display()));
+    assert_eq!(
+        err,
+        format!(
+            "cairn verify: no store at {}\n",
+            p.cairn_home().join("store.db").display()
+        )
+    );
 
     std::fs::create_dir_all(p.cairn_home()).unwrap();
-    std::fs::write(p.cairn_home().join("store.db"), "not a database, but long enough to read a header").unwrap();
+    std::fs::write(
+        p.cairn_home().join("store.db"),
+        "not a database, but long enough to read a header",
+    )
+    .unwrap();
     let (code, _, err) = p.invoke(&["verify"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
     assert!(err.starts_with("cairn verify: the store: "), "{err}");
@@ -307,14 +359,21 @@ fn verify_reports_a_store_error_met_while_checking() {
     let (code, _, err) = p.invoke(&["verify"], &DEV);
 
     assert_eq!(code, EXIT_FAILURE);
-    assert!(err.starts_with("cairn verify: the store is corrupt"), "{err}");
+    assert!(
+        err.starts_with("cairn verify: the store is corrupt"),
+        "{err}"
+    );
 }
 
 #[test]
 fn verify_refuses_an_unknown_flag() {
     assert_eq!(
         invoke(&["verify", "--yaml"], &DEV),
-        (EXIT_USAGE, String::new(), "cairn verify: unknown flag \"--yaml\"\n".into())
+        (
+            EXIT_USAGE,
+            String::new(),
+            "cairn verify: unknown flag \"--yaml\"\n".into()
+        )
     );
 }
 
@@ -329,7 +388,10 @@ fn mcp_answers_each_line_of_input() {
     let (code, out, err) = p.invoke(&["mcp"], &DEV);
 
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
-    let lines: Vec<serde_json::Value> = out.lines().map(|l| serde_json::from_str(l).unwrap()).collect();
+    let lines: Vec<serde_json::Value> = out
+        .lines()
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect();
     assert_eq!(lines[0]["result"]["serverInfo"]["version"], "dev");
     assert_eq!(lines[1]["id"], 2);
 }
@@ -338,11 +400,19 @@ fn mcp_answers_each_line_of_input() {
 fn mcp_refuses_flags_and_reports_a_store_it_cannot_open() {
     assert_eq!(
         invoke(&["mcp", "--x"], &DEV),
-        (EXIT_USAGE, String::new(), "cairn mcp: unknown flag \"--x\"\n".into())
+        (
+            EXIT_USAGE,
+            String::new(),
+            "cairn mcp: unknown flag \"--x\"\n".into()
+        )
     );
     let p = Process::new();
     std::fs::create_dir_all(p.cairn_home()).unwrap();
-    std::fs::write(p.cairn_home().join("store.db"), "not a database, but long enough to read a header").unwrap();
+    std::fs::write(
+        p.cairn_home().join("store.db"),
+        "not a database, but long enough to read a header",
+    )
+    .unwrap();
     let (code, _, err) = p.invoke(&["mcp"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
     assert!(err.starts_with("cairn mcp: the store: "), "{err}");
@@ -392,6 +462,9 @@ fn a_command_without_a_home_fails() {
         let code = run(args, &ctx, &mut out, &mut err);
 
         assert_eq!(code, EXIT_FAILURE, "{command}");
-        assert_eq!(String::from_utf8(err).unwrap(), format!("cairn {command}: no home: set CAIRN_HOME or HOME\n"));
+        assert_eq!(
+            String::from_utf8(err).unwrap(),
+            format!("cairn {command}: no home: set CAIRN_HOME or HOME\n")
+        );
     }
 }

@@ -23,8 +23,73 @@ use std::process::Command;
 
 use serde_json::Value;
 
-/// The crates the core executable may link, by name.
-const REACHABLE: [&str; 0] = [];
+/// The crates the core executable may link, by name, each weighed for
+/// its reach when it joined (plan 2609292012, phase 1). `cargo
+/// metadata` resolves every platform and unifies features across the
+/// workspace, so the list holds a few crates a given build leaves out.
+const REACHABLE: [&str; 44] = [
+    // The core's own library crates, each with the same clippy bans.
+    "administration",
+    "envelope",
+    "ingest",
+    "key",
+    "mcp",
+    "record",
+    "store",
+    // SHA-256 (ADR-2610142154): pure computation over bytes, with its
+    // digest traits and the CPU feature probe of its fast paths.
+    "sha2",
+    "digest",
+    "block-buffer",
+    "crypto-common",
+    "hybrid-array",
+    "typenum",
+    "const-oid",
+    "cpufeatures",
+    "cfg-if",
+    // Ed25519 (ADR-2610142155): curve arithmetic and signatures, pure
+    // computation; zeroize wipes secret keys, subtle compares in
+    // constant time. Its derive macro, like every proc macro below,
+    // runs only at build time.
+    "ed25519-dalek",
+    "ed25519",
+    "signature",
+    "curve25519-dalek",
+    "curve25519-dalek-derive",
+    "fiat-crypto",
+    "subtle",
+    "zeroize",
+    // The OS's random source (ADR-2610142156): the getrandom system
+    // call, or its platform's equivalent, through libc's declarations;
+    // r-efi only on UEFI targets.
+    "getrandom",
+    "libc",
+    "r-efi",
+    // The store (ADR-2610110553): SQLite compiled in with extension
+    // loading compiled out, so it opens files and no socket, and starts
+    // no program.
+    "rusqlite",
+    "libsqlite3-sys",
+    "bitflags",
+    "smallvec",
+    "fallible-iterator",
+    "fallible-streaming-iterator",
+    // JSON (ADR-2610142157): parsing and writing text in memory.
+    "serde_json",
+    "serde_core",
+    "itoa",
+    "memchr",
+    "zmij",
+    // serde with its derive, which the workspace's feature unification
+    // turns on for serde_json, and the proc-macro crates every derive
+    // needs; they run only at build time.
+    "serde",
+    "serde_derive",
+    "proc-macro2",
+    "quote",
+    "syn",
+    "unicode-ident",
+];
 
 /// The packages `root` links: its normal dependencies and theirs, by
 /// name. Dev and build dependencies never reach the executable.
