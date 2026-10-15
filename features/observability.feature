@@ -33,11 +33,15 @@ Feature: Observability (OPS)
   @OPS-03 @P0 @I6
   Scenario: doctor fails while a failure counter has risen since the counters were last acknowledged
     Given an isolated Cairn home
-    And the person has acknowledged the counters with "cairn counter ack", a neutral principal act
+    And the person has acknowledged the counters at a terminal with "cairn counter ack", a neutral principal act
     When the hook "UserPromptSubmit" runs with a malformed JSON object
     And the person runs "cairn doctor"
     Then the command exits 1
-    When the person runs "cairn counter ack"
+    When an agent's tool call runs "cairn counter ack" with no terminal
+    Then the command exits 1
+    When the person runs "cairn doctor"
+    Then the command exits 1
+    When the person acknowledges the counters at a terminal with "cairn counter ack"
     And the person runs "cairn doctor"
     Then the command exits 0
 

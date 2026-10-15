@@ -20,6 +20,9 @@ struct Process {
     held_open: bool,
     home_id: Option<String>,
     hook_panics: bool,
+    /// The standard input and output are a terminal, as a person's are;
+    /// an agent's tool call has none.
+    terminal: bool,
 }
 
 /// The time every test's clock reads.
@@ -34,6 +37,7 @@ impl Process {
             held_open: false,
             home_id: None,
             hook_panics: false,
+            terminal: true,
         }
     }
 
@@ -64,6 +68,7 @@ impl Process {
             home: Some(self.dir.path().as_os_str().to_owned()),
             home_id: self.home_id.as_ref().map(Into::into),
             hook_panics: self.hook_panics,
+            terminal: self.terminal,
             input: &input,
             clock: &|| NOW,
         };
@@ -210,6 +215,7 @@ fn a_failed_write_is_a_failure() {
             home: None,
             home_id: None,
             hook_panics: false,
+            terminal: true,
             input: &input,
             clock: &|| NOW,
         };
@@ -575,6 +581,7 @@ fn mcp_reports_a_reply_it_cannot_write() {
         home: None,
         home_id: None,
         hook_panics: false,
+        terminal: true,
         input: &input,
         clock: &|| NOW,
     };
@@ -595,6 +602,7 @@ fn a_command_without_a_home_fails() {
         home: None,
         home_id: None,
         hook_panics: false,
+        terminal: true,
         input: &input,
         clock: &|| NOW,
     };
@@ -747,6 +755,7 @@ fn a_hook_input_that_trickles_past_its_wait_is_rejected() {
         home: None,
         home_id: None,
         hook_panics: false,
+        terminal: true,
         input: &input,
         clock: &|| NOW,
     };
@@ -781,6 +790,7 @@ fn a_panic_while_auditing_a_hook_failure_still_exits_0() {
         home: None,
         home_id: None,
         hook_panics: false,
+        terminal: true,
         input: &input,
         clock: &|| panic!("the clock fails"),
     };
@@ -896,6 +906,24 @@ fn counter_ack_appends_its_entry_and_says_so() {
     assert_eq!(out, "{\"acknowledged\":2}\n");
     let kinds: Vec<String> = audited(&p).into_iter().map(|e| e.kind).collect();
     assert_eq!(kinds, ["counter_ack", "counter_ack"]);
+}
+
+#[test]
+fn counter_ack_without_a_terminal_is_refused_and_acknowledges_nothing() {
+    let mut p = Process::new();
+    p.terminal = false;
+
+    assert_eq!(
+        p.invoke(&["counter", "ack"], &DEV),
+        (
+            EXIT_FAILURE,
+            String::new(),
+            "cairn counter ack: refused: acknowledging the counters is a principal act, \
+             which needs a terminal on standard input and output (OWN-12)\n"
+                .into()
+        )
+    );
+    assert!(!p.cairn_home().exists());
 }
 
 #[test]

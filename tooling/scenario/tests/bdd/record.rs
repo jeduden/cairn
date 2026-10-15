@@ -126,6 +126,22 @@ pub fn run_core(w: &mut World, args: &[&str], input: Option<&[u8]>) -> Result<()
     Ok(())
 }
 
+/// [`run_core`] with a pseudo-terminal as the core's standard input and
+/// output, as a person at a terminal gives it: what a CLI verb that
+/// writes a principal act needs (OWN-12). Its stderr arrives in its
+/// stdout.
+pub fn run_core_at_terminal(w: &mut World, args: &[&str]) -> Result<(), String> {
+    let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
+    let exe = testkit::core_executable()?;
+    let set = rec(w).env.clone();
+    let env: Vec<(&str, &str)> = set.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    let out = core
+        .run_at_terminal(&exe, args, &w.home, &env)
+        .map_err(|e| e.to_string())?;
+    rec(w).ran = Some(out);
+    Ok(())
+}
+
 /// Sets `key` to `value` in the environment of every command the
 /// scenario starts from now on.
 pub fn set_env(w: &mut World, key: &str, value: &str) {

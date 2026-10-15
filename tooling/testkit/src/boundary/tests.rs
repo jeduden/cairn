@@ -468,3 +468,70 @@ fn a_start_s_environment_never_moves_it_out_of_its_isolated_home() {
         )
     );
 }
+
+#[test]
+fn a_shell_line_quotes_every_word() {
+    assert_eq!(
+        shell_line(Path::new("/bin/cairn"), &["counter", "it's"]),
+        r"exec '/bin/cairn' 'counter' 'it'\''s'"
+    );
+}
+
+#[test]
+fn a_start_at_a_terminal_runs_the_program_under_script() {
+    let line = terminal_args(Path::new("/bin/cairn"), &["counter", "ack"]);
+
+    assert_eq!(
+        line,
+        ["-qefc", "exec '/bin/cairn' 'counter' 'ack'", "/dev/null"]
+    );
+}
+
+#[test]
+fn an_unconfined_start_at_a_terminal_gives_the_program_one() {
+    let home = TempDir::new().unwrap();
+
+    let out = unconfined()
+        .run_at_terminal(
+            Path::new("sh"),
+            &["-c", "test -t 0 && test -t 1 && echo \"$CAIRN_HOME_ID\""],
+            home.path(),
+            &[("CAIRN_HOME_ID", "h1")],
+        )
+        .unwrap();
+
+    assert!(out.status.success(), "{out:?}");
+    assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), "h1");
+}
+
+#[test]
+fn a_confined_start_at_a_terminal_gives_the_program_one() {
+    let Some(c) = confined() else { return };
+    let home = TempDir::new().unwrap();
+
+    let out = c
+        .run_at_terminal(
+            Path::new("sh"),
+            &["-c", "test -t 0 && test -t 1 && echo \"$HOME\""],
+            home.path(),
+            &[],
+        )
+        .unwrap();
+
+    assert!(out.status.success(), "{out:?}");
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout).trim(),
+        home.path().display().to_string()
+    );
+}
+
+#[test]
+fn a_start_at_a_terminal_passes_the_program_exit_code() {
+    let home = TempDir::new().unwrap();
+
+    let out = unconfined()
+        .run_at_terminal(Path::new("sh"), &["-c", "exit 7"], home.path(), &[])
+        .unwrap();
+
+    assert_eq!(out.status.code(), Some(7));
+}

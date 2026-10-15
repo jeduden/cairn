@@ -16,7 +16,7 @@ use cucumber::{given, then, when};
 use serde_json::Value;
 
 use crate::World;
-use crate::record::{first_start, home, last_run, run_core};
+use crate::record::{first_start, home, last_run, run_core, run_core_at_terminal};
 
 /// A recorded Claude Code 2.1.296 `SessionStart` hook input.
 const SESSION_START: &str = "testdata/claude-code/2.1.296/hooks/clear/01-SessionStart.json";
@@ -170,10 +170,10 @@ fn every_entry_canonical_and_chained(w: &mut World) -> Result<(), String> {
 }
 
 #[given(
-    regex = r#"^the person has acknowledged the counters with "cairn counter ack", a neutral principal act$"#
+    regex = r#"^the person has acknowledged the counters at a terminal with "cairn counter ack", a neutral principal act$"#
 )]
 fn acknowledged(w: &mut World) -> Result<(), String> {
-    run_core(w, &["counter", "ack"], None)?;
+    run_core_at_terminal(w, &["counter", "ack"])?;
     let out = last_run(w)?;
     if out.status.success() {
         return Ok(());
@@ -181,8 +181,19 @@ fn acknowledged(w: &mut World) -> Result<(), String> {
     Err(format!(
         "cairn counter ack exited {}: {}",
         out.status,
-        String::from_utf8_lossy(&out.stderr).trim()
+        String::from_utf8_lossy(&out.stdout).trim()
     ))
+}
+
+#[when(regex = r#"^the person acknowledges the counters at a terminal with "cairn counter ack"$"#)]
+fn acknowledges(w: &mut World) -> Result<(), String> {
+    run_core_at_terminal(w, &["counter", "ack"])
+}
+
+#[when(regex = r#"^an agent's tool call runs "cairn ([^"]*)" with no terminal$"#)]
+fn tool_call_runs(w: &mut World, args: String) -> Result<(), String> {
+    let args: Vec<&str> = args.split_whitespace().collect();
+    run_core(w, &args, None)
 }
 
 #[when(regex = r#"^the hook "([A-Za-z]+)" runs with (a malformed JSON object|a valid input)$"#)]
