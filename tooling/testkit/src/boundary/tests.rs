@@ -408,3 +408,39 @@ fn a_start_with_input_that_cannot_run_names_the_program() {
 
     assert!(matches!(err, Error::Start { .. }), "{err}");
 }
+
+#[test]
+fn an_unconfined_start_hands_its_environment_and_input_to_the_program() {
+    let home = TempDir::new().unwrap();
+
+    let out = unconfined()
+        .run_in(
+            Path::new("sh"),
+            &["-c", "printf '%s:' \"$CAIRN_HOME_ID\"; cat"],
+            home.path(),
+            &[("CAIRN_HOME_ID", "home-b")],
+            Some(b"in"),
+        )
+        .unwrap();
+
+    assert_eq!(out.stdout, b"home-b:in");
+}
+
+#[test]
+fn a_confined_start_hands_its_environment_to_the_program() {
+    let Some(c) = confined() else { return };
+    let home = TempDir::new().unwrap();
+
+    let out = c
+        .run_in(
+            Path::new("sh"),
+            &["-c", "printf '%s' \"$CAIRN_TEST_FAULT\""],
+            home.path(),
+            &[("CAIRN_TEST_FAULT", "hook-panic")],
+            None,
+        )
+        .unwrap();
+
+    assert!(out.status.success());
+    assert_eq!(out.stdout, b"hook-panic");
+}

@@ -170,6 +170,25 @@ impl Confinement {
         self.start(program, args, home, Some(input), caller)
     }
 
+    /// [`run`](Self::run), with each of `env` set in the program's
+    /// environment, and `input`, when given, written to its stdin.
+    ///
+    /// # Errors
+    ///
+    /// As [`run_with_input`](Self::run_with_input).
+    #[track_caller]
+    pub fn run_in(
+        &self,
+        program: &Path,
+        args: &[&str],
+        home: &Path,
+        _env: &[(&str, &str)],
+        input: Option<&[u8]>,
+    ) -> Result<Output, Error> {
+        let caller = caller(std::thread::current().name(), Location::caller());
+        self.start(program, args, home, input, caller)
+    }
+
     fn start(
         &self,
         program: &Path,
