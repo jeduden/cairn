@@ -21,6 +21,7 @@
 //! repeats what the call passed (RCL-04).
 
 use std::io::{self, Write};
+use std::panic::{self, AssertUnwindSafe};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::Duration;
 
@@ -47,6 +48,7 @@ cairn:room/<room id>/w/<writer id>/<seq>. Pass scope \"room\" for an event outsi
 
 /// The JSON-RPC error codes the server answers with.
 const PARSE_ERROR: i64 = -32700;
+const INTERNAL_ERROR: i64 = -32603;
 const INVALID_REQUEST: i64 = -32600;
 const METHOD_NOT_FOUND: i64 = -32601;
 
@@ -305,9 +307,12 @@ fn error(id: &Value, code: i64, message: &str) -> String {
     json!({"jsonrpc": "2.0", "id": id, "error": {"code": code, "message": message}}).to_string()
 }
 
-/// Answers each line `input` delivers on `out`, until the input closes.
-/// Each wait for a line ends after `idle` and starts again, so no wait
-/// is without a deadline (ENG-03).
+/// Answers each line `input` delivers on `out` through `handle`, until
+/// the input closes. Each wait for a line ends after `idle` and starts
+/// again, so no wait is without a deadline (ENG-03). A panic while
+/// handling a line stops here: the line is answered with an internal
+/// error, `panicked` is told so the caller can audit it, and serving
+/// goes on (ENG-04).
 ///
 /// # Errors
 ///
@@ -317,7 +322,7 @@ pub fn serve(
     input: &Receiver<io::Result<String>>,
     out: &mut dyn Write,
     idle: Duration,
-    _panicked: &mut dyn FnMut(),
+    panicked: &mut dyn FnMut(),
 ) -> io::Result<()> {
     loop {
         match input.recv_timeout(idle) {
@@ -328,7 +333,15 @@ pub fn serve(
                 out.flush()?;
             }
             Ok(line) => {
-                if let Some(reply) = handle(&line?) {
+                let line = line?;
+                let reply =
+                    panic::catch_unwind(AssertUnwindSafe(|| handle(&line))).unwrap_or_else(|_| {
+                        // The panic stops at the entry point, and the
+                        // client hears of it (ENG-04).
+                        panicked();
+                        Some(error(&Value::Null, INTERNAL_ERROR, "internal error"))
+                    });
+                if let Some(reply) = reply {
                     writeln!(out, "{reply}")?;
                     out.flush()?;
                 }
