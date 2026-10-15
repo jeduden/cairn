@@ -30,7 +30,13 @@ impl Fixture {
     fn server(&self) -> Server {
         let store = Store::open(&self.home.store()).unwrap();
         let node = Node::find(&self.home, &store).unwrap();
-        Server::new(store, "v9", node.device().public(), node.personal_room())
+        Server::new(
+            store,
+            "v9",
+            node.device().public(),
+            node.device_writer(),
+            node.personal_room(),
+        )
     }
 
     fn sql(&self, statement: &str) {
@@ -512,12 +518,27 @@ fn the_room_scope_is_the_personal_room_unless_a_room_is_named() {
     assert_eq!(refusal(&unnamed), "the event lies in another room");
     let item = &envelope_of(&named)["items"][0];
     assert_eq!(
-        (item["origin"].as_str(), item["address"].as_str()),
-        (
-            Some("witnessed"),
-            Some(format!("cairn:room/{other}/w/{writer}/1").as_str())
-        )
+        item["address"].as_str(),
+        Some(format!("cairn:room/{other}/w/{writer}/1").as_str())
     );
+}
+
+#[test]
+fn a_seat_the_node_certified_but_never_recorded_shows_its_origin_as_peer() {
+    // cairn verify refuses a seat whose certificate record the genesis
+    // device seat lacks (PRV-12), so recall does not count it as this
+    // node's own either.
+    let f = fixture();
+    let device = key::signing::DeviceKey::load(&f.home.device_key()).unwrap();
+    let writer = foreign_seat(&f, &device, f.ingested.room);
+    let mut server = f.server();
+
+    let result = event_get(
+        &mut server,
+        json!({"address": format!("{writer}:1"), "scope": "room"}),
+    );
+
+    assert_eq!(envelope_of(&result)["items"][0]["origin"], "peer");
 }
 
 #[test]
