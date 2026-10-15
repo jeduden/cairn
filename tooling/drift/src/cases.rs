@@ -905,8 +905,9 @@ fn static_analysis_cases() -> Vec<Case> {
 }
 
 /// The drifts the TOML checks exist to catch: CI no longer running one
-/// or no longer gating on its job, a misspelt manifest key, and a TOML
-/// file out of its layout.
+/// or no longer gating on its job, which the gate test catches, and a
+/// misspelt manifest key and a TOML file out of its layout, which taplo
+/// itself catches.
 fn toml_cases() -> Vec<Case> {
     const CI: &str = ".github/workflows/ci.yml";
     const GATE: &str = "the_ci_workflow_gates_on_the_toml_checks";
@@ -928,7 +929,7 @@ fn toml_cases() -> Vec<Case> {
         ),
         case(
             "a manifest key misspelt",
-            GATE,
+            "taplo lint",
             Injection::replace(
                 "crates/cairn/Cargo.toml",
                 "edition.workspace = true\n",
@@ -939,7 +940,7 @@ fn toml_cases() -> Vec<Case> {
         ),
         case(
             "a TOML file out of its layout",
-            GATE,
+            "taplo fmt",
             Injection::replace(
                 "Cargo.toml",
                 "unsafe_code = \"forbid\"",
