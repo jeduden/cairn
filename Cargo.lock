@@ -88,6 +88,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
+name = "audit"
+version = "0.0.0"
+dependencies = [
+ "record",
+ "serde_json",
+ "testkit",
+]
+
+[[package]]
 name = "benchmark"
 version = "0.0.0"
 dependencies = [
@@ -130,6 +139,8 @@ name = "cairn"
 version = "0.0.0"
 dependencies = [
  "administration",
+ "audit",
+ "hook",
  "ingest",
  "key",
  "mcp",
@@ -671,6 +682,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
+name = "hook"
+version = "0.0.0"
+dependencies = [
+ "audit",
+ "serde_json",
+]
+
+[[package]]
 name = "humantime"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1164,6 +1183,7 @@ version = "0.0.0"
 dependencies = [
  "administration",
  "adr",
+ "audit",
  "cucumber",
  "drift",
  "engineering",

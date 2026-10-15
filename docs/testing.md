@@ -212,6 +212,12 @@ temporary directory. Each world gets its own fresh `HOME` and
 State a section tracks lives in its own struct, reached through
 `World::section::<T>()`, never as a new field on the world.
 
+A step starts the core through `run_core` in `record.rs`, confined, with
+the variables earlier steps set through `set_env`. One of them exists
+only for tests: a development build's hook handler panics when
+`CAIRN_TEST_FAULT` is `hook-panic`, so the `@ENG-04` scenario can prove
+the hook's entry point catches it. A release build never reads it.
+
 ## Keeping tests off real state
 
 ENG-14 holds in three layers, so a test cannot touch the real `HOME`, a

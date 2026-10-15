@@ -408,3 +408,155 @@ fn a_start_with_input_that_cannot_run_names_the_program() {
 
     assert!(matches!(err, Error::Start { .. }), "{err}");
 }
+
+#[test]
+fn an_unconfined_start_hands_its_environment_and_input_to_the_program() {
+    let home = TempDir::new().unwrap();
+
+    let out = unconfined()
+        .run_in(
+            Path::new("sh"),
+            &["-c", "printf '%s:' \"$CAIRN_HOME_ID\"; cat"],
+            home.path(),
+            &[("CAIRN_HOME_ID", "home-b")],
+            Some(b"in"),
+        )
+        .unwrap();
+
+    assert_eq!(out.stdout, b"home-b:in");
+}
+
+#[test]
+fn a_confined_start_hands_its_environment_to_the_program() {
+    let Some(c) = confined() else { return };
+    let home = TempDir::new().unwrap();
+
+    let out = c
+        .run_in(
+            Path::new("sh"),
+            &["-c", "printf '%s' \"$CAIRN_TEST_FAULT\""],
+            home.path(),
+            &[("CAIRN_TEST_FAULT", "hook-panic")],
+            None,
+        )
+        .unwrap();
+
+    assert!(out.status.success());
+    assert_eq!(out.stdout, b"hook-panic");
+}
+
+#[test]
+fn a_start_s_environment_never_moves_it_out_of_its_isolated_home() {
+    let home = TempDir::new().unwrap();
+
+    let out = unconfined()
+        .run_in(
+            Path::new("sh"),
+            &["-c", "printf '%s|%s' \"$HOME\" \"$CAIRN_HOME\""],
+            home.path(),
+            &[("HOME", "/elsewhere"), ("CAIRN_HOME", "/elsewhere/.cairn")],
+            None,
+        )
+        .unwrap();
+
+    assert_eq!(
+        String::from_utf8(out.stdout).unwrap(),
+        format!(
+            "{}|{}",
+            home.path().display(),
+            home.path().join(".cairn").display()
+        )
+    );
+}
+
+#[test]
+fn a_shell_line_quotes_every_word() {
+    let mut command = Command::new("/bin/cairn");
+    command.args(["counter", "it's"]);
+
+    assert_eq!(
+        shell_line(&command),
+        r"exec '/bin/cairn' 'counter' 'it'\''s'"
+    );
+}
+
+#[test]
+fn a_command_at_a_terminal_runs_the_whole_confined_line_under_script() {
+    let c = Confinement {
+        component: Component::Core,
+        mode: Mode::Confined,
+    };
+    let inner = c.command(
+        Path::new("/bin/cairn"),
+        &["counter", "ack"],
+        Path::new("/t"),
+    );
+
+    let command = at_terminal(&inner);
+
+    assert_eq!(command.get_program(), "script");
+    let args: Vec<&OsStr> = command.get_args().collect();
+    assert_eq!(args[0], "-qefc");
+    assert!(
+        args[1].to_string_lossy().starts_with("exec 'unshare' "),
+        "{:?}",
+        args[1]
+    );
+    assert!(
+        args[1]
+            .to_string_lossy()
+            .ends_with(" '/bin/cairn' 'counter' 'ack'"),
+        "{:?}",
+        args[1]
+    );
+    assert_eq!(args[2], "/dev/null");
+}
+
+#[test]
+fn an_unconfined_start_at_a_terminal_gives_the_program_one() {
+    let home = TempDir::new().unwrap();
+
+    let out = unconfined()
+        .run_at_terminal(
+            Path::new("sh"),
+            &["-c", "test -t 0 && test -t 1 && echo \"$CAIRN_HOME_ID\""],
+            home.path(),
+            &[("CAIRN_HOME_ID", "h1")],
+        )
+        .unwrap();
+
+    assert!(out.status.success(), "{out:?}");
+    assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), "h1");
+}
+
+#[test]
+fn a_confined_start_at_a_terminal_gives_the_program_one() {
+    let Some(c) = confined() else { return };
+    let home = TempDir::new().unwrap();
+
+    let out = c
+        .run_at_terminal(
+            Path::new("sh"),
+            &["-c", "test -t 0 && test -t 1 && echo \"$HOME\""],
+            home.path(),
+            &[],
+        )
+        .unwrap();
+
+    assert!(out.status.success(), "{out:?}");
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout).trim(),
+        home.path().display().to_string()
+    );
+}
+
+#[test]
+fn a_start_at_a_terminal_passes_the_program_exit_code() {
+    let home = TempDir::new().unwrap();
+
+    let out = unconfined()
+        .run_at_terminal(Path::new("sh"), &["-c", "exit 7"], home.path(), &[])
+        .unwrap();
+
+    assert_eq!(out.status.code(), Some(7));
+}

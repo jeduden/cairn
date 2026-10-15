@@ -36,6 +36,9 @@ pub struct RecordSteps {
     /// Each writer the scenario built, in the order it was built, with
     /// the wall-clock time its transcript gave each of its events.
     writers: Vec<(WriterId, Vec<String>)>,
+    /// Variables a step set in the environment of every command the
+    /// scenario starts after it, beside `HOME` and `CAIRN_HOME`.
+    env: Vec<(String, String)>,
 }
 
 fn rec(w: &mut World) -> &mut RecordSteps {
@@ -43,8 +46,18 @@ fn rec(w: &mut World) -> &mut RecordSteps {
 }
 
 /// The scenario's home, as the core finds it.
-fn home(w: &World) -> Result<Home, String> {
+pub fn home(w: &World) -> Result<Home, String> {
     Home::locate(Some(w.cairn_home.as_os_str()), None).map_err(|e| e.to_string())
+}
+
+/// The node's first start in the scenario's home, as the core makes
+/// it: the home, the device key and the personal room in `store.db`.
+pub fn first_start(w: &World) -> Result<Home, String> {
+    let home = home(w)?;
+    home.create().map_err(|e| e.to_string())?;
+    let mut store = Store::open(&home.store()).map_err(|e| e.to_string())?;
+    Node::open(&home, &mut store, &mut OsEntropy).map_err(|e| e.to_string())?;
+    Ok(home)
 }
 
 #[given(regex = r"^an isolated Cairn home$")]
@@ -97,19 +110,75 @@ fn two_writers(w: &mut World, count: usize) -> Result<(), String> {
     Ok(())
 }
 
-#[when(regex = r#"^the person runs "cairn ([^"]*)"$"#)]
-fn person_runs(w: &mut World, args: String) -> Result<(), String> {
+/// Starts the built core with `args`, confined, in the scenario's home
+/// and with the environment its steps set, `input` on its stdin when
+/// given; the outcome is the one `the command exits` and the steps after
+/// it read.
+pub fn run_core(w: &mut World, args: &[&str], input: Option<&[u8]>) -> Result<(), String> {
     let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
     let exe = testkit::core_executable()?;
-    let args: Vec<&str> = args.split_whitespace().collect();
-    let out = core.run(&exe, &args, &w.home).map_err(|e| e.to_string())?;
+    let set = rec(w).env.clone();
+    let env: Vec<(&str, &str)> = set.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    let out = core
+        .run_in(&exe, args, &w.home, &env, input)
+        .map_err(|e| e.to_string())?;
     rec(w).ran = Some(out);
     Ok(())
 }
 
+/// [`run_core`] with a pseudo-terminal as the core's standard input and
+/// output, as a person at a terminal gives it: what a CLI verb that
+/// writes a principal act needs (OWN-12). Its stderr arrives in its
+/// stdout.
+pub fn run_core_at_terminal(w: &mut World, args: &[&str]) -> Result<(), String> {
+    let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
+    let exe = testkit::core_executable()?;
+    let set = rec(w).env.clone();
+    let env: Vec<(&str, &str)> = set.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    let out = core
+        .run_at_terminal(&exe, args, &w.home, &env)
+        .map_err(|e| e.to_string())?;
+    rec(w).ran = Some(out);
+    Ok(())
+}
+
+/// Sets `key` to `value` in the environment of every command the
+/// scenario starts from now on.
+pub fn set_env(w: &mut World, key: &str, value: &str) {
+    rec(w).env.push((key.to_owned(), value.to_owned()));
+}
+
+/// The outcome of the command a step last ran.
+pub fn last_run(w: &mut World) -> Result<&Output, String> {
+    rec(w)
+        .ran
+        .as_ref()
+        .ok_or_else(|| "no step ran a command".to_owned())
+}
+
+#[when(regex = r#"^the person runs "cairn ([^"]*)"$"#)]
+fn person_runs(w: &mut World, args: String) -> Result<(), String> {
+    let args: Vec<&str> = args.split_whitespace().collect();
+    run_core(w, &args, None)
+}
+
+#[when(regex = r#"^the person runs "cairn ([^"]*)" at a terminal$"#)]
+fn person_runs_at_terminal(w: &mut World, args: String) -> Result<(), String> {
+    let args: Vec<&str> = args.split_whitespace().collect();
+    run_core_at_terminal(w, &args)
+}
+
+#[when(
+    regex = r#"^the agent's tool call runs "cairn ([^"]*)" with its standard input and output not a terminal$"#
+)]
+fn tool_call_runs(w: &mut World, args: String) -> Result<(), String> {
+    let args: Vec<&str> = args.split_whitespace().collect();
+    run_core(w, &args, None)
+}
+
 #[then(regex = r"^the command exits (\d+)$")]
 fn exits(w: &mut World, code: i32) -> Result<(), String> {
-    let out = rec(w).ran.as_ref().ok_or("no step ran a command")?;
+    let out = last_run(w)?;
     if out.status.code() == Some(code) {
         return Ok(());
     }

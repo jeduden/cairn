@@ -23,6 +23,12 @@ its upgrade notes (ENG-23). Cairn follows semantic versioning.
   attests nothing. A release runs only from `main`. The release attaches
   its SBOM, and a last job verifies the published release against each
   signer's exact identity at `refs/heads/main` (ENG-20).
+- Every command refuses a home that another OS user owns or can reach,
+  or that `home.json` binds to another home id than `CAIRN_HOME_ID`
+  (SEC-02, SEC-03). The home keeps a hash-chained audit log under
+  `audit/` that `cairn verify` checks (OPS-02). New commands: `cairn
+  hook`, which fails open and audits, `cairn status`, `cairn doctor`
+  and `cairn counter ack` (OPS-03, ENG-04).
 
 ### Upgrade notes
 

@@ -21,23 +21,27 @@ Feature: Observability (OPS)
       | the agent calls the MCP tool "event_expand" with a range above 8,000 estimated model tokens | truncated | recall_truncated     |
       | the hook "SessionStart" runs with an unreadable transcript path                             | failed    | hook_failed          |
 
-  @OPS-02 @P0 @I6 @pending
+  @OPS-02 @P0 @I6
   Scenario: the audit log is an append-only hash-chained JSONL file that rotates with chain continuation
     Given an isolated Cairn home
     And an audit log that has reached its rotation size
-    When the person runs "cairn counter ack"
+    When the person runs "cairn counter ack" at a terminal
     Then the file "audit/audit-000002.jsonl" is created with mode 0600
     And its first entry's previous hash equals the hash of the last entry in "audit/audit-000001.jsonl"
     And every entry is RFC 8785 canonical JSON whose SHA-256 chain verifies with "cairn verify"
 
-  @OPS-03 @P0 @I6 @pending
+  @OPS-03 @P0 @I6
   Scenario: doctor fails while a failure counter has risen since the counters were last acknowledged
     Given an isolated Cairn home
-    And the person has acknowledged the counters with "cairn counter ack", a neutral principal act
+    And the person has acknowledged the counters at a terminal with "cairn counter ack", a neutral principal act
     When the hook "UserPromptSubmit" runs with a malformed JSON object
     And the person runs "cairn doctor"
     Then the command exits 1
-    When the person runs "cairn counter ack"
+    When the agent's tool call runs "cairn counter ack" with its standard input and output not a terminal
+    Then the command exits 1
+    When the person runs "cairn doctor"
+    Then the command exits 1
+    When the person runs "cairn counter ack" at a terminal
     And the person runs "cairn doctor"
     Then the command exits 0
 

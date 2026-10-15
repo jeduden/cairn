@@ -103,9 +103,10 @@ user and network namespace of its own (`unshare --map-current-user
 and `io_uring_setup` with `EACCES` and records every network call.
 Any recorded call fails the test, naming the core and the test that
 started it. The gate test `the_core_s_tests_start_it_confined` refuses
-a test that starts the core any other way. It needs Linux, `unshare`
-from util-linux with unprivileged user namespaces, and `strace`; a
-machine without them fails the end-to-end tests with what is missing.
+a test that starts the core any other way; a step needing a terminal gets one
+from `script`, outside the trace. It needs Linux, `unshare` and `script` from
+util-linux with unprivileged user namespaces, and `strace`; a machine without
+them fails the end-to-end tests with what is missing.
 Outside CI, `CAIRN_E2E_UNCONFINED=1` runs them unconfined instead, on
 a machine that cannot confine; CI refuses it.
 
