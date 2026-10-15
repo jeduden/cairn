@@ -293,8 +293,7 @@ new reach (I4), content of another principal (I8), errors and seams
 no lint sees, and the domain model's terms. Persona reviews belong to
 plans and SRS changes (the `persona-review` skill), not to each pull
 request. The nightly job takes what is too slow for a pull request:
-fuzzing, crash consistency, soak and slow benchmarks, as their plans
-land.
+fuzzing, crash consistency, soak and slow benchmarks, as plans land.
 
 ## The plan catalog and its merge driver
 
