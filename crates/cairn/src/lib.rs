@@ -265,8 +265,15 @@ fn mcp(
         .map_err(|e| e.to_string())
         .and_then(|store| {
             let node = Node::find(&home, &store).map_err(|e| e.to_string())?;
-            let (key, room) = (node.device().public(), node.personal_room());
-            Ok(mcp::Server::new(store, ctx.build.version, key, room))
+            let key = node.device().public();
+            let (writer, room) = (node.device_writer(), node.personal_room());
+            Ok(mcp::Server::new(
+                store,
+                ctx.build.version,
+                key,
+                writer,
+                room,
+            ))
         });
     let mut server = match served {
         Ok(server) => server,

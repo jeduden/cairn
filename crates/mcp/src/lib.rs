@@ -14,8 +14,9 @@
 //! `event_get` serves an event only once it checks against the record:
 //! its content opens its commitment, its header hashes to its stored
 //! hash, and its `prev_hash` names its predecessor. Its origin comes
-//! from its seat certificate, checked against this node's device key; a
-//! seat that key did not certify shows as `peer`. A refusal is fixed
+//! from its seat certificate, checked against this node's device key and
+//! recorded in the genesis device seat's certificate records, as `cairn
+//! verify` requires; any other seat shows as `peer`. A refusal is fixed
 //! text, naming at most an address it parsed and renders anew; it never
 //! repeats what the call passed (RCL-04).
 
@@ -28,7 +29,8 @@ use key::certificate::SeatCertificate;
 use key::signing::PublicKey;
 use record::commitment::commit;
 use record::digest::Digest;
-use record::id::{Address, RoomId, Seq};
+use record::event::EventKind;
+use record::id::{Address, RoomId, Seq, WriterId};
 use serde_json::{Value, json};
 use store::{Store, Stored, StoredSeat};
 
@@ -67,19 +69,28 @@ pub struct Server {
     store: Store,
     version: String,
     device_key: PublicKey,
+    device_writer: WriterId,
     personal_room: RoomId,
 }
 
 impl Server {
     /// A server answering from `store` for the node whose device key is
-    /// `device_key` and whose personal room is `personal_room`, naming
-    /// itself as cairn `version`.
+    /// `device_key`, whose genesis device seat's writer is
+    /// `device_writer` and whose personal room is `personal_room`,
+    /// naming itself as cairn `version`.
     #[must_use]
-    pub fn new(store: Store, version: &str, device_key: PublicKey, personal_room: RoomId) -> Self {
+    pub fn new(
+        store: Store,
+        version: &str,
+        device_key: PublicKey,
+        device_writer: WriterId,
+        personal_room: RoomId,
+    ) -> Self {
         Self {
             store,
             version: version.to_owned(),
             device_key,
+            device_writer,
             personal_room,
         }
     }
@@ -190,7 +201,7 @@ impl Server {
             address: full,
             writer: address.writer.to_string(),
             author: seat.seat.to_string(),
-            origin: self.origin(&seat),
+            origin: self.origin(&seat).map_err(unreadable)?,
             run: Run::Other,
             kind: header.kind.as_str().to_owned(),
             provenance: header.provenance.name(),
@@ -230,10 +241,11 @@ impl Server {
     }
 
     /// Where the event of `seat` came from: a seat whose certificate
-    /// checks, names it, and was certified by this node's device key is
-    /// this node's own, ingested or witnessed; any other is a peer's.
-    fn origin(&self, seat: &StoredSeat) -> Origin {
-        let own = SeatCertificate::from_value(&seat.certificate)
+    /// checks, names it, was certified by this node's device key, and is
+    /// recorded in the genesis device seat is this node's own, ingested
+    /// or witnessed; any other is a peer's.
+    fn origin(&self, seat: &StoredSeat) -> Result<Origin, store::StoreError> {
+        let certified = SeatCertificate::from_value(&seat.certificate)
             .ok()
             .filter(|c| {
                 c.check().is_ok()
@@ -241,11 +253,30 @@ impl Server {
                     && c.writer_id() == seat.writer
                     && c.room == seat.room
             });
-        match own {
+        let own = match certified {
+            Some(c) if self.recorded(&c)? => Some(c),
+            _ => None,
+        };
+
+        Ok(match own {
             Some(c) if c.ingest_seat => Origin::Ingested,
             Some(_) => Origin::Witnessed,
             None => Origin::Peer,
-        }
+        })
+    }
+
+    /// Whether the genesis device seat holds a certificate record of
+    /// `cert`.
+    fn recorded(&self, cert: &SeatCertificate) -> Result<bool, store::StoreError> {
+        let (digest, writer) = (cert.digest().to_hex(), cert.writer_id().to_string());
+
+        Ok(self.store.log(self.device_writer)?.iter().any(|s| {
+            s.link.header.kind == EventKind::CertificateRecord
+                && s.content.as_ref().is_some_and(|c| {
+                    c["certificate"].as_str() == Some(digest.as_str())
+                        && c["writer"].as_str() == Some(writer.as_str())
+                })
+        }))
     }
 }
 
