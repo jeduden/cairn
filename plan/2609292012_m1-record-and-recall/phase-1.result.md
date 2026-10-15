@@ -75,6 +75,11 @@ Parked:
   until M5's SEC-09.
 - A release build refuses `cairn ingest` until phase 4's redaction
   lands, which lifts it.
+- Two first starts on one fresh home are not serialized: one can fail
+  on a constraint or the staging rename, with the record intact.
+  PRV-12's lock is phase 5's.
+- `cairn verify` reads the device key's file for its public half; a
+  public-key file arrives with phase 5's key stores.
 - From the review panel, to their phases: every failure listed, unheld
   heads told from contradicted ones, re-ingest dedupe (REC-03), size
   limits and cursors (SEC-08), typed failure counters (I6), the home's

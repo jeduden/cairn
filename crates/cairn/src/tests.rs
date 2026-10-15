@@ -394,11 +394,7 @@ fn verify_without_a_store_or_with_a_failing_one_fails() {
     );
 
     std::fs::create_dir_all(p.cairn_home()).unwrap();
-    std::fs::write(
-        p.cairn_home().join("store.db"),
-        "not a database, but long enough to read a header",
-    )
-    .unwrap();
+    junk_store(&p);
     let (code, _, err) = p.invoke(&["verify"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
     assert!(err.starts_with("cairn verify: the store: "), "{err}");
@@ -500,11 +496,7 @@ fn mcp_refuses_flags_and_reports_a_store_it_cannot_open() {
     }
     let p = Process::new();
     std::fs::create_dir_all(p.cairn_home()).unwrap();
-    std::fs::write(
-        p.cairn_home().join("store.db"),
-        "not a database, but long enough to read a header",
-    )
-    .unwrap();
+    junk_store(&p);
     let (code, _, err) = p.invoke(&["mcp"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
     assert!(err.starts_with("cairn mcp: the store: "), "{err}");
@@ -581,5 +573,17 @@ fn a_command_without_a_home_fails() {
             String::from_utf8(err).unwrap(),
             format!("cairn {command}: no home: set CAIRN_HOME or HOME\n")
         );
+    }
+}
+
+/// Writes a store file that is no database, readable by its owner alone
+/// so the store reads it rather than refuse its permissions (SEC-02).
+fn junk_store(p: &Process) {
+    let path = p.cairn_home().join("store.db");
+    std::fs::write(&path, "not a database, but long enough to read a header").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).unwrap();
     }
 }

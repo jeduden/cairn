@@ -76,8 +76,11 @@ CREATE TABLE event_heads (
 pub enum StoreError {
     /// SQLite refused an operation.
     Sqlite(rusqlite::Error),
-    /// The store file's permissions cannot be set.
+    /// The store file cannot be made or read.
     Io(std::io::Error),
+    /// The store file can be read by others: its mode, refused rather
+    /// than quietly fixed (SEC-02).
+    Permissions { mode: u32 },
     /// The store is of a newer format version than this cairn's.
     Newer { found: u32 },
     /// The store records a header field set or encoding this cairn does
@@ -99,6 +102,10 @@ impl fmt::Display for StoreError {
         match self {
             Self::Sqlite(e) => write!(f, "the store: {e}"),
             Self::Io(e) => write!(f, "the store file: {e}"),
+            Self::Permissions { mode } => write!(
+                f,
+                "the store file can be read by others (mode {mode:o}): fix its permissions to 600 (SEC-02)"
+            ),
             Self::Newer { found } => write!(
                 f,
                 "the store is format version {found}, newer than this cairn's {SCHEMA_VERSION}"
@@ -202,7 +209,7 @@ impl Store {
     pub fn open(path: &Path) -> Result<Self, StoreError> {
         create_owner_only(path)?;
         let conn = Connection::open(path)?;
-        restrict(path)?;
+        owner_only(path)?;
         conn.busy_timeout(BUSY)?;
         conn.pragma_update(None, "journal_mode", "WAL")?;
         conn.pragma_update(None, "synchronous", "FULL")?;
@@ -692,13 +699,20 @@ fn create_owner_only(path: &Path) -> Result<(), StoreError> {
     options.open(path).map(drop).map_err(StoreError::Io)
 }
 
-/// Makes the store file readable only by its owner (§8.1).
-fn restrict(path: &Path) -> Result<(), StoreError> {
+/// Refuses a store file others can read (SEC-02), leaving it as it is
+/// so the principal sees that it was exposed.
+fn owner_only(path: &Path) -> Result<(), StoreError> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))
-            .map_err(StoreError::Io)?;
+        let mode = std::fs::metadata(path)
+            .map_err(StoreError::Io)?
+            .permissions()
+            .mode()
+            & 0o777;
+        if mode & 0o077 != 0 {
+            return Err(StoreError::Permissions { mode });
+        }
     }
     #[cfg(not(unix))]
     let _ = path;

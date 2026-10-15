@@ -168,8 +168,8 @@ that fails on a statistically significant regression greater than
   benchmark, a ceiling in percent and the reason in
   [tooling/benchmark/accepted.txt](../tooling/benchmark/accepted.txt).
   The gate passes that benchmark as accepted while the head's median
-  stays within the ceiling. It does so only while the base lacks the
-  same line, so an acceptance lasts one change. A drift case proves
+  stays within the ceiling. It does so only while no base line names
+  that benchmark, so an acceptance lasts one change. A drift case proves
   the record's check fails on a malformed line.
 
 `cargo run -p benchmark -- run --core target/release/cairn` samples

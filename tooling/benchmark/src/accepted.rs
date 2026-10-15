@@ -60,10 +60,16 @@ pub fn parse(text: &str) -> Result<Vec<Acceptance>, String> {
     Ok(out)
 }
 
-/// The acceptances in `head` that `base` does not carry.
+/// The acceptances in `head` for a benchmark no line of `base` names.
+/// A base line, however a later change rewords it or raises its ceiling,
+/// keeps its benchmark's acceptance spent; accepting that benchmark
+/// again takes removing its line first.
 #[must_use]
 pub fn fresh(head: &[Acceptance], base: &[Acceptance]) -> Vec<Acceptance> {
-    head.iter().filter(|a| !base.contains(a)).cloned().collect()
+    head.iter()
+        .filter(|a| !base.iter().any(|b| b.benchmark == a.benchmark))
+        .cloned()
+        .collect()
 }
 
 #[cfg(test)]

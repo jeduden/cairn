@@ -141,6 +141,7 @@ fn a_file_that_is_no_database_is_refused() {
         "not sqlite at all, but long enough to read a header from it",
     )
     .unwrap();
+    owner_only_file(&dir.path().join("store.db"));
 
     let err = Store::open(&dir.path().join("store.db")).unwrap_err();
 
@@ -649,4 +650,16 @@ fn a_writer_at_the_last_seq_appends_nothing_more() {
         matches!(err, StoreError::Full(w) if w == writer(1)),
         "{err}"
     );
+}
+
+/// Makes the file at `path` readable by its owner alone, as a store file
+/// must be before it is opened (SEC-02).
+fn owner_only_file(path: &std::path::Path) {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600)).unwrap();
+    }
+    #[cfg(not(unix))]
+    let _ = path;
 }

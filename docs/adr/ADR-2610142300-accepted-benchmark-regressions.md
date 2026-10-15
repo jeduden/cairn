@@ -6,7 +6,7 @@ summary: >-
   A change that slows a benchmark past ENG-15's 10% on purpose records
   the benchmark, a ceiling and the reason in
   tooling/benchmark/accepted.txt. The gate passes it as accepted while
-  the base lacks the same line, so each acceptance lasts one change.
+  no base line names the benchmark, so each acceptance lasts one change.
 ---
 # ADR-2610142300: Accepted benchmark regressions
 
@@ -32,10 +32,11 @@ A committed file, `tooling/benchmark/accepted.txt`, holds one
 acceptance a line: the benchmark, a ceiling in percent above the
 gate's 10%, and the reason. `benchmark gate` takes the head's file and
 the base's (`--accepted`, `--accepted-on-base`). A regression that an
-acceptance in the head's file covers, and the base's file does not
-carry, passes as `accepted` when the head's median stays within the
-ceiling. Past the ceiling, or once the base carries the line, it
-fails as before.
+acceptance in the head's file covers, for a benchmark no line of the
+base's file names, passes as `accepted` when the head's median stays
+within the ceiling. Past the ceiling, or once the base names the
+benchmark, it fails as before: a later change that rewords the line or
+raises its ceiling accepts nothing.
 
 The record is a reviewed path: `tooling/` is the stakeholder's in
 CODEOWNERS, so no acceptance lands without that review. Once the
@@ -56,6 +57,8 @@ more and the step it accepted becomes the baseline.
 
 - Each acceptance stays in the file after it lands. Pruning old lines
   is safe at any time, since a line the base carries accepts nothing.
+  Accepting the same benchmark again takes removing its old line in
+  an earlier change.
 - A drift case proves `the_accepted_regressions_parse` fails on a
   malformed line (ENG-27).
 - The `benchmark` job passes both files. A base without the file
