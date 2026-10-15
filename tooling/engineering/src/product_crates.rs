@@ -90,7 +90,7 @@ const MUTABLE: [&str; 7] = [
 ];
 
 /// `line` up to its comment: a `#` outside a double-quoted string.
-fn strip_comment(line: &str) -> &str {
+pub(crate) fn strip_comment(line: &str) -> &str {
     let (mut quoted, mut escaped) = (false, false);
     for (i, ch) in line.char_indices() {
         match ch {
@@ -282,18 +282,22 @@ pub(crate) fn crates(c: &Checkout) -> Result<Vec<String>, String> {
     Ok(out)
 }
 
-/// The configuration file clippy reads for the crate `name`, relative
-/// to the root: as clippy looks it up, the first of `.clippy.toml` and
-/// `clippy.toml` in the crate's directory, then in each directory above
-/// it up to the root. The root's `clippy.toml` when there is none, so a
-/// missing file is named.
+/// The configuration file clippy reads for the product crate `name`,
+/// relative to the root: see [`clippy_config_of`].
 pub(crate) fn clippy_config(c: &Checkout, name: &str) -> String {
-    let crate_dir = format!("{CRATES}/{name}/");
-    let dirs = [crate_dir.as_str(), "crates/", ""];
-    dirs.iter()
-        .flat_map(|dir| [".clippy.toml", "clippy.toml"].map(|f| format!("{dir}{f}")))
+    clippy_config_of(c, &format!("{CRATES}/{name}"))
+}
+
+/// The configuration file clippy reads for the workspace member in
+/// `dir`, relative to the root: as clippy looks it up, the first of
+/// `.clippy.toml` and `clippy.toml` in `dir`, then in each directory
+/// above it up to the root. The root's `clippy.toml` when there is
+/// none, so a missing file is named.
+pub(crate) fn clippy_config_of(c: &Checkout, dir: &str) -> String {
+    std::iter::successors(Some(Path::new(dir)), |d| d.parent())
+        .flat_map(|d| [".clippy.toml", "clippy.toml"].map(|f| d.join(f)))
         .find(|rel| c.root.join(rel).is_file())
-        .unwrap_or_else(|| "clippy.toml".to_owned())
+        .map_or_else(|| "clippy.toml".to_owned(), |rel| rel.display().to_string())
 }
 
 /// Requires the clippy configuration each product crate builds with,

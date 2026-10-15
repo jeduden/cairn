@@ -45,7 +45,9 @@ installs it on the first `cargo` command.
 The workspace's lints in [Cargo.toml](../Cargo.toml) forbid `unsafe`,
 and refuse `unwrap`, `expect` and `panic!` outside tests
 ([clippy.toml](../clippy.toml) lets a test use them). CI runs clippy
-with every warning denied, and rustfmt.
+with every warning denied, and rustfmt. The workspace lints deny the
+complexity lints too, under the ceilings each clippy.toml sets, and
+`every_crate_holds_the_complexity_limits` refuses a ceiling raised.
 [deny.toml](../deny.toml) holds every crate in the tree to ENG-18's
 license allow-list, each exception named, and to crates.io as the
 only source. cargo-audit refuses a crate with a known vulnerability.
@@ -253,8 +255,7 @@ What CI decides, on every pull request:
   (ENG-26);
 - rustfmt and clippy, with each product crate's bans on sockets and
   program starts (I4), on clocks and hash order (I10) and on waits with
-  no deadline (ENG-03), and the
-  reach test;
+  no deadline (ENG-03), the complexity limits, and the reach test;
 - the crates' declared dependency directions and responsibilities
   (ENG-02);
 - no mutable global state in a product crate (ENG-03);
