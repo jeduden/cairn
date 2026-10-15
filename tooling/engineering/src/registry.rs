@@ -22,8 +22,9 @@ pub const CHECKOUT_STEP: &str = "the repository checkout";
 /// gates that prove what a pending scenario cannot yet: the core rows
 /// of ENG-12 and ENG-16, ENG-15's benchmark gate, and ENG-21's ruleset
 /// and CODEOWNERS; and the gates behind ENG-03, pending until M1 adds
-/// injectable I/O traits, and ENG-20's three workflow gates.
-pub const GATE_TESTS: [&str; 32] = [
+/// injectable I/O traits, ENG-20's three workflow gates, and the gate
+/// that holds every crate to the complexity limits.
+pub const GATE_TESTS: [&str; 33] = [
     "specification_parses",
     "decision_records_parse",
     "specification_and_features_agree",
@@ -40,6 +41,7 @@ pub const GATE_TESTS: [&str; 32] = [
     "every_crate_forbids_unsafe_code",
     "the_core_s_reach_evidence_is_present_and_gated",
     "derived_code_is_refused_a_clock_or_randomness_at_build_time",
+    "every_crate_holds_the_complexity_limits",
     "the_benchmark_suite_registers_every_nfr_id_eng_15_names",
     "ci_gates_on_the_benchmark_job",
     "the_checkout_s_ruleset_rejects_direct_pushes",

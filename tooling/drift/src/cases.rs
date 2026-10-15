@@ -63,6 +63,7 @@ pub fn cases() -> Vec<Case> {
         confinement_cases(),
         ci_gate_cases(),
         static_analysis_cases(),
+        complexity_cases(),
         release_cases(),
         protection_cases(),
         architecture_cases(),
@@ -943,6 +944,52 @@ fn static_analysis_cases() -> Vec<Case> {
             ),
             check("derived_code_is_refused_a_clock_or_randomness_at_build_time"),
             "code that computes derived artifacts may read a clock or randomness: crate cairn: crates/cairn/clippy.toml does not ban std::time::Instant::now in disallowed-methods",
+        ),
+    ]
+}
+
+/// The drifts the complexity gate exists to catch: the workspace lints
+/// no longer denying a complexity lint, a crate's clippy.toml raising a
+/// ceiling or dropping one, and the core growing a function past one.
+fn complexity_cases() -> Vec<Case> {
+    const GATE: &str = "every_crate_holds_the_complexity_limits";
+    let gate = || cargo_test("engineering", "static_analysis", GATE);
+    vec![
+        case(
+            "the workspace lints no longer denying too_many_lines",
+            GATE,
+            Injection::replace("Cargo.toml", "too_many_lines = \"deny\"\n", ""),
+            gate(),
+            "the workspace lints do not deny clippy::too_many_lines",
+        ),
+        case(
+            "a product crate's clippy.toml raising a complexity ceiling",
+            GATE,
+            Injection::replace(
+                "crates/cairn/clippy.toml",
+                "too-many-lines-threshold = 80",
+                "too-many-lines-threshold = 200",
+            ),
+            gate(),
+            "crates/cairn/clippy.toml sets too-many-lines-threshold to 200, above 80",
+        ),
+        case(
+            "the workspace's clippy.toml dropping a complexity ceiling",
+            GATE,
+            Injection::replace("clippy.toml", "excessive-nesting-threshold = 5\n", ""),
+            gate(),
+            "clippy.toml sets no excessive-nesting-threshold",
+        ),
+        case(
+            "the core nesting a block past the ceiling",
+            GATE,
+            Injection::replace(
+                "crates/cairn/src/lib.rs",
+                "use std::io::{self, Write};",
+                "use std::io::{self, Write};\n\npub fn deep(x: u8) -> u8 {\n    if x > 0 { if x > 1 { if x > 2 { if x > 3 { if x > 4 { if x > 5 { return 6; } } } } } }\n    0\n}",
+            ),
+            clippy("cairn"),
+            "this block is too nested",
         ),
     ]
 }
