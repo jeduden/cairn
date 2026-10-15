@@ -115,6 +115,19 @@ fn an_empty_last_file_takes_the_next_entry_chained_to_the_file_before() {
 }
 
 #[test]
+fn an_empty_first_file_takes_the_first_entry() {
+    let dir = TempDir::new().unwrap();
+    let log = log(&dir);
+    fs::create_dir_all(log.dir()).unwrap();
+    fs::write(log.file(1), "").unwrap();
+
+    let first = log.append(&FAILED, 0).unwrap();
+
+    assert_eq!((first.number, first.prev_hash), (1, Digest::ZERO));
+    assert_eq!(log.verify().unwrap().entries, 1);
+}
+
+#[test]
 fn a_log_with_no_directory_holds_no_entry() {
     let dir = TempDir::new().unwrap();
     let log = log(&dir);

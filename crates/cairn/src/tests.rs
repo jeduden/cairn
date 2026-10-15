@@ -1100,3 +1100,53 @@ fn a_panic_in_the_mcp_server_is_audited() {
         (Some("mcp_panicked"), "mcp", "panic recovered")
     );
 }
+
+#[test]
+fn a_caught_mcp_panic_the_audit_log_cannot_take_is_said_on_stderr() {
+    let p = Process::new();
+    owner_only_dirs(&p.cairn_home().join("audit/audit-000001.jsonl"));
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let mut err = Vec::new();
+
+    on_mcp_panic(&home, &|| NOW, &mut err)();
+
+    let err = String::from_utf8(err).unwrap();
+    assert!(
+        err.starts_with("cairn mcp: audit a caught panic: ") && err.contains("audit-000001.jsonl"),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_caught_mcp_panic_is_audited_quietly() {
+    let p = Process::new();
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let mut err = Vec::new();
+
+    on_mcp_panic(&home, &|| NOW, &mut err)();
+
+    assert!(err.is_empty());
+    assert_eq!(audited(&p).len(), 1);
+}
+
+#[test]
+fn an_audit_log_that_cannot_be_read_fails_verify_doctor_and_status() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let audit = p.cairn_home().join("audit");
+    std::fs::write(&audit, "not a directory").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&audit, std::fs::Permissions::from_mode(0o600)).unwrap();
+    }
+
+    for command in ["verify", "doctor", "status"] {
+        let (code, _, err) = p.invoke(&[command], &DEV);
+        assert_eq!(code, EXIT_FAILURE, "{command}");
+        assert!(
+            err.starts_with(&format!("cairn {command}: {}", audit.display())),
+            "{command}: {err}"
+        );
+    }
+}

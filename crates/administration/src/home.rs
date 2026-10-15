@@ -120,19 +120,17 @@ impl Home {
                 path: dir.clone(),
                 source,
             };
-            let mut items: Vec<PathBuf> = fs::read_dir(&dir)
+            // Each item's own metadata, a link's rather than its
+            // target's.
+            let mut items: Vec<(PathBuf, fs::Metadata)> = fs::read_dir(&dir)
                 .map_err(io)?
-                .map(|item| item.map(|i| i.path()))
+                .map(|item| item.and_then(|i| Ok((i.path(), i.metadata()?))))
                 .collect::<Result<_, _>>()
                 .map_err(io)?;
             // A listing's order is the file system's; the first
             // refusal named should not be.
-            items.sort();
-            for path in items {
-                let meta = fs::symlink_metadata(&path).map_err(|source| AdminError::Io {
-                    path: path.clone(),
-                    source,
-                })?;
+            items.sort_by(|a, b| a.0.cmp(&b.0));
+            for (path, meta) in items {
                 if meta.file_type().is_symlink() {
                     return Err(AdminError::SymbolicLink { path });
                 }

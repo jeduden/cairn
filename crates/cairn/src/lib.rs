@@ -326,17 +326,12 @@ fn mcp(
         Ok(server) => server,
         Err(e) => return failed("mcp", &e, stderr),
     };
-    let mut panicked = || {
-        if let Err(e) = mcp_panicked(&home, (ctx.clock)()) {
-            let _ = writeln!(stderr, "cairn mcp: audit a caught panic: {e}");
-        }
-    };
     let served = mcp::serve(
         &mut |l| server.handle(l),
         &(ctx.input)(),
         stdout,
         IDLE,
-        &mut panicked,
+        &mut on_mcp_panic(&home, ctx.clock, stderr),
     );
     match served {
         Ok(()) => EXIT_OK,
@@ -504,6 +499,20 @@ fn hook_input(ctx: &Context) -> Option<String> {
             Ok(Ok(line)) => lines.push(line),
             Ok(Err(_)) | Err(RecvTimeoutError::Timeout) => return None,
             Err(RecvTimeoutError::Disconnected) => return Some(lines.join("\n")),
+        }
+    }
+}
+
+/// What the MCP server does with each panic it catches: audit it,
+/// saying on `stderr` when the audit log takes no entry.
+fn on_mcp_panic<'a>(
+    home: &'a Home,
+    clock: &'a dyn Fn() -> u64,
+    stderr: &'a mut dyn Write,
+) -> impl FnMut() + 'a {
+    move || {
+        if let Err(e) = mcp_panicked(home, clock()) {
+            let _ = writeln!(stderr, "cairn mcp: audit a caught panic: {e}");
         }
     }
 }

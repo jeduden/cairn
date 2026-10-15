@@ -229,6 +229,17 @@ fn the_home_itself_may_be_reached_through_a_symbolic_link() {
     linked.check().unwrap();
 }
 
+#[test]
+fn a_home_below_a_file_cannot_be_checked() {
+    let dir = TempDir::new().unwrap();
+    owner_only_file(&dir.path().join("f"));
+    let home = Home::locate(Some(dir.path().join("f/home").as_os_str()), None).unwrap();
+
+    let err = home.check().unwrap_err();
+
+    assert!(matches!(err, AdminError::Io { .. }), "{err:?}");
+}
+
 #[cfg(unix)]
 #[test]
 fn a_home_directory_that_cannot_be_listed_is_an_io_failure() {

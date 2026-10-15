@@ -210,15 +210,29 @@ impl Log {
         std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
         let file = options.open(&path).map_err(failed(&path))?;
         for _ in 0..LOCK_ATTEMPTS {
-            match file.try_lock() {
-                Ok(()) => return Ok(file),
-                Err(TryLockError::WouldBlock) => std::thread::sleep(LOCK_PAUSE),
-                Err(TryLockError::Error(source)) => return Err(AuditError::Io { path, source }),
+            let locked = file
+                .try_lock()
+                .map(|()| true)
+                .or_else(held_elsewhere)
+                .map_err(failed(&path))?;
+            if locked {
+                return Ok(file);
             }
+            std::thread::sleep(LOCK_PAUSE);
         }
 
         Err(AuditError::Busy { path })
     }
+}
+
+/// Whether a failed try of the lock only found another process
+/// holding it, which a later try may not; any other failure stands.
+fn held_elsewhere(e: TryLockError) -> io::Result<bool> {
+    let e = io::Error::from(e);
+
+    (e.kind() == io::ErrorKind::WouldBlock)
+        .then_some(false)
+        .ok_or(e)
 }
 
 /// The name of file `n`.
@@ -255,16 +269,16 @@ fn parse_lines(n: u32, text: &str) -> Result<Vec<(usize, Entry)>, AuditError> {
 /// The last entry of file `n`'s `text`.
 fn last_entry(n: u32, text: &str) -> Result<Option<Entry>, AuditError> {
     let lines = text.split_inclusive('\n').count();
-    let Some(piece) = text.split_inclusive('\n').next_back() else {
-        return Ok(None);
-    };
-    let whole = piece
-        .strip_suffix('\n')
-        .ok_or_else(|| broken(n, lines, "torn entry"))?;
 
-    Entry::parse(whole)
-        .map(Some)
-        .map_err(|why| broken(n, lines, why))
+    text.split_inclusive('\n')
+        .next_back()
+        .map(|piece| {
+            let whole = piece
+                .strip_suffix('\n')
+                .ok_or_else(|| broken(n, lines, "torn entry"))?;
+            Entry::parse(whole).map_err(|why| broken(n, lines, why))
+        })
+        .transpose()
 }
 
 fn broken(n: u32, line: usize, why: &'static str) -> AuditError {
