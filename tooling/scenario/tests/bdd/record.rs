@@ -43,8 +43,18 @@ fn rec(w: &mut World) -> &mut RecordSteps {
 }
 
 /// The scenario's home, as the core finds it.
-fn home(w: &World) -> Result<Home, String> {
+pub fn home(w: &World) -> Result<Home, String> {
     Home::locate(Some(w.cairn_home.as_os_str()), None).map_err(|e| e.to_string())
+}
+
+/// The node's first start in the scenario's home, as the core makes
+/// it: the home, the device key and the personal room in `store.db`.
+pub fn first_start(w: &World) -> Result<Home, String> {
+    let home = home(w)?;
+    home.create().map_err(|e| e.to_string())?;
+    let mut store = Store::open(&home.store()).map_err(|e| e.to_string())?;
+    Node::open(&home, &mut store, &mut OsEntropy).map_err(|e| e.to_string())?;
+    Ok(home)
 }
 
 #[given(regex = r"^an isolated Cairn home$")]
@@ -97,19 +107,42 @@ fn two_writers(w: &mut World, count: usize) -> Result<(), String> {
     Ok(())
 }
 
-#[when(regex = r#"^the person runs "cairn ([^"]*)"$"#)]
-fn person_runs(w: &mut World, args: String) -> Result<(), String> {
+/// Starts the built core with `args`, confined, in the scenario's home
+/// and with the environment its steps set, `input` on its stdin when
+/// given; the outcome is the one `the command exits` and the steps after
+/// it read.
+pub fn run_core(w: &mut World, args: &[&str], input: Option<&[u8]>) -> Result<(), String> {
     let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
     let exe = testkit::core_executable()?;
-    let args: Vec<&str> = args.split_whitespace().collect();
-    let out = core.run(&exe, &args, &w.home).map_err(|e| e.to_string())?;
+    let env: Vec<(&str, &str)> = w
+        .env
+        .iter()
+        .map(|(k, v)| (k.as_str(), v.as_str()))
+        .collect();
+    let out = core
+        .run_in(&exe, args, &w.home, &env, input)
+        .map_err(|e| e.to_string())?;
     rec(w).ran = Some(out);
     Ok(())
 }
 
+/// The outcome of the command a step last ran.
+pub fn last_run(w: &mut World) -> Result<&Output, String> {
+    rec(w)
+        .ran
+        .as_ref()
+        .ok_or_else(|| "no step ran a command".to_owned())
+}
+
+#[when(regex = r#"^the person runs "cairn ([^"]*)"$"#)]
+fn person_runs(w: &mut World, args: String) -> Result<(), String> {
+    let args: Vec<&str> = args.split_whitespace().collect();
+    run_core(w, &args, None)
+}
+
 #[then(regex = r"^the command exits (\d+)$")]
 fn exits(w: &mut World, code: i32) -> Result<(), String> {
-    let out = rec(w).ran.as_ref().ok_or("no step ran a command")?;
+    let out = last_run(w)?;
     if out.status.code() == Some(code) {
         return Ok(());
     }

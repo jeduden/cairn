@@ -22,11 +22,14 @@ mod engineering_benchmark;
 mod engineering_boundary;
 mod engineering_drift;
 mod engineering_isolation;
+mod engineering_panics;
 mod engineering_protection;
 mod engineering_reach;
 mod engineering_release;
 mod engineering_review;
+mod observability;
 mod record;
+mod security;
 
 use std::env;
 use std::ffi::OsStr;
@@ -50,6 +53,9 @@ use testkit::guard::{self, Place};
 pub struct World {
     pub home: PathBuf,
     pub cairn_home: PathBuf,
+    /// Variables a step sets in the environment of every command the
+    /// scenario starts after it, beside `HOME` and `CAIRN_HOME`.
+    pub env: Vec<(String, String)>,
     sections: runner::Sections,
     _dir: TempDir,
 }
@@ -70,6 +76,7 @@ impl World {
 
         Ok(Self {
             cairn_home: home.join(".cairn"),
+            env: Vec::new(),
             home,
             sections: runner::Sections::default(),
             _dir: dir,
