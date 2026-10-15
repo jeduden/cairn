@@ -49,6 +49,7 @@ pub fn cases() -> Vec<Case> {
         decision_cases(),
         repository_cases(),
         review_cases(),
+        review_gate_cases(),
         gate_cases(),
         parse_cases(),
         persona_cases(),
@@ -57,13 +58,17 @@ pub fn cases() -> Vec<Case> {
         ledger_cases(),
         reach_cases(),
         product_crate_cases(),
+        deadline_cases(),
+        core_wait_cases(),
         confinement_cases(),
+        ci_gate_cases(),
         static_analysis_cases(),
         release_cases(),
         protection_cases(),
         architecture_cases(),
         benchmark_cases(),
         isolation_cases(),
+        instruction_cases(),
     ]
     .concat()
 }
@@ -243,8 +248,9 @@ fn repository_cases() -> Vec<Case> {
     ]
 }
 
-/// The drifts ENG-28 exists to catch: the reviewing agent reaching the
-/// approval, or the approval skipping the review gate.
+/// The drifts ENG-28 exists to catch in the reviewing agent's reach: the
+/// agent reaching the approval. [`review_gate_cases`] holds the approval
+/// skipping the review gate.
 fn review_cases() -> Vec<Case> {
     vec![
         case(
@@ -291,6 +297,13 @@ fn review_cases() -> Vec<Case> {
             scenario("ENG-28"),
             "job post runs on always(), even after a failed review",
         ),
+    ]
+}
+
+/// The drifts ENG-28 exists to catch in what the approval rests on: the
+/// review gate, the deterministic findings and the review bundle.
+fn review_gate_cases() -> Vec<Case> {
+    vec![
         case(
             "the review posted without the review gate",
             "ENG-28",
@@ -636,9 +649,10 @@ fn architecture_cases() -> Vec<Case> {
     ]
 }
 
-/// The drifts the product crates' bans exist to catch: a crate's
-/// clippy.toml dropping one (I4, I10), the core reading a clock or a
-/// random order (I10), and mutable global state (ENG-03).
+/// The drifts the product crates' reach and determinism bans exist to
+/// catch: a crate's clippy.toml dropping one (I4, I10), and the core
+/// reading a clock or a random order (I10). [`deadline_cases`] holds
+/// ENG-03's.
 fn product_crate_cases() -> Vec<Case> {
     const LIB: &str = "crates/cairn/src/lib.rs";
     const AT: &str = "use std::io::{self, Write};";
@@ -695,6 +709,13 @@ fn product_crate_cases() -> Vec<Case> {
             clippy("cairn"),
             "use of a disallowed type `std::collections::HashMap`",
         ),
+    ]
+}
+
+/// The drifts ENG-03's deadline bans exist to catch: a product crate's
+/// clippy.toml dropping one. [`core_wait_cases`] holds the core's code.
+fn deadline_cases() -> Vec<Case> {
+    vec![
         case(
             "a product crate's clippy.toml dropping a deadline ban",
             "the_product_crates_ban_every_wait_with_no_deadline",
@@ -725,6 +746,15 @@ fn product_crate_cases() -> Vec<Case> {
             ),
             "crates/cairn/clippy.toml does not ban std::fs::File::lock in disallowed-methods",
         ),
+    ]
+}
+
+/// The drifts ENG-03 exists to catch in the core's code: a wait with no
+/// deadline, and mutable global state.
+fn core_wait_cases() -> Vec<Case> {
+    const LIB: &str = "crates/cairn/src/lib.rs";
+    const AT: &str = "use std::io::{self, Write};";
+    vec![
         case(
             "the core waiting on a channel with no deadline",
             "ENG-03",
@@ -810,16 +840,18 @@ fn confinement_cases() -> Vec<Case> {
     ]
 }
 
-/// The drifts ENG-16's core row exists to catch: CI no longer gating on
-/// a static check, a crate switching the unsafe ban off, and the core's
-/// reach evidence or the determinism bans going missing.
-fn static_analysis_cases() -> Vec<Case> {
+/// The drifts ENG-16's core row exists to catch in what CI gates on: a
+/// static check no longer run, left out of the ci job or allowed to
+/// fail, and the ci job passing after a failed job.
+fn ci_gate_cases() -> Vec<Case> {
     const CI: &str = ".github/workflows/ci.yml";
-    const CLIPPY: &str = "crates/cairn/clippy.toml";
-    let check = |name| cargo_test("engineering", "static_analysis", name);
-    let gates = || check("the_ci_workflow_gates_on_the_static_checks");
-    let unsafe_ban = || check("every_crate_forbids_unsafe_code");
-    let reach = || check("the_core_s_reach_evidence_is_present_and_gated");
+    let gates = || {
+        cargo_test(
+            "engineering",
+            "static_analysis",
+            "the_ci_workflow_gates_on_the_static_checks",
+        )
+    };
     vec![
         case(
             "CI no longer running cargo-audit",
@@ -853,6 +885,18 @@ fn static_analysis_cases() -> Vec<Case> {
             gates(),
             "the ci job does not run after a failed job",
         ),
+    ]
+}
+
+/// The drifts ENG-16's core row exists to catch in the code itself: a
+/// crate switching the unsafe ban off, and the core's reach evidence or
+/// the determinism bans going missing.
+fn static_analysis_cases() -> Vec<Case> {
+    const CLIPPY: &str = "crates/cairn/clippy.toml";
+    let check = |name| cargo_test("engineering", "static_analysis", name);
+    let unsafe_ban = || check("every_crate_forbids_unsafe_code");
+    let reach = || check("the_core_s_reach_evidence_is_present_and_gated");
+    vec![
         case(
             "a crate no longer inheriting the workspace lints",
             "every_crate_forbids_unsafe_code",
@@ -936,7 +980,12 @@ const SBOM_GATE: &str = "the_checkout_s_release_attaches_and_attests_an_sbom";
 /// a missing check of the published release, and an SBOM that is not
 /// attested.
 fn release_cases() -> Vec<Case> {
-    [release_signer_cases(), release_verify_cases()].concat()
+    [
+        release_signer_cases(),
+        release_build_cases(),
+        release_verify_cases(),
+    ]
+    .concat()
 }
 
 /// The ENG-20 drifts in who signs the build provenance, and with what.
@@ -985,6 +1034,14 @@ fn release_signer_cases() -> Vec<Case> {
             PROVENANCE_GATE,
             "ci.yml job build grants id-token: write to build.yml",
         ),
+    ]
+}
+
+/// The ENG-20 drifts in the release build workflow itself: it no longer
+/// attesting provenance, its attest job running the repository's code,
+/// the release going around it, and a release dispatched from any ref.
+fn release_build_cases() -> Vec<Case> {
+    vec![
         release_case(
             "the release build workflow no longer attesting provenance",
             Injection::replace(
@@ -1316,10 +1373,9 @@ fn benchmark_cases() -> Vec<Case> {
     ]
 }
 
-/// The drifts the isolation guard and the instruction scan exist to
-/// catch (ENG-14): the guard letting real state through, or refusing
-/// every place; a read of real state that bypasses it; and an agent
-/// instruction directing a destructive command at real state.
+/// The drifts the isolation guard exists to catch (ENG-14): the guard
+/// letting real state through, or refusing every place, and a read of
+/// real state that bypasses it.
 fn isolation_cases() -> Vec<Case> {
     const GUARD: &str = "tooling/testkit/src/guard.rs";
     const UNDER: &str = "    path != temp && path.starts_with(temp)";
@@ -1328,13 +1384,6 @@ fn isolation_cases() -> Vec<Case> {
             "engineering",
             "isolation",
             "only_the_isolation_guard_reads_the_home",
-        )
-    };
-    let instructions = || {
-        cargo_test(
-            "engineering",
-            "isolation",
-            "the_agent_instructions_direct_no_destructive_command_at_real_state",
         )
     };
     vec![
@@ -1363,6 +1412,21 @@ fn isolation_cases() -> Vec<Case> {
             reads(),
             "reads real state outside testkit::guard",
         ),
+    ]
+}
+
+/// The drifts the decoy `HOME` and the instruction scan exist to catch
+/// (ENG-14): CI running the suite with the real `HOME`, and an agent
+/// instruction directing a destructive command at real state.
+fn instruction_cases() -> Vec<Case> {
+    let instructions = || {
+        cargo_test(
+            "engineering",
+            "isolation",
+            "the_agent_instructions_direct_no_destructive_command_at_real_state",
+        )
+    };
+    vec![
         case(
             "CI running the suite with the real `HOME`",
             "the_ci_test_job_runs_with_a_decoy_home",
