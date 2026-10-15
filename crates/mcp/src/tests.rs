@@ -356,7 +356,14 @@ fn serve_answers_each_line_until_the_input_closes() {
     drop(tx);
     let mut out = Vec::new();
 
-    serve(&mut server, &rx, &mut out, Duration::from_millis(10)).unwrap();
+    serve(
+        &mut |l| server.handle(l),
+        &rx,
+        &mut out,
+        Duration::from_millis(10),
+        &mut || {},
+    )
+    .unwrap();
 
     let lines: Vec<Value> = String::from_utf8(out)
         .unwrap()
@@ -381,7 +388,14 @@ fn serve_waits_past_an_idle_deadline_and_stops_on_a_read_error() {
     });
     let mut out = Vec::new();
 
-    let err = serve(&mut server, &rx, &mut out, Duration::from_millis(5)).unwrap_err();
+    let err = serve(
+        &mut |l| server.handle(l),
+        &rx,
+        &mut out,
+        Duration::from_millis(5),
+        &mut || {},
+    )
+    .unwrap_err();
 
     assert_eq!(err.to_string(), "closed");
     while !sender.is_finished() {
@@ -556,7 +570,14 @@ fn serve_answers_a_line_that_is_not_utf8_and_goes_on() {
     drop(tx);
     let mut out = Vec::new();
 
-    serve(&mut server, &rx, &mut out, Duration::from_millis(10)).unwrap();
+    serve(
+        &mut |l| server.handle(l),
+        &rx,
+        &mut out,
+        Duration::from_millis(10),
+        &mut || {},
+    )
+    .unwrap();
 
     let lines: Vec<Value> = String::from_utf8(out)
         .unwrap()
@@ -568,4 +589,45 @@ fn serve_answers_a_line_that_is_not_utf8_and_goes_on() {
         (lines[0]["error"]["code"].clone(), lines[1]["id"].clone()),
         (json!(-32700), json!(2))
     );
+}
+
+#[test]
+fn serve_answers_a_request_whose_handling_panicked_and_goes_on() {
+    let (tx, rx) = mpsc::channel();
+    for id in [1, 2] {
+        tx.send(Ok(format!(
+            r#"{{"jsonrpc":"2.0","id":{id},"method":"ping"}}"#
+        )))
+        .unwrap();
+    }
+    drop(tx);
+    let mut out = Vec::new();
+    let mut panics = 0;
+    let mut first = true;
+    let mut handle = |line: &str| {
+        if std::mem::take(&mut first) {
+            panic!("boom");
+        }
+        Some(line.to_owned())
+    };
+
+    serve(
+        &mut handle,
+        &rx,
+        &mut out,
+        Duration::from_millis(10),
+        &mut || panics += 1,
+    )
+    .unwrap();
+
+    let lines: Vec<Value> = String::from_utf8(out)
+        .unwrap()
+        .lines()
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect();
+    assert_eq!(panics, 1);
+    assert_eq!(lines.len(), 2);
+    assert_eq!(lines[0]["error"]["code"], json!(-32603));
+    assert_eq!(lines[0]["error"]["message"], json!("internal error"));
+    assert_eq!(lines[1]["id"], json!(2));
 }

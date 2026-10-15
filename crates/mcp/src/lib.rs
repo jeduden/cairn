@@ -313,10 +313,11 @@ fn error(id: &Value, code: i64, message: &str) -> String {
 ///
 /// Fails when reading the input or writing a reply fails.
 pub fn serve(
-    server: &mut Server,
+    handle: &mut dyn FnMut(&str) -> Option<String>,
     input: &Receiver<io::Result<String>>,
     out: &mut dyn Write,
     idle: Duration,
+    _panicked: &mut dyn FnMut(),
 ) -> io::Result<()> {
     loop {
         match input.recv_timeout(idle) {
@@ -327,7 +328,7 @@ pub fn serve(
                 out.flush()?;
             }
             Ok(line) => {
-                if let Some(reply) = server.handle(&line?) {
+                if let Some(reply) = handle(&line?) {
                     writeln!(out, "{reply}")?;
                     out.flush()?;
                 }

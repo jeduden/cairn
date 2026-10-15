@@ -279,7 +279,13 @@ fn mcp(
         Ok(server) => server,
         Err(e) => return failed("mcp", &e, stderr),
     };
-    match mcp::serve(&mut server, &(ctx.input)(), stdout, IDLE) {
+    match mcp::serve(
+        &mut |l| server.handle(l),
+        &(ctx.input)(),
+        stdout,
+        IDLE,
+        &mut || {},
+    ) {
         Ok(()) => EXIT_OK,
         Err(e) => failed("mcp", &e, stderr),
     }
