@@ -49,6 +49,7 @@ with every warning denied, and rustfmt.
 [deny.toml](../deny.toml) holds every crate in the tree to ENG-18's
 license allow-list, each exception named, and to crates.io as the
 only source. cargo-audit refuses a crate with a known vulnerability.
+[CodeQL](../.github/workflows/codeql.yml) scans all but the tests.
 
 Crates may only depend on the crates they declare (ENG-02). Each
 crate's `Cargo.toml` holds a `cairn` metadata table with three keys:

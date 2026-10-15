@@ -1,0 +1,11 @@
+# CodeQL's configuration (.github/workflows/codeql.yml). It scans the
+# product code and leaves out the tests, whose fixed keys, nonces and
+# commitment keys keep them deterministic and are no secret. Rust is
+# analyzed without a build, so these paths are not extracted at all.
+name: cairn
+
+paths-ignore:
+  # The unit tests beside each module.
+  - "**/tests.rs"
+  # Each crate's integration and end-to-end tests, and their fixtures.
+  - "**/tests/**"
