@@ -8,12 +8,11 @@ use audit::log::Log;
 use cucumber::{given, then};
 
 use crate::World;
-use crate::record::{home, last_run};
+use crate::record::{home, last_run, set_env};
 
 #[given(regex = r"^a hook handler that panics$")]
 fn hook_handler_panics(w: &mut World) {
-    w.env
-        .push(("CAIRN_TEST_FAULT".to_owned(), "hook-panic".to_owned()));
+    set_env(w, "CAIRN_TEST_FAULT", "hook-panic");
 }
 
 #[then(regex = r"^the hook output is empty$")]

@@ -46,10 +46,13 @@ agent's review.
 
 For phase 3:
 
-- `cairn counter ack` only appends a `counter_ack` entry. Record the
-  neutral principal act in the device seat, ask for a terminal
-  (OWN-12), and move doctor's last acknowledgement to it. The `@OPS-03`
-  step then needs a terminal from the testkit.
+- `cairn counter ack` only appends a `counter_ack` entry, and needs no
+  terminal, so until phase 3 an agent's own tool call can acknowledge
+  the counters and quiet `cairn doctor` (I6). Record the neutral
+  principal act in the device seat, ask for a terminal (OWN-12), and
+  move doctor's last acknowledgement to it. The `@OPS-02` and `@OPS-03`
+  steps then need a terminal from the testkit; `script` cannot give it
+  under the trace, as it calls `getpeername`.
 - `home.json` is written by hand; configuration's `home.id` should
   write it.
 
@@ -73,3 +76,8 @@ Parked:
 - Windows' ACLs are not checked yet.
 - The `@SEC-02` steps for another OS user need root or `sudo -n`.
 - OQ-50 (i): every counter so far counts as a failure counter.
+- Counter names disagree across pending scenarios: `@OPS-01` counts a
+  malformed hook input as `hook_rejected`, `@SEC-16` as
+  `hook_input_rejected`. Settle them before either goes live.
+- The SRS names no variable for SEC-03's home id; `CAIRN_HOME_ID`
+  should join it beside `CAIRN_HOME`, in its own pull request.

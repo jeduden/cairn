@@ -53,9 +53,6 @@ use testkit::guard::{self, Place};
 pub struct World {
     pub home: PathBuf,
     pub cairn_home: PathBuf,
-    /// Variables a step sets in the environment of every command the
-    /// scenario starts after it, beside `HOME` and `CAIRN_HOME`.
-    pub env: Vec<(String, String)>,
     sections: runner::Sections,
     _dir: TempDir,
 }
@@ -76,7 +73,6 @@ impl World {
 
         Ok(Self {
             cairn_home: home.join(".cairn"),
-            env: Vec::new(),
             home,
             sections: runner::Sections::default(),
             _dir: dir,

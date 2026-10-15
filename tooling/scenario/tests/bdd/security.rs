@@ -18,7 +18,7 @@ use cucumber::{given, then};
 use record::digest::Digest;
 
 use crate::World;
-use crate::record::{first_start, home, last_run};
+use crate::record::{first_start, home, last_run, set_env};
 
 /// What the security steps track.
 #[derive(Debug, Default)]
@@ -180,7 +180,7 @@ fn configured_home_id(w: &mut World, id: String) -> Result<(), String> {
 
 #[given(regex = r#"^the environment supplies home id "([^"]+)"$"#)]
 fn supplied_home_id(w: &mut World, id: String) {
-    w.env.push(("CAIRN_HOME_ID".to_owned(), id));
+    set_env(w, "CAIRN_HOME_ID", &id);
 }
 
 #[then(regex = r#"^the error names "([^"]+)" and the permission problem$"#)]

@@ -36,6 +36,9 @@ pub struct RecordSteps {
     /// Each writer the scenario built, in the order it was built, with
     /// the wall-clock time its transcript gave each of its events.
     writers: Vec<(WriterId, Vec<String>)>,
+    /// Variables a step set in the environment of every command the
+    /// scenario starts after it, beside `HOME` and `CAIRN_HOME`.
+    env: Vec<(String, String)>,
 }
 
 fn rec(w: &mut World) -> &mut RecordSteps {
@@ -114,16 +117,19 @@ fn two_writers(w: &mut World, count: usize) -> Result<(), String> {
 pub fn run_core(w: &mut World, args: &[&str], input: Option<&[u8]>) -> Result<(), String> {
     let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
     let exe = testkit::core_executable()?;
-    let env: Vec<(&str, &str)> = w
-        .env
-        .iter()
-        .map(|(k, v)| (k.as_str(), v.as_str()))
-        .collect();
+    let set = rec(w).env.clone();
+    let env: Vec<(&str, &str)> = set.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
     let out = core
         .run_in(&exe, args, &w.home, &env, input)
         .map_err(|e| e.to_string())?;
     rec(w).ran = Some(out);
     Ok(())
+}
+
+/// Sets `key` to `value` in the environment of every command the
+/// scenario starts from now on.
+pub fn set_env(w: &mut World, key: &str, value: &str) {
+    rec(w).env.push((key.to_owned(), value.to_owned()));
 }
 
 /// The outcome of the command a step last ran.
