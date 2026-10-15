@@ -949,8 +949,10 @@ fn static_analysis_cases() -> Vec<Case> {
 }
 
 /// The drifts the complexity gate exists to catch: the workspace lints
-/// no longer denying a complexity lint, a crate's clippy.toml raising a
-/// ceiling or dropping one, and the core growing a function past one.
+/// no longer denying a complexity lint, and a crate's clippy.toml
+/// raising a ceiling, dropping one or switching a lint off. Clippy
+/// itself, which CI gates on (ENG-16), catches the core nesting a block
+/// past a ceiling.
 fn complexity_cases() -> Vec<Case> {
     const GATE: &str = "every_crate_holds_the_complexity_limits";
     let gate = || cargo_test("engineering", "static_analysis", GATE);
@@ -981,8 +983,19 @@ fn complexity_cases() -> Vec<Case> {
             "clippy.toml sets no excessive-nesting-threshold",
         ),
         case(
-            "the core nesting a block past the ceiling",
+            "a product crate's clippy.toml switching excessive_nesting off",
             GATE,
+            Injection::replace(
+                "crates/cairn/clippy.toml",
+                "excessive-nesting-threshold = 5",
+                "excessive-nesting-threshold = 0",
+            ),
+            gate(),
+            "crates/cairn/clippy.toml sets excessive-nesting-threshold to 0, which switches the lint off",
+        ),
+        case(
+            "the core nesting a block past the ceiling",
+            "ENG-16",
             Injection::replace(
                 "crates/cairn/src/lib.rs",
                 "use std::io::{self, Write};",

@@ -32,6 +32,10 @@ pub const LIMITS: [(&str, u64); 4] = [
     ("max-fn-params-bools", 3),
 ];
 
+/// The thresholds clippy reads 0 as switching their lint off, so a
+/// clippy.toml may not set them that low.
+const OFF_AT_ZERO: [&str; 1] = ["excessive-nesting-threshold"];
+
 /// The levels that make a lint fail the build.
 const DENYING: [&str; 2] = ["deny", "forbid"];
 
@@ -54,18 +58,24 @@ pub fn workspace_denies(root_manifest: &str) -> Vec<String> {
         .collect()
 }
 
-/// The integer a clippy.toml sets its top-level `key` to, comments left
-/// out; none when the key is missing or holds no integer.
+/// The integer a clippy.toml sets its top-level `key` to: a line before
+/// the first `[table]` header, comments left out. None when the key is
+/// missing there or holds no integer.
 #[must_use]
 pub fn threshold(clippy_toml: &str, key: &str) -> Option<u64> {
-    clippy_toml.lines().find_map(|line| {
-        let (k, v) = strip_comment(line).split_once('=')?;
-        (k.trim() == key).then(|| v.trim().parse().ok())?
-    })
+    clippy_toml
+        .lines()
+        .map(strip_comment)
+        .take_while(|line| !line.trim_start().starts_with('['))
+        .find_map(|line| {
+            let (k, v) = line.split_once('=')?;
+            (k.trim() == key).then(|| v.trim().parse().ok())?
+        })
 }
 
 /// Requires `clippy_toml`, read from `file`, to set every threshold of
-/// [`LIMITS`] at or below its ceiling, and names each it does not.
+/// [`LIMITS`] at or below its ceiling, and none of [`OFF_AT_ZERO`] to 0,
+/// and names each it does not.
 #[must_use]
 pub fn holds_limits(file: &str, clippy_toml: &str) -> Vec<String> {
     LIMITS
@@ -73,6 +83,9 @@ pub fn holds_limits(file: &str, clippy_toml: &str) -> Vec<String> {
         .filter_map(|(key, max)| match threshold(clippy_toml, key) {
             None => Some(format!("{file} sets no {key}")),
             Some(set) if set > *max => Some(format!("{file} sets {key} to {set}, above {max}")),
+            Some(0) if OFF_AT_ZERO.contains(key) => Some(format!(
+                "{file} sets {key} to 0, which switches the lint off"
+            )),
             Some(_) => None,
         })
         .collect()

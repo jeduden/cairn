@@ -177,3 +177,27 @@ fn what_it_cannot_read_is_named() {
     let (_d, c) = checkout(&root, &[], &holding());
     assert!(crates_hold_limits(&c)[0].starts_with("list gone: "));
 }
+
+#[test]
+fn a_nesting_ceiling_of_zero_switches_the_lint_off_and_fails() {
+    let body = holding().replace(
+        "excessive-nesting-threshold = 5",
+        "excessive-nesting-threshold = 0",
+    );
+
+    assert_eq!(
+        holds_limits("clippy.toml", &body),
+        ["clippy.toml sets excessive-nesting-threshold to 0, which switches the lint off"]
+    );
+
+    let zero_lines = holding().replace("max-fn-params-bools = 3", "max-fn-params-bools = 0");
+    assert!(holds_limits("clippy.toml", &zero_lines).is_empty());
+}
+
+#[test]
+fn threshold_reads_only_the_keys_before_the_first_table() {
+    let body = "too-many-lines-threshold = 80\n[later]\nmax-fn-params-bools = 3\n";
+
+    assert_eq!(threshold(body, "too-many-lines-threshold"), Some(80));
+    assert_eq!(threshold(body, "max-fn-params-bools"), None);
+}
