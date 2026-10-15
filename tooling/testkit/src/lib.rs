@@ -34,6 +34,42 @@ pub fn isolate<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
         .env("CAIRN_HOME", home.join(".cairn"))
 }
 
+/// The `cairn` executable cargo built beside the running test. `cargo
+/// test` builds a workspace member's executables into the profile
+/// directory whose `deps` directory holds every test, so a scenario
+/// starts the same build of the core the end-to-end tests do.
+///
+/// # Errors
+///
+/// Fails, saying how to build it, when it is not there.
+pub fn core_executable() -> Result<PathBuf, String> {
+    let test = std::env::current_exe().map_err(|e| format!("locate the running test: {e}"))?;
+    sibling_executable(&test, "cairn")
+}
+
+/// The executable `name` in the directory above the one holding `test`.
+fn sibling_executable(test: &Path, name: &str) -> Result<PathBuf, String> {
+    let profile = test
+        .parent()
+        .and_then(Path::parent)
+        .filter(|p| !p.as_os_str().is_empty())
+        .ok_or_else(|| {
+            format!(
+                "the running test {} lies in no deps directory",
+                test.display()
+            )
+        })?;
+    let path = profile.join(format!("{name}{}", std::env::consts::EXE_SUFFIX));
+    if path.is_file() {
+        Ok(path)
+    } else {
+        Err(format!(
+            "no {name} executable at {}: build it first, with cargo build -p {name}",
+            path.display()
+        ))
+    }
+}
+
 /// A directory under the system's temporary directory, removed with
 /// everything in it when dropped.
 #[derive(Debug)]

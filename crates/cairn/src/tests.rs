@@ -1,25 +1,71 @@
 use super::*;
 use std::io;
+use std::sync::mpsc;
+use testkit::TempDir;
 
 const DEV: Build<'static> = Build {
     version: "dev",
     commit: None,
 };
 
-fn invoke(args: &[&str], build: &Build) -> (u8, String, String) {
-    let (mut out, mut err) = (Vec::new(), Vec::new());
-    let code = run(
-        args.iter().map(|a| (*a).to_owned()),
-        build,
-        &mut out,
-        &mut err,
-    );
+/// A process's surroundings: a fresh home, and input that closes at
+/// once unless a test hands lines.
+struct Process {
+    dir: TempDir,
+    lines: Vec<String>,
+}
 
-    (
-        code,
-        String::from_utf8(out).unwrap(),
-        String::from_utf8(err).unwrap(),
-    )
+impl Process {
+    fn new() -> Self {
+        Self {
+            dir: TempDir::new().unwrap(),
+            lines: Vec::new(),
+        }
+    }
+
+    fn cairn_home(&self) -> std::path::PathBuf {
+        self.dir.path().join(".cairn")
+    }
+
+    fn invoke(&self, args: &[&str], build: &Build) -> (u8, String, String) {
+        let lines = self.lines.clone();
+        let input = move || {
+            let (tx, rx) = mpsc::channel();
+            for line in lines.clone() {
+                tx.send(Ok(line)).unwrap();
+            }
+            rx
+        };
+        let ctx = Context {
+            build,
+            cairn_home: None,
+            home: Some(self.dir.path().as_os_str().to_owned()),
+            input: &input,
+        };
+        let (mut out, mut err) = (Vec::new(), Vec::new());
+        let code = run(
+            args.iter().map(|a| (*a).to_owned()),
+            &ctx,
+            &mut out,
+            &mut err,
+        );
+
+        (
+            code,
+            String::from_utf8(out).unwrap(),
+            String::from_utf8(err).unwrap(),
+        )
+    }
+
+    fn transcript(&self, text: &str) -> String {
+        let path = self.dir.path().join("t.jsonl");
+        std::fs::write(&path, text).unwrap();
+        path.display().to_string()
+    }
+}
+
+fn invoke(args: &[&str], build: &Build) -> (u8, String, String) {
+    Process::new().invoke(args, build)
 }
 
 #[test]
@@ -44,11 +90,11 @@ fn help_prints_the_usage_to_stdout() {
 
 #[test]
 fn an_unknown_command_is_a_usage_error() {
-    let (code, _, err) = invoke(&["ingest"], &DEV);
+    let (code, _, err) = invoke(&["rebuild"], &DEV);
 
     assert_eq!(code, EXIT_USAGE);
     assert!(
-        err.starts_with("cairn: unknown command \"ingest\"\n\nusage: cairn"),
+        err.starts_with("cairn: unknown command \"rebuild\"\n\nusage: cairn"),
         "{err}"
     );
 }
@@ -119,12 +165,27 @@ impl io::Write for Closed {
 
 #[test]
 fn a_failed_write_is_a_failure() {
-    for args in [&["version"][..], &["version", "--json"], &["help"]] {
+    let p = Process::new();
+    let path = p.transcript("x\n");
+    for args in [
+        &["version"][..],
+        &["version", "--json"],
+        &["help"],
+        &["ingest", "--path", &path],
+        &["verify"],
+    ] {
         let mut err = Vec::new();
+        let input = || mpsc::channel().1;
+        let ctx = Context {
+            build: &DEV,
+            cairn_home: Some(p.cairn_home().into_os_string()),
+            home: None,
+            input: &input,
+        };
 
         let code = run(
             args.iter().map(|a| (*a).to_owned()),
-            &DEV,
+            &ctx,
             &mut Closed,
             &mut err,
         );
@@ -141,4 +202,388 @@ fn a_failed_write_is_a_failure() {
 fn the_build_is_stamped_from_the_environment_or_reports_dev() {
     assert_eq!(BUILD.version, option_env!("CAIRN_VERSION").unwrap_or("dev"));
     assert_eq!(BUILD.commit, option_env!("CAIRN_COMMIT"));
+}
+
+#[test]
+fn ingest_records_each_line_and_names_the_writer() {
+    let p = Process::new();
+    let path = p.transcript("a\nb\n");
+
+    let (code, out, err) = p.invoke(&["ingest", "--path", &path], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(out.starts_with("ingested 2 lines into writer "), "{out}");
+    assert!(!out.contains(&path), "the output repeats no path: {out}");
+}
+
+#[test]
+fn a_release_build_records_no_transcript_until_redaction_lands() {
+    let p = Process::new();
+    let path = p.transcript("a\n");
+    let release = Build {
+        version: "1.0.0",
+        commit: Some("abc"),
+    };
+
+    let (code, out, err) = p.invoke(&["ingest", "--path", &path], &release);
+
+    assert_eq!(
+        (code, out.as_str(), err.as_str()),
+        (
+            EXIT_FAILURE,
+            "",
+            "cairn ingest: a release build records no transcript until redaction before \
+             storage (SEC-08) lands; use a development build\n"
+        )
+    );
+    assert!(!p.cairn_home().exists());
+}
+
+#[test]
+fn ingest_json_names_the_writer_seat_room_and_count() {
+    let p = Process::new();
+    let path = p.transcript("a\n");
+
+    let (code, out, _) = p.invoke(&["ingest", &format!("--path={path}"), "--json"], &DEV);
+
+    assert_eq!(code, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["events"], 1);
+    for field in ["writer", "seat", "room"] {
+        assert_eq!(v[field].as_str().unwrap().len(), 64, "{field}");
+    }
+}
+
+#[test]
+fn ingest_refuses_a_wrong_command_line() {
+    for (args, want) in [
+        (&["ingest"][..], "cairn ingest: want --path P\n"),
+        (
+            &["ingest", "--path"],
+            "cairn ingest: --path needs a transcript\n",
+        ),
+        (
+            &["ingest", "--all"],
+            "cairn ingest: --all is not supported yet; pass --path\n",
+        ),
+        (
+            &["ingest", "--yaml"],
+            "cairn ingest: unknown flag \"--yaml\"\n",
+        ),
+    ] {
+        let (code, _, err) = invoke(args, &DEV);
+        assert_eq!((code, err.as_str()), (EXIT_USAGE, want), "{args:?}");
+    }
+}
+
+#[test]
+fn ingest_reports_a_transcript_it_cannot_read() {
+    let p = Process::new();
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", "/nonexistent/t.jsonl"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        err.starts_with("cairn ingest: read the transcript /nonexistent/t.jsonl: "),
+        "{err}"
+    );
+}
+
+#[test]
+fn verify_checks_the_record_and_counts_it() {
+    let p = Process::new();
+    let path = p.transcript("a\nb\n");
+    p.invoke(&["ingest", "--path", &path], &DEV);
+
+    let text = p.invoke(&["verify"], &DEV);
+    let json = p.invoke(&["verify", "--json"], &DEV);
+
+    assert_eq!(
+        text,
+        (
+            EXIT_OK,
+            "checked 2 writers and 6 events: every chain, commitment and seat certificate holds; \
+             integrity unsigned, as no log is signed yet\n"
+                .into(),
+            String::new()
+        )
+    );
+    assert_eq!(json.0, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&json.1).unwrap();
+    assert_eq!(
+        (&v["integrity"], &v["writers"], &v["events"], &v["broken"]),
+        (
+            &serde_json::json!("unsigned"),
+            &serde_json::json!(2),
+            &serde_json::json!(6),
+            &serde_json::Value::Null
+        )
+    );
+    let order: Vec<&str> = v["order"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|a| a.as_str().unwrap())
+        .collect();
+    assert_eq!(order.len(), 6);
+    assert!(
+        order.iter().all(|a| a.starts_with("cairn:room/")),
+        "{order:?}"
+    );
+}
+
+#[test]
+fn verify_exits_3_naming_where_the_chain_breaks() {
+    let p = Process::new();
+    let path = p.transcript("a\nb\n");
+    p.invoke(&["ingest", "--path", &path], &DEV);
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute(
+        "UPDATE events SET provenance = 'user' WHERE kind = 'unparsed_line' AND seq = 2",
+        [],
+    )
+    .unwrap();
+
+    let (code, out, err) = p.invoke(&["verify"], &DEV);
+    let (json_code, json, _) = p.invoke(&["verify", "--json"], &DEV);
+
+    assert_eq!((code, out.as_str()), (EXIT_INTEGRITY, ""));
+    assert!(
+        err.starts_with("cairn verify: chain broken at cairn:room/"),
+        "{err}"
+    );
+    assert!(
+        err.ends_with("/2: the stored hash does not match the event's header\n"),
+        "{err}"
+    );
+    assert_eq!(json_code, EXIT_INTEGRITY);
+    let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(
+        format!(
+            "cairn verify: {}\n",
+            v["broken"]["message"].as_str().unwrap()
+        ),
+        err
+    );
+    assert_eq!(
+        (&v["integrity"], &v["broken"]["class"], &v["order"]),
+        (
+            &serde_json::json!("broken"),
+            &serde_json::json!("chain"),
+            &serde_json::Value::Null
+        )
+    );
+    assert!(
+        err.contains(v["broken"]["address"].as_str().unwrap()),
+        "{v}"
+    );
+}
+
+#[test]
+fn verify_without_a_store_or_with_a_failing_one_fails() {
+    let p = Process::new();
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert_eq!(
+        err,
+        format!(
+            "cairn verify: no store at {}\n",
+            p.cairn_home().join("store.db").display()
+        )
+    );
+
+    std::fs::create_dir_all(p.cairn_home()).unwrap();
+    junk_store(&p);
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.starts_with("cairn verify: the store: "), "{err}");
+}
+
+#[test]
+fn verify_reports_a_store_error_met_while_checking() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute("UPDATE seats SET room = 'x'", []).unwrap();
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+    let (_, json, _) = p.invoke(&["verify", "--json"], &DEV);
+
+    assert_eq!(code, EXIT_INTEGRITY);
+    assert!(
+        err.starts_with("cairn verify: the store is corrupt"),
+        "{err}"
+    );
+    let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(
+        (&v["broken"]["class"], &v["broken"]["address"]),
+        (&serde_json::json!("corrupt"), &serde_json::Value::Null)
+    );
+}
+
+#[test]
+fn verify_reports_a_store_that_fails_while_checking() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute("DROP TABLE event_heads", []).unwrap();
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        err.starts_with("cairn verify: the store: no such table"),
+        "{err}"
+    );
+}
+
+#[test]
+fn verify_of_a_home_without_its_device_key_fails() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    std::fs::remove_file(p.cairn_home().join("keys/device.key")).unwrap();
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("device.key"), "{err}");
+}
+
+#[test]
+fn verify_refuses_an_unknown_flag() {
+    assert_eq!(
+        invoke(&["verify", "--yaml"], &DEV),
+        (
+            EXIT_USAGE,
+            String::new(),
+            "cairn verify: unknown flag \"--yaml\"\n".into()
+        )
+    );
+}
+
+#[test]
+fn mcp_answers_each_line_of_input() {
+    let mut p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    p.lines = vec![
+        r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#.into(),
+        r#"{"jsonrpc":"2.0","id":2,"method":"ping"}"#.into(),
+    ];
+
+    let (code, out, err) = p.invoke(&["mcp"], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let lines: Vec<serde_json::Value> = out
+        .lines()
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect();
+    assert_eq!(lines[0]["result"]["serverInfo"]["version"], "dev");
+    assert_eq!(lines[1]["id"], 2);
+}
+
+#[test]
+fn mcp_refuses_flags_and_reports_a_store_it_cannot_open() {
+    for flag in ["--x", "--json"] {
+        assert_eq!(
+            invoke(&["mcp", flag], &DEV),
+            (
+                EXIT_USAGE,
+                String::new(),
+                format!("cairn mcp: unknown flag {flag:?}\n")
+            )
+        );
+    }
+    let p = Process::new();
+    std::fs::create_dir_all(p.cairn_home()).unwrap();
+    junk_store(&p);
+    let (code, _, err) = p.invoke(&["mcp"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.starts_with("cairn mcp: the store: "), "{err}");
+}
+
+#[test]
+fn mcp_without_a_store_or_a_node_fails_and_makes_nothing() {
+    let p = Process::new();
+
+    let (code, _, err) = p.invoke(&["mcp"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert_eq!(
+        err,
+        format!(
+            "cairn mcp: no store at {}: run cairn ingest first\n",
+            p.cairn_home().join("store.db").display()
+        )
+    );
+    assert!(!p.cairn_home().exists());
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    std::fs::remove_file(p.cairn_home().join("keys/device.key")).unwrap();
+    let (code, _, err) = p.invoke(&["mcp"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("device.key"), "{err}");
+}
+
+#[test]
+fn mcp_reports_a_reply_it_cannot_write() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let lines = vec![r#"{"jsonrpc":"2.0","id":2,"method":"ping"}"#.to_owned()];
+    let input = move || {
+        let (tx, rx) = mpsc::channel();
+        for line in lines.clone() {
+            tx.send(Ok(line)).unwrap();
+        }
+        rx
+    };
+    let ctx = Context {
+        build: &DEV,
+        cairn_home: Some(p.cairn_home().into_os_string()),
+        home: None,
+        input: &input,
+    };
+    let mut err = Vec::new();
+
+    let code = run(["mcp".to_owned()], &ctx, &mut Closed, &mut err);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert_eq!(String::from_utf8(err).unwrap(), "cairn mcp: closed\n");
+}
+
+#[test]
+fn a_command_without_a_home_fails() {
+    let input = || mpsc::channel().1;
+    let ctx = Context {
+        build: &DEV,
+        cairn_home: None,
+        home: None,
+        input: &input,
+    };
+    for command in ["ingest", "mcp", "verify"] {
+        let mut args = vec![command.to_owned()];
+        if command == "ingest" {
+            args.extend(["--path".to_owned(), "t".to_owned()]);
+        }
+        let (mut out, mut err) = (Vec::new(), Vec::new());
+
+        let code = run(args, &ctx, &mut out, &mut err);
+
+        assert_eq!(code, EXIT_FAILURE, "{command}");
+        assert_eq!(
+            String::from_utf8(err).unwrap(),
+            format!("cairn {command}: no home: set CAIRN_HOME or HOME\n")
+        );
+    }
+}
+
+/// Writes a store file that is no database, readable by its owner alone
+/// so the store reads it rather than refuse its permissions (SEC-02).
+fn junk_store(p: &Process) {
+    let path = p.cairn_home().join("store.db");
+    std::fs::write(&path, "not a database, but long enough to read a header").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).unwrap();
+    }
 }

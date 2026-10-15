@@ -24,7 +24,7 @@
 use std::ffi::OsString;
 use std::fmt;
 use std::fs;
-use std::io;
+use std::io::{self, Write};
 use std::panic::Location;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
@@ -148,16 +148,48 @@ impl Confinement {
     #[track_caller]
     pub fn run(&self, program: &Path, args: &[&str], home: &Path) -> Result<Output, Error> {
         let caller = caller(std::thread::current().name(), Location::caller());
+        self.start(program, args, home, None, caller)
+    }
+
+    /// [`run`](Self::run), with `input` written to the program's stdin,
+    /// which then closes. The input is written whole before the output
+    /// is read, so it suits the short exchanges a test makes.
+    ///
+    /// # Errors
+    ///
+    /// As [`run`](Self::run), and when the input cannot be written.
+    #[track_caller]
+    pub fn run_with_input(
+        &self,
+        program: &Path,
+        args: &[&str],
+        home: &Path,
+        input: &[u8],
+    ) -> Result<Output, Error> {
+        let caller = caller(std::thread::current().name(), Location::caller());
+        self.start(program, args, home, Some(input), caller)
+    }
+
+    fn start(
+        &self,
+        program: &Path,
+        args: &[&str],
+        home: &Path,
+        input: Option<&[u8]>,
+        caller: String,
+    ) -> Result<Output, Error> {
         let dir = TempDir::new().map_err(|source| Error::Trace { source })?;
         let trace = dir.path().join("trace");
         let mut command = self.command(program, args, &trace);
-        let output = isolate(&mut command, home)
-            .stdin(Stdio::null())
-            .output()
-            .map_err(|source| Error::Start {
-                program: program.to_path_buf(),
-                source,
-            })?;
+        isolate(&mut command, home);
+        let output = match input {
+            None => command.stdin(Stdio::null()).output(),
+            Some(bytes) => feed(&mut command, bytes),
+        }
+        .map_err(|source| Error::Start {
+            program: program.to_path_buf(),
+            source,
+        })?;
         if self.mode == Mode::Unconfined {
             return Ok(output);
         }
@@ -204,6 +236,23 @@ impl Confinement {
             })
         }
     }
+}
+
+/// Starts `command` with `input` on its stdin, closes it, and waits
+/// for the program's output.
+fn feed(command: &mut Command, input: &[u8]) -> io::Result<Output> {
+    let mut child = command
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()?;
+    // The stdin was piped above, so it is there; dropping it closes it.
+    child
+        .stdin
+        .take()
+        .map_or(Ok(()), |mut stdin| stdin.write_all(input))?;
+
+    child.wait_with_output()
 }
 
 /// How a start runs, from the environment `var` reads: unconfined when

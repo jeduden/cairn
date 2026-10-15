@@ -1,0 +1,26 @@
+[package]
+name = "key"
+version = "0.0.0"
+description = "Device, seat and recovery keys, the signatures they make, seat certificates and key events"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+ed25519-dalek.workspace = true
+getrandom.workspace = true
+record.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+testkit.workspace = true
+
+[lints]
+workspace = true
+
+# ENG-02: see crates/cairn/Cargo.toml.
+[package.metadata.cairn]
+responsibility = "Mints and keeps keys, and makes and checks the signatures, seat certificates and key events they sign"
+may-depend-on = ["record"]
+may-dev-depend-on = ["testkit"]

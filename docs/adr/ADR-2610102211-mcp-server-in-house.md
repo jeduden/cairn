@@ -1,7 +1,7 @@
 ---
 id: ADR-2610102211
 title: "The MCP server: Cairn's own stdio server on serde_json, not rmcp"
-status: proposed
+status: accepted
 summary: >-
   `cairn mcp` speaks MCP through a minimal stdio server of Cairn's own,
   reading and writing JSON through serde_json. The Rust MCP SDK rmcp
@@ -31,7 +31,11 @@ report][report].
 `cairn mcp` is a stdio MCP server of Cairn's own. It speaks the subset
 §9.2 needs: `initialize` with protocol-version negotiation,
 `notifications/initialized`, `ping`, `tools/list`, `tools/call` with
-`structuredContent` and `isError`, and `notifications/cancelled`. It
+one text block and `isError`, and `notifications/cancelled`. The text
+block is the envelope in §9.3's field order, its warning before any
+recalled content. The call returns no `structuredContent`: `serde_json`
+writes an object's keys in sorted order, which would put an item's
+content ahead of the warning. It
 reads and writes JSON through `serde_json`, and runs each call on a
 std thread whose cancel signal a cancellation or the call's deadline
 fires (ENG-03). No async runtime links into the core.

@@ -1,4 +1,5 @@
 use super::*;
+use crate::accepted::Acceptance;
 
 const NAME: &str = "core_start_up";
 
@@ -224,4 +225,47 @@ fn the_threshold_compares_medians_exactly_and_saturates() {
     assert!(!slower_than_threshold(2000, 2200));
     assert!(slower_than_threshold(2000, 2201));
     assert!(!slower_than_threshold(u128::MAX, u128::MAX));
+}
+
+fn acceptance(name: &str, percent: u128) -> Acceptance {
+    Acceptance {
+        benchmark: name.to_owned(),
+        up_to_percent: percent,
+        reason: "a reviewed step".to_owned(),
+    }
+}
+
+#[test]
+fn a_regression_within_a_fresh_acceptance_is_accepted_not_failed() {
+    let base = clean(1000, 30);
+    let regressed = compare(base.clone(), scaled(&base, 120));
+
+    let got = accept(vec![regressed], &[acceptance("core_start_up", 30)]);
+
+    assert_eq!(got[0].status, Status::Accepted);
+    assert!(!got[0].fails());
+    assert_eq!(got[0].failure(), None);
+    assert_eq!(Status::Accepted.describe(), "accepted");
+}
+
+#[test]
+fn a_regression_past_its_acceptance_or_of_another_benchmark_still_fails() {
+    let base = clean(1000, 30);
+    let regressed = compare(base.clone(), scaled(&base, 140));
+
+    let past = accept(vec![regressed.clone()], &[acceptance("core_start_up", 30)]);
+    let other = accept(vec![regressed], &[acceptance("other", 50)]);
+
+    assert_eq!(past[0].status, Status::Regressed);
+    assert_eq!(other[0].status, Status::Regressed);
+}
+
+#[test]
+fn an_acceptance_leaves_a_benchmark_within_the_threshold_as_it_is() {
+    let base = clean(1000, 30);
+    let within = compare(base.clone(), scaled(&base, 105));
+
+    let got = accept(vec![within], &[acceptance("core_start_up", 30)]);
+
+    assert_eq!(got[0].status, Status::Within);
 }

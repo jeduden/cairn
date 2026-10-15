@@ -367,3 +367,44 @@ fn only_a_failed_start_or_trace_has_a_cause() {
         assert!(std::error::Error::source(&err).is_none(), "{err}");
     }
 }
+
+#[test]
+fn an_unconfined_start_hands_its_input_to_the_program() {
+    let home = TempDir::new().unwrap();
+
+    let out = unconfined()
+        .run_with_input(Path::new("cat"), &[], home.path(), b"line one\nline two\n")
+        .unwrap();
+
+    assert!(out.status.success());
+    assert_eq!(out.stdout, b"line one\nline two\n");
+}
+
+#[test]
+fn a_confined_start_hands_its_input_to_the_program() {
+    let Some(c) = confined() else { return };
+    let home = TempDir::new().unwrap();
+
+    let out = c
+        .run_with_input(
+            Path::new("sh"),
+            &["-c", "cat"],
+            home.path(),
+            b"to the core\n",
+        )
+        .unwrap();
+
+    assert!(out.status.success());
+    assert_eq!(out.stdout, b"to the core\n");
+}
+
+#[test]
+fn a_start_with_input_that_cannot_run_names_the_program() {
+    let home = TempDir::new().unwrap();
+
+    let err = unconfined()
+        .run_with_input(Path::new("/cairn/no/such/program"), &[], home.path(), b"x")
+        .unwrap_err();
+
+    assert!(matches!(err, Error::Start { .. }), "{err}");
+}
