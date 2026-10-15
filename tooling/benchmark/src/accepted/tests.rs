@@ -49,3 +49,13 @@ fn only_an_acceptance_the_base_does_not_carry_is_fresh() {
     assert_eq!(fresh(&a, &base), &a[..1]);
     assert!(fresh(&a, &a).is_empty());
 }
+
+#[test]
+fn an_acceptance_of_a_benchmark_the_base_names_is_not_fresh_however_its_line_reads() {
+    let base = parse("core_start_up 30 why\n").unwrap();
+    let reworded = parse("core_start_up 30 another reason\n").unwrap();
+    let raised = parse("core_start_up 40 why\n").unwrap();
+
+    assert!(fresh(&reworded, &base).is_empty());
+    assert!(fresh(&raised, &base).is_empty());
+}

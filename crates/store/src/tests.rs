@@ -57,6 +57,29 @@ fn the_store_file_is_readable_only_by_its_owner() {
     assert_eq!(mode & 0o777, 0o600);
 }
 
+#[cfg(unix)]
+#[test]
+fn a_store_file_others_can_read_is_refused_and_left_as_it_is() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = TempDir::new().unwrap();
+    drop(open(&dir));
+    let path = dir.path().join("store.db");
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
+
+    let err = Store::open(&path).unwrap_err();
+
+    assert!(
+        matches!(err, StoreError::Permissions { mode: 0o644 }),
+        "{err}"
+    );
+    assert_eq!(
+        err.to_string(),
+        "the store file can be read by others (mode 644): fix its permissions to 600 (SEC-02)"
+    );
+    let mode = std::fs::metadata(&path).unwrap().permissions().mode();
+    assert_eq!(mode & 0o777, 0o644);
+}
+
 #[test]
 fn a_store_reopens_with_what_it_held() {
     let dir = TempDir::new().unwrap();
