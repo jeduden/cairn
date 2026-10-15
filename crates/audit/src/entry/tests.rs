@@ -1,0 +1,141 @@
+use record::canonical;
+use record::digest::Digest;
+use serde_json::{Value, json};
+
+use super::*;
+
+const REJECTED: Occurrence = Occurrence::Degraded {
+    kind: Kind::Rejected,
+    counter: Counter::HookRejected,
+    operation: "hook UserPromptSubmit",
+    detail: "not a JSON object",
+};
+
+#[test]
+fn each_kind_and_counter_has_its_name() {
+    let kinds = [
+        (Kind::Failed, "failed"),
+        (Kind::Dropped, "dropped"),
+        (Kind::Rejected, "rejected"),
+        (Kind::Redacted, "redacted"),
+        (Kind::TimedOut, "timed-out"),
+        (Kind::Truncated, "truncated"),
+        (Kind::Coalesced, "coalesced"),
+    ];
+    for (kind, name) in kinds {
+        assert_eq!(kind.as_str(), name);
+    }
+    let counters = [
+        (Counter::HookRejected, "hook_rejected"),
+        (Counter::HookPanicked, "hook_panicked"),
+        (Counter::McpPanicked, "mcp_panicked"),
+    ];
+    for (counter, name) in counters {
+        assert_eq!(counter.as_str(), name);
+    }
+}
+
+#[test]
+fn a_degraded_entry_names_its_kind_counter_operation_and_detail() {
+    let e = Entry::next(&REJECTED, 7, 1_760_000_000, Digest::ZERO).unwrap();
+    assert_eq!(e.number, 7);
+    assert_eq!(e.time, 1_760_000_000);
+    assert_eq!(e.kind, "rejected");
+    assert_eq!(e.counter.as_deref(), Some("hook_rejected"));
+    assert_eq!(e.operation, "hook UserPromptSubmit");
+    assert_eq!(e.detail, "not a JSON object");
+    assert_eq!(e.prev_hash, Digest::ZERO);
+}
+
+#[test]
+fn a_counter_ack_feeds_no_counter() {
+    let e = Entry::next(&Occurrence::CounterAck, 1, 5, Digest::ZERO).unwrap();
+    assert_eq!(e.kind, COUNTER_ACK);
+    assert_eq!(e.counter, None);
+    assert_eq!(e.operation, "counter ack");
+    assert_eq!(e.detail, "counters acknowledged");
+}
+
+#[test]
+fn the_hash_is_sha_256_over_the_canonical_entry_without_it() {
+    let prev = Digest::of(&[b"before"]);
+    let e = Entry::next(&REJECTED, 2, 9, prev).unwrap();
+    let body = json!({
+        "entry": 2,
+        "time": 9,
+        "kind": "rejected",
+        "counter": "hook_rejected",
+        "operation": "hook UserPromptSubmit",
+        "detail": "not a JSON object",
+        "prev_hash": prev.to_hex(),
+    });
+    let want = Digest::of(&[canonical::encode(&body).unwrap().as_bytes()]);
+    assert_eq!(e.hash, want);
+}
+
+#[test]
+fn the_line_is_the_canonical_entry_with_its_hash() {
+    let e = Entry::next(&REJECTED, 2, 9, Digest::ZERO).unwrap();
+    let line = e.line().unwrap();
+    let value: Value = serde_json::from_str(&line).unwrap();
+    assert_eq!(canonical::encode(&value).unwrap(), line);
+    assert_eq!(value["hash"], json!(e.hash.to_hex()));
+    assert_eq!(value["prev_hash"], json!(Digest::ZERO.to_hex()));
+    let ack = Entry::next(&Occurrence::CounterAck, 3, 9, e.hash).unwrap();
+    let value: Value = serde_json::from_str(&ack.line().unwrap()).unwrap();
+    assert!(value.get("counter").is_none(), "{value}");
+}
+
+#[test]
+fn a_time_past_the_safe_integers_has_no_encoding() {
+    let e = Entry::next(&REJECTED, 1, u64::MAX, Digest::ZERO);
+    assert!(matches!(e, Err(AuditError::Encode(_))), "{e:?}");
+}
+
+#[test]
+fn a_line_parses_back_to_its_entry() {
+    for occurrence in [REJECTED, Occurrence::CounterAck] {
+        let e = Entry::next(&occurrence, 4, 11, Digest::of(&[b"p"])).unwrap();
+        assert_eq!(Entry::parse(&e.line().unwrap()), Ok(e));
+    }
+}
+
+#[test]
+fn a_line_that_is_not_a_whole_canonical_entry_is_refused() {
+    let e = Entry::next(&REJECTED, 4, 11, Digest::ZERO).unwrap();
+    let mut value: Value = serde_json::from_str(&e.line().unwrap()).unwrap();
+    let pretty = serde_json::to_string_pretty(&value).unwrap();
+    let cases = [
+        ("{", "not JSON"),
+        ("[]", "not an entry"),
+        (pretty.as_str(), "not canonical JSON"),
+    ];
+    for (line, why) in cases {
+        assert_eq!(Entry::parse(line), Err(why), "{line}");
+    }
+
+    let mut extra = value.clone();
+    extra["more"] = json!(1);
+    let mut missing = value.clone();
+    missing.as_object_mut().unwrap().remove("detail");
+    let mut mistyped = value.clone();
+    mistyped["entry"] = json!("4");
+    let mut bad_hash = value.clone();
+    bad_hash["hash"] = json!("zz");
+    let mut no_number = value.clone();
+    no_number["entry"] = json!(0);
+    for (v, why) in [
+        (extra, "not an entry"),
+        (missing, "not an entry"),
+        (mistyped, "not an entry"),
+        (bad_hash, "not an entry"),
+        (no_number, "not an entry"),
+    ] {
+        let line = canonical::encode(&v).unwrap();
+        assert_eq!(Entry::parse(&line), Err(why), "{line}");
+    }
+
+    value["detail"] = json!("something else");
+    let line = canonical::encode(&value).unwrap();
+    assert_eq!(Entry::parse(&line), Err("hash does not match"));
+}
