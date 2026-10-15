@@ -14,7 +14,7 @@ Feature: Security (SEC)
     And CI fails when a component's evidence is missing or shows a violation
     And no core process runs or starts a component behind B1 to B3
 
-  @SEC-02 @P0 @I8 @pending
+  @SEC-02 @P0 @I8
   Scenario Outline: cairn refuses a home or store file with loose permissions or belonging to another OS user
     Given an isolated Cairn home
     And the store path "<path>" has mode "<mode>" and belongs to the OS user "<user>"
@@ -30,7 +30,7 @@ Feature: Security (SEC)
       | store database | 0644 | running UID |
       | payload store  | 0600 | another UID |
 
-  @SEC-03 @P0 @I8 @pending
+  @SEC-03 @P0 @I8
   Scenario: a mismatched home id refuses to open the home
     Given an isolated Cairn home
     And the home is configured with home id "home-a"

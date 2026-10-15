@@ -25,6 +25,25 @@ pub enum AdminError {
     Store(store::StoreError),
     /// The home and the store disagree about the node.
     Node(&'static str),
+    /// A directory or file of the home lets other OS users in (SEC-02).
+    LoosePermissions { path: PathBuf, mode: u32 },
+    /// A directory or file of the home belongs to OS user `uid`, not
+    /// the `running` one (SEC-02, I8).
+    OtherOsUser {
+        path: PathBuf,
+        uid: u32,
+        running: u32,
+    },
+    /// A symbolic link inside the home, which could lead out of it.
+    SymbolicLink { path: PathBuf },
+    /// The running OS user cannot be learnt.
+    OsUser(std::io::Error),
+    /// The home's home id binding does not hold one home id (SEC-03).
+    HomeIdBinding { path: PathBuf },
+    /// The environment supplies another home id than the home's.
+    HomeIdMismatch,
+    /// The home is bound to a home id and the environment supplies none.
+    HomeIdMissing,
 }
 
 impl fmt::Display for AdminError {
@@ -35,6 +54,29 @@ impl fmt::Display for AdminError {
             Self::Key(e) => write!(f, "{e}"),
             Self::Store(e) => write!(f, "{e}"),
             Self::Node(why) => f.write_str(why),
+            Self::LoosePermissions { path, mode } => write!(
+                f,
+                "{}: mode {mode:04o} lets other OS users in; the home wants owner-only permissions",
+                path.display()
+            ),
+            Self::OtherOsUser { path, uid, running } => write!(
+                f,
+                "{}: belongs to UID {uid}, not the running UID {running}",
+                path.display()
+            ),
+            Self::SymbolicLink { path } => {
+                write!(f, "{}: a symbolic link inside the home", path.display())
+            }
+            Self::OsUser(e) => write!(f, "learn the running OS user: {e}"),
+            Self::HomeIdBinding { path } => {
+                write!(f, "{}: want {{\"id\": \"<home id>\"}}", path.display())
+            }
+            Self::HomeIdMismatch => {
+                f.write_str("the home id CAIRN_HOME_ID supplies does not match the home's")
+            }
+            Self::HomeIdMissing => {
+                f.write_str("the home is bound to a home id, and CAIRN_HOME_ID supplies none")
+            }
         }
     }
 }
@@ -42,10 +84,17 @@ impl fmt::Display for AdminError {
 impl std::error::Error for AdminError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::Io { source, .. } => Some(source),
+            Self::Io { source, .. } | Self::OsUser(source) => Some(source),
             Self::Key(e) => Some(e),
             Self::Store(e) => Some(e),
-            Self::NoHome | Self::Node(_) => None,
+            Self::NoHome
+            | Self::Node(_)
+            | Self::LoosePermissions { .. }
+            | Self::OtherOsUser { .. }
+            | Self::SymbolicLink { .. }
+            | Self::HomeIdBinding { .. }
+            | Self::HomeIdMismatch
+            | Self::HomeIdMissing => None,
         }
     }
 }

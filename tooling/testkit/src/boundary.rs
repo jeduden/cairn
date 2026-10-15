@@ -21,7 +21,7 @@
 //! tests unconfined there; CI refuses it, so the gate holds where it
 //! counts.
 
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::fmt;
 use std::fs;
 use std::io::{self, Write};
@@ -47,6 +47,11 @@ const UNSHARE: &str = "unshare";
 
 /// The namespace: the current OS user, and a network of its own.
 const NAMESPACE: [&str; 3] = ["--map-current-user", "--net", "--"];
+
+/// The tool that gives a program a pseudo-terminal: util-linux
+/// `script`, quiet, flushing, passing on the program's exit code, and
+/// keeping no typescript.
+const SCRIPT: &str = "script";
 
 /// The trace, up to its output file: every process followed, attach
 /// and exit notes and signals left out, every network call recorded,
@@ -148,7 +153,7 @@ impl Confinement {
     #[track_caller]
     pub fn run(&self, program: &Path, args: &[&str], home: &Path) -> Result<Output, Error> {
         let caller = caller(std::thread::current().name(), Location::caller());
-        self.start(program, args, home, None, caller)
+        self.start(program, args, home, &[], Stdin::Closed, caller)
     }
 
     /// [`run`](Self::run), with `input` written to the program's stdin,
@@ -167,7 +172,48 @@ impl Confinement {
         input: &[u8],
     ) -> Result<Output, Error> {
         let caller = caller(std::thread::current().name(), Location::caller());
-        self.start(program, args, home, Some(input), caller)
+        self.start(program, args, home, &[], Stdin::Input(input), caller)
+    }
+
+    /// [`run`](Self::run), with each of `env` set in the program's
+    /// environment, and `input`, when given, written to its stdin.
+    ///
+    /// # Errors
+    ///
+    /// As [`run_with_input`](Self::run_with_input).
+    #[track_caller]
+    pub fn run_in(
+        &self,
+        program: &Path,
+        args: &[&str],
+        home: &Path,
+        env: &[(&str, &str)],
+        input: Option<&[u8]>,
+    ) -> Result<Output, Error> {
+        let caller = caller(std::thread::current().name(), Location::caller());
+        let stdin = input.map_or(Stdin::Closed, Stdin::Input);
+        self.start(program, args, home, env, stdin, caller)
+    }
+
+    /// [`run_in`](Self::run_in) with a pseudo-terminal as the program's
+    /// standard input and output, as a person at a terminal gives it.
+    /// [`SCRIPT`] holds the terminal outside the confinement, so the
+    /// trace sees only the program. The program's stderr arrives in the
+    /// output's stdout, with the terminal's line endings.
+    ///
+    /// # Errors
+    ///
+    /// As [`run`](Self::run).
+    #[track_caller]
+    pub fn run_at_terminal(
+        &self,
+        program: &Path,
+        args: &[&str],
+        home: &Path,
+        env: &[(&str, &str)],
+    ) -> Result<Output, Error> {
+        let caller = caller(std::thread::current().name(), Location::caller());
+        self.start(program, args, home, env, Stdin::Terminal, caller)
     }
 
     fn start(
@@ -175,16 +221,23 @@ impl Confinement {
         program: &Path,
         args: &[&str],
         home: &Path,
-        input: Option<&[u8]>,
+        env: &[(&str, &str)],
+        stdin: Stdin,
         caller: String,
     ) -> Result<Output, Error> {
         let dir = TempDir::new().map_err(|source| Error::Trace { source })?;
         let trace = dir.path().join("trace");
         let mut command = self.command(program, args, &trace);
+        if stdin == Stdin::Terminal {
+            command = at_terminal(&command);
+        }
+        // The isolated home goes last, so no variable a step sets moves
+        // the program out of it (ENG-14).
+        command.envs(env.iter().copied());
         isolate(&mut command, home);
-        let output = match input {
-            None => command.stdin(Stdio::null()).output(),
-            Some(bytes) => feed(&mut command, bytes),
+        let output = match stdin {
+            Stdin::Closed | Stdin::Terminal => command.stdin(Stdio::null()).output(),
+            Stdin::Input(bytes) => feed(&mut command, bytes),
         }
         .map_err(|source| Error::Start {
             program: program.to_path_buf(),
@@ -236,6 +289,34 @@ impl Confinement {
             })
         }
     }
+}
+
+/// What a start gives the program on its standard input.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Stdin<'a> {
+    /// Nothing: it reads end of file at once.
+    Closed,
+    /// These bytes, then end of file.
+    Input(&'a [u8]),
+    /// A pseudo-terminal, which is its standard output too.
+    Terminal,
+}
+
+/// `command` started at a pseudo-terminal of its own, through
+/// [`SCRIPT`].
+fn at_terminal(command: &Command) -> Command {
+    let mut outer = Command::new(SCRIPT);
+    outer.args(["-qefc", &shell_line(command), "/dev/null"]);
+
+    outer
+}
+
+/// The shell line that runs `command`, every word quoted.
+fn shell_line(command: &Command) -> String {
+    let quote = |word: &OsStr| format!("'{}'", word.to_string_lossy().replace('\'', r"'\''"));
+    std::iter::once(command.get_program())
+        .chain(command.get_args())
+        .fold("exec".to_owned(), |line, word| line + " " + &quote(word))
 }
 
 /// Starts `command` with `input` on its stdin, closes it, and waits

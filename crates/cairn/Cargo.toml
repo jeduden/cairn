@@ -9,6 +9,8 @@ publish.workspace = true
 
 [dependencies]
 administration.workspace = true
+audit.workspace = true
+hook.workspace = true
 ingest.workspace = true
 key.workspace = true
 mcp.workspace = true
@@ -28,5 +30,5 @@ workspace = true
 # architecture check reads both.
 [package.metadata.cairn]
 responsibility = "Runs the core executable: the hook handlers, the MCP server and the CLI"
-may-depend-on = ["administration", "ingest", "key", "mcp", "store"]
+may-depend-on = ["administration", "audit", "hook", "ingest", "key", "mcp", "store"]
 may-dev-depend-on = ["record", "testkit"]

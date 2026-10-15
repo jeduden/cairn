@@ -14,6 +14,7 @@ srs.workspace = true
 [dev-dependencies]
 adr.workspace = true
 administration.workspace = true
+audit.workspace = true
 drift.workspace = true
 engineering.workspace = true
 harness-contract.workspace = true
@@ -38,4 +39,4 @@ workspace = true
 [package.metadata.cairn]
 responsibility = "Reads features into scenarios, keeps them in step with the SRS and runs them"
 may-depend-on = ["srs"]
-may-dev-depend-on = ["adr", "administration", "drift", "engineering", "harness-contract", "key", "record", "store", "testkit"]
+may-dev-depend-on = ["adr", "administration", "audit", "drift", "engineering", "harness-contract", "key", "record", "store", "testkit"]

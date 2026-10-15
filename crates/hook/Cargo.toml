@@ -1,0 +1,21 @@
+[package]
+name = "hook"
+version = "0.0.0"
+description = "The hook handlers' entry point: the hook input checked, a panic caught, every failure typed for its counter"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+audit.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true
+
+# ENG-02: see crates/cairn/Cargo.toml.
+[package.metadata.cairn]
+responsibility = "Runs the hook handlers: checks the hook input, catches a panic, and types each failure for its counter"
+may-depend-on = ["audit"]
+may-dev-depend-on = []

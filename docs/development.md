@@ -103,9 +103,10 @@ user and network namespace of its own (`unshare --map-current-user
 and `io_uring_setup` with `EACCES` and records every network call.
 Any recorded call fails the test, naming the core and the test that
 started it. The gate test `the_core_s_tests_start_it_confined` refuses
-a test that starts the core any other way. It needs Linux, `unshare`
-from util-linux with unprivileged user namespaces, and `strace`; a
-machine without them fails the end-to-end tests with what is missing.
+a test that starts the core any other way; a step needing a terminal gets one
+from `script`, outside the trace. It needs Linux, `unshare` and `script` from
+util-linux with unprivileged user namespaces, and `strace`; a machine without
+them fails the end-to-end tests with what is missing.
 Outside CI, `CAIRN_E2E_UNCONFINED=1` runs them unconfined instead, on
 a machine that cannot confine; CI refuses it.
 
@@ -134,16 +135,15 @@ Every workflow lives in `.github/workflows`. Every action is fixed
 to a commit SHA with its version in a trailing comment, and dependabot
 proposes the bumps after a seven-day cooldown.
 
-[ci.yml](../.github/workflows/ci.yml) runs on every push and pull
-request to `main`. It runs every test and scenario, with `HOME`
-pointed at an empty decoy that must stay empty (ENG-14), the core's
-end-to-end tests confined (ENG-12), clippy and rustfmt, cargo-deny and
-cargo-audit, the drift suite, the benchmark gate, and the release build
-of every target (NFR-10, CON-02). It also runs `mdsmith check .`,
-[taplo](../.taplo.toml), and zizmor over the workflows. A final
-job named `CI` passes only when every other job passed. It is the one
-check the branch and release-tag rulesets require, because GitHub
-names a required check after a job, never after the workflow.
+[ci.yml](../.github/workflows/ci.yml) runs on every push and pull request to
+`main`. It runs every test and scenario, with `HOME` pointed at an empty
+decoy that must stay empty (ENG-14), the core's end-to-end tests confined
+(ENG-12), clippy and rustfmt, cargo-deny and cargo-audit, the drift suite,
+the benchmark gate, and the release build of every target (NFR-10, CON-02).
+It also runs `mdsmith check .`, [taplo](../.taplo.toml), and zizmor over the
+workflows. A final job named `CI` passes only when every other job passed.
+It is the one check the branch and release-tag rulesets require, because
+GitHub names a required check after a job, never after the workflow.
 
 The `benchmark` job (ENG-15) is described in
 [testing.md](testing.md#benchmarks-and-the-regression-gate).

@@ -31,7 +31,7 @@ Feature: Engineering quality (ENG)
     And every public blocking operation takes a deadline, directly or through a cancellation signal a deadline fires
     And no crate that computes derived artifacts reads the wall clock or randomness
 
-  @ENG-04 @P0 @pending
+  @ENG-04 @P0
   Scenario: errors keep their cause, are typed per counter, and panics stop at the entry points
     Given an isolated Cairn home
     And a hook handler that panics

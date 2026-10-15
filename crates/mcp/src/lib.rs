@@ -21,6 +21,7 @@
 //! repeats what the call passed (RCL-04).
 
 use std::io::{self, Write};
+use std::panic::{self, AssertUnwindSafe};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::Duration;
 
@@ -47,6 +48,7 @@ cairn:room/<room id>/w/<writer id>/<seq>. Pass scope \"room\" for an event outsi
 
 /// The JSON-RPC error codes the server answers with.
 const PARSE_ERROR: i64 = -32700;
+const INTERNAL_ERROR: i64 = -32603;
 const INVALID_REQUEST: i64 = -32600;
 const METHOD_NOT_FOUND: i64 = -32601;
 
@@ -305,18 +307,22 @@ fn error(id: &Value, code: i64, message: &str) -> String {
     json!({"jsonrpc": "2.0", "id": id, "error": {"code": code, "message": message}}).to_string()
 }
 
-/// Answers each line `input` delivers on `out`, until the input closes.
-/// Each wait for a line ends after `idle` and starts again, so no wait
-/// is without a deadline (ENG-03).
+/// Answers each line `input` delivers on `out` through `handle`, until
+/// the input closes. Each wait for a line ends after `idle` and starts
+/// again, so no wait is without a deadline (ENG-03). A panic while
+/// handling a line stops here: a request is answered with an internal
+/// error under its id, `panicked` is told so the caller can audit it,
+/// and serving goes on (ENG-04).
 ///
 /// # Errors
 ///
 /// Fails when reading the input or writing a reply fails.
 pub fn serve(
-    server: &mut Server,
+    handle: &mut dyn FnMut(&str) -> Option<String>,
     input: &Receiver<io::Result<String>>,
     out: &mut dyn Write,
     idle: Duration,
+    panicked: &mut dyn FnMut(),
 ) -> io::Result<()> {
     loop {
         match input.recv_timeout(idle) {
@@ -327,7 +333,15 @@ pub fn serve(
                 out.flush()?;
             }
             Ok(line) => {
-                if let Some(reply) = server.handle(&line?) {
+                let line = line?;
+                let reply =
+                    panic::catch_unwind(AssertUnwindSafe(|| handle(&line))).unwrap_or_else(|_| {
+                        // The panic stops at the entry point, and the
+                        // client hears of it (ENG-04).
+                        panicked();
+                        panic_reply(&line)
+                    });
+                if let Some(reply) = reply {
                     writeln!(out, "{reply}")?;
                     out.flush()?;
                 }
@@ -336,6 +350,19 @@ pub fn serve(
             Err(RecvTimeoutError::Disconnected) => return Ok(()),
         }
     }
+}
+
+/// The reply to `line` once handling it panicked: an internal error
+/// with the request's id, so the client can match it to its request;
+/// none for a notification, which takes no reply; a null id for a line
+/// that names no method.
+fn panic_reply(line: &str) -> Option<String> {
+    let id = match serde_json::from_str::<Value>(line) {
+        Ok(message) if message.get("method").is_some() => message.get("id")?.clone(),
+        _ => Value::Null,
+    };
+
+    Some(error(&id, INTERNAL_ERROR, "internal error"))
 }
 
 #[cfg(test)]
