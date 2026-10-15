@@ -1,7 +1,7 @@
 //! The registry: every drift a check that keeps the records in step
 //! exists to catch.
 
-use crate::{Case, Check, Injection, cargo_test, clippy, mdsmith, scenario};
+use crate::{Case, Check, Injection, cargo_test, clippy, mdsmith, scenario, taplo_fmt, taplo_lint};
 
 /// The dependency decision the ENG-18 and ENG-26 cases drift.
 const TEST_STACK: &str = "docs/adr/ADR-2610142221-json-serde-json.md";
@@ -59,6 +59,7 @@ pub fn cases() -> Vec<Case> {
         product_crate_cases(),
         confinement_cases(),
         static_analysis_cases(),
+        toml_cases(),
         release_cases(),
         protection_cases(),
         architecture_cases(),
@@ -899,6 +900,53 @@ fn static_analysis_cases() -> Vec<Case> {
             ),
             check("derived_code_is_refused_a_clock_or_randomness_at_build_time"),
             "code that computes derived artifacts may read a clock or randomness: crate cairn: crates/cairn/clippy.toml does not ban std::time::Instant::now in disallowed-methods",
+        ),
+    ]
+}
+
+/// The drifts the TOML checks exist to catch: CI no longer running one
+/// or no longer gating on its job, a misspelt manifest key, and a TOML
+/// file out of its layout.
+fn toml_cases() -> Vec<Case> {
+    const CI: &str = ".github/workflows/ci.yml";
+    const GATE: &str = "the_ci_workflow_gates_on_the_toml_checks";
+    let gate = || cargo_test("engineering", "static_analysis", GATE);
+    vec![
+        case(
+            "CI no longer running taplo lint",
+            GATE,
+            Injection::replace(CI, "      - run: taplo lint\n", ""),
+            gate(),
+            "no CI job runs taplo lint: taplo lint",
+        ),
+        case(
+            "the toml job left out of the ci job",
+            GATE,
+            Injection::replace(CI, "markdown, toml, workflows", "markdown, workflows"),
+            gate(),
+            "job toml runs taplo fmt, but the ci job does not need it",
+        ),
+        case(
+            "a manifest key misspelt",
+            GATE,
+            Injection::replace(
+                "crates/cairn/Cargo.toml",
+                "edition.workspace = true\n",
+                "edition.workspace = true\nlicence = \"MIT\"\n",
+            ),
+            taplo_lint(),
+            "'licence' was unexpected",
+        ),
+        case(
+            "a TOML file out of its layout",
+            GATE,
+            Injection::replace(
+                "Cargo.toml",
+                "unsafe_code = \"forbid\"",
+                "unsafe_code=\"forbid\"",
+            ),
+            taplo_fmt(),
+            "the file is not properly formatted",
         ),
     ]
 }

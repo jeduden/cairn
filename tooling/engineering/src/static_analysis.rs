@@ -42,6 +42,14 @@ pub const STATIC_CHECKS: [(&str, &str); 5] = [
     ("the custom checks", "cargo test --workspace --locked"),
 ];
 
+/// The TOML checks, with the command CI runs each with: Taplo holds
+/// every TOML file to the layout `.taplo.toml` sets, and each to the
+/// schema `.taplo.toml` names for it.
+pub const TOML_CHECKS: [(&str, &str); 2] = [
+    ("taplo fmt", "taplo fmt --check"),
+    ("taplo lint", "taplo lint"),
+];
+
 /// The check that enforces the clippy bans.
 const CLIPPY: (&str, &str) = STATIC_CHECKS[0];
 
@@ -196,6 +204,15 @@ pub fn ci_gates(flow: &Workflow) -> Vec<String> {
     problems.extend(aggregates(flow));
 
     problems
+}
+
+/// Requires CI to gate on every TOML check of [`TOML_CHECKS`].
+#[must_use]
+pub fn toml_gates(flow: &Workflow) -> Vec<String> {
+    TOML_CHECKS
+        .iter()
+        .flat_map(|check| gates_on(flow, *check))
+        .collect()
 }
 
 /// The lines of the TOML table `[header]`, comments left out.

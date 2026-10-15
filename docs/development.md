@@ -39,6 +39,7 @@ installs it on the first `cargo` command.
   supply chain (ENG-16), with [deny.toml](../deny.toml)'s policy
 - `mdsmith check .` — lint the Markdown; `mdsmith fix .` rewrites
   what it can, including the generated catalogs
+- `taplo fmt --check` and `taplo lint` — TOML layout and schemas
 
 ## Static analysis
 
@@ -137,8 +138,8 @@ request to `main`. It runs every test and scenario, with `HOME`
 pointed at an empty decoy that must stay empty (ENG-14), the core's
 end-to-end tests confined (ENG-12), clippy and rustfmt, cargo-deny and
 cargo-audit, the drift suite, the benchmark gate, and the release build
-of every target (NFR-10, CON-02). It also runs `mdsmith check .` and
-zizmor over the workflows themselves. A final
+of every target (NFR-10, CON-02). It also runs `mdsmith check .`, taplo
+over the TOML files and zizmor over the workflows. A final
 job named `CI` passes only when every other job passed. It is the one
 check the branch and release-tag rulesets require, because GitHub
 names a required check after a job, never after the workflow.
