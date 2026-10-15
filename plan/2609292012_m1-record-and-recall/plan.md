@@ -268,7 +268,8 @@ footer: |
 | --- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | ✅     | [Proving slice: one transcript recorded, recalled and verified](phase-1.md)                                                                                                                            |
 |     | ↳      | @REC-10 off @pending and passing. A recorded transcript is ingested, recalled through event_get in the envelope and verified, end to end and confined; a flipped header byte exits 3 naming the event. |
-| 2   | 🔳     | [The home, the audit log and counters](phase-2.md)                                                                                                                                                     |
+| 2   | ✅     | [The home, the audit log and counters](phase-2.md)                                                                                                                                                     |
+|     | ↳      | @SEC-02, @SEC-03, @OPS-02, @OPS-03 and @ENG-04 off @pending and passing, confined. Every command checks the home first; the audit log chains across rotation; cairn hook fails open and audits.        |
 <?/catalog?>
 
 ## Acceptance Criteria

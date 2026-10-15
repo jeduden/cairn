@@ -1,7 +1,7 @@
 ---
 n: 2
 title: "The home, the audit log and counters"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 2: the home, the audit log and counters
