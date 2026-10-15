@@ -48,9 +48,10 @@ Inherited:
   provenance in device seats only. It returns the causal order and
   names each failure's class.
 - `event_get` checks commitment, hash and `prev_hash` first. A seat
-  the node's key did not certify reads `peer`. Scope defaults to the
-  personal room; refusals are fixed text; the result is the envelope's
-  text alone, in §9.3's order.
+  not both certified by the node's key and recorded in its genesis
+  reads `peer`. Scope defaults to the personal room; refusals are
+  fixed text; the result is the envelope's text alone, in §9.3's
+  order.
 - Removed content with no tombstone fails verify until phase 14.
 - Steps start the core through `testkit::core_executable()` and
   `Confinement`; `an isolated Cairn home`, `the person runs "cairn …"`
