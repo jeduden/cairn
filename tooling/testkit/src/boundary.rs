@@ -148,7 +148,7 @@ impl Confinement {
     #[track_caller]
     pub fn run(&self, program: &Path, args: &[&str], home: &Path) -> Result<Output, Error> {
         let caller = caller(std::thread::current().name(), Location::caller());
-        self.start(program, args, home, None, caller)
+        self.start(program, args, home, &[], None, caller)
     }
 
     /// [`run`](Self::run), with `input` written to the program's stdin,
@@ -167,7 +167,7 @@ impl Confinement {
         input: &[u8],
     ) -> Result<Output, Error> {
         let caller = caller(std::thread::current().name(), Location::caller());
-        self.start(program, args, home, Some(input), caller)
+        self.start(program, args, home, &[], Some(input), caller)
     }
 
     /// [`run`](Self::run), with each of `env` set in the program's
@@ -182,11 +182,11 @@ impl Confinement {
         program: &Path,
         args: &[&str],
         home: &Path,
-        _env: &[(&str, &str)],
+        env: &[(&str, &str)],
         input: Option<&[u8]>,
     ) -> Result<Output, Error> {
         let caller = caller(std::thread::current().name(), Location::caller());
-        self.start(program, args, home, input, caller)
+        self.start(program, args, home, env, input, caller)
     }
 
     fn start(
@@ -194,6 +194,7 @@ impl Confinement {
         program: &Path,
         args: &[&str],
         home: &Path,
+        env: &[(&str, &str)],
         input: Option<&[u8]>,
         caller: String,
     ) -> Result<Output, Error> {
@@ -201,6 +202,7 @@ impl Confinement {
         let trace = dir.path().join("trace");
         let mut command = self.command(program, args, &trace);
         isolate(&mut command, home);
+        command.envs(env.iter().copied());
         let output = match input {
             None => command.stdin(Stdio::null()).output(),
             Some(bytes) => feed(&mut command, bytes),
