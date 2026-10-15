@@ -150,7 +150,7 @@ Feature: Record (REC)
     And nothing in an export lets a reader off this node confirm a guess at the content from a payload name
     And each payload was written to a temporary file, fsynced, then renamed into place
 
-  @REC-10 @P0 @I10 @pending
+  @REC-10 @P0 @I10
   Scenario: each writer's events form their own hash chain over a header that carries no content
     Given an isolated Cairn home
     And a record in which two writers have each appended 20 events, each having seen the other's log, the second writer's clock running an hour behind

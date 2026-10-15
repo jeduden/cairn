@@ -92,3 +92,38 @@ fn repo_root_is_two_levels_above_the_crate() {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
     );
 }
+
+#[test]
+fn an_executable_is_found_beside_the_running_test_s_deps_directory() {
+    let dir = TempDir::new().unwrap();
+    let deps = dir.path().join("debug/deps");
+    fs::create_dir_all(&deps).unwrap();
+    let test = deps.join("bdd-0123");
+    let exe = dir
+        .path()
+        .join(format!("debug/cairn{}", std::env::consts::EXE_SUFFIX));
+
+    let missing = sibling_executable(&test, "cairn").unwrap_err();
+    fs::write(&exe, "").unwrap();
+    let found = sibling_executable(&test, "cairn").unwrap();
+
+    assert_eq!(found, exe);
+    assert_eq!(
+        missing,
+        format!(
+            "no cairn executable at {}: build it first, with cargo build -p cairn",
+            exe.display()
+        )
+    );
+    assert_eq!(
+        sibling_executable(Path::new("bdd"), "cairn").unwrap_err(),
+        "the running test bdd lies in no deps directory"
+    );
+}
+
+#[test]
+fn core_executable_looks_beside_the_running_test() {
+    let test = std::env::current_exe().unwrap();
+
+    assert_eq!(core_executable(), sibling_executable(&test, "cairn"));
+}

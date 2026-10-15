@@ -1,6 +1,7 @@
 # The Cargo workspace (ENG-02): the product's crates under crates/,
-# today the `cairn` core executable, and the repository tooling under
-# tooling/. The product's other crates join it as their plans land.
+# the `cairn` core executable and the library crates it links, and the
+# repository tooling under tooling/. The product's other crates join it
+# as their plans land.
 #
 # Every external dependency is declared once, in
 # [workspace.dependencies], and each crate takes it with
@@ -19,8 +20,22 @@ publish = false
 
 [workspace.dependencies]
 cucumber = "0.23.0"
+ed25519-dalek = "3.0.0"
+getrandom = "0.4.3"
+# SQLite and FTS5 compiled in, extension loading compiled out through
+# LIBSQLITE3_FLAGS in .cargo/config.toml (ADR-2610110553).
+rusqlite = { version = "0.40.2", default-features = false, features = ["bundled"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
+sha2 = "0.11.1"
+
+administration = { path = "crates/administration" }
+envelope = { path = "crates/envelope" }
+ingest = { path = "crates/ingest" }
+key = { path = "crates/key" }
+mcp = { path = "crates/mcp" }
+record = { path = "crates/record" }
+store = { path = "crates/store" }
 
 adr = { path = "tooling/adr" }
 benchmark = { path = "tooling/benchmark" }

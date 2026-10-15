@@ -4,10 +4,10 @@
 use crate::{Case, Check, Injection, cargo_test, clippy, mdsmith, scenario};
 
 /// The dependency decision the ENG-18 and ENG-26 cases drift.
-const TEST_STACK: &str = "docs/adr/ADR-2610101913-test-stack-after-go.md";
+const TEST_STACK: &str = "docs/adr/ADR-2610142221-json-serde-json.md";
 
 /// The decision [`TEST_STACK`] superseded.
-const OLD_TEST_STACK: &str = "docs/adr/ADR-2610101442-rust-test-stack.md";
+const OLD_TEST_STACK: &str = "docs/adr/ADR-2610101913-test-stack-after-go.md";
 
 /// The release workflow the ENG-20 cases drift.
 const RELEASE_WORKFLOW: &str = ".github/workflows/release.yml";
@@ -134,9 +134,9 @@ fn decision_cases() -> Vec<Case> {
         case(
             "two ADRs sharing an id",
             "ENG-26",
-            Injection::copy(TEST_STACK, "docs/adr/ADR-2610101913-copy.md"),
+            Injection::copy(TEST_STACK, "docs/adr/ADR-2610142221-copy.md"),
             scenario("ENG-26"),
-            "id ADR-2610101913 already used by",
+            "id ADR-2610142221 already used by",
         ),
         case(
             "an ADR superseded without a successor",
@@ -150,7 +150,7 @@ fn decision_cases() -> Vec<Case> {
             "ENG-26",
             Injection::replace(OLD_TEST_STACK, "status: superseded", "status: accepted"),
             scenario("ENG-26"),
-            r#"ADR-2610101442 names successor ADR-2610101913 but its status is "accepted", not superseded"#,
+            r#"ADR-2610101913 names successor ADR-2610142221 but its status is "accepted", not superseded"#,
         ),
         // Phase 3 of plan 2609292156 moves ADR-01 to ADR-10 into files
         // and makes this drift fail ENG-26.
@@ -393,8 +393,8 @@ fn gate_cases() -> Vec<Case> {
             "mdsmith check",
             Injection::replace(
                 TEST_STACK,
-                "read JSON through serde and serde_json. All three serve",
-                "read JSON through serde and serde_json. Each of them serves",
+                "serde_json reads and writes JSON in the tooling",
+                "serde_json reads and writes JSON in tooling",
             ),
             mdsmith(),
             "generated section is out of date",
@@ -420,7 +420,7 @@ fn parse_cases() -> Vec<Case> {
         case(
             "a decision record whose front matter no longer reads",
             "decision_records_parse",
-            Injection::replace(TEST_STACK, "id: ADR-2610101913", "id ADR-2610101913"),
+            Injection::replace(TEST_STACK, "id: ADR-2610142221", "id ADR-2610142221"),
             cargo_test("adr", "records", "decision_records_parse"),
             "malformed front matter",
         ),
@@ -561,8 +561,8 @@ fn reach_cases() -> Vec<Case> {
             "the_core_executable_links_only_crates_its_reach_allows",
             Injection::replace(
                 "crates/cairn/Cargo.toml",
-                "[dev-dependencies]\nserde_json.workspace = true\n",
-                "[dependencies]\nserde_json.workspace = true\n\n[dev-dependencies]\n",
+                "store.workspace = true\n\n[dev-dependencies]\nrecord.workspace = true\nrusqlite.workspace = true\ntestkit.workspace = true\n",
+                "store.workspace = true\ntestkit.workspace = true\n\n[dev-dependencies]\nrecord.workspace = true\nrusqlite.workspace = true\n",
             ),
             cargo_test(
                 "cairn",
@@ -576,8 +576,8 @@ fn reach_cases() -> Vec<Case> {
             "SEC-01",
             Injection::replace(
                 "crates/cairn/src/lib.rs",
-                "use std::io::Write;",
-                "use std::io::Write;\n\npub fn dial() -> Option<std::net::TcpStream> {\n    None\n}",
+                "use std::io::{self, Write};",
+                "use std::io::{self, Write};\n\npub fn dial() -> Option<std::net::TcpStream> {\n    None\n}",
             ),
             clippy("cairn"),
             "use of a disallowed type `std::net::TcpStream`",
@@ -598,8 +598,8 @@ fn architecture_cases() -> Vec<Case> {
             "ENG-02",
             Injection::replace(
                 "crates/cairn/Cargo.toml",
-                "[dev-dependencies]\nserde_json.workspace = true\ntestkit.workspace = true\n",
-                "[dependencies]\ntestkit.workspace = true\n\n[dev-dependencies]\nserde_json.workspace = true\n",
+                "store.workspace = true\n\n[dev-dependencies]\nrecord.workspace = true\nrusqlite.workspace = true\ntestkit.workspace = true\n",
+                "store.workspace = true\ntestkit.workspace = true\n\n[dev-dependencies]\nrecord.workspace = true\nrusqlite.workspace = true\n",
             ),
             scenario("ENG-02"),
             "product crate cairn depends on tooling crate testkit, which a product crate never does",
@@ -641,7 +641,7 @@ fn architecture_cases() -> Vec<Case> {
 /// random order (I10), and mutable global state (ENG-03).
 fn product_crate_cases() -> Vec<Case> {
     const LIB: &str = "crates/cairn/src/lib.rs";
-    const AT: &str = "use std::io::Write;";
+    const AT: &str = "use std::io::{self, Write};";
     vec![
         case(
             "a product crate's clippy.toml dropping a reach ban",
@@ -679,7 +679,7 @@ fn product_crate_cases() -> Vec<Case> {
             Injection::replace(
                 LIB,
                 AT,
-                "use std::io::Write;\n\npub fn now() -> std::time::Instant {\n    std::time::Instant::now()\n}",
+                "use std::io::{self, Write};\n\npub fn now() -> std::time::Instant {\n    std::time::Instant::now()\n}",
             ),
             clippy("cairn"),
             "use of a disallowed method `std::time::Instant::now`",
@@ -690,7 +690,7 @@ fn product_crate_cases() -> Vec<Case> {
             Injection::replace(
                 LIB,
                 AT,
-                "use std::io::Write;\n\npub type Index = std::collections::HashMap<u8, u8>;",
+                "use std::io::{self, Write};\n\npub type Index = std::collections::HashMap<u8, u8>;",
             ),
             clippy("cairn"),
             "use of a disallowed type `std::collections::HashMap`",
@@ -731,7 +731,7 @@ fn product_crate_cases() -> Vec<Case> {
             Injection::replace(
                 LIB,
                 AT,
-                "use std::io::Write;\n\npub fn wait(rx: &std::sync::mpsc::Receiver<u8>) -> Option<u8> {\n    rx.recv().ok()\n}",
+                "use std::io::{self, Write};\n\npub fn wait(rx: &std::sync::mpsc::Receiver<u8>) -> Option<u8> {\n    rx.recv().ok()\n}",
             ),
             clippy("cairn"),
             "use of a disallowed method `std::sync::mpsc::Receiver::recv`",
@@ -742,7 +742,7 @@ fn product_crate_cases() -> Vec<Case> {
             Injection::replace(
                 LIB,
                 AT,
-                "use std::io::Write;\n\npub fn wait(h: std::thread::JoinHandle<()>) {\n    let _ = h.join();\n}",
+                "use std::io::{self, Write};\n\npub fn wait(h: std::thread::JoinHandle<()>) {\n    let _ = h.join();\n}",
             ),
             clippy("cairn"),
             "use of a disallowed method `std::thread::JoinHandle::join`",
@@ -753,7 +753,7 @@ fn product_crate_cases() -> Vec<Case> {
             Injection::replace(
                 LIB,
                 AT,
-                "use std::io::Write;\n\npub fn input() -> std::io::Stdin {\n    std::io::stdin()\n}",
+                "use std::io::{self, Write};\n\npub fn input() -> std::io::Stdin {\n    std::io::stdin()\n}",
             ),
             clippy("cairn"),
             "use of a disallowed method `std::io::stdin`",
@@ -764,14 +764,14 @@ fn product_crate_cases() -> Vec<Case> {
             Injection::replace(
                 LIB,
                 AT,
-                "use std::io::Write;\n\npub static SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);",
+                "use std::io::{self, Write};\n\npub static SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);",
             ),
             cargo_test(
                 "engineering",
                 "checkout",
                 "no_product_crate_keeps_mutable_global_state",
             ),
-            "crates/cairn/src/lib.rs:10: mutable global state: pub static SEQ",
+            "crates/cairn/src/lib.rs:11: mutable global state: pub static SEQ",
         ),
     ]
 }
@@ -801,8 +801,8 @@ fn confinement_cases() -> Vec<Case> {
             "ENG-12",
             Injection::replace(
                 "crates/cairn/src/lib.rs",
-                "        Some(\"version\") => version(args, build, stdout, stderr),",
-                "        Some(\"version\") => {\n            let _ = std::net::UdpSocket::bind((\"127.0.0.1\", 0));\n            version(args, build, stdout, stderr)\n        }",
+                "        Some(\"version\") => version(args, ctx.build, stdout, stderr),",
+                "        Some(\"version\") => {\n            let _ = std::net::UdpSocket::bind((\"127.0.0.1\", 0));\n            version(args, ctx.build, stdout, stderr)\n        }",
             ),
             cargo_test("cairn", "e2e_cairn", "version_prints_the_build_s_version"),
             "ENG-12: the core opened a socket outside its boundary, which denies all network; started by version_prints_the_build_s_version",
@@ -1282,6 +1282,36 @@ fn benchmark_cases() -> Vec<Case> {
             Injection::replace(CI, ", benchmark", ""),
             cargo_test("engineering", "benchmark_gate", GATED),
             "job ci does not need benchmark",
+        ),
+        case(
+            "SQLite built with extension loading",
+            "sqlite_is_built_without_extension_loading",
+            Injection::replace(
+                ".cargo/config.toml",
+                "LIBSQLITE3_FLAGS = {",
+                "UNUSED_SQLITE_FLAGS = {",
+            ),
+            cargo_test(
+                "store",
+                "sqlite_build",
+                "sqlite_is_built_without_extension_loading",
+            ),
+            "SQLite was built with extension loading",
+        ),
+        case(
+            "an accepted regression recorded with no reason",
+            "the_accepted_regressions_parse",
+            Injection::replace(
+                "tooling/benchmark/accepted.txt",
+                "core_start_up 30 the core links",
+                "core_start_up\n30 the core links",
+            ),
+            cargo_test(
+                "benchmark",
+                "accepted_file",
+                "the_accepted_regressions_parse",
+            ),
+            "want <benchmark> <percent> <reason>",
         ),
     ]
 }

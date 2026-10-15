@@ -1,7 +1,8 @@
 ---
 id: ADR-2610101913
 title: "The test stack after Go: cucumber, serde and serde_json"
-status: accepted
+status: superseded
+superseded-by: ADR-2610142221
 scope: dependencies
 summary: >-
   The scenarios run through cucumber-rs, and the tooling and the tests

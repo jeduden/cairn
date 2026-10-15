@@ -13,10 +13,14 @@ srs.workspace = true
 
 [dev-dependencies]
 adr.workspace = true
+administration.workspace = true
 drift.workspace = true
 engineering.workspace = true
 harness-contract.workspace = true
+key.workspace = true
+record.workspace = true
 serde_json.workspace = true
+store.workspace = true
 testkit.workspace = true
 
 # The executable requirement matrix: every scenario under features/,
@@ -34,4 +38,4 @@ workspace = true
 [package.metadata.cairn]
 responsibility = "Reads features into scenarios, keeps them in step with the SRS and runs them"
 may-depend-on = ["srs"]
-may-dev-depend-on = ["adr", "drift", "engineering", "harness-contract", "testkit"]
+may-dev-depend-on = ["adr", "administration", "drift", "engineering", "harness-contract", "key", "record", "store", "testkit"]
