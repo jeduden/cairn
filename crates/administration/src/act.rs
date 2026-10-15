@@ -321,8 +321,8 @@ pub fn open_residual_risks(store: &Store) -> Result<OpenRisks, AdminError> {
 pub struct Gate {
     /// Whether standard input and output are both a terminal.
     pub terminal: bool,
-    /// Whether managed policy, or the principal, requires an
-    /// authenticator for widening acts.
+    /// Whether managed policy requires an authenticator for widening
+    /// acts (SEC-22).
     pub authenticator_required: bool,
     /// Whether managed policy fails, so what it requires is unknown.
     pub managed_policy_failed: bool,

@@ -202,6 +202,24 @@ fn ctx_of(p: &Process) -> Context<'static> {
 }
 
 #[test]
+fn recorded_acts_are_none_while_the_first_start_is_unfinished() {
+    let p = Process::new();
+    let home = p_home(&p);
+    home.create().unwrap();
+    drop(Store::open(&home.store()).unwrap());
+    assert_eq!(recorded_acts(&home), Ok(Vec::new()));
+    assert_eq!(p.invoke(&["status"], &DEV).0, EXIT_OK);
+    assert_eq!(p.invoke(&["doctor"], &DEV).0, EXIT_OK);
+
+    // The genesis recorded, its device key not yet placed.
+    let q = Process::new();
+    q.invoke(&["ingest", "--path", &q.transcript("a\n")], &DEV);
+    std::fs::remove_file(q.cairn_home().join("keys/device.key")).unwrap();
+    std::fs::create_dir_all(p_home(&q).genesis()).unwrap();
+    assert_eq!(recorded_acts(&p_home(&q)), Ok(Vec::new()));
+}
+
+#[test]
 fn recorded_acts_reports_a_store_whose_node_is_gone() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);

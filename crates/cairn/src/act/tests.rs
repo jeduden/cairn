@@ -197,6 +197,18 @@ fn a_widening_act_is_refused_while_managed_policy_requires_an_authenticator() {
 }
 
 #[test]
+fn only_managed_policy_requires_an_authenticator_or_forbids_risk_acceptance() {
+    let p = with_a_run();
+    p.repository("authenticator.required = true\nrisk_acceptance.forbidden = true\n");
+    let (code, _, err) = p.invoke(&["risk-acceptance", "record"], &DEV);
+    assert_eq!(code, EXIT_OK, "{err}");
+    p.configure("recall.max_k = 10\n");
+    let (code, _, err) = p.invoke(&["configuration", "accept"], &DEV);
+    assert_eq!(code, EXIT_OK, "{err}");
+    assert!(refusals(&p).is_empty());
+}
+
+#[test]
 fn a_widening_act_is_refused_while_managed_policy_is_invalid() {
     let mut p = Process::new();
     p.configure("recall.max_k = 10\n");
@@ -432,6 +444,23 @@ fn a_run_seat_whose_certificate_does_not_read_fails_risk_acceptance() {
 }
 
 #[test]
+fn cut_and_neutral_acts_need_no_open_residual_risks() {
+    let p = with_a_run();
+    assert_eq!(p.invoke(&["risk-acceptance", "record"], &DEV).0, EXIT_OK);
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute(
+        "UPDATE seats SET certificate = '{}' WHERE certificate NOT LIKE '%\"device\"%'",
+        [],
+    )
+    .unwrap();
+    drop(conn);
+    for args in [&["counter", "ack"][..], &["risk-acceptance", "withdraw"]] {
+        let (code, _, err) = p.invoke(args, &DEV);
+        assert_eq!(code, EXIT_OK, "{args:?}: {err}");
+    }
+}
+
+#[test]
 fn a_refusal_the_audit_log_cannot_take_is_still_reported() {
     let mut p = Process::new();
     p.terminal = false;
@@ -447,4 +476,14 @@ fn a_refusal_the_audit_log_cannot_take_is_still_reported() {
         "{err}"
     );
     assert!(err.contains("needs a terminal"), "{err}");
+}
+
+#[test]
+fn managed_sets_reads_a_bool_key_managed_policy_sets_true() {
+    let managed = configuration::layer::parse("authenticator.required = true\n").unwrap();
+    assert!(super::managed_sets(&managed, "authenticator.required"));
+    assert!(!super::managed_sets(&managed, "risk_acceptance.forbidden"));
+    assert!(!super::managed_sets(&managed, "no.such_key"));
+    let off = configuration::layer::parse("authenticator.required = false\n").unwrap();
+    assert!(!super::managed_sets(&off, "authenticator.required"));
 }

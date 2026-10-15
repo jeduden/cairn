@@ -8,13 +8,15 @@ use std::collections::BTreeSet;
 use std::io::Write;
 
 use administration::act::{
-    self, Act, FORGEABLE, Gate, OpenRisks, Recorded, Refusal, ResidualRisk, open_residual_risks,
-    permit, standing_risk_acceptance,
+    self, Act, Class, FORGEABLE, Gate, OpenRisks, Recorded, Refusal, ResidualRisk,
+    open_residual_risks, permit, standing_risk_acceptance,
 };
 use administration::home::Home;
 use administration::node::Node;
 use audit::entry::{Counter, Kind, Occurrence};
-use audit::log::Log;
+use configuration::Value;
+use configuration::key::key;
+use configuration::layer::LayerValues;
 use key::random::OsEntropy;
 use record::digest::Digest;
 use record::id::Address;
@@ -25,13 +27,12 @@ use crate::settings::{InForce, in_force, recorded, recorded_acts};
 use crate::{Context, EXIT_USAGE, failed, json_flag, written};
 
 /// What an act is taken in: the home, its store and node, the acts it
-/// recorded, the residual risks open on it, and the settings in force.
+/// recorded, and the settings in force.
 struct Taking {
     home: Home,
     store: Store,
     node: Node,
     acts: Vec<Recorded>,
-    open: OpenRisks,
     settings: InForce,
 }
 
@@ -43,7 +44,6 @@ impl Taking {
         let mut store = Store::open(&home.store()).map_err(|e| e.to_string())?;
         let node = Node::open(&home, &mut store, &mut OsEntropy).map_err(|e| e.to_string())?;
         let acts = act::acts(&store, &node).map_err(|e| e.to_string())?;
-        let open = open_residual_risks(&store).map_err(|e| e.to_string())?;
         let settings = in_force(ctx, &home, &acts);
 
         Ok(Self {
@@ -51,23 +51,34 @@ impl Taking {
             store,
             node,
             acts,
-            open,
             settings,
         })
     }
 
-    /// What decides whether an act is permitted here.
-    fn gate(&self, ctx: &Context) -> Gate {
-        let s = &self.settings.resolved.settings;
+    /// The residual risks open on the node.
+    fn open_risks(&self) -> Result<OpenRisks, String> {
+        open_residual_risks(&self.store).map_err(|e| e.to_string())
+    }
 
-        Gate {
+    /// What decides whether `act` is permitted here. Only a widening
+    /// act reads the open residual risks; only managed policy requires
+    /// an authenticator or forbids risk acceptance (SEC-22).
+    fn gate(&self, ctx: &Context, act: &Act) -> Result<Gate, String> {
+        let open = if act.class() == Class::Widening {
+            self.open_risks()?
+        } else {
+            OpenRisks::default()
+        };
+        let managed = &self.settings.loaded.layers.managed;
+
+        Ok(Gate {
             terminal: ctx.terminal,
-            authenticator_required: s.authenticator_required(),
+            authenticator_required: managed_sets(managed, "authenticator.required"),
             managed_policy_failed: self.settings.loaded.managed_policy_failed(),
-            risk_acceptance_forbidden: s.risk_acceptance_forbidden(),
-            open: self.open.clone(),
+            risk_acceptance_forbidden: managed_sets(managed, "risk_acceptance.forbidden"),
+            open,
             standing: standing_risk_acceptance(&self.acts),
-        }
+        })
     }
 
     /// Takes `act` if the gate permits it: records it, or audits and
@@ -79,12 +90,20 @@ impl Taking {
         act: &Act,
         stderr: &mut dyn Write,
     ) -> Result<Address, u8> {
-        if let Err(refusal) = permit(act, &self.gate(ctx)) {
+        let gate = self
+            .gate(ctx, act)
+            .map_err(|e| failed(operation, &e, stderr))?;
+        if let Err(refusal) = permit(act, &gate) {
             return Err(refuse(ctx, operation, &refusal, stderr));
         }
         act::record(&mut self.store, &self.node, act, &mut OsEntropy)
             .map_err(|e| failed(operation, &e, stderr))
     }
+}
+
+/// Whether managed policy sets the bool settings key `name` to true.
+fn managed_sets(managed: &LayerValues, name: &str) -> bool {
+    key(name).and_then(|k| managed.get(&k)) == Some(&Value::Bool(true))
 }
 
 /// Audits and reports `refusal` of an act under `operation`.
@@ -154,13 +173,10 @@ pub(crate) fn counter(
     };
     // The audit log notes the acknowledgement; the act covers every
     // entry up to that note.
-    let noted = Log::new(taking.home.audit()).append(
-        &Occurrence::PrincipalAct {
-            operation: OP,
-            detail: "counters acknowledged",
-        },
-        (ctx.clock)(),
-    );
+    let noted = ctx.audit(&Occurrence::PrincipalAct {
+        operation: OP,
+        detail: "counters acknowledged",
+    });
     let through = match noted {
         Ok(entry) => entry.number,
         Err(e) => return failed(OP, &e, stderr),
@@ -379,7 +395,10 @@ fn record_acceptance(
         Ok(t) => t,
         Err(e) => return failed(OP, &e, stderr),
     };
-    let risks = taking.open.risks.clone();
+    let risks = match taking.open_risks() {
+        Ok(open) => open.risks,
+        Err(e) => return failed(OP, &e, stderr),
+    };
     if risks.is_empty() {
         let line = if as_json {
             json!({"accepted": [], "act": null}).to_string()

@@ -171,49 +171,35 @@ impl Entry {
                 counter,
                 operation,
                 detail,
-            } => (kind, counter, operation, detail.to_owned()),
+            } => (
+                kind.as_str(),
+                Some(counter.as_str()),
+                operation,
+                detail.to_owned(),
+            ),
             Occurrence::Keyed {
                 kind,
                 counter,
                 operation,
                 detail,
                 key,
-            } => (kind, counter, operation, format!("{detail} {}", shown(key))),
+            } => (
+                kind.as_str(),
+                Some(counter.as_str()),
+                operation,
+                format!("{detail} {}", shown(key)),
+            ),
             Occurrence::PrincipalAct { operation, detail } => {
-                return Self::noted(PRINCIPAL_ACT, operation, detail, number, time, prev_hash);
+                (PRINCIPAL_ACT, None, operation, detail.to_owned())
             }
         };
         let mut entry = Self {
             number,
             time,
-            kind: kind.as_str().to_owned(),
-            counter: Some(counter.as_str().to_owned()),
+            kind: kind.to_owned(),
+            counter: counter.map(str::to_owned),
             operation: operation.to_owned(),
             detail,
-            prev_hash,
-            hash: Digest::ZERO,
-        };
-        entry.hash = entry.digest()?;
-
-        Ok(entry)
-    }
-
-    /// An entry of `kind` feeding no counter.
-    fn noted(
-        kind: &str,
-        operation: &str,
-        detail: &str,
-        number: u64,
-        time: u64,
-        prev_hash: Digest,
-    ) -> Result<Self, AuditError> {
-        let mut entry = Self {
-            number,
-            time,
-            kind: kind.to_owned(),
-            counter: None,
-            operation: operation.to_owned(),
-            detail: detail.to_owned(),
             prev_hash,
             hash: Digest::ZERO,
         };
