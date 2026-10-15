@@ -216,7 +216,7 @@ pub fn toml_gates(flow: &Workflow) -> Vec<String> {
 }
 
 /// The lines of the TOML table `[header]`, comments left out.
-fn table(toml: &str, header: &str) -> Vec<String> {
+pub(crate) fn table(toml: &str, header: &str) -> Vec<String> {
     let want = format!("[{header}]");
     let mut inside = false;
     let mut out = Vec::new();
@@ -233,7 +233,7 @@ fn table(toml: &str, header: &str) -> Vec<String> {
 }
 
 /// The value `key` holds in a table's `lines`.
-fn value<'a>(lines: &'a [String], key: &str) -> Option<&'a str> {
+pub(crate) fn value<'a>(lines: &'a [String], key: &str) -> Option<&'a str> {
     lines.iter().find_map(|l| {
         let (k, v) = l.split_once('=')?;
         (k.trim() == key).then_some(v.trim())

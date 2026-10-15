@@ -3,3 +3,13 @@
 allow-unwrap-in-tests = true
 allow-expect-in-tests = true
 allow-panic-in-tests = true
+
+# Small functions (CLAUDE.md): the ceilings for the complexity lints
+# the workspace lints deny. A function's cognitive complexity, its
+# lines of code (comments and blank lines left out), a block's nesting
+# depth and a function's bool parameters. The engineering gate test
+# `every_crate_holds_the_complexity_limits` refuses a higher one.
+cognitive-complexity-threshold = 15
+too-many-lines-threshold = 80
+excessive-nesting-threshold = 5
+max-fn-params-bools = 3

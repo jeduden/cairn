@@ -39,14 +39,15 @@ installs it on the first `cargo` command.
   supply chain (ENG-16), with [deny.toml](../deny.toml)'s policy
 - `mdsmith check .` — lint the Markdown; `mdsmith fix .` rewrites
   what it can, including the generated catalogs
-- `taplo fmt --check` and `taplo lint` — TOML layout and schemas
 
 ## Static analysis
 
 The workspace's lints in [Cargo.toml](../Cargo.toml) forbid `unsafe`,
 and refuse `unwrap`, `expect` and `panic!` outside tests
 ([clippy.toml](../clippy.toml) lets a test use them). CI runs clippy
-with every warning denied, and rustfmt.
+with every warning denied, and rustfmt. The workspace lints deny the
+complexity lints too, under the ceilings each clippy.toml sets, and
+`every_crate_holds_the_complexity_limits` refuses a ceiling raised.
 [deny.toml](../deny.toml) holds every crate in the tree to ENG-18's
 license allow-list, each exception named, and to crates.io as the
 only source. cargo-audit refuses a crate with a known vulnerability.
@@ -138,8 +139,8 @@ request to `main`. It runs every test and scenario, with `HOME`
 pointed at an empty decoy that must stay empty (ENG-14), the core's
 end-to-end tests confined (ENG-12), clippy and rustfmt, cargo-deny and
 cargo-audit, the drift suite, the benchmark gate, and the release build
-of every target (NFR-10, CON-02). It also runs `mdsmith check .`, taplo
-over the TOML files and zizmor over the workflows. A final
+of every target (NFR-10, CON-02). It also runs `mdsmith check .`,
+[taplo](../.taplo.toml), and zizmor over the workflows. A final
 job named `CI` passes only when every other job passed. It is the one
 check the branch and release-tag rulesets require, because GitHub
 names a required check after a job, never after the workflow.
@@ -254,8 +255,7 @@ What CI decides, on every pull request:
   (ENG-26);
 - rustfmt and clippy, with each product crate's bans on sockets and
   program starts (I4), on clocks and hash order (I10) and on waits with
-  no deadline (ENG-03), and the
-  reach test;
+  no deadline (ENG-03), the complexity limits, and the reach test;
 - the crates' declared dependency directions and responsibilities
   (ENG-02);
 - no mutable global state in a product crate (ENG-03);

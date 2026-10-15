@@ -58,6 +58,14 @@ unsafe_code = "forbid"
 unwrap_used = "deny"
 expect_used = "deny"
 panic = "deny"
+# Small functions (CLAUDE.md), held at build time: these complexity
+# lints are off by default, and clippy.toml sets the ceilings they hold
+# each function to. A site that must exceed one says so with an
+# `expect` and a reason, under review.
+cognitive_complexity = "deny"
+too_many_lines = "deny"
+excessive_nesting = "deny"
+fn_params_excessive_bools = "deny"
 
 # The test pyramid's policy, which `cargo run -p coverage` enforces
 # (ENG-11). It measures line coverage per test layer: unit (the tests

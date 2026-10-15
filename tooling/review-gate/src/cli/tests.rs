@@ -97,21 +97,32 @@ fn run_prints_nothing_for_a_head_that_moved() {
     assert!(err.contains("moved past"), "{err}");
 }
 
+/// One way the gate fails closed: its name, the arguments, the input
+/// files, what standard error must say and the exit code.
+type FailCase = (
+    &'static str,
+    Vec<String>,
+    BTreeMap<String, String>,
+    &'static str,
+    u8,
+);
+
+/// Requires each of `cases` to exit with its code, write nothing to
+/// standard output and say why on standard error.
+fn fails_closed(cases: Vec<FailCase>) {
+    for (name, args, files, want, code) in cases {
+        let (got, out, err) = invoke(args, &files);
+        assert_eq!(got, code, "{name}: {err}");
+        assert!(out.is_empty(), "{name}");
+        assert!(err.contains(want), "{name}: {err}");
+    }
+}
+
 #[test]
-fn run_fails_closed() {
-    let with = |name: &str, body: &str| {
-        let mut m = inputs();
-        m.insert(name.to_owned(), body.to_owned());
-        m
-    };
-    let without = |name: &str| {
-        let mut m = inputs();
-        m.remove(name);
-        m
-    };
+fn run_fails_closed_on_a_wrong_command_line() {
     let mut stray = args(HEAD);
     stray.push("extra".into());
-    let cases = [
+    fails_closed(vec![
         (
             "an unknown flag",
             vec!["--approve".to_owned()],
@@ -171,6 +182,22 @@ fn run_fails_closed() {
             "unexpected argument",
             EXIT_USAGE,
         ),
+    ]);
+}
+
+#[test]
+fn run_fails_closed_on_a_missing_or_malformed_input() {
+    let with = |name: &str, body: &str| {
+        let mut m = inputs();
+        m.insert(name.to_owned(), body.to_owned());
+        m
+    };
+    let without = |name: &str| {
+        let mut m = inputs();
+        m.remove(name);
+        m
+    };
+    fails_closed(vec![
         (
             "no outcome file",
             args(HEAD),
@@ -206,13 +233,7 @@ fn run_fails_closed() {
             "CI has not passed",
             EXIT_FAILURE,
         ),
-    ];
-    for (name, args, files, want, code) in cases {
-        let (got, out, err) = invoke(args, &files);
-        assert_eq!(got, code, "{name}: {err}");
-        assert!(out.is_empty(), "{name}");
-        assert!(err.contains(want), "{name}: {err}");
-    }
+    ]);
 }
 
 /// A stdout that refuses every write, as a closed pipe does.

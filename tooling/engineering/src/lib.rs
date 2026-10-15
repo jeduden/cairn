@@ -10,6 +10,7 @@ pub mod architecture;
 pub mod benchmarks;
 pub mod branch_protection;
 pub mod codeowners;
+pub mod complexity;
 pub mod confinement;
 pub mod decisions;
 pub mod dependencies;

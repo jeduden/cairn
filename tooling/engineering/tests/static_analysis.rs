@@ -53,6 +53,16 @@ fn derived_code_is_refused_a_clock_or_randomness_at_build_time() {
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
 
+/// Function complexity is held at build time: the workspace lints deny
+/// clippy's complexity lints, and every crate's clippy configuration
+/// holds each threshold at or below its ceiling.
+#[test]
+fn every_crate_holds_the_complexity_limits() {
+    let problems = engineering::complexity::crates_hold_limits(&checkout());
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
 /// CI gates on Taplo's TOML checks: every TOML file's layout, and each
 /// against the schema `.taplo.toml` names for it.
 #[test]
