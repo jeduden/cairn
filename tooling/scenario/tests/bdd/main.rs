@@ -26,6 +26,7 @@ mod engineering_protection;
 mod engineering_reach;
 mod engineering_release;
 mod engineering_review;
+mod record;
 
 use std::env;
 use std::ffi::OsStr;

@@ -1,7 +1,7 @@
 ---
 id: 2610012322
 title: "Scope Cairn for agent fleets: shared, real-time, public sessions"
-status: "🔳"
+status: "✅"
 summary: >-
   Widen Cairn from one agent's local memory to secure session memory
   shared across worktrees, cloud sandboxes, machines and the public,
@@ -177,7 +177,10 @@ footer: |
 - [x] The SRS changes are proposed, in pull request #16 (SRS
   2.0-draft); the invariant changes are approved in ADR-2610032155,
   accepted on 4 October 2026
-- [ ] M1 is re-planned on the approved identity model
+- [x] M1 is re-planned on the approved identity model, in plan
+  [2609292012](../2609292012_m1-record-and-recall/plan.md); the
+  language and shell records the stack rests on (OQ-32) were accepted
+  on 14 October 2026, leaving only the packaging open
 - [x] All tests pass: `cargo test --workspace` at the root and
   `cargo test` in the proving slice's own crate
 - [x] `mdsmith check .` is clean

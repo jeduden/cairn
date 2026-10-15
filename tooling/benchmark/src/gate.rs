@@ -48,6 +48,7 @@
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
 
+use crate::accepted::Acceptance;
 use crate::samples::Samples;
 use crate::stats;
 
@@ -80,6 +81,8 @@ pub enum Status {
     New,
     /// A side has fewer than [`MIN_SAMPLES`]: no decision, so it fails.
     TooFew,
+    /// Regressed, but within a reviewed acceptance's ceiling: passes.
+    Accepted,
 }
 
 impl Status {
@@ -93,6 +96,7 @@ impl Status {
             Self::Retired => "retired",
             Self::New => "new on the head",
             Self::TooFew => "too few samples",
+            Self::Accepted => "accepted",
         }
     }
 }
@@ -149,7 +153,7 @@ impl Delta {
             Status::TooFew => Some(format!(
                 "{name} has too few samples to decide: the gate needs {MIN_SAMPLES} on each side"
             )),
-            Status::Within | Status::Retired | Status::New => None,
+            Status::Within | Status::Retired | Status::New | Status::Accepted => None,
         }
     }
 }
@@ -203,6 +207,28 @@ fn compare(name: &str, base: Option<&[u64]>, head: Option<&[u64]>, retired: bool
     };
 
     c
+}
+
+/// `comparisons` with each regression that a fresh acceptance of its
+/// benchmark covers marked accepted: the head's median no more than the
+/// acceptance's ceiling above the base's.
+#[must_use]
+pub fn accept(comparisons: Vec<Delta>, accepted: &[Acceptance]) -> Vec<Delta> {
+    comparisons
+        .into_iter()
+        .map(|mut c| {
+            let covered = accepted.iter().any(|a| {
+                a.benchmark == c.benchmark
+                    && c.base.zip(c.head).is_some_and(|(base, head)| {
+                        head.saturating_mul(100) <= base.saturating_mul(100 + a.up_to_percent)
+                    })
+            });
+            if c.status == Status::Regressed && covered {
+                c.status = Status::Accepted;
+            }
+            c
+        })
+        .collect()
 }
 
 /// Whether the head's median is more than [`THRESHOLD_PERCENT`] above

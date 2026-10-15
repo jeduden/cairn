@@ -85,6 +85,9 @@ fn run(dir: &Path, target: &Path, check: &Check) -> (bool, String) {
         // HOME stays, so rustup and cargo find their toolchains; Cairn's
         // own home is the copy's (ENG-14).
         .env("CAIRN_HOME", dir.join(".cairn"))
+        // The `[env]` of .cargo/config.toml sets this in the suite's own
+        // environment; the copy's config alone decides it for the check.
+        .env_remove("LIBSQLITE3_FLAGS")
         .stdin(Stdio::null())
         .stdout(out.try_clone().unwrap())
         .stderr(out)

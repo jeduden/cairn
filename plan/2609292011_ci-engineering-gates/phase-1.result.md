@@ -9,9 +9,9 @@ summary: >-
   suite against a decoy `HOME`, and no agent instruction file directs a
   destructive command at the real home. Seven drift cases hold it.
 ---
-# Phase 1 handoff
+## Handoff
 
-## Done
+### Done
 
 - The isolation guard is `testkit::guard`. A test resolves the home, a
   Cairn home, Claude Code's configuration directory or its state file
@@ -45,7 +45,7 @@ summary: >-
   `rm -rf ~/.cairn`, and a settings hook clearing `~/.claude`.
 - Shape: unit 462, integration 41, end-to-end 38 (22 scenarios).
 
-## Next
+### Next
 
 - A product crate that resolves a home in shipped code (M1) cannot call
   the testkit. It joins `RESOLVERS` in

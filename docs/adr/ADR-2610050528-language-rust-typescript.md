@@ -1,12 +1,13 @@
 ---
 id: ADR-2610050528
 title: "The implementation language: Rust for the core, TypeScript for the page"
-status: proposed
+status: accepted
 summary: >-
   Every Cairn process is Rust, around one core library linked into the
   Tauri shell on all five platforms and into Cairn's server for the
   browser; the one UI page is TypeScript and holds no logic. It closes
-  OQ-32's language half and replaces CON-01's Go.
+  OQ-32's language half and replaces CON-01's Go. The stakeholder
+  accepted it on 14 October 2026.
 ---
 # ADR-2610050528: The implementation language
 
@@ -105,8 +106,10 @@ a node. The stakeholder chose Rust and TypeScript on 5 October 2026.
   compiler rejects memory and data-race errors before review.
 - **The bake-off** becomes a proving slice: the Rust core in a Tauri
   app on one desktop and one phone, and in the browser.
-- The status stays `proposed` until the stakeholder approves it and
-  the SRS change lands.
+- The stakeholder accepted this record on 14 October 2026, after
+  SRS 2.1-draft and 2.32-draft landed its SRS changes. The packaging
+  proposed above, two executables per desktop in one download, stays
+  open under OQ-32.
 
 [cmp]: ../../research/notes/implementation-path/comparison.md
 [frame]: ../../research/notes/implementation-path/constraints.md

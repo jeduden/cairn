@@ -1518,7 +1518,7 @@
    "texts": [
     {
      "file": "docs/srs/12-delivery-plan.md",
-     "quote": "MEM-01, SEC-01..08, SEC-10, SEC-12, SEC-15..18,"
+     "quote": "MEM-01, SEC-01..08, SEC-10 in part (keys kept on the node"
     }
    ]
   },

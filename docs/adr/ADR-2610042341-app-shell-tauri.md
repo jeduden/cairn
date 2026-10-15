@@ -1,12 +1,13 @@
 ---
 id: ADR-2610042341
 title: "The app shell: Tauri 2 on five platforms, the same page in the browser"
-status: proposed
+status: accepted
 summary: >-
   Cairn's app is a Tauri 2 shell on Linux, Windows, macOS, iOS and
   Android around one web page, and the same page serves the browser
   when Cairn is hosted. It answers OQ-32's UI and packaging half;
-  ADR-2610050528 answers the language.
+  ADR-2610050528 answers the language. The stakeholder accepted it on
+  14 October 2026.
 ---
 # ADR-2610042341: The app shell
 
@@ -98,8 +99,11 @@ browser unchanged. A UI the core draws needs a second UI there.
   browser.
 - **The bake-off becomes a proving slice** of the Rust core in this
   shell ([ADR-2610050528][lang]).
-- The status stays `proposed` until the stakeholder approves it and
-  the SRS changes above land.
+- The stakeholder accepted this record on 14 October 2026. Windows
+  joined CON-02 and NFR-10 in SRS 2.34-draft. The other SRS changes
+  above, the hosted browser surface's boundary row among them, land
+  with the plans that build those surfaces; the packaging stays open
+  under OQ-32.
 
 [notes]: ../../research/notes/implementation-path/options.md
 [shells]: ../../research/notes/implementation-path/tauri-vs-xilem.md

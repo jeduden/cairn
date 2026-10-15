@@ -5,17 +5,20 @@
 //!   writes the samples to stdout. The CI job runs the base commit's
 //!   build and the head's with the same flags, so these stay stable: a
 //!   change to them breaks the comparison until it reaches the base.
-//! - `benchmark gate --base FILE --head FILE` decides from the two
-//!   samples files, writes the report to stdout as a Markdown table, and
-//!   fails naming each benchmark that regressed, went missing or has too
-//!   few samples.
+//! - `benchmark gate --base FILE --head FILE [--accepted FILE]
+//!   [--accepted-on-base FILE]` decides from the two samples files,
+//!   writes the report to stdout as a Markdown table, and fails naming
+//!   each benchmark that regressed, went missing or has too few samples.
+//!   A regression the head's acceptances cover, and the base's do not,
+//!   passes as accepted (see [`accepted`](crate::accepted)); a missing
+//!   base acceptances file counts as empty.
 
 use std::collections::BTreeMap;
 use std::io::{self, Write};
 use std::path::Path;
 use std::time::Duration;
 
-use crate::{gate, measure, samples, suite};
+use crate::{accepted, gate, measure, samples, suite};
 
 /// The command did what it was asked, and the gate, if it ran, found every benchmark within the threshold.
 pub const EXIT_OK: u8 = 0;
@@ -25,7 +28,7 @@ pub const EXIT_FAILURE: u8 = 1;
 pub const EXIT_USAGE: u8 = 2;
 
 const USAGE: &str = "usage: benchmark run --core PATH [--samples N]\n       \
-                     benchmark gate --base FILE --head FILE";
+                     benchmark gate --base FILE --head FILE [--accepted FILE] [--accepted-on-base FILE]";
 
 /// How many samples `run` takes of each benchmark unless told.
 pub const DEFAULT_SAMPLES: usize = 10;
@@ -54,9 +57,12 @@ pub fn run(
         "run" => flags(&rest, &["core", "samples"])
             .and_then(|f| run_options(&f))
             .map(|(core, count)| sample_suite(&core, count, stdout, time)),
-        "gate" => flags(&rest, &["base", "head"])
-            .and_then(|f| Ok((required(&f, "base")?, required(&f, "head")?)))
-            .map(|(base, head)| decide(&base, &head, stdout, read)),
+        "gate" => flags(&rest, &["base", "head", "accepted", "accepted-on-base"])
+            .and_then(|f| Ok((required(&f, "base")?, required(&f, "head")?, f)))
+            .map(|(base, head, f)| {
+                let acceptances = (f.get("accepted"), f.get("accepted-on-base"));
+                decide(&base, &head, acceptances, stdout, read)
+            }),
         _ => Err(format!("unknown command {command:?}")),
     };
 
@@ -114,6 +120,7 @@ fn sample_suite(
 fn decide(
     base: &str,
     head: &str,
+    (accepted, accepted_on_base): (Option<&String>, Option<&String>),
     stdout: &mut dyn Write,
     read: Read<'_>,
 ) -> Result<(), Vec<String>> {
@@ -124,8 +131,22 @@ fn decide(
             .map_err(|e| vec![e])
     };
     let (base, head) = (load(base)?, load(head)?);
+    let acceptances = |path: Option<&String>, missing_is_empty: bool| {
+        let Some(path) = path else {
+            return Ok(Vec::new());
+        };
+        let text = match read(path) {
+            Err(e) if missing_is_empty && e.kind() == io::ErrorKind::NotFound => String::new(),
+            other => other.map_err(|e| vec![format!("read {path}: {e}")])?,
+        };
+        accepted::parse(&text).map_err(|e| vec![format!("{path}: {e}")])
+    };
+    let fresh = accepted::fresh(
+        &acceptances(accepted, false)?,
+        &acceptances(accepted_on_base, true)?,
+    );
 
-    let comparisons = gate::decide(&base, &head, &suite::RETIRED);
+    let comparisons = gate::accept(gate::decide(&base, &head, &suite::RETIRED), &fresh);
     let report = gate::report(&comparisons);
     stdout
         .write_all(report.as_bytes())

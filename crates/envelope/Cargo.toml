@@ -1,0 +1,20 @@
+[package]
+name = "envelope"
+version = "0.0.0"
+description = "The envelope recalled content reaches a model in (§9.3)"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true
+
+# ENG-02: see crates/cairn/Cargo.toml.
+[package.metadata.cairn]
+responsibility = "Renders the envelope that carries recalled content to a model"
+may-depend-on = []
+may-dev-depend-on = []
