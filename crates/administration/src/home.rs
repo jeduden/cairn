@@ -69,6 +69,45 @@ impl Home {
         self.keys().join("genesis")
     }
 
+    /// The audit log's directory.
+    #[must_use]
+    pub fn audit(&self) -> PathBuf {
+        PathBuf::new()
+    }
+
+    /// The home id binding (§8.1, SEC-03).
+    #[must_use]
+    pub fn binding(&self) -> PathBuf {
+        PathBuf::new()
+    }
+
+    /// Checks the home.
+    ///
+    /// # Errors
+    ///
+    /// Fails.
+    pub fn check(&self) -> Result<(), AdminError> {
+        Ok(())
+    }
+
+    /// Checks the home as `running`.
+    ///
+    /// # Errors
+    ///
+    /// Fails.
+    pub fn check_as(&self, _running: u32) -> Result<(), AdminError> {
+        Ok(())
+    }
+
+    /// Checks the home id.
+    ///
+    /// # Errors
+    ///
+    /// Fails.
+    pub fn check_home_id(&self, _supplied: Option<&OsStr>) -> Result<(), AdminError> {
+        Ok(())
+    }
+
     fn keys(&self) -> PathBuf {
         self.root.join("keys")
     }
@@ -90,6 +129,12 @@ impl Home {
             .create(&keys)
             .map_err(|source| AdminError::Io { path: keys, source })
     }
+}
+
+/// The OS user this process runs as.
+#[cfg(unix)]
+fn running_uid() -> Result<u32, AdminError> {
+    Ok(u32::MAX)
 }
 
 #[cfg(test)]

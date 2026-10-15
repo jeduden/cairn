@@ -17,3 +17,28 @@ fn errors_explain_themselves_and_keep_their_cause() {
     assert!(std::error::Error::source(&AdminError::NoHome).is_none());
     assert!(std::error::Error::source(&AdminError::Node("n")).is_none());
 }
+
+#[test]
+fn the_home_s_refusals_name_what_they_refuse_and_have_no_cause() {
+    let p = || PathBuf::from("/h");
+    for e in [
+        AdminError::LoosePermissions {
+            path: p(),
+            mode: 0o755,
+        },
+        AdminError::OtherOsUser {
+            path: p(),
+            uid: 1,
+            running: 2,
+        },
+        AdminError::SymbolicLink { path: p() },
+        AdminError::HomeIdBinding { path: p() },
+        AdminError::HomeIdMismatch,
+        AdminError::HomeIdMissing,
+    ] {
+        assert!(std::error::Error::source(&e).is_none(), "{e}");
+    }
+    let os = AdminError::OsUser(std::io::Error::other("no pipe"));
+    assert_eq!(os.to_string(), "learn the running OS user: no pipe");
+    assert!(std::error::Error::source(&os).is_some());
+}
