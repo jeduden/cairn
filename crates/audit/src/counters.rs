@@ -1,12 +1,13 @@
 //! The counters derived from the audit log (OPS-01, OPS-03): each
 //! named counter counts the entries that name it, and its rise counts
-//! those after the last `counter_ack` entry. Every counter Cairn names
+//! those after the entry the last acknowledgement covered, which the
+//! counter acknowledgement act records in the device seat (OWN-11). Every counter Cairn names
 //! so far is a failure counter (OQ-50 (i)). Counting reads no clock: the
 //! same entries always give the same counts (I10).
 
 use std::collections::BTreeMap;
 
-use crate::entry::{COUNTER_ACK, Entry};
+use crate::entry::Entry;
 
 /// Each counter's count, and its rise since the counters were last
 /// acknowledged; a counter with no entry is absent from both.
@@ -25,17 +26,18 @@ impl Counts {
     }
 }
 
-/// The counts `entries` give, taken in order.
+/// The counts `entries` give, their rise counted after the entry
+/// numbered `acknowledged`, the last the counters were acknowledged
+/// through; all of them when they never were.
 #[must_use]
-pub fn counts(entries: &[Entry]) -> Counts {
+pub fn counts(entries: &[Entry], acknowledged: Option<u64>) -> Counts {
     let mut out = Counts::default();
     for e in entries {
-        if e.kind == COUNTER_ACK {
-            out.since_ack.clear();
-        }
         if let Some(counter) = &e.counter {
             *out.total.entry(counter.clone()).or_default() += 1;
-            *out.since_ack.entry(counter.clone()).or_default() += 1;
+            if acknowledged.is_none_or(|n| e.number > n) {
+                *out.since_ack.entry(counter.clone()).or_default() += 1;
+            }
         }
     }
 

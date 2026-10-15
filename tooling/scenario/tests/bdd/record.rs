@@ -117,7 +117,7 @@ fn two_writers(w: &mut World, count: usize) -> Result<(), String> {
 pub fn run_core(w: &mut World, args: &[&str], input: Option<&[u8]>) -> Result<(), String> {
     let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
     let exe = testkit::core_executable()?;
-    let set = rec(w).env.clone();
+    let set = environment(w);
     let env: Vec<(&str, &str)> = set.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
     let out = core
         .run_in(&exe, args, &w.home, &env, input)
@@ -133,7 +133,7 @@ pub fn run_core(w: &mut World, args: &[&str], input: Option<&[u8]>) -> Result<()
 pub fn run_core_at_terminal(w: &mut World, args: &[&str]) -> Result<(), String> {
     let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
     let exe = testkit::core_executable()?;
-    let set = rec(w).env.clone();
+    let set = environment(w);
     let env: Vec<(&str, &str)> = set.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
     let out = core
         .run_at_terminal(&exe, args, &w.home, &env)
@@ -141,6 +141,19 @@ pub fn run_core_at_terminal(w: &mut World, args: &[&str]) -> Result<(), String> 
     rec(w).ran = Some(out);
     Ok(())
 }
+
+/// The environment a command starts with beside `HOME` and
+/// `CAIRN_HOME`: managed policy read from inside the scenario's home,
+/// never the machine's (ENG-14), then what the steps set.
+fn environment(w: &mut World) -> Vec<(String, String)> {
+    let managed = w.home.join(MANAGED_POLICY).display().to_string();
+    let mut env = vec![("CAIRN_TEST_MANAGED_POLICY".to_owned(), managed)];
+    env.extend(rec(w).env.iter().cloned());
+    env
+}
+
+/// Where a scenario's managed policy lies, in its home.
+pub const MANAGED_POLICY: &str = "managed_policy.toml";
 
 /// Sets `key` to `value` in the environment of every command the
 /// scenario starts from now on.

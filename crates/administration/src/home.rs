@@ -249,8 +249,12 @@ fn owner_only(path: &Path, meta: &fs::Metadata, running: u32) -> Result<(), Admi
 /// to. That needs no `unsafe` and no dependency, and inside a user
 /// namespace gives the user as that namespace maps it, as it does the
 /// owners of the home's files.
+///
+/// # Errors
+///
+/// Fails when no pipe can be made or its owner read.
 #[cfg(unix)]
-fn running_uid() -> Result<u32, AdminError> {
+pub fn running_uid() -> Result<u32, AdminError> {
     use std::os::fd::OwnedFd;
     use std::os::unix::fs::MetadataExt;
 

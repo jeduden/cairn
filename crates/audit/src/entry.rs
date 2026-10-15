@@ -22,9 +22,6 @@ const FIELDS: [&str; 8] = [
     "time",
 ];
 
-/// The kind of the entry `cairn counter ack` appends.
-pub const COUNTER_ACK: &str = "counter_ack";
-
 /// How an operation degraded (OPS-01).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
@@ -59,6 +56,20 @@ pub enum Counter {
     HookRejected,
     HookPanicked,
     McpPanicked,
+    /// A settings layer failed validation, and a recording command
+    /// went on without it (ADM-04, I9).
+    SettingsLayerInvalid,
+    /// A repository configuration key that does more than tighten was
+    /// ignored (SEC-11).
+    RepositoryConfigurationKeyIgnored,
+    /// A settings layer's trust policy key was ignored (PRV-05).
+    TrustPolicyKeyIgnored,
+    /// Managed policy is writable by the principal, or does not parse
+    /// or validate (ADM-04).
+    ManagedPolicyInvalid,
+    /// A principal act was refused: no terminal (OWN-12), or a widening
+    /// act OWN-22 or managed policy does not permit (SEC-22).
+    PrincipalActRefused,
 }
 
 impl Counter {
@@ -69,24 +80,62 @@ impl Counter {
             Self::HookRejected => "hook_rejected",
             Self::HookPanicked => "hook_panicked",
             Self::McpPanicked => "mcp_panicked",
+            Self::SettingsLayerInvalid => "settings_layer_invalid",
+            Self::RepositoryConfigurationKeyIgnored => "repository_configuration_key_ignored",
+            Self::TrustPolicyKeyIgnored => "trust_policy_key_ignored",
+            Self::ManagedPolicyInvalid => "managed_policy_invalid",
+            Self::PrincipalActRefused => "principal_act_refused",
         }
     }
 }
 
-/// What one entry reports. Every field is text Cairn ships, so no
-/// record content or secret can reach the log.
+/// What one entry reports. Every field is text Cairn ships, or a
+/// settings key's name, so no record content or secret can reach the
+/// log.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Occurrence {
+pub enum Occurrence<'a> {
     Degraded {
         kind: Kind,
         counter: Counter,
         operation: &'static str,
         detail: &'static str,
     },
-    /// The counters were acknowledged (`cairn counter ack`). Until
-    /// phase 3 records that neutral principal act in the device seat,
-    /// this entry is where the acknowledgement lives.
-    CounterAck,
+    /// An operation degraded over one settings key: its detail is
+    /// `detail` followed by `key`, a settings key's name or a
+    /// provenance class, shown only when it holds nothing but the
+    /// characters those can.
+    Keyed {
+        kind: Kind,
+        counter: Counter,
+        operation: &'static str,
+        detail: &'static str,
+        key: &'a str,
+    },
+    /// A principal act was taken, such as acknowledging the counters;
+    /// it feeds no counter.
+    PrincipalAct {
+        operation: &'static str,
+        detail: &'static str,
+    },
+}
+
+/// The kind of an entry noting a principal act.
+pub const PRINCIPAL_ACT: &str = "principal_act";
+
+/// `key` as an entry may hold it: as it is when it holds only the
+/// characters a settings key or a provenance class can, else a fixed
+/// phrase.
+fn shown(key: &str) -> &str {
+    let plain = !key.is_empty()
+        && key.len() <= 160
+        && key
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || "_.:*-".contains(c));
+    if plain {
+        key
+    } else {
+        "a key no settings key spells"
+    }
 }
 
 /// One entry of the audit log.
@@ -111,7 +160,7 @@ impl Entry {
     /// Fails when `number` or `time` lies past the integers the
     /// canonical encoding takes.
     pub fn next(
-        occurrence: &Occurrence,
+        occurrence: &Occurrence<'_>,
         number: u64,
         time: u64,
         prev_hash: Digest,
@@ -122,14 +171,47 @@ impl Entry {
                 counter,
                 operation,
                 detail,
-            } => (kind.as_str(), Some(counter.as_str()), operation, detail),
-            Occurrence::CounterAck => (COUNTER_ACK, None, "counter ack", "counters acknowledged"),
+            } => (kind, counter, operation, detail.to_owned()),
+            Occurrence::Keyed {
+                kind,
+                counter,
+                operation,
+                detail,
+                key,
+            } => (kind, counter, operation, format!("{detail} {}", shown(key))),
+            Occurrence::PrincipalAct { operation, detail } => {
+                return Self::noted(PRINCIPAL_ACT, operation, detail, number, time, prev_hash);
+            }
         };
         let mut entry = Self {
             number,
             time,
+            kind: kind.as_str().to_owned(),
+            counter: Some(counter.as_str().to_owned()),
+            operation: operation.to_owned(),
+            detail,
+            prev_hash,
+            hash: Digest::ZERO,
+        };
+        entry.hash = entry.digest()?;
+
+        Ok(entry)
+    }
+
+    /// An entry of `kind` feeding no counter.
+    fn noted(
+        kind: &str,
+        operation: &str,
+        detail: &str,
+        number: u64,
+        time: u64,
+        prev_hash: Digest,
+    ) -> Result<Self, AuditError> {
+        let mut entry = Self {
+            number,
+            time,
             kind: kind.to_owned(),
-            counter: counter.map(str::to_owned),
+            counter: None,
             operation: operation.to_owned(),
             detail: detail.to_owned(),
             prev_hash,

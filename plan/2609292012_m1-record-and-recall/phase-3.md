@@ -1,7 +1,7 @@
 ---
 n: 3
 title: "Settings layers and principal acts at the terminal"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 3: settings layers and principal acts at the terminal
