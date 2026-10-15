@@ -206,8 +206,8 @@ jobs:
   # ENG-27: every check that keeps the specification, its scenarios
   # and the repository's records in step is proven here. The suite
   # injects each registered drift into a copy of the checkout and fails
-  # when the check it names lets the drift through. It needs mdsmith on
-  # PATH, so it runs here rather than in `cargo test --workspace`.
+  # when the check it names lets the drift through. It needs mdsmith and
+  # taplo on PATH, so it runs here rather than in `cargo test --workspace`.
   drift:
     runs-on: ubuntu-latest
     steps:
@@ -225,6 +225,11 @@ jobs:
       - uses: jeduden/mdsmith@0ca0d2f7c95ab53e3e9ed8851150af98b95088fb # v0.55.1
         with:
           version: v0.55.1
+      # The same taplo the toml job lints with, for the TOML drift
+      # cases. Bump it with the toml job's.
+      - run: >-
+          cargo install --locked taplo-cli@0.10.0
+          --no-default-features --features lint,rustls-tls
       # ENG-12: the end-to-end suite starts the core in a user and
       # network namespace of its own, under strace, and fails on any
       # socket. The runner's AppArmor refuses unprivileged user
@@ -351,6 +356,33 @@ jobs:
           version: v0.55.1
           args: check .
 
+  # TOML files: Taplo holds each to the layout .taplo.toml sets, and
+  # every Cargo.toml to Schema Store's Cargo schema, committed under
+  # .taplo/schemas so the lint reads no network. Cargo only warns on a
+  # misspelt manifest key; this refuses it.
+  toml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The same components as every job: rust-toolchain.toml lists
+      # them, so rustup would install them on the first cargo command.
+      - name: Install the pinned Rust toolchain
+        run: >-
+          rustup toolchain install
+          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          --profile minimal --component clippy,rustfmt,llvm-tools-preview
+          --no-self-update
+      # An exact version from crates.io, built against its own lockfile
+      # with the linter's features alone. Bump it by hand, with the
+      # drift job's.
+      - run: >-
+          cargo install --locked taplo-cli@0.10.0
+          --no-default-features --features lint,rustls-tls
+      - run: taplo fmt --check
+      - run: taplo lint
+
   # Workflows are an attack surface no compiler reads. zizmor checks
   # them for an unpinned action, a token left in a checkout, an input
   # interpolated into a shell.
@@ -382,7 +414,7 @@ jobs:
   ci:
     name: CI
     if: ${{ always() }}
-    needs: [test, coverage, lint, supply-chain, drift, benchmark, build, markdown, workflows]
+    needs: [test, coverage, lint, supply-chain, drift, benchmark, build, markdown, toml, workflows]
     runs-on: ubuntu-latest
     steps:
       - name: Fail unless every job passed

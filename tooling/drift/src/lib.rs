@@ -154,6 +154,18 @@ pub fn mdsmith() -> Check {
     Check::new("mdsmith", &["check", "."])
 }
 
+/// Checks every TOML file's layout against `.taplo.toml`.
+#[must_use]
+pub fn taplo_fmt() -> Check {
+    Check::new("taplo", &["fmt", "--check"])
+}
+
+/// Checks every TOML file against the schema `.taplo.toml` names for it.
+#[must_use]
+pub fn taplo_lint() -> Check {
+    Check::new("taplo", &["lint"])
+}
+
 /// What validating or applying an injection can fail with.
 #[derive(Debug)]
 pub enum Error {

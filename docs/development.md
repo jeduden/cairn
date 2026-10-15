@@ -140,10 +140,10 @@ proposes the bumps after a seven-day cooldown.
 decoy that must stay empty (ENG-14), the core's end-to-end tests confined
 (ENG-12), clippy and rustfmt, cargo-deny and cargo-audit, the drift suite,
 the benchmark gate, and the release build of every target (NFR-10, CON-02).
-It also runs `mdsmith check .` and zizmor over the workflows themselves. A
-final job named `CI` passes only when every other job passed. It is the one
-check the branch and release-tag rulesets require, because GitHub names a
-required check after a job, never after the workflow.
+It also runs `mdsmith check .`, [taplo](../.taplo.toml), and zizmor over the
+workflows. A final job named `CI` passes only when every other job passed.
+It is the one check the branch and release-tag rulesets require, because
+GitHub names a required check after a job, never after the workflow.
 
 The `benchmark` job (ENG-15) is described in
 [testing.md](testing.md#benchmarks-and-the-regression-gate).

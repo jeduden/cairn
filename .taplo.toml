@@ -1,0 +1,37 @@
+# Taplo's configuration: the layout of every TOML file, and the schemas
+# the manifests and this file are checked against. CI's toml job runs
+# `taplo fmt --check` and `taplo lint`; `taplo fmt` rewrites the layout.
+#
+# Cargo warns on a misspelt manifest key and builds on; the schema
+# refuses it. clippy, cargo-deny, rustup and cargo's own configuration
+# reader check their files themselves, and Schema Store's schemas for
+# the last two refuse nothing more, so they have none here.
+#
+# The schemas are Schema Store's (https://www.schemastore.org, Apache
+# 2.0), committed under .taplo/schemas so the lint is pinned and reads
+# no network. cargo.json's five references to further schemas (the
+# lint names under [lints], which rustc and clippy check themselves,
+# and a quikrun metadata table) are removed, so it resolves alone.
+# cargo.json's own $comment records its origin, license and that edit.
+# Refresh a schema by hand: fetch https://www.schemastore.org/<name>.json
+# again and, for cargo.json, remove those references and restore the
+# $comment.
+
+include = ["**/*.toml"]
+# The plans' spike crates are kept as they were written.
+exclude = ["plan/**", "target/**"]
+
+[formatting]
+column_width = 100
+indent_string = "  "
+# Keep an array on one line or many as written.
+array_auto_expand = false
+array_auto_collapse = false
+
+[[rule]]
+include = ["**/Cargo.toml"]
+schema = { path = "./.taplo/schemas/cargo.json" }
+
+[[rule]]
+include = [".taplo.toml"]
+schema = { path = "./.taplo/schemas/taplo.json" }
