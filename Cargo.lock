@@ -139,6 +139,8 @@ name = "cairn"
 version = "0.0.0"
 dependencies = [
  "administration",
+ "audit",
+ "hook",
  "ingest",
  "key",
  "mcp",

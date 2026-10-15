@@ -78,8 +78,16 @@ pub struct Context<'a> {
     pub cairn_home: Option<OsString>,
     /// `HOME`, as the process found it.
     pub home: Option<OsString>,
+    /// `CAIRN_HOME_ID`, the home id the environment supplies (SEC-03).
+    pub home_id: Option<OsString>,
+    /// Whether the hook handler panics: a development build's seam for
+    /// the `@ENG-04` scenario, never set in a release build.
+    pub hook_panics: bool,
     /// Starts reading the process's input, one line at a time.
     pub input: &'a dyn Fn() -> Receiver<io::Result<String>>,
+    /// The wall clock, in seconds since the Unix epoch, which only
+    /// audit entries read.
+    pub clock: &'a dyn Fn() -> u64,
 }
 
 impl Context<'_> {
@@ -373,6 +381,9 @@ fn verify_command(
         other => other,
     }
 }
+
+/// Audits a panic the MCP server caught.
+fn mcp_panicked(_home: &Home, _time: u64) {}
 
 /// `s` as a JSON string literal.
 fn json_string(s: &str) -> String {

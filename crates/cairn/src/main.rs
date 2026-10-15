@@ -14,7 +14,10 @@ fn main() -> ExitCode {
         build: &cairn::BUILD,
         cairn_home: std::env::var_os("CAIRN_HOME"),
         home: std::env::var_os("HOME"),
+        home_id: std::env::var_os("CAIRN_HOME_ID"),
+        hook_panics: false,
         input: &stdin_lines,
+        clock: &|| 0,
     };
 
     ExitCode::from(cairn::run(args, &ctx, &mut io::stdout(), &mut io::stderr()))
