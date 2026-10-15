@@ -5,22 +5,44 @@
 use std::io::{self, BufRead};
 use std::process::ExitCode;
 use std::sync::mpsc::{self, Receiver};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() -> ExitCode {
-    let args = std::env::args_os()
+    let args: Vec<String> = std::env::args_os()
         .skip(1)
-        .map(|a| a.to_string_lossy().into_owned());
+        .map(|a| a.to_string_lossy().into_owned())
+        .collect();
+    if args.first().is_some_and(|a| a == "hook") {
+        // A hook handler writes nothing to stderr, the default panic
+        // message included (§9.1, ENG-04); its entry point catches the
+        // panic and audits it.
+        std::panic::set_hook(Box::new(|_| {}));
+    }
     let ctx = cairn::Context {
         build: &cairn::BUILD,
         cairn_home: std::env::var_os("CAIRN_HOME"),
         home: std::env::var_os("HOME"),
         home_id: std::env::var_os("CAIRN_HOME_ID"),
-        hook_panics: false,
+        // The development build's seam for the `@ENG-04` scenario; a
+        // release build never reads it.
+        hook_panics: cfg!(debug_assertions)
+            && std::env::var_os("CAIRN_TEST_FAULT").is_some_and(|v| v == "hook-panic"),
         input: &stdin_lines,
-        clock: &|| 0,
+        clock: &now,
     };
 
     ExitCode::from(cairn::run(args, &ctx, &mut io::stdout(), &mut io::stderr()))
+}
+
+/// The wall clock, in seconds since the Unix epoch, for audit entries.
+#[expect(
+    clippy::disallowed_methods,
+    reason = "an audit entry records when it was made; no derived artifact reads it (I10)"
+)]
+fn now() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs())
 }
 
 /// The process's input, one line at a time, read on a thread of its

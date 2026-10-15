@@ -426,7 +426,7 @@ fn verify_without_a_store_or_with_a_failing_one_fails() {
         )
     );
 
-    std::fs::create_dir_all(p.cairn_home()).unwrap();
+    owner_only_dirs(&p.cairn_home());
     junk_store(&p);
     let (code, _, err) = p.invoke(&["verify"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
@@ -528,7 +528,7 @@ fn mcp_refuses_flags_and_reports_a_store_it_cannot_open() {
         );
     }
     let p = Process::new();
-    std::fs::create_dir_all(p.cairn_home()).unwrap();
+    owner_only_dirs(&p.cairn_home());
     junk_store(&p);
     let (code, _, err) = p.invoke(&["mcp"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
@@ -621,6 +621,16 @@ fn a_command_without_a_home_fails() {
             format!("cairn {name}: no home: set CAIRN_HOME or HOME\n")
         );
     }
+}
+
+/// Makes `path` and the directories above it that do not exist yet,
+/// each readable by its owner alone, as the home's check wants (SEC-02).
+fn owner_only_dirs(path: &std::path::Path) {
+    let mut builder = std::fs::DirBuilder::new();
+    builder.recursive(true);
+    #[cfg(unix)]
+    std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
+    builder.create(path).unwrap();
 }
 
 /// Writes a store file that is no database, readable by its owner alone
@@ -792,7 +802,7 @@ fn a_hook_in_a_home_it_must_refuse_writes_nothing_and_exits_0() {
 #[test]
 fn a_hook_whose_audit_log_cannot_take_an_entry_still_exits_0() {
     let mut p = Process::new();
-    std::fs::create_dir_all(p.cairn_home().join("audit/audit-000001.jsonl")).unwrap();
+    owner_only_dirs(&p.cairn_home().join("audit/audit-000001.jsonl"));
     p.lines = vec!["not json".to_owned()];
 
     assert_eq!(
@@ -837,12 +847,15 @@ fn counter_needs_ack_and_refuses_other_flags() {
 #[test]
 fn counter_ack_reports_an_audit_log_it_cannot_append_to() {
     let p = Process::new();
-    std::fs::create_dir_all(p.cairn_home().join("audit/audit-000001.jsonl")).unwrap();
+    owner_only_dirs(&p.cairn_home().join("audit/audit-000001.jsonl"));
 
     let (code, _, err) = p.invoke(&["counter", "ack"], &DEV);
 
     assert_eq!(code, EXIT_FAILURE);
-    assert!(err.starts_with("cairn counter ack: "), "{err}");
+    assert!(
+        err.starts_with("cairn counter ack: ") && err.contains("audit-000001.jsonl"),
+        "{err}"
+    );
 }
 
 #[test]
@@ -1074,7 +1087,7 @@ fn a_panic_in_the_mcp_server_is_audited() {
     let p = Process::new();
     let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
 
-    mcp_panicked(&home, NOW);
+    mcp_panicked(&home, NOW).unwrap();
 
     let entries = audited(&p);
     assert_eq!(entries.len(), 1);
