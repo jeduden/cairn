@@ -1,5 +1,4 @@
 use std::fs;
-use std::io::Write as _;
 
 use record::digest::Digest;
 use testkit::TempDir;
