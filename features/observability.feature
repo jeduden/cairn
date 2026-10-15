@@ -21,7 +21,7 @@ Feature: Observability (OPS)
       | the agent calls the MCP tool "event_expand" with a range above 8,000 estimated model tokens | truncated | recall_truncated     |
       | the hook "SessionStart" runs with an unreadable transcript path                             | failed    | hook_failed          |
 
-  @OPS-02 @P0 @I6 @pending
+  @OPS-02 @P0 @I6
   Scenario: the audit log is an append-only hash-chained JSONL file that rotates with chain continuation
     Given an isolated Cairn home
     And an audit log that has reached its rotation size
@@ -30,7 +30,7 @@ Feature: Observability (OPS)
     And its first entry's previous hash equals the hash of the last entry in "audit/audit-000001.jsonl"
     And every entry is RFC 8785 canonical JSON whose SHA-256 chain verifies with "cairn verify"
 
-  @OPS-03 @P0 @I6 @pending
+  @OPS-03 @P0 @I6
   Scenario: doctor fails while a failure counter has risen since the counters were last acknowledged
     Given an isolated Cairn home
     And the person has acknowledged the counters with "cairn counter ack", a neutral principal act
