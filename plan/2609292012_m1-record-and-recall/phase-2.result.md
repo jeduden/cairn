@@ -46,13 +46,12 @@ agent's review.
 
 For phase 3:
 
-- `cairn counter ack` only appends a `counter_ack` entry, and needs no
-  terminal, so until phase 3 an agent's own tool call can acknowledge
-  the counters and quiet `cairn doctor` (I6). Record the neutral
-  principal act in the device seat, ask for a terminal (OWN-12), and
-  move doctor's last acknowledgement to it. The `@OPS-02` and `@OPS-03`
-  steps then need a terminal from the testkit; `script` cannot give it
-  under the trace, as it calls `getpeername`.
+- `cairn counter ack` refuses without a terminal on standard input
+  and output (OWN-12), which the `@OPS-03` scenario proves with the
+  agent's tool call, and the testkit's `run_at_terminal` gives a step
+  one through `script`, outside the trace. It still only appends a
+  `counter_ack` entry: record the neutral principal act in the device
+  seat and move doctor's last acknowledgement to it.
 - `home.json` is written by hand; configuration's `home.id` should
   write it.
 

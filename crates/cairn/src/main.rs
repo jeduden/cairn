@@ -2,7 +2,7 @@
 //! entry point only hands it the process's arguments, environment and
 //! streams.
 
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, IsTerminal};
 use std::process::ExitCode;
 use std::sync::mpsc::{self, Receiver};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -27,6 +27,7 @@ fn main() -> ExitCode {
         // release build never reads it.
         hook_panics: cfg!(debug_assertions)
             && std::env::var_os("CAIRN_TEST_FAULT").is_some_and(|v| v == "hook-panic"),
+        terminal: terminal(),
         input: &stdin_lines,
         clock: &now,
     };
@@ -43,6 +44,18 @@ fn now() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| d.as_secs())
+}
+
+/// Whether the process's standard input and output are both a terminal
+/// (OWN-12).
+fn terminal() -> bool {
+    #[expect(
+        clippy::disallowed_methods,
+        reason = "asking whether stdin is a terminal reads nothing, so it waits for nothing"
+    )]
+    let stdin = io::stdin();
+
+    stdin.is_terminal() && io::stdout().is_terminal()
 }
 
 /// The process's input, one line at a time, read on a thread of its

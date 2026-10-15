@@ -37,8 +37,10 @@ Counters (OPS-01, OPS-03):
 
 - Counters derive from the audit log, one per name. Each one this
   phase adds is a failure counter (OQ-50 (i)).
-- `cairn counter ack` appends a `counter_ack` entry. That is interim:
-  phase 3 records the neutral principal act (OWN-11, OWN-12), and
+- `cairn counter ack` appends a `counter_ack` entry, and refuses
+  unless its standard input and output are a terminal (OWN-12), so an
+  agent's tool call cannot quiet `cairn doctor`. The entry is interim:
+  phase 3 records the neutral principal act (OWN-11), and
   `cairn doctor` then reads the last acknowledgement from it.
 - `cairn doctor` exits 1, naming each counter, while one rose since
   the last acknowledgement. It is read-only (ADM-10).

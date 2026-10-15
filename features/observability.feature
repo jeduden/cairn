@@ -25,7 +25,7 @@ Feature: Observability (OPS)
   Scenario: the audit log is an append-only hash-chained JSONL file that rotates with chain continuation
     Given an isolated Cairn home
     And an audit log that has reached its rotation size
-    When the person runs "cairn counter ack"
+    When the person runs "cairn counter ack" at a terminal
     Then the file "audit/audit-000002.jsonl" is created with mode 0600
     And its first entry's previous hash equals the hash of the last entry in "audit/audit-000001.jsonl"
     And every entry is RFC 8785 canonical JSON whose SHA-256 chain verifies with "cairn verify"
@@ -37,11 +37,11 @@ Feature: Observability (OPS)
     When the hook "UserPromptSubmit" runs with a malformed JSON object
     And the person runs "cairn doctor"
     Then the command exits 1
-    When an agent's tool call runs "cairn counter ack" with no terminal
+    When the agent's tool call runs "cairn counter ack" with its standard input and output not a terminal
     Then the command exits 1
     When the person runs "cairn doctor"
     Then the command exits 1
-    When the person acknowledges the counters at a terminal with "cairn counter ack"
+    When the person runs "cairn counter ack" at a terminal
     And the person runs "cairn doctor"
     Then the command exits 0
 

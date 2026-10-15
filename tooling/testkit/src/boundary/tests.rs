@@ -471,20 +471,45 @@ fn a_start_s_environment_never_moves_it_out_of_its_isolated_home() {
 
 #[test]
 fn a_shell_line_quotes_every_word() {
+    let mut command = Command::new("/bin/cairn");
+    command.args(["counter", "it's"]);
+
     assert_eq!(
-        shell_line(Path::new("/bin/cairn"), &["counter", "it's"]),
+        shell_line(&command),
         r"exec '/bin/cairn' 'counter' 'it'\''s'"
     );
 }
 
 #[test]
-fn a_start_at_a_terminal_runs_the_program_under_script() {
-    let line = terminal_args(Path::new("/bin/cairn"), &["counter", "ack"]);
-
-    assert_eq!(
-        line,
-        ["-qefc", "exec '/bin/cairn' 'counter' 'ack'", "/dev/null"]
+fn a_command_at_a_terminal_runs_the_whole_confined_line_under_script() {
+    let c = Confinement {
+        component: Component::Core,
+        mode: Mode::Confined,
+    };
+    let inner = c.command(
+        Path::new("/bin/cairn"),
+        &["counter", "ack"],
+        Path::new("/t"),
     );
+
+    let command = at_terminal(&inner);
+
+    assert_eq!(command.get_program(), "script");
+    let args: Vec<&OsStr> = command.get_args().collect();
+    assert_eq!(args[0], "-qefc");
+    assert!(
+        args[1].to_string_lossy().starts_with("exec 'unshare' "),
+        "{:?}",
+        args[1]
+    );
+    assert!(
+        args[1]
+            .to_string_lossy()
+            .ends_with(" '/bin/cairn' 'counter' 'ack'"),
+        "{:?}",
+        args[1]
+    );
+    assert_eq!(args[2], "/dev/null");
 }
 
 #[test]

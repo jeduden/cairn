@@ -185,17 +185,6 @@ fn acknowledged(w: &mut World) -> Result<(), String> {
     ))
 }
 
-#[when(regex = r#"^the person acknowledges the counters at a terminal with "cairn counter ack"$"#)]
-fn acknowledges(w: &mut World) -> Result<(), String> {
-    run_core_at_terminal(w, &["counter", "ack"])
-}
-
-#[when(regex = r#"^an agent's tool call runs "cairn ([^"]*)" with no terminal$"#)]
-fn tool_call_runs(w: &mut World, args: String) -> Result<(), String> {
-    let args: Vec<&str> = args.split_whitespace().collect();
-    run_core(w, &args, None)
-}
-
 #[when(regex = r#"^the hook "([A-Za-z]+)" runs with (a malformed JSON object|a valid input)$"#)]
 fn hook_runs(w: &mut World, hook: String, input: String) -> Result<(), String> {
     let input = if input == "a valid input" {

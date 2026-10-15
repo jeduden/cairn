@@ -101,6 +101,10 @@ pub struct Context<'a> {
     /// Whether the hook handler panics: a development build's seam for
     /// the `@ENG-04` scenario, never set in a release build.
     pub hook_panics: bool,
+    /// Whether the process's standard input and output are both a
+    /// terminal, which a verb that writes a principal act needs
+    /// (OWN-12): a person's are, an agent's tool call's are not.
+    pub terminal: bool,
     /// Starts reading the process's input, one line at a time.
     pub input: &'a dyn Fn() -> Receiver<io::Result<String>>,
     /// The wall clock, in seconds since the Unix epoch, which only
@@ -533,7 +537,9 @@ fn mcp_panicked(home: &Home, time: u64) -> Result<Entry, AuditError> {
 
 /// `cairn counter ack [--json]`: acknowledges the counters (OPS-03). It
 /// appends a `counter_ack` entry to the audit log; phase 3 records the
-/// neutral principal act it is (OWN-11).
+/// neutral principal act it is (OWN-11). Like every verb that writes a
+/// principal act, it refuses unless its standard input and output are a
+/// terminal (OWN-12), so an agent's tool call cannot quiet `cairn doctor`.
 fn counter(
     mut args: impl Iterator<Item = String>,
     ctx: &Context,
@@ -547,6 +553,14 @@ fn counter(
     let Some(as_json) = json_flag("counter ack", args, stderr) else {
         return EXIT_USAGE;
     };
+    if !ctx.terminal {
+        let _ = writeln!(
+            stderr,
+            "cairn counter ack: refused: acknowledging the counters is a principal act, \
+             which needs a terminal on standard input and output (OWN-12)"
+        );
+        return EXIT_FAILURE;
+    }
     let entry = match ctx.audit(&Occurrence::CounterAck) {
         Ok(entry) => entry,
         Err(e) => return failed("counter ack", &e, stderr),

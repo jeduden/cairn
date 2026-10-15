@@ -162,6 +162,20 @@ fn person_runs(w: &mut World, args: String) -> Result<(), String> {
     run_core(w, &args, None)
 }
 
+#[when(regex = r#"^the person runs "cairn ([^"]*)" at a terminal$"#)]
+fn person_runs_at_terminal(w: &mut World, args: String) -> Result<(), String> {
+    let args: Vec<&str> = args.split_whitespace().collect();
+    run_core_at_terminal(w, &args)
+}
+
+#[when(
+    regex = r#"^the agent's tool call runs "cairn ([^"]*)" with its standard input and output not a terminal$"#
+)]
+fn tool_call_runs(w: &mut World, args: String) -> Result<(), String> {
+    let args: Vec<&str> = args.split_whitespace().collect();
+    run_core(w, &args, None)
+}
+
 #[then(regex = r"^the command exits (\d+)$")]
 fn exits(w: &mut World, code: i32) -> Result<(), String> {
     let out = last_run(w)?;
