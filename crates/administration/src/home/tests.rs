@@ -219,6 +219,20 @@ fn a_symbolic_link_inside_the_home_is_refused() {
 
 #[cfg(unix)]
 #[test]
+fn what_vanished_since_it_was_listed_is_absent_and_any_other_failure_stands() {
+    let gone = || Err::<(), _>(std::io::Error::from(std::io::ErrorKind::NotFound));
+    let denied = || Err::<(), _>(std::io::Error::from(std::io::ErrorKind::PermissionDenied));
+
+    assert_eq!(present(Ok(7)).unwrap(), Some(7));
+    assert_eq!(present(gone()).unwrap(), None);
+    assert_eq!(
+        present(denied()).unwrap_err().kind(),
+        std::io::ErrorKind::PermissionDenied
+    );
+}
+
+#[cfg(unix)]
+#[test]
 fn the_home_itself_may_be_reached_through_a_symbolic_link() {
     let dir = TempDir::new().unwrap();
     let home = made_home(&dir);

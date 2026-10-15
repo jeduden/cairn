@@ -728,6 +728,78 @@ fn a_hook_input_that_cannot_be_read_or_never_ends_is_rejected() {
 }
 
 #[test]
+fn a_hook_input_that_trickles_past_its_wait_is_rejected() {
+    let p = Process::new();
+    // A line every 50 ms, each inside the wait, until the hook stops
+    // listening: the whole input must still end within the wait.
+    let input = || {
+        let (tx, rx) = mpsc::channel();
+        std::thread::spawn(move || {
+            while tx.send(Ok("{".to_owned())).is_ok() {
+                std::thread::sleep(std::time::Duration::from_millis(50));
+            }
+        });
+        rx
+    };
+    let ctx = Context {
+        build: &DEV,
+        cairn_home: Some(p.cairn_home().into_os_string()),
+        home: None,
+        home_id: None,
+        hook_panics: false,
+        input: &input,
+        clock: &|| NOW,
+    };
+    let (mut out, mut err) = (Vec::new(), Vec::new());
+
+    let code = run(
+        ["hook".to_owned(), "SessionStart".to_owned()],
+        &ctx,
+        &mut out,
+        &mut err,
+    );
+
+    assert_eq!(
+        (code, out.is_empty(), err.is_empty()),
+        (EXIT_OK, true, true)
+    );
+    let details: Vec<String> = audited(&p).into_iter().map(|e| e.detail).collect();
+    assert_eq!(details, ["not a JSON object"]);
+}
+
+#[test]
+fn a_panic_while_auditing_a_hook_failure_still_exits_0() {
+    let p = Process::new();
+    let input = || {
+        let (tx, rx) = mpsc::channel();
+        tx.send(Ok("not json".to_owned())).unwrap();
+        rx
+    };
+    let ctx = Context {
+        build: &DEV,
+        cairn_home: Some(p.cairn_home().into_os_string()),
+        home: None,
+        home_id: None,
+        hook_panics: false,
+        input: &input,
+        clock: &|| panic!("the clock fails"),
+    };
+    let (mut out, mut err) = (Vec::new(), Vec::new());
+
+    let code = run(
+        ["hook".to_owned(), "UserPromptSubmit".to_owned()],
+        &ctx,
+        &mut out,
+        &mut err,
+    );
+
+    assert_eq!(
+        (code, out.is_empty(), err.is_empty()),
+        (EXIT_OK, true, true)
+    );
+}
+
+#[test]
 fn a_hook_cairn_does_not_install_is_rejected_and_exits_0() {
     let mut p = Process::new();
     p.lines = vec![SESSION_START.to_owned()];

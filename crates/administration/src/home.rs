@@ -120,13 +120,19 @@ impl Home {
                 path: dir.clone(),
                 source,
             };
-            // Each item's own metadata, a link's rather than its
-            // target's.
-            let mut items: Vec<(PathBuf, fs::Metadata)> = fs::read_dir(&dir)
-                .map_err(io)?
-                .map(|item| item.and_then(|i| Ok((i.path(), i.metadata()?))))
-                .collect::<Result<_, _>>()
-                .map_err(io)?;
+            // What another process removes while the walk runs, such as
+            // the store's WAL files as its last connection closes, is
+            // no longer in the home: it is skipped, not refused.
+            let listing = present(fs::read_dir(&dir)).map_err(io)?;
+            let mut items: Vec<(PathBuf, fs::Metadata)> = Vec::new();
+            for item in listing.into_iter().flatten() {
+                let item = item.map_err(io)?;
+                // Each item's own metadata, a link's rather than its
+                // target's.
+                if let Some(meta) = present(item.metadata()).map_err(io)? {
+                    items.push((item.path(), meta));
+                }
+            }
             // A listing's order is the file system's; the first
             // refusal named should not be.
             items.sort_by(|a, b| a.0.cmp(&b.0));
@@ -203,6 +209,16 @@ fn home_id(text: &str) -> Option<String> {
         .as_str()
         .filter(|id| !id.is_empty())
         .map(str::to_owned)
+}
+
+/// What `result` holds, or none when what it reads no longer exists.
+#[cfg(unix)]
+fn present<T>(result: std::io::Result<T>) -> std::io::Result<Option<T>> {
+    match result {
+        Ok(value) => Ok(Some(value)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e),
+    }
 }
 
 /// Refuses `path` unless `meta` shows it belongs to `running` and

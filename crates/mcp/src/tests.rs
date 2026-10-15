@@ -627,7 +627,24 @@ fn serve_answers_a_request_whose_handling_panicked_and_goes_on() {
         .collect();
     assert_eq!(panics, 1);
     assert_eq!(lines.len(), 2);
+    assert_eq!(lines[0]["id"], json!(1));
     assert_eq!(lines[0]["error"]["code"], json!(-32603));
     assert_eq!(lines[0]["error"]["message"], json!("internal error"));
     assert_eq!(lines[1]["id"], json!(2));
+}
+
+#[test]
+fn a_panic_is_answered_with_the_request_s_id_and_a_notification_not_at_all() {
+    let reply = |line: &str| panic_reply(line).map(|r| serde_json::from_str::<Value>(&r).unwrap());
+
+    let request = reply(r#"{"jsonrpc":"2.0","id":7,"method":"tools/call"}"#).unwrap();
+    assert_eq!(request["id"], json!(7));
+    assert_eq!(request["error"]["code"], json!(-32603));
+    assert_eq!(
+        reply(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#),
+        None
+    );
+    for line in ["not json", r#"{"jsonrpc":"2.0","id":3}"#] {
+        assert_eq!(reply(line).unwrap()["id"], Value::Null, "{line}");
+    }
 }

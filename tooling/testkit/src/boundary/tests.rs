@@ -444,3 +444,27 @@ fn a_confined_start_hands_its_environment_to_the_program() {
     assert!(out.status.success());
     assert_eq!(out.stdout, b"hook-panic");
 }
+
+#[test]
+fn a_start_s_environment_never_moves_it_out_of_its_isolated_home() {
+    let home = TempDir::new().unwrap();
+
+    let out = unconfined()
+        .run_in(
+            Path::new("sh"),
+            &["-c", "printf '%s|%s' \"$HOME\" \"$CAIRN_HOME\""],
+            home.path(),
+            &[("HOME", "/elsewhere"), ("CAIRN_HOME", "/elsewhere/.cairn")],
+            None,
+        )
+        .unwrap();
+
+    assert_eq!(
+        String::from_utf8(out.stdout).unwrap(),
+        format!(
+            "{}|{}",
+            home.path().display(),
+            home.path().join(".cairn").display()
+        )
+    );
+}

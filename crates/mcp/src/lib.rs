@@ -310,9 +310,9 @@ fn error(id: &Value, code: i64, message: &str) -> String {
 /// Answers each line `input` delivers on `out` through `handle`, until
 /// the input closes. Each wait for a line ends after `idle` and starts
 /// again, so no wait is without a deadline (ENG-03). A panic while
-/// handling a line stops here: the line is answered with an internal
-/// error, `panicked` is told so the caller can audit it, and serving
-/// goes on (ENG-04).
+/// handling a line stops here: a request is answered with an internal
+/// error under its id, `panicked` is told so the caller can audit it,
+/// and serving goes on (ENG-04).
 ///
 /// # Errors
 ///
@@ -339,7 +339,7 @@ pub fn serve(
                         // The panic stops at the entry point, and the
                         // client hears of it (ENG-04).
                         panicked();
-                        Some(error(&Value::Null, INTERNAL_ERROR, "internal error"))
+                        panic_reply(&line)
                     });
                 if let Some(reply) = reply {
                     writeln!(out, "{reply}")?;
@@ -350,6 +350,19 @@ pub fn serve(
             Err(RecvTimeoutError::Disconnected) => return Ok(()),
         }
     }
+}
+
+/// The reply to `line` once handling it panicked: an internal error
+/// with the request's id, so the client can match it to its request;
+/// none for a notification, which takes no reply; a null id for a line
+/// that names no method.
+fn panic_reply(line: &str) -> Option<String> {
+    let id = match serde_json::from_str::<Value>(line) {
+        Ok(message) if message.get("method").is_some() => message.get("id")?.clone(),
+        _ => Value::Null,
+    };
+
+    Some(error(&id, INTERNAL_ERROR, "internal error"))
 }
 
 #[cfg(test)]

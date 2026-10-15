@@ -13,7 +13,7 @@ use std::io::{self, Write};
 use std::panic::{self, AssertUnwindSafe};
 use std::path::Path;
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use administration::home::Home;
 use administration::node::Node;
@@ -40,8 +40,9 @@ pub const EXIT_INTEGRITY: u8 = 3;
 /// How long `cairn mcp` waits for a line before it waits again.
 const IDLE: Duration = Duration::from_secs(1);
 
-/// How long `cairn hook` waits for each line of its hook input. The
-/// hook budgets of NFR-02 replace it with phase 9's handlers.
+/// How long `cairn hook` waits for its whole hook input, however its
+/// lines arrive. The hook budgets of NFR-02 replace it with phase 9's
+/// handlers.
 const HOOK_INPUT_WAIT: Duration = Duration::from_millis(500);
 
 /// What a build stamps into the executable. The release build sets
@@ -121,13 +122,11 @@ impl Context<'_> {
 
     /// Appends `occurrence` to the checked home's audit log, making the
     /// home first where it does not exist yet.
-    fn audit(&self, occurrence: &Occurrence) -> Result<Entry, String> {
-        let home = self.home().map_err(|e| e.to_string())?;
-        home.create().map_err(|e| e.to_string())?;
+    fn audit(&self, occurrence: &Occurrence) -> Result<Entry, Box<dyn std::error::Error>> {
+        let home = self.home()?;
+        home.create()?;
 
-        Log::new(home.audit())
-            .append(occurrence, (self.clock)())
-            .map_err(|e| e.to_string())
+        Ok(Log::new(home.audit()).append(occurrence, (self.clock)())?)
     }
 }
 
@@ -170,14 +169,9 @@ fn version(
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> u8 {
-    let mut as_json = false;
-    for arg in args {
-        if arg != "--json" {
-            let _ = writeln!(stderr, "cairn version: unknown flag {arg:?}");
-            return EXIT_USAGE;
-        }
-        as_json = true;
-    }
+    let Some(as_json) = json_flag("version", args, stderr) else {
+        return EXIT_USAGE;
+    };
     let line = if as_json {
         version_json(build)
     } else {
@@ -452,7 +446,7 @@ fn broken_json(
 /// (ENG-04, I9). A home it must refuse is left untouched (I8).
 fn hook_command(name: Option<&str>, ctx: &Context, stdout: &mut dyn Write) -> u8 {
     let hook = name.and_then(Hook::parse);
-    let ran = panic::catch_unwind(AssertUnwindSafe(|| match hook {
+    let ran = match hook {
         None => Err(Failure::UnknownHook),
         Some(h) => hook::guarded(|| {
             if ctx.hook_panics {
@@ -461,8 +455,7 @@ fn hook_command(name: Option<&str>, ctx: &Context, stdout: &mut dyn Write) -> u8
             let hook_input = hook_input(ctx).ok_or(Failure::Malformed)?;
             hook::handle(h, &hook_input)
         }),
-    }))
-    .unwrap_or(Err(Failure::Panicked));
+    };
     match ran {
         Ok(out) => {
             let _ = stdout.write_all(out.as_bytes());
@@ -471,8 +464,11 @@ fn hook_command(name: Option<&str>, ctx: &Context, stdout: &mut dyn Write) -> u8
             let operation = hook.map_or("hook", Hook::operation);
             // Nowhere to report an audit log that takes no entry: the
             // hook writes nothing to stderr. `cairn status` and `cairn
-            // doctor` name what keeps the home from taking it.
-            let _ = ctx.audit(&failure.occurrence(operation));
+            // doctor` name what keeps the home from taking it. A panic
+            // while auditing stops here too (ENG-04).
+            let _ = panic::catch_unwind(AssertUnwindSafe(|| {
+                ctx.audit(&failure.occurrence(operation))
+            }));
         }
     }
 
@@ -490,12 +486,18 @@ fn seam_panic() {
 }
 
 /// The hook input on stdin, its lines joined, once the input closes;
-/// none when it cannot be read or a line does not arrive in time.
+/// none when it cannot be read or does not close in time.
+#[expect(
+    clippy::disallowed_methods,
+    reason = "the deadline on reading the hook input (ENG-03); no derived artifact reads it (I10)"
+)]
 fn hook_input(ctx: &Context) -> Option<String> {
     let input = (ctx.input)();
+    let deadline = Instant::now() + HOOK_INPUT_WAIT;
     let mut lines = Vec::new();
     loop {
-        match input.recv_timeout(HOOK_INPUT_WAIT) {
+        let left = deadline.checked_duration_since(Instant::now())?;
+        match input.recv_timeout(left) {
             Ok(Ok(line)) => lines.push(line),
             Ok(Err(_)) | Err(RecvTimeoutError::Timeout) => return None,
             Err(RecvTimeoutError::Disconnected) => return Some(lines.join("\n")),
@@ -587,18 +589,20 @@ fn doctor(
         Ok(home) => home,
         Err(e) => return failed("doctor", &e, stderr),
     };
-    let risen = if home.root().exists() {
+    let counts = if home.root().exists() {
         match audit_counts("doctor", &home, stderr) {
-            Ok((c, _)) => Some(c.since_ack),
+            Ok((c, _)) => Some(c),
             Err(code) => return code,
         }
     } else {
         None
     };
-    let code = match &risen {
-        Some(r) if !r.is_empty() => EXIT_FAILURE,
-        _ => EXIT_OK,
+    let code = if counts.as_ref().is_some_and(Counts::risen) {
+        EXIT_FAILURE
+    } else {
+        EXIT_OK
     };
+    let risen = counts.map(|c| c.since_ack);
     let text = if as_json {
         json!({"risen": risen.unwrap_or_default()}).to_string()
     } else {

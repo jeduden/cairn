@@ -201,8 +201,10 @@ impl Confinement {
         let dir = TempDir::new().map_err(|source| Error::Trace { source })?;
         let trace = dir.path().join("trace");
         let mut command = self.command(program, args, &trace);
-        isolate(&mut command, home);
+        // The isolated home goes last, so no variable a step sets moves
+        // the program out of it (ENG-14).
         command.envs(env.iter().copied());
+        isolate(&mut command, home);
         let output = match input {
             None => command.stdin(Stdio::null()).output(),
             Some(bytes) => feed(&mut command, bytes),

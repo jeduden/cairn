@@ -32,8 +32,10 @@ Inherited:
   `&'static str`, so no content reaches the log. New counters join
   `audit::entry::Counter`; new kinds of failure each get a variant.
 - The `hook` crate: `Hook`, `Failure`, `handle`, `guarded`. `cairn
-  hook` reads the hook input with a 500 ms wait per line.
-- `mcp::serve` takes the handler and a callback per caught panic.
+  hook` waits 500 ms for its whole hook input, and audits under its
+  own panic guard.
+- `mcp::serve` takes the handler and a callback per caught panic; it
+  answers a request whose handling panicked under the request's id.
 - The testkit's `Confinement::run_in` takes environment variables; the
   steps' `run_core` and `last_run` live in `bdd/record.rs`, and
   `World::env` carries the variables.
@@ -53,14 +55,21 @@ For phase 3:
 
 Parked:
 
-- A hook input that times out counts as `hook_rejected`; phase 9's
-  hook budgets add `hook_budget_exceeded` (NFR-02).
+- A hook input that times out or cannot be read counts as
+  `hook_rejected`; phase 9's hook budgets add their own counters
+  (NFR-02, OPS-01).
 - Audit appends are not synced to disk, and a torn last entry fails
   every later append until repaired (ENG-06, phase 16).
 - A hook whose home is refused or whose audit log takes no entry
   leaves no trace; `cairn status` and `cairn doctor` name the cause.
 - The home check walks every file, payloads included once phase 6
-  writes them; it may need narrowing to fit the hook budget.
+  writes them; it may need narrowing to fit the hook budget. An append
+  reads the whole last audit file, and `cairn status` and `cairn
+  doctor` re-check the whole log each run.
+- `cairn verify`, `status` and `doctor` read the audit log without its
+  lock, so an append mid-write can read as a torn entry.
+- `cairn verify` needs a store, so a home with only audit entries
+  cannot have its audit chain checked.
 - Windows' ACLs are not checked yet.
 - The `@SEC-02` steps for another OS user need root or `sudo -n`.
 - OQ-50 (i): every counter so far counts as a failure counter.
