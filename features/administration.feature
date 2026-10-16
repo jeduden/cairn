@@ -50,11 +50,15 @@ Feature: Administration and lifecycle (ADM)
     And the core records every event of the run
 
     Examples:
-      | settings                                                           | component    | expected                                                                                      |
-      | the person's config.toml containing "recal.max_k = 10"             | cairn status | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
-      | the person's config.toml containing "recall.max_k = 'ten'"         | cairn status | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
-      | the person's config.toml containing "recall.max_k = 500"           | cairn status | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
-      | the person's config.toml containing "payload.threshold_bytes = -1" | cairn status | exits 2, and the error names the key "payload.threshold_bytes" and the problem "out of range" |
+      | settings                                                                            | component    | expected                                                                                                                                                                    |
+      | the person's config.toml containing "recal.max_k = 10"                              | cairn status | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"                                                                                            |
+      | the person's config.toml containing "recall.max_k = 'ten'"                          | cairn status | exits 2, and the error names the key "recall.max_k" and the problem "type error"                                                                                            |
+      | the person's config.toml containing "recall.max_k = 500"                            | cairn status | exits 2, and the error names the key "recall.max_k" and the problem "out of range"                                                                                          |
+      | the person's config.toml containing "payload.threshold_bytes = -1"                  | cairn status | exits 2, and the error names the key "payload.threshold_bytes" and the problem "out of range"                                                                               |
+      | the person's config.toml containing "flag.enabled = false"                          | cairn status | exits 0, shows deployment mode "automation" and "flag.enabled" awaiting acceptance: it stands as it stood until a widening principal act records that file's digest         |
+      | the person's config.toml containing "node.deployment_mode = 'interactive'"          | cairn status | exits 0, shows deployment mode "automation" and "node.deployment_mode" awaiting acceptance: it stands as it stood until a widening principal act records that file's digest |
+      | a repository ".cairn.toml" containing "node.deployment_mode = 'interactive'"        | cairn status | exits 0, shows deployment mode "automation" and counts "repository_configuration_key_ignored": repository configuration only tightens                                       |
+      | a managed policy file the person's OS user can write, containing "recall.max_k = 5" | cairn status | exits 0, shows managed policy refused as writable by the person's OS user and counts "managed_policy_invalid"                                                               |
 
   @ADM-05 @P0 @I1 @pending
   Scenario: segment and schema migrations run forward after a verified backup and newer versions are refused
