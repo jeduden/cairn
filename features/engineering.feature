@@ -41,7 +41,7 @@ Feature: Engineering quality (ENG)
     And the hook handler wrote nothing to stderr, the default panic message included
     And an audit entry records "panic recovered"
 
-  @ENG-05 @P0 @pending
+  @ENG-05 @P0
   Scenario: structured logs pass through redaction
     Given an isolated Cairn home
     And a log field containing an AWS access key

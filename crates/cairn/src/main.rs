@@ -41,7 +41,28 @@ fn main() -> ExitCode {
         clock: &now,
     };
 
-    ExitCode::from(cairn::run(args, &ctx, &mut io::stdout(), &mut io::stderr()))
+    let log = cairn::structured_log(
+        std::env::var_os("CAIRN_HOME"),
+        std::env::var_os("HOME"),
+        std::env::var_os("CAIRN_HOME_ID"),
+        now,
+    )
+    .map(std::sync::Arc::new);
+    let code = match &log {
+        Ok(log) => {
+            let dispatch = tracing::Dispatch::from(log.clone());
+            tracing::dispatcher::with_default(&dispatch, || {
+                cairn::run(args, &ctx, &mut io::stdout(), &mut io::stderr())
+            })
+        }
+        // No log without the rule set to redact it.
+        Err(_) => cairn::run(args, &ctx, &mut io::stdout(), &mut io::stderr()),
+    };
+    if let Ok(log) = &log {
+        cairn::audit_dropped_log_lines(&ctx, log.dropped());
+    }
+
+    ExitCode::from(code)
 }
 
 /// The wall clock, in seconds since the Unix epoch, for audit entries.

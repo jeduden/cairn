@@ -31,6 +31,9 @@ sha2 = "0.11.1"
 # Linear-time matching, Unicode classes and the literal fast paths
 # kept, nothing else (ADR-2610161200).
 regex = { version = "1.13.1", default-features = false, features = ["std", "unicode", "perf"] }
+# The events and their macros only: no proc-macro attributes, no log
+# bridge (ADR-2610161201).
+tracing = { version = "0.1.44", default-features = false, features = ["std"] }
 # Parsing only: no writer, the nesting limit kept (ADR-2610152132).
 toml = { version = "1.1.5", default-features = false, features = ["std", "parse", "serde"] }
 
@@ -45,6 +48,7 @@ mcp = { path = "crates/mcp" }
 record = { path = "crates/record" }
 redaction = { path = "crates/redaction" }
 store = { path = "crates/store" }
+structured_log = { path = "crates/structured_log" }
 
 adr = { path = "tooling/adr" }
 benchmark = { path = "tooling/benchmark" }

@@ -147,6 +147,55 @@ impl Context<'_> {
     }
 }
 
+/// The structured log (ENG-05, OPS-05) for the home the environment
+/// names: written to its log file once the home exists and passes its
+/// checks (SEC-02, SEC-03), and nowhere before; each field redacted by
+/// the maintained redaction rule set.
+///
+/// # Errors
+///
+/// Fails when the rule set does not compile, which its unit test rules
+/// out.
+pub fn structured_log(
+    cairn_home: Option<OsString>,
+    home: Option<OsString>,
+    home_id: Option<OsString>,
+    clock: fn() -> u64,
+) -> Result<structured_log::StructuredLog, String> {
+    let open: structured_log::Open = Box::new(move || {
+        let Ok(home) = Home::locate(cairn_home.as_deref(), home.as_deref()) else {
+            return Ok(None);
+        };
+        if !home.root().exists() || home.check().is_err() {
+            return Ok(None);
+        }
+        if home.check_home_id(home_id.as_deref()).is_err() {
+            return Ok(None);
+        }
+        let file = structured_log::open_log_file(&home.root().join("logs"))?;
+        Ok(Some(Box::new(file)))
+    });
+    let (redactor, _) = Redactor::new(&[]).map_err(|e| e.to_string())?;
+
+    Ok(structured_log::StructuredLog::new(
+        open,
+        redactor,
+        Box::new(clock),
+    ))
+}
+
+/// Audits the log lines a run could not write (I6).
+pub fn audit_dropped_log_lines(ctx: &Context, dropped: u64) {
+    for _ in 0..dropped {
+        let _ = ctx.audit(&Occurrence::Degraded {
+            kind: Kind::Dropped,
+            counter: Counter::LogLineDropped,
+            operation: "log",
+            detail: "log line dropped",
+        });
+    }
+}
+
 /// Runs one invocation and returns its exit code. It is `main` without
 /// the process: every test drives the command line through here.
 pub fn run(
@@ -281,6 +330,13 @@ fn ingest(
         Err(e) => return failed("ingest", &e, stderr),
     };
     audit_redactions(ctx, &ingested.redactions, stderr);
+    tracing::info!(
+        transcript = %path,
+        writer = %ingested.writer,
+        events = ingested.events as u64,
+        redactions = ingested.redactions.len() as u64,
+        "ingested"
+    );
     let line = if as_json {
         json!({
             "writer": ingested.writer.to_string(),

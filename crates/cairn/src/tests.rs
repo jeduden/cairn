@@ -1,5 +1,6 @@
 use super::*;
 use configuration::source::OsUser;
+use std::ffi::OsStr;
 use std::io;
 use std::sync::mpsc;
 use testkit::TempDir;
@@ -1527,4 +1528,84 @@ fn bounded_lines_cut_a_line_past_the_limit_and_stop() {
         io::ErrorKind::InvalidData
     );
     assert_eq!(bad.len(), 1);
+}
+
+/// Logs one event carrying an AWS access key through the structured
+/// log of `p`'s home, with `home_id` supplied.
+fn log_one(p: &Process, home_id: Option<&str>) -> std::sync::Arc<structured_log::StructuredLog> {
+    let log = std::sync::Arc::new(
+        structured_log(
+            None,
+            Some(p.dir.path().as_os_str().to_owned()),
+            home_id.map(Into::into),
+            || NOW,
+        )
+        .unwrap(),
+    );
+    let dispatch = tracing::Dispatch::from(log.clone());
+    tracing::dispatcher::with_default(&dispatch, || {
+        tracing::info!(key = "AKIAIOSFODNN7EXAMPLE", "logged");
+    });
+    log
+}
+
+fn log_file(p: &Process) -> std::path::PathBuf {
+    p.cairn_home().join("logs").join(structured_log::LOG_FILE)
+}
+
+#[test]
+fn the_structured_log_waits_for_the_home_and_redacts_each_field() {
+    let p = Process::new();
+    log_one(&p, None);
+    assert!(!p.cairn_home().exists(), "a log makes no home");
+
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let log = log_one(&p, None);
+
+    assert_eq!(log.dropped(), 0);
+    let text = std::fs::read_to_string(log_file(&p)).unwrap();
+    let line: Value = serde_json::from_str(text.trim_end()).unwrap();
+    assert_eq!(line["fields"]["key"], "[REDACTED:aws_access_key]");
+    assert_eq!(line["time"], NOW);
+    assert!(
+        Home::locate(Some(p.cairn_home().as_os_str()), None)
+            .unwrap()
+            .check()
+            .is_ok()
+    );
+}
+
+#[test]
+fn a_home_the_core_refuses_gets_no_log() {
+    let mut p = Process::new();
+    p.home_id = Some("h1".to_owned());
+    std::fs::create_dir_all(p.cairn_home()).unwrap();
+    set_mode(&p.cairn_home(), 0o700);
+    std::fs::write(p.cairn_home().join("home.json"), r#"{"id":"h1"}"#).unwrap();
+    set_mode(&p.cairn_home().join("home.json"), 0o600);
+
+    log_one(&p, Some("h2"));
+    assert!(!log_file(&p).exists());
+    set_mode(&p.cairn_home(), 0o755);
+    log_one(&p, Some("h1"));
+    assert!(!log_file(&p).exists());
+    let _ = Home::locate(Some(OsStr::new("relative")), None);
+    let none = structured_log(Some("relative".into()), None, None, || NOW).unwrap();
+    let dispatch = tracing::Dispatch::new(none);
+    tracing::dispatcher::with_default(&dispatch, || tracing::info!("nowhere"));
+}
+
+#[test]
+fn dropped_log_lines_are_audited_one_entry_each() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let before = audited(&p).len();
+    let ctx = crate::settings::tests::ctx_of(&p);
+
+    audit_dropped_log_lines(&ctx, 2);
+
+    let entries = audited(&p);
+    assert_eq!(entries.len(), before + 2);
+    assert_eq!(entries[before].counter.as_deref(), Some("log_line_dropped"));
+    assert_eq!(entries[before].detail, "log line dropped");
 }

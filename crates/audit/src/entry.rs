@@ -86,6 +86,8 @@ pub enum Counter {
     HookInputTooDeep,
     /// A path outside every allowed root was refused (SEC-18).
     PathOutsideAllowedRoots,
+    /// A structured log line could not be written (ENG-05, I6).
+    LogLineDropped,
 }
 
 impl Counter {
@@ -107,6 +109,7 @@ impl Counter {
             Self::HookInputTooLarge => "hook_input_too_large",
             Self::HookInputTooDeep => "hook_input_too_deep",
             Self::PathOutsideAllowedRoots => "path_outside_allowed_roots",
+            Self::LogLineDropped => "log_line_dropped",
         }
     }
 }

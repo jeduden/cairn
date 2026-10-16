@@ -183,7 +183,7 @@ fn p_home(p: &Process) -> Home {
 }
 
 /// A context for `p`'s directory, as `Process::invoke` makes one.
-fn ctx_of(p: &Process) -> Context<'static> {
+pub(crate) fn ctx_of(p: &Process) -> Context<'static> {
     let input: &'static dyn Fn() -> std::sync::mpsc::Receiver<std::io::Result<String>> =
         Box::leak(Box::new(|| std::sync::mpsc::channel().1));
     Context {

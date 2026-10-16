@@ -52,6 +52,7 @@ fn each_kind_and_counter_has_its_name() {
             Counter::PathOutsideAllowedRoots,
             "path_outside_allowed_roots",
         ),
+        (Counter::LogLineDropped, "log_line_dropped"),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

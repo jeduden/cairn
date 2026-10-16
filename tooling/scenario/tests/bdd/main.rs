@@ -23,6 +23,7 @@ mod engineering_benchmark;
 mod engineering_boundary;
 mod engineering_drift;
 mod engineering_isolation;
+mod engineering_logs;
 mod engineering_panics;
 mod engineering_protection;
 mod engineering_reach;

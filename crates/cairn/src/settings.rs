@@ -180,4 +180,4 @@ pub fn managed_policy(dev_override: Option<std::ffi::OsString>) -> PathBuf {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
