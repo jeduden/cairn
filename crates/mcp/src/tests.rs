@@ -592,6 +592,37 @@ fn serve_answers_a_line_that_is_not_utf8_and_goes_on() {
 }
 
 #[test]
+fn serve_answers_a_request_past_the_line_limit_and_goes_on() {
+    let f = fixture();
+    let mut server = f.server();
+    let (tx, rx) = mpsc::channel();
+    tx.send(Err(std::io::ErrorKind::FileTooLarge.into())).unwrap();
+    tx.send(Ok(r#"{"jsonrpc":"2.0","id":2,"method":"ping"}"#.to_owned()))
+        .unwrap();
+    drop(tx);
+    let mut out = Vec::new();
+
+    serve(
+        &mut |l| server.handle(l),
+        &rx,
+        &mut out,
+        Duration::from_millis(10),
+        &mut || {},
+    )
+    .unwrap();
+
+    let lines: Vec<Value> = String::from_utf8(out)
+        .unwrap()
+        .lines()
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect();
+    assert_eq!(lines.len(), 2);
+    assert_eq!(lines[0]["error"]["code"], json!(-32600));
+    assert_eq!(lines[0]["error"]["message"], "request exceeds 1 MiB");
+    assert_eq!(lines[1]["id"], json!(2));
+}
+
+#[test]
 fn serve_answers_a_request_whose_handling_panicked_and_goes_on() {
     let (tx, rx) = mpsc::channel();
     for id in [1, 2] {

@@ -1513,19 +1513,23 @@ fn a_hook_input_nested_past_depth_64_is_audited_and_injects_nothing() {
 }
 
 #[test]
-fn bounded_lines_cut_a_line_past_the_limit_and_stop() {
+fn bounded_lines_refuse_a_line_past_the_limit_without_holding_it_and_go_on() {
     let input = "ab\ncdefgh\nij\n".as_bytes();
     let lines: Vec<io::Result<String>> = bounded_lines(input, 4).collect();
-    assert_eq!(lines.len(), 2);
+    assert_eq!(lines.len(), 3);
     assert_eq!(lines[0].as_ref().unwrap(), "ab");
     assert_eq!(
         lines[1].as_ref().unwrap_err().kind(),
         io::ErrorKind::FileTooLarge
     );
-    let whole: Vec<String> = bounded_lines("a\r\nb".as_bytes(), 4)
+    assert_eq!(lines[2].as_ref().unwrap(), "ij");
+    let whole: Vec<String> = bounded_lines("a\r\nabcd\r\nb".as_bytes(), 4)
         .map(Result::unwrap)
         .collect();
-    assert_eq!(whole, ["a", "b"]);
+    assert_eq!(whole, ["a", "abcd", "b"]);
+    let at_end: Vec<io::Result<String>> = bounded_lines("abcdef".as_bytes(), 4).collect();
+    assert_eq!(at_end.len(), 1);
+    assert!(at_end[0].is_err());
     struct Failing;
     impl io::Read for Failing {
         fn read(&mut self, _: &mut [u8]) -> io::Result<usize> {
@@ -1535,12 +1539,12 @@ fn bounded_lines_cut_a_line_past_the_limit_and_stop() {
     let failed: Vec<io::Result<String>> = bounded_lines(io::BufReader::new(Failing), 4).collect();
     assert_eq!(failed.len(), 1);
     assert!(failed[0].is_err());
-    let bad: Vec<io::Result<String>> = bounded_lines(&[0xff, b'\n'][..], 4).collect();
+    let bad: Vec<io::Result<String>> = bounded_lines(&[0xff, b'\n', b'a'][..], 4).collect();
     assert_eq!(
         bad[0].as_ref().unwrap_err().kind(),
         io::ErrorKind::InvalidData
     );
-    assert_eq!(bad.len(), 1);
+    assert_eq!(bad[1].as_ref().unwrap(), "a");
 }
 
 /// Logs one event carrying an AWS access key through the structured
