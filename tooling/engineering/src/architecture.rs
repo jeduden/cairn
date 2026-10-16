@@ -22,8 +22,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::Value;
 
-/// Where the product's crates live.
-const PRODUCT: &str = "crates/";
+/// Where the product's crates live: the one place the architecture and
+/// ENG-18 checks read it from.
+pub(crate) const PRODUCT: &str = "crates/";
 
 /// Where the repository tooling lives.
 const TOOLING: &str = "tooling/";

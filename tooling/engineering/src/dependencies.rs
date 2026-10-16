@@ -10,7 +10,7 @@ use std::process::Command;
 
 use adr::Adr;
 
-use crate::{Checkout, list};
+use crate::{Checkout, architecture, list};
 
 /// The crates the workspace's members depend on directly from a
 /// registry, read from `cargo metadata --no-deps`: normal, build and
@@ -47,7 +47,8 @@ pub fn cargo_direct_deps(metadata: &str) -> Result<Vec<String>, String> {
 ///
 /// # Errors
 ///
-/// Fails when `metadata` is not cargo's JSON.
+/// Fails when `metadata` is not cargo's JSON, or names no workspace
+/// root to find the product's crates under.
 pub fn cargo_shipped_deps(metadata: &str, product: &Path) -> Result<Vec<String>, String> {
     let value: serde_json::Value =
         serde_json::from_str(metadata).map_err(|e| format!("read cargo metadata: {e}"))?;
@@ -57,16 +58,15 @@ pub fn cargo_shipped_deps(metadata: &str, product: &Path) -> Result<Vec<String>,
         .flatten()
         .filter_map(|p| Some((p["name"].as_str()?, p)))
         .collect();
+    let root = value["workspace_root"]
+        .as_str()
+        .ok_or("cargo metadata names no workspace_root")?;
+    let product = Path::new(root).join(product);
     let mut todo: Vec<&serde_json::Value> = value["packages"]
         .as_array()
         .into_iter()
         .flatten()
-        .filter(|p| {
-            ships(
-                p,
-                &Path::new(value["workspace_root"].as_str().unwrap_or("")).join(product),
-            )
-        })
+        .filter(|p| ships(p, &product))
         .collect();
     let (mut seen, mut deps) = (BTreeSet::new(), BTreeSet::new());
     while let Some(p) = todo.pop() {
@@ -157,7 +157,7 @@ pub struct DirectDeps {
 
 /// The direct dependencies the manifest `file` names: the registry
 /// crates `metadata` lists for the Cargo workspace a `Cargo.toml` roots,
-/// with the product's crates under `crates/`.
+/// with the product's crates where the architecture check finds them.
 ///
 /// # Errors
 ///
@@ -172,7 +172,7 @@ pub fn direct_deps(
             let json = metadata(&checkout.root.join(file))?;
             Ok(DirectDeps {
                 all: cargo_direct_deps(&json)?,
-                shipped: cargo_shipped_deps(&json, Path::new("crates"))?,
+                shipped: cargo_shipped_deps(&json, Path::new(architecture::PRODUCT))?,
             })
         }
         other => Err(format!("no reader for the dependencies in {other}")),
