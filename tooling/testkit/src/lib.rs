@@ -37,6 +37,29 @@ pub fn isolate<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
         .current_dir(home)
 }
 
+/// Copies the transcript at `source` under `home`'s default transcript
+/// root, `~/.claude/projects` (SEC-18), keeping its project directory's
+/// and its own name, and returns where it now lies.
+///
+/// # Errors
+///
+/// Fails when the transcript cannot be read or written.
+pub fn place_transcript(home: &Path, source: &Path) -> io::Result<PathBuf> {
+    let project = source
+        .parent()
+        .and_then(Path::file_name)
+        .unwrap_or_else(|| std::ffi::OsStr::new("project"));
+    let name = source
+        .file_name()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "no file name"))?;
+    let dir = home.join(".claude").join("projects").join(project);
+    std::fs::create_dir_all(&dir)?;
+    let placed = dir.join(name);
+    std::fs::copy(source, &placed)?;
+
+    Ok(placed)
+}
+
 /// The `cairn` executable cargo built beside the running test. `cargo
 /// test` builds a workspace member's executables into the profile
 /// directory whose `deps` directory holds every test, so a scenario

@@ -88,7 +88,7 @@ impl AllowedRoots {
         path: &Path,
         access: Access,
     ) -> Result<AllowedPath, PathOutsideAllowedRoots> {
-        let resolved = fs::canonicalize(path).map_err(|_| PathOutsideAllowedRoots)?;
+        let resolved = resolved(path).ok_or(PathOutsideAllowedRoots)?;
         let within = self
             .roots
             .iter()
@@ -98,6 +98,21 @@ impl AllowedRoots {
         }
 
         Err(PathOutsideAllowedRoots)
+    }
+}
+
+/// `path` with every symbolic link resolved; for one that does not
+/// exist, its parent resolved and its name joined, so a missing file
+/// within a root is reported as missing, not as outside.
+fn resolved(path: &Path) -> Option<PathBuf> {
+    match fs::canonicalize(path) {
+        Ok(p) => Some(p),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            let name = path.file_name()?;
+            let parent = fs::canonicalize(path.parent()?).ok()?;
+            Some(parent.join(name))
+        }
+        Err(_) => None,
     }
 }
 

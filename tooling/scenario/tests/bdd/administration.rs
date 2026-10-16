@@ -47,7 +47,8 @@ pub fn configure(w: &World, text: &str) -> Result<(), String> {
 pub fn agent_runs(w: &mut World) -> Result<(), String> {
     let path = testkit::repo_root().join(TRANSCRIPT);
     let text = fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-    let shown = path.display().to_string();
+    let placed = testkit::place_transcript(&w.home, &path).map_err(|e| e.to_string())?;
+    let shown = placed.display().to_string();
     run_core(w, &["ingest", "--path", &shown, "--json"], None)?;
     let out = last_run(w)?;
     if !out.status.success() {

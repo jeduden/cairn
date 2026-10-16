@@ -20,6 +20,7 @@ use administration::act as act_record;
 use administration::home::Home;
 use administration::node::Node;
 use administration::verify::{VerifyError, verify};
+use allowed_root::{Access, AllowedPath, AllowedRoots};
 use audit::AuditError;
 use audit::counters::{Counts, counts};
 use audit::entry::{Counter, Entry, Kind, Occurrence};
@@ -318,8 +319,11 @@ fn ingest(
     let ingested = match ctx.home() {
         Ok(home) => {
             let in_force = audit_settings(ctx, &home, stderr);
-            redactor(ctx, &in_force.resolved.settings, stderr).and_then(|redactor| {
-                ingest::ingest_path(&home, Path::new(&path), &redactor, &mut OsEntropy)
+            let settings = &in_force.resolved.settings;
+            let transcript = allowed_transcript(ctx, &home, settings, Path::new(&path));
+            transcript.and_then(|transcript| {
+                let redactor = redactor(ctx, settings, stderr)?;
+                ingest::ingest_path(&home, transcript.path(), &redactor, &mut OsEntropy)
                     .map_err(|e| e.to_string())
             })
         }
@@ -353,6 +357,38 @@ fn ingest(
     };
 
     written(writeln!(stdout, "{line}"), stderr)
+}
+
+/// The transcript at `path` resolved within the allowed roots `cairn
+/// ingest` reads from: the transcript roots and the home (SEC-18). A
+/// path outside them is refused, audited and counted, and nothing is
+/// read from it.
+fn allowed_transcript(
+    ctx: &Context,
+    home: &Home,
+    settings: &configuration::resolve::Settings,
+    path: &Path,
+) -> Result<AllowedPath, String> {
+    let os_home = ctx.home.as_deref().map(Path::new);
+    let roots = match settings.get("transcript.roots") {
+        Some(configuration::value::Value::Texts(roots)) => roots.as_slice(),
+        _ => &[],
+    };
+    let allowed = roots
+        .iter()
+        .fold(AllowedRoots::default(), |allowed, root| {
+            allowed.with(&allowed_root::expand_home(root, os_home), Access::Read)
+        })
+        .with(home.root(), Access::ReadWrite);
+    allowed.resolve(path, Access::Read).map_err(|refused| {
+        let _ = ctx.audit(&Occurrence::Degraded {
+            kind: Kind::Rejected,
+            counter: Counter::PathOutsideAllowedRoots,
+            operation: "ingest",
+            detail: "path outside allowed roots",
+        });
+        refused.to_string()
+    })
 }
 
 /// The redactor for the settings in force: the rule set and the

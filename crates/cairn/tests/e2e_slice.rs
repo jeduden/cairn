@@ -31,6 +31,12 @@ fn transcript() -> PathBuf {
         .join(TRANSCRIPT)
 }
 
+/// The transcript placed under the home's default transcript root, the
+/// only place `cairn ingest` reads from in a fresh home (SEC-18).
+fn placed(home: &Path) -> PathBuf {
+    testkit::place_transcript(home, &transcript()).unwrap()
+}
+
 fn core() -> Confinement {
     Confinement::of(Component::Core).unwrap_or_else(|e| panic!("{e}"))
 }
@@ -80,7 +86,12 @@ fn one_transcript_is_recorded_recalled_in_the_envelope_and_verified() {
 
     let ingest = cairn(
         home.path(),
-        &["ingest", "--path", transcript().to_str().unwrap(), "--json"],
+        &[
+            "ingest",
+            "--path",
+            placed(home.path()).to_str().unwrap(),
+            "--json",
+        ],
     );
     assert!(
         ingest.status.success(),
@@ -151,7 +162,12 @@ fn a_changed_header_byte_fails_verify_naming_the_event_s_address() {
     let home = testkit::TempDir::new().unwrap();
     let ingest = cairn(
         home.path(),
-        &["ingest", "--path", transcript().to_str().unwrap(), "--json"],
+        &[
+            "ingest",
+            "--path",
+            placed(home.path()).to_str().unwrap(),
+            "--json",
+        ],
     );
     assert!(
         ingest.status.success(),

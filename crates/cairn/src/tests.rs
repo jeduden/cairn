@@ -272,7 +272,7 @@ fn a_failed_write_is_a_failure() {
         let ctx = Context {
             build: &DEV,
             cairn_home: Some(p.cairn_home().into_os_string()),
-            home: None,
+            home: Some(p.dir.path().as_os_str().to_owned()),
             home_id: None,
             hook_panics: false,
             terminal: true,
@@ -403,12 +403,13 @@ fn ingest_refuses_a_wrong_command_line() {
 #[test]
 fn ingest_reports_a_transcript_it_cannot_read() {
     let p = Process::new();
+    let missing = p.transcript("a\n").replace("t.jsonl", "missing.jsonl");
 
-    let (code, _, err) = p.invoke(&["ingest", "--path", "/nonexistent/t.jsonl"], &DEV);
+    let (code, _, err) = p.invoke(&["ingest", "--path", &missing], &DEV);
 
     assert_eq!(code, EXIT_FAILURE);
     assert!(
-        err.starts_with("cairn ingest: read the transcript /nonexistent/t.jsonl: "),
+        err.starts_with("cairn ingest: read the transcript "),
         "{err}"
     );
 }
@@ -1619,20 +1620,30 @@ fn ingest_refuses_a_path_outside_the_allowed_roots_and_reads_nothing() {
     let p = Process::new();
     let outside = p.dir.path().join("t.jsonl");
     std::fs::write(&outside, "AKIAIOSFODNN7EXAMPLE\n").unwrap();
-    let climbing = format!("{}/../../t.jsonl", p.transcript("a\n").trim_end_matches("/t.jsonl"));
+    let climbing = format!(
+        "{}/../../t.jsonl",
+        p.transcript("a\n").trim_end_matches("/t.jsonl")
+    );
 
     for path in [outside.display().to_string(), climbing] {
         let (code, out, err) = p.invoke(&["ingest", "--path", &path], &DEV);
 
         assert_eq!(
             (code, out.as_str(), err.as_str()),
-            (EXIT_FAILURE, "", "cairn ingest: path outside allowed roots\n")
+            (
+                EXIT_FAILURE,
+                "",
+                "cairn ingest: path outside allowed roots\n"
+            )
         );
     }
     let entries = audited(&p);
     assert_eq!(entries.len(), 2);
     assert_eq!(entries[0].detail, "path outside allowed roots");
-    assert_eq!(entries[0].counter.as_deref(), Some("path_outside_allowed_roots"));
+    assert_eq!(
+        entries[0].counter.as_deref(),
+        Some("path_outside_allowed_roots")
+    );
     assert!(!p.cairn_home().join("store.db").exists());
 }
 
@@ -1642,9 +1653,16 @@ fn ingest_reads_within_the_configured_transcript_roots_and_the_home() {
     let elsewhere = p.dir.path().join("elsewhere");
     std::fs::create_dir_all(&elsewhere).unwrap();
     std::fs::write(elsewhere.join("t.jsonl"), "a\n").unwrap();
-    p.configure(&format!("[transcript]\nroots = [{:?}]\n", elsewhere.display().to_string()));
+    p.configure(&format!(
+        "[transcript]\nroots = [{:?}]\n",
+        elsewhere.display().to_string()
+    ));
     let (code, _, err) = p.invoke(
-        &["ingest", "--path", &elsewhere.join("t.jsonl").display().to_string()],
+        &[
+            "ingest",
+            "--path",
+            &elsewhere.join("t.jsonl").display().to_string(),
+        ],
         &DEV,
     );
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));

@@ -146,6 +146,7 @@ name = "cairn"
 version = "0.0.0"
 dependencies = [
  "administration",
+ "allowed_root",
  "audit",
  "configuration",
  "hook",

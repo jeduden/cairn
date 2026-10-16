@@ -96,7 +96,9 @@ impl Node {
 
     /// Ingests a three-line transcript: one run.
     fn run_an_agent(&self) -> Output {
-        let transcript = self.home().join("t.jsonl");
+        let dir = self.home().join(".claude").join("projects").join("p");
+        fs::create_dir_all(&dir).unwrap();
+        let transcript = dir.join("t.jsonl");
         fs::write(&transcript, "{\"a\":1}\n{\"b\":2}\n{\"c\":3}\n").unwrap();
         let path = transcript.display().to_string();
         self.agent(&["ingest", "--path", &path, "--json"])

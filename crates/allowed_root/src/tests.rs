@@ -71,7 +71,9 @@ fn a_path_outside_every_root_or_climbing_out_is_refused() {
         PathBuf::from("/etc/passwd"),
         l.at(".claude/projects/../../.ssh/id_ed25519"),
         l.at(".ssh/id_ed25519"),
-        l.at(".claude/projects/p/missing.jsonl"),
+        l.at(".ssh/missing"),
+        l.at(".claude/projects/nowhere/missing.jsonl"),
+        PathBuf::from("/"),
     ] {
         assert_eq!(
             roots.resolve(&path, Access::Read),
@@ -168,4 +170,31 @@ fn expand_home_takes_a_leading_tilde_as_the_home() {
     assert_eq!(expand_home("~x/y", Some(home)), PathBuf::from("~x/y"));
     assert_eq!(expand_home("~/y", None), PathBuf::from("~/y"));
     assert_eq!(expand_home("/abs", Some(home)), PathBuf::from("/abs"));
+}
+
+#[test]
+fn a_missing_file_within_a_root_resolves_for_its_read_to_fail() {
+    let l = Layout::new();
+    let found = l
+        .roots()
+        .resolve(&l.at(".claude/projects/p/missing.jsonl"), Access::Read)
+        .unwrap();
+    assert_eq!(
+        found.path(),
+        fs::canonicalize(l.at(".claude/projects/p"))
+            .unwrap()
+            .join("missing.jsonl")
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn a_path_that_cannot_be_resolved_for_another_reason_is_refused() {
+    let l = Layout::new();
+    let file = l.at(".claude/projects/p/t.jsonl");
+    assert!(
+        l.roots()
+            .resolve(&file.join("below-a-file"), Access::Read)
+            .is_err()
+    );
 }
