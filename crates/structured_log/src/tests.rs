@@ -54,6 +54,7 @@ fn an_event_is_one_json_line_with_its_fields_redacted() {
         let span = tracing::info_span!("a span", n = 1);
         let _entered = span.enter();
         span.record("n", 2);
+        span.follows_from(tracing::info_span!("before").id());
         tracing::warn!("in a span");
     });
 

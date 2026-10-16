@@ -47,20 +47,16 @@ fn main() -> ExitCode {
         std::env::var_os("CAIRN_HOME_ID"),
         now,
     )
+    .ok()
     .map(std::sync::Arc::new);
-    let code = match &log {
-        Ok(log) => {
-            let dispatch = tracing::Dispatch::from(log.clone());
-            tracing::dispatcher::with_default(&dispatch, || {
-                cairn::run(args, &ctx, &mut io::stdout(), &mut io::stderr())
-            })
-        }
-        // No log without the rule set to redact it.
-        Err(_) => cairn::run(args, &ctx, &mut io::stdout(), &mut io::stderr()),
-    };
-    if let Ok(log) = &log {
-        cairn::audit_dropped_log_lines(&ctx, log.dropped());
-    }
+    // No log without the rule set to redact it.
+    let dispatch = log
+        .clone()
+        .map_or_else(tracing::Dispatch::none, tracing::Dispatch::from);
+    let code = tracing::dispatcher::with_default(&dispatch, || {
+        cairn::run(args, &ctx, &mut io::stdout(), &mut io::stderr())
+    });
+    cairn::audit_dropped_log_lines(&ctx, log.map_or(0, |l| l.dropped()));
 
     ExitCode::from(code)
 }

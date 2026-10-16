@@ -370,11 +370,8 @@ fn allowed_transcript(
     path: &Path,
 ) -> Result<AllowedPath, String> {
     let os_home = ctx.home.as_deref().map(Path::new);
-    let roots = match settings.get("transcript.roots") {
-        Some(configuration::value::Value::Texts(roots)) => roots.as_slice(),
-        _ => &[],
-    };
-    let allowed = roots
+    let allowed = settings
+        .texts("transcript.roots")
         .iter()
         .fold(AllowedRoots::default(), |allowed, root| {
             allowed.with(&allowed_root::expand_home(root, os_home), Access::Read)
@@ -399,10 +396,7 @@ fn redactor(
     settings: &configuration::resolve::Settings,
     stderr: &mut dyn Write,
 ) -> Result<Redactor, String> {
-    let patterns = match settings.get("redaction.extra_patterns") {
-        Some(configuration::value::Value::Texts(p)) => p.as_slice(),
-        _ => &[],
-    };
+    let patterns = settings.texts("redaction.extra_patterns");
     let (redactor, refused) = Redactor::new(patterns).map_err(|e| e.to_string())?;
     for r in &refused {
         let occurrence = Occurrence::Keyed {

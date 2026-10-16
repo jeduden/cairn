@@ -1,6 +1,5 @@
 use super::*;
 use configuration::source::OsUser;
-use std::ffi::OsStr;
 use std::io;
 use std::sync::mpsc;
 use testkit::TempDir;
@@ -1527,6 +1526,15 @@ fn bounded_lines_cut_a_line_past_the_limit_and_stop() {
         .map(Result::unwrap)
         .collect();
     assert_eq!(whole, ["a", "b"]);
+    struct Failing;
+    impl io::Read for Failing {
+        fn read(&mut self, _: &mut [u8]) -> io::Result<usize> {
+            Err(io::Error::other("gone"))
+        }
+    }
+    let failed: Vec<io::Result<String>> = bounded_lines(io::BufReader::new(Failing), 4).collect();
+    assert_eq!(failed.len(), 1);
+    assert!(failed[0].is_err());
     let bad: Vec<io::Result<String>> = bounded_lines(&[0xff, b'\n'][..], 4).collect();
     assert_eq!(
         bad[0].as_ref().unwrap_err().kind(),
@@ -1594,8 +1602,7 @@ fn a_home_the_core_refuses_gets_no_log() {
     set_mode(&p.cairn_home(), 0o755);
     log_one(&p, Some("h1"));
     assert!(!log_file(&p).exists());
-    let _ = Home::locate(Some(OsStr::new("relative")), None);
-    let none = structured_log(Some("relative".into()), None, None, || NOW).unwrap();
+    let none = structured_log(None, None, None, || NOW).unwrap();
     let dispatch = tracing::Dispatch::new(none);
     tracing::dispatcher::with_default(&dispatch, || tracing::info!("nowhere"));
 }
