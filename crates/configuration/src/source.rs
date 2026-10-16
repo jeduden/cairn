@@ -180,15 +180,11 @@ pub fn load(sources: &Sources) -> Loaded {
         loaded.layers.repository = layer_at(&mut loaded, layer, path);
     }
     let managed = &sources.managed;
-    match managed_check(managed, sources.running) {
-        Ok(()) => {
-            loaded.layers.managed = layer_at(&mut loaded, SettingsLayer::ManagedPolicy, managed);
-        }
-        Err(failure) => {
-            loaded
-                .failures
-                .push(failed(SettingsLayer::ManagedPolicy, managed, failure))
-        }
+    let layer = SettingsLayer::ManagedPolicy;
+    match read_managed(managed, sources.running) {
+        Ok(Some(text)) => loaded.layers.managed = values(&mut loaded, layer, managed, &text),
+        Ok(None) => {}
+        Err(failure) => loaded.failures.push(failed(layer, managed, failure)),
     }
 
     loaded
@@ -225,10 +221,14 @@ fn failed(layer: SettingsLayer, path: &Path, failure: Failure) -> LayerFailure {
 
 /// The text of the file at `path`; none when there is no file.
 fn read(path: &Path) -> Result<Option<String>, Failure> {
-    let file = match fs::File::open(path) {
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-        file => file.map_err(Failure::Unreadable)?,
-    };
+    match fs::File::open(path) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        file => read_open(file.map_err(Failure::Unreadable)?).map(Some),
+    }
+}
+
+/// The text of `file`, at most [`MAX_LAYER_BYTES`] of UTF-8.
+fn read_open(file: fs::File) -> Result<String, Failure> {
     let mut bytes = Vec::new();
     file.take(MAX_LAYER_BYTES + 1)
         .read_to_end(&mut bytes)
@@ -237,19 +237,20 @@ fn read(path: &Path) -> Result<Option<String>, Failure> {
         return Err(Failure::TooLarge);
     }
 
-    String::from_utf8(bytes)
-        .map(Some)
-        .map_err(|_| Failure::NotText)
+    String::from_utf8(bytes).map_err(|_| Failure::NotText)
 }
 
-/// Refuses managed policy at `path` unless neither it nor its
-/// directory could be written by the OS user `running`: each belongs
-/// to another OS user and lets no group or other user write. A path
-/// with no file passes; there is no managed policy. A file is refused
-/// where the running OS user is unknown or the OS has no modes to check.
-fn managed_check(path: &Path, running: OsUser) -> Result<(), Failure> {
+/// The text of managed policy at `path`, refused unless neither the
+/// file nor its directory could be written by the OS user `running`:
+/// each belongs to another OS user and lets no group or other user
+/// write. The file is checked as opened and read through that same
+/// handle, so nothing swapped in between check and read is read. A path
+/// with no file gives none; there is no managed policy. A file is
+/// refused where the running OS user is unknown or the OS has no modes
+/// to check.
+fn read_managed(path: &Path, running: OsUser) -> Result<Option<String>, Failure> {
     let meta = match fs::symlink_metadata(path) {
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         meta => meta.map_err(Failure::Unreadable)?,
     };
     if meta.file_type().is_symlink() {
@@ -260,7 +261,11 @@ fn managed_check(path: &Path, running: OsUser) -> Result<(), Failure> {
         OsUser::Unknown => return Err(Failure::OsUserUnknown),
         OsUser::Unchecked => return Err(Failure::Unverifiable),
     };
-    owned_elsewhere(path, meta, running)
+    let file = fs::File::open(path).map_err(Failure::Unreadable)?;
+    let opened = file.metadata().map_err(Failure::Unreadable)?;
+    owned_elsewhere(path, opened, running)?;
+
+    read_open(file).map(Some)
 }
 
 /// Refuses `path`, whose metadata is `meta`, when it or its directory

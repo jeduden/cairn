@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 use testkit::TempDir;
 
 use super::{
-    Failure, LayerFailure, Loaded, MANAGED_POLICY, MAX_LAYER_BYTES, OsUser, Sources, load,
-    managed_check, read, repository_configuration, writable,
+    Failure, LayerFailure, Loaded, MANAGED_POLICY, MAX_LAYER_BYTES, OsUser, Sources, load, read,
+    read_managed, repository_configuration, writable,
 };
 use crate::key::key;
 use crate::resolve::SettingsLayer;
@@ -179,14 +179,35 @@ fn load_refuses_managed_policy_that_is_invalid() {
 }
 
 #[test]
-fn managed_check_refuses_a_symbolic_link() {
+fn read_managed_reads_policy_through_the_handle_it_checked() {
+    let dir = TempDir::new().unwrap();
+    assert_eq!(
+        read_managed(&dir.path().join("none"), OsUser::Known(0)).unwrap(),
+        None
+    );
+    let file = dir.path().join("p.toml");
+    write(&file, "x = 1\n");
+    let other = me(dir.path()).wrapping_add(1);
+
+    assert_eq!(
+        read_managed(&file, OsUser::Known(other)).unwrap(),
+        Some("x = 1\n".to_owned())
+    );
+    assert!(matches!(
+        read_managed(&file, OsUser::Known(me(dir.path()))),
+        Err(Failure::Writable(p)) if p == file
+    ));
+}
+
+#[test]
+fn read_managed_refuses_a_symbolic_link() {
     let dir = TempDir::new().unwrap();
     let target = dir.path().join("target.toml");
     write(&target, "");
     let link = dir.path().join("link.toml");
     symlink(&target, &link).unwrap();
     assert!(matches!(
-        managed_check(&link, OsUser::Known(0)),
+        read_managed(&link, OsUser::Known(0)),
         Err(Failure::SymbolicLink)
     ));
     let shown = LayerFailure {
@@ -198,13 +219,13 @@ fn managed_check_refuses_a_symbolic_link() {
 }
 
 #[test]
-fn managed_check_refuses_policy_where_the_os_has_no_modes_to_check() {
+fn read_managed_refuses_policy_where_the_os_has_no_modes_to_check() {
     let dir = TempDir::new().unwrap();
-    assert!(managed_check(&dir.path().join("none"), OsUser::Unchecked).is_ok());
+    assert!(read_managed(&dir.path().join("none"), OsUser::Unchecked).is_ok());
     let file = dir.path().join("p.toml");
     write(&file, "");
     assert!(matches!(
-        managed_check(&file, OsUser::Unchecked),
+        read_managed(&file, OsUser::Unchecked),
         Err(Failure::Unverifiable)
     ));
     let shown = LayerFailure {
@@ -221,13 +242,13 @@ fn managed_check_refuses_policy_where_the_os_has_no_modes_to_check() {
 }
 
 #[test]
-fn managed_check_refuses_policy_while_the_running_os_user_is_unknown() {
+fn read_managed_refuses_policy_while_the_running_os_user_is_unknown() {
     let dir = TempDir::new().unwrap();
-    assert!(managed_check(&dir.path().join("none"), OsUser::Unknown).is_ok());
+    assert!(read_managed(&dir.path().join("none"), OsUser::Unknown).is_ok());
     let file = dir.path().join("p.toml");
     write(&file, "");
     assert!(matches!(
-        managed_check(&file, OsUser::Unknown),
+        read_managed(&file, OsUser::Unknown),
         Err(Failure::OsUserUnknown)
     ));
     let shown = LayerFailure {
@@ -244,13 +265,13 @@ fn managed_check_refuses_policy_while_the_running_os_user_is_unknown() {
 }
 
 #[test]
-fn managed_check_reports_an_unreadable_path() {
+fn read_managed_reports_an_unreadable_path() {
     let dir = TempDir::new().unwrap();
     let file = dir.path().join("p.toml");
     write(&file, "");
     let path = file.join("below-a-file");
     assert!(matches!(
-        managed_check(&path, OsUser::Known(0)),
+        read_managed(&path, OsUser::Known(0)),
         Err(Failure::Unreadable(_))
     ));
 }
