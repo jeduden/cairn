@@ -100,3 +100,9 @@ fn a_rule_skips_empty_matches_and_refuses_a_bad_or_huge_pattern() {
     assert!(RedactionRule::new("extra_pattern_1", "(").is_err());
     assert!(RedactionRule::new("extra_pattern_1", r"\w{1000}{1000}").is_err());
 }
+
+#[test]
+fn a_literal_rule_ignores_case() {
+    let rule = RedactionRule::literal("account_email", "Person@Example.com").unwrap();
+    assert_eq!(rule.spans("person@EXAMPLE.COM").collect::<Vec<_>>(), [(0, 18)]);
+}

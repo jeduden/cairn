@@ -157,3 +157,37 @@ fn a_marker_carries_nothing_of_the_secret() {
     assert!(!out.text.contains("AKIA"));
     assert!(!out.text.contains("EXAMPLE"));
 }
+
+#[test]
+fn redact_line_finds_a_secret_a_duplicate_key_hides_from_the_parser() {
+    let r = redactor(&[]);
+    let line = r#"{"a":"AKIAIOSFODNN7EXAMPLE","a":"x"}"#;
+    let out = r.redact_line(line);
+    assert_eq!(out.text, r#"{"a":"[REDACTED:aws_access_key]","a":"x"}"#);
+    let escaped = r#"{"a":"AKIAIOSFODNN7EXAMPLE","a":"x"}"#;
+    assert_eq!(r.redact_line(escaped).text, out.text);
+}
+
+#[test]
+fn redact_line_decodes_each_string_of_a_line_that_is_no_json() {
+    let r = redactor(&[]);
+    let truncated = r#"{"a":"AKIAIOSFODNN7EXAMPLE","b":"cut"#;
+    let out = r.redact_line(truncated);
+    assert_eq!(out.text, r#"{"a":"[REDACTED:aws_access_key]","b":"cut"#);
+    let bare = "plain AKIAIOSFODNN7EXAMPLE \"quoted\\\"AKIAIOSFODNN7EXAMPLE\"";
+    let out = r.redact_line(bare);
+    assert_eq!(out.rules.len(), 2);
+    assert!(!out.text.contains("AKIA"), "{}", out.text);
+    let lone = r#"{"a":"\ud800 AKIAIOSFODNN7EXAMPLE"}"#;
+    assert!(!r.redact_line(lone).text.contains("AKIA"));
+}
+
+#[test]
+fn redact_line_keeps_everything_but_the_redacted_strings_byte_for_byte() {
+    let r = redactor(&[]);
+    let line = r#"{"b": 1,  "a": "k AKIAIOSFODNN7EXAMPLE", "n": 2.50}"#;
+    assert_eq!(
+        r.redact_line(line).text,
+        r#"{"b": 1,  "a": "k [REDACTED:aws_access_key]", "n": 2.50}"#
+    );
+}
