@@ -148,21 +148,17 @@ fn configuration_accept_records_the_digest_and_settings_and_they_apply() {
 }
 
 #[test]
-fn configuration_accept_is_refused_where_managed_policy_fixes_what_it_changes() {
+fn configuration_accept_leaves_what_managed_policy_sets_to_managed_policy() {
     let p = Process::new();
-    p.configure("node.deployment_mode = 'interactive'\n");
+    p.configure("node.deployment_mode = 'interactive'\nrecall.max_k = 10\n");
     p.manage("node.deployment_mode = 'automation'\n");
+
     let (code, _, err) = p.invoke(&["configuration", "accept"], &DEV);
-    assert_eq!(code, EXIT_FAILURE);
-    assert!(
-        err.contains(
-            "refused: managed policy fixes node.deployment_mode, which the configuration changes"
-        ),
-        "{err}"
-    );
-    assert_eq!(refusals(&p).len(), 1);
-    p.configure("node.deployment_mode = 'automation'\n");
-    assert_eq!(p.invoke(&["configuration", "accept"], &DEV).0, EXIT_OK);
+
+    assert_eq!(code, EXIT_OK, "{err}");
+    assert!(refusals(&p).is_empty());
+    let (_, after, _) = p.invoke(&["status", "--json"], &DEV);
+    assert_eq!(json(&after)["deployment_mode"], "automation");
 }
 
 #[test]

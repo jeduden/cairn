@@ -226,7 +226,7 @@ pub(crate) fn configuration(
         Ok(t) => t,
         Err(e) => return failed(OP, &e, stderr),
     };
-    let (digest, act) = match acceptance(ctx, &taking, stderr) {
+    let (digest, act) = match acceptance(&taking, stderr) {
         Ok(accepting) => accepting,
         Err(code) => return code,
     };
@@ -258,9 +258,9 @@ pub(crate) fn configuration(
 }
 
 /// The acceptance of the principal's configuration as it stands, unless
-/// a layer fails (exit 2), there is none, or it changes what managed
-/// policy fixes (SEC-22).
-fn acceptance(ctx: &Context, taking: &Taking, stderr: &mut dyn Write) -> Result<(Digest, Act), u8> {
+/// a layer fails (exit 2) or there is none. A key managed policy also
+/// sets is accepted and stays overridden by managed policy (ADM-04).
+fn acceptance(taking: &Taking, stderr: &mut dyn Write) -> Result<(Digest, Act), u8> {
     const OP: &str = "configuration accept";
     let loaded = &taking.settings.loaded;
     if loaded.principal_layer_failed() {
@@ -274,22 +274,9 @@ fn acceptance(ctx: &Context, taking: &Taking, stderr: &mut dyn Write) -> Result<
         let why = format!("no configuration at {} to accept", path.display());
         return Err(failed(OP, &why, stderr));
     };
-    let layers = &loaded.layers;
-    let fixed = layers
-        .configuration
-        .iter()
-        .find(|(k, v)| layers.managed.get(*k).is_some_and(|m| m != *v));
-    if let Some((key, _)) = fixed {
-        let why = format!(
-            "refused: managed policy fixes {key}, which the configuration changes (SEC-22)"
-        );
-        let detail = "refused: managed policy fixes a setting the configuration changes";
-        return Err(refused(ctx, OP, detail, &why, stderr));
-    }
-
     let act = Act::ConfigurationAccept {
         digest,
-        settings: recorded(&layers.configuration),
+        settings: recorded(&loaded.layers.configuration),
     };
 
     Ok((digest, act))
