@@ -286,6 +286,15 @@ fn cargo_shipped_deps_counts_what_links_into_a_product_executable() {
         cargo_shipped_deps(r#"{"workspace_root": "/w"}"#, product).unwrap(),
         Vec::<String>::new()
     );
+    let stray = r#"{"workspace_root": "/w", "packages": [
+        {"name": "cairn", "manifest_path": "/w/crates/cairn/Cargo.toml",
+         "targets": [{"kind": ["bin"]}],
+         "dependencies": [{"name": "vendored", "source": null, "kind": null}]}
+    ]}"#;
+    assert_eq!(
+        cargo_shipped_deps(stray, product).unwrap_err(),
+        "cairn depends by path on vendored, which is no workspace member"
+    );
 }
 
 #[test]
