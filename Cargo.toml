@@ -38,6 +38,7 @@ tracing = { version = "0.1.44", default-features = false, features = ["std"] }
 toml = { version = "1.1.5", default-features = false, features = ["std", "parse", "serde"] }
 
 administration = { path = "crates/administration" }
+allowed_root = { path = "crates/allowed_root" }
 audit = { path = "crates/audit" }
 configuration = { path = "crates/configuration" }
 envelope = { path = "crates/envelope" }
