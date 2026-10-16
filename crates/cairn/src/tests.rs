@@ -109,8 +109,12 @@ impl Process {
         )
     }
 
+    /// Writes a transcript under the default transcript root,
+    /// `~/.claude/projects` (SEC-18).
     pub(crate) fn transcript(&self, text: &str) -> String {
-        let path = self.dir.path().join("t.jsonl");
+        let dir = self.dir.path().join(".claude").join("projects").join("p");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("t.jsonl");
         std::fs::write(&path, text).unwrap();
         path.display().to_string()
     }
@@ -1608,4 +1612,49 @@ fn dropped_log_lines_are_audited_one_entry_each() {
     assert_eq!(entries.len(), before + 2);
     assert_eq!(entries[before].counter.as_deref(), Some("log_line_dropped"));
     assert_eq!(entries[before].detail, "log line dropped");
+}
+
+#[test]
+fn ingest_refuses_a_path_outside_the_allowed_roots_and_reads_nothing() {
+    let p = Process::new();
+    let outside = p.dir.path().join("t.jsonl");
+    std::fs::write(&outside, "AKIAIOSFODNN7EXAMPLE\n").unwrap();
+    let climbing = format!("{}/../../t.jsonl", p.transcript("a\n").trim_end_matches("/t.jsonl"));
+
+    for path in [outside.display().to_string(), climbing] {
+        let (code, out, err) = p.invoke(&["ingest", "--path", &path], &DEV);
+
+        assert_eq!(
+            (code, out.as_str(), err.as_str()),
+            (EXIT_FAILURE, "", "cairn ingest: path outside allowed roots\n")
+        );
+    }
+    let entries = audited(&p);
+    assert_eq!(entries.len(), 2);
+    assert_eq!(entries[0].detail, "path outside allowed roots");
+    assert_eq!(entries[0].counter.as_deref(), Some("path_outside_allowed_roots"));
+    assert!(!p.cairn_home().join("store.db").exists());
+}
+
+#[test]
+fn ingest_reads_within_the_configured_transcript_roots_and_the_home() {
+    let p = Process::new();
+    let elsewhere = p.dir.path().join("elsewhere");
+    std::fs::create_dir_all(&elsewhere).unwrap();
+    std::fs::write(elsewhere.join("t.jsonl"), "a\n").unwrap();
+    p.configure(&format!("[transcript]\nroots = [{:?}]\n", elsewhere.display().to_string()));
+    let (code, _, err) = p.invoke(
+        &["ingest", "--path", &elsewhere.join("t.jsonl").display().to_string()],
+        &DEV,
+    );
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+
+    let in_home = p.cairn_home().join("t.jsonl");
+    std::fs::write(&in_home, "a\n").unwrap();
+    set_mode(&in_home, 0o600);
+    let (code, _, err) = p.invoke(&["ingest", "--path", &in_home.display().to_string()], &DEV);
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    // The default root no longer applies once the roots are configured.
+    let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
 }
