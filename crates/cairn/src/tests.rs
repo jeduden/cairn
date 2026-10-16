@@ -1655,31 +1655,49 @@ fn ingest_refuses_a_path_outside_the_allowed_roots_and_reads_nothing() {
 }
 
 #[test]
-fn ingest_reads_within_the_configured_transcript_roots_and_the_home() {
+fn ingest_reads_within_the_configured_transcript_roots_only() {
     let p = Process::new();
     let elsewhere = p.dir.path().join("elsewhere");
     std::fs::create_dir_all(&elsewhere).unwrap();
     std::fs::write(elsewhere.join("t.jsonl"), "a\n").unwrap();
-    p.configure(&format!(
-        "[transcript]\nroots = [{:?}]\n",
-        elsewhere.display().to_string()
-    ));
+    p.configure(&format!("[transcript]\nroots = [{:?}]\n", elsewhere.display().to_string()));
     let (code, _, err) = p.invoke(
-        &[
-            "ingest",
-            "--path",
-            &elsewhere.join("t.jsonl").display().to_string(),
-        ],
+        &["ingest", "--path", &elsewhere.join("t.jsonl").display().to_string()],
         &DEV,
     );
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
 
-    let in_home = p.cairn_home().join("t.jsonl");
-    std::fs::write(&in_home, "a\n").unwrap();
-    set_mode(&in_home, 0o600);
-    let (code, _, err) = p.invoke(&["ingest", "--path", &in_home.display().to_string()], &DEV);
-    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    // Nothing in the home is a transcript: not its keys, not its store.
+    let device_key = p.cairn_home().join("keys").join("device.key");
+    let store = p.cairn_home().join("store.db");
+    for path in [device_key, store] {
+        let (code, _, err) = p.invoke(&["ingest", "--path", &path.display().to_string()], &DEV);
+        assert_eq!(
+            (code, err.as_str()),
+            (EXIT_FAILURE, "cairn ingest: path outside allowed roots\n")
+        );
+    }
     // The default root no longer applies once the roots are configured.
     let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     assert_eq!(code, EXIT_FAILURE);
+}
+
+#[test]
+fn ingest_says_when_it_cannot_audit_a_path_outside_the_roots() {
+    let p = Process::new();
+    let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let audit_dir = p.cairn_home().join("audit");
+    std::fs::remove_dir_all(&audit_dir).unwrap();
+    std::fs::write(&audit_dir, "").unwrap();
+    set_mode(&audit_dir, 0o600);
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", "/etc/passwd"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        err.contains("cairn ingest: audit a path outside allowed roots: "),
+        "{err}"
+    );
+    assert!(err.ends_with("cairn ingest: path outside allowed roots\n"), "{err}");
 }
