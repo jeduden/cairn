@@ -19,6 +19,9 @@ pub(crate) struct Process {
     /// The input stays open after its lines, as a harness that never
     /// closes it would.
     pub(crate) held_open: bool,
+    /// The input fails after its lines as a line cut at the reader's
+    /// limit does.
+    pub(crate) input_too_large: bool,
     pub(crate) home_id: Option<String>,
     pub(crate) hook_panics: bool,
     /// The standard input and output are a terminal, as a person's are;
@@ -40,6 +43,7 @@ impl Process {
             lines: Vec::new(),
             input_error: false,
             held_open: false,
+            input_too_large: false,
             home_id: None,
             hook_panics: false,
             terminal: true,
@@ -52,8 +56,12 @@ impl Process {
     }
 
     pub(crate) fn invoke(&self, args: &[&str], build: &Build) -> (u8, String, String) {
-        let (lines, input_error, held_open) =
-            (self.lines.clone(), self.input_error, self.held_open);
+        let (lines, input_error, held_open, too_large) = (
+            self.lines.clone(),
+            self.input_error,
+            self.held_open,
+            self.input_too_large,
+        );
         let input = move || {
             let (tx, rx) = mpsc::channel();
             for line in lines.clone() {
@@ -61,6 +69,10 @@ impl Process {
             }
             if input_error {
                 tx.send(Err(io::Error::new(io::ErrorKind::InvalidData, "not UTF-8")))
+                    .unwrap();
+            }
+            if too_large {
+                tx.send(Err(io::Error::from(io::ErrorKind::FileTooLarge)))
                     .unwrap();
             }
             if held_open {
@@ -1450,4 +1462,63 @@ fn ingest_says_which_redaction_it_cannot_audit_and_still_records() {
         "{err}"
     );
     assert!(err.contains("cairn ingest: audit a redaction: "), "{err}");
+}
+
+#[test]
+fn a_hook_input_past_1_mib_is_audited_and_injects_nothing() {
+    let mut p = Process::new();
+    p.lines = vec!["{\"p\":\"".to_owned(), format!("{}\"}}", "x".repeat(1 << 20))];
+
+    assert_eq!(
+        p.invoke(&["hook", "UserPromptSubmit"], &DEV),
+        (EXIT_OK, String::new(), String::new())
+    );
+    let entries = audited(&p);
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].detail, "hook input exceeds 1 MiB");
+    assert_eq!(entries[0].counter.as_deref(), Some("hook_input_too_large"));
+}
+
+#[test]
+fn a_line_the_reader_cut_at_its_limit_is_a_hook_input_past_1_mib() {
+    let mut p = Process::new();
+    p.lines = vec!["{".to_owned()];
+    p.input_too_large = true;
+
+    assert_eq!(
+        p.invoke(&["hook", "SessionStart"], &DEV),
+        (EXIT_OK, String::new(), String::new())
+    );
+    assert_eq!(audited(&p)[0].detail, "hook input exceeds 1 MiB");
+}
+
+#[test]
+fn a_hook_input_nested_past_depth_64_is_audited_and_injects_nothing() {
+    let mut p = Process::new();
+    p.lines = vec![format!("{}{}", "[".repeat(65), "]".repeat(65))];
+
+    assert_eq!(
+        p.invoke(&["hook", "UserPromptSubmit"], &DEV),
+        (EXIT_OK, String::new(), String::new())
+    );
+    assert_eq!(audited(&p)[0].detail, "hook input nesting exceeds depth 64");
+}
+
+#[test]
+fn bounded_lines_cut_a_line_past_the_limit_and_stop() {
+    let input = "ab\ncdefgh\nij\n".as_bytes();
+    let lines: Vec<io::Result<String>> = bounded_lines(input, 4).collect();
+    assert_eq!(lines.len(), 2);
+    assert_eq!(lines[0].as_ref().unwrap(), "ab");
+    assert_eq!(
+        lines[1].as_ref().unwrap_err().kind(),
+        io::ErrorKind::FileTooLarge
+    );
+    let whole: Vec<String> = bounded_lines("a\r\nb".as_bytes(), 4)
+        .map(Result::unwrap)
+        .collect();
+    assert_eq!(whole, ["a", "b"]);
+    let bad: Vec<io::Result<String>> = bounded_lines(&[0xff, b'\n'][..], 4).collect();
+    assert_eq!(bad[0].as_ref().unwrap_err().kind(), io::ErrorKind::InvalidData);
+    assert_eq!(bad.len(), 1);
 }

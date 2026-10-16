@@ -75,6 +75,18 @@ fn each_failure_is_audited_with_its_own_kind_and_counter() {
             Counter::HookPanicked,
             "panic recovered",
         ),
+        (
+            Failure::TooLarge,
+            Kind::Rejected,
+            Counter::HookInputTooLarge,
+            "hook input exceeds 1 MiB",
+        ),
+        (
+            Failure::TooDeep,
+            Kind::Rejected,
+            Counter::HookInputTooDeep,
+            "hook input nesting exceeds depth 64",
+        ),
     ];
     for (failure, kind, counter, detail) in cases {
         assert_eq!(
@@ -89,4 +101,37 @@ fn each_failure_is_audited_with_its_own_kind_and_counter() {
         assert_eq!(failure.to_string(), detail);
         assert!(failure.source().is_none());
     }
+}
+
+/// A JSON object nested `depth` levels deep.
+fn nested(depth: usize) -> String {
+    format!("{}{}", "{\"a\":".repeat(depth - 1) + "{", "}".repeat(depth))
+}
+
+#[test]
+fn a_hook_input_past_1_mib_is_refused_before_it_is_parsed() {
+    let fits = format!("{{\"p\":\"{}\"}}", "x".repeat(HOOK_INPUT_LIMIT - 8));
+    assert_eq!(fits.len(), HOOK_INPUT_LIMIT);
+    assert_eq!(handle(Hook::UserPromptSubmit, &fits), Ok(String::new()));
+    let over = format!("{fits} ");
+    assert_eq!(handle(Hook::UserPromptSubmit, &over), Err(Failure::TooLarge));
+}
+
+#[test]
+fn a_hook_input_nested_past_depth_64_is_refused_before_it_is_parsed() {
+    assert_eq!(handle(Hook::UserPromptSubmit, &nested(64)), Ok(String::new()));
+    assert_eq!(handle(Hook::UserPromptSubmit, &nested(65)), Err(Failure::TooDeep));
+    // Deep enough that the parser's own limit would refuse it as malformed.
+    assert_eq!(handle(Hook::UserPromptSubmit, &nested(200)), Err(Failure::TooDeep));
+}
+
+#[test]
+fn depth_counts_brackets_outside_strings_only() {
+    assert_eq!(depth(""), 0);
+    assert_eq!(depth("{}"), 1);
+    assert_eq!(depth(r#"{"a":[1,{"b":[]}]}"#), 4);
+    assert_eq!(depth(r#"{"a":"[[[[{{"}"#), 1);
+    assert_eq!(depth(r#"{"a":"\"[[["}"#), 1);
+    assert_eq!(depth(r#"{"a":"\\"}"#), 1);
+    assert_eq!(depth("}}}{"), 1);
 }
