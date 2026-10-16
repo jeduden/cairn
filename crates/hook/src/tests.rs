@@ -114,15 +114,27 @@ fn a_hook_input_past_1_mib_is_refused_before_it_is_parsed() {
     assert_eq!(fits.len(), HOOK_INPUT_LIMIT);
     assert_eq!(handle(Hook::UserPromptSubmit, &fits), Ok(String::new()));
     let over = format!("{fits} ");
-    assert_eq!(handle(Hook::UserPromptSubmit, &over), Err(Failure::TooLarge));
+    assert_eq!(
+        handle(Hook::UserPromptSubmit, &over),
+        Err(Failure::TooLarge)
+    );
 }
 
 #[test]
 fn a_hook_input_nested_past_depth_64_is_refused_before_it_is_parsed() {
-    assert_eq!(handle(Hook::UserPromptSubmit, &nested(64)), Ok(String::new()));
-    assert_eq!(handle(Hook::UserPromptSubmit, &nested(65)), Err(Failure::TooDeep));
+    assert_eq!(
+        handle(Hook::UserPromptSubmit, &nested(64)),
+        Ok(String::new())
+    );
+    assert_eq!(
+        handle(Hook::UserPromptSubmit, &nested(65)),
+        Err(Failure::TooDeep)
+    );
     // Deep enough that the parser's own limit would refuse it as malformed.
-    assert_eq!(handle(Hook::UserPromptSubmit, &nested(200)), Err(Failure::TooDeep));
+    assert_eq!(
+        handle(Hook::UserPromptSubmit, &nested(200)),
+        Err(Failure::TooDeep)
+    );
 }
 
 #[test]

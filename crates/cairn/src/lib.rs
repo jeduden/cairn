@@ -45,6 +45,10 @@ pub const EXIT_INTEGRITY: u8 = 3;
 /// How long `cairn mcp` waits for a line before it waits again.
 const IDLE: Duration = Duration::from_secs(1);
 
+/// The longest line the process's input may carry, the hook input's
+/// limit (SEC-05); the MCP server's requests are held to it too.
+pub const INPUT_LINE_LIMIT: usize = hook::HOOK_INPUT_LIMIT;
+
 /// How long `cairn hook` waits for its whole hook input, however its
 /// lines arrive. The hook budgets of NFR-02 replace it with phase 9's
 /// handlers.
@@ -538,7 +542,7 @@ fn hook_command(name: Option<&str>, ctx: &Context, stdout: &mut dyn Write) -> u8
             if ctx.hook_panics {
                 seam_panic();
             }
-            let hook_input = hook_input(ctx).ok_or(Failure::Malformed)?;
+            let hook_input = hook_input(ctx)?;
             hook::handle(h, &hook_input)
         }),
     };
@@ -571,24 +575,86 @@ fn seam_panic() {
     panic!("the hook handler panics, as CAIRN_TEST_FAULT asked");
 }
 
-/// The hook input on stdin, its lines joined, once the input closes;
-/// none when it cannot be read or does not close in time.
+/// The hook input on stdin, its lines joined, once the input closes.
+/// Reading stops once it holds more than 1 MiB (SEC-05).
+///
+/// # Errors
+///
+/// [`Failure::TooLarge`] past 1 MiB or for a line the reader cut at its
+/// limit; [`Failure::Malformed`] when the input cannot be read or does
+/// not close in time.
 #[expect(
     clippy::disallowed_methods,
     reason = "the deadline on reading the hook input (ENG-03); no derived artifact reads it (I10)"
 )]
-fn hook_input(ctx: &Context) -> Option<String> {
+fn hook_input(ctx: &Context) -> Result<String, Failure> {
     let input = (ctx.input)();
     let deadline = Instant::now() + HOOK_INPUT_WAIT;
-    let mut lines = Vec::new();
+    let (mut text, mut lines) = (String::new(), 0usize);
     loop {
-        let left = deadline.checked_duration_since(Instant::now())?;
+        let left = deadline
+            .checked_duration_since(Instant::now())
+            .ok_or(Failure::Malformed)?;
         match input.recv_timeout(left) {
-            Ok(Ok(line)) => lines.push(line),
-            Ok(Err(_)) | Err(RecvTimeoutError::Timeout) => return None,
-            Err(RecvTimeoutError::Disconnected) => return Some(lines.join("\n")),
+            Ok(Ok(line)) => {
+                if lines > 0 {
+                    text.push('\n');
+                }
+                text.push_str(&line);
+                lines += 1;
+                if text.len() > hook::HOOK_INPUT_LIMIT {
+                    return Err(Failure::TooLarge);
+                }
+            }
+            Ok(Err(e)) if e.kind() == io::ErrorKind::FileTooLarge => return Err(Failure::TooLarge),
+            Ok(Err(_)) | Err(RecvTimeoutError::Timeout) => return Err(Failure::Malformed),
+            Err(RecvTimeoutError::Disconnected) => return Ok(text),
         }
     }
+}
+
+/// The lines `reader` holds, each without its line ending. A line longer
+/// than `limit` bytes ends the lines with an error of kind
+/// [`io::ErrorKind::FileTooLarge`], so no line is ever held past the
+/// limit (SEC-05); one that is not UTF-8 ends them too.
+pub fn bounded_lines<R: io::BufRead>(
+    reader: R,
+    limit: usize,
+) -> impl Iterator<Item = io::Result<String>> {
+    let mut reader = Some(reader);
+    std::iter::from_fn(move || {
+        let r = reader.as_mut()?;
+        let mut buf = Vec::new();
+        let read = io::BufRead::read_until(
+            &mut io::Read::take(r.by_ref(), limit as u64 + 1),
+            b'\n',
+            &mut buf,
+        );
+        let line = match read {
+            Ok(0) => None,
+            Ok(_) => Some(line_of(buf, limit)),
+            Err(e) => Some(Err(e)),
+        };
+        if !matches!(line, Some(Ok(_))) {
+            reader = None;
+        }
+        line
+    })
+}
+
+/// One line read with its ending, checked against `limit`.
+fn line_of(mut buf: Vec<u8>, limit: usize) -> io::Result<String> {
+    if buf.last() == Some(&b'\n') {
+        buf.pop();
+        if buf.last() == Some(&b'\r') {
+            buf.pop();
+        }
+    }
+    if buf.len() > limit {
+        return Err(io::ErrorKind::FileTooLarge.into());
+    }
+
+    String::from_utf8(buf).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }
 
 /// What the MCP server does with each panic it catches: audit it,

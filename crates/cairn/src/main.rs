@@ -2,7 +2,7 @@
 //! entry point only hands it the process's arguments, environment and
 //! streams.
 
-use std::io::{self, BufRead, IsTerminal};
+use std::io::{self, IsTerminal};
 use std::process::ExitCode;
 use std::sync::mpsc::{self, Receiver};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -78,7 +78,8 @@ fn terminal() -> bool {
 }
 
 /// The process's input, one line at a time, read on a thread of its
-/// own so its reader waits for each line with a deadline (ENG-03).
+/// own so its reader waits for each line with a deadline (ENG-03), and
+/// no line held past its limit (SEC-05).
 fn stdin_lines() -> Receiver<io::Result<String>> {
     let (tx, rx) = mpsc::channel();
     std::thread::spawn(move || {
@@ -88,9 +89,7 @@ fn stdin_lines() -> Receiver<io::Result<String>> {
         )]
         let stdin = io::stdin();
         // Reading stops once the reader is gone.
-        stdin
-            .lock()
-            .lines()
+        cairn::bounded_lines(stdin.lock(), cairn::INPUT_LINE_LIMIT)
             .map_while(|line| tx.send(line).ok())
             .for_each(drop);
     });

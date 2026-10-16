@@ -1467,7 +1467,10 @@ fn ingest_says_which_redaction_it_cannot_audit_and_still_records() {
 #[test]
 fn a_hook_input_past_1_mib_is_audited_and_injects_nothing() {
     let mut p = Process::new();
-    p.lines = vec!["{\"p\":\"".to_owned(), format!("{}\"}}", "x".repeat(1 << 20))];
+    p.lines = vec![
+        "{\"p\":\"".to_owned(),
+        format!("{}\"}}", "x".repeat(1 << 20)),
+    ];
 
     assert_eq!(
         p.invoke(&["hook", "UserPromptSubmit"], &DEV),
@@ -1519,6 +1522,9 @@ fn bounded_lines_cut_a_line_past_the_limit_and_stop() {
         .collect();
     assert_eq!(whole, ["a", "b"]);
     let bad: Vec<io::Result<String>> = bounded_lines(&[0xff, b'\n'][..], 4).collect();
-    assert_eq!(bad[0].as_ref().unwrap_err().kind(), io::ErrorKind::InvalidData);
+    assert_eq!(
+        bad[0].as_ref().unwrap_err().kind(),
+        io::ErrorKind::InvalidData
+    );
     assert_eq!(bad.len(), 1);
 }
