@@ -9,7 +9,10 @@ summary: >-
 
 SRS requirement ENG-18 asks for three things. Every direct dependency
 is justified by an accepted decision record (ADR). Its license is
-Apache-2.0, MIT, BSD or ISC. The direct set stays at ten or fewer.
+Apache-2.0, MIT, BSD or ISC. The direct dependencies linked into a
+shipped executable stay at ten or fewer; one only tests, fuzz targets or
+the repository tooling use needs its ADR and license all the same, but
+does not count.
 
 Each dependency decision lives in its own file under
 [docs/adr](docs/adr/), per ENG-26. The file's Decision table gives
@@ -27,7 +30,9 @@ of these cases:
   than one;
 - an accepted ADR names a module no manifest requires any more;
 - a row leaves a column empty, or its license is off the allow-list;
-- this file does not list a dependency ADR.
+- this file does not list a dependency ADR;
+- more than ten direct dependencies link into a shipped executable,
+  reached by normal dependencies from a binary under `crates/`.
 
 Updates arrive as reviewed dependabot pull requests; see
 [.github/dependabot.yml](.github/dependabot.yml).
@@ -58,8 +63,8 @@ footer: |
 | [ADR-2610152132](docs/adr/ADR-2610152132-settings-toml.md)            | accepted   | Every settings layer, managed policy, the principal's configuration and a repository's .cairn.toml, is read through the toml crate's parser into a table the configuration crate validates strictly itself. No serde derive, no writer, and the parser's nesting limit kept on. |
 <?/catalog?>
 
-Eight direct dependencies, against the target of ten. Six link into
-the shipped `cairn` executable: `sha2`, `ed25519-dalek`, `getrandom`,
+Eight direct dependencies. Six link into the shipped `cairn`
+executable, against the target of ten: `sha2`, `ed25519-dalek`, `getrandom`,
 `rusqlite`, `serde_json` and `toml`. `cucumber` and `serde` serve tests and
 repository tooling alone. The executable's reach test,
 [crates/cairn/tests/reach.rs](crates/cairn/tests/reach.rs), fails the
