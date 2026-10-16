@@ -16,6 +16,7 @@ ingest.workspace = true
 key.workspace = true
 mcp.workspace = true
 record.workspace = true
+redaction.workspace = true
 serde_json.workspace = true
 store.workspace = true
 
@@ -31,5 +32,5 @@ workspace = true
 # architecture check reads both.
 [package.metadata.cairn]
 responsibility = "Runs the core executable: the hook handlers, the MCP server and the CLI"
-may-depend-on = ["administration", "audit", "configuration", "hook", "ingest", "key", "mcp", "record", "store"]
+may-depend-on = ["administration", "audit", "configuration", "hook", "ingest", "key", "mcp", "record", "redaction", "store"]
 may-dev-depend-on = ["testkit"]

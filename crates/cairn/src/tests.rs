@@ -1425,3 +1425,29 @@ fn an_audit_log_that_cannot_be_read_fails_verify_doctor_and_status() {
         );
     }
 }
+
+#[test]
+fn ingest_says_which_redaction_it_cannot_audit_and_still_records() {
+    let p = Process::new();
+    p.configure("[redaction]\nextra_patterns = [\"(\"]\n");
+    let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    assert_eq!(code, EXIT_OK);
+    // An audit log that takes no entry.
+    let audit_dir = p.cairn_home().join("audit");
+    std::fs::remove_dir_all(&audit_dir).unwrap();
+    std::fs::write(&audit_dir, "").unwrap();
+    set_mode(&audit_dir, 0o600);
+
+    let (code, out, err) = p.invoke(
+        &["ingest", "--path", &p.transcript("AKIAIOSFODNN7EXAMPLE\n")],
+        &DEV,
+    );
+
+    assert_eq!(code, EXIT_OK, "{err}");
+    assert!(out.starts_with("ingested 1 lines"), "{out}");
+    assert!(
+        err.contains("cairn ingest: audit a refused redaction pattern: "),
+        "{err}"
+    );
+    assert!(err.contains("cairn ingest: audit a redaction: "), "{err}");
+}

@@ -146,6 +146,7 @@ dependencies = [
  "key",
  "mcp",
  "record",
+ "redaction",
  "rusqlite",
  "serde_json",
  "store",

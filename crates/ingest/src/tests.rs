@@ -70,7 +70,8 @@ fn an_unreadable_empty_or_non_utf8_transcript_records_nothing() {
     let dir = TempDir::new().unwrap();
     let home = home(&dir);
 
-    let missing = ingest_path(&home, &dir.path().join("none"), &redactor(), &mut OsEntropy).unwrap_err();
+    let missing =
+        ingest_path(&home, &dir.path().join("none"), &redactor(), &mut OsEntropy).unwrap_err();
     assert!(matches!(missing, IngestError::Read { .. }), "{missing}");
     assert!(
         missing.to_string().starts_with("read the transcript "),
@@ -88,7 +89,13 @@ fn an_unreadable_empty_or_non_utf8_transcript_records_nothing() {
     );
 
     std::fs::write(dir.path().join("t.jsonl"), [0xff, b'\n']).unwrap();
-    let bytes = ingest_path(&home, &dir.path().join("t.jsonl"), &redactor(), &mut OsEntropy).unwrap_err();
+    let bytes = ingest_path(
+        &home,
+        &dir.path().join("t.jsonl"),
+        &redactor(),
+        &mut OsEntropy,
+    )
+    .unwrap_err();
     assert_eq!(
         bytes.to_string(),
         format!(
@@ -165,7 +172,8 @@ fn a_store_that_fails_part_way_names_the_writer_and_what_landed() {
     .unwrap();
     let text: String = (1..=250).map(|n| format!("line {n}\n")).collect();
 
-    let err = ingest_path(&home, &transcript(&dir, &text), &redactor(), &mut OsEntropy).unwrap_err();
+    let err =
+        ingest_path(&home, &transcript(&dir, &text), &redactor(), &mut OsEntropy).unwrap_err();
 
     let IngestError::Partial { writer, landed, .. } = &err else {
         panic!("{err}");
@@ -210,7 +218,12 @@ fn every_line_is_redacted_before_anything_is_written() {
     let log = store.log(ingested.writer).unwrap();
     let contents: Vec<serde_json::Value> = log.iter().map(|e| e.content.clone().unwrap()).collect();
     let all = serde_json::to_string(&contents).unwrap();
-    for secret in ["AKIAIOSFODNN7EXAMPLE", "ACME-12345678", "user@example.com", "0f0e0d0c-0000"] {
+    for secret in [
+        "AKIAIOSFODNN7EXAMPLE",
+        "ACME-12345678",
+        "user@example.com",
+        "0f0e0d0c-0000",
+    ] {
         assert!(!all.contains(secret), "{secret} reached the store");
     }
     assert_eq!(contents[0]["redactions"], 5);

@@ -29,6 +29,7 @@ use configuration::{Loaded, SettingsLayer};
 use hook::{Failure, Hook};
 use key::random::OsEntropy;
 use key::signing::DeviceKey;
+use redaction::Redactor;
 use serde_json::{Value, json};
 use store::Store;
 
@@ -60,14 +61,6 @@ pub struct Build<'a> {
 
 /// The version a build reports when the release pipeline stamps none.
 const BUILD_DEV: &str = "dev";
-
-/// Why a release build refuses `cairn ingest`: until redaction before
-/// storage (SEC-08) lands, an ingested secret would stay in the
-/// append-only record with no purge (ADM-07) to remove it. A
-/// development build still ingests, as the tests and the proving slice
-/// need.
-const RELEASE_INGEST: &str = "a release build records no transcript until redaction before \
-                              storage (SEC-08) lands; use a development build";
 
 /// This executable's build.
 pub const BUILD: Build<'static> = Build {
@@ -269,13 +262,13 @@ fn ingest(
     let Some(path) = path else {
         return usage(stderr, "want --path P");
     };
-    if ctx.build.version != BUILD_DEV {
-        return failed("ingest", &RELEASE_INGEST, stderr);
-    }
     let ingested = match ctx.home() {
         Ok(home) => {
-            audit_settings(ctx, &home, stderr);
-            ingest::ingest_path(&home, Path::new(&path), &mut OsEntropy).map_err(|e| e.to_string())
+            let in_force = audit_settings(ctx, &home, stderr);
+            redactor(ctx, &in_force.resolved.settings, stderr).and_then(|redactor| {
+                ingest::ingest_path(&home, Path::new(&path), &redactor, &mut OsEntropy)
+                    .map_err(|e| e.to_string())
+            })
         }
         Err(e) => Err(e.to_string()),
     };
@@ -283,6 +276,7 @@ fn ingest(
         Ok(i) => i,
         Err(e) => return failed("ingest", &e, stderr),
     };
+    audit_redactions(ctx, &ingested.redactions, stderr);
     let line = if as_json {
         json!({
             "writer": ingested.writer.to_string(),
@@ -301,10 +295,60 @@ fn ingest(
     written(writeln!(stdout, "{line}"), stderr)
 }
 
+/// The redactor for the settings in force: the rule set and the
+/// principal's redaction patterns (SEC-08), each pattern refused
+/// audited and counted while the rest still apply.
+fn redactor(
+    ctx: &Context,
+    settings: &configuration::resolve::Settings,
+    stderr: &mut dyn Write,
+) -> Result<Redactor, String> {
+    let patterns = match settings.get("redaction.extra_patterns") {
+        Some(configuration::value::Value::Texts(p)) => p.as_slice(),
+        _ => &[],
+    };
+    let (redactor, refused) = Redactor::new(patterns).map_err(|e| e.to_string())?;
+    for r in &refused {
+        let occurrence = Occurrence::Keyed {
+            kind: Kind::Rejected,
+            counter: Counter::RedactionPatternRefused,
+            operation: "ingest",
+            detail: "refused redaction pattern",
+            key: &r.rule,
+        };
+        if let Err(e) = ctx.audit(&occurrence) {
+            let _ = writeln!(
+                stderr,
+                "cairn ingest: audit a refused redaction pattern: {e}"
+            );
+        }
+    }
+
+    Ok(redactor)
+}
+
+/// Audits each redaction an ingest made, one entry per redaction
+/// (SEC-08, I6), naming its rule and nothing of what it removed.
+fn audit_redactions(ctx: &Context, rules: &[String], stderr: &mut dyn Write) {
+    for rule in rules {
+        let occurrence = Occurrence::Keyed {
+            kind: Kind::Redacted,
+            counter: Counter::Redacted,
+            operation: "ingest",
+            detail: "redacted by rule",
+            key: rule,
+        };
+        if let Err(e) = ctx.audit(&occurrence) {
+            let _ = writeln!(stderr, "cairn ingest: audit a redaction: {e}");
+        }
+    }
+}
+
 /// Audits each settings layer that fails and each key ignored before a
 /// recording command goes on recording whatever they say (ADM-04, I9);
-/// says on `stderr` what cannot be read or audited.
-fn audit_settings(ctx: &Context, home: &Home, stderr: &mut dyn Write) {
+/// says on `stderr` what cannot be read or audited. Returns the
+/// settings in force.
+fn audit_settings(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> settings::InForce {
     let acts = settings::recorded_acts(home).unwrap_or_else(|e| {
         let _ = writeln!(stderr, "cairn ingest: read the accepted configuration: {e}");
         Vec::new()
@@ -316,6 +360,8 @@ fn audit_settings(ctx: &Context, home: &Home, stderr: &mut dyn Write) {
     for e in settings::audit(ctx, "ingest", &in_force) {
         let _ = writeln!(stderr, "cairn ingest: audit the settings: {e}");
     }
+
+    in_force
 }
 
 /// `cairn mcp`: serves the MCP tools over the process's input and
