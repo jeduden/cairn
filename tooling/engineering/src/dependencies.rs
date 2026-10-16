@@ -47,8 +47,10 @@ pub fn cargo_direct_deps(metadata: &str) -> Result<Vec<String>, String> {
 ///
 /// # Errors
 ///
-/// Fails when `metadata` is not cargo's JSON, or names no workspace
-/// root to find the product's crates under.
+/// Fails when `metadata` is not cargo's JSON, names no workspace root
+/// to find the product's crates under, or a crate it follows depends by
+/// path on a package that is no workspace member, whose crates would
+/// go uncounted.
 pub fn cargo_shipped_deps(metadata: &str, product: &Path) -> Result<Vec<String>, String> {
     let value: serde_json::Value =
         serde_json::from_str(metadata).map_err(|e| format!("read cargo metadata: {e}"))?;
@@ -78,7 +80,12 @@ pub fn cargo_shipped_deps(metadata: &str, product: &Path) -> Result<Vec<String>,
                 (Some(s), Some(name)) if s.starts_with("registry+") => {
                     deps.insert(name);
                 }
-                (None, Some(name)) => todo.extend(packages.get(name)),
+                (None, Some(name)) => todo.push(packages.get(name).ok_or_else(|| {
+                    format!(
+                        "{} depends by path on {name}, which is no workspace member",
+                        p["name"].as_str().unwrap_or_default()
+                    )
+                })?),
                 _ => {}
             }
         }
