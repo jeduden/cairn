@@ -47,8 +47,9 @@ state is set.
 
 ## Consequences
 
-- The core's reach test allows `tracing`, `tracing-core` and
-  `pin-project-lite`: events and their fields in memory. None opens a
+- The core's reach test allows `tracing`, `tracing-core`,
+  `pin-project-lite` and `once_cell`: events and their fields in
+  memory, and the cell holding the registry of call sites. None opens a
   socket or starts a program; the subscriber writes only the file the
   core opens.
 - The direct set linked into the core is eight, against ENG-18's

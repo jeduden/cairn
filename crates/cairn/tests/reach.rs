@@ -27,7 +27,7 @@ use serde_json::Value;
 /// its reach when it joined (plan 2609292012, phase 1). `cargo
 /// metadata` resolves every platform and unifies features across the
 /// workspace, so the list holds a few crates a given build leaves out.
-const REACHABLE: [&str; 65] = [
+const REACHABLE: [&str; 66] = [
     // The core's own library crates, each with the same clippy bans.
     "administration",
     "audit",
@@ -92,10 +92,12 @@ const REACHABLE: [&str; 65] = [
     "regex-syntax",
     "aho-corasick",
     // Structured logs (ADR-2610161201): events and their fields in
-    // memory; the core's own subscriber writes them.
+    // memory, and the lazily set cell tracing-core keeps its registry
+    // of call sites in; the core's own subscriber writes them.
     "tracing",
     "tracing-core",
     "pin-project-lite",
+    "once_cell",
     // TOML (ADR-2610152132): parsing a settings layer's text in memory;
     // no writer, the nesting limit kept. cargo metadata also lists its
     // optional writer and ordered map, which the core's features leave
