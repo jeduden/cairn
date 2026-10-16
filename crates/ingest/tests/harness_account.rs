@@ -62,7 +62,10 @@ fn identifiers(text: &str) -> BTreeSet<String> {
 #[test]
 fn no_harness_account_identifier_from_a_recorded_transcript_reaches_the_store() {
     let mut found = Vec::new();
-    transcripts(&testkit::repo_root().join("testdata/claude-code"), &mut found);
+    transcripts(
+        &testkit::repo_root().join("testdata/claude-code"),
+        &mut found,
+    );
     assert!(found.len() > 10, "too few transcripts: {}", found.len());
     let redactor = Redactor::new(&[]).unwrap().0;
     let mut checked = 0;

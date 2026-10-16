@@ -33,6 +33,7 @@ mod observability;
 mod principal_acts;
 mod record;
 mod security;
+mod security_redaction;
 
 use std::env;
 use std::ffi::OsStr;
