@@ -35,6 +35,10 @@ fn each_kind_and_counter_has_its_name() {
             "repository_configuration_key_ignored",
         ),
         (Counter::TrustPolicyKeyIgnored, "trust_policy_key_ignored"),
+        (
+            Counter::ConfigurationKeyIgnored,
+            "configuration_key_ignored",
+        ),
         (Counter::ManagedPolicyInvalid, "managed_policy_invalid"),
         (Counter::PrincipalActRefused, "principal_act_refused"),
     ];

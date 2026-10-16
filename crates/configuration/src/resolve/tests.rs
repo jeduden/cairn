@@ -214,11 +214,61 @@ fn tightens_follows_each_repository_rule() {
     ));
     assert!(tightens(spec("kernel.enabled"), None, &Value::Bool(false)));
     assert!(!tightens(spec("kernel.enabled"), None, &Value::Bool(true)));
-    assert!(tightens(
+    assert!(!tightens(
         spec("authenticator.required"),
         Some(&Value::Bool(false)),
         &Value::Bool(true)
     ));
+}
+
+#[test]
+fn the_principal_s_configuration_may_require_an_authenticator_but_a_repository_may_not() {
+    let r = resolve(
+        &layers("authenticator.required = true", "", ""),
+        &LayerValues::new(),
+    );
+    assert!(r.settings.authenticator_required());
+    assert!(r.ignored.is_empty());
+
+    let r = resolve(
+        &layers("", "authenticator.required = true", ""),
+        &LayerValues::new(),
+    );
+    assert!(!r.settings.authenticator_required());
+    assert_eq!(
+        r.ignored,
+        [ignored(
+            SettingsLayer::RepositoryConfiguration,
+            "authenticator.required",
+            Reason::Loosens
+        )]
+    );
+}
+
+#[test]
+fn only_managed_policy_may_forbid_risk_acceptance() {
+    let forbid = "risk_acceptance.forbidden = true";
+    let r = resolve(&layers(forbid, forbid, ""), &values(forbid));
+    assert!(!r.settings.risk_acceptance_forbidden());
+    assert!(r.awaiting_acceptance.is_empty());
+    assert_eq!(
+        r.ignored,
+        [
+            ignored(
+                SettingsLayer::Configuration,
+                "risk_acceptance.forbidden",
+                Reason::ManagedPolicyOnly
+            ),
+            ignored(
+                SettingsLayer::RepositoryConfiguration,
+                "risk_acceptance.forbidden",
+                Reason::Loosens
+            ),
+        ]
+    );
+    let r = resolve(&layers("", "", forbid), &LayerValues::new());
+    assert!(r.settings.risk_acceptance_forbidden());
+    assert!(r.ignored.is_empty());
 }
 
 #[test]

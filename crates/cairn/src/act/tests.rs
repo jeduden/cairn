@@ -194,7 +194,25 @@ fn a_widening_act_is_refused_while_managed_policy_requires_an_authenticator() {
 }
 
 #[test]
-fn only_managed_policy_requires_an_authenticator_or_forbids_risk_acceptance() {
+fn a_widening_act_is_refused_while_the_principal_s_configuration_requires_an_authenticator() {
+    let p = with_a_run();
+    p.configure("authenticator.required = true\n");
+
+    let (code, _, err) = p.invoke(&["risk-acceptance", "record"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("an authenticator is required"), "{err}");
+    assert_eq!(
+        refusals(&p),
+        [(
+            "risk-acceptance record".to_owned(),
+            "refused: an authenticator is required".to_owned()
+        )]
+    );
+}
+
+#[test]
+fn a_repository_can_neither_require_an_authenticator_nor_forbid_risk_acceptance() {
     let p = with_a_run();
     p.repository("authenticator.required = true\nrisk_acceptance.forbidden = true\n");
     let (code, _, err) = p.invoke(&["risk-acceptance", "record"], &DEV);
@@ -203,6 +221,37 @@ fn only_managed_policy_requires_an_authenticator_or_forbids_risk_acceptance() {
     let (code, _, err) = p.invoke(&["configuration", "accept"], &DEV);
     assert_eq!(code, EXIT_OK, "{err}");
     assert!(refusals(&p).is_empty());
+    let ignored: Vec<String> = audited(&p)
+        .into_iter()
+        .filter(|e| e.counter.as_deref() == Some("repository_configuration_key_ignored"))
+        .map(|e| e.detail)
+        .collect();
+    assert!(
+        ignored.contains(&"ignored repository configuration key authenticator.required".to_owned()),
+        "{ignored:?}"
+    );
+}
+
+#[test]
+fn the_principal_s_configuration_cannot_forbid_risk_acceptance() {
+    let p = with_a_run();
+    p.configure("risk_acceptance.forbidden = true\n");
+
+    let (code, _, err) = p.invoke(&["risk-acceptance", "record"], &DEV);
+
+    assert_eq!(code, EXIT_OK, "{err}");
+    let ignored: Vec<String> = audited(&p)
+        .into_iter()
+        .filter(|e| e.counter.as_deref() == Some("configuration_key_ignored"))
+        .map(|e| e.detail)
+        .collect();
+    assert!(
+        ignored.contains(
+            &"ignored configuration key only managed policy sets risk_acceptance.forbidden"
+                .to_owned()
+        ),
+        "{ignored:?}"
+    );
 }
 
 #[test]
@@ -510,14 +559,4 @@ fn a_refusal_the_audit_log_cannot_take_is_still_reported() {
         "{err}"
     );
     assert!(err.contains("needs a terminal"), "{err}");
-}
-
-#[test]
-fn managed_sets_reads_a_bool_key_managed_policy_sets_true() {
-    let managed = configuration::layer::parse("authenticator.required = true\n").unwrap();
-    assert!(super::managed_sets(&managed, "authenticator.required"));
-    assert!(!super::managed_sets(&managed, "risk_acceptance.forbidden"));
-    assert!(!super::managed_sets(&managed, "no.such_key"));
-    let off = configuration::layer::parse("authenticator.required = false\n").unwrap();
-    assert!(!super::managed_sets(&off, "authenticator.required"));
 }
