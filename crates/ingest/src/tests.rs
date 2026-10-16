@@ -8,6 +8,10 @@ fn home(dir: &TempDir) -> Home {
     Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap()
 }
 
+fn redactor() -> Redactor {
+    Redactor::new(&[]).unwrap().0
+}
+
 fn transcript(dir: &TempDir, text: &str) -> std::path::PathBuf {
     let path = dir.path().join("t.jsonl");
     std::fs::write(&path, text).unwrap();
@@ -28,7 +32,7 @@ fn every_line_becomes_one_unparsed_event_of_a_new_ingest_seat() {
     let home = home(&dir);
     let path = transcript(&dir, "{\"a\":1}\n{\"b\":2}\n");
 
-    let ingested = ingest_path(&home, &path, &mut OsEntropy).unwrap();
+    let ingested = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
 
     assert_eq!(ingested.events, 2);
     let store = Store::open(&home.store()).unwrap();
@@ -54,8 +58,8 @@ fn each_ingest_starts_its_own_seat_in_the_same_personal_room() {
     let home = home(&dir);
     let path = transcript(&dir, "x\n");
 
-    let a = ingest_path(&home, &path, &mut OsEntropy).unwrap();
-    let b = ingest_path(&home, &path, &mut OsEntropy).unwrap();
+    let a = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+    let b = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
 
     assert_ne!(a.writer, b.writer);
     assert_eq!(a.room, b.room);
@@ -104,7 +108,7 @@ fn a_home_that_cannot_be_made_is_returned() {
     let home = Home::locate(Some(OsStr::new(dir.path().join("f").as_os_str())), None).unwrap();
     let path = transcript(&dir, "x\n");
 
-    let err = ingest_path(&home, &path, &mut OsEntropy).unwrap_err();
+    let err = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap_err();
 
     assert!(matches!(err, IngestError::Admin(_)), "{err}");
     assert!(
@@ -121,7 +125,7 @@ fn a_store_that_cannot_open_or_a_random_source_that_fails_is_returned() {
     let home = home(&dir);
     home.create().unwrap();
     let path = transcript(&dir, "x\n");
-    ingest_path(&home, &path, &mut OsEntropy).unwrap();
+    ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
 
     let err = ingest_path(&home, &path, &mut Failing).unwrap_err();
     assert!(matches!(err, IngestError::Key(_)), "{err}");
@@ -133,7 +137,7 @@ fn a_store_that_cannot_open_or_a_random_source_that_fails_is_returned() {
         "not a database at all, but long enough to read a header",
     )
     .unwrap();
-    let err = ingest_path(&home, &path, &mut OsEntropy).unwrap_err();
+    let err = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap_err();
     assert!(matches!(err, IngestError::Store(_)), "{err}");
     assert!(err.to_string().starts_with("the store: "), "{err}");
     assert!(std::error::Error::source(&err).is_some());
@@ -176,4 +180,41 @@ fn a_store_that_fails_part_way_names_the_writer_and_what_landed() {
         "{err}"
     );
     assert!(std::error::Error::source(&err).is_some());
+}
+
+#[test]
+fn every_line_is_redacted_before_anything_is_written() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let context = r#"{"attachment":{"type":"session_context","context":{"userEmail":"is user@example.com."}},"type":"attachment"}"#;
+    let org = r#"{"attachment":{"type":"credential_org","organizationUuid":"0f0e0d0c-0000-0000-0000-000000000001"}}"#;
+    let tool = r#"{"message":{"content":"AKIAIOSFODNN7EXAMPLE ACME-12345678"},"toolUseResult":"AKIAIOSFODNN7EXAMPLE","from":"user@example.com","org":"0f0e0d0c-0000-0000-0000-000000000001"}"#;
+    let path = transcript(&dir, &format!("{tool}\n{context}\n{org}\nclean\n"));
+    let (redactor, _) = Redactor::new(&["ACME-[0-9]{8}".to_owned()]).unwrap();
+
+    let ingested = ingest_path(&home, &path, &redactor, &mut OsEntropy).unwrap();
+
+    assert_eq!(
+        ingested.redactions,
+        [
+            "account_email",
+            "aws_access_key",
+            "extra_pattern_1",
+            "organization_id",
+            "aws_access_key",
+            "account_email",
+            "organization_id",
+        ]
+    );
+    let store = Store::open(&home.store()).unwrap();
+    let log = store.log(ingested.writer).unwrap();
+    let contents: Vec<serde_json::Value> = log.iter().map(|e| e.content.clone().unwrap()).collect();
+    let all = serde_json::to_string(&contents).unwrap();
+    for secret in ["AKIAIOSFODNN7EXAMPLE", "ACME-12345678", "user@example.com", "0f0e0d0c-0000"] {
+        assert!(!all.contains(secret), "{secret} reached the store");
+    }
+    assert_eq!(contents[0]["redactions"], 5);
+    assert_eq!(contents[3], serde_json::json!({"line": 4, "text": "clean"}));
+    let bytes = std::fs::read(home.store()).unwrap();
+    assert!(!bytes.windows(20).any(|w| w == b"AKIAIOSFODNN7EXAMPLE"));
 }
