@@ -272,6 +272,7 @@ footer: |
 |     | ↳      | @SEC-02, @SEC-03, @OPS-02, @OPS-03 and @ENG-04 off @pending and passing, confined. Every command checks the home first; the audit log chains across rotation; cairn hook fails open and audits.                                                                                                               |
 | 3   | ✅     | [Settings layers and principal acts at the terminal](phase-3.md)                                                                                                                                                                                                                                              |
 |     | ↳      | Settings layers validated and layered; widening acts gated by OWN-22 and managed policy; counter ack, configuration accept and risk acceptance recorded as principal acts. @ADM-04 off @pending with eight rows, its flags row moved to @PRV-07 by ruling; the M1 steps of OWN-11, -12 and -22 pass narrowed. |
+| 4   | 🔳     | [Redaction before anything is written, input limits and paths](phase-4.md)                                                                                                                                                                                                                                    |
 <?/catalog?>
 
 ## Acceptance Criteria
