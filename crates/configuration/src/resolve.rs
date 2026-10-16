@@ -60,6 +60,8 @@ pub enum Reason {
     Loosens,
     /// A key that would change the trust policy.
     TrustPolicy,
+    /// A key only managed policy may set, in another layer.
+    ManagedPolicyOnly,
 }
 
 /// A key a layer sets that changes nothing, audited and counted.
@@ -105,13 +107,14 @@ impl Settings {
         }
     }
 
-    /// Whether widening acts need an authenticator (OWN-11, SEC-22).
+    /// Whether widening acts need an authenticator: the principal's
+    /// configuration or managed policy requires one (OWN-11, SEC-22).
     #[must_use]
     pub fn authenticator_required(&self) -> bool {
         self.get("authenticator.required") == Some(&Value::Bool(true))
     }
 
-    /// Whether risk acceptance is forbidden (OWN-22, SEC-22).
+    /// Whether managed policy forbids risk acceptance (OWN-22, SEC-22).
     #[must_use]
     pub fn risk_acceptance_forbidden(&self) -> bool {
         self.get("risk_acceptance.forbidden") == Some(&Value::Bool(true))
@@ -164,10 +167,20 @@ pub fn resolve(layers: &Layers, accepted: &LayerValues) -> Resolved {
 /// acceptance standing as accepted.
 fn configuration(out: &mut Resolved, layer: &LayerValues, accepted: &LayerValues) {
     let ignored = trust_policy(out, SettingsLayer::Configuration, layer);
+    out.ignored.extend(
+        layer
+            .keys()
+            .filter(|k| k.managed_policy_only())
+            .map(|k| IgnoredKey {
+                layer: SettingsLayer::Configuration,
+                key: k.clone(),
+                reason: Reason::ManagedPolicyOnly,
+            }),
+    );
     let keys: Vec<&SettingsKey> = layer
         .keys()
         .chain(accepted.keys())
-        .filter(|k| !ignored.contains(k) && k.trust_policy().is_none())
+        .filter(|k| !ignored.contains(k) && k.trust_policy().is_none() && !k.managed_policy_only())
         .collect();
     for key in keys {
         let spec = key.spec();

@@ -3,7 +3,6 @@
 //! encoding of its fields (§8.3); its hash is SHA-256 over the encoding
 //! of every field but the hash, the previous entry's hash among them.
 
-use configuration::key::{UNSPELLED, spelled};
 use record::canonical;
 use record::digest::Digest;
 use serde_json::{Map, Value, json};
@@ -65,6 +64,9 @@ pub enum Counter {
     RepositoryConfigurationKeyIgnored,
     /// A settings layer's trust policy key was ignored (PRV-05).
     TrustPolicyKeyIgnored,
+    /// A key only managed policy may set was ignored in the principal's
+    /// configuration (OWN-22, SEC-22).
+    ConfigurationKeyIgnored,
     /// Managed policy is writable by the principal, or does not parse
     /// or validate (ADM-04).
     ManagedPolicyInvalid,
@@ -84,6 +86,7 @@ impl Counter {
             Self::SettingsLayerInvalid => "settings_layer_invalid",
             Self::RepositoryConfigurationKeyIgnored => "repository_configuration_key_ignored",
             Self::TrustPolicyKeyIgnored => "trust_policy_key_ignored",
+            Self::ConfigurationKeyIgnored => "configuration_key_ignored",
             Self::ManagedPolicyInvalid => "managed_policy_invalid",
             Self::PrincipalActRefused => "principal_act_refused",
         }
@@ -123,10 +126,21 @@ pub enum Occurrence<'a> {
 /// The kind of an entry noting a principal act.
 pub const PRINCIPAL_ACT: &str = "principal_act";
 
-/// `key` as an entry may hold it: as it is when a settings key could
-/// spell it, else a fixed phrase.
+/// `key` as an entry may hold it: as it is when it holds only the
+/// characters a settings key or a provenance class can, else a fixed
+/// phrase. The audit log owns this filter, so it trusts no caller to
+/// have checked the key (T5).
 fn shown(key: &str) -> &str {
-    spelled(key).unwrap_or(UNSPELLED)
+    let plain = !key.is_empty()
+        && key.len() <= 160
+        && key
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || "_.:*-".contains(c));
+    if plain {
+        key
+    } else {
+        "a key no settings key spells"
+    }
 }
 
 /// One entry of the audit log.

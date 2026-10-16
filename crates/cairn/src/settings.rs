@@ -136,6 +136,11 @@ fn ignored<'a>(operation: &'static str, i: &'a IgnoredKey) -> Occurrence<'a> {
             },
             class,
         ),
+        (Reason::ManagedPolicyOnly, _) => (
+            Counter::ConfigurationKeyIgnored,
+            "ignored configuration key only managed policy sets",
+            i.key.name(),
+        ),
         _ => (
             Counter::RepositoryConfigurationKeyIgnored,
             "ignored repository configuration key",

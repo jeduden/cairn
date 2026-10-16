@@ -17,6 +17,13 @@ fn with_a_run() -> Process {
     p
 }
 
+/// Ingests another run, which audits the keys the settings layers
+/// ignore.
+fn ingest_again(p: &Process) {
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript("b\n")], &DEV);
+    assert_eq!(code, EXIT_OK, "{err}");
+}
+
 /// The counters each refusal audited, in order.
 fn refusals(p: &Process) -> Vec<(String, String)> {
     audited(p)
@@ -221,6 +228,7 @@ fn a_repository_can_neither_require_an_authenticator_nor_forbid_risk_acceptance(
     let (code, _, err) = p.invoke(&["configuration", "accept"], &DEV);
     assert_eq!(code, EXIT_OK, "{err}");
     assert!(refusals(&p).is_empty());
+    ingest_again(&p);
     let ignored: Vec<String> = audited(&p)
         .into_iter()
         .filter(|e| e.counter.as_deref() == Some("repository_configuration_key_ignored"))
@@ -240,6 +248,7 @@ fn the_principal_s_configuration_cannot_forbid_risk_acceptance() {
     let (code, _, err) = p.invoke(&["risk-acceptance", "record"], &DEV);
 
     assert_eq!(code, EXIT_OK, "{err}");
+    ingest_again(&p);
     let ignored: Vec<String> = audited(&p)
         .into_iter()
         .filter(|e| e.counter.as_deref() == Some("configuration_key_ignored"))

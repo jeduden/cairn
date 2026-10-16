@@ -15,9 +15,6 @@ use administration::home::Home;
 use administration::node::Node;
 use audit::entry::{Counter, Kind, Occurrence};
 use audit::log::Log;
-use configuration::Value;
-use configuration::key::key;
-use configuration::layer::LayerValues;
 use key::random::OsEntropy;
 use record::digest::Digest;
 use record::id::Address;
@@ -62,21 +59,22 @@ impl Taking {
     }
 
     /// What decides whether `act` is permitted here. Only a widening
-    /// act reads the open residual risks; only managed policy requires
-    /// an authenticator or forbids risk acceptance (SEC-22).
+    /// act reads the open residual risks. The principal's configuration
+    /// or managed policy requires an authenticator (OWN-11); only
+    /// managed policy forbids risk acceptance (SEC-22).
     fn gate(&self, ctx: &Context, act: &Act) -> Result<Gate, String> {
         let open = if act.class() == Class::Widening {
             self.open_risks()?
         } else {
             OpenRisks::default()
         };
-        let managed = &self.settings.loaded.layers.managed;
+        let settings = &self.settings.resolved.settings;
 
         Ok(Gate {
             terminal: ctx.terminal,
-            authenticator_required: managed_sets(managed, "authenticator.required"),
+            authenticator_required: settings.authenticator_required(),
             managed_policy_failed: self.settings.loaded.managed_policy_failed(),
-            risk_acceptance_forbidden: managed_sets(managed, "risk_acceptance.forbidden"),
+            risk_acceptance_forbidden: settings.risk_acceptance_forbidden(),
             open,
             standing: standing_risk_acceptance(&self.acts),
         })
@@ -100,11 +98,6 @@ impl Taking {
         act::record(&mut self.store, &self.node, act, &mut OsEntropy)
             .map_err(|e| failed(operation, &e, stderr))
     }
-}
-
-/// Whether managed policy sets the bool settings key `name` to true.
-fn managed_sets(managed: &LayerValues, name: &str) -> bool {
-    key(name).and_then(|k| managed.get(&k)) == Some(&Value::Bool(true))
 }
 
 /// Audits and reports `refusal` of an act under `operation`.

@@ -326,7 +326,9 @@ const FIXED: &[(&str, Spec)] = &[
         spec(
             Kind::Bool,
             Some(Default::Bool(false)),
-            Repository::OnlyBool(true),
+            // The principal or managed policy requires one (OWN-11); a
+            // repository may not refuse the principal's widening acts.
+            Repository::Never,
             Acceptance::TurningOff,
         ),
     ),
@@ -335,7 +337,8 @@ const FIXED: &[(&str, Spec)] = &[
         spec(
             Kind::Bool,
             Some(Default::Bool(false)),
-            Repository::OnlyBool(true),
+            // Managed policy alone sets it (OWN-22, SEC-22).
+            Repository::Never,
             Acceptance::TurningOff,
         ),
     ),
@@ -411,6 +414,13 @@ impl SettingsKey {
     #[must_use]
     pub fn trust_policy(&self) -> Option<&str> {
         self.name.strip_prefix("trust_policy.")
+    }
+
+    /// Whether only managed policy may set it: forbidding risk
+    /// acceptance (OWN-22, SEC-22).
+    #[must_use]
+    pub fn managed_policy_only(&self) -> bool {
+        self.name == "risk_acceptance.forbidden"
     }
 
     /// Its default value; none when it is unset by default.
