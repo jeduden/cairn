@@ -261,7 +261,7 @@ fn a_failed_write_is_a_failure() {
             terminal: true,
             working_dir: None,
             managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
-            os_user: OsUser::Unchecked,
+            os_user: OsUser::Known(u32::MAX),
             input: &input,
             clock: &|| NOW,
         };
@@ -630,7 +630,7 @@ fn mcp_reports_a_reply_it_cannot_write() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
-        os_user: OsUser::Unchecked,
+        os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
     };
@@ -654,7 +654,7 @@ fn a_command_without_a_home_fails() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
-        os_user: OsUser::Unchecked,
+        os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
     };
@@ -810,7 +810,7 @@ fn a_hook_input_that_trickles_past_its_wait_is_rejected() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
-        os_user: OsUser::Unchecked,
+        os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
     };
@@ -848,7 +848,7 @@ fn a_panic_while_auditing_a_hook_failure_still_exits_0() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
-        os_user: OsUser::Unchecked,
+        os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| panic!("the clock fails"),
     };

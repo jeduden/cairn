@@ -198,12 +198,26 @@ fn managed_check_refuses_a_symbolic_link() {
 }
 
 #[test]
-fn managed_check_passes_with_no_file_or_where_the_os_has_no_modes_to_check() {
+fn managed_check_refuses_policy_where_the_os_has_no_modes_to_check() {
     let dir = TempDir::new().unwrap();
-    assert!(managed_check(&dir.path().join("none"), OsUser::Known(0)).is_ok());
+    assert!(managed_check(&dir.path().join("none"), OsUser::Unchecked).is_ok());
     let file = dir.path().join("p.toml");
     write(&file, "");
-    assert!(managed_check(&file, OsUser::Unchecked).is_ok());
+    assert!(matches!(
+        managed_check(&file, OsUser::Unchecked),
+        Err(Failure::Unverifiable)
+    ));
+    let shown = LayerFailure {
+        layer: SettingsLayer::ManagedPolicy,
+        path: file,
+        failure: Failure::Unverifiable,
+    };
+    assert!(
+        shown.to_string().ends_with(
+            "who may write a file cannot be checked on this OS yet, so no file can be shown to be managed policy"
+        ),
+        "{shown}"
+    );
 }
 
 #[test]

@@ -214,8 +214,9 @@ fn a_widening_act_is_refused_while_managed_policy_is_invalid() {
     let mut p = Process::new();
     p.configure("recall.max_k = 10\n");
     p.manage("kernel.memory_mib = 64\n");
-    // The running OS user owns the file, so it could have written it.
-    p.os_user = OsUser::Unchecked;
+    // As another OS user's file, it passes; the running OS user owns
+    // it, so it could have written it.
+    p.os_user = OsUser::Known(u32::MAX);
     assert_eq!(p.invoke(&["configuration", "accept"], &DEV).0, EXIT_OK);
     let mine = std::os::unix::fs::MetadataExt::uid(&std::fs::metadata(p.dir.path()).unwrap());
     p.os_user = OsUser::Known(mine);
@@ -225,6 +226,24 @@ fn a_widening_act_is_refused_while_managed_policy_is_invalid() {
     let (_, status, _) = p.invoke(&["status"], &DEV);
     assert!(
         status.contains("managed policy refused: managed policy "),
+        "{status}"
+    );
+}
+
+#[test]
+fn managed_policy_is_refused_where_the_os_has_no_modes_to_check() {
+    let mut p = Process::new();
+    p.configure("recall.max_k = 10\n");
+    p.manage("kernel.memory_mib = 64\n");
+    p.os_user = OsUser::Unchecked;
+
+    let (code, _, err) = p.invoke(&["configuration", "accept"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("refused: managed policy is invalid"), "{err}");
+    let (_, status, _) = p.invoke(&["status"], &DEV);
+    assert!(
+        status.contains("cannot be checked on this OS yet"),
         "{status}"
     );
 }
