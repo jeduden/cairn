@@ -48,7 +48,10 @@ on the parser's leniency.
 
 ## Consequences
 
-- The core's reach test allows `toml`, `toml_parser`, `toml_datetime`,
-  `serde_spanned` and `winnow`: parsing text in memory.
+- The core's reach test allows nine crates: `toml`, `toml_parser`,
+  `toml_datetime`, `serde_spanned` and `winnow`, which parse text in
+  memory, and `toml_writer`, `indexmap`, `hashbrown` and `equivalent`,
+  which `toml` links for its tables. None opens a socket or starts a
+  program.
 - The direct set is eight, against ENG-18's target of ten.
 - The parser's fuzz target joins the first `fuzz/` crate, in phase 7.

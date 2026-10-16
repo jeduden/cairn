@@ -59,6 +59,9 @@ pub enum Failure {
     /// The running OS user cannot be learnt, so nothing shows that it
     /// could not have written the file (ADM-04).
     OsUserUnknown,
+    /// The OS has no file modes Cairn checks yet, so nothing shows that
+    /// the running OS user could not have written the file (ADM-04).
+    Unverifiable,
 }
 
 /// A settings layer that gives no settings, and why.
@@ -85,6 +88,9 @@ impl fmt::Display for LayerFailure {
             Failure::SymbolicLink => f.write_str("a symbolic link, refused"),
             Failure::OsUserUnknown => f.write_str(
                 "the running OS user cannot be learnt, so no file can be shown to be managed policy",
+            ),
+            Failure::Unverifiable => f.write_str(
+                "who may write a file cannot be checked on this OS yet, so no file can be shown to be managed policy",
             ),
         }
     }
@@ -119,8 +125,8 @@ pub enum OsUser {
     /// The OS has file modes, but the running OS user could not be
     /// learnt: any managed policy is refused, as nothing shows it safe.
     Unknown,
-    /// The OS has no file modes Cairn checks yet: Windows' ACLs come
-    /// later.
+    /// The OS has no file modes Cairn checks yet: any managed policy is
+    /// refused until Windows' ACLs are checked.
     Unchecked,
 }
 
@@ -239,9 +245,8 @@ fn read(path: &Path) -> Result<Option<String>, Failure> {
 /// Refuses managed policy at `path` unless neither it nor its
 /// directory could be written by the OS user `running`: each belongs
 /// to another OS user and lets no group or other user write. A path
-/// with no file passes; there is no managed policy. A file passes
-/// unchecked where the OS has no modes to check, and is refused where
-/// the running OS user is unknown.
+/// with no file passes; there is no managed policy. A file is refused
+/// where the running OS user is unknown or the OS has no modes to check.
 fn managed_check(path: &Path, running: OsUser) -> Result<(), Failure> {
     let meta = match fs::symlink_metadata(path) {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
@@ -253,8 +258,16 @@ fn managed_check(path: &Path, running: OsUser) -> Result<(), Failure> {
     let running = match running {
         OsUser::Known(uid) => uid,
         OsUser::Unknown => return Err(Failure::OsUserUnknown),
-        OsUser::Unchecked => return Ok(()),
+        OsUser::Unchecked => return Err(Failure::Unverifiable),
     };
+    owned_elsewhere(path, meta, running)
+}
+
+/// Refuses `path`, whose metadata is `meta`, when it or its directory
+/// lets the OS user `running` write: it is the owner, who may change
+/// the mode, or a group or other user may write.
+#[cfg(unix)]
+fn owned_elsewhere(path: &Path, meta: fs::Metadata, running: u32) -> Result<(), Failure> {
     let dir = path.parent().unwrap_or(path);
     for (p, m) in [(path, Ok(meta)), (dir, fs::metadata(dir))] {
         let m = m.map_err(Failure::Unreadable)?;
@@ -266,6 +279,13 @@ fn managed_check(path: &Path, running: OsUser) -> Result<(), Failure> {
     Ok(())
 }
 
+/// Without Unix modes, nothing shows who may write, so every file is
+/// refused until Windows' ACLs are checked.
+#[cfg(not(unix))]
+fn owned_elsewhere(_path: &Path, _meta: fs::Metadata, _running: u32) -> Result<(), Failure> {
+    Err(Failure::Unverifiable)
+}
+
 /// Whether `meta` lets the OS user `running` write: it is the owner,
 /// who may change the mode, or a group or other user may write.
 #[cfg(unix)]
@@ -273,13 +293,6 @@ fn writable(meta: &fs::Metadata, running: u32) -> bool {
     use std::os::unix::fs::MetadataExt;
 
     meta.uid() == running || meta.mode() & 0o022 != 0
-}
-
-/// Without Unix modes, no check is possible yet: Windows' ACLs come
-/// later, and the running OS user is unchecked there.
-#[cfg(not(unix))]
-fn writable(_meta: &fs::Metadata, _running: u32) -> bool {
-    true
 }
 
 /// The repository configuration for `working`: `.cairn.toml` at the
