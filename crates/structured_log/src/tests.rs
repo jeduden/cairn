@@ -23,7 +23,11 @@ impl io::Write for Shared {
 }
 
 fn log_to(open: Open) -> StructuredLog {
-    StructuredLog::new(open, Redactor::new(&[]).unwrap().0, Box::new(|| 7))
+    StructuredLog::new(open, rule_set, Box::new(|| 7))
+}
+
+fn rule_set() -> Result<Redactor, redaction::PatternError> {
+    Redactor::new(&[]).map(|(r, _)| r)
 }
 
 fn lines(shared: &Shared) -> Vec<Value> {
@@ -141,4 +145,22 @@ fn the_log_file_is_owner_only_and_appended_to() {
     }
     std::fs::write(dir.path().join("file"), "").unwrap();
     assert!(open_log_file(&dir.path().join("file").join("logs")).is_err());
+}
+
+#[test]
+fn a_redactor_that_does_not_compile_drops_every_line_unwritten() {
+    let shared = Shared::default();
+    let out = shared.clone();
+    let failing = || Err(redaction::PatternError::Syntax("x".to_owned()));
+    let log = Arc::new(StructuredLog::new(
+        Box::new(move || Ok(Some(Box::new(out.clone())))),
+        failing,
+        Box::new(|| 7),
+    ));
+    let subscriber: Arc<dyn tracing::Subscriber + Send + Sync> = log.clone();
+
+    tracing::subscriber::with_default(subscriber, || tracing::info!(key = "AKIAIOSFODNN7EXAMPLE"));
+
+    assert_eq!(log.dropped(), 1);
+    assert!(shared.0.lock().unwrap().is_empty());
 }

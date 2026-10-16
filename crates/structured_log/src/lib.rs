@@ -13,8 +13,8 @@
 use std::fs::{self, File, OpenOptions};
 use std::io::{self, Write};
 use std::path::Path;
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Mutex, OnceLock};
 
 use redaction::Redactor;
 use serde_json::{Map, Value, json};
@@ -29,11 +29,15 @@ pub const LOG_FILE: &str = "cairn.jsonl";
 /// the home exists.
 pub type Open = Box<dyn Fn() -> io::Result<Option<Box<dyn Write + Send>>> + Send + Sync>;
 
+/// Compiles the redactor a log's fields pass through.
+pub type Compile = fn() -> Result<Redactor, redaction::PatternError>;
+
 /// The subscriber.
 pub struct StructuredLog {
     open: Open,
     out: Mutex<Option<Box<dyn Write + Send>>>,
-    redactor: Redactor,
+    compile: Compile,
+    redactor: OnceLock<Option<Redactor>>,
     clock: Box<dyn Fn() -> u64 + Send + Sync>,
     spans: AtomicU64,
     dropped: AtomicU64,
@@ -41,13 +45,16 @@ pub struct StructuredLog {
 
 impl StructuredLog {
     /// A log written where `open` says, its lines stamped by `clock` in
-    /// seconds since the Unix epoch, its fields redacted by `redactor`.
+    /// seconds since the Unix epoch, its fields redacted by the redactor
+    /// `compile` makes. It compiles at the first event, so a run that
+    /// logs nothing spends nothing on it.
     #[must_use]
-    pub fn new(open: Open, redactor: Redactor, clock: Box<dyn Fn() -> u64 + Send + Sync>) -> Self {
+    pub fn new(open: Open, compile: Compile, clock: Box<dyn Fn() -> u64 + Send + Sync>) -> Self {
         Self {
             open,
             out: Mutex::new(None),
-            redactor,
+            compile,
+            redactor: OnceLock::new(),
             clock,
             spans: AtomicU64::new(0),
             dropped: AtomicU64::new(0),
@@ -60,22 +67,28 @@ impl StructuredLog {
         self.dropped.load(Ordering::Relaxed)
     }
 
-    /// The JSON line for `event`, its fields redacted.
-    fn line(&self, event: &Event<'_>) -> String {
+    /// The JSON line for `event`, its fields redacted; none when the
+    /// redactor does not compile, so no field goes unredacted.
+    fn line(&self, event: &Event<'_>) -> Option<String> {
+        let redactor = self
+            .redactor
+            .get_or_init(|| (self.compile)().ok())
+            .as_ref()?;
         let mut fields = Fields {
             map: Map::new(),
-            redactor: &self.redactor,
+            redactor,
         };
         event.record(&mut fields);
         let meta = event.metadata();
 
-        json!({
+        let line = json!({
             "time": (self.clock)(),
             "level": level(*meta.level()),
             "target": meta.target(),
             "fields": fields.map,
-        })
-        .to_string()
+        });
+
+        Some(line.to_string())
     }
 
     /// Writes `line`, opening the log first if it is not open.
@@ -108,7 +121,8 @@ impl Subscriber for StructuredLog {
     fn record_follows_from(&self, _span: &Id, _follows: &Id) {}
 
     fn event(&self, event: &Event<'_>) {
-        if self.write(&self.line(event)).is_err() {
+        let written = self.line(event).map(|line| self.write(&line));
+        if !matches!(written, Some(Ok(()))) {
             self.dropped.fetch_add(1, Ordering::Relaxed);
         }
     }

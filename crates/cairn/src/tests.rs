@@ -1550,15 +1550,12 @@ fn bounded_lines_refuse_a_line_past_the_limit_without_holding_it_and_go_on() {
 /// Logs one event carrying an AWS access key through the structured
 /// log of `p`'s home, with `home_id` supplied.
 fn log_one(p: &Process, home_id: Option<&str>) -> std::sync::Arc<structured_log::StructuredLog> {
-    let log = std::sync::Arc::new(
-        structured_log(
-            None,
-            Some(p.dir.path().as_os_str().to_owned()),
-            home_id.map(Into::into),
-            || NOW,
-        )
-        .unwrap(),
-    );
+    let log = std::sync::Arc::new(structured_log(
+        None,
+        Some(p.dir.path().as_os_str().to_owned()),
+        home_id.map(Into::into),
+        || NOW,
+    ));
     let dispatch = tracing::Dispatch::from(log.clone());
     tracing::dispatcher::with_default(&dispatch, || {
         tracing::info!(key = "AKIAIOSFODNN7EXAMPLE", "logged");
@@ -1606,7 +1603,7 @@ fn a_home_the_core_refuses_gets_no_log() {
     set_mode(&p.cairn_home(), 0o755);
     log_one(&p, Some("h1"));
     assert!(!log_file(&p).exists());
-    let none = structured_log(None, None, None, || NOW).unwrap();
+    let none = structured_log(None, None, None, || NOW);
     let dispatch = tracing::Dispatch::new(none);
     tracing::dispatcher::with_default(&dispatch, || tracing::info!("nowhere"));
 }

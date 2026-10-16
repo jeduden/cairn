@@ -151,18 +151,15 @@ impl Context<'_> {
 /// The structured log (ENG-05, OPS-05) for the home the environment
 /// names: written to its log file once the home exists and passes its
 /// checks (SEC-02, SEC-03), and nowhere before; each field redacted by
-/// the maintained redaction rule set.
-///
-/// # Errors
-///
-/// Fails when the rule set does not compile, which its unit test rules
-/// out.
+/// the maintained redaction rule set, compiled at the first event, so
+/// a run that logs nothing starts no slower.
+#[must_use]
 pub fn structured_log(
     cairn_home: Option<OsString>,
     home: Option<OsString>,
     home_id: Option<OsString>,
     clock: fn() -> u64,
-) -> Result<structured_log::StructuredLog, String> {
+) -> structured_log::StructuredLog {
     let open: structured_log::Open = Box::new(move || {
         let Ok(home) = Home::locate(cairn_home.as_deref(), home.as_deref()) else {
             return Ok(None);
@@ -176,13 +173,7 @@ pub fn structured_log(
         let file = structured_log::open_log_file(&home.root().join("logs"))?;
         Ok(Some(Box::new(file)))
     });
-    let (redactor, _) = Redactor::new(&[]).map_err(|e| e.to_string())?;
-
-    Ok(structured_log::StructuredLog::new(
-        open,
-        redactor,
-        Box::new(clock),
-    ))
+    structured_log::StructuredLog::new(open, || Redactor::new(&[]).map(|(r, _)| r), Box::new(clock))
 }
 
 /// Audits the log lines a run could not write (I6).
