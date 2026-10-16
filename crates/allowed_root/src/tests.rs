@@ -205,8 +205,15 @@ fn a_path_that_cannot_be_resolved_for_another_reason_is_refused() {
 #[test]
 fn a_dangling_link_within_a_root_is_refused() {
     let l = Layout::new();
-    link(&l.at(".ssh/not-yet"), &l.at(".claude/projects/p/dangling.jsonl"));
-    assert!(l.roots().resolve(&l.at(".claude/projects/p/dangling.jsonl"), Access::Read).is_err());
+    link(
+        &l.at(".ssh/not-yet"),
+        &l.at(".claude/projects/p/dangling.jsonl"),
+    );
+    assert!(
+        l.roots()
+            .resolve(&l.at(".claude/projects/p/dangling.jsonl"), Access::Read)
+            .is_err()
+    );
 }
 
 #[test]
@@ -215,9 +222,17 @@ fn a_git_file_naming_no_git_directory_adds_no_root() {
     fs::create_dir_all(l.at("src/evil")).unwrap();
     fs::write(l.at("src/evil/.git"), "gitdir: /\n").unwrap();
     let roots = AllowedRoots::default().with_worktree(&l.at("src/evil"));
-    assert!(roots.resolve(&l.at(".ssh/id_ed25519"), Access::Read).is_err());
+    assert!(
+        roots
+            .resolve(&l.at(".ssh/id_ed25519"), Access::Read)
+            .is_err()
+    );
     assert!(roots.resolve(&l.at("src/evil/.git"), Access::Read).is_ok());
-    for named in ["../app/.git/worktrees/wt", "/r/repo.git", "/r/.git/modules/m"] {
+    for named in [
+        "../app/.git/worktrees/wt",
+        "/r/repo.git",
+        "/r/.git/modules/m",
+    ] {
         assert!(is_git_directory(Path::new(named)), "{named}");
     }
     for named in ["/", "/home/someone", "../app"] {

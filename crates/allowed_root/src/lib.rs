@@ -102,12 +102,15 @@ impl AllowedRoots {
 }
 
 /// `path` with every symbolic link resolved; for one that does not
-/// exist, its parent resolved and its name joined, so a missing file
-/// within a root is reported as missing, not as outside.
+/// exist, not even as a dangling link, its parent resolved and its name
+/// joined, so a missing file within a root is reported as missing, not
+/// as outside.
 fn resolved(path: &Path) -> Option<PathBuf> {
     match fs::canonicalize(path) {
         Ok(p) => Some(p),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+        Err(e)
+            if e.kind() == std::io::ErrorKind::NotFound && fs::symlink_metadata(path).is_err() =>
+        {
             let name = path.file_name()?;
             let parent = fs::canonicalize(path.parent()?).ok()?;
             Some(parent.join(name))
@@ -128,8 +131,21 @@ fn repository(cwd: &Path) -> Option<(PathBuf, PathBuf)> {
     }
     let text = fs::read_to_string(&dot_git).ok()?;
     let named = text.lines().find_map(|l| l.strip_prefix("gitdir:"))?.trim();
+    let git_dir = top.join(named);
+    if !is_git_directory(&git_dir) {
+        return Some((top.to_path_buf(), dot_git));
+    }
 
-    Some((top.to_path_buf(), top.join(named)))
+    Some((top.to_path_buf(), git_dir))
+}
+
+/// Whether `path` names a git directory: one of its parts is `.git` or
+/// ends in `.git`, as a repository's, a bare one's, and a worktree's or
+/// submodule's inside them do. A `.git` file naming anything else, as
+/// `gitdir: /` would, opens no root beyond the worktree.
+fn is_git_directory(path: &Path) -> bool {
+    path.components()
+        .any(|c| c.as_os_str().to_str().is_some_and(|s| s.ends_with(".git")))
 }
 
 /// `path` with a leading `~` or `~/` taken as `home`, the way
