@@ -279,9 +279,53 @@ fn cargo_shipped_deps_counts_what_links_into_a_product_executable() {
             .starts_with("read cargo metadata: ")
     );
     assert_eq!(
-        cargo_shipped_deps("{}", product).unwrap(),
+        cargo_shipped_deps("{}", product).unwrap_err(),
+        "cargo metadata names no workspace_root"
+    );
+    assert_eq!(
+        cargo_shipped_deps(r#"{"workspace_root": "/w"}"#, product).unwrap(),
         Vec::<String>::new()
     );
+}
+
+#[test]
+fn ships_wants_a_binary_target_under_the_product_root() {
+    let product = std::path::Path::new("/w/crates");
+    let package = |manifest: &str, kind: &str| serde_json::json!({"manifest_path": manifest, "targets": [{"kind": ["lib"]}, {"kind": [kind]}]});
+
+    assert!(ships(
+        &package("/w/crates/cairn/Cargo.toml", "bin"),
+        product
+    ));
+    assert!(!ships(
+        &package("/w/crates/store/Cargo.toml", "test"),
+        product
+    ));
+    assert!(!ships(
+        &package("/w/tooling/review-gate/Cargo.toml", "bin"),
+        product
+    ));
+    assert!(!ships(
+        &package("/w/crates-old/x/Cargo.toml", "bin"),
+        product
+    ));
+    assert!(!ships(&serde_json::json!({}), product));
+}
+
+#[test]
+fn normal_keeps_neither_dev_nor_build_dependencies() {
+    let package = serde_json::json!({"dependencies": [
+        {"name": "a", "kind": null},
+        {"name": "b", "kind": "dev"},
+        {"name": "c", "kind": "build"},
+        {"name": "d"}
+    ]});
+
+    let names: Vec<_> = normal(&package)
+        .filter_map(|d| d["name"].as_str())
+        .collect();
+    assert_eq!(names, ["a", "d"]);
+    assert_eq!(normal(&serde_json::json!({})).count(), 0);
 }
 
 #[test]
