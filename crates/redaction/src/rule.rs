@@ -64,13 +64,13 @@ impl RedactionRule {
         })
     }
 
-    /// The rule matching `literal` exactly, wherever it appears.
+    /// The rule matching `literal` in any case, wherever it appears.
     ///
     /// # Errors
     ///
     /// Fails when the escaped literal exceeds the size limit.
     pub fn literal(name: &str, literal: &str) -> Result<Self, regex::Error> {
-        Self::new(name, &regex::escape(literal))
+        Self::new(name, &format!("(?i){}", regex::escape(literal)))
     }
 
     /// Its name, which its marker carries.

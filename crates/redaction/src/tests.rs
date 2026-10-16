@@ -1,7 +1,7 @@
-use serde_json::json;
-
 use super::account::HarnessAccountIdentifiers;
-use super::{PatternRefused, Redacted, Redactor, extra_pattern, merged, unique};
+use super::{
+    PatternRefused, Piece, Redacted, Redactor, extra_pattern, literal_end, merged, pieces,
+};
 
 const AWS: &str = "AKIAIOSFODNN7EXAMPLE";
 
@@ -83,51 +83,6 @@ fn with_identifiers_redacts_the_harness_account_ahead_of_extra_patterns() {
 }
 
 #[test]
-fn redact_value_walks_strings_and_keys_and_keeps_the_rest() {
-    let r = redactor(&[]);
-    let value = json!({
-        "message": {"content": [{"text": format!("out {AWS}")}]},
-        AWS: 1,
-        "n": 2.5,
-        "ok": true,
-        "nothing": null,
-    });
-    let (out, rules) = r.redact_value(&value);
-    assert_eq!(
-        out,
-        json!({
-            "message": {"content": [{"text": "out [REDACTED:aws_access_key]"}]},
-            "[REDACTED:aws_access_key]": 1,
-            "n": 2.5,
-            "ok": true,
-            "nothing": null,
-        })
-    );
-    assert_eq!(rules.len(), 2);
-}
-
-#[test]
-fn two_keys_that_redact_alike_both_keep_their_values() {
-    let r = redactor(&[]);
-    let value = json!({"AKIAIOSFODNN7EXAMPLA": 1, "AKIAIOSFODNN7EXAMPLB": 2});
-    let (out, _) = r.redact_value(&value);
-    assert_eq!(
-        out,
-        json!({"[REDACTED:aws_access_key]": 1, "[REDACTED:aws_access_key] (2)": 2})
-    );
-}
-
-#[test]
-fn unique_counts_past_every_key_taken() {
-    let map = json!({"k": 0, "k (2)": 0});
-    let serde_json::Value::Object(map) = map else {
-        panic!("an object");
-    };
-    assert_eq!(unique("j".to_owned(), &map), "j");
-    assert_eq!(unique("k".to_owned(), &map), "k (3)");
-}
-
-#[test]
 fn redact_line_keeps_a_clean_line_byte_for_byte() {
     let r = redactor(&[]);
     let line = r#"{"b": 1,  "a": "x"}"#;
@@ -190,4 +145,22 @@ fn redact_line_keeps_everything_but_the_redacted_strings_byte_for_byte() {
         r.redact_line(line).text,
         r#"{"b": 1,  "a": "k [REDACTED:aws_access_key]", "n": 2.50}"#
     );
+}
+
+#[test]
+fn pieces_cut_a_line_at_its_string_literals() {
+    assert_eq!(
+        pieces(r#"{"a": "b\"c", x"open"#),
+        [
+            Piece::Between("{"),
+            Piece::String(r#""a""#),
+            Piece::Between(": "),
+            Piece::String(r#""b\"c""#),
+            Piece::Between(", x"),
+            Piece::String(r#""open"#),
+        ]
+    );
+    assert!(pieces("").is_empty());
+    // An escape at the very end runs past it, and the literal ends there.
+    assert_eq!(literal_end(b"ab\\", 0), 3);
 }

@@ -104,5 +104,8 @@ fn a_rule_skips_empty_matches_and_refuses_a_bad_or_huge_pattern() {
 #[test]
 fn a_literal_rule_ignores_case() {
     let rule = RedactionRule::literal("account_email", "Person@Example.com").unwrap();
-    assert_eq!(rule.spans("person@EXAMPLE.COM").collect::<Vec<_>>(), [(0, 18)]);
+    assert_eq!(
+        rule.spans("person@EXAMPLE.COM").collect::<Vec<_>>(),
+        [(0, 18)]
+    );
 }

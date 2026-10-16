@@ -205,11 +205,11 @@ fn every_line_is_redacted_before_anything_is_written() {
     assert_eq!(
         ingested.redactions,
         [
-            "account_email",
             "aws_access_key",
             "extra_pattern_1",
-            "organization_id",
             "aws_access_key",
+            "account_email",
+            "organization_id",
             "account_email",
             "organization_id",
         ]
@@ -236,7 +236,7 @@ fn every_line_is_redacted_before_anything_is_written() {
 fn an_identifier_too_long_to_redact_records_nothing() {
     let dir = TempDir::new().unwrap();
     let home = home(&dir);
-    let email = format!("{}@example.com", "a".repeat(4 << 20));
+    let email = format!("{}@example.com", "a".repeat(1 << 20));
     let line = serde_json::json!({"attachment": {"type": "session_context", "context": {"userEmail": email}}});
     let path = transcript(&dir, &format!("{line}\n"));
 

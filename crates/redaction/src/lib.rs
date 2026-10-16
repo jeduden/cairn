@@ -8,7 +8,7 @@
 
 use std::fmt;
 
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 pub mod account;
 pub mod rule;
@@ -124,73 +124,90 @@ impl Redactor {
         out
     }
 
-    /// `value` with every string in it, object keys included, redacted.
-    #[must_use]
-    pub fn redact_value(&self, value: &Value) -> (Value, Vec<String>) {
-        let mut rules = Vec::new();
-        let redacted = self.walk(value, &mut rules);
-
-        (redacted, rules)
-    }
-
-    /// A transcript line or hook input redacted: its JSON value's
-    /// strings, written back as JSON when any is redacted, or the raw
-    /// text when it is no JSON. A line with nothing to redact stays as
-    /// it was, byte for byte.
+    /// A transcript line or hook input redacted. Each JSON string in
+    /// it is decoded and redacted on its own, so neither an escape nor
+    /// a key the parser would drop as a duplicate hides a secret, and a
+    /// line that is no JSON is redacted all the same; the text between
+    /// strings is redacted as it stands. Only a string that is redacted
+    /// changes, written back as a JSON string; every other byte stays.
     #[must_use]
     pub fn redact_line(&self, line: &str) -> Redacted {
-        let Ok(value) = serde_json::from_str::<Value>(line) else {
-            return self.redact_text(line);
+        let mut out = Redacted {
+            text: String::with_capacity(line.len()),
+            rules: Vec::new(),
         };
-        let (redacted, rules) = self.redact_value(&value);
-        let text = if rules.is_empty() {
-            line.to_owned()
-        } else {
-            redacted.to_string()
-        };
-
-        Redacted { text, rules }
-    }
-
-    fn walk(&self, value: &Value, rules: &mut Vec<String>) -> Value {
-        match value {
-            Value::String(s) => Value::String(self.collect(s, rules)),
-            Value::Array(items) => {
-                Value::Array(items.iter().map(|v| self.walk(v, rules)).collect())
-            }
-            Value::Object(map) => {
-                let mut out = Map::new();
-                for (k, v) in map {
-                    let key = unique(self.collect(k, rules), &out);
-                    let v = self.walk(v, rules);
-                    out.insert(key, v);
+        for piece in pieces(line) {
+            let (text, rules) = match piece {
+                Piece::Between(text) => {
+                    let r = self.redact_text(text);
+                    (r.text, r.rules)
                 }
-                Value::Object(out)
-            }
-            other => other.clone(),
+                Piece::String(literal) => self.redact_literal(literal),
+            };
+            out.text.push_str(&text);
+            out.rules.extend(rules);
         }
+
+        out
     }
 
-    fn collect(&self, text: &str, rules: &mut Vec<String>) -> String {
-        let r = self.redact_text(text);
-        rules.extend(r.rules);
+    /// One JSON string literal, quotes included, redacted: decoded when
+    /// it decodes, else as it stands.
+    fn redact_literal(&self, literal: &str) -> (String, Vec<String>) {
+        let Ok(decoded) = serde_json::from_str::<String>(literal) else {
+            let r = self.redact_text(literal);
+            return (r.text, r.rules);
+        };
+        let r = self.redact_text(&decoded);
+        if r.rules.is_empty() {
+            return (literal.to_owned(), r.rules);
+        }
 
-        r.text
+        (Value::String(r.text).to_string(), r.rules)
     }
 }
 
-/// `key`, or, where a redacted key already stands in `map`, the first
-/// of `key (2)`, `key (3)` and on that does not, so no value is lost
-/// when two keys redact alike.
-fn unique(key: String, map: &Map<String, Value>) -> String {
-    if !map.contains_key(&key) {
-        return key;
+/// A piece of a line: a JSON string literal, quotes included, or the
+/// text between two.
+#[derive(Debug, PartialEq, Eq)]
+enum Piece<'a> {
+    Between(&'a str),
+    String(&'a str),
+}
+
+/// `line` cut into its string literals and the text between them; a
+/// literal left open runs to the end of the line.
+fn pieces(line: &str) -> Vec<Piece<'_>> {
+    let bytes = line.as_bytes();
+    let (mut out, mut at) = (Vec::new(), 0);
+    while let Some(open) = line[at..].find('"').map(|i| at + i) {
+        if open > at {
+            out.push(Piece::Between(&line[at..open]));
+        }
+        let close = literal_end(bytes, open + 1);
+        out.push(Piece::String(&line[open..close]));
+        at = close;
+    }
+    if at < line.len() {
+        out.push(Piece::Between(&line[at..]));
     }
 
-    (2..)
-        .map(|n| format!("{key} ({n})"))
-        .find(|k| !map.contains_key(k))
-        .unwrap_or(key)
+    out
+}
+
+/// The index past the quote that closes the literal whose content
+/// starts at `from`, or the line's end when none does.
+fn literal_end(bytes: &[u8], from: usize) -> usize {
+    let mut i = from;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'\\' => i += 2,
+            b'"' => return i + 1,
+            _ => i += 1,
+        }
+    }
+
+    bytes.len()
 }
 
 /// Sorted spans with each run of overlapping ones merged into the
