@@ -1250,6 +1250,7 @@ dependencies = [
  "harness-contract",
  "key",
  "record",
+ "rusqlite",
  "serde_json",
  "srs",
  "store",

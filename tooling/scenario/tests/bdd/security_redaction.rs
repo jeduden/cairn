@@ -25,6 +25,9 @@ const ACME: &str = "ACME-12345678";
 const EMAIL: &str = "person@example.com";
 const ORGANIZATION: &str = "4f7d2c1e-9a3b-4c8d-8e2f-1a2b3c4d5e6f";
 
+/// A field of the agent's run no rule matches.
+const CLEAN_FIELD: &str = "00000000-0000-4000-8000-000000000001";
+
 /// What the redaction steps track: each transcript by name.
 #[derive(Debug, Default)]
 pub struct RedactionSteps {
@@ -121,7 +124,7 @@ fn bash_result_with_key(w: &mut World, name: String) -> Result<(), String> {
             {"type": "tool_result", "tool_use_id": "toolu_1", "content": output},
         ]},
         "toolUseResult": {"stdout": output, "stderr": "", "interrupted": false},
-        "uuid": "00000000-0000-4000-8000-000000000001",
+        "uuid": CLEAN_FIELD,
     });
     append(w, &name, &line)
 }
@@ -195,8 +198,26 @@ fn no_value_confirms_a_guess(w: &mut World) -> Result<(), String> {
     regex = r"^any correlation of the repeated AWS access key lives only in a node-local index keyed under this node's own at-rest key$"
 )]
 fn no_correlation_index(w: &mut World) -> Result<(), String> {
-    // Cairn keeps no correlation index, so none can confirm a guess.
-    none_in_home(w, &["correlation"])
+    // Cairn keeps no correlation index, so none can confirm a guess:
+    // the store holds the record's tables and nothing beside them.
+    let store = home(w)?.store();
+    let db =
+        rusqlite::Connection::open_with_flags(&store, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+            .map_err(|e| e.to_string())?;
+    let mut query = db
+        .prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
+        .map_err(|e| e.to_string())?;
+    let tables: Vec<String> = query
+        .query_map([], |row| row.get(0))
+        .map_err(|e| e.to_string())?
+        .collect::<Result<_, _>>()
+        .map_err(|e| e.to_string())?;
+    if tables == ["event_heads", "events", "meta", "seats"] {
+        return Ok(());
+    }
+    Err(format!(
+        "the store holds tables beside the record's: {tables:?}"
+    ))
 }
 
 #[then(
@@ -215,6 +236,12 @@ fn repository_pattern_ignored(w: &mut World, pattern: String) -> Result<(), Stri
         return Err("cairn ingest failed with the repository pattern".to_owned());
     }
     none_in_home(w, &["[REDACTED:extra_pattern_2]"])?;
+    // Text no rule matches survives whole: the repository's pattern
+    // redacted nothing under any name.
+    let clean = [CLEAN_FIELD.as_bytes().to_vec()];
+    if found_in_home(w, &clean)?.is_none() {
+        return Err(format!("{CLEAN_FIELD} did not survive whole"));
+    }
     let entries = audit::log::Log::new(home(w)?.audit())
         .entries()
         .map_err(|e| e.to_string())?;
