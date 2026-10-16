@@ -1,10 +1,12 @@
 //! Administration of the home (§8.1, §9.5): where the home is, the
-//! node's first start in it, the seats the node certifies, and `cairn
-//! verify`'s check of the whole record.
+//! node's first start in it, the seats the node certifies, the
+//! principal acts its CLI takes, and `cairn verify`'s check of the
+//! whole record.
 
 use std::fmt;
 use std::path::PathBuf;
 
+pub mod act;
 pub mod home;
 pub mod node;
 pub mod verify;

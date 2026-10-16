@@ -1,0 +1,25 @@
+[package]
+name = "configuration"
+version = "0.0.0"
+description = "The settings layers: defaults, the principal's configuration, repository configuration and managed policy, each validated strictly and layered (ADM-04)"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+record.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+
+[dev-dependencies]
+testkit.workspace = true
+
+[lints]
+workspace = true
+
+# ENG-02: see crates/cairn/Cargo.toml.
+[package.metadata.cairn]
+responsibility = "Reads, validates and layers the settings layers"
+may-depend-on = ["record"]
+may-dev-depend-on = ["testkit"]

@@ -228,18 +228,18 @@ hands off.
 | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1     | opus   | The slice's end-to-end test in an isolated home; `@REC-10` passes                                                                                       |
 | 2     | sonnet | `@SEC-02`, `@SEC-03`, `@OPS-02`, `@OPS-03` and `@ENG-04` pass                                                                                           |
-| 3     | opus   | `@ADM-04`, `@PRV-04`, `@PRV-05` and `@SEC-22` pass; OWN-11, OWN-12 and OWN-22's M1 steps bound and passing                                              |
+| 3     | opus   | Its end-to-end tests pass; so do ADM-04's rows 1 to 4 and the M1 steps of OWN-11, -12 and -22                                                           |
 | 4     | sonnet | `@SEC-05`, `@SEC-08`, `@SEC-18` and `@ENG-05` pass; no fixture secret reaches the store or a log                                                        |
 | 5     | opus   | `@PRV-09`, `@PRV-11` and `@REC-24` pass; PRV-12, SEC-10, SEC-27, LANE-16 and LANE-23's M1 steps bound and passing                                       |
 | 6     | opus   | `@REC-09` and `@REC-12` pass; REC-19's segment steps pass; a newer segment or store is refused; the crash-consistency job runs nightly                  |
 | 7     | opus   | `@PRV-01`, `@PRV-03`, `@PRV-08`, `@REC-05` and `@REC-26` pass; the parser's fuzz target and the residual-identifier drift case run                      |
-| 8     | opus   | `@REC-01` to `@REC-04`, `@REC-07`, `@REC-08` and `@REC-22` pass; both properties hold; NFR-04 benchmarked                                               |
-| 9     | opus   | `@SEC-16` passes; REC-19's holding steps pass; a hook handler fails open within its budget; NFR-01 and NFR-02 benchmarked                               |
+| 8     | opus   | `@REC-01` to `@REC-04`, `@REC-07`, `@REC-08`, `@REC-22` and PRV-05's transcript rows pass; both properties hold; NFR-04 benchmarked                     |
+| 9     | opus   | `@SEC-16` and `@PRV-04` pass; REC-19's holding steps pass; a hook handler fails open within its budget; NFR-01 and NFR-02 benchmarked                   |
 | 10    | opus   | `@REC-06`, `@REC-13` and `@PRV-14` pass against a live MCP server                                                                                       |
 | 11    | opus   | `@PRV-02`, `@PRV-06`, `@LANE-02`, `@OWN-01` and `@MEM-01` pass; PRV-13, LANE-01, LANE-31 and ADM-13's M1 steps pass                                     |
 | 12    | sonnet | `@REC-11`, `@SEC-04` and `@RCL-02` pass; NFR-03 benchmarked                                                                                             |
 | 13    | opus   | `@RCL-01`, `@RCL-03` to `@RCL-05`, `@RCL-07`, `@RCL-08`, `@SEC-06` and `@SEC-07` pass; the envelope's golden files match                                |
-| 14    | opus   | `@SEC-12`, `@RCL-06` and `@REC-17` pass; a purged event leaves nothing confirming a guess                                                               |
+| 14    | opus   | `@SEC-12`, `@RCL-06`, `@REC-17` and `@SEC-22` pass; a purged event leaves nothing confirming a guess                                                    |
 | 15    | sonnet | `@ADM-09`, `@ADM-11`, `@OPS-01`, `@SEC-15`, `@SEC-17`, `@SEC-19` and `@ENG-22` pass; SEC-01's core row passes                                           |
 | 16    | opus   | `@ENG-03`, `@ENG-06`, `@ENG-07`, `@ENG-09`, `@ENG-11`, `@ENG-15`, `@ENG-23` and `@ENG-29` pass; 95% recall in `cairn-eval`; the S12 rebuild test passes |
 
@@ -264,12 +264,14 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                                                                                                                                                                  |
-| --- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | ✅     | [Proving slice: one transcript recorded, recalled and verified](phase-1.md)                                                                                                                            |
-|     | ↳      | @REC-10 off @pending and passing. A recorded transcript is ingested, recalled through event_get in the envelope and verified, end to end and confined; a flipped header byte exits 3 naming the event. |
-| 2   | ✅     | [The home, the audit log and counters](phase-2.md)                                                                                                                                                     |
-|     | ↳      | @SEC-02, @SEC-03, @OPS-02, @OPS-03 and @ENG-04 off @pending and passing, confined. Every command checks the home first; the audit log chains across rotation; cairn hook fails open and audits.        |
+| #   | Status | Phase                                                                                                                                                                                                                                                                           |
+| --- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ✅     | [Proving slice: one transcript recorded, recalled and verified](phase-1.md)                                                                                                                                                                                                     |
+|     | ↳      | @REC-10 off @pending and passing. A recorded transcript is ingested, recalled through event_get in the envelope and verified, end to end and confined; a flipped header byte exits 3 naming the event.                                                                          |
+| 2   | ✅     | [The home, the audit log and counters](phase-2.md)                                                                                                                                                                                                                              |
+|     | ↳      | @SEC-02, @SEC-03, @OPS-02, @OPS-03 and @ENG-04 off @pending and passing, confined. Every command checks the home first; the audit log chains across rotation; cairn hook fails open and audits.                                                                                 |
+| 3   | 🔳     | [Settings layers and principal acts at the terminal](phase-3.md)                                                                                                                                                                                                                |
+|     | ↳      | Settings layers validated and layered; widening acts gated by OWN-22 and managed policy; counter ack, configuration accept and risk acceptance recorded as principal acts. ADM-04's rows 1 to 4 and the M1 steps of OWN-11, -12 and -22 pass narrowed; none comes off @pending. |
 <?/catalog?>
 
 ## Acceptance Criteria

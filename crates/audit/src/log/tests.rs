@@ -13,6 +13,14 @@ const FAILED: Occurrence = Occurrence::Degraded {
     detail: "panic recovered",
 };
 
+const IGNORED: Occurrence = Occurrence::Keyed {
+    kind: Kind::Rejected,
+    counter: Counter::TrustPolicyKeyIgnored,
+    operation: "ingest",
+    detail: "ignored trust policy key for",
+    key: "web",
+};
+
 fn log(dir: &TempDir) -> Log {
     Log::new(dir.path().join("audit"))
 }
@@ -47,7 +55,7 @@ fn the_first_append_makes_the_log_owner_only_and_chains_from_zero() {
     let first = log.append(&FAILED, 100).unwrap();
     assert_eq!(first.number, 1);
     assert_eq!(first.prev_hash, Digest::ZERO);
-    let second = log.append(&Occurrence::CounterAck, 101).unwrap();
+    let second = log.append(&IGNORED, 101).unwrap();
     assert_eq!(second.number, 2);
     assert_eq!(second.prev_hash, first.hash);
     let text = fs::read_to_string(log.file(1)).unwrap();
@@ -85,7 +93,7 @@ fn a_file_that_reached_the_rotation_size_continues_the_chain_in_the_next() {
         prev = e;
     }
     assert!(usize::try_from(written).unwrap() >= padding);
-    let next = log.append(&Occurrence::CounterAck, 3).unwrap();
+    let next = log.append(&IGNORED, 3).unwrap();
     assert_eq!(next.number, prev.number + 1);
     assert_eq!(next.prev_hash, prev.hash);
     assert_eq!(

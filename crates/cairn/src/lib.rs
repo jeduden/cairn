@@ -2,7 +2,8 @@
 //! handlers, the MCP server and the CLI so far.
 //!
 //! It runs `version`, `ingest --path`, `mcp`, `verify`, `hook`,
-//! `status`, `doctor` and `counter ack`. Every other
+//! `status`, `doctor`, and the principal acts `counter ack`,
+//! `configuration accept` and `risk-acceptance`. Every other
 //! command in the SRS's §9.5 is a pending scenario under features/, and
 //! lands with the plan that makes its scenario pass.
 
@@ -11,10 +12,11 @@ use std::ffi::OsString;
 use std::fs;
 use std::io::{self, Write};
 use std::panic::{self, AssertUnwindSafe};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::{Duration, Instant};
 
+use administration::act as act_record;
 use administration::home::Home;
 use administration::node::Node;
 use administration::verify::{VerifyError, verify};
@@ -22,6 +24,8 @@ use audit::AuditError;
 use audit::counters::{Counts, counts};
 use audit::entry::{Counter, Entry, Kind, Occurrence};
 use audit::log::Log;
+use configuration::source::OsUser;
+use configuration::{Loaded, SettingsLayer};
 use hook::{Failure, Hook};
 use key::random::OsEntropy;
 use key::signing::DeviceKey;
@@ -77,15 +81,19 @@ pub const BUILD: Build<'static> = Build {
 const USAGE: &str = "usage: cairn <command> [flags]
 
 commands:
-  counter ack [--json]       acknowledge the counters
-  doctor [--json]            fail while a counter rose since the last acknowledgement
-  hook <hook>                run the hook handler on the hook input on stdin
-  ingest --path P [--json]   record the transcript at P
-  mcp                        serve the MCP tools over stdio
-  status [--json]            show the home, the store, the audit log and the counters
-  verify [--json]            check the record and the audit log
-  version [--json]           print the build version
-  help                       print this message
+  configuration accept [--json]          accept the configuration (widening)
+  counter ack [--json]                   acknowledge the counters (neutral)
+  doctor [--json]                        fail while a counter rose since the last acknowledgement
+  hook <hook>                            run the hook handler on the hook input on stdin
+  ingest --path P [--json]               record the transcript at P
+  mcp                                    serve the MCP tools over stdio
+  risk-acceptance show [--json]          show the residual risks open on this node
+  risk-acceptance record [--json]        accept the open residual risks (widening)
+  risk-acceptance withdraw [--json]      withdraw the risk acceptance (cut)
+  status [--json]                        show the home, the store, the settings and the counters
+  verify [--json]                        check the record and the audit log
+  version [--json]                       print the build version
+  help                                   print this message
 ";
 
 /// What an invocation runs in: the build, the home variables and the
@@ -105,6 +113,14 @@ pub struct Context<'a> {
     /// terminal, which a verb that writes a principal act needs
     /// (OWN-12): a person's are, an agent's tool call's are not.
     pub terminal: bool,
+    /// The working directory, whose repository's configuration is a
+    /// settings layer (SEC-11).
+    pub working_dir: Option<PathBuf>,
+    /// Where managed policy is read from (ADM-04).
+    pub managed_policy: PathBuf,
+    /// The running OS user, whom managed policy's files must not let
+    /// write (ADM-04).
+    pub os_user: OsUser,
     /// Starts reading the process's input, one line at a time.
     pub input: &'a dyn Fn() -> Receiver<io::Result<String>>,
     /// The wall clock, in seconds since the Unix epoch, which only
@@ -148,11 +164,13 @@ pub fn run(
             let _ = stderr.write_all(USAGE.as_bytes());
             EXIT_USAGE
         }
-        Some("counter") => counter(args, ctx, stdout, stderr),
+        Some("configuration") => act::configuration(args, ctx, stdout, stderr),
+        Some("counter") => act::counter(args, ctx, stdout, stderr),
         Some("doctor") => doctor(args, ctx, stdout, stderr),
         Some("hook") => hook_command(args.next().as_deref(), ctx, stdout),
         Some("ingest") => ingest(args, ctx, stdout, stderr),
         Some("mcp") => mcp(args, ctx, stdout, stderr),
+        Some("risk-acceptance") => act::risk_acceptance(args, ctx, stdout, stderr),
         Some("status") => status(args, ctx, stdout, stderr),
         Some("verify") => verify_command(args, ctx, stdout, stderr),
         Some("version") => version(args, ctx.build, stdout, stderr),
@@ -198,7 +216,7 @@ fn version_json(build: &Build) -> String {
 
 /// The flags a command takes, with `--json` among them; anything else
 /// is a usage error, reported on `stderr`.
-fn json_flag(
+pub(crate) fn json_flag(
     command: &str,
     args: impl Iterator<Item = String>,
     stderr: &mut dyn Write,
@@ -216,7 +234,7 @@ fn json_flag(
 }
 
 /// Reports a failure of `command` on `stderr`.
-fn failed(command: &str, e: &dyn std::fmt::Display, stderr: &mut dyn Write) -> u8 {
+pub(crate) fn failed(command: &str, e: &dyn std::fmt::Display, stderr: &mut dyn Write) -> u8 {
     let _ = writeln!(stderr, "cairn {command}: {e}");
     EXIT_FAILURE
 }
@@ -256,6 +274,7 @@ fn ingest(
     }
     let ingested = match ctx.home() {
         Ok(home) => {
+            audit_settings(ctx, &home, stderr);
             ingest::ingest_path(&home, Path::new(&path), &mut OsEntropy).map_err(|e| e.to_string())
         }
         Err(e) => Err(e.to_string()),
@@ -280,6 +299,23 @@ fn ingest(
     };
 
     written(writeln!(stdout, "{line}"), stderr)
+}
+
+/// Audits each settings layer that fails and each key ignored before a
+/// recording command goes on recording whatever they say (ADM-04, I9);
+/// says on `stderr` what cannot be read or audited.
+fn audit_settings(ctx: &Context, home: &Home, stderr: &mut dyn Write) {
+    let acts = settings::recorded_acts(home).unwrap_or_else(|e| {
+        let _ = writeln!(stderr, "cairn ingest: read the accepted configuration: {e}");
+        Vec::new()
+    });
+    let in_force = settings::in_force(ctx, home, &acts);
+    for failure in &in_force.loaded.failures {
+        let _ = writeln!(stderr, "cairn ingest: recording without {failure}");
+    }
+    for e in settings::audit(ctx, "ingest", &in_force) {
+        let _ = writeln!(stderr, "cairn ingest: audit the settings: {e}");
+    }
 }
 
 /// `cairn mcp`: serves the MCP tools over the process's input and
@@ -535,56 +571,40 @@ fn mcp_panicked(home: &Home, time: u64) -> Result<Entry, AuditError> {
     Log::new(home.audit()).append(&occurrence, time)
 }
 
-/// `cairn counter ack [--json]`: acknowledges the counters (OPS-03). It
-/// appends a `counter_ack` entry to the audit log; phase 3 records the
-/// neutral principal act it is (OWN-11). Like every verb that writes a
-/// principal act, it refuses unless its standard input and output are a
-/// terminal (OWN-12), so an agent's tool call cannot quiet `cairn doctor`.
-fn counter(
-    mut args: impl Iterator<Item = String>,
-    ctx: &Context,
-    stdout: &mut dyn Write,
+/// The counts the home's audit log gives, their rise counted after the
+/// entry the counters were last acknowledged through, and its number of
+/// entries; else the exit code, its failure reported: 3 for a broken
+/// chain.
+fn audit_counts(
+    command: &str,
+    home: &Home,
+    acknowledged: Option<(u64, record::digest::Digest)>,
     stderr: &mut dyn Write,
-) -> u8 {
-    if args.next().as_deref() != Some("ack") {
-        let _ = writeln!(stderr, "cairn counter: want ack");
-        return EXIT_USAGE;
-    }
-    let Some(as_json) = json_flag("counter ack", args, stderr) else {
-        return EXIT_USAGE;
-    };
-    if !ctx.terminal {
-        let _ = writeln!(
-            stderr,
-            "cairn counter ack: refused: acknowledging the counters is a principal act, \
-             which needs a terminal on standard input and output (OWN-12)"
-        );
-        return EXIT_FAILURE;
-    }
-    let entry = match ctx.audit(&Occurrence::CounterAck) {
-        Ok(entry) => entry,
-        Err(e) => return failed("counter ack", &e, stderr),
-    };
-    let line = if as_json {
-        json!({"acknowledged": entry.number}).to_string()
-    } else {
-        "counters acknowledged".to_owned()
-    };
-
-    written(writeln!(stdout, "{line}"), stderr)
-}
-
-/// The counts the home's audit log gives, and its number of entries;
-/// else the exit code, its failure reported: 3 for a broken chain.
-fn audit_counts(command: &str, home: &Home, stderr: &mut dyn Write) -> Result<(Counts, u64), u8> {
+) -> Result<(Counts, u64), u8> {
     match Log::new(home.audit()).entries() {
-        Ok(entries) => Ok((counts(&entries), entries.len() as u64)),
+        Ok(entries) => Ok((counts(&entries, acknowledged), entries.len() as u64)),
         Err(e @ AuditError::Broken { .. }) => {
             let _ = writeln!(stderr, "cairn {command}: {e}");
             Err(EXIT_INTEGRITY)
         }
         Err(e) => Err(failed(command, &e, stderr)),
     }
+}
+
+/// The counts of `home`'s audit log since the counters were last
+/// acknowledged, a neutral principal act the record holds (OWN-11), and
+/// its number of entries; none before the home exists.
+fn home_counts(
+    command: &str,
+    home: &Home,
+    acts: &[act_record::Recorded],
+    stderr: &mut dyn Write,
+) -> Result<Option<(Counts, u64)>, u8> {
+    if !home.root().exists() {
+        return Ok(None);
+    }
+
+    audit_counts(command, home, act_record::acknowledged(acts), stderr).map(Some)
 }
 
 /// `cairn doctor [--json]`: read-only (ADM-10); exits 1 while a counter
@@ -599,17 +619,17 @@ fn doctor(
     let Some(as_json) = json_flag("doctor", args, stderr) else {
         return EXIT_USAGE;
     };
-    let home = match ctx.home() {
-        Ok(home) => home,
+    let read = ctx
+        .home()
+        .map_err(|e| e.to_string())
+        .and_then(|home| Ok((settings::recorded_acts(&home)?, home)));
+    let (acts, home) = match read {
+        Ok(read) => read,
         Err(e) => return failed("doctor", &e, stderr),
     };
-    let counts = if home.root().exists() {
-        match audit_counts("doctor", &home, stderr) {
-            Ok((c, _)) => Some(c),
-            Err(code) => return code,
-        }
-    } else {
-        None
+    let counts = match home_counts("doctor", &home, &acts, stderr) {
+        Ok(c) => c.map(|(c, _)| c),
+        Err(code) => return code,
     };
     let code = if counts.as_ref().is_some_and(Counts::risen) {
         EXIT_FAILURE
@@ -644,8 +664,83 @@ fn doctor(
     }
 }
 
-/// `cairn status [--json]`: the home, the store, the audit log and the
-/// non-zero counters (ADM-11, which phase 15 completes).
+/// What `cairn status` shows.
+struct Status {
+    home: String,
+    /// The store's path and size, once the home exists.
+    store: Option<(String, Option<u64>)>,
+    /// The audit log's path and number of entries, once the home exists.
+    audit: Option<(String, u64)>,
+    /// Each counter's total and rise since the last acknowledgement.
+    counters: Vec<(String, u64, u64)>,
+    deployment_mode: String,
+    awaiting_acceptance: Vec<String>,
+    /// Why managed policy is refused, when it is.
+    managed_policy: Option<String>,
+}
+
+impl Status {
+    fn json(&self) -> String {
+        let counters: BTreeMap<&String, Value> = self
+            .counters
+            .iter()
+            .map(|(name, total, since)| (name, json!({"total": total, "since_ack": since})))
+            .collect();
+        json!({
+            "home": self.home,
+            "store": self.store.as_ref().map(|(p, b)| json!({"path": p, "bytes": b})),
+            "audit": self.audit.as_ref().map(|(p, n)| json!({"path": p, "entries": n})),
+            "counters": counters,
+            "deployment_mode": self.deployment_mode,
+            "awaiting_acceptance": self.awaiting_acceptance,
+            "managed_policy": {"refused": self.managed_policy},
+        })
+        .to_string()
+    }
+
+    fn text(&self) -> String {
+        let mut lines = Vec::new();
+        match (&self.store, &self.audit) {
+            (Some((store, bytes)), Some((audit, entries))) => {
+                let size = bytes.map_or("none yet".to_owned(), |b| format!("{b} bytes"));
+                lines.push(format!("home: {}", self.home));
+                lines.push(format!("store: {store} ({size})"));
+                lines.push(format!("audit log: {audit} ({entries} entries)"));
+            }
+            _ => lines.push(format!("home: {} (none yet)", self.home)),
+        }
+        let counters: Vec<String> = self
+            .counters
+            .iter()
+            .map(|(name, total, since)| format!("{name} {total} ({since} since acknowledged)"))
+            .collect();
+        if self.store.is_some() {
+            let counters = if counters.is_empty() {
+                "none".to_owned()
+            } else {
+                counters.join(", ")
+            };
+            lines.push(format!("counters: {counters}"));
+        }
+        lines.push(format!("deployment mode: {}", self.deployment_mode));
+        if !self.awaiting_acceptance.is_empty() {
+            lines.push(format!(
+                "awaiting acceptance (cairn configuration accept): {}",
+                self.awaiting_acceptance.join(", ")
+            ));
+        }
+        if let Some(why) = &self.managed_policy {
+            lines.push(format!("managed policy refused: {why}"));
+        }
+
+        lines.join("\n")
+    }
+}
+
+/// `cairn status [--json]`: the home, the store, the audit log, the
+/// non-zero counters and the settings in force (ADM-11, which phase 15
+/// completes). It exits 2 while the configuration or the repository
+/// configuration fails validation (ADM-04).
 fn status(
     args: impl Iterator<Item = String>,
     ctx: &Context,
@@ -655,64 +750,69 @@ fn status(
     let Some(as_json) = json_flag("status", args, stderr) else {
         return EXIT_USAGE;
     };
-    let home = match ctx.home() {
-        Ok(home) => home,
+    let read = ctx
+        .home()
+        .map_err(|e| e.to_string())
+        .and_then(|home| Ok((settings::recorded_acts(&home)?, home)));
+    let (acts, home) = match read {
+        Ok(read) => read,
         Err(e) => return failed("status", &e, stderr),
     };
-    let root = home.root().display().to_string();
-    if !home.root().exists() {
-        let text = if as_json {
-            json!({"home": root, "store": null, "audit": null, "counters": {}}).to_string()
-        } else {
-            format!("home: {root} (none yet)")
-        };
-        return written(writeln!(stdout, "{text}"), stderr);
+    let in_force = settings::in_force(ctx, &home, &acts);
+    if in_force.loaded.principal_layer_failed() {
+        return invalid_layers("status", &in_force.loaded, stderr);
     }
-    let (counts, entries) = match audit_counts("status", &home, stderr) {
+    let counted = match home_counts("status", &home, &acts, stderr) {
         Ok(c) => c,
         Err(code) => return code,
     };
-    let (store, audit) = (home.store(), home.audit());
-    let bytes = fs::metadata(&store).ok().map(|m| m.len());
-    let rows: Vec<(&String, u64, u64)> = counts
-        .total
-        .iter()
-        .map(|(name, total)| {
-            let since = counts.since_ack.get(name).copied().unwrap_or(0);
-            (name, *total, since)
-        })
-        .collect();
+    let status = status_of(&home, counted, &in_force);
     let text = if as_json {
-        let counters: BTreeMap<&String, Value> = rows
-            .iter()
-            .map(|(name, total, since)| (*name, json!({"total": total, "since_ack": since})))
-            .collect();
-        json!({
-            "home": root,
-            "store": {"path": store.display().to_string(), "bytes": bytes},
-            "audit": {"path": audit.display().to_string(), "entries": entries},
-            "counters": counters,
-        })
-        .to_string()
+        status.json()
     } else {
-        let size = bytes.map_or("none yet".to_owned(), |b| format!("{b} bytes"));
-        let counters = rows
-            .iter()
-            .map(|(name, total, since)| format!("{name} {total} ({since} since acknowledged)"))
-            .collect::<Vec<_>>();
-        let counters = if counters.is_empty() {
-            "none".to_owned()
-        } else {
-            counters.join(", ")
-        };
-        format!(
-            "home: {root}\nstore: {} ({size})\naudit log: {} ({entries} entries)\ncounters: {counters}",
-            store.display(),
-            audit.display()
-        )
+        status.text()
     };
 
     written(writeln!(stdout, "{text}"), stderr)
+}
+
+/// The status of `home`, given its audit log's counts.
+fn status_of(home: &Home, counted: Option<(Counts, u64)>, in_force: &settings::InForce) -> Status {
+    let (store, audit) = (home.store(), home.audit());
+    let mut status = Status {
+        home: home.root().display().to_string(),
+        store: None,
+        audit: None,
+        counters: Vec::new(),
+        deployment_mode: in_force.resolved.settings.deployment_mode().to_owned(),
+        awaiting_acceptance: in_force
+            .resolved
+            .awaiting_acceptance
+            .iter()
+            .map(|k| k.name().to_owned())
+            .collect(),
+        managed_policy: in_force
+            .loaded
+            .failures
+            .iter()
+            .find(|f| f.layer == SettingsLayer::ManagedPolicy)
+            .map(ToString::to_string),
+    };
+    if let Some((counts, entries)) = counted {
+        let bytes = fs::metadata(&store).ok().map(|m| m.len());
+        status.store = Some((store.display().to_string(), bytes));
+        status.audit = Some((audit.display().to_string(), entries));
+        status.counters = counts
+            .total
+            .iter()
+            .map(|(name, total)| {
+                let since = counts.since_ack.get(name).copied().unwrap_or(0);
+                (name.clone(), *total, since)
+            })
+            .collect();
+    }
+
+    status
 }
 
 /// `s` as a JSON string literal.
@@ -733,7 +833,7 @@ fn json_string(s: &str) -> String {
 
 /// Turns the result of writing the command's output into its exit
 /// code: a write that fails, to a closed stdout say, is a failure.
-fn written(result: std::io::Result<()>, stderr: &mut dyn Write) -> u8 {
+pub(crate) fn written(result: std::io::Result<()>, stderr: &mut dyn Write) -> u8 {
     match result {
         Ok(()) => EXIT_OK,
         Err(e) => {
@@ -742,6 +842,25 @@ fn written(result: std::io::Result<()>, stderr: &mut dyn Write) -> u8 {
         }
     }
 }
+
+/// Reports each failed settings layer but managed policy, exiting 2
+/// (ADM-04): the error names the layer, the key and the problem.
+pub(crate) fn invalid_layers(command: &str, loaded: &Loaded, stderr: &mut dyn Write) -> u8 {
+    for failure in loaded
+        .failures
+        .iter()
+        .filter(|f| f.layer != SettingsLayer::ManagedPolicy)
+    {
+        let _ = writeln!(stderr, "cairn {command}: {failure}");
+    }
+
+    EXIT_USAGE
+}
+
+mod act;
+mod settings;
+
+pub use settings::managed_policy;
 
 #[cfg(test)]
 mod tests;

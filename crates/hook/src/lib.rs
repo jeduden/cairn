@@ -58,7 +58,7 @@ pub enum Failure {
 impl Failure {
     /// The audit entry it makes for `operation`.
     #[must_use]
-    pub fn occurrence(self, operation: &'static str) -> Occurrence {
+    pub fn occurrence(self, operation: &'static str) -> Occurrence<'static> {
         let (kind, counter) = match self {
             Self::UnknownHook | Self::Malformed => (Kind::Rejected, Counter::HookRejected),
             Self::Panicked => (Kind::Failed, Counter::HookPanicked),

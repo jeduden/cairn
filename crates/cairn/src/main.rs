@@ -28,6 +28,15 @@ fn main() -> ExitCode {
         hook_panics: cfg!(debug_assertions)
             && std::env::var_os("CAIRN_TEST_FAULT").is_some_and(|v| v == "hook-panic"),
         terminal: terminal(),
+        working_dir: std::env::current_dir().ok(),
+        // A development build's seam for the tests; a release build
+        // reads only the documented path.
+        managed_policy: cairn::managed_policy(
+            cfg!(debug_assertions)
+                .then(|| std::env::var_os("CAIRN_TEST_MANAGED_POLICY"))
+                .flatten(),
+        ),
+        os_user: os_user(),
         input: &stdin_lines,
         clock: &now,
     };
@@ -44,6 +53,16 @@ fn now() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| d.as_secs())
+}
+
+/// The running OS user, on an OS whose file modes Cairn checks; unknown
+/// there when it cannot be learnt, which refuses managed policy.
+fn os_user() -> configuration::source::OsUser {
+    use configuration::source::OsUser;
+    #[cfg(unix)]
+    return administration::home::running_uid().map_or(OsUser::Unknown, OsUser::Known);
+    #[cfg(not(unix))]
+    OsUser::Unchecked
 }
 
 /// Whether the process's standard input and output are both a terminal

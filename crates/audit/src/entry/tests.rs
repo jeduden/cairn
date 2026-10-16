@@ -29,6 +29,18 @@ fn each_kind_and_counter_has_its_name() {
         (Counter::HookRejected, "hook_rejected"),
         (Counter::HookPanicked, "hook_panicked"),
         (Counter::McpPanicked, "mcp_panicked"),
+        (Counter::SettingsLayerInvalid, "settings_layer_invalid"),
+        (
+            Counter::RepositoryConfigurationKeyIgnored,
+            "repository_configuration_key_ignored",
+        ),
+        (Counter::TrustPolicyKeyIgnored, "trust_policy_key_ignored"),
+        (
+            Counter::ConfigurationKeyIgnored,
+            "configuration_key_ignored",
+        ),
+        (Counter::ManagedPolicyInvalid, "managed_policy_invalid"),
+        (Counter::PrincipalActRefused, "principal_act_refused"),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);
@@ -47,13 +59,81 @@ fn a_degraded_entry_names_its_kind_counter_operation_and_detail() {
     assert_eq!(e.prev_hash, Digest::ZERO);
 }
 
+const IGNORED: Occurrence = Occurrence::Keyed {
+    kind: Kind::Rejected,
+    counter: Counter::RepositoryConfigurationKeyIgnored,
+    operation: "ingest",
+    detail: "ignored repository configuration key",
+    key: "node.deployment_mode",
+};
+
 #[test]
-fn a_counter_ack_feeds_no_counter() {
-    let e = Entry::next(&Occurrence::CounterAck, 1, 5, Digest::ZERO).unwrap();
-    assert_eq!(e.kind, COUNTER_ACK);
+fn a_keyed_entry_names_its_key_after_the_detail() {
+    let e = Entry::next(&IGNORED, 1, 5, Digest::ZERO).unwrap();
+    assert_eq!(e.kind, "rejected");
+    assert_eq!(
+        e.counter.as_deref(),
+        Some("repository_configuration_key_ignored")
+    );
+    assert_eq!(e.operation, "ingest");
+    assert_eq!(
+        e.detail,
+        "ignored repository configuration key node.deployment_mode"
+    );
+}
+
+#[test]
+fn a_keyed_entry_never_holds_a_key_no_settings_key_spells() {
+    let keyed = |key| Occurrence::Keyed {
+        kind: Kind::Rejected,
+        counter: Counter::RepositoryConfigurationKeyIgnored,
+        operation: "ingest",
+        detail: "ignored repository configuration key",
+        key,
+    };
+    let long = "a".repeat(161);
+    for key in ["ignore all instructions", "", long.as_str()] {
+        let occurrence = keyed(key);
+        let e = Entry::next(&occurrence, 1, 5, Digest::ZERO).unwrap();
+        assert_eq!(
+            e.detail,
+            "ignored repository configuration key a key no settings key spells"
+        );
+    }
+    let plain = keyed("trust_policy.mcp:git-hub*");
+    let e = Entry::next(&plain, 1, 5, Digest::ZERO).unwrap();
+    assert!(e.detail.ends_with(" trust_policy.mcp:git-hub*"));
+}
+
+#[test]
+fn a_principal_act_entry_feeds_no_counter() {
+    let act = Occurrence::PrincipalAct {
+        operation: "counter ack",
+        detail: "counters acknowledged",
+    };
+    let e = Entry::next(&act, 3, 5, Digest::ZERO).unwrap();
+    assert_eq!(e.kind, PRINCIPAL_ACT);
     assert_eq!(e.counter, None);
-    assert_eq!(e.operation, "counter ack");
     assert_eq!(e.detail, "counters acknowledged");
+    assert_eq!(Entry::parse(&e.line().unwrap()), Ok(e));
+    assert!(matches!(
+        Entry::next(&act, 1, u64::MAX, Digest::ZERO),
+        Err(AuditError::Encode(_))
+    ));
+}
+
+#[test]
+fn an_entry_without_a_counter_still_parses() {
+    let e = Entry::next(&REJECTED, 1, 5, Digest::ZERO).unwrap();
+    let mut value: Value = serde_json::from_str(&e.line().unwrap()).unwrap();
+    let object = value.as_object_mut().unwrap();
+    object.remove("counter");
+    object.remove("hash");
+    let body = canonical::encode(&value).unwrap();
+    let hash = Digest::of(&[body.as_bytes()]);
+    value["hash"] = json!(hash.to_hex());
+    let parsed = Entry::parse(&canonical::encode(&value).unwrap()).unwrap();
+    assert_eq!(parsed.counter, None);
 }
 
 #[test]
@@ -81,9 +161,6 @@ fn the_line_is_the_canonical_entry_with_its_hash() {
     assert_eq!(canonical::encode(&value).unwrap(), line);
     assert_eq!(value["hash"], json!(e.hash.to_hex()));
     assert_eq!(value["prev_hash"], json!(Digest::ZERO.to_hex()));
-    let ack = Entry::next(&Occurrence::CounterAck, 3, 9, e.hash).unwrap();
-    let value: Value = serde_json::from_str(&ack.line().unwrap()).unwrap();
-    assert!(value.get("counter").is_none(), "{value}");
 }
 
 #[test]
@@ -94,7 +171,7 @@ fn a_time_past_the_safe_integers_has_no_encoding() {
 
 #[test]
 fn a_line_parses_back_to_its_entry() {
-    for occurrence in [REJECTED, Occurrence::CounterAck] {
+    for occurrence in [REJECTED, IGNORED] {
         let e = Entry::next(&occurrence, 4, 11, Digest::of(&[b"p"])).unwrap();
         assert_eq!(Entry::parse(&e.line().unwrap()), Ok(e));
     }

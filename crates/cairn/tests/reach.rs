@@ -27,10 +27,11 @@ use serde_json::Value;
 /// its reach when it joined (plan 2609292012, phase 1). `cargo
 /// metadata` resolves every platform and unifies features across the
 /// workspace, so the list holds a few crates a given build leaves out.
-const REACHABLE: [&str; 46] = [
+const REACHABLE: [&str; 56] = [
     // The core's own library crates, each with the same clippy bans.
     "administration",
     "audit",
+    "configuration",
     "envelope",
     "hook",
     "ingest",
@@ -82,6 +83,19 @@ const REACHABLE: [&str; 46] = [
     "itoa",
     "memchr",
     "zmij",
+    // TOML (ADR-2610152132): parsing a settings layer's text in memory;
+    // no writer, the nesting limit kept. cargo metadata also lists its
+    // optional writer and ordered map, which the core's features leave
+    // out: data structures and text formatting in memory.
+    "toml",
+    "toml_parser",
+    "toml_datetime",
+    "serde_spanned",
+    "winnow",
+    "toml_writer",
+    "indexmap",
+    "hashbrown",
+    "equivalent",
     // serde with its derive, which the workspace's feature unification
     // turns on for serde_json, and the proc-macro crates every derive
     // needs; they run only at build time.

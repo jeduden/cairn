@@ -15,6 +15,9 @@ pub enum EventKind {
     CertificateRecord,
     /// A transcript line recorded whole, before a parser reads it.
     UnparsedLine,
+    /// A principal act, recorded in the device seat of the device it
+    /// was taken on (OWN-02, OWN-11).
+    PrincipalAct,
 }
 
 impl EventKind {
@@ -26,6 +29,7 @@ impl EventKind {
             Self::CreateRoom => "create_room",
             Self::CertificateRecord => "certificate_record",
             Self::UnparsedLine => "unparsed_line",
+            Self::PrincipalAct => "principal_act",
         }
     }
 
@@ -37,6 +41,7 @@ impl EventKind {
             Self::CreateRoom,
             Self::CertificateRecord,
             Self::UnparsedLine,
+            Self::PrincipalAct,
         ]
         .into_iter()
         .find(|k| k.as_str() == name)

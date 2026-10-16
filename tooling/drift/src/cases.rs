@@ -576,8 +576,8 @@ fn reach_cases() -> Vec<Case> {
             "the_core_executable_links_only_crates_its_reach_allows",
             Injection::replace(
                 "crates/cairn/Cargo.toml",
-                "store.workspace = true\n\n[dev-dependencies]\nrecord.workspace = true\nrusqlite.workspace = true\ntestkit.workspace = true\n",
-                "store.workspace = true\ntestkit.workspace = true\n\n[dev-dependencies]\nrecord.workspace = true\nrusqlite.workspace = true\n",
+                "store.workspace = true\n\n[dev-dependencies]\nrusqlite.workspace = true\ntestkit.workspace = true\n",
+                "store.workspace = true\ntestkit.workspace = true\n\n[dev-dependencies]\nrusqlite.workspace = true\n",
             ),
             cargo_test(
                 "cairn",
@@ -613,8 +613,8 @@ fn architecture_cases() -> Vec<Case> {
             "ENG-02",
             Injection::replace(
                 "crates/cairn/Cargo.toml",
-                "store.workspace = true\n\n[dev-dependencies]\nrecord.workspace = true\nrusqlite.workspace = true\ntestkit.workspace = true\n",
-                "store.workspace = true\ntestkit.workspace = true\n\n[dev-dependencies]\nrecord.workspace = true\nrusqlite.workspace = true\n",
+                "store.workspace = true\n\n[dev-dependencies]\nrusqlite.workspace = true\ntestkit.workspace = true\n",
+                "store.workspace = true\ntestkit.workspace = true\n\n[dev-dependencies]\nrusqlite.workspace = true\n",
             ),
             scenario("ENG-02"),
             "product crate cairn depends on tooling crate testkit, which a product crate never does",
@@ -803,7 +803,7 @@ fn core_wait_cases() -> Vec<Case> {
                 "checkout",
                 "no_product_crate_keeps_mutable_global_state",
             ),
-            "crates/cairn/src/lib.rs:14: mutable global state: pub static SEQ",
+            "crates/cairn/src/lib.rs:15: mutable global state: pub static SEQ",
         ),
     ]
 }
