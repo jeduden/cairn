@@ -1,5 +1,6 @@
 //! ENG-18: every direct dependency is justified by exactly one accepted
-//! ADR, with an allow-listed license, within the stated target.
+//! ADR, with an allow-listed license; those linked into a shipped
+//! executable stay within the stated target.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -9,7 +10,7 @@ use std::process::Command;
 
 use adr::Adr;
 
-use crate::{Checkout, list};
+use crate::{Checkout, architecture, list};
 
 /// The crates the workspace's members depend on directly from a
 /// registry, read from `cargo metadata --no-deps`: normal, build and
@@ -35,6 +36,87 @@ pub fn cargo_direct_deps(metadata: &str) -> Result<Vec<String>, String> {
         .collect();
 
     Ok(deps.into_iter().map(str::to_owned).collect())
+}
+
+/// The crates linked into a shipped executable: the registry crates
+/// reached through normal dependencies from each package under
+/// `product`, relative to the workspace root cargo reports, with a
+/// binary target, following the workspace's own
+/// crates by path. Dev and build dependencies link into no shipped
+/// executable, and the repository's tooling ships none.
+///
+/// # Errors
+///
+/// Fails when `metadata` is not cargo's JSON, names no workspace root
+/// to find the product's crates under, or a crate it follows depends by
+/// path on a package that is no workspace member, whose crates would
+/// go uncounted.
+pub fn cargo_shipped_deps(metadata: &str, product: &Path) -> Result<Vec<String>, String> {
+    let value: serde_json::Value =
+        serde_json::from_str(metadata).map_err(|e| format!("read cargo metadata: {e}"))?;
+    let packages: BTreeMap<&str, &serde_json::Value> = value["packages"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|p| Some((p["name"].as_str()?, p)))
+        .collect();
+    let root = value["workspace_root"]
+        .as_str()
+        .ok_or("cargo metadata names no workspace_root")?;
+    let product = Path::new(root).join(product);
+    let mut todo: Vec<&serde_json::Value> = value["packages"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|p| ships(p, &product))
+        .collect();
+    let (mut seen, mut deps) = (BTreeSet::new(), BTreeSet::new());
+    while let Some(p) = todo.pop() {
+        if !seen.insert(p["name"].as_str()) {
+            continue;
+        }
+        for d in normal(p) {
+            match (d["source"].as_str(), d["name"].as_str()) {
+                (Some(s), Some(name)) if s.starts_with("registry+") => {
+                    deps.insert(name);
+                }
+                (None, Some(name)) => todo.push(packages.get(name).ok_or_else(|| {
+                    format!(
+                        "{} depends by path on {name}, which is no workspace member",
+                        p["name"].as_str().unwrap_or_default()
+                    )
+                })?),
+                _ => {}
+            }
+        }
+    }
+
+    Ok(deps.into_iter().map(str::to_owned).collect())
+}
+
+/// Whether `package` builds a shipped executable: a binary target of
+/// a crate under `product`.
+fn ships(package: &serde_json::Value, product: &Path) -> bool {
+    let under = package["manifest_path"]
+        .as_str()
+        .is_some_and(|m| Path::new(m).starts_with(product));
+    let bin = package["targets"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .flat_map(|t| t["kind"].as_array().into_iter().flatten())
+        .any(|k| k == "bin");
+    under && bin
+}
+
+/// The dependencies of `package` that link into what it builds: neither
+/// dev nor build.
+fn normal(package: &serde_json::Value) -> impl Iterator<Item = &serde_json::Value> {
+    package["dependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|d| d["kind"].is_null())
 }
 
 /// Runs `cargo metadata` on the workspace `manifest` roots, without
@@ -69,8 +151,20 @@ pub fn cargo_metadata(cargo: &OsStr, manifest: &Path, cairn_home: &Path) -> Resu
     String::from_utf8(out.stdout).map_err(|e| format!("read cargo metadata: {e}"))
 }
 
+/// The direct dependencies a manifest names, and those of them linked
+/// into a shipped executable.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct DirectDeps {
+    /// Every direct dependency: each needs an accepted ADR.
+    pub all: Vec<String>,
+    /// Those linked into a shipped executable: ENG-18's target counts
+    /// these.
+    pub shipped: Vec<String>,
+}
+
 /// The direct dependencies the manifest `file` names: the registry
-/// crates `metadata` lists for the Cargo workspace a `Cargo.toml` roots.
+/// crates `metadata` lists for the Cargo workspace a `Cargo.toml` roots,
+/// with the product's crates where the architecture check finds them.
 ///
 /// # Errors
 ///
@@ -79,9 +173,15 @@ pub fn direct_deps(
     checkout: &Checkout,
     file: &str,
     metadata: impl Fn(&Path) -> Result<String, String>,
-) -> Result<Vec<String>, String> {
+) -> Result<DirectDeps, String> {
     match file {
-        "Cargo.toml" => cargo_direct_deps(&metadata(&checkout.root.join(file))?),
+        "Cargo.toml" => {
+            let json = metadata(&checkout.root.join(file))?;
+            Ok(DirectDeps {
+                all: cargo_direct_deps(&json)?,
+                shipped: cargo_shipped_deps(&json, Path::new(architecture::PRODUCT))?,
+            })
+        }
         other => Err(format!("no reader for the dependencies in {other}")),
     }
 }
@@ -206,8 +306,9 @@ pub fn allow_list(eng18: &str) -> Result<Vec<String>, String> {
     Ok(list.split(", ").map(str::to_owned).collect())
 }
 
-/// The most direct dependencies ENG-18's text allows: the number in
-/// `≤ N direct dependencies`.
+/// The most direct dependencies linked into a shipped executable that
+/// ENG-18's text allows: the number in `≤ N direct dependencies linked
+/// into a shipped executable`.
 ///
 /// # Errors
 ///
@@ -218,23 +319,25 @@ pub fn dependency_target(eng18: &str) -> Result<usize, String> {
         .skip(1)
         .find_map(|rest| {
             let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
-            let stated = rest[digits.len()..].starts_with(" direct dependencies");
+            let stated = rest[digits.len()..]
+                .starts_with(" direct dependencies linked into a shipped executable");
             stated.then(|| digits.parse().ok()).flatten()
         })
         .ok_or_else(|| "ENG-18 does not state its dependency target".to_owned())
 }
 
-/// Checks the direct dependencies against the target.
+/// Checks the direct dependencies linked into a shipped executable
+/// against the target.
 ///
 /// # Errors
 ///
 /// Fails when there are more than `target`.
-pub fn within_target(deps: &[String], target: usize) -> Result<(), String> {
-    if deps.len() > target {
+pub fn within_target(shipped: &[String], target: usize) -> Result<(), String> {
+    if shipped.len() > target {
         return Err(format!(
-            "{} direct dependencies, want at most {target}: {}",
-            deps.len(),
-            list(deps)
+            "{} direct dependencies linked into a shipped executable, want at most {target}: {}",
+            shipped.len(),
+            list(shipped)
         ));
     }
 
