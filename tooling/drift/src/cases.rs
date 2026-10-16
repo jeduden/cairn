@@ -132,6 +132,17 @@ fn dependency_cases() -> Vec<Case> {
             scenario("ENG-18"),
             r#"serde is licensed "GPL-3.0", not on the allow-list"#,
         ),
+        case(
+            "more shipped dependencies than the target",
+            "ENG-18",
+            Injection::replace(
+                "docs/srs/10-engineering-quality.md",
+                "The target is ≤ 10 direct",
+                "The target is ≤ 2 direct",
+            ),
+            scenario("ENG-18"),
+            "direct dependencies linked into a shipped executable, want at most 2",
+        ),
     ]
 }
 
