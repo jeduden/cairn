@@ -1,7 +1,7 @@
 ---
 n: 3
 title: "Settings layers and principal acts at the terminal"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 3: settings layers and principal acts at the terminal
@@ -51,8 +51,9 @@ audits each failing layer and ignored key, and records on (I9).
 
 Where the gate's scenarios go live:
 
-- `@ADM-04`: rows 1 to 4 pass here; row 5 needs flags (PRV-07, P1),
-  outside M1. Raise it with the stakeholder.
+- `@ADM-04`: rows 1 to 4 pass here, and it comes off `@pending`. The
+  stakeholder ruled row 5, flags staying on until a widening act, into
+  `@PRV-07`'s scenario, which flags need (P1, M5).
 - `@PRV-04`: phase 9, which matches `user` events to prompts.
 - `@PRV-05`: phase 8 ingests phase 7's provenance classes; `post`
   and `summary` need later milestones.
@@ -66,6 +67,5 @@ Tests. Unit tests beside each function. End-to-end tests in
 Parked to phase 7: the configuration parser's fuzz target, with the
 first `fuzz/` crate, its nightly and its ADR.
 
-Gate: the end-to-end tests pass against the built core, confined.
-The phase stays open until the stakeholder rules on `@ADM-04` row 5,
-since its gate no longer takes a scenario off `@pending`.
+Gate: the end-to-end tests pass against the built core, confined, and
+`@ADM-04` passes off `@pending`.
