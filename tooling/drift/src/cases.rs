@@ -1480,8 +1480,8 @@ fn benchmark_cases() -> Vec<Case> {
             "the_accepted_regressions_parse",
             Injection::replace(
                 "tooling/benchmark/accepted.txt",
-                "core_start_up 30 the core links",
-                "core_start_up\n30 the core links",
+                "with the stakeholder's acceptance.\n",
+                "with the stakeholder's acceptance.\ncore_start_up\n",
             ),
             cargo_test(
                 "benchmark",
