@@ -7,6 +7,8 @@
 
 use std::collections::BTreeMap;
 
+use record::digest::Digest;
+
 use crate::entry::Entry;
 
 /// Each counter's count, and its rise since the counters were last
@@ -26,16 +28,20 @@ impl Counts {
     }
 }
 
-/// The counts `entries` give, their rise counted after the entry
-/// numbered `acknowledged`, the last the counters were acknowledged
-/// through; all of them when they never were.
+/// The counts `entries` give, their rise counted after the entry the
+/// counters were last acknowledged through, named by its number and
+/// hash; all of them when they never were, or when `entries` no longer
+/// hold that entry, as in a log that began again (I6).
 #[must_use]
-pub fn counts(entries: &[Entry], acknowledged: Option<u64>) -> Counts {
+pub fn counts(entries: &[Entry], acknowledged: Option<(u64, Digest)>) -> Counts {
+    let through = acknowledged
+        .filter(|(n, hash)| entries.iter().any(|e| e.number == *n && e.hash == *hash))
+        .map_or(0, |(n, _)| n);
     let mut out = Counts::default();
     for e in entries {
         if let Some(counter) = &e.counter {
             *out.total.entry(counter.clone()).or_default() += 1;
-            if acknowledged.is_none_or(|n| e.number > n) {
+            if e.number > through {
                 *out.since_ack.entry(counter.clone()).or_default() += 1;
             }
         }

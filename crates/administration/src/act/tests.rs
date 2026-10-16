@@ -239,7 +239,10 @@ fn every_act_refuses_without_a_terminal_first() {
         authenticator_required: true,
         ..Gate::default()
     };
-    for act in [Act::CounterAck { through: None }, Act::RiskAcceptanceWithdraw] {
+    for act in [
+        Act::CounterAck { through: None },
+        Act::RiskAcceptanceWithdraw,
+    ] {
         assert_eq!(permit(&act, &no_terminal), Err(Refusal::NoTerminal));
     }
 }

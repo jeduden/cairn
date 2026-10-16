@@ -170,7 +170,7 @@ fn sources_find_the_repository_configuration_from_the_working_directory() {
     let s = sources(&ctx, &home);
     assert_eq!(s.configuration, p.cairn_home().join("config.toml"));
     assert_eq!(s.repository, None);
-    assert_eq!(s.running, Some(u32::MAX));
+    assert_eq!(s.running, OsUser::Known(u32::MAX));
     p.repository("");
     assert_eq!(
         sources(&ctx, &home).repository,

@@ -222,9 +222,9 @@ fn managed_check_refuses_policy_while_the_running_os_user_is_unknown() {
         failure: Failure::OsUserUnknown,
     };
     assert!(
-        shown
-            .to_string()
-            .ends_with("the running OS user cannot be learnt, so no file can be shown to be managed policy"),
+        shown.to_string().ends_with(
+            "the running OS user cannot be learnt, so no file can be shown to be managed policy"
+        ),
         "{shown}"
     );
 }

@@ -56,6 +56,9 @@ pub enum Failure {
     Writable(PathBuf),
     /// The path is a symbolic link, whose target no check can pin.
     SymbolicLink,
+    /// The running OS user cannot be learnt, so nothing shows that it
+    /// could not have written the file (ADM-04).
+    OsUserUnknown,
 }
 
 /// A settings layer that gives no settings, and why.
@@ -80,6 +83,9 @@ impl fmt::Display for LayerFailure {
                 path.display()
             ),
             Failure::SymbolicLink => f.write_str("a symbolic link, refused"),
+            Failure::OsUserUnknown => f.write_str(
+                "the running OS user cannot be learnt, so no file can be shown to be managed policy",
+            ),
         }
     }
 }
@@ -100,8 +106,22 @@ pub struct Sources {
     pub repository: Option<PathBuf>,
     pub managed: PathBuf,
     /// The running OS user, whom managed policy's files must not let
-    /// write; none where the OS has no such check yet.
-    pub running: Option<u32>,
+    /// write.
+    pub running: OsUser,
+}
+
+/// The running OS user, as far as the check on managed policy's files
+/// knows it (ADM-04).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OsUser {
+    /// This UID.
+    Known(u32),
+    /// The OS has file modes, but the running OS user could not be
+    /// learnt: any managed policy is refused, as nothing shows it safe.
+    Unknown,
+    /// The OS has no file modes Cairn checks yet: Windows' ACLs come
+    /// later.
+    Unchecked,
 }
 
 /// The settings layers as read: each that gave settings, the digest of
@@ -219,8 +239,10 @@ fn read(path: &Path) -> Result<Option<String>, Failure> {
 /// Refuses managed policy at `path` unless neither it nor its
 /// directory could be written by the OS user `running`: each belongs
 /// to another OS user and lets no group or other user write. A path
-/// with no file passes; there is no managed policy.
-fn managed_check(path: &Path, running: Option<u32>) -> Result<(), Failure> {
+/// with no file passes; there is no managed policy. A file passes
+/// unchecked where the OS has no modes to check, and is refused where
+/// the running OS user is unknown.
+fn managed_check(path: &Path, running: OsUser) -> Result<(), Failure> {
     let meta = match fs::symlink_metadata(path) {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
         meta => meta.map_err(Failure::Unreadable)?,
@@ -228,8 +250,10 @@ fn managed_check(path: &Path, running: Option<u32>) -> Result<(), Failure> {
     if meta.file_type().is_symlink() {
         return Err(Failure::SymbolicLink);
     }
-    let Some(running) = running else {
-        return Ok(());
+    let running = match running {
+        OsUser::Known(uid) => uid,
+        OsUser::Unknown => return Err(Failure::OsUserUnknown),
+        OsUser::Unchecked => return Ok(()),
     };
     let dir = path.parent().unwrap_or(path);
     for (p, m) in [(path, Ok(meta)), (dir, fs::metadata(dir))] {
@@ -252,7 +276,7 @@ fn writable(meta: &fs::Metadata, running: u32) -> bool {
 }
 
 /// Without Unix modes, no check is possible yet: Windows' ACLs come
-/// later, and `running` is none there.
+/// later, and the running OS user is unchecked there.
 #[cfg(not(unix))]
 fn writable(_meta: &fs::Metadata, _running: u32) -> bool {
     true

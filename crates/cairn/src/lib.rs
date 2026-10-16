@@ -24,6 +24,7 @@ use audit::AuditError;
 use audit::counters::{Counts, counts};
 use audit::entry::{Counter, Entry, Kind, Occurrence};
 use audit::log::Log;
+use configuration::source::OsUser;
 use configuration::{Loaded, SettingsLayer};
 use hook::{Failure, Hook};
 use key::random::OsEntropy;
@@ -118,8 +119,8 @@ pub struct Context<'a> {
     /// Where managed policy is read from (ADM-04).
     pub managed_policy: PathBuf,
     /// The running OS user, whom managed policy's files must not let
-    /// write; none where that cannot be checked yet.
-    pub os_user: Option<u32>,
+    /// write (ADM-04).
+    pub os_user: OsUser,
     /// Starts reading the process's input, one line at a time.
     pub input: &'a dyn Fn() -> Receiver<io::Result<String>>,
     /// The wall clock, in seconds since the Unix epoch, which only
@@ -577,7 +578,7 @@ fn mcp_panicked(home: &Home, time: u64) -> Result<Entry, AuditError> {
 fn audit_counts(
     command: &str,
     home: &Home,
-    acknowledged: Option<u64>,
+    acknowledged: Option<(u64, record::digest::Digest)>,
     stderr: &mut dyn Write,
 ) -> Result<(Counts, u64), u8> {
     match Log::new(home.audit()).entries() {

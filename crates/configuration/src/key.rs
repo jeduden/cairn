@@ -501,21 +501,30 @@ fn is_class(class: &str) -> bool {
     !class.contains('.') && Provenance::parse(class).is_some()
 }
 
-/// `name` as an error may show it: as it is when it holds only the
-/// characters a settings key can, else a fixed phrase, so a repository
-/// configuration cannot put its own text into a message (T5).
+/// What stands for a name no settings key could spell.
+pub const UNSPELLED: &str = "a key no settings key spells";
+
+/// `name` when it holds only the characters a settings key or a
+/// provenance class can, and no more of them than one may hold; none
+/// otherwise. What a repository configuration names reaches a message
+/// or an audit entry only through this, so it cannot put its own text
+/// there (T5).
 #[must_use]
-pub fn shown(name: &str) -> String {
+pub fn spelled(name: &str) -> Option<&str> {
     let plain = name.len() <= 160
         && !name.is_empty()
         && name
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || "_.:*-".contains(c));
-    if plain {
-        format!("\"{name}\"")
-    } else {
-        "a key no settings key spells".to_owned()
-    }
+
+    plain.then_some(name)
+}
+
+/// `name` as an error may show it: quoted when a settings key could
+/// spell it, else [`UNSPELLED`].
+#[must_use]
+pub fn shown(name: &str) -> String {
+    spelled(name).map_or_else(|| UNSPELLED.to_owned(), |n| format!("\"{n}\""))
 }
 
 #[cfg(test)]

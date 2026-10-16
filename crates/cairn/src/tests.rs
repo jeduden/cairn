@@ -1,7 +1,7 @@
 use super::*;
+use configuration::source::OsUser;
 use std::io;
 use std::sync::mpsc;
-use configuration::source::OsUser;
 use testkit::TempDir;
 
 pub(crate) const DEV: Build<'static> = Build {

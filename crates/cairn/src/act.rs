@@ -14,6 +14,7 @@ use administration::act::{
 use administration::home::Home;
 use administration::node::Node;
 use audit::entry::{Counter, Kind, Occurrence};
+use audit::log::Log;
 use configuration::Value;
 use configuration::key::key;
 use configuration::layer::LayerValues;
@@ -23,7 +24,7 @@ use record::id::Address;
 use serde_json::json;
 use store::Store;
 
-use crate::settings::{InForce, in_force, recorded, recorded_acts};
+use crate::settings::{InForce, acts_in, in_force, recorded};
 use crate::{Context, EXIT_USAGE, failed, json_flag, written};
 
 /// What an act is taken in: the home, its store and node, the acts it
@@ -149,7 +150,9 @@ fn at_terminal(ctx: &Context, operation: &'static str, stderr: &mut dyn Write) -
 }
 
 /// `cairn counter ack [--json]`: acknowledges the counters through the
-/// audit log's last entry (OPS-03), a neutral principal act.
+/// audit log's last entry, named by number and hash (OPS-03), a neutral
+/// principal act. Only once the act is recorded does the audit log note
+/// it, so the log never notes an acknowledgement the record lacks.
 pub(crate) fn counter(
     mut args: impl Iterator<Item = String>,
     ctx: &Context,
@@ -171,24 +174,29 @@ pub(crate) fn counter(
         Ok(t) => t,
         Err(e) => return failed(OP, &e, stderr),
     };
-    // The audit log notes the acknowledgement; the act covers every
-    // entry up to that note.
-    let noted = ctx.audit(&Occurrence::PrincipalAct {
-        operation: OP,
-        detail: "counters acknowledged",
-    });
-    let through = match noted {
-        Ok(entry) => entry.number,
+    let through = match Log::new(taking.home.audit()).entries() {
+        Ok(entries) => entries.last().map(|e| (e.number, e.hash)),
         Err(e) => return failed(OP, &e, stderr),
     };
     let address = match taking.take(ctx, OP, &Act::CounterAck { through }, stderr) {
         Ok(a) => a,
         Err(code) => return code,
     };
-    let line = if as_json {
-        json!({"acknowledged": through, "act": address.to_string()}).to_string()
-    } else {
-        format!("counters acknowledged through audit entry {through}")
+    let noted = ctx.audit(&Occurrence::PrincipalAct {
+        operation: OP,
+        detail: "counters acknowledged",
+    });
+    if let Err(e) = noted {
+        let why =
+            format!("the acknowledgement is recorded, but the audit log took no note of it: {e}");
+        return failed(OP, &why, stderr);
+    }
+    let line = match (as_json, through) {
+        (true, _) => {
+            json!({"acknowledged": through.map(|(n, _)| n), "act": address.to_string()}).to_string()
+        }
+        (false, Some((n, _))) => format!("counters acknowledged through audit entry {n}"),
+        (false, None) => "counters acknowledged; the audit log held no entry".to_owned(),
     };
 
     written(writeln!(stdout, "{line}"), stderr)
@@ -328,13 +336,12 @@ fn ids(risks: &BTreeSet<ResidualRisk>) -> Vec<&'static str> {
 fn show(ctx: &Context, as_json: bool, stdout: &mut dyn Write, stderr: &mut dyn Write) -> u8 {
     const OP: &str = "risk-acceptance show";
     let shown = ctx.home().map_err(|e| e.to_string()).and_then(|home| {
-        let acts = recorded_acts(&home)?;
-        let open = if home.store().exists() {
-            let store = Store::open(&home.store()).map_err(|e| e.to_string())?;
-            open_residual_risks(&store).map_err(|e| e.to_string())?
-        } else {
-            OpenRisks::default()
-        };
+        if !home.store().exists() {
+            return Ok((OpenRisks::default(), None));
+        }
+        let store = Store::open(&home.store()).map_err(|e| e.to_string())?;
+        let acts = acts_in(&home, &store)?;
+        let open = open_residual_risks(&store).map_err(|e| e.to_string())?;
         Ok((open, standing_risk_acceptance(&acts)))
     });
     let (open, standing) = match shown {

@@ -55,12 +55,14 @@ fn now() -> u64 {
         .map_or(0, |d| d.as_secs())
 }
 
-/// The running OS user, on an OS whose file modes Cairn checks.
-fn os_user() -> Option<u32> {
+/// The running OS user, on an OS whose file modes Cairn checks; unknown
+/// there when it cannot be learnt, which refuses managed policy.
+fn os_user() -> configuration::source::OsUser {
+    use configuration::source::OsUser;
     #[cfg(unix)]
-    return administration::home::running_uid().ok();
+    return administration::home::running_uid().map_or(OsUser::Unknown, OsUser::Known);
     #[cfg(not(unix))]
-    None
+    OsUser::Unchecked
 }
 
 /// Whether the process's standard input and output are both a terminal

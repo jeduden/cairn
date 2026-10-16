@@ -3,6 +3,7 @@
 //! encoding of its fields (§8.3); its hash is SHA-256 over the encoding
 //! of every field but the hash, the previous entry's hash among them.
 
+use configuration::key::{UNSPELLED, spelled};
 use record::canonical;
 use record::digest::Digest;
 use serde_json::{Map, Value, json};
@@ -122,20 +123,10 @@ pub enum Occurrence<'a> {
 /// The kind of an entry noting a principal act.
 pub const PRINCIPAL_ACT: &str = "principal_act";
 
-/// `key` as an entry may hold it: as it is when it holds only the
-/// characters a settings key or a provenance class can, else a fixed
-/// phrase.
+/// `key` as an entry may hold it: as it is when a settings key could
+/// spell it, else a fixed phrase.
 fn shown(key: &str) -> &str {
-    let plain = !key.is_empty()
-        && key.len() <= 160
-        && key
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || "_.:*-".contains(c));
-    if plain {
-        key
-    } else {
-        "a key no settings key spells"
-    }
+    spelled(key).unwrap_or(UNSPELLED)
 }
 
 /// One entry of the audit log.

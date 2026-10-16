@@ -1,6 +1,7 @@
 use super::*;
 use key::random::OsEntropy;
 use record::event::{EventKind, Provenance};
+use record::id::SeatId;
 use testkit::TempDir;
 
 fn home(dir: &TempDir) -> Home {
@@ -182,14 +183,14 @@ fn a_store_that_fails_mid_start_is_returned() {
     let mut store = Store::open(&home.store()).unwrap();
     let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
     // A seat certificate stored by hand under an unparseable value
-    // makes the device seat unreadable.
+    // makes the device seat unreadable, so no device seat is found.
     let conn = rusqlite::Connection::open(home.store()).unwrap();
     conn.execute("UPDATE seats SET certificate = '{}'", [])
         .unwrap();
 
     assert!(matches!(
         Node::open(&home, &mut store, &mut OsEntropy),
-        Err(AdminError::Key(_))
+        Err(AdminError::Node(_))
     ));
     conn.execute("UPDATE seats SET certificate = '{'", [])
         .unwrap();
@@ -316,6 +317,29 @@ fn find_reads_the_node_a_start_made_and_writes_nothing() {
         (found.device_writer(), found.personal_room()),
         (node.device_writer(), node.personal_room())
     );
+}
+
+#[test]
+fn find_passes_over_a_seat_whose_certificate_does_not_read() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let mut store = Store::open(&home.store()).unwrap();
+    let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+    // It sorts before every other writer, so find meets it first.
+    let first = WriterId::parse(&"0".repeat(64)).unwrap();
+    let device = store.seat(node.device_writer()).unwrap().unwrap();
+    store
+        .add_seat(&StoredSeat {
+            writer: first,
+            seat: SeatId::derive(&device.room, &[9; 32]),
+            certificate: serde_json::json!({}),
+            ..device
+        })
+        .unwrap();
+
+    let found = Node::find(&home, &store).unwrap();
+
+    assert_eq!(found.device_writer(), node.device_writer());
 }
 
 #[test]

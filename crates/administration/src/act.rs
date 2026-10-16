@@ -148,9 +148,10 @@ impl fmt::Display for ResidualRisk {
 /// A principal act this node's CLI takes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Act {
-    /// Acknowledge the counters through audit entry `through` (OPS-03);
-    /// neutral.
-    CounterAck { through: u64 },
+    /// Acknowledge the counters through the audit entry `through` names
+    /// by number and hash, the log's last when the act was taken; none
+    /// when the log held no entry (OPS-03). Neutral.
+    CounterAck { through: Option<(u64, Digest)> },
     /// Accept the principal's configuration whose text has `digest`,
     /// recording the settings it sets (ADM-04); widening.
     ConfigurationAccept { digest: Digest, settings: Value },
@@ -189,7 +190,10 @@ impl Act {
         content.insert("principal_surface".into(), json!(PRINCIPAL_SURFACE));
         match self {
             Self::CounterAck { through } => {
-                content.insert("audit_entry".into(), json!(through));
+                content.insert("audit_entry".into(), json!(through.map(|(n, _)| n)));
+                if let Some((_, hash)) = through {
+                    content.insert("audit_hash".into(), json!(hash.to_hex()));
+                }
             }
             Self::ConfigurationAccept { digest, settings } => {
                 content.insert("digest".into(), json!(digest.to_hex()));
@@ -245,13 +249,16 @@ fn last<'a>(acts: &'a [Recorded], name: &str) -> Option<&'a Recorded> {
     acts.iter().rev().find(|a| a.name == name)
 }
 
-/// The audit entry the counters were last acknowledged through.
+/// The audit entry the counters were last acknowledged through, by
+/// number and hash; none when they never were, or when the log held no
+/// entry then.
 #[must_use]
-pub fn acknowledged(acts: &[Recorded]) -> Option<u64> {
-    last(acts, "counter_ack")?
-        .content
-        .get("audit_entry")?
-        .as_u64()
+pub fn acknowledged(acts: &[Recorded]) -> Option<(u64, Digest)> {
+    let content = &last(acts, "counter_ack")?.content;
+    let number = content.get("audit_entry")?.as_u64()?;
+    let hash = Digest::from_hex(content.get("audit_hash")?.as_str()?).ok()?;
+
+    Some((number, hash))
 }
 
 /// The settings the last accepted configuration set, as recorded.

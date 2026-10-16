@@ -72,7 +72,9 @@ impl Node {
 
     /// The node whose device key `home` holds, by the device seat whose
     /// log begins with that key's `minted` key event: its genesis. It
-    /// writes nothing, so it finds only a node a start made.
+    /// writes nothing, so it finds only a node a start made. A seat
+    /// whose certificate does not read is passed over: it cannot be the
+    /// seat the device key certified, and `cairn verify` reports it.
     ///
     /// # Errors
     ///
@@ -82,7 +84,9 @@ impl Node {
         let device = DeviceKey::load(&home.device_key())?;
         let key = device.public();
         for seat in store.seats()? {
-            let cert = SeatCertificate::from_value(&seat.certificate)?;
+            let Ok(cert) = SeatCertificate::from_value(&seat.certificate) else {
+                continue;
+            };
             if cert.seat_kind != SeatKind::Device || cert.certifying_key != key {
                 continue;
             }
