@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use administration::act::{Class, Recorded};
 use audit::entry::Occurrence;
 use configuration::layer::parse;
-use configuration::source::MANAGED_POLICY;
+use configuration::source::{MANAGED_POLICY, OsUser};
 use record::id::Seq;
 use serde_json::json;
 
@@ -73,7 +73,7 @@ fn every_failed_layer_and_ignored_key_has_its_occurrence() {
     let mut q = Process::new();
     q.manage("trust_policy.\"mcp:github\" = 'trusted'\n");
     q.configure("trust_policy.file = 'trusted'\n");
-    q.os_user = Some(u32::MAX);
+    q.os_user = OsUser::Known(u32::MAX);
 
     let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     q.invoke(&["ingest", "--path", &q.transcript("a\n")], &DEV);
@@ -195,7 +195,7 @@ fn ctx_of(p: &Process) -> Context<'static> {
         terminal: true,
         working_dir: Some(p.dir.path().to_path_buf()),
         managed_policy: p.dir.path().join("managed").join("managed_policy.toml"),
-        os_user: Some(u32::MAX),
+        os_user: OsUser::Known(u32::MAX),
         input,
         clock: &|| 0,
     }

@@ -1,3 +1,4 @@
+use configuration::source::OsUser;
 use serde_json::Value;
 
 use crate::tests::{DEV, Process, audited, recorded};
@@ -214,16 +215,34 @@ fn a_widening_act_is_refused_while_managed_policy_is_invalid() {
     p.configure("recall.max_k = 10\n");
     p.manage("kernel.memory_mib = 64\n");
     // The running OS user owns the file, so it could have written it.
-    p.os_user = None;
+    p.os_user = OsUser::Unchecked;
     assert_eq!(p.invoke(&["configuration", "accept"], &DEV).0, EXIT_OK);
     let mine = std::os::unix::fs::MetadataExt::uid(&std::fs::metadata(p.dir.path()).unwrap());
-    p.os_user = Some(mine);
+    p.os_user = OsUser::Known(mine);
     let (code, _, err) = p.invoke(&["configuration", "accept"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
     assert!(err.contains("refused: managed policy is invalid"), "{err}");
     let (_, status, _) = p.invoke(&["status"], &DEV);
     assert!(
         status.contains("managed policy refused: managed policy "),
+        "{status}"
+    );
+}
+
+#[test]
+fn managed_policy_is_refused_while_the_running_os_user_is_unknown() {
+    let mut p = Process::new();
+    p.configure("recall.max_k = 10\n");
+    p.manage("kernel.memory_mib = 64\n");
+    p.os_user = OsUser::Unknown;
+
+    let (code, _, err) = p.invoke(&["configuration", "accept"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("refused: managed policy is invalid"), "{err}");
+    let (_, status, _) = p.invoke(&["status"], &DEV);
+    assert!(
+        status.contains("the running OS user cannot be learnt"),
         "{status}"
     );
 }

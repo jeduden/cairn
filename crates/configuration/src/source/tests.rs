@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 use testkit::TempDir;
 
 use super::{
-    Failure, LayerFailure, Loaded, MANAGED_POLICY, MAX_LAYER_BYTES, Sources, load, managed_check,
-    read, repository_configuration, writable,
+    Failure, LayerFailure, Loaded, MANAGED_POLICY, MAX_LAYER_BYTES, OsUser, Sources, load,
+    managed_check, read, repository_configuration, writable,
 };
 use crate::key::key;
 use crate::resolve::SettingsLayer;
@@ -27,7 +27,7 @@ fn sources(dir: &Path) -> Sources {
         configuration: dir.join("config.toml"),
         repository: Some(dir.join(".cairn.toml")),
         managed: dir.join("managed").join("managed_policy.toml"),
-        running: Some(me(dir) + 1),
+        running: OsUser::Known(me(dir) + 1),
     }
 }
 
@@ -145,7 +145,7 @@ fn load_refuses_managed_policy_the_running_user_owns() {
     let dir = TempDir::new().unwrap();
     let mut s = sources(dir.path());
     write(&s.managed, "authenticator.required = true\n");
-    s.running = Some(me(dir.path()));
+    s.running = OsUser::Known(me(dir.path()));
     let loaded = load(&s);
     let f = failure(&loaded);
     assert!(matches!(&f.failure, Failure::Writable(p) if *p == s.managed));
@@ -186,7 +186,7 @@ fn managed_check_refuses_a_symbolic_link() {
     let link = dir.path().join("link.toml");
     symlink(&target, &link).unwrap();
     assert!(matches!(
-        managed_check(&link, Some(0)),
+        managed_check(&link, OsUser::Known(0)),
         Err(Failure::SymbolicLink)
     ));
     let shown = LayerFailure {
@@ -198,12 +198,35 @@ fn managed_check_refuses_a_symbolic_link() {
 }
 
 #[test]
-fn managed_check_passes_with_no_file_or_no_running_user_to_check() {
+fn managed_check_passes_with_no_file_or_where_the_os_has_no_modes_to_check() {
     let dir = TempDir::new().unwrap();
-    assert!(managed_check(&dir.path().join("none"), Some(0)).is_ok());
+    assert!(managed_check(&dir.path().join("none"), OsUser::Known(0)).is_ok());
     let file = dir.path().join("p.toml");
     write(&file, "");
-    assert!(managed_check(&file, None).is_ok());
+    assert!(managed_check(&file, OsUser::Unchecked).is_ok());
+}
+
+#[test]
+fn managed_check_refuses_policy_while_the_running_os_user_is_unknown() {
+    let dir = TempDir::new().unwrap();
+    assert!(managed_check(&dir.path().join("none"), OsUser::Unknown).is_ok());
+    let file = dir.path().join("p.toml");
+    write(&file, "");
+    assert!(matches!(
+        managed_check(&file, OsUser::Unknown),
+        Err(Failure::OsUserUnknown)
+    ));
+    let shown = LayerFailure {
+        layer: SettingsLayer::ManagedPolicy,
+        path: file,
+        failure: Failure::OsUserUnknown,
+    };
+    assert!(
+        shown
+            .to_string()
+            .ends_with("the running OS user cannot be learnt, so no file can be shown to be managed policy"),
+        "{shown}"
+    );
 }
 
 #[test]
@@ -213,7 +236,7 @@ fn managed_check_reports_an_unreadable_path() {
     write(&file, "");
     let path = file.join("below-a-file");
     assert!(matches!(
-        managed_check(&path, Some(0)),
+        managed_check(&path, OsUser::Known(0)),
         Err(Failure::Unreadable(_))
     ));
 }

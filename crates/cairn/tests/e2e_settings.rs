@@ -274,6 +274,6 @@ fn acknowledging_the_counters_is_a_neutral_principal_act_the_person_takes() {
 
     let acked = node.person(&["counter", "ack"]);
     assert!(acked.status.success(), "{}", text(&acked.stdout));
-    assert!(text(&acked.stdout).contains("counters acknowledged through audit entry 3"));
+    assert!(text(&acked.stdout).contains("counters acknowledged through audit entry 2"));
     assert_eq!(node.agent(&["doctor"]).status.code(), Some(0));
 }

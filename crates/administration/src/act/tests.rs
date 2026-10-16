@@ -66,7 +66,7 @@ fn each_act_has_its_class_and_an_unnamed_one_is_widening() {
     assert_eq!(class_of("configuration_accept"), Class::Widening);
     assert_eq!(class_of("risk_acceptance_record"), Class::Widening);
     assert_eq!(class_of("named_by_no_requirement"), Class::Widening);
-    assert_eq!(Act::CounterAck { through: 1 }.class(), Class::Neutral);
+    assert_eq!(Act::CounterAck { through: None }.class(), Class::Neutral);
     assert_eq!(Act::RiskAcceptanceWithdraw.class(), Class::Cut);
 }
 
@@ -86,8 +86,21 @@ fn residual_risks_have_ids_texts_and_parse_back() {
 #[test]
 fn an_acts_content_names_it_its_class_and_its_principal_surface() {
     assert_eq!(
-        Act::CounterAck { through: 7 }.content(),
-        json!({"act": "counter_ack", "class": "neutral", "principal_surface": "cli", "audit_entry": 7})
+        Act::CounterAck {
+            through: Some((7, Digest::ZERO))
+        }
+        .content(),
+        json!({
+            "act": "counter_ack",
+            "class": "neutral",
+            "principal_surface": "cli",
+            "audit_entry": 7,
+            "audit_hash": Digest::ZERO.to_hex(),
+        })
+    );
+    assert_eq!(
+        Act::CounterAck { through: None }.content(),
+        json!({"act": "counter_ack", "class": "neutral", "principal_surface": "cli", "audit_entry": null})
     );
     let digest = Digest::of(&[b"config"]);
     assert_eq!(
@@ -121,7 +134,9 @@ fn record_appends_an_operator_event_to_the_device_seat() {
     let address = record(
         &mut s.store,
         &s.node,
-        &Act::CounterAck { through: 3 },
+        &Act::CounterAck {
+            through: Some((3, Digest::ZERO)),
+        },
         &mut OsEntropy,
     )
     .unwrap();
@@ -136,7 +151,7 @@ fn record_appends_an_operator_event_to_the_device_seat() {
         (acts[0].name.as_str(), acts[0].class),
         ("counter_ack", Class::Neutral)
     );
-    assert_eq!(acknowledged(&acts), Some(3));
+    assert_eq!(acknowledged(&acts), Some((3, Digest::ZERO)));
 }
 
 #[test]
@@ -159,12 +174,16 @@ fn the_last_acknowledgement_and_accepted_settings_are_read_from_the_record() {
     assert_eq!(acknowledged(&acts0), None);
     assert_eq!(accepted_settings(&acts0), None);
     for act in [
-        Act::CounterAck { through: 1 },
+        Act::CounterAck {
+            through: Some((1, Digest::ZERO)),
+        },
         Act::ConfigurationAccept {
             digest: Digest::ZERO,
             settings: json!({"a": 1}),
         },
-        Act::CounterAck { through: 5 },
+        Act::CounterAck {
+            through: Some((5, Digest::of(&[b"5"]))),
+        },
         Act::ConfigurationAccept {
             digest: Digest::ZERO,
             settings: json!({"b": 2}),
@@ -173,7 +192,7 @@ fn the_last_acknowledgement_and_accepted_settings_are_read_from_the_record() {
         record(&mut s.store, &s.node, &act, &mut OsEntropy).unwrap();
     }
     let acts = acts(&s.store, &s.node).unwrap();
-    assert_eq!(acknowledged(&acts), Some(5));
+    assert_eq!(acknowledged(&acts), Some((5, Digest::of(&[b"5"]))));
     assert_eq!(accepted_settings(&acts), json!({"b": 2}).as_object());
 }
 
@@ -220,7 +239,7 @@ fn every_act_refuses_without_a_terminal_first() {
         authenticator_required: true,
         ..Gate::default()
     };
-    for act in [Act::CounterAck { through: 0 }, Act::RiskAcceptanceWithdraw] {
+    for act in [Act::CounterAck { through: None }, Act::RiskAcceptanceWithdraw] {
         assert_eq!(permit(&act, &no_terminal), Err(Refusal::NoTerminal));
     }
 }
@@ -238,7 +257,7 @@ fn cut_and_neutral_acts_need_nothing_more() {
         },
         standing: None,
     };
-    assert_eq!(permit(&Act::CounterAck { through: 0 }, &strict), Ok(()));
+    assert_eq!(permit(&Act::CounterAck { through: None }, &strict), Ok(()));
     assert_eq!(permit(&Act::RiskAcceptanceWithdraw, &strict), Ok(()));
 }
 

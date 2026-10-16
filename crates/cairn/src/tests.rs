@@ -1,6 +1,7 @@
 use super::*;
 use std::io;
 use std::sync::mpsc;
+use configuration::source::OsUser;
 use testkit::TempDir;
 
 pub(crate) const DEV: Build<'static> = Build {
@@ -26,7 +27,7 @@ pub(crate) struct Process {
     /// The running OS user the core is told of: by default someone else
     /// than the owner of the test's files, so a managed policy the test
     /// writes passes as root's would.
-    pub(crate) os_user: Option<u32>,
+    pub(crate) os_user: OsUser,
 }
 
 /// The time every test's clock reads.
@@ -42,7 +43,7 @@ impl Process {
             home_id: None,
             hook_panics: false,
             terminal: true,
-            os_user: Some(u32::MAX),
+            os_user: OsUser::Known(u32::MAX),
         }
     }
 
@@ -260,7 +261,7 @@ fn a_failed_write_is_a_failure() {
             terminal: true,
             working_dir: None,
             managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
-            os_user: None,
+            os_user: OsUser::Unchecked,
             input: &input,
             clock: &|| NOW,
         };
@@ -629,7 +630,7 @@ fn mcp_reports_a_reply_it_cannot_write() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
-        os_user: None,
+        os_user: OsUser::Unchecked,
         input: &input,
         clock: &|| NOW,
     };
@@ -653,7 +654,7 @@ fn a_command_without_a_home_fails() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
-        os_user: None,
+        os_user: OsUser::Unchecked,
         input: &input,
         clock: &|| NOW,
     };
@@ -809,7 +810,7 @@ fn a_hook_input_that_trickles_past_its_wait_is_rejected() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
-        os_user: None,
+        os_user: OsUser::Unchecked,
         input: &input,
         clock: &|| NOW,
     };
@@ -847,7 +848,7 @@ fn a_panic_while_auditing_a_hook_failure_still_exits_0() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
-        os_user: None,
+        os_user: OsUser::Unchecked,
         input: &input,
         clock: &|| panic!("the clock fails"),
     };
@@ -958,7 +959,7 @@ fn counter_ack_records_a_neutral_principal_act_through_the_last_audit_entry() {
         p.invoke(&["counter", "ack"], &DEV),
         (
             EXIT_OK,
-            "counters acknowledged through audit entry 1\n".into(),
+            "counters acknowledged; the audit log held no entry\n".into(),
             String::new()
         )
     );
@@ -967,15 +968,59 @@ fn counter_ack_records_a_neutral_principal_act_through_the_last_audit_entry() {
     let (code, out, _) = p.invoke(&["counter", "ack", "--json"], &DEV);
     assert_eq!(code, EXIT_OK);
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();
-    assert_eq!(v["acknowledged"], 3);
+    assert_eq!(v["acknowledged"], 2);
     let acts = recorded(&p);
     assert_eq!(acts.len(), 2);
+    assert_eq!(acts[0]["audit_entry"], serde_json::Value::Null);
     assert_eq!(acts[1]["act"], "counter_ack");
     assert_eq!(acts[1]["class"], "neutral");
     assert_eq!(acts[1]["principal_surface"], "cli");
-    assert_eq!(acts[1]["audit_entry"], 3);
-    let kinds: Vec<String> = audited(&p).into_iter().map(|e| e.kind).collect();
+    assert_eq!(acts[1]["audit_entry"], 2);
+    let entries = audited(&p);
+    assert_eq!(acts[1]["audit_hash"], entries[1].hash.to_hex());
+    let kinds: Vec<String> = entries.into_iter().map(|e| e.kind).collect();
     assert_eq!(kinds, ["principal_act", "rejected", "principal_act"]);
+}
+
+#[test]
+fn counter_ack_keeps_its_recorded_act_when_the_audit_log_takes_no_note() {
+    let mut p = Process::new();
+    p.lines = vec!["not json".to_owned()];
+    p.invoke(&["hook", "UserPromptSubmit"], &DEV);
+    let lock = p.cairn_home().join("audit/lock");
+    std::fs::remove_file(&lock).unwrap();
+    owner_only_dirs(&lock);
+
+    let (code, out, err) = p.invoke(&["counter", "ack"], &DEV);
+
+    assert_eq!((code, out.as_str()), (EXIT_FAILURE, ""));
+    assert!(
+        err.starts_with("cairn counter ack: the acknowledgement is recorded, but the audit log took no note of it: "),
+        "{err}"
+    );
+    assert_eq!(recorded(&p)[0]["audit_entry"], 1);
+    assert_eq!(audited(&p).len(), 1);
+    std::fs::remove_dir(&lock).unwrap();
+    assert_eq!(p.invoke(&["doctor"], &DEV).0, EXIT_OK);
+}
+
+#[test]
+fn an_acknowledgement_hides_no_failure_once_the_audit_log_began_again() {
+    let mut p = Process::new();
+    p.lines = vec!["not json".to_owned()];
+    p.invoke(&["hook", "UserPromptSubmit"], &DEV);
+    p.invoke(&["hook", "UserPromptSubmit"], &DEV);
+    assert_eq!(p.invoke(&["counter", "ack"], &DEV).0, EXIT_OK);
+    std::fs::remove_dir_all(p.cairn_home().join("audit")).unwrap();
+    p.invoke(&["hook", "UserPromptSubmit"], &DEV);
+
+    let (code, out, _) = p.invoke(&["doctor"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert_eq!(
+        out,
+        "counter hook_rejected rose by 1 since the counters were last acknowledged\n"
+    );
 }
 
 /// The content of every principal act the home's store holds.
