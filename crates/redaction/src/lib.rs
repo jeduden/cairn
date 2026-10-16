@@ -16,6 +16,9 @@ pub mod rule;
 use account::HarnessAccountIdentifiers;
 use rule::{RedactionRule, rule_set};
 
+/// Why a pattern does not compile, or compiles past the size limit.
+pub type PatternError = regex::Error;
+
 /// The rule name of the principal's `n`th redaction pattern, from 1.
 #[must_use]
 pub fn extra_pattern(n: usize) -> String {

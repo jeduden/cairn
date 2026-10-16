@@ -70,7 +70,7 @@ fn an_unreadable_empty_or_non_utf8_transcript_records_nothing() {
     let dir = TempDir::new().unwrap();
     let home = home(&dir);
 
-    let missing = ingest_path(&home, &dir.path().join("none"), &mut OsEntropy).unwrap_err();
+    let missing = ingest_path(&home, &dir.path().join("none"), &redactor(), &mut OsEntropy).unwrap_err();
     assert!(matches!(missing, IngestError::Read { .. }), "{missing}");
     assert!(
         missing.to_string().starts_with("read the transcript "),
@@ -78,7 +78,7 @@ fn an_unreadable_empty_or_non_utf8_transcript_records_nothing() {
     );
     assert!(std::error::Error::source(&missing).is_some());
 
-    let empty = ingest_path(&home, &transcript(&dir, ""), &mut OsEntropy).unwrap_err();
+    let empty = ingest_path(&home, &transcript(&dir, ""), &redactor(), &mut OsEntropy).unwrap_err();
     assert_eq!(
         empty.to_string(),
         format!(
@@ -88,7 +88,7 @@ fn an_unreadable_empty_or_non_utf8_transcript_records_nothing() {
     );
 
     std::fs::write(dir.path().join("t.jsonl"), [0xff, b'\n']).unwrap();
-    let bytes = ingest_path(&home, &dir.path().join("t.jsonl"), &mut OsEntropy).unwrap_err();
+    let bytes = ingest_path(&home, &dir.path().join("t.jsonl"), &redactor(), &mut OsEntropy).unwrap_err();
     assert_eq!(
         bytes.to_string(),
         format!(
@@ -127,7 +127,7 @@ fn a_store_that_cannot_open_or_a_random_source_that_fails_is_returned() {
     let path = transcript(&dir, "x\n");
     ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
 
-    let err = ingest_path(&home, &path, &mut Failing).unwrap_err();
+    let err = ingest_path(&home, &path, &redactor(), &mut Failing).unwrap_err();
     assert!(matches!(err, IngestError::Key(_)), "{err}");
     assert_eq!(err.to_string(), "draw random bytes: none");
     assert!(std::error::Error::source(&err).is_some());
@@ -156,7 +156,7 @@ impl key::random::Entropy for Failing {
 fn a_store_that_fails_part_way_names_the_writer_and_what_landed() {
     let dir = TempDir::new().unwrap();
     let home = home(&dir);
-    ingest_path(&home, &transcript(&dir, "x\n"), &mut OsEntropy).unwrap();
+    ingest_path(&home, &transcript(&dir, "x\n"), &redactor(), &mut OsEntropy).unwrap();
     let conn = rusqlite::Connection::open(home.store()).unwrap();
     conn.execute_batch(
         "CREATE TRIGGER refuse BEFORE INSERT ON events WHEN NEW.seq = 150 \
@@ -165,7 +165,7 @@ fn a_store_that_fails_part_way_names_the_writer_and_what_landed() {
     .unwrap();
     let text: String = (1..=250).map(|n| format!("line {n}\n")).collect();
 
-    let err = ingest_path(&home, &transcript(&dir, &text), &mut OsEntropy).unwrap_err();
+    let err = ingest_path(&home, &transcript(&dir, &text), &redactor(), &mut OsEntropy).unwrap_err();
 
     let IngestError::Partial { writer, landed, .. } = &err else {
         panic!("{err}");
@@ -217,4 +217,20 @@ fn every_line_is_redacted_before_anything_is_written() {
     assert_eq!(contents[3], serde_json::json!({"line": 4, "text": "clean"}));
     let bytes = std::fs::read(home.store()).unwrap();
     assert!(!bytes.windows(20).any(|w| w == b"AKIAIOSFODNN7EXAMPLE"));
+}
+
+#[test]
+fn an_identifier_too_long_to_redact_records_nothing() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let email = format!("{}@example.com", "a".repeat(4 << 20));
+    let line = serde_json::json!({"attachment": {"type": "session_context", "context": {"userEmail": email}}});
+    let path = transcript(&dir, &format!("{line}\n"));
+
+    let err = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap_err();
+
+    assert!(matches!(err, IngestError::Redaction(_)));
+    assert!(err.to_string().starts_with("redact the transcript: "));
+    assert!(std::error::Error::source(&err).is_some());
+    assert!(!home.store().exists());
 }

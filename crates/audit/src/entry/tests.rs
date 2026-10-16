@@ -41,6 +41,17 @@ fn each_kind_and_counter_has_its_name() {
         ),
         (Counter::ManagedPolicyInvalid, "managed_policy_invalid"),
         (Counter::PrincipalActRefused, "principal_act_refused"),
+        (Counter::Redacted, "redacted"),
+        (
+            Counter::RedactionPatternRefused,
+            "redaction_pattern_refused",
+        ),
+        (Counter::HookInputTooLarge, "hook_input_too_large"),
+        (Counter::HookInputTooDeep, "hook_input_too_deep"),
+        (
+            Counter::PathOutsideAllowedRoots,
+            "path_outside_allowed_roots",
+        ),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

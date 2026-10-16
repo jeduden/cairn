@@ -8,9 +8,12 @@
 //! ingest seat stands in for all of the transcript's runs, which that
 //! parser splits it by.
 //!
-//! The transcript is read, and every commitment key drawn, before
-//! anything is recorded, so a transcript that cannot be read records
-//! nothing.
+//! The transcript is read, every line redacted (SEC-08) and every
+//! commitment key drawn before anything is recorded, so a transcript
+//! that cannot be read records nothing, and no secret the redactor
+//! matches reaches the store. The harness account identifiers are
+//! learnt from the whole transcript first, so a line before the one
+//! that names them is redacted too.
 
 use std::fmt;
 use std::fs;
@@ -24,11 +27,13 @@ use key::random::{Entropy, draw};
 use record::commitment::CommitmentKey;
 use record::event::{EventKind, Provenance};
 use record::id::{RoomId, SeatId, WriterId};
-use serde_json::json;
+use redaction::Redactor;
+use redaction::account::HarnessAccountIdentifiers;
+use serde_json::{Value, json};
 use store::{NewEvent, Store, StoreError};
 
 /// What one ingest recorded.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ingested {
     /// The ingest seat's writer.
     pub writer: WriterId,
@@ -37,6 +42,8 @@ pub struct Ingested {
     pub room: RoomId,
     /// How many events it appended.
     pub events: usize,
+    /// The rule of each redaction made, line by line.
+    pub redactions: Vec<String>,
 }
 
 /// Why an ingest recorded nothing, or stopped part way.
@@ -51,6 +58,8 @@ pub enum IngestError {
     NotUtf8(PathBuf),
     /// The transcript holds no line.
     Empty(PathBuf),
+    /// A harness account identifier is too long to redact.
+    Redaction(redaction::PatternError),
     /// The random source failed.
     Key(KeyError),
     /// The home or the node failed.
@@ -75,6 +84,7 @@ impl fmt::Display for IngestError {
             }
             Self::NotUtf8(path) => write!(f, "the transcript {} is not UTF-8", path.display()),
             Self::Empty(path) => write!(f, "the transcript {} holds no line", path.display()),
+            Self::Redaction(e) => write!(f, "redact the transcript: {e}"),
             Self::Key(e) => write!(f, "{e}"),
             Self::Admin(e) => write!(f, "{e}"),
             Self::Store(e) => write!(f, "{e}"),
@@ -95,6 +105,7 @@ impl std::error::Error for IngestError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Read { source, .. } => Some(source),
+            Self::Redaction(e) => Some(e),
             Self::Key(e) => Some(e),
             Self::Admin(e) => Some(e),
             Self::Store(e) | Self::Partial { source: e, .. } => Some(e),
@@ -104,16 +115,19 @@ impl std::error::Error for IngestError {
 }
 
 /// Ingests the transcript at `path` into a new ingest seat of the node
-/// in `home`, starting the node first when it has never started.
+/// in `home`, starting the node first when it has never started, each
+/// line redacted by `redactor` and the harness account identifiers the
+/// transcript names.
 ///
 /// # Errors
 ///
 /// Fails when the transcript cannot be read, is not UTF-8 or holds no
-/// line, or when the random source, the home, the node or the store
-/// fails.
+/// line, or when an identifier cannot be redacted, or the random
+/// source, the home, the node or the store fails.
 pub fn ingest_path(
     home: &Home,
     path: &Path,
+    redactor: &Redactor,
     entropy: &mut dyn Entropy,
 ) -> Result<Ingested, IngestError> {
     let bytes = fs::read(path).map_err(|source| IngestError::Read {
@@ -125,14 +139,22 @@ pub fn ingest_path(
     if lines.is_empty() {
         return Err(IngestError::Empty(path.to_path_buf()));
     }
+    let mut ids = HarnessAccountIdentifiers::default();
+    lines.iter().for_each(|l| ids.learn(l));
+    let redactor = redactor
+        .with_identifiers(&ids)
+        .map_err(IngestError::Redaction)?;
     let mut new_events = Vec::with_capacity(lines.len());
+    let mut redactions = Vec::new();
     for (n, line) in (1u64..).zip(&lines) {
+        let redacted = redactor.redact_line(line);
         new_events.push(NewEvent {
             kind: EventKind::UnparsedLine,
             provenance: Provenance::Unparsed,
-            content: json!({"line": n, "text": line}),
+            content: content(n, &redacted.text, redacted.rules.len()),
             commitment_key: CommitmentKey::from_bytes(draw(entropy).map_err(IngestError::Key)?),
         });
+        redactions.extend(redacted.rules);
     }
     home.create().map_err(IngestError::Admin)?;
     let mut store = Store::open(&home.store()).map_err(IngestError::Store)?;
@@ -159,7 +181,19 @@ pub fn ingest_path(
         seat: seat.seat,
         room: seat.room,
         events: new_events.len(),
+        redactions,
     })
+}
+
+/// An unparsed line's content: its number and redacted text, and how
+/// many redactions the text holds when it holds any.
+fn content(line: u64, text: &str, redactions: usize) -> Value {
+    let mut content = json!({"line": line, "text": text});
+    if redactions > 0 {
+        content["redactions"] = json!(redactions);
+    }
+
+    content
 }
 
 /// A transcript's lines: its text split at each newline, without the
