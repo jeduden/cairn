@@ -1527,6 +1527,10 @@ fn bounded_lines_refuse_a_line_past_the_limit_without_holding_it_and_go_on() {
         .map(Result::unwrap)
         .collect();
     assert_eq!(whole, ["a", "abcd", "b"]);
+    // One byte past the limit, its line ending read with it.
+    let just_over: Vec<io::Result<String>> = bounded_lines("abcde\nx".as_bytes(), 4).collect();
+    assert!(just_over[0].is_err());
+    assert_eq!(just_over[1].as_ref().unwrap(), "x");
     let at_end: Vec<io::Result<String>> = bounded_lines("abcdef".as_bytes(), 4).collect();
     assert_eq!(at_end.len(), 1);
     assert!(at_end[0].is_err());
