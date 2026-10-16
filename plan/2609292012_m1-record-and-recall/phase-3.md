@@ -53,7 +53,10 @@ Where the gate's scenarios go live:
 
 - `@ADM-04`: rows 1 to 4 pass here, and it comes off `@pending`. The
   stakeholder ruled row 5, flags staying on until a widening act, into
-  `@PRV-07`'s scenario, which flags need (P1, M5).
+  `@PRV-07`'s scenario, which flags need (P1, M5), and asked for rows
+  for the rest M1 enforces: a widening setting awaiting acceptance, a
+  repository configuration's widening key ignored and counted, and
+  managed policy the person's OS user can write refused and counted.
 - `@PRV-04`: phase 9, which matches `user` events to prompts.
 - `@PRV-05`: phase 8 ingests phase 7's provenance classes; `post`
   and `summary` need later milestones.

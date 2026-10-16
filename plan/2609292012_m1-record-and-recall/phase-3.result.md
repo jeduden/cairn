@@ -6,9 +6,9 @@ result: true
 summary: >-
   Settings layers validated and layered; widening acts gated by OWN-22
   and managed policy; counter ack, configuration accept and risk
-  acceptance recorded as principal acts. @ADM-04 off @pending, its row 5
-  moved to @PRV-07 by ruling; the M1 steps of OWN-11, -12 and -22 pass
-  narrowed.
+  acceptance recorded as principal acts. @ADM-04 off @pending with eight
+  rows, its flags row moved to @PRV-07 by ruling; the M1 steps of
+  OWN-11, -12 and -22 pass narrowed.
 ---
 # Phase 3 result
 
@@ -19,9 +19,15 @@ Outcome:
 - ADM-04, SEC-11, PRV-04's setting, PRV-05, and SEC-22's managed policy
   part hold in the core: `e2e_settings.rs` drives each, confined. The
   workspace's 76 live scenarios pass.
-- `@ADM-04` is off `@pending` and passes: the stakeholder ruled its row
-  5, flags staying on until a widening act records the digest, into
-  `@PRV-07`'s scenario, since it needs flags (P1, M5). The M1 steps of
+- `@ADM-04` is off `@pending` and passes eight rows: four of strict
+  validation; `flag.enabled` and `node.deployment_mode` standing until
+  a widening principal act accepts them; a repository configuration's
+  widening key ignored and counted; managed policy the person's OS user
+  can write refused and counted. The stakeholder ruled its old row 5,
+  flags staying on until that act, into `@PRV-07`'s scenario, since it
+  needs flags (P1, M5). Each command a test starts now runs in its
+  isolated home (ENG-14), so no test reads the checkout's repository
+  configuration. The M1 steps of
   `@OWN-11`, `@OWN-12` and `@OWN-22` pass with their outlines narrowed
   locally; those stay `@pending`.
 - I2, I6, I7 and I9 hold: no layer trusts a class, every ignored key,
@@ -50,8 +56,12 @@ Inherited:
 
 For the stakeholder:
 
-- Ruled: `@ADM-04` row 5 moved to `@PRV-07`. Still open: `@PRV-05`'s
-  `post` and `summary` rows need rooms, so it cannot pass in M1.
+- Ruled: `@ADM-04` row 5 moved to `@PRV-07`. Two parts of ADM-04 no
+  live row proves: valid managed policy overriding the other layers,
+  which needs a file another OS user owns, so only the configuration
+  crate's unit test proves it; and B1–B3 refusal, since M1 has no B1–B3
+  component until M7. Still open: `@PRV-05`'s `post` and `summary` rows
+  need rooms, so it cannot pass in M1.
 - The scenarios spell the ignored-key audit entry three ways (PRV-04,
   SEC-11, PRV-05); the core writes the domain model's words.
 - The crate name `configuration` covers three settings layers.
