@@ -1660,9 +1660,16 @@ fn ingest_reads_within_the_configured_transcript_roots_only() {
     let elsewhere = p.dir.path().join("elsewhere");
     std::fs::create_dir_all(&elsewhere).unwrap();
     std::fs::write(elsewhere.join("t.jsonl"), "a\n").unwrap();
-    p.configure(&format!("[transcript]\nroots = [{:?}]\n", elsewhere.display().to_string()));
+    p.configure(&format!(
+        "[transcript]\nroots = [{:?}]\n",
+        elsewhere.display().to_string()
+    ));
     let (code, _, err) = p.invoke(
-        &["ingest", "--path", &elsewhere.join("t.jsonl").display().to_string()],
+        &[
+            "ingest",
+            "--path",
+            &elsewhere.join("t.jsonl").display().to_string(),
+        ],
         &DEV,
     );
     assert_eq!((code, err.as_str()), (EXIT_OK, ""));
@@ -1688,7 +1695,7 @@ fn ingest_says_when_it_cannot_audit_a_path_outside_the_roots() {
     let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     assert_eq!(code, EXIT_OK);
     let audit_dir = p.cairn_home().join("audit");
-    std::fs::remove_dir_all(&audit_dir).unwrap();
+    let _ = std::fs::remove_dir_all(&audit_dir);
     std::fs::write(&audit_dir, "").unwrap();
     set_mode(&audit_dir, 0o600);
 
@@ -1699,5 +1706,8 @@ fn ingest_says_when_it_cannot_audit_a_path_outside_the_roots() {
         err.contains("cairn ingest: audit a path outside allowed roots: "),
         "{err}"
     );
-    assert!(err.ends_with("cairn ingest: path outside allowed roots\n"), "{err}");
+    assert!(
+        err.ends_with("cairn ingest: path outside allowed roots\n"),
+        "{err}"
+    );
 }
