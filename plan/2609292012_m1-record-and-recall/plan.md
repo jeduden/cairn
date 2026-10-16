@@ -270,7 +270,7 @@ footer: |
 |     | ↳      | @REC-10 off @pending and passing. A recorded transcript is ingested, recalled through event_get in the envelope and verified, end to end and confined; a flipped header byte exits 3 naming the event.                                                                          |
 | 2   | ✅     | [The home, the audit log and counters](phase-2.md)                                                                                                                                                                                                                              |
 |     | ↳      | @SEC-02, @SEC-03, @OPS-02, @OPS-03 and @ENG-04 off @pending and passing, confined. Every command checks the home first; the audit log chains across rotation; cairn hook fails open and audits.                                                                                 |
-| 3   | ✅     | [Settings layers and principal acts at the terminal](phase-3.md)                                                                                                                                                                                                                |
+| 3   | 🔳     | [Settings layers and principal acts at the terminal](phase-3.md)                                                                                                                                                                                                                |
 |     | ↳      | Settings layers validated and layered; widening acts gated by OWN-22 and managed policy; counter ack, configuration accept and risk acceptance recorded as principal acts. ADM-04's rows 1 to 4 and the M1 steps of OWN-11, -12 and -22 pass narrowed; none comes off @pending. |
 <?/catalog?>
 

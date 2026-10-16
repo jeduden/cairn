@@ -1,7 +1,7 @@
 ---
 n: 3
 title: "Settings layers and principal acts at the terminal"
-status: "✅"
+status: "🔳"
 result: false
 ---
 # Phase 3: settings layers and principal acts at the terminal
@@ -67,3 +67,5 @@ Parked to phase 7: the configuration parser's fuzz target, with the
 first `fuzz/` crate, its nightly and its ADR.
 
 Gate: the end-to-end tests pass against the built core, confined.
+The phase stays open until the stakeholder rules on `@ADM-04` row 5,
+since its gate no longer takes a scenario off `@pending`.
