@@ -596,7 +596,8 @@ fn serve_answers_a_request_past_the_line_limit_and_goes_on() {
     let f = fixture();
     let mut server = f.server();
     let (tx, rx) = mpsc::channel();
-    tx.send(Err(std::io::ErrorKind::FileTooLarge.into())).unwrap();
+    tx.send(Err(std::io::ErrorKind::FileTooLarge.into()))
+        .unwrap();
     tx.send(Ok(r#"{"jsonrpc":"2.0","id":2,"method":"ping"}"#.to_owned()))
         .unwrap();
     drop(tx);

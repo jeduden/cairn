@@ -705,10 +705,11 @@ fn hook_input(ctx: &Context) -> Result<String, Failure> {
     }
 }
 
-/// The lines `reader` holds, each without its line ending. A line longer
-/// than `limit` bytes ends the lines with an error of kind
-/// [`io::ErrorKind::FileTooLarge`], so no line is ever held past the
-/// limit (SEC-05); one that is not UTF-8 ends them too.
+/// The lines `reader` holds, each without its line ending. A line
+/// longer than `limit` bytes is never held whole (SEC-05): an error of
+/// kind [`io::ErrorKind::FileTooLarge`] stands in its place, its rest
+/// skipped, and the lines after it go on, as they do after one that is
+/// not UTF-8. A read that fails ends them.
 pub fn bounded_lines<R: io::BufRead>(
     reader: R,
     limit: usize,
@@ -717,20 +718,24 @@ pub fn bounded_lines<R: io::BufRead>(
     std::iter::from_fn(move || {
         let r = reader.as_mut()?;
         let mut buf = Vec::new();
+        // The limit, and room for a line ending of two bytes.
         let read = io::BufRead::read_until(
-            &mut io::Read::take(r.by_ref(), limit as u64 + 1),
+            &mut io::Read::take(r.by_ref(), limit as u64 + 2),
             b'\n',
             &mut buf,
         );
-        let line = match read {
+        match read {
             Ok(0) => None,
+            Ok(_) if buf.last() != Some(&b'\n') && buf.len() > limit => {
+                let skipped = io::BufRead::skip_until(r, b'\n');
+                Some(skipped.and(Err(io::ErrorKind::FileTooLarge.into())))
+            }
             Ok(_) => Some(line_of(buf, limit)),
-            Err(e) => Some(Err(e)),
-        };
-        if !matches!(line, Some(Ok(_))) {
-            reader = None;
+            Err(e) => {
+                reader = None;
+                Some(Err(e))
+            }
         }
-        line
     })
 }
 
