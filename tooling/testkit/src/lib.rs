@@ -25,13 +25,16 @@ pub fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
-/// Points `command` at `home` (ENG-14): its `HOME`, and a `CAIRN_HOME`
-/// inside it, so an executable a test starts cannot reach the real `HOME`,
-/// a Cairn home or Claude Code's configuration.
+/// Points `command` at `home` (ENG-14): its `HOME`, a `CAIRN_HOME`
+/// inside it, and its working directory, so an executable a test starts
+/// cannot reach the real `HOME`, a Cairn home, Claude Code's
+/// configuration, or the repository configuration of the checkout the
+/// test runs in.
 pub fn isolate<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
     command
         .env("HOME", home)
         .env("CAIRN_HOME", home.join(".cairn"))
+        .current_dir(home)
 }
 
 /// The `cairn` executable cargo built beside the running test. `cargo
