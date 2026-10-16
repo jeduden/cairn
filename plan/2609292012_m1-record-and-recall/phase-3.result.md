@@ -6,9 +6,8 @@ result: true
 summary: >-
   Settings layers validated and layered; widening acts gated by OWN-22
   and managed policy; counter ack, configuration accept and risk
-  acceptance recorded as principal acts. @ADM-04 off @pending, its row 5
-  moved to @PRV-07 by ruling; the M1 steps of OWN-11, -12 and -22 pass
-  narrowed.
+  acceptance recorded as principal acts. ADM-04's rows 1 to 4 and the
+  M1 steps of OWN-11, -12 and -22 pass narrowed; none comes off @pending.
 ---
 # Phase 3 result
 
@@ -19,11 +18,9 @@ Outcome:
 - ADM-04, SEC-11, PRV-04's setting, PRV-05, and SEC-22's managed policy
   part hold in the core: `e2e_settings.rs` drives each, confined. The
   workspace's 76 live scenarios pass.
-- `@ADM-04` is off `@pending` and passes: the stakeholder ruled its row
-  5, flags staying on until a widening act records the digest, into
-  `@PRV-07`'s scenario, since it needs flags (P1, M5). The M1 steps of
-  `@OWN-11`, `@OWN-12` and `@OWN-22` pass with their outlines narrowed
-  locally; those stay `@pending`.
+- `@ADM-04` rows 1 to 4 and the M1 steps of `@OWN-11`, `@OWN-12` and
+  `@OWN-22` pass with their outlines narrowed locally; none comes off
+  `@pending`, as phase-3.md says why.
 - I2, I6, I7 and I9 hold: no layer trusts a class, every ignored key,
   failed layer and refused act is audited and counted, a repository
   configuration only tightens, and recording goes on past a bad layer.
@@ -50,8 +47,8 @@ Inherited:
 
 For the stakeholder:
 
-- Ruled: `@ADM-04` row 5 moved to `@PRV-07`. Still open: `@PRV-05`'s
-  `post` and `summary` rows need rooms, so it cannot pass in M1.
+- `@ADM-04` row 5 needs flags (PRV-07, P1) and `@PRV-05`'s `post` and
+  `summary` rows need rooms, so neither scenario can pass in M1.
 - The scenarios spell the ignored-key audit entry three ways (PRV-04,
   SEC-11, PRV-05); the core writes the domain model's words.
 - The crate name `configuration` covers three settings layers.

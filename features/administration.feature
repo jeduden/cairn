@@ -41,7 +41,7 @@ Feature: Administration and lifecycle (ADM)
     And that file of the harness's managed settings is byte-identical to before
     And the output states that the harness's managed settings are in force and names the documented managed install path
 
-  @ADM-04 @P0 @I6 @I7
+  @ADM-04 @P0 @I6 @I7 @pending
   Scenario Outline: every settings layer is validated strictly, managed policy overrides the others but never turns a component on, repository configuration only tightens, and a settings change that needs a widening principal act waits for one
     Given an isolated Cairn home
     And <settings>
@@ -50,11 +50,12 @@ Feature: Administration and lifecycle (ADM)
     And the core records every event of the run
 
     Examples:
-      | settings                                                           | component    | expected                                                                                      |
-      | the person's config.toml containing "recal.max_k = 10"             | cairn status | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
-      | the person's config.toml containing "recall.max_k = 'ten'"         | cairn status | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
-      | the person's config.toml containing "recall.max_k = 500"           | cairn status | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
-      | the person's config.toml containing "payload.threshold_bytes = -1" | cairn status | exits 2, and the error names the key "payload.threshold_bytes" and the problem "out of range" |
+      | settings                                                                                                                                            | component               | expected                                                                                      |
+      | the person's config.toml containing "recal.max_k = 10"                                                                                              | cairn status            | exits 2, and the error names the key "recal.max_k" and the problem "unknown key"              |
+      | the person's config.toml containing "recall.max_k = 'ten'"                                                                                          | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "type error"              |
+      | the person's config.toml containing "recall.max_k = 500"                                                                                            | cairn status            | exits 2, and the error names the key "recall.max_k" and the problem "out of range"            |
+      | the person's config.toml containing "payload.threshold_bytes = -1"                                                                                  | cairn status            | exits 2, and the error names the key "payload.threshold_bytes" and the problem "out of range" |
+      | the person's config.toml containing "flag.enabled = false" with no widening act recording its digest, and a tool result that orders the assistant   | cairn audit --flagged   | lists that tool result as flagged: flags stay on until a widening act records that digest     |
 
   @ADM-05 @P0 @I1 @pending
   Scenario: segment and schema migrations run forward after a verified backup and newer versions are refused

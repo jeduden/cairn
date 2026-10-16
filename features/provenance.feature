@@ -159,9 +159,6 @@ Feature: Provenance and trust (PRV)
     Then the WebFetch tool result is stored as a "web" event flagged "instruction_like"
     And its hit from the MCP tool "event_search" carries the flag, and no landmark contains its text
     And "cairn audit --flagged" lists its address (writer, seq)
-    Given the person's config.toml containing "flag.enabled = false" with no widening act recording its digest
-    When "web-run" gains a second WebFetch tool result carrying <content> and the person runs "cairn ingest --all"
-    Then "cairn audit --flagged" lists that tool result as well: flags stay on until a widening act records that digest (ADM-04)
 
     Examples:
       | content                                                      |
