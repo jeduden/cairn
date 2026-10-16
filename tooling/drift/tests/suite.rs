@@ -5,8 +5,8 @@
 //! kept, and every check builds into one target directory beside the
 //! copy, so cargo compiles once and reuses the build for every case.
 //!
-//! It needs mdsmith on PATH, so its tests are ignored by default; CI's
-//! drift job runs them with `--ignored`.
+//! It needs mdsmith and taplo on PATH, so its tests are ignored by
+//! default; CI's drift job runs them with `--ignored`.
 
 #![allow(
     clippy::unwrap_used,
@@ -35,7 +35,7 @@ const POLL: Duration = Duration::from_millis(100);
 /// One test, so every check builds into the one target directory in
 /// turn rather than two copies compiling side by side.
 #[test]
-#[ignore = "needs mdsmith on PATH; CI's drift job runs it"]
+#[ignore = "needs mdsmith and taplo on PATH; CI's drift job runs it"]
 fn every_drift_is_caught() {
     let tmp = TempDir::new().unwrap();
     let (work, target) = (tmp.path().join("work"), tmp.path().join("target"));

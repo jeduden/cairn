@@ -454,3 +454,31 @@ fn a_member_glob_that_cannot_be_listed_is_named() {
     assert_eq!(crates_forbid_unsafe(&c).len(), 1);
     assert!(crates_forbid_unsafe(&c)[0].starts_with("list gone: "));
 }
+
+#[test]
+fn ci_gating_on_both_toml_checks_passes() {
+    let flow = workflow(
+        &[("toml", "taplo fmt --check"), ("schemas", "taplo lint")],
+        "toml, schemas",
+    );
+
+    assert!(toml_gates(&flow).is_empty(), "{:?}", toml_gates(&flow));
+}
+
+#[test]
+fn a_toml_check_not_run_or_not_needed_is_named() {
+    let flow = workflow(
+        &[("toml", "taplo fmt --check"), ("schemas", "taplo lint")],
+        "toml",
+    );
+    assert_eq!(
+        toml_gates(&flow),
+        ["job schemas runs taplo lint, but the ci job does not need it"]
+    );
+
+    let flow = workflow(&[("toml", "taplo lint")], "toml");
+    assert_eq!(
+        toml_gates(&flow),
+        ["no CI job runs taplo fmt: taplo fmt --check"]
+    );
+}

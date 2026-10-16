@@ -62,3 +62,12 @@ fn every_crate_holds_the_complexity_limits() {
 
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
+
+/// CI gates on Taplo's TOML checks: every TOML file's layout, and each
+/// against the schema `.taplo.toml` names for it.
+#[test]
+fn the_ci_workflow_gates_on_the_toml_checks() {
+    let problems = static_analysis::toml_gates(&ci(&checkout()));
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}

@@ -71,5 +71,5 @@ to the same allow-list, with each exception named, and to crates.io as
 the only source; CI runs cargo-deny and cargo-audit over it (ENG-16).
 Updates arrive weekly from dependabot for Cargo and actions.
 
-Dev tools are no dependency. CI installs cargo-deny, cargo-audit and
-cargo-llvm-cov at exact versions.
+Dev tools are no dependency. CI installs cargo-deny, cargo-audit,
+cargo-llvm-cov and taplo at exact versions.
