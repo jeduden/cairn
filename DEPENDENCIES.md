@@ -61,12 +61,13 @@ footer: |
 | [ADR-2610142220](docs/adr/ADR-2610142220-random-getrandom.md)         | accepted   | Every random bit Cairn draws, for keys, commitment keys and room-id nonces, comes from the OS's random source through getrandom, behind a trait a test replaces. No user-space generator stands between.                                                                        |
 | [ADR-2610142221](docs/adr/ADR-2610142221-json-serde-json.md)          | accepted   | The scenarios run through cucumber-rs and the tooling decodes JSON through serde. serde_json reads and writes JSON in the tooling and, from M1, in the core executable: the MCP server, the store's content, the envelope and the canonical encoding.                           |
 | [ADR-2610152132](docs/adr/ADR-2610152132-settings-toml.md)            | accepted   | Every settings layer, managed policy, the principal's configuration and a repository's .cairn.toml, is read through the toml crate's parser into a table the configuration crate validates strictly itself. No serde derive, no writer, and the parser's nesting limit kept on. |
+| [ADR-2610161200](docs/adr/ADR-2610161200-redaction-regex.md)          | accepted   | The redaction rule set and the principal's redaction patterns (redaction.extra_patterns) match through the regex crate: finite automata, linear time on every input, each pattern compiled under a size limit. Default features off; std, unicode and perf on.                  |
 <?/catalog?>
 
-Eight direct dependencies. Six link into the shipped `cairn`
+Nine direct dependencies. Seven link into the shipped `cairn`
 executable, against the target of ten: `sha2`, `ed25519-dalek`, `getrandom`,
-`rusqlite`, `serde_json` and `toml`. `cucumber` and `serde` serve tests and
-repository tooling alone. The executable's reach test,
+`rusqlite`, `serde_json`, `toml` and `regex`. `cucumber` and `serde`
+serve tests and repository tooling alone. The executable's reach test,
 [crates/cairn/tests/reach.rs](crates/cairn/tests/reach.rs), fails the
 build when a crate links into it that its list does not allow, each
 listed crate weighed for its reach when it joined.

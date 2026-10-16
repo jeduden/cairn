@@ -103,7 +103,7 @@ impl Redactor {
             .enumerate()
             .flat_map(|(i, r)| r.spans(text).map(move |(s, e)| (s, e, i)))
             .collect();
-        spans.sort_unstable();
+        spans.sort_unstable_by_key(|&(start, _, rule)| (start, rule));
         let mut out = Redacted {
             text: String::with_capacity(text.len()),
             rules: Vec::new(),
@@ -152,7 +152,9 @@ impl Redactor {
     fn walk(&self, value: &Value, rules: &mut Vec<String>) -> Value {
         match value {
             Value::String(s) => Value::String(self.collect(s, rules)),
-            Value::Array(items) => Value::Array(items.iter().map(|v| self.walk(v, rules)).collect()),
+            Value::Array(items) => {
+                Value::Array(items.iter().map(|v| self.walk(v, rules)).collect())
+            }
             Value::Object(map) => {
                 let mut out = Map::new();
                 for (k, v) in map {

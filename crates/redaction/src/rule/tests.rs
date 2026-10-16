@@ -22,7 +22,11 @@ fn the_rule_set_is_version_1_and_every_rule_compiles() {
 #[test]
 fn each_rule_matches_its_secret_format() {
     let cases = [
-        ("aws_access_key", "key AKIAIOSFODNN7EXAMPLE end", "AKIAIOSFODNN7EXAMPLE"),
+        (
+            "aws_access_key",
+            "key AKIAIOSFODNN7EXAMPLE end",
+            "AKIAIOSFODNN7EXAMPLE",
+        ),
         (
             "github_token",
             "ghp_0123456789abcdefghijABCDEFGHIJ012345 x",
@@ -66,7 +70,8 @@ fn each_rule_matches_its_secret_format() {
 
 #[test]
 fn a_private_key_block_is_matched_whole_or_to_the_end_when_cut_short() {
-    let block = "-----BEGIN OPENSSH PRIVATE KEY-----\nb3Bl\nbnNz\n-----END OPENSSH PRIVATE KEY-----";
+    let block =
+        "-----BEGIN OPENSSH PRIVATE KEY-----\nb3Bl\nbnNz\n-----END OPENSSH PRIVATE KEY-----";
     assert_eq!(matched("private_key", &format!("a {block} b")), [block]);
     let cut = "-----BEGIN RSA PRIVATE KEY-----\nMIIE";
     assert_eq!(matched("private_key", &format!("a {cut}")), [cut]);

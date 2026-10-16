@@ -58,7 +58,10 @@ fn a_refused_pattern_is_named_and_the_rest_still_apply() {
     assert_eq!(refused.len(), 1);
     let PatternRefused { rule, .. } = &refused[0];
     assert_eq!(rule, "extra_pattern_1");
-    assert_eq!(refused[0].to_string(), "redaction pattern extra_pattern_1 refused");
+    assert_eq!(
+        refused[0].to_string(),
+        "redaction pattern extra_pattern_1 refused"
+    );
     assert!(std::error::Error::source(&refused[0]).is_some());
     assert_eq!(r.redact_text("ACME").text, "[REDACTED:extra_pattern_2]");
 }
@@ -70,8 +73,13 @@ fn with_identifiers_redacts_the_harness_account_ahead_of_extra_patterns() {
     let r = redactor(&["user@example"]).with_identifiers(&ids).unwrap();
     let out = r.redact_text("from user@example.com");
     assert_eq!(out.text, "from [REDACTED:account_email]");
-    let none = redactor(&[]).with_identifiers(&HarnessAccountIdentifiers::default()).unwrap();
-    assert_eq!(none.redact_text("user@example.com").text, "user@example.com");
+    let none = redactor(&[])
+        .with_identifiers(&HarnessAccountIdentifiers::default())
+        .unwrap();
+    assert_eq!(
+        none.redact_text("user@example.com").text,
+        "user@example.com"
+    );
 }
 
 #[test]
