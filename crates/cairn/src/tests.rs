@@ -300,7 +300,7 @@ fn ingest_records_each_line_and_names_the_writer() {
 }
 
 #[test]
-fn a_release_build_records_no_transcript_until_redaction_lands() {
+fn a_release_build_ingests_now_that_redaction_comes_first() {
     let p = Process::new();
     let path = p.transcript("a\n");
     let release = Build {
@@ -310,16 +310,40 @@ fn a_release_build_records_no_transcript_until_redaction_lands() {
 
     let (code, out, err) = p.invoke(&["ingest", "--path", &path], &release);
 
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(out.starts_with("ingested 1 lines into writer "), "{out}");
+}
+
+#[test]
+fn ingest_redacts_by_the_principals_patterns_and_audits_each_redaction() {
+    let p = Process::new();
+    p.configure("[redaction]\nextra_patterns = [\"(\", \"ACME-[0-9]{8}\"]\n");
+    let path = p.transcript("{\"t\":\"AKIAIOSFODNN7EXAMPLE ACME-12345678\"}\n");
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &path], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let entries: Vec<(String, Option<String>, String)> = audited(&p)
+        .into_iter()
+        .map(|e| (e.kind, e.counter, e.detail))
+        .collect();
+    let entry = |kind: &str, counter: &str, detail: &str| {
+        (kind.to_owned(), Some(counter.to_owned()), detail.to_owned())
+    };
     assert_eq!(
-        (code, out.as_str(), err.as_str()),
-        (
-            EXIT_FAILURE,
-            "",
-            "cairn ingest: a release build records no transcript until redaction before \
-             storage (SEC-08) lands; use a development build\n"
-        )
+        entries,
+        [
+            entry(
+                "rejected",
+                "redaction_pattern_refused",
+                "refused redaction pattern extra_pattern_1"
+            ),
+            entry("redacted", "redacted", "redacted by rule aws_access_key"),
+            entry("redacted", "redacted", "redacted by rule extra_pattern_2"),
+        ]
     );
-    assert!(!p.cairn_home().exists());
+    let store = std::fs::read(p.cairn_home().join("store.db")).unwrap();
+    assert!(!store.windows(13).any(|w| w == b"ACME-12345678"));
 }
 
 #[test]
