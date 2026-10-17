@@ -67,9 +67,10 @@ footer: |
 | [ADR-2610171300](docs/adr/ADR-2610171300-key-stores.md)               | accepted   | The core keeps each key in an entry named per home: on macOS in the Keychain through security-framework, on Windows in a file DPAPI protects through windows-sys in the dpapi shim, the one crate with unsafe code, which Miri checks; on Linux in a 0600 file, and cairn status says so. The stakeholder's ruling 2 of 14 October 2026. |
 <?/catalog?>
 
-Ten direct dependencies. Eight link into the shipped `cairn`
-executable, against the target of ten: `sha2`, `ed25519-dalek`,
-`getrandom`, `rusqlite`, `serde_json`, `toml`, `regex` and `tracing`.
+Twelve direct dependencies. Ten link into the shipped `cairn`
+executable, at the target of ten: `sha2`, `ed25519-dalek`,
+`getrandom`, `rusqlite`, `serde_json`, `toml`, `regex` and `tracing`,
+with `security-framework` on macOS and `windows-sys` on Windows only.
 `cucumber` and `serde` serve tests and repository tooling alone.
 `libfuzzer-sys`, proposed, would serve the fuzz targets alone, in
 `fuzz/`, a cargo workspace of its own that the check above does not
