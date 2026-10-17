@@ -91,9 +91,9 @@ fn appended_lines_keep_their_places_and_move_the_position_with_them() {
             writer(1),
             &events,
             &places,
+            &[false, true],
             source.id,
             &position(20, 2),
-            true,
         )
         .unwrap();
 
@@ -123,9 +123,9 @@ fn an_append_that_fails_leaves_the_position_where_it_was() {
             writer(1),
             &[bad],
             &[place(1, None)],
+            &[true],
             source.id,
             &position(10, 1),
-            true,
         )
         .unwrap_err();
 
@@ -166,9 +166,9 @@ fn a_line_owner_is_the_first_event_of_another_source_in_the_directory() {
             writer(1),
             &[event(EventKind::TranscriptLine, 1)],
             &[place(1, Some("u1"))],
+            &[true],
             a.id,
             &position(10, 1),
-            true,
         )
         .unwrap();
     store
@@ -176,9 +176,9 @@ fn a_line_owner_is_the_first_event_of_another_source_in_the_directory() {
             writer(2),
             &[event(EventKind::RepeatReference, 1)],
             &[place(1, Some("u2"))],
+            &[true],
             b.id,
             &position(10, 1),
-            true,
         )
         .unwrap();
     store
@@ -186,9 +186,9 @@ fn a_line_owner_is_the_first_event_of_another_source_in_the_directory() {
             writer(3),
             &[event(EventKind::TranscriptLine, 1)],
             &[place(1, Some("u3"))],
+            &[true],
             elsewhere.id,
             &position(10, 1),
-            true,
         )
         .unwrap();
 
@@ -279,9 +279,9 @@ fn a_place_whose_kind_does_not_parse_is_corrupt() {
             writer(1),
             &[event(EventKind::TranscriptLine, 1)],
             &[place(1, None)],
+            &[true],
             a.id,
             &position(10, 1),
-            true,
         )
         .unwrap();
     store

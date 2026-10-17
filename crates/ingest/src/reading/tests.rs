@@ -5,7 +5,7 @@ fn writer(n: u8) -> WriterId {
 }
 
 #[test]
-fn a_transaction_holds_one_writer_s_consecutive_lines_up_to_a_segment_end() {
+fn a_transaction_holds_one_writer_s_consecutive_lines() {
     let (a, b) = (writer(1), writer(2));
     let ends = [
         (a, false, 1),
@@ -15,7 +15,7 @@ fn a_transaction_holds_one_writer_s_consecutive_lines_up_to_a_segment_end() {
         (a, false, 5),
     ];
 
-    assert_eq!(transactions(&ends), [0..2, 2..3, 3..4, 4..5]);
+    assert_eq!(transactions(&ends), [0..3, 3..4, 4..5]);
     assert_eq!(last_of_each_writer(&ends)[&a], 4);
     assert_eq!(last_of_each_writer(&ends)[&b], 3);
     assert!(transactions(&[]).is_empty());

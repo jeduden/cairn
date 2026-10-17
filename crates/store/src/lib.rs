@@ -725,8 +725,8 @@ impl Store {
     /// Appends `new_events` to `writer`'s log in one transaction, as
     /// [`append`](Self::append) does, keeping each one's place in the
     /// transcript source generation `id` and moving its position to
-    /// `position` in the same transaction (REC-03); the segment closes
-    /// after them when `close`.
+    /// `position` in the same transaction (REC-03); the writer's segment
+    /// closes after each event `closes` marks `true` (REC-19).
     ///
     /// # Errors
     ///
@@ -736,9 +736,9 @@ impl Store {
         writer: WriterId,
         new_events: &[NewEvent],
         places: &[Place],
+        closes: &[bool],
         id: i64,
         position: &Position,
-        close: bool,
     ) -> Result<Vec<Address>, StoreError> {
         let to = Out {
             payloads: &self.payloads,
@@ -747,7 +747,15 @@ impl Store {
         let tx = self
             .conn
             .transaction_with_behavior(TransactionBehavior::Immediate)?;
-        let out = to.append_chunk(&tx, writer, new_events, close)?;
+        let mut out = Vec::with_capacity(new_events.len());
+        let mut start = 0;
+        for i in 0..new_events.len() {
+            let close = closes.get(i).copied().unwrap_or(false);
+            if close || i + 1 == new_events.len() {
+                out.extend(to.append_chunk(&tx, writer, &new_events[start..=i], close)?);
+                start = i + 1;
+            }
+        }
         source::place(&tx, id, &out, places)?;
         source::advance(&tx, id, position)?;
         tx.commit()?;
@@ -981,6 +989,10 @@ impl Out<'_> {
         let (mut next, mut prev_hash) = newest(tx, writer)?;
         let mut heads = advanced_heads(tx, writer)?;
         let mut out = Vec::with_capacity(new_events.len());
+        let mut inserts = Inserts {
+            event: tx.prepare(INSERT_EVENT)?,
+            head: tx.prepare(INSERT_HEAD)?,
+        };
         for new in new_events {
             let seq = Seq::new(next).ok_or(StoreError::Full(writer))?;
             let address = Address::new(writer, seq);
@@ -995,7 +1007,7 @@ impl Out<'_> {
             };
             let hash = header.hash();
             let body = self.body(address, new, canonical)?;
-            insert_event(tx, &header, hash, new, &body)?;
+            insert_event(&mut inserts, &header, hash, new, &body)?;
             out.push(address);
             prev_hash = hash;
             next += 1;
@@ -1071,10 +1083,28 @@ enum Body {
     Payload(PayloadReference),
 }
 
+/// Inserts an event's row.
+const INSERT_EVENT: &str =
+    "INSERT INTO events (writer, seq, kind, provenance, prev_hash, commitment, hash, content,
+                         commitment_key, preview, payload, payload_size, transcript_timestamp)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)";
+
+/// Inserts one head an event cites.
+const INSERT_HEAD: &str =
+    "INSERT INTO event_heads (writer, seq, other_writer, other_seq, other_hash)
+     VALUES (?1, ?2, ?3, ?4, ?5)";
+
+/// The statements an append transaction inserts its events with,
+/// prepared once for all of them.
+struct Inserts<'t> {
+    event: rusqlite::Statement<'t>,
+    head: rusqlite::Statement<'t>,
+}
+
 /// Inserts the row of the new event `new`, whose header is `header` and
 /// hash `hash`, its content kept as `body`, and the heads it cites.
 fn insert_event(
-    tx: &Transaction<'_>,
+    inserts: &mut Inserts<'_>,
     header: &EventHeader,
     hash: Digest,
     new: &NewEvent,
@@ -1086,31 +1116,29 @@ fn insert_event(
         Body::Inline(text) => (Some(text.as_str()), None),
         Body::Payload(r) => (None, Some(r)),
     };
-    tx.execute(
-        "INSERT INTO events (writer, seq, kind, provenance, prev_hash, commitment, hash, content,
-                             commitment_key, preview, payload, payload_size, transcript_timestamp)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-        params![
+    inserts.event.execute(params![
+        id,
+        seq,
+        header.kind.as_str(),
+        header.provenance.name(),
+        header.prev_hash.to_hex(),
+        header.commitment.to_string(),
+        hash.to_hex(),
+        content,
+        new.commitment_key.to_hex(),
+        reference.map(|r| r.preview.as_str()),
+        reference.map(|r| r.name.as_str()),
+        reference.map(|r| sql_size(r.size)),
+        new.transcript_timestamp,
+    ])?;
+    for seen in &header.heads {
+        inserts.head.execute(params![
             id,
             seq,
-            header.kind.as_str(),
-            header.provenance.name(),
-            header.prev_hash.to_hex(),
-            header.commitment.to_string(),
-            hash.to_hex(),
-            content,
-            new.commitment_key.to_hex(),
-            reference.map(|r| r.preview.as_str()),
-            reference.map(|r| r.name.as_str()),
-            reference.map(|r| sql_size(r.size)),
-            new.transcript_timestamp,
-        ],
-    )?;
-    for seen in &header.heads {
-        tx.execute(
-            "INSERT INTO event_heads (writer, seq, other_writer, other_seq, other_hash) VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![id, seq, seen.address.writer.to_string(), sql(seen.address.seq), seen.head.to_hex()],
-        )?;
+            seen.address.writer.to_string(),
+            sql(seen.address.seq),
+            seen.head.to_hex()
+        ])?;
     }
 
     Ok(())

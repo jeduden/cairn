@@ -55,7 +55,7 @@ pub(crate) fn ingest(
     let defaults = Defaults::of(path);
     let mut runs = Runs::load(&store, &named.path)?;
     let own = runs.ensure(&mut store, &node, home, &defaults.own(), entropy)?;
-    let mut planner = Planner::new(&named, inputs, &resume.source, &runs)?;
+    let mut planner = Planner::new(&store, &named, inputs, &resume.source, &runs)?;
     let plan = planner.plan(
         &mut store,
         &mut runs,
@@ -394,15 +394,23 @@ struct Planner<'a> {
     /// Whether a fork observation names each ingested run's harness
     /// session, by writer.
     forked: BTreeMap<WriterId, bool>,
+    /// Whether ingest has read another transcript of the directory,
+    /// whose events a line could repeat.
+    others: bool,
 }
 
 impl<'a> Planner<'a> {
     fn new(
+        store: &Store,
         named: &'a Named,
         inputs: &'a Inputs,
         source: &Source,
         runs: &Runs,
     ) -> Result<Self, IngestError> {
+        let others = store
+            .sources()?
+            .iter()
+            .any(|s| s.directory == named.directory && s.path != named.path);
         let forked = runs
             .sessions
             .iter()
@@ -415,6 +423,7 @@ impl<'a> Planner<'a> {
             held_since: source.held_since,
             siblings: None,
             forked,
+            others,
         })
     }
 
@@ -488,6 +497,9 @@ impl<'a> Planner<'a> {
     /// recorded the line `uuid` names, if an ingested run holds one.
     fn owner(&self, store: &Store, uuid: &str) -> Result<Option<Owner>, IngestError> {
         let named = self.named;
+        if !self.others {
+            return Ok(None);
+        }
         let Some(address) = store.line_owner(&named.directory, uuid, &named.path)? else {
             return Ok(None);
         };
@@ -624,9 +636,9 @@ impl Plan {
 /// Appends `plan` to its writers a transaction at a time, each moving
 /// the source's position past the lines it covers, then records how many
 /// bytes the source held. A transaction holds one writer's run of
-/// consecutive lines, at most a batch, ending where a segment closes:
-/// at a turn end or subagent end, and after a writer's last line. Returns
-/// how many events it appended.
+/// consecutive lines, at most a batch; its segments close at each turn
+/// end and subagent end, and after a writer's last line. Returns how many
+/// events it appended.
 fn append(
     store: &mut Store,
     resume: &Resume,
@@ -645,10 +657,17 @@ fn append(
         ..resume.position.clone()
     };
     let last = last_of_each_writer(&plan.ends);
+    // A segment closes at each turn end and subagent end, and after each
+    // writer's last line.
+    let closes: Vec<bool> = plan
+        .ends
+        .iter()
+        .enumerate()
+        .map(|(i, (writer, end, _))| *end || last.get(writer) == Some(&i))
+        .collect();
     let mut landed = 0;
     for range in transactions(&plan.ends) {
         let (writer, _, end) = plan.ends[range.end - 1];
-        let close = plan.ends[range.end - 1].1 || last.get(&writer) == Some(&(range.end - 1));
         let first = plan.places[range.start].offset;
         running.update(
             bytes
@@ -665,9 +684,9 @@ fn append(
             writer,
             &plan.events[range.clone()],
             &plan.places[range.clone()],
+            &closes[range.clone()],
             resume.source.id,
             &position,
-            close,
         );
         appended.map_err(|source| IngestError::Partial {
             writer,
@@ -691,14 +710,13 @@ fn last_of_each_writer(ends: &[(WriterId, bool, u64)]) -> BTreeMap<WriterId, usi
 }
 
 /// The ranges of `ends` each append transaction takes: consecutive
-/// events of one writer, at most a batch, each ending after an event
-/// that closes a segment.
+/// events of one writer, at most a batch.
 fn transactions(ends: &[(WriterId, bool, u64)]) -> Vec<std::ops::Range<usize>> {
     let mut out = Vec::new();
     let mut start = 0;
-    for (i, (writer, end, _)) in ends.iter().enumerate() {
+    for (i, (writer, _, _)) in ends.iter().enumerate() {
         let next_differs = ends.get(i + 1).is_none_or(|(w, _, _)| w != writer);
-        if *end || next_differs || i + 1 - start == store::BATCH {
+        if next_differs || i + 1 - start == store::BATCH {
             out.push(start..i + 1);
             start = i + 1;
         }
