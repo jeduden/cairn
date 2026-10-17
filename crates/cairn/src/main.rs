@@ -48,7 +48,6 @@ fn main() -> ExitCode {
         cairn::LogSettings {
             managed: ctx.managed_policy.clone(),
             os_user: ctx.os_user,
-            working_dir: ctx.working_dir.clone(),
         },
         now,
     );

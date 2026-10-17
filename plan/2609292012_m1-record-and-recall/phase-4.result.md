@@ -35,8 +35,9 @@ Outcome:
   counted (`ingest_refused_settings_invalid`); ADM-04 now says so, and
   `@ADM-04`'s failing-layer rows show the refusal. The transcript stays
   for an ingest once the layer is fixed (I1).
-- Log fields are redacted with the rule set and every redaction
-  pattern a settings layer names; while a principal layer fails, no
+- Log fields are redacted with the rule set and the redaction patterns
+  the principal's configuration and managed policy name, a
+  repository's never; while the principal's configuration fails, no
   line is written, each counted as dropped. The logged transcript path
   is redacted with the harness account identifiers too.
 - A `.git` file's git directory is judged after resolving it, so no
@@ -79,3 +80,6 @@ Parked:
   it, and a FIFO in a root blocks the read: phase 8's ingest.
 - Ingest failures other than refusals reach stderr, unaudited.
 - Redactions are audited just after the write, not with it.
+- Only the logged transcript path passes the harness account
+  identifiers; a later log field that could carry them must pass
+  ingest's redactor too.
