@@ -1,5 +1,5 @@
 //! Search without the store: the query compiler (SEC-04) and the ranking
-//! of hits (RCL-02). The compiler is the only code that builds
+//! of hits ([`rank`], RCL-02). The compiler is the only code that builds
 //! a search query. Caller text is never FTS5 syntax. It splits on whitespace
 //! into literal terms, and each term is quoted whole, so `OR`, `NEAR(x)`
 //! and a stray quote match as the words they are and run no operator.
@@ -11,6 +11,8 @@
 //! The compiler is pure: it reads no clock, no file and no store, so a
 //! fuzz target can run it on hostile text. The deadline a query runs
 //! under is the store's (SEC-04, ENG-03).
+
+pub mod rank;
 
 use std::fmt;
 
@@ -95,8 +97,59 @@ impl std::error::Error for Error {}
 /// more than [`MAX_TERM_CHARS`] characters, a term starting with `*` or
 /// holding a control character, or no term with a letter or digit.
 pub fn compile(request: &Request<'_>) -> Result<Compiled, Error> {
-    let _ = request;
-    Err(Error::Empty)
+    let mut seen = 0;
+    let mut required = Vec::new();
+    for term in request.text.split_whitespace() {
+        required.extend(literal(term, &mut seen)?);
+    }
+    for term in request.all_of {
+        required.extend(literal(term, &mut seen)?);
+    }
+    if let Some(phrase) = request.phrase {
+        required.extend(literal(phrase, &mut seen)?);
+    }
+    let mut any = Vec::new();
+    for term in request.any_of {
+        any.extend(literal(term, &mut seen)?);
+    }
+    match any.len() {
+        0 => {}
+        1 => required.extend(any),
+        _ => required.push(format!("({})", any.join(" OR "))),
+    }
+    if required.is_empty() {
+        return Err(Error::Empty);
+    }
+
+    Ok(Compiled {
+        expression: required.join(" AND "),
+        terms: seen,
+    })
+}
+
+/// One term as a quoted FTS5 phrase, counted in `seen`; none for a
+/// term with nothing to match, an empty one or one with no letter or
+/// digit, which the tokenizer would drop whole.
+fn literal(term: &str, seen: &mut usize) -> Result<Option<String>, Error> {
+    if term.is_empty() {
+        return Ok(None);
+    }
+    *seen += 1;
+    if *seen > MAX_TERMS {
+        return Err(Error::TooManyTerms);
+    }
+    if term.starts_with('*') {
+        return Err(Error::LeadingWildcard);
+    }
+    if term.chars().take(MAX_TERM_CHARS + 1).count() > MAX_TERM_CHARS {
+        return Err(Error::TermTooLong);
+    }
+    if term.chars().any(char::is_control) {
+        return Err(Error::Control);
+    }
+    let searchable = term.chars().any(char::is_alphanumeric);
+
+    Ok(searchable.then(|| format!("\"{}\"", term.replace('"', "\"\""))))
 }
 
 #[cfg(test)]
