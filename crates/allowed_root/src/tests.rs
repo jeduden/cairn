@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use testkit::TempDir;
 
 use super::{
-    Access, AllowedRoots, PathOutsideAllowedRoots, expand_home, is_git_directory, repository,
+    Access, AllowedRoots, PathOutsideAllowedRoots, expand_home, git_directory, repository,
 };
 
 /// A home as SEC-18's scenario lays it out: transcript roots, a
@@ -150,10 +150,19 @@ fn a_root_that_does_not_resolve_allows_nothing() {
 fn repository_follows_a_git_file_to_the_directory_it_names() {
     let l = Layout::new();
     fs::create_dir_all(l.at("src/wt/sub")).unwrap();
+    fs::create_dir_all(l.at("src/app/.git/worktrees/wt")).unwrap();
+    fs::write(
+        l.at("src/app/.git/worktrees/wt/HEAD"),
+        "ref: refs/heads/wt\n",
+    )
+    .unwrap();
     fs::write(l.at("src/wt/.git"), "gitdir: ../app/.git/worktrees/wt\n").unwrap();
     let (top, git_dir) = repository(&l.at("src/wt/sub")).unwrap();
     assert_eq!(top, fs::canonicalize(l.at("src/wt")).unwrap());
-    assert_eq!(git_dir, top.join("../app/.git/worktrees/wt"));
+    assert_eq!(
+        git_dir,
+        fs::canonicalize(l.at("src/app/.git/worktrees/wt")).unwrap()
+    );
     fs::write(l.at("src/wt/.git"), "no gitdir here\n").unwrap();
     assert_eq!(repository(&l.at("src/wt/sub")), None);
     assert_eq!(repository(&l.at("nowhere")), None);
@@ -216,6 +225,28 @@ fn a_dangling_link_within_a_root_is_refused() {
     );
 }
 
+/// A hostile worktree's `.git` file whose `gitdir:` reads like a git
+/// directory but resolves to the home, or an ancestor of the worktree,
+/// opens no root over the home's secrets (SEC-18).
+#[cfg(unix)]
+#[test]
+fn a_git_file_whose_git_directory_resolves_elsewhere_adds_no_root() {
+    let l = Layout::new();
+    fs::create_dir_all(l.at("src/evil/sub.git")).unwrap();
+    fs::write(l.at("HEAD"), "ref: refs/heads/main\n").unwrap();
+    link(l.dir.path(), &l.at("src/evil/x.git"));
+    for named in ["x.git", "sub.git/../../..", "sub.git/../../../"] {
+        fs::write(l.at("src/evil/.git"), format!("gitdir: {named}\n")).unwrap();
+        let roots = AllowedRoots::default().with_worktree(&l.at("src/evil"));
+        assert!(
+            roots
+                .resolve(&l.at(".ssh/id_ed25519"), Access::Read)
+                .is_err(),
+            "gitdir: {named}"
+        );
+    }
+}
+
 #[test]
 fn a_git_file_naming_no_git_directory_adds_no_root() {
     let l = Layout::new();
@@ -228,14 +259,34 @@ fn a_git_file_naming_no_git_directory_adds_no_root() {
             .is_err()
     );
     assert!(roots.resolve(&l.at("src/evil/.git"), Access::Read).is_ok());
-    for named in [
-        "../app/.git/worktrees/wt",
-        "/r/repo.git",
-        "/r/.git/modules/m",
+}
+
+#[test]
+fn git_directory_wants_a_resolved_git_directory_holding_head_outside_the_worktree() {
+    let l = Layout::new();
+    for d in [
+        "bare.git",
+        "nohead.git",
+        "anc.git/proj",
+        "src/app/.git/modules/m",
     ] {
-        assert!(is_git_directory(Path::new(named)), "{named}");
+        fs::create_dir_all(l.at(d)).unwrap();
     }
-    for named in ["/", "/home/someone", "../app"] {
-        assert!(!is_git_directory(Path::new(named)), "{named}");
+    for d in ["bare.git", "anc.git", "src/app/.git/modules/m"] {
+        fs::write(l.at(d).join("HEAD"), "ref: refs/heads/main\n").unwrap();
     }
+    let top = fs::canonicalize(l.at("src")).unwrap();
+    for named in ["src/app/.git", "bare.git", "src/app/.git/modules/m"] {
+        let found = git_directory(&top, &l.at(named));
+        assert_eq!(
+            found,
+            Some(fs::canonicalize(l.at(named)).unwrap()),
+            "{named}"
+        );
+    }
+    for named in ["src/app", "nohead.git", "missing.git"] {
+        assert_eq!(git_directory(&top, &l.at(named)), None, "{named}");
+    }
+    let inside = fs::canonicalize(l.at("anc.git/proj")).unwrap();
+    assert_eq!(git_directory(&inside, &l.at("anc.git")), None);
 }
