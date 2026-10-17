@@ -1,7 +1,7 @@
 ---
 n: 7
 title: "The transcript parser and provenance"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 7: the transcript parser and provenance
