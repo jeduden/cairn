@@ -43,10 +43,10 @@ summary: >-
   or a purge (ADM-07) rewrites closed segments without changing any address.
   The **open segment** is a writer's newest, still growing, closing as REC-19
   says; peers exchange its sealed prefix. A closed segment or an open segment's
-  sealed prefix is a **sealed range**. Each segment, like the store, carries
-  a **format version**; a node refuses one newer than it supports (ADM-05). A
-  refused segment is recorded as a structural event in this node's personal
-  room (REC-21).
+  sealed prefix is a **sealed range**. A refused segment is recorded as a
+  structural event in this node's personal room (REC-21). Each segment, like
+  the store, carries a **format version**; a node refuses one newer than it
+  supports (ADM-05).
 - **Seal**: A seat key's signature over its writer id, a seq and the chain head
   at that seq (REC-18), made where that key lives (REC-19). Events after the
   newest seal are unsigned.
