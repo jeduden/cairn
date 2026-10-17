@@ -1,7 +1,7 @@
 ---
 n: 8
 title: "cairn ingest: runs, ingest positions, generations and repeated lines"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 8: `cairn ingest`
@@ -63,9 +63,10 @@ Where the gate's scenarios go live:
 - `@REC-04`: fork observations need phase 9, live ingest phase 10,
   purge phase 14.
 - `@REC-08`: `cairn event expand` is phase 13's.
-- `@REC-22`: freshness and trust marks and hook markers come later.
+- `@REC-22`: unbound, raised: its transcript from outside the roots
+  meets SEC-18's refusal. Its marks and hook markers come later.
 - `@PRV-05`: `post` and `summary` rows come later.
 
 Gate: `@REC-01`, `@REC-03` and `@REC-07` pass. The bound steps of
-`@REC-02`, `@REC-04`, `@REC-08`, `@REC-22` and PRV-05 pass. Both
+`@REC-02`, `@REC-04`, `@REC-08` and PRV-05 pass. Both
 properties hold; NFR-04 is benchmarked.
