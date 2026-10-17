@@ -7,6 +7,7 @@ fn every_event_kind_round_trips_through_its_name() {
         (EventKind::CreateRoom, "create_room"),
         (EventKind::CertificateRecord, "certificate_record"),
         (EventKind::UnparsedLine, "unparsed_line"),
+        (EventKind::TranscriptLine, "transcript_line"),
         (EventKind::PrincipalAct, "principal_act"),
     ] {
         assert_eq!(kind.as_str(), name);

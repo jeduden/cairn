@@ -32,7 +32,7 @@ fn recorded_shapes_regenerate_byte_for_byte() {
 
 #[test]
 fn every_recorded_transcript_replays_without_an_unparsed_line_or_format_drift() {
-    let supported = Shapes::supported().unwrap();
+    let supported = Shapes::supported();
     let redactor = Redactor::new(&[]).unwrap().0;
     let mut problems = Vec::new();
     let mut replayed = 0;

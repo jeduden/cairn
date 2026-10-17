@@ -866,12 +866,14 @@ version = "0.0.0"
 dependencies = [
  "administration",
  "key",
+ "provenance",
  "record",
  "redaction",
  "rusqlite",
  "serde_json",
  "store",
  "testkit",
+ "transcript",
 ]
 
 [[package]]
@@ -1263,11 +1265,13 @@ dependencies = [
  "harness-contract",
  "key",
  "record",
+ "redaction",
  "rusqlite",
  "serde_json",
  "srs",
  "store",
  "testkit",
+ "transcript",
 ]
 
 [[package]]

@@ -93,7 +93,7 @@ Feature: Record (REC)
     When a harness fork of "parent-run" with the transcript "late-fork", repeating those 40 lines, is ingested
     Then none of those lines is recorded again, each refusal is counted and audited, and the record keeps only their uuids beside the tombstones
 
-  @REC-05 @P0 @I1 @I6 @pending
+  @REC-05 @P0 @I1 @I6
   Scenario: unreadable transcript lines are kept as redacted unparsed events
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"

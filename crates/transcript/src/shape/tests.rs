@@ -140,7 +140,8 @@ fn recorded_shapes_refuse_text_of_another_form() {
 
 #[test]
 fn the_supported_versions_are_the_shapes_recorded_beside_the_crate() {
-    let shapes = Shapes::supported().unwrap();
+    assert!(Shapes::from_texts(&SUPPORTED).is_ok());
+    let shapes = Shapes::supported();
 
     let versions: Vec<&str> = shapes.versions().map(|r| r.version.as_str()).collect();
     assert_eq!(versions, ["2.1.296"]);

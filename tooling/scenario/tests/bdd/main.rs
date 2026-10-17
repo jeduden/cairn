@@ -21,6 +21,7 @@ mod engineering_analyzers;
 mod engineering_architecture;
 mod engineering_benchmark;
 mod engineering_boundary;
+mod engineering_contract;
 mod engineering_drift;
 mod engineering_isolation;
 mod engineering_logs;
@@ -31,7 +32,9 @@ mod engineering_release;
 mod engineering_review;
 mod observability;
 mod principal_acts;
+mod provenance;
 mod record;
+mod record_transcript;
 mod security;
 mod security_redaction;
 

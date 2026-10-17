@@ -266,3 +266,163 @@ fn an_identifier_too_long_to_redact_records_nothing() {
     assert!(std::error::Error::source(&err).is_some());
     assert!(!home.store().exists());
 }
+
+/// A recorded Claude Code 2.1.296 transcript: 57 lines, a Bash call and
+/// its result among them.
+const RECORDED: &str = "testdata/claude-code/2.1.296/transcripts/projects/-w-my-app/686aa14f-b535-45bc-9ed0-5400ea84bec7.jsonl";
+
+#[test]
+fn each_line_is_recorded_with_the_class_its_structure_gives() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let text = std::fs::read_to_string(testkit::repo_root().join(RECORDED)).unwrap();
+    let path = transcript(&dir, &text);
+
+    let ingested = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+
+    assert_eq!((ingested.events, ingested.unparsed), (57, 0));
+    assert_eq!(ingested.drifts, Vec::<String>::new());
+    let store = Store::open(&home.store()).unwrap();
+    let log = store.log(ingested.writer).unwrap();
+    let class = |line: usize| log[line - 1].link.header.provenance.name();
+    assert!(
+        log.iter()
+            .all(|e| e.link.header.kind == EventKind::TranscriptLine)
+    );
+    assert_eq!(class(1), "harness_meta");
+    assert_eq!(class(3), "harness_text");
+    assert_eq!(class(6), "harness_text");
+    // A prompt is no `user` event until a hook observation records the
+    // harness session's process ancestry (PRV-08).
+    assert_eq!(class(7), "harness_text");
+    assert_eq!(class(20), "assistant");
+    assert_eq!(class(21), "tool_call");
+    assert_eq!(class(22), "tool_result:Bash");
+    assert_eq!(class(57), "harness_meta");
+    assert_eq!(
+        log[21].content.as_ref().unwrap()["text"],
+        text.lines().nth(21).unwrap()
+    );
+    let device = key::signing::DeviceKey::load(&home.device_key()).unwrap();
+    assert!(administration::verify::verify(&store, &device.public()).is_ok());
+}
+
+#[test]
+fn an_unparsed_or_drifting_line_is_kept_redacted_counted_and_described() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let key = "sk-ant-api03-ABCDEFGHIJKLMNOPQRSTUVWXYZ012345";
+    let lines = [
+        format!("{{not json {key}"),
+        format!(r#"{{"type":"future_kind","secret":"{key}"}}"#),
+        format!(r#"{{"type":"assistant","version":"2.1.296","note":"{key}"}}"#),
+    ];
+    let path = transcript(&dir, &format!("{}\n", lines.join("\n")));
+
+    let ingested = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+
+    assert_eq!((ingested.events, ingested.unparsed), (3, 2));
+    assert_eq!(ingested.drifts.len(), 2);
+    assert_eq!(
+        ingested.drifts[0],
+        "claude-code:unversioned:future_kind:unrecorded-type"
+    );
+    assert!(
+        ingested.drifts[1].starts_with("claude-code:2.1.296:assistant:missing:"),
+        "{:?}",
+        ingested.drifts
+    );
+    let store = Store::open(&home.store()).unwrap();
+    let log = store.log(ingested.writer).unwrap();
+    let headers: Vec<(EventKind, Provenance)> = log
+        .iter()
+        .map(|e| (e.link.header.kind, e.link.header.provenance.clone()))
+        .collect();
+    assert_eq!(
+        headers,
+        [
+            (EventKind::UnparsedLine, Provenance::Unparsed),
+            (EventKind::UnparsedLine, Provenance::Unparsed),
+            (EventKind::TranscriptLine, Provenance::HarnessText),
+        ]
+    );
+    for stored in &log {
+        let text = stored.content.as_ref().unwrap()["text"].as_str().unwrap();
+        assert!(!text.contains(key), "{text}");
+        assert!(text.contains("[REDACTED:anthropic_api_key]"), "{text}");
+    }
+}
+
+#[test]
+fn a_drifts_description_passes_the_redactor() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let line = r#"{"type":"assistant","version":"AKIAIOSFODNN7EXAMPLE","message":{}}"#;
+    let path = transcript(&dir, &format!("{line}\n"));
+
+    let ingested = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+
+    assert_eq!(
+        ingested.drifts,
+        ["claude-code:_REDACTED_aws_access_key_:assistant:unsupported-version"]
+    );
+}
+
+#[test]
+fn the_transcripts_under_a_root_are_its_jsonl_files_in_path_order() {
+    let dir = TempDir::new().unwrap();
+    let root = dir.path().join("projects");
+    std::fs::create_dir_all(root.join("-w-a/s1/subagents")).unwrap();
+    std::fs::create_dir_all(root.join("-w-b")).unwrap();
+    for file in [
+        "-w-b/s2.jsonl",
+        "-w-a/s1.jsonl",
+        "-w-a/s1/subagents/agent-1.jsonl",
+        "-w-a/s1/subagents/agent-1.meta.json",
+        "-w-a/notes.txt",
+    ] {
+        std::fs::write(root.join(file), "x\n").unwrap();
+    }
+
+    let found = transcripts(&root).unwrap();
+
+    assert_eq!(
+        found,
+        // Path order compares component by component: `s1` before
+        // `s1.jsonl`.
+        [
+            root.join("-w-a/s1/subagents/agent-1.jsonl"),
+            root.join("-w-a/s1.jsonl"),
+            root.join("-w-b/s2.jsonl"),
+        ]
+    );
+    assert_eq!(
+        transcripts(&dir.path().join("none")).unwrap(),
+        Vec::<std::path::PathBuf>::new()
+    );
+    let file = root.join("-w-b/s2.jsonl");
+    let err = transcripts(&file).unwrap_err();
+    assert!(
+        err.to_string()
+            .starts_with(&format!("list the transcripts in {}: ", file.display())),
+        "{err}"
+    );
+    assert!(std::error::Error::source(&err).is_some());
+}
+
+#[cfg(unix)]
+#[test]
+fn the_transcripts_under_a_root_list_a_linked_transcript_but_descend_no_linked_directory() {
+    let dir = TempDir::new().unwrap();
+    let root = dir.path().join("projects");
+    std::fs::create_dir_all(&root).unwrap();
+    std::fs::create_dir_all(dir.path().join("elsewhere")).unwrap();
+    std::fs::write(dir.path().join("elsewhere/s.jsonl"), "x\n").unwrap();
+    std::os::unix::fs::symlink(dir.path().join("elsewhere"), root.join("dir")).unwrap();
+    std::os::unix::fs::symlink(dir.path().join("elsewhere/s.jsonl"), root.join("s.jsonl")).unwrap();
+
+    // The linked transcript is listed as the link; ingest resolves it
+    // within the allowed roots (SEC-18). The linked directory, which
+    // could loop, is not descended.
+    assert_eq!(transcripts(&root).unwrap(), [root.join("s.jsonl")]);
+}
