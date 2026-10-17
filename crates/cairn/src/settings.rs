@@ -73,7 +73,13 @@ pub(crate) fn accepted(acts: &[Recorded]) -> LayerValues {
 
 /// The settings layers in force for `home`, given its principal acts.
 pub(crate) fn in_force(ctx: &Context, home: &Home, acts: &[Recorded]) -> InForce {
-    let loaded = load(&sources(ctx, home));
+    in_force_from(&sources(ctx, home), acts)
+}
+
+/// The settings layers in force as read from `sources`, given the
+/// principal acts the record holds.
+pub(crate) fn in_force_from(sources: &Sources, acts: &[Recorded]) -> InForce {
+    let loaded = load(sources);
     let resolved = configuration::resolve(&loaded.layers, &accepted(acts));
 
     InForce { loaded, resolved }
@@ -140,7 +146,7 @@ fn ignored<'a>(operation: &'static str, i: &'a IgnoredKey) -> Occurrence<'a> {
         ),
         _ => (
             Counter::RepositoryConfigurationKeyIgnored,
-            "ignored repository configuration key",
+            "rejected repository setting",
             i.key.name(),
         ),
     };

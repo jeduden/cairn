@@ -91,7 +91,7 @@ fn every_failed_layer_and_ignored_key_has_its_occurrence() {
     assert_eq!(details(&p, "managed_policy_invalid").len(), 1);
     assert_eq!(
         details(&p, "repository_configuration_key_ignored"),
-        ["ignored repository configuration key node.deployment_mode"]
+        ["rejected repository setting node.deployment_mode"]
     );
     assert_eq!(
         details(&p, "trust_policy_key_ignored"),
@@ -200,6 +200,9 @@ pub(crate) fn ctx_of(p: &Process) -> Context<'static> {
         os_user: OsUser::Known(u32::MAX),
         input,
         clock: &|| 0,
+        attended: false,
+        hook_budget: None,
+        ancestry: || None,
     }
 }
 

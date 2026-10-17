@@ -18,6 +18,13 @@ fn main() -> ExitCode {
         // panic and audits it.
         std::panic::set_hook(Box::new(|_| {}));
     }
+    // A development build's seam for the tests: the clock stands still
+    // at the time it names; a release build reads the wall clock.
+    let fixed: Option<u64> = cfg!(debug_assertions)
+        .then(|| std::env::var("CAIRN_TEST_CLOCK").ok())
+        .flatten()
+        .and_then(|t| t.parse().ok());
+    let clock = move || fixed.unwrap_or_else(now);
     let ctx = cairn::Context {
         build: &cairn::BUILD,
         cairn_home: std::env::var_os("CAIRN_HOME"),
@@ -44,7 +51,19 @@ fn main() -> ExitCode {
             .map(std::path::PathBuf::from),
         os_user: os_user(),
         input: &stdin_lines,
-        clock: &now,
+        clock: &clock,
+        // The harness's attended mark (ASM-22), which only a hook
+        // handler reads (PRV-04).
+        attended: std::env::var_os("CLAUDE_CODE_SESSION_ATTENDED").is_some_and(|v| v == "1"),
+        // A development build's seam for the tests; a release build
+        // keeps each hook's own budget (NFR-02).
+        ancestry: hook::ancestry::own,
+        hook_budget: cairn::budget_override(
+            cfg!(debug_assertions)
+                .then(|| std::env::var("CAIRN_TEST_HOOK_BUDGET_MS").ok())
+                .flatten()
+                .as_deref(),
+        ),
     };
 
     let log = cairn::structured_log(
