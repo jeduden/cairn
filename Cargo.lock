@@ -699,8 +699,11 @@ dependencies = [
 name = "harness-contract"
 version = "0.0.0"
 dependencies = [
+ "provenance",
+ "redaction",
  "serde_json",
  "testkit",
+ "transcript",
 ]
 
 [[package]]
