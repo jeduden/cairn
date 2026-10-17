@@ -440,7 +440,20 @@ fn ingest(
 fn start_node(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> Result<(), String> {
     home.create().map_err(|e| e.to_string())?;
     let mut store = Store::open(&home.store()).map_err(|e| e.to_string())?;
-    let opened = Node::open(home, &mut store, &mut OsEntropy);
+
+    open_node(ctx, home, &mut store, stderr).map(drop)
+}
+
+/// The node in `home`, opened in `store` as [`start_node`] opens it:
+/// a node identity change audited and counted, and a missing device key
+/// or a key store that cannot be read refused, audited and counted.
+pub(crate) fn open_node(
+    ctx: &Context,
+    home: &Home,
+    store: &mut Store,
+    stderr: &mut dyn Write,
+) -> Result<Node, String> {
+    let opened = Node::open(home, store, &mut OsEntropy);
     let occurrence = match &opened {
         Ok(node) if node.identity_change().is_some() => Some(Occurrence::Degraded {
             kind: Kind::Dropped,
@@ -471,7 +484,7 @@ fn start_node(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> Result<(), 
         let _ = writeln!(stderr, "cairn: audit the node's start: {e}");
     }
 
-    opened.map(drop).map_err(|e| e.to_string())
+    opened.map_err(|e| e.to_string())
 }
 
 /// Refuses an ingest while the principal's configuration or the

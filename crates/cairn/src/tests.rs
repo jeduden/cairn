@@ -1953,3 +1953,24 @@ fn ingest_refuses_a_missing_or_unreadable_device_key_audited_and_counted() {
         "{err}"
     );
 }
+
+#[test]
+fn a_principal_act_audits_a_node_identity_change_and_counts_no_act_from_before_it() {
+    let mut p = Process::new();
+    let id = p.dir.path().join("machine-id");
+    std::fs::write(&id, "first").unwrap();
+    p.node_identity = Some(id.clone());
+    p.invoke(&["counter", "ack"], &DEV);
+    std::fs::write(&id, "second").unwrap();
+
+    let (code, _, err) = p.invoke(&["counter", "ack"], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(audit_text(&p).contains("node identity changed"));
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None)
+        .unwrap()
+        .with_identity(IdentitySource::Files(vec![id]));
+    let store = Store::open(&home.store()).unwrap();
+    let node = Node::find(&home, &store).unwrap();
+    assert_eq!(act_record::acts(&store, &node).unwrap().len(), 1);
+}
