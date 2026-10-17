@@ -637,3 +637,28 @@ fn a_line_above_the_payload_threshold_goes_to_the_payload_store() {
         store::DEFAULT_PAYLOAD_THRESHOLD
     );
 }
+
+#[test]
+fn every_event_s_commitment_key_is_a_fresh_256_bit_secret_kept_beside_its_content() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let text: String = (1..=64).map(|n| format!("line {n}\n")).collect();
+
+    let ingested =
+        ingest_path(&home, &transcript(&dir, &text), &redactor(), &mut OsEntropy).unwrap();
+
+    let log = Store::open(&home.store())
+        .unwrap()
+        .log(ingested.writer)
+        .unwrap();
+    let keys: std::collections::BTreeSet<[u8; 32]> = log
+        .iter()
+        .map(|s| *s.commitment_key.as_ref().unwrap().as_bytes())
+        .collect();
+    assert_eq!(keys.len(), 64, "no two events share a commitment key");
+    for stored in &log {
+        let key = stored.commitment_key.as_ref().unwrap();
+        assert_eq!(key.as_bytes().len() * 8, 256);
+        assert!(!stored.link.header.canonical().contains(&key.to_hex()));
+    }
+}
