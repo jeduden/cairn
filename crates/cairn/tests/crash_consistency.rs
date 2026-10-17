@@ -105,7 +105,7 @@ fn iterate(first: u64, threads: u64, iterations: u64, seed: u64) -> u64 {
     let mut home = fresh();
     let mut killed = 0;
     for (i, n) in (first..iterations).step_by(threads as usize).enumerate() {
-        if i > 0 && i as u64 % PER_HOME == 0 {
+        if i > 0 && (i as u64).is_multiple_of(PER_HOME) {
             home = fresh();
         }
         let after = Duration::from_millis(kill_point(seed, n));
