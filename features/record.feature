@@ -139,7 +139,7 @@ Feature: Record (REC)
     Then the output names "cut-short", and only it, as a transcript source that disappeared before it was fully ingested
     And "cairn event expand" still returns all 40 events of "main-run"
 
-  @REC-09 @P0 @I1 @pending
+  @REC-09 @P0 @I1
   Scenario: content above the payload threshold goes to a payload store under a name that reveals nothing off the node
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
