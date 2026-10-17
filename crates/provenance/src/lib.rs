@@ -125,9 +125,6 @@ impl<'a> Classifier<'a> {
     }
 
     fn class(&mut self, line: &Line) -> Provenance {
-        if !line.is_empty() {
-            return Provenance::HarnessText;
-        }
         match text(line, "type") {
             "user" => self.user(line),
             "assistant" => self.assistant(line),

@@ -105,7 +105,7 @@ impl RecordedShapes {
     #[must_use]
     pub fn generate(version: &str, lines: &[Line]) -> Self {
         let mut shapes: BTreeMap<String, Shape> = BTreeMap::new();
-        for line in lines.iter().take(0) {
+        for line in lines {
             let Some(key) = shape_key(line) else {
                 continue;
             };

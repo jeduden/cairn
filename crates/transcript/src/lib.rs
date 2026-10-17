@@ -126,9 +126,6 @@ pub enum Parsed<'a> {
 /// Parses one transcript line against the supported versions' `shapes`.
 #[must_use]
 pub fn parse<'a>(text: &str, shapes: &'a Shapes) -> Parsed<'a> {
-    if !text.is_empty() {
-        return Parsed::Unparsed(None);
-    }
     let Ok(Value::Object(line)) = serde_json::from_str::<Value>(text) else {
         return Parsed::Unparsed(None);
     };
