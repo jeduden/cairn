@@ -84,15 +84,13 @@ proven by its bound steps or by named tests. That follows the pattern
 of ENG-12 in plan 2609292011. A scenario that cannot pass as written
 is a finding to raise, never one to re-pend.
 
-Each test kind lands with the code it tests: the fuzz targets of
-ENG-07, the properties of ENG-08, crash consistency (ENG-06), the
-contract replay (ENG-17) and the benchmarks of NFR-01 to NFR-05
-(ENG-15). Plan 2609292011 built the other ENG gates. It keeps ENG-03
-and ENG-15 open until M1 adds injectable I/O traits and benchmarks of
-real code, so M1 no longer depends on it. M1's last phase closes both
-with it instead. The CON rows need no scenario of their own: the
-reach test and the release build prove CON-02 to CON-04, and the
-record's laws (REC-06, REC-10, ENG-08) prove CON-05.
+Each test kind lands with the code it tests: ENG-07's fuzz targets,
+ENG-08's properties, crash consistency (ENG-06), the contract replay
+(ENG-17) and NFR-01 to NFR-05's benchmarks (ENG-15). Plan 2609292011
+keeps ENG-03 and ENG-15 open until M1 adds injectable I/O traits and
+real benchmarks; M1's last phase closes both. The reach test and the
+release build prove CON-02 to CON-04, and the record's laws (REC-06,
+REC-10, ENG-08) CON-05, with no scenario of their own.
 
 ### What the spikes left
 
@@ -274,6 +272,7 @@ footer: |
 |     | ↳      | @ENG-05 off @pending and passing. cairn ingest redacts every line before it writes, refuses while a settings layer fails, reads only within the allowed roots, and a release build ingests again; hook input past 1 MiB or depth 64 is refused. SEC-05 rows 1-2 and SEC-08's ingest steps pass narrowed.                                  |
 | 5   | ✅     | [Keys, seats and the personal room](phase-5.md)                                                                                                                                                                                                                                                                                           |
 |     | ↳      | @PRV-11 off @pending and passing. Keys live in this OS's key store per ruling 2, the dpapi shim under Miri; a changed node identity moves the node to a new device key and device seat in the same personal room, audited. REC-24, SEC-10 and PRV-12's genesis steps pass narrowed; @PRV-09 and @REC-24 cannot pass in M1 and are raised. |
+| 6   | 🔳     | [The store: writer logs, commitments, payloads, segments and format versions](phase-6.md)                                                                                                                                                                                                                                                 |
 | 7   | ✅     | [The transcript parser and provenance](phase-7.md)                                                                                                                                                                                                                                                                                        |
 |     | ↳      | @REC-05 and @PRV-03 off @pending and passing. Every transcript line is checked against its version's recorded shape and classed from its structure; unparsed and drifting lines are kept, counted and audited. PRV-08, REC-26, PRV-01 and ENG-17's M1 steps pass narrowed; three fuzz targets run nightly.                                |
 <?/catalog?>
