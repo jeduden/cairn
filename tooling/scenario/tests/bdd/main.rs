@@ -36,6 +36,7 @@ mod provenance;
 mod provenance_seats;
 mod record;
 mod record_keys;
+mod record_store;
 mod record_transcript;
 mod security;
 mod security_keys;
