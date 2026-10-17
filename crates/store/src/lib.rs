@@ -13,6 +13,7 @@
 
 pub mod payload;
 pub mod segment;
+pub mod source;
 
 use std::fmt;
 use std::path::Path;
@@ -33,6 +34,7 @@ use serde_json::Value;
 
 pub use payload::{Disk, OsDisk, Payloads};
 pub use segment::{SEGMENT_VERSION, Segment};
+pub use source::{IngestedRun, Place, Placed, Position, Source};
 
 /// The store's schema version (ADM-05, ADM-11).
 pub const SCHEMA_VERSION: u32 = 1;
@@ -642,6 +644,172 @@ impl Store {
             .collect()
     }
 
+    /// The newest generation of the transcript source at `path`.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or its row does not parse.
+    pub fn source(&self, path: &str) -> Result<Option<Source>, StoreError> {
+        Ok(source::select(
+            &self.conn,
+            &format!("{} AND path = ?1", source::NEWEST),
+            path,
+        )?
+        .pop())
+    }
+
+    /// The newest generation of every transcript source, by path.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn sources(&self) -> Result<Vec<Source>, StoreError> {
+        source::select(
+            &self.conn,
+            &format!("{} AND ?1 = ?1 ORDER BY path", source::NEWEST),
+            "",
+        )
+    }
+
+    /// Starts the next generation of the transcript source at `path`,
+    /// which lies in the transcript directory `directory`, its first
+    /// when none was read (REC-07).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn start_generation(&mut self, path: &str, directory: &str) -> Result<Source, StoreError> {
+        source::start(&self.conn, path, directory)
+    }
+
+    /// Moves the position of the transcript source generation `id` to
+    /// `position`, appending nothing.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn advance(&mut self, id: i64, position: &Position) -> Result<(), StoreError> {
+        source::advance(&self.conn, id, position)
+    }
+
+    /// Marks the transcript source generation `id` held at its ingest
+    /// marker since `since`, or, with none, no longer held (REC-04).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn hold(&mut self, id: i64, since: Option<u64>) -> Result<(), StoreError> {
+        source::hold(&self.conn, id, since)
+    }
+
+    /// Marks the transcript source generation `id` gone before it was
+    /// fully ingested (REC-08).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn lose(&mut self, id: i64) -> Result<(), StoreError> {
+        source::lose(&self.conn, id)
+    }
+
+    /// Appends `new_events` to `writer`'s log in one transaction, as
+    /// [`append`](Self::append) does, keeping each one's place in the
+    /// transcript source generation `id` and moving its position to
+    /// `position` in the same transaction (REC-03); the segment closes
+    /// after them when `close`.
+    ///
+    /// # Errors
+    ///
+    /// As [`append`](Self::append); nothing is appended or moved then.
+    pub fn append_lines(
+        &mut self,
+        writer: WriterId,
+        new_events: &[NewEvent],
+        places: &[Place],
+        id: i64,
+        position: &Position,
+        close: bool,
+    ) -> Result<Vec<Address>, StoreError> {
+        let to = Out {
+            payloads: &self.payloads,
+            threshold: self.threshold,
+        };
+        let tx = self
+            .conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let out = to.append_chunk(&tx, writer, new_events, close)?;
+        source::place(&tx, id, &out, places)?;
+        source::advance(&tx, id, position)?;
+        tx.commit()?;
+
+        Ok(out)
+    }
+
+    /// The events of the transcript source generation `id`, in line
+    /// order.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn placed(&self, id: i64) -> Result<Vec<Placed>, StoreError> {
+        source::placed(&self.conn, id)
+    }
+
+    /// The event that first recorded the line `uuid` names in the
+    /// transcript directory `directory`, read from a transcript source
+    /// other than `path`; never a repeat reference (REC-04).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn line_owner(
+        &self,
+        directory: &str,
+        uuid: &str,
+        path: &str,
+    ) -> Result<Option<Address>, StoreError> {
+        source::owner(&self.conn, directory, uuid, path)
+    }
+
+    /// Keeps `run`, an ingested run (REC-02).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does, or when its transcript source already has
+    /// a run of its agent id.
+    pub fn add_run(&mut self, run: &IngestedRun) -> Result<(), StoreError> {
+        source::add_run(&self.conn, run)
+    }
+
+    /// The ingested run of the transcript source at `path` and the
+    /// harness's agent id `agent_id`, none for the main run.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn ingested_run(
+        &self,
+        path: &str,
+        agent_id: Option<&str>,
+    ) -> Result<Option<IngestedRun>, StoreError> {
+        Ok(source::runs(
+            &self.conn,
+            "WHERE path = ?1 AND ifnull(agent_id, '') = ?2",
+            path,
+            agent_id.unwrap_or_default(),
+        )?
+        .pop())
+    }
+
+    /// Every ingested run, in the order they were kept.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn ingested_runs(&self) -> Result<Vec<IngestedRun>, StoreError> {
+        source::runs(&self.conn, "WHERE ?1 = ?2", "", "")
+    }
+
     /// The event at `address`.
     ///
     /// # Errors
@@ -995,6 +1163,7 @@ fn insert_seat(conn: &Connection, seat: &StoredSeat) -> Result<(), StoreError> {
 fn create(tx: &rusqlite::Transaction<'_>) -> Result<(), StoreError> {
     tx.execute_batch(SCHEMA)?;
     tx.execute_batch(segment::SCHEMA)?;
+    tx.execute_batch(source::SCHEMA)?;
     let mut insert = tx.prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
     for (key, value) in [
         ("schema_version", SCHEMA_VERSION.to_string()),
