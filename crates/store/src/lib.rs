@@ -8,9 +8,12 @@
 //!
 //! - [`payload`]: content above the payload threshold, kept in the
 //!   payload store beside `store.db` (REC-09).
+//! - [`hook`]: the hook observations and prompt commitments the hook
+//!   handlers hold beside the record (REC-19, PRV-08).
 //! - [`segment`]: each writer's log in segments, each with its format
 //!   version; a core append closes the segment it ends (REC-19).
 
+pub mod hook;
 pub mod payload;
 pub mod segment;
 pub mod source;
@@ -32,6 +35,7 @@ use rusqlite::{
 };
 use serde_json::Value;
 
+pub use hook::{Held, Observation, PromptCommitment};
 pub use payload::{Disk, OsDisk, Payloads};
 pub use segment::{SEGMENT_VERSION, Segment};
 pub use source::{IngestedRun, Place, Placed, Position, Source};
@@ -1207,6 +1211,7 @@ fn create(tx: &rusqlite::Transaction<'_>) -> Result<(), StoreError> {
     tx.execute_batch(SCHEMA)?;
     tx.execute_batch(segment::SCHEMA)?;
     tx.execute_batch(source::SCHEMA)?;
+    tx.execute_batch(hook::SCHEMA)?;
     let mut insert = tx.prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
     for (key, value) in [
         ("schema_version", SCHEMA_VERSION.to_string()),
