@@ -648,6 +648,29 @@ fn a_transcript_source_gone_before_it_was_fully_ingested_is_reported_and_audited
 }
 
 #[test]
+fn transcript_sources_that_cannot_be_read_fail_verify_and_status_and_are_said_by_ingest() {
+    let p = Process::new();
+    transcript_in(&p, "-w-a", "s1.jsonl", b"a\n");
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    std::fs::remove_file(p.dir.path().join(".claude/projects/-w-a/s1.jsonl")).unwrap();
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute_batch("DROP TABLE transcript_sources").unwrap();
+    drop(conn);
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("transcript_sources"), "{err}");
+    let (code, _, err) = p.invoke(&["status"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("transcript_sources"), "{err}");
+    let (_, _, err) = p.invoke(&["ingest", "--all"], &DEV);
+    assert!(
+        err.contains("cairn ingest: find lost transcript sources: "),
+        "{err}"
+    );
+}
+
+#[test]
 fn ingest_all_with_no_transcript_ingests_nothing() {
     let p = Process::new();
 

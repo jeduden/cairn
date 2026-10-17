@@ -218,26 +218,32 @@ pub(crate) const NEWEST: &str = "WHERE generation = (SELECT max(generation)
 /// Starts the next generation of the source at `path`, in `directory`,
 /// nothing read of it.
 pub(crate) fn start(conn: &Connection, path: &str, directory: &str) -> Result<Source, StoreError> {
-    let start = Position::start();
-    conn.execute(
+    let position = Position::start();
+    let next = "SELECT ifnull(max(generation), 0) + 1 FROM transcript_sources WHERE path = ?1";
+    let generation: Result<i64, _> = conn.query_row(next, [path], |r| r.get(0));
+    let generation = generation?;
+    let inserted = conn.execute(
         "INSERT INTO transcript_sources
              (path, generation, directory, byte_offset, prefix_hash, lines, seen, held_since, lost)
-         VALUES (?1, (SELECT ifnull(max(generation), 0) + 1 FROM transcript_sources WHERE path = ?1),
-                 ?2, 0, ?3, 0, 0, NULL, 0)",
-        params![path, directory, start.prefix.to_hex()],
-    )?;
-    let id = conn.last_insert_rowid();
-    select(conn, "WHERE id = ?1", &id.to_string())?
-        .pop()
-        .ok_or_else(|| StoreError::Corrupt {
-            address: None,
-            what: format!("transcript source {path:?} vanished"),
-        })
+         VALUES (?1, ?2, ?3, 0, ?4, 0, 0, NULL, 0)",
+        params![path, generation, directory, position.prefix.to_hex()],
+    );
+    inserted?;
+
+    Ok(Source {
+        id: conn.last_insert_rowid(),
+        path: path.to_owned(),
+        generation: count(generation),
+        directory: directory.to_owned(),
+        position,
+        held_since: None,
+        lost: false,
+    })
 }
 
 /// Moves source `id`'s position to `position`.
 pub(crate) fn advance(conn: &Connection, id: i64, position: &Position) -> Result<(), StoreError> {
-    conn.execute(
+    let updated = conn.execute(
         "UPDATE transcript_sources SET byte_offset = ?2, prefix_hash = ?3, lines = ?4, seen = ?5
          WHERE id = ?1",
         params![
@@ -247,20 +253,20 @@ pub(crate) fn advance(conn: &Connection, id: i64, position: &Position) -> Result
             sql_count(position.lines),
             sql_count(position.seen)
         ],
-    )?;
+    );
 
-    Ok(())
+    updated.map(drop).map_err(StoreError::from)
 }
 
 /// Marks source `id` held at its ingest marker since `since`, or no
 /// longer held.
 pub(crate) fn hold(conn: &Connection, id: i64, since: Option<u64>) -> Result<(), StoreError> {
-    conn.execute(
+    let updated = conn.execute(
         "UPDATE transcript_sources SET held_since = ?2 WHERE id = ?1",
         params![id, since.map(sql_count)],
-    )?;
+    );
 
-    Ok(())
+    updated.map(drop).map_err(StoreError::from)
 }
 
 /// Marks source `id` found gone before it was fully ingested.
@@ -282,14 +288,15 @@ pub(crate) fn place(
          VALUES ((SELECT rowid FROM events WHERE writer = ?1 AND seq = ?2), ?3, ?4, ?5, ?6)",
     )?;
     for (address, place) in addresses.iter().zip(places) {
-        insert.execute(params![
+        let inserted = insert.execute(params![
             address.writer.to_string(),
             sql(address.seq),
             id,
             sql_count(place.line),
             sql_count(place.offset),
             place.uuid
-        ])?;
+        ]);
+        inserted?;
     }
 
     Ok(())
@@ -297,11 +304,12 @@ pub(crate) fn place(
 
 /// The events of source `id`, in line order.
 pub(crate) fn placed(conn: &Connection, id: i64) -> Result<Vec<Placed>, StoreError> {
-    let mut statement = conn.prepare(
+    let statement = conn.prepare(
         "SELECT p.line, p.byte_offset, p.uuid, e.writer, e.seq, e.kind
          FROM transcript_places p JOIN events e ON e.rowid = p.event
          WHERE p.source = ?1 ORDER BY p.line",
-    )?;
+    );
+    let mut statement = statement?;
     let rows = statement.query_map([id], |r| {
         Ok((
             r.get::<_, i64>(0)?,

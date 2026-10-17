@@ -61,3 +61,10 @@ fn the_directory_s_other_transcripts_give_their_uuids() {
     assert_eq!(found, BTreeSet::from(["u1".to_owned()]));
     assert!(sibling_uuids(&dir.path().join("none").to_string_lossy(), "").is_empty());
 }
+
+#[test]
+fn a_run_whose_writer_has_no_seat_is_corrupt() {
+    let err = no_seat(writer(1));
+
+    assert!(err.to_string().contains("has no seat"), "{err}");
+}

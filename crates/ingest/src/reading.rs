@@ -255,10 +255,11 @@ fn text_of(store: &Store, placed: &Placed) -> Result<String, IngestError> {
         .and_then(|a| Address::parse(&a).ok())
         .map(|(a, _)| a);
 
-    Ok(match referred {
-        Some(address) => text(address)?.unwrap_or_default(),
-        None => String::new(),
-    })
+    Ok(referred
+        .map(text)
+        .transpose()?
+        .flatten()
+        .unwrap_or_default())
 }
 
 /// The ingested runs of one transcript source, by the harness's agent
@@ -503,23 +504,20 @@ impl<'a> Planner<'a> {
         let Some(address) = store.line_owner(&named.directory, uuid, &named.path)? else {
             return Ok(None);
         };
-        let Some(fork) = self.forked.get(&address.writer).copied() else {
-            return Ok(None);
-        };
-        let Some(event) = store.event(address)? else {
-            return Ok(None);
-        };
-        let text = event
-            .content
-            .as_ref()
-            .and_then(|c| c["text"].as_str())
-            .unwrap_or_default()
-            .to_owned();
+        // An event a place names is an ingested run's, and holds its
+        // line until purge removes it.
+        let fork = self.forked.get(&address.writer).copied();
+        let event = store.event(address)?;
 
-        Ok(Some(Owner {
+        Ok(fork.zip(event).map(|(fork, event)| Owner {
             address,
             provenance: event.link.header.provenance.clone(),
-            text,
+            text: event
+                .content
+                .as_ref()
+                .and_then(|c| c["text"].as_str())
+                .unwrap_or_default()
+                .to_owned(),
             fork,
         }))
     }
@@ -766,11 +764,16 @@ fn choose_owners(
 
 /// The seat of `writer`.
 fn seat_of(store: &Store, writer: WriterId) -> Result<record::id::SeatId, IngestError> {
-    store.seat(writer)?.map(|s| s.seat).ok_or_else(|| {
-        IngestError::Store(store::StoreError::Corrupt {
-            address: None,
-            what: format!("writer {writer} has no seat"),
-        })
+    let seat = store.seat(writer)?;
+
+    seat.map(|s| s.seat).ok_or_else(|| no_seat(writer))
+}
+
+/// The error of a run whose writer has no seat in the store.
+fn no_seat(writer: WriterId) -> IngestError {
+    IngestError::Store(store::StoreError::Corrupt {
+        address: None,
+        what: format!("writer {writer} has no seat"),
     })
 }
 

@@ -650,12 +650,13 @@ impl Store {
     ///
     /// Fails when SQLite does or its row does not parse.
     pub fn source(&self, path: &str) -> Result<Option<Source>, StoreError> {
-        Ok(source::select(
+        let found = source::select(
             &self.conn,
             &format!("{} AND path = ?1", source::NEWEST),
             path,
-        )?
-        .pop())
+        );
+
+        found.map(|mut s| s.pop())
     }
 
     /// Every generation of the transcript source at `path`, oldest
@@ -812,13 +813,14 @@ impl Store {
         path: &str,
         agent_id: Option<&str>,
     ) -> Result<Option<IngestedRun>, StoreError> {
-        Ok(source::runs(
+        let found = source::runs(
             &self.conn,
             "WHERE path = ?1 AND ifnull(agent_id, '') = ?2",
             path,
             agent_id.unwrap_or_default(),
-        )?
-        .pop())
+        );
+
+        found.map(|mut r| r.pop())
     }
 
     /// Every ingested run, in the order they were kept.
@@ -1132,13 +1134,14 @@ fn insert_event(
         new.transcript_timestamp,
     ])?;
     for seen in &header.heads {
-        inserts.head.execute(params![
+        let inserted = inserts.head.execute(params![
             id,
             seq,
             seen.address.writer.to_string(),
             sql(seen.address.seq),
             seen.head.to_hex()
-        ])?;
+        ]);
+        inserted?;
     }
 
     Ok(())
