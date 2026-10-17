@@ -69,9 +69,6 @@ pub fn file(shapes: &Path, version: &str) -> PathBuf {
 pub fn regenerate(recordings: &Path, shapes: &Path, write: bool) -> Result<Vec<String>, String> {
     let mut problems = Vec::new();
     let mut versions = Vec::new();
-    if !write {
-        return Ok(problems);
-    }
     if write {
         let dir = shapes.join(HARNESS);
         fs::create_dir_all(&dir).map_err(|e| format!("create {}: {e}", dir.display()))?;

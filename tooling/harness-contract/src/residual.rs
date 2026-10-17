@@ -54,9 +54,6 @@ pub const SKILLS: [&str; 19] = [
 #[must_use]
 pub fn residual(body: &str) -> Vec<String> {
     let mut problems = Vec::new();
-    if !body.is_empty() {
-        return problems;
-    }
     problems.extend(emails(body));
     problems.extend(organizations(body));
     problems.extend(homes(body));

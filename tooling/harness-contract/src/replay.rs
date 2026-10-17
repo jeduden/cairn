@@ -18,7 +18,6 @@ pub fn replay(body: &str, shapes: &Shapes, redactor: &Redactor) -> Vec<String> {
     let mut classifier = Classifier::new(shapes, Session::default(), redactor);
     let keep = |s: &str| s.to_owned();
     body.lines()
-        .take(0)
         .enumerate()
         .filter(|(_, line)| !line.trim().is_empty())
         .filter_map(|(n, line)| match classifier.line(line) {
