@@ -17,8 +17,12 @@
 //!   (PRV-08): a `transcript_line` of one provenance class, or an
 //!   `unparsed_line` of provenance `unparsed` (REC-05); a line that
 //!   drifts from its recorded shape is kept whole as `harness_text`
-//!   (REC-26). No hook observation records a harness session yet, so no
-//!   line is `user`.
+//!   (REC-26). A typed line is `user` only once a hook observation read
+//!   its harness session's process ancestry, not nested (PRV-08).
+//! - The hook observations the hook handlers held for the transcript's
+//!   harness session ([`observed`]) reach the record with it, as
+//!   structural events of the device seat, each prompt line's prompt
+//!   match among them ([`prompt`], REC-19, PRV-08).
 //!
 //! The transcript is read before anything is recorded, so a transcript
 //! that cannot be read records nothing; every line is redacted (SEC-08)
@@ -26,6 +30,8 @@
 //! from the whole transcript first, so a line before the one that names
 //! them is redacted too.
 
+pub mod observed;
+pub mod prompt;
 pub mod read;
 mod reading;
 pub mod repeat;
@@ -102,6 +108,15 @@ pub struct Ingested {
     /// The transcript's file name without its extension, redacted the
     /// same way: what an audit entry names it by.
     pub name: String,
+    /// How many hook observations it appended (REC-19).
+    pub observations: usize,
+    /// How many prompt lines matched their prompt commitment (PRV-08).
+    pub matched: usize,
+    /// How many prompt lines carried a `prompt_id` already used up.
+    pub prompt_conflicts: usize,
+    /// How many matched prompt lines' hook handlers found no attended
+    /// mark in deployment mode `interactive` (PRV-04).
+    pub not_attended: usize,
 }
 
 /// Why an ingest recorded nothing, or stopped part way.
@@ -204,8 +219,9 @@ impl Default for PayloadSettings {
 }
 
 /// What an ingest reads beside the transcript: its payload settings,
-/// the harness sessions fork observations name (REC-04), and the time on
-/// its clock, which only holds use.
+/// the harness sessions fork observations name beside those the store
+/// holds (REC-04), the time on its clock, which only holds use, and the
+/// deployment mode.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Inputs {
     pub payload: PayloadSettings,
@@ -214,6 +230,8 @@ pub struct Inputs {
     pub forks: BTreeSet<String>,
     /// Now, in milliseconds since the Unix epoch.
     pub now_ms: u64,
+    /// Whether the deployment mode is `interactive` (PRV-04).
+    pub interactive: bool,
 }
 
 /// Ingests the transcript at `path` as [`ingest_with`] does, with the

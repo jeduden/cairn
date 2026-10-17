@@ -21,6 +21,8 @@ use serde_json::{Value, json};
 use store::{IngestedRun, NewEvent, Place, Placed, Position, Source, Store};
 use transcript::shape::Shapes;
 
+use crate::observed::{self, Observed};
+use crate::prompt::{self, Outcome, PromptLine};
 use crate::read::{self, Line};
 use crate::repeat::{self, Decision, Facts, Owner, Rule};
 use crate::run::{Defaults, RunKey};
@@ -50,6 +52,10 @@ pub(crate) fn ingest(
     let mut store =
         Store::open(&home.store())?.with_payload_threshold(inputs.payload.payload_threshold);
     let node = Node::open(home, &mut store, entropy).map_err(IngestError::Admin)?;
+    let observed = Observed::load(&store)?;
+    let mut inputs = inputs.clone();
+    inputs.forks.extend(observed.forks());
+    let inputs = &inputs;
     let named = Named::of(path, &redactor);
     let resume = Resume::find(&mut store, &named, text.as_bytes(), &lines, &redactor)?;
     let defaults = Defaults::of(path);
@@ -59,7 +65,7 @@ pub(crate) fn ingest(
     let plan = planner.plan(
         &mut store,
         &mut runs,
-        &Session::default(),
+        &observed.session(&defaults.own().harness_session),
         Read {
             node: &node,
             home,
@@ -71,11 +77,23 @@ pub(crate) fn ingest(
         },
         entropy,
     )?;
-    let appended = append(&mut store, &resume, text.as_bytes(), &plan)?;
+    let (appended, addresses) = append(&mut store, &resume, text.as_bytes(), &plan)?;
     let hold_started = hold(&mut store, &resume.source, plan.hold, inputs.now_ms)?;
     let owners_chosen = choose_owners(&mut store, &node, &plan.chosen, entropy)?;
+    let main = defaults.own().agent_id.is_none().then_some(own);
+    let seen = Seen {
+        observed: &observed,
+        session: &defaults.own().harness_session,
+        main,
+        interactive: inputs.interactive,
+    };
+    let observations = record_observed(&mut store, &node, &seen, &plan, &addresses, entropy)?;
 
     Ok(Ingested {
+        matched: observations.matched,
+        prompt_conflicts: observations.conflicts,
+        not_attended: observations.not_attended,
+        observations: observations.appended,
         writer: own,
         seat: seat_of(&store, own)?,
         room: node.personal_room(),
@@ -371,6 +389,9 @@ struct Plan {
     redactions: Vec<String>,
     unparsed: usize,
     drifts: Vec<String>,
+    /// Each prompt line's event, by its index, with its `prompt_id` and
+    /// what became of the prompt commitment it names (PRV-08).
+    prompts: Vec<(usize, String, Outcome)>,
 }
 
 impl Plan {
@@ -398,6 +419,9 @@ struct Planner<'a> {
     /// Whether ingest has read another transcript of the directory,
     /// whose events a line could repeat.
     others: bool,
+    /// The prompt commitments, by harness session and `prompt_id`, a
+    /// line this ingest read used up.
+    used: BTreeSet<(String, String)>,
 }
 
 impl<'a> Planner<'a> {
@@ -425,6 +449,7 @@ impl<'a> Planner<'a> {
             siblings: None,
             forked,
             others,
+            used: BTreeSet::new(),
         })
     }
 
@@ -456,6 +481,8 @@ impl<'a> Planner<'a> {
                 plan.hold = true;
                 break;
             }
+            let user = matches!(classified, Classified::Line(Provenance::User, _));
+            let prompt = self.prompt(store, &read.parsed[i], &key, user, &decision, &read)?;
             let at = Planned {
                 writer,
                 number: i as u64 + 1,
@@ -463,9 +490,48 @@ impl<'a> Planner<'a> {
                 parsed: &read.parsed[i],
             };
             plan.add(at, classified, redacted, decision, read.redactor, entropy)?;
+            if let Some((prompt_id, outcome)) = prompt {
+                plan.prompts
+                    .push((plan.events.len() - 1, prompt_id, outcome));
+            }
         }
 
         Ok(plan)
+    }
+
+    /// What the parsed line `line` of the run `key`, classed `user` when
+    /// `user`, does to the prompt commitment its `prompt_id` names, when
+    /// it is a prompt line recorded as its own event (PRV-08).
+    fn prompt(
+        &mut self,
+        store: &Store,
+        line: &Value,
+        key: &RunKey,
+        user: bool,
+        decision: &Decision,
+        read: &Read<'_, '_>,
+    ) -> Result<Option<(String, Outcome)>, IngestError> {
+        if matches!(decision, Decision::Reference { .. }) {
+            return Ok(None);
+        }
+        let Some(prompt_line) = PromptLine::of(line) else {
+            return Ok(None);
+        };
+        let id = (key.harness_session.clone(), prompt_line.prompt_id.clone());
+        let commitment = store.prompt_commitment(&id.0, &id.1)?;
+        let redact = |text: &str| read.redactor.redact_text(text).text;
+        let outcome = prompt::outcome(
+            commitment.as_ref(),
+            self.used.contains(&id),
+            user,
+            &prompt_line,
+            &redact,
+        );
+        if outcome.is_some() {
+            self.used.insert(id);
+        }
+
+        Ok(outcome.map(|o| (prompt_line.prompt_id, o)))
     }
 
     /// What becomes of the parsed line `line` of the run `key`, whose
@@ -636,13 +702,13 @@ impl Plan {
 /// bytes the source held. A transaction holds one writer's run of
 /// consecutive lines, at most a batch; its segments close at each turn
 /// end and subagent end, and after a writer's last line. Returns how many
-/// events it appended.
+/// events it appended, and the address of each.
 fn append(
     store: &mut Store,
     resume: &Resume,
     bytes: &[u8],
     plan: &Plan,
-) -> Result<usize, IngestError> {
+) -> Result<(usize, Vec<Address>), IngestError> {
     let seen = bytes.len() as u64;
     let mut running = Running::default();
     running.update(
@@ -664,6 +730,7 @@ fn append(
         .map(|(i, (writer, end, _))| *end || last.get(writer) == Some(&i))
         .collect();
     let mut landed = 0;
+    let mut addresses = Vec::with_capacity(plan.events.len());
     for range in transactions(&plan.ends) {
         let (writer, _, end) = plan.ends[range.end - 1];
         let first = plan.places[range.start].offset;
@@ -686,17 +753,108 @@ fn append(
             resume.source.id,
             &position,
         );
-        appended.map_err(|source| IngestError::Partial {
+        addresses.extend(appended.map_err(|source| IngestError::Partial {
             writer,
             landed,
             lines: plan.events.len(),
             source,
-        })?;
+        })?);
         landed += range.len();
     }
     store.advance(resume.source.id, &position)?;
 
-    Ok(landed)
+    Ok((landed, addresses))
+}
+
+/// What one ingest found of the hook observations of the harness
+/// session it read.
+struct Seen<'s> {
+    observed: &'s Observed,
+    /// The harness session of the transcript's own run.
+    session: &'s str,
+    /// The writer of that harness session's main run, when the
+    /// transcript is its main run's: its hook observations go with it.
+    main: Option<WriterId>,
+    /// Whether the deployment mode is `interactive` (PRV-04).
+    interactive: bool,
+}
+
+/// What [`record_observed`] recorded.
+#[derive(Debug, Default)]
+struct Recorded {
+    appended: usize,
+    matched: usize,
+    conflicts: usize,
+    not_attended: usize,
+}
+
+/// Records, in the device seat, a prompt match event for each prompt
+/// line of `plan`, whose events landed at `addresses`, and a hook
+/// observation event for each hook observation the transcript's main
+/// run still held, using up the prompt commitments and marking the
+/// observations appended in the same transaction (REC-19, PRV-08).
+fn record_observed(
+    store: &mut Store,
+    node: &Node,
+    seen: &Seen<'_>,
+    plan: &Plan,
+    addresses: &[Address],
+    entropy: &mut dyn Entropy,
+) -> Result<Recorded, IngestError> {
+    let mut recorded = Recorded::default();
+    let mut contents = Vec::new();
+    let mut used = Vec::new();
+    let prompts = plan
+        .prompts
+        .iter()
+        .filter_map(|(index, id, outcome)| Some((addresses.get(*index)?, id, outcome)));
+    for (address, prompt_id, outcome) in prompts {
+        let attended = seen.observed.attended(seen.session, prompt_id);
+        recorded.matched += usize::from(*outcome == Outcome::Matched);
+        recorded.conflicts += usize::from(*outcome == Outcome::Conflict);
+        recorded.not_attended +=
+            usize::from(seen.interactive && *outcome == Outcome::Matched && !attended);
+        used.push((seen.session.to_owned(), prompt_id.clone()));
+        contents.push((
+            EventKind::PromptMatch,
+            json!({
+                "event": address.to_string(),
+                "prompt_id": prompt_id,
+                "result": outcome.as_str(),
+                "attended": attended,
+            }),
+        ));
+    }
+    let pending = seen
+        .main
+        .map(|run| (run, seen.observed.pending(seen.session)));
+    let mut ids = Vec::new();
+    for (run, held) in pending
+        .iter()
+        .flat_map(|(r, h)| h.iter().map(move |h| (*r, h)))
+    {
+        contents.push((EventKind::HookObservation, observed::content(held, run)));
+        ids.push(held.id);
+    }
+    recorded.appended = ids.len();
+    if contents.is_empty() {
+        return Ok(recorded);
+    }
+    let events = contents
+        .into_iter()
+        .map(|(kind, content)| {
+            Ok(NewEvent {
+                kind,
+                provenance: Provenance::Structural,
+                content,
+                commitment_key: CommitmentKey::from_bytes(draw(entropy).map_err(IngestError::Key)?),
+                transcript_timestamp: None,
+            })
+        })
+        .collect::<Result<Vec<_>, IngestError>>()?;
+    store.append_observed(node.device_writer(), &events, &ids, &used)?;
+
+    Ok(recorded)
 }
 
 /// The index of each writer's last event in `ends`.

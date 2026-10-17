@@ -1013,3 +1013,228 @@ fn a_repeated_line_refers_through_a_repeat_reference_when_a_generation_compares(
     assert!(shrunk.new_generation);
     assert_eq!(shrunk.events, 0);
 }
+
+/// A recorded Claude Code 2.1.296 line typed at the harness's input,
+/// carrying `text` as its prompt `prompt_id` marked `source`.
+fn typed(text: &str, prompt_id: &str, source: &str) -> String {
+    let recorded = std::fs::read_to_string(
+        testkit::repo_root()
+            .join("testdata/claude-code/2.1.296/transcripts/rewind/1-before-rewind.jsonl"),
+    )
+    .unwrap();
+    let mut line: serde_json::Value = recorded
+        .lines()
+        .map(|l| serde_json::from_str::<serde_json::Value>(l).unwrap())
+        .find(|l| l["promptSource"] == "typed")
+        .unwrap();
+    line["message"]["content"] = serde_json::json!(text);
+    line["promptId"] = serde_json::json!(prompt_id);
+    line["promptSource"] = serde_json::json!(source);
+    format!("{line}\n")
+}
+
+/// What a hook handler of harness session `session` observed.
+fn observation(hook: &str, session: &str) -> store::Observation {
+    store::Observation {
+        hook: hook.to_owned(),
+        harness_session: session.to_owned(),
+        transcript_path: format!("/t/{session}.jsonl"),
+        cwd: "/w".to_owned(),
+        offset: Some(0),
+        source: Some("startup".to_owned()),
+        prompt_id: None,
+        attended: false,
+        ancestry: None,
+        at: 1,
+    }
+}
+
+/// Holds, in `home`'s store, a `SessionStart` hook observation of
+/// `session` that read its process ancestry, nested or not.
+fn observe_start(home: &Home, session: &str, nested: bool) {
+    home.create().unwrap();
+    let mut store = Store::open(&home.store()).unwrap();
+    let mut start = observation("SessionStart", session);
+    start.ancestry = Some((1 + u64::from(nested), nested));
+    store.hold_observation(&start, None).unwrap();
+}
+
+/// Holds a `UserPromptSubmit` hook observation of `session` for the
+/// prompt `prompt_id` committing to `text`.
+fn observe_prompt(home: &Home, session: &str, prompt_id: &str, text: &str, attended: bool) {
+    let mut store = Store::open(&home.store()).unwrap();
+    let mut prompt = observation("UserPromptSubmit", session);
+    prompt.prompt_id = Some(prompt_id.to_owned());
+    prompt.attended = attended;
+    let key = record::commitment::CommitmentKey::from_bytes([9; 32]);
+    let commitment = store::PromptCommitment {
+        harness_session: session.to_owned(),
+        prompt_id: prompt_id.to_owned(),
+        commitment: record::commitment::commit(&key, &serde_json::json!(text)).unwrap(),
+        key,
+        used: false,
+    };
+    store.hold_observation(&prompt, Some(&commitment)).unwrap();
+}
+
+/// The provenance of each event of `writer`.
+fn classes(home: &Home, writer: WriterId) -> Vec<String> {
+    let store = Store::open(&home.store()).unwrap();
+    store
+        .log(writer)
+        .unwrap()
+        .iter()
+        .map(|e| e.link.header.provenance.name())
+        .collect()
+}
+
+#[test]
+fn a_typed_line_is_user_only_once_its_ancestry_is_observed_and_not_nested() {
+    for (observed, nested, class) in [
+        (false, false, "harness_text"),
+        (true, false, "user"),
+        (true, true, "harness_text"),
+    ] {
+        let dir = TempDir::new().unwrap();
+        let home = home(&dir);
+        if observed {
+            observe_start(&home, "s1", nested);
+        }
+        let path = dir.path().join("s1.jsonl");
+        std::fs::write(&path, typed("hello", "p1", "typed")).unwrap();
+
+        let ingested = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+
+        assert_eq!(
+            classes(&home, ingested.writer),
+            [class],
+            "{observed} {nested}"
+        );
+    }
+}
+
+#[test]
+fn hook_observations_and_prompt_matches_reach_the_device_seat_once() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    observe_start(&home, "s1", false);
+    observe_prompt(&home, "s1", "p1", "hello", false);
+    observe_prompt(&home, "s1", "p2", "other", true);
+    let path = dir.path().join("s1.jsonl");
+    let text = [
+        typed("hello", "p1", "typed"),
+        typed("hello again", "p1", "typed"),
+        typed("mismatch", "p2", "typed"),
+        typed("no commitment", "p3", "typed"),
+    ]
+    .concat();
+    std::fs::write(&path, &text).unwrap();
+    let inputs = Inputs {
+        interactive: true,
+        ..Inputs::default()
+    };
+
+    let ingested = ingest_with(&home, &path, &redactor(), &inputs, &mut OsEntropy).unwrap();
+
+    assert_eq!(
+        (
+            ingested.observations,
+            ingested.matched,
+            ingested.prompt_conflicts,
+            ingested.not_attended
+        ),
+        (3, 1, 1, 1)
+    );
+    let store = Store::open(&home.store()).unwrap();
+    let node = administration::node::Node::find(&home, &store).unwrap();
+    let device = store.log(node.device_writer()).unwrap();
+    let results: Vec<(String, String)> = device
+        .iter()
+        .filter(|e| e.link.header.kind == EventKind::PromptMatch)
+        .map(|e| {
+            let c = e.content.as_ref().unwrap();
+            (
+                c["prompt_id"].as_str().unwrap().to_owned(),
+                c["result"].as_str().unwrap().to_owned(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        results,
+        [
+            ("p1".to_owned(), "matched".to_owned()),
+            ("p1".to_owned(), "conflict".to_owned()),
+            ("p2".to_owned(), "unmatched".to_owned())
+        ]
+    );
+    let first = device
+        .iter()
+        .find(|e| e.link.header.kind == EventKind::PromptMatch)
+        .unwrap();
+    let user = store.log(ingested.writer).unwrap()[0].link.header.address;
+    assert_eq!(first.content.as_ref().unwrap()["event"], user.to_string());
+    let observed = device
+        .iter()
+        .filter(|e| e.link.header.kind == EventKind::HookObservation)
+        .count();
+    assert_eq!(observed, 3);
+    assert!(
+        store
+            .hook_observations()
+            .unwrap()
+            .iter()
+            .all(|h| h.appended)
+    );
+    verifies(&home);
+
+    std::fs::write(&path, format!("{text}{}", typed("later", "p1", "typed"))).unwrap();
+    let again = ingest_with(&home, &path, &redactor(), &inputs, &mut OsEntropy).unwrap();
+    assert_eq!(
+        (again.observations, again.matched, again.prompt_conflicts),
+        (0, 0, 1)
+    );
+}
+
+#[test]
+fn a_subagent_s_transcript_leaves_its_sessions_observations_for_the_main_run() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    observe_start(&home, "s1", false);
+    let sub = dir.path().join("s1").join("subagents");
+    std::fs::create_dir_all(&sub).unwrap();
+    let path = sub.join("agent-a1.jsonl");
+    std::fs::write(&path, "{\"a\":1}\n").unwrap();
+
+    let ingested = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+
+    assert_eq!(ingested.observations, 0);
+    let store = Store::open(&home.store()).unwrap();
+    assert!(
+        store
+            .hook_observations()
+            .unwrap()
+            .iter()
+            .all(|h| !h.appended)
+    );
+}
+
+#[test]
+fn a_fork_observation_the_store_holds_names_a_harness_fork() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    home.create().unwrap();
+    let mut store = Store::open(&home.store()).unwrap();
+    let mut fork = observation("SessionStart", "fork");
+    fork.source = Some("fork".into());
+    store.hold_observation(&fork, None).unwrap();
+    drop(store);
+    let parent = dir.path().join("parent.jsonl");
+    let forked = dir.path().join("fork.jsonl");
+    std::fs::write(&parent, numbered("parent", 1, 3)).unwrap();
+    std::fs::write(&forked, numbered("parent", 1, 3)).unwrap();
+
+    let first = ingest_path(&home, &forked, &redactor(), &mut OsEntropy).unwrap();
+
+    // The fork's lines wait for their owner, though no input named it.
+    assert!(first.held);
+}
