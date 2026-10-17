@@ -92,7 +92,7 @@ jobs:
         run: |
           export CAIRN_CRASH_SEED="$GITHUB_RUN_ID"
           echo "crash-consistency seed $CAIRN_CRASH_SEED" | tee -a "$GITHUB_STEP_SUMMARY"
-          cargo test --locked -p cairn --test crash_consistency -- --nocapture
+          cargo test --locked -p cairn --test e2e_crash_consistency -- --nocapture
 
   # ENG-21: the rulesets, main's and the tag rulesets, are settings of
   # the repository on GitHub, not files, so they can weaken without a
