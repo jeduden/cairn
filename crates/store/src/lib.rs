@@ -82,7 +82,7 @@ CREATE TABLE events (
     payload_size INTEGER,
     transcript_timestamp TEXT,
     PRIMARY KEY (writer, seq)
-) STRICT, WITHOUT ROWID;
+) STRICT;
 CREATE TABLE event_heads (
     writer TEXT NOT NULL,
     seq INTEGER NOT NULL,
