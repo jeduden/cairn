@@ -216,6 +216,54 @@ impl Confinement {
         self.start(program, args, home, env, Stdin::Terminal, caller)
     }
 
+    /// Starts `program` as [`run_in`](Self::run_in) does, with no input,
+    /// and kills it and every process it started once `after` passed,
+    /// unless it exited by then: the crash-consistency test's kill
+    /// (ENG-06). Returns whether it was still running. Its trace is
+    /// checked as any start's.
+    ///
+    /// # Errors
+    ///
+    /// As [`run`](Self::run), and when the kill cannot be sent.
+    #[track_caller]
+    pub fn run_killed(
+        &self,
+        program: &Path,
+        args: &[&str],
+        home: &Path,
+        env: &[(&str, &str)],
+        after: std::time::Duration,
+    ) -> Result<bool, Error> {
+        let caller = caller(std::thread::current().name(), Location::caller());
+        let dir = TempDir::new().map_err(|source| Error::Trace { source })?;
+        let trace = dir.path().join("trace");
+        let mut command = self.command(program, args, &trace);
+        command.envs(env.iter().copied());
+        isolate(&mut command, home);
+        let started = |source| Error::Start {
+            program: program.to_path_buf(),
+            source,
+        };
+        let running = kill_after(&mut command, after).map_err(started)?;
+        if self.mode == Mode::Unconfined {
+            return Ok(running);
+        }
+        let quiet = Output {
+            status: std::process::ExitStatus::default(),
+            stdout: Vec::new(),
+            stderr: Vec::new(),
+        };
+
+        // A start killed before the trace began leaves none: nothing ran
+        // to make a call.
+        let trace = match fs::read_to_string(&trace) {
+            Err(e) if running && e.kind() == io::ErrorKind::NotFound => Ok(String::new()),
+            read => read,
+        };
+
+        self.finish(quiet, trace, caller).map(|_| running)
+    }
+
     fn start(
         &self,
         program: &Path,
@@ -317,6 +365,37 @@ fn shell_line(command: &Command) -> String {
     std::iter::once(command.get_program())
         .chain(command.get_args())
         .fold("exec".to_owned(), |line, word| line + " " + &quote(word))
+}
+
+/// Starts `command` in a process group of its own, its output
+/// discarded, and kills the whole group with `SIGKILL` once `after`
+/// passed, unless it exited by then, so neither the trace nor the
+/// program outlives the other; whether it was still running.
+fn kill_after(command: &mut Command, after: std::time::Duration) -> io::Result<bool> {
+    #[cfg(unix)]
+    std::os::unix::process::CommandExt::process_group(command, 0);
+    let mut child = command
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()?;
+    std::thread::sleep(after);
+    let running = child.try_wait()?.is_none();
+    if running {
+        let group = format!("-{}", child.id());
+        let sent = Command::new("kill")
+            .args(["-KILL", "--", &group])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()?;
+        // The group may have exited between the look and the kill.
+        if !sent.success() && child.try_wait()?.is_none() {
+            child.kill()?;
+        }
+    }
+    child.wait()?;
+
+    Ok(running)
 }
 
 /// Starts `command` with `input` on its stdin, closes it, and waits

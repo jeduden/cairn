@@ -560,3 +560,100 @@ fn a_start_at_a_terminal_passes_the_program_exit_code() {
 
     assert_eq!(out.status.code(), Some(7));
 }
+
+#[test]
+fn a_start_killed_while_it_runs_is_killed_with_everything_it_started() {
+    let home = TempDir::new().unwrap();
+    let left = home.path().join("left");
+    let script = format!("sleep 0.5; touch {}", left.display());
+    let starts: Vec<Confinement> = confined().into_iter().chain([unconfined()]).collect();
+
+    for c in starts {
+        let running = c
+            .run_killed(
+                Path::new("sh"),
+                &["-c", &script],
+                home.path(),
+                &[],
+                std::time::Duration::from_millis(100),
+            )
+            .unwrap();
+
+        assert!(running);
+        std::thread::sleep(std::time::Duration::from_millis(700));
+        assert!(!left.exists(), "nothing it started outlived the kill");
+    }
+}
+
+#[test]
+fn a_start_that_exits_before_its_kill_is_left_to_finish() {
+    let home = TempDir::new().unwrap();
+    let starts: Vec<Confinement> = confined().into_iter().chain([unconfined()]).collect();
+
+    for c in starts {
+        let running = c
+            .run_killed(
+                Path::new("true"),
+                &[],
+                home.path(),
+                &[],
+                std::time::Duration::from_millis(500),
+            )
+            .unwrap();
+
+        assert!(!running);
+    }
+}
+
+#[test]
+fn a_killed_start_that_cannot_run_names_the_program() {
+    let home = TempDir::new().unwrap();
+
+    let err = unconfined()
+        .run_killed(
+            Path::new("/no/such/program"),
+            &[],
+            home.path(),
+            &[],
+            std::time::Duration::from_millis(1),
+        )
+        .unwrap_err();
+
+    assert!(matches!(err, Error::Start { .. }), "{err}");
+}
+
+#[test]
+fn a_socket_a_killed_start_opened_fails_it() {
+    let Some(c) = confined() else { return };
+    let home = TempDir::new().unwrap();
+
+    let err = c
+        .run_killed(
+            &this_test_binary(),
+            &probe_args(),
+            home.path(),
+            &[],
+            std::time::Duration::from_millis(2000),
+        )
+        .unwrap_err();
+
+    assert!(matches!(err, Error::Socket { .. }), "{err}");
+}
+
+#[test]
+fn a_start_killed_before_its_trace_began_passes() {
+    let Some(c) = confined() else { return };
+    let home = TempDir::new().unwrap();
+
+    let running = c
+        .run_killed(
+            Path::new("sleep"),
+            &["5"],
+            home.path(),
+            &[],
+            std::time::Duration::ZERO,
+        )
+        .unwrap();
+
+    assert!(running);
+}
