@@ -648,6 +648,25 @@ fn a_transcript_source_gone_before_it_was_fully_ingested_is_reported_and_audited
 }
 
 #[test]
+fn ingest_says_which_lost_transcript_source_it_cannot_audit() {
+    let p = Process::new();
+    let cut = transcript_in(&p, "-w-a", "cut-short.jsonl", b"{\"a\":1}\n{\"b\":");
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    std::fs::remove_file(&cut).unwrap();
+    let audit_dir = p.cairn_home().join("audit");
+    std::fs::remove_dir_all(&audit_dir).unwrap();
+    std::fs::write(&audit_dir, "").unwrap();
+    set_mode(&audit_dir, 0o600);
+
+    let (_, _, err) = p.invoke(&["ingest", "--all"], &DEV);
+
+    assert!(
+        err.contains("cairn ingest: audit a lost transcript source: "),
+        "{err}"
+    );
+}
+
+#[test]
 fn transcript_sources_that_cannot_be_read_fail_verify_and_status_and_are_said_by_ingest() {
     let p = Process::new();
     transcript_in(&p, "-w-a", "s1.jsonl", b"a\n");
