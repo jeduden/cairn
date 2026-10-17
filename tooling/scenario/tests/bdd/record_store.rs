@@ -166,9 +166,16 @@ fn stored_inline(w: &mut World, kib: u64) -> Result<(), String> {
 fn no_guess_from_a_name(w: &mut World) -> Result<(), String> {
     // M1 has no export; what one would carry of a payload is its name.
     // Ingesting the same content again must give it another name, and
-    // no name may be a digest a guess at the content gives.
+    // no name may be a digest a guess at the content gives. A source
+    // read again records nothing new (REC-03), so the same lines are
+    // ingested as another transcript, in a directory of their own.
     let (_, first) = sized_event(w, 20)?;
-    let path = transcript(w, "main-run")?.display().to_string();
+    let source = transcript(w, "main-run")?;
+    let dir = w.home.join(".claude").join("projects").join("-w-copy");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let copy = dir.join("main-run.jsonl");
+    std::fs::copy(&source, &copy).map_err(|e| e.to_string())?;
+    let path = copy.display().to_string();
     run_core(w, &["ingest", "--path", &path], None)?;
     let named: Vec<(String, Value)> = transcript_events(w)?
         .into_iter()
