@@ -71,6 +71,12 @@ const MISSING: &str = "the core's reach evidence is missing: ";
 /// The attribute a crate root carries to forbid unsafe code itself.
 const FORBID: &str = "#![forbid(unsafe_code)]";
 
+/// The one crate that holds unsafe code: the shim through which Windows'
+/// key store calls DPAPI (ADR-2610171300). It denies unsafe code in its
+/// own lints instead of inheriting the workspace's forbid, allows it in
+/// one module, and Miri runs its tests (ENG-09).
+pub const UNSAFE_SHIM: &str = "crates/dpapi";
+
 /// The jobs `job` needs: an inline list or a single job.
 #[must_use]
 pub fn needs(job: &Job) -> Vec<String> {
