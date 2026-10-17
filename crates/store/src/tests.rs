@@ -109,7 +109,7 @@ fn a_store_of_a_newer_version_is_refused_and_named() {
     assert!(matches!(err, StoreError::Newer { found: 2 }), "{err}");
     assert_eq!(
         err.to_string(),
-        "the store is format version 2, newer than this cairn's 1"
+        "the store is schema version 2, newer than this cairn's 1"
     );
 }
 

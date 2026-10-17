@@ -2316,7 +2316,7 @@ fn status_and_verify_exit_3_naming_a_newer_store_and_leave_it_unchanged() {
                 EXIT_INTEGRITY,
                 "",
                 format!(
-                    "cairn {command}: the store is format version 2, newer than this cairn's 1\n"
+                    "cairn {command}: the store is schema version 2, newer than this cairn's 1\n"
                 )
                 .as_str()
             )
@@ -2324,7 +2324,7 @@ fn status_and_verify_exit_3_naming_a_newer_store_and_leave_it_unchanged() {
     }
     let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
     assert_eq!(code, EXIT_FAILURE);
-    assert!(err.contains("the store is format version 2"), "{err}");
+    assert!(err.contains("the store is schema version 2"), "{err}");
 
     assert_eq!(std::fs::read(&path).unwrap(), before);
 }
