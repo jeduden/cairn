@@ -430,3 +430,210 @@ fn the_transcripts_under_a_root_list_a_linked_transcript_but_descend_no_linked_d
     // could loop, is not descended.
     assert_eq!(transcripts(&root).unwrap(), [root.join("s.jsonl")]);
 }
+
+/// A writer's segments as (first, last, closed).
+fn ranges(home: &Home, writer: WriterId) -> Vec<(u64, u64, bool)> {
+    Store::open(&home.store())
+        .unwrap()
+        .segments(writer)
+        .unwrap()
+        .iter()
+        .map(|s| (s.first.get(), s.last.get(), s.closed))
+        .collect()
+}
+
+#[test]
+fn a_segment_closes_at_each_turn_end_and_at_the_transcript_s_end() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let end = r#"{"type":"assistant","message":{"stop_reason":"end_turn"}}"#;
+    let call = r#"{"type":"assistant","message":{"stop_reason":"tool_use"}}"#;
+    let partial = r#"{"type":"assistant","message":{"stop_reason":null}}"#;
+    let text = format!("a\n{partial}\n{call}\n{end}\nb\n{end}\nc\n");
+
+    let ingested =
+        ingest_path(&home, &transcript(&dir, &text), &redactor(), &mut OsEntropy).unwrap();
+
+    assert_eq!(
+        ranges(&home, ingested.writer),
+        [(1, 4, true), (5, 6, true), (7, 7, true)]
+    );
+}
+
+#[test]
+fn a_transcript_ending_at_a_turn_end_opens_no_empty_segment() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let end = r#"{"type":"assistant","message":{"stop_reason":"end_turn"}}"#;
+
+    let ingested = ingest_path(
+        &home,
+        &transcript(&dir, &format!("a\n{end}\n")),
+        &redactor(),
+        &mut OsEntropy,
+    )
+    .unwrap();
+
+    assert_eq!(ranges(&home, ingested.writer), [(1, 2, true)]);
+}
+
+#[test]
+fn a_turn_end_is_the_model_reply_that_ends_a_turn() {
+    for (line, ends) in [
+        (
+            r#"{"type":"assistant","message":{"stop_reason":"end_turn"}}"#,
+            true,
+        ),
+        (
+            r#"{"type":"assistant","message":{"stop_reason":"stop_sequence"}}"#,
+            true,
+        ),
+        (
+            r#"{"type":"assistant","message":{"stop_reason":"max_tokens"}}"#,
+            true,
+        ),
+        (
+            r#"{"type":"assistant","message":{"stop_reason":"tool_use"}}"#,
+            false,
+        ),
+        (
+            r#"{"type":"assistant","message":{"stop_reason":"pause_turn"}}"#,
+            false,
+        ),
+        (
+            r#"{"type":"assistant","message":{"stop_reason":null}}"#,
+            false,
+        ),
+        (
+            r#"{"type":"user","message":{"stop_reason":"end_turn"}}"#,
+            false,
+        ),
+        ("not json", false),
+    ] {
+        let value = serde_json::from_str(line).unwrap_or(Value::Null);
+        assert_eq!(turn_end(&value), ends, "{line}");
+    }
+}
+
+#[test]
+fn a_segment_closes_at_each_subagent_end_its_parent_records() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let path = testkit::repo_root().join(
+        "testdata/claude-code/2.1.296/transcripts/projects/-w-sub/a7cb6eb6-32e6-4f88-9192-12e8e99b99fd.jsonl",
+    );
+
+    let ingested = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+
+    let store = Store::open(&home.store()).unwrap();
+    let log = store.log(ingested.writer).unwrap();
+    let ends: Vec<u64> = log
+        .iter()
+        .filter(|s| s.link.header.provenance == Provenance::SubagentResult)
+        .map(|s| s.link.header.address.seq.get())
+        .collect();
+    assert!(!ends.is_empty(), "the recording holds a subagent end");
+    let closed: Vec<u64> = ranges(&home, ingested.writer)
+        .iter()
+        .map(|(_, last, closed)| {
+            assert!(closed);
+            *last
+        })
+        .collect();
+    for end in ends {
+        assert!(
+            closed.contains(&end),
+            "a segment closes at {end}: {closed:?}"
+        );
+    }
+    assert_eq!(closed.last(), Some(&(log.len() as u64)));
+}
+
+#[test]
+fn a_line_s_transcript_timestamp_is_kept_only_when_well_formed() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let text = [
+        r#"{"timestamp":"2026-10-17T12:00:01.123Z"}"#,
+        r#"{"timestamp":"2026-10-17T11:59:59+02:00"}"#,
+        r#"{"no":"timestamp"}"#,
+        r#"{"timestamp":"AKIAIOSFODNN7EXAMPLE"}"#,
+        r#"{"timestamp":12}"#,
+        r#"{"message":{"timestamp":"2026-10-17T12:00:00Z"}}"#,
+        "not json",
+    ]
+    .join("\n");
+
+    let ingested =
+        ingest_path(&home, &transcript(&dir, &text), &redactor(), &mut OsEntropy).unwrap();
+
+    let stamps: Vec<Option<String>> = Store::open(&home.store())
+        .unwrap()
+        .log(ingested.writer)
+        .unwrap()
+        .into_iter()
+        .map(|s| s.transcript_timestamp)
+        .collect();
+    assert_eq!(
+        stamps,
+        [
+            Some("2026-10-17T12:00:01.123Z".to_owned()),
+            Some("2026-10-17T11:59:59+02:00".to_owned()),
+            None,
+            None,
+            None,
+            None,
+            None
+        ]
+    );
+}
+
+#[test]
+fn a_well_formed_transcript_timestamp_is_rfc_3339() {
+    for (text, ok) in [
+        ("2026-10-17T12:00:01Z", true),
+        ("2026-10-17T12:00:01.1Z", true),
+        ("2026-10-17T12:00:01.123456789Z", true),
+        ("2026-10-17T12:00:01-07:30", true),
+        ("2026-10-17T12:00:01.1234567890Z", false),
+        ("2026-10-17T12:00:01.Z", false),
+        ("2026-10-17 12:00:01Z", false),
+        ("2026-10-17T12:00:01", false),
+        ("2026-1a-17T12:00:01Z", false),
+        ("2026-10-17T12:00:01+0200", false),
+        ("2026-10-17T12:00:01Zjunk", false),
+        ("", false),
+    ] {
+        assert_eq!(well_formed(text), ok, "{text}");
+    }
+}
+
+#[test]
+fn a_line_above_the_payload_threshold_goes_to_the_payload_store() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let text = format!("{}\nshort\n", "x".repeat(300));
+
+    let ingested = ingest_with(
+        &home,
+        &transcript(&dir, &text),
+        &redactor(),
+        &Limits {
+            payload_threshold: 200,
+        },
+        &mut OsEntropy,
+    )
+    .unwrap();
+
+    let log = Store::open(&home.store())
+        .unwrap()
+        .log(ingested.writer)
+        .unwrap();
+    assert!(log[0].payload.is_some());
+    assert_eq!(log[0].content.as_ref().unwrap()["text"], "x".repeat(300));
+    assert!(log[1].payload.is_none());
+    assert_eq!(
+        Limits::default().payload_threshold,
+        store::DEFAULT_PAYLOAD_THRESHOLD
+    );
+}
