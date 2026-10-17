@@ -4,7 +4,7 @@
 //! are appended in transcript order with their transcript timestamps
 //! kept as metadata, `cairn verify` and `cairn status` report each
 //! writer chain ended without a closed segment, and `cairn status`
-//! exits 3 on a store of a newer format version, leaving it unchanged.
+//! exits 3 on a store of a newer schema version, leaving it unchanged.
 //!
 //! `@REC-12` stays pending: its last step runs `cairn event expand`,
 //! the principal's recall (phase 13). `@REC-19`'s other steps need the

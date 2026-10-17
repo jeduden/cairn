@@ -354,7 +354,7 @@ pub(crate) fn failed(command: &str, e: &dyn std::fmt::Display, stderr: &mut dyn 
     EXIT_FAILURE
 }
 
-/// Reports a store that failed to open: one of a newer format version is
+/// Reports a store that failed to open: one of a newer schema version is
 /// an integrity failure, refused and named, exiting 3 (ADM-05); any other
 /// a failure.
 fn store_failed(command: &str, e: &store::StoreError, stderr: &mut dyn Write) -> u8 {

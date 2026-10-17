@@ -21,7 +21,7 @@ pub(crate) struct SegmentsStatus {
 ///
 /// # Errors
 ///
-/// Fails when the store cannot be read, or is of a newer format version.
+/// Fails when the store cannot be read, or is of a newer schema version.
 pub(crate) fn read(home: &Home) -> Result<Option<SegmentsStatus>, StoreError> {
     let path = home.store();
     if !path.exists() {

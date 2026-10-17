@@ -2,7 +2,7 @@
 //! logs and the seats that write them, through SQLite. Each writer's
 //! events are appended inside an immediate transaction, a hundred at a
 //! time, which alone assigns their seq and chains them (REC-06,
-//! REC-10). The store records its format version, the header's field
+//! REC-10). The store records its schema version, the header's field
 //! set and its encoding in `meta` (§8.3), and refuses a store of a
 //! newer version before anything in it changes (ADM-05).
 //!
@@ -34,7 +34,7 @@ use serde_json::Value;
 pub use payload::{Disk, OsDisk, Payloads};
 pub use segment::{SEGMENT_VERSION, Segment};
 
-/// The store's format version.
+/// The store's schema version (ADM-05, ADM-11).
 pub const SCHEMA_VERSION: u32 = 1;
 
 /// The payload threshold `payload.threshold_bytes` defaults to: content
@@ -51,14 +51,14 @@ const BUSY: Duration = Duration::from_secs(5);
 /// Whether the store has its schema yet.
 const HAS_META: &str = "SELECT count(*) FROM sqlite_master WHERE name = 'meta'";
 
-/// The store's format version.
+/// The store's schema version (ADM-05, ADM-11).
 const VERSION: &str = "SELECT value FROM meta WHERE key = 'schema_version'";
 
 /// The heads one event cites.
 const CITED: &str = "SELECT other_writer, other_seq, other_hash FROM event_heads
      WHERE writer = ?1 AND seq = ?2 ORDER BY other_writer";
 
-/// The schema of format version 1.
+/// The tables of schema version 1.
 const SCHEMA: &str = "
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL) STRICT;
 CREATE TABLE seats (
@@ -103,7 +103,7 @@ pub enum StoreError {
     /// The store file can be read by others: its mode, refused rather
     /// than quietly fixed (SEC-02).
     Permissions { mode: u32 },
-    /// The store is of a newer format version than this cairn's.
+    /// The store is of a newer schema version than this cairn's.
     Newer { found: u32 },
     /// The store records a header field set or encoding this cairn does
     /// not write, so its hashes would not check here.
@@ -138,7 +138,7 @@ impl fmt::Display for StoreError {
             ),
             Self::Newer { found } => write!(
                 f,
-                "the store is format version {found}, newer than this cairn's {SCHEMA_VERSION}"
+                "the store is schema version {found}, newer than this cairn's {SCHEMA_VERSION}"
             ),
             Self::Format { key, found } => write!(
                 f,
@@ -288,7 +288,7 @@ impl Store {
     /// # Errors
     ///
     /// Fails when there is no store, when SQLite cannot open it, when it
-    /// holds no schema, or when it is of a newer format version.
+    /// holds no schema, or when it is of a newer schema version.
     pub fn open_read_only(path: &Path) -> Result<Self, StoreError> {
         let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX;
         let store = Self::over(Connection::open_with_flags(path, flags)?, path)?;
@@ -362,7 +362,7 @@ impl Store {
         self.check_format()
     }
 
-    /// Checks the store's format version, header field set and encoding
+    /// Checks the store's schema version, header field set and encoding
     /// against this cairn's (§8.3, ADM-05).
     fn check_format(&self) -> Result<(), StoreError> {
         let version: String = self.conn.query_row(VERSION, [], |r| r.get(0))?;
