@@ -7,6 +7,7 @@ fn ids(list: &[&str]) -> Vec<String> {
 
 fn bench(name: &'static str, requirement: &'static str, coverage: Coverage) -> Benchmark {
     Benchmark {
+        fixture: benchmark::suite::Fixture::None,
         name,
         requirement,
         coverage,

@@ -32,13 +32,16 @@ fn samples(ns: u64, n: u64) -> String {
     })
 }
 
-/// This test executable stands in for the core: `run` starts it with
-/// `version`, which it takes as a test filter that no test here
-/// matches, so it runs nothing and exits 0.
+/// A script stands in for the core: whatever `run` starts it with, it
+/// exits 0.
+#[cfg(unix)]
 #[test]
 fn run_samples_the_suite_against_the_core_it_is_given() {
+    use std::os::unix::fs::PermissionsExt;
     let dir = TempDir::new().unwrap();
-    let core = env::current_exe().unwrap();
+    let core = dir.path().join("cairn");
+    fs::write(&core, "#!/bin/sh\nexit 0\n").unwrap();
+    fs::set_permissions(&core, fs::Permissions::from_mode(0o755)).unwrap();
 
     let out = benchmark(
         &dir,
@@ -55,6 +58,13 @@ fn run_samples_the_suite_against_the_core_it_is_given() {
         samples
             .lines()
             .filter(|l| l.starts_with("core_start_up "))
+            .count(),
+        3
+    );
+    assert_eq!(
+        samples
+            .lines()
+            .filter(|l| l.starts_with("ingest_transcript "))
             .count(),
         3
     );
