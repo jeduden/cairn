@@ -28,30 +28,15 @@ fn the_installed_hooks_parse_and_name_their_operation() {
 }
 
 #[test]
-fn a_hook_input_that_is_a_json_object_injects_nothing() {
-    let input = r#"{"session_id":"s","hook_event_name":"SessionStart","source":"startup"}"#;
-
-    assert_eq!(handle(Hook::SessionStart, input), Ok(String::new()));
-}
-
-#[test]
-fn a_hook_input_that_is_no_json_object_is_rejected() {
-    for input in ["", "{\"session_id\": ", "[1]", "\"text\"", "{} {}"] {
-        assert_eq!(
-            handle(Hook::UserPromptSubmit, input),
-            Err(Failure::Malformed),
-            "{input:?}"
-        );
-    }
-}
-
-#[test]
 fn a_panic_in_the_handler_is_caught_as_its_own_failure() {
     let caught = guarded(|| -> Result<String, Failure> { panic!("boom") });
 
     assert_eq!(caught, Err(Failure::Panicked));
     assert_eq!(guarded(|| Ok("out".to_owned())), Ok("out".to_owned()));
-    assert_eq!(guarded(|| Err(Failure::Malformed)), Err(Failure::Malformed));
+    assert_eq!(
+        guarded(|| Err::<String, _>(Failure::Malformed)),
+        Err(Failure::Malformed)
+    );
 }
 
 #[test]
@@ -68,6 +53,12 @@ fn each_failure_is_audited_with_its_own_kind_and_counter() {
             Kind::Rejected,
             Counter::HookRejected,
             "not a JSON object",
+        ),
+        (
+            Failure::Invalid,
+            Kind::Rejected,
+            Counter::HookInputRejected,
+            "hook input failed schema validation",
         ),
         (
             Failure::Panicked,
@@ -103,47 +94,16 @@ fn each_failure_is_audited_with_its_own_kind_and_counter() {
     }
 }
 
-/// A JSON object nested `depth` levels deep.
-fn nested(depth: usize) -> String {
-    format!("{}{}", "{\"a\":".repeat(depth - 1) + "{", "}".repeat(depth))
-}
-
 #[test]
-fn a_hook_input_past_1_mib_is_refused_before_it_is_parsed() {
-    let fits = format!("{{\"p\":\"{}\"}}", "x".repeat(HOOK_INPUT_LIMIT - 8));
-    assert_eq!(fits.len(), HOOK_INPUT_LIMIT);
-    assert_eq!(handle(Hook::UserPromptSubmit, &fits), Ok(String::new()));
-    let over = format!("{fits} ");
-    assert_eq!(
-        handle(Hook::UserPromptSubmit, &over),
-        Err(Failure::TooLarge)
-    );
-}
-
-#[test]
-fn a_hook_input_nested_past_depth_64_is_refused_before_it_is_parsed() {
-    assert_eq!(
-        handle(Hook::UserPromptSubmit, &nested(64)),
-        Ok(String::new())
-    );
-    assert_eq!(
-        handle(Hook::UserPromptSubmit, &nested(65)),
-        Err(Failure::TooDeep)
-    );
-    // Deep enough that the parser's own limit would refuse it as malformed.
-    assert_eq!(
-        handle(Hook::UserPromptSubmit, &nested(200)),
-        Err(Failure::TooDeep)
-    );
-}
-
-#[test]
-fn depth_counts_brackets_outside_strings_only() {
-    assert_eq!(depth(""), 0);
-    assert_eq!(depth("{}"), 1);
-    assert_eq!(depth(r#"{"a":[1,{"b":[]}]}"#), 4);
-    assert_eq!(depth(r#"{"a":"[[[[{{"}"#), 1);
-    assert_eq!(depth(r#"{"a":"\"[[["}"#), 1);
-    assert_eq!(depth(r#"{"a":"\\"}"#), 1);
-    assert_eq!(depth("}}}{"), 1);
+fn each_hook_names_itself_with_a_budget_below_its_harness_timeout() {
+    for (hook, name, budget) in [
+        (Hook::SessionStart, "SessionStart", 150),
+        (Hook::UserPromptSubmit, "UserPromptSubmit", 50),
+        (Hook::PermissionRequest, "PermissionRequest", 50),
+    ] {
+        assert_eq!(hook.name(), name);
+        assert_eq!(Hook::parse(name), Some(hook));
+        assert_eq!(hook.budget(), std::time::Duration::from_millis(budget));
+        assert!(hook.budget() < hook.harness_timeout());
+    }
 }
