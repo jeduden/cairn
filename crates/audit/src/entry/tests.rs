@@ -53,6 +53,10 @@ fn each_kind_and_counter_has_its_name() {
             "path_outside_allowed_roots",
         ),
         (Counter::LogLineDropped, "log_line_dropped"),
+        (
+            Counter::IngestRefusedSettingsInvalid,
+            "ingest_refused_settings_invalid",
+        ),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

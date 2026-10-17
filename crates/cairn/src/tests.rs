@@ -1735,6 +1735,38 @@ fn ingest_refuses_a_path_outside_the_allowed_roots_and_reads_nothing() {
     assert!(!p.cairn_home().join("store.db").exists());
 }
 
+/// While the principal's configuration fails, ingest cannot know the
+/// redaction patterns the principal asked for, so it records nothing:
+/// the refusal is audited and counted, and the transcript stays for an
+/// ingest once the configuration is fixed (SEC-08, I1, I6).
+#[test]
+fn ingest_refuses_while_a_settings_layer_fails() {
+    let p = Process::new();
+    p.configure("recal.max_k = 10\n");
+    let transcript = p.transcript("{\"a\":1}\n");
+
+    let (code, out, err) = p.invoke(&["ingest", "--path", &transcript], &DEV);
+
+    assert_eq!((code, out.as_str()), (EXIT_FAILURE, ""));
+    assert!(
+        err.contains("cairn ingest: a settings layer failed"),
+        "{err}"
+    );
+    let counters: Vec<Option<String>> = audited(&p).into_iter().map(|e| e.counter).collect();
+    assert!(
+        counters.contains(&Some("settings_layer_invalid".to_owned())),
+        "{counters:?}"
+    );
+    assert!(
+        counters.contains(&Some("ingest_refused_settings_invalid".to_owned())),
+        "{counters:?}"
+    );
+    assert!(!p.cairn_home().join("store.db").exists());
+
+    p.configure("recall.max_k = 10\n");
+    assert_eq!(p.invoke(&["ingest", "--path", &transcript], &DEV).0, 0);
+}
+
 #[test]
 fn ingest_reads_within_the_configured_transcript_roots_only() {
     let p = Process::new();
@@ -1768,6 +1800,25 @@ fn ingest_reads_within_the_configured_transcript_roots_only() {
     // The default root no longer applies once the roots are configured.
     let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     assert_eq!(code, EXIT_FAILURE);
+}
+
+#[test]
+fn ingest_says_when_it_cannot_audit_its_refusal() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    p.configure("recal.max_k = 10\n");
+    let audit_dir = p.cairn_home().join("audit");
+    let _ = std::fs::remove_dir_all(&audit_dir);
+    std::fs::write(&audit_dir, "").unwrap();
+    set_mode(&audit_dir, 0o600);
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        err.contains("cairn ingest: audit a refused ingest: "),
+        "{err}"
+    );
 }
 
 #[test]
