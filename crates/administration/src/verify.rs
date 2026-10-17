@@ -16,10 +16,13 @@
 //!   seat, was certified by a key with an inception, and the device seat
 //!   holding that inception holds its certificate record, as each
 //!   certificate record there names a seat that key certified;
-//! - trusted provenance only in device seats.
+//! - trusted provenance only in device seats;
+//! - every writer's segments, which tile its log, only its newest open,
+//!   none of a newer format version (REC-19, ADM-05); every payload.
 //!
 //! The report names each seat with the seat kind and the ingest flag
-//! its seat certificate names, read from that certificate alone.
+//! its seat certificate names, read from that certificate alone, and
+//! every writer chain that ended without a closed segment.
 //!
 //! The first failure is named by the event's full address, or by the
 //! writer. A record that passes yields its causal order.
@@ -36,7 +39,7 @@ use record::digest::{Digest, unhex};
 use record::event::{EventKind, Provenance};
 use record::id::{Address, RoomId, SeatId, WriterId};
 use serde_json::Value;
-use store::{Store, StoreError, Stored, StoredSeat};
+use store::{Segment, Store, StoreError, Stored, StoredSeat};
 
 use crate::node::begins_genesis;
 
@@ -51,6 +54,9 @@ pub struct Report {
     pub rooms: BTreeMap<WriterId, RoomId>,
     /// Each seat, as its seat certificate names it, by writer id.
     pub seats: Vec<SeatReport>,
+    /// Each writer's open segment: a writer chain that ended without a
+    /// closed segment, unless its writer still appends (REC-19).
+    pub open_segments: Vec<Segment>,
 }
 
 /// A seat as `cairn verify` reports it: everything but its writer read
@@ -100,6 +106,13 @@ pub enum VerifyError {
     Seat { writer: WriterId, reason: String },
     /// This node's genesis does not check.
     Genesis(&'static str),
+    /// A segment is of a newer format version than this cairn's: it is
+    /// refused and left as it is (ADM-05).
+    NewerSegment(Segment),
+    /// A writer's segments do not tile its log.
+    Segments { writer: WriterId, reason: String },
+    /// The payload of the event at this address cannot be read.
+    Payload { address: String, reason: String },
     /// A stored value does not parse.
     Corrupt(StoreError),
     /// The store failed.
@@ -118,6 +131,9 @@ impl VerifyError {
             Self::Provenance { .. } => "provenance",
             Self::Seat { .. } => "seat",
             Self::Genesis(_) => "genesis",
+            Self::NewerSegment(_) => "newer_segment",
+            Self::Segments { .. } => "segment",
+            Self::Payload { .. } => "payload",
             Self::Corrupt(_) => "corrupt",
             Self::Store(_) => "store",
         }
@@ -132,8 +148,14 @@ impl VerifyError {
             | Self::Content { address, .. }
             | Self::KeyEvent { address, .. }
             | Self::Record { address }
-            | Self::Provenance { address, .. } => Some(address),
-            Self::Seat { .. } | Self::Genesis(_) | Self::Corrupt(_) | Self::Store(_) => None,
+            | Self::Provenance { address, .. }
+            | Self::Payload { address, .. } => Some(address),
+            Self::Seat { .. }
+            | Self::Genesis(_)
+            | Self::NewerSegment(_)
+            | Self::Segments { .. }
+            | Self::Corrupt(_)
+            | Self::Store(_) => None,
         }
     }
 }
@@ -167,7 +189,13 @@ impl fmt::Display for VerifyError {
                 f,
                 "the event at {address} is of {provenance} provenance, which only a device seat records"
             ),
-            Self::Seat { writer, reason } => write!(f, "writer {writer}: {reason}"),
+            Self::Seat { writer, reason } | Self::Segments { writer, reason } => {
+                write!(f, "writer {writer}: {reason}")
+            }
+            Self::NewerSegment(s) => write!(f, "{}", StoreError::NewerSegment(s.clone())),
+            Self::Payload { address, reason } => {
+                write!(f, "the payload of {address} cannot be read: {reason}")
+            }
             Self::Genesis(why) => f.write_str(why),
             Self::Corrupt(e) | Self::Store(e) => write!(f, "{e}"),
         }
@@ -198,8 +226,12 @@ impl From<StoreError> for VerifyError {
 /// where the launcher's trusted kind is recorded is M7's.
 const TRUSTED: [Provenance; 2] = [Provenance::Operator, Provenance::Structural];
 
-/// Each writer's log as one snapshot read it.
-type Logs = Vec<(WriterId, Result<Vec<Stored>, StoreError>)>;
+/// Each writer's log and segments as one snapshot read them.
+type Logs = Vec<(
+    WriterId,
+    Result<Vec<Stored>, StoreError>,
+    Result<Vec<Segment>, StoreError>,
+)>;
 
 /// Verifies the whole record in `store` against the node whose device
 /// key is `node_key`.
@@ -211,7 +243,10 @@ pub fn verify(store: &Store, node_key: &PublicKey) -> Result<Report, VerifyError
     let (seats, writers, logs) = store.snapshot(|s| {
         let seats = s.seats()?;
         let writers = s.writers()?;
-        let logs: Logs = writers.iter().map(|w| (*w, s.log(*w))).collect();
+        let logs: Logs = writers
+            .iter()
+            .map(|w| (*w, s.log(*w), s.segments(*w)))
+            .collect();
         Ok((seats, writers, logs))
     })?;
     let seats: BTreeMap<WriterId, StoredSeat> = seats.into_iter().map(|s| (s.writer, s)).collect();
@@ -225,17 +260,12 @@ pub fn verify(store: &Store, node_key: &PublicKey) -> Result<Report, VerifyError
         reason: e.fault.to_string(),
     };
     let mut held = BTreeMap::new();
-    for (writer, log) in logs {
-        let log = log.map_err(|e| match e {
-            StoreError::Corrupt {
-                address: Some(a),
-                what,
-            } => VerifyError::Broken {
-                address: full(a),
-                reason: format!("the stored header does not parse: {what}"),
-            },
-            e => e.into(),
-        })?;
+    let mut open_segments = Vec::new();
+    for (writer, log, segments) in logs {
+        let log = log.map_err(|e| unread(e, &full))?;
+        let segments = segments?;
+        tile(writer, &segments, log.len() as u64)?;
+        open_segments.extend(segments.last().filter(|s| !s.closed).cloned());
         let links: Vec<Link> = log.iter().map(|s| s.link.clone()).collect();
         chain::check_writer(writer, &links).map_err(broken)?;
         if let Some(s) = log.iter().find(|s| !opens(s)) {
@@ -270,7 +300,62 @@ pub fn verify(store: &Store, node_key: &PublicKey) -> Result<Report, VerifyError
         order,
         rooms: certs.iter().map(|(w, c)| (*w, c.room)).collect(),
         seats: certs.iter().map(|(w, c)| seat_report(*w, c)).collect(),
+        open_segments,
     })
+}
+
+/// Why a writer's log could not be read, as verification names it.
+fn unread(e: StoreError, full: &dyn Fn(Address) -> String) -> VerifyError {
+    match e {
+        StoreError::Corrupt {
+            address: Some(a),
+            what,
+        } => VerifyError::Broken {
+            address: full(a),
+            reason: format!("the stored header does not parse: {what}"),
+        },
+        StoreError::NewerSegment(s) => VerifyError::NewerSegment(s),
+        StoreError::Payload { address, source } => VerifyError::Payload {
+            address: full(address),
+            reason: source.to_string(),
+        },
+        e => e.into(),
+    }
+}
+
+/// Checks that `writer`'s `segments`, in seq order, tile its log of
+/// `len` events: each starts where the one before it ended, the last
+/// ends at its newest event, and only the last may be open.
+fn tile(writer: WriterId, segments: &[Segment], len: u64) -> Result<(), VerifyError> {
+    let fail = |reason: String| VerifyError::Segments { writer, reason };
+    let mut next = 1;
+    for (i, s) in segments.iter().enumerate() {
+        let first = s.first.get();
+        if first < next {
+            return Err(fail(format!(
+                "the segment from seq {first} overlaps the one before it"
+            )));
+        }
+        if first > next {
+            return Err(fail(format!("no segment holds seq {next}")));
+        }
+        if !s.closed && i + 1 < segments.len() {
+            return Err(fail(format!(
+                "the segment from seq {first} is open, though a later one follows it"
+            )));
+        }
+        if s.last.get() > len {
+            return Err(fail(format!(
+                "a segment runs past its newest event, seq {len}"
+            )));
+        }
+        next = s.last.get() + 1;
+    }
+    if next <= len {
+        return Err(fail(format!("no segment holds seq {next}")));
+    }
+
+    Ok(())
 }
 
 /// Checks that each seat was certified by a key with an inception, and
