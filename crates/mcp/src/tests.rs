@@ -7,6 +7,8 @@ use serde_json::{Value, json};
 use std::sync::mpsc;
 use testkit::TempDir;
 
+mod search_calls;
+
 struct Fixture {
     _dir: TempDir,
     home: Home,
@@ -143,15 +145,13 @@ fn tools_list_offers_event_get_with_its_schema() {
     )["result"]["tools"]
         .clone();
 
-    assert_eq!(tools.as_array().unwrap().len(), 1);
-    assert_eq!(tools[0]["name"], "event_get");
-    assert_eq!(tools[0]["inputSchema"]["required"], json!(["address"]));
-    assert!(
-        tools[0]["description"]
-            .as_str()
-            .unwrap()
-            .contains("envelope")
-    );
+    assert_eq!(tools.as_array().unwrap().len(), 2);
+    assert_eq!(tools[0]["name"], "event_search");
+    assert_eq!(tools[1]["name"], "event_get");
+    assert_eq!(tools[1]["inputSchema"]["required"], json!(["address"]));
+    for tool in tools.as_array().unwrap() {
+        assert!(tool["description"].as_str().unwrap().contains("envelope"));
+    }
 }
 
 #[test]
@@ -295,7 +295,7 @@ fn an_unknown_tool_is_a_tool_error() {
 
     assert_eq!(
         refusal(&result),
-        "no such tool: this server offers event_get"
+        "no such tool: this server offers event_get and event_search"
     );
 }
 

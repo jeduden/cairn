@@ -71,6 +71,7 @@ fn each_kind_and_counter_has_its_name() {
         (Counter::RepeatHeld, "repeat_held"),
         (Counter::RepeatReleased, "repeat_released"),
         (Counter::TranscriptSourceLost, "transcript_source_lost"),
+        (Counter::SearchCancelled, "search_cancelled"),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

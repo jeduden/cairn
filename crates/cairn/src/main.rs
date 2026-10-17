@@ -45,6 +45,13 @@ fn main() -> ExitCode {
         os_user: os_user(),
         input: &stdin_lines,
         clock: &now,
+        // A development build's seam for the `@SEC-04` scenario, which
+        // needs a search past its deadline; a release build keeps 2 s.
+        search_deadline: cfg!(debug_assertions)
+            .then(|| std::env::var("CAIRN_TEST_SEARCH_DEADLINE_MS").ok())
+            .flatten()
+            .and_then(|ms| ms.parse().ok())
+            .map(std::time::Duration::from_millis),
     };
 
     let log = cairn::structured_log(
