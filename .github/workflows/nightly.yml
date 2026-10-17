@@ -57,6 +57,43 @@ jobs:
           name: fuzz-crashers
           path: fuzz/artifacts/
 
+  # ENG-06: the crash-consistency test kills the built core with
+  # SIGKILL at a random point of `cairn ingest`, 10,000 times, each
+  # start confined (ENG-12), and fails unless `cairn verify` exits 0
+  # after every kill. A failing iteration names the seed that replays
+  # it; each night takes a new seed. Purge, migration and rebuild join
+  # it as their phases land.
+  crash-consistency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned Rust toolchain
+        run: >-
+          rustup toolchain install
+          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          --profile minimal --no-self-update
+      # The confinement runs the core in a user and network namespace of
+      # its own, under strace. A runner may restrict unprivileged user
+      # namespaces, and its image may lack strace.
+      - name: Allow the confinement
+        run: |
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          command -v strace >/dev/null || {
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
+          }
+      - name: Kill ingest 10,000 times and verify after each kill
+        env:
+          CAIRN_CRASH_ITERATIONS: "10000"
+        run: |
+          export CAIRN_CRASH_SEED="$GITHUB_RUN_ID"
+          echo "crash-consistency seed $CAIRN_CRASH_SEED" | tee -a "$GITHUB_STEP_SUMMARY"
+          cargo test --locked -p cairn --test e2e_crash_consistency -- --nocapture
+
   # ENG-21: the rulesets, main's and the tag rulesets, are settings of
   # the repository on GitHub, not files, so they can weaken without a
   # pull request. The rulesets the repository commits under

@@ -264,6 +264,34 @@ fn prepare(
     }
 }
 
+/// The device key `cairn verify` checks the record in `store` against:
+/// the one `home`'s key store holds, or, while an interrupted first
+/// start is staged, the key it staged, which its next start places, as
+/// a crash can leave it (ENG-06). The flag says the key is staged.
+/// `None` while no start has recorded anything: no key is placed and
+/// the store holds no seat, so the next start makes the node.
+///
+/// # Errors
+///
+/// Fails when the device key cannot be read, or is missing beside a
+/// record with no first start staged, or when the staged start or the
+/// store fails.
+pub fn verifying_key(home: &Home, store: &Store) -> Result<Option<(PublicKey, bool)>, AdminError> {
+    let keys = home.key_store();
+    let missing = match DeviceKey::fetch(keys.as_ref(), &Entry::device()) {
+        Ok(device) => return Ok(Some((device.public(), false))),
+        Err(e) if e.is_missing() => e,
+        Err(e) => return Err(e.into()),
+    };
+    if store.seats()?.is_empty() {
+        return Ok(None);
+    }
+    match Staged::load(home, keys.as_ref())? {
+        Some(staged) if staged.nonce.is_some() => Ok(Some((staged.device.public(), true))),
+        _ => Err(missing.into()),
+    }
+}
+
 /// What a start staged: a first start's keys and its personal room's
 /// nonce, or a node identity change's keys.
 struct Staged {
@@ -591,6 +619,7 @@ fn new_event(key: [u8; 32], kind: EventKind, provenance: Provenance, content: Va
         provenance,
         content,
         commitment_key: CommitmentKey::from_bytes(key),
+        transcript_timestamp: None,
     }
 }
 

@@ -137,20 +137,54 @@ impl std::error::Error for IngestError {
     }
 }
 
+/// The settings an ingest writes under.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Limits {
+    /// Content whose canonical encoding is longer goes to the payload
+    /// store (`payload.threshold_bytes`, REC-09).
+    pub payload_threshold: usize,
+}
+
+impl Default for Limits {
+    fn default() -> Self {
+        Self {
+            payload_threshold: store::DEFAULT_PAYLOAD_THRESHOLD,
+        }
+    }
+}
+
+/// Ingests the transcript at `path` as [`ingest_with`] does, under the
+/// default [`Limits`].
+///
+/// # Errors
+///
+/// As [`ingest_with`].
+pub fn ingest_path(
+    home: &Home,
+    path: &Path,
+    redactor: &Redactor,
+    entropy: &mut dyn Entropy,
+) -> Result<Ingested, IngestError> {
+    ingest_with(home, path, redactor, &Limits::default(), entropy)
+}
+
 /// Ingests the transcript at `path` into a new ingest seat of the node
 /// in `home`, starting the node first when it has never started, each
 /// line redacted by `redactor` and the harness account identifiers the
-/// transcript names.
+/// transcript names. The seat's writer closes a segment at each turn
+/// end and subagent end the transcript records, and at its end
+/// (REC-19).
 ///
 /// # Errors
 ///
 /// Fails when the transcript cannot be read, is not UTF-8 or holds no
 /// line, or when an identifier cannot be redacted, or the random
 /// source, the home, the node or the store fails.
-pub fn ingest_path(
+pub fn ingest_with(
     home: &Home,
     path: &Path,
     redactor: &Redactor,
+    limits: &Limits,
     entropy: &mut dyn Entropy,
 ) -> Result<Ingested, IngestError> {
     let bytes = fs::read(path).map_err(|source| IngestError::Read {
@@ -169,29 +203,20 @@ pub fn ingest_path(
         .map_err(IngestError::Redaction)?;
     let Prepared {
         new_events,
+        ends,
         redactions,
         unparsed,
         drifts,
     } = prepare(&lines, &redactor, entropy)?;
     home.create().map_err(IngestError::Admin)?;
-    let mut store = Store::open(&home.store()).map_err(IngestError::Store)?;
+    let mut store = Store::open(&home.store())
+        .map_err(IngestError::Store)?
+        .with_payload_threshold(limits.payload_threshold);
     let node = Node::open(home, &mut store, entropy).map_err(IngestError::Admin)?;
     let seat = node
         .certify_ingest_seat(home, &mut store, entropy)
         .map_err(IngestError::Admin)?;
-    // A transaction at a time, so a failure can say what landed.
-    let mut landed = 0;
-    for chunk in new_events.chunks(store::BATCH) {
-        store
-            .append(seat.writer, chunk)
-            .map_err(|source| IngestError::Partial {
-                writer: seat.writer,
-                landed,
-                lines: new_events.len(),
-                source,
-            })?;
-        landed += chunk.len();
-    }
+    append_segments(&mut store, seat.writer, &new_events, &ends)?;
 
     Ok(Ingested {
         writer: seat.writer,
@@ -205,9 +230,59 @@ pub fn ingest_path(
     })
 }
 
+/// Appends `new_events` to `writer`, a segment to each run of them that
+/// `ends` closes, each `true` closing the segment after its event, and
+/// the last segment closed at the end. A transaction at a time, so a
+/// failure can say what landed.
+fn append_segments(
+    store: &mut Store,
+    writer: WriterId,
+    new_events: &[NewEvent],
+    ends: &[bool],
+) -> Result<(), IngestError> {
+    let mut landed = 0;
+    for segment in segments(ends) {
+        let chunks: Vec<&[NewEvent]> = new_events[segment].chunks(store::BATCH).collect();
+        for (n, chunk) in chunks.iter().enumerate() {
+            let appended = if n + 1 == chunks.len() {
+                store.append(writer, chunk)
+            } else {
+                store.append_open(writer, chunk)
+            };
+            appended.map_err(|source| IngestError::Partial {
+                writer,
+                landed,
+                lines: new_events.len(),
+                source,
+            })?;
+            landed += chunk.len();
+        }
+    }
+
+    Ok(())
+}
+
+/// The ranges of events each segment holds: each closes after an event
+/// `ends` marks, and the last at the end.
+fn segments(ends: &[bool]) -> Vec<std::ops::Range<usize>> {
+    let mut out = Vec::new();
+    let mut start = 0;
+    for (i, end) in ends.iter().enumerate() {
+        if *end || i + 1 == ends.len() {
+            out.push(start..i + 1);
+            start = i + 1;
+        }
+    }
+
+    out
+}
+
 /// A transcript's events, ready to append, with what reading it found.
 struct Prepared {
     new_events: Vec<NewEvent>,
+    /// For each event, whether a segment closes after it: a turn end or
+    /// a subagent end (REC-19).
+    ends: Vec<bool>,
     redactions: Vec<String>,
     unparsed: usize,
     drifts: Vec<String>,
@@ -229,6 +304,7 @@ fn prepare(
     let describe = |text: &str| redactor.redact_text(text).text;
     let mut prepared = Prepared {
         new_events: Vec::with_capacity(lines.len()),
+        ends: Vec::with_capacity(lines.len()),
         redactions: Vec::new(),
         unparsed: 0,
         drifts: Vec::new(),
@@ -242,12 +318,22 @@ fn prepare(
             Classified::Line(provenance, drift) => (EventKind::TranscriptLine, provenance, drift),
         };
         prepared.drifts.extend(drift.map(|d| d.describe(&describe)));
+        // Read from the line's own structure, as its class is; the
+        // timestamp only when well formed, so it carries no secret.
+        let parsed: Value = serde_json::from_str(line).unwrap_or(Value::Null);
+        prepared
+            .ends
+            .push(turn_end(&parsed) || provenance == Provenance::SubagentResult);
         let redacted = redactor.redact_line(line);
         prepared.new_events.push(NewEvent {
             kind,
             provenance,
             content: content(n, &redacted.text, redacted.rules.len()),
             commitment_key: CommitmentKey::from_bytes(draw(entropy).map_err(IngestError::Key)?),
+            transcript_timestamp: parsed["timestamp"]
+                .as_str()
+                .filter(|t| well_formed(t))
+                .map(str::to_owned),
         });
         prepared.redactions.extend(redacted.rules);
     }
@@ -294,6 +380,53 @@ fn walk(dir: &Path, found: &mut Vec<PathBuf>) -> Result<(), IngestError> {
     }
 
     Ok(())
+}
+
+/// Whether the parsed transcript line `line` is the model reply that
+/// ends a turn: an `assistant` line that stopped for any reason but a
+/// tool call or a pause.
+fn turn_end(line: &Value) -> bool {
+    line["type"] == "assistant"
+        && line["message"]["stop_reason"]
+            .as_str()
+            .is_some_and(|r| !matches!(r, "tool_use" | "pause_turn"))
+}
+
+/// Whether `text` is an RFC 3339 date and time, as a transcript
+/// timestamp is: `YYYY-MM-DDTHH:MM:SS`, at most nine fraction digits,
+/// then `Z` or an offset `+HH:MM`.
+fn well_formed(text: &str) -> bool {
+    let b = text.as_bytes();
+    let digits =
+        |r: std::ops::Range<usize>| b.get(r).is_some_and(|d| d.iter().all(u8::is_ascii_digit));
+    let at = |i: usize, c: u8| b.get(i) == Some(&c);
+    let date_time = digits(0..4)
+        && at(4, b'-')
+        && digits(5..7)
+        && at(7, b'-')
+        && digits(8..10)
+        && at(10, b'T')
+        && digits(11..13)
+        && at(13, b':')
+        && digits(14..16)
+        && at(16, b':')
+        && digits(17..19);
+    let mut rest = b.get(19..).unwrap_or_default();
+    if let Some(fraction) = rest.strip_prefix(b".") {
+        let n = fraction.iter().take_while(|d| d.is_ascii_digit()).count();
+        if n == 0 || n > 9 {
+            return false;
+        }
+        rest = &fraction[n..];
+    }
+    let zone = rest == b"Z"
+        || (rest.len() == 6
+            && matches!(rest[0], b'+' | b'-')
+            && rest[1..3].iter().all(u8::is_ascii_digit)
+            && rest[3] == b':'
+            && rest[4..6].iter().all(u8::is_ascii_digit));
+
+    date_time && zone
 }
 
 /// An unparsed line's content: its number and redacted text, and how

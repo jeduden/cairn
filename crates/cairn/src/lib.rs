@@ -20,7 +20,7 @@ use administration::act as act_record;
 use administration::home::Home;
 use administration::node::Node;
 use administration::node_identity::IdentitySource;
-use administration::verify::{VerifyError, verify};
+use administration::verify::{Report, VerifyError, verify};
 use allowed_root::{Access, AllowedPath, AllowedRoots};
 use audit::AuditError;
 use audit::counters::{Counts, counts};
@@ -29,9 +29,8 @@ use audit::log::Log;
 use configuration::source::OsUser;
 use configuration::{Loaded, SettingsLayer};
 use hook::{Failure, Hook};
-use key::key_store::{Entry as KeyEntry, KeyStoreKind};
+use key::key_store::KeyStoreKind;
 use key::random::OsEntropy;
-use key::signing::DeviceKey;
 use redaction::Redactor;
 use serde_json::{Value, json};
 use store::Store;
@@ -355,6 +354,31 @@ pub(crate) fn failed(command: &str, e: &dyn std::fmt::Display, stderr: &mut dyn 
     EXIT_FAILURE
 }
 
+/// Reports a store that failed to open: one of a newer format version is
+/// an integrity failure, refused and named, exiting 3 (ADM-05); any other
+/// a failure.
+fn store_failed(command: &str, e: &store::StoreError, stderr: &mut dyn Write) -> u8 {
+    let code = failed(command, e, stderr);
+    if matches!(e, store::StoreError::Newer { .. }) {
+        EXIT_INTEGRITY
+    } else {
+        code
+    }
+}
+
+/// The payload threshold the settings in force set (REC-09).
+fn limits(settings: &configuration::resolve::Settings) -> ingest::Limits {
+    // The key has a default and takes only an integer it bounds.
+    let threshold = settings
+        .get("payload.threshold_bytes")
+        .and_then(|v| v.to_json().as_u64())
+        .and_then(|n| usize::try_from(n).ok());
+
+    ingest::Limits {
+        payload_threshold: threshold.unwrap_or(store::DEFAULT_PAYLOAD_THRESHOLD),
+    }
+}
+
 /// What `cairn ingest` reads.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum IngestTarget {
@@ -420,8 +444,14 @@ fn ingest(
     let mut reports = Vec::new();
     for transcript in &allowed {
         let ingested = redactor.as_ref().map_err(Clone::clone).and_then(|r| {
-            ingest::ingest_path(&home, transcript.path(), r, &mut OsEntropy)
-                .map_err(|e| e.to_string())
+            ingest::ingest_with(
+                &home,
+                transcript.path(),
+                r,
+                &limits(settings),
+                &mut OsEntropy,
+            )
+            .map_err(|e| e.to_string())
         });
         match ingested {
             Ok(ingested) => {
@@ -819,39 +849,21 @@ fn verify_command(
     }
     let store = match Store::open(&home.store()) {
         Ok(store) => store,
+        Err(e) => return store_failed("verify", &e, stderr),
+    };
+    let verified = match verify_record(&home, &store) {
+        Ok(verified) => verified,
         Err(e) => return failed("verify", &e, stderr),
     };
-    let device = match DeviceKey::fetch(home.key_store().as_ref(), &KeyEntry::device()) {
-        Ok(device) => device.public(),
-        Err(e) => return failed("verify", &e, stderr),
-    };
-    let checked = match verify(&store, &device) {
-        Ok(r) => Log::new(home.audit()).verify().map(|a| (r, a)).map_err(Err),
+    let checked = match verified {
+        Ok((r, staged)) => Log::new(home.audit())
+            .verify()
+            .map(|a| (r, staged, a))
+            .map_err(Err),
         Err(e) => Err(Ok(e)),
     };
     let (code, line) = match checked {
-        Ok((r, a)) if as_json => (
-            EXIT_OK,
-            json!({
-                "integrity": "unsigned",
-                "writers": r.writers,
-                "events": r.events,
-                "order": r.full_order(),
-                "seats": seats_json(&r.seats),
-                "audit": {"files": a.files, "entries": a.entries},
-                "broken": null,
-            })
-            .to_string(),
-        ),
-        Ok((r, a)) => (
-            EXIT_OK,
-            format!(
-                "checked {} writers and {} events: every chain, commitment and seat certificate \
-                 holds; integrity unsigned, as no log is signed yet; the audit log's chain holds \
-                 over {} entries",
-                r.writers, r.events, a.entries
-            ),
-        ),
+        Ok((r, staged, a)) => (EXIT_OK, verified_line(as_json, &r, staged, &a)),
         Err(Ok(VerifyError::Store(e))) => return failed("verify", &e, stderr),
         Err(Err(e @ AuditError::Broken { .. })) => {
             broken_json(as_json, "audit", None, &e.to_string(), stderr)
@@ -873,6 +885,77 @@ fn verify_command(
         EXIT_OK => code,
         other => other,
     }
+}
+
+/// The record in `store`, verified against the device key `home` keeps,
+/// or against the key an interrupted first start staged, which its next
+/// start places, with whether it was staged; an empty record while that
+/// start has recorded nothing yet, as a crash can leave a home (ENG-06).
+fn verify_record(
+    home: &Home,
+    store: &Store,
+) -> Result<Result<(Report, bool), VerifyError>, administration::AdminError> {
+    Ok(match administration::node::verifying_key(home, store)? {
+        Some((key, staged)) => verify(store, &key).map(|r| (r, staged)),
+        None => Ok((
+            Report {
+                writers: 0,
+                events: 0,
+                order: Vec::new(),
+                rooms: BTreeMap::new(),
+                seats: Vec::new(),
+                open_segments: Vec::new(),
+            },
+            true,
+        )),
+    })
+}
+
+/// What `cairn verify` says of a record that verified, `staged` while
+/// the node's first start is still to finish, as JSON when asked.
+fn verified_line(as_json: bool, r: &Report, staged: bool, a: &audit::log::Checked) -> String {
+    if as_json {
+        return json!({
+            "integrity": "unsigned",
+            "writers": r.writers,
+            "events": r.events,
+            "order": r.full_order(),
+            "seats": seats_json(&r.seats),
+            "open_segments": segments::open_json(&r.open_segments),
+            "staged": staged,
+            "audit": {"files": a.files, "entries": a.entries},
+            "broken": null,
+        })
+        .to_string();
+    }
+    let staged = if staged {
+        "; the node's first start was interrupted, and its next start finishes it"
+    } else {
+        ""
+    };
+
+    format!(
+        "checked {} writers and {} events: every chain, commitment and seat certificate \
+         holds; integrity unsigned, as no log is signed yet; the audit log's chain holds \
+         over {} entries{}{staged}",
+        r.writers,
+        r.events,
+        a.entries,
+        open_text(&r.open_segments)
+    )
+}
+
+/// What `cairn verify` adds for writer chains that ended without a
+/// closed segment: nothing when none did (REC-19).
+fn open_text(open: &[store::Segment]) -> String {
+    if open.is_empty() {
+        return String::new();
+    }
+
+    format!(
+        "; writer chains ended without a closed segment: {}",
+        segments::open_list(open)
+    )
 }
 
 /// Each seat as `cairn verify --json` reports it: its writer, and its
@@ -1188,6 +1271,8 @@ struct Status {
     managed_policy: Option<String>,
     /// The key store the home's keys are kept in (SEC-10).
     keys: KeyStoreKind,
+    /// The store's open and newer segments, once there is a store.
+    segments: Option<segments::SegmentsStatus>,
 }
 
 impl Status {
@@ -1210,6 +1295,7 @@ impl Status {
                 "readable_by_agents": self.keys.readable_by_agents(),
                 "where": self.keys.describe(),
             },
+            "segments": self.segments.as_ref().map(segments::SegmentsStatus::json),
         })
         .to_string()
     }
@@ -1249,6 +1335,11 @@ impl Status {
             lines.push(format!("managed policy refused: {why}"));
         }
         lines.push(format!("keys: {}", self.keys.describe()));
+        lines.extend(
+            self.segments
+                .iter()
+                .flat_map(segments::SegmentsStatus::lines),
+        );
 
         lines.join("\n")
     }
@@ -1267,12 +1358,18 @@ fn status(
     let Some(as_json) = json_flag("status", args, stderr) else {
         return EXIT_USAGE;
     };
-    let read = ctx
-        .home()
-        .map_err(|e| e.to_string())
-        .and_then(|home| Ok((settings::recorded_acts(&home)?, home)));
-    let (acts, home) = match read {
-        Ok(read) => read,
+    let home = match ctx.home() {
+        Ok(home) => home,
+        Err(e) => return failed("status", &e, stderr),
+    };
+    // The store's version is read first, and nothing in a newer store is
+    // opened for writing (ADM-05).
+    let segments = match segments::read(&home) {
+        Ok(s) => s,
+        Err(e) => return store_failed("status", &e, stderr),
+    };
+    let acts = match settings::recorded_acts(&home) {
+        Ok(acts) => acts,
         Err(e) => return failed("status", &e, stderr),
     };
     let in_force = settings::in_force(ctx, &home, &acts);
@@ -1283,14 +1380,21 @@ fn status(
         Ok(c) => c,
         Err(code) => return code,
     };
-    let status = status_of(&home, counted, &in_force);
+    let refused = segments.as_ref().is_some_and(|s| !s.newer.is_empty());
+    let mut status = status_of(&home, counted, &in_force);
+    status.segments = segments;
     let text = if as_json {
         status.json()
     } else {
         status.text()
     };
 
-    written(writeln!(stdout, "{text}"), stderr)
+    // A refused segment of a newer format version is named and exits 3
+    // (ADM-05).
+    match written(writeln!(stdout, "{text}"), stderr) {
+        EXIT_OK if refused => EXIT_INTEGRITY,
+        other => other,
+    }
 }
 
 /// The status of `home`, given its audit log's counts.
@@ -1315,6 +1419,7 @@ fn status_of(home: &Home, counted: Option<(Counts, u64)>, in_force: &settings::I
             .find(|f| f.layer == SettingsLayer::ManagedPolicy)
             .map(ToString::to_string),
         keys: home.key_store().kind(),
+        segments: None,
     };
     if let Some((counts, entries)) = counted {
         let bytes = fs::metadata(&store).ok().map(|m| m.len());
@@ -1376,6 +1481,7 @@ pub(crate) fn invalid_layers(command: &str, loaded: &Loaded, stderr: &mut dyn Wr
 }
 
 mod act;
+mod segments;
 mod settings;
 
 pub use settings::managed_policy;

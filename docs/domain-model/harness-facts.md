@@ -29,7 +29,9 @@ them, Cairn changes only harness configuration, under I7.
   allowed root is refused. As a
   Cairn term, "source" is a transcript source or a trusted source; the harness's
   `source` field and §6.1's threat sources keep their own sense. Each
-  **transcript line** is one JSON value, recorded as one event. A harness
+  **transcript line** is one JSON value, recorded as one event, keeping the
+  harness's **transcript timestamp** as metadata when the line carries one;
+  `seq` alone orders events (REC-12). A harness
   version's **recorded shape** is, per line type (an attachment by its type, a
   `system` line by its subtype), the keys its recorded lines all carry and those
   any carries, generated from that version's recorded transcripts (ENG-17). A

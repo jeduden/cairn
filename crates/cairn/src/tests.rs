@@ -1480,6 +1480,7 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
                 "readable_by_agents": true,
                 "where": "files only this OS user can read; an unsandboxed agent of the same OS user could read them",
             },
+            "segments": {"open": [], "newer": []},
         })
     );
     let fresh = Process::new();
@@ -1500,6 +1501,7 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
                 "readable_by_agents": true,
                 "where": "files only this OS user can read; an unsandboxed agent of the same OS user could read them",
             },
+            "segments": null,
         })
     );
 }
@@ -2192,4 +2194,254 @@ fn ingest_fails_on_a_store_the_node_cannot_be_found_in_and_audits_no_key_failure
     assert!(!after.contains("key store"), "{after}");
     assert!(!after.contains("device key missing"), "{after}");
     assert!(after.len() >= before.len());
+}
+
+/// Runs `statement` on the store in `p`'s home.
+fn store_sql(p: &Process, statement: &str) {
+    rusqlite::Connection::open(p.cairn_home().join("store.db"))
+        .unwrap()
+        .execute_batch(statement)
+        .unwrap();
+}
+
+/// Appends two events to a writer of the store in `p`'s home, leaving
+/// its segment open, as a writer that stopped before closing it would;
+/// its writer.
+fn writer_left_open(p: &Process) -> store::WriterId {
+    let writer = store::WriterId::derive(&[7; 32]);
+    let new = |n: u8| store::NewEvent {
+        kind: record::event::EventKind::UnparsedLine,
+        provenance: record::event::Provenance::Unparsed,
+        content: serde_json::json!({"line": n}),
+        commitment_key: store::CommitmentKey::from_bytes([n; 32]),
+        transcript_timestamp: None,
+    };
+    Store::open(&p.cairn_home().join("store.db"))
+        .unwrap()
+        .append_open(writer, &[new(1), new(2)])
+        .unwrap();
+    writer
+}
+
+#[test]
+fn status_reports_each_writer_chain_ended_without_a_closed_segment() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    let writer = writer_left_open(&p);
+
+    let (code, out, err) = p.invoke(&["status"], &DEV);
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(
+        out.contains(&format!(
+            "\nwriter chains ended without a closed segment: {writer} (seq 1 to 2)\n"
+        )),
+        "{out}"
+    );
+    let (code, out, _) = p.invoke(&["status", "--json"], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(
+        v["segments"],
+        serde_json::json!({
+            "open": [{"writer": writer.to_string(), "first": 1, "last": 2}],
+            "newer": [],
+        })
+    );
+}
+
+#[test]
+fn verify_reports_each_writer_chain_ended_without_a_closed_segment_and_exits_0() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    let (_, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["open_segments"], serde_json::json!([]));
+    let writer = writer_left_open(&p);
+    // The writer has no seat certificate: verify names that first, so
+    // give the open segment to the ingest seat's writer instead.
+    store_sql(
+        &p,
+        &format!(
+            "DELETE FROM segments WHERE writer = '{writer}'; DELETE FROM events WHERE writer = '{writer}'"
+        ),
+    );
+    let ingest = Store::open(&p.cairn_home().join("store.db"))
+        .unwrap()
+        .open_segments()
+        .unwrap();
+    assert!(ingest.is_empty());
+    store_sql(
+        &p,
+        "UPDATE segments SET closed = 0 WHERE (writer, first_seq) IN \
+         (SELECT writer, max(first_seq) FROM segments WHERE writer IN \
+          (SELECT writer FROM events WHERE kind = 'transcript_line') GROUP BY writer)",
+    );
+
+    let (code, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    let text = p.invoke(&["verify"], &DEV).1;
+
+    assert_eq!(code, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let open = v["open_segments"].as_array().unwrap();
+    assert_eq!(open.len(), 1, "{v}");
+    assert_eq!(
+        (&open[0]["first"], &open[0]["last"]),
+        (&serde_json::json!(1), &serde_json::json!(1))
+    );
+    assert!(
+        text.contains(&format!(
+            "; writer chains ended without a closed segment: {} (seq 1 to 1)",
+            open[0]["writer"].as_str().unwrap()
+        )),
+        "{text}"
+    );
+}
+
+#[test]
+fn status_and_verify_exit_3_naming_a_newer_store_and_leave_it_unchanged() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    store_sql(
+        &p,
+        "PRAGMA journal_mode = DELETE; UPDATE meta SET value = '2' WHERE key = 'schema_version'",
+    );
+    let path = p.cairn_home().join("store.db");
+    let before = std::fs::read(&path).unwrap();
+
+    for command in ["status", "verify"] {
+        let (code, out, err) = p.invoke(&[command], &DEV);
+        assert_eq!(
+            (code, out.as_str(), err.as_str()),
+            (
+                EXIT_INTEGRITY,
+                "",
+                format!(
+                    "cairn {command}: the store is format version 2, newer than this cairn's 1\n"
+                )
+                .as_str()
+            )
+        );
+    }
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("the store is format version 2"), "{err}");
+
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+}
+
+#[test]
+fn status_and_verify_exit_3_naming_a_newer_segment() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    store_sql(
+        &p,
+        "UPDATE segments SET format_version = 2 WHERE writer IN \
+         (SELECT writer FROM events WHERE kind = 'transcript_line')",
+    );
+    let newer = Store::open(&p.cairn_home().join("store.db"))
+        .unwrap()
+        .newer_segments()
+        .unwrap();
+    assert_eq!(newer.len(), 1);
+    let named = store::StoreError::NewerSegment(newer[0].clone()).to_string();
+
+    let (code, out, err) = p.invoke(&["status"], &DEV);
+    assert_eq!((code, err.as_str()), (EXIT_INTEGRITY, ""));
+    assert!(out.contains(&format!("\nrefused: {named}\n")), "{out}");
+    let (code, out, _) = p.invoke(&["status", "--json"], &DEV);
+    assert_eq!(code, EXIT_INTEGRITY);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["segments"]["newer"][0]["format_version"], 2);
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!(
+        (code, err),
+        (EXIT_INTEGRITY, format!("cairn verify: {named}\n"))
+    );
+}
+
+#[test]
+fn status_of_a_store_it_cannot_read_fails() {
+    let p = Process::new();
+    owner_only_dirs(&p.cairn_home());
+    Home::locate(Some(p.cairn_home().as_os_str()), None)
+        .unwrap()
+        .create()
+        .unwrap();
+    junk_store(&p);
+
+    let (code, _, err) = p.invoke(&["status"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.starts_with("cairn status: the store: "), "{err}");
+}
+
+#[test]
+fn ingest_puts_a_line_above_the_configured_payload_threshold_in_the_payload_store() {
+    let p = Process::new();
+    p.configure("payload.threshold_bytes = 100\n");
+    let long = format!(
+        "{{\"type\":\"atis-latch\",\"atis\":\"{}\",\"sessionId\":\"s\"}}\n",
+        "a".repeat(200)
+    );
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript(&long)], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let held = std::fs::read_dir(p.cairn_home().join("payloads"))
+        .unwrap()
+        .any(|e| {
+            std::fs::read_to_string(e.unwrap().path())
+                .unwrap()
+                .contains(&"a".repeat(200))
+        });
+    assert!(held, "the line's content is in the payload store");
+    assert_eq!(p.invoke(&["verify"], &DEV).0, EXIT_OK);
+}
+
+#[test]
+fn verify_of_a_home_whose_first_start_was_cut_short_before_it_recorded_exits_0() {
+    use key::key_store::Entry;
+    use key::signing::{DeviceKey, RecoveryKey, SeatKey};
+    let p = Process::new();
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    home.create().unwrap();
+    drop(Store::open(&home.store()).unwrap());
+    // A first start killed after it staged its keys, before it recorded.
+    let keys = home.key_store();
+    DeviceKey::mint(&mut OsEntropy)
+        .unwrap()
+        .keep(keys.as_ref(), &Entry::staged(&Entry::device()))
+        .unwrap();
+    RecoveryKey::mint(&mut OsEntropy)
+        .unwrap()
+        .keep(keys.as_ref(), &Entry::staged(&Entry::recovery()))
+        .unwrap();
+    SeatKey::mint(&mut OsEntropy)
+        .unwrap()
+        .keep(keys.as_ref(), &Entry::staged_seat())
+        .unwrap();
+    key::file::write_secret(&home.staged(), &format!("genesis {}", "0".repeat(32))).unwrap();
+
+    let (code, out, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(out.starts_with("checked 0 writers and 0 events: "), "{out}");
+    assert!(
+        out.ends_with("; the node's first start was interrupted, and its next start finishes it\n"),
+        "{out}"
+    );
+    let (_, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(
+        (&v["writers"], &v["staged"]),
+        (&serde_json::json!(0), &serde_json::json!(true))
+    );
+
+    // Its next start finishes it, and the record verifies against the
+    // key it placed.
+    let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let (_, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["staged"], serde_json::json!(false));
 }

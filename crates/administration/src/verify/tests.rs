@@ -28,6 +28,7 @@ fn new_event(n: u8) -> NewEvent {
         provenance: Provenance::Unparsed,
         content: json!({"line": n, "text": format!("line {n}")}),
         commitment_key: CommitmentKey::from_bytes([n; 32]),
+        transcript_timestamp: None,
     }
 }
 
@@ -59,7 +60,7 @@ fn fixture() -> Fixture {
 impl Fixture {
     fn sql(&self, statement: &str) {
         let conn = rusqlite::Connection::open(self.home.store()).unwrap();
-        conn.execute(statement, []).unwrap();
+        conn.execute_batch(statement).unwrap();
     }
 
     fn at(&self, seq: u64) -> Address {
@@ -414,6 +415,7 @@ fn a_key_event_whose_content_is_no_key_event_is_named() {
                 provenance: Provenance::Structural,
                 content: json!({}),
                 commitment_key: CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
@@ -542,6 +544,7 @@ fn a_certificate_record_naming_a_seat_this_node_does_not_hold_is_named() {
                 provenance: Provenance::Structural,
                 content: json!({"certificate": "0".repeat(64), "seat": "0".repeat(64), "writer": stray.to_string()}),
                 commitment_key: CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap()[0];
@@ -571,6 +574,7 @@ fn trusted_provenance_outside_a_device_seat_is_named() {
                 provenance: Provenance::Operator,
                 content: json!({"line": 4, "text": "x"}),
                 commitment_key: CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap()[0];
@@ -600,6 +604,7 @@ fn a_transcripts_untrusted_harness_meta_verifies_in_an_ingest_seat() {
                 provenance: Provenance::HarnessMeta,
                 content: json!({"line": 4, "text": "{\"type\":\"mode\"}"}),
                 commitment_key: CommitmentKey::from_bytes([4; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
@@ -764,12 +769,14 @@ fn forged_change_of(
             provenance: Provenance::Structural,
             content: change(&device).to_value(),
             commitment_key: CommitmentKey::from_bytes([1; 32]),
+            transcript_timestamp: None,
         },
         NewEvent {
             kind: EventKind::KeyEvent,
             provenance: Provenance::Structural,
             content: minted.to_value(),
             commitment_key: CommitmentKey::from_bytes([2; 32]),
+            transcript_timestamp: None,
         },
         NewEvent {
             kind: EventKind::CertificateRecord,
@@ -780,6 +787,7 @@ fn forged_change_of(
                 "writer": cert.writer_id().to_string(),
             }),
             commitment_key: CommitmentKey::from_bytes([3; 32]),
+            transcript_timestamp: None,
         },
     ];
     let at = f
@@ -865,6 +873,7 @@ fn a_node_identity_change_event_that_does_not_parse_is_named() {
                 provenance: Provenance::Structural,
                 content: json!({}),
                 commitment_key: CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
@@ -898,6 +907,7 @@ fn a_certificate_record_naming_a_seat_another_key_certified_is_named() {
                     "writer": cert.writer_id().to_string(),
                 }),
                 commitment_key: CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap()[0];
@@ -938,5 +948,143 @@ fn node_identity_changes_that_replace_each_other_lead_back_to_no_genesis() {
     assert_eq!(
         err.to_string(),
         "this node's device key leads back to no genesis"
+    );
+}
+
+#[test]
+fn a_record_whose_writers_closed_their_segments_reports_none_open() {
+    let f = fixture();
+
+    let report = verify(&f.store, &f.node.device().public()).unwrap();
+
+    assert!(report.open_segments.is_empty());
+}
+
+#[test]
+fn a_writer_chain_ended_without_a_closed_segment_is_reported_and_verifies() {
+    let mut f = fixture();
+    f.store
+        .append_open(f.ingest.writer, &[new_event(4), new_event(5)])
+        .unwrap();
+
+    let report = verify(&f.store, &f.node.device().public()).unwrap();
+
+    let open: Vec<(WriterId, u64, u64)> = report
+        .open_segments
+        .iter()
+        .map(|s| (s.writer, s.first.get(), s.last.get()))
+        .collect();
+    assert_eq!(open, [(f.ingest.writer, 4, 5)]);
+}
+
+#[test]
+fn a_segment_of_a_newer_format_version_is_refused_and_named() {
+    let f = fixture();
+    f.sql(&format!(
+        "UPDATE segments SET format_version = 2 WHERE writer = '{}'",
+        f.ingest.writer
+    ));
+
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+
+    assert!(
+        matches!(&err, VerifyError::NewerSegment(s) if s.writer == f.ingest.writer && s.format_version == 2),
+        "{err}"
+    );
+    assert_eq!(err.class(), "newer_segment");
+    assert_eq!(err.address(), None);
+    assert_eq!(
+        err.to_string(),
+        format!(
+            "the segment of writer {} from seq 1 to 3 is format version 2, newer than this cairn's 1",
+            f.ingest.writer
+        )
+    );
+}
+
+#[test]
+fn segments_that_do_not_tile_a_writer_s_log_are_named() {
+    for (statement, why) in [
+        (
+            "DELETE FROM segments WHERE writer = '{w}'",
+            "no segment holds seq 1",
+        ),
+        (
+            "UPDATE segments SET last_seq = 2 WHERE writer = '{w}'",
+            "no segment holds seq 3",
+        ),
+        (
+            "UPDATE segments SET last_seq = 4 WHERE writer = '{w}'",
+            "a segment runs past its newest event, seq 3",
+        ),
+        (
+            "INSERT INTO segments VALUES ('{w}', 2, 3, 1, 1)",
+            "the segment from seq 2 overlaps the one before it",
+        ),
+        (
+            "UPDATE segments SET last_seq = 1 WHERE writer = '{w}';
+             INSERT INTO segments VALUES ('{w}', 3, 3, 1, 1)",
+            "no segment holds seq 2",
+        ),
+    ] {
+        let f = fixture();
+        f.sql(&statement.replace("{w}", &f.ingest.writer.to_string()));
+
+        let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+
+        assert_eq!(err.class(), "segment", "{statement}: {err}");
+        assert_eq!(
+            err.to_string(),
+            format!("writer {}: {why}", f.ingest.writer),
+            "{statement}"
+        );
+    }
+}
+
+#[test]
+fn only_a_writer_s_newest_segment_may_be_open() {
+    let mut f = fixture();
+    f.store.append(f.ingest.writer, &[new_event(4)]).unwrap();
+    f.sql(&format!(
+        "UPDATE segments SET closed = 0 WHERE writer = '{}' AND first_seq = 1",
+        f.ingest.writer
+    ));
+
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        format!(
+            "writer {}: the segment from seq 1 is open, though a later one follows it",
+            f.ingest.writer
+        )
+    );
+}
+
+#[test]
+fn a_payload_that_is_gone_is_named_by_its_event() {
+    let mut f = fixture();
+    let mut big = new_event(4);
+    big.content = json!({"line": 4, "text": "x".repeat(9000)});
+    f.store.append(f.ingest.writer, &[big]).unwrap();
+    let name = f
+        .store
+        .event(f.at(4))
+        .unwrap()
+        .unwrap()
+        .payload
+        .unwrap()
+        .name;
+    std::fs::remove_file(f.home.root().join("payloads").join(name)).unwrap();
+
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+
+    assert_eq!(err.class(), "payload");
+    let full = f.at(4).full(&f.node.personal_room());
+    assert_eq!(err.address(), Some(full.as_str()));
+    assert!(
+        err.to_string()
+            .starts_with(&format!("the payload of {full} cannot be read: ")),
+        "{err}"
     );
 }
