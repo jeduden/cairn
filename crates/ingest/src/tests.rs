@@ -618,7 +618,7 @@ fn a_line_above_the_payload_threshold_goes_to_the_payload_store() {
         &home,
         &transcript(&dir, &text),
         &redactor(),
-        &Limits {
+        &PayloadSettings {
             payload_threshold: 200,
         },
         &mut OsEntropy,
@@ -633,7 +633,7 @@ fn a_line_above_the_payload_threshold_goes_to_the_payload_store() {
     assert_eq!(log[0].content.as_ref().unwrap()["text"], "x".repeat(300));
     assert!(log[1].payload.is_none());
     assert_eq!(
-        Limits::default().payload_threshold,
+        PayloadSettings::default().payload_threshold,
         store::DEFAULT_PAYLOAD_THRESHOLD
     );
 }

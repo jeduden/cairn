@@ -137,15 +137,15 @@ impl std::error::Error for IngestError {
     }
 }
 
-/// The settings an ingest writes under.
+/// The payload settings an ingest writes under (REC-09).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Limits {
+pub struct PayloadSettings {
     /// Content whose canonical encoding is longer goes to the payload
     /// store (`payload.threshold_bytes`, REC-09).
     pub payload_threshold: usize,
 }
 
-impl Default for Limits {
+impl Default for PayloadSettings {
     fn default() -> Self {
         Self {
             payload_threshold: store::DEFAULT_PAYLOAD_THRESHOLD,
@@ -154,7 +154,7 @@ impl Default for Limits {
 }
 
 /// Ingests the transcript at `path` as [`ingest_with`] does, under the
-/// default [`Limits`].
+/// default [`PayloadSettings`].
 ///
 /// # Errors
 ///
@@ -165,7 +165,7 @@ pub fn ingest_path(
     redactor: &Redactor,
     entropy: &mut dyn Entropy,
 ) -> Result<Ingested, IngestError> {
-    ingest_with(home, path, redactor, &Limits::default(), entropy)
+    ingest_with(home, path, redactor, &PayloadSettings::default(), entropy)
 }
 
 /// Ingests the transcript at `path` into a new ingest seat of the node
@@ -184,7 +184,7 @@ pub fn ingest_with(
     home: &Home,
     path: &Path,
     redactor: &Redactor,
-    limits: &Limits,
+    payload: &PayloadSettings,
     entropy: &mut dyn Entropy,
 ) -> Result<Ingested, IngestError> {
     let bytes = fs::read(path).map_err(|source| IngestError::Read {
@@ -211,7 +211,7 @@ pub fn ingest_with(
     home.create().map_err(IngestError::Admin)?;
     let mut store = Store::open(&home.store())
         .map_err(IngestError::Store)?
-        .with_payload_threshold(limits.payload_threshold);
+        .with_payload_threshold(payload.payload_threshold);
     let node = Node::open(home, &mut store, entropy).map_err(IngestError::Admin)?;
     let seat = node
         .certify_ingest_seat(home, &mut store, entropy)

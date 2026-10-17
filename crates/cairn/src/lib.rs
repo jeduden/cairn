@@ -367,14 +367,14 @@ fn store_failed(command: &str, e: &store::StoreError, stderr: &mut dyn Write) ->
 }
 
 /// The payload threshold the settings in force set (REC-09).
-fn limits(settings: &configuration::resolve::Settings) -> ingest::Limits {
+fn payload_settings(settings: &configuration::resolve::Settings) -> ingest::PayloadSettings {
     // The key has a default and takes only an integer it bounds.
     let threshold = settings
         .get("payload.threshold_bytes")
         .and_then(|v| v.to_json().as_u64())
         .and_then(|n| usize::try_from(n).ok());
 
-    ingest::Limits {
+    ingest::PayloadSettings {
         payload_threshold: threshold.unwrap_or(store::DEFAULT_PAYLOAD_THRESHOLD),
     }
 }
@@ -448,7 +448,7 @@ fn ingest(
                 &home,
                 transcript.path(),
                 r,
-                &limits(settings),
+                &payload_settings(settings),
                 &mut OsEntropy,
             )
             .map_err(|e| e.to_string())
