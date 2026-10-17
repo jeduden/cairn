@@ -332,6 +332,13 @@ pub fn serve(
                 writeln!(out, "{}", error(&Value::Null, PARSE_ERROR, "parse error"))?;
                 out.flush()?;
             }
+            Ok(Err(e)) if e.kind() == io::ErrorKind::FileTooLarge => {
+                // A request past the input's line limit (SEC-05) was
+                // never held whole; the next line may be one.
+                let reply = error(&Value::Null, INVALID_REQUEST, "request exceeds 1 MiB");
+                writeln!(out, "{reply}")?;
+                out.flush()?;
+            }
             Ok(line) => {
                 let line = line?;
                 let reply =

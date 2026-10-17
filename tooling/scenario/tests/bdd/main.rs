@@ -23,6 +23,7 @@ mod engineering_benchmark;
 mod engineering_boundary;
 mod engineering_drift;
 mod engineering_isolation;
+mod engineering_logs;
 mod engineering_panics;
 mod engineering_protection;
 mod engineering_reach;
@@ -32,6 +33,7 @@ mod observability;
 mod principal_acts;
 mod record;
 mod security;
+mod security_redaction;
 
 use std::env;
 use std::ffi::OsStr;

@@ -96,7 +96,9 @@ impl Node {
 
     /// Ingests a three-line transcript: one run.
     fn run_an_agent(&self) -> Output {
-        let transcript = self.home().join("t.jsonl");
+        let dir = self.home().join(".claude").join("projects").join("p");
+        fs::create_dir_all(&dir).unwrap();
+        let transcript = dir.join("t.jsonl");
         fs::write(&transcript, "{\"a\":1}\n{\"b\":2}\n{\"c\":3}\n").unwrap();
         let path = transcript.display().to_string();
         self.agent(&["ingest", "--path", &path, "--json"])
@@ -134,7 +136,7 @@ fn text(bytes: &[u8]) -> String {
 }
 
 #[test]
-fn an_invalid_configuration_fails_status_naming_the_key_and_the_core_keeps_recording() {
+fn an_invalid_configuration_fails_status_naming_the_key_and_ingest_refuses_until_it_is_fixed() {
     for (setting, key, problem) in [
         ("recal.max_k = 10", "recal.max_k", "unknown key"),
         ("recall.max_k = 'ten'", "recall.max_k", "type error"),
@@ -151,9 +153,13 @@ fn an_invalid_configuration_fails_status_naming_the_key_and_the_core_keeps_recor
         let ingested = node.run_an_agent();
         let status = node.agent(&["status"]);
 
-        assert!(ingested.status.success(), "{}", text(&ingested.stderr));
-        let got: Value = serde_json::from_slice(&ingested.stdout).unwrap();
-        assert_eq!(got["events"], 3, "{setting}");
+        assert_eq!(ingested.status.code(), Some(1), "{setting}");
+        assert_eq!(
+            node.audited("ingest_refused_settings_invalid").len(),
+            1,
+            "{setting}"
+        );
+        assert!(!node.cairn_home().join("store.db").exists(), "{setting}");
         assert_eq!(status.status.code(), Some(2), "{setting}");
         let err = text(&status.stderr);
         assert!(
@@ -161,6 +167,11 @@ fn an_invalid_configuration_fails_status_naming_the_key_and_the_core_keeps_recor
             "{setting}: {err}"
         );
         assert_eq!(node.audited("settings_layer_invalid").len(), 1, "{setting}");
+
+        node.configure("recall.max_k = 10\n");
+        let fixed = node.run_an_agent();
+        let got: Value = serde_json::from_slice(&fixed.stdout).unwrap();
+        assert_eq!(got["events"], 3, "{setting}");
     }
 }
 
@@ -266,14 +277,20 @@ fn no_settings_layer_changes_the_trust_policy() {
 fn acknowledging_the_counters_is_a_neutral_principal_act_the_person_takes() {
     let node = Node::new();
     node.configure("recal.max_k = 1\n");
-    assert!(node.run_an_agent().status.success());
+    assert_eq!(node.run_an_agent().status.code(), Some(1));
     assert_eq!(node.agent(&["doctor"]).status.code(), Some(1));
 
     assert_eq!(node.agent(&["counter", "ack"]).status.code(), Some(1));
     assert_eq!(node.agent(&["doctor"]).status.code(), Some(1));
 
+    // Entry 1 audits the failing configuration, entry 2 the refused
+    // ingest, entry 3 the agent's refused acknowledgement.
     let acked = node.person(&["counter", "ack"]);
     assert!(acked.status.success(), "{}", text(&acked.stdout));
-    assert!(text(&acked.stdout).contains("counters acknowledged through audit entry 2"));
+    assert!(
+        text(&acked.stdout).contains("counters acknowledged through audit entry 3"),
+        "{}",
+        text(&acked.stdout)
+    );
     assert_eq!(node.agent(&["doctor"]).status.code(), Some(0));
 }

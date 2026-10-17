@@ -56,8 +56,7 @@ pub enum Counter {
     HookRejected,
     HookPanicked,
     McpPanicked,
-    /// A settings layer failed validation, and a recording command
-    /// went on without it (ADM-04, I9).
+    /// A settings layer failed validation (ADM-04).
     SettingsLayerInvalid,
     /// A repository configuration key that does more than tighten was
     /// ignored (SEC-11).
@@ -73,6 +72,26 @@ pub enum Counter {
     /// A principal act was refused: no terminal (OWN-12), or a widening
     /// act OWN-22 or managed policy does not permit (SEC-22).
     PrincipalActRefused,
+    /// A secret or harness account identifier was redacted before it
+    /// was written, once per redaction (SEC-08).
+    Redacted,
+    /// A principal's redaction pattern did not compile, or compiled past
+    /// the size limit, and was refused (SEC-08).
+    RedactionPatternRefused,
+    /// A hook input exceeded 1 MiB and was refused (SEC-05).
+    HookInputTooLarge,
+    /// A hook input nested deeper than 64 levels and was refused
+    /// (SEC-05).
+    HookInputTooDeep,
+    /// A path outside every allowed root was refused (SEC-18).
+    PathOutsideAllowedRoots,
+    /// A structured log line could not be written (ENG-05, I6).
+    LogLineDropped,
+    /// An ingest was refused while the principal's configuration or the
+    /// repository configuration failed, so the redaction patterns it
+    /// needs were unknown; the transcript stays for a later ingest
+    /// (SEC-08, I1).
+    IngestRefusedSettingsInvalid,
 }
 
 impl Counter {
@@ -89,6 +108,13 @@ impl Counter {
             Self::ConfigurationKeyIgnored => "configuration_key_ignored",
             Self::ManagedPolicyInvalid => "managed_policy_invalid",
             Self::PrincipalActRefused => "principal_act_refused",
+            Self::Redacted => "redacted",
+            Self::RedactionPatternRefused => "redaction_pattern_refused",
+            Self::HookInputTooLarge => "hook_input_too_large",
+            Self::HookInputTooDeep => "hook_input_too_deep",
+            Self::PathOutsideAllowedRoots => "path_outside_allowed_roots",
+            Self::LogLineDropped => "log_line_dropped",
+            Self::IngestRefusedSettingsInvalid => "ingest_refused_settings_invalid",
         }
     }
 }

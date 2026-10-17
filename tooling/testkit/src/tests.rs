@@ -128,3 +128,21 @@ fn core_executable_looks_beside_the_running_test() {
 
     assert_eq!(core_executable(), sibling_executable(&test, "cairn"));
 }
+
+#[test]
+fn place_transcript_copies_under_the_default_transcript_root() {
+    let dir = TempDir::new().unwrap();
+    let source = dir.path().join("src").join("-w-app");
+    std::fs::create_dir_all(&source).unwrap();
+    std::fs::write(source.join("s.jsonl"), "{}\n").unwrap();
+    let home = dir.path().join("home");
+
+    let placed = place_transcript(&home, &source.join("s.jsonl")).unwrap();
+
+    assert_eq!(placed, home.join(".claude/projects/-w-app/s.jsonl"));
+    assert_eq!(std::fs::read_to_string(&placed).unwrap(), "{}\n");
+    assert!(place_transcript(&home, Path::new("/")).is_err());
+    assert!(place_transcript(&home, &source.join("missing.jsonl")).is_err());
+    let top = place_transcript(&home, Path::new("relative.jsonl"));
+    assert!(top.is_err());
+}

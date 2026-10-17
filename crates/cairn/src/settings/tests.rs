@@ -9,7 +9,7 @@ use serde_json::json;
 
 use super::*;
 use crate::tests::{DEV, Process, audited};
-use crate::{EXIT_OK, EXIT_USAGE};
+use crate::{EXIT_FAILURE, EXIT_OK, EXIT_USAGE};
 
 fn accept(settings: serde_json::Value) -> Recorded {
     Recorded {
@@ -78,14 +78,15 @@ fn every_failed_layer_and_ignored_key_has_its_occurrence() {
     let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     q.invoke(&["ingest", "--path", &q.transcript("a\n")], &DEV);
 
-    assert_eq!(code, EXIT_OK, "{err}");
+    assert_eq!(code, EXIT_FAILURE, "{err}");
+    assert!(err.contains("cairn ingest: configuration "), "{err}");
     assert!(
-        err.contains("cairn ingest: recording without configuration "),
+        err.contains("cairn ingest: recording without managed policy "),
         "{err}"
     );
     assert_eq!(
         details(&p, "settings_layer_invalid"),
-        ["configuration failed; went on without it"]
+        ["configuration failed"]
     );
     assert_eq!(details(&p, "managed_policy_invalid").len(), 1);
     assert_eq!(
@@ -112,7 +113,7 @@ fn an_invalid_repository_configuration_has_its_own_detail() {
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
     assert_eq!(
         details(&p, "settings_layer_invalid"),
-        ["repository configuration failed; went on without it"]
+        ["repository configuration failed"]
     );
     let (code, _, err) = p.invoke(&["status"], &DEV);
     assert_eq!(code, EXIT_USAGE);
@@ -183,7 +184,7 @@ fn p_home(p: &Process) -> Home {
 }
 
 /// A context for `p`'s directory, as `Process::invoke` makes one.
-fn ctx_of(p: &Process) -> Context<'static> {
+pub(crate) fn ctx_of(p: &Process) -> Context<'static> {
     let input: &'static dyn Fn() -> std::sync::mpsc::Receiver<std::io::Result<String>> =
         Box::leak(Box::new(|| std::sync::mpsc::channel().1));
     Context {

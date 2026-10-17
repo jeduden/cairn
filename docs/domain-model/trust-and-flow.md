@@ -136,6 +136,11 @@ summary: >-
   `cairn status` (ADM-11), failing `cairn doctor` until acknowledged
   (`cairn counter ack`, I6, OPS-03). The audit log also records every purge
   (ADM-07).
+- **Structured log**: A line for each operation Cairn's components perform,
+  one JSON object a line in `logs/cairn.jsonl` or on stderr, a hook handler's
+  only in the file, every field redacted first (ENG-05, OPS-05). It is
+  neither the audit log nor a writer log: it holds no counter and no hash
+  chain, and nothing derived is built from it.
 - **Canary**: `cairn canary`'s end-to-end test: it writes a **canary event**
   through capture's ingest path and recalls it through the MCP server (OPS-04).
 - **Stat**: A count derived from the record within a recall scope, such as

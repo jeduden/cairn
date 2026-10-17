@@ -20,6 +20,7 @@ engineering.workspace = true
 harness-contract.workspace = true
 key.workspace = true
 record.workspace = true
+rusqlite.workspace = true
 serde_json.workspace = true
 store.workspace = true
 testkit.workspace = true

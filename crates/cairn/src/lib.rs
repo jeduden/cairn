@@ -20,6 +20,7 @@ use administration::act as act_record;
 use administration::home::Home;
 use administration::node::Node;
 use administration::verify::{VerifyError, verify};
+use allowed_root::{Access, AllowedPath, AllowedRoots};
 use audit::AuditError;
 use audit::counters::{Counts, counts};
 use audit::entry::{Counter, Entry, Kind, Occurrence};
@@ -29,6 +30,7 @@ use configuration::{Loaded, SettingsLayer};
 use hook::{Failure, Hook};
 use key::random::OsEntropy;
 use key::signing::DeviceKey;
+use redaction::Redactor;
 use serde_json::{Value, json};
 use store::Store;
 
@@ -43,6 +45,10 @@ pub const EXIT_INTEGRITY: u8 = 3;
 
 /// How long `cairn mcp` waits for a line before it waits again.
 const IDLE: Duration = Duration::from_secs(1);
+
+/// The longest line the process's input may carry, the hook input's
+/// limit (SEC-05); the MCP server's requests are held to it too.
+pub const INPUT_LINE_LIMIT: usize = hook::HOOK_INPUT_LIMIT;
 
 /// How long `cairn hook` waits for its whole hook input, however its
 /// lines arrive. The hook budgets of NFR-02 replace it with phase 9's
@@ -60,14 +66,6 @@ pub struct Build<'a> {
 
 /// The version a build reports when the release pipeline stamps none.
 const BUILD_DEV: &str = "dev";
-
-/// Why a release build refuses `cairn ingest`: until redaction before
-/// storage (SEC-08) lands, an ingested secret would stay in the
-/// append-only record with no purge (ADM-07) to remove it. A
-/// development build still ingests, as the tests and the proving slice
-/// need.
-const RELEASE_INGEST: &str = "a release build records no transcript until redaction before \
-                              storage (SEC-08) lands; use a development build";
 
 /// This executable's build.
 pub const BUILD: Build<'static> = Build {
@@ -147,6 +145,115 @@ impl Context<'_> {
         home.create()?;
 
         Ok(Log::new(home.audit()).append(occurrence, (self.clock)())?)
+    }
+}
+
+/// Where a run's managed policy is, beside the principal's
+/// configuration in its home: what the structured log reads the
+/// redaction patterns from. A repository's never apply (SEC-08).
+#[derive(Debug, Clone)]
+pub struct LogSettings {
+    pub managed: PathBuf,
+    pub os_user: configuration::source::OsUser,
+}
+
+impl Default for LogSettings {
+    fn default() -> Self {
+        Self {
+            managed: PathBuf::new(),
+            os_user: configuration::source::OsUser::Unchecked,
+        }
+    }
+}
+
+/// The structured log (ENG-05, OPS-05) for the home the environment
+/// names: written to its log file once the home exists and passes its
+/// checks (SEC-02, SEC-03), and nowhere before; each field redacted by
+/// the maintained redaction rule set and the redaction patterns the
+/// principal's configuration and managed policy name (SEC-08), compiled
+/// at the first event, so a run that logs nothing starts no slower.
+/// While the principal's configuration fails, its patterns are unknown,
+/// so no line is written; each is counted as dropped.
+#[must_use]
+pub fn structured_log(
+    cairn_home: Option<OsString>,
+    home: Option<OsString>,
+    home_id: Option<OsString>,
+    settings: LogSettings,
+    clock: fn() -> u64,
+) -> structured_log::StructuredLog {
+    let (compile_home, compile_os_home) = (cairn_home.clone(), home.clone());
+    // With no home there are no settings layers to read and nowhere to
+    // write: the rule set alone, and the log opens nothing.
+    let compile: structured_log::Compile =
+        Box::new(
+            move || match Home::locate(compile_home.as_deref(), compile_os_home.as_deref()) {
+                Ok(home) => log_redactor(&home, &settings),
+                Err(_) => Redactor::new(&[])
+                    .map(|(r, _)| r)
+                    .map_err(|e| e.to_string()),
+            },
+        );
+    let open: structured_log::Open = Box::new(move || {
+        let Ok(home) = Home::locate(cairn_home.as_deref(), home.as_deref()) else {
+            return Ok(None);
+        };
+        if !home.root().exists() || home.check().is_err() {
+            return Ok(None);
+        }
+        if home.check_home_id(home_id.as_deref()).is_err() {
+            return Ok(None);
+        }
+        let file = structured_log::open_log_file(&home.root().join("logs"))?;
+        Ok(Some(Box::new(file)))
+    });
+    structured_log::StructuredLog::new(open, compile, Box::new(clock))
+}
+
+/// The redactor log fields pass through: the rule set and the redaction
+/// patterns the principal's configuration and managed policy of `home`
+/// name, as written, so a pattern still awaiting acceptance redacts the
+/// log too; a repository's never (SEC-08). None while the principal's
+/// configuration fails.
+fn log_redactor(home: &Home, settings: &LogSettings) -> Result<Redactor, String> {
+    let sources = configuration::Sources {
+        configuration: home.root().join(configuration::source::CONFIGURATION),
+        repository: None,
+        managed: settings.managed.clone(),
+        running: settings.os_user,
+    };
+    let loaded = configuration::load(&sources);
+    if loaded.principal_layer_failed() {
+        return Err("the configuration failed, so its redaction patterns are unknown".to_owned());
+    }
+    let mut patterns: Vec<String> = Vec::new();
+    for layer in [&loaded.layers.configuration, &loaded.layers.managed] {
+        let named = configuration::key::key("redaction.extra_patterns").and_then(|k| layer.get(&k));
+        if let Some(configuration::Value::Texts(items)) = named {
+            patterns.extend(
+                items
+                    .iter()
+                    .filter(|p| !patterns.contains(p))
+                    .cloned()
+                    .collect::<Vec<_>>(),
+            );
+        }
+    }
+
+    Redactor::new(&patterns)
+        .map(|(r, _)| r)
+        .map_err(|e| e.to_string())
+}
+
+/// Audits the log lines a run could not write (I6).
+pub fn audit_dropped_log_lines(ctx: &Context, dropped: u64) {
+    for _ in 0..dropped {
+        let _ = ctx.audit(&Occurrence::Degraded {
+            kind: Kind::Dropped,
+            counter: Counter::LogLineDropped,
+            operation: "log",
+            detail: "log line dropped",
+        });
     }
 }
 
@@ -269,13 +376,19 @@ fn ingest(
     let Some(path) = path else {
         return usage(stderr, "want --path P");
     };
-    if ctx.build.version != BUILD_DEV {
-        return failed("ingest", &RELEASE_INGEST, stderr);
-    }
     let ingested = match ctx.home() {
         Ok(home) => {
-            audit_settings(ctx, &home, stderr);
-            ingest::ingest_path(&home, Path::new(&path), &mut OsEntropy).map_err(|e| e.to_string())
+            let in_force = audit_settings(ctx, &home, stderr);
+            if in_force.loaded.principal_layer_failed() {
+                return failed("ingest", &refuse_ingest(ctx, stderr), stderr);
+            }
+            let settings = &in_force.resolved.settings;
+            let transcript = allowed_transcript(ctx, settings, Path::new(&path), stderr);
+            transcript.and_then(|transcript| {
+                let redactor = redactor(ctx, settings, stderr)?;
+                ingest::ingest_path(&home, transcript.path(), &redactor, &mut OsEntropy)
+                    .map_err(|e| e.to_string())
+            })
         }
         Err(e) => Err(e.to_string()),
     };
@@ -283,6 +396,14 @@ fn ingest(
         Ok(i) => i,
         Err(e) => return failed("ingest", &e, stderr),
     };
+    audit_redactions(ctx, &ingested.redactions, stderr);
+    tracing::info!(
+        transcript = %ingested.redacted_path,
+        writer = %ingested.writer,
+        events = ingested.events as u64,
+        redactions = ingested.redactions.len() as u64,
+        "ingested"
+    );
     let line = if as_json {
         json!({
             "writer": ingested.writer.to_string(),
@@ -301,21 +422,131 @@ fn ingest(
     written(writeln!(stdout, "{line}"), stderr)
 }
 
+/// Refuses an ingest while the principal's configuration or the
+/// repository configuration fails: the redaction patterns they name are
+/// unknown, so nothing may be written (SEC-08). The refusal is audited
+/// and counted (I6), and the transcript stays where it is for an ingest
+/// once the layer is fixed (I1).
+fn refuse_ingest(ctx: &Context, stderr: &mut dyn Write) -> String {
+    let occurrence = Occurrence::Degraded {
+        kind: Kind::Rejected,
+        counter: Counter::IngestRefusedSettingsInvalid,
+        operation: "ingest",
+        detail: "ingest refused while a settings layer fails",
+    };
+    if let Err(e) = ctx.audit(&occurrence) {
+        let _ = writeln!(stderr, "cairn ingest: audit a refused ingest: {e}");
+    }
+
+    "a settings layer failed, so its redaction patterns are unknown; fix it and ingest again"
+        .to_owned()
+}
+
+/// The transcript at `path` resolved within the transcript roots, the
+/// only allowed roots `cairn ingest` reads from (SEC-18): nothing in
+/// the home, its keys and store among it, is a transcript. A path
+/// outside them is refused, audited and counted, and nothing is read
+/// from it.
+fn allowed_transcript(
+    ctx: &Context,
+    settings: &configuration::resolve::Settings,
+    path: &Path,
+    stderr: &mut dyn Write,
+) -> Result<AllowedPath, String> {
+    let os_home = ctx.home.as_deref().map(Path::new);
+    let allowed = settings
+        .texts("transcript.roots")
+        .iter()
+        .fold(AllowedRoots::default(), |allowed, root| {
+            allowed.with(&allowed_root::expand_home(root, os_home), Access::Read)
+        });
+    allowed.resolve(path, Access::Read).map_err(|refused| {
+        let occurrence = Occurrence::Degraded {
+            kind: Kind::Rejected,
+            counter: Counter::PathOutsideAllowedRoots,
+            operation: "ingest",
+            detail: "path outside allowed roots",
+        };
+        if let Err(e) = ctx.audit(&occurrence) {
+            let _ = writeln!(
+                stderr,
+                "cairn ingest: audit a path outside allowed roots: {e}"
+            );
+        }
+        refused.to_string()
+    })
+}
+
+/// The redactor for the settings in force: the rule set and the
+/// principal's redaction patterns (SEC-08), each pattern refused
+/// audited and counted while the rest still apply.
+fn redactor(
+    ctx: &Context,
+    settings: &configuration::resolve::Settings,
+    stderr: &mut dyn Write,
+) -> Result<Redactor, String> {
+    let patterns = settings.texts("redaction.extra_patterns");
+    let (redactor, refused) = Redactor::new(patterns).map_err(|e| e.to_string())?;
+    for r in &refused {
+        let occurrence = Occurrence::Keyed {
+            kind: Kind::Rejected,
+            counter: Counter::RedactionPatternRefused,
+            operation: "ingest",
+            detail: "refused redaction pattern",
+            key: &r.rule,
+        };
+        if let Err(e) = ctx.audit(&occurrence) {
+            let _ = writeln!(
+                stderr,
+                "cairn ingest: audit a refused redaction pattern: {e}"
+            );
+        }
+    }
+
+    Ok(redactor)
+}
+
+/// Audits each redaction an ingest made, one entry per redaction
+/// (SEC-08, I6), naming its rule and nothing of what it removed.
+fn audit_redactions(ctx: &Context, rules: &[String], stderr: &mut dyn Write) {
+    for rule in rules {
+        let occurrence = Occurrence::Keyed {
+            kind: Kind::Redacted,
+            counter: Counter::Redacted,
+            operation: "ingest",
+            detail: "redacted by rule",
+            key: rule,
+        };
+        if let Err(e) = ctx.audit(&occurrence) {
+            let _ = writeln!(stderr, "cairn ingest: audit a redaction: {e}");
+        }
+    }
+}
+
 /// Audits each settings layer that fails and each key ignored before a
 /// recording command goes on recording whatever they say (ADM-04, I9);
-/// says on `stderr` what cannot be read or audited.
-fn audit_settings(ctx: &Context, home: &Home, stderr: &mut dyn Write) {
+/// says on `stderr` what cannot be read or audited. Returns the
+/// settings in force.
+fn audit_settings(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> settings::InForce {
     let acts = settings::recorded_acts(home).unwrap_or_else(|e| {
         let _ = writeln!(stderr, "cairn ingest: read the accepted configuration: {e}");
         Vec::new()
     });
     let in_force = settings::in_force(ctx, home, &acts);
+    // Managed policy that fails leaves the core recording (ADM-04); a
+    // failing principal layer refuses the ingest after this.
     for failure in &in_force.loaded.failures {
-        let _ = writeln!(stderr, "cairn ingest: recording without {failure}");
+        let line = match failure.layer {
+            configuration::SettingsLayer::ManagedPolicy => format!("recording without {failure}"),
+            _ => failure.to_string(),
+        };
+        let _ = writeln!(stderr, "cairn ingest: {line}");
     }
     for e in settings::audit(ctx, "ingest", &in_force) {
         let _ = writeln!(stderr, "cairn ingest: audit the settings: {e}");
     }
+
+    in_force
 }
 
 /// `cairn mcp`: serves the MCP tools over the process's input and
@@ -492,7 +723,7 @@ fn hook_command(name: Option<&str>, ctx: &Context, stdout: &mut dyn Write) -> u8
             if ctx.hook_panics {
                 seam_panic();
             }
-            let hook_input = hook_input(ctx).ok_or(Failure::Malformed)?;
+            let hook_input = hook_input(ctx)?;
             hook::handle(h, &hook_input)
         }),
     };
@@ -525,24 +756,91 @@ fn seam_panic() {
     panic!("the hook handler panics, as CAIRN_TEST_FAULT asked");
 }
 
-/// The hook input on stdin, its lines joined, once the input closes;
-/// none when it cannot be read or does not close in time.
+/// The hook input on stdin, its lines joined, once the input closes.
+/// Reading stops once it holds more than 1 MiB (SEC-05).
+///
+/// # Errors
+///
+/// [`Failure::TooLarge`] past 1 MiB or for a line the reader cut at its
+/// limit; [`Failure::Malformed`] when the input cannot be read or does
+/// not close in time.
 #[expect(
     clippy::disallowed_methods,
     reason = "the deadline on reading the hook input (ENG-03); no derived artifact reads it (I10)"
 )]
-fn hook_input(ctx: &Context) -> Option<String> {
+fn hook_input(ctx: &Context) -> Result<String, Failure> {
     let input = (ctx.input)();
     let deadline = Instant::now() + HOOK_INPUT_WAIT;
-    let mut lines = Vec::new();
+    let (mut text, mut lines) = (String::new(), 0usize);
     loop {
-        let left = deadline.checked_duration_since(Instant::now())?;
+        let left = deadline
+            .checked_duration_since(Instant::now())
+            .ok_or(Failure::Malformed)?;
         match input.recv_timeout(left) {
-            Ok(Ok(line)) => lines.push(line),
-            Ok(Err(_)) | Err(RecvTimeoutError::Timeout) => return None,
-            Err(RecvTimeoutError::Disconnected) => return Some(lines.join("\n")),
+            Ok(Ok(line)) => {
+                if lines > 0 {
+                    text.push('\n');
+                }
+                text.push_str(&line);
+                lines += 1;
+                if text.len() > hook::HOOK_INPUT_LIMIT {
+                    return Err(Failure::TooLarge);
+                }
+            }
+            Ok(Err(e)) if e.kind() == io::ErrorKind::FileTooLarge => return Err(Failure::TooLarge),
+            Ok(Err(_)) | Err(RecvTimeoutError::Timeout) => return Err(Failure::Malformed),
+            Err(RecvTimeoutError::Disconnected) => return Ok(text),
         }
     }
+}
+
+/// The lines `reader` holds, each without its line ending. A line
+/// longer than `limit` bytes is never held whole (SEC-05): an error of
+/// kind [`io::ErrorKind::FileTooLarge`] stands in its place, its rest
+/// skipped, and the lines after it go on, as they do after one that is
+/// not UTF-8. A read that fails ends them.
+pub fn bounded_lines<R: io::BufRead>(
+    reader: R,
+    limit: usize,
+) -> impl Iterator<Item = io::Result<String>> {
+    let mut reader = Some(reader);
+    std::iter::from_fn(move || {
+        let r = reader.as_mut()?;
+        let mut buf = Vec::new();
+        // The limit, and room for a line ending of two bytes.
+        let read = io::BufRead::read_until(
+            &mut io::Read::take(r.by_ref(), limit as u64 + 2),
+            b'\n',
+            &mut buf,
+        );
+        match read {
+            Ok(0) => None,
+            Ok(_) if buf.last() != Some(&b'\n') && buf.len() > limit => {
+                let skipped = io::BufRead::skip_until(r, b'\n');
+                Some(skipped.and(Err(io::ErrorKind::FileTooLarge.into())))
+            }
+            Ok(_) => Some(line_of(buf, limit)),
+            Err(e) => {
+                reader = None;
+                Some(Err(e))
+            }
+        }
+    })
+}
+
+/// One line read with its ending, checked against `limit`.
+fn line_of(mut buf: Vec<u8>, limit: usize) -> io::Result<String> {
+    if buf.last() == Some(&b'\n') {
+        buf.pop();
+        if buf.last() == Some(&b'\r') {
+            buf.pop();
+        }
+    }
+    if buf.len() > limit {
+        return Err(io::ErrorKind::FileTooLarge.into());
+    }
+
+    String::from_utf8(buf).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }
 
 /// What the MCP server does with each panic it catches: audit it,

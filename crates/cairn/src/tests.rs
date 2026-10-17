@@ -19,6 +19,9 @@ pub(crate) struct Process {
     /// The input stays open after its lines, as a harness that never
     /// closes it would.
     pub(crate) held_open: bool,
+    /// The input fails after its lines as a line cut at the reader's
+    /// limit does.
+    pub(crate) input_too_large: bool,
     pub(crate) home_id: Option<String>,
     pub(crate) hook_panics: bool,
     /// The standard input and output are a terminal, as a person's are;
@@ -40,6 +43,7 @@ impl Process {
             lines: Vec::new(),
             input_error: false,
             held_open: false,
+            input_too_large: false,
             home_id: None,
             hook_panics: false,
             terminal: true,
@@ -52,8 +56,12 @@ impl Process {
     }
 
     pub(crate) fn invoke(&self, args: &[&str], build: &Build) -> (u8, String, String) {
-        let (lines, input_error, held_open) =
-            (self.lines.clone(), self.input_error, self.held_open);
+        let (lines, input_error, held_open, too_large) = (
+            self.lines.clone(),
+            self.input_error,
+            self.held_open,
+            self.input_too_large,
+        );
         let input = move || {
             let (tx, rx) = mpsc::channel();
             for line in lines.clone() {
@@ -61,6 +69,10 @@ impl Process {
             }
             if input_error {
                 tx.send(Err(io::Error::new(io::ErrorKind::InvalidData, "not UTF-8")))
+                    .unwrap();
+            }
+            if too_large {
+                tx.send(Err(io::Error::from(io::ErrorKind::FileTooLarge)))
                     .unwrap();
             }
             if held_open {
@@ -96,8 +108,12 @@ impl Process {
         )
     }
 
+    /// Writes a transcript under the default transcript root,
+    /// `~/.claude/projects` (SEC-18).
     pub(crate) fn transcript(&self, text: &str) -> String {
-        let path = self.dir.path().join("t.jsonl");
+        let dir = self.dir.path().join(".claude").join("projects").join("p");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("t.jsonl");
         std::fs::write(&path, text).unwrap();
         path.display().to_string()
     }
@@ -255,7 +271,7 @@ fn a_failed_write_is_a_failure() {
         let ctx = Context {
             build: &DEV,
             cairn_home: Some(p.cairn_home().into_os_string()),
-            home: None,
+            home: Some(p.dir.path().as_os_str().to_owned()),
             home_id: None,
             hook_panics: false,
             terminal: true,
@@ -300,7 +316,7 @@ fn ingest_records_each_line_and_names_the_writer() {
 }
 
 #[test]
-fn a_release_build_records_no_transcript_until_redaction_lands() {
+fn a_release_build_ingests_now_that_redaction_comes_first() {
     let p = Process::new();
     let path = p.transcript("a\n");
     let release = Build {
@@ -310,16 +326,40 @@ fn a_release_build_records_no_transcript_until_redaction_lands() {
 
     let (code, out, err) = p.invoke(&["ingest", "--path", &path], &release);
 
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(out.starts_with("ingested 1 lines into writer "), "{out}");
+}
+
+#[test]
+fn ingest_redacts_by_the_principals_patterns_and_audits_each_redaction() {
+    let p = Process::new();
+    p.configure("[redaction]\nextra_patterns = [\"(\", \"ACME-[0-9]{8}\"]\n");
+    let path = p.transcript("{\"t\":\"AKIAIOSFODNN7EXAMPLE ACME-12345678\"}\n");
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &path], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let entries: Vec<(String, Option<String>, String)> = audited(&p)
+        .into_iter()
+        .map(|e| (e.kind, e.counter, e.detail))
+        .collect();
+    let entry = |kind: &str, counter: &str, detail: &str| {
+        (kind.to_owned(), Some(counter.to_owned()), detail.to_owned())
+    };
     assert_eq!(
-        (code, out.as_str(), err.as_str()),
-        (
-            EXIT_FAILURE,
-            "",
-            "cairn ingest: a release build records no transcript until redaction before \
-             storage (SEC-08) lands; use a development build\n"
-        )
+        entries,
+        [
+            entry(
+                "rejected",
+                "redaction_pattern_refused",
+                "refused redaction pattern extra_pattern_1"
+            ),
+            entry("redacted", "redacted", "redacted by rule aws_access_key"),
+            entry("redacted", "redacted", "redacted by rule extra_pattern_2"),
+        ]
     );
-    assert!(!p.cairn_home().exists());
+    let store = std::fs::read(p.cairn_home().join("store.db")).unwrap();
+    assert!(!store.windows(13).any(|w| w == b"ACME-12345678"));
 }
 
 #[test]
@@ -362,12 +402,13 @@ fn ingest_refuses_a_wrong_command_line() {
 #[test]
 fn ingest_reports_a_transcript_it_cannot_read() {
     let p = Process::new();
+    let missing = p.transcript("a\n").replace("t.jsonl", "missing.jsonl");
 
-    let (code, _, err) = p.invoke(&["ingest", "--path", "/nonexistent/t.jsonl"], &DEV);
+    let (code, _, err) = p.invoke(&["ingest", "--path", &missing], &DEV);
 
     assert_eq!(code, EXIT_FAILURE);
     assert!(
-        err.starts_with("cairn ingest: read the transcript /nonexistent/t.jsonl: "),
+        err.starts_with("cairn ingest: read the transcript "),
         "{err}"
     );
 }
@@ -1400,4 +1441,414 @@ fn an_audit_log_that_cannot_be_read_fails_verify_doctor_and_status() {
             "{command}: {err}"
         );
     }
+}
+
+#[test]
+fn ingest_says_which_redaction_it_cannot_audit_and_still_records() {
+    let p = Process::new();
+    p.configure("[redaction]\nextra_patterns = [\"(\"]\n");
+    let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    assert_eq!(code, EXIT_OK);
+    // An audit log that takes no entry.
+    let audit_dir = p.cairn_home().join("audit");
+    std::fs::remove_dir_all(&audit_dir).unwrap();
+    std::fs::write(&audit_dir, "").unwrap();
+    set_mode(&audit_dir, 0o600);
+
+    let (code, out, err) = p.invoke(
+        &["ingest", "--path", &p.transcript("AKIAIOSFODNN7EXAMPLE\n")],
+        &DEV,
+    );
+
+    assert_eq!(code, EXIT_OK, "{err}");
+    assert!(out.starts_with("ingested 1 lines"), "{out}");
+    assert!(
+        err.contains("cairn ingest: audit a refused redaction pattern: "),
+        "{err}"
+    );
+    assert!(err.contains("cairn ingest: audit a redaction: "), "{err}");
+}
+
+#[test]
+fn a_hook_input_past_1_mib_is_audited_and_injects_nothing() {
+    let mut p = Process::new();
+    p.lines = vec![
+        "{\"p\":\"".to_owned(),
+        format!("{}\"}}", "x".repeat(1 << 20)),
+    ];
+
+    assert_eq!(
+        p.invoke(&["hook", "UserPromptSubmit"], &DEV),
+        (EXIT_OK, String::new(), String::new())
+    );
+    let entries = audited(&p);
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].detail, "hook input exceeds 1 MiB");
+    assert_eq!(entries[0].counter.as_deref(), Some("hook_input_too_large"));
+}
+
+#[test]
+fn a_line_the_reader_cut_at_its_limit_is_a_hook_input_past_1_mib() {
+    let mut p = Process::new();
+    p.lines = vec!["{".to_owned()];
+    p.input_too_large = true;
+
+    assert_eq!(
+        p.invoke(&["hook", "SessionStart"], &DEV),
+        (EXIT_OK, String::new(), String::new())
+    );
+    assert_eq!(audited(&p)[0].detail, "hook input exceeds 1 MiB");
+}
+
+#[test]
+fn a_hook_input_nested_past_depth_64_is_audited_and_injects_nothing() {
+    let mut p = Process::new();
+    p.lines = vec![format!("{}{}", "[".repeat(65), "]".repeat(65))];
+
+    assert_eq!(
+        p.invoke(&["hook", "UserPromptSubmit"], &DEV),
+        (EXIT_OK, String::new(), String::new())
+    );
+    assert_eq!(audited(&p)[0].detail, "hook input nesting exceeds depth 64");
+}
+
+#[test]
+fn bounded_lines_refuse_a_line_past_the_limit_without_holding_it_and_go_on() {
+    let input = "ab\ncdefgh\nij\n".as_bytes();
+    let lines: Vec<io::Result<String>> = bounded_lines(input, 4).collect();
+    assert_eq!(lines.len(), 3);
+    assert_eq!(lines[0].as_ref().unwrap(), "ab");
+    assert_eq!(
+        lines[1].as_ref().unwrap_err().kind(),
+        io::ErrorKind::FileTooLarge
+    );
+    assert_eq!(lines[2].as_ref().unwrap(), "ij");
+    let whole: Vec<String> = bounded_lines("a\r\nabcd\r\nb".as_bytes(), 4)
+        .map(Result::unwrap)
+        .collect();
+    assert_eq!(whole, ["a", "abcd", "b"]);
+    // One byte past the limit, its line ending read with it.
+    let just_over: Vec<io::Result<String>> = bounded_lines("abcde\nx".as_bytes(), 4).collect();
+    assert!(just_over[0].is_err());
+    assert_eq!(just_over[1].as_ref().unwrap(), "x");
+    let at_end: Vec<io::Result<String>> = bounded_lines("abcdef".as_bytes(), 4).collect();
+    assert_eq!(at_end.len(), 1);
+    assert!(at_end[0].is_err());
+    struct Failing;
+    impl io::Read for Failing {
+        fn read(&mut self, _: &mut [u8]) -> io::Result<usize> {
+            Err(io::Error::other("gone"))
+        }
+    }
+    let failed: Vec<io::Result<String>> = bounded_lines(io::BufReader::new(Failing), 4).collect();
+    assert_eq!(failed.len(), 1);
+    assert!(failed[0].is_err());
+    let bad: Vec<io::Result<String>> = bounded_lines(&[0xff, b'\n', b'a'][..], 4).collect();
+    assert_eq!(
+        bad[0].as_ref().unwrap_err().kind(),
+        io::ErrorKind::InvalidData
+    );
+    assert_eq!(bad[1].as_ref().unwrap(), "a");
+}
+
+/// Logs one event carrying an AWS access key through the structured
+/// log of `p`'s home, with `home_id` supplied.
+fn log_one(p: &Process, home_id: Option<&str>) -> std::sync::Arc<structured_log::StructuredLog> {
+    log_with(p, home_id, || {
+        tracing::info!(key = "AKIAIOSFODNN7EXAMPLE", "logged");
+    })
+}
+
+/// The structured log of `p`'s home, with `home_id` supplied, its
+/// settings layers where `p`'s commands find them, as it stands after
+/// `logging` ran under it.
+fn log_with(
+    p: &Process,
+    home_id: Option<&str>,
+    logging: impl FnOnce(),
+) -> std::sync::Arc<structured_log::StructuredLog> {
+    let ctx = crate::settings::tests::ctx_of(p);
+    let (managed, os_user) = (ctx.managed_policy.clone(), ctx.os_user);
+    let log = std::sync::Arc::new(structured_log(
+        None,
+        Some(p.dir.path().as_os_str().to_owned()),
+        home_id.map(Into::into),
+        LogSettings { managed, os_user },
+        || NOW,
+    ));
+    let dispatch = tracing::Dispatch::from(log.clone());
+    tracing::dispatcher::with_default(&dispatch, logging);
+    log
+}
+
+fn logged_lines(p: &Process) -> Vec<Value> {
+    std::fs::read_to_string(log_file(p))
+        .unwrap_or_default()
+        .lines()
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect()
+}
+
+/// The log redacts each field with the principal's redaction patterns
+/// too, and writes no line while the principal's configuration fails,
+/// so its patterns are unknown (SEC-08).
+#[test]
+fn the_structured_log_redacts_with_the_principal_patterns_or_not_at_all() {
+    let p = Process::new();
+    p.configure("[redaction]\nextra_patterns = [\"ACME-[0-9]{8}\"]\n");
+    let log = log_with(&p, None, || {
+        tracing::info!(key = "id ACME-12345678", "logged")
+    });
+    assert_eq!(log.dropped(), 0);
+    assert_eq!(
+        logged_lines(&p)[0]["fields"]["key"],
+        "id [REDACTED:extra_pattern_1]"
+    );
+
+    p.configure("recal.max_k = 10\n");
+    let log = log_with(&p, None, || {
+        tracing::info!(key = "id ACME-12345678", "logged")
+    });
+    assert_eq!(log.dropped(), 1);
+    assert_eq!(logged_lines(&p).len(), 1);
+}
+
+/// A repository's redaction patterns are never applied, not even to the
+/// log, and a failing repository configuration leaves the log written
+/// (SEC-08, SEC-11).
+#[test]
+fn the_structured_log_ignores_a_repository_configuration() {
+    let p = Process::new();
+    p.configure("recall.max_k = 10\n");
+    p.repository("[redaction]\nextra_patterns = [\"keep-me\"]\n");
+    log_with(&p, None, || tracing::info!(key = "keep-me", "logged"));
+    assert_eq!(logged_lines(&p)[0]["fields"]["key"], "keep-me");
+
+    p.repository("recall.max_k = 'ten'\n");
+    let log = log_with(&p, None, || tracing::info!(key = "x", "logged"));
+    assert_eq!(log.dropped(), 0);
+    assert_eq!(logged_lines(&p).len(), 2);
+}
+
+/// The transcript path ingest logs is redacted with the harness account
+/// identifiers the transcript taught it (SEC-08).
+#[test]
+fn the_logged_transcript_path_is_redacted_with_the_harness_account_identifiers() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let dir = p.dir.path().join(".claude/projects/someone@example.com");
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("t.jsonl");
+    let context = r#"{"attachment":{"type":"session_context","context":{"userEmail":"someone@example.com"}}}"#;
+    std::fs::write(&path, format!("{context}\n")).unwrap();
+    let path = path.display().to_string();
+
+    log_with(&p, None, || {
+        assert_eq!(p.invoke(&["ingest", "--path", &path], &DEV).0, 0);
+    });
+
+    let logged = logged_lines(&p);
+    let transcript = logged[0]["fields"]["transcript"].as_str().unwrap();
+    assert!(!transcript.contains("someone@example.com"), "{transcript}");
+}
+
+fn log_file(p: &Process) -> std::path::PathBuf {
+    p.cairn_home().join("logs").join(structured_log::LOG_FILE)
+}
+
+#[test]
+fn the_structured_log_waits_for_the_home_and_redacts_each_field() {
+    let p = Process::new();
+    log_one(&p, None);
+    assert!(!p.cairn_home().exists(), "a log makes no home");
+
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let log = log_one(&p, None);
+
+    assert_eq!(log.dropped(), 0);
+    let text = std::fs::read_to_string(log_file(&p)).unwrap();
+    let line: Value = serde_json::from_str(text.trim_end()).unwrap();
+    assert_eq!(line["fields"]["key"], "[REDACTED:aws_access_key]");
+    assert_eq!(line["time"], NOW);
+    assert!(
+        Home::locate(Some(p.cairn_home().as_os_str()), None)
+            .unwrap()
+            .check()
+            .is_ok()
+    );
+}
+
+#[test]
+fn a_home_the_core_refuses_gets_no_log() {
+    let mut p = Process::new();
+    p.home_id = Some("h1".to_owned());
+    std::fs::create_dir_all(p.cairn_home()).unwrap();
+    set_mode(&p.cairn_home(), 0o700);
+    std::fs::write(p.cairn_home().join("home.json"), r#"{"id":"h1"}"#).unwrap();
+    set_mode(&p.cairn_home().join("home.json"), 0o600);
+
+    log_one(&p, Some("h2"));
+    assert!(!log_file(&p).exists());
+    set_mode(&p.cairn_home(), 0o755);
+    log_one(&p, Some("h1"));
+    assert!(!log_file(&p).exists());
+    let none = structured_log(None, None, None, LogSettings::default(), || NOW);
+    let dispatch = tracing::Dispatch::new(none);
+    tracing::dispatcher::with_default(&dispatch, || tracing::info!("nowhere"));
+}
+
+#[test]
+fn dropped_log_lines_are_audited_one_entry_each() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let before = audited(&p).len();
+    let ctx = crate::settings::tests::ctx_of(&p);
+
+    audit_dropped_log_lines(&ctx, 2);
+
+    let entries = audited(&p);
+    assert_eq!(entries.len(), before + 2);
+    assert_eq!(entries[before].counter.as_deref(), Some("log_line_dropped"));
+    assert_eq!(entries[before].detail, "log line dropped");
+}
+
+#[test]
+fn ingest_refuses_a_path_outside_the_allowed_roots_and_reads_nothing() {
+    let p = Process::new();
+    let outside = p.dir.path().join("t.jsonl");
+    std::fs::write(&outside, "AKIAIOSFODNN7EXAMPLE\n").unwrap();
+    let climbing = format!(
+        "{}/../../t.jsonl",
+        p.transcript("a\n").trim_end_matches("/t.jsonl")
+    );
+
+    for path in [outside.display().to_string(), climbing] {
+        let (code, out, err) = p.invoke(&["ingest", "--path", &path], &DEV);
+
+        assert_eq!(
+            (code, out.as_str(), err.as_str()),
+            (
+                EXIT_FAILURE,
+                "",
+                "cairn ingest: path outside allowed roots\n"
+            )
+        );
+    }
+    let entries = audited(&p);
+    assert_eq!(entries.len(), 2);
+    assert_eq!(entries[0].detail, "path outside allowed roots");
+    assert_eq!(
+        entries[0].counter.as_deref(),
+        Some("path_outside_allowed_roots")
+    );
+    assert!(!p.cairn_home().join("store.db").exists());
+}
+
+/// While the principal's configuration fails, ingest cannot know the
+/// redaction patterns the principal asked for, so it records nothing:
+/// the refusal is audited and counted, and the transcript stays for an
+/// ingest once the configuration is fixed (SEC-08, I1, I6).
+#[test]
+fn ingest_refuses_while_a_settings_layer_fails() {
+    let p = Process::new();
+    p.configure("recal.max_k = 10\n");
+    let transcript = p.transcript("{\"a\":1}\n");
+
+    let (code, out, err) = p.invoke(&["ingest", "--path", &transcript], &DEV);
+
+    assert_eq!((code, out.as_str()), (EXIT_FAILURE, ""));
+    assert!(
+        err.contains("cairn ingest: a settings layer failed"),
+        "{err}"
+    );
+    let counters: Vec<Option<String>> = audited(&p).into_iter().map(|e| e.counter).collect();
+    assert!(
+        counters.contains(&Some("settings_layer_invalid".to_owned())),
+        "{counters:?}"
+    );
+    assert!(
+        counters.contains(&Some("ingest_refused_settings_invalid".to_owned())),
+        "{counters:?}"
+    );
+    assert!(!p.cairn_home().join("store.db").exists());
+
+    p.configure("recall.max_k = 10\n");
+    assert_eq!(p.invoke(&["ingest", "--path", &transcript], &DEV).0, 0);
+}
+
+#[test]
+fn ingest_reads_within_the_configured_transcript_roots_only() {
+    let p = Process::new();
+    let elsewhere = p.dir.path().join("elsewhere");
+    std::fs::create_dir_all(&elsewhere).unwrap();
+    std::fs::write(elsewhere.join("t.jsonl"), "a\n").unwrap();
+    p.configure(&format!(
+        "[transcript]\nroots = [{:?}]\n",
+        elsewhere.display().to_string()
+    ));
+    let (code, _, err) = p.invoke(
+        &[
+            "ingest",
+            "--path",
+            &elsewhere.join("t.jsonl").display().to_string(),
+        ],
+        &DEV,
+    );
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+
+    // Nothing in the home is a transcript: not its keys, not its store.
+    let device_key = p.cairn_home().join("keys").join("device.key");
+    let store = p.cairn_home().join("store.db");
+    for path in [device_key, store] {
+        let (code, _, err) = p.invoke(&["ingest", "--path", &path.display().to_string()], &DEV);
+        assert_eq!(
+            (code, err.as_str()),
+            (EXIT_FAILURE, "cairn ingest: path outside allowed roots\n")
+        );
+    }
+    // The default root no longer applies once the roots are configured.
+    let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+}
+
+#[test]
+fn ingest_says_when_it_cannot_audit_its_refusal() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    p.configure("recal.max_k = 10\n");
+    let audit_dir = p.cairn_home().join("audit");
+    let _ = std::fs::remove_dir_all(&audit_dir);
+    std::fs::write(&audit_dir, "").unwrap();
+    set_mode(&audit_dir, 0o600);
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        err.contains("cairn ingest: audit a refused ingest: "),
+        "{err}"
+    );
+}
+
+#[test]
+fn ingest_says_when_it_cannot_audit_a_path_outside_the_roots() {
+    let p = Process::new();
+    let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let audit_dir = p.cairn_home().join("audit");
+    let _ = std::fs::remove_dir_all(&audit_dir);
+    std::fs::write(&audit_dir, "").unwrap();
+    set_mode(&audit_dir, 0o600);
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", "/etc/passwd"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        err.contains("cairn ingest: audit a path outside allowed roots: "),
+        "{err}"
+    );
+    assert!(
+        err.ends_with("cairn ingest: path outside allowed roots\n"),
+        "{err}"
+    );
 }

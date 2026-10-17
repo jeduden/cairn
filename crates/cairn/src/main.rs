@@ -2,7 +2,7 @@
 //! entry point only hands it the process's arguments, environment and
 //! streams.
 
-use std::io::{self, BufRead, IsTerminal};
+use std::io::{self, IsTerminal};
 use std::process::ExitCode;
 use std::sync::mpsc::{self, Receiver};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -41,7 +41,24 @@ fn main() -> ExitCode {
         clock: &now,
     };
 
-    ExitCode::from(cairn::run(args, &ctx, &mut io::stdout(), &mut io::stderr()))
+    let log = cairn::structured_log(
+        std::env::var_os("CAIRN_HOME"),
+        std::env::var_os("HOME"),
+        std::env::var_os("CAIRN_HOME_ID"),
+        cairn::LogSettings {
+            managed: ctx.managed_policy.clone(),
+            os_user: ctx.os_user,
+        },
+        now,
+    );
+    let log = std::sync::Arc::new(log);
+    let dispatch = tracing::Dispatch::from(log.clone());
+    let code = tracing::dispatcher::with_default(&dispatch, || {
+        cairn::run(args, &ctx, &mut io::stdout(), &mut io::stderr())
+    });
+    cairn::audit_dropped_log_lines(&ctx, log.dropped());
+
+    ExitCode::from(code)
 }
 
 /// The wall clock, in seconds since the Unix epoch, for audit entries.
@@ -78,7 +95,8 @@ fn terminal() -> bool {
 }
 
 /// The process's input, one line at a time, read on a thread of its
-/// own so its reader waits for each line with a deadline (ENG-03).
+/// own so its reader waits for each line with a deadline (ENG-03), and
+/// no line held past its limit (SEC-05).
 fn stdin_lines() -> Receiver<io::Result<String>> {
     let (tx, rx) = mpsc::channel();
     std::thread::spawn(move || {
@@ -88,9 +106,7 @@ fn stdin_lines() -> Receiver<io::Result<String>> {
         )]
         let stdin = io::stdin();
         // Reading stops once the reader is gone.
-        stdin
-            .lock()
-            .lines()
+        cairn::bounded_lines(stdin.lock(), cairn::INPUT_LINE_LIMIT)
             .map_while(|line| tx.send(line).ok())
             .for_each(drop);
     });

@@ -12,6 +12,12 @@ use std::panic::{self, AssertUnwindSafe};
 use audit::entry::{Counter, Kind, Occurrence};
 use serde_json::Value;
 
+/// The most bytes a hook input may hold (SEC-05).
+pub const HOOK_INPUT_LIMIT: usize = 1 << 20;
+
+/// The deepest a hook input's JSON may nest (SEC-05).
+pub const NESTING_LIMIT: usize = 64;
+
 /// A hook Cairn installs: only those through which it writes to an
 /// agent (§9.1).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -53,6 +59,10 @@ pub enum Failure {
     Malformed,
     /// The handler panicked, and the panic was caught.
     Panicked,
+    /// The hook input exceeds [`HOOK_INPUT_LIMIT`].
+    TooLarge,
+    /// The hook input nests deeper than [`NESTING_LIMIT`].
+    TooDeep,
 }
 
 impl Failure {
@@ -62,6 +72,8 @@ impl Failure {
         let (kind, counter) = match self {
             Self::UnknownHook | Self::Malformed => (Kind::Rejected, Counter::HookRejected),
             Self::Panicked => (Kind::Failed, Counter::HookPanicked),
+            Self::TooLarge => (Kind::Rejected, Counter::HookInputTooLarge),
+            Self::TooDeep => (Kind::Rejected, Counter::HookInputTooDeep),
         };
 
         Occurrence::Degraded {
@@ -78,6 +90,8 @@ impl Failure {
             Self::UnknownHook => "no such hook",
             Self::Malformed => "not a JSON object",
             Self::Panicked => "panic recovered",
+            Self::TooLarge => "hook input exceeds 1 MiB",
+            Self::TooDeep => "hook input nesting exceeds depth 64",
         }
     }
 }
@@ -91,16 +105,53 @@ impl fmt::Display for Failure {
 impl std::error::Error for Failure {}
 
 /// What `hook` writes to stdout for `hook_input`: nothing yet, as no
-/// handler injects before phase 9.
+/// handler injects before phase 9. The input limits (SEC-05) are
+/// checked before the input is parsed.
 ///
 /// # Errors
 ///
-/// Fails when the hook input is no JSON object.
+/// Fails when the hook input exceeds 1 MiB, nests deeper than 64
+/// levels, or is no JSON object.
 pub fn handle(_hook: Hook, hook_input: &str) -> Result<String, Failure> {
+    if hook_input.len() > HOOK_INPUT_LIMIT {
+        return Err(Failure::TooLarge);
+    }
+    if depth(hook_input) > NESTING_LIMIT {
+        return Err(Failure::TooDeep);
+    }
     match serde_json::from_str::<Value>(hook_input) {
         Ok(Value::Object(_)) => Ok(String::new()),
         _ => Err(Failure::Malformed),
     }
+}
+
+/// The deepest `text`'s brackets nest, counting only those outside
+/// JSON strings; a stray closing bracket counts nothing.
+fn depth(text: &str) -> usize {
+    let (mut deepest, mut open) = (0, 0usize);
+    let (mut in_string, mut escaped) = (false, false);
+    for b in text.bytes() {
+        if in_string {
+            match (escaped, b) {
+                (true, _) => escaped = false,
+                (false, b'\\') => escaped = true,
+                (false, b'"') => in_string = false,
+                _ => {}
+            }
+            continue;
+        }
+        match b {
+            b'"' => in_string = true,
+            b'{' | b'[' => {
+                open += 1;
+                deepest = deepest.max(open);
+            }
+            b'}' | b']' => open = open.saturating_sub(1),
+            _ => {}
+        }
+    }
+
+    deepest
 }
 
 /// Runs `handler`, catching a panic in it as [`Failure::Panicked`] so

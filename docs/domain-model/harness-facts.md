@@ -22,7 +22,11 @@ them, Cairn changes only harness configuration, under I7.
   **transcript source** is a transcript Cairn ingests (Ingest marker, `cairn
   ingest`); a shrunk transcript or a rewritten prefix starts a new **transcript
   generation** (REC-07). The **transcript roots** (`transcript.roots`) are the
-  directories ingest reads transcripts from by default (REC-01, SEC-18). As a
+  directories ingest reads transcripts from by default (REC-01, SEC-18). An
+  **allowed root** is a directory within which every path Cairn receives must
+  resolve: the transcript roots, the home, and, for reading only, a run's
+  worktree and its repository's git directory (SEC-18). A path outside every
+  allowed root is refused. As a
   Cairn term, "source" is a transcript source or a trusted source; the harness's
   `source` field and §6.1's threat sources keep their own sense. A transcript
   line or hook input whose shape differs from the one recorded for its harness

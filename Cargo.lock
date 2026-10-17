@@ -32,6 +32,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "allowed_root"
+version = "0.0.0"
+dependencies = [
+ "testkit",
+]
+
+[[package]]
 name = "anstream"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -139,6 +146,7 @@ name = "cairn"
 version = "0.0.0"
 dependencies = [
  "administration",
+ "allowed_root",
  "audit",
  "configuration",
  "hook",
@@ -146,10 +154,13 @@ dependencies = [
  "key",
  "mcp",
  "record",
+ "redaction",
  "rusqlite",
  "serde_json",
  "store",
+ "structured_log",
  "testkit",
+ "tracing",
 ]
 
 [[package]]
@@ -853,6 +864,7 @@ dependencies = [
  "administration",
  "key",
  "record",
+ "redaction",
  "rusqlite",
  "serde_json",
  "store",
@@ -950,6 +962,7 @@ dependencies = [
  "ingest",
  "key",
  "record",
+ "redaction",
  "rusqlite",
  "serde_json",
  "store",
@@ -981,6 +994,12 @@ dependencies = [
  "memchr",
  "nom",
 ]
+
+[[package]]
+name = "once_cell"
+version = "1.21.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "once_cell_polyfill"
@@ -1088,6 +1107,14 @@ version = "0.0.0"
 dependencies = [
  "serde_json",
  "sha2",
+]
+
+[[package]]
+name = "redaction"
+version = "0.0.0"
+dependencies = [
+ "regex",
+ "serde_json",
 ]
 
 [[package]]
@@ -1223,6 +1250,7 @@ dependencies = [
  "harness-contract",
  "key",
  "record",
+ "rusqlite",
  "serde_json",
  "srs",
  "store",
@@ -1378,6 +1406,16 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
+
+[[package]]
+name = "structured_log"
+version = "0.0.0"
+dependencies = [
+ "redaction",
+ "serde_json",
+ "testkit",
+ "tracing",
+]
 
 [[package]]
 name = "subtle"
@@ -1545,6 +1583,25 @@ name = "toml_writer"
 version = "1.1.3+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06bdbd8cfc056b8d2e2e85f29b56a3bdbecb527cef81eb39e3e7b98af4652770"
+
+[[package]]
+name = "tracing"
+version = "0.1.44"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100"
+dependencies = [
+ "pin-project-lite",
+ "tracing-core",
+]
+
+[[package]]
+name = "tracing-core"
+version = "0.1.36"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a"
+dependencies = [
+ "once_cell",
+]
 
 [[package]]
 name = "typed-builder"
