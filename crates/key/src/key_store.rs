@@ -233,13 +233,11 @@ impl KeyStore for FileKeyStore {
     }
 
     fn put(&self, entry: &Entry, secret: &str) -> Result<(), KeyError> {
-        let _ = (entry, secret);
-        Err(KeyError::Malformed("unbuilt".to_owned()))
+        write_kept(&self.path(entry), secret)
     }
 
     fn get(&self, entry: &Entry) -> Result<String, KeyError> {
-        let _ = entry;
-        Err(KeyError::Malformed("unbuilt".to_owned()))
+        read_secret(&self.path(entry)).map_err(|e| missing_file(entry, e))
     }
 
     fn remove(&self, entry: &Entry) -> Result<(), KeyError> {
@@ -254,8 +252,7 @@ pub fn account(home: &Path, entry: &Entry) -> String {
     let path = home.as_os_str().as_encoded_bytes();
     let digest = Digest::of(&[ACCOUNT, path]).to_hex();
 
-    let _ = (digest, entry);
-    String::new()
+    format!("home-{}/{}", &digest[..32], entry.0)
 }
 
 /// What a keychain does for a key store: Cairn's own generic passwords,
