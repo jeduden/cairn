@@ -1,7 +1,7 @@
 ---
 n: 5
 title: "Keys, seats and the personal room"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 5: keys, seats and the personal room
