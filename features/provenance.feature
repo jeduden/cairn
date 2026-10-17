@@ -80,7 +80,7 @@ Feature: Provenance and trust (PRV)
       | interactive | a run seat's writer on another node of this principal                                                                                                                       | user             | untrusted | reports nothing                                          |
       | automation  | a writer of this node, widening beyond its recorded sandbox states and risk acceptance                                                                                      | operator         | trusted   | reports it as a widening principal act that fails OWN-22 |
 
-  @PRV-03 @P0 @I2 @pending
+  @PRV-03 @P0 @I2
   Scenario Outline: model-reproducible text no principal stamped, and harness-summarised text, is untrusted
     Given an isolated Cairn home
     And deployment mode "interactive"

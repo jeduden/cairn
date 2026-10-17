@@ -149,11 +149,10 @@ The `benchmark` job (ENG-15) is described in
 [testing.md](testing.md#benchmarks-and-the-regression-gate).
 
 [nightly.yml](../.github/workflows/nightly.yml) is where
-cargo-fuzz runs every target under `fuzz/` (ENG-07). There are none
-yet; the job fails the night a `fuzz/` crate appears until the plan
-that adds it pins the nightly and adds the cargo-fuzz step. The
-crash-consistency test (ENG-06), the concurrency soak (ENG-09) and the
-live Claude Code contract test (ENG-17) join it as their plans land.
+cargo-fuzz runs each target under `fuzz/` (ENG-07) for 15 minutes,
+from its corpus under `fuzz/corpus`, on the nightly
+`fuzz/rust-toolchain.toml` pins. The crash-consistency test (ENG-06),
+the soak (ENG-09) and the live contract test (ENG-17) join it later.
 
 [build.yml](../.github/workflows/build.yml) is the release build.
 CI runs it on every change, and the release workflow runs it too. One

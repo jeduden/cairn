@@ -577,6 +577,26 @@ fn trusted_provenance_outside_a_device_seat_is_named() {
 }
 
 #[test]
+fn a_transcripts_untrusted_harness_meta_verifies_in_an_ingest_seat() {
+    // A transcript line's harness_meta is untrusted (PRV-08): only what
+    // the launcher records is the trusted kind.
+    let mut f = fixture();
+    f.store
+        .append(
+            f.ingest.writer,
+            &[NewEvent {
+                kind: EventKind::TranscriptLine,
+                provenance: Provenance::HarnessMeta,
+                content: json!({"line": 4, "text": "{\"type\":\"mode\"}"}),
+                commitment_key: CommitmentKey::from_bytes([4; 32]),
+            }],
+        )
+        .unwrap();
+
+    assert!(verify(&f.store, &f.node.device().public()).is_ok());
+}
+
+#[test]
 fn each_failure_names_its_class_and_where_it_is() {
     let at = |e: VerifyError| (e.class(), e.address().map(str::to_owned));
     let a = || "a".to_owned();

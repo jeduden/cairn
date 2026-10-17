@@ -699,8 +699,11 @@ dependencies = [
 name = "harness-contract"
 version = "0.0.0"
 dependencies = [
+ "provenance",
+ "redaction",
  "serde_json",
  "testkit",
+ "transcript",
 ]
 
 [[package]]
@@ -863,12 +866,14 @@ version = "0.0.0"
 dependencies = [
  "administration",
  "key",
+ "provenance",
  "record",
  "redaction",
  "rusqlite",
  "serde_json",
  "store",
  "testkit",
+ "transcript",
 ]
 
 [[package]]
@@ -1087,6 +1092,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "provenance"
+version = "0.0.0"
+dependencies = [
+ "record",
+ "redaction",
+ "serde_json",
+ "transcript",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1250,11 +1265,13 @@ dependencies = [
  "harness-contract",
  "key",
  "record",
+ "redaction",
  "rusqlite",
  "serde_json",
  "srs",
  "store",
  "testkit",
+ "transcript",
 ]
 
 [[package]]
@@ -1601,6 +1618,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "transcript"
+version = "0.0.0"
+dependencies = [
+ "serde_json",
 ]
 
 [[package]]

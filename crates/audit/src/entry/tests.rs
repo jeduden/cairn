@@ -57,6 +57,8 @@ fn each_kind_and_counter_has_its_name() {
             Counter::IngestRefusedSettingsInvalid,
             "ingest_refused_settings_invalid",
         ),
+        (Counter::EventsUnparsed, "events_unparsed"),
+        (Counter::FormatDrift, "format_drift"),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

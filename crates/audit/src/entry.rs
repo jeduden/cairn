@@ -92,6 +92,12 @@ pub enum Counter {
     /// needs were unknown; the transcript stays for a later ingest
     /// (SEC-08, I1).
     IngestRefusedSettingsInvalid,
+    /// A transcript line was stored as an `unparsed` event: it cannot be
+    /// parsed, or its type is one no supported version records (REC-05).
+    EventsUnparsed,
+    /// A transcript line's shape differed from the one recorded for its
+    /// harness version (REC-26).
+    FormatDrift,
 }
 
 impl Counter {
@@ -115,6 +121,8 @@ impl Counter {
             Self::PathOutsideAllowedRoots => "path_outside_allowed_roots",
             Self::LogLineDropped => "log_line_dropped",
             Self::IngestRefusedSettingsInvalid => "ingest_refused_settings_invalid",
+            Self::EventsUnparsed => "events_unparsed",
+            Self::FormatDrift => "format_drift",
         }
     }
 }
@@ -131,9 +139,9 @@ pub enum Occurrence<'a> {
         detail: &'static str,
     },
     /// An operation degraded over one settings key: its detail is
-    /// `detail` followed by `key`, a settings key's name or a
-    /// provenance class, shown only when it holds nothing but the
-    /// characters those can.
+    /// `detail` followed by `key`, a settings key's name, a provenance
+    /// class or a format drift's description, shown only when it holds
+    /// nothing but the characters those can.
     Keyed {
         kind: Kind,
         counter: Counter,

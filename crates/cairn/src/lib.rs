@@ -1,7 +1,7 @@
 //! The Cairn core executable, specified in docs/srs: the hook
 //! handlers, the MCP server and the CLI so far.
 //!
-//! It runs `version`, `ingest --path`, `mcp`, `verify`, `hook`,
+//! It runs `version`, `ingest`, `mcp`, `verify`, `hook`,
 //! `status`, `doctor`, and the principal acts `counter ack`,
 //! `configuration accept` and `risk-acceptance`. Every other
 //! command in the SRS's §9.5 is a pending scenario under features/, and
@@ -83,7 +83,7 @@ commands:
   counter ack [--json]                   acknowledge the counters (neutral)
   doctor [--json]                        fail while a counter rose since the last acknowledgement
   hook <hook>                            run the hook handler on the hook input on stdin
-  ingest --path P [--json]               record the transcript at P
+  ingest --all | --path P [--json]       record every transcript under the roots, or the one at P
   mcp                                    serve the MCP tools over stdio
   risk-acceptance show [--json]          show the residual risks open on this node
   risk-acceptance record [--json]        accept the open residual risks (widening)
@@ -346,80 +346,203 @@ pub(crate) fn failed(command: &str, e: &dyn std::fmt::Display, stderr: &mut dyn 
     EXIT_FAILURE
 }
 
-/// `cairn ingest --path P [--json]`: records the transcript at `P` in a
-/// new ingest seat.
+/// What `cairn ingest` reads.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum IngestTarget {
+    /// Every transcript under the transcript roots (REC-01).
+    All,
+    /// The transcript at this path.
+    Path(String),
+}
+
+/// `cairn ingest --all | --path P [--json]`: records every transcript
+/// under the transcript roots, or the one at `P`, each in a new ingest
+/// seat. A transcript that cannot be ingested is reported and the rest
+/// still are; the command then fails.
 fn ingest(
-    mut args: impl Iterator<Item = String>,
+    args: impl Iterator<Item = String>,
     ctx: &Context,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> u8 {
-    let usage = |stderr: &mut dyn Write, why: &str| {
-        let _ = writeln!(stderr, "cairn ingest: {why}");
-        EXIT_USAGE
+    let (target, as_json) = match ingest_args(args) {
+        Ok(parsed) => parsed,
+        Err(why) => {
+            let _ = writeln!(stderr, "cairn ingest: {why}");
+            return EXIT_USAGE;
+        }
     };
-    let (mut path, mut as_json) = (None, false);
+    let home = match ctx.home() {
+        Ok(home) => home,
+        Err(e) => return failed("ingest", &e, stderr),
+    };
+    let in_force = audit_settings(ctx, &home, stderr);
+    if in_force.loaded.principal_layer_failed() {
+        return failed("ingest", &refuse_ingest(ctx, stderr), stderr);
+    }
+    let settings = &in_force.resolved.settings;
+    let candidates = match &target {
+        IngestTarget::Path(path) => vec![PathBuf::from(path)],
+        IngestTarget::All => match root_transcripts(ctx, settings) {
+            Ok(found) => found,
+            Err(e) => return failed("ingest", &e, stderr),
+        },
+    };
+    let mut failures = 0;
+    let mut allowed = Vec::new();
+    for path in &candidates {
+        match allowed_transcript(ctx, settings, path, stderr) {
+            Ok(transcript) => allowed.push(transcript),
+            Err(e) => {
+                failed("ingest", &e, stderr);
+                failures += 1;
+            }
+        }
+    }
+    if allowed.is_empty() && failures > 0 {
+        return EXIT_FAILURE;
+    }
+    // The rule set always compiles (its unit test proves it); were it
+    // not to, each transcript would fail with why.
+    let redactor = redactor(ctx, settings, stderr);
+    let mut reports = Vec::new();
+    for transcript in &allowed {
+        let ingested = redactor.as_ref().map_err(Clone::clone).and_then(|r| {
+            ingest::ingest_path(&home, transcript.path(), r, &mut OsEntropy)
+                .map_err(|e| e.to_string())
+        });
+        match ingested {
+            Ok(ingested) => {
+                record_ingested(ctx, &ingested, stderr);
+                reports.push(ingested);
+            }
+            Err(e) => {
+                failed("ingest", &e, stderr);
+                failures += 1;
+            }
+        }
+    }
+    let shown = ingest_report(&target, &reports, failures, as_json);
+    let code = written(write!(stdout, "{shown}"), stderr);
+
+    if failures > 0 { EXIT_FAILURE } else { code }
+}
+
+/// What `cairn ingest`'s command line asks for, or why it is refused.
+fn ingest_args(mut args: impl Iterator<Item = String>) -> Result<(IngestTarget, bool), String> {
+    let (mut all, mut path, mut as_json) = (false, None, false);
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--json" => as_json = true,
-            "--path" => match args.next() {
-                Some(p) => path = Some(p),
-                None => return usage(stderr, "--path needs a transcript"),
-            },
-            "--all" => return usage(stderr, "--all is not supported yet; pass --path"),
+            "--all" => all = true,
+            "--path" => path = Some(args.next().ok_or("--path needs a transcript")?),
             other => match other.strip_prefix("--path=") {
                 Some(p) => path = Some(p.to_owned()),
-                None => return usage(stderr, &format!("unknown flag {other:?}")),
+                None => return Err(format!("unknown flag {other:?}")),
             },
         }
     }
-    let Some(path) = path else {
-        return usage(stderr, "want --path P");
-    };
-    let ingested = match ctx.home() {
-        Ok(home) => {
-            let in_force = audit_settings(ctx, &home, stderr);
-            if in_force.loaded.principal_layer_failed() {
-                return failed("ingest", &refuse_ingest(ctx, stderr), stderr);
-            }
-            let settings = &in_force.resolved.settings;
-            let transcript = allowed_transcript(ctx, settings, Path::new(&path), stderr);
-            transcript.and_then(|transcript| {
-                let redactor = redactor(ctx, settings, stderr)?;
-                ingest::ingest_path(&home, transcript.path(), &redactor, &mut OsEntropy)
-                    .map_err(|e| e.to_string())
-            })
-        }
-        Err(e) => Err(e.to_string()),
-    };
-    let ingested = match ingested {
-        Ok(i) => i,
-        Err(e) => return failed("ingest", &e, stderr),
-    };
+    match (all, path) {
+        (true, Some(_)) => Err("want --all or --path P, not both".to_owned()),
+        (true, None) => Ok((IngestTarget::All, as_json)),
+        (false, Some(path)) => Ok((IngestTarget::Path(path), as_json)),
+        (false, None) => Err("want --all or --path P".to_owned()),
+    }
+}
+
+/// The transcripts under every transcript root (REC-01), root by root.
+fn root_transcripts(
+    ctx: &Context,
+    settings: &configuration::resolve::Settings,
+) -> Result<Vec<PathBuf>, String> {
+    let os_home = ctx.home.as_deref().map(Path::new);
+    let mut found = Vec::new();
+    for root in settings.texts("transcript.roots") {
+        let root = allowed_root::expand_home(root, os_home);
+        found.extend(ingest::transcripts(&root).map_err(|e| e.to_string())?);
+    }
+
+    Ok(found)
+}
+
+/// Audits what one ingest found, each redaction, unparsed line and
+/// format drift, and logs it.
+fn record_ingested(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
     audit_redactions(ctx, &ingested.redactions, stderr);
+    audit_parsing(ctx, ingested, stderr);
     tracing::info!(
         transcript = %ingested.redacted_path,
         writer = %ingested.writer,
         events = ingested.events as u64,
         redactions = ingested.redactions.len() as u64,
+        unparsed = ingested.unparsed as u64,
+        format_drift = ingested.drifts.len() as u64,
         "ingested"
     );
-    let line = if as_json {
-        json!({
-            "writer": ingested.writer.to_string(),
-            "seat": ingested.seat.to_string(),
-            "room": ingested.room.to_string(),
-            "events": ingested.events,
-        })
-        .to_string()
-    } else {
-        format!(
-            "ingested {} lines into writer {}",
-            ingested.events, ingested.writer
-        )
-    };
+}
 
-    written(writeln!(stdout, "{line}"), stderr)
+/// What `cairn ingest` prints of the transcripts it recorded: for
+/// `--path`, the one; for `--all`, each, or that there was none.
+fn ingest_report(
+    target: &IngestTarget,
+    reports: &[ingest::Ingested],
+    failures: usize,
+    as_json: bool,
+) -> String {
+    let one = |i: &ingest::Ingested| {
+        json!({
+            "writer": i.writer.to_string(),
+            "seat": i.seat.to_string(),
+            "room": i.room.to_string(),
+            "events": i.events,
+        })
+    };
+    if as_json && *target == IngestTarget::All {
+        let all: Vec<Value> = reports.iter().map(one).collect();
+        return format!("{}\n", json!({"transcripts": all}));
+    }
+    if reports.is_empty() && failures == 0 && *target == IngestTarget::All {
+        return "ingested no transcript\n".to_owned();
+    }
+    reports
+        .iter()
+        .map(|i| {
+            if as_json {
+                format!("{}\n", one(i))
+            } else {
+                format!("ingested {} lines into writer {}\n", i.events, i.writer)
+            }
+        })
+        .collect()
+}
+
+/// Audits each line an ingest stored as `unparsed` (REC-05) and each
+/// format drift it found (REC-26), one entry each, naming the harness
+/// version and what differed and nothing of the line's content.
+fn audit_parsing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
+    let unparsed = Occurrence::Degraded {
+        kind: Kind::Failed,
+        counter: Counter::EventsUnparsed,
+        operation: "ingest",
+        detail: "stored a transcript line it cannot parse as an unparsed event",
+    };
+    for _ in 0..ingested.unparsed {
+        if let Err(e) = ctx.audit(&unparsed) {
+            let _ = writeln!(stderr, "cairn ingest: audit an unparsed line: {e}");
+        }
+    }
+    for drift in &ingested.drifts {
+        let occurrence = Occurrence::Keyed {
+            kind: Kind::Rejected,
+            counter: Counter::FormatDrift,
+            operation: "ingest",
+            detail: "format drift",
+            key: drift,
+        };
+        if let Err(e) = ctx.audit(&occurrence) {
+            let _ = writeln!(stderr, "cairn ingest: audit a format drift: {e}");
+        }
+    }
 }
 
 /// Refuses an ingest while the principal's configuration or the

@@ -36,6 +36,10 @@ pub(crate) struct Process {
 /// The time every test's clock reads.
 const NOW: u64 = 1_760_000_000;
 
+/// A transcript line in Claude Code 2.1.296's recorded shape, which
+/// ingest records with nothing to audit.
+const CLEAN_LINE: &str = "{\"type\":\"atis-latch\",\"atis\":\"\",\"sessionId\":\"s\"}\n";
+
 impl Process {
     pub(crate) fn new() -> Self {
         Self {
@@ -356,6 +360,12 @@ fn ingest_redacts_by_the_principals_patterns_and_audits_each_redaction() {
             ),
             entry("redacted", "redacted", "redacted by rule aws_access_key"),
             entry("redacted", "redacted", "redacted by rule extra_pattern_2"),
+            // The line has no type, so it is stored unparsed (REC-05).
+            entry(
+                "failed",
+                "events_unparsed",
+                "stored a transcript line it cannot parse as an unparsed event"
+            ),
         ]
     );
     let store = std::fs::read(p.cairn_home().join("store.db")).unwrap();
@@ -380,14 +390,18 @@ fn ingest_json_names_the_writer_seat_room_and_count() {
 #[test]
 fn ingest_refuses_a_wrong_command_line() {
     for (args, want) in [
-        (&["ingest"][..], "cairn ingest: want --path P\n"),
+        (&["ingest"][..], "cairn ingest: want --all or --path P\n"),
         (
             &["ingest", "--path"],
             "cairn ingest: --path needs a transcript\n",
         ),
         (
-            &["ingest", "--all"],
-            "cairn ingest: --all is not supported yet; pass --path\n",
+            &["ingest", "--all", "--path", "t.jsonl"],
+            "cairn ingest: want --all or --path P, not both\n",
+        ),
+        (
+            &["ingest", "--path=t.jsonl", "--all"],
+            "cairn ingest: want --all or --path P, not both\n",
         ),
         (
             &["ingest", "--yaml"],
@@ -414,9 +428,193 @@ fn ingest_reports_a_transcript_it_cannot_read() {
 }
 
 #[test]
+fn ingest_audits_and_counts_each_unparsed_line_and_format_drift() {
+    let p = Process::new();
+    let path = p.transcript("{not json\n{\"type\":\"future_kind\"}\n");
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &path], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let entries: Vec<(String, Option<String>, String)> = audited(&p)
+        .into_iter()
+        .map(|e| (e.kind, e.counter, e.detail))
+        .collect();
+    let entry = |kind: &str, counter: &str, detail: &str| {
+        (kind.to_owned(), Some(counter.to_owned()), detail.to_owned())
+    };
+    let unparsed = || {
+        entry(
+            "failed",
+            "events_unparsed",
+            "stored a transcript line it cannot parse as an unparsed event",
+        )
+    };
+    assert_eq!(
+        entries,
+        [
+            unparsed(),
+            unparsed(),
+            entry(
+                "rejected",
+                "format_drift",
+                "format drift claude-code:unversioned:future_kind:unrecorded-type"
+            ),
+        ]
+    );
+    let (_, status, _) = p.invoke(&["status"], &DEV);
+    assert!(
+        status.contains("events_unparsed 2 (2 since acknowledged)"),
+        "{status}"
+    );
+    assert!(
+        status.contains("format_drift 1 (1 since acknowledged)"),
+        "{status}"
+    );
+}
+
+#[test]
+fn ingest_says_which_unparsed_line_or_drift_it_cannot_audit_and_still_records() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let audit_dir = p.cairn_home().join("audit");
+    std::fs::remove_dir_all(&audit_dir).unwrap();
+    std::fs::write(&audit_dir, "").unwrap();
+    set_mode(&audit_dir, 0o600);
+
+    let (code, out, err) = p.invoke(
+        &[
+            "ingest",
+            "--path",
+            &p.transcript("{\"type\":\"future_kind\"}\n"),
+        ],
+        &DEV,
+    );
+
+    assert_eq!(code, EXIT_OK, "{err}");
+    assert!(out.starts_with("ingested 1 lines"), "{out}");
+    assert!(
+        err.contains("cairn ingest: audit an unparsed line: "),
+        "{err}"
+    );
+    assert!(
+        err.contains("cairn ingest: audit a format drift: "),
+        "{err}"
+    );
+}
+
+/// Writes a transcript `name` holding `text` in project `project` under
+/// the default transcript root.
+fn transcript_in(p: &Process, project: &str, name: &str, text: &[u8]) -> std::path::PathBuf {
+    let dir = p.dir.path().join(".claude").join("projects").join(project);
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join(name);
+    std::fs::write(&path, text).unwrap();
+    path
+}
+
+#[test]
+fn ingest_all_reads_every_transcript_under_the_transcript_roots() {
+    let p = Process::new();
+    transcript_in(&p, "-w-a", "s1.jsonl", b"a\n");
+    transcript_in(&p, "-w-b", "s2.jsonl", b"b\nc\n");
+
+    let (code, out, err) = p.invoke(&["ingest", "--all"], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let lines: Vec<&str> = out.lines().collect();
+    assert_eq!(lines.len(), 2, "{out}");
+    assert!(
+        lines[0].starts_with("ingested 1 lines into writer "),
+        "{out}"
+    );
+    assert!(
+        lines[1].starts_with("ingested 2 lines into writer "),
+        "{out}"
+    );
+
+    let (code, out, _) = p.invoke(&["ingest", "--all", "--json"], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let events: Vec<u64> = v["transcripts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["events"].as_u64().unwrap())
+        .collect();
+    assert_eq!(events, [1, 2]);
+}
+
+#[test]
+fn ingest_all_with_no_transcript_ingests_nothing() {
+    let p = Process::new();
+
+    assert_eq!(
+        p.invoke(&["ingest", "--all"], &DEV),
+        (
+            EXIT_OK,
+            "ingested no transcript\n".to_owned(),
+            String::new()
+        )
+    );
+    assert_eq!(
+        p.invoke(&["ingest", "--all", "--json"], &DEV),
+        (EXIT_OK, "{\"transcripts\":[]}\n".to_owned(), String::new())
+    );
+}
+
+#[test]
+fn ingest_all_goes_on_past_a_transcript_it_cannot_ingest_and_fails() {
+    let p = Process::new();
+    transcript_in(&p, "-w-a", "bad.jsonl", &[0xff, b'\n']);
+    transcript_in(&p, "-w-b", "good.jsonl", b"a\n");
+
+    let (code, out, err) = p.invoke(&["ingest", "--all"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(out.starts_with("ingested 1 lines into writer "), "{out}");
+    assert!(err.contains("is not UTF-8"), "{err}");
+}
+
+#[cfg(unix)]
+#[test]
+fn ingest_all_refuses_a_linked_transcript_outside_the_roots_and_goes_on() {
+    let p = Process::new();
+    let outside = p.dir.path().join("outside.jsonl");
+    std::fs::write(&outside, "a\n").unwrap();
+    let dir = p.dir.path().join(".claude").join("projects").join("-w-a");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::os::unix::fs::symlink(&outside, dir.join("linked.jsonl")).unwrap();
+
+    let (code, out, err) = p.invoke(&["ingest", "--all"], &DEV);
+
+    assert_eq!((code, out.as_str()), (EXIT_FAILURE, ""));
+    assert!(err.contains("cairn ingest: "), "{err}");
+    let counters: Vec<Option<String>> = audited(&p).into_iter().map(|e| e.counter).collect();
+    assert_eq!(counters, [Some("path_outside_allowed_roots".to_owned())]);
+}
+
+#[test]
+fn ingest_all_reports_a_transcript_root_it_cannot_list() {
+    let p = Process::new();
+    p.configure(&format!(
+        "[transcript]\nroots = [{:?}]\n",
+        p.dir.path().join("file").display().to_string()
+    ));
+    std::fs::write(p.dir.path().join("file"), "").unwrap();
+
+    let (code, _, err) = p.invoke(&["ingest", "--all"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        err.starts_with("cairn ingest: list the transcripts in "),
+        "{err}"
+    );
+}
+
+#[test]
 fn verify_checks_the_record_and_counts_it() {
     let p = Process::new();
-    let path = p.transcript("a\nb\n");
+    let path = p.transcript(&CLEAN_LINE.repeat(2));
     p.invoke(&["ingest", "--path", &path], &DEV);
 
     let text = p.invoke(&["verify"], &DEV);
@@ -1230,7 +1428,7 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
              counters: none\ndeployment mode: automation\n"
         )
     );
-    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
     p.lines = vec!["not json".to_owned()];
     p.invoke(&["hook", "UserPromptSubmit"], &DEV);
 
@@ -1342,7 +1540,7 @@ fn every_command_refuses_a_home_bound_to_another_home_id() {
 #[test]
 fn verify_checks_the_audit_chain_too() {
     let mut p = Process::new();
-    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
     p.lines = vec!["not json".to_owned()];
     p.invoke(&["hook", "UserPromptSubmit"], &DEV);
     let (code, out, _) = p.invoke(&["verify"], &DEV);
@@ -1424,7 +1622,7 @@ fn a_caught_mcp_panic_is_audited_quietly() {
 #[test]
 fn an_audit_log_that_cannot_be_read_fails_verify_doctor_and_status() {
     let p = Process::new();
-    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
     let audit = p.cairn_home().join("audit");
     std::fs::write(&audit, "not a directory").unwrap();
     #[cfg(unix)]

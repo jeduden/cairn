@@ -46,10 +46,12 @@ hook = { path = "crates/hook" }
 ingest = { path = "crates/ingest" }
 key = { path = "crates/key" }
 mcp = { path = "crates/mcp" }
+provenance = { path = "crates/provenance" }
 record = { path = "crates/record" }
 redaction = { path = "crates/redaction" }
 store = { path = "crates/store" }
 structured_log = { path = "crates/structured_log" }
+transcript = { path = "crates/transcript" }
 
 adr = { path = "tooling/adr" }
 benchmark = { path = "tooling/benchmark" }
