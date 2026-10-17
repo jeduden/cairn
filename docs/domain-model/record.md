@@ -132,7 +132,12 @@ summary: >-
   holds quarantined.
 - **Redaction**: Removing secrets from content before it is stored, on import,
   or from what an export's, a publish's or an invite's review step sends,
-  recorded (I1, SEC-08).
+  recorded (I1, SEC-08). Three kinds of **redaction rule** apply: the
+  **redaction rule set**, Cairn's maintained and versioned rules for known
+  secret shapes; the **harness account identifiers**, the account email and
+  organization id a transcript's own harness fields name, learnt from each
+  transcript; and the principal's **redaction patterns**
+  (`redaction.extra_patterns`). Each match becomes a marker naming its rule.
 - **Retention policy**: A rule (`retention_policy.*`), set by the node's
   principal (ADM-04) or managed policy, that purges content per room and
   provenance class after a time (I1, SEC-22).
