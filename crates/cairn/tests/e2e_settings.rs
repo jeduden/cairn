@@ -269,7 +269,7 @@ fn no_settings_layer_changes_the_trust_policy() {
     assert_eq!(ignored.len(), 1);
     assert_eq!(
         ignored[0]["detail"],
-        "ignored trust policy key in configuration for tool_result:Bash"
+        "configuration: rejected trust override for tool_result:Bash"
     );
 }
 
