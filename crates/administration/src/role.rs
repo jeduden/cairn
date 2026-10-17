@@ -133,9 +133,6 @@ fn owners_device_seat(cert: &SeatCertificate, own: &[PublicKey]) -> bool {
 /// starts included, and the viewer role for any other seat.
 #[must_use]
 pub fn seat_role(cert: &SeatCertificate, own: &[PublicKey]) -> Option<Role> {
-    if cert.seat_kind == SeatKind::Device || !own.is_empty() {
-        return Some(Role::Viewer);
-    }
     if owners_device_seat(cert, own) {
         return None;
     }

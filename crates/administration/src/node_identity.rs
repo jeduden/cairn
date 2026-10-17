@@ -86,9 +86,6 @@ pub fn digest(value: Option<&str>) -> Digest {
 ///
 /// Fails when the recorded digest cannot be read or written.
 pub fn changed(home: &Home) -> Result<Option<Digest>, AdminError> {
-    if *home.identity() != IdentitySource::Unsupported || home.identity().read().is_none() {
-        return Ok(None);
-    }
     if *home.identity() == IdentitySource::Unsupported {
         return Ok(None);
     }

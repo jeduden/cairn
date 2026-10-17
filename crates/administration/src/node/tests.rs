@@ -513,40 +513,18 @@ fn a_leftover_staged_entry_is_cleared_before_a_start_stages_again() {
     ));
 }
 
-/// The scenario's change: the node identity file now holds "second".
-fn move_machine(dir: &TempDir) {
-    fs::write(dir.path().join("machine-id"), "second\n").unwrap();
-}
-
-#[test]
-fn a_changed_node_identity_mints_new_keys_and_a_new_device_seat_in_the_personal_room() {
-    let dir = TempDir::new().unwrap();
-    let home = home(&dir);
-    let keys = files(&home);
-    let mut store = Store::open(&home.store()).unwrap();
-    let old = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
-    let ingest = old
-        .certify_ingest_seat(&home, &mut store, &mut OsEntropy)
-        .unwrap();
-    let old_logs: Vec<usize> = [old.device_writer(), ingest.writer]
+/// The length of each of `writers`' logs.
+fn lengths(store: &Store, writers: &[WriterId]) -> Vec<usize> {
+    writers
         .iter()
         .map(|w| store.log(*w).unwrap().len())
-        .collect();
-    let old_recovery = RecoveryKey::fetch(&keys, &Entry::recovery()).unwrap();
-    move_machine(&dir);
+        .collect()
+}
 
-    let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
-
-    assert_ne!(node.device().public(), old.device().public());
-    assert_ne!(node.device_writer(), old.device_writer());
-    assert_eq!(node.personal_room(), old.personal_room());
-    assert_eq!(
-        node.identity_change(),
-        Some(IdentityChange {
-            replaced: old.device().public().fingerprint(),
-            key: node.device().public().fingerprint(),
-        })
-    );
+/// Checks that `node`'s device seat begins with the node identity change
+/// leaving `old`'s device seat at its head, then the new key's `minted`,
+/// which it returns, then its certificate record.
+fn holds_the_change(store: &Store, old: &Node, node: &Node) -> KeyEvent {
     let log = store.log(node.device_writer()).unwrap();
     assert_eq!(
         kinds(&log),
@@ -569,15 +547,49 @@ fn a_changed_node_identity_mints_new_keys_and_a_new_device_seat_in_the_personal_
     );
     let minted = KeyEvent::from_value(log[1].content.as_ref().unwrap()).unwrap();
     assert!(minted.check_minted(&node.device().public()).is_ok());
+    minted
+}
+
+/// The scenario's change: the node identity file now holds "second".
+fn move_machine(dir: &TempDir) {
+    fs::write(dir.path().join("machine-id"), "second\n").unwrap();
+}
+
+#[test]
+fn a_changed_node_identity_mints_new_keys_and_a_new_device_seat_in_the_personal_room() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let keys = files(&home);
+    let mut store = Store::open(&home.store()).unwrap();
+    let old = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+    let ingest = old
+        .certify_ingest_seat(&home, &mut store, &mut OsEntropy)
+        .unwrap();
+    let old_logs = lengths(&store, &[old.device_writer(), ingest.writer]);
+    let old_recovery = RecoveryKey::fetch(&keys, &Entry::recovery()).unwrap();
+    move_machine(&dir);
+
+    let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+
+    assert_ne!(node.device().public(), old.device().public());
+    assert_ne!(node.device_writer(), old.device_writer());
+    assert_eq!(node.personal_room(), old.personal_room());
+    assert_eq!(
+        node.identity_change(),
+        Some(IdentityChange {
+            replaced: old.device().public().fingerprint(),
+            key: node.device().public().fingerprint(),
+        })
+    );
+    let minted = holds_the_change(&store, &old, &node);
     let new_recovery = RecoveryKey::fetch(&keys, &Entry::recovery()).unwrap();
     assert_ne!(new_recovery.public(), old_recovery.public());
     assert_eq!(minted.recovery, new_recovery.public().digest());
     // Nothing is appended under an old key.
-    let after: Vec<usize> = [old.device_writer(), ingest.writer]
-        .iter()
-        .map(|w| store.log(*w).unwrap().len())
-        .collect();
-    assert_eq!(after, old_logs);
+    assert_eq!(
+        lengths(&store, &[old.device_writer(), ingest.writer]),
+        old_logs
+    );
     assert!(!home.staged().exists());
     assert_eq!(
         fs::read_to_string(home.node_identity()).unwrap(),

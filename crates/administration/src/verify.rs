@@ -257,7 +257,32 @@ pub fn verify(store: &Store, node_key: &PublicKey) -> Result<Report, VerifyError
     let inceptions = inceptions(&certs, &held, &full)?;
     genesis(node_key, &certs, &held, &inceptions)?;
     let recorded = certificate_records(&held, &certs, &inceptions, &full)?;
-    for (writer, cert) in &certs {
+    seats_counted(&certs, &inceptions, &recorded)?;
+    for (writer, log) in &held {
+        let device = certs
+            .get(writer)
+            .is_some_and(|c| c.seat_kind == SeatKind::Device);
+        events(log, device, &full)?;
+    }
+    let order = chain::causal_order(&record).map_err(broken)?;
+
+    Ok(Report {
+        writers: writers.len(),
+        events: order.len(),
+        order,
+        rooms: certs.iter().map(|(w, c)| (*w, c.room)).collect(),
+        seats: certs.iter().map(|(w, c)| seat_report(*w, c)).collect(),
+    })
+}
+
+/// Checks that each seat was certified by a key with an inception, and
+/// that its certificate record stands in that key's device seat.
+fn seats_counted(
+    certs: &BTreeMap<WriterId, SeatCertificate>,
+    inceptions: &BTreeMap<Digest, Inception>,
+    recorded: &BTreeSet<WriterId>,
+) -> Result<(), VerifyError> {
+    for (writer, cert) in certs {
         let seat_error = |reason: &str| VerifyError::Seat {
             writer: *writer,
             reason: reason.to_owned(),
@@ -273,32 +298,20 @@ pub fn verify(store: &Store, node_key: &PublicKey) -> Result<Report, VerifyError
             ));
         }
     }
-    for (writer, log) in &held {
-        let device = certs
-            .get(writer)
-            .is_some_and(|c| c.seat_kind == SeatKind::Device);
-        events(log, device, &full)?;
-    }
-    let order = chain::causal_order(&record).map_err(broken)?;
 
-    Ok(Report {
-        writers: writers.len(),
-        events: order.len(),
-        order,
-        rooms: certs.iter().map(|(w, c)| (*w, c.room)).collect(),
-        seats: certs
-            .iter()
-            .filter(|_| false)
-            .map(|(w, c)| SeatReport {
-                writer: *w,
-                seat: c.seat_id(),
-                room: c.room,
-                seat_kind: c.seat_kind,
-                ingest_seat: c.ingest_seat,
-                certificate: c.to_value(),
-            })
-            .collect(),
-    })
+    Ok(())
+}
+
+/// The report of `writer`'s seat, read from its certificate `cert`.
+fn seat_report(writer: WriterId, cert: &SeatCertificate) -> SeatReport {
+    SeatReport {
+        writer,
+        seat: cert.seat_id(),
+        room: cert.room,
+        seat_kind: cert.seat_kind,
+        ingest_seat: cert.ingest_seat,
+        certificate: cert.to_value(),
+    }
 }
 
 /// Whether a stored event's content opens its commitment. Content

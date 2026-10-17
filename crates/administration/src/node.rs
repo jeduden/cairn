@@ -218,7 +218,7 @@ impl Node {
         seat: &SeatKey,
         entropy: &mut dyn Entropy,
     ) -> Result<StoredSeat, AdminError> {
-        let cert = SeatCertificate::issue(&self.device, seat, self.room, SeatKind::Run, true)?;
+        let cert = SeatCertificate::issue(&self.device, seat, self.room, SeatKind::Run, false)?;
         self.record_seat(store, &cert, entropy)
     }
 

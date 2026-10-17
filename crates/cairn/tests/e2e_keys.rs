@@ -106,14 +106,21 @@ fn keys_stay_in_the_key_store_and_a_changed_node_identity_starts_a_new_device_se
     assert_eq!(second["room"], first["room"]);
     let status = json(home, &["status"]);
     assert_eq!(status["counters"]["node_identity_changed"]["total"], 1);
-    let verified = json(home, &["verify"]);
+    two_device_seats_in_one_room(&json(home, &["verify"]), &first["room"]);
+    no_seed_outside_its_key_file(home);
+}
+
+/// Checks that `verified`, `cairn verify --json`'s report, names two
+/// device seats in `room` and two ingest seats the two device keys
+/// certified, each seat's kind read from its certificate.
+fn two_device_seats_in_one_room(verified: &Value, room: &Value) {
     let seats = verified["seats"].as_array().unwrap();
     let devices: Vec<&Value> = seats
         .iter()
         .filter(|s| s["seat_kind"] == "device")
         .collect();
     assert_eq!(devices.len(), 2);
-    assert!(devices.iter().all(|s| s["room"] == first["room"]));
+    assert!(devices.iter().all(|s| s["room"] == *room));
     let ingests: Vec<&Value> = seats.iter().filter(|s| s["ingest_seat"] == true).collect();
     assert_eq!(ingests.len(), 2);
     // The two ingest seats were certified by different device keys: the
@@ -126,9 +133,11 @@ fn keys_stay_in_the_key_store_and_a_changed_node_identity_starts_a_new_device_se
         assert_eq!(seat["seat_kind"], seat["certificate"]["seat_kind"]);
         assert_eq!(seat["ingest_seat"], seat["certificate"]["ingest_seat"]);
     }
+}
 
-    // No key's seed is anywhere but its key file: not in the store, a
-    // log, the audit log or any output.
+/// Checks that no key's seed is anywhere but its key file: not in the
+/// store, a log, the audit log or any output.
+fn no_seed_outside_its_key_file(home: &Path) {
     let keys = files(&home.join(".cairn/keys"));
     assert!(
         keys.len() >= 4,

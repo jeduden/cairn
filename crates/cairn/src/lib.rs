@@ -1110,7 +1110,7 @@ impl Status {
         if let Some(why) = &self.managed_policy {
             lines.push(format!("managed policy refused: {why}"));
         }
-        let _ = self.keys.describe();
+        lines.push(format!("keys: {}", self.keys.describe()));
 
         lines.join("\n")
     }
