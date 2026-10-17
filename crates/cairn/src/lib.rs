@@ -20,7 +20,7 @@ use administration::act as act_record;
 use administration::home::Home;
 use administration::node::Node;
 use administration::node_identity::IdentitySource;
-use administration::verify::{VerifyError, verify};
+use administration::verify::{Report, VerifyError, verify};
 use allowed_root::{Access, AllowedPath, AllowedRoots};
 use audit::AuditError;
 use audit::counters::{Counts, counts};
@@ -29,9 +29,8 @@ use audit::log::Log;
 use configuration::source::OsUser;
 use configuration::{Loaded, SettingsLayer};
 use hook::{Failure, Hook};
-use key::key_store::{Entry as KeyEntry, KeyStoreKind};
+use key::key_store::KeyStoreKind;
 use key::random::OsEntropy;
-use key::signing::DeviceKey;
 use redaction::Redactor;
 use serde_json::{Value, json};
 use store::Store;
@@ -849,41 +848,19 @@ fn verify_command(
         Ok(store) => store,
         Err(e) => return store_failed("verify", &e, stderr),
     };
-    let device = match DeviceKey::fetch(home.key_store().as_ref(), &KeyEntry::device()) {
-        Ok(device) => device.public(),
+    let verified = match verify_record(&home, &store) {
+        Ok(verified) => verified,
         Err(e) => return failed("verify", &e, stderr),
     };
-    let checked = match verify(&store, &device) {
-        Ok(r) => Log::new(home.audit()).verify().map(|a| (r, a)).map_err(Err),
+    let checked = match verified {
+        Ok((r, staged)) => Log::new(home.audit())
+            .verify()
+            .map(|a| (r, staged, a))
+            .map_err(Err),
         Err(e) => Err(Ok(e)),
     };
     let (code, line) = match checked {
-        Ok((r, a)) if as_json => (
-            EXIT_OK,
-            json!({
-                "integrity": "unsigned",
-                "writers": r.writers,
-                "events": r.events,
-                "order": r.full_order(),
-                "seats": seats_json(&r.seats),
-                "open_segments": segments::open_json(&r.open_segments),
-                "audit": {"files": a.files, "entries": a.entries},
-                "broken": null,
-            })
-            .to_string(),
-        ),
-        Ok((r, a)) => (
-            EXIT_OK,
-            format!(
-                "checked {} writers and {} events: every chain, commitment and seat certificate \
-                 holds; integrity unsigned, as no log is signed yet; the audit log's chain holds \
-                 over {} entries{}",
-                r.writers,
-                r.events,
-                a.entries,
-                open_text(&r.open_segments)
-            ),
-        ),
+        Ok((r, staged, a)) => (EXIT_OK, verified_line(as_json, &r, staged, &a)),
         Err(Ok(VerifyError::Store(e))) => return failed("verify", &e, stderr),
         Err(Err(e @ AuditError::Broken { .. })) => {
             broken_json(as_json, "audit", None, &e.to_string(), stderr)
@@ -905,6 +882,64 @@ fn verify_command(
         EXIT_OK => code,
         other => other,
     }
+}
+
+/// The record in `store`, verified against the device key `home` keeps,
+/// or against the key an interrupted first start staged, which its next
+/// start places, with whether it was staged; an empty record while that
+/// start has recorded nothing yet, as a crash can leave a home (ENG-06).
+fn verify_record(
+    home: &Home,
+    store: &Store,
+) -> Result<Result<(Report, bool), VerifyError>, administration::AdminError> {
+    Ok(match administration::node::verifying_key(home, store)? {
+        Some((key, staged)) => verify(store, &key).map(|r| (r, staged)),
+        None => Ok((
+            Report {
+                writers: 0,
+                events: 0,
+                order: Vec::new(),
+                rooms: BTreeMap::new(),
+                seats: Vec::new(),
+                open_segments: Vec::new(),
+            },
+            true,
+        )),
+    })
+}
+
+/// What `cairn verify` says of a record that verified, `staged` while
+/// the node's first start is still to finish, as JSON when asked.
+fn verified_line(as_json: bool, r: &Report, staged: bool, a: &audit::log::Checked) -> String {
+    if as_json {
+        return json!({
+            "integrity": "unsigned",
+            "writers": r.writers,
+            "events": r.events,
+            "order": r.full_order(),
+            "seats": seats_json(&r.seats),
+            "open_segments": segments::open_json(&r.open_segments),
+            "staged": staged,
+            "audit": {"files": a.files, "entries": a.entries},
+            "broken": null,
+        })
+        .to_string();
+    }
+    let staged = if staged {
+        "; the node's first start was interrupted, and its next start finishes it"
+    } else {
+        ""
+    };
+
+    format!(
+        "checked {} writers and {} events: every chain, commitment and seat certificate \
+         holds; integrity unsigned, as no log is signed yet; the audit log's chain holds \
+         over {} entries{}{staged}",
+        r.writers,
+        r.events,
+        a.entries,
+        open_text(&r.open_segments)
+    )
 }
 
 /// What `cairn verify` adds for writer chains that ended without a
