@@ -472,18 +472,17 @@ fn genesis(
         .ok_or(VerifyError::Genesis(
             "no device seat of this node's device key holds its inception",
         ))?;
-    for _ in 0..inceptions.len() {
-        let Some((replaced, _)) = inception.replaces else {
-            break;
-        };
-        inception = inceptions.get(&replaced).ok_or(VerifyError::Genesis(
-            "this node's device key leads back to no genesis",
-        ))?;
-    }
-    if inception.replaces.is_some() {
-        return Err(VerifyError::Genesis(
-            "this node's device key leads back to no genesis",
-        ));
+    // Every replaced key has an inception (`inceptions` checked it), so
+    // only a cycle runs past the number of inceptions.
+    let mut steps = 0;
+    while let Some((replaced, _)) = inception.replaces {
+        steps += 1;
+        inception = inceptions
+            .get(&replaced)
+            .filter(|_| steps <= inceptions.len())
+            .ok_or(VerifyError::Genesis(
+                "this node's device key leads back to no genesis",
+            ))?;
     }
     let log = held.get(&inception.writer).map_or(&[][..], Vec::as_slice);
     let cert = certs.get(&inception.writer);

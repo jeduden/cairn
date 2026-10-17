@@ -110,6 +110,18 @@ impl std::error::Error for AdminError {
     }
 }
 
+impl AdminError {
+    /// The failure to read, write or remove the file or directory at
+    /// `path`.
+    #[must_use]
+    pub fn io(path: &std::path::Path, source: std::io::Error) -> Self {
+        Self::Io {
+            path: path.to_path_buf(),
+            source,
+        }
+    }
+}
+
 impl From<key::KeyError> for AdminError {
     fn from(e: key::KeyError) -> Self {
         Self::Key(e)

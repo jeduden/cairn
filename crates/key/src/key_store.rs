@@ -189,15 +189,16 @@ fn missing_file(entry: &Entry, e: KeyError) -> KeyError {
 /// Writes `secret` to a new file at `path` that only its owner reads,
 /// making its directory, readable only by its owner, first.
 fn write_kept(path: &Path, secret: &str) -> Result<(), KeyError> {
-    if let Some(dir) = path.parent() {
-        let mut builder = std::fs::DirBuilder::new();
-        builder.recursive(true);
-        #[cfg(unix)]
-        std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
-        builder.create(dir).map_err(|source| KeyError::File {
+    let dir = path.parent().unwrap_or(path);
+    let mut builder = std::fs::DirBuilder::new();
+    builder.recursive(true);
+    #[cfg(unix)]
+    std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
+    if let Err(source) = builder.create(dir) {
+        return Err(KeyError::File {
             path: dir.to_path_buf(),
             source,
-        })?;
+        });
     }
     write_secret(path, secret)
 }

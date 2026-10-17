@@ -319,3 +319,35 @@ fn only_an_even_run_of_lowercase_hex_digits_unhexes() {
     assert_eq!(unhex_vec("zz"), None);
     assert_eq!(unhex_vec("éé"), None);
 }
+
+#[test]
+fn a_key_store_whose_directory_cannot_be_made_keeps_nothing() {
+    let dir = TempDir::new().unwrap();
+    fs::write(dir.path().join("keys"), "").unwrap();
+    let keys = store(&dir);
+
+    let err = keys.put(&Entry::device(), "00").unwrap_err();
+
+    assert!(matches!(err, KeyError::File { .. }), "{err}");
+    assert!(err.is_unavailable());
+}
+
+#[test]
+fn only_a_store_that_cannot_be_read_is_unavailable() {
+    let missing = KeyError::Missing {
+        entry: "device".into(),
+    };
+    let locked = KeyError::Unavailable {
+        entry: "device".into(),
+        reason: "locked".into(),
+    };
+    let loose = KeyError::Permissions {
+        path: "/k".into(),
+        mode: 0o644,
+    };
+
+    assert!(!missing.is_unavailable());
+    assert!(locked.is_unavailable());
+    assert!(loose.is_unavailable());
+    assert!(!KeyError::Malformed("x".into()).is_unavailable());
+}

@@ -27,7 +27,6 @@
 //! genesis (PRV-12).
 
 use std::fs;
-use std::path::Path;
 
 use key::KeyError;
 use key::certificate::{SeatCertificate, SeatKind};
@@ -140,10 +139,8 @@ impl Node {
                 continue;
             }
             let first = store.event(Address::new(seat.writer, Seq::FIRST))?;
-            let second = match Seq::FIRST.next() {
-                Some(seq) => store.event(Address::new(seat.writer, seq))?,
-                None => None,
-            };
+            let second_seq = Seq::FIRST.next().unwrap_or(Seq::FIRST);
+            let second = store.event(Address::new(seat.writer, second_seq))?;
             if holds_inception(first.as_ref(), second.as_ref(), &key) {
                 return Ok(Self {
                     device,
@@ -308,7 +305,7 @@ impl Staged {
             None => CHANGE.to_owned(),
         };
         write_secret(&home.staged(), &text)?;
-        sync_directory(&home.staged()).map_err(|source| io(&home.staged(), source))
+        sync_directory(&home.staged()).map_err(|source| AdminError::io(&home.staged(), source))
     }
 
     /// What `home` staged, none when it staged nothing.
@@ -367,8 +364,8 @@ impl Staged {
             keys.remove(&entry)?;
         }
         let path = home.staged();
-        fs::remove_file(&path).map_err(|source| io(&path, source))?;
-        sync_directory(&path).map_err(|source| io(&path, source))?;
+        fs::remove_file(&path).map_err(|source| AdminError::io(&path, source))?;
+        sync_directory(&path).map_err(|source| AdminError::io(&path, source))?;
 
         Ok(change)
     }
@@ -594,14 +591,6 @@ fn new_event(key: [u8; 32], kind: EventKind, provenance: Provenance, content: Va
         provenance,
         content,
         commitment_key: CommitmentKey::from_bytes(key),
-    }
-}
-
-/// The failure to write or remove the file at `path`.
-fn io(path: &Path, source: std::io::Error) -> AdminError {
-    AdminError::Io {
-        path: path.to_path_buf(),
-        source,
     }
 }
 

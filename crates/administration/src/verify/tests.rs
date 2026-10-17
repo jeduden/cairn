@@ -712,6 +712,15 @@ fn forged_change(
     change: impl FnOnce(&DeviceKey) -> NodeIdentityChange,
 ) -> (DeviceKey, Address) {
     let device = DeviceKey::mint(&mut OsEntropy).unwrap();
+    forged_change_of(f, device, change)
+}
+
+/// [`forged_change`] for the device key `device`.
+fn forged_change_of(
+    f: &mut Fixture,
+    device: DeviceKey,
+    change: impl FnOnce(&DeviceKey) -> NodeIdentityChange,
+) -> (DeviceKey, Address) {
     let recovery = RecoveryKey::mint(&mut OsEntropy).unwrap();
     let seat = SeatKey::mint(&mut OsEntropy).unwrap();
     let cert = SeatCertificate::issue(
@@ -881,5 +890,33 @@ fn a_certificate_record_naming_a_seat_another_key_certified_is_named() {
             "the certificate record at {} names a seat this node does not hold",
             at.full(&f.node.personal_room())
         )
+    );
+}
+
+#[test]
+fn node_identity_changes_that_replace_each_other_lead_back_to_no_genesis() {
+    let mut f = fixture();
+    let writer = f.node.device_writer();
+    let head = f.store.log(writer).unwrap().last().unwrap().link.clone();
+    let head = SeenHead::new(head.header.address, head.hash);
+    let a = DeviceKey::mint(&mut OsEntropy).unwrap();
+    let b = DeviceKey::mint(&mut OsEntropy).unwrap();
+    let (fa, fb) = (a.public().fingerprint(), b.public().fingerprint());
+    let (a, _) = forged_change_of(&mut f, a, |_| NodeIdentityChange {
+        replaces: fb,
+        key: fa,
+        chain_head: head,
+    });
+    forged_change_of(&mut f, b, |_| NodeIdentityChange {
+        replaces: fa,
+        key: fb,
+        chain_head: head,
+    });
+
+    let err = verify(&f.store, &a.public()).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        "this node's device key leads back to no genesis"
     );
 }

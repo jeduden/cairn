@@ -57,6 +57,9 @@ fn each_kind_and_counter_has_its_name() {
             Counter::IngestRefusedSettingsInvalid,
             "ingest_refused_settings_invalid",
         ),
+        (Counter::NodeIdentityChanged, "node_identity_changed"),
+        (Counter::DeviceKeyMissing, "device_key_missing"),
+        (Counter::KeyStoreUnavailable, "key_store_unavailable"),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

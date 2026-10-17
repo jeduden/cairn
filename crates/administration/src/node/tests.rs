@@ -692,3 +692,43 @@ fn an_unsupported_node_identity_is_never_found_changed() {
     assert_eq!(node.device_writer(), old.device_writer());
     assert!(!home.node_identity().exists());
 }
+
+#[test]
+fn a_start_interrupted_after_placing_every_key_clears_its_staging() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let keys = files(&home);
+    let mut store = Store::open(&home.store()).unwrap();
+    let staged = Staged::mint(&mut OsEntropy, true).unwrap();
+    staged.stage(&home, &keys).unwrap();
+    let record = staged
+        .record_genesis(&mut store, &mut OsEntropy, staged.nonce.unwrap())
+        .unwrap();
+    staged.place(&keys, &record).unwrap();
+
+    let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+
+    assert_eq!(node.device().public(), staged.device.public());
+    assert!(!home.staged().exists());
+}
+
+#[test]
+fn a_seat_entry_that_cannot_be_read_stops_the_placing() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let keys = files(&home);
+    let mut store = Store::open(&home.store()).unwrap();
+    let staged = Staged::mint(&mut OsEntropy, true).unwrap();
+    staged.stage(&home, &keys).unwrap();
+    let record = staged
+        .record_genesis(&mut store, &mut OsEntropy, staged.nonce.unwrap())
+        .unwrap();
+    fs::create_dir(keys.path(&Entry::seat(record.seat))).unwrap();
+
+    let err = Node::open(&home, &mut store, &mut OsEntropy).unwrap_err();
+
+    match err {
+        AdminError::Key(e) => assert!(e.is_unavailable(), "{e}"),
+        other => panic!("want a key error, got {other}"),
+    }
+}

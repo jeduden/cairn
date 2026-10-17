@@ -8,7 +8,7 @@
 //! phase 5).
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use key::file::{staging, sync_directory, write_secret};
 use record::digest::Digest;
@@ -30,17 +30,21 @@ pub enum IdentitySource {
 }
 
 impl IdentitySource {
-    /// This OS's source.
+    /// This OS's source: the machine id on Linux.
+    #[cfg(target_os = "linux")]
     #[must_use]
     pub fn platform() -> Self {
-        if cfg!(target_os = "linux") {
-            Self::Files(vec![
-                PathBuf::from("/etc/machine-id"),
-                PathBuf::from("/var/lib/dbus/machine-id"),
-            ])
-        } else {
-            Self::Unsupported
-        }
+        Self::Files(vec![
+            PathBuf::from("/etc/machine-id"),
+            PathBuf::from("/var/lib/dbus/machine-id"),
+        ])
+    }
+
+    /// This OS's source: none yet.
+    #[cfg(not(target_os = "linux"))]
+    #[must_use]
+    pub fn platform() -> Self {
+        Self::Unsupported
     }
 
     /// The value the first file that holds one holds, trimmed; none when
@@ -96,7 +100,7 @@ pub fn changed(home: &Home) -> Result<Option<Digest>, AdminError> {
             record(home, current)?;
             return Ok(None);
         }
-        recorded => recorded.map_err(|source| io(&path, source))?,
+        recorded => recorded.map_err(|source| AdminError::io(&path, source))?,
     };
 
     Ok((recorded.trim() != current.to_hex()).then_some(current))
@@ -112,20 +116,14 @@ pub fn record(home: &Home, current: Digest) -> Result<(), AdminError> {
     let path = home.node_identity();
     let temporary = staging(&path);
     match fs::remove_file(&temporary) {
-        Err(e) if e.kind() != std::io::ErrorKind::NotFound => return Err(io(&temporary, e)),
+        Err(e) if e.kind() != std::io::ErrorKind::NotFound => {
+            return Err(AdminError::io(&temporary, e));
+        }
         _ => {}
     }
     write_secret(&temporary, &current.to_hex())?;
-    fs::rename(&temporary, &path).map_err(|source| io(&path, source))?;
-    sync_directory(&path).map_err(|source| io(&path, source))
-}
-
-/// The failure to read or write the file at `path`.
-fn io(path: &Path, source: std::io::Error) -> AdminError {
-    AdminError::Io {
-        path: path.to_path_buf(),
-        source,
-    }
+    fs::rename(&temporary, &path).map_err(|source| AdminError::io(&path, source))?;
+    sync_directory(&path).map_err(|source| AdminError::io(&path, source))
 }
 
 #[cfg(test)]

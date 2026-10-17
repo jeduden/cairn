@@ -1885,7 +1885,10 @@ fn ingest_says_when_it_cannot_audit_a_path_outside_the_roots() {
 fn audit_text(p: &Process) -> String {
     let dir = p.cairn_home().join("audit");
     let mut text = String::new();
-    for entry in std::fs::read_dir(dir).unwrap() {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return text;
+    };
+    for entry in entries {
         text.push_str(&std::fs::read_to_string(entry.unwrap().path()).unwrap());
     }
     text
@@ -1973,4 +1976,22 @@ fn a_principal_act_audits_a_node_identity_change_and_counts_no_act_from_before_i
     let store = Store::open(&home.store()).unwrap();
     let node = Node::find(&home, &store).unwrap();
     assert_eq!(act_record::acts(&store, &node).unwrap().len(), 1);
+}
+
+#[test]
+fn ingest_fails_on_a_store_the_node_cannot_be_found_in_and_audits_no_key_failure() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute("UPDATE seats SET certificate = '{'", [])
+        .unwrap();
+    let before = audit_text(&p);
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript("b\n")], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE, "{err}");
+    let after = audit_text(&p);
+    assert!(!after.contains("key store"), "{after}");
+    assert!(!after.contains("device key missing"), "{after}");
+    assert!(after.len() >= before.len());
 }
