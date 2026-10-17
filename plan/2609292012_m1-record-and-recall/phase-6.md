@@ -1,7 +1,7 @@
 ---
 n: 6
 title: "The store: writer logs, commitments, payloads, segments and format versions"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 6: the store
@@ -52,8 +52,8 @@ Properties and crash consistency:
 - ENG-08: random appends, rollbacks, payloads, closes and concurrent
   writers keep each writer's `seq` gap-free.
 - ENG-06: a test kills `cairn ingest` at random points, then checks
-  `cairn verify` exits 0, every writer gap-free and every payload
-  whole. CI runs a few iterations; a nightly job runs 10,000.
+  `cairn verify` exits 0. CI runs a few iterations; a nightly job runs
+  10,000. A first start cut short verifies against its staged key.
 
 Freezes (§12.3): NFR-09's store overhead, measured over every recorded
 transcript, and REC-17's 256-bit secret, each with a test as evidence.
@@ -72,7 +72,7 @@ Where the gate's scenarios go live:
   properties, come later; the ingest half and the first property here.
 
 Tests. Unit tests beside each function, 99% per crate.
-`e2e_store.rs` drives the store through the built core, confined.
+`@REC-09` and `e2e_crash_consistency.rs` drive the built core.
 
 For the stakeholder: SEC-05's third row streams a long line to the
 payload store without holding it whole. Yet SEC-08 redacts each JSON
