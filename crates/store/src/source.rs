@@ -49,7 +49,7 @@ CREATE TABLE ingested_runs (
     harness_session TEXT NOT NULL,
     agent_id TEXT
 ) STRICT;
-CREATE UNIQUE INDEX ingested_runs_agent ON ingested_runs (path, ifnull(agent_id, ''));
+CREATE INDEX ingested_runs_agent ON ingested_runs (path, ifnull(agent_id, ''));
 ";
 
 /// The columns a transcript source is read from.

@@ -68,6 +68,10 @@ fn a_source_starts_at_generation_1_and_each_new_generation_counts_on() {
     assert_eq!(second.generation, 2);
     assert_eq!(other.generation, 1);
     assert_eq!(store.source("/t/a.jsonl").unwrap(), Some(second.clone()));
+    assert_eq!(
+        store.generations("/t/a.jsonl").unwrap(),
+        vec![first.clone(), second.clone()]
+    );
     assert_eq!(store.sources().unwrap(), vec![second, other]);
 }
 
@@ -199,7 +203,7 @@ fn a_line_owner_is_the_first_event_of_another_source_in_the_directory() {
 }
 
 #[test]
-fn an_ingested_run_is_kept_once_per_source_and_agent_id() {
+fn the_ingested_run_of_a_source_and_agent_id_is_the_one_kept_last() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
     let main = IngestedRun {
@@ -216,22 +220,24 @@ fn an_ingested_run_is_kept_once_per_source_and_agent_id() {
 
     store.add_run(&main).unwrap();
     store.add_run(&sub).unwrap();
-    let again = store.add_run(&IngestedRun {
+    let twice = store.add_run(&main);
+    let later = IngestedRun {
         writer: writer(3),
         ..main.clone()
-    });
+    };
+    store.add_run(&later).unwrap();
 
-    assert!(again.is_err());
+    assert!(twice.is_err());
     assert_eq!(
         store.ingested_run("/t/s.jsonl", None).unwrap(),
-        Some(main.clone())
+        Some(later.clone())
     );
     assert_eq!(
         store.ingested_run("/t/s.jsonl", Some("a1")).unwrap(),
         Some(sub.clone())
     );
     assert_eq!(store.ingested_run("/t/s.jsonl", Some("a2")).unwrap(), None);
-    assert_eq!(store.ingested_runs().unwrap(), vec![main, sub]);
+    assert_eq!(store.ingested_runs().unwrap(), vec![main, sub, later]);
 }
 
 #[test]

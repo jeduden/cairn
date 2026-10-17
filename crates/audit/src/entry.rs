@@ -106,6 +106,24 @@ pub enum Counter {
     DeviceKeyMissing,
     /// The key store is locked or cannot be read (PRV-12).
     KeyStoreUnavailable,
+    /// A transcript source shrank or its consumed prefix changed, and a
+    /// new transcript generation started (REC-07).
+    NewTranscriptGeneration,
+    /// A transcript line repeated another source's `uuid` with other
+    /// content, and was recorded as its own event (REC-04).
+    RepeatConflicts,
+    /// No fork observation named the owner of repeated lines, so the run
+    /// that first recorded them owns them (REC-04).
+    RepeatOwnerChosen,
+    /// An ingest marker began to hold a harness fork's repeated lines
+    /// until their owner's transcript is ingested (REC-04).
+    RepeatHeld,
+    /// Held repeated lines were released into their own run's writer,
+    /// after 30 s or once their owner's transcript was gone (REC-04).
+    RepeatReleased,
+    /// A transcript source disappeared before it was fully ingested
+    /// (REC-08).
+    TranscriptSourceLost,
 }
 
 impl Counter {
@@ -134,6 +152,12 @@ impl Counter {
             Self::NodeIdentityChanged => "node_identity_changed",
             Self::DeviceKeyMissing => "device_key_missing",
             Self::KeyStoreUnavailable => "key_store_unavailable",
+            Self::NewTranscriptGeneration => "new_transcript_generation",
+            Self::RepeatConflicts => "repeat_conflicts",
+            Self::RepeatOwnerChosen => "repeat_owner_chosen",
+            Self::RepeatHeld => "repeat_held",
+            Self::RepeatReleased => "repeat_released",
+            Self::TranscriptSourceLost => "transcript_source_lost",
         }
     }
 }

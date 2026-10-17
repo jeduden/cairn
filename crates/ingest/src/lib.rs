@@ -1,53 +1,93 @@
-//! `cairn ingest` (REC-01's first step): reads one transcript into the
-//! record. Each `cairn ingest` starts an ingest seat in the personal room,
-//! certified by the node's device key, and appends every line of the
-//! transcript to that seat's writer as one event, its content the line's
-//! number and redacted text. The transcript parser classes each line
-//! from its structure (PRV-08): a `transcript_line` of one provenance
-//! class, or, for a line it cannot parse, an `unparsed_line` of
-//! provenance `unparsed` (REC-05). A line that drifts from its recorded
-//! shape is kept whole as `harness_text` (REC-26); each unparsed line
-//! and each drift is reported for the caller to audit and count. No
-//! hook observation records a harness session yet, so no line is
-//! `user`; the one ingest seat stands in for all of the transcript's
-//! runs, which phase 8 splits it by.
+//! `cairn ingest` (REC-01 to REC-04, REC-07, REC-08, REC-22): reads a
+//! transcript source into the record, incrementally and idempotently.
 //!
-//! The transcript is read, every line redacted (SEC-08) and every
-//! commitment key drawn before anything is recorded, so a transcript
-//! that cannot be read records nothing, and no secret the redactor
-//! matches reaches the store. The harness account identifiers are
-//! learnt from the whole transcript first, so a line before the one
-//! that names them is redacted too.
+//! - Each transcript is split by run (REC-02): each line belongs to the
+//!   run of the harness's agent id, a line carrying none to the run of
+//!   the transcript's first entry. Each run is an ingested run with its
+//!   own ingest seat in the personal room, certified by the node's
+//!   device key, so its events derive origin `ingested` and stay
+//!   untrusted (REC-22). A later ingest of the same transcript source
+//!   appends to the same writer.
+//! - Each transcript source keeps an ingest position (REC-03), which
+//!   moves in the transaction that appends the lines it covers; a
+//!   source that shrank, or whose consumed prefix changed, starts a new
+//!   transcript generation (REC-07), every earlier event kept.
+//! - A line a harness fork repeats is recorded once (REC-04, [`repeat`]).
+//! - The transcript parser classes each line from its structure
+//!   (PRV-08): a `transcript_line` of one provenance class, or an
+//!   `unparsed_line` of provenance `unparsed` (REC-05); a line that
+//!   drifts from its recorded shape is kept whole as `harness_text`
+//!   (REC-26). No hook observation records a harness session yet, so no
+//!   line is `user`.
+//!
+//! The transcript is read before anything is recorded, so a transcript
+//! that cannot be read records nothing; every line is redacted (SEC-08)
+//! before it is written. The harness account identifiers are learnt
+//! from the whole transcript first, so a line before the one that names
+//! them is redacted too.
 
+pub mod read;
+mod reading;
+pub mod repeat;
+pub mod run;
+
+use std::collections::BTreeSet;
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use administration::AdminError;
 use administration::home::Home;
-use administration::node::Node;
 use key::KeyError;
-use key::random::{Entropy, draw};
-use provenance::{Classified, Classifier, Session};
-use record::commitment::CommitmentKey;
-use record::event::{EventKind, Provenance};
+use key::random::Entropy;
 use record::id::{RoomId, SeatId, WriterId};
 use redaction::Redactor;
-use redaction::account::HarnessAccountIdentifiers;
 use serde_json::{Value, json};
-use store::{NewEvent, Store, StoreError};
-use transcript::shape::Shapes;
+use store::StoreError;
+
+/// One run an ingest read lines of (REC-02).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RunReport {
+    /// Its ingest seat's writer.
+    pub writer: WriterId,
+    pub seat: SeatId,
+    /// The harness's agent id; none for a harness session's main run.
+    pub agent_id: Option<String>,
+    /// The run its parent link ties a subagent's run to: the main run of
+    /// its harness session, when that is known.
+    pub parent: Option<WriterId>,
+    /// How many events this ingest appended to it.
+    pub events: usize,
+}
 
 /// What one ingest recorded.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ingested {
-    /// The ingest seat's writer.
+    /// The writer of the transcript's own run: that of its first entry.
     pub writer: WriterId,
     pub seat: SeatId,
-    /// The personal room the seat is in.
+    /// The personal room its runs' seats are in.
     pub room: RoomId,
-    /// How many events it appended.
+    /// Each run this ingest appended to, the transcript's own first.
+    pub runs: Vec<RunReport>,
+    /// How many events it appended, repeat references among them.
     pub events: usize,
+    /// The transcript generation it read (REC-07).
+    pub generation: u64,
+    /// Whether it started that generation over an earlier one.
+    pub new_generation: bool,
+    /// Whether an ingest marker now holds repeated lines (REC-04).
+    pub held: bool,
+    /// Whether that hold began with this ingest.
+    pub hold_started: bool,
+    /// How many lines a hold released into their own run's writer.
+    pub released: usize,
+    /// How many repeat references it recorded.
+    pub references: usize,
+    /// How many lines repeat a `uuid` with other content.
+    pub conflicts: usize,
+    /// How many repeat owner events it recorded in the device seat.
+    pub owners_chosen: usize,
     /// The rule of each redaction made, line by line.
     pub redactions: Vec<String>,
     /// How many lines it stored as `unparsed` events (REC-05).
@@ -59,6 +99,9 @@ pub struct Ingested {
     /// harness account identifiers it taught among the rules: the path
     /// as it may be logged (SEC-08).
     pub redacted_path: String,
+    /// The transcript's file name without its extension, redacted the
+    /// same way: what an audit entry names it by.
+    pub name: String,
 }
 
 /// Why an ingest recorded nothing, or stopped part way.
@@ -86,8 +129,9 @@ pub enum IngestError {
     Admin(AdminError),
     /// The store failed.
     Store(StoreError),
-    /// The store failed after `landed` of the transcript's `lines`
-    /// lines were recorded in `writer`'s log; those stay.
+    /// The store failed after `landed` of the `lines` lines read were
+    /// recorded, the last in `writer`'s log; those stay, and the ingest
+    /// position stands after them.
     Partial {
         writer: WriterId,
         landed: usize,
@@ -137,6 +181,12 @@ impl std::error::Error for IngestError {
     }
 }
 
+impl From<StoreError> for IngestError {
+    fn from(e: StoreError) -> Self {
+        Self::Store(e)
+    }
+}
+
 /// The payload settings an ingest writes under (REC-09).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PayloadSettings {
@@ -153,8 +203,21 @@ impl Default for PayloadSettings {
     }
 }
 
-/// Ingests the transcript at `path` as [`ingest_with`] does, under the
-/// default [`PayloadSettings`].
+/// What an ingest reads beside the transcript: its payload settings,
+/// the harness sessions fork observations name (REC-04), and the time on
+/// its clock, which only holds use.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Inputs {
+    pub payload: PayloadSettings,
+    /// The harness session ids a `SessionStart` hook observation with
+    /// `source` = `fork` names.
+    pub forks: BTreeSet<String>,
+    /// Now, in milliseconds since the Unix epoch.
+    pub now_ms: u64,
+}
+
+/// Ingests the transcript at `path` as [`ingest_with`] does, with the
+/// default [`Inputs`].
 ///
 /// # Errors
 ///
@@ -165,15 +228,16 @@ pub fn ingest_path(
     redactor: &Redactor,
     entropy: &mut dyn Entropy,
 ) -> Result<Ingested, IngestError> {
-    ingest_with(home, path, redactor, &PayloadSettings::default(), entropy)
+    ingest_with(home, path, redactor, &Inputs::default(), entropy)
 }
 
-/// Ingests the transcript at `path` into a new ingest seat of the node
-/// in `home`, starting the node first when it has never started, each
-/// line redacted by `redactor` and the harness account identifiers the
-/// transcript names. The seat's writer closes a segment at each turn
-/// end and subagent end the transcript records, and at its end
-/// (REC-19).
+/// Ingests the transcript source at `path`, a path resolved within the
+/// allowed roots, into the node in `home`, starting the node first when
+/// it has never started: the lines past its ingest position, each
+/// redacted by `redactor` and the harness account identifiers the
+/// transcript names, each appended to its run's writer. A writer closes
+/// a segment at each turn end and subagent end the transcript records,
+/// and at the end of what this ingest appends to it (REC-19).
 ///
 /// # Errors
 ///
@@ -184,161 +248,19 @@ pub fn ingest_with(
     home: &Home,
     path: &Path,
     redactor: &Redactor,
-    payload: &PayloadSettings,
+    inputs: &Inputs,
     entropy: &mut dyn Entropy,
 ) -> Result<Ingested, IngestError> {
-    let bytes = fs::read(path).map_err(|source| IngestError::Read {
+    let bytes = read::transcript(path).map_err(|source| IngestError::Read {
         path: path.to_path_buf(),
         source,
     })?;
     let text = String::from_utf8(bytes).map_err(|_| IngestError::NotUtf8(path.to_path_buf()))?;
-    let lines = lines(&text);
-    if lines.is_empty() {
+    if text.is_empty() {
         return Err(IngestError::Empty(path.to_path_buf()));
     }
-    let mut ids = HarnessAccountIdentifiers::default();
-    lines.iter().for_each(|l| ids.learn(l));
-    let redactor = redactor
-        .with_identifiers(&ids)
-        .map_err(IngestError::Redaction)?;
-    let Prepared {
-        new_events,
-        ends,
-        redactions,
-        unparsed,
-        drifts,
-    } = prepare(&lines, &redactor, entropy)?;
-    home.create().map_err(IngestError::Admin)?;
-    let mut store = Store::open(&home.store())
-        .map_err(IngestError::Store)?
-        .with_payload_threshold(payload.payload_threshold);
-    let node = Node::open(home, &mut store, entropy).map_err(IngestError::Admin)?;
-    let seat = node
-        .certify_ingest_seat(home, &mut store, entropy)
-        .map_err(IngestError::Admin)?;
-    append_segments(&mut store, seat.writer, &new_events, &ends)?;
 
-    Ok(Ingested {
-        writer: seat.writer,
-        seat: seat.seat,
-        room: seat.room,
-        events: new_events.len(),
-        redactions,
-        unparsed,
-        drifts,
-        redacted_path: redactor.redact_text(&path.to_string_lossy()).text,
-    })
-}
-
-/// Appends `new_events` to `writer`, a segment to each run of them that
-/// `ends` closes, each `true` closing the segment after its event, and
-/// the last segment closed at the end. A transaction at a time, so a
-/// failure can say what landed.
-fn append_segments(
-    store: &mut Store,
-    writer: WriterId,
-    new_events: &[NewEvent],
-    ends: &[bool],
-) -> Result<(), IngestError> {
-    let mut landed = 0;
-    for segment in segments(ends) {
-        let chunks: Vec<&[NewEvent]> = new_events[segment].chunks(store::BATCH).collect();
-        for (n, chunk) in chunks.iter().enumerate() {
-            let appended = if n + 1 == chunks.len() {
-                store.append(writer, chunk)
-            } else {
-                store.append_open(writer, chunk)
-            };
-            appended.map_err(|source| IngestError::Partial {
-                writer,
-                landed,
-                lines: new_events.len(),
-                source,
-            })?;
-            landed += chunk.len();
-        }
-    }
-
-    Ok(())
-}
-
-/// The ranges of events each segment holds: each closes after an event
-/// `ends` marks, and the last at the end.
-fn segments(ends: &[bool]) -> Vec<std::ops::Range<usize>> {
-    let mut out = Vec::new();
-    let mut start = 0;
-    for (i, end) in ends.iter().enumerate() {
-        if *end || i + 1 == ends.len() {
-            out.push(start..i + 1);
-            start = i + 1;
-        }
-    }
-
-    out
-}
-
-/// A transcript's events, ready to append, with what reading it found.
-struct Prepared {
-    new_events: Vec<NewEvent>,
-    /// For each event, whether a segment closes after it: a turn end or
-    /// a subagent end (REC-19).
-    ends: Vec<bool>,
-    redactions: Vec<String>,
-    unparsed: usize,
-    drifts: Vec<String>,
-}
-
-/// Classes each of `lines` from its structure, in order, then redacts
-/// it and draws its commitment key. A line is classed from its own
-/// text, so a key name or value redaction would change cannot change
-/// its class; what it stores is the redacted text alone.
-fn prepare(
-    lines: &[&str],
-    redactor: &Redactor,
-    entropy: &mut dyn Entropy,
-) -> Result<Prepared, IngestError> {
-    let shapes = Shapes::supported();
-    // No hook observation records a harness session's ancestry yet
-    // (phase 9), so no line is `user` (PRV-08).
-    let mut classifier = Classifier::new(&shapes, Session::default(), redactor);
-    let describe = |text: &str| redactor.redact_text(text).text;
-    let mut prepared = Prepared {
-        new_events: Vec::with_capacity(lines.len()),
-        ends: Vec::with_capacity(lines.len()),
-        redactions: Vec::new(),
-        unparsed: 0,
-        drifts: Vec::new(),
-    };
-    for (n, line) in (1u64..).zip(lines) {
-        let (kind, provenance, drift) = match classifier.line(line) {
-            Classified::Unparsed(drift) => {
-                prepared.unparsed += 1;
-                (EventKind::UnparsedLine, Provenance::Unparsed, drift)
-            }
-            Classified::Line(provenance, drift) => (EventKind::TranscriptLine, provenance, drift),
-        };
-        prepared.drifts.extend(drift.map(|d| d.describe(&describe)));
-        // Read from the line's own structure, as its class is; the
-        // timestamp only when well formed, so it carries no secret.
-        let parsed: Value = serde_json::from_str(line).unwrap_or(Value::Null);
-        prepared
-            .ends
-            .push(turn_end(&parsed) || provenance == Provenance::SubagentResult);
-        let redacted = redactor.redact_line(line);
-        prepared.new_events.push(NewEvent {
-            kind,
-            provenance,
-            content: content(n, &redacted.text, redacted.rules.len()),
-            commitment_key: CommitmentKey::from_bytes(draw(entropy).map_err(IngestError::Key)?),
-            transcript_timestamp: parsed["timestamp"]
-                .as_str()
-                .filter(|t| well_formed(t))
-                .map(str::to_owned),
-        });
-        prepared.redactions.extend(redacted.rules);
-    }
-
-    Ok(prepared)
+    reading::ingest(home, path, &text, redactor, inputs, entropy)
 }
 
 /// The transcripts under `root`: every `.jsonl` file in it or a
@@ -429,8 +351,8 @@ fn well_formed(text: &str) -> bool {
     date_time && zone
 }
 
-/// An unparsed line's content: its number and redacted text, and how
-/// many redactions the text holds when it holds any.
+/// A line's content: its number and redacted text, and how many
+/// redactions the text holds when it holds any.
 fn content(line: u64, text: &str, redactions: usize) -> Value {
     let mut content = json!({"line": line, "text": text});
     if redactions > 0 {
@@ -438,18 +360,6 @@ fn content(line: u64, text: &str, redactions: usize) -> Value {
     }
 
     content
-}
-
-/// A transcript's lines: its text split at each newline, without the
-/// empty piece after a final one.
-#[must_use]
-pub fn lines(text: &str) -> Vec<&str> {
-    let mut out: Vec<&str> = text.split('\n').collect();
-    if out.last() == Some(&"") {
-        out.pop();
-    }
-
-    out
 }
 
 #[cfg(test)]

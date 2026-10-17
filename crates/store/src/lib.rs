@@ -658,6 +658,16 @@ impl Store {
         .pop())
     }
 
+    /// Every generation of the transcript source at `path`, oldest
+    /// first.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn generations(&self, path: &str) -> Result<Vec<Source>, StoreError> {
+        source::select(&self.conn, "WHERE path = ?1 ORDER BY generation", path)
+    }
+
     /// The newest generation of every transcript source, by path.
     ///
     /// # Errors
@@ -771,18 +781,20 @@ impl Store {
         source::owner(&self.conn, directory, uuid, path)
     }
 
-    /// Keeps `run`, an ingested run (REC-02).
+    /// Keeps `run`, an ingested run (REC-02): for its transcript source
+    /// and agent id, it takes over from any kept before, whose writer
+    /// gets nothing more (REC-19).
     ///
     /// # Errors
     ///
-    /// Fails when SQLite does, or when its transcript source already has
-    /// a run of its agent id.
+    /// Fails when SQLite does, or when its writer is already kept.
     pub fn add_run(&mut self, run: &IngestedRun) -> Result<(), StoreError> {
         source::add_run(&self.conn, run)
     }
 
     /// The ingested run of the transcript source at `path` and the
-    /// harness's agent id `agent_id`, none for the main run.
+    /// harness's agent id `agent_id`, none for the main run: the one
+    /// kept last.
     ///
     /// # Errors
     ///
