@@ -57,6 +57,20 @@ fn each_kind_and_counter_has_its_name() {
             Counter::IngestRefusedSettingsInvalid,
             "ingest_refused_settings_invalid",
         ),
+        (Counter::EventsUnparsed, "events_unparsed"),
+        (Counter::FormatDrift, "format_drift"),
+        (Counter::NodeIdentityChanged, "node_identity_changed"),
+        (Counter::DeviceKeyMissing, "device_key_missing"),
+        (Counter::KeyStoreUnavailable, "key_store_unavailable"),
+        (
+            Counter::NewTranscriptGeneration,
+            "new_transcript_generation",
+        ),
+        (Counter::RepeatConflicts, "repeat_conflicts"),
+        (Counter::RepeatOwnerChosen, "repeat_owner_chosen"),
+        (Counter::RepeatHeld, "repeat_held"),
+        (Counter::RepeatReleased, "repeat_released"),
+        (Counter::TranscriptSourceLost, "transcript_source_lost"),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

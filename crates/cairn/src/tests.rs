@@ -31,10 +31,17 @@ pub(crate) struct Process {
     /// than the owner of the test's files, so a managed policy the test
     /// writes passes as root's would.
     pub(crate) os_user: OsUser,
+    /// Where the node identity is read from, as a development build's
+    /// seam lets a test say; this OS's source when none.
+    pub(crate) node_identity: Option<std::path::PathBuf>,
 }
 
 /// The time every test's clock reads.
 const NOW: u64 = 1_760_000_000;
+
+/// A transcript line in Claude Code 2.1.296's recorded shape, which
+/// ingest records with nothing to audit.
+const CLEAN_LINE: &str = "{\"type\":\"atis-latch\",\"atis\":\"\",\"sessionId\":\"s\"}\n";
 
 impl Process {
     pub(crate) fn new() -> Self {
@@ -48,6 +55,7 @@ impl Process {
             hook_panics: false,
             terminal: true,
             os_user: OsUser::Known(u32::MAX),
+            node_identity: None,
         }
     }
 
@@ -89,6 +97,7 @@ impl Process {
             terminal: self.terminal,
             working_dir: Some(self.dir.path().to_path_buf()),
             managed_policy: self.dir.path().join("managed").join("managed_policy.toml"),
+            node_identity: self.node_identity.clone(),
             os_user: self.os_user,
             input: &input,
             clock: &|| NOW,
@@ -277,6 +286,7 @@ fn a_failed_write_is_a_failure() {
             terminal: true,
             working_dir: None,
             managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
+            node_identity: None,
             os_user: OsUser::Known(u32::MAX),
             input: &input,
             clock: &|| NOW,
@@ -356,6 +366,12 @@ fn ingest_redacts_by_the_principals_patterns_and_audits_each_redaction() {
             ),
             entry("redacted", "redacted", "redacted by rule aws_access_key"),
             entry("redacted", "redacted", "redacted by rule extra_pattern_2"),
+            // The line has no type, so it is stored unparsed (REC-05).
+            entry(
+                "failed",
+                "events_unparsed",
+                "stored a transcript line it cannot parse as an unparsed event"
+            ),
         ]
     );
     let store = std::fs::read(p.cairn_home().join("store.db")).unwrap();
@@ -380,14 +396,18 @@ fn ingest_json_names_the_writer_seat_room_and_count() {
 #[test]
 fn ingest_refuses_a_wrong_command_line() {
     for (args, want) in [
-        (&["ingest"][..], "cairn ingest: want --path P\n"),
+        (&["ingest"][..], "cairn ingest: want --all or --path P\n"),
         (
             &["ingest", "--path"],
             "cairn ingest: --path needs a transcript\n",
         ),
         (
-            &["ingest", "--all"],
-            "cairn ingest: --all is not supported yet; pass --path\n",
+            &["ingest", "--all", "--path", "t.jsonl"],
+            "cairn ingest: want --all or --path P, not both\n",
+        ),
+        (
+            &["ingest", "--path=t.jsonl", "--all"],
+            "cairn ingest: want --all or --path P, not both\n",
         ),
         (
             &["ingest", "--yaml"],
@@ -414,9 +434,313 @@ fn ingest_reports_a_transcript_it_cannot_read() {
 }
 
 #[test]
+fn ingest_audits_and_counts_each_unparsed_line_and_format_drift() {
+    let p = Process::new();
+    let path = p.transcript("{not json\n{\"type\":\"future_kind\"}\n");
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &path], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let entries: Vec<(String, Option<String>, String)> = audited(&p)
+        .into_iter()
+        .map(|e| (e.kind, e.counter, e.detail))
+        .collect();
+    let entry = |kind: &str, counter: &str, detail: &str| {
+        (kind.to_owned(), Some(counter.to_owned()), detail.to_owned())
+    };
+    let unparsed = || {
+        entry(
+            "failed",
+            "events_unparsed",
+            "stored a transcript line it cannot parse as an unparsed event",
+        )
+    };
+    assert_eq!(
+        entries,
+        [
+            unparsed(),
+            unparsed(),
+            entry(
+                "rejected",
+                "format_drift",
+                "format drift claude-code:unversioned:future_kind:unrecorded-type"
+            ),
+        ]
+    );
+    let (_, status, _) = p.invoke(&["status"], &DEV);
+    assert!(
+        status.contains("events_unparsed 2 (2 since acknowledged)"),
+        "{status}"
+    );
+    assert!(
+        status.contains("format_drift 1 (1 since acknowledged)"),
+        "{status}"
+    );
+}
+
+#[test]
+fn ingest_says_which_unparsed_line_or_drift_it_cannot_audit_and_still_records() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let audit_dir = p.cairn_home().join("audit");
+    std::fs::remove_dir_all(&audit_dir).unwrap();
+    std::fs::write(&audit_dir, "").unwrap();
+    set_mode(&audit_dir, 0o600);
+
+    let (code, out, err) = p.invoke(
+        &[
+            "ingest",
+            "--path",
+            &p.transcript("{\"type\":\"future_kind\"}\n"),
+        ],
+        &DEV,
+    );
+
+    assert_eq!(code, EXIT_OK, "{err}");
+    assert!(out.starts_with("ingested 1 lines"), "{out}");
+    assert!(
+        err.contains("cairn ingest: audit an unparsed line: "),
+        "{err}"
+    );
+    assert!(
+        err.contains("cairn ingest: audit a format drift: "),
+        "{err}"
+    );
+}
+
+/// Writes a transcript `name` holding `text` in project `project` under
+/// the default transcript root.
+fn transcript_in(p: &Process, project: &str, name: &str, text: &[u8]) -> std::path::PathBuf {
+    let dir = p.dir.path().join(".claude").join("projects").join(project);
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join(name);
+    std::fs::write(&path, text).unwrap();
+    path
+}
+
+#[test]
+fn ingest_all_reads_every_transcript_under_the_transcript_roots() {
+    let p = Process::new();
+    transcript_in(&p, "-w-a", "s1.jsonl", b"a\n");
+    transcript_in(&p, "-w-b", "s2.jsonl", b"b\nc\n");
+
+    let (code, out, err) = p.invoke(&["ingest", "--all"], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let lines: Vec<&str> = out.lines().collect();
+    assert_eq!(lines.len(), 2, "{out}");
+    assert!(
+        lines[0].starts_with("ingested 1 lines into writer "),
+        "{out}"
+    );
+    assert!(
+        lines[1].starts_with("ingested 2 lines into writer "),
+        "{out}"
+    );
+
+    let (code, out, _) = p.invoke(&["ingest", "--all", "--json"], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let events: Vec<u64> = v["transcripts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["events"].as_u64().unwrap())
+        .collect();
+    // Read again, each transcript source gains no event (REC-03).
+    assert_eq!(events, [0, 0]);
+}
+
+#[test]
+fn ingest_audits_a_new_transcript_generation_and_repeated_lines() {
+    let p = Process::new();
+    let line = |uuid: &str, text: &str| {
+        format!("{{\"type\":\"x\",\"uuid\":\"{uuid}\",\"t\":\"{text}\"}}\n")
+    };
+    let main = transcript_in(
+        &p,
+        "-w-a",
+        "main-run.jsonl",
+        format!("{}{}", line("u1", "a"), line("u2", "b")).as_bytes(),
+    );
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    std::fs::write(&main, line("u1", "a")).unwrap();
+    transcript_in(
+        &p,
+        "-w-a",
+        "repeating.jsonl",
+        format!("{}{}", line("u1", "a"), line("u2", "other")).as_bytes(),
+    );
+
+    let (code, out, err) = p.invoke(&["ingest", "--all", "--json"], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let main_report = &v["transcripts"][0];
+    assert_eq!(main_report["generation"], 2);
+    assert_eq!(main_report["held"], false);
+    assert_eq!(main_report["runs"][0]["agent_id"], serde_json::Value::Null);
+    assert_eq!(main_report["runs"][0]["parent"], serde_json::Value::Null);
+    let audit = audit_text(&p);
+    assert!(
+        audit.contains("new transcript generation of main-run"),
+        "{audit}"
+    );
+    assert!(
+        audit.contains("repeated uuid with other content, recorded as its own event, in repeating"),
+        "{audit}"
+    );
+    assert!(
+        audit.contains(
+            "repeated lines owned by the run that first recorded them, repeated in repeating"
+        ),
+        "{audit}"
+    );
+    let (_, out, _) = p.invoke(&["status", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    for counter in [
+        "new_transcript_generation",
+        "repeat_conflicts",
+        "repeat_owner_chosen",
+    ] {
+        assert_eq!(v["counters"][counter]["total"], 1, "{counter}");
+    }
+    assert_eq!(p.invoke(&["verify"], &DEV).0, EXIT_OK);
+}
+
+#[test]
+fn a_transcript_source_gone_before_it_was_fully_ingested_is_reported_and_audited_once() {
+    let p = Process::new();
+    let cut = transcript_in(&p, "-w-a", "cut-short.jsonl", b"{\"a\":1}\n{\"b\":");
+    let whole = transcript_in(&p, "-w-a", "main-run.jsonl", b"{\"a\":1}\n");
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    std::fs::remove_file(&cut).unwrap();
+    std::fs::remove_file(&whole).unwrap();
+
+    let (code, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(
+        v["lost_sources"],
+        serde_json::json!([cut.display().to_string()])
+    );
+    let (_, text, _) = p.invoke(&["verify"], &DEV);
+    assert!(
+        text.contains("transcript sources gone before they were fully ingested: "),
+        "{text}"
+    );
+    let (_, status, _) = p.invoke(&["status"], &DEV);
+    assert!(
+        status.contains("transcript sources gone before they were fully ingested: "),
+        "{status}"
+    );
+
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    let audit = audit_text(&p);
+    assert_eq!(
+        audit
+            .matches("transcript source gone before it was fully ingested: cut-short")
+            .count(),
+        1,
+        "{audit}"
+    );
+}
+
+#[test]
+fn transcript_sources_that_cannot_be_read_fail_verify_and_status_and_are_said_by_ingest() {
+    let p = Process::new();
+    transcript_in(&p, "-w-a", "s1.jsonl", b"a\n");
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    std::fs::remove_file(p.dir.path().join(".claude/projects/-w-a/s1.jsonl")).unwrap();
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute_batch("DROP TABLE transcript_sources").unwrap();
+    drop(conn);
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("transcript_sources"), "{err}");
+    let (code, _, err) = p.invoke(&["status"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("transcript_sources"), "{err}");
+    let (_, _, err) = p.invoke(&["ingest", "--all"], &DEV);
+    assert!(
+        err.contains("cairn ingest: find lost transcript sources: "),
+        "{err}"
+    );
+}
+
+#[test]
+fn ingest_all_with_no_transcript_ingests_nothing() {
+    let p = Process::new();
+
+    assert_eq!(
+        p.invoke(&["ingest", "--all"], &DEV),
+        (
+            EXIT_OK,
+            "ingested no transcript\n".to_owned(),
+            String::new()
+        )
+    );
+    assert_eq!(
+        p.invoke(&["ingest", "--all", "--json"], &DEV),
+        (EXIT_OK, "{\"transcripts\":[]}\n".to_owned(), String::new())
+    );
+}
+
+#[test]
+fn ingest_all_goes_on_past_a_transcript_it_cannot_ingest_and_fails() {
+    let p = Process::new();
+    transcript_in(&p, "-w-a", "bad.jsonl", &[0xff, b'\n']);
+    transcript_in(&p, "-w-b", "good.jsonl", b"a\n");
+
+    let (code, out, err) = p.invoke(&["ingest", "--all"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(out.starts_with("ingested 1 lines into writer "), "{out}");
+    assert!(err.contains("is not UTF-8"), "{err}");
+}
+
+#[cfg(unix)]
+#[test]
+fn ingest_all_refuses_a_linked_transcript_outside_the_roots_and_goes_on() {
+    let p = Process::new();
+    let outside = p.dir.path().join("outside.jsonl");
+    std::fs::write(&outside, "a\n").unwrap();
+    let dir = p.dir.path().join(".claude").join("projects").join("-w-a");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::os::unix::fs::symlink(&outside, dir.join("linked.jsonl")).unwrap();
+
+    let (code, out, err) = p.invoke(&["ingest", "--all"], &DEV);
+
+    assert_eq!((code, out.as_str()), (EXIT_FAILURE, ""));
+    assert!(err.contains("cairn ingest: "), "{err}");
+    let counters: Vec<Option<String>> = audited(&p).into_iter().map(|e| e.counter).collect();
+    assert_eq!(counters, [Some("path_outside_allowed_roots".to_owned())]);
+}
+
+#[test]
+fn ingest_all_reports_a_transcript_root_it_cannot_list() {
+    let p = Process::new();
+    p.configure(&format!(
+        "[transcript]\nroots = [{:?}]\n",
+        p.dir.path().join("file").display().to_string()
+    ));
+    std::fs::write(p.dir.path().join("file"), "").unwrap();
+
+    let (code, _, err) = p.invoke(&["ingest", "--all"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        err.starts_with("cairn ingest: list the transcripts in "),
+        "{err}"
+    );
+}
+
+#[test]
 fn verify_checks_the_record_and_counts_it() {
     let p = Process::new();
-    let path = p.transcript("a\nb\n");
+    let path = p.transcript(&CLEAN_LINE.repeat(2));
     p.invoke(&["ingest", "--path", &path], &DEV);
 
     let text = p.invoke(&["verify"], &DEV);
@@ -573,7 +897,10 @@ fn verify_of_a_home_without_its_device_key_fails() {
     let (code, _, err) = p.invoke(&["verify"], &DEV);
 
     assert_eq!(code, EXIT_FAILURE);
-    assert!(err.contains("device.key"), "{err}");
+    assert!(
+        err.contains("no key in the key store entry device"),
+        "{err}"
+    );
 }
 
 #[test]
@@ -647,7 +974,10 @@ fn mcp_without_a_store_or_a_node_fails_and_makes_nothing() {
     std::fs::remove_file(p.cairn_home().join("keys/device.key")).unwrap();
     let (code, _, err) = p.invoke(&["mcp"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
-    assert!(err.contains("device.key"), "{err}");
+    assert!(
+        err.contains("no key in the key store entry device"),
+        "{err}"
+    );
 }
 
 #[test]
@@ -671,6 +1001,7 @@ fn mcp_reports_a_reply_it_cannot_write() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
+        node_identity: None,
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
@@ -695,6 +1026,7 @@ fn a_command_without_a_home_fails() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
+        node_identity: None,
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
@@ -851,6 +1183,7 @@ fn a_hook_input_that_trickles_past_its_wait_is_rejected() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
+        node_identity: None,
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
@@ -889,6 +1222,7 @@ fn a_panic_while_auditing_a_hook_failure_still_exits_0() {
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
+        node_identity: None,
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| panic!("the clock fails"),
@@ -1215,7 +1549,9 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
         p.invoke(&["status"], &DEV),
         (
             EXIT_OK,
-            format!("home: {home} (none yet)\ndeployment mode: automation\n"),
+            format!(
+                "home: {home} (none yet)\ndeployment mode: automation\nkeys: files only this OS user can read; an unsandboxed agent of the same OS user could read them\n"
+            ),
             String::new()
         )
     );
@@ -1227,10 +1563,10 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
         p.invoke(&["status"], &DEV).1,
         format!(
             "home: {home}\nstore: {home}/store.db (none yet)\naudit log: {home}/audit (0 entries)\n\
-             counters: none\ndeployment mode: automation\n"
+             counters: none\ndeployment mode: automation\nkeys: files only this OS user can read; an unsandboxed agent of the same OS user could read them\n"
         )
     );
-    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
     p.lines = vec!["not json".to_owned()];
     p.invoke(&["hook", "UserPromptSubmit"], &DEV);
 
@@ -1243,7 +1579,7 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
         out,
         format!(
             "home: {home}\nstore: {home}/store.db ({bytes} bytes)\naudit log: {home}/audit (1 entries)\n\
-             counters: hook_rejected 1 (1 since acknowledged)\ndeployment mode: automation\n"
+             counters: hook_rejected 1 (1 since acknowledged)\ndeployment mode: automation\nkeys: files only this OS user can read; an unsandboxed agent of the same OS user could read them\n"
         )
     );
     let (code, out, _) = p.invoke(&["status", "--json"], &DEV);
@@ -1259,8 +1595,19 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
             "deployment_mode": "automation",
             "awaiting_acceptance": [],
             "managed_policy": {"refused": null},
+            "keys": {
+                "store": "file",
+                "readable_by_agents": true,
+                "where": "files only this OS user can read; an unsandboxed agent of the same OS user could read them",
+            },
+            "segments": {"open": [], "newer": []},
+            "transcript_sources": {"held": [], "lost": []},
         })
     );
+}
+
+#[test]
+fn status_of_a_home_not_made_yet_shows_no_store() {
     let fresh = Process::new();
     let (_, out, _) = fresh.invoke(&["status", "--json"], &DEV);
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();
@@ -1274,6 +1621,13 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
             "deployment_mode": "automation",
             "awaiting_acceptance": [],
             "managed_policy": {"refused": null},
+            "keys": {
+                "store": "file",
+                "readable_by_agents": true,
+                "where": "files only this OS user can read; an unsandboxed agent of the same OS user could read them",
+            },
+            "segments": null,
+            "transcript_sources": null,
         })
     );
 }
@@ -1342,7 +1696,7 @@ fn every_command_refuses_a_home_bound_to_another_home_id() {
 #[test]
 fn verify_checks_the_audit_chain_too() {
     let mut p = Process::new();
-    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
     p.lines = vec!["not json".to_owned()];
     p.invoke(&["hook", "UserPromptSubmit"], &DEV);
     let (code, out, _) = p.invoke(&["verify"], &DEV);
@@ -1424,7 +1778,7 @@ fn a_caught_mcp_panic_is_audited_quietly() {
 #[test]
 fn an_audit_log_that_cannot_be_read_fails_verify_doctor_and_status() {
     let p = Process::new();
-    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
     let audit = p.cairn_home().join("audit");
     std::fs::write(&audit, "not a directory").unwrap();
     #[cfg(unix)]
@@ -1851,4 +2205,369 @@ fn ingest_says_when_it_cannot_audit_a_path_outside_the_roots() {
         err.ends_with("cairn ingest: path outside allowed roots\n"),
         "{err}"
     );
+}
+
+/// Every audit entry the home at `p` holds, as text.
+fn audit_text(p: &Process) -> String {
+    let dir = p.cairn_home().join("audit");
+    let mut text = String::new();
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return text;
+    };
+    for entry in entries {
+        text.push_str(&std::fs::read_to_string(entry.unwrap().path()).unwrap());
+    }
+    text
+}
+
+#[test]
+fn ingest_audits_and_counts_a_node_identity_change_before_it_appends() {
+    let mut p = Process::new();
+    let id = p.dir.path().join("machine-id");
+    std::fs::write(&id, "first").unwrap();
+    p.node_identity = Some(id.clone());
+    assert_eq!(
+        p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV)
+            .0,
+        EXIT_OK
+    );
+    std::fs::write(&id, "second").unwrap();
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript("b\n")], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let (_, out, _) = p.invoke(&["status", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["counters"]["node_identity_changed"]["total"], 1);
+    assert!(
+        audit_text(&p)
+            .contains("node identity changed: a new device key and device seat replace the old")
+    );
+    let (code, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let kinds: Vec<&str> = v["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| s["seat_kind"].as_str().unwrap())
+        .collect();
+    assert_eq!(kinds.iter().filter(|k| **k == "device").count(), 2);
+    assert_eq!(kinds.iter().filter(|k| **k == "run").count(), 2);
+}
+
+#[test]
+fn ingest_refuses_a_missing_or_unreadable_device_key_audited_and_counted() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let key = p.cairn_home().join("keys/device.key");
+    std::fs::remove_file(&key).unwrap();
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript("b\n")], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("no second genesis starts"), "{err}");
+    assert!(audit_text(&p).contains("device key missing from the key store"));
+
+    std::fs::create_dir(&key).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&key, std::fs::Permissions::from_mode(0o700)).unwrap();
+    }
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript("c\n")], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(
+        audit_text(&p).contains("key store locked or unreadable"),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_principal_act_audits_a_node_identity_change_and_counts_no_act_from_before_it() {
+    let mut p = Process::new();
+    let id = p.dir.path().join("machine-id");
+    std::fs::write(&id, "first").unwrap();
+    p.node_identity = Some(id.clone());
+    p.invoke(&["counter", "ack"], &DEV);
+    std::fs::write(&id, "second").unwrap();
+
+    let (code, _, err) = p.invoke(&["counter", "ack"], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(audit_text(&p).contains("node identity changed"));
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None)
+        .unwrap()
+        .with_identity(IdentitySource::Files(vec![id]));
+    let store = Store::open(&home.store()).unwrap();
+    let node = Node::find(&home, &store).unwrap();
+    assert_eq!(act_record::acts(&store, &node).unwrap().len(), 1);
+}
+
+#[test]
+fn ingest_fails_on_a_store_the_node_cannot_be_found_in_and_audits_no_key_failure() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute("UPDATE seats SET certificate = '{'", [])
+        .unwrap();
+    let before = audit_text(&p);
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript("b\n")], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE, "{err}");
+    let after = audit_text(&p);
+    assert!(!after.contains("key store"), "{after}");
+    assert!(!after.contains("device key missing"), "{after}");
+    assert!(after.len() >= before.len());
+}
+
+/// Runs `statement` on the store in `p`'s home.
+fn store_sql(p: &Process, statement: &str) {
+    rusqlite::Connection::open(p.cairn_home().join("store.db"))
+        .unwrap()
+        .execute_batch(statement)
+        .unwrap();
+}
+
+/// Appends two events to a writer of the store in `p`'s home, leaving
+/// its segment open, as a writer that stopped before closing it would;
+/// its writer.
+fn writer_left_open(p: &Process) -> store::WriterId {
+    let writer = store::WriterId::derive(&[7; 32]);
+    let new = |n: u8| store::NewEvent {
+        kind: record::event::EventKind::UnparsedLine,
+        provenance: record::event::Provenance::Unparsed,
+        content: serde_json::json!({"line": n}),
+        commitment_key: store::CommitmentKey::from_bytes([n; 32]),
+        transcript_timestamp: None,
+    };
+    Store::open(&p.cairn_home().join("store.db"))
+        .unwrap()
+        .append_open(writer, &[new(1), new(2)])
+        .unwrap();
+    writer
+}
+
+#[test]
+fn status_reports_each_writer_chain_ended_without_a_closed_segment() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    let writer = writer_left_open(&p);
+
+    let (code, out, err) = p.invoke(&["status"], &DEV);
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(
+        out.contains(&format!(
+            "\nwriter chains ended without a closed segment: {writer} (seq 1 to 2)\n"
+        )),
+        "{out}"
+    );
+    let (code, out, _) = p.invoke(&["status", "--json"], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(
+        v["segments"],
+        serde_json::json!({
+            "open": [{"writer": writer.to_string(), "first": 1, "last": 2}],
+            "newer": [],
+        })
+    );
+}
+
+#[test]
+fn verify_reports_each_writer_chain_ended_without_a_closed_segment_and_exits_0() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    let (_, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["open_segments"], serde_json::json!([]));
+    let writer = writer_left_open(&p);
+    // The writer has no seat certificate: verify names that first, so
+    // give the open segment to the ingest seat's writer instead.
+    store_sql(
+        &p,
+        &format!(
+            "DELETE FROM segments WHERE writer = '{writer}'; DELETE FROM events WHERE writer = '{writer}'"
+        ),
+    );
+    let ingest = Store::open(&p.cairn_home().join("store.db"))
+        .unwrap()
+        .open_segments()
+        .unwrap();
+    assert!(ingest.is_empty());
+    store_sql(
+        &p,
+        "UPDATE segments SET closed = 0 WHERE (writer, first_seq) IN \
+         (SELECT writer, max(first_seq) FROM segments WHERE writer IN \
+          (SELECT writer FROM events WHERE kind = 'transcript_line') GROUP BY writer)",
+    );
+
+    let (code, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    let text = p.invoke(&["verify"], &DEV).1;
+
+    assert_eq!(code, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let open = v["open_segments"].as_array().unwrap();
+    assert_eq!(open.len(), 1, "{v}");
+    assert_eq!(
+        (&open[0]["first"], &open[0]["last"]),
+        (&serde_json::json!(1), &serde_json::json!(1))
+    );
+    assert!(
+        text.contains(&format!(
+            "; writer chains ended without a closed segment: {} (seq 1 to 1)",
+            open[0]["writer"].as_str().unwrap()
+        )),
+        "{text}"
+    );
+}
+
+#[test]
+fn status_and_verify_exit_3_naming_a_newer_store_and_leave_it_unchanged() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    store_sql(
+        &p,
+        "PRAGMA journal_mode = DELETE; UPDATE meta SET value = '2' WHERE key = 'schema_version'",
+    );
+    let path = p.cairn_home().join("store.db");
+    let before = std::fs::read(&path).unwrap();
+
+    for command in ["status", "verify"] {
+        let (code, out, err) = p.invoke(&[command], &DEV);
+        assert_eq!(
+            (code, out.as_str(), err.as_str()),
+            (
+                EXIT_INTEGRITY,
+                "",
+                format!(
+                    "cairn {command}: the store is schema version 2, newer than this cairn's 1\n"
+                )
+                .as_str()
+            )
+        );
+    }
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("the store is schema version 2"), "{err}");
+
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+}
+
+#[test]
+fn status_and_verify_exit_3_naming_a_newer_segment() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    store_sql(
+        &p,
+        "UPDATE segments SET format_version = 2 WHERE writer IN \
+         (SELECT writer FROM events WHERE kind = 'transcript_line')",
+    );
+    let newer = Store::open(&p.cairn_home().join("store.db"))
+        .unwrap()
+        .newer_segments()
+        .unwrap();
+    assert_eq!(newer.len(), 1);
+    let named = store::StoreError::NewerSegment(newer[0].clone()).to_string();
+
+    let (code, out, err) = p.invoke(&["status"], &DEV);
+    assert_eq!((code, err.as_str()), (EXIT_INTEGRITY, ""));
+    assert!(out.contains(&format!("\nrefused: {named}\n")), "{out}");
+    let (code, out, _) = p.invoke(&["status", "--json"], &DEV);
+    assert_eq!(code, EXIT_INTEGRITY);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["segments"]["newer"][0]["format_version"], 2);
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!(
+        (code, err),
+        (EXIT_INTEGRITY, format!("cairn verify: {named}\n"))
+    );
+}
+
+#[test]
+fn status_of_a_store_it_cannot_read_fails() {
+    let p = Process::new();
+    owner_only_dirs(&p.cairn_home());
+    Home::locate(Some(p.cairn_home().as_os_str()), None)
+        .unwrap()
+        .create()
+        .unwrap();
+    junk_store(&p);
+
+    let (code, _, err) = p.invoke(&["status"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.starts_with("cairn status: the store: "), "{err}");
+}
+
+#[test]
+fn ingest_puts_a_line_above_the_configured_payload_threshold_in_the_payload_store() {
+    let p = Process::new();
+    p.configure("payload.threshold_bytes = 100\n");
+    let long = format!(
+        "{{\"type\":\"atis-latch\",\"atis\":\"{}\",\"sessionId\":\"s\"}}\n",
+        "a".repeat(200)
+    );
+
+    let (code, _, err) = p.invoke(&["ingest", "--path", &p.transcript(&long)], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let held = std::fs::read_dir(p.cairn_home().join("payloads"))
+        .unwrap()
+        .any(|e| {
+            std::fs::read_to_string(e.unwrap().path())
+                .unwrap()
+                .contains(&"a".repeat(200))
+        });
+    assert!(held, "the line's content is in the payload store");
+    assert_eq!(p.invoke(&["verify"], &DEV).0, EXIT_OK);
+}
+
+#[test]
+fn verify_of_a_home_whose_first_start_was_cut_short_before_it_recorded_exits_0() {
+    use key::key_store::Entry;
+    use key::signing::{DeviceKey, RecoveryKey, SeatKey};
+    let p = Process::new();
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    home.create().unwrap();
+    drop(Store::open(&home.store()).unwrap());
+    // A first start killed after it staged its keys, before it recorded.
+    let keys = home.key_store();
+    DeviceKey::mint(&mut OsEntropy)
+        .unwrap()
+        .keep(keys.as_ref(), &Entry::staged(&Entry::device()))
+        .unwrap();
+    RecoveryKey::mint(&mut OsEntropy)
+        .unwrap()
+        .keep(keys.as_ref(), &Entry::staged(&Entry::recovery()))
+        .unwrap();
+    SeatKey::mint(&mut OsEntropy)
+        .unwrap()
+        .keep(keys.as_ref(), &Entry::staged_seat())
+        .unwrap();
+    key::file::write_secret(&home.staged(), &format!("genesis {}", "0".repeat(32))).unwrap();
+
+    let (code, out, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(out.starts_with("checked 0 writers and 0 events: "), "{out}");
+    assert!(
+        out.ends_with("; the node's first start was interrupted, and its next start finishes it\n"),
+        "{out}"
+    );
+    let (_, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(
+        (&v["writers"], &v["staged"]),
+        (&serde_json::json!(0), &serde_json::json!(true))
+    );
+
+    // Its next start finishes it, and the record verifies against the
+    // key it placed.
+    let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let (_, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["staged"], serde_json::json!(false));
 }

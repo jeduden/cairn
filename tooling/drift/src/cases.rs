@@ -71,6 +71,7 @@ pub fn cases() -> Vec<Case> {
         benchmark_cases(),
         isolation_cases(),
         instruction_cases(),
+        transcript_contract_cases(),
     ]
     .concat()
 }
@@ -918,6 +919,17 @@ fn static_analysis_cases() -> Vec<Case> {
             "crate crates/cairn neither inherits the workspace lints nor forbids unsafe code in src/lib.rs",
         ),
         case(
+            "the unsafe shim no longer denying unsafe code",
+            "every_crate_forbids_unsafe_code",
+            Injection::replace(
+                "crates/dpapi/Cargo.toml",
+                "unsafe_code = \"deny\"",
+                "unsafe_code = \"allow\"",
+            ),
+            unsafe_ban(),
+            "crate crates/dpapi, the one unsafe shim, does not deny unsafe code in its own lints",
+        ),
+        case(
             "the workspace lints no longer forbidding unsafe code",
             "every_crate_forbids_unsafe_code",
             Injection::replace(
@@ -1023,6 +1035,13 @@ fn complexity_cases() -> Vec<Case> {
             Injection::replace("Cargo.toml", "too_many_lines = \"deny\"\n", ""),
             gate(),
             "the workspace lints do not deny clippy::too_many_lines",
+        ),
+        case(
+            "the unsafe shim no longer denying too_many_lines",
+            GATE,
+            Injection::replace("crates/dpapi/Cargo.toml", "too_many_lines = \"deny\"\n", ""),
+            gate(),
+            "crate crates/dpapi, the one unsafe shim, does not deny clippy::too_many_lines",
         ),
         case(
             "a product crate's clippy.toml raising a complexity ceiling",
@@ -1594,6 +1613,49 @@ fn instruction_cases() -> Vec<Case> {
             ),
             scenario("ENG-14"),
             ".claude/settings.json:",
+        ),
+    ]
+}
+
+/// The drifts the transcript contract's checks exist to catch (ENG-17,
+/// REC-26): a fixture carrying a residual identifier, recorded shapes
+/// that no longer match the recordings, and a recorded transcript the
+/// core's parser no longer reads without format drift.
+fn transcript_contract_cases() -> Vec<Case> {
+    let contract = |name| cargo_test("harness-contract", "contract", name);
+    vec![
+        case(
+            "a recorded fixture carrying an account's email address",
+            "ENG-17",
+            Injection::replace(
+                "testdata/claude-code/2.1.296/transcripts/projects/-w-my-app/72c55a35-095c-4ec1-a79e-834f2cc8d630.jsonl",
+                "user@example.com",
+                "jane.doe@gmail.com",
+            ),
+            contract("recorded_fixtures_hold_no_residual_identifier"),
+            "an email address jane.doe@gmail.com",
+        ),
+        case(
+            "recorded shapes that differ from what the recordings give",
+            "REC-26",
+            Injection::replace(
+                "crates/transcript/shapes/claude-code/2.1.296.json",
+                "\"harness\": \"claude-code\",",
+                "\"harness\":  \"claude-code\",",
+            ),
+            contract("recorded_shapes_regenerate_byte_for_byte"),
+            "differs from the shapes 2.1.296 records",
+        ),
+        case(
+            "a recorded transcript line of a type no supported version records",
+            "ENG-17",
+            Injection::replace(
+                "testdata/claude-code/2.1.296/transcripts/rewind/1-before-rewind.jsonl",
+                "\"type\":\"ai-title\"",
+                "\"type\":\"ai-titles\"",
+            ),
+            contract("every_recorded_transcript_replays_without_an_unparsed_line_or_format_drift"),
+            "format drift claude-code:unversioned:ai-titles:unrecorded-type",
         ),
     ]
 }

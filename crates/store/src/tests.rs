@@ -14,6 +14,7 @@ fn new_event(n: u64) -> NewEvent {
         provenance: Provenance::Unparsed,
         content: json!({"text": format!("line {n}")}),
         commitment_key: CommitmentKey::from_bytes([n as u8; 32]),
+        transcript_timestamp: None,
     }
 }
 
@@ -108,7 +109,7 @@ fn a_store_of_a_newer_version_is_refused_and_named() {
     assert!(matches!(err, StoreError::Newer { found: 2 }), "{err}");
     assert_eq!(
         err.to_string(),
-        "the store is format version 2, newer than this cairn's 1"
+        "the store is schema version 2, newer than this cairn's 1"
     );
 }
 
@@ -662,4 +663,571 @@ fn owner_only_file(path: &std::path::Path) {
     }
     #[cfg(not(unix))]
     let _ = path;
+}
+
+/// An event whose content is `bytes` of text long.
+fn sized_event(n: u8, bytes: usize) -> NewEvent {
+    NewEvent {
+        kind: EventKind::TranscriptLine,
+        provenance: Provenance::ToolResult("Bash".into()),
+        content: json!({"line": n, "text": "x".repeat(bytes)}),
+        commitment_key: CommitmentKey::from_bytes([n; 32]),
+        transcript_timestamp: None,
+    }
+}
+
+#[test]
+fn content_above_the_threshold_goes_to_the_payload_store_and_reads_back_whole() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let big = sized_event(1, 20 << 10);
+
+    let [address] = store.append(writer(1), std::slice::from_ref(&big)).unwrap()[..] else {
+        panic!("one address")
+    };
+
+    let stored = store.event(address).unwrap().unwrap();
+    assert_eq!(stored.content.as_ref(), Some(&big.content));
+    let payload = stored.payload.clone().unwrap();
+    let canonical = record::canonical::encode(&big.content).unwrap();
+    assert_eq!(payload.name, payload::name(&big.commitment_key));
+    assert_eq!(payload.size, canonical.len() as u64);
+    assert_eq!(payload.preview, "x".repeat(512));
+    assert_eq!(
+        stored.link.header.commitment,
+        record::commitment::commit(&big.commitment_key, &big.content).unwrap()
+    );
+    let file = dir.path().join("payloads").join(&payload.name);
+    assert_eq!(std::fs::read_to_string(file).unwrap(), canonical);
+    let inline: Option<String> = store
+        .conn
+        .query_row("SELECT content FROM events", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(inline, None, "the row keeps no copy of the content");
+}
+
+#[test]
+fn content_at_or_below_the_threshold_stays_inline() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let small = sized_event(1, 2 << 10);
+
+    store
+        .append(writer(1), std::slice::from_ref(&small))
+        .unwrap();
+
+    let stored = store.log(writer(1)).unwrap().remove(0);
+    assert_eq!(stored.content, Some(small.content));
+    assert_eq!(stored.payload, None);
+    assert!(!dir.path().join("payloads").exists());
+}
+
+#[test]
+fn the_payload_threshold_is_set_per_store() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir).with_payload_threshold(100);
+    let canonical = record::canonical::encode(&sized_event(1, 90).content).unwrap();
+    assert!(canonical.len() > 100);
+
+    store
+        .append(writer(1), &[sized_event(1, 90), sized_event(2, 10)])
+        .unwrap();
+
+    let log = store.log(writer(1)).unwrap();
+    assert!(log[0].payload.is_some());
+    assert!(log[1].payload.is_none());
+    assert_eq!(DEFAULT_PAYLOAD_THRESHOLD, 8192);
+}
+
+#[test]
+fn a_payload_goes_through_the_store_s_disk() {
+    use std::sync::{Arc, Mutex};
+    #[derive(Clone, Default)]
+    struct Count(Arc<Mutex<usize>>);
+    impl Disk for Count {
+        fn write_synced(&self, path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+            *self.0.lock().unwrap() += 1;
+            OsDisk.write_synced(path, bytes)
+        }
+        fn rename(&self, from: &Path, to: &Path) -> std::io::Result<()> {
+            OsDisk.rename(from, to)
+        }
+        fn sync_dir(&self, dir: &Path) -> std::io::Result<()> {
+            OsDisk.sync_dir(dir)
+        }
+        fn read(&self, path: &Path) -> std::io::Result<Vec<u8>> {
+            OsDisk.read(path)
+        }
+    }
+    let dir = TempDir::new().unwrap();
+    let count = Count::default();
+    let mut store = open(&dir).with_disk(Box::new(count.clone()));
+
+    store.append(writer(1), &[sized_event(1, 9000)]).unwrap();
+
+    assert_eq!(*count.0.lock().unwrap(), 1);
+}
+
+#[test]
+fn a_payload_that_cannot_be_read_names_its_event() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &[sized_event(1, 9000)]).unwrap();
+    let name = store.log(writer(1)).unwrap()[0]
+        .payload
+        .clone()
+        .unwrap()
+        .name;
+    std::fs::remove_file(dir.path().join("payloads").join(name)).unwrap();
+
+    let err = store.log(writer(1)).unwrap_err();
+
+    let at = Address::new(writer(1), Seq::FIRST);
+    assert!(
+        matches!(&err, StoreError::Payload { address, .. } if *address == at),
+        "{err}"
+    );
+    assert!(
+        err.to_string()
+            .starts_with(&format!("the payload of {at}: ")),
+        "{err}"
+    );
+    assert!(std::error::Error::source(&err).is_some());
+}
+
+#[test]
+fn a_payload_that_does_not_parse_or_whose_row_is_off_is_corrupt() {
+    for column in ["payload_size", "preview", "payload"] {
+        let dir = TempDir::new().unwrap();
+        let mut store = open(&dir);
+        store.append(writer(1), &[sized_event(1, 9000)]).unwrap();
+        if column == "payload_size" {
+            store
+                .conn
+                .execute("UPDATE events SET payload_size = -1", [])
+                .unwrap();
+        } else {
+            store
+                .conn
+                .execute(&format!("UPDATE events SET {column} = NULL"), [])
+                .unwrap();
+        }
+
+        let err = store.log(writer(1)).unwrap_err();
+
+        assert!(
+            matches!(
+                err,
+                StoreError::Corrupt {
+                    address: Some(_),
+                    ..
+                }
+            ),
+            "{column}: {err}"
+        );
+    }
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &[sized_event(1, 9000)]).unwrap();
+    let name = store.log(writer(1)).unwrap()[0]
+        .payload
+        .clone()
+        .unwrap()
+        .name;
+    std::fs::write(dir.path().join("payloads").join(name), "{").unwrap();
+    assert!(matches!(
+        store.log(writer(1)),
+        Err(StoreError::Corrupt {
+            address: Some(_),
+            ..
+        })
+    ));
+}
+
+#[test]
+fn a_failed_payload_write_rolls_back_its_transaction() {
+    let dir = TempDir::new().unwrap();
+    std::fs::write(dir.path().join("payloads"), "a file in its place").unwrap();
+    let mut store = open(&dir);
+
+    let err = store
+        .append(writer(1), &[sized_event(1, 9000)])
+        .unwrap_err();
+
+    assert!(matches!(err, StoreError::Payload { .. }), "{err}");
+    assert!(store.log(writer(1)).unwrap().is_empty());
+}
+
+#[test]
+fn a_transcript_timestamp_is_kept_as_metadata_and_never_made_up() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let mut stamped = new_event(1);
+    stamped.transcript_timestamp = Some("2026-10-17T12:00:00.000Z".into());
+
+    store.append(writer(1), &[stamped, new_event(2)]).unwrap();
+
+    let log = store.log(writer(1)).unwrap();
+    assert_eq!(
+        log[0].transcript_timestamp.as_deref(),
+        Some("2026-10-17T12:00:00.000Z")
+    );
+    assert_eq!(log[1].transcript_timestamp, None);
+    assert!(
+        !log[0].link.header.canonical().contains("2026"),
+        "the header never carries it"
+    );
+}
+
+fn segment(w: WriterId, first: u64, last: u64, closed: bool) -> Segment {
+    Segment {
+        writer: w,
+        first: Seq::new(first).unwrap(),
+        last: Seq::new(last).unwrap(),
+        format_version: SEGMENT_VERSION,
+        closed,
+    }
+}
+
+#[test]
+fn a_core_append_closes_the_segment_it_ends() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+
+    store.append(writer(1), &new_events(3)).unwrap();
+    store.append(writer(1), &new_events(2)).unwrap();
+
+    assert_eq!(
+        store.segments(writer(1)).unwrap(),
+        [
+            segment(writer(1), 1, 3, true),
+            segment(writer(1), 4, 5, true)
+        ]
+    );
+    assert!(store.open_segments().unwrap().is_empty());
+}
+
+#[test]
+fn an_open_append_extends_the_open_segment_until_it_closes() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+
+    store.append_open(writer(1), &new_events(2)).unwrap();
+    store.append_open(writer(1), &new_events(250)).unwrap();
+    assert_eq!(
+        store.open_segments().unwrap(),
+        [segment(writer(1), 1, 252, false)]
+    );
+    store.append(writer(1), &new_events(1)).unwrap();
+    store.append_open(writer(1), &new_events(1)).unwrap();
+    store.close_segment(writer(1)).unwrap();
+    store.close_segment(writer(1)).unwrap();
+    store.close_segment(writer(2)).unwrap();
+
+    assert_eq!(
+        store.segments(writer(1)).unwrap(),
+        [
+            segment(writer(1), 1, 253, true),
+            segment(writer(1), 254, 254, true)
+        ]
+    );
+    assert!(store.segments(writer(2)).unwrap().is_empty());
+}
+
+#[test]
+fn a_rolled_back_append_leaves_its_segment_as_it_stood() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append_open(writer(1), &new_events(2)).unwrap();
+    let mut bad = new_events(2);
+    bad[1].content = json!({"x": 0.5});
+
+    assert!(store.append(writer(1), &bad).is_err());
+
+    assert_eq!(
+        store.segments(writer(1)).unwrap(),
+        [segment(writer(1), 1, 2, false)]
+    );
+}
+
+#[test]
+fn a_seat_s_first_events_close_their_segment() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let room = RoomId::derive(&[1; 32], &[1; 16]);
+
+    store
+        .add_seat_and_append(&seat_in(room, 1), writer(1), &new_events(2))
+        .unwrap();
+
+    assert_eq!(
+        store.segments(writer(1)).unwrap(),
+        [segment(writer(1), 1, 2, true)]
+    );
+}
+
+/// Marks writer 1's segment starting at `first` as of format version
+/// `version`.
+fn set_segment_version(store: &Store, first: i64, version: i64) {
+    store
+        .conn
+        .execute(
+            "UPDATE segments SET format_version = ?1 WHERE first_seq = ?2",
+            [version, first],
+        )
+        .unwrap();
+}
+
+#[test]
+fn a_segment_of_a_newer_format_version_is_refused_named_and_left_unchanged() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &new_events(3)).unwrap();
+    store.append(writer(1), &new_events(2)).unwrap();
+    store.append(writer(2), &new_events(1)).unwrap();
+    set_segment_version(&store, 4, 2);
+    let mut newer = segment(writer(1), 4, 5, true);
+    newer.format_version = 2;
+
+    for err in [
+        store.log(writer(1)).unwrap_err(),
+        store
+            .event(Address::new(writer(1), Seq::FIRST))
+            .unwrap_err(),
+        store.append(writer(1), &new_events(1)).unwrap_err(),
+        store.append_open(writer(1), &new_events(1)).unwrap_err(),
+        store.close_segment(writer(1)).unwrap_err(),
+    ] {
+        assert!(
+            matches!(&err, StoreError::NewerSegment(s) if *s == newer),
+            "{err}"
+        );
+        assert_eq!(
+            err.to_string(),
+            format!(
+                "the segment of writer {} from seq 4 to 5 is format version 2, newer than this cairn's 1",
+                writer(1)
+            )
+        );
+    }
+    assert_eq!(store.newer_segments().unwrap(), [newer.clone()]);
+    assert_eq!(
+        store.log(writer(2)).unwrap().len(),
+        1,
+        "another writer reads on"
+    );
+    assert_eq!(
+        store.segments(writer(1)).unwrap()[1],
+        newer,
+        "left unchanged"
+    );
+}
+
+#[test]
+fn a_segment_row_that_does_not_parse_is_corrupt() {
+    for (column, value) in [("first_seq", -1), ("last_seq", 0), ("format_version", -1)] {
+        let dir = TempDir::new().unwrap();
+        let mut store = open(&dir);
+        store.append(writer(1), &new_events(1)).unwrap();
+        store
+            .conn
+            .execute(&format!("UPDATE segments SET {column} = ?1"), [value])
+            .unwrap();
+
+        let err = store.segments(writer(1)).unwrap_err();
+
+        assert!(matches!(err, StoreError::Corrupt { .. }), "{column}: {err}");
+    }
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &new_events(1)).unwrap();
+    store
+        .conn
+        .execute("UPDATE segments SET writer = 'x', closed = 0", [])
+        .unwrap();
+    assert!(matches!(
+        store.open_segments(),
+        Err(StoreError::Corrupt { .. })
+    ));
+}
+
+#[test]
+fn a_newer_store_is_refused_before_anything_in_it_changes() {
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("store.db");
+    let store = open(&dir);
+    store
+        .conn
+        .pragma_update(None, "journal_mode", "DELETE")
+        .unwrap();
+    store
+        .conn
+        .execute(
+            "UPDATE meta SET value = '2' WHERE key = 'schema_version'",
+            [],
+        )
+        .unwrap();
+    drop(store);
+    let before = std::fs::read(&path).unwrap();
+
+    assert!(matches!(
+        Store::open(&path),
+        Err(StoreError::Newer { found: 2 })
+    ));
+    assert!(matches!(
+        Store::open_read_only(&path),
+        Err(StoreError::Newer { found: 2 })
+    ));
+
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+    let mode: String = rusqlite::Connection::open(&path)
+        .unwrap()
+        .pragma_query_value(None, "journal_mode", |r| r.get(0))
+        .unwrap();
+    assert_eq!(
+        mode, "delete",
+        "the refused store's journal is left as it was"
+    );
+}
+
+#[test]
+fn a_read_only_store_reads_what_the_store_holds_and_makes_nothing() {
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("store.db");
+
+    assert!(Store::open_read_only(&path).is_err());
+    assert!(!path.exists(), "a read creates no store");
+
+    open(&dir).append_open(writer(1), &new_events(2)).unwrap();
+    let store = Store::open_read_only(&path).unwrap();
+
+    assert_eq!(
+        store.open_segments().unwrap(),
+        [segment(writer(1), 1, 2, false)]
+    );
+    assert_eq!(store.meta("schema_version").unwrap().as_deref(), Some("1"));
+}
+
+#[cfg(unix)]
+#[test]
+fn a_read_only_store_others_can_read_is_refused() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("store.db");
+    drop(open(&dir));
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
+
+    assert!(matches!(
+        Store::open_read_only(&path),
+        Err(StoreError::Permissions { .. })
+    ));
+}
+
+#[test]
+fn a_read_only_store_without_its_schema_is_corrupt() {
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("store.db");
+    drop(rusqlite::Connection::open(&path).unwrap());
+    owner_only_file(&path);
+
+    assert!(matches!(
+        Store::open_read_only(&path),
+        Err(StoreError::Corrupt { address: None, .. })
+    ));
+}
+
+#[test]
+fn a_payload_that_is_not_utf_8_is_corrupt() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &[sized_event(1, 9000)]).unwrap();
+    let name = store.log(writer(1)).unwrap()[0]
+        .payload
+        .clone()
+        .unwrap()
+        .name;
+    std::fs::write(dir.path().join("payloads").join(name), [0xff, 0xfe]).unwrap();
+
+    let err = store.log(writer(1)).unwrap_err();
+
+    assert!(
+        matches!(&err, StoreError::Corrupt { address: Some(_), what } if what.contains("not UTF-8")),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_segment_that_cannot_be_recorded_rolls_back_its_append() {
+    for (setup, trigger) in [
+        (0, "BEFORE INSERT ON segments"),
+        (2, "BEFORE UPDATE ON segments"),
+    ] {
+        let dir = TempDir::new().unwrap();
+        let mut store = open(&dir);
+        if setup > 0 {
+            store.append_open(writer(1), &new_events(setup)).unwrap();
+        }
+        store
+            .conn
+            .execute_batch(&format!(
+                "CREATE TRIGGER refuse {trigger} BEGIN SELECT RAISE(ABORT, 'refused'); END"
+            ))
+            .unwrap();
+
+        let err = store.append(writer(1), &new_events(1)).unwrap_err();
+
+        assert!(matches!(err, StoreError::Sqlite(_)), "{trigger}: {err}");
+        assert_eq!(store.log(writer(1)).unwrap().len(), setup as usize);
+    }
+}
+
+#[test]
+fn a_store_whose_segments_cannot_be_read_fails() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &new_events(1)).unwrap();
+    store.conn.execute_batch("DROP TABLE segments").unwrap();
+
+    assert!(matches!(store.log(writer(1)), Err(StoreError::Sqlite(_))));
+    assert!(matches!(
+        store.segments(writer(1)),
+        Err(StoreError::Sqlite(_))
+    ));
+    assert!(matches!(
+        store.close_segment(writer(1)),
+        Err(StoreError::Sqlite(_))
+    ));
+}
+
+#[test]
+fn a_newer_segment_row_that_does_not_parse_is_corrupt() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &new_events(1)).unwrap();
+    store
+        .conn
+        .execute("UPDATE segments SET format_version = 2, first_seq = 0", [])
+        .unwrap();
+
+    let err = store.log(writer(1)).unwrap_err();
+
+    assert!(
+        matches!(&err, StoreError::Corrupt { address: None, what } if what.contains("first seq 0")),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_seat_recorded_with_no_event_opens_no_segment() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let room = RoomId::derive(&[1; 32], &[1; 16]);
+
+    let addresses = store
+        .add_seat_and_append(&seat_in(room, 1), writer(1), &[])
+        .unwrap();
+
+    assert!(addresses.is_empty());
+    assert_eq!(store.seats().unwrap().len(), 1);
+    assert!(store.segments(writer(1)).unwrap().is_empty());
 }

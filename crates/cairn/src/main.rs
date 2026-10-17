@@ -36,6 +36,12 @@ fn main() -> ExitCode {
                 .then(|| std::env::var_os("CAIRN_TEST_MANAGED_POLICY"))
                 .flatten(),
         ),
+        // A development build's seam for the tests; a release build
+        // reads only this OS's node identity.
+        node_identity: cfg!(debug_assertions)
+            .then(|| std::env::var_os("CAIRN_TEST_NODE_IDENTITY"))
+            .flatten()
+            .map(std::path::PathBuf::from),
         os_user: os_user(),
         input: &stdin_lines,
         clock: &now,

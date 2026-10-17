@@ -69,9 +69,7 @@ removes its row and its †.
 | PRV-14's 2 s wait for a tool call's transcript line                                                               | S9                                                                                      |
 | VIEW-02's 2 s from transcript line to room view                                                                   | S9                                                                                      |
 | NFR-01's `PermissionRequest` targets: 50 ms beyond the wait, 10 s below the harness timeout                       | S9, with the held-request behaviour                                                     |
-| NFR-09's store overhead ≤ 1.5× stored text (S2 measured 1.96× before payload files and commitments)               | M1, on its schema and payload store                                                     |
 | REC-11's 1 MiB indexing cap per event                                                                             | M1, with the cost of indexing one capped event                                          |
-| REC-17's 256-bit per-event secret                                                                                 | M1, with the commitment                                                                 |
 | RCL-02's 50 hits and RCL-03's 8,000-model-token cap                                                               | M1, with recall                                                                         |
 | SEC-04's 16 terms of at most 64 characters                                                                        | M1, with the query compiler                                                             |
 | PIN-08's 1,000-model-token pin budget and INJ-07's 2,000-model-token restore block limit                          | M2, with OQ-56                                                                          |

@@ -40,7 +40,7 @@ impl Taking {
         let home = ctx.home().map_err(|e| e.to_string())?;
         home.create().map_err(|e| e.to_string())?;
         let mut store = Store::open(&home.store()).map_err(|e| e.to_string())?;
-        let node = Node::open(&home, &mut store, &mut OsEntropy).map_err(|e| e.to_string())?;
+        let node = crate::open_node(ctx, &home, &mut store, &mut std::io::sink())?;
         let acts = act::acts(&store, &node).map_err(|e| e.to_string())?;
         let settings = in_force(ctx, &home, &acts);
 

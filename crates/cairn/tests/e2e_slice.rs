@@ -132,6 +132,12 @@ fn one_transcript_is_recorded_recalled_in_the_envelope_and_verified() {
     let item = &envelope["items"][0];
     assert_eq!(item["address"], format!("cairn:room/{room}/w/{writer}/3"));
     assert_eq!(item["content"], lines[2]);
+    // The third line queues a prompt: the harness's text, classed from
+    // its structure (PRV-08).
+    assert_eq!(
+        (item["kind"].as_str(), item["provenance"].as_str()),
+        (Some("transcript_line"), Some("harness_text"))
+    );
     assert_eq!(
         (item["origin"].as_str(), item["trust"].as_str()),
         (Some("ingested"), Some("untrusted"))

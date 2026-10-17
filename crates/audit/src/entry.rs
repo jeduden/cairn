@@ -92,6 +92,38 @@ pub enum Counter {
     /// needs were unknown; the transcript stays for a later ingest
     /// (SEC-08, I1).
     IngestRefusedSettingsInvalid,
+    /// A transcript line was stored as an `unparsed` event: it cannot be
+    /// parsed, or its type is one no supported version records (REC-05).
+    EventsUnparsed,
+    /// A transcript line's shape differed from the one recorded for its
+    /// harness version (REC-26).
+    FormatDrift,
+    /// The node identity changed, and a new device key and device seat
+    /// replaced the old (REC-24).
+    NodeIdentityChanged,
+    /// The device key is missing from the key store beside this node's
+    /// record (SEC-10, PRV-12).
+    DeviceKeyMissing,
+    /// The key store is locked or cannot be read (PRV-12).
+    KeyStoreUnavailable,
+    /// A transcript source shrank or its consumed prefix changed, and a
+    /// new transcript generation started (REC-07).
+    NewTranscriptGeneration,
+    /// A transcript line repeated another source's `uuid` with other
+    /// content, and was recorded as its own event (REC-04).
+    RepeatConflicts,
+    /// No fork observation named the owner of repeated lines, so the run
+    /// that first recorded them owns them (REC-04).
+    RepeatOwnerChosen,
+    /// An ingest marker began to hold a harness fork's repeated lines
+    /// until their owner's transcript is ingested (REC-04).
+    RepeatHeld,
+    /// Held repeated lines were released into their own run's writer,
+    /// after 30 s or once their owner's transcript was gone (REC-04).
+    RepeatReleased,
+    /// A transcript source disappeared before it was fully ingested
+    /// (REC-08).
+    TranscriptSourceLost,
 }
 
 impl Counter {
@@ -115,6 +147,17 @@ impl Counter {
             Self::PathOutsideAllowedRoots => "path_outside_allowed_roots",
             Self::LogLineDropped => "log_line_dropped",
             Self::IngestRefusedSettingsInvalid => "ingest_refused_settings_invalid",
+            Self::EventsUnparsed => "events_unparsed",
+            Self::FormatDrift => "format_drift",
+            Self::NodeIdentityChanged => "node_identity_changed",
+            Self::DeviceKeyMissing => "device_key_missing",
+            Self::KeyStoreUnavailable => "key_store_unavailable",
+            Self::NewTranscriptGeneration => "new_transcript_generation",
+            Self::RepeatConflicts => "repeat_conflicts",
+            Self::RepeatOwnerChosen => "repeat_owner_chosen",
+            Self::RepeatHeld => "repeat_held",
+            Self::RepeatReleased => "repeat_released",
+            Self::TranscriptSourceLost => "transcript_source_lost",
         }
     }
 }
@@ -131,9 +174,9 @@ pub enum Occurrence<'a> {
         detail: &'static str,
     },
     /// An operation degraded over one settings key: its detail is
-    /// `detail` followed by `key`, a settings key's name or a
-    /// provenance class, shown only when it holds nothing but the
-    /// characters those can.
+    /// `detail` followed by `key`, a settings key's name, a provenance
+    /// class or a format drift's description, shown only when it holds
+    /// nothing but the characters those can.
     Keyed {
         kind: Kind,
         counter: Counter,

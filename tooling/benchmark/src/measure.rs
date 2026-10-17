@@ -9,7 +9,8 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use crate::suite::Benchmark;
+use crate::fixture;
+use crate::suite::{Benchmark, Fixture};
 
 /// How long one sample may take before it is an error.
 pub const DEADLINE: Duration = Duration::from_secs(10);
@@ -24,9 +25,48 @@ pub const DEADLINE: Duration = Duration::from_secs(10);
 /// Fails when the program cannot start, exits unsuccessfully, or has
 /// not exited by `deadline`; it is then left to finish on its own.
 pub fn time_program(program: &Path, args: &[&str], deadline: Duration) -> Result<Duration, String> {
+    time_program_in(program, args, &[], deadline)
+}
+
+/// Times one sample of `benchmark` against the core executable
+/// `program`: over a fresh fixture, made before and removed after, that
+/// counts nothing of the time.
+///
+/// # Errors
+///
+/// Fails when the fixture cannot be made, or as [`time_program`].
+pub fn time_benchmark(
+    program: &Path,
+    benchmark: &Benchmark,
+    deadline: Duration,
+) -> Result<Duration, String> {
+    match benchmark.fixture {
+        Fixture::None => time_program(program, benchmark.args, deadline),
+        Fixture::Transcript { lines } => {
+            let home =
+                fixture::Home::with_transcript(&std::env::temp_dir(), &fixture::transcript(lines))
+                    .map_err(|e| format!("make the fixture of {}: {e}", benchmark.name))?;
+            time_program_in(program, benchmark.args, &home.env(), deadline)
+        }
+    }
+}
+
+/// Times `program` as [`time_program`] does, with `env` set beside the
+/// environment it inherits.
+///
+/// # Errors
+///
+/// As [`time_program`].
+pub fn time_program_in(
+    program: &Path,
+    args: &[&str],
+    env: &[(&str, std::path::PathBuf)],
+    deadline: Duration,
+) -> Result<Duration, String> {
     let mut command = Command::new(program);
     command
         .args(args)
+        .envs(env.iter().map(|(k, v)| (*k, v.as_os_str())))
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());

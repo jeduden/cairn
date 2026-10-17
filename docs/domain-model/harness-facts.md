@@ -28,11 +28,19 @@ them, Cairn changes only harness configuration, under I7.
   worktree and its repository's git directory (SEC-18). A path outside every
   allowed root is refused. As a
   Cairn term, "source" is a transcript source or a trusted source; the harness's
-  `source` field and §6.1's threat sources keep their own sense. A transcript
-  line or hook input whose shape differs from the one recorded for its harness
-  version is **format drift**, counted and audited (REC-26): such a line is kept
-  whole, redacted, as untrusted `harness_text`, and such a hook input gets the
-  empty answer.
+  `source` field and §6.1's threat sources keep their own sense. Each
+  **transcript line** is one JSON value, recorded as one event. Its event
+  keeps the line's well-formed `timestamp` as its **transcript timestamp**, a
+  field outside the chained header that is no structural field and never
+  trusted; `seq` alone orders events (REC-12), and time marks alone age them
+  (REC-15). A harness
+  version's **recorded shape** is, per line type (an attachment by its type, a
+  `system` line by its subtype), the keys its recorded lines all carry and those
+  any carries, generated from that version's recorded transcripts (ENG-17). A
+  transcript line or hook input whose shape differs from the one recorded for
+  its harness version is **format drift**, counted and audited (REC-26): such a
+  line is kept whole, redacted, as untrusted `harness_text`, and such a hook
+  input gets the empty answer.
 - **Hook**: The harness's callback into Cairn, carrying its **hook input**, a
   JSON object (§9.1). The core's hook handlers answer it. Cairn installs only
   the hooks through which it writes to an agent: `SessionStart`,
@@ -51,18 +59,20 @@ them, Cairn changes only harness configuration, under I7.
   `claudecode/toolUseId`). The MCP server finds the run that made a call only by
   the transcript line carrying it (PRV-14).
 - **Turn**: One exchange between the harness and the model, from an input to the
-  model reply that ends it. A **user turn** is the turn that text typed at the
-  harness's own input starts (its prompt, or the terminal the launcher hosts): a
-  person's message in `interactive` deployment mode, a pipeline's in
+  model reply that ends it. A **turn end** is that reply: one that stops for no
+  tool call and no harness pause. A **subagent end** is a subagent's
+  `subagent_result` event (REC-19). A **user turn** is the turn that text typed
+  at the harness's own input starts (its prompt, or the terminal the launcher
+  hosts): a person's message in `interactive` deployment mode, a pipeline's in
   `automation`. A line the launcher carried in starts no user turn: the launcher
   records the carried text's commitment as its **turn trigger** (what started a
   turn, LANE-14). Only that typed text is `user`, trusted only when matched to
   the prompt commitment of the text a `UserPromptSubmit` hook got and its hook
   handler found the attended mark (PRV-04), while no run on the node leaves R3
-  or R8 open (PRV-08). Other free text the harness writes
-  or adds to the model's input is `harness_text`, never `user` and never
-  trusted, unless it is a turn's model reply, a tool result, a file's or an MCP
-  server's text or a subagent's report (PRV-08, PRV-03).
+  or R8 open (PRV-08). Other free text the harness writes or adds to the model's
+  input is `harness_text`, never `user` and never trusted, unless it is a turn's
+  model reply, a tool result, a file's or an MCP server's text or a subagent's
+  report (PRV-08, PRV-03).
 - **Compaction**: The harness replacing earlier context with a compaction
   summary when the context window fills or when asked. Cairn neither performs
   nor controls it (NG1), and sends the harness nothing for it; it records it

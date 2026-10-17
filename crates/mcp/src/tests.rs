@@ -330,6 +330,7 @@ fn a_store_failure_or_a_writer_without_a_seat_is_a_tool_error() {
                 provenance: record::event::Provenance::Unparsed,
                 content: json!({"text": "x"}),
                 commitment_key: record::commitment::CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
@@ -492,6 +493,7 @@ fn foreign_seat(
                 provenance: record::event::Provenance::Unparsed,
                 content: json!({"line": 1, "text": "x"}),
                 commitment_key: record::commitment::CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
@@ -517,7 +519,11 @@ fn an_event_of_a_seat_this_node_did_not_certify_shows_its_origin_as_peer() {
 #[test]
 fn the_room_scope_is_the_personal_room_unless_a_room_is_named() {
     let f = fixture();
-    let device = key::signing::DeviceKey::load(&f.home.device_key()).unwrap();
+    let device = key::signing::DeviceKey::fetch(
+        f.home.key_store().as_ref(),
+        &key::key_store::Entry::device(),
+    )
+    .unwrap();
     let other = record::id::RoomId::derive(&[2; 32], &[2; 16]);
     let writer = foreign_seat(&f, &device, other);
     let mut server = f.server();
@@ -543,7 +549,11 @@ fn a_seat_the_node_certified_but_never_recorded_shows_its_origin_as_peer() {
     // device seat lacks (PRV-12), so recall does not count it as this
     // node's own either.
     let f = fixture();
-    let device = key::signing::DeviceKey::load(&f.home.device_key()).unwrap();
+    let device = key::signing::DeviceKey::fetch(
+        f.home.key_store().as_ref(),
+        &key::key_store::Entry::device(),
+    )
+    .unwrap();
     let writer = foreign_seat(&f, &device, f.ingested.room);
     let mut server = f.server();
 

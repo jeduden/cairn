@@ -46,6 +46,29 @@ fn time_program_gives_up_at_its_deadline() {
 }
 
 #[test]
+fn time_benchmark_times_each_benchmark_over_its_fixture() {
+    const QUIET: [&str; 2] = ["--exact", "no_test_has_this_name"];
+    let (program, _) = quiet();
+    for b in SUITE {
+        let quiet_benchmark = Benchmark { args: &QUIET, ..b };
+
+        let took = time_benchmark(&program, &quiet_benchmark, DEADLINE).unwrap();
+
+        assert!(took > Duration::ZERO, "{}", b.name);
+    }
+}
+
+#[test]
+fn time_program_in_sets_the_variables_it_is_given() {
+    let (program, _) = quiet();
+    let env = [("CAIRN_BENCHMARK_PROBE", std::path::PathBuf::from("x"))];
+
+    let err = time_program_in(&program, &["--no-such-flag"], &env, DEADLINE).unwrap_err();
+
+    assert!(err.contains(" --no-such-flag exited "), "{err}");
+}
+
+#[test]
 fn sample_discards_one_warm_up_and_keeps_the_rest_in_nanoseconds() {
     let mut calls = 0_u64;
     let mut time = |_: &Benchmark| {

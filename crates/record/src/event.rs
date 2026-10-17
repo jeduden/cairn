@@ -13,11 +13,27 @@ pub enum EventKind {
     /// A certificate record: a seat certificate's digest, recorded in a
     /// device seat (PRV-11, PRV-12).
     CertificateRecord,
-    /// A transcript line recorded whole, before a parser reads it.
+    /// A transcript line recorded whole that the transcript parser
+    /// cannot parse, or whose type no supported version records
+    /// (REC-05).
     UnparsedLine,
+    /// A transcript line recorded whole, of the provenance class its
+    /// structure gives (PRV-08).
+    TranscriptLine,
     /// A principal act, recorded in the device seat of the device it
     /// was taken on (OWN-02, OWN-11).
     PrincipalAct,
+    /// A node identity change event, the first event of the device seat
+    /// a node whose node identity changed starts (REC-24).
+    NodeIdentityChange,
+    /// A repeat reference: a transcript line a harness fork repeats,
+    /// recorded by a run that does not own it as the address of the
+    /// event that holds it, never a copy (REC-04).
+    RepeatReference,
+    /// A repeat owner event: which run's writer owns a repeated line
+    /// when no fork observation names one, recorded in the device seat
+    /// (REC-04).
+    RepeatOwner,
 }
 
 impl EventKind {
@@ -29,7 +45,11 @@ impl EventKind {
             Self::CreateRoom => "create_room",
             Self::CertificateRecord => "certificate_record",
             Self::UnparsedLine => "unparsed_line",
+            Self::TranscriptLine => "transcript_line",
             Self::PrincipalAct => "principal_act",
+            Self::NodeIdentityChange => "node_identity_change",
+            Self::RepeatReference => "repeat_reference",
+            Self::RepeatOwner => "repeat_owner",
         }
     }
 
@@ -41,7 +61,11 @@ impl EventKind {
             Self::CreateRoom,
             Self::CertificateRecord,
             Self::UnparsedLine,
+            Self::TranscriptLine,
             Self::PrincipalAct,
+            Self::NodeIdentityChange,
+            Self::RepeatReference,
+            Self::RepeatOwner,
         ]
         .into_iter()
         .find(|k| k.as_str() == name)

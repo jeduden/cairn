@@ -1,5 +1,13 @@
 use super::*;
 use std::ffi::OsStr;
+
+#[cfg(not(any(target_os = "macos", windows)))]
+#[test]
+fn its_keys_are_files_in_its_keys_directory_on_this_os() {
+    let home = Home::locate(Some(OsStr::new("/c")), None).unwrap();
+
+    assert_eq!(home.key_store().kind(), key::key_store::KeyStoreKind::File);
+}
 use testkit::TempDir;
 
 #[test]
@@ -33,16 +41,12 @@ fn no_home_at_all_is_refused() {
 #[test]
 fn a_home_names_its_files() {
     let home = Home::locate(Some(OsStr::new("/c")), None).unwrap();
-    let room = record::id::RoomId::derive(&[1; 32], &[2; 16]);
-    let seat = record::id::SeatId::derive(&room, &[1; 32]);
 
     assert_eq!(home.store(), Path::new("/c/store.db"));
-    assert_eq!(home.device_key(), Path::new("/c/keys/device.key"));
-    assert_eq!(home.recovery_key(), Path::new("/c/keys/recovery.key"));
-    assert_eq!(
-        home.seat_key(seat),
-        PathBuf::from(format!("/c/keys/seat-{seat}.key"))
-    );
+    assert_eq!(home.keys(), Path::new("/c/keys"));
+    assert_eq!(home.staged(), Path::new("/c/keys/staged"));
+    assert_eq!(home.node_identity(), Path::new("/c/node-identity"));
+    assert_eq!(home.identity(), &IdentitySource::platform());
 }
 
 #[test]
@@ -76,10 +80,16 @@ fn create_fails_where_a_file_stands() {
 }
 
 #[test]
-fn a_first_start_stages_its_genesis_in_one_directory_of_keys() {
+fn a_home_reads_its_node_identity_where_it_is_told() {
     let home = Home::locate(Some(OsStr::new("/c")), None).unwrap();
 
-    assert_eq!(home.genesis(), Path::new("/c/keys/genesis"));
+    let other = home
+        .clone()
+        .with_identity(IdentitySource::Files(vec![PathBuf::from("/id")]));
+    assert_eq!(
+        other.identity(),
+        &IdentitySource::Files(vec![PathBuf::from("/id")])
+    );
 }
 
 #[test]

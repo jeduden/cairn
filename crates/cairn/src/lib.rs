@@ -1,7 +1,7 @@
 //! The Cairn core executable, specified in docs/srs: the hook
 //! handlers, the MCP server and the CLI so far.
 //!
-//! It runs `version`, `ingest --path`, `mcp`, `verify`, `hook`,
+//! It runs `version`, `ingest`, `mcp`, `verify`, `hook`,
 //! `status`, `doctor`, and the principal acts `counter ack`,
 //! `configuration accept` and `risk-acceptance`. Every other
 //! command in the SRS's §9.5 is a pending scenario under features/, and
@@ -19,7 +19,8 @@ use std::time::{Duration, Instant};
 use administration::act as act_record;
 use administration::home::Home;
 use administration::node::Node;
-use administration::verify::{VerifyError, verify};
+use administration::node_identity::IdentitySource;
+use administration::verify::{Report, VerifyError, verify};
 use allowed_root::{Access, AllowedPath, AllowedRoots};
 use audit::AuditError;
 use audit::counters::{Counts, counts};
@@ -28,8 +29,8 @@ use audit::log::Log;
 use configuration::source::OsUser;
 use configuration::{Loaded, SettingsLayer};
 use hook::{Failure, Hook};
+use key::key_store::KeyStoreKind;
 use key::random::OsEntropy;
-use key::signing::DeviceKey;
 use redaction::Redactor;
 use serde_json::{Value, json};
 use store::Store;
@@ -83,7 +84,7 @@ commands:
   counter ack [--json]                   acknowledge the counters (neutral)
   doctor [--json]                        fail while a counter rose since the last acknowledgement
   hook <hook>                            run the hook handler on the hook input on stdin
-  ingest --path P [--json]               record the transcript at P
+  ingest --all | --path P [--json]       record every transcript under the roots, or the one at P
   mcp                                    serve the MCP tools over stdio
   risk-acceptance show [--json]          show the residual risks open on this node
   risk-acceptance record [--json]        accept the open residual risks (widening)
@@ -116,13 +117,17 @@ pub struct Context<'a> {
     pub working_dir: Option<PathBuf>,
     /// Where managed policy is read from (ADM-04).
     pub managed_policy: PathBuf,
+    /// Where the node identity is read from instead of this OS's source
+    /// (REC-24): a development build's seam for the tests, never set in
+    /// a release build.
+    pub node_identity: Option<PathBuf>,
     /// The running OS user, whom managed policy's files must not let
     /// write (ADM-04).
     pub os_user: OsUser,
     /// Starts reading the process's input, one line at a time.
     pub input: &'a dyn Fn() -> Receiver<io::Result<String>>,
     /// The wall clock, in seconds since the Unix epoch, which only
-    /// audit entries read.
+    /// audit entries and ingest's holds read.
     pub clock: &'a dyn Fn() -> u64,
 }
 
@@ -131,7 +136,10 @@ impl Context<'_> {
     /// everything in it owner-only (SEC-02), and its home id the one the
     /// environment supplies (SEC-03).
     fn home(&self) -> Result<Home, administration::AdminError> {
-        let home = Home::locate(self.cairn_home.as_deref(), self.home.as_deref())?;
+        let mut home = Home::locate(self.cairn_home.as_deref(), self.home.as_deref())?;
+        if let Some(path) = &self.node_identity {
+            home = home.with_identity(IdentitySource::Files(vec![path.clone()]));
+        }
         home.check()?;
         home.check_home_id(self.home_id.as_deref())?;
 
@@ -346,80 +354,440 @@ pub(crate) fn failed(command: &str, e: &dyn std::fmt::Display, stderr: &mut dyn 
     EXIT_FAILURE
 }
 
-/// `cairn ingest --path P [--json]`: records the transcript at `P` in a
-/// new ingest seat.
+/// Reports a store that failed to open: one of a newer schema version is
+/// an integrity failure, refused and named, exiting 3 (ADM-05); any other
+/// a failure.
+fn store_failed(command: &str, e: &store::StoreError, stderr: &mut dyn Write) -> u8 {
+    let code = failed(command, e, stderr);
+    if matches!(e, store::StoreError::Newer { .. }) {
+        EXIT_INTEGRITY
+    } else {
+        code
+    }
+}
+
+/// The payload threshold the settings in force set (REC-09).
+fn payload_settings(settings: &configuration::resolve::Settings) -> ingest::PayloadSettings {
+    // The key has a default and takes only an integer it bounds.
+    let threshold = settings
+        .get("payload.threshold_bytes")
+        .and_then(|v| v.to_json().as_u64())
+        .and_then(|n| usize::try_from(n).ok());
+
+    ingest::PayloadSettings {
+        payload_threshold: threshold.unwrap_or(store::DEFAULT_PAYLOAD_THRESHOLD),
+    }
+}
+
+/// What `cairn ingest` reads.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum IngestTarget {
+    /// Every transcript under the transcript roots (REC-01).
+    All,
+    /// The transcript at this path.
+    Path(String),
+}
+
+/// `cairn ingest --all | --path P [--json]`: records every transcript
+/// under the transcript roots, or the one at `P`, each in a new ingest
+/// seat. A transcript that cannot be ingested is reported and the rest
+/// still are; the command then fails.
 fn ingest(
-    mut args: impl Iterator<Item = String>,
+    args: impl Iterator<Item = String>,
     ctx: &Context,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> u8 {
-    let usage = |stderr: &mut dyn Write, why: &str| {
-        let _ = writeln!(stderr, "cairn ingest: {why}");
-        EXIT_USAGE
+    let (target, as_json) = match ingest_args(args) {
+        Ok(parsed) => parsed,
+        Err(why) => {
+            let _ = writeln!(stderr, "cairn ingest: {why}");
+            return EXIT_USAGE;
+        }
     };
-    let (mut path, mut as_json) = (None, false);
+    let home = match ctx.home() {
+        Ok(home) => home,
+        Err(e) => return failed("ingest", &e, stderr),
+    };
+    let in_force = audit_settings(ctx, &home, stderr);
+    if in_force.loaded.principal_layer_failed() {
+        return failed("ingest", &refuse_ingest(ctx, stderr), stderr);
+    }
+    let settings = &in_force.resolved.settings;
+    let candidates = match &target {
+        IngestTarget::Path(path) => vec![PathBuf::from(path)],
+        IngestTarget::All => match root_transcripts(ctx, settings) {
+            Ok(found) => found,
+            Err(e) => return failed("ingest", &e, stderr),
+        },
+    };
+    let mut failures = 0;
+    let mut allowed = Vec::new();
+    for path in &candidates {
+        match allowed_transcript(ctx, settings, path, stderr) {
+            Ok(transcript) => allowed.push(transcript),
+            Err(e) => {
+                failed("ingest", &e, stderr);
+                failures += 1;
+            }
+        }
+    }
+    if allowed.is_empty() && failures > 0 {
+        return EXIT_FAILURE;
+    }
+    // The rule set always compiles (its unit test proves it); were it
+    // not to, each transcript would fail with why.
+    let redactor = redactor(ctx, settings, stderr);
+    if let Err(e) = start_node(ctx, &home, stderr) {
+        return failed("ingest", &e, stderr);
+    }
+    let inputs = ingest::Inputs {
+        payload: payload_settings(settings),
+        // Fork observations are the hook handlers' (phase 9 of plan
+        // 2609292012); until then none names a harness fork (REC-04).
+        forks: std::collections::BTreeSet::new(),
+        now_ms: (ctx.clock)().saturating_mul(1000),
+    };
+    let paths: Vec<&Path> = allowed.iter().map(AllowedPath::path).collect();
+    let (reports, failed_ingests) = ingest_all(ctx, &home, &paths, &redactor, &inputs, stderr);
+    failures += failed_ingests;
+    if target == IngestTarget::All {
+        audit_lost(ctx, &home, stderr);
+    }
+    let shown = ingest_report(&target, &reports, failures, as_json);
+    let code = written(write!(stdout, "{shown}"), stderr);
+
+    if failures > 0 { EXIT_FAILURE } else { code }
+}
+
+/// Ingests each transcript source at `paths`. Returns a report of each
+/// ingested, and how many failed, each said on `stderr`. No source is
+/// held at an ingest marker yet, as no fork observation names a harness
+/// fork until the hook handlers record them (REC-04).
+fn ingest_all(
+    ctx: &Context,
+    home: &Home,
+    paths: &[&Path],
+    redactor: &Result<Redactor, String>,
+    inputs: &ingest::Inputs,
+    stderr: &mut dyn Write,
+) -> (Vec<ingest::Ingested>, usize) {
+    let mut reports = Vec::new();
+    let mut failures = 0;
+    for path in paths {
+        let ingested = redactor.as_ref().map_err(Clone::clone).and_then(|r| {
+            ingest::ingest_with(home, path, r, inputs, &mut OsEntropy).map_err(|e| e.to_string())
+        });
+        match ingested {
+            Ok(i) => {
+                record_ingested(ctx, &i, stderr);
+                reports.push(i);
+            }
+            Err(e) => {
+                failed("ingest", &e, stderr);
+                failures += 1;
+            }
+        }
+    }
+
+    (reports, failures)
+}
+
+/// Audits and counts, once each, every transcript source `cairn ingest
+/// --all` finds gone before it was fully ingested (REC-08, I6).
+fn audit_lost(ctx: &Context, home: &Home, stderr: &mut dyn Write) {
+    let found = Store::open(&home.store()).and_then(|mut store| {
+        let sources = store.sources()?;
+        let fresh: Vec<store::Source> = sources::lost(&sources)
+            .into_iter()
+            .filter(|s| !s.lost)
+            .cloned()
+            .collect();
+        for source in &fresh {
+            store.lose(source.id)?;
+        }
+        Ok(fresh)
+    });
+    let fresh = match found {
+        Ok(fresh) => fresh,
+        Err(e) => {
+            let _ = writeln!(stderr, "cairn ingest: find lost transcript sources: {e}");
+            return;
+        }
+    };
+    for source in fresh {
+        let name = Path::new(&source.path)
+            .file_stem()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let occurrence = Occurrence::Keyed {
+            kind: Kind::Dropped,
+            counter: Counter::TranscriptSourceLost,
+            operation: "ingest",
+            detail: "transcript source gone before it was fully ingested:",
+            key: &name,
+        };
+        if let Err(e) = ctx.audit(&occurrence) {
+            let _ = writeln!(stderr, "cairn ingest: audit a lost transcript source: {e}");
+        }
+    }
+}
+
+/// What `cairn ingest`'s command line asks for, or why it is refused.
+fn ingest_args(mut args: impl Iterator<Item = String>) -> Result<(IngestTarget, bool), String> {
+    let (mut all, mut path, mut as_json) = (false, None, false);
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--json" => as_json = true,
-            "--path" => match args.next() {
-                Some(p) => path = Some(p),
-                None => return usage(stderr, "--path needs a transcript"),
-            },
-            "--all" => return usage(stderr, "--all is not supported yet; pass --path"),
+            "--all" => all = true,
+            "--path" => path = Some(args.next().ok_or("--path needs a transcript")?),
             other => match other.strip_prefix("--path=") {
                 Some(p) => path = Some(p.to_owned()),
-                None => return usage(stderr, &format!("unknown flag {other:?}")),
+                None => return Err(format!("unknown flag {other:?}")),
             },
         }
     }
-    let Some(path) = path else {
-        return usage(stderr, "want --path P");
-    };
-    let ingested = match ctx.home() {
-        Ok(home) => {
-            let in_force = audit_settings(ctx, &home, stderr);
-            if in_force.loaded.principal_layer_failed() {
-                return failed("ingest", &refuse_ingest(ctx, stderr), stderr);
-            }
-            let settings = &in_force.resolved.settings;
-            let transcript = allowed_transcript(ctx, settings, Path::new(&path), stderr);
-            transcript.and_then(|transcript| {
-                let redactor = redactor(ctx, settings, stderr)?;
-                ingest::ingest_path(&home, transcript.path(), &redactor, &mut OsEntropy)
-                    .map_err(|e| e.to_string())
-            })
-        }
-        Err(e) => Err(e.to_string()),
-    };
-    let ingested = match ingested {
-        Ok(i) => i,
-        Err(e) => return failed("ingest", &e, stderr),
-    };
+    match (all, path) {
+        (true, Some(_)) => Err("want --all or --path P, not both".to_owned()),
+        (true, None) => Ok((IngestTarget::All, as_json)),
+        (false, Some(path)) => Ok((IngestTarget::Path(path), as_json)),
+        (false, None) => Err("want --all or --path P".to_owned()),
+    }
+}
+
+/// The transcripts under every transcript root (REC-01), root by root.
+fn root_transcripts(
+    ctx: &Context,
+    settings: &configuration::resolve::Settings,
+) -> Result<Vec<PathBuf>, String> {
+    let os_home = ctx.home.as_deref().map(Path::new);
+    let mut found = Vec::new();
+    for root in settings.texts("transcript.roots") {
+        let root = allowed_root::expand_home(root, os_home);
+        found.extend(ingest::transcripts(&root).map_err(|e| e.to_string())?);
+    }
+
+    Ok(found)
+}
+
+/// Audits what one ingest found, each redaction, unparsed line and
+/// format drift, and logs it.
+fn record_ingested(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
     audit_redactions(ctx, &ingested.redactions, stderr);
+    audit_parsing(ctx, ingested, stderr);
+    audit_sourcing(ctx, ingested, stderr);
     tracing::info!(
         transcript = %ingested.redacted_path,
         writer = %ingested.writer,
         events = ingested.events as u64,
         redactions = ingested.redactions.len() as u64,
+        unparsed = ingested.unparsed as u64,
+        format_drift = ingested.drifts.len() as u64,
         "ingested"
     );
-    let line = if as_json {
-        json!({
-            "writer": ingested.writer.to_string(),
-            "seat": ingested.seat.to_string(),
-            "room": ingested.room.to_string(),
-            "events": ingested.events,
-        })
-        .to_string()
-    } else {
-        format!(
-            "ingested {} lines into writer {}",
-            ingested.events, ingested.writer
-        )
-    };
+}
 
-    written(writeln!(stdout, "{line}"), stderr)
+/// What `cairn ingest` prints of the transcripts it recorded: for
+/// `--path`, the one; for `--all`, each, or that there was none.
+fn ingest_report(
+    target: &IngestTarget,
+    reports: &[ingest::Ingested],
+    failures: usize,
+    as_json: bool,
+) -> String {
+    let one = |i: &ingest::Ingested| {
+        json!({
+            "writer": i.writer.to_string(),
+            "seat": i.seat.to_string(),
+            "room": i.room.to_string(),
+            "events": i.events,
+            "generation": i.generation,
+            "held": i.held,
+            "runs": runs_json(&i.runs),
+        })
+    };
+    if as_json && *target == IngestTarget::All {
+        let all: Vec<Value> = reports.iter().map(one).collect();
+        return format!("{}\n", json!({"transcripts": all}));
+    }
+    if reports.is_empty() && failures == 0 && *target == IngestTarget::All {
+        return "ingested no transcript\n".to_owned();
+    }
+    reports
+        .iter()
+        .map(|i| {
+            if as_json {
+                format!("{}\n", one(i))
+            } else {
+                format!("ingested {} lines into writer {}\n", i.events, i.writer)
+            }
+        })
+        .collect()
+}
+
+/// Each run an ingest appended to, as `cairn ingest --json` shows it:
+/// its writer and seat, the harness's agent id, the run its parent link
+/// ties it to, and how many events it gained (REC-02).
+fn runs_json(runs: &[ingest::RunReport]) -> Value {
+    runs.iter()
+        .map(|r| {
+            json!({
+                "writer": r.writer.to_string(),
+                "seat": r.seat.to_string(),
+                "agent_id": r.agent_id,
+                "parent": r.parent.map(|p| p.to_string()),
+                "events": r.events,
+            })
+        })
+        .collect()
+}
+
+/// Audits what an ingest found of its transcript source, one entry
+/// each, naming the source by its redacted name: a new transcript
+/// generation (REC-07); each line repeating a `uuid` with other
+/// content, each repeat owner no fork observation chose, a hold begun
+/// and each line released from one (REC-04).
+fn audit_sourcing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
+    let keyed = |kind, counter, detail| Occurrence::Keyed {
+        kind,
+        counter,
+        operation: "ingest",
+        detail,
+        key: &ingested.name,
+    };
+    let occurrences = [
+        (
+            usize::from(ingested.new_generation),
+            keyed(
+                Kind::Truncated,
+                Counter::NewTranscriptGeneration,
+                "new transcript generation of",
+            ),
+        ),
+        (
+            ingested.conflicts,
+            keyed(
+                Kind::Rejected,
+                Counter::RepeatConflicts,
+                "repeated uuid with other content, recorded as its own event, in",
+            ),
+        ),
+        (
+            ingested.owners_chosen,
+            keyed(
+                Kind::Coalesced,
+                Counter::RepeatOwnerChosen,
+                "repeated lines owned by the run that first recorded them, repeated in",
+            ),
+        ),
+        (
+            usize::from(ingested.hold_started),
+            keyed(
+                Kind::Truncated,
+                Counter::RepeatHeld,
+                "repeated lines held at an ingest marker in",
+            ),
+        ),
+        (
+            ingested.released,
+            keyed(
+                Kind::TimedOut,
+                Counter::RepeatReleased,
+                "repeated line released into its own run in",
+            ),
+        ),
+    ];
+    for (times, occurrence) in &occurrences {
+        for _ in 0..*times {
+            if let Err(e) = ctx.audit(occurrence) {
+                let _ = writeln!(stderr, "cairn ingest: audit the transcript source: {e}");
+            }
+        }
+    }
+}
+
+/// Audits each line an ingest stored as `unparsed` (REC-05) and each
+/// format drift it found (REC-26), one entry each, naming the harness
+/// version and what differed and nothing of the line's content.
+fn audit_parsing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
+    let unparsed = Occurrence::Degraded {
+        kind: Kind::Failed,
+        counter: Counter::EventsUnparsed,
+        operation: "ingest",
+        detail: "stored a transcript line it cannot parse as an unparsed event",
+    };
+    for _ in 0..ingested.unparsed {
+        if let Err(e) = ctx.audit(&unparsed) {
+            let _ = writeln!(stderr, "cairn ingest: audit an unparsed line: {e}");
+        }
+    }
+    for drift in &ingested.drifts {
+        let occurrence = Occurrence::Keyed {
+            kind: Kind::Rejected,
+            counter: Counter::FormatDrift,
+            operation: "ingest",
+            detail: "format drift",
+            key: drift,
+        };
+        if let Err(e) = ctx.audit(&occurrence) {
+            let _ = writeln!(stderr, "cairn ingest: audit a format drift: {e}");
+        }
+    }
+}
+
+/// Opens the node before anything is appended: its first start, or the
+/// node identity check every later start makes first (REC-24). A change
+/// is audited and counted. A device key missing from the key store, or
+/// a key store that is locked or cannot be read, refuses the command,
+/// audited and counted (I6).
+fn start_node(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> Result<(), String> {
+    home.create().map_err(|e| e.to_string())?;
+    let mut store = Store::open(&home.store()).map_err(|e| e.to_string())?;
+
+    open_node(ctx, home, &mut store, stderr).map(drop)
+}
+
+/// The node in `home`, opened in `store` as [`start_node`] opens it:
+/// a node identity change audited and counted, and a missing device key
+/// or a key store that cannot be read refused, audited and counted.
+pub(crate) fn open_node(
+    ctx: &Context,
+    home: &Home,
+    store: &mut Store,
+    stderr: &mut dyn Write,
+) -> Result<Node, String> {
+    let opened = Node::open(home, store, &mut OsEntropy);
+    let occurrence = match &opened {
+        Ok(node) if node.identity_change().is_some() => Some(Occurrence::Degraded {
+            kind: Kind::Dropped,
+            counter: Counter::NodeIdentityChanged,
+            operation: "start",
+            detail: "node identity changed: a new device key and device seat replace the old",
+        }),
+        Ok(_) => None,
+        Err(administration::AdminError::DeviceKeyMissing) => Some(Occurrence::Degraded {
+            kind: Kind::Failed,
+            counter: Counter::DeviceKeyMissing,
+            operation: "start",
+            detail: "device key missing from the key store",
+        }),
+        Err(administration::AdminError::Key(e)) if e.is_unavailable() => {
+            Some(Occurrence::Degraded {
+                kind: Kind::Failed,
+                counter: Counter::KeyStoreUnavailable,
+                operation: "start",
+                detail: "key store locked or unreadable",
+            })
+        }
+        Err(_) => None,
+    };
+    if let Some(occurrence) = occurrence
+        && let Err(e) = ctx.audit(&occurrence)
+    {
+        let _ = writeln!(stderr, "cairn: audit the node's start: {e}");
+    }
+
+    opened.map_err(|e| e.to_string())
 }
 
 /// Refuses an ingest while the principal's configuration or the
@@ -629,38 +997,25 @@ fn verify_command(
     }
     let store = match Store::open(&home.store()) {
         Ok(store) => store,
+        Err(e) => return store_failed("verify", &e, stderr),
+    };
+    let lost = match sources::of(&store) {
+        Ok(status) => status.lost,
         Err(e) => return failed("verify", &e, stderr),
     };
-    let device = match DeviceKey::load(&home.device_key()) {
-        Ok(device) => device,
+    let verified = match verify_record(&home, &store) {
+        Ok(verified) => verified,
         Err(e) => return failed("verify", &e, stderr),
     };
-    let checked = match verify(&store, &device.public()) {
-        Ok(r) => Log::new(home.audit()).verify().map(|a| (r, a)).map_err(Err),
+    let checked = match verified {
+        Ok((r, staged)) => Log::new(home.audit())
+            .verify()
+            .map(|a| (r, staged, a))
+            .map_err(Err),
         Err(e) => Err(Ok(e)),
     };
     let (code, line) = match checked {
-        Ok((r, a)) if as_json => (
-            EXIT_OK,
-            json!({
-                "integrity": "unsigned",
-                "writers": r.writers,
-                "events": r.events,
-                "order": r.full_order(),
-                "audit": {"files": a.files, "entries": a.entries},
-                "broken": null,
-            })
-            .to_string(),
-        ),
-        Ok((r, a)) => (
-            EXIT_OK,
-            format!(
-                "checked {} writers and {} events: every chain, commitment and seat certificate \
-                 holds; integrity unsigned, as no log is signed yet; the audit log's chain holds \
-                 over {} entries",
-                r.writers, r.events, a.entries
-            ),
-        ),
+        Ok((r, staged, a)) => (EXIT_OK, verified_line(as_json, &r, staged, &a, &lost)),
         Err(Ok(VerifyError::Store(e))) => return failed("verify", &e, stderr),
         Err(Err(e @ AuditError::Broken { .. })) => {
             broken_json(as_json, "audit", None, &e.to_string(), stderr)
@@ -684,6 +1039,114 @@ fn verify_command(
     }
 }
 
+/// The record in `store`, verified against the device key `home` keeps,
+/// or against the key an interrupted first start staged, which its next
+/// start places, with whether it was staged; an empty record while that
+/// start has recorded nothing yet, as a crash can leave a home (ENG-06).
+fn verify_record(
+    home: &Home,
+    store: &Store,
+) -> Result<Result<(Report, bool), VerifyError>, administration::AdminError> {
+    Ok(match administration::node::verifying_key(home, store)? {
+        Some((key, staged)) => verify(store, &key).map(|r| (r, staged)),
+        None => Ok((
+            Report {
+                writers: 0,
+                events: 0,
+                order: Vec::new(),
+                rooms: BTreeMap::new(),
+                seats: Vec::new(),
+                open_segments: Vec::new(),
+            },
+            true,
+        )),
+    })
+}
+
+/// What `cairn verify` says of a record that verified, `staged` while
+/// the node's first start is still to finish, as JSON when asked.
+fn verified_line(
+    as_json: bool,
+    r: &Report,
+    staged: bool,
+    a: &audit::log::Checked,
+    lost: &[String],
+) -> String {
+    if as_json {
+        return json!({
+            "integrity": "unsigned",
+            "writers": r.writers,
+            "events": r.events,
+            "order": r.full_order(),
+            "seats": seats_json(&r.seats),
+            "open_segments": segments::open_json(&r.open_segments),
+            "lost_sources": lost,
+            "staged": staged,
+            "audit": {"files": a.files, "entries": a.entries},
+            "broken": null,
+        })
+        .to_string();
+    }
+    let staged = if staged {
+        "; the node's first start was interrupted, and its next start finishes it"
+    } else {
+        ""
+    };
+
+    format!(
+        "checked {} writers and {} events: every chain, commitment and seat certificate \
+         holds; integrity unsigned, as no log is signed yet; the audit log's chain holds \
+         over {} entries{}{}{staged}",
+        r.writers,
+        r.events,
+        a.entries,
+        open_text(&r.open_segments),
+        lost_line(lost)
+    )
+}
+
+/// What `cairn verify` adds for transcript sources gone before they
+/// were fully ingested: nothing when none was (REC-08).
+fn lost_line(lost: &[String]) -> String {
+    if lost.is_empty() {
+        return String::new();
+    }
+
+    format!("; {}", sources::lost_text(lost))
+}
+
+/// What `cairn verify` adds for writer chains that ended without a
+/// closed segment: nothing when none did (REC-19).
+fn open_text(open: &[store::Segment]) -> String {
+    if open.is_empty() {
+        return String::new();
+    }
+
+    format!(
+        "; writer chains ended without a closed segment: {}",
+        segments::open_list(open)
+    )
+}
+
+/// Each seat as `cairn verify --json` reports it: its writer, and its
+/// seat id, room, seat kind, ingest flag and seat certificate, all read
+/// from that certificate (PRV-11).
+fn seats_json(seats: &[administration::verify::SeatReport]) -> Value {
+    seats
+        .iter()
+        .map(|s| {
+            json!({
+                "writer": s.writer.to_string(),
+                "seat": s.seat.to_string(),
+                "room": s.room.to_string(),
+                "seat_kind": s.seat_kind.as_str(),
+                "ingest_seat": s.ingest_seat,
+                "certificate": s.certificate,
+            })
+        })
+        .collect()
+}
+
 /// Reports a broken record or audit log on `stderr`, exiting 3, with
 /// the failure's class, address and message as JSON when asked; the
 /// line is empty when no JSON was asked for.
@@ -703,6 +1166,7 @@ fn broken_json(
         "writers": null,
         "events": null,
         "order": null,
+        "seats": null,
         "audit": null,
         "broken": {"class": class, "address": address, "message": message},
     });
@@ -975,6 +1439,12 @@ struct Status {
     awaiting_acceptance: Vec<String>,
     /// Why managed policy is refused, when it is.
     managed_policy: Option<String>,
+    /// The key store the home's keys are kept in (SEC-10).
+    keys: KeyStoreKind,
+    /// The store's open and newer segments, once there is a store.
+    segments: Option<segments::SegmentsStatus>,
+    /// The transcript sources held or lost, once there is a store.
+    sources: Option<sources::SourcesStatus>,
 }
 
 impl Status {
@@ -992,6 +1462,13 @@ impl Status {
             "deployment_mode": self.deployment_mode,
             "awaiting_acceptance": self.awaiting_acceptance,
             "managed_policy": {"refused": self.managed_policy},
+            "keys": {
+                "store": self.keys.as_str(),
+                "readable_by_agents": self.keys.readable_by_agents(),
+                "where": self.keys.describe(),
+            },
+            "segments": self.segments.as_ref().map(segments::SegmentsStatus::json),
+            "transcript_sources": self.sources.as_ref().map(sources::SourcesStatus::json),
         })
         .to_string()
     }
@@ -1030,6 +1507,13 @@ impl Status {
         if let Some(why) = &self.managed_policy {
             lines.push(format!("managed policy refused: {why}"));
         }
+        lines.push(format!("keys: {}", self.keys.describe()));
+        lines.extend(
+            self.segments
+                .iter()
+                .flat_map(segments::SegmentsStatus::lines),
+        );
+        lines.extend(self.sources.iter().flat_map(sources::SourcesStatus::lines));
 
         lines.join("\n")
     }
@@ -1048,12 +1532,18 @@ fn status(
     let Some(as_json) = json_flag("status", args, stderr) else {
         return EXIT_USAGE;
     };
-    let read = ctx
-        .home()
-        .map_err(|e| e.to_string())
-        .and_then(|home| Ok((settings::recorded_acts(&home)?, home)));
-    let (acts, home) = match read {
-        Ok(read) => read,
+    let home = match ctx.home() {
+        Ok(home) => home,
+        Err(e) => return failed("status", &e, stderr),
+    };
+    // The store's version is read first, and nothing in a newer store is
+    // opened for writing (ADM-05).
+    let segments = match segments::read(&home) {
+        Ok(s) => s,
+        Err(e) => return store_failed("status", &e, stderr),
+    };
+    let acts = match settings::recorded_acts(&home) {
+        Ok(acts) => acts,
         Err(e) => return failed("status", &e, stderr),
     };
     let in_force = settings::in_force(ctx, &home, &acts);
@@ -1064,14 +1554,25 @@ fn status(
         Ok(c) => c,
         Err(code) => return code,
     };
-    let status = status_of(&home, counted, &in_force);
+    let refused = segments.as_ref().is_some_and(|s| !s.newer.is_empty());
+    let mut status = status_of(&home, counted, &in_force);
+    status.segments = segments;
+    status.sources = match sources::read(&home) {
+        Ok(s) => s,
+        Err(e) => return store_failed("status", &e, stderr),
+    };
     let text = if as_json {
         status.json()
     } else {
         status.text()
     };
 
-    written(writeln!(stdout, "{text}"), stderr)
+    // A refused segment of a newer format version is named and exits 3
+    // (ADM-05).
+    match written(writeln!(stdout, "{text}"), stderr) {
+        EXIT_OK if refused => EXIT_INTEGRITY,
+        other => other,
+    }
 }
 
 /// The status of `home`, given its audit log's counts.
@@ -1095,6 +1596,9 @@ fn status_of(home: &Home, counted: Option<(Counts, u64)>, in_force: &settings::I
             .iter()
             .find(|f| f.layer == SettingsLayer::ManagedPolicy)
             .map(ToString::to_string),
+        keys: home.key_store().kind(),
+        segments: None,
+        sources: None,
     };
     if let Some((counts, entries)) = counted {
         let bytes = fs::metadata(&store).ok().map(|m| m.len());
@@ -1156,7 +1660,9 @@ pub(crate) fn invalid_layers(command: &str, loaded: &Loaded, stderr: &mut dyn Wr
 }
 
 mod act;
+mod segments;
 mod settings;
+mod sources;
 
 pub use settings::managed_policy;
 
