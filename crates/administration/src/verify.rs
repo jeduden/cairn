@@ -171,12 +171,10 @@ impl From<StoreError> for VerifyError {
 }
 
 /// The provenance classes only a device seat records: this node's own
-/// operator, structural and launcher events (I2).
-const TRUSTED: [Provenance; 3] = [
-    Provenance::Operator,
-    Provenance::Structural,
-    Provenance::HarnessMeta,
-];
+/// operator and structural events (I2). A transcript line's
+/// `harness_meta` is untrusted and recorded in an ingest seat (PRV-08);
+/// where the launcher's trusted kind is recorded is M7's.
+const TRUSTED: [Provenance; 2] = [Provenance::Operator, Provenance::Structural];
 
 /// Each writer's log as one snapshot read it.
 type Logs = Vec<(WriterId, Result<Vec<Stored>, StoreError>)>;

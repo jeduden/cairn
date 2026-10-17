@@ -230,13 +230,12 @@ pub struct Shapes {
 
 impl Shapes {
     /// The supported versions' shapes, as this crate compiles them in.
-    ///
-    /// # Errors
-    ///
-    /// Fails when a version's text does not parse, which this crate's
-    /// unit test rules out.
-    pub fn supported() -> Result<Self, ShapeError> {
-        Self::from_texts(&SUPPORTED)
+    /// This crate's unit test proves every one parses; were one not to,
+    /// no version would be supported, so every line would be unparsed
+    /// and counted as format drift, never classified by its fields.
+    #[must_use]
+    pub fn supported() -> Self {
+        Self::from_texts(&SUPPORTED).unwrap_or_default()
     }
 
     /// The shapes each `(version, text)` holds.

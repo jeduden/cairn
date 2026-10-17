@@ -13,8 +13,13 @@ pub enum EventKind {
     /// A certificate record: a seat certificate's digest, recorded in a
     /// device seat (PRV-11, PRV-12).
     CertificateRecord,
-    /// A transcript line recorded whole, before a parser reads it.
+    /// A transcript line recorded whole that the transcript parser
+    /// cannot parse, or whose type no supported version records
+    /// (REC-05).
     UnparsedLine,
+    /// A transcript line recorded whole, of the provenance class its
+    /// structure gives (PRV-08).
+    TranscriptLine,
     /// A principal act, recorded in the device seat of the device it
     /// was taken on (OWN-02, OWN-11).
     PrincipalAct,
@@ -29,6 +34,7 @@ impl EventKind {
             Self::CreateRoom => "create_room",
             Self::CertificateRecord => "certificate_record",
             Self::UnparsedLine => "unparsed_line",
+            Self::TranscriptLine => "transcript_line",
             Self::PrincipalAct => "principal_act",
         }
     }
@@ -41,6 +47,7 @@ impl EventKind {
             Self::CreateRoom,
             Self::CertificateRecord,
             Self::UnparsedLine,
+            Self::TranscriptLine,
             Self::PrincipalAct,
         ]
         .into_iter()
