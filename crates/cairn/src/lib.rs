@@ -402,13 +402,16 @@ fn ingest(
     if allowed.is_empty() && failures > 0 {
         return EXIT_FAILURE;
     }
-    let redactor = match redactor(ctx, settings, stderr) {
-        Ok(redactor) => redactor,
-        Err(e) => return failed("ingest", &e, stderr),
-    };
+    // The rule set always compiles (its unit test proves it); were it
+    // not to, each transcript would fail with why.
+    let redactor = redactor(ctx, settings, stderr);
     let mut reports = Vec::new();
     for transcript in &allowed {
-        match ingest::ingest_path(&home, transcript.path(), &redactor, &mut OsEntropy) {
+        let ingested = redactor.as_ref().map_err(Clone::clone).and_then(|r| {
+            ingest::ingest_path(&home, transcript.path(), r, &mut OsEntropy)
+                .map_err(|e| e.to_string())
+        });
+        match ingested {
             Ok(ingested) => {
                 record_ingested(ctx, &ingested, stderr);
                 reports.push(ingested);
