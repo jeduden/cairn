@@ -71,6 +71,7 @@ pub fn cases() -> Vec<Case> {
         benchmark_cases(),
         isolation_cases(),
         instruction_cases(),
+        transcript_contract_cases(),
     ]
     .concat()
 }
@@ -1594,6 +1595,49 @@ fn instruction_cases() -> Vec<Case> {
             ),
             scenario("ENG-14"),
             ".claude/settings.json:",
+        ),
+    ]
+}
+
+/// The drifts the transcript contract's checks exist to catch (ENG-17,
+/// REC-26): a fixture carrying a residual identifier, recorded shapes
+/// that no longer match the recordings, and a recorded transcript the
+/// core's parser no longer reads without format drift.
+fn transcript_contract_cases() -> Vec<Case> {
+    let contract = |name| cargo_test("harness-contract", "contract", name);
+    vec![
+        case(
+            "a recorded fixture carrying an account's email address",
+            "ENG-17",
+            Injection::replace(
+                "testdata/claude-code/2.1.296/transcripts/projects/-w-my-app/72c55a35-095c-4ec1-a79e-834f2cc8d630.jsonl",
+                "user@example.com",
+                "jane.doe@gmail.com",
+            ),
+            contract("recorded_fixtures_hold_no_residual_identifier"),
+            "an email address jane.doe@gmail.com",
+        ),
+        case(
+            "recorded shapes that differ from what the recordings give",
+            "REC-26",
+            Injection::replace(
+                "crates/transcript/shapes/claude-code/2.1.296.json",
+                "\"harness\": \"claude-code\",",
+                "\"harness\":  \"claude-code\",",
+            ),
+            contract("recorded_shapes_regenerate_byte_for_byte"),
+            "differs from the shapes 2.1.296 records",
+        ),
+        case(
+            "a recorded transcript line of a type no supported version records",
+            "ENG-17",
+            Injection::replace(
+                "testdata/claude-code/2.1.296/transcripts/rewind/1-before-rewind.jsonl",
+                "\"type\":\"ai-title\"",
+                "\"type\":\"ai-titles\"",
+            ),
+            contract("every_recorded_transcript_replays_without_an_unparsed_line_or_format_drift"),
+            "format drift claude-code:unversioned:ai-titles:unrecorded-type",
         ),
     ]
 }
