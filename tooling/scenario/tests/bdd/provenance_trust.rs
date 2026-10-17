@@ -34,7 +34,7 @@ fn append_to(path: &Path, text: &str) -> Result<(), String> {
 
 /// Writes managed policy holding `text` into a directory of its own that
 /// another OS user owns, as managed policy must be (ADM-04), and points
-/// the core at it. The scenarios run as root, which may give it away.
+/// the core at it, given away as root or through `sudo -n`.
 fn managed_policy(w: &mut World, text: &str) -> Result<(), String> {
     let dir = w.home.join("managed");
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
@@ -43,8 +43,7 @@ fn managed_policy(w: &mut World, text: &str) -> Result<(), String> {
     // nobody's UID, which owns neither the policy nor its directory.
     let other = 65534;
     for p in [&path, &dir] {
-        std::os::unix::fs::chown(p, Some(other), None)
-            .map_err(|e| format!("chown {}: {e}; the step needs root", p.display()))?;
+        crate::security::give(p, other)?;
     }
     set_env(w, "CAIRN_TEST_MANAGED_POLICY", &path.display().to_string());
     Ok(())

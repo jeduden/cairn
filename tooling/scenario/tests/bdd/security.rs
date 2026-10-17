@@ -74,7 +74,7 @@ fn owner(path: &Path) -> Result<u32, String> {
 
 /// Gives `path` to the OS user `uid`: directly as root, else through
 /// `sudo -n`.
-fn give(path: &Path, uid: u32) -> Result<(), String> {
+pub(crate) fn give(path: &Path, uid: u32) -> Result<(), String> {
     if running_as_root()? {
         return std::os::unix::fs::chown(path, Some(uid), None)
             .map_err(|e| format!("chown {}: {e}", path.display()));
