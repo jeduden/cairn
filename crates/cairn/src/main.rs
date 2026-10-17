@@ -45,6 +45,11 @@ fn main() -> ExitCode {
         std::env::var_os("CAIRN_HOME"),
         std::env::var_os("HOME"),
         std::env::var_os("CAIRN_HOME_ID"),
+        cairn::LogSettings {
+            managed: ctx.managed_policy.clone(),
+            os_user: ctx.os_user,
+            working_dir: ctx.working_dir.clone(),
+        },
         now,
     );
     let log = std::sync::Arc::new(log);

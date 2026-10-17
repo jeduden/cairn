@@ -1,6 +1,6 @@
 //! Cairn's structured logs (ENG-05, OPS-05): a `tracing` subscriber
 //! that writes each event as one JSON object per line, every field
-//! value redacted by the maintained redaction rule set first, so no
+//! value redacted first by the redactor its caller compiles, so no
 //! secret a log field carries reaches the log file. It writes only to
 //! the home's log file, `logs/cairn.jsonl`, which a hook handler logs
 //! to and nowhere else; Cairn ships no log anywhere (OPS-05).
@@ -29,8 +29,9 @@ pub const LOG_FILE: &str = "cairn.jsonl";
 /// the home exists.
 pub type Open = Box<dyn Fn() -> io::Result<Option<Box<dyn Write + Send>>> + Send + Sync>;
 
-/// Compiles the redactor a log's fields pass through.
-pub type Compile = fn() -> Result<Redactor, redaction::PatternError>;
+/// Compiles the redactor a log's fields pass through, or says why it
+/// cannot.
+pub type Compile = Box<dyn Fn() -> Result<Redactor, String> + Send + Sync>;
 
 /// The subscriber.
 pub struct StructuredLog {

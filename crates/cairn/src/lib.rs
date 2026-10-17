@@ -148,18 +148,53 @@ impl Context<'_> {
     }
 }
 
+/// Where a run's settings layers are beside its home: what the
+/// structured log reads the redaction patterns from.
+#[derive(Debug, Clone)]
+pub struct LogSettings {
+    pub managed: PathBuf,
+    pub os_user: configuration::source::OsUser,
+    pub working_dir: Option<PathBuf>,
+}
+
+impl Default for LogSettings {
+    fn default() -> Self {
+        Self {
+            managed: PathBuf::new(),
+            os_user: configuration::source::OsUser::Unchecked,
+            working_dir: None,
+        }
+    }
+}
+
 /// The structured log (ENG-05, OPS-05) for the home the environment
 /// names: written to its log file once the home exists and passes its
 /// checks (SEC-02, SEC-03), and nowhere before; each field redacted by
-/// the maintained redaction rule set, compiled at the first event, so
-/// a run that logs nothing starts no slower.
+/// the maintained redaction rule set and every redaction pattern a
+/// settings layer names (SEC-08), compiled at the first event, so a run
+/// that logs nothing starts no slower. While the principal's
+/// configuration or the repository configuration fails, their patterns
+/// are unknown, so no line is written; each is counted as dropped.
 #[must_use]
 pub fn structured_log(
     cairn_home: Option<OsString>,
     home: Option<OsString>,
     home_id: Option<OsString>,
+    settings: LogSettings,
     clock: fn() -> u64,
 ) -> structured_log::StructuredLog {
+    let (compile_home, compile_os_home) = (cairn_home.clone(), home.clone());
+    // With no home there are no settings layers to read and nowhere to
+    // write: the rule set alone, and the log opens nothing.
+    let compile: structured_log::Compile =
+        Box::new(
+            move || match Home::locate(compile_home.as_deref(), compile_os_home.as_deref()) {
+                Ok(home) => log_redactor(&home, &settings),
+                Err(_) => Redactor::new(&[])
+                    .map(|(r, _)| r)
+                    .map_err(|e| e.to_string()),
+            },
+        );
     let open: structured_log::Open = Box::new(move || {
         let Ok(home) = Home::locate(cairn_home.as_deref(), home.as_deref()) else {
             return Ok(None);
@@ -173,7 +208,48 @@ pub fn structured_log(
         let file = structured_log::open_log_file(&home.root().join("logs"))?;
         Ok(Some(Box::new(file)))
     });
-    structured_log::StructuredLog::new(open, || Redactor::new(&[]).map(|(r, _)| r), Box::new(clock))
+    structured_log::StructuredLog::new(open, compile, Box::new(clock))
+}
+
+/// The redactor log fields pass through: the rule set and every
+/// redaction pattern any settings layer of `home` names, as written, so
+/// a pattern still awaiting acceptance redacts the log too; none while
+/// the principal's configuration or the repository configuration fails.
+fn log_redactor(home: &Home, settings: &LogSettings) -> Result<Redactor, String> {
+    let sources = configuration::Sources {
+        configuration: home.root().join(configuration::source::CONFIGURATION),
+        repository: settings
+            .working_dir
+            .as_deref()
+            .and_then(configuration::source::repository_configuration),
+        managed: settings.managed.clone(),
+        running: settings.os_user,
+    };
+    let loaded = configuration::load(&sources);
+    if loaded.principal_layer_failed() {
+        return Err("a settings layer failed, so its redaction patterns are unknown".to_owned());
+    }
+    let mut patterns: Vec<String> = Vec::new();
+    for layer in [
+        &loaded.layers.configuration,
+        &loaded.layers.repository,
+        &loaded.layers.managed,
+    ] {
+        let named = configuration::key::key("redaction.extra_patterns").and_then(|k| layer.get(&k));
+        if let Some(configuration::Value::Texts(items)) = named {
+            patterns.extend(
+                items
+                    .iter()
+                    .filter(|p| !patterns.contains(p))
+                    .cloned()
+                    .collect::<Vec<_>>(),
+            );
+        }
+    }
+
+    Redactor::new(&patterns)
+        .map(|(r, _)| r)
+        .map_err(|e| e.to_string())
 }
 
 /// Audits the log lines a run could not write (I6).
@@ -326,7 +402,7 @@ fn ingest(
     };
     audit_redactions(ctx, &ingested.redactions, stderr);
     tracing::info!(
-        transcript = %path,
+        transcript = %ingested.redacted_path,
         writer = %ingested.writer,
         events = ingested.events as u64,
         redactions = ingested.redactions.len() as u64,

@@ -44,6 +44,10 @@ pub struct Ingested {
     pub events: usize,
     /// The rule of each redaction made, line by line.
     pub redactions: Vec<String>,
+    /// The transcript's path redacted the way its lines were, the
+    /// harness account identifiers it taught among the rules: the path
+    /// as it may be logged (SEC-08).
+    pub redacted_path: String,
 }
 
 /// Why an ingest recorded nothing, or stopped part way.
@@ -182,6 +186,7 @@ pub fn ingest_path(
         room: seat.room,
         events: new_events.len(),
         redactions,
+        redacted_path: redactor.redact_text(&path.to_string_lossy()).text,
     })
 }
 
