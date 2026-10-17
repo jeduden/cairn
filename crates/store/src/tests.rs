@@ -1135,3 +1135,99 @@ fn a_read_only_store_without_its_schema_is_corrupt() {
         Err(StoreError::Corrupt { address: None, .. })
     ));
 }
+
+#[test]
+fn a_payload_that_is_not_utf_8_is_corrupt() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &[sized_event(1, 9000)]).unwrap();
+    let name = store.log(writer(1)).unwrap()[0]
+        .payload
+        .clone()
+        .unwrap()
+        .name;
+    std::fs::write(dir.path().join("payloads").join(name), [0xff, 0xfe]).unwrap();
+
+    let err = store.log(writer(1)).unwrap_err();
+
+    assert!(
+        matches!(&err, StoreError::Corrupt { address: Some(_), what } if what.contains("not UTF-8")),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_segment_that_cannot_be_recorded_rolls_back_its_append() {
+    for (setup, trigger) in [
+        (0, "BEFORE INSERT ON segments"),
+        (2, "BEFORE UPDATE ON segments"),
+    ] {
+        let dir = TempDir::new().unwrap();
+        let mut store = open(&dir);
+        if setup > 0 {
+            store.append_open(writer(1), &new_events(setup)).unwrap();
+        }
+        store
+            .conn
+            .execute_batch(&format!(
+                "CREATE TRIGGER refuse {trigger} BEGIN SELECT RAISE(ABORT, 'refused'); END"
+            ))
+            .unwrap();
+
+        let err = store.append(writer(1), &new_events(1)).unwrap_err();
+
+        assert!(matches!(err, StoreError::Sqlite(_)), "{trigger}: {err}");
+        assert_eq!(store.log(writer(1)).unwrap().len(), setup as usize);
+    }
+}
+
+#[test]
+fn a_store_whose_segments_cannot_be_read_fails() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &new_events(1)).unwrap();
+    store.conn.execute_batch("DROP TABLE segments").unwrap();
+
+    assert!(matches!(store.log(writer(1)), Err(StoreError::Sqlite(_))));
+    assert!(matches!(
+        store.segments(writer(1)),
+        Err(StoreError::Sqlite(_))
+    ));
+    assert!(matches!(
+        store.close_segment(writer(1)),
+        Err(StoreError::Sqlite(_))
+    ));
+}
+
+#[test]
+fn a_newer_segment_row_that_does_not_parse_is_corrupt() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &new_events(1)).unwrap();
+    store
+        .conn
+        .execute("UPDATE segments SET format_version = 2, first_seq = 0", [])
+        .unwrap();
+
+    let err = store.log(writer(1)).unwrap_err();
+
+    assert!(
+        matches!(&err, StoreError::Corrupt { address: None, what } if what.contains("first seq 0")),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_seat_recorded_with_no_event_opens_no_segment() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let room = RoomId::derive(&[1; 32], &[1; 16]);
+
+    let addresses = store
+        .add_seat_and_append(&seat_in(room, 1), writer(1), &[])
+        .unwrap();
+
+    assert!(addresses.is_empty());
+    assert_eq!(store.seats().unwrap().len(), 1);
+    assert!(store.segments(writer(1)).unwrap().is_empty());
+}

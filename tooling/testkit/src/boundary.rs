@@ -383,16 +383,15 @@ fn kill_after(command: &mut Command, after: std::time::Duration) -> io::Result<b
     let running = child.try_wait()?.is_none();
     if running {
         let group = format!("-{}", child.id());
-        let sent = Command::new("kill")
+        Command::new("kill")
             .args(["-KILL", "--", &group])
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .status()?;
-        // The group may have exited between the look and the kill.
-        if !sent.success() && child.try_wait()?.is_none() {
-            child.kill()?;
-        }
     }
+    // The group may have exited between the look and its kill; a kill of
+    // a program that exited does nothing.
+    let _ = child.kill();
     child.wait()?;
 
     Ok(running)

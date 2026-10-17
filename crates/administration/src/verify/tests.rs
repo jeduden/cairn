@@ -60,7 +60,7 @@ fn fixture() -> Fixture {
 impl Fixture {
     fn sql(&self, statement: &str) {
         let conn = rusqlite::Connection::open(self.home.store()).unwrap();
-        conn.execute(statement, []).unwrap();
+        conn.execute_batch(statement).unwrap();
     }
 
     fn at(&self, seq: u64) -> Address {
@@ -1020,6 +1020,11 @@ fn segments_that_do_not_tile_a_writer_s_log_are_named() {
         (
             "INSERT INTO segments VALUES ('{w}', 2, 3, 1, 1)",
             "the segment from seq 2 overlaps the one before it",
+        ),
+        (
+            "UPDATE segments SET last_seq = 1 WHERE writer = '{w}';
+             INSERT INTO segments VALUES ('{w}', 3, 3, 1, 1)",
+            "no segment holds seq 2",
         ),
     ] {
         let f = fixture();
