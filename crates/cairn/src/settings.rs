@@ -96,13 +96,10 @@ pub(crate) fn recorded(layer: &LayerValues) -> serde_json::Value {
 pub(crate) fn occurrences<'a>(operation: &'static str, f: &'a InForce) -> Vec<Occurrence<'a>> {
     let failed = f.loaded.failures.iter().map(|failure| {
         let (counter, detail) = match failure.layer {
-            SettingsLayer::Configuration => (
-                Counter::SettingsLayerInvalid,
-                "configuration failed; went on without it",
-            ),
+            SettingsLayer::Configuration => (Counter::SettingsLayerInvalid, "configuration failed"),
             SettingsLayer::RepositoryConfiguration => (
                 Counter::SettingsLayerInvalid,
-                "repository configuration failed; went on without it",
+                "repository configuration failed",
             ),
             SettingsLayer::ManagedPolicy => (
                 Counter::ManagedPolicyInvalid,

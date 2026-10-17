@@ -5,9 +5,10 @@ status: "✅"
 result: true
 summary: >-
   @ENG-05 off @pending and passing. cairn ingest redacts every line
-  before it writes, reads only within the transcript roots, and a
-  release build ingests again; hook input past 1 MiB or depth 64 is
-  refused. SEC-05 rows 1-2 and SEC-08's ingest steps pass narrowed.
+  before it writes, refuses while a settings layer fails, reads only
+  within the allowed roots, and a release build ingests again; hook
+  input past 1 MiB or depth 64 is refused. SEC-05 rows 1-2 and SEC-08's
+  ingest steps pass narrowed.
 ---
 # Phase 4 result
 
@@ -29,6 +30,21 @@ Outcome:
 - I1, I6, I8 and I9 hold: only secrets leave the record, every
   redaction and refusal is counted, nothing outside the roots is read,
   and the hook still fails open.
+- The stakeholder ruled that ingest refuses while the principal's
+  configuration or the repository configuration fails, audited and
+  counted (`ingest_refused_settings_invalid`); ADM-04 now says so, and
+  `@ADM-04`'s failing-layer rows show the refusal. The transcript stays
+  for an ingest once the layer is fixed (I1).
+- Log fields are redacted with the rule set and every redaction
+  pattern a settings layer names; while a principal layer fails, no
+  line is written, each counted as dropped. The logged transcript path
+  is redacted with the harness account identifiers too.
+- A `.git` file's git directory is judged after resolving it, so no
+  link or `..` opens the home as a read-only allowed root.
+- The domain model defines allowed root, structured log, redaction
+  rule, redaction rule set, harness account identifiers and redaction
+  patterns; SEC-08 says redaction, not the rule set, removes the
+  harness account identifiers.
 
 Inherited:
 
@@ -50,10 +66,10 @@ For the stakeholder:
 
 - `@SEC-08` cannot pass in M1: `cairn purge --run` is ADM-07's run
   scope, in M3.
-- The domain model defines neither "allowed root" nor "structured
-  log".
-- When the principal's configuration fails to load, ingest records
-  without its redaction patterns (ADM-04's fail-open). Refuse instead?
+- While a settings layer fails, may hook handlers still record? Their
+  redaction patterns are as unknown as ingest's; phase 9 decides.
+- A hostile worktree's `.git` file can still name another
+  repository's git directory as a read-only root: for security review.
 
 Parked:
 
@@ -62,5 +78,4 @@ Parked:
 - Ingest reads a path after resolving it, so a same-user swap can race
   it, and a FIFO in a root blocks the read: phase 8's ingest.
 - Ingest failures other than refusals reach stderr, unaudited.
-- Logs redact with the rule set alone, not the principal's patterns.
 - Redactions are audited just after the write, not with it.

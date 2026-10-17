@@ -3,28 +3,33 @@
 //! status`, naming the key and the problem; a widening setting stands
 //! until a widening principal act accepts it; a repository
 //! configuration's widening key is ignored and counted; managed policy
-//! the person's OS user can write is refused and counted. In each the
-//! core records every event of an agent's run. Whether flags stay on is
-//! PRV-07's to show.
+//! the person's OS user can write is refused and counted. The core
+//! records every event of an agent's run, except while the principal's
+//! configuration fails: then it refuses the ingest, counted, since the
+//! redaction patterns it names are unknown (SEC-08). Whether flags stay
+//! on is PRV-07's to show.
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
+use audit::log::Log;
 use cucumber::{given, then, when};
 use serde_json::Value;
 
 use crate::World;
-use crate::record::{MANAGED_POLICY, last_run, run_core};
+use crate::record::{MANAGED_POLICY, home, last_run, run_core};
 
 /// The transcript an agent's run leaves: one recorded harness session.
 const TRANSCRIPT: &str = "testdata/claude-code/2.1.296/transcripts/projects/-w-my-app/686aa14f-b535-45bc-9ed0-5400ea84bec7.jsonl";
 
-/// What the administration steps track: the lines the agent's run left
-/// and the events `cairn ingest` recorded of them.
+/// What the administration steps track: the lines the agent's run left,
+/// the events `cairn ingest` recorded of them, and its refusal when it
+/// refused.
 #[derive(Debug, Default)]
 pub struct AdministrationSteps {
     lines: usize,
     recorded: Option<u64>,
+    refused: Option<String>,
 }
 
 fn adm(w: &mut World) -> &mut AdministrationSteps {
@@ -43,26 +48,39 @@ pub fn configure(w: &World, text: &str) -> Result<(), String> {
 
 /// An agent's run: the core ingests its transcript, as `cairn ingest`
 /// does, and the step keeps how many lines it left and how many events
-/// were recorded.
+/// were recorded; it fails when the ingest does.
 pub fn agent_runs(w: &mut World) -> Result<(), String> {
+    agent_runs_or_refused(w)?;
+    match adm(w).refused.take() {
+        Some(refused) => Err(refused),
+        None => Ok(()),
+    }
+}
+
+/// An agent's run, as [`agent_runs`], keeping a refused ingest for a
+/// later step to judge.
+fn agent_runs_or_refused(w: &mut World) -> Result<(), String> {
     let path = testkit::repo_root().join(TRANSCRIPT);
     let text = fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let placed = testkit::place_transcript(&w.home, &path).map_err(|e| e.to_string())?;
     let shown = placed.display().to_string();
     run_core(w, &["ingest", "--path", &shown, "--json"], None)?;
     let out = last_run(w)?;
+    let lines = text.lines().count();
     if !out.status.success() {
-        return Err(format!(
+        let refused = format!(
             "cairn ingest exited {}: {}",
             out.status,
             String::from_utf8_lossy(&out.stderr).trim()
-        ));
+        );
+        let state = adm(w);
+        (state.lines, state.recorded, state.refused) = (lines, None, Some(refused));
+        return Ok(());
     }
     let report: Value = serde_json::from_slice(&out.stdout).map_err(|e| e.to_string())?;
     let recorded = report["events"].as_u64();
     let state = adm(w);
-    state.lines = text.lines().count();
-    state.recorded = recorded;
+    (state.lines, state.recorded, state.refused) = (lines, recorded, None);
     Ok(())
 }
 
@@ -90,7 +108,7 @@ fn writable_managed_policy(w: &mut World, setting: String) -> Result<(), String>
 
 #[when(regex = r#"^an agent runs and the person starts "cairn ([^"]+)"$"#)]
 fn agent_runs_and_person_starts(w: &mut World, args: String) -> Result<(), String> {
-    agent_runs(w)?;
+    agent_runs_or_refused(w)?;
     let args: Vec<&str> = args.split_whitespace().collect();
     run_core(w, &args, None)
 }
@@ -189,8 +207,37 @@ fn counted(shown: &str, counter: &str) -> Result<(), String> {
     }
 }
 
+#[then(
+    regex = r#"^the core refuses the run's ingest, audits and counts it in "([^"]+)", and records none of it$"#
+)]
+fn refuses_ingest(w: &mut World, counter: String) -> Result<(), String> {
+    let state = adm(w);
+    if state.refused.is_none() || state.recorded.is_some() {
+        return Err(format!(
+            "the ingest was not refused: recorded {:?}",
+            state.recorded
+        ));
+    }
+    let entries = Log::new(home(w)?.audit())
+        .entries()
+        .map_err(|e| e.to_string())?;
+    if !entries
+        .iter()
+        .any(|e| e.counter.as_deref() == Some(counter.as_str()))
+    {
+        return Err(format!("no audit entry counts {counter:?}"));
+    }
+    if home(w)?.store().exists() {
+        return Err("the refused ingest left a store".to_owned());
+    }
+    Ok(())
+}
+
 #[then(regex = r"^the core records every event of the run$")]
 fn records_every_event(w: &mut World) -> Result<(), String> {
+    if let Some(refused) = adm(w).refused.clone() {
+        return Err(refused);
+    }
     let state = adm(w);
     if state.recorded == Some(state.lines as u64) && state.lines > 0 {
         return Ok(());

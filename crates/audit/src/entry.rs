@@ -56,8 +56,7 @@ pub enum Counter {
     HookRejected,
     HookPanicked,
     McpPanicked,
-    /// A settings layer failed validation, and a recording command
-    /// went on without it (ADM-04, I9).
+    /// A settings layer failed validation (ADM-04).
     SettingsLayerInvalid,
     /// A repository configuration key that does more than tighten was
     /// ignored (SEC-11).
@@ -88,6 +87,11 @@ pub enum Counter {
     PathOutsideAllowedRoots,
     /// A structured log line could not be written (ENG-05, I6).
     LogLineDropped,
+    /// An ingest was refused while the principal's configuration or the
+    /// repository configuration failed, so the redaction patterns it
+    /// needs were unknown; the transcript stays for a later ingest
+    /// (SEC-08, I1).
+    IngestRefusedSettingsInvalid,
 }
 
 impl Counter {
@@ -110,6 +114,7 @@ impl Counter {
             Self::HookInputTooDeep => "hook_input_too_deep",
             Self::PathOutsideAllowedRoots => "path_outside_allowed_roots",
             Self::LogLineDropped => "log_line_dropped",
+            Self::IngestRefusedSettingsInvalid => "ingest_refused_settings_invalid",
         }
     }
 }

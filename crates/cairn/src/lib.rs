@@ -386,6 +386,9 @@ fn ingest(
     let ingested = match ctx.home() {
         Ok(home) => {
             let in_force = audit_settings(ctx, &home, stderr);
+            if in_force.loaded.principal_layer_failed() {
+                return failed("ingest", &refuse_ingest(ctx, stderr), stderr);
+            }
             let settings = &in_force.resolved.settings;
             let transcript = allowed_transcript(ctx, settings, Path::new(&path), stderr);
             transcript.and_then(|transcript| {
@@ -424,6 +427,26 @@ fn ingest(
     };
 
     written(writeln!(stdout, "{line}"), stderr)
+}
+
+/// Refuses an ingest while the principal's configuration or the
+/// repository configuration fails: the redaction patterns they name are
+/// unknown, so nothing may be written (SEC-08). The refusal is audited
+/// and counted (I6), and the transcript stays where it is for an ingest
+/// once the layer is fixed (I1).
+fn refuse_ingest(ctx: &Context, stderr: &mut dyn Write) -> String {
+    let occurrence = Occurrence::Degraded {
+        kind: Kind::Rejected,
+        counter: Counter::IngestRefusedSettingsInvalid,
+        operation: "ingest",
+        detail: "ingest refused while a settings layer fails",
+    };
+    if let Err(e) = ctx.audit(&occurrence) {
+        let _ = writeln!(stderr, "cairn ingest: audit a refused ingest: {e}");
+    }
+
+    "a settings layer failed, so its redaction patterns are unknown; fix it and ingest again"
+        .to_owned()
 }
 
 /// The transcript at `path` resolved within the transcript roots, the
@@ -517,8 +540,14 @@ fn audit_settings(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> setting
         Vec::new()
     });
     let in_force = settings::in_force(ctx, home, &acts);
+    // Managed policy that fails leaves the core recording (ADM-04); a
+    // failing principal layer refuses the ingest after this.
     for failure in &in_force.loaded.failures {
-        let _ = writeln!(stderr, "cairn ingest: recording without {failure}");
+        let line = match failure.layer {
+            configuration::SettingsLayer::ManagedPolicy => format!("recording without {failure}"),
+            _ => failure.to_string(),
+        };
+        let _ = writeln!(stderr, "cairn ingest: {line}");
     }
     for e in settings::audit(ctx, "ingest", &in_force) {
         let _ = writeln!(stderr, "cairn ingest: audit the settings: {e}");
