@@ -131,21 +131,26 @@ fn repository(cwd: &Path) -> Option<(PathBuf, PathBuf)> {
     }
     let text = fs::read_to_string(&dot_git).ok()?;
     let named = text.lines().find_map(|l| l.strip_prefix("gitdir:"))?.trim();
-    let git_dir = top.join(named);
-    if !is_git_directory(&git_dir) {
-        return Some((top.to_path_buf(), dot_git));
+    match git_directory(top, &top.join(named)) {
+        Some(git_dir) => Some((top.to_path_buf(), git_dir)),
+        None => Some((top.to_path_buf(), dot_git)),
     }
-
-    Some((top.to_path_buf(), git_dir))
 }
 
-/// Whether `path` names a git directory: one of its parts is `.git` or
-/// ends in `.git`, as a repository's, a bare one's, and a worktree's or
-/// submodule's inside them do. A `.git` file naming anything else, as
-/// `gitdir: /` would, opens no root beyond the worktree.
-fn is_git_directory(path: &Path) -> bool {
-    path.components()
-        .any(|c| c.as_os_str().to_str().is_some_and(|s| s.ends_with(".git")))
+/// The git directory `named` resolves to, judged after every symbolic
+/// link and `..` in it is resolved: a directory holding `HEAD`, one of
+/// whose parts is `.git` or ends in `.git`, as a repository's, a bare
+/// one's, and a worktree's or submodule's inside them do, and no
+/// ancestor of the worktree `top`. A `.git` file naming anything else,
+/// as `gitdir: /`, a `*.git` link to the home or `sub.git/../..` would,
+/// opens no root beyond the worktree.
+fn git_directory(top: &Path, named: &Path) -> Option<PathBuf> {
+    let resolved = fs::canonicalize(named).ok()?;
+    let looks_like = resolved
+        .components()
+        .any(|c| c.as_os_str().to_str().is_some_and(|s| s.ends_with(".git")));
+    let holds_head = resolved.join("HEAD").is_file();
+    (looks_like && holds_head && !top.starts_with(&resolved)).then_some(resolved)
 }
 
 /// `path` with a leading `~` or `~/` taken as `home`, the way
