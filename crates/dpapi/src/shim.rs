@@ -97,8 +97,37 @@ fn length(len: usize) -> Result<u32, Error> {
 /// Protects `data` through `api`, or unprotects it when `protecting` is
 /// false, and copies out the bytes it returns.
 fn call(api: &dyn Api, data: &[u8], protecting: bool) -> Result<Vec<u8>, Error> {
-    let _ = (api, data, protecting, ptr::null::<u8>());
-    Err(Error::TooLong)
+    let input = Blob {
+        len: length(data.len())?,
+        data: data.as_ptr().cast_mut(),
+    };
+    let mut output = Blob {
+        len: 0,
+        data: ptr::null_mut(),
+    };
+    // SAFETY: `input` points at `data`, which outlives the call and
+    // which DPAPI only reads; `output` is a local DPAPI writes.
+    let ok = unsafe {
+        if protecting {
+            api.protect(&input, &mut output)
+        } else {
+            api.unprotect(&input, &mut output)
+        }
+    };
+    if !ok {
+        return Err(Error::Failed(api.last_error()));
+    }
+    if output.data.is_null() {
+        return Ok(Vec::new());
+    }
+    // SAFETY: on success `output` holds a buffer of `len` bytes, valid
+    // until it is freed below.
+    let out = unsafe { std::slice::from_raw_parts(output.data, output.len as usize) }.to_vec();
+    // SAFETY: the buffer came from this successful call and is freed
+    // once, after its bytes were copied out.
+    unsafe { api.free(output.data, output.len) };
+
+    Ok(out)
 }
 
 /// DPAPI itself, scoped to the running OS user, with no prompt.

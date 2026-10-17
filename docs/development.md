@@ -82,7 +82,8 @@ own [clippy.toml](../crates/cairn/clippy.toml) refuses the
 [its reach test](../crates/cairn/tests/reach.rs) refuses any crate
 linked into it, so neither can arrive through a dependency. Both are
 the build-time half of SEC-01. With unsafe code forbidden, the core's
-own code cannot add code that runs as the process starts either.
+own code cannot add code that runs as the process starts either. The
+DPAPI shim `dpapi` alone only denies it, its tests under Miri (ENG-09).
 
 The gate tests in the `engineering` crate's `static_analysis` target
 hold this in place. CI gates on clippy, rustfmt, cargo-deny,

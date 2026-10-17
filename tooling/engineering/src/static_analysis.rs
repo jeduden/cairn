@@ -263,6 +263,12 @@ pub fn workspace_forbids_unsafe(root_manifest: &str) -> Result<(), String> {
     }
 }
 
+/// Whether a crate's manifest denies unsafe code in its own lints.
+fn denies_unsafe(manifest: &str) -> bool {
+    value(&table(manifest, "lints.rust"), "unsafe_code").map(|v| v.replace(' ', ""))
+        == Some("\"deny\"".to_owned())
+}
+
 /// Whether a crate's manifest inherits the workspace lints.
 #[must_use]
 pub fn inherits_workspace_lints(manifest: &str) -> bool {
@@ -325,7 +331,8 @@ fn forbids_in_roots(c: &Checkout, member: &str) -> Vec<String> {
 
 /// Requires the workspace lints to forbid unsafe code, and every
 /// member crate to inherit them or forbid unsafe code in its own crate
-/// roots, so no crate can switch the ban off.
+/// roots, so no crate can switch the ban off; the one unsafe shim,
+/// [`UNSAFE_SHIM`], denies it in its own lints instead.
 #[must_use]
 pub fn crates_forbid_unsafe(c: &Checkout) -> Vec<String> {
     let root = match c.read("Cargo.toml") {
@@ -344,6 +351,13 @@ pub fn crates_forbid_unsafe(c: &Checkout) -> Vec<String> {
         match c.read(&format!("{member}/Cargo.toml")) {
             Err(e) => problems.push(e),
             Ok(manifest) if inherits_workspace_lints(&manifest) => {}
+            Ok(manifest) if member == UNSAFE_SHIM => {
+                if !denies_unsafe(&manifest) {
+                    problems.push(format!(
+                        "crate {member}, the one unsafe shim, does not deny unsafe code in its own lints"
+                    ));
+                }
+            }
             Ok(_) => problems.extend(forbids_in_roots(c, &member)),
         }
     }
