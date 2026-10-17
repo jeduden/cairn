@@ -1617,10 +1617,12 @@ fn instruction_cases() -> Vec<Case> {
     ]
 }
 
-/// The drifts the transcript contract's checks exist to catch (ENG-17,
-/// REC-26): a fixture carrying a residual identifier, recorded shapes
-/// that no longer match the recordings, and a recorded transcript the
-/// core's parser no longer reads without format drift.
+/// The drifts the transcript and hook input contract's checks exist to
+/// catch (ENG-17, REC-26, SEC-16): a fixture carrying a residual
+/// identifier, recorded or hook input shapes that no longer match the
+/// recordings, a recorded transcript the core's parser no longer reads
+/// without format drift, and a recorded hook input the core's decoder
+/// rejects.
 fn transcript_contract_cases() -> Vec<Case> {
     let contract = |name| cargo_test("harness-contract", "contract", name);
     vec![
@@ -1656,6 +1658,28 @@ fn transcript_contract_cases() -> Vec<Case> {
             ),
             contract("every_recorded_transcript_replays_without_an_unparsed_line_or_format_drift"),
             "format drift claude-code:unversioned:ai-titles:unrecorded-type",
+        ),
+        case(
+            "hook input shapes that differ from what the recorded hook inputs give",
+            "REC-26",
+            Injection::replace(
+                "crates/hook/shapes/claude-code/2.1.296.json",
+                "\"harness\": \"claude-code\",",
+                "\"harness\":  \"claude-code\",",
+            ),
+            contract("hook_input_shapes_regenerate_byte_for_byte"),
+            "differs from the shapes 2.1.296 records",
+        ),
+        case(
+            "a recorded hook input that fails the schema",
+            "SEC-16",
+            Injection::replace(
+                "testdata/claude-code/2.1.296/hooks/startup/01-SessionStart.json",
+                "\"session_id\":\"205beaae-e4b8-4798-a1aa-cdf50c807136\"",
+                "\"session_id\":205",
+            ),
+            contract("every_recorded_hook_input_decodes_without_rejection_or_format_drift"),
+            "hook input failed schema validation",
         ),
     ]
 }

@@ -6,6 +6,7 @@
 use std::fs;
 use std::path::Path;
 
+use hook::{Decoded, Hook};
 use provenance::{Classified, Classifier, Session};
 use redaction::Redactor;
 use transcript::shape::Shapes;
@@ -44,6 +45,39 @@ pub fn replay_file(
 ) -> Result<Vec<String>, String> {
     let body = fs::read_to_string(path).map_err(|e| format!("read {}: {e}", path.display()))?;
     Ok(replay(&body, shapes, redactor)
+        .into_iter()
+        .map(|p| format!("{}: {p}", path.display()))
+        .collect())
+}
+
+/// The problems replaying the recorded hook input at `path` through the
+/// core's hook input decoder finds (SEC-16, REC-26): none for a hook
+/// Cairn does not install, else one when the decoder rejects it or
+/// finds format drift.
+///
+/// # Errors
+///
+/// Fails when the hook input cannot be read.
+pub fn replay_hook_input(path: &Path) -> Result<Vec<String>, String> {
+    let text = fs::read_to_string(path).map_err(|e| format!("read {}: {e}", path.display()))?;
+    let value: serde_json::Value = serde_json::from_str(&text).unwrap_or_default();
+    let installed = value
+        .get("hook_event_name")
+        .and_then(serde_json::Value::as_str)
+        .and_then(Hook::parse);
+    let Some(hook) = installed else {
+        return Ok(Vec::new());
+    };
+    let keep = |s: &str| s.to_owned();
+    let problem = match hook::decode(hook, &text) {
+        Ok(Decoded { drift: None, .. }) => None,
+        Ok(Decoded {
+            drift: Some(drift), ..
+        }) => Some(format!("format drift {}", drift.describe(&keep))),
+        Err(failure) => Some(failure.to_string()),
+    };
+
+    Ok(problem
         .into_iter()
         .map(|p| format!("{}: {p}", path.display()))
         .collect())

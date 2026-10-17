@@ -50,3 +50,44 @@ fn replaying_a_file_leads_each_problem_with_its_path() {
     assert_eq!(problems, [format!("{}: line 1: unparsed", path.display())]);
     assert!(replay_file(&dir.path().join("none"), &shapes(), &redactor()).is_err());
 }
+
+#[test]
+fn a_hook_input_replays_through_the_cores_decoder() {
+    let dir = TempDir::new().unwrap();
+    let write = |name: &str, body: &str| {
+        let path = dir.path().join(name);
+        fs::write(&path, body).unwrap();
+        path
+    };
+    let fits = write(
+        "fits.json",
+        r#"{"session_id":"s","transcript_path":"/t","cwd":"/w","hook_event_name":"SessionStart","source":"startup"}"#,
+    );
+    let drifts = write(
+        "drifts.json",
+        r#"{"session_id":"s","transcript_path":"/t","cwd":"/w","hook_event_name":"SessionStart"}"#,
+    );
+    let invalid = write(
+        "invalid.json",
+        r#"{"session_id":1,"hook_event_name":"SessionStart"}"#,
+    );
+    let other = write("other.json", r#"{"hook_event_name":"Stop"}"#);
+
+    assert_eq!(replay_hook_input(&fits).unwrap(), Vec::<String>::new());
+    assert_eq!(replay_hook_input(&other).unwrap(), Vec::<String>::new());
+    assert_eq!(
+        replay_hook_input(&drifts).unwrap(),
+        [format!(
+            "{}: format drift claude-code:2.1.296:SessionStart:missing:source",
+            drifts.display()
+        )]
+    );
+    assert_eq!(
+        replay_hook_input(&invalid).unwrap(),
+        [format!(
+            "{}: hook input failed schema validation",
+            invalid.display()
+        )]
+    );
+    assert!(replay_hook_input(&dir.path().join("none")).is_err());
+}
