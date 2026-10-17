@@ -125,11 +125,11 @@ fn ignored<'a>(operation: &'static str, i: &'a IgnoredKey) -> Occurrence<'a> {
         (Reason::TrustPolicy, Some(class)) => (
             Counter::TrustPolicyKeyIgnored,
             match i.layer {
-                SettingsLayer::Configuration => "ignored trust policy key in configuration for",
+                SettingsLayer::Configuration => "configuration: rejected trust override for",
                 SettingsLayer::RepositoryConfiguration => {
-                    "ignored trust policy key in repository configuration for"
+                    "repository configuration: rejected trust override for"
                 }
-                SettingsLayer::ManagedPolicy => "ignored trust policy key in managed policy for",
+                SettingsLayer::ManagedPolicy => "managed policy: rejected trust override for",
             },
             class,
         ),

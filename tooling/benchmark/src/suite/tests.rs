@@ -7,6 +7,7 @@ fn bench(name: &'static str) -> Benchmark {
         coverage: Coverage::Target,
         measures: "something",
         args: &[],
+        fixture: Fixture::None,
     }
 }
 
@@ -40,6 +41,20 @@ fn problems_names_a_benchmark_registered_and_retired() {
 }
 
 #[test]
+fn ingestion_is_timed_over_a_transcript_in_a_fresh_home() {
+    let ingest = SUITE.iter().find(|b| b.requirement == "NFR-04").unwrap();
+
+    assert_eq!(ingest.coverage, Coverage::Target);
+    assert_eq!(ingest.args, ["ingest", "--all"]);
+    assert_eq!(
+        ingest.fixture,
+        Fixture::Transcript {
+            lines: INGEST_LINES
+        }
+    );
+}
+
+#[test]
 fn the_core_start_up_is_a_floor_not_a_hook_handler() {
     let start_up = SUITE.iter().find(|b| b.name == "core_start_up").unwrap();
 
@@ -48,9 +63,9 @@ fn the_core_start_up_is_a_floor_not_a_hook_handler() {
 }
 
 #[test]
-fn every_nfr_id_eng_15_names_is_awaiting_a_benchmark_of_real_code() {
+fn every_nfr_id_eng_15_names_but_nfr_04_is_awaiting_a_benchmark_of_real_code() {
     let ids: Vec<&str> = AWAITING.iter().map(|a| a.requirement).collect();
 
-    assert_eq!(ids, ["NFR-01", "NFR-02", "NFR-03", "NFR-04", "NFR-05"]);
+    assert_eq!(ids, ["NFR-01", "NFR-02", "NFR-03", "NFR-05"]);
     assert!(AWAITING.iter().all(|a| !a.on.is_empty()));
 }

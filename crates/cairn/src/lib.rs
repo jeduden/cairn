@@ -127,7 +127,7 @@ pub struct Context<'a> {
     /// Starts reading the process's input, one line at a time.
     pub input: &'a dyn Fn() -> Receiver<io::Result<String>>,
     /// The wall clock, in seconds since the Unix epoch, which only
-    /// audit entries read.
+    /// audit entries and ingest's holds read.
     pub clock: &'a dyn Fn() -> u64,
 }
 
@@ -367,14 +367,14 @@ fn store_failed(command: &str, e: &store::StoreError, stderr: &mut dyn Write) ->
 }
 
 /// The payload threshold the settings in force set (REC-09).
-fn limits(settings: &configuration::resolve::Settings) -> ingest::Limits {
+fn payload_settings(settings: &configuration::resolve::Settings) -> ingest::PayloadSettings {
     // The key has a default and takes only an integer it bounds.
     let threshold = settings
         .get("payload.threshold_bytes")
         .and_then(|v| v.to_json().as_u64())
         .and_then(|n| usize::try_from(n).ok());
 
-    ingest::Limits {
+    ingest::PayloadSettings {
         payload_threshold: threshold.unwrap_or(store::DEFAULT_PAYLOAD_THRESHOLD),
     }
 }
@@ -441,22 +441,47 @@ fn ingest(
     if let Err(e) = start_node(ctx, &home, stderr) {
         return failed("ingest", &e, stderr);
     }
+    let inputs = ingest::Inputs {
+        payload: payload_settings(settings),
+        // Fork observations are the hook handlers' (phase 9 of plan
+        // 2609292012); until then none names a harness fork (REC-04).
+        forks: std::collections::BTreeSet::new(),
+        now_ms: (ctx.clock)().saturating_mul(1000),
+    };
+    let paths: Vec<&Path> = allowed.iter().map(AllowedPath::path).collect();
+    let (reports, failed_ingests) = ingest_all(ctx, &home, &paths, &redactor, &inputs, stderr);
+    failures += failed_ingests;
+    if target == IngestTarget::All {
+        audit_lost(ctx, &home, stderr);
+    }
+    let shown = ingest_report(&target, &reports, failures, as_json);
+    let code = written(write!(stdout, "{shown}"), stderr);
+
+    if failures > 0 { EXIT_FAILURE } else { code }
+}
+
+/// Ingests each transcript source at `paths`. Returns a report of each
+/// ingested, and how many failed, each said on `stderr`. No source is
+/// held at an ingest marker yet, as no fork observation names a harness
+/// fork until the hook handlers record them (REC-04).
+fn ingest_all(
+    ctx: &Context,
+    home: &Home,
+    paths: &[&Path],
+    redactor: &Result<Redactor, String>,
+    inputs: &ingest::Inputs,
+    stderr: &mut dyn Write,
+) -> (Vec<ingest::Ingested>, usize) {
     let mut reports = Vec::new();
-    for transcript in &allowed {
+    let mut failures = 0;
+    for path in paths {
         let ingested = redactor.as_ref().map_err(Clone::clone).and_then(|r| {
-            ingest::ingest_with(
-                &home,
-                transcript.path(),
-                r,
-                &limits(settings),
-                &mut OsEntropy,
-            )
-            .map_err(|e| e.to_string())
+            ingest::ingest_with(home, path, r, inputs, &mut OsEntropy).map_err(|e| e.to_string())
         });
         match ingested {
-            Ok(ingested) => {
-                record_ingested(ctx, &ingested, stderr);
-                reports.push(ingested);
+            Ok(i) => {
+                record_ingested(ctx, &i, stderr);
+                reports.push(i);
             }
             Err(e) => {
                 failed("ingest", &e, stderr);
@@ -464,10 +489,48 @@ fn ingest(
             }
         }
     }
-    let shown = ingest_report(&target, &reports, failures, as_json);
-    let code = written(write!(stdout, "{shown}"), stderr);
 
-    if failures > 0 { EXIT_FAILURE } else { code }
+    (reports, failures)
+}
+
+/// Audits and counts, once each, every transcript source `cairn ingest
+/// --all` finds gone before it was fully ingested (REC-08, I6).
+fn audit_lost(ctx: &Context, home: &Home, stderr: &mut dyn Write) {
+    let found = Store::open(&home.store()).and_then(|mut store| {
+        let sources = store.sources()?;
+        let fresh: Vec<store::Source> = sources::lost(&sources)
+            .into_iter()
+            .filter(|s| !s.lost)
+            .cloned()
+            .collect();
+        for source in &fresh {
+            store.lose(source.id)?;
+        }
+        Ok(fresh)
+    });
+    let fresh = match found {
+        Ok(fresh) => fresh,
+        Err(e) => {
+            let _ = writeln!(stderr, "cairn ingest: find lost transcript sources: {e}");
+            return;
+        }
+    };
+    for source in fresh {
+        let name = Path::new(&source.path)
+            .file_stem()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let occurrence = Occurrence::Keyed {
+            kind: Kind::Dropped,
+            counter: Counter::TranscriptSourceLost,
+            operation: "ingest",
+            detail: "transcript source gone before it was fully ingested:",
+            key: &name,
+        };
+        if let Err(e) = ctx.audit(&occurrence) {
+            let _ = writeln!(stderr, "cairn ingest: audit a lost transcript source: {e}");
+        }
+    }
 }
 
 /// What `cairn ingest`'s command line asks for, or why it is refused.
@@ -512,6 +575,7 @@ fn root_transcripts(
 fn record_ingested(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
     audit_redactions(ctx, &ingested.redactions, stderr);
     audit_parsing(ctx, ingested, stderr);
+    audit_sourcing(ctx, ingested, stderr);
     tracing::info!(
         transcript = %ingested.redacted_path,
         writer = %ingested.writer,
@@ -537,6 +601,9 @@ fn ingest_report(
             "seat": i.seat.to_string(),
             "room": i.room.to_string(),
             "events": i.events,
+            "generation": i.generation,
+            "held": i.held,
+            "runs": runs_json(&i.runs),
         })
     };
     if as_json && *target == IngestTarget::All {
@@ -556,6 +623,87 @@ fn ingest_report(
             }
         })
         .collect()
+}
+
+/// Each run an ingest appended to, as `cairn ingest --json` shows it:
+/// its writer and seat, the harness's agent id, the run its parent link
+/// ties it to, and how many events it gained (REC-02).
+fn runs_json(runs: &[ingest::RunReport]) -> Value {
+    runs.iter()
+        .map(|r| {
+            json!({
+                "writer": r.writer.to_string(),
+                "seat": r.seat.to_string(),
+                "agent_id": r.agent_id,
+                "parent": r.parent.map(|p| p.to_string()),
+                "events": r.events,
+            })
+        })
+        .collect()
+}
+
+/// Audits what an ingest found of its transcript source, one entry
+/// each, naming the source by its redacted name: a new transcript
+/// generation (REC-07); each line repeating a `uuid` with other
+/// content, each repeat owner no fork observation chose, a hold begun
+/// and each line released from one (REC-04).
+fn audit_sourcing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
+    let keyed = |kind, counter, detail| Occurrence::Keyed {
+        kind,
+        counter,
+        operation: "ingest",
+        detail,
+        key: &ingested.name,
+    };
+    let occurrences = [
+        (
+            usize::from(ingested.new_generation),
+            keyed(
+                Kind::Truncated,
+                Counter::NewTranscriptGeneration,
+                "new transcript generation of",
+            ),
+        ),
+        (
+            ingested.conflicts,
+            keyed(
+                Kind::Rejected,
+                Counter::RepeatConflicts,
+                "repeated uuid with other content, recorded as its own event, in",
+            ),
+        ),
+        (
+            ingested.owners_chosen,
+            keyed(
+                Kind::Coalesced,
+                Counter::RepeatOwnerChosen,
+                "repeated lines owned by the run that first recorded them, repeated in",
+            ),
+        ),
+        (
+            usize::from(ingested.hold_started),
+            keyed(
+                Kind::Truncated,
+                Counter::RepeatHeld,
+                "repeated lines held at an ingest marker in",
+            ),
+        ),
+        (
+            ingested.released,
+            keyed(
+                Kind::TimedOut,
+                Counter::RepeatReleased,
+                "repeated line released into its own run in",
+            ),
+        ),
+    ];
+    for (times, occurrence) in &occurrences {
+        for _ in 0..*times {
+            if let Err(e) = ctx.audit(occurrence) {
+                let _ = writeln!(stderr, "cairn ingest: audit the transcript source: {e}");
+            }
+        }
+    }
 }
 
 /// Audits each line an ingest stored as `unparsed` (REC-05) and each
@@ -851,6 +999,10 @@ fn verify_command(
         Ok(store) => store,
         Err(e) => return store_failed("verify", &e, stderr),
     };
+    let lost = match sources::of(&store) {
+        Ok(status) => status.lost,
+        Err(e) => return failed("verify", &e, stderr),
+    };
     let verified = match verify_record(&home, &store) {
         Ok(verified) => verified,
         Err(e) => return failed("verify", &e, stderr),
@@ -863,7 +1015,7 @@ fn verify_command(
         Err(e) => Err(Ok(e)),
     };
     let (code, line) = match checked {
-        Ok((r, staged, a)) => (EXIT_OK, verified_line(as_json, &r, staged, &a)),
+        Ok((r, staged, a)) => (EXIT_OK, verified_line(as_json, &r, staged, &a, &lost)),
         Err(Ok(VerifyError::Store(e))) => return failed("verify", &e, stderr),
         Err(Err(e @ AuditError::Broken { .. })) => {
             broken_json(as_json, "audit", None, &e.to_string(), stderr)
@@ -913,7 +1065,13 @@ fn verify_record(
 
 /// What `cairn verify` says of a record that verified, `staged` while
 /// the node's first start is still to finish, as JSON when asked.
-fn verified_line(as_json: bool, r: &Report, staged: bool, a: &audit::log::Checked) -> String {
+fn verified_line(
+    as_json: bool,
+    r: &Report,
+    staged: bool,
+    a: &audit::log::Checked,
+    lost: &[String],
+) -> String {
     if as_json {
         return json!({
             "integrity": "unsigned",
@@ -922,6 +1080,7 @@ fn verified_line(as_json: bool, r: &Report, staged: bool, a: &audit::log::Checke
             "order": r.full_order(),
             "seats": seats_json(&r.seats),
             "open_segments": segments::open_json(&r.open_segments),
+            "lost_sources": lost,
             "staged": staged,
             "audit": {"files": a.files, "entries": a.entries},
             "broken": null,
@@ -937,12 +1096,23 @@ fn verified_line(as_json: bool, r: &Report, staged: bool, a: &audit::log::Checke
     format!(
         "checked {} writers and {} events: every chain, commitment and seat certificate \
          holds; integrity unsigned, as no log is signed yet; the audit log's chain holds \
-         over {} entries{}{staged}",
+         over {} entries{}{}{staged}",
         r.writers,
         r.events,
         a.entries,
-        open_text(&r.open_segments)
+        open_text(&r.open_segments),
+        lost_line(lost)
     )
+}
+
+/// What `cairn verify` adds for transcript sources gone before they
+/// were fully ingested: nothing when none was (REC-08).
+fn lost_line(lost: &[String]) -> String {
+    if lost.is_empty() {
+        return String::new();
+    }
+
+    format!("; {}", sources::lost_text(lost))
 }
 
 /// What `cairn verify` adds for writer chains that ended without a
@@ -1273,6 +1443,8 @@ struct Status {
     keys: KeyStoreKind,
     /// The store's open and newer segments, once there is a store.
     segments: Option<segments::SegmentsStatus>,
+    /// The transcript sources held or lost, once there is a store.
+    sources: Option<sources::SourcesStatus>,
 }
 
 impl Status {
@@ -1296,6 +1468,7 @@ impl Status {
                 "where": self.keys.describe(),
             },
             "segments": self.segments.as_ref().map(segments::SegmentsStatus::json),
+            "transcript_sources": self.sources.as_ref().map(sources::SourcesStatus::json),
         })
         .to_string()
     }
@@ -1340,6 +1513,7 @@ impl Status {
                 .iter()
                 .flat_map(segments::SegmentsStatus::lines),
         );
+        lines.extend(self.sources.iter().flat_map(sources::SourcesStatus::lines));
 
         lines.join("\n")
     }
@@ -1383,6 +1557,10 @@ fn status(
     let refused = segments.as_ref().is_some_and(|s| !s.newer.is_empty());
     let mut status = status_of(&home, counted, &in_force);
     status.segments = segments;
+    status.sources = match sources::read(&home) {
+        Ok(s) => s,
+        Err(e) => return store_failed("status", &e, stderr),
+    };
     let text = if as_json {
         status.json()
     } else {
@@ -1420,6 +1598,7 @@ fn status_of(home: &Home, counted: Option<(Counts, u64)>, in_force: &settings::I
             .map(ToString::to_string),
         keys: home.key_store().kind(),
         segments: None,
+        sources: None,
     };
     if let Some((counts, entries)) = counted {
         let bytes = fs::metadata(&store).ok().map(|m| m.len());
@@ -1483,6 +1662,7 @@ pub(crate) fn invalid_layers(command: &str, loaded: &Loaded, stderr: &mut dyn Wr
 mod act;
 mod segments;
 mod settings;
+mod sources;
 
 pub use settings::managed_policy;
 

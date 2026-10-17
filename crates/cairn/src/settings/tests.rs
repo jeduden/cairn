@@ -95,13 +95,13 @@ fn every_failed_layer_and_ignored_key_has_its_occurrence() {
     );
     assert_eq!(
         details(&p, "trust_policy_key_ignored"),
-        ["ignored trust policy key in repository configuration for web"]
+        ["repository configuration: rejected trust override for web"]
     );
     assert_eq!(
         details(&q, "trust_policy_key_ignored"),
         [
-            "ignored trust policy key in configuration for file",
-            "ignored trust policy key in managed policy for mcp:github",
+            "configuration: rejected trust override for file",
+            "managed policy: rejected trust override for mcp:github",
         ]
     );
 }

@@ -128,7 +128,12 @@ summary: >-
   harness session's MCP server as the transcript grows (REC-13) or by `cairn
   ingest` (REC-22). A line a harness fork repeats is recorded once, in the
   writer of the run it belongs to; every other run that repeats it records a
-  **repeat reference** to that event's address, never a copy (REC-04). A
+  **repeat reference** to that event's address, never a copy (REC-04). The
+  run it belongs to is the one no **fork observation**, a `SessionStart` hook
+  observation with `source` = `fork`, names; with none, the run that first
+  recorded it, as a structural **repeat owner** event in the device seat
+  records. A fork's line read before its owner's is **held** at an ingest
+  marker until the owner's transcript is ingested or gone, or 30 s pass. A
   transcript source's **ingest position** is how far ingest has read it
   (REC-03).
 - **Worktree checkpoint**: An event recording a worktree's commit, branch and

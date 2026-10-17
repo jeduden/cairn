@@ -3,13 +3,14 @@
 //! real code covers yet, with what it waits on.
 //!
 //! A benchmark measures code that exists. The hook handlers, the MCP
-//! tools, ingestion and the store that NFR-01..05 set targets for
-//! arrive with M1's other plans, so they are declared [`AWAITING`]
-//! here rather than stood in for by a benchmark of something else. The
-//! one benchmark today, [`SUITE`]'s core start-up, is a
-//! [`Coverage::Floor`]: a cost every hook handler pays, not a hook
-//! handler. The ENG-15 scenario stays pending until every NFR id it
-//! names has a [`Coverage::Target`] benchmark.
+//! tools and the store that NFR-01..05 set targets for arrive with M1's
+//! other plans, so they are declared [`AWAITING`] here rather than
+//! stood in for by a benchmark of something else. [`SUITE`]'s core
+//! start-up is a [`Coverage::Floor`]: a cost every hook handler pays,
+//! not a hook handler. Its ingestion benchmark times `cairn ingest`
+//! over a synthetic transcript in a fresh home (NFR-04). The ENG-15
+//! scenario stays pending until every NFR id it names has a
+//! [`Coverage::Target`] benchmark.
 //!
 //! The CI job runs the base commit's suite and the head's. A benchmark
 //! renamed or removed on the head goes into [`RETIRED`] in the same
@@ -27,6 +28,18 @@ pub enum Coverage {
     Floor,
 }
 
+/// What a benchmark's core executable runs over, made before each
+/// sample and outside its time.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Fixture {
+    /// Nothing: the core starts in the benchmark's own environment.
+    None,
+    /// A fresh home, `HOME` and `CAIRN_HOME` both inside it, holding one
+    /// transcript of this many lines under its transcript roots, taken
+    /// from a recorded Claude Code transcript.
+    Transcript { lines: usize },
+}
+
 /// One benchmark of the suite. Every benchmark today starts the core
 /// executable with `args` and times it until it exits; a benchmark that
 /// calls into a crate in-process joins with the crate it measures.
@@ -41,6 +54,8 @@ pub struct Benchmark {
     pub measures: &'static str,
     /// The core executable's arguments.
     pub args: &'static [&'static str],
+    /// What the core runs over.
+    pub fixture: Fixture,
 }
 
 /// An NFR id ENG-15 names that no benchmark of real code covers yet.
@@ -51,19 +66,36 @@ pub struct Awaiting {
     pub on: &'static str,
 }
 
+/// The lines the ingestion benchmark's transcript holds.
+pub const INGEST_LINES: usize = 2_000;
+
 /// The suite.
-pub const SUITE: [Benchmark; 1] = [Benchmark {
-    name: "core_start_up",
-    requirement: "NFR-01",
-    coverage: Coverage::Floor,
-    measures: "the core executable started with `version` until it exits: \
-               the process start every hook handler pays before its own work, \
-               not a hook handler",
-    args: &["version"],
-}];
+pub const SUITE: [Benchmark; 2] = [
+    Benchmark {
+        name: "core_start_up",
+        requirement: "NFR-01",
+        coverage: Coverage::Floor,
+        measures: "the core executable started with `version` until it exits: \
+                   the process start every hook handler pays before its own work, \
+                   not a hook handler",
+        args: &["version"],
+        fixture: Fixture::None,
+    },
+    Benchmark {
+        name: "ingest_transcript",
+        requirement: "NFR-04",
+        coverage: Coverage::Target,
+        measures: "`cairn ingest --all` over one transcript of 2,000 recorded Claude Code \
+                   lines in a fresh home, until it exits: ingestion's events per second",
+        args: &["ingest", "--all"],
+        fixture: Fixture::Transcript {
+            lines: INGEST_LINES,
+        },
+    },
+];
 
 /// The NFR ids ENG-15 names that have no benchmark of real code yet.
-pub const AWAITING: [Awaiting; 5] = [
+pub const AWAITING: [Awaiting; 4] = [
     Awaiting {
         requirement: "NFR-01",
         on: "the hook handlers, timed on a store of 1M events (plan 2609292012)",
@@ -75,10 +107,6 @@ pub const AWAITING: [Awaiting; 5] = [
     Awaiting {
         requirement: "NFR-03",
         on: "the MCP server's event_search and event_expand on a store of 10M events (plan 2609292012)",
-    },
-    Awaiting {
-        requirement: "NFR-04",
-        on: "ingestion (plan 2609292012)",
     },
     Awaiting {
         requirement: "NFR-05",

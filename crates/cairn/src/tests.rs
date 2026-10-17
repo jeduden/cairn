@@ -547,7 +547,127 @@ fn ingest_all_reads_every_transcript_under_the_transcript_roots() {
         .iter()
         .map(|t| t["events"].as_u64().unwrap())
         .collect();
-    assert_eq!(events, [1, 2]);
+    // Read again, each transcript source gains no event (REC-03).
+    assert_eq!(events, [0, 0]);
+}
+
+#[test]
+fn ingest_audits_a_new_transcript_generation_and_repeated_lines() {
+    let p = Process::new();
+    let line = |uuid: &str, text: &str| {
+        format!("{{\"type\":\"x\",\"uuid\":\"{uuid}\",\"t\":\"{text}\"}}\n")
+    };
+    let main = transcript_in(
+        &p,
+        "-w-a",
+        "main-run.jsonl",
+        format!("{}{}", line("u1", "a"), line("u2", "b")).as_bytes(),
+    );
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    std::fs::write(&main, line("u1", "a")).unwrap();
+    transcript_in(
+        &p,
+        "-w-a",
+        "repeating.jsonl",
+        format!("{}{}", line("u1", "a"), line("u2", "other")).as_bytes(),
+    );
+
+    let (code, out, err) = p.invoke(&["ingest", "--all", "--json"], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let main_report = &v["transcripts"][0];
+    assert_eq!(main_report["generation"], 2);
+    assert_eq!(main_report["held"], false);
+    assert_eq!(main_report["runs"][0]["agent_id"], serde_json::Value::Null);
+    assert_eq!(main_report["runs"][0]["parent"], serde_json::Value::Null);
+    let audit = audit_text(&p);
+    assert!(
+        audit.contains("new transcript generation of main-run"),
+        "{audit}"
+    );
+    assert!(
+        audit.contains("repeated uuid with other content, recorded as its own event, in repeating"),
+        "{audit}"
+    );
+    assert!(
+        audit.contains(
+            "repeated lines owned by the run that first recorded them, repeated in repeating"
+        ),
+        "{audit}"
+    );
+    let (_, out, _) = p.invoke(&["status", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    for counter in [
+        "new_transcript_generation",
+        "repeat_conflicts",
+        "repeat_owner_chosen",
+    ] {
+        assert_eq!(v["counters"][counter]["total"], 1, "{counter}");
+    }
+    assert_eq!(p.invoke(&["verify"], &DEV).0, EXIT_OK);
+}
+
+#[test]
+fn a_transcript_source_gone_before_it_was_fully_ingested_is_reported_and_audited_once() {
+    let p = Process::new();
+    let cut = transcript_in(&p, "-w-a", "cut-short.jsonl", b"{\"a\":1}\n{\"b\":");
+    let whole = transcript_in(&p, "-w-a", "main-run.jsonl", b"{\"a\":1}\n");
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    std::fs::remove_file(&cut).unwrap();
+    std::fs::remove_file(&whole).unwrap();
+
+    let (code, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(
+        v["lost_sources"],
+        serde_json::json!([cut.display().to_string()])
+    );
+    let (_, text, _) = p.invoke(&["verify"], &DEV);
+    assert!(
+        text.contains("transcript sources gone before they were fully ingested: "),
+        "{text}"
+    );
+    let (_, status, _) = p.invoke(&["status"], &DEV);
+    assert!(
+        status.contains("transcript sources gone before they were fully ingested: "),
+        "{status}"
+    );
+
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    let audit = audit_text(&p);
+    assert_eq!(
+        audit
+            .matches("transcript source gone before it was fully ingested: cut-short")
+            .count(),
+        1,
+        "{audit}"
+    );
+}
+
+#[test]
+fn transcript_sources_that_cannot_be_read_fail_verify_and_status_and_are_said_by_ingest() {
+    let p = Process::new();
+    transcript_in(&p, "-w-a", "s1.jsonl", b"a\n");
+    assert_eq!(p.invoke(&["ingest", "--all"], &DEV).0, EXIT_OK);
+    std::fs::remove_file(p.dir.path().join(".claude/projects/-w-a/s1.jsonl")).unwrap();
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute_batch("DROP TABLE transcript_sources").unwrap();
+    drop(conn);
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("transcript_sources"), "{err}");
+    let (code, _, err) = p.invoke(&["status"], &DEV);
+    assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("transcript_sources"), "{err}");
+    let (_, _, err) = p.invoke(&["ingest", "--all"], &DEV);
+    assert!(
+        err.contains("cairn ingest: find lost transcript sources: "),
+        "{err}"
+    );
 }
 
 #[test]
@@ -1481,8 +1601,13 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
                 "where": "files only this OS user can read; an unsandboxed agent of the same OS user could read them",
             },
             "segments": {"open": [], "newer": []},
+            "transcript_sources": {"held": [], "lost": []},
         })
     );
+}
+
+#[test]
+fn status_of_a_home_not_made_yet_shows_no_store() {
     let fresh = Process::new();
     let (_, out, _) = fresh.invoke(&["status", "--json"], &DEV);
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();
@@ -1502,6 +1627,7 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
                 "where": "files only this OS user can read; an unsandboxed agent of the same OS user could read them",
             },
             "segments": null,
+            "transcript_sources": null,
         })
     );
 }

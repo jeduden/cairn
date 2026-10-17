@@ -26,6 +26,14 @@ pub enum EventKind {
     /// A node identity change event, the first event of the device seat
     /// a node whose node identity changed starts (REC-24).
     NodeIdentityChange,
+    /// A repeat reference: a transcript line a harness fork repeats,
+    /// recorded by a run that does not own it as the address of the
+    /// event that holds it, never a copy (REC-04).
+    RepeatReference,
+    /// A repeat owner event: which run's writer owns a repeated line
+    /// when no fork observation names one, recorded in the device seat
+    /// (REC-04).
+    RepeatOwner,
 }
 
 impl EventKind {
@@ -40,6 +48,8 @@ impl EventKind {
             Self::TranscriptLine => "transcript_line",
             Self::PrincipalAct => "principal_act",
             Self::NodeIdentityChange => "node_identity_change",
+            Self::RepeatReference => "repeat_reference",
+            Self::RepeatOwner => "repeat_owner",
         }
     }
 
@@ -54,6 +64,8 @@ impl EventKind {
             Self::TranscriptLine,
             Self::PrincipalAct,
             Self::NodeIdentityChange,
+            Self::RepeatReference,
+            Self::RepeatOwner,
         ]
         .into_iter()
         .find(|k| k.as_str() == name)

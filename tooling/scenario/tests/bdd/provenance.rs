@@ -59,7 +59,7 @@ fn pointer<'a>(line: &'a Value, field: &str) -> Option<&'a Value> {
 }
 
 /// A recorded attachment line of attachment type `kind`.
-fn attachment(kind: &str) -> Result<Value, String> {
+pub(crate) fn attachment(kind: &str) -> Result<Value, String> {
     recorded_where("attachment", "attachment/type", &json!(kind))
 }
 
@@ -70,7 +70,7 @@ fn typed() -> Result<Value, String> {
 
 /// A Bash call and its result, the result's output replaced by
 /// `output` when given.
-fn bash_result(output: Option<&str>) -> Result<Vec<Value>, String> {
+pub(crate) fn bash_result(output: Option<&str>) -> Result<Vec<Value>, String> {
     let (call, mut result) = recorded_call("Bash")?;
     if let Some(output) = output {
         result["message"]["content"][0]["content"] = json!(output);
@@ -163,7 +163,7 @@ fn structural_item(item: &str) -> Result<Vec<Value>, String> {
 
 /// Writes `lines` as a new transcript under the default transcript
 /// root and ingests it.
-fn record_lines(w: &mut World, lines: &[Value]) -> Result<(), String> {
+pub(crate) fn record_lines(w: &mut World, lines: &[Value]) -> Result<(), String> {
     let dir = w.home.join(".claude").join("projects").join("-w-app");
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let path: PathBuf = dir.join("item.jsonl");
@@ -215,7 +215,7 @@ fn every_kind(w: &mut World, name: String) -> Result<(), String> {
 }
 
 /// A recorded Bash call and its result, renamed to a call of `tool`.
-fn synthetic_call(tool: &str) -> Result<Vec<Value>, String> {
+pub(crate) fn synthetic_call(tool: &str) -> Result<Vec<Value>, String> {
     let (mut call, mut result) = recorded_call("Bash")?;
     let id = format!("toolu_phase7_{tool}");
     call["message"]["content"][0]["name"] = json!(tool);

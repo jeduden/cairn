@@ -77,7 +77,8 @@ fn the_store_holds_every_recorded_transcript_within_1_5_times_its_stored_text() 
     for writer in writers {
         for stored in store.log(writer).unwrap() {
             assert_ne!(stored.link.header.kind, EventKind::KeyEvent);
-            text += stored.content.unwrap()["text"].as_str().unwrap().len() as u64;
+            // A repeat reference keeps no text of its own (REC-04).
+            text += stored.content.unwrap()["text"].as_str().map_or(0, str::len) as u64;
         }
     }
     drop(store);

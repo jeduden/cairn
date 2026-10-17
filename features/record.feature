@@ -5,7 +5,7 @@ Feature: Record (REC)
   declared but not yet written: its steps are bound when the plan that
   implements the requirement lands.
 
-  @REC-01 @P0 @I1 @pending
+  @REC-01 @P0 @I1
   Scenario Outline: harness transcripts are ingested from the configured transcript roots
     Given an isolated Cairn home
     And the person's configuration <roots>
@@ -40,7 +40,7 @@ Feature: Record (REC)
     And that new run belongs to the agent of "parent-run" only when the harness gives an agent id stable across harness sessions, else it is its own agent
     And a later run of an agent reaches the agent's rooms through the "rooms" recall scope and its restore blocks, but holds no seat, add or role there until it joins under LANE-23
 
-  @REC-03 @P0 @I1 @I10 @pending
+  @REC-03 @P0 @I1 @I10
   Scenario: re-ingesting a transcript source creates no duplicate events
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
@@ -114,7 +114,7 @@ Feature: Record (REC)
     And each seq was assigned by its writer inside the append transaction that wrote its event
     And a local index position is never shown or accepted as an address
 
-  @REC-07 @P0 @I1 @I6 @pending
+  @REC-07 @P0 @I1 @I6
   Scenario Outline: a shrunk or rewritten transcript source starts a new transcript generation without losing events
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"

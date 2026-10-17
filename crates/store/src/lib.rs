@@ -13,6 +13,7 @@
 
 pub mod payload;
 pub mod segment;
+pub mod source;
 
 use std::fmt;
 use std::path::Path;
@@ -33,6 +34,7 @@ use serde_json::Value;
 
 pub use payload::{Disk, OsDisk, Payloads};
 pub use segment::{SEGMENT_VERSION, Segment};
+pub use source::{IngestedRun, Place, Placed, Position, Source};
 
 /// The store's schema version (ADM-05, ADM-11).
 pub const SCHEMA_VERSION: u32 = 1;
@@ -642,6 +644,194 @@ impl Store {
             .collect()
     }
 
+    /// The newest generation of the transcript source at `path`.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or its row does not parse.
+    pub fn source(&self, path: &str) -> Result<Option<Source>, StoreError> {
+        let found = source::select(
+            &self.conn,
+            &format!("{} AND path = ?1", source::NEWEST),
+            path,
+        );
+
+        found.map(|mut s| s.pop())
+    }
+
+    /// Every generation of the transcript source at `path`, oldest
+    /// first.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn generations(&self, path: &str) -> Result<Vec<Source>, StoreError> {
+        source::select(&self.conn, "WHERE path = ?1 ORDER BY generation", path)
+    }
+
+    /// The newest generation of every transcript source, by path.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn sources(&self) -> Result<Vec<Source>, StoreError> {
+        source::select(
+            &self.conn,
+            &format!("{} AND ?1 = ?1 ORDER BY path", source::NEWEST),
+            "",
+        )
+    }
+
+    /// Starts the next generation of the transcript source at `path`,
+    /// which lies in the transcript directory `directory`, its first
+    /// when none was read (REC-07).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn start_generation(&mut self, path: &str, directory: &str) -> Result<Source, StoreError> {
+        source::start(&self.conn, path, directory)
+    }
+
+    /// Moves the position of the transcript source generation `id` to
+    /// `position`, appending nothing.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn advance(&mut self, id: i64, position: &Position) -> Result<(), StoreError> {
+        source::advance(&self.conn, id, position)
+    }
+
+    /// Marks the transcript source generation `id` held at its ingest
+    /// marker since `since`, or, with none, no longer held (REC-04).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn hold(&mut self, id: i64, since: Option<u64>) -> Result<(), StoreError> {
+        source::hold(&self.conn, id, since)
+    }
+
+    /// Marks the transcript source generation `id` gone before it was
+    /// fully ingested (REC-08).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn lose(&mut self, id: i64) -> Result<(), StoreError> {
+        source::lose(&self.conn, id)
+    }
+
+    /// Appends `new_events` to `writer`'s log in one transaction, as
+    /// [`append`](Self::append) does, keeping each one's place in the
+    /// transcript source generation `id` and moving its position to
+    /// `position` in the same transaction (REC-03); the writer's segment
+    /// closes after each event `closes` marks `true` (REC-19).
+    ///
+    /// # Errors
+    ///
+    /// As [`append`](Self::append); nothing is appended or moved then.
+    pub fn append_lines(
+        &mut self,
+        writer: WriterId,
+        new_events: &[NewEvent],
+        places: &[Place],
+        closes: &[bool],
+        id: i64,
+        position: &Position,
+    ) -> Result<Vec<Address>, StoreError> {
+        let to = Out {
+            payloads: &self.payloads,
+            threshold: self.threshold,
+        };
+        let tx = self
+            .conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let mut out = Vec::with_capacity(new_events.len());
+        let mut start = 0;
+        for i in 0..new_events.len() {
+            let close = closes.get(i).copied().unwrap_or(false);
+            if close || i + 1 == new_events.len() {
+                out.extend(to.append_chunk(&tx, writer, &new_events[start..=i], close)?);
+                start = i + 1;
+            }
+        }
+        source::place(&tx, id, &out, places)?;
+        source::advance(&tx, id, position)?;
+        tx.commit()?;
+
+        Ok(out)
+    }
+
+    /// The events of the transcript source generation `id`, in line
+    /// order.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn placed(&self, id: i64) -> Result<Vec<Placed>, StoreError> {
+        source::placed(&self.conn, id)
+    }
+
+    /// The event that first recorded the line `uuid` names in the
+    /// transcript directory `directory`, read from a transcript source
+    /// other than `path`; never a repeat reference (REC-04).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn line_owner(
+        &self,
+        directory: &str,
+        uuid: &str,
+        path: &str,
+    ) -> Result<Option<Address>, StoreError> {
+        source::owner(&self.conn, directory, uuid, path)
+    }
+
+    /// Keeps `run`, an ingested run (REC-02): for its transcript source
+    /// and agent id, it takes over from any kept before, whose writer
+    /// gets nothing more (REC-19).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does, or when its writer is already kept.
+    pub fn add_run(&mut self, run: &IngestedRun) -> Result<(), StoreError> {
+        source::add_run(&self.conn, run)
+    }
+
+    /// The ingested run of the transcript source at `path` and the
+    /// harness's agent id `agent_id`, none for the main run: the one
+    /// kept last.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn ingested_run(
+        &self,
+        path: &str,
+        agent_id: Option<&str>,
+    ) -> Result<Option<IngestedRun>, StoreError> {
+        let found = source::runs(
+            &self.conn,
+            "WHERE path = ?1 AND ifnull(agent_id, '') = ?2",
+            path,
+            agent_id.unwrap_or_default(),
+        );
+
+        found.map(|mut r| r.pop())
+    }
+
+    /// Every ingested run, in the order they were kept.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn ingested_runs(&self) -> Result<Vec<IngestedRun>, StoreError> {
+        source::runs(&self.conn, "WHERE ?1 = ?2", "", "")
+    }
+
     /// The event at `address`.
     ///
     /// # Errors
@@ -801,6 +991,10 @@ impl Out<'_> {
         let (mut next, mut prev_hash) = newest(tx, writer)?;
         let mut heads = advanced_heads(tx, writer)?;
         let mut out = Vec::with_capacity(new_events.len());
+        let mut inserts = Inserts {
+            event: tx.prepare(INSERT_EVENT)?,
+            head: tx.prepare(INSERT_HEAD)?,
+        };
         for new in new_events {
             let seq = Seq::new(next).ok_or(StoreError::Full(writer))?;
             let address = Address::new(writer, seq);
@@ -815,7 +1009,7 @@ impl Out<'_> {
             };
             let hash = header.hash();
             let body = self.body(address, new, canonical)?;
-            insert_event(tx, &header, hash, new, &body)?;
+            insert_event(&mut inserts, &header, hash, new, &body)?;
             out.push(address);
             prev_hash = hash;
             next += 1;
@@ -891,10 +1085,28 @@ enum Body {
     Payload(PayloadReference),
 }
 
+/// Inserts an event's row.
+const INSERT_EVENT: &str =
+    "INSERT INTO events (writer, seq, kind, provenance, prev_hash, commitment, hash, content,
+                         commitment_key, preview, payload, payload_size, transcript_timestamp)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)";
+
+/// Inserts one head an event cites.
+const INSERT_HEAD: &str =
+    "INSERT INTO event_heads (writer, seq, other_writer, other_seq, other_hash)
+     VALUES (?1, ?2, ?3, ?4, ?5)";
+
+/// The statements an append transaction inserts its events with,
+/// prepared once for all of them.
+struct Inserts<'t> {
+    event: rusqlite::Statement<'t>,
+    head: rusqlite::Statement<'t>,
+}
+
 /// Inserts the row of the new event `new`, whose header is `header` and
 /// hash `hash`, its content kept as `body`, and the heads it cites.
 fn insert_event(
-    tx: &Transaction<'_>,
+    inserts: &mut Inserts<'_>,
     header: &EventHeader,
     hash: Digest,
     new: &NewEvent,
@@ -906,31 +1118,30 @@ fn insert_event(
         Body::Inline(text) => (Some(text.as_str()), None),
         Body::Payload(r) => (None, Some(r)),
     };
-    tx.execute(
-        "INSERT INTO events (writer, seq, kind, provenance, prev_hash, commitment, hash, content,
-                             commitment_key, preview, payload, payload_size, transcript_timestamp)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-        params![
+    inserts.event.execute(params![
+        id,
+        seq,
+        header.kind.as_str(),
+        header.provenance.name(),
+        header.prev_hash.to_hex(),
+        header.commitment.to_string(),
+        hash.to_hex(),
+        content,
+        new.commitment_key.to_hex(),
+        reference.map(|r| r.preview.as_str()),
+        reference.map(|r| r.name.as_str()),
+        reference.map(|r| sql_size(r.size)),
+        new.transcript_timestamp,
+    ])?;
+    for seen in &header.heads {
+        let inserted = inserts.head.execute(params![
             id,
             seq,
-            header.kind.as_str(),
-            header.provenance.name(),
-            header.prev_hash.to_hex(),
-            header.commitment.to_string(),
-            hash.to_hex(),
-            content,
-            new.commitment_key.to_hex(),
-            reference.map(|r| r.preview.as_str()),
-            reference.map(|r| r.name.as_str()),
-            reference.map(|r| sql_size(r.size)),
-            new.transcript_timestamp,
-        ],
-    )?;
-    for seen in &header.heads {
-        tx.execute(
-            "INSERT INTO event_heads (writer, seq, other_writer, other_seq, other_hash) VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![id, seq, seen.address.writer.to_string(), sql(seen.address.seq), seen.head.to_hex()],
-        )?;
+            seen.address.writer.to_string(),
+            sql(seen.address.seq),
+            seen.head.to_hex()
+        ]);
+        inserted?;
     }
 
     Ok(())
@@ -995,6 +1206,7 @@ fn insert_seat(conn: &Connection, seat: &StoredSeat) -> Result<(), StoreError> {
 fn create(tx: &rusqlite::Transaction<'_>) -> Result<(), StoreError> {
     tx.execute_batch(SCHEMA)?;
     tx.execute_batch(segment::SCHEMA)?;
+    tx.execute_batch(source::SCHEMA)?;
     let mut insert = tx.prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
     for (key, value) in [
         ("schema_version", SCHEMA_VERSION.to_string()),
