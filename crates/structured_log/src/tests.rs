@@ -23,11 +23,13 @@ impl io::Write for Shared {
 }
 
 fn log_to(open: Open) -> StructuredLog {
-    StructuredLog::new(open, rule_set, Box::new(|| 7))
+    StructuredLog::new(open, Box::new(rule_set), Box::new(|| 7))
 }
 
-fn rule_set() -> Result<Redactor, redaction::PatternError> {
-    Redactor::new(&[]).map(|(r, _)| r)
+fn rule_set() -> Result<Redactor, String> {
+    Redactor::new(&[])
+        .map(|(r, _)| r)
+        .map_err(|e| e.to_string())
 }
 
 fn lines(shared: &Shared) -> Vec<Value> {
@@ -151,10 +153,9 @@ fn the_log_file_is_owner_only_and_appended_to() {
 fn a_redactor_that_does_not_compile_drops_every_line_unwritten() {
     let shared = Shared::default();
     let out = shared.clone();
-    let failing = || Err(redaction::PatternError::Syntax("x".to_owned()));
     let log = Arc::new(StructuredLog::new(
         Box::new(move || Ok(Some(Box::new(out.clone())))),
-        failing,
+        Box::new(|| Err("a settings layer failed".to_owned())),
         Box::new(|| 7),
     ));
     let subscriber: Arc<dyn tracing::Subscriber + Send + Sync> = log.clone();

@@ -191,6 +191,25 @@ fn a_store_that_fails_part_way_names_the_writer_and_what_landed() {
 }
 
 #[test]
+fn the_redacted_path_is_redacted_like_the_lines() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let named = dir.path().join("user@example.com");
+    std::fs::create_dir_all(&named).unwrap();
+    let path = named.join("ACME-12345678.jsonl");
+    let context =
+        r#"{"attachment":{"type":"session_context","context":{"userEmail":"user@example.com"}}}"#;
+    std::fs::write(&path, format!("{context}\n")).unwrap();
+    let (redactor, _) = Redactor::new(&["ACME-[0-9]{8}".to_owned()]).unwrap();
+
+    let ingested = ingest_path(&home, &path, &redactor, &mut OsEntropy).unwrap();
+
+    let shown = &ingested.redacted_path;
+    assert!(shown.contains("[REDACTED:account_email]"), "{shown}");
+    assert!(shown.contains("[REDACTED:extra_pattern_1]"), "{shown}");
+}
+
+#[test]
 fn every_line_is_redacted_before_anything_is_written() {
     let dir = TempDir::new().unwrap();
     let home = home(&dir);

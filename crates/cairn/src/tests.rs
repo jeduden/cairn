@@ -1554,17 +1554,93 @@ fn bounded_lines_refuse_a_line_past_the_limit_without_holding_it_and_go_on() {
 /// Logs one event carrying an AWS access key through the structured
 /// log of `p`'s home, with `home_id` supplied.
 fn log_one(p: &Process, home_id: Option<&str>) -> std::sync::Arc<structured_log::StructuredLog> {
+    log_with(p, home_id, || {
+        tracing::info!(key = "AKIAIOSFODNN7EXAMPLE", "logged");
+    })
+}
+
+/// The structured log of `p`'s home, with `home_id` supplied, its
+/// settings layers where `p`'s commands find them, as it stands after
+/// `logging` ran under it.
+fn log_with(
+    p: &Process,
+    home_id: Option<&str>,
+    logging: impl FnOnce(),
+) -> std::sync::Arc<structured_log::StructuredLog> {
+    let ctx = crate::settings::tests::ctx_of(p);
+    let (managed, os_user, working_dir) = (
+        ctx.managed_policy.clone(),
+        ctx.os_user,
+        ctx.working_dir.clone(),
+    );
     let log = std::sync::Arc::new(structured_log(
         None,
         Some(p.dir.path().as_os_str().to_owned()),
         home_id.map(Into::into),
+        LogSettings {
+            managed,
+            os_user,
+            working_dir,
+        },
         || NOW,
     ));
     let dispatch = tracing::Dispatch::from(log.clone());
-    tracing::dispatcher::with_default(&dispatch, || {
-        tracing::info!(key = "AKIAIOSFODNN7EXAMPLE", "logged");
-    });
+    tracing::dispatcher::with_default(&dispatch, logging);
     log
+}
+
+fn logged_lines(p: &Process) -> Vec<Value> {
+    std::fs::read_to_string(log_file(p))
+        .unwrap_or_default()
+        .lines()
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect()
+}
+
+/// The log redacts each field with the principal's redaction patterns
+/// too, and writes no line while the principal's configuration fails,
+/// so its patterns are unknown (SEC-08).
+#[test]
+fn the_structured_log_redacts_with_the_principal_patterns_or_not_at_all() {
+    let p = Process::new();
+    p.configure("[redaction]\nextra_patterns = [\"ACME-[0-9]{8}\"]\n");
+    let log = log_with(&p, None, || {
+        tracing::info!(key = "id ACME-12345678", "logged")
+    });
+    assert_eq!(log.dropped(), 0);
+    assert_eq!(
+        logged_lines(&p)[0]["fields"]["key"],
+        "id [REDACTED:extra_pattern_1]"
+    );
+
+    p.configure("recal.max_k = 10\n");
+    let log = log_with(&p, None, || {
+        tracing::info!(key = "id ACME-12345678", "logged")
+    });
+    assert_eq!(log.dropped(), 1);
+    assert_eq!(logged_lines(&p).len(), 1);
+}
+
+/// The transcript path ingest logs is redacted with the harness account
+/// identifiers the transcript taught it (SEC-08).
+#[test]
+fn the_logged_transcript_path_is_redacted_with_the_harness_account_identifiers() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let dir = p.dir.path().join(".claude/projects/someone@example.com");
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("t.jsonl");
+    let context = r#"{"attachment":{"type":"session_context","context":{"userEmail":"someone@example.com"}}}"#;
+    std::fs::write(&path, format!("{context}\n")).unwrap();
+    let path = path.display().to_string();
+
+    log_with(&p, None, || {
+        assert_eq!(p.invoke(&["ingest", "--path", &path], &DEV).0, 0);
+    });
+
+    let logged = logged_lines(&p);
+    let transcript = logged[0]["fields"]["transcript"].as_str().unwrap();
+    assert!(!transcript.contains("someone@example.com"), "{transcript}");
 }
 
 fn log_file(p: &Process) -> std::path::PathBuf {
@@ -1607,7 +1683,7 @@ fn a_home_the_core_refuses_gets_no_log() {
     set_mode(&p.cairn_home(), 0o755);
     log_one(&p, Some("h1"));
     assert!(!log_file(&p).exists());
-    let none = structured_log(None, None, None, || NOW);
+    let none = structured_log(None, None, None, LogSettings::default(), || NOW);
     let dispatch = tracing::Dispatch::new(none);
     tracing::dispatcher::with_default(&dispatch, || tracing::info!("nowhere"));
 }
