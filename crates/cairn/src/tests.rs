@@ -2398,3 +2398,50 @@ fn ingest_puts_a_line_above_the_configured_payload_threshold_in_the_payload_stor
     assert!(held, "the line's content is in the payload store");
     assert_eq!(p.invoke(&["verify"], &DEV).0, EXIT_OK);
 }
+
+#[test]
+fn verify_of_a_home_whose_first_start_was_cut_short_before_it_recorded_exits_0() {
+    use key::key_store::Entry;
+    use key::signing::{DeviceKey, RecoveryKey, SeatKey};
+    let p = Process::new();
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    home.create().unwrap();
+    drop(Store::open(&home.store()).unwrap());
+    // A first start killed after it staged its keys, before it recorded.
+    let keys = home.key_store();
+    DeviceKey::mint(&mut OsEntropy)
+        .unwrap()
+        .keep(keys.as_ref(), &Entry::staged(&Entry::device()))
+        .unwrap();
+    RecoveryKey::mint(&mut OsEntropy)
+        .unwrap()
+        .keep(keys.as_ref(), &Entry::staged(&Entry::recovery()))
+        .unwrap();
+    SeatKey::mint(&mut OsEntropy)
+        .unwrap()
+        .keep(keys.as_ref(), &Entry::staged_seat())
+        .unwrap();
+    key::file::write_secret(&home.staged(), &format!("genesis {}", "0".repeat(32))).unwrap();
+
+    let (code, out, err) = p.invoke(&["verify"], &DEV);
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(out.starts_with("checked 0 writers and 0 events: "), "{out}");
+    assert!(
+        out.ends_with("; the node's first start was interrupted, and its next start finishes it\n"),
+        "{out}"
+    );
+    let (_, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(
+        (&v["writers"], &v["staged"]),
+        (&serde_json::json!(0), &serde_json::json!(true))
+    );
+
+    // Its next start finishes it, and the record verifies against the
+    // key it placed.
+    let (code, _, _) = p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
+    assert_eq!(code, EXIT_OK);
+    let (_, out, _) = p.invoke(&["verify", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["staged"], serde_json::json!(false));
+}

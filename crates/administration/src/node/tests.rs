@@ -732,3 +732,95 @@ fn a_seat_entry_that_cannot_be_read_stops_the_placing() {
         other => panic!("want a key error, got {other}"),
     }
 }
+
+#[test]
+fn the_verifying_key_is_the_device_key_once_a_start_finished() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let mut store = Store::open(&home.store()).unwrap();
+    let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+
+    assert_eq!(
+        verifying_key(&home, &store).unwrap(),
+        Some((node.device().public(), false))
+    );
+}
+
+#[test]
+fn a_first_start_interrupted_before_it_recorded_has_no_verifying_key_yet() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let store = Store::open(&home.store()).unwrap();
+    Staged::mint(&mut OsEntropy, true)
+        .unwrap()
+        .stage(&home, &files(&home))
+        .unwrap();
+
+    assert_eq!(verifying_key(&home, &store).unwrap(), None);
+}
+
+#[test]
+fn a_first_start_interrupted_after_it_recorded_is_verified_against_its_staged_key() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let keys = files(&home);
+    let mut store = Store::open(&home.store()).unwrap();
+    let staged = Staged::mint(&mut OsEntropy, true).unwrap();
+    staged.stage(&home, &keys).unwrap();
+    staged
+        .record_genesis(&mut store, &mut OsEntropy, staged.nonce.unwrap())
+        .unwrap();
+
+    let (key, is_staged) = verifying_key(&home, &store).unwrap().unwrap();
+
+    assert_eq!((key, is_staged), (staged.device.public(), true));
+    assert!(crate::verify::verify(&store, &key).is_ok());
+}
+
+#[test]
+fn a_missing_device_key_beside_a_record_with_no_first_start_staged_has_no_verifying_key() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let mut store = Store::open(&home.store()).unwrap();
+    assert_eq!(
+        verifying_key(&home, &store).unwrap(),
+        None,
+        "nothing recorded"
+    );
+    Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+    fs::remove_file(files(&home).path(&Entry::device())).unwrap();
+
+    let err = verifying_key(&home, &store).unwrap_err();
+    assert!(
+        matches!(&err, AdminError::Key(e) if e.is_missing()),
+        "{err}"
+    );
+
+    Staged::mint(&mut OsEntropy, false)
+        .unwrap()
+        .stage(&home, &files(&home))
+        .unwrap();
+    assert!(matches!(
+        verifying_key(&home, &store),
+        Err(AdminError::Key(_))
+    ));
+}
+
+#[cfg(unix)]
+#[test]
+fn a_device_key_that_cannot_be_read_has_no_verifying_key() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let mut store = Store::open(&home.store()).unwrap();
+    Node::open(&home, &mut store, &mut OsEntropy).unwrap();
+    let file = files(&home).path(&Entry::device());
+    fs::set_permissions(&file, fs::Permissions::from_mode(0o644)).unwrap();
+
+    let err = verifying_key(&home, &store).unwrap_err();
+
+    assert!(
+        matches!(&err, AdminError::Key(e) if e.is_unavailable()),
+        "{err}"
+    );
+}
