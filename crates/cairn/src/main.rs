@@ -32,6 +32,9 @@ fn main() -> ExitCode {
         home_id: std::env::var_os("CAIRN_HOME_ID"),
         // The development build's seam for the `@ENG-04` scenario; a
         // release build never reads it.
+        // The development build's seam for the `@NFR-02` scenario.
+        hook_hangs: cfg!(debug_assertions)
+            && std::env::var_os("CAIRN_TEST_FAULT").is_some_and(|v| v == "hook-hang"),
         hook_panics: cfg!(debug_assertions)
             && std::env::var_os("CAIRN_TEST_FAULT").is_some_and(|v| v == "hook-panic"),
         terminal: terminal(),

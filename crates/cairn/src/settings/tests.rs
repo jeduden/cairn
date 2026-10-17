@@ -193,6 +193,7 @@ pub(crate) fn ctx_of(p: &Process) -> Context<'static> {
         home: None,
         home_id: None,
         hook_panics: false,
+        hook_hangs: false,
         terminal: true,
         working_dir: Some(p.dir.path().to_path_buf()),
         managed_policy: p.dir.path().join("managed").join("managed_policy.toml"),

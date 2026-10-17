@@ -106,6 +106,10 @@ pub struct Context<'a> {
     /// Whether the hook handler panics: a development build's seam for
     /// the `@ENG-04` scenario, never set in a release build.
     pub hook_panics: bool,
+    /// Whether the hook handler hangs, as one the harness kills before
+    /// it finishes: a development build's seam for the `@NFR-02`
+    /// scenario, never set in a release build.
+    pub hook_hangs: bool,
     /// Whether the process's standard input and output are both a
     /// terminal, which a verb that writes a principal act needs
     /// (OWN-12): a person's are, an agent's tool call's are not.

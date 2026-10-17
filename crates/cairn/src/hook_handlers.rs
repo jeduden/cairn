@@ -42,6 +42,9 @@ use crate::{Context, EXIT_OK, settings};
 /// for an MCP server to take it before it counts as a failure (REC-19).
 pub(crate) const BINDING_WAIT_SECS: u64 = 30;
 
+/// How long a hook handler the development build's seam hangs.
+const HANG: Duration = Duration::from_secs(60);
+
 /// The directory of start markers, in the home.
 const MARKERS: &str = "hooks";
 
@@ -103,6 +106,7 @@ fn run(name: Option<&str>, ctx: &Context, stdout: &mut dyn Write) {
             attended: ctx.attended,
             ancestry: ctx.ancestry,
             panics: ctx.hook_panics,
+            hangs: ctx.hook_hangs,
         };
         job.within(deadline)
     });
@@ -163,6 +167,8 @@ struct Job {
     ancestry: fn() -> Option<hook::ancestry::Ancestry>,
     /// A development build's seam: the handler panics.
     panics: bool,
+    /// A development build's seam: the handler hangs.
+    hangs: bool,
 }
 
 impl Job {
@@ -184,6 +190,10 @@ impl Job {
     fn run(self) -> Result<String, Failure> {
         if self.panics {
             crate::seam_panic();
+        }
+        if self.hangs {
+            // Longer than any harness timeout: the harness kills it first.
+            std::thread::sleep(HANG);
         }
         let decoded = hook::decode(self.hook, &self.text)?;
         if let Some((home, sources)) = &self.home {
@@ -246,13 +256,13 @@ impl<'j> Recording<'j> {
         let in_force = settings::in_force_from(self.sources, &acts);
         let settings = &in_force.resolved.settings;
         let patterns = settings.texts("redaction.extra_patterns");
-        let redactor = Redactor::new(patterns).ok().map(|(r, _)| r);
+        // The rule set always compiles (the redaction crate's tests prove
+        // it); were it not to, nothing could be written.
+        let Ok((redactor, _)) = Redactor::new(patterns) else {
+            return self.failed("redaction rules could not be built");
+        };
+        let redact = |t: &str| redactor.redact_text(t).text;
         if let Some(drift) = &decoded.drift {
-            let redact = |t: &str| {
-                redactor
-                    .as_ref()
-                    .map_or_else(String::new, |r| r.redact_text(t).text)
-            };
             let described = drift.describe(&redact);
             self.audit(&Occurrence::Keyed {
                 kind: Kind::Rejected,
@@ -271,8 +281,8 @@ impl<'j> Recording<'j> {
         let observation = Observation {
             hook: self.job.hook.name().to_owned(),
             harness_session: session.clone(),
-            transcript_path: path.clone(),
-            cwd: input.cwd.clone().unwrap_or_default(),
+            transcript_path: redact(path),
+            cwd: redact(input.cwd.as_deref().unwrap_or_default()),
             offset: self.offset(Path::new(path), roots),
             source: input.source.as_deref().map(source_name),
             prompt_id: input.prompt_id.clone(),
@@ -285,7 +295,7 @@ impl<'j> Recording<'j> {
         };
         let usable = !in_force.loaded.principal_layer_failed();
         let commitment = match (self.job.hook, usable) {
-            (Hook::UserPromptSubmit, true) => redactor.as_ref().and_then(|r| committed(input, r)),
+            (Hook::UserPromptSubmit, true) => committed(input, &redactor),
             (Hook::UserPromptSubmit, false) if input.prompt_id.is_some() => {
                 self.audit(&Occurrence::Degraded {
                     kind: Kind::Dropped,

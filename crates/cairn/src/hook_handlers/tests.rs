@@ -508,6 +508,39 @@ fn a_held_fork_is_read_again_once_its_owner_is_ingested() {
 }
 
 #[test]
+fn a_hanging_handler_answers_empty_by_its_budget() {
+    let mut p = Process::new();
+    p.hook_hangs = true;
+    p.hook_budget = Some(Duration::from_millis(200));
+
+    let ran = hook(&mut p, "SessionStart", |p| session_start(p, "s1", "startup"));
+
+    assert_eq!(ran, (EXIT_OK, String::new(), String::new()));
+    assert_eq!(
+        entries(&p),
+        [(
+            Some("hook_budget_exceeded".into()),
+            "hook handler ran past its hook budget and answered empty".into()
+        )]
+    );
+    assert_eq!(markers(&p), Vec::<String>::new());
+}
+
+#[test]
+fn the_working_directory_and_transcript_path_are_redacted_before_they_are_held() {
+    let mut p = Process::new();
+    let mut input: Value = serde_json::from_str(&session_start(&p, "s1", "startup")).unwrap();
+    input["cwd"] = json!("/w/AKIAIOSFODNN7EXAMPLE");
+
+    hook(&mut p, "SessionStart", |_| input.to_string());
+
+    let held = held(&p);
+    assert_eq!(held[0].observation.cwd, "/w/[REDACTED:aws_access_key]");
+    let text = fs::read(p.cairn_home().join("store.db")).unwrap();
+    assert!(!String::from_utf8_lossy(&text).contains("AKIAIOSFODNN7EXAMPLE"));
+}
+
+#[test]
 fn a_source_names_only_a_known_start_and_a_budget_parses_as_milliseconds() {
     for source in SOURCES {
         assert_eq!(source_name(source), source);
