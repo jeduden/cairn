@@ -1568,20 +1568,12 @@ fn log_with(
     logging: impl FnOnce(),
 ) -> std::sync::Arc<structured_log::StructuredLog> {
     let ctx = crate::settings::tests::ctx_of(p);
-    let (managed, os_user, working_dir) = (
-        ctx.managed_policy.clone(),
-        ctx.os_user,
-        ctx.working_dir.clone(),
-    );
+    let (managed, os_user) = (ctx.managed_policy.clone(), ctx.os_user);
     let log = std::sync::Arc::new(structured_log(
         None,
         Some(p.dir.path().as_os_str().to_owned()),
         home_id.map(Into::into),
-        LogSettings {
-            managed,
-            os_user,
-            working_dir,
-        },
+        LogSettings { managed, os_user },
         || NOW,
     ));
     let dispatch = tracing::Dispatch::from(log.clone());
@@ -1619,6 +1611,23 @@ fn the_structured_log_redacts_with_the_principal_patterns_or_not_at_all() {
     });
     assert_eq!(log.dropped(), 1);
     assert_eq!(logged_lines(&p).len(), 1);
+}
+
+/// A repository's redaction patterns are never applied, not even to the
+/// log, and a failing repository configuration leaves the log written
+/// (SEC-08, SEC-11).
+#[test]
+fn the_structured_log_ignores_a_repository_configuration() {
+    let p = Process::new();
+    p.configure("recall.max_k = 10\n");
+    p.repository("[redaction]\nextra_patterns = [\"keep-me\"]\n");
+    log_with(&p, None, || tracing::info!(key = "keep-me", "logged"));
+    assert_eq!(logged_lines(&p)[0]["fields"]["key"], "keep-me");
+
+    p.repository("recall.max_k = 'ten'\n");
+    let log = log_with(&p, None, || tracing::info!(key = "x", "logged"));
+    assert_eq!(log.dropped(), 0);
+    assert_eq!(logged_lines(&p).len(), 2);
 }
 
 /// The transcript path ingest logs is redacted with the harness account
