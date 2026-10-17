@@ -1,8 +1,11 @@
 use super::*;
 use crate::home::Home;
 use crate::node::Node;
+use crate::node_identity::IdentitySource;
+use key::key_event::NodeIdentityChange;
 use key::random::OsEntropy;
-use key::signing::{DeviceKey, SeatKey};
+use key::signing::{DeviceKey, RecoveryKey, SeatKey};
+use record::chain::SeenHead;
 use record::commitment::CommitmentKey;
 use record::digest::Digest;
 use record::event::{EventKind, Provenance};
@@ -31,7 +34,10 @@ fn new_event(n: u8) -> NewEvent {
 /// A node with one ingest seat holding three events.
 fn fixture() -> Fixture {
     let dir = TempDir::new().unwrap();
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    std::fs::write(dir.path().join("machine-id"), "first").unwrap();
+    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None)
+        .unwrap()
+        .with_identity(IdentitySource::Files(vec![dir.path().join("machine-id")]));
     home.create().unwrap();
     let mut store = Store::open(&home.store()).unwrap();
     let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
@@ -285,10 +291,15 @@ fn a_seat_certificate_naming_another_seat_or_room_is_named() {
 #[test]
 fn a_seat_certificate_no_certificate_record_holds_is_named() {
     let mut f = fixture();
-    let device = DeviceKey::load(&f.home.device_key()).unwrap();
     let seat = SeatKey::mint(&mut OsEntropy).unwrap();
-    let cert = SeatCertificate::issue(&device, &seat, f.node.personal_room(), SeatKind::Run, true)
-        .unwrap();
+    let cert = SeatCertificate::issue(
+        f.node.device(),
+        &seat,
+        f.node.personal_room(),
+        SeatKind::Run,
+        true,
+    )
+    .unwrap();
     let record = StoredSeat {
         writer: cert.writer_id(),
         seat: cert.seat_id(),
@@ -302,7 +313,7 @@ fn a_seat_certificate_no_certificate_record_holds_is_named() {
     assert_eq!(
         err.to_string(),
         format!(
-            "writer {}: no certificate record in this node's genesis device seat holds its seat certificate",
+            "writer {}: no certificate record in the device seat of the key that certified it holds its seat certificate",
             record.writer
         )
     );
@@ -334,7 +345,7 @@ fn a_seat_certificate_from_a_key_with_no_minted_key_event_is_named() {
     assert_eq!(
         err.to_string(),
         format!(
-            "writer {}: its seat certificate was certified by a key that is not this node's own",
+            "writer {}: its seat certificate was certified by a key with no inception in this node's record",
             record.writer
         )
     );
@@ -452,7 +463,7 @@ fn a_record_checked_against_another_nodes_key_has_no_genesis() {
 
     assert_eq!(
         err.to_string(),
-        "no device seat of this node's device key begins with its minted key event"
+        "no device seat of this node's device key holds its inception"
     );
     assert_eq!((err.class(), err.address()), ("genesis", None));
 }
@@ -650,4 +661,282 @@ fn each_failure_names_its_class_and_where_it_is() {
         VerifyError::from(store::StoreError::Full(w)),
         VerifyError::Store(_)
     ));
+}
+
+#[test]
+fn the_report_names_each_seat_by_its_seat_certificate() {
+    let f = fixture();
+
+    let report = verify(&f.store, &f.node.device().public()).unwrap();
+
+    let device = report
+        .seats
+        .iter()
+        .find(|s| s.writer == f.node.device_writer())
+        .unwrap();
+    assert_eq!(
+        (device.seat_kind, device.ingest_seat, device.room),
+        (SeatKind::Device, false, f.node.personal_room())
+    );
+    let ingest = report
+        .seats
+        .iter()
+        .find(|s| s.writer == f.ingest.writer)
+        .unwrap();
+    assert_eq!(
+        (ingest.seat_kind, ingest.ingest_seat, ingest.seat),
+        (SeatKind::Run, true, f.ingest.seat)
+    );
+    assert_eq!(ingest.certificate, f.ingest.certificate);
+    assert_eq!(report.seats.len(), 2);
+}
+
+/// The fixture's node moved to another machine: a new device key and a
+/// new device seat that begins with the node identity change.
+fn moved(f: &mut Fixture) -> Node {
+    let root = f.home.root().parent().unwrap().to_path_buf();
+    std::fs::write(root.join("machine-id"), "second").unwrap();
+    Node::open(&f.home, &mut f.store, &mut OsEntropy).unwrap()
+}
+
+#[test]
+fn a_record_whose_node_identity_changed_verifies_against_the_new_key() {
+    let mut f = fixture();
+    let node = moved(&mut f);
+    let ingest = node
+        .certify_ingest_seat(&f.home, &mut f.store, &mut OsEntropy)
+        .unwrap();
+
+    let report = verify(&f.store, &node.device().public()).unwrap();
+
+    assert_eq!(report.seats.len(), 4);
+    let new = report
+        .seats
+        .iter()
+        .find(|s| s.writer == node.device_writer())
+        .unwrap();
+    assert_eq!(
+        (new.seat_kind, new.room),
+        (SeatKind::Device, f.node.personal_room())
+    );
+    assert!(report.seats.iter().any(|s| s.writer == ingest.writer));
+    // The old key's record still verifies against the old key.
+    assert!(verify(&f.store, &f.node.device().public()).is_ok());
+}
+
+/// Records a device seat of a fresh device key in the personal room
+/// that begins with `change`, then the key's `minted`: a node identity
+/// change as an appending process could forge it.
+fn forged_change(
+    f: &mut Fixture,
+    change: impl FnOnce(&DeviceKey) -> NodeIdentityChange,
+) -> (DeviceKey, Address) {
+    let device = DeviceKey::mint(&mut OsEntropy).unwrap();
+    forged_change_of(f, device, change)
+}
+
+/// [`forged_change`] for the device key `device`.
+fn forged_change_of(
+    f: &mut Fixture,
+    device: DeviceKey,
+    change: impl FnOnce(&DeviceKey) -> NodeIdentityChange,
+) -> (DeviceKey, Address) {
+    let recovery = RecoveryKey::mint(&mut OsEntropy).unwrap();
+    let seat = SeatKey::mint(&mut OsEntropy).unwrap();
+    let cert = SeatCertificate::issue(
+        &device,
+        &seat,
+        f.node.personal_room(),
+        SeatKind::Device,
+        false,
+    )
+    .unwrap();
+    let record = StoredSeat {
+        writer: cert.writer_id(),
+        seat: cert.seat_id(),
+        room: cert.room,
+        certificate: cert.to_value(),
+    };
+    let minted = key::key_event::KeyEvent::minted(&device, &recovery.public()).unwrap();
+    let events = [
+        NewEvent {
+            kind: EventKind::NodeIdentityChange,
+            provenance: Provenance::Structural,
+            content: change(&device).to_value(),
+            commitment_key: CommitmentKey::from_bytes([1; 32]),
+        },
+        NewEvent {
+            kind: EventKind::KeyEvent,
+            provenance: Provenance::Structural,
+            content: minted.to_value(),
+            commitment_key: CommitmentKey::from_bytes([2; 32]),
+        },
+        NewEvent {
+            kind: EventKind::CertificateRecord,
+            provenance: Provenance::Structural,
+            content: json!({
+                "certificate": cert.digest().to_hex(),
+                "seat": cert.seat_id().to_string(),
+                "writer": cert.writer_id().to_string(),
+            }),
+            commitment_key: CommitmentKey::from_bytes([3; 32]),
+        },
+    ];
+    let at = f
+        .store
+        .add_seat_and_append(&record, record.writer, &events)
+        .unwrap()[0];
+    (device, at)
+}
+
+#[test]
+fn a_node_identity_change_whose_chain_head_names_no_event_is_named() {
+    let mut f = fixture();
+    let old = f.node.device().public().fingerprint();
+    let writer = f.node.device_writer();
+    let (device, at) = forged_change(&mut f, |d| NodeIdentityChange {
+        replaces: old,
+        key: d.public().fingerprint(),
+        chain_head: SeenHead::new(Address::new(writer, Seq::new(9).unwrap()), Digest::ZERO),
+    });
+
+    let err = verify(&f.store, &device.public()).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        format!(
+            "the key event at {} does not check: its chain head names no event of its writer",
+            at.full(&f.node.personal_room())
+        )
+    );
+}
+
+#[test]
+fn a_node_identity_change_replacing_a_key_with_no_inception_is_named() {
+    let mut f = fixture();
+    let writer = f.node.device_writer();
+    let head = f.store.log(writer).unwrap().last().unwrap().link.clone();
+    let (device, at) = forged_change(&mut f, |d| NodeIdentityChange {
+        replaces: Digest::ZERO,
+        key: d.public().fingerprint(),
+        chain_head: SeenHead::new(head.header.address, head.hash),
+    });
+
+    let err = verify(&f.store, &device.public()).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        format!(
+            "the key event at {} does not check: it replaces a key with no inception in this node's record",
+            at.full(&f.node.personal_room())
+        )
+    );
+}
+
+#[test]
+fn a_node_identity_change_naming_another_key_holds_no_inception() {
+    let mut f = fixture();
+    let old = f.node.device().public().fingerprint();
+    let writer = f.node.device_writer();
+    let head = f.store.log(writer).unwrap().last().unwrap().link.clone();
+    let (device, _) = forged_change(&mut f, |_| NodeIdentityChange {
+        replaces: old,
+        key: Digest::ZERO,
+        chain_head: SeenHead::new(head.header.address, head.hash),
+    });
+
+    let err = verify(&f.store, &device.public()).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        "no device seat of this node's device key holds its inception"
+    );
+}
+
+#[test]
+fn a_node_identity_change_event_that_does_not_parse_is_named() {
+    let mut f = fixture();
+    let device = f.node.device_writer();
+    f.store
+        .append(
+            device,
+            &[NewEvent {
+                kind: EventKind::NodeIdentityChange,
+                provenance: Provenance::Structural,
+                content: json!({}),
+                commitment_key: CommitmentKey::from_bytes([1; 32]),
+            }],
+        )
+        .unwrap();
+
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+
+    assert!(
+        err.to_string()
+            .contains("does not check: malformed node identity change event"),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_certificate_record_naming_a_seat_another_key_certified_is_named() {
+    let mut f = fixture();
+    let node = moved(&mut f);
+    // The new device seat records the old ingest seat, which the old key
+    // certified.
+    let cert = SeatCertificate::from_value(&f.ingest.certificate).unwrap();
+    let at = f
+        .store
+        .append(
+            node.device_writer(),
+            &[NewEvent {
+                kind: EventKind::CertificateRecord,
+                provenance: Provenance::Structural,
+                content: json!({
+                    "certificate": cert.digest().to_hex(),
+                    "seat": cert.seat_id().to_string(),
+                    "writer": cert.writer_id().to_string(),
+                }),
+                commitment_key: CommitmentKey::from_bytes([1; 32]),
+            }],
+        )
+        .unwrap()[0];
+
+    let err = verify(&f.store, &node.device().public()).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        format!(
+            "the certificate record at {} names a seat this node does not hold",
+            at.full(&f.node.personal_room())
+        )
+    );
+}
+
+#[test]
+fn node_identity_changes_that_replace_each_other_lead_back_to_no_genesis() {
+    let mut f = fixture();
+    let writer = f.node.device_writer();
+    let head = f.store.log(writer).unwrap().last().unwrap().link.clone();
+    let head = SeenHead::new(head.header.address, head.hash);
+    let a = DeviceKey::mint(&mut OsEntropy).unwrap();
+    let b = DeviceKey::mint(&mut OsEntropy).unwrap();
+    let (fa, fb) = (a.public().fingerprint(), b.public().fingerprint());
+    let (a, _) = forged_change_of(&mut f, a, |_| NodeIdentityChange {
+        replaces: fb,
+        key: fa,
+        chain_head: head,
+    });
+    forged_change_of(&mut f, b, |_| NodeIdentityChange {
+        replaces: fa,
+        key: fb,
+        chain_head: head,
+    });
+
+    let err = verify(&f.store, &a.public()).unwrap_err();
+
+    assert_eq!(
+        err.to_string(),
+        "this node's device key leads back to no genesis"
+    );
 }

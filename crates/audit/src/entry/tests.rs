@@ -59,6 +59,9 @@ fn each_kind_and_counter_has_its_name() {
         ),
         (Counter::EventsUnparsed, "events_unparsed"),
         (Counter::FormatDrift, "format_drift"),
+        (Counter::NodeIdentityChanged, "node_identity_changed"),
+        (Counter::DeviceKeyMissing, "device_key_missing"),
+        (Counter::KeyStoreUnavailable, "key_store_unavailable"),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

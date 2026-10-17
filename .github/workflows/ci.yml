@@ -165,6 +165,34 @@ jobs:
           disable_search: true
           fail_ci_if_error: false
 
+  # ENG-09: Miri runs the tests of the dpapi shim, the one crate with
+  # unsafe code, over its fake of DPAPI, on the exact dated nightly
+  # ENG-01 pins for Miri here. The Windows and macOS key stores
+  # (ADR-2610171300) then build for their own targets, which a Linux
+  # runner can check but not run.
+  miri:
+    runs-on: ubuntu-latest
+    env:
+      MIRI_NIGHTLY: nightly-2026-10-16
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned nightly with Miri
+        run: >-
+          rustup toolchain install "$MIRI_NIGHTLY"
+          --profile minimal --component miri,rust-src --no-self-update
+      - run: cargo "+$MIRI_NIGHTLY" miri test -p dpapi --locked
+      - name: Install the pinned Rust toolchain with the Windows and macOS targets
+        run: >-
+          rustup toolchain install
+          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
+          --profile minimal --component clippy,rustfmt,llvm-tools-preview
+          --target x86_64-pc-windows-gnu,aarch64-apple-darwin
+          --no-self-update
+      - run: cargo check -p key -p dpapi --all-targets --locked --target x86_64-pc-windows-gnu
+      - run: cargo check -p key --all-targets --locked --target aarch64-apple-darwin
+
   # ENG-16: clippy with warnings denied, and rustfmt's layout.
   lint:
     runs-on: ubuntu-latest
@@ -414,7 +442,7 @@ jobs:
   ci:
     name: CI
     if: ${{ always() }}
-    needs: [test, coverage, lint, supply-chain, drift, benchmark, build, markdown, toml, workflows]
+    needs: [test, coverage, lint, supply-chain, drift, benchmark, build, markdown, toml, workflows, miri]
     runs-on: ubuntu-latest
     steps:
       - name: Fail unless every job passed

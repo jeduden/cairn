@@ -23,6 +23,9 @@ pub enum EventKind {
     /// A principal act, recorded in the device seat of the device it
     /// was taken on (OWN-02, OWN-11).
     PrincipalAct,
+    /// A node identity change event, the first event of the device seat
+    /// a node whose node identity changed starts (REC-24).
+    NodeIdentityChange,
 }
 
 impl EventKind {
@@ -36,6 +39,7 @@ impl EventKind {
             Self::UnparsedLine => "unparsed_line",
             Self::TranscriptLine => "transcript_line",
             Self::PrincipalAct => "principal_act",
+            Self::NodeIdentityChange => "node_identity_change",
         }
     }
 
@@ -49,6 +53,7 @@ impl EventKind {
             Self::UnparsedLine,
             Self::TranscriptLine,
             Self::PrincipalAct,
+            Self::NodeIdentityChange,
         ]
         .into_iter()
         .find(|k| k.as_str() == name)

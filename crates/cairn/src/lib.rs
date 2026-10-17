@@ -19,6 +19,7 @@ use std::time::{Duration, Instant};
 use administration::act as act_record;
 use administration::home::Home;
 use administration::node::Node;
+use administration::node_identity::IdentitySource;
 use administration::verify::{VerifyError, verify};
 use allowed_root::{Access, AllowedPath, AllowedRoots};
 use audit::AuditError;
@@ -28,6 +29,7 @@ use audit::log::Log;
 use configuration::source::OsUser;
 use configuration::{Loaded, SettingsLayer};
 use hook::{Failure, Hook};
+use key::key_store::{Entry as KeyEntry, KeyStoreKind};
 use key::random::OsEntropy;
 use key::signing::DeviceKey;
 use redaction::Redactor;
@@ -116,6 +118,10 @@ pub struct Context<'a> {
     pub working_dir: Option<PathBuf>,
     /// Where managed policy is read from (ADM-04).
     pub managed_policy: PathBuf,
+    /// Where the node identity is read from instead of this OS's source
+    /// (REC-24): a development build's seam for the tests, never set in
+    /// a release build.
+    pub node_identity: Option<PathBuf>,
     /// The running OS user, whom managed policy's files must not let
     /// write (ADM-04).
     pub os_user: OsUser,
@@ -131,7 +137,10 @@ impl Context<'_> {
     /// everything in it owner-only (SEC-02), and its home id the one the
     /// environment supplies (SEC-03).
     fn home(&self) -> Result<Home, administration::AdminError> {
-        let home = Home::locate(self.cairn_home.as_deref(), self.home.as_deref())?;
+        let mut home = Home::locate(self.cairn_home.as_deref(), self.home.as_deref())?;
+        if let Some(path) = &self.node_identity {
+            home = home.with_identity(IdentitySource::Files(vec![path.clone()]));
+        }
         home.check()?;
         home.check_home_id(self.home_id.as_deref())?;
 
@@ -405,6 +414,9 @@ fn ingest(
     // The rule set always compiles (its unit test proves it); were it
     // not to, each transcript would fail with why.
     let redactor = redactor(ctx, settings, stderr);
+    if let Err(e) = start_node(ctx, &home, stderr) {
+        return failed("ingest", &e, stderr);
+    }
     let mut reports = Vec::new();
     for transcript in &allowed {
         let ingested = redactor.as_ref().map_err(Clone::clone).and_then(|r| {
@@ -543,6 +555,61 @@ fn audit_parsing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Wr
             let _ = writeln!(stderr, "cairn ingest: audit a format drift: {e}");
         }
     }
+}
+
+/// Opens the node before anything is appended: its first start, or the
+/// node identity check every later start makes first (REC-24). A change
+/// is audited and counted. A device key missing from the key store, or
+/// a key store that is locked or cannot be read, refuses the command,
+/// audited and counted (I6).
+fn start_node(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> Result<(), String> {
+    home.create().map_err(|e| e.to_string())?;
+    let mut store = Store::open(&home.store()).map_err(|e| e.to_string())?;
+
+    open_node(ctx, home, &mut store, stderr).map(drop)
+}
+
+/// The node in `home`, opened in `store` as [`start_node`] opens it:
+/// a node identity change audited and counted, and a missing device key
+/// or a key store that cannot be read refused, audited and counted.
+pub(crate) fn open_node(
+    ctx: &Context,
+    home: &Home,
+    store: &mut Store,
+    stderr: &mut dyn Write,
+) -> Result<Node, String> {
+    let opened = Node::open(home, store, &mut OsEntropy);
+    let occurrence = match &opened {
+        Ok(node) if node.identity_change().is_some() => Some(Occurrence::Degraded {
+            kind: Kind::Dropped,
+            counter: Counter::NodeIdentityChanged,
+            operation: "start",
+            detail: "node identity changed: a new device key and device seat replace the old",
+        }),
+        Ok(_) => None,
+        Err(administration::AdminError::DeviceKeyMissing) => Some(Occurrence::Degraded {
+            kind: Kind::Failed,
+            counter: Counter::DeviceKeyMissing,
+            operation: "start",
+            detail: "device key missing from the key store",
+        }),
+        Err(administration::AdminError::Key(e)) if e.is_unavailable() => {
+            Some(Occurrence::Degraded {
+                kind: Kind::Failed,
+                counter: Counter::KeyStoreUnavailable,
+                operation: "start",
+                detail: "key store locked or unreadable",
+            })
+        }
+        Err(_) => None,
+    };
+    if let Some(occurrence) = occurrence
+        && let Err(e) = ctx.audit(&occurrence)
+    {
+        let _ = writeln!(stderr, "cairn: audit the node's start: {e}");
+    }
+
+    opened.map_err(|e| e.to_string())
 }
 
 /// Refuses an ingest while the principal's configuration or the
@@ -754,11 +821,11 @@ fn verify_command(
         Ok(store) => store,
         Err(e) => return failed("verify", &e, stderr),
     };
-    let device = match DeviceKey::load(&home.device_key()) {
-        Ok(device) => device,
+    let device = match DeviceKey::fetch(home.key_store().as_ref(), &KeyEntry::device()) {
+        Ok(device) => device.public(),
         Err(e) => return failed("verify", &e, stderr),
     };
-    let checked = match verify(&store, &device.public()) {
+    let checked = match verify(&store, &device) {
         Ok(r) => Log::new(home.audit()).verify().map(|a| (r, a)).map_err(Err),
         Err(e) => Err(Ok(e)),
     };
@@ -770,6 +837,7 @@ fn verify_command(
                 "writers": r.writers,
                 "events": r.events,
                 "order": r.full_order(),
+                "seats": seats_json(&r.seats),
                 "audit": {"files": a.files, "entries": a.entries},
                 "broken": null,
             })
@@ -807,6 +875,25 @@ fn verify_command(
     }
 }
 
+/// Each seat as `cairn verify --json` reports it: its writer, and its
+/// seat id, room, seat kind, ingest flag and seat certificate, all read
+/// from that certificate (PRV-11).
+fn seats_json(seats: &[administration::verify::SeatReport]) -> Value {
+    seats
+        .iter()
+        .map(|s| {
+            json!({
+                "writer": s.writer.to_string(),
+                "seat": s.seat.to_string(),
+                "room": s.room.to_string(),
+                "seat_kind": s.seat_kind.as_str(),
+                "ingest_seat": s.ingest_seat,
+                "certificate": s.certificate,
+            })
+        })
+        .collect()
+}
+
 /// Reports a broken record or audit log on `stderr`, exiting 3, with
 /// the failure's class, address and message as JSON when asked; the
 /// line is empty when no JSON was asked for.
@@ -826,6 +913,7 @@ fn broken_json(
         "writers": null,
         "events": null,
         "order": null,
+        "seats": null,
         "audit": null,
         "broken": {"class": class, "address": address, "message": message},
     });
@@ -1098,6 +1186,8 @@ struct Status {
     awaiting_acceptance: Vec<String>,
     /// Why managed policy is refused, when it is.
     managed_policy: Option<String>,
+    /// The key store the home's keys are kept in (SEC-10).
+    keys: KeyStoreKind,
 }
 
 impl Status {
@@ -1115,6 +1205,11 @@ impl Status {
             "deployment_mode": self.deployment_mode,
             "awaiting_acceptance": self.awaiting_acceptance,
             "managed_policy": {"refused": self.managed_policy},
+            "keys": {
+                "store": self.keys.as_str(),
+                "readable_by_agents": self.keys.readable_by_agents(),
+                "where": self.keys.describe(),
+            },
         })
         .to_string()
     }
@@ -1153,6 +1248,7 @@ impl Status {
         if let Some(why) = &self.managed_policy {
             lines.push(format!("managed policy refused: {why}"));
         }
+        lines.push(format!("keys: {}", self.keys.describe()));
 
         lines.join("\n")
     }
@@ -1218,6 +1314,7 @@ fn status_of(home: &Home, counted: Option<(Counts, u64)>, in_force: &settings::I
             .iter()
             .find(|f| f.layer == SettingsLayer::ManagedPolicy)
             .map(ToString::to_string),
+        keys: home.key_store().kind(),
     };
     if let Some((counts, entries)) = counted {
         let bytes = fs::metadata(&store).ok().map(|m| m.len());

@@ -4,14 +4,13 @@
 //! verifies as another.
 
 use std::fmt;
-use std::path::Path;
 
 use ed25519_dalek::{Signer as _, SigningKey, VerifyingKey};
 use record::canonical;
 use record::digest::{Digest, hex, unhex};
 use serde_json::Value;
 
-use crate::file;
+use crate::key_store::{Entry, KeyStore};
 use crate::random::{Entropy, draw};
 
 /// The label every signed message starts with.
@@ -37,6 +36,33 @@ pub enum KeyError {
     },
     /// A key file is readable by others.
     Permissions { path: std::path::PathBuf, mode: u32 },
+    /// The key store entry holds no key (SEC-10).
+    Missing { entry: String },
+    /// The key store entry already holds a key, which is never replaced.
+    Occupied { entry: String },
+    /// The key store is locked or cannot be read: not a missing key
+    /// (PRV-12).
+    Unavailable { entry: String, reason: String },
+}
+
+impl KeyError {
+    /// Whether the key is missing from its entry, which, unlike a key
+    /// store that is locked or cannot be read, may be minted anew
+    /// (PRV-12, SEC-27).
+    #[must_use]
+    pub fn is_missing(&self) -> bool {
+        matches!(self, Self::Missing { .. })
+    }
+
+    /// Whether the key store is locked or cannot be read: a key file that
+    /// cannot be read, or that others can read, included (PRV-12).
+    #[must_use]
+    pub fn is_unavailable(&self) -> bool {
+        matches!(
+            self,
+            Self::Unavailable { .. } | Self::File { .. } | Self::Permissions { .. }
+        )
+    }
 }
 
 impl fmt::Display for KeyError {
@@ -52,6 +78,13 @@ impl fmt::Display for KeyError {
                 "key file {} is readable by others (mode {mode:o}); want 600",
                 path.display()
             ),
+            Self::Missing { entry } => write!(f, "no key in the key store entry {entry}"),
+            Self::Occupied { entry } => {
+                write!(f, "the key store entry {entry} already holds a key")
+            }
+            Self::Unavailable { entry, reason } => {
+                write!(f, "the key store entry {entry} is unavailable: {reason}")
+            }
         }
     }
 }
@@ -261,24 +294,25 @@ macro_rules! signing_key {
                 Ok(Signature(self.0.sign(&message(kind, body)?).to_bytes()))
             }
 
-            /// Writes it to a new file at `path` that only its owner
-            /// reads.
+            /// Keeps it in `entry` of `store`, which must hold no key
+            /// yet (SEC-10).
             ///
             /// # Errors
             ///
-            /// Fails when the file exists or cannot be written.
-            pub fn save(&self, path: &Path) -> Result<(), KeyError> {
-                file::write_secret(path, &self.seed_hex())
+            /// Fails when the entry holds a key or the key store cannot
+            /// be written.
+            pub fn keep(&self, store: &dyn KeyStore, entry: &Entry) -> Result<(), KeyError> {
+                store.put(entry, &self.seed_hex())
             }
 
-            /// Reads it from its file at `path`.
+            /// Reads it from `entry` of `store`.
             ///
             /// # Errors
             ///
-            /// Fails when the file cannot be read, others can read it,
-            /// or it holds no seed.
-            pub fn load(path: &Path) -> Result<Self, KeyError> {
-                Self::from_seed(&file::read_secret(path)?)
+            /// Fails when the entry holds no key, the key store cannot
+            /// be read, or the entry holds no seed.
+            pub fn fetch(store: &dyn KeyStore, entry: &Entry) -> Result<Self, KeyError> {
+                Self::from_seed(&store.get(entry)?)
             }
         }
 

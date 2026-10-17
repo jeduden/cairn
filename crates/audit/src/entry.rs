@@ -98,6 +98,14 @@ pub enum Counter {
     /// A transcript line's shape differed from the one recorded for its
     /// harness version (REC-26).
     FormatDrift,
+    /// The node identity changed, and a new device key and device seat
+    /// replaced the old (REC-24).
+    NodeIdentityChanged,
+    /// The device key is missing from the key store beside this node's
+    /// record (SEC-10, PRV-12).
+    DeviceKeyMissing,
+    /// The key store is locked or cannot be read (PRV-12).
+    KeyStoreUnavailable,
 }
 
 impl Counter {
@@ -123,6 +131,9 @@ impl Counter {
             Self::IngestRefusedSettingsInvalid => "ingest_refused_settings_invalid",
             Self::EventsUnparsed => "events_unparsed",
             Self::FormatDrift => "format_drift",
+            Self::NodeIdentityChanged => "node_identity_changed",
+            Self::DeviceKeyMissing => "device_key_missing",
+            Self::KeyStoreUnavailable => "key_store_unavailable",
         }
     }
 }

@@ -9,6 +9,7 @@ fn every_event_kind_round_trips_through_its_name() {
         (EventKind::UnparsedLine, "unparsed_line"),
         (EventKind::TranscriptLine, "transcript_line"),
         (EventKind::PrincipalAct, "principal_act"),
+        (EventKind::NodeIdentityChange, "node_identity_change"),
     ] {
         assert_eq!(kind.as_str(), name);
         assert_eq!(EventKind::parse(name), Some(kind));

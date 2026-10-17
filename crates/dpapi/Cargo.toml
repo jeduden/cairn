@@ -1,0 +1,36 @@
+[package]
+name = "dpapi"
+version = "0.0.0"
+description = "Protects a key's bytes for the running OS user through Windows' DPAPI: the one crate that holds unsafe code (SEC-10, ENG-09)"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys.workspace = true
+
+# The one crate that does not inherit the workspace lints, which forbid
+# unsafe code: it calls DPAPI through windows-sys (the plan's ruling 2).
+# It denies unsafe code instead, so only the module that allows it,
+# src/shim.rs, holds any, and every unsafe block says why it is sound.
+# Miri runs its tests over a fake of DPAPI (ENG-09). The static-analysis
+# gate lists it, and holds it to the workspace's other lints.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+cognitive_complexity = "deny"
+too_many_lines = "deny"
+excessive_nesting = "deny"
+fn_params_excessive_bools = "deny"
+undocumented_unsafe_blocks = "deny"
+
+# ENG-02: see crates/cairn/Cargo.toml.
+[package.metadata.cairn]
+responsibility = "Protects and unprotects a key's bytes for the running OS user through Windows' DPAPI"
+may-depend-on = []
+may-dev-depend-on = []

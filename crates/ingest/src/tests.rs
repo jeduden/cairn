@@ -48,7 +48,9 @@ fn every_line_becomes_one_unparsed_event_of_a_new_ingest_seat() {
     }
     let seat = store.seat(ingested.writer).unwrap().unwrap();
     assert_eq!((seat.seat, seat.room), (ingested.seat, ingested.room));
-    let device = key::signing::DeviceKey::load(&home.device_key()).unwrap();
+    let device =
+        key::signing::DeviceKey::fetch(home.key_store().as_ref(), &key::key_store::Entry::device())
+            .unwrap();
     assert!(administration::verify::verify(&store, &device.public()).is_ok());
 }
 
@@ -303,7 +305,9 @@ fn each_line_is_recorded_with_the_class_its_structure_gives() {
         log[21].content.as_ref().unwrap()["text"],
         text.lines().nth(21).unwrap()
     );
-    let device = key::signing::DeviceKey::load(&home.device_key()).unwrap();
+    let device =
+        key::signing::DeviceKey::fetch(home.key_store().as_ref(), &key::key_store::Entry::device())
+            .unwrap();
     assert!(administration::verify::verify(&store, &device.public()).is_ok());
 }
 

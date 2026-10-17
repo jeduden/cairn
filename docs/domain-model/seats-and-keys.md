@@ -2,7 +2,7 @@
 title: "Seats and keys"
 order: "06"
 summary: >-
-  Seats and the keys behind them: run and device seats, room and seat ids, seat, device, principal and token keys, key events and key event logs, recovery keys, certificates, access tokens, authenticators and CI keys.
+  Seats and the keys behind them: run and device seats, room and seat ids, seat, device, principal and token keys, key events and key event logs, recovery keys, key stores, certificates, access tokens, authenticators and CI keys.
 ---
 # Seats and keys
 
@@ -107,6 +107,13 @@ summary: >-
   access token carries (PRV-12). A **confirmation key** is a key a recorded
   managed-policy listing names whose signature lets a confirm, choose or reject
   count without a presence proof (SEC-22, PRV-12).
+- **Key store**: Where the core keeps the keys SEC-10 binds to a home, each in
+  its own **entry**, named for that home so two homes never share a key: the
+  platform key store where one exists (the macOS Keychain; on Windows, a file
+  DPAPI protects for the OS user), else a file only the principal's OS user can
+  read, which `cairn status` names. A key missing from its entry is told apart
+  from a key store that is locked or cannot be read, which never counts as a
+  missing key (SEC-10, PRV-12).
 - **Seat certificate**: A device key's or token key's signature over a seat key,
   scoped to the seat's room and naming its seat kind and whether it is an ingest
   seat, that the seat key countersigns (PRV-10, PRV-11). Its **certificate
