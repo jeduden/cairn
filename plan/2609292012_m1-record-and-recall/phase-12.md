@@ -1,0 +1,66 @@
+---
+n: 12
+title: "Search: the search index, the query compiler and event_search"
+status: "🔳"
+result: false
+---
+# Phase 12: search
+
+Requirements. REC-11, SEC-04 and RCL-02, on what phase 8 ingests.
+ENG-07's query parser target, ENG-08's rebuild-digest property and
+NFR-03's benchmark (ENG-15). Three targets freeze (§12.3): REC-11's
+indexing cap, RCL-02's hits and SEC-04's terms.
+
+The search index, in `store.db` beside the record (§8.2, I10):
+
+- An FTS5 table over each event's text: the `text` of its content,
+  full text, also when the content went to the payload store, up to
+  the indexing cap of 1 MiB per event. No text is copied into the
+  index (contentless), so the record stays the one place content lives.
+- A row's id derives from its address, never from arrival (S12): its
+  seq in the high bits, a hash of its writer in the low ones. Two
+  events of one id keep the smaller address; the other is counted as
+  an index collision and shown (I6).
+- An event is indexed in the transaction that appends it. A store
+  without an index, one phases 1 to 8 made, gets it built the first
+  time it opens for writing. `Store::rebuild_index` derives it from the
+  record alone.
+- The tokenizer and the cap are kept in `meta` and are part of the
+  index's canonical digest (§8.3), which hashes every value a read can
+  return, row by row in address order, never a row id.
+
+The query compiler, a new `query` crate with no dependency:
+
+- Caller text is literal terms: split on whitespace, each term quoted
+  for FTS5, so `OR`, `NEAR(x)` and `"` run nothing. `any_of`, `all_of`
+  and `phrase` are the only operators, as structured parameters.
+- At most 16 terms (across all parameters) of at most 64 characters; a
+  leading `*` is refused. Each refusal is fixed text.
+
+Bounded BM25 (RCL-02, S2): the match window is the newest 2,000 matches
+after the filters, newest by seq then writer hash. BM25 with length
+normalization ranks the window; per-run damping divides each further
+hit of one run by `1 + 0.5 * hits already taken`; the best `k` (default
+10, at most 50) return. A deadline (default 2 s) interrupts the query;
+the cancelled search is counted `search_cancelled` and audited.
+
+`event_search` over MCP, in the envelope `event_get` already uses,
+each hit one item whose content is its preview and which carries its
+score. Filters: `scope` (`room`; `run` needs the session binding, as
+`event_get`, and `rooms` is RCL-05's), `room`, `run` (a run's writer
+id), `provenance[]`, `kind[]`, `trust`, `since`, `until`, `k`. Trust is
+`untrusted` for every ingested event until PRV-02 (phase 11).
+
+Where the gate's scenarios go live:
+
+- `@REC-11`: ingest then `event_search` over `cairn mcp`.
+- `@SEC-04`: the four term rows over `cairn mcp`; the deadline row on
+  a store of 1M events built by the step.
+- `@RCL-02`: needs the session binding (phase 9), live ingest (phase
+  10), trust levels (phase 11) and the `rooms` scope (phase 13), and
+  its transcript "mixed-provenance" has no steps; its M1 part is bound
+  and proven by named tests. Raised if it cannot pass as written.
+
+Gate: `@REC-11` and `@SEC-04` pass. `@RCL-02` passes or is raised.
+NFR-03 is benchmarked and the rebuild-digest property holds. The query
+parser's fuzz target runs nightly. The three targets are frozen.
