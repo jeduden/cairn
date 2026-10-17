@@ -252,7 +252,7 @@ Feature: Provenance and trust (PRV)
       | by the phone's device key, allowing a held permission request                                                                  | trusted                                                                                    |
       | by the phone's device key, adding a pin                                                                                        | untrusted                                                                                  |
 
-  @PRV-11 @P0 @I2 @I8 @pending
+  @PRV-11 @P0 @I2 @I8
   Scenario: the node's device key certifies each seat key with a seat certificate naming its seat kind
     Given an isolated Cairn home
     And a node whose device key no principal key has certified

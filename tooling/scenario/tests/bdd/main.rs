@@ -31,6 +31,7 @@ mod engineering_release;
 mod engineering_review;
 mod observability;
 mod principal_acts;
+mod provenance;
 mod record;
 mod security;
 mod security_redaction;

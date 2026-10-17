@@ -48,11 +48,18 @@ impl Entry {
         Self(format!("seat-{seat}"))
     }
 
-    /// The entry a first start stages `entry`'s key in before it records
-    /// anything.
+    /// The entry a start stages `entry`'s new key in before it records
+    /// anything: a first start's, or a node identity change's.
     #[must_use]
     pub fn staged(entry: &Self) -> Self {
-        Self(format!("genesis-{}", entry.0))
+        Self(format!("staged-{}", entry.0))
+    }
+
+    /// The entry a start stages a new device seat's key in, before the
+    /// seat's id is known.
+    #[must_use]
+    pub fn staged_seat() -> Self {
+        Self("staged-seat".to_owned())
     }
 
     /// Its name, which names no secret.

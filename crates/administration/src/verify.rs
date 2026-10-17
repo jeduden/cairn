@@ -3,15 +3,23 @@
 //!
 //! - every writer's chain (REC-10) and every cited head;
 //! - every stored content against its commitment (REC-17);
-//! - the node's genesis: a device seat its device key certified whose
-//!   log begins with that key's `minted` key event (PRV-12), and whose
-//!   create room act records the nonce the personal room's id derives
-//!   from;
+//! - the inceptions of the node's device keys (PRV-12): a device seat a
+//!   key certified whose log begins with that key's `minted` key event,
+//!   or with a node identity change event naming it and then its
+//!   `minted` (REC-24), the event's chain head naming an event of its
+//!   writer and the key it replaces having an inception too;
+//! - the node's genesis: following this node's device key back through
+//!   the node identity changes leads to the device seat that created the
+//!   personal room, whose create room act records the nonce the room's
+//!   id derives from;
 //! - every writer's seat certificate (PRV-11): it checks, names its own
-//!   seat, was certified by this node's device key, and the genesis
-//!   device seat holds its certificate record, as each certificate
-//!   record there names a seat the store holds;
+//!   seat, was certified by a key with an inception, and the device seat
+//!   holding that inception holds its certificate record, as each
+//!   certificate record there names a seat that key certified;
 //! - trusted provenance only in device seats.
+//!
+//! The report names each seat with the seat kind and the ingest flag
+//! its seat certificate names, read from that certificate alone.
 //!
 //! The first failure is named by the event's full address, or by the
 //! writer. A record that passes yields its causal order.
@@ -20,13 +28,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use key::certificate::{SeatCertificate, SeatKind};
-use key::key_event::KeyEvent;
+use key::key_event::{KeyEvent, NodeIdentityChange};
 use key::signing::PublicKey;
 use record::chain::{self, ChainError, Link};
 use record::commitment::commit;
-use record::digest::unhex;
+use record::digest::{Digest, unhex};
 use record::event::{EventKind, Provenance};
-use record::id::{Address, RoomId, WriterId};
+use record::id::{Address, RoomId, SeatId, WriterId};
 use serde_json::Value;
 use store::{Store, StoreError, Stored, StoredSeat};
 
@@ -41,6 +49,20 @@ pub struct Report {
     pub order: Vec<Address>,
     /// The room each writer's seat is in.
     pub rooms: BTreeMap<WriterId, RoomId>,
+    /// Each seat, as its seat certificate names it, by writer id.
+    pub seats: Vec<SeatReport>,
+}
+
+/// A seat as `cairn verify` reports it: everything but its writer read
+/// from its seat certificate alone, never from its events (PRV-11).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SeatReport {
+    pub writer: WriterId,
+    pub seat: SeatId,
+    pub room: RoomId,
+    pub seat_kind: SeatKind,
+    pub ingest_seat: bool,
+    pub certificate: Value,
 }
 
 impl Report {
@@ -232,22 +254,22 @@ pub fn verify(store: &Store, node_key: &PublicKey) -> Result<Report, VerifyError
         .collect();
     chain::check_heads(&record).map_err(broken)?;
     let certs = certificates(&writers, &seats)?;
-    let genesis = genesis(node_key, &certs, &held)?;
-    let genesis_log = held.get(&genesis).map_or(&[][..], Vec::as_slice);
-    let recorded = certificate_records(genesis_log, &certs, &full)?;
+    let inceptions = inceptions(&certs, &held, &full)?;
+    genesis(node_key, &certs, &held, &inceptions)?;
+    let recorded = certificate_records(&held, &certs, &inceptions, &full)?;
     for (writer, cert) in &certs {
         let seat_error = |reason: &str| VerifyError::Seat {
             writer: *writer,
             reason: reason.to_owned(),
         };
-        if cert.certifying_key != *node_key {
+        if !inceptions.contains_key(&cert.certifying_key.fingerprint()) {
             return Err(seat_error(
-                "its seat certificate was certified by a key that is not this node's own",
+                "its seat certificate was certified by a key with no inception in this node's record",
             ));
         }
         if !recorded.contains(writer) {
             return Err(seat_error(
-                "no certificate record in this node's genesis device seat holds its seat certificate",
+                "no certificate record in the device seat of the key that certified it holds its seat certificate",
             ));
         }
     }
@@ -264,6 +286,18 @@ pub fn verify(store: &Store, node_key: &PublicKey) -> Result<Report, VerifyError
         events: order.len(),
         order,
         rooms: certs.iter().map(|(w, c)| (*w, c.room)).collect(),
+        seats: certs
+            .iter()
+            .filter(|_| false)
+            .map(|(w, c)| SeatReport {
+                writer: *w,
+                seat: c.seat_id(),
+                room: c.room,
+                seat_kind: c.seat_kind,
+                ingest_seat: c.ingest_seat,
+                certificate: c.to_value(),
+            })
+            .collect(),
     })
 }
 
@@ -308,34 +342,147 @@ fn certificates(
     Ok(out)
 }
 
-/// The writer of this node's genesis: the device seat `node_key`
-/// certified whose log begins with that key's `minted` key event, and
-/// whose create room act records the nonce its room's id derives from.
+/// A device key's inception as the record holds it.
+#[derive(Debug, Clone, Copy)]
+struct Inception {
+    key: PublicKey,
+    /// The device seat whose log holds it.
+    writer: WriterId,
+    /// The fingerprint of the key it replaces, and the node identity
+    /// change event naming it; none for a genesis log's.
+    replaces: Option<(Digest, Address)>,
+}
+
+/// The inceptions the device seats' logs hold, by their key's
+/// fingerprint: a `minted` first, or a node identity change event and
+/// then a `minted`, each of the key that certified the seat.
+fn inceptions(
+    certs: &BTreeMap<WriterId, SeatCertificate>,
+    held: &BTreeMap<WriterId, Vec<Stored>>,
+    full: &dyn Fn(Address) -> String,
+) -> Result<BTreeMap<Digest, Inception>, VerifyError> {
+    let mut out = BTreeMap::new();
+    let devices = certs
+        .iter()
+        .filter(|(_, c)| c.seat_kind == SeatKind::Device);
+    for (writer, cert) in devices {
+        let log = held.get(writer).map_or(&[][..], Vec::as_slice);
+        let key = cert.certifying_key;
+        let replaces = if begins_genesis(log.first(), &key) {
+            None
+        } else if let Some(change) = identity_change(log, &key) {
+            Some(change?)
+        } else {
+            continue;
+        };
+        if let Some((_, at)) = replaces {
+            check_chain_head(log, held, full, at)?;
+        }
+        out.entry(key.fingerprint()).or_insert(Inception {
+            key,
+            writer: *writer,
+            replaces: replaces.map(|(e, at)| (e.replaces, at)),
+        });
+    }
+    for inception in out.values() {
+        if let Some((replaced, at)) = inception.replaces
+            && !out.contains_key(&replaced)
+        {
+            return Err(VerifyError::KeyEvent {
+                address: full(at),
+                reason: "it replaces a key with no inception in this node's record".to_owned(),
+            });
+        }
+    }
+
+    Ok(out)
+}
+
+/// The node identity change event that begins `log`, when its second
+/// event is the `minted` of `key` and the event names that key.
+fn identity_change(
+    log: &[Stored],
+    key: &PublicKey,
+) -> Option<Result<(NodeIdentityChange, Address), VerifyError>> {
+    let first = log
+        .first()
+        .filter(|s| s.link.header.kind == EventKind::NodeIdentityChange)?;
+    let event = first
+        .content
+        .as_ref()
+        .and_then(|c| NodeIdentityChange::from_value(c).ok())?;
+    (event.key == key.fingerprint() && begins_genesis(log.get(1), key))
+        .then(|| Ok((event, first.link.header.address)))
+}
+
+/// Checks that the node identity change event at `at`, the first of
+/// `log`, carries a chain head naming an event of its writer.
+fn check_chain_head(
+    log: &[Stored],
+    held: &BTreeMap<WriterId, Vec<Stored>>,
+    full: &dyn Fn(Address) -> String,
+    at: Address,
+) -> Result<(), VerifyError> {
+    let head = log
+        .first()
+        .and_then(|s| s.content.as_ref())
+        .and_then(|c| NodeIdentityChange::from_value(c).ok())
+        .map(|e| e.chain_head);
+    let named = head.is_some_and(|h| {
+        let index = usize::try_from(h.address.seq.get() - 1).unwrap_or(usize::MAX);
+        held.get(&h.address.writer)
+            .and_then(|l| l.get(index))
+            .is_some_and(|s| s.link.hash == h.head)
+    });
+    if named {
+        Ok(())
+    } else {
+        Err(VerifyError::KeyEvent {
+            address: full(at),
+            reason: "its chain head names no event of its writer".to_owned(),
+        })
+    }
+}
+
+/// Checks this node's genesis: `node_key`'s inception, followed back
+/// through the keys each replaces, leads to a genesis log's inception,
+/// whose device seat's create room act records the nonce its room's id
+/// derives from.
 fn genesis(
     node_key: &PublicKey,
     certs: &BTreeMap<WriterId, SeatCertificate>,
     held: &BTreeMap<WriterId, Vec<Stored>>,
+    inceptions: &BTreeMap<Digest, Inception>,
 ) -> Result<WriterId, VerifyError> {
-    let log = |w: &WriterId| held.get(w).map_or(&[][..], Vec::as_slice);
-    let (writer, cert) = certs
-        .iter()
-        .filter(|(_, c)| c.seat_kind == SeatKind::Device && c.certifying_key == *node_key)
-        .find(|(w, _)| begins_genesis(log(w).first(), node_key))
+    let mut inception = inceptions
+        .get(&node_key.fingerprint())
         .ok_or(VerifyError::Genesis(
-            "no device seat of this node's device key begins with its minted key event",
+            "no device seat of this node's device key holds its inception",
         ))?;
-    let room = log(writer)
+    for _ in 0..inceptions.len() {
+        let Some((replaced, _)) = inception.replaces else {
+            break;
+        };
+        inception = inceptions.get(&replaced).ok_or(VerifyError::Genesis(
+            "this node's device key leads back to no genesis",
+        ))?;
+    }
+    if inception.replaces.is_some() {
+        return Err(VerifyError::Genesis(
+            "this node's device key leads back to no genesis",
+        ));
+    }
+    let log = held.get(&inception.writer).map_or(&[][..], Vec::as_slice);
+    let cert = certs.get(&inception.writer);
+    let room = log
         .get(1)
         .filter(|s| s.link.header.kind == EventKind::CreateRoom)
         .and_then(|s| s.content.as_ref())
-        .and_then(|act| derived_room(&cert.seat_key, act));
-    if room != Some(cert.room) {
-        return Err(VerifyError::Genesis(
-            "the personal room's id does not derive from its device seat's key and the nonce its create room act records",
-        ));
-    }
-
-    Ok(*writer)
+        .zip(cert)
+        .and_then(|(act, cert)| derived_room(&cert.seat_key, act).filter(|r| *r == cert.room));
+    room.map(|_| inception.writer).ok_or(VerifyError::Genesis(
+        "the personal room's id does not derive from its device seat's key and the nonce its create room act records",
+    ))
 }
 
 /// The room a create room act names, when its id derives from the seat
@@ -347,41 +494,47 @@ fn derived_room(seat_key: &PublicKey, act: &Value) -> Option<RoomId> {
     (act["room"].as_str() == Some(room.to_string().as_str())).then_some(room)
 }
 
-/// The writers whose seat certificates the certificate records in
-/// `log`, the genesis device seat's, hold; each record must name a seat
-/// the store holds, by its writer, its seat and its certificate's
-/// digest.
+/// The writers whose seat certificates the certificate records hold:
+/// those in the device seat holding each key's inception, each of which
+/// must name, by its writer, its seat and its certificate's digest, a
+/// seat that key certified.
 fn certificate_records(
-    log: &[Stored],
+    held: &BTreeMap<WriterId, Vec<Stored>>,
     certs: &BTreeMap<WriterId, SeatCertificate>,
+    inceptions: &BTreeMap<Digest, Inception>,
     full: &dyn Fn(Address) -> String,
 ) -> Result<BTreeSet<WriterId>, VerifyError> {
     let mut out = BTreeSet::new();
-    let records = log
-        .iter()
-        .filter(|s| s.link.header.kind == EventKind::CertificateRecord);
-    for stored in records {
-        let content = stored.content.as_ref().unwrap_or(&Value::Null);
-        let writer = content["writer"]
-            .as_str()
-            .and_then(|w| WriterId::parse(w).ok());
-        let held = writer.and_then(|w| certs.get(&w).map(|c| (w, c)));
-        let named = held.filter(|(_, c)| {
-            content["certificate"].as_str() == Some(c.digest().to_hex().as_str())
-                && content["seat"].as_str() == Some(c.seat_id().to_string().as_str())
-        });
-        let (writer, _) = named.ok_or_else(|| VerifyError::Record {
-            address: full(stored.link.header.address),
-        })?;
-        out.insert(writer);
+    for inception in inceptions.values() {
+        let log = held.get(&inception.writer).map_or(&[][..], Vec::as_slice);
+        let records = log
+            .iter()
+            .filter(|s| s.link.header.kind == EventKind::CertificateRecord);
+        for stored in records {
+            let content = stored.content.as_ref().unwrap_or(&Value::Null);
+            let writer = content["writer"]
+                .as_str()
+                .and_then(|w| WriterId::parse(w).ok());
+            let named = writer
+                .and_then(|w| certs.get(&w).map(|c| (w, c)))
+                .filter(|(_, c)| {
+                    c.certifying_key == inception.key
+                        && content["certificate"].as_str() == Some(c.digest().to_hex().as_str())
+                        && content["seat"].as_str() == Some(c.seat_id().to_string().as_str())
+                });
+            let (writer, _) = named.ok_or_else(|| VerifyError::Record {
+                address: full(stored.link.header.address),
+            })?;
+            out.insert(writer);
+        }
     }
 
     Ok(out)
 }
 
 /// Checks each event of one writer's `log`: a key event's content is a
-/// key event, and trusted provenance appears only when `device`, the
-/// writer a device seat's.
+/// key event, a node identity change event's is one, and trusted
+/// provenance appears only when `device`, the writer a device seat's.
 fn events(
     log: &[Stored],
     device: bool,
@@ -395,14 +548,17 @@ fn events(
                 provenance: header.provenance.name(),
             });
         }
-        if header.kind == EventKind::KeyEvent {
-            // Content that is not there failed the commitment already.
-            let content = stored.content.as_ref().unwrap_or(&Value::Null);
-            KeyEvent::from_value(content).map_err(|e| VerifyError::KeyEvent {
-                address: full(header.address),
-                reason: e.to_string(),
-            })?;
-        }
+        // Content that is not there failed the commitment already.
+        let content = stored.content.as_ref().unwrap_or(&Value::Null);
+        let parsed = match header.kind {
+            EventKind::KeyEvent => KeyEvent::from_value(content).map(drop),
+            EventKind::NodeIdentityChange => NodeIdentityChange::from_value(content).map(drop),
+            _ => Ok(()),
+        };
+        parsed.map_err(|e| VerifyError::KeyEvent {
+            address: full(header.address),
+            reason: e.to_string(),
+        })?;
     }
 
     Ok(())

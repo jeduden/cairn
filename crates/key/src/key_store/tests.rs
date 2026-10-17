@@ -17,7 +17,8 @@ fn entries_are_named_for_what_they_keep() {
     assert_eq!(Entry::device().name(), "device");
     assert_eq!(Entry::recovery().name(), "recovery");
     assert_eq!(Entry::seat(seat).name(), format!("seat-{seat}"));
-    assert_eq!(Entry::staged(&Entry::device()).name(), "genesis-device");
+    assert_eq!(Entry::staged(&Entry::device()).name(), "staged-device");
+    assert_eq!(Entry::staged_seat().name(), "staged-seat");
 }
 
 #[test]

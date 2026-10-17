@@ -517,7 +517,11 @@ fn an_event_of_a_seat_this_node_did_not_certify_shows_its_origin_as_peer() {
 #[test]
 fn the_room_scope_is_the_personal_room_unless_a_room_is_named() {
     let f = fixture();
-    let device = key::signing::DeviceKey::load(&f.home.device_key()).unwrap();
+    let device = key::signing::DeviceKey::fetch(
+        f.home.key_store().as_ref(),
+        &key::key_store::Entry::device(),
+    )
+    .unwrap();
     let other = record::id::RoomId::derive(&[2; 32], &[2; 16]);
     let writer = foreign_seat(&f, &device, other);
     let mut server = f.server();
@@ -543,7 +547,11 @@ fn a_seat_the_node_certified_but_never_recorded_shows_its_origin_as_peer() {
     // device seat lacks (PRV-12), so recall does not count it as this
     // node's own either.
     let f = fixture();
-    let device = key::signing::DeviceKey::load(&f.home.device_key()).unwrap();
+    let device = key::signing::DeviceKey::fetch(
+        f.home.key_store().as_ref(),
+        &key::key_store::Entry::device(),
+    )
+    .unwrap();
     let writer = foreign_seat(&f, &device, f.ingested.room);
     let mut server = f.server();
 

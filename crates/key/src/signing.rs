@@ -4,14 +4,12 @@
 //! verifies as another.
 
 use std::fmt;
-use std::path::Path;
 
 use ed25519_dalek::{Signer as _, SigningKey, VerifyingKey};
 use record::canonical;
 use record::digest::{Digest, hex, unhex};
 use serde_json::Value;
 
-use crate::file;
 use crate::key_store::{Entry, KeyStore};
 use crate::random::{Entropy, draw};
 
@@ -54,6 +52,16 @@ impl KeyError {
     #[must_use]
     pub fn is_missing(&self) -> bool {
         matches!(self, Self::Missing { .. })
+    }
+
+    /// Whether the key store is locked or cannot be read: a key file that
+    /// cannot be read, or that others can read, included (PRV-12).
+    #[must_use]
+    pub fn is_unavailable(&self) -> bool {
+        matches!(
+            self,
+            Self::Unavailable { .. } | Self::File { .. } | Self::Permissions { .. }
+        )
     }
 }
 
@@ -284,26 +292,6 @@ macro_rules! signing_key {
             /// Fails when `body` has no canonical encoding.
             pub fn sign(&self, kind: SignatureKind, body: &Value) -> Result<Signature, KeyError> {
                 Ok(Signature(self.0.sign(&message(kind, body)?).to_bytes()))
-            }
-
-            /// Writes it to a new file at `path` that only its owner
-            /// reads.
-            ///
-            /// # Errors
-            ///
-            /// Fails when the file exists or cannot be written.
-            pub fn save(&self, path: &Path) -> Result<(), KeyError> {
-                file::write_secret(path, &self.seed_hex())
-            }
-
-            /// Reads it from its file at `path`.
-            ///
-            /// # Errors
-            ///
-            /// Fails when the file cannot be read, others can read it,
-            /// or it holds no seed.
-            pub fn load(path: &Path) -> Result<Self, KeyError> {
-                Self::from_seed(&file::read_secret(path)?)
             }
 
             /// Keeps it in `entry` of `store`, which must hold no key

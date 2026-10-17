@@ -92,6 +92,14 @@ pub enum Counter {
     /// needs were unknown; the transcript stays for a later ingest
     /// (SEC-08, I1).
     IngestRefusedSettingsInvalid,
+    /// The node identity changed, and a new device key and device seat
+    /// replaced the old (REC-24).
+    NodeIdentityChanged,
+    /// The device key is missing from the key store beside this node's
+    /// record (SEC-10, PRV-12).
+    DeviceKeyMissing,
+    /// The key store is locked or cannot be read (PRV-12).
+    KeyStoreUnavailable,
 }
 
 impl Counter {
@@ -115,6 +123,9 @@ impl Counter {
             Self::PathOutsideAllowedRoots => "path_outside_allowed_roots",
             Self::LogLineDropped => "log_line_dropped",
             Self::IngestRefusedSettingsInvalid => "ingest_refused_settings_invalid",
+            Self::NodeIdentityChanged => "node_identity_changed",
+            Self::DeviceKeyMissing => "device_key_missing",
+            Self::KeyStoreUnavailable => "key_store_unavailable",
         }
     }
 }

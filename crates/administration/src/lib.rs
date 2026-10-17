@@ -1,7 +1,7 @@
 //! Administration of the home (§8.1, §9.5): where the home is, the
-//! node's first start in it, the seats the node certifies, the
-//! principal acts its CLI takes, and `cairn verify`'s check of the
-//! whole record.
+//! node's first start in it and its node identity, the seats the node
+//! certifies, the principal acts its CLI takes, and `cairn verify`'s
+//! check of the whole record.
 
 use std::fmt;
 use std::path::PathBuf;
@@ -9,6 +9,8 @@ use std::path::PathBuf;
 pub mod act;
 pub mod home;
 pub mod node;
+pub mod node_identity;
+pub mod role;
 pub mod verify;
 
 /// What can go wrong administering the home.
@@ -27,6 +29,9 @@ pub enum AdminError {
     Store(store::StoreError),
     /// The home and the store disagree about the node.
     Node(&'static str),
+    /// The device key is missing from the key store, but the store holds
+    /// this node's record: no second genesis starts (PRV-12).
+    DeviceKeyMissing,
     /// A directory or file of the home lets other OS users in (SEC-02).
     LoosePermissions { path: PathBuf, mode: u32 },
     /// A directory or file of the home belongs to OS user `uid`, not
@@ -56,6 +61,9 @@ impl fmt::Display for AdminError {
             Self::Key(e) => write!(f, "{e}"),
             Self::Store(e) => write!(f, "{e}"),
             Self::Node(why) => f.write_str(why),
+            Self::DeviceKeyMissing => f.write_str(
+                "the device key is missing from the key store, but the store holds this node's record; no second genesis starts",
+            ),
             Self::LoosePermissions { path, mode } => write!(
                 f,
                 "{}: mode {mode:04o} lets other OS users in; the home wants owner-only permissions",
@@ -91,6 +99,7 @@ impl std::error::Error for AdminError {
             Self::Store(e) => Some(e),
             Self::NoHome
             | Self::Node(_)
+            | Self::DeviceKeyMissing
             | Self::LoosePermissions { .. }
             | Self::OtherOsUser { .. }
             | Self::SymbolicLink { .. }
