@@ -1,7 +1,9 @@
-//! The steps of SRS §5.6, provenance (PRV). `@PRV-11` is bound: the
-//! node's device key certifies each seat key with a seat certificate
-//! naming its seat kind and whether it is an ingest seat, and `cairn
-//! verify --json` reports each seat's kind from that certificate alone.
+//! The steps of SRS §5.6, provenance (PRV), that phase 5 of plan
+//! 2609292012 carries. `@PRV-11` is bound: the node's device key
+//! certifies each seat key with a seat certificate naming its seat kind
+//! and whether it is an ingest seat, and `cairn verify --json` reports
+//! each seat's kind from that certificate alone. The first steps of
+//! PRV-12 are bound too: the genesis log's `minted`.
 //!
 //! A run seat's key lives only in its harness session's MCP server
 //! (SEC-10), which phase 10 of plan 2609292012 builds; until then the
@@ -234,4 +236,56 @@ fn i2_review(_w: &mut World) -> Result<(), String> {
     review
         .map(|_| ())
         .ok_or_else(|| "no accepted ADR records PRV-11's I2 security review".to_owned())
+}
+
+#[given(regex = r"^an isolated Cairn home with no authenticator$")]
+fn home_without_authenticator(w: &mut World) -> Result<(), String> {
+    // No authenticator can be enrolled before OWN-11's ship; the home is
+    // as fresh as any isolated one.
+    if w.cairn_home.starts_with(&w.home) && !w.cairn_home.exists() {
+        Ok(())
+    } else {
+        Err(format!(
+            "the Cairn home {} is not a fresh one inside the scenario's home",
+            w.cairn_home.display()
+        ))
+    }
+}
+
+#[when(regex = r"^Cairn starts for the first time$")]
+fn starts_first(w: &mut World) -> Result<(), String> {
+    crate::record_keys::ingest_one_line(w, "first")
+}
+
+#[then(
+    regex = r#"^a "minted" key event, the first event of the device seat that created the personal room, starts the genesis log, committing to the digest of its recovery key's public key$"#
+)]
+fn genesis_minted(w: &mut World) -> Result<(), String> {
+    let home = home(w)?;
+    let store = Store::open(&home.store()).map_err(|e| e.to_string())?;
+    let node = Node::find(&home, &store).map_err(|e| e.to_string())?;
+    let log = store.log(node.device_writer()).map_err(|e| e.to_string())?;
+    let minted = log
+        .first()
+        .and_then(|s| s.content.as_ref())
+        .and_then(|c| key::key_event::KeyEvent::from_value(c).ok())
+        .ok_or("the device seat begins with no key event")?;
+    let created = log.get(1).is_some_and(|s| {
+        s.link.header.kind == EventKind::CreateRoom
+            && s.content
+                .as_ref()
+                .is_some_and(|c| c["room"] == node.personal_room().to_string().as_str())
+    });
+    let recovery = key::signing::RecoveryKey::fetch(
+        home.key_store().as_ref(),
+        &key::key_store::Entry::recovery(),
+    )
+    .map_err(|e| e.to_string())?;
+    if minted.check_minted(&node.device().public()).is_err()
+        || !created
+        || minted.recovery != recovery.public().digest()
+    {
+        return Err("the genesis device seat does not begin with the device key's minted, committing to its recovery key".to_owned());
+    }
+    Ok(())
 }

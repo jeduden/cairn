@@ -31,9 +31,11 @@ mod engineering_release;
 mod engineering_review;
 mod observability;
 mod principal_acts;
-mod provenance;
+mod provenance_seats;
 mod record;
+mod record_keys;
 mod security;
+mod security_keys;
 mod security_redaction;
 
 use std::env;
