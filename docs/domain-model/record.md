@@ -36,14 +36,17 @@ summary: >-
   meaning of "address".
 - **Payload**: The full content of a large event, stored outside the event in
   the store's **payload store**, under a name that confirms no guess at its
-  content (REC-09).
+  content (REC-09). The event keeps its **preview**, the content's first bytes,
+  with the payload's name and its commitment.
 - **Segment**: A range of one writer, sealed as a unit when it closes; what
   peers exchange. A unit of the record, not a storage layout: a merge (REC-25)
   or a purge (ADM-07) rewrites closed segments without changing any address.
   The **open segment** is a writer's newest, still growing, closing as REC-19
   says; peers exchange its sealed prefix. A closed segment or an open segment's
-  sealed prefix is a **sealed range**. A refused segment is recorded as a
-  structural event in this node's personal room (REC-21).
+  sealed prefix is a **sealed range**. Each segment, like the store, carries
+  a **format version**; a node refuses one newer than it supports (ADM-05). A
+  refused segment is recorded as a structural event in this node's personal
+  room (REC-21).
 - **Seal**: A seat key's signature over its writer id, a seq and the chain head
   at that seq (REC-18), made where that key lives (REC-19). Events after the
   newest seal are unsigned.
