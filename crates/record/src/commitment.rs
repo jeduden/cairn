@@ -101,12 +101,14 @@ impl fmt::Debug for Commitment {
 ///
 /// Fails when `content` has no canonical encoding.
 pub fn commit(key: &CommitmentKey, content: &Value) -> Result<Commitment, canonical::Error> {
-    let canonical = canonical::encode(content)?;
+    Ok(commit_encoded(key, &canonical::encode(content)?))
+}
 
-    Ok(Commitment(hmac_sha256(
-        &key.0,
-        &[LABEL, canonical.as_bytes()],
-    )))
+/// The commitment under `key` to the content whose canonical encoding
+/// is `canonical`, for a caller that encoded it already.
+#[must_use]
+pub fn commit_encoded(key: &CommitmentKey, canonical: &str) -> Commitment {
+    Commitment(hmac_sha256(&key.0, &[LABEL, canonical.as_bytes()]))
 }
 
 #[cfg(test)]

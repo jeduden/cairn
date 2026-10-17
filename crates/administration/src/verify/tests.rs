@@ -28,6 +28,7 @@ fn new_event(n: u8) -> NewEvent {
         provenance: Provenance::Unparsed,
         content: json!({"line": n, "text": format!("line {n}")}),
         commitment_key: CommitmentKey::from_bytes([n; 32]),
+        transcript_timestamp: None,
     }
 }
 
@@ -414,6 +415,7 @@ fn a_key_event_whose_content_is_no_key_event_is_named() {
                 provenance: Provenance::Structural,
                 content: json!({}),
                 commitment_key: CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
@@ -542,6 +544,7 @@ fn a_certificate_record_naming_a_seat_this_node_does_not_hold_is_named() {
                 provenance: Provenance::Structural,
                 content: json!({"certificate": "0".repeat(64), "seat": "0".repeat(64), "writer": stray.to_string()}),
                 commitment_key: CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap()[0];
@@ -571,6 +574,7 @@ fn trusted_provenance_outside_a_device_seat_is_named() {
                 provenance: Provenance::Operator,
                 content: json!({"line": 4, "text": "x"}),
                 commitment_key: CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap()[0];
@@ -600,6 +604,7 @@ fn a_transcripts_untrusted_harness_meta_verifies_in_an_ingest_seat() {
                 provenance: Provenance::HarnessMeta,
                 content: json!({"line": 4, "text": "{\"type\":\"mode\"}"}),
                 commitment_key: CommitmentKey::from_bytes([4; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
@@ -764,12 +769,14 @@ fn forged_change_of(
             provenance: Provenance::Structural,
             content: change(&device).to_value(),
             commitment_key: CommitmentKey::from_bytes([1; 32]),
+            transcript_timestamp: None,
         },
         NewEvent {
             kind: EventKind::KeyEvent,
             provenance: Provenance::Structural,
             content: minted.to_value(),
             commitment_key: CommitmentKey::from_bytes([2; 32]),
+            transcript_timestamp: None,
         },
         NewEvent {
             kind: EventKind::CertificateRecord,
@@ -780,6 +787,7 @@ fn forged_change_of(
                 "writer": cert.writer_id().to_string(),
             }),
             commitment_key: CommitmentKey::from_bytes([3; 32]),
+            transcript_timestamp: None,
         },
     ];
     let at = f
@@ -865,6 +873,7 @@ fn a_node_identity_change_event_that_does_not_parse_is_named() {
                 provenance: Provenance::Structural,
                 content: json!({}),
                 commitment_key: CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
@@ -898,6 +907,7 @@ fn a_certificate_record_naming_a_seat_another_key_certified_is_named() {
                     "writer": cert.writer_id().to_string(),
                 }),
                 commitment_key: CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap()[0];

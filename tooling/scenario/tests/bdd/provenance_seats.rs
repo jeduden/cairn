@@ -72,6 +72,7 @@ fn seats_start(w: &mut World) -> Result<(), String> {
         commitment_key: CommitmentKey::from_bytes(
             key::random::draw(&mut OsEntropy).map_err(|e| e.to_string())?,
         ),
+        transcript_timestamp: None,
     };
     store
         .append(seat.writer, &[claim])

@@ -591,6 +591,7 @@ fn new_event(key: [u8; 32], kind: EventKind, provenance: Provenance, content: Va
         provenance,
         content,
         commitment_key: CommitmentKey::from_bytes(key),
+        transcript_timestamp: None,
     }
 }
 

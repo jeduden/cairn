@@ -330,6 +330,7 @@ fn a_store_failure_or_a_writer_without_a_seat_is_a_tool_error() {
                 provenance: record::event::Provenance::Unparsed,
                 content: json!({"text": "x"}),
                 commitment_key: record::commitment::CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
@@ -492,6 +493,7 @@ fn foreign_seat(
                 provenance: record::event::Provenance::Unparsed,
                 content: json!({"line": 1, "text": "x"}),
                 commitment_key: record::commitment::CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
