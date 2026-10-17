@@ -16,8 +16,11 @@ them, Cairn changes only harness configuration, under I7.
 - **Harness session**: The harness's own unit, which yields one transcript, plus
   one per subagent where the harness writes them apart (ASM-03). Named only when
   describing the harness, never as a Cairn unit. One whose harness process
-  descends from a run's tool call records no `user` event (PRV-08); recall taint
-  passes between its runs and that run (SEC-13).
+  descends from a run's tool call, a **nested** harness session, records no
+  `user` event (PRV-08); recall taint passes between its runs and that run
+  (SEC-13). Its **process ancestry** is the chain of processes a hook handler of
+  it descends from, read inside the core: a harness process above the harness
+  session's own makes it nested.
 - **Transcript**: The harness's file of what a harness session did. A
   **transcript source** is a transcript Cairn ingests (Ingest marker, `cairn
   ingest`); a shrunk transcript or a rewritten prefix starts a new **transcript
@@ -36,7 +39,8 @@ them, Cairn changes only harness configuration, under I7.
   (REC-15). A harness
   version's **recorded shape** is, per line type (an attachment by its type, a
   `system` line by its subtype), the keys its recorded lines all carry and those
-  any carries, generated from that version's recorded transcripts (ENG-17). A
+  any carries, generated from that version's recorded transcripts (ENG-17), and
+  per hook the same of its recorded hook inputs. A
   transcript line or hook input whose shape differs from the one recorded for
   its harness version is **format drift**, counted and audited (REC-26): such a
   line is kept whole, redacted, as untrusted `harness_text`, and such a hook
@@ -53,7 +57,9 @@ them, Cairn changes only harness configuration, under I7.
   none of its own and inherits what started the harness, so only a hook handler
   reads it. A `UserPromptSubmit` hook observation records it as a structural
   field, which can only keep `user` untrusted, never make anything trusted
-  (PRV-04).
+  (PRV-04). A **prompt match** is the structural event naming the `user` event a
+  prompt commitment was used up by, its `prompt_id` and whether it matched
+  (PRV-08).
 - **Tool-use id**: The harness's id for one tool call, carried by the call's
   transcript line and by its MCP call (Claude Code: `_meta`
   `claudecode/toolUseId`). The MCP server finds the run that made a call only by
