@@ -52,7 +52,7 @@ pub(crate) fn ingest(
     let node = Node::open(home, &mut store, entropy).map_err(IngestError::Admin)?;
     let named = Named::of(path, &redactor);
     let resume = Resume::find(&mut store, &named, text.as_bytes(), &lines, &redactor)?;
-    let defaults = Defaults::of(&parsed, &named.stem);
+    let defaults = Defaults::of(path);
     let mut runs = Runs::load(&store, &named.path)?;
     let own = runs.ensure(&mut store, &node, home, &defaults.own(), entropy)?;
     let mut planner = Planner::new(&named, inputs, &resume.source, &runs)?;
@@ -98,11 +98,10 @@ pub(crate) fn ingest(
 }
 
 /// A transcript source's names: its path as the store keys it, its
-/// transcript directory, its stem, and what it may be shown as.
+/// transcript directory, and what it may be shown as.
 struct Named {
     path: String,
     directory: String,
-    stem: String,
     redacted_path: String,
     name: String,
 }
@@ -120,7 +119,6 @@ impl Named {
             directory: directory.to_string_lossy().into_owned(),
             redacted_path: redactor.redact_text(&path.to_string_lossy()).text,
             name: redactor.redact_text(&stem).text,
-            stem,
         }
     }
 }

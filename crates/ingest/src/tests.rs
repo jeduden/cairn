@@ -790,10 +790,11 @@ fn a_new_generation_compares_with_the_lines_its_predecessor_skipped_too() {
 fn a_transcript_splits_by_run_each_subagent_tied_to_its_parent() {
     let dir = TempDir::new().unwrap();
     let home = home(&dir);
-    let main = transcript(&dir, &numbered("s1", 1, 2));
+    let main = dir.path().join("s1.jsonl");
+    std::fs::write(&main, numbered("s1", 1, 2)).unwrap();
     let sub_dir = dir.path().join("s1/subagents");
     std::fs::create_dir_all(&sub_dir).unwrap();
-    let sub = sub_dir.join("agent-a1.jsonl");
+    let sub = sub_dir.join("agent-Explore.jsonl");
     let lines = [
         serde_json::json!({"type": "user", "uuid": "a", "sessionId": "s1", "agentId": "Explore"}),
         serde_json::json!({"type": "last-prompt"}),
@@ -902,9 +903,9 @@ fn a_fork_read_first_is_held_until_its_owner_is_ingested() {
     std::fs::write(&fork, text).unwrap();
     let r = redactor();
 
-    let held = ingest_with(&home, &fork, &r, &forked("f", 1_000), &mut OsEntropy).unwrap();
-    let owner = ingest_with(&home, &parent, &r, &forked("f", 2_000), &mut OsEntropy).unwrap();
-    let released = ingest_with(&home, &fork, &r, &forked("f", 3_000), &mut OsEntropy).unwrap();
+    let held = ingest_with(&home, &fork, &r, &forked("fork", 1_000), &mut OsEntropy).unwrap();
+    let owner = ingest_with(&home, &parent, &r, &forked("fork", 2_000), &mut OsEntropy).unwrap();
+    let released = ingest_with(&home, &fork, &r, &forked("fork", 3_000), &mut OsEntropy).unwrap();
 
     assert!(held.held && held.hold_started);
     assert_eq!(held.events, 1, "its own line before the repeated ones");
@@ -934,15 +935,16 @@ fn a_hold_releases_its_lines_after_30_s_or_once_the_owner_is_gone() {
         std::fs::write(&fork, numbered("f", 1, 2)).unwrap();
         let r = redactor();
 
-        let held = ingest_with(&home, &fork, &r, &forked("f", 1_000), &mut OsEntropy).unwrap();
-        let still = ingest_with(&home, &fork, &r, &forked("f", 30_999), &mut OsEntropy).unwrap();
+        let held = ingest_with(&home, &fork, &r, &forked("fork", 1_000), &mut OsEntropy).unwrap();
+        let still = ingest_with(&home, &fork, &r, &forked("fork", 30_999), &mut OsEntropy).unwrap();
         let later = if gone {
             std::fs::remove_file(&parent).unwrap();
             2_000
         } else {
             31_000
         };
-        let released = ingest_with(&home, &fork, &r, &forked("f", later), &mut OsEntropy).unwrap();
+        let released =
+            ingest_with(&home, &fork, &r, &forked("fork", later), &mut OsEntropy).unwrap();
 
         assert!(held.held && held.hold_started && held.events == 0);
         assert!(still.held && !still.hold_started);
@@ -960,10 +962,10 @@ fn a_fork_s_line_whose_owner_was_released_stays_the_owner_s_own() {
     let fork = dir.path().join("fork.jsonl");
     std::fs::write(&fork, numbered("f", 1, 2)).unwrap();
     let r = redactor();
-    ingest_with(&home, &fork, &r, &forked("f", 0), &mut OsEntropy).unwrap();
-    ingest_with(&home, &fork, &r, &forked("f", 40_000), &mut OsEntropy).unwrap();
+    ingest_with(&home, &fork, &r, &forked("fork", 0), &mut OsEntropy).unwrap();
+    ingest_with(&home, &fork, &r, &forked("fork", 40_000), &mut OsEntropy).unwrap();
 
-    let owner = ingest_with(&home, &parent, &r, &forked("f", 41_000), &mut OsEntropy).unwrap();
+    let owner = ingest_with(&home, &parent, &r, &forked("fork", 41_000), &mut OsEntropy).unwrap();
 
     assert_eq!((owner.events, owner.references), (2, 0));
 }
