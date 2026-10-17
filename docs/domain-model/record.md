@@ -34,19 +34,28 @@ summary: >-
   **writer-label assignment** a structural event (RCL-08). An address range
   lies in one writer; "range" on its own means an address range. The only
   meaning of "address".
-- **Payload**: The full content of a large event, stored outside the event in
-  the store's **payload store**, under a name that confirms no guess at its
-  content (REC-09). The event keeps its **preview**, the content's first bytes,
-  with the payload's name and its commitment.
+- **Payload**: The full content of an event whose canonical encoding passes the
+  payload threshold (`payload.threshold_bytes`, REC-09), stored in the store's
+  **payload store** under a name that confirms no guess at its content. The
+  event keeps its preview, its **payload reference** (the payload's name and
+  size) and the event's commitment.
+- **Preview**: The first bytes of an event's or post's content, at most 512 by
+  default, cut at a character boundary (REC-09). It is what a payload event
+  keeps in place of its content, and what a recall hit, the kernel or a view
+  shows of any event or post (OWN-08). A preview is content: it carries its
+  event's trust level, is no structural field, and goes with the content under
+  purge (ADM-07).
 - **Segment**: A range of one writer, sealed as a unit when it closes; what
   peers exchange. A unit of the record, not a storage layout: a merge (REC-25)
   or a purge (ADM-07) rewrites closed segments without changing any address.
   The **open segment** is a writer's newest, still growing, closing as REC-19
   says; peers exchange its sealed prefix. A closed segment or an open segment's
   sealed prefix is a **sealed range**. A refused segment is recorded as a
-  structural event in this node's personal room (REC-21). Each segment, like
-  the store, carries a **format version**; a node refuses one newer than it
-  supports (ADM-05).
+  structural event in this node's personal room (REC-21). Each segment carries
+  a **format version** (REC-21), and the store a **schema version** (ADM-05,
+  ADM-11). A node refuses to open a store or segment newer than it supports
+  (ADM-05), and refuses and audits a segment of any version it does not support
+  (REC-21).
 - **Seal**: A seat key's signature over its writer id, a seq and the chain head
   at that seq (REC-18), made where that key lives (REC-19). Events after the
   newest seal are unsigned.
