@@ -69,9 +69,7 @@ removes its row and its †.
 | PRV-14's 2 s wait for a tool call's transcript line                                                               | S9                                                                                      |
 | VIEW-02's 2 s from transcript line to room view                                                                   | S9                                                                                      |
 | NFR-01's `PermissionRequest` targets: 50 ms beyond the wait, 10 s below the harness timeout                       | S9, with the held-request behaviour                                                     |
-| REC-11's 1 MiB indexing cap per event                                                                             | M1, with the cost of indexing one capped event                                          |
-| RCL-02's 50 hits and RCL-03's 8,000-model-token cap                                                               | M1, with recall                                                                         |
-| SEC-04's 16 terms of at most 64 characters                                                                        | M1, with the query compiler                                                             |
+| RCL-03's 8,000-model-token cap                                                                                    | M1, with recall                                                                         |
 | PIN-08's 1,000-model-token pin budget and INJ-07's 2,000-model-token restore block limit                          | M2, with OQ-56                                                                          |
 | PIN-03's 1,000 characters per pin (OQ-56)                                                                         | M2                                                                                      |
 | LMK-03's 80-character structural field (S8 saw an 85-character file path in a real run)                           | M3                                                                                      |
