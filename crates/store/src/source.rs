@@ -241,11 +241,11 @@ pub(crate) fn start(conn: &Connection, path: &str, directory: &str) -> Result<So
     })
 }
 
-/// Moves source `id`'s position to `position`.
+/// Moves source `id`'s position to `position`, never back.
 pub(crate) fn advance(conn: &Connection, id: i64, position: &Position) -> Result<(), StoreError> {
     let updated = conn.execute(
         "UPDATE transcript_sources SET byte_offset = ?2, prefix_hash = ?3, lines = ?4, seen = ?5
-         WHERE id = ?1",
+         WHERE id = ?1 AND byte_offset <= ?2",
         params![
             id,
             sql_count(position.offset),
@@ -256,6 +256,19 @@ pub(crate) fn advance(conn: &Connection, id: i64, position: &Position) -> Result
     );
 
     updated.map(drop).map_err(StoreError::from)
+}
+
+/// The byte offset source `id`'s position stands at; 0 for no source.
+pub(crate) fn offset(conn: &Connection, id: i64) -> Result<u64, StoreError> {
+    let offset: Option<i64> = conn
+        .query_row(
+            "SELECT byte_offset FROM transcript_sources WHERE id = ?1",
+            [id],
+            |r| r.get(0),
+        )
+        .optional()?;
+
+    Ok(offset.map_or(0, |o| u64::try_from(o).unwrap_or(0)))
 }
 
 /// Marks source `id` held at its ingest marker since `since`, or no
