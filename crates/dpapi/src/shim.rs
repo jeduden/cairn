@@ -123,8 +123,13 @@ fn call(api: &dyn Api, data: &[u8], protecting: bool) -> Result<Vec<u8>, Error> 
     // SAFETY: on success `output` holds a buffer of `len` bytes, valid
     // until it is freed below.
     let out = unsafe { std::slice::from_raw_parts(output.data, output.len as usize) }.to_vec();
+    for i in 0..output.len as usize {
+        // SAFETY: as above; each byte of the buffer is overwritten once,
+        // volatile so the wipe of a buffer about to be freed stays.
+        unsafe { ptr::write_volatile(output.data.add(i), 0) };
+    }
     // SAFETY: the buffer came from this successful call and is freed
-    // once, after its bytes were copied out.
+    // once, after its bytes were copied out and wiped.
     unsafe { api.free(output.data, output.len) };
 
     Ok(out)
