@@ -38,6 +38,7 @@ mod provenance_trust;
 mod record;
 mod record_ingest;
 mod record_keys;
+mod record_search;
 mod record_store;
 mod record_transcript;
 mod security;

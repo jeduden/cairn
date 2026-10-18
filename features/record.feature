@@ -160,7 +160,7 @@ Feature: Record (REC)
     And the header contains only the address, kind, provenance class, prev_hash, the heads of the other writers' logs the writer had seen, and the commitment
     And events of the two writers are ordered by the heads each cites, never by wall-clock time
 
-  @REC-11 @P0 @pending
+  @REC-11 @P0
   Scenario: event and payload text is full-text indexed up to the indexing cap, with ranked search
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
