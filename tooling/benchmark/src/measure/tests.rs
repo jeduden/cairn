@@ -59,6 +59,26 @@ fn time_benchmark_times_each_benchmark_over_its_fixture() {
 }
 
 #[test]
+fn time_program_fed_hands_its_input_and_fails_as_time_program_does() {
+    let (program, args) = quiet();
+
+    let took = time_program_fed(&program, &args, &[], b"{}".to_vec(), DEADLINE).unwrap();
+    assert!(took > Duration::ZERO);
+    let err =
+        time_program_fed(&program, &["--no-such-flag"], &[], Vec::new(), DEADLINE).unwrap_err();
+    assert!(err.contains(" --no-such-flag exited "), "{err}");
+    let err = time_program_fed(
+        Path::new("/no/such/program"),
+        &[],
+        &[],
+        Vec::new(),
+        DEADLINE,
+    )
+    .unwrap_err();
+    assert!(err.starts_with("start /no/such/program: "), "{err}");
+}
+
+#[test]
 fn time_program_in_sets_the_variables_it_is_given() {
     let (program, _) = quiet();
     let env = [("CAIRN_BENCHMARK_PROBE", std::path::PathBuf::from("x"))];

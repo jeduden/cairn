@@ -63,6 +63,26 @@ impl Home {
         Ok(home)
     }
 
+    /// The hook input of `hook` in Claude Code 2.1.296's recorded shape,
+    /// naming this home's transcript.
+    #[must_use]
+    pub fn hook_input(&self, hook: &str) -> String {
+        let transcript = self.root.join(".claude/projects/-w-bench/bench.jsonl");
+        let own = match hook {
+            "SessionStart" => r#","source":"startup""#,
+            "UserPromptSubmit" => {
+                r#","prompt_id":"b4d185a7-444a-48c7-b7b3-4f5da463e538","permission_mode":"default","prompt":"Reply with just the word A1.""#
+            }
+            _ => "",
+        };
+
+        format!(
+            r#"{{"session_id":"bench","transcript_path":{},"cwd":"/w/bench","hook_event_name":{}{own}}}"#,
+            json_string(&transcript.to_string_lossy()),
+            json_string(hook),
+        )
+    }
+
     /// The variables the core starts with: `HOME` and `CAIRN_HOME`, both
     /// inside this home.
     #[must_use]
@@ -78,6 +98,22 @@ impl Drop for Home {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.root);
     }
+}
+
+/// `text` as a JSON string.
+fn json_string(text: &str) -> String {
+    let mut out = String::from("\"");
+    for c in text.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            c if u32::from(c) < 0x20 => out.push_str(&format!("\\u{:04x}", u32::from(c))),
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+
+    out
 }
 
 #[cfg(test)]

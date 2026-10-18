@@ -20,6 +20,25 @@ fn a_transcript_repeats_the_recorded_lines_each_copy_with_its_own_uuids() {
 }
 
 #[test]
+fn a_hook_input_names_the_homes_transcript_in_its_hooks_recorded_shape() {
+    let base = TempDir::new().unwrap();
+    let home = Home::with_transcript(base.path(), "x\n").unwrap();
+    let transcript = home.env()[0]
+        .1
+        .join(".claude/projects/-w-bench/bench.jsonl");
+
+    let start = home.hook_input("SessionStart");
+    let prompt = home.hook_input("UserPromptSubmit");
+    let other = home.hook_input("PermissionRequest");
+
+    assert!(start.contains(&json_string(&transcript.to_string_lossy())));
+    assert!(start.ends_with(r#""hook_event_name":"SessionStart","source":"startup"}"#));
+    assert!(prompt.contains(r#""prompt":"Reply with just the word A1.""#));
+    assert!(other.ends_with(r#""hook_event_name":"PermissionRequest"}"#));
+    assert_eq!(json_string("a\"b\\c\u{1}"), r#""a\"b\\c\u0001""#);
+}
+
+#[test]
 fn a_home_holds_its_transcript_and_is_removed_when_dropped() {
     let base = TempDir::new().unwrap();
 
