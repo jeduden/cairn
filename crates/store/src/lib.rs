@@ -296,17 +296,30 @@ impl Store {
     /// Fails when there is no store, when SQLite cannot open it, when it
     /// holds no schema, or when it is of a newer schema version.
     pub fn open_read_only(path: &Path) -> Result<Self, StoreError> {
+        Self::open_read_only_made(path)?.ok_or_else(|| StoreError::Corrupt {
+            address: None,
+            what: "it holds no schema".to_owned(),
+        })
+    }
+
+    /// Opens the store at `path` for reading alone, as
+    /// [`open_read_only`](Self::open_read_only) does; none when it holds
+    /// no schema yet, as a store whose first opener was stopped before it
+    /// made one, a hook handler past its budget say, holds nothing.
+    ///
+    /// # Errors
+    ///
+    /// Fails when there is no store, when SQLite cannot open it, or when
+    /// it is of a newer schema version.
+    pub fn open_read_only_made(path: &Path) -> Result<Option<Self>, StoreError> {
         let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX;
         let store = Self::over(Connection::open_with_flags(path, flags)?, path)?;
         if !store.has_meta()? {
-            return Err(StoreError::Corrupt {
-                address: None,
-                what: "it holds no schema".to_owned(),
-            });
+            return Ok(None);
         }
         store.check_format()?;
 
-        Ok(store)
+        Ok(Some(store))
     }
 
     /// The store over `conn`, the file at `path` once checked readable

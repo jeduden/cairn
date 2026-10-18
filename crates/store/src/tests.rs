@@ -1091,6 +1091,26 @@ fn a_newer_store_is_refused_before_anything_in_it_changes() {
 }
 
 #[test]
+fn a_store_whose_first_opener_made_no_schema_reads_as_none_yet() {
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("store.db");
+    std::fs::write(&path, "").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).unwrap();
+    }
+
+    assert!(Store::open_read_only_made(&path).unwrap().is_none());
+    assert!(matches!(
+        Store::open_read_only(&path),
+        Err(StoreError::Corrupt { what, .. }) if what == "it holds no schema"
+    ));
+    open(&dir);
+    assert!(Store::open_read_only_made(&path).unwrap().is_some());
+}
+
+#[test]
 fn a_read_only_store_reads_what_the_store_holds_and_makes_nothing() {
     let dir = TempDir::new().unwrap();
     let path = dir.path().join("store.db");
