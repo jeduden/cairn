@@ -393,6 +393,17 @@ pub struct Started {
     caller: String,
 }
 
+/// A program still running when its handle drops, because a test
+/// failed before stopping it, is killed with everything it started, so
+/// no confined process outlives its test.
+impl Drop for Started {
+    fn drop(&mut self) {
+        if matches!(self.child.try_wait(), Ok(None)) {
+            let _ = self.kill_group();
+        }
+    }
+}
+
 impl Started {
     /// The program's standard input, until it is closed.
     pub fn stdin(&mut self) -> Option<&mut std::process::ChildStdin> {
