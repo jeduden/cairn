@@ -8,6 +8,8 @@ use super::*;
 struct Fake {
     fail: Option<u32>,
     freed: Cell<usize>,
+    /// How many buffers came back to `free` still holding a nonzero byte.
+    unwiped: Cell<usize>,
     empty: bool,
 }
 
@@ -66,7 +68,11 @@ unsafe impl Api for Fake {
         let slice = std::ptr::slice_from_raw_parts_mut(data, len as usize);
         // SAFETY: `data` and `len` are a buffer `reverse` leaked from a
         // boxed slice, handed back once.
-        drop(unsafe { Box::from_raw(slice) });
+        let buffer = unsafe { Box::from_raw(slice) };
+        if buffer.iter().any(|&b| b != 0) {
+            self.unwiped.set(self.unwiped.get() + 1);
+        }
+        drop(buffer);
     }
 
     fn last_error(&self) -> u32 {
@@ -84,6 +90,18 @@ fn protected_bytes_come_back_and_the_buffer_is_freed_once() {
     assert_eq!(blob, b"dees");
     assert_eq!(plain, b"seed");
     assert_eq!(api.freed.get(), 2);
+}
+
+#[test]
+fn the_buffer_dpapi_returns_is_wiped_before_it_is_freed() {
+    let api = Fake::default();
+
+    let blob = protect(&api, b"seed").unwrap();
+    let plain = unprotect(&api, &blob).unwrap();
+
+    assert_eq!(plain, b"seed");
+    assert_eq!(api.freed.get(), 2);
+    assert_eq!(api.unwiped.get(), 0);
 }
 
 #[test]
