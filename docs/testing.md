@@ -213,10 +213,14 @@ State a section tracks lives in its own struct, reached through
 `World::section::<T>()`, never as a new field on the world.
 
 A step starts the core through `run_core` in `record.rs`, confined, with
-the variables earlier steps set through `set_env`. One of them exists
-only for tests: a development build's hook handler panics when
-`CAIRN_TEST_FAULT` is `hook-panic`, so the `@ENG-04` scenario can prove
-the hook's entry point catches it. A release build never reads it.
+the variables earlier steps set through `set_env`. Some exist only for
+tests, and a release build never reads them. A development build's hook
+handler panics when `CAIRN_TEST_FAULT` is `hook-panic`, so the `@ENG-04`
+scenario can prove the hook's entry point catches it, and hangs when it
+is `hook-hang`, so `@NFR-02` can kill it. `CAIRN_TEST_CLOCK` stands the
+clock still at a time it names. `CAIRN_TEST_HOOK_BUDGET_MS` sets every
+hook's budget; `run_core` sets it lenient unless a step sets a hook's
+own, so a loaded machine fails no scenario on a budget it does not test.
 
 ## Keeping tests off real state
 

@@ -1,7 +1,7 @@
 ---
 n: 9
 title: "The hook handlers: hook observations held at the ingest marker"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 9: the hook handlers
@@ -11,7 +11,7 @@ the attended mark, prompt commitments and process ancestry; REC-19's
 holding of a run's hook observations; NFR-02's hook budgets and start
 markers. ENG-07 gets the hook input decoder's fuzz target, ENG-17 the
 hook input contract replay, ENG-15 the NFR-01 and NFR-02 benchmarks.
-`@SEC-16` comes off `@pending`.
+`@SEC-16` and `@NFR-02` come off `@pending`.
 
 The hook input decoder (SEC-16, REC-26), before anything is recorded:
 
@@ -19,10 +19,9 @@ The hook input decoder (SEC-16, REC-26), before anything is recorded:
   (`session_id`, `prompt_id`) must be a plain id; else the input is
   rejected, audited as "hook input failed schema validation" and
   counted `hook_input_rejected`. A malformed one stays `hook_rejected`.
-- Its keys are checked against the hook input shapes recorded for the
-  supported versions, generated from `testdata/claude-code` like the
-  transcript's. A missing or extra key is format drift, audited and
-  counted; the handler still answers empty and records what it can.
+- Its keys are checked against the hook input shapes generated from
+  `testdata/claude-code`. A missing or extra key is format drift,
+  audited and counted; the handler still records what it can.
 
 What each handler records, as state beside the record, never in a
 writer: no MCP server holds a run-seat key before phase 10 (REC-19).
@@ -35,9 +34,7 @@ writer: no MCP server holds a run-seat key before phase 10 (REC-19).
 - `UserPromptSubmit`: the `prompt_id`, whether the attended mark is in
   the handler's environment, and a prompt commitment to the redacted
   prompt under its own 256-bit key. While a principal settings layer
-  fails, the redaction patterns are unknown: the observation is kept,
-  the commitment dropped, audited and counted. This answers phase 4's
-  open question.
+  fails, the commitment is dropped, counted (phase 4's question).
 - `PermissionRequest`: nothing yet; OWN-04 decides later.
 - Each held at the transcript's ingest marker, at the transcript's size
   when its hook fired.
@@ -61,9 +58,8 @@ server as it starts, or `cairn status`. A session binding no MCP server
 took within 30 s is counted once, by the next hook handler, `cairn
 status` or `cairn ingest`.
 
-Benchmarks (ENG-15): each hook handler runs over a fresh home. That
-covers NFR-02's budgets. NFR-01's store of 1M events, under fleet load,
-stays awaiting.
+Benchmarks (ENG-15): each hook handler over a fresh home, for NFR-02.
+NFR-01's store of 1M events stays awaiting.
 
 Where the gate's scenarios go live:
 
@@ -71,10 +67,14 @@ Where the gate's scenarios go live:
   state (OQ-40); rows 1 to 3 bound.
 - `@REC-19`: the holding steps bound; sealing is M7's, the MCP server
   phase 10's.
-- `@NFR-02`: the MCP server's row needs phase 10.
+- `@NFR-02`: `cairn mcp` counts a marker as it starts, so all rows
+  pass.
+- `@REC-04`'s homes and `@REC-22`'s ingest marker need several homes:
+  with phase 10.
 - PRV-08 rows 2, 4, 5 and 19 and REC-26's hook row bound where they
   pass.
 
-Gate: `@SEC-16` passes, and `@PRV-04`'s first three rows. REC-19's
-holding steps pass; a hook handler fails open within its hook budget;
-NFR-01 and NFR-02 are benchmarked.
+Gate: `@SEC-16` and `@NFR-02` pass, and `@PRV-04`'s first three
+rows. REC-19's holding steps are bound, their MCP server half phase
+10's; a hook handler fails open within its hook budget; NFR-01 and
+NFR-02 are benchmarked.
