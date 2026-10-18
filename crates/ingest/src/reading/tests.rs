@@ -15,17 +15,30 @@ fn a_transaction_holds_one_writer_s_consecutive_lines() {
         (a, false, 5),
     ];
 
-    assert_eq!(transactions(&ends), [0..3, 3..4, 4..5]);
+    assert_eq!(transactions(&ends, &BTreeSet::new()), [0..3, 3..4, 4..5]);
     assert_eq!(last_of_each_writer(&ends)[&a], 4);
     assert_eq!(last_of_each_writer(&ends)[&b], 3);
-    assert!(transactions(&[]).is_empty());
+    assert!(transactions(&[], &BTreeSet::new()).is_empty());
+}
+
+#[test]
+fn a_transaction_starts_at_each_index_an_observation_lands_before() {
+    let ends: Vec<_> = (0..5).map(|i| (writer(1), false, i)).collect();
+
+    assert_eq!(
+        transactions(&ends, &BTreeSet::from([2, 4])),
+        [0..2, 2..4, 4..5]
+    );
 }
 
 #[test]
 fn a_transaction_holds_at_most_a_batch() {
     let ends: Vec<_> = (0..250).map(|i| (writer(1), false, i)).collect();
 
-    assert_eq!(transactions(&ends), [0..100, 100..200, 200..250]);
+    assert_eq!(
+        transactions(&ends, &BTreeSet::new()),
+        [0..100, 100..200, 200..250]
+    );
 }
 
 #[test]

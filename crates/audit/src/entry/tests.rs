@@ -92,6 +92,27 @@ fn each_kind_and_counter_has_its_name() {
 }
 
 #[test]
+fn each_counter_of_the_mcp_server_has_its_name() {
+    let counters = [
+        (Counter::IngestRemainderLeft, "ingest_remainder_left"),
+        (
+            Counter::WitnessedRepeatRecorded,
+            "witnessed_repeat_recorded",
+        ),
+        (
+            Counter::ToolCallWithoutToolUseId,
+            "tool_call_without_tool_use_id",
+        ),
+        (Counter::ToolCallRunNotFound, "tool_call_run_not_found"),
+        (Counter::ToolCallRunAmbiguous, "tool_call_run_ambiguous"),
+        (Counter::LiveIngestFailed, "live_ingest_failed"),
+    ];
+    for (counter, name) in counters {
+        assert_eq!(counter.as_str(), name);
+    }
+}
+
+#[test]
 fn a_degraded_entry_names_its_kind_counter_operation_and_detail() {
     let e = Entry::next(&REJECTED, 7, 1_760_000_000, Digest::ZERO).unwrap();
     assert_eq!(e.number, 7);
