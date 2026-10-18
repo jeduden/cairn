@@ -41,7 +41,8 @@ fn a_handler_below_its_own_harness_alone_is_not_nested() {
         observe(&table, 100),
         Some(Ancestry {
             harnesses: 1,
-            nested: false
+            nested: false,
+            harness: Some(102),
         })
     );
 }
@@ -54,8 +55,10 @@ fn a_harness_above_the_sessions_own_makes_it_nested() {
         observe(&table, 100),
         Some(Ancestry {
             harnesses: 2,
-            nested: true
-        })
+            nested: true,
+            harness: Some(102),
+        }),
+        "the nearest harness process is the session's own"
     );
 }
 
@@ -65,7 +68,8 @@ fn a_handler_no_harness_started_counts_none() {
         observe(&chain(&["cairn", "bash"]), 100),
         Some(Ancestry {
             harnesses: 0,
-            nested: false
+            nested: false,
+            harness: None,
         })
     );
 }
@@ -128,7 +132,8 @@ fn proc_gives_each_parent_and_the_names_a_process_runs_under() {
         observe(&proc, 7),
         Some(Ancestry {
             harnesses: 0,
-            nested: false
+            nested: false,
+            harness: None,
         })
     );
     #[cfg(unix)]

@@ -1045,6 +1045,7 @@ fn observation(hook: &str, session: &str) -> store::Observation {
         prompt_id: None,
         attended: false,
         ancestry: None,
+        harness: None,
         at: 1,
     }
 }

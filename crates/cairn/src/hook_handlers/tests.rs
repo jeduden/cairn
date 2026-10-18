@@ -111,6 +111,11 @@ fn a_session_start_holds_its_session_binding_at_the_transcripts_ingest_marker() 
     );
     assert_eq!(o.ancestry, Some((1, false)));
     assert_eq!(
+        o.harness,
+        Some(crate::tests::HARNESS),
+        "its harness process, whose MCP server takes the session binding"
+    );
+    assert_eq!(
         markers(&p),
         Vec::<String>::new(),
         "its start marker cleared"
@@ -129,8 +134,14 @@ fn a_user_prompt_submit_keeps_only_the_prompt_id_and_a_prompt_commitment() {
     let held = held(&p);
     let o = &held[0].observation;
     assert_eq!(
-        (o.prompt_id.as_deref(), o.attended, o.offset, o.ancestry),
-        (Some("p1"), true, Some(0), None)
+        (
+            o.prompt_id.as_deref(),
+            o.attended,
+            o.offset,
+            o.ancestry,
+            o.harness
+        ),
+        (Some("p1"), true, Some(0), None, None)
     );
     let commitment = store(&p).prompt_commitment("s1", "p1").unwrap().unwrap();
     let redacted = Redactor::new(&[])
@@ -385,6 +396,7 @@ fn hold_start(p: &Process, session: &str, at: u64) {
         prompt_id: None,
         attended: false,
         ancestry: None,
+        harness: None,
         at,
     };
     store(p).hold_observation(&observation, None).unwrap();

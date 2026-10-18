@@ -278,6 +278,9 @@ impl<'j> Recording<'j> {
             return;
         };
         let roots = settings.texts("transcript.roots");
+        let ancestry = (self.job.hook == Hook::SessionStart)
+            .then(self.job.ancestry)
+            .flatten();
         let observation = Observation {
             hook: self.job.hook.name().to_owned(),
             harness_session: session.clone(),
@@ -287,10 +290,8 @@ impl<'j> Recording<'j> {
             source: input.source.as_deref().map(source_name),
             prompt_id: input.prompt_id.clone(),
             attended: self.job.attended,
-            ancestry: (self.job.hook == Hook::SessionStart)
-                .then(self.job.ancestry)
-                .flatten()
-                .map(|a| (a.harnesses as u64, a.nested)),
+            ancestry: ancestry.map(|a| (a.harnesses as u64, a.nested)),
+            harness: ancestry.and_then(|a| a.harness),
             at: self.job.now,
         };
         let usable = !in_force.loaded.principal_layer_failed();

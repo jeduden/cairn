@@ -46,11 +46,16 @@ pub(crate) struct Process {
     pub(crate) ancestry: fn() -> Option<hook::ancestry::Ancestry>,
 }
 
+/// The harness process the tests' hook handlers and MCP servers run
+/// below.
+pub(crate) const HARNESS: u32 = 4242;
+
 /// The ancestry of a hook handler below its own harness alone.
 pub(crate) fn own_harness() -> Option<hook::ancestry::Ancestry> {
     Some(hook::ancestry::Ancestry {
         harnesses: 1,
         nested: false,
+        harness: Some(HARNESS),
     })
 }
 

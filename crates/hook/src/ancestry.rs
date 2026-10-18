@@ -27,13 +27,17 @@ pub trait Processes {
     fn names(&self, pid: u32) -> Vec<String>;
 }
 
-/// What a hook handler observed of its process ancestry.
+/// What a hook handler, or the MCP server, observed of its process
+/// ancestry.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Ancestry {
     /// How many harness processes are among its ancestors.
     pub harnesses: usize,
     /// More than one: a harness process above the session's own.
     pub nested: bool,
+    /// The nearest harness process above it: its own harness session's,
+    /// whose session binding the MCP server takes (REC-13).
+    pub harness: Option<u32>,
 }
 
 /// The ancestry of `pid` as `processes` tells it, read up to the first
@@ -42,6 +46,7 @@ pub struct Ancestry {
 #[must_use]
 pub fn observe(processes: &dyn Processes, pid: u32) -> Option<Ancestry> {
     let mut harnesses = 0;
+    let mut nearest = None;
     let mut current = pid;
     for _ in 0..DEPTH_LIMIT {
         let parent = processes.parent(current)?;
@@ -49,10 +54,12 @@ pub fn observe(processes: &dyn Processes, pid: u32) -> Option<Ancestry> {
             return Some(Ancestry {
                 harnesses,
                 nested: harnesses > 1,
+                harness: nearest,
             });
         }
         if processes.names(parent).iter().any(|n| harness(n)) {
             harnesses += 1;
+            nearest = nearest.or(Some(parent));
         }
         current = parent;
     }

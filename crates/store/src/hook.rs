@@ -30,9 +30,11 @@ CREATE TABLE hook_observations (
     attended INTEGER NOT NULL,
     harnesses INTEGER,
     nested INTEGER,
+    harness_process INTEGER,
     at INTEGER NOT NULL,
     appended INTEGER NOT NULL,
-    binding_counted INTEGER NOT NULL
+    binding_counted INTEGER NOT NULL,
+    taken INTEGER NOT NULL
 ) STRICT;
 CREATE INDEX hook_observations_session ON hook_observations (harness_session);
 CREATE TABLE prompt_commitments (
@@ -47,7 +49,8 @@ CREATE TABLE prompt_commitments (
 
 /// The columns a hook observation is read from.
 const OBSERVATION: &str = "SELECT id, hook, harness_session, transcript_path, cwd, byte_offset,
-    source, prompt_id, attended, harnesses, nested, at, appended FROM hook_observations";
+    source, prompt_id, attended, harnesses, nested, harness_process, at, appended, taken
+    FROM hook_observations";
 
 /// What one hook handler observed: only the hook input's structural
 /// fields, never a prompt's text.
@@ -72,6 +75,10 @@ pub struct Observation {
     /// The harness processes among the handler's ancestors, and whether
     /// that makes the harness session nested; none when unread.
     pub ancestry: Option<(u64, bool)>,
+    /// The nearest harness process among them, by its process id: with
+    /// `SessionStart`, the harness process whose MCP server takes this
+    /// session binding (REC-13).
+    pub harness: Option<u32>,
     /// When it was held, in seconds since the Unix epoch.
     pub at: u64,
 }
@@ -83,6 +90,8 @@ pub struct Held {
     pub observation: Observation,
     /// Whether it reached the record.
     pub appended: bool,
+    /// Whether an MCP server took it as its session binding (REC-13).
+    pub taken: bool,
 }
 
 /// A prompt commitment (PRV-08).
@@ -119,7 +128,9 @@ type Row = (
     bool,
     Option<i64>,
     Option<bool>,
+    Option<i64>,
     i64,
+    bool,
     bool,
 );
 
@@ -127,7 +138,8 @@ fn held(row: Row) -> Held {
     let (id, hook, session, path, cwd, offset, source, prompt_id, attended) = (
         row.0, row.1, row.2, row.3, row.4, row.5, row.6, row.7, row.8,
     );
-    let (harnesses, nested, at, appended) = (row.9, row.10, row.11, row.12);
+    let (harnesses, nested, harness, at, appended, taken) =
+        (row.9, row.10, row.11, row.12, row.13, row.14);
 
     Held {
         id,
@@ -141,9 +153,11 @@ fn held(row: Row) -> Held {
             prompt_id,
             attended,
             ancestry: harnesses.zip(nested).map(|(h, n)| (count(h), n)),
+            harness: harness.and_then(|h| u32::try_from(h).ok()),
             at: count(at),
         },
         appended,
+        taken,
     }
 }
 
@@ -164,6 +178,8 @@ fn observations(conn: &Connection, filter: &str) -> Result<Vec<Held>, StoreError
             r.get(10)?,
             r.get(11)?,
             r.get(12)?,
+            r.get(13)?,
+            r.get(14)?,
         ))
     })?;
     let rows: Vec<Row> = rows.collect::<Result<_, _>>()?;
@@ -191,9 +207,9 @@ impl Store {
             .transaction_with_behavior(TransactionBehavior::Immediate)?;
         tx.execute(
             "INSERT INTO hook_observations (hook, harness_session, transcript_path, cwd,
-                 byte_offset, source, prompt_id, attended, harnesses, nested, at, appended,
-                 binding_counted)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 0, 0)",
+                 byte_offset, source, prompt_id, attended, harnesses, nested, harness_process,
+                 at, appended, binding_counted, taken)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, 0, 0, 0)",
             params![
                 o.hook,
                 o.harness_session,
@@ -205,6 +221,7 @@ impl Store {
                 o.attended,
                 o.ancestry.map(|(h, _)| sql_count(h)),
                 o.ancestry.map(|(_, n)| n),
+                o.harness,
                 sql_count(o.at),
             ],
         )?;
@@ -330,10 +347,38 @@ impl Store {
         observations(
             &self.conn,
             &format!(
-                "WHERE hook = 'SessionStart' AND binding_counted = 0 AND at < {}",
+                "WHERE hook = 'SessionStart' AND binding_counted = 0 AND taken = 0 AND at < {}",
                 sql_count(before)
             ),
         )
+    }
+
+    /// Takes every session binding the `SessionStart` hook handlers of
+    /// the harness process `harness` recorded that no MCP server took,
+    /// marking each taken in one transaction, so no other MCP server
+    /// takes it and none is counted untaken (REC-13, REC-19). Returns
+    /// them in the order they were held.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does; nothing is taken then.
+    pub fn take_bindings(&mut self, harness: u32) -> Result<Vec<Held>, StoreError> {
+        let tx = self
+            .conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let filter =
+            format!("WHERE hook = 'SessionStart' AND taken = 0 AND harness_process = {harness}");
+        let mut taken = observations(&tx, &filter)?;
+        tx.execute(
+            &format!("UPDATE hook_observations SET taken = 1 {filter}"),
+            [],
+        )?;
+        tx.commit()?;
+        for held in &mut taken {
+            held.taken = true;
+        }
+
+        Ok(taken)
     }
 
     /// Marks the session binding of hook observation `id` counted as a
