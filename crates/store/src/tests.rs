@@ -92,6 +92,26 @@ fn a_store_reopens_with_what_it_held() {
 }
 
 #[test]
+fn a_store_closed_without_a_checkpoint_leaves_its_log_to_the_next_opener() {
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("store.db");
+    let wal = dir.path().join("store.db-wal");
+    drop(open(&dir));
+    assert!(
+        !wal.exists(),
+        "a plain close checkpoints and removes the log"
+    );
+
+    let mut store = open(&dir).without_checkpoint_on_close().unwrap();
+    store.append(writer(1), &new_events(2)).unwrap();
+    drop(store);
+
+    assert!(std::fs::metadata(&wal).unwrap().len() > 0);
+    let reopened = Store::open(&path).unwrap();
+    assert_eq!(reopened.log(writer(1)).unwrap().len(), 2);
+}
+
+#[test]
 fn a_store_of_a_newer_version_is_refused_and_named() {
     let dir = TempDir::new().unwrap();
     let store = open(&dir);

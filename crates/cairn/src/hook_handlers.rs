@@ -107,8 +107,9 @@ fn run(name: Option<&str>, ctx: &Context, stdout: &mut dyn Write) {
             ancestry: ctx.ancestry,
             panics: ctx.hook_panics,
             hangs: ctx.hook_hangs,
+            deadline,
         };
-        job.within(deadline)
+        job.within()
     });
     match answered {
         Ok(Some(out)) => {
@@ -169,12 +170,15 @@ struct Job {
     panics: bool,
     /// A development build's seam: the handler hangs.
     hangs: bool,
+    /// When the hook budget ends.
+    deadline: Instant,
 }
 
 impl Job {
-    /// Runs the job on a thread of its own: its answer by `deadline`,
+    /// Runs the job on a thread of its own: its answer by its deadline,
     /// or none once the deadline passes first.
-    fn within(self, deadline: Instant) -> Result<Option<String>, Failure> {
+    fn within(self) -> Result<Option<String>, Failure> {
+        let deadline = self.deadline;
         let (tx, rx) = mpsc::channel();
         std::thread::spawn(move || {
             let _ = tx.send(hook::guarded(|| self.run()));
@@ -235,6 +239,11 @@ impl<'j> Recording<'j> {
         let _ = self.log.append(occurrence, self.job.now);
     }
 
+    /// What is left of the hook budget.
+    fn remaining(&self) -> Duration {
+        self.job.deadline.saturating_duration_since(now_instant())
+    }
+
     fn failed(&self, detail: &'static str) {
         self.audit(&Occurrence::Degraded {
             kind: Kind::Failed,
@@ -256,15 +265,29 @@ impl<'j> Recording<'j> {
 
     /// [`Self::record`]'s work, failing with what could not be done.
     fn held(&self, decoded: &Decoded) -> Result<(), &'static str> {
-        let mut store = Store::open(&self.home.store()).map_err(|_| "store could not be opened")?;
+        let loaded = configuration::load(self.sources);
+        // The redaction rules compile while the store opens, for the
+        // patterns the settings layers name before any principal act is
+        // read: most often the patterns in force (NFR-02).
+        let guessed = configuration::resolve(&loaded.layers, &settings::accepted(&[]));
+        let compiling = compile(extra_patterns(&guessed.settings));
+        // The process ancestry is read meanwhile too.
+        let reading =
+            (self.job.hook == Hook::SessionStart).then(|| in_background(self.job.ancestry));
+        // A handler leaves the store's log to the next opener: its
+        // commit is durable already, and a checkpoint would cost it its
+        // hook budget (NFR-02).
+        let mut store = Store::open(&self.home.store())
+            .and_then(Store::without_checkpoint_on_close)
+            .map_err(|_| "store could not be opened")?;
         let acts = settings::acts_in(self.home, &store).unwrap_or_default();
-        let in_force = settings::in_force_from(self.sources, &acts);
+        let in_force = settings::in_force_loaded(loaded, &acts);
         let settings = &in_force.resolved.settings;
-        let patterns = settings.texts("redaction.extra_patterns");
+        let patterns = extra_patterns(settings);
         // The rule set always compiles (the redaction crate's tests prove
         // it); were it not to, nothing could be written.
-        let (redactor, _) =
-            Redactor::new(patterns).map_err(|_| "redaction rules could not be built")?;
+        let redactor = redactor_for(&patterns, compiling.recv_timeout(self.remaining()).ok())
+            .ok_or("redaction rules could not be built")?;
         let redact = |t: &str| redactor.redact_text(t).text;
         if let Some(drift) = &decoded.drift {
             let described = drift.describe(&redact);
@@ -282,8 +305,8 @@ impl<'j> Recording<'j> {
             return Ok(());
         };
         let roots = settings.texts("transcript.roots");
-        let ancestry = (self.job.hook == Hook::SessionStart)
-            .then(self.job.ancestry)
+        let ancestry = reading
+            .and_then(|r| r.recv_timeout(self.remaining()).ok())
             .flatten();
         let observation = Observation {
             hook: self.job.hook.name().to_owned(),
@@ -352,6 +375,46 @@ impl<'j> Recording<'j> {
                 None
             }
         }
+    }
+}
+
+/// The redaction rules [`compile`] built, with the patterns they were
+/// built for; none when they did not compile.
+type Compiled = (Vec<String>, Option<Redactor>);
+
+/// The principal's redaction patterns `settings` names.
+fn extra_patterns(settings: &configuration::Settings) -> Vec<String> {
+    settings.texts("redaction.extra_patterns").to_vec()
+}
+
+/// Runs `work` on a thread of its own, which sends what it gives once
+/// done.
+fn in_background<T: Send + 'static>(
+    work: impl FnOnce() -> T + Send + 'static,
+) -> mpsc::Receiver<T> {
+    let (tx, rx) = mpsc::channel();
+    std::thread::spawn(move || {
+        let _ = tx.send(work());
+    });
+    rx
+}
+
+/// Compiles the redaction rules with `patterns` on a thread of its own,
+/// which sends them once built.
+fn compile(patterns: Vec<String>) -> mpsc::Receiver<Compiled> {
+    in_background(move || {
+        let redactor = Redactor::new(&patterns).ok().map(|(r, _)| r);
+        (patterns, redactor)
+    })
+}
+
+/// The redaction rules with `patterns`: those `compiled` holds when
+/// they were built for `patterns`, else built now; none when they do
+/// not compile.
+fn redactor_for(patterns: &[String], compiled: Option<Compiled>) -> Option<Redactor> {
+    match compiled {
+        Some((built_for, Some(redactor))) if built_for == patterns => Some(redactor),
+        _ => Redactor::new(patterns).ok().map(|(r, _)| r),
     }
 }
 

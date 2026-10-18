@@ -86,7 +86,12 @@ pub(crate) fn in_force(ctx: &Context, home: &Home, acts: &[Recorded]) -> InForce
 /// The settings layers in force as read from `sources`, given the
 /// principal acts the record holds.
 pub(crate) fn in_force_from(sources: &Sources, acts: &[Recorded]) -> InForce {
-    let loaded = load(sources);
+    in_force_loaded(load(sources), acts)
+}
+
+/// The settings layers in force as `loaded` holds them, given the
+/// principal acts the record holds.
+pub(crate) fn in_force_loaded(loaded: Loaded, acts: &[Recorded]) -> InForce {
     let resolved = configuration::resolve(&loaded.layers, &accepted(acts));
 
     InForce { loaded, resolved }

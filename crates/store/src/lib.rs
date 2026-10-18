@@ -30,6 +30,7 @@ use record::digest::Digest;
 use record::event::{EventKind, Provenance};
 pub use record::header::{ENCODING, EventHeader, FIELD_SET, SeenHead};
 pub use record::id::{Address, RoomId, SeatId, Seq, WriterId};
+use rusqlite::config::DbConfig;
 use rusqlite::{
     Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior, params,
 };
@@ -351,6 +352,22 @@ impl Store {
     pub fn with_payload_threshold(mut self, threshold: usize) -> Self {
         self.threshold = threshold;
         self
+    }
+
+    /// This store, its connection leaving the write-ahead log to the
+    /// next opener as it closes instead of checkpointing it into the
+    /// store file: for a short-lived process, such as a hook handler
+    /// within its hook budget (NFR-02). Every commit is durable
+    /// already, so nothing is lost; the next opener, or SQLite's own
+    /// automatic checkpoint, moves the log into the store file.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does.
+    pub fn without_checkpoint_on_close(self) -> Result<Self, StoreError> {
+        self.conn
+            .set_db_config(DbConfig::SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE, true)?;
+        Ok(self)
     }
 
     /// This store, its payloads written and read through `disk`.

@@ -45,6 +45,14 @@ fn store(p: &Process) -> Store {
     Store::open(&p.cairn_home().join("store.db")).unwrap()
 }
 
+/// What the store keeps on disk: its file, and the log a hook handler
+/// leaves to the next opener.
+fn stored(p: &Process) -> String {
+    let file = |name: &str| fs::read(p.cairn_home().join(name)).unwrap_or_default();
+    let text = [file("store.db"), file("store.db-wal")].concat();
+    String::from_utf8_lossy(&text).into_owned()
+}
+
 fn held(p: &Process) -> Vec<store::Held> {
     store(p).hook_observations().unwrap()
 }
@@ -154,9 +162,9 @@ fn a_user_prompt_submit_keeps_only_the_prompt_id_and_a_prompt_commitment() {
         commit(&commitment.key, &json!(redacted)).unwrap(),
         commitment.commitment
     );
-    let text = fs::read(p.cairn_home().join("store.db")).unwrap();
+    assert!(stored(&p).contains("p1"), "the prompt id is kept");
     assert!(
-        !String::from_utf8_lossy(&text).contains("deploy with"),
+        !stored(&p).contains("deploy with"),
         "no prompt text is kept"
     );
 }
@@ -557,8 +565,72 @@ fn the_working_directory_and_transcript_path_are_redacted_before_they_are_held()
 
     let held = held(&p);
     assert_eq!(held[0].observation.cwd, "/w/[REDACTED:aws_access_key]");
-    let text = fs::read(p.cairn_home().join("store.db")).unwrap();
-    assert!(!String::from_utf8_lossy(&text).contains("AKIAIOSFODNN7EXAMPLE"));
+    assert!(stored(&p).contains("/w/[REDACTED:aws_access_key]"));
+    assert!(!stored(&p).contains("AKIAIOSFODNN7EXAMPLE"));
+}
+
+#[test]
+fn the_principals_redaction_patterns_redact_what_a_hook_holds() {
+    let mut p = Process::new();
+    p.configure("[redaction]\nextra_patterns = [\"ACME-[0-9]{8}\"]\n");
+    let mut input: Value = serde_json::from_str(&session_start(&p, "s1", "startup")).unwrap();
+    input["cwd"] = json!("/w/ACME-12345678");
+
+    hook(&mut p, "SessionStart", |_| input.to_string());
+
+    assert_eq!(held(&p)[0].observation.cwd, "/w/[REDACTED:extra_pattern_1]");
+}
+
+#[test]
+fn a_hook_handler_leaves_the_stores_log_to_the_next_opener() {
+    let mut p = Process::new();
+
+    hook(&mut p, "SessionStart", |p| {
+        session_start(p, "s1", "startup")
+    });
+
+    let log = fs::metadata(p.cairn_home().join("store.db-wal")).unwrap();
+    assert!(log.len() > 0, "its commit is in the log, not checkpointed");
+    assert_eq!(held(&p).len(), 1, "the next opener reads what it held");
+}
+
+/// What the redaction rules `redactor` leave of `text`.
+fn redacted_by(redactor: Option<Redactor>, text: &str) -> Option<String> {
+    redactor.map(|r| r.redact_text(text).text)
+}
+
+#[test]
+fn redaction_rules_compiled_for_the_patterns_in_force_are_kept_else_built_again() {
+    let patterns = vec!["ACME-[0-9]{8}".to_owned()];
+    let without = || Redactor::new(&[]).ok().map(|(r, _)| r);
+    let text = "id ACME-12345678";
+
+    let kept = redactor_for(&patterns, Some((patterns.clone(), without())));
+    let other = redactor_for(&patterns, Some((Vec::new(), without())));
+    let failed = redactor_for(&patterns, Some((patterns.clone(), None)));
+    let unsent = redactor_for(&patterns, None);
+
+    // Built for `patterns`, the compiled rules are kept as they are.
+    assert_eq!(redacted_by(kept, text).as_deref(), Some(text));
+    let built = Some("id [REDACTED:extra_pattern_1]");
+    assert_eq!(redacted_by(other, text).as_deref(), built);
+    assert_eq!(redacted_by(failed, text).as_deref(), built);
+    assert_eq!(redacted_by(unsent, text).as_deref(), built);
+}
+
+#[test]
+fn redaction_rules_compile_on_a_thread_that_sends_them_with_their_patterns() {
+    let patterns = vec!["ACME-[0-9]{8}".to_owned()];
+
+    let (built_for, redactor) = compile(patterns.clone())
+        .recv_timeout(Duration::from_secs(30))
+        .unwrap();
+
+    assert_eq!(built_for, patterns);
+    assert_eq!(
+        redacted_by(redactor, "id ACME-12345678").as_deref(),
+        Some("id [REDACTED:extra_pattern_1]")
+    );
 }
 
 #[test]
@@ -607,6 +679,7 @@ fn a_transcript_size_that_cannot_be_read_is_none_and_counted() {
         ancestry: || None,
         panics: false,
         hangs: false,
+        deadline: now_instant(),
     };
     let recording = Recording::new(&job, &home, &sources);
 
