@@ -27,7 +27,11 @@ pub(crate) fn read(home: &Home) -> Result<Option<SegmentsStatus>, StoreError> {
     if !path.exists() {
         return Ok(None);
     }
-    let store = Store::open_read_only(&path)?;
+    // A store its first opener was stopped before it made a schema in,
+    // such as a hook handler past its hook budget, holds nothing yet.
+    let Some(store) = Store::open_read_only_made(&path)? else {
+        return Ok(None);
+    };
 
     Ok(Some(SegmentsStatus {
         open: store.open_segments()?,

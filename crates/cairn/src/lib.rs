@@ -11,7 +11,6 @@ use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::fs;
 use std::io::{self, Write};
-use std::panic::{self, AssertUnwindSafe};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::{Duration, Instant};
@@ -28,7 +27,7 @@ use audit::entry::{Counter, Entry, Kind, Occurrence};
 use audit::log::Log;
 use configuration::source::OsUser;
 use configuration::{Loaded, SettingsLayer};
-use hook::{Failure, Hook};
+use hook::Failure;
 use key::key_store::KeyStoreKind;
 use key::random::OsEntropy;
 use redaction::Redactor;
@@ -51,9 +50,8 @@ const IDLE: Duration = Duration::from_secs(1);
 /// limit (SEC-05); the MCP server's requests are held to it too.
 pub const INPUT_LINE_LIMIT: usize = hook::HOOK_INPUT_LIMIT;
 
-/// How long `cairn hook` waits for its whole hook input, however its
-/// lines arrive. The hook budgets of NFR-02 replace it with phase 9's
-/// handlers.
+/// The longest `cairn hook` waits for its whole hook input, however its
+/// lines arrive; its hook budget ends the wait sooner (NFR-02).
 const HOOK_INPUT_WAIT: Duration = Duration::from_millis(500);
 
 /// What a build stamps into the executable. The release build sets
@@ -108,6 +106,10 @@ pub struct Context<'a> {
     /// Whether the hook handler panics: a development build's seam for
     /// the `@ENG-04` scenario, never set in a release build.
     pub hook_panics: bool,
+    /// Whether the hook handler hangs, as one the harness kills before
+    /// it finishes: a development build's seam for the `@NFR-02`
+    /// scenario, never set in a release build.
+    pub hook_hangs: bool,
     /// Whether the process's standard input and output are both a
     /// terminal, which a verb that writes a principal act needs
     /// (OWN-12): a person's are, an agent's tool call's are not.
@@ -127,8 +129,18 @@ pub struct Context<'a> {
     /// Starts reading the process's input, one line at a time.
     pub input: &'a dyn Fn() -> Receiver<io::Result<String>>,
     /// The wall clock, in seconds since the Unix epoch, which only
-    /// audit entries and ingest's holds read.
+    /// audit entries, ingest's holds, start markers and session
+    /// bindings read.
     pub clock: &'a dyn Fn() -> u64,
+    /// Whether the harness's attended mark is in the process's
+    /// environment (ASM-22): only a hook handler reads it (PRV-04).
+    pub attended: bool,
+    /// A hook budget in place of each hook's own: a development build's
+    /// seam for the tests, never set in a release build.
+    pub hook_budget: Option<Duration>,
+    /// Reads a hook handler's process ancestry (PRV-08): this process's
+    /// own, or what a test stands in for it.
+    pub ancestry: fn() -> Option<hook::ancestry::Ancestry>,
 }
 
 impl Context<'_> {
@@ -282,7 +294,7 @@ pub fn run(
         Some("configuration") => act::configuration(args, ctx, stdout, stderr),
         Some("counter") => act::counter(args, ctx, stdout, stderr),
         Some("doctor") => doctor(args, ctx, stdout, stderr),
-        Some("hook") => hook_command(args.next().as_deref(), ctx, stdout),
+        Some("hook") => hook_handlers::hook_command(args.next().as_deref(), ctx, stdout),
         Some("ingest") => ingest(args, ctx, stdout, stderr),
         Some("mcp") => mcp(args, ctx, stdout, stderr),
         Some("risk-acceptance") => act::risk_acceptance(args, ctx, stdout, stderr),
@@ -441,16 +453,21 @@ fn ingest(
     if let Err(e) = start_node(ctx, &home, stderr) {
         return failed("ingest", &e, stderr);
     }
+    count_untaken_bindings(ctx, &home);
     let inputs = ingest::Inputs {
         payload: payload_settings(settings),
-        // Fork observations are the hook handlers' (phase 9 of plan
-        // 2609292012); until then none names a harness fork (REC-04).
+        // Ingest reads the fork observations the hook handlers held from
+        // the store itself (REC-04).
         forks: std::collections::BTreeSet::new(),
         now_ms: (ctx.clock)().saturating_mul(1000),
+        interactive: settings.deployment_mode() == "interactive",
     };
     let paths: Vec<&Path> = allowed.iter().map(AllowedPath::path).collect();
     let (reports, failed_ingests) = ingest_all(ctx, &home, &paths, &redactor, &inputs, stderr);
     failures += failed_ingests;
+    let held = held_sources(ctx, settings, &home, stderr);
+    let held: Vec<&Path> = held.iter().map(AllowedPath::path).collect();
+    failures += ingest_all(ctx, &home, &held, &redactor, &inputs, stderr).1;
     if target == IngestTarget::All {
         audit_lost(ctx, &home, stderr);
     }
@@ -461,9 +478,7 @@ fn ingest(
 }
 
 /// Ingests each transcript source at `paths`. Returns a report of each
-/// ingested, and how many failed, each said on `stderr`. No source is
-/// held at an ingest marker yet, as no fork observation names a harness
-/// fork until the hook handlers record them (REC-04).
+/// ingested, and how many failed, each said on `stderr`.
 fn ingest_all(
     ctx: &Context,
     home: &Home,
@@ -491,6 +506,42 @@ fn ingest_all(
     }
 
     (reports, failures)
+}
+
+/// Counts, once each, every session binding no MCP server took within
+/// 30 s of its `SessionStart` hook observation (REC-19, I6).
+fn count_untaken_bindings(ctx: &Context, home: &Home) {
+    if let Ok(mut store) = Store::open(&home.store()) {
+        hook_handlers::count_untaken(&mut store, (ctx.clock)(), &|o| {
+            let _ = ctx.audit(o);
+        });
+    }
+}
+
+/// The transcript sources an ingest marker holds, each resolved again
+/// within the transcript roots: what a harness fork read before its
+/// owner left waiting, read again once its owner is ingested or gone
+/// (REC-04, REC-08).
+fn held_sources(
+    ctx: &Context,
+    settings: &configuration::resolve::Settings,
+    home: &Home,
+    stderr: &mut dyn Write,
+) -> Vec<AllowedPath> {
+    let held: Vec<PathBuf> = Store::open(&home.store())
+        .and_then(|store| store.sources())
+        .map(|sources| {
+            sources
+                .into_iter()
+                .filter(|s| s.held_since.is_some() && !s.lost)
+                .map(|s| PathBuf::from(s.path))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    held.iter()
+        .filter_map(|path| allowed_transcript(ctx, settings, path, stderr).ok())
+        .collect()
 }
 
 /// Audits and counts, once each, every transcript source `cairn ingest
@@ -576,6 +627,7 @@ fn record_ingested(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn 
     audit_redactions(ctx, &ingested.redactions, stderr);
     audit_parsing(ctx, ingested, stderr);
     audit_sourcing(ctx, ingested, stderr);
+    audit_prompts(ctx, ingested, stderr);
     tracing::info!(
         transcript = %ingested.redacted_path,
         writer = %ingested.writer,
@@ -701,6 +753,41 @@ fn audit_sourcing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn W
         for _ in 0..*times {
             if let Err(e) = ctx.audit(occurrence) {
                 let _ = writeln!(stderr, "cairn ingest: audit the transcript source: {e}");
+            }
+        }
+    }
+}
+
+/// Audits each prompt line an ingest found carrying a `prompt_id`
+/// already used up (PRV-08), and each matched `user` event whose hook
+/// handler found no attended mark in deployment mode `interactive`,
+/// which stays untrusted (PRV-04).
+fn audit_prompts(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
+    let occurrences = [
+        (
+            ingested.prompt_conflicts,
+            Occurrence::Degraded {
+                kind: Kind::Rejected,
+                counter: Counter::PromptMatchConflicts,
+                operation: "ingest",
+                detail: "a line carried the prompt_id of a prompt commitment already used up",
+            },
+        ),
+        (
+            ingested.not_attended,
+            Occurrence::Degraded {
+                kind: Kind::Rejected,
+                counter: Counter::HarnessSessionNotAttended,
+                operation: "ingest",
+                detail: "a matched user event stays untrusted: its hook handler found no \
+                         attended mark",
+            },
+        ),
+    ];
+    for (times, occurrence) in &occurrences {
+        for _ in 0..*times {
+            if let Err(e) = ctx.audit(occurrence) {
+                let _ = writeln!(stderr, "cairn ingest: audit a prompt match: {e}");
             }
         }
     }
@@ -933,6 +1020,11 @@ fn mcp(
         Ok(home) => home,
         Err(e) => return failed("mcp", &e, stderr),
     };
+    // The MCP server counts each start marker a stopped hook handler
+    // left behind, as it starts (NFR-02).
+    if home.root().exists() {
+        hook_handlers::count_unfinished(&home, (ctx.clock)(), None);
+    }
     // Recall reads a record a start made; it makes no home or store.
     if !home.store().exists() {
         let why = format!(
@@ -1174,42 +1266,6 @@ fn broken_json(
     (EXIT_INTEGRITY, line.to_string())
 }
 
-/// `cairn hook <hook>`: the hook handlers' entry point (§9.1). It reads
-/// the hook input from stdin and writes at most the handler's output to
-/// stdout, never anything to stderr, and exits 0 on every path: a
-/// failure, a panic among them, is audited and the agent goes on
-/// (ENG-04, I9). A home it must refuse is left untouched (I8).
-fn hook_command(name: Option<&str>, ctx: &Context, stdout: &mut dyn Write) -> u8 {
-    let hook = name.and_then(Hook::parse);
-    let ran = match hook {
-        None => Err(Failure::UnknownHook),
-        Some(h) => hook::guarded(|| {
-            if ctx.hook_panics {
-                seam_panic();
-            }
-            let hook_input = hook_input(ctx)?;
-            hook::handle(h, &hook_input)
-        }),
-    };
-    match ran {
-        Ok(out) => {
-            let _ = stdout.write_all(out.as_bytes());
-        }
-        Err(failure) => {
-            let operation = hook.map_or("hook", Hook::operation);
-            // Nowhere to report an audit log that takes no entry: the
-            // hook writes nothing to stderr. `cairn status` and `cairn
-            // doctor` name what keeps the home from taking it. A panic
-            // while auditing stops here too (ENG-04).
-            let _ = panic::catch_unwind(AssertUnwindSafe(|| {
-                ctx.audit(&failure.occurrence(operation))
-            }));
-        }
-    }
-
-    EXIT_OK
-}
-
 /// The development build's seam for the `@ENG-04` scenario: the hook
 /// handler panics.
 #[expect(
@@ -1220,8 +1276,8 @@ fn seam_panic() {
     panic!("the hook handler panics, as CAIRN_TEST_FAULT asked");
 }
 
-/// The hook input on stdin, its lines joined, once the input closes.
-/// Reading stops once it holds more than 1 MiB (SEC-05).
+/// The hook input on stdin, its lines joined, once the input closes
+/// by `deadline`. Reading stops once it holds more than 1 MiB (SEC-05).
 ///
 /// # Errors
 ///
@@ -1232,9 +1288,8 @@ fn seam_panic() {
     clippy::disallowed_methods,
     reason = "the deadline on reading the hook input (ENG-03); no derived artifact reads it (I10)"
 )]
-fn hook_input(ctx: &Context) -> Result<String, Failure> {
+fn hook_input(ctx: &Context, deadline: Instant) -> Result<String, Failure> {
     let input = (ctx.input)();
-    let deadline = Instant::now() + HOOK_INPUT_WAIT;
     let (mut text, mut lines) = (String::new(), 0usize);
     loop {
         let left = deadline
@@ -1550,6 +1605,14 @@ fn status(
     if in_force.loaded.principal_layer_failed() {
         return invalid_layers("status", &in_force.loaded, stderr);
     }
+    // Each start marker left behind and each session binding left
+    // untaken is counted before the counters are read (NFR-02, REC-19).
+    if home.root().exists() {
+        hook_handlers::count_unfinished(&home, (ctx.clock)(), None);
+    }
+    if home.store().exists() {
+        count_untaken_bindings(ctx, &home);
+    }
     let counted = match home_counts("status", &home, &acts, stderr) {
         Ok(c) => c,
         Err(code) => return code,
@@ -1660,10 +1723,12 @@ pub(crate) fn invalid_layers(command: &str, loaded: &Loaded, stderr: &mut dyn Wr
 }
 
 mod act;
+mod hook_handlers;
 mod segments;
 mod settings;
 mod sources;
 
+pub use hook_handlers::budget_override;
 pub use settings::managed_policy;
 
 #[cfg(test)]

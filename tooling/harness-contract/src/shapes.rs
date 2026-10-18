@@ -67,6 +67,56 @@ pub fn file(shapes: &Path, version: &str) -> PathBuf {
 /// Fails when a recording or a file cannot be read, or a file cannot
 /// be written.
 pub fn regenerate(recordings: &Path, shapes: &Path, write: bool) -> Result<Vec<String>, String> {
+    regenerate_with(recordings, shapes, write, generate)
+}
+
+/// Where the `hook` crate keeps each version's hook input shapes,
+/// relative to the repository.
+pub const HOOK_SHAPES_DIR: &str = "crates/hook/shapes";
+
+/// The hook input shapes `version`'s recorded hook inputs show, each
+/// under its hook, named by the directory's name.
+///
+/// # Errors
+///
+/// Fails when a hook input cannot be read or is not JSON.
+pub fn generate_hooks(version: &Path) -> Result<RecordedShapes, String> {
+    let mut keyed = Vec::new();
+    for path in recording::files(&version.join("hooks"), ".json")? {
+        let value = recording::json(&path)?;
+        let hook = value.get("hook_event_name").and_then(|h| h.as_str());
+        if let (Some(hook), Some(object)) = (hook, value.as_object()) {
+            keyed.push((hook.to_owned(), object.clone()));
+        }
+    }
+    let name = version
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
+
+    Ok(RecordedShapes::generate_keyed(&name, &keyed))
+}
+
+/// [`regenerate`] for the hook input shapes under `shapes`.
+///
+/// # Errors
+///
+/// As [`regenerate`].
+pub fn regenerate_hooks(
+    recordings: &Path,
+    shapes: &Path,
+    write: bool,
+) -> Result<Vec<String>, String> {
+    regenerate_with(recordings, shapes, write, generate_hooks)
+}
+
+/// [`regenerate`] with each version's shapes given by `generate`.
+fn regenerate_with(
+    recordings: &Path,
+    shapes: &Path,
+    write: bool,
+    generate: fn(&Path) -> Result<RecordedShapes, String>,
+) -> Result<Vec<String>, String> {
     let mut problems = Vec::new();
     let mut versions = Vec::new();
     if write {

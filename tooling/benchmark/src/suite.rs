@@ -2,13 +2,17 @@
 //! measures toward, and each NFR id ENG-15 names that no benchmark of
 //! real code covers yet, with what it waits on.
 //!
-//! A benchmark measures code that exists. The hook handlers, the MCP
-//! tools and the store that NFR-01..05 set targets for arrive with M1's
-//! other plans, so they are declared [`AWAITING`] here rather than
-//! stood in for by a benchmark of something else. [`SUITE`]'s core
-//! start-up is a [`Coverage::Floor`]: a cost every hook handler pays,
-//! not a hook handler. Its ingestion benchmark times `cairn ingest`
-//! over a synthetic transcript in a fresh home (NFR-04). The ENG-15
+//! A benchmark measures code that exists. The MCP tools and the store
+//! at scale that NFR-01..05 set targets for arrive with M1's other
+//! phases, so they are declared [`AWAITING`] here rather than stood in
+//! for by a benchmark of something else. [`SUITE`]'s core start-up is a
+//! [`Coverage::Floor`]: a cost every hook handler pays, not a hook
+//! handler. Its ingestion benchmark times `cairn ingest` over a
+//! synthetic transcript in a fresh home (NFR-04). Its hook handler
+//! benchmarks time each handler on a hook input over a fresh home:
+//! `SessionStart` against its hook budget (NFR-02), `UserPromptSubmit`
+//! a floor of NFR-01's target, which a store of 1M events under fleet
+//! load sets. The ENG-15
 //! scenario stays pending until every NFR id it names has a
 //! [`Coverage::Target`] benchmark.
 //!
@@ -38,7 +42,15 @@ pub enum Fixture {
     /// transcript of this many lines under its transcript roots, taken
     /// from a recorded Claude Code transcript.
     Transcript { lines: usize },
+    /// A fresh home holding one transcript of [`HOOK_LINES`] lines, as
+    /// [`Fixture::Transcript`] does, and on the core's stdin the hook
+    /// input of the hook this names, in Claude Code 2.1.296's recorded
+    /// shape, naming that transcript.
+    HookInput { hook: &'static str },
 }
+
+/// The lines the transcript a hook handler's benchmark names holds.
+pub const HOOK_LINES: usize = 200;
 
 /// One benchmark of the suite. Every benchmark today starts the core
 /// executable with `args` and times it until it exits; a benchmark that
@@ -70,7 +82,7 @@ pub struct Awaiting {
 pub const INGEST_LINES: usize = 2_000;
 
 /// The suite.
-pub const SUITE: [Benchmark; 2] = [
+pub const SUITE: [Benchmark; 4] = [
     Benchmark {
         name: "core_start_up",
         requirement: "NFR-01",
@@ -92,17 +104,38 @@ pub const SUITE: [Benchmark; 2] = [
             lines: INGEST_LINES,
         },
     },
+    Benchmark {
+        name: "hook_session_start",
+        requirement: "NFR-02",
+        coverage: Coverage::Target,
+        measures: "`cairn hook SessionStart` on a recorded-shape hook input in a fresh home, \
+                   until it exits: the handler holding its session binding at the \
+                   transcript's ingest marker, against its 150 ms hook budget",
+        args: &["hook", "SessionStart"],
+        fixture: Fixture::HookInput {
+            hook: "SessionStart",
+        },
+    },
+    Benchmark {
+        name: "hook_user_prompt_submit",
+        requirement: "NFR-01",
+        coverage: Coverage::Floor,
+        measures: "`cairn hook UserPromptSubmit` on a recorded-shape hook input in a fresh \
+                   home, until it exits: the handler keeping its prompt commitment, on a \
+                   fresh home rather than a store of 1M events under fleet load",
+        args: &["hook", "UserPromptSubmit"],
+        fixture: Fixture::HookInput {
+            hook: "UserPromptSubmit",
+        },
+    },
 ];
 
 /// The NFR ids ENG-15 names that have no benchmark of real code yet.
-pub const AWAITING: [Awaiting; 4] = [
+pub const AWAITING: [Awaiting; 3] = [
     Awaiting {
         requirement: "NFR-01",
-        on: "the hook handlers, timed on a store of 1M events (plan 2609292012)",
-    },
-    Awaiting {
-        requirement: "NFR-02",
-        on: "the hook handlers and their hook budgets (plan 2609292012)",
+        on: "the hook handlers timed on a store of 1M events with the room view open and \
+             ten harnesses writing (plans 2609292012 and M7's)",
     },
     Awaiting {
         requirement: "NFR-03",

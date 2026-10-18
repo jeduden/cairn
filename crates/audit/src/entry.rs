@@ -124,6 +124,29 @@ pub enum Counter {
     /// A transcript source disappeared before it was fully ingested
     /// (REC-08).
     TranscriptSourceLost,
+    /// A field of a hook input a handler uses failed the schema
+    /// (SEC-16).
+    HookInputRejected,
+    /// A hook handler ran past its hook budget and answered empty
+    /// (NFR-02).
+    HookBudgetExceeded,
+    /// A hook handler failed to record its hook observation (I6).
+    HookFailed,
+    /// A start marker was left behind by a hook handler the harness
+    /// stopped before it finished (NFR-02).
+    HookUnfinished,
+    /// No MCP server took a harness session's session binding within
+    /// 30 s of its `SessionStart` hook observation (REC-19).
+    SessionBindingNotTaken,
+    /// A prompt commitment was dropped while a settings layer failed,
+    /// its redaction patterns unknown (PRV-08, SEC-08).
+    PromptCommitmentDropped,
+    /// A line carried the `prompt_id` of a prompt commitment already
+    /// used up (PRV-08).
+    PromptMatchConflicts,
+    /// A matched `user` event's hook handler found no attended mark in
+    /// deployment mode `interactive` (PRV-04).
+    HarnessSessionNotAttended,
 }
 
 impl Counter {
@@ -158,6 +181,14 @@ impl Counter {
             Self::RepeatHeld => "repeat_held",
             Self::RepeatReleased => "repeat_released",
             Self::TranscriptSourceLost => "transcript_source_lost",
+            Self::HookInputRejected => "hook_input_rejected",
+            Self::HookBudgetExceeded => "hook_budget_exceeded",
+            Self::HookFailed => "hook_failed",
+            Self::HookUnfinished => "hook_unfinished",
+            Self::SessionBindingNotTaken => "session_binding_not_taken",
+            Self::PromptCommitmentDropped => "prompt_commitment_dropped",
+            Self::PromptMatchConflicts => "prompt_match_conflicts",
+            Self::HarnessSessionNotAttended => "harness_session_not_attended",
         }
     }
 }

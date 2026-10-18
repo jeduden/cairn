@@ -104,11 +104,22 @@ impl RecordedShapes {
     /// no shape key adds none.
     #[must_use]
     pub fn generate(version: &str, lines: &[Line]) -> Self {
+        let keyed: Vec<(String, Line)> = lines
+            .iter()
+            .filter_map(|line| Some((shape_key(line)?, line.clone())))
+            .collect();
+
+        Self::generate_keyed(version, &keyed)
+    }
+
+    /// The shapes `objects`, recorded from `version`, show, each object
+    /// under the shape key it is given with: a hook input's under its
+    /// hook, say.
+    #[must_use]
+    pub fn generate_keyed(version: &str, objects: &[(String, Line)]) -> Self {
         let mut shapes: BTreeMap<String, Shape> = BTreeMap::new();
-        for line in lines {
-            let Some(key) = shape_key(line) else {
-                continue;
-            };
+        for (key, line) in objects {
+            let key = key.clone();
             let keys: BTreeSet<String> = line.keys().cloned().collect();
             match shapes.get_mut(&key) {
                 Some(shape) => {

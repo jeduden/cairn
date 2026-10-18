@@ -18,6 +18,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3bc62ac97cc33321f50863d514c3bc38a453947a8f9e781137e47c7401020aed"
 
 [[package]]
+name = "audit"
+version = "0.0.0"
+dependencies = [
+ "record",
+ "serde_json",
+]
+
+[[package]]
 name = "block-buffer"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -31,6 +39,7 @@ name = "cairn-fuzz"
 version = "0.0.0"
 dependencies = [
  "configuration",
+ "hook",
  "libfuzzer-sys",
  "provenance",
  "redaction",
@@ -127,6 +136,15 @@ name = "hashbrown"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
+
+[[package]]
+name = "hook"
+version = "0.0.0"
+dependencies = [
+ "audit",
+ "serde_json",
+ "transcript",
+]
 
 [[package]]
 name = "hybrid-array"

@@ -63,9 +63,36 @@ fn the_core_start_up_is_a_floor_not_a_hook_handler() {
 }
 
 #[test]
-fn every_nfr_id_eng_15_names_but_nfr_04_is_awaiting_a_benchmark_of_real_code() {
+fn every_nfr_id_eng_15_names_but_nfr_02_and_nfr_04_is_awaiting_a_benchmark_of_real_code() {
     let ids: Vec<&str> = AWAITING.iter().map(|a| a.requirement).collect();
 
-    assert_eq!(ids, ["NFR-01", "NFR-02", "NFR-03", "NFR-05"]);
+    assert_eq!(ids, ["NFR-01", "NFR-03", "NFR-05"]);
     assert!(AWAITING.iter().all(|a| !a.on.is_empty()));
+}
+
+#[test]
+fn each_hook_handler_is_timed_on_its_hook_input_in_a_fresh_home() {
+    let start = SUITE
+        .iter()
+        .find(|b| b.name == "hook_session_start")
+        .unwrap();
+    let prompt = SUITE
+        .iter()
+        .find(|b| b.name == "hook_user_prompt_submit")
+        .unwrap();
+
+    assert_eq!(
+        (start.requirement, start.coverage, start.args),
+        ("NFR-02", Coverage::Target, &["hook", "SessionStart"][..])
+    );
+    assert_eq!(
+        start.fixture,
+        Fixture::HookInput {
+            hook: "SessionStart"
+        }
+    );
+    assert_eq!(
+        (prompt.requirement, prompt.coverage),
+        ("NFR-01", Coverage::Floor)
+    );
 }

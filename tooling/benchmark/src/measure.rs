@@ -3,6 +3,7 @@
 //! slow sample, so a hung benchmark fails the run instead of stalling
 //! the CI job until its timeout.
 
+use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::sync::mpsc;
@@ -10,7 +11,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::fixture;
-use crate::suite::{Benchmark, Fixture};
+use crate::suite::{Benchmark, Fixture, HOOK_LINES};
 
 /// How long one sample may take before it is an error.
 pub const DEADLINE: Duration = Duration::from_secs(10);
@@ -48,6 +49,76 @@ pub fn time_benchmark(
                     .map_err(|e| format!("make the fixture of {}: {e}", benchmark.name))?;
             time_program_in(program, benchmark.args, &home.env(), deadline)
         }
+        Fixture::HookInput { hook } => {
+            let home = fixture::Home::with_transcript(
+                &std::env::temp_dir(),
+                &fixture::transcript(HOOK_LINES),
+            )
+            .map_err(|e| format!("make the fixture of {}: {e}", benchmark.name))?;
+            let input = home.hook_input(hook).into_bytes();
+            time_program_fed(program, benchmark.args, &home.env(), input, deadline)
+        }
+    }
+}
+
+/// Times `program` as [`time_program_in`] does, with `input` on its
+/// stdin, which is then closed, as a harness hands a hook handler its
+/// hook input.
+///
+/// # Errors
+///
+/// As [`time_program`].
+pub fn time_program_fed(
+    program: &Path,
+    args: &[&str],
+    env: &[(&str, std::path::PathBuf)],
+    input: Vec<u8>,
+    deadline: Duration,
+) -> Result<Duration, String> {
+    let mut command = Command::new(program);
+    command
+        .args(args)
+        .envs(env.iter().map(|(k, v)| (*k, v.as_os_str())))
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    waited(program, args, deadline, move || {
+        let started = Instant::now();
+        let status = command.spawn().and_then(|mut child| {
+            if let Some(mut stdin) = child.stdin.take() {
+                // A program that exits without reading its input is
+                // timed all the same.
+                let _ = stdin.write_all(&input);
+            }
+            child.wait()
+        });
+        (started.elapsed(), status)
+    })
+}
+
+/// The time `run`, on a thread of its own, says its program took, by
+/// `deadline`: an error when it fails to start, exits unsuccessfully or
+/// has not exited by then.
+fn waited(
+    program: &Path,
+    args: &[&str],
+    deadline: Duration,
+    run: impl FnOnce() -> (Duration, std::io::Result<std::process::ExitStatus>) + Send + 'static,
+) -> Result<Duration, String> {
+    let (done, result) = mpsc::channel();
+    thread::spawn(move || {
+        let _ = done.send(run());
+    });
+
+    let shown = program.display();
+    match result.recv_timeout(deadline) {
+        Ok((took, Ok(status))) if status.success() => Ok(took),
+        Ok((_, Ok(status))) => Err(format!("{shown} {} exited {status}", args.join(" "))),
+        Ok((_, Err(err))) => Err(format!("start {shown}: {err}")),
+        Err(_) => Err(format!(
+            "{shown} {} did not exit within {deadline:?}",
+            args.join(" ")
+        )),
     }
 }
 
@@ -70,23 +141,11 @@ pub fn time_program_in(
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());
-    let (done, result) = mpsc::channel();
-    thread::spawn(move || {
+    waited(program, args, deadline, move || {
         let started = Instant::now();
         let status = command.status();
-        let _ = done.send((started.elapsed(), status));
-    });
-
-    let shown = program.display();
-    match result.recv_timeout(deadline) {
-        Ok((took, Ok(status))) if status.success() => Ok(took),
-        Ok((_, Ok(status))) => Err(format!("{shown} {} exited {status}", args.join(" "))),
-        Ok((_, Err(err))) => Err(format!("start {shown}: {err}")),
-        Err(_) => Err(format!(
-            "{shown} {} did not exit within {deadline:?}",
-            args.join(" ")
-        )),
-    }
+        (started.elapsed(), status)
+    })
 }
 
 /// Takes `count` samples of `benchmark` with `time`, after one warm-up

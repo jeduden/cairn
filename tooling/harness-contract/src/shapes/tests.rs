@@ -104,3 +104,35 @@ fn regenerating_fails_when_it_cannot_write_or_read() {
     assert!(regenerate(&rec, &shapes, true).is_err());
     assert!(regenerate(&dir.path().join("none"), &shapes, false).is_err());
 }
+
+#[test]
+fn a_versions_hook_input_shapes_key_each_input_by_its_hook() {
+    let dir = TempDir::new().unwrap();
+    let rec = dir.path().join("rec");
+    let flow = rec.join("1.0.0/hooks/startup");
+    fs::create_dir_all(&flow).unwrap();
+    fs::write(
+        flow.join("01-SessionStart.json"),
+        r#"{"hook_event_name":"SessionStart","session_id":"s"}"#,
+    )
+    .unwrap();
+    fs::write(flow.join("02-x.json"), r#"{"no_hook":1}"#).unwrap();
+
+    let generated = generate_hooks(&rec.join("1.0.0")).unwrap();
+    assert_eq!(generated.version, "1.0.0");
+    assert_eq!(
+        generated.shapes.keys().collect::<Vec<_>>(),
+        ["SessionStart"]
+    );
+    let shapes = dir.path().join("shapes");
+    assert_eq!(
+        regenerate_hooks(&rec, &shapes, true).unwrap(),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        regenerate_hooks(&rec, &shapes, false).unwrap(),
+        Vec::<String>::new()
+    );
+    fs::write(flow.join("03-bad.json"), "{x").unwrap();
+    assert!(generate_hooks(&rec.join("1.0.0")).is_err());
+}

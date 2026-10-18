@@ -24,6 +24,8 @@ pub(crate) struct Process {
     pub(crate) input_too_large: bool,
     pub(crate) home_id: Option<String>,
     pub(crate) hook_panics: bool,
+    /// The hook handler hangs until the harness would kill it.
+    pub(crate) hook_hangs: bool,
     /// The standard input and output are a terminal, as a person's are;
     /// an agent's tool call has none.
     pub(crate) terminal: bool,
@@ -34,10 +36,30 @@ pub(crate) struct Process {
     /// Where the node identity is read from, as a development build's
     /// seam lets a test say; this OS's source when none.
     pub(crate) node_identity: Option<std::path::PathBuf>,
+    /// Whether the harness's attended mark is in the environment.
+    pub(crate) attended: bool,
+    /// The hook budget in place of each hook's own.
+    pub(crate) hook_budget: Option<std::time::Duration>,
+    /// The time the clock reads.
+    pub(crate) now: u64,
+    /// The process ancestry a hook handler reads.
+    pub(crate) ancestry: fn() -> Option<hook::ancestry::Ancestry>,
 }
 
+/// The ancestry of a hook handler below its own harness alone.
+pub(crate) fn own_harness() -> Option<hook::ancestry::Ancestry> {
+    Some(hook::ancestry::Ancestry {
+        harnesses: 1,
+        nested: false,
+    })
+}
+
+/// A hook budget no handler under test reaches, however loaded the
+/// machine running the tests.
+pub(crate) const LENIENT: std::time::Duration = std::time::Duration::from_secs(20);
+
 /// The time every test's clock reads.
-const NOW: u64 = 1_760_000_000;
+pub(crate) const NOW: u64 = 1_760_000_000;
 
 /// A transcript line in Claude Code 2.1.296's recorded shape, which
 /// ingest records with nothing to audit.
@@ -53,9 +75,14 @@ impl Process {
             input_too_large: false,
             home_id: None,
             hook_panics: false,
+            hook_hangs: false,
             terminal: true,
             os_user: OsUser::Known(u32::MAX),
             node_identity: None,
+            attended: false,
+            hook_budget: Some(LENIENT),
+            ancestry: own_harness,
+            now: NOW,
         }
     }
 
@@ -64,6 +91,7 @@ impl Process {
     }
 
     pub(crate) fn invoke(&self, args: &[&str], build: &Build) -> (u8, String, String) {
+        let now = self.now;
         let (lines, input_error, held_open, too_large) = (
             self.lines.clone(),
             self.input_error,
@@ -94,13 +122,17 @@ impl Process {
             home: Some(self.dir.path().as_os_str().to_owned()),
             home_id: self.home_id.as_ref().map(Into::into),
             hook_panics: self.hook_panics,
+            hook_hangs: self.hook_hangs,
             terminal: self.terminal,
             working_dir: Some(self.dir.path().to_path_buf()),
             managed_policy: self.dir.path().join("managed").join("managed_policy.toml"),
             node_identity: self.node_identity.clone(),
             os_user: self.os_user,
             input: &input,
-            clock: &|| NOW,
+            clock: &|| now,
+            attended: self.attended,
+            hook_budget: self.hook_budget,
+            ancestry: self.ancestry,
         };
         let (mut out, mut err) = (Vec::new(), Vec::new());
         let code = run(
@@ -283,6 +315,7 @@ fn a_failed_write_is_a_failure() {
             home: Some(p.dir.path().as_os_str().to_owned()),
             home_id: None,
             hook_panics: false,
+            hook_hangs: false,
             terminal: true,
             working_dir: None,
             managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
@@ -290,6 +323,9 @@ fn a_failed_write_is_a_failure() {
             os_user: OsUser::Known(u32::MAX),
             input: &input,
             clock: &|| NOW,
+            attended: false,
+            hook_budget: Some(LENIENT),
+            ancestry: own_harness,
         };
 
         let code = run(
@@ -1017,6 +1053,7 @@ fn mcp_reports_a_reply_it_cannot_write() {
         home: None,
         home_id: None,
         hook_panics: false,
+        hook_hangs: false,
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
@@ -1024,6 +1061,9 @@ fn mcp_reports_a_reply_it_cannot_write() {
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
+        attended: false,
+        hook_budget: Some(LENIENT),
+        ancestry: own_harness,
     };
     let mut err = Vec::new();
 
@@ -1042,6 +1082,7 @@ fn a_command_without_a_home_fails() {
         home: None,
         home_id: None,
         hook_panics: false,
+        hook_hangs: false,
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
@@ -1049,6 +1090,9 @@ fn a_command_without_a_home_fails() {
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
+        attended: false,
+        hook_budget: Some(LENIENT),
+        ancestry: own_harness,
     };
     for command in ["ingest", "mcp", "verify", "status", "doctor", "counter"] {
         let mut args = vec![command.to_owned()];
@@ -1077,7 +1121,7 @@ fn a_command_without_a_home_fails() {
 
 /// Makes `path` and the directories above it that do not exist yet,
 /// each readable by its owner alone, as the home's check wants (SEC-02).
-fn owner_only_dirs(path: &std::path::Path) {
+pub(crate) fn owner_only_dirs(path: &std::path::Path) {
     let mut builder = std::fs::DirBuilder::new();
     builder.recursive(true);
     #[cfg(unix)]
@@ -1110,7 +1154,9 @@ const SESSION_START: &str =
 #[test]
 fn a_hook_with_a_valid_hook_input_injects_nothing_and_audits_nothing() {
     let mut p = Process::new();
-    p.lines = vec![SESSION_START.to_owned()];
+    p.lines = vec![crate::hook_handlers::tests::session_start(
+        &p, "s1", "startup",
+    )];
 
     assert_eq!(
         p.invoke(&["hook", "SessionStart"], &DEV),
@@ -1199,6 +1245,7 @@ fn a_hook_input_that_trickles_past_its_wait_is_rejected() {
         home: None,
         home_id: None,
         hook_panics: false,
+        hook_hangs: false,
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
@@ -1206,6 +1253,9 @@ fn a_hook_input_that_trickles_past_its_wait_is_rejected() {
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
+        attended: false,
+        hook_budget: Some(LENIENT),
+        ancestry: own_harness,
     };
     let (mut out, mut err) = (Vec::new(), Vec::new());
 
@@ -1238,6 +1288,7 @@ fn a_panic_while_auditing_a_hook_failure_still_exits_0() {
         home: None,
         home_id: None,
         hook_panics: false,
+        hook_hangs: false,
         terminal: true,
         working_dir: None,
         managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
@@ -1245,6 +1296,9 @@ fn a_panic_while_auditing_a_hook_failure_still_exits_0() {
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| panic!("the clock fails"),
+        attended: false,
+        hook_budget: Some(LENIENT),
+        ancestry: own_harness,
     };
     let (mut out, mut err) = (Vec::new(), Vec::new());
 

@@ -60,6 +60,38 @@ fn generating_keeps_the_keys_every_line_carries_and_those_any_carries() {
 }
 
 #[test]
+fn generating_by_given_keys_keeps_each_keys_objects_apart() {
+    let keyed = [
+        (
+            "SessionStart".to_owned(),
+            line(&json!({"session_id": "s", "source": "startup"})),
+        ),
+        (
+            "SessionStart".to_owned(),
+            line(&json!({"session_id": "s", "source": "fork", "context_tokens": 1})),
+        ),
+        (
+            "UserPromptSubmit".to_owned(),
+            line(&json!({"session_id": "s", "prompt": "p"})),
+        ),
+    ];
+
+    let recorded = RecordedShapes::generate_keyed("9.9.9", &keyed);
+
+    assert_eq!(recorded.version, "9.9.9");
+    let start = &recorded.shapes["SessionStart"];
+    assert_eq!(start.needs, names(&["session_id", "source"]));
+    assert_eq!(
+        start.allows,
+        names(&["context_tokens", "session_id", "source"])
+    );
+    assert_eq!(
+        recorded.shapes["UserPromptSubmit"].needs,
+        names(&["prompt", "session_id"])
+    );
+}
+
+#[test]
 fn a_shape_names_the_first_key_missing_and_the_first_beyond_it() {
     let shape = Shape {
         needs: names(&["a", "type"]),

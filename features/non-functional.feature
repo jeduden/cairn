@@ -20,7 +20,7 @@ Feature: Non-functional requirements (NFR)
       | SessionStart      | 150 ms                                                                                                                                      |
       | PermissionRequest | 50 ms of Cairn's own processing beyond the wait, which ends within the principal's hold window and at least 10 s before the harness timeout |
 
-  @NFR-02 @pending
+  @NFR-02
   Scenario Outline: a hook handler stays within its hook budget, and one the harness stopped leaves a start marker that is counted
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"

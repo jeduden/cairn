@@ -21,10 +21,10 @@ counted.
 
 ## Context
 
-Milestone M1 of [§12.2](../../docs/srs/12-delivery-plan.md). This plan
-replaces the one written before SRS 2.0. That one stored events in one
-table keyed by a local sequence. SRS 2.0 to 3.0 put the record on the
-seats, writers and keys of the [domain model](../../docs/domain-model/index.md),
+Milestone M1 of [§12.2](../../docs/srs/12-delivery-plan.md). It replaces
+a plan from before SRS 2.0, which keyed events by a local sequence. SRS
+2.0 to 3.0 put the record on the seats, writers and keys of the
+[domain model](../../docs/domain-model/index.md),
 under the invariants [ADR-2610112209] and [ADR-2610112004] approved
 and the key event log of [ADR-2610122234]:
 
@@ -41,8 +41,8 @@ and the key event log of [ADR-2610122234]:
   alone (PRV-02, PRV-13). The search index rebuilds identical in content in
   any arrival order (I10, [ADR-2610112004]).
 
-[ADR-2610050528] and [ADR-2610042341] settle the language and shell;
-OQ-32 decides only how the components ship.
+[ADR-2610050528] and [ADR-2610042341] settle language and shell; OQ-32 is
+how the components ship.
 
 ### Scope
 
@@ -79,9 +79,8 @@ These land in part, as §12.2 bounds them or as their scenarios reach past M1:
 | ADM-13         | the core writes to no git repository                                    | install M2; commit hook, launcher M7 |
 
 A scenario of a row that lands in part stays `@pending`, its M1 part
-proven by its bound steps or by named tests. That follows the pattern
-of ENG-12 in plan 2609292011. A scenario that cannot pass as written
-is a finding to raise, never one to re-pend.
+proven by its bound steps or named tests, as ENG-12 in plan 2609292011.
+One that cannot pass as written is a finding to raise, never re-pended.
 
 Each test kind lands with its code: ENG-07's fuzz targets, ENG-08's
 properties, ENG-06, ENG-17 and NFR-01 to NFR-05's benchmarks (ENG-15).
@@ -227,7 +226,7 @@ but 12 may start once 8 lands. A phase's spec is written at its turn.
 | 6     | opus   | `@REC-09` and `@REC-12` pass; REC-19's segment steps pass; a newer segment or store is refused; the crash-consistency job runs nightly                  |
 | 7     | opus   | `@PRV-01`, `@PRV-03`, `@PRV-08`, `@REC-05` and `@REC-26` pass; the parser's fuzz target and the residual-identifier drift case run                      |
 | 8     | opus   | `@REC-01` to `@REC-04`, `@REC-07`, `@REC-08`, `@REC-22` and PRV-05's transcript rows pass; both properties hold; NFR-04 benchmarked                     |
-| 9     | opus   | `@SEC-16` and `@PRV-04` pass; REC-19's holding steps pass; a hook handler fails open within its budget; NFR-01 and NFR-02 benchmarked                   |
+| 9     | opus   | `@SEC-16`, `@NFR-02` and `@PRV-04`'s rows 1-3 pass; REC-19's holding steps bound; NFR-01 and NFR-02 benchmarked                                         |
 | 10    | opus   | `@REC-06`, `@REC-13` and `@PRV-14` pass against a live MCP server                                                                                       |
 | 11    | opus   | `@PRV-02`, `@PRV-06`, `@LANE-02`, `@OWN-01` and `@MEM-01` pass; PRV-13, LANE-01, LANE-31 and ADM-13's M1 steps pass                                     |
 | 12    | sonnet | `@REC-11`, `@SEC-04` and `@RCL-02` pass; NFR-03 benchmarked                                                                                             |
@@ -257,24 +256,26 @@ footer: |
 
 ?>
 
-| #   | Status | Phase                                                                                                                                                                                                                                                                                                                                                |
-| --- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | ✅     | [Proving slice: one transcript recorded, recalled and verified](phase-1.md)                                                                                                                                                                                                                                                                          |
-|     | ↳      | @REC-10 off @pending and passing. A recorded transcript is ingested, recalled through event_get in the envelope and verified, end to end and confined; a flipped header byte exits 3 naming the event.                                                                                                                                               |
-| 2   | ✅     | [The home, the audit log and counters](phase-2.md)                                                                                                                                                                                                                                                                                                   |
-|     | ↳      | @SEC-02, @SEC-03, @OPS-02, @OPS-03 and @ENG-04 off @pending and passing, confined. Every command checks the home first; the audit log chains across rotation; cairn hook fails open and audits.                                                                                                                                                      |
-| 3   | ✅     | [Settings layers and principal acts at the terminal](phase-3.md)                                                                                                                                                                                                                                                                                     |
-|     | ↳      | Settings layers validated and layered; widening acts gated by OWN-22 and managed policy; counter ack, configuration accept and risk acceptance recorded as principal acts. @ADM-04 off @pending with eight rows, its flags row moved to @PRV-07 by ruling; the M1 steps of OWN-11, -12 and -22 pass narrowed.                                        |
-| 4   | ✅     | [Redaction before anything is written, input limits and paths](phase-4.md)                                                                                                                                                                                                                                                                           |
-|     | ↳      | @ENG-05 off @pending and passing. cairn ingest redacts every line before it writes, refuses while a settings layer fails, reads only within the allowed roots, and a release build ingests again; hook input past 1 MiB or depth 64 is refused. SEC-05 rows 1-2 and SEC-08's ingest steps pass narrowed.                                             |
-| 5   | ✅     | [Keys, seats and the personal room](phase-5.md)                                                                                                                                                                                                                                                                                                      |
-|     | ↳      | @PRV-11 off @pending and passing. Keys live in this OS's key store per ruling 2, the dpapi shim under Miri; a changed node identity moves the node to a new device key and device seat in the same personal room, audited. REC-24, SEC-10 and PRV-12's genesis steps pass narrowed; @PRV-09 and @REC-24 cannot pass in M1 and are raised.            |
-| 6   | ✅     | [The store: writer logs, commitments, payloads, segments and format versions](phase-6.md)                                                                                                                                                                                                                                                            |
-|     | ↳      | @REC-09 off @pending and passing. Content above the payload threshold goes to the payload store under a keyed name; segments close at turn ends; a newer store or segment is refused, cairn status exits 3. REC-12, REC-19's segment and ADM-05's status steps pass narrowed; 10,000 kills of ingest run nightly; NFR-09 and REC-17's secret frozen. |
-| 7   | ✅     | [The transcript parser and provenance](phase-7.md)                                                                                                                                                                                                                                                                                                   |
-|     | ↳      | @REC-05 and @PRV-03 off @pending and passing. Every transcript line is checked against its version's recorded shape and classed from its structure; unparsed and drifting lines are kept, counted and audited. PRV-08, REC-26, PRV-01 and ENG-17's M1 steps pass narrowed; three fuzz targets run nightly.                                           |
-| 8   | ✅     | [cairn ingest: runs, ingest positions, generations and repeated lines](phase-8.md)                                                                                                                                                                                                                                                                   |
-|     | ↳      | @REC-01, @REC-03 and @REC-07 off @pending and passing. Ingest resumes each transcript source past its ingest position, splits it by run, starts a new generation on a shrink or rewrite, and records a repeated line once. REC-02, REC-04, REC-08 and PRV-05's bound steps pass narrowed; both ENG-08 properties hold; NFR-04 benchmarked, not met.  |
+| #   | Status | Phase                                                                                                                                                                                                                                                                                                                                                            |
+| --- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ✅     | [Proving slice: one transcript recorded, recalled and verified](phase-1.md)                                                                                                                                                                                                                                                                                      |
+|     | ↳      | @REC-10 off @pending and passing. A recorded transcript is ingested, recalled through event_get in the envelope and verified, end to end and confined; a flipped header byte exits 3 naming the event.                                                                                                                                                           |
+| 2   | ✅     | [The home, the audit log and counters](phase-2.md)                                                                                                                                                                                                                                                                                                               |
+|     | ↳      | @SEC-02, @SEC-03, @OPS-02, @OPS-03 and @ENG-04 off @pending and passing, confined. Every command checks the home first; the audit log chains across rotation; cairn hook fails open and audits.                                                                                                                                                                  |
+| 3   | ✅     | [Settings layers and principal acts at the terminal](phase-3.md)                                                                                                                                                                                                                                                                                                 |
+|     | ↳      | Settings layers validated and layered; widening acts gated by OWN-22 and managed policy; counter ack, configuration accept and risk acceptance recorded as principal acts. @ADM-04 off @pending with eight rows, its flags row moved to @PRV-07 by ruling; the M1 steps of OWN-11, -12 and -22 pass narrowed.                                                    |
+| 4   | ✅     | [Redaction before anything is written, input limits and paths](phase-4.md)                                                                                                                                                                                                                                                                                       |
+|     | ↳      | @ENG-05 off @pending and passing. cairn ingest redacts every line before it writes, refuses while a settings layer fails, reads only within the allowed roots, and a release build ingests again; hook input past 1 MiB or depth 64 is refused. SEC-05 rows 1-2 and SEC-08's ingest steps pass narrowed.                                                         |
+| 5   | ✅     | [Keys, seats and the personal room](phase-5.md)                                                                                                                                                                                                                                                                                                                  |
+|     | ↳      | @PRV-11 off @pending and passing. Keys live in this OS's key store per ruling 2, the dpapi shim under Miri; a changed node identity moves the node to a new device key and device seat in the same personal room, audited. REC-24, SEC-10 and PRV-12's genesis steps pass narrowed; @PRV-09 and @REC-24 cannot pass in M1 and are raised.                        |
+| 6   | ✅     | [The store: writer logs, commitments, payloads, segments and format versions](phase-6.md)                                                                                                                                                                                                                                                                        |
+|     | ↳      | @REC-09 off @pending and passing. Content above the payload threshold goes to the payload store under a keyed name; segments close at turn ends; a newer store or segment is refused, cairn status exits 3. REC-12, REC-19's segment and ADM-05's status steps pass narrowed; 10,000 kills of ingest run nightly; NFR-09 and REC-17's secret frozen.             |
+| 7   | ✅     | [The transcript parser and provenance](phase-7.md)                                                                                                                                                                                                                                                                                                               |
+|     | ↳      | @REC-05 and @PRV-03 off @pending and passing. Every transcript line is checked against its version's recorded shape and classed from its structure; unparsed and drifting lines are kept, counted and audited. PRV-08, REC-26, PRV-01 and ENG-17's M1 steps pass narrowed; three fuzz targets run nightly.                                                       |
+| 8   | ✅     | [cairn ingest: runs, ingest positions, generations and repeated lines](phase-8.md)                                                                                                                                                                                                                                                                               |
+|     | ↳      | @REC-01, @REC-03 and @REC-07 off @pending and passing. Ingest resumes each transcript source past its ingest position, splits it by run, starts a new generation on a shrink or rewrite, and records a repeated line once. REC-02, REC-04, REC-08 and PRV-05's bound steps pass narrowed; both ENG-08 properties hold; NFR-04 benchmarked, not met.              |
+| 9   | ✅     | [The hook handlers: hook observations held at the ingest marker](phase-9.md)                                                                                                                                                                                                                                                                                     |
+|     | ↳      | @SEC-16 and @NFR-02 off @pending and passing. Hook handlers decode each hook input against its schema and recorded shapes, and hold their observations at the ingest marker within their hook budgets; ingest uses them for user lines and prompt matches. PRV-04 rows 1-3, PRV-08, REC-19 and REC-26's hook steps pass narrowed; NFR-01 and NFR-02 benchmarked. |
 <?/catalog?>
 
 ## Acceptance Criteria

@@ -71,6 +71,20 @@ fn each_kind_and_counter_has_its_name() {
         (Counter::RepeatHeld, "repeat_held"),
         (Counter::RepeatReleased, "repeat_released"),
         (Counter::TranscriptSourceLost, "transcript_source_lost"),
+        (Counter::HookInputRejected, "hook_input_rejected"),
+        (Counter::HookBudgetExceeded, "hook_budget_exceeded"),
+        (Counter::HookFailed, "hook_failed"),
+        (Counter::HookUnfinished, "hook_unfinished"),
+        (Counter::SessionBindingNotTaken, "session_binding_not_taken"),
+        (
+            Counter::PromptCommitmentDropped,
+            "prompt_commitment_dropped",
+        ),
+        (Counter::PromptMatchConflicts, "prompt_match_conflicts"),
+        (
+            Counter::HarnessSessionNotAttended,
+            "harness_session_not_attended",
+        ),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);
@@ -93,7 +107,7 @@ const IGNORED: Occurrence = Occurrence::Keyed {
     kind: Kind::Rejected,
     counter: Counter::RepositoryConfigurationKeyIgnored,
     operation: "ingest",
-    detail: "ignored repository configuration key",
+    detail: "rejected repository setting",
     key: "node.deployment_mode",
 };
 
@@ -106,10 +120,7 @@ fn a_keyed_entry_names_its_key_after_the_detail() {
         Some("repository_configuration_key_ignored")
     );
     assert_eq!(e.operation, "ingest");
-    assert_eq!(
-        e.detail,
-        "ignored repository configuration key node.deployment_mode"
-    );
+    assert_eq!(e.detail, "rejected repository setting node.deployment_mode");
 }
 
 #[test]
@@ -118,7 +129,7 @@ fn a_keyed_entry_never_holds_a_key_no_settings_key_spells() {
         kind: Kind::Rejected,
         counter: Counter::RepositoryConfigurationKeyIgnored,
         operation: "ingest",
-        detail: "ignored repository configuration key",
+        detail: "rejected repository setting",
         key,
     };
     let long = "a".repeat(161);
@@ -127,7 +138,7 @@ fn a_keyed_entry_never_holds_a_key_no_settings_key_spells() {
         let e = Entry::next(&occurrence, 1, 5, Digest::ZERO).unwrap();
         assert_eq!(
             e.detail,
-            "ignored repository configuration key a key no settings key spells"
+            "rejected repository setting a key no settings key spells"
         );
     }
     let plain = keyed("trust_policy.mcp:git-hub*");

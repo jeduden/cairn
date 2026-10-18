@@ -2,7 +2,10 @@
 //! under `testdata/claude-code`: the recorded shapes the core compiles
 //! in are exactly what the recordings give, every recorded transcript
 //! replays through the core's parser with no unparsed line or format
-//! drift, and no fixture carries a residual identifier.
+//! drift, every recorded hook input decodes through the core's hook
+//! input decoder with no rejection or drift against the hook input
+//! shapes the recordings give, and no fixture carries a residual
+//! identifier.
 //!
 //! `CAIRN_REGENERATE_SHAPES=1 cargo test -p harness-contract --test
 //! contract` writes the shapes afresh after a new recording.
@@ -44,6 +47,34 @@ fn every_recorded_transcript_replays_without_an_unparsed_line_or_format_drift() 
     }
 
     assert!(replayed > 0, "no recorded transcript");
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+#[test]
+fn hook_input_shapes_regenerate_byte_for_byte() {
+    let write = std::env::var_os("CAIRN_REGENERATE_SHAPES").is_some();
+    let problems = shapes::regenerate_hooks(
+        &recordings(),
+        &testkit::repo_root().join(shapes::HOOK_SHAPES_DIR),
+        write,
+    )
+    .unwrap();
+
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+#[test]
+fn every_recorded_hook_input_decodes_without_rejection_or_format_drift() {
+    let mut problems = Vec::new();
+    let mut replayed = 0;
+    for version in recording::versions(&recordings()).unwrap() {
+        for path in recording::files(&version.join("hooks"), ".json").unwrap() {
+            problems.extend(replay::replay_hook_input(&path).unwrap());
+            replayed += 1;
+        }
+    }
+
+    assert!(replayed > 0, "no recorded hook input");
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
 

@@ -12,6 +12,8 @@ fn every_event_kind_round_trips_through_its_name() {
         (EventKind::NodeIdentityChange, "node_identity_change"),
         (EventKind::RepeatReference, "repeat_reference"),
         (EventKind::RepeatOwner, "repeat_owner"),
+        (EventKind::HookObservation, "hook_observation"),
+        (EventKind::PromptMatch, "prompt_match"),
     ] {
         assert_eq!(kind.as_str(), name);
         assert_eq!(EventKind::parse(name), Some(kind));

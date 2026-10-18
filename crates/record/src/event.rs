@@ -34,6 +34,13 @@ pub enum EventKind {
     /// when no fork observation names one, recorded in the device seat
     /// (REC-04).
     RepeatOwner,
+    /// A hook observation: the structural fields a hook handler kept,
+    /// held at a transcript's ingest marker until it reached the record
+    /// (REC-19, PRV-08).
+    HookObservation,
+    /// A prompt match: what became of a prompt commitment the first line
+    /// carrying its `prompt_id` used up (PRV-08).
+    PromptMatch,
 }
 
 impl EventKind {
@@ -50,6 +57,8 @@ impl EventKind {
             Self::NodeIdentityChange => "node_identity_change",
             Self::RepeatReference => "repeat_reference",
             Self::RepeatOwner => "repeat_owner",
+            Self::HookObservation => "hook_observation",
+            Self::PromptMatch => "prompt_match",
         }
     }
 
@@ -66,6 +75,8 @@ impl EventKind {
             Self::NodeIdentityChange,
             Self::RepeatReference,
             Self::RepeatOwner,
+            Self::HookObservation,
+            Self::PromptMatch,
         ]
         .into_iter()
         .find(|k| k.as_str() == name)

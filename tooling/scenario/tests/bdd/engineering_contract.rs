@@ -1,11 +1,10 @@
-//! The steps of ENG-17 that phase 7 of plan 2609292012 carries: the
-//! contract suite replays every recorded transcript of every supported
-//! Claude Code version through the core's own parser, and the
-//! residual-identifier check refuses a fixture that carries an
+//! The steps of ENG-17 that phases 7 and 9 of plan 2609292012 carry:
+//! the contract suite replays every recorded transcript of every
+//! supported Claude Code version through the core's own parser, and
+//! every recorded hook input through the core's hook input decoder, and
+//! the residual-identifier check refuses a fixture that carries an
 //! account's identifiers, with its drift case. `@ENG-17` stays pending:
-//! its nightly live run and recording are M2's, and the hook inputs'
-//! recorded shapes phase 9's, so the replay reads each hook input as a
-//! JSON object only.
+//! its nightly live run and recording are M2's.
 
 use cucumber::{given, then, when};
 use harness_contract::{recording, replay, residual, shapes};
@@ -58,9 +57,7 @@ fn replays(w: &mut World) -> Result<(), String> {
             problems.extend(replay::replay_file(&path, &supported, &redactor)?);
         }
         for path in recording::files(&version.join("hooks"), ".json")? {
-            if !recording::json(&path)?.is_object() {
-                problems.push(format!("{}: not a hook input", path.display()));
-            }
+            problems.extend(replay::replay_hook_input(&path)?);
         }
     }
     steps(w).problems = Some(problems);

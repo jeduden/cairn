@@ -7,8 +7,9 @@
 //! and the recall of one event through `event_get`.
 //!
 //! `@REC-26` stays pending: its harness session's MCP server ingests
-//! live (REC-13, phase 10), and its prompt matches and hook input row
-//! are phase 9's. Until then its drift steps ingest with `cairn ingest`.
+//! live (REC-13, phase 10). Until then its drift steps ingest with
+//! `cairn ingest`, its typed lines matching a prompt the hook handlers
+//! got (phase 9).
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -340,6 +341,26 @@ fn recorded_shapes(_w: &mut World) -> Result<(), String> {
     ))
 }
 
+/// The typed `user` line of the drift `drift` names, carrying an AWS
+/// access key in its prompt, after the hook handlers of its harness
+/// session recorded its process ancestry and its prompt commitment, so
+/// only the drift keeps it from `user`.
+fn typed_drift(w: &mut World, drift: &str) -> Result<Value, String> {
+    use crate::record_hooks::{prompt_submit, run_hook, session_start, typed_line};
+    let prompt = format!("deploy with {AWS_ACCESS_KEY}");
+    let start = session_start(w, "main-run", "startup")?;
+    run_hook(w, "SessionStart", &start, &[])?;
+    let submit = prompt_submit(w, "main-run", "p-drift", &prompt)?;
+    run_hook(w, "UserPromptSubmit", &submit, &[])?;
+    let mut line = typed_line(&prompt, "p-drift", "typed", "main-run")?;
+    if drift.contains("\"version\"") {
+        line["version"] = json!("9.9.9");
+    } else {
+        line["futureKey"] = json!(true);
+    }
+    Ok(line)
+}
+
 /// A line of the drift `drift` names, carrying an AWS access key.
 fn drift_line(drift: &str) -> Result<Value, String> {
     match drift {
@@ -362,11 +383,30 @@ fn drift_line(drift: &str) -> Result<Value, String> {
 }
 
 #[when(
-    regex = r#"^(the harness appends a line of a type no supported version records|the harness appends an "assistant" line without the "message" key), carrying an AWS access key$"#
+    regex = r#"^(the harness appends a line of a type no supported version records|the harness appends an "assistant" line without the "message" key|the harness appends a "user" line typed at the input, matching a prompt, whose "version" is no supported version|the harness appends a "user" line typed at the input, matching a prompt, with a key no recorded shape has|the hook "SessionStart" runs with a hook input that lacks "source"), carrying an AWS access key$"#
 )]
 fn harness_drifts(w: &mut World, drift: String) -> Result<(), String> {
     remember_counters(w)?;
-    let line = drift_line(&drift)?;
+    let line = if drift.starts_with("the hook") {
+        // The hook input drifts; the transcript goes on with a clean
+        // line, which ingest records.
+        let mut input = crate::record_hooks::session_start(w, "main-run", "startup")?;
+        if let Some(fields) = input.as_object_mut() {
+            fields.remove("source");
+        }
+        input["cwd"] = json!(format!("/w/{AWS_ACCESS_KEY}"));
+        run_core(
+            w,
+            &["hook", "SessionStart"],
+            Some(input.to_string().as_bytes()),
+        )?;
+        crate::record_hooks::note_answer(w)?;
+        recorded("a mode line", |l| l["type"] == "mode")?
+    } else if drift.contains("matching a prompt") {
+        typed_drift(w, &drift)?
+    } else {
+        drift_line(&drift)?
+    };
     append_raw(w, "main-run", &line.to_string())?;
     append(
         w,
@@ -396,6 +436,13 @@ fn stored_unparsed_and_drift(w: &mut World) -> Result<(), String> {
             "format_drift rose by {drift} and events_unparsed by {unparsed}"
         )),
     }
+}
+
+#[then(regex = r#"^the line is stored whole as an untrusted "harness_text" event, never "user"$"#)]
+fn stored_whole_never_user(w: &mut World) -> Result<(), String> {
+    // A typed line matching a prompt in a harness session whose process
+    // ancestry is observed would be `user` but for its drift.
+    stored_whole_harness_text(w)
 }
 
 #[then(regex = r#"^the line is stored whole as an untrusted "harness_text" event$"#)]
@@ -441,10 +488,22 @@ fn drift_counted_and_named(w: &mut World) -> Result<(), String> {
         .rev()
         .find(|e| e.counter.as_deref() == Some("format_drift"));
     let detail = named.map(|e| e.detail.clone()).unwrap_or_default();
-    let differed = ["unrecorded-type", "missing:message"]
+    // The harness version the drifting line names, or for a hook input,
+    // which names none, the newest supported version it was checked
+    // against.
+    let named_version = [VERSION, "9.9.9"]
         .iter()
-        .any(|d| detail.ends_with(d));
-    if rose == 1 && detail.contains(&format!("claude-code:{VERSION}:")) && differed {
+        .any(|v| detail.contains(&format!("claude-code:{v}:")));
+    let differed = [
+        "unrecorded-type",
+        "missing:message",
+        "unsupported-version",
+        "beyond:futureKey",
+        "missing:source",
+    ]
+    .iter()
+    .any(|d| detail.ends_with(d));
+    if rose == 1 && named_version && differed {
         return Ok(());
     }
     Err(format!(

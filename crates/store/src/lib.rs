@@ -8,9 +8,12 @@
 //!
 //! - [`payload`]: content above the payload threshold, kept in the
 //!   payload store beside `store.db` (REC-09).
+//! - [`hook`]: the hook observations and prompt commitments the hook
+//!   handlers hold beside the record (REC-19, PRV-08).
 //! - [`segment`]: each writer's log in segments, each with its format
 //!   version; a core append closes the segment it ends (REC-19).
 
+pub mod hook;
 pub mod payload;
 pub mod segment;
 pub mod source;
@@ -32,6 +35,7 @@ use rusqlite::{
 };
 use serde_json::Value;
 
+pub use hook::{Held, Observation, PromptCommitment};
 pub use payload::{Disk, OsDisk, Payloads};
 pub use segment::{SEGMENT_VERSION, Segment};
 pub use source::{IngestedRun, Place, Placed, Position, Source};
@@ -292,17 +296,30 @@ impl Store {
     /// Fails when there is no store, when SQLite cannot open it, when it
     /// holds no schema, or when it is of a newer schema version.
     pub fn open_read_only(path: &Path) -> Result<Self, StoreError> {
+        Self::open_read_only_made(path)?.ok_or_else(|| StoreError::Corrupt {
+            address: None,
+            what: "it holds no schema".to_owned(),
+        })
+    }
+
+    /// Opens the store at `path` for reading alone, as
+    /// [`open_read_only`](Self::open_read_only) does; none when it holds
+    /// no schema yet, as a store whose first opener was stopped before it
+    /// made one, a hook handler past its budget say, holds nothing.
+    ///
+    /// # Errors
+    ///
+    /// Fails when there is no store, when SQLite cannot open it, or when
+    /// it is of a newer schema version.
+    pub fn open_read_only_made(path: &Path) -> Result<Option<Self>, StoreError> {
         let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX;
         let store = Self::over(Connection::open_with_flags(path, flags)?, path)?;
         if !store.has_meta()? {
-            return Err(StoreError::Corrupt {
-                address: None,
-                what: "it holds no schema".to_owned(),
-            });
+            return Ok(None);
         }
         store.check_format()?;
 
-        Ok(store)
+        Ok(Some(store))
     }
 
     /// The store over `conn`, the file at `path` once checked readable
@@ -1207,6 +1224,7 @@ fn create(tx: &rusqlite::Transaction<'_>) -> Result<(), StoreError> {
     tx.execute_batch(SCHEMA)?;
     tx.execute_batch(segment::SCHEMA)?;
     tx.execute_batch(source::SCHEMA)?;
+    tx.execute_batch(hook::SCHEMA)?;
     let mut insert = tx.prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
     for (key, value) in [
         ("schema_version", SCHEMA_VERSION.to_string()),
