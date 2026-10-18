@@ -470,3 +470,52 @@ fn a_transcript_in_the_run_s_worktree_is_read() {
     assert_eq!(running.sessions.len(), 1);
     assert!(f.counted().is_empty());
 }
+
+#[test]
+fn a_store_that_cannot_open_takes_no_binding_and_stops_without_an_audit() {
+    let f = Fixture::new();
+    std::fs::write(f.main(), line(1, None)).unwrap();
+    let store = f.home.store();
+    std::fs::write(&store, "not a database, and longer than its header").unwrap();
+    #[cfg(unix)]
+    std::fs::set_permissions(&store, std::os::unix::fs::PermissionsExt::from_mode(0o600)).unwrap();
+    let mut running = f.running(Some(HARNESS), None);
+
+    running.bind();
+    assert!(running.sessions.is_empty());
+    assert!(!f.shared.serving.load(Ordering::SeqCst));
+
+    running.transcripts.insert(f.main(), 0);
+    running.stop();
+    assert!(f.counted().is_empty(), "no remainder it could not read");
+}
+
+#[test]
+fn a_transcript_gone_after_its_ingest_gives_no_tool_uses_and_is_read_again_later() {
+    let f = Fixture::new();
+    std::fs::write(f.main(), line(1, Some("toolu_m"))).unwrap();
+    let redactor = Redactor::new(&[]).unwrap().0;
+    ingest::ingest_path(&f.home, &f.main(), &redactor, &mut OsEntropy).unwrap();
+    std::fs::remove_file(f.main()).unwrap();
+    let mut running = f.running(Some(HARNESS), None);
+    running.transcripts.insert(f.main(), 0);
+
+    running.read_tool_uses(&f.main());
+
+    assert!(f.shared.runs_of("toolu_m").is_empty());
+    assert_eq!(running.transcripts.get(&f.main()), Some(&0));
+}
+
+#[cfg(unix)]
+#[test]
+fn a_marker_that_cannot_be_opened_is_passed_over() {
+    let f = Fixture::new();
+    let markers = f.home.root().join(MARKERS);
+    std::fs::create_dir_all(&markers).unwrap();
+    let link = markers.join("gone.marker");
+    std::os::unix::fs::symlink(f.dir.path().join("gone"), &link).unwrap();
+    let audit = |_: &Occurrence| panic!("nothing to audit");
+
+    assert_eq!(count_stopped(&f.home, "ingest", &audit), 0);
+    assert!(link.symlink_metadata().is_ok(), "left as it is");
+}

@@ -1177,17 +1177,24 @@ fn ambiguous_calls_are_counted_on_their_own() {
         live_limit: None,
     };
 
-    record_found(
-        &ctx,
-        &[Found {
-            tool_use_id: Some("toolu_2".to_owned()),
-            run: Err(Cause::Ambiguous),
-            waited: std::time::Duration::ZERO,
-        }],
-    );
+    log_with(&p, None, || {
+        record_found(
+            &ctx,
+            &[Found {
+                tool_use_id: Some("toolu_2".to_owned()),
+                run: Err(Cause::Ambiguous),
+                waited: std::time::Duration::ZERO,
+            }],
+        );
+    });
 
     let counters: Vec<Option<String>> = audited(&p).into_iter().map(|e| e.counter).collect();
     assert!(counters.contains(&Some("tool_call_run_ambiguous".to_owned())));
+    let refused = logged_lines(&p)
+        .into_iter()
+        .find(|l| l["fields"]["tool_use_id"] == "toolu_2")
+        .expect("the refusal is logged");
+    assert_eq!(refused["fields"]["cause"], Cause::Ambiguous.as_str());
 }
 
 #[test]
