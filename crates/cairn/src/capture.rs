@@ -44,6 +44,10 @@ use store::Store;
 /// How often live ingest reads its transcripts again.
 pub(crate) const POLL: Duration = Duration::from_millis(100);
 
+/// How often a run seat's writer closes its open segment while live
+/// ingest appends to it (REC-19).
+pub(crate) const SEGMENT_EVERY: Duration = Duration::from_secs(30);
+
 /// How often a call waiting for its tool-use id looks again.
 const LOOK: Duration = Duration::from_millis(10);
 
@@ -163,6 +167,10 @@ pub(crate) struct Running {
     /// The paths refused, each audited once.
     refused: BTreeSet<PathBuf>,
     lock: Option<ServerLock>,
+    /// When its run seats' open segments last closed, and how often
+    /// they close while it appends (REC-19).
+    closed: Instant,
+    close_every: Duration,
 }
 
 impl Capture {
@@ -177,6 +185,8 @@ impl Capture {
             transcripts: BTreeMap::new(),
             refused: BTreeSet::new(),
             lock: None,
+            closed: now_instant(),
+            close_every: SEGMENT_EVERY,
         };
         running.bind();
         running.poll();
@@ -306,6 +316,19 @@ impl Running {
             }
             self.read_tool_uses(&path);
         }
+        if self.closed.elapsed() >= self.close_every {
+            self.close_segments();
+            self.closed = now_instant();
+        }
+    }
+
+    /// Closes each run seat's open segment (REC-19).
+    fn close_segments(&self) {
+        if let Ok(mut store) = Store::open(&self.capture.home.store()) {
+            for (_, writer) in self.seats.runs() {
+                let _ = store.close_segment(writer);
+            }
+        }
     }
 
     /// Audits an ingest that failed: a link swapped in for a transcript
@@ -412,11 +435,7 @@ impl Running {
         for name in remainders(home, self.transcripts.keys()) {
             self.audit(&remainder(&name, "mcp"));
         }
-        if let Ok(mut store) = Store::open(&home.store()) {
-            for (_, writer) in self.seats.runs() {
-                let _ = store.close_segment(writer);
-            }
-        }
+        self.close_segments();
         if let Some(lock) = self.lock {
             lock.remove();
         }
@@ -489,6 +508,16 @@ fn tool_use_ids(line: &Value) -> Vec<String> {
 
 fn as_index(offset: u64) -> usize {
     usize::try_from(offset).unwrap_or(usize::MAX)
+}
+
+/// Now, for the segments' 30 s close.
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a segment closes every 30 s of wall-clock time while a run appends (REC-19); \
+              no derived artifact reads it (I10)"
+)]
+fn now_instant() -> Instant {
+    Instant::now()
 }
 
 /// A server lock: a file naming the transcripts its MCP server

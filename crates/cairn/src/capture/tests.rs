@@ -62,6 +62,8 @@ impl Fixture {
             transcripts: BTreeMap::new(),
             refused: BTreeSet::new(),
             lock: None,
+            closed: now_instant(),
+            close_every: SEGMENT_EVERY,
         }
     }
 
@@ -405,4 +407,44 @@ fn live_ingest_starts_bound_and_stops_when_told() {
     started.run();
 
     assert!(f.locks().is_empty());
+}
+
+#[test]
+fn a_run_seat_s_open_segment_closes_every_30_s_while_live_ingest_appends() {
+    let f = Fixture::new();
+    std::fs::write(f.main(), line(1, None)).unwrap();
+    f.bind(SESSION, &f.main(), HARNESS);
+    let mut running = f.running(Some(HARNESS), None);
+    running.bind();
+    running.poll();
+    let (_, writer) = running.seats.runs()[0].clone();
+    let open = || {
+        Store::open(&f.home.store())
+            .unwrap()
+            .open_segments()
+            .unwrap()
+            .iter()
+            .any(|s| s.writer == writer)
+    };
+    // Its first segment closed after its last line; the next stays open.
+    let mut store = Store::open(&f.home.store()).unwrap();
+    store
+        .append_open(
+            writer,
+            &[store::NewEvent {
+                kind: record::event::EventKind::HookObservation,
+                provenance: record::event::Provenance::Structural,
+                content: json!({"hook": "SessionStart"}),
+                commitment_key: record::commitment::CommitmentKey::from_bytes([4; 32]),
+                transcript_timestamp: None,
+            }],
+        )
+        .unwrap();
+    running.poll();
+    assert!(open(), "within 30 s it stays open");
+
+    running.close_every = Duration::ZERO;
+    running.poll();
+
+    assert!(!open());
 }
