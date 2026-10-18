@@ -125,7 +125,7 @@ pub enum Counter {
     /// (REC-08).
     TranscriptSourceLost,
     /// A search ran past its deadline and was cancelled (SEC-04).
-    SearchCancelled,
+    QueryCancelled,
 }
 
 impl Counter {
@@ -160,7 +160,7 @@ impl Counter {
             Self::RepeatHeld => "repeat_held",
             Self::RepeatReleased => "repeat_released",
             Self::TranscriptSourceLost => "transcript_source_lost",
-            Self::SearchCancelled => "search_cancelled",
+            Self::QueryCancelled => "query_cancelled",
         }
     }
 }

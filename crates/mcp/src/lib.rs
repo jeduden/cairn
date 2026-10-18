@@ -120,7 +120,7 @@ impl Server {
 
     /// This server, its searches cancelled after `deadline`.
     #[must_use]
-    pub fn with_search_deadline(mut self, deadline: Duration) -> Self {
+    pub fn with_query_deadline(mut self, deadline: Duration) -> Self {
         self.deadline = deadline;
         self
     }
@@ -302,11 +302,16 @@ impl Server {
     ) -> Result<Item, String> {
         let unreadable = |_| NO_INDEX.to_owned();
         let address = hit.address;
-        let preview = self
+        let (kind, provenance) = self
             .store
-            .event_preview(address, event_search::PREVIEW_CHARS)
+            .kind_and_provenance(address)
             .map_err(unreadable)?
             .ok_or_else(|| format!("no event at {address}"))?;
+        let preview = self
+            .store
+            .preview(address)
+            .map_err(unreadable)?
+            .unwrap_or_default();
         let (author, origin) = match seats.entry(address.writer) {
             Entry::Occupied(known) => known.into_mut(),
             Entry::Vacant(new) => new.insert(self.author_and_origin(address.writer)?),
@@ -318,13 +323,13 @@ impl Server {
             author: author.clone(),
             origin: *origin,
             run: Run::Other,
-            kind: preview.kind.as_str().to_owned(),
-            provenance: preview.provenance.name(),
+            kind: kind.as_str().to_owned(),
+            provenance: provenance.name(),
             trust: TrustLevel::Untrusted,
             flags: Vec::new(),
             integrity: IntegrityStatus::Unverified,
             score: Some(hit.score),
-            content: preview.text,
+            content: preview,
         })
     }
 

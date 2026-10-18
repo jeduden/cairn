@@ -32,7 +32,7 @@ fn a_call_with_only_a_query_asks_for_ten_hits_in_any_run_of_the_room() {
     assert_eq!(params.text, "deploy");
     assert_eq!(params.k, 10);
     assert_eq!(params.room, None);
-    assert_eq!(params.run, None);
+    assert_eq!(params.writer, None);
     assert!(params.provenance.is_empty() && params.kinds.is_empty());
     assert!(!params.trusted_only);
     assert_eq!((params.since, params.until), (None, None));
@@ -68,7 +68,7 @@ fn the_room_and_the_run_are_ids() {
     let params = parsed(json!({"room": id, "run": id})).unwrap();
 
     assert_eq!(params.room.unwrap().to_string(), id);
-    assert_eq!(params.run.unwrap().to_string(), id);
+    assert_eq!(params.writer.unwrap().to_string(), id);
     assert_eq!(parsed(json!({"room": "nope"})), Err(BAD_ROOM));
     assert_eq!(parsed(json!({"run": "nope"})), Err(BAD_RUN));
     assert_eq!(parsed(json!({"run": 3})), Err(BAD_RUN));

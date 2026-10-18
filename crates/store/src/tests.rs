@@ -1232,38 +1232,43 @@ fn a_seat_recorded_with_no_event_opens_no_segment() {
     assert!(store.segments(writer(1)).unwrap().is_empty());
 }
 
-fn preview_of(store: &Store, seq: u64, chars: usize) -> Option<EventPreview> {
-    let address = Address::new(writer(1), Seq::new(seq).unwrap());
-    store.event_preview(address, chars).unwrap()
+fn address(seq: u64) -> Address {
+    Address::new(writer(1), Seq::new(seq).unwrap())
 }
 
 #[test]
-fn an_event_preview_shows_its_kind_provenance_and_the_start_of_its_text() {
+fn a_preview_is_the_start_of_the_text_and_the_classes_are_the_events() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
     store.append(writer(1), &new_events(1)).unwrap();
 
-    let preview = preview_of(&store, 1, 4).unwrap();
-
-    assert_eq!(preview.kind, EventKind::UnparsedLine);
-    assert_eq!(preview.provenance, Provenance::Unparsed);
-    assert_eq!(preview.text, "line");
-    assert_eq!(preview_of(&store, 1, 100).unwrap().text, "line 1");
+    assert_eq!(
+        store.preview(address(1)).unwrap().as_deref(),
+        Some("line 1")
+    );
+    assert_eq!(
+        store.kind_and_provenance(address(1)).unwrap(),
+        Some((EventKind::UnparsedLine, Provenance::Unparsed))
+    );
 }
 
 #[test]
-fn the_preview_of_content_in_the_payload_store_is_the_one_its_row_keeps() {
+fn a_long_text_is_previewed_to_512_bytes_inline_or_in_the_payload_store() {
     let dir = TempDir::new().unwrap();
-    let mut store = open(&dir).with_payload_threshold(10);
-    let long = NewEvent {
-        content: json!({"text": "x".repeat(2000)}),
+    let mut store = open(&dir);
+    let long = |n| NewEvent {
+        content: json!({"text": "é".repeat(n)}),
         ..new_event(1)
     };
-    store.append(writer(1), &[long]).unwrap();
+    store.append(writer(1), &[long(300)]).unwrap();
+    let mut spilled = open(&TempDir::new().unwrap()).with_payload_threshold(10);
+    spilled.append(writer(1), &[long(2000)]).unwrap();
 
-    let preview = preview_of(&store, 1, 10_000).unwrap();
-
-    assert_eq!(preview.text.len(), payload::PREVIEW_BYTES);
+    assert_eq!(store.preview(address(1)).unwrap().unwrap().len(), 512);
+    assert_eq!(
+        spilled.preview(address(1)).unwrap().unwrap().len(),
+        payload::PREVIEW_BYTES
+    );
 }
 
 #[test]
@@ -1276,11 +1281,14 @@ fn the_preview_of_content_with_no_text_is_its_encoding() {
     };
     store.append(writer(1), &[bare]).unwrap();
 
-    assert_eq!(preview_of(&store, 1, 100).unwrap().text, r#"{"k":1}"#);
+    assert_eq!(
+        store.preview(address(1)).unwrap().as_deref(),
+        Some(r#"{"k":1}"#)
+    );
 }
 
 #[test]
-fn an_event_that_is_not_there_has_no_preview_and_one_without_content_no_text() {
+fn an_event_that_is_not_there_has_no_preview_and_one_without_content_none_to_show() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);
     store.append(writer(1), &new_events(1)).unwrap();
@@ -1289,12 +1297,13 @@ fn an_event_that_is_not_there_has_no_preview_and_one_without_content_no_text() {
         .execute("UPDATE events SET content = NULL", [])
         .unwrap();
 
-    assert!(preview_of(&store, 2, 10).is_none());
-    assert_eq!(preview_of(&store, 1, 10).unwrap().text, "");
+    assert!(store.preview(address(2)).unwrap().is_none());
+    assert!(store.kind_and_provenance(address(2)).unwrap().is_none());
+    assert_eq!(store.preview(address(1)).unwrap().as_deref(), Some(""));
 }
 
 #[test]
-fn a_preview_of_a_row_that_does_not_parse_is_corrupt() {
+fn a_row_that_does_not_parse_is_corrupt_for_a_preview_or_its_classes() {
     for (column, value) in [("content", "{"), ("kind", "bad"), ("provenance", "bad")] {
         let dir = TempDir::new().unwrap();
         let mut store = open(&dir);
@@ -1303,9 +1312,12 @@ fn a_preview_of_a_row_that_does_not_parse_is_corrupt() {
             .conn
             .execute(&format!("UPDATE events SET {column} = '{value}'"), [])
             .unwrap();
-        let address = Address::new(writer(1), Seq::new(1).unwrap());
 
-        let err = store.event_preview(address, 10).unwrap_err();
+        let err = if column == "content" {
+            store.preview(address(1)).unwrap_err()
+        } else {
+            store.kind_and_provenance(address(1)).unwrap_err()
+        };
 
         assert!(matches!(err, StoreError::Corrupt { .. }), "{column}: {err}");
     }

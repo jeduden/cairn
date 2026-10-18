@@ -64,7 +64,7 @@ fn base(query: &Compiled) -> Search<'_> {
     Search {
         query,
         room: room(),
-        run: None,
+        writer: None,
         provenance: &[],
         kinds: &[],
         since: None,
@@ -136,7 +136,7 @@ fn a_new_store_has_its_index_and_records_how_it_is_built() {
         Some(TOKENIZER)
     );
     assert_eq!(
-        store.meta("search_index_cap").unwrap(),
+        store.meta("search_index.indexing_cap").unwrap(),
         Some(DEFAULT_CAP.to_string())
     );
 }
@@ -287,13 +287,13 @@ fn a_run_filter_keeps_one_writer() {
 
     let none = store
         .search(&Search {
-            run: Some(writer(2)),
+            writer: Some(writer(2)),
             ..base(&query)
         })
         .unwrap();
     let one = store
         .search(&Search {
-            run: Some(writer(1)),
+            writer: Some(writer(1)),
             ..base(&query)
         })
         .unwrap();
@@ -357,7 +357,7 @@ fn a_time_range_keeps_events_whose_transcript_time_lies_in_it() {
 }
 
 #[test]
-fn only_the_newest_window_of_matches_is_ranked() {
+fn only_the_newest_matches_are_ranked() {
     let dir = TempDir::new().unwrap();
     let mut events = vec![line(
         1,
@@ -365,8 +365,9 @@ fn only_the_newest_window_of_matches_is_ranked() {
         Provenance::Unparsed,
         None,
     )];
-    events
-        .extend((2..=WINDOW as u64 + 1).map(|n| line(n, "alpha pad", Provenance::Unparsed, None)));
+    events.extend(
+        (2..=RANKED_MATCHES as u64 + 1).map(|n| line(n, "alpha pad", Provenance::Unparsed, None)),
+    );
     let store = with(&dir, &events);
     let query = compiled("alpha");
 
@@ -379,7 +380,7 @@ fn only_the_newest_window_of_matches_is_ranked() {
 
     assert!(
         !seqs(&all).contains(&1),
-        "the oldest match lies outside the window"
+        "the oldest match lies outside the newest matches"
     );
     assert_eq!(all.len(), rank::MAX_HITS);
 }
@@ -387,7 +388,7 @@ fn only_the_newest_window_of_matches_is_ranked() {
 #[test]
 fn a_search_past_its_deadline_is_cancelled_and_the_next_one_runs() {
     let dir = TempDir::new().unwrap();
-    let events: Vec<NewEvent> = (1..=WINDOW as u64)
+    let events: Vec<NewEvent> = (1..=RANKED_MATCHES as u64)
         .map(|n| line(n, "alpha pad", Provenance::Unparsed, None))
         .collect();
     let store = with(&dir, &events);
@@ -407,12 +408,12 @@ fn a_search_past_its_deadline_is_cancelled_and_the_next_one_runs() {
 fn the_index_kept_per_append_has_the_digest_of_a_rebuild() {
     let dir = TempDir::new().unwrap();
     let mut store = mixed(&dir);
-    let kept = store.index_digest().unwrap();
+    let kept = store.search_index_digest().unwrap();
 
-    let read = store.rebuild_index().unwrap();
+    let read = store.rebuild_search_index().unwrap();
 
     assert_eq!(read, 4);
-    assert_eq!(store.index_digest().unwrap(), kept);
+    assert_eq!(store.search_index_digest().unwrap(), kept);
 }
 
 #[test]
@@ -426,7 +427,7 @@ fn two_stores_holding_the_same_logs_share_a_digest_whatever_arrived_first() {
                 .append(writer(n), &texts(&["shared word", &format!("only {n}")]))
                 .unwrap();
         }
-        store.index_digest().unwrap()
+        store.search_index_digest().unwrap()
     };
 
     assert_eq!(appends([1, 2]), appends([2, 1]));
@@ -438,8 +439,10 @@ fn a_different_text_is_a_different_digest() {
     let (one, two) = (TempDir::new().unwrap(), TempDir::new().unwrap());
 
     assert_ne!(
-        with(&one, &texts(&["same"])).index_digest().unwrap(),
-        with(&two, &texts(&["other"])).index_digest().unwrap()
+        with(&one, &texts(&["same"])).search_index_digest().unwrap(),
+        with(&two, &texts(&["other"]))
+            .search_index_digest()
+            .unwrap()
     );
 }
 
@@ -447,7 +450,7 @@ fn a_different_text_is_a_different_digest() {
 fn a_store_made_before_the_index_gets_one_built_from_its_record() {
     let dir = TempDir::new().unwrap();
     let store = with(&dir, &texts(&["deploy the cluster", "lunch"]));
-    let kept = store.index_digest().unwrap();
+    let kept = store.search_index_digest().unwrap();
     for table in ["events_vocab", "events_fts", "search_writers"] {
         store
             .conn
@@ -459,7 +462,7 @@ fn a_store_made_before_the_index_gets_one_built_from_its_record() {
     let store = open(&dir);
 
     assert_eq!(seqs(&find(&store, "cluster")), [1]);
-    assert_eq!(store.index_digest().unwrap(), kept);
+    assert_eq!(store.search_index_digest().unwrap(), kept);
 }
 
 #[test]
@@ -480,8 +483,14 @@ fn a_store_opened_for_reading_with_no_index_says_so() {
         read.search(&base(&query)),
         Err(StoreError::NoIndex)
     ));
-    assert!(matches!(read.index_digest(), Err(StoreError::NoIndex)));
-    assert!(matches!(read.rebuild_index(), Err(StoreError::NoIndex)));
+    assert!(matches!(
+        read.search_index_digest(),
+        Err(StoreError::NoIndex)
+    ));
+    assert!(matches!(
+        read.rebuild_search_index(),
+        Err(StoreError::NoIndex)
+    ));
 }
 
 /// A writer id that shares the slot of `writer(1)`: the same first five
@@ -510,10 +519,10 @@ fn of_two_writers_sharing_a_slot_the_smaller_id_is_indexed_whichever_arrived_fir
             let hits = find(&store, "shared");
             assert_eq!(hits.len(), 1);
             assert_eq!(hits[0].address.writer, small);
-            assert_eq!(store.index_displaced().unwrap(), [large]);
-            let kept = store.index_digest().unwrap();
-            store.rebuild_index().unwrap();
-            assert_eq!(store.index_digest().unwrap(), kept);
+            assert_eq!(store.search_index_unindexed_writers().unwrap(), [large]);
+            let kept = store.search_index_digest().unwrap();
+            store.rebuild_search_index().unwrap();
+            assert_eq!(store.search_index_digest().unwrap(), kept);
             kept
         })
         .collect();
@@ -522,15 +531,15 @@ fn of_two_writers_sharing_a_slot_the_smaller_id_is_indexed_whichever_arrived_fir
 }
 
 #[test]
-fn a_store_with_no_displaced_writer_names_none() {
+fn a_store_leaving_out_no_writer_names_none() {
     let dir = TempDir::new().unwrap();
     let store = mixed(&dir);
 
-    assert!(store.index_displaced().unwrap().is_empty());
+    assert!(store.search_index_unindexed_writers().unwrap().is_empty());
 }
 
 #[test]
-fn a_displaced_writer_id_that_does_not_parse_is_corrupt() {
+fn an_unindexed_writer_id_that_does_not_parse_is_corrupt() {
     let dir = TempDir::new().unwrap();
     let store = mixed(&dir);
     store
@@ -542,7 +551,7 @@ fn a_displaced_writer_id_that_does_not_parse_is_corrupt() {
         .unwrap();
 
     assert!(matches!(
-        store.index_displaced(),
+        store.search_index_unindexed_writers(),
         Err(StoreError::Corrupt { .. })
     ));
 }
@@ -582,13 +591,13 @@ fn a_hit_naming_a_writer_that_is_no_id_is_corrupt() {
 fn a_rebuild_failing_midway_leaves_the_index_as_it_was() {
     let dir = TempDir::new().unwrap();
     let mut store = with(&dir, &texts(&["deploy", "lunch"]));
-    let kept = store.index_digest().unwrap();
+    let kept = store.search_index_digest().unwrap();
     store
         .conn
         .execute("UPDATE events SET kind = 'bad' WHERE seq = 2", [])
         .unwrap();
 
-    assert!(store.rebuild_index().is_err());
+    assert!(store.rebuild_search_index().is_err());
     store
         .conn
         .execute(
@@ -597,7 +606,7 @@ fn a_rebuild_failing_midway_leaves_the_index_as_it_was() {
         )
         .unwrap();
 
-    assert_eq!(store.index_digest().unwrap(), kept);
+    assert_eq!(store.search_index_digest().unwrap(), kept);
 }
 
 /// A statement that runs for minutes.
@@ -676,7 +685,7 @@ fn a_rebuild_leaves_out_an_event_whose_content_was_removed() {
         .execute("UPDATE events SET content = NULL WHERE seq = 1", [])
         .unwrap();
 
-    assert_eq!(store.rebuild_index().unwrap(), 2);
+    assert_eq!(store.rebuild_search_index().unwrap(), 2);
 
     assert!(find(&store, "deploy").is_empty());
     assert_eq!(seqs(&find(&store, "lunch")), [2]);
@@ -686,7 +695,7 @@ fn a_rebuild_leaves_out_an_event_whose_content_was_removed() {
 fn opening_a_store_twice_before_it_has_an_index_builds_it_once_whole() {
     let dir = TempDir::new().unwrap();
     let store = with(&dir, &texts(&["deploy"]));
-    let kept = store.index_digest().unwrap();
+    let kept = store.search_index_digest().unwrap();
     store
         .conn
         .execute_batch("DROP TABLE events_vocab; DROP TABLE events_fts; DROP TABLE search_writers;")
@@ -696,6 +705,6 @@ fn opening_a_store_twice_before_it_has_an_index_builds_it_once_whole() {
     drop(open(&dir));
     let again = open(&dir);
 
-    assert_eq!(again.index_digest().unwrap(), kept);
+    assert_eq!(again.search_index_digest().unwrap(), kept);
     assert_eq!(seqs(&find(&again, "deploy")), [1]);
 }

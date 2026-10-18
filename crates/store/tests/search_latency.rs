@@ -19,7 +19,7 @@ use record::event::{EventKind, Provenance};
 use record::id::{Address, RoomId, SeatId, Seq, WriterId};
 use search::Request;
 use serde_json::json;
-use store::index::{SLOT_BITS, row_id_of};
+use store::search_index::{SLOT_BITS, row_id_of};
 use store::{NewEvent, Search, Store, StoredSeat};
 use testkit::TempDir;
 
@@ -110,7 +110,7 @@ fn time(store: &Store, word: &str, k: usize) -> (Duration, Duration, usize) {
     let search = Search {
         query: &query,
         room: room(),
-        run: None,
+        writer: None,
         provenance: &[],
         kinds: &[],
         since: None,

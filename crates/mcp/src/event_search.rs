@@ -24,9 +24,6 @@ pub const DEFAULT_HITS: usize = 10;
 /// How long a search may run before it is cancelled (SEC-04).
 pub const DEADLINE: Duration = Duration::from_secs(2);
 
-/// How many characters of an event's text its hit shows.
-pub const PREVIEW_CHARS: usize = 200;
-
 /// The most values a filter list holds, and the most characters each of
 /// them.
 const FILTER_VALUES: usize = 16;
@@ -37,7 +34,8 @@ pub const NEEDS_RUN: &str = "this server serves no run yet, so pass scope \"room
 pub const NO_ROOMS: &str = "scope \"rooms\" is not served yet";
 const BAD_SCOPE: &str = "the scope is none of run, room or rooms";
 const BAD_ROOM: &str = "the room is not a room id";
-const BAD_RUN: &str = "the run is not a run id";
+const BAD_RUN: &str =
+    "the run is not a writer id: a run is named by its writer until runs derive from seats";
 const BAD_QUERY: &str = "query, phrase must be strings and any_of, all_of lists of strings";
 const BAD_FILTER: &str = "provenance and kind must be lists of at most 16 short strings";
 const BAD_TRUST: &str = "the trust is neither trusted nor untrusted";
@@ -52,7 +50,7 @@ pub struct Params {
     pub all_of: Vec<String>,
     pub phrase: Option<String>,
     pub room: Option<RoomId>,
-    pub run: Option<WriterId>,
+    pub writer: Option<WriterId>,
     pub provenance: Vec<String>,
     pub kinds: Vec<String>,
     pub trusted_only: bool,
@@ -84,7 +82,7 @@ impl Params {
         Search {
             query,
             room,
-            run: self.run,
+            writer: self.writer,
             provenance: &self.provenance,
             kinds: &self.kinds,
             since: self.since.as_deref(),
@@ -121,7 +119,7 @@ pub fn parse(arguments: &Value) -> Result<Params, &'static str> {
         all_of: strings(&arguments["all_of"], BAD_QUERY)?,
         phrase: optional_string(&arguments["phrase"])?,
         room: id(&arguments["room"], BAD_ROOM, RoomId::parse)?,
-        run: id(&arguments["run"], BAD_RUN, WriterId::parse)?,
+        writer: id(&arguments["run"], BAD_RUN, WriterId::parse)?,
         provenance: filter(&arguments["provenance"])?,
         kinds: filter(&arguments["kind"])?,
         trusted_only,

@@ -13,8 +13,8 @@
 //! - [`index`]: the search index over event text, kept in the append
 //!   transaction and searched under a deadline (REC-11, RCL-02).
 
-pub mod index;
 pub mod payload;
+pub mod search_index;
 pub mod segment;
 pub mod source;
 
@@ -35,9 +35,9 @@ use rusqlite::{
 };
 use serde_json::Value;
 
-pub use index::Search;
 pub use payload::{Disk, OsDisk, Payloads};
 pub use search::rank::Hit;
+pub use search_index::Search;
 pub use segment::{SEGMENT_VERSION, Segment};
 pub use source::{IngestedRun, Place, Placed, Position, Source};
 
@@ -234,15 +234,6 @@ pub struct PayloadReference {
     pub preview: String,
 }
 
-/// What a search shows of an event: its kind and provenance and the
-/// start of its text, read without opening its payload.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EventPreview {
-    pub kind: EventKind,
-    pub provenance: Provenance,
-    pub text: String,
-}
-
 /// A seat that writes in this store: its writer, id, room and seat
 /// certificate, kept as the certificate's own JSON.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -389,7 +380,7 @@ impl Store {
     /// Gives a store the search index it lacks, built from its record:
     /// one a cairn before the index made (REC-11).
     fn ensure_index(&self) -> Result<(), StoreError> {
-        if index::exists(&self.conn)? {
+        if search_index::exists(&self.conn)? {
             return Ok(());
         }
         self.conn.execute_batch("BEGIN IMMEDIATE")?;
@@ -402,7 +393,7 @@ impl Store {
     /// Makes the index's tables and settings, and fills them from the
     /// record.
     fn create_index(&self) -> Result<(), StoreError> {
-        self.conn.execute_batch(index::SCHEMA)?;
+        self.conn.execute_batch(search_index::SCHEMA)?;
         record_settings(&self.conn)?;
 
         self.reindex().map(drop)
@@ -430,8 +421,8 @@ impl Store {
     ///
     /// Fails when SQLite does, when an event cannot be read, or when
     /// the store has no search index.
-    pub fn rebuild_index(&mut self) -> Result<u64, StoreError> {
-        if !index::exists(&self.conn)? {
+    pub fn rebuild_search_index(&mut self) -> Result<u64, StoreError> {
+        if !search_index::exists(&self.conn)? {
             return Err(StoreError::NoIndex);
         }
         self.conn.execute_batch("BEGIN IMMEDIATE")?;
@@ -442,13 +433,14 @@ impl Store {
     /// Empties the index and fills it from every writer's log, inside a
     /// transaction already begun.
     fn reindex(&self) -> Result<u64, StoreError> {
-        index::clear(&self.conn)?;
+        search_index::clear(&self.conn)?;
         let mut count = 0;
         for writer in self.writers()? {
-            let mut indexing = index::Indexing::open(&self.conn, writer)?;
+            let mut indexing = search_index::Indexing::open(&self.conn, writer)?;
             let mut after = 0;
             loop {
-                let chunk = self.rows_limited(writer, "AND seq > ?2", after, index::CHUNK)?;
+                let chunk =
+                    self.rows_limited(writer, "AND seq > ?2", after, search_index::CHUNK)?;
                 let Some(last) = chunk.last() else { break };
                 after = sql(last.link.header.address.seq);
                 index_chunk(&mut indexing, &chunk)?;
@@ -467,7 +459,7 @@ impl Store {
     /// Fails when SQLite does, when the store has no search index, or
     /// with [`StoreError::Cancelled`] when the deadline passes.
     pub fn search(&self, search: &Search<'_>) -> Result<Vec<Hit>, StoreError> {
-        index::run(&self.conn, search)
+        search_index::run(&self.conn, search)
     }
 
     /// The search index's canonical digest (§8.3): the same for any two
@@ -477,22 +469,22 @@ impl Store {
     /// # Errors
     ///
     /// Fails when SQLite does or the store has no search index.
-    pub fn index_digest(&self) -> Result<Digest, StoreError> {
-        if !index::exists(&self.conn)? {
+    pub fn search_index_digest(&self) -> Result<Digest, StoreError> {
+        if !search_index::exists(&self.conn)? {
             return Err(StoreError::NoIndex);
         }
 
-        index::digest(&self.conn)
+        search_index::digest(&self.conn)
     }
 
-    /// The writers whose events the search index leaves out because
-    /// another writer's id holds their slot (I6).
+    /// The writers whose events the search index leaves out, because
+    /// another writer's id holds their slot.
     ///
     /// # Errors
     ///
     /// Fails when SQLite does or an id does not parse.
-    pub fn index_displaced(&self) -> Result<Vec<WriterId>, StoreError> {
-        index::displaced(&self.conn)?
+    pub fn search_index_unindexed_writers(&self) -> Result<Vec<WriterId>, StoreError> {
+        search_index::unindexed_writers(&self.conn)?
             .iter()
             .map(|text| {
                 WriterId::parse(text).map_err(|_| StoreError::Corrupt {
@@ -982,56 +974,72 @@ impl Store {
             .pop())
     }
 
-    /// The start of the event at `address`, at most `chars` characters
-    /// of its text: from the row alone, so an event whose content went
-    /// to the payload store shows its preview.
+    /// The preview of the event at `address` (REC-09): the first bytes
+    /// of its content's text, at most [`payload::PREVIEW_BYTES`], cut at
+    /// a character boundary. It is read from the row alone, so an event
+    /// whose content went to the payload store shows the preview its
+    /// row keeps; none for an event that is not there.
     ///
     /// # Errors
     ///
     /// Fails when SQLite does or the row does not parse.
-    pub fn event_preview(
-        &self,
-        address: Address,
-        chars: usize,
-    ) -> Result<Option<EventPreview>, StoreError> {
+    pub fn preview(&self, address: Address) -> Result<Option<String>, StoreError> {
         let row = self
             .conn
             .query_row(
-                "SELECT kind, provenance, content, preview FROM events WHERE writer = ?1 AND seq = ?2",
+                PREVIEW_ROW,
                 params![address.writer.to_string(), sql(address.seq)],
                 |r| {
                     Ok((
-                        r.get::<_, String>(0)?,
-                        r.get::<_, String>(1)?,
-                        r.get::<_, Option<String>>(2)?,
-                        r.get::<_, Option<String>>(3)?,
+                        r.get::<_, Option<String>>(0)?,
+                        r.get::<_, Option<String>>(1)?,
                     ))
                 },
             )
             .optional()?;
-        let Some((kind, provenance, content, preview)) = row else {
+        let Some((content, preview)) = row else {
             return Ok(None);
         };
+        let Some(content) = content else {
+            return Ok(Some(preview.unwrap_or_default()));
+        };
+        let value: Value = serde_json::from_str(&content).map_err(|_| StoreError::Corrupt {
+            address: Some(address),
+            what: "content".to_owned(),
+        })?;
+
+        Ok(Some(payload::preview(&value, &content)))
+    }
+
+    /// The kind and provenance class of the event at `address`.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or the row does not parse.
+    pub fn kind_and_provenance(
+        &self,
+        address: Address,
+    ) -> Result<Option<(EventKind, Provenance)>, StoreError> {
+        let row = self
+            .conn
+            .query_row(
+                CLASS_ROW,
+                params![address.writer.to_string(), sql(address.seq)],
+                |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)),
+            )
+            .optional()?;
         let corrupt = |what: &str| StoreError::Corrupt {
             address: Some(address),
             what: what.to_owned(),
         };
-        let text = match (content, preview) {
-            (Some(content), _) => {
-                let value: Value =
-                    serde_json::from_str(&content).map_err(|_| corrupt("content"))?;
-                value["text"]
-                    .as_str()
-                    .map_or_else(|| value.to_string(), str::to_owned)
-            }
-            (None, preview) => preview.unwrap_or_default(),
-        };
 
-        Ok(Some(EventPreview {
-            kind: EventKind::parse(&kind).ok_or_else(|| corrupt("kind"))?,
-            provenance: Provenance::parse(&provenance).ok_or_else(|| corrupt("provenance"))?,
-            text: text.chars().take(chars).collect(),
-        }))
+        row.map(|(kind, provenance)| {
+            Ok((
+                EventKind::parse(&kind).ok_or_else(|| corrupt("kind"))?,
+                Provenance::parse(&provenance).ok_or_else(|| corrupt("provenance"))?,
+            ))
+        })
+        .transpose()
     }
 
     /// `writer`'s log, in seq order.
@@ -1197,7 +1205,7 @@ impl Out<'_> {
             event: tx.prepare(INSERT_EVENT)?,
             head: tx.prepare(INSERT_HEAD)?,
         };
-        let mut indexing = index::Indexing::open(tx, writer)?;
+        let mut indexing = search_index::Indexing::open(tx, writer)?;
         for new in new_events {
             let seq = Seq::new(next).ok_or(StoreError::Full(writer))?;
             let address = Address::new(writer, seq);
@@ -1411,7 +1419,7 @@ fn create(tx: &rusqlite::Transaction<'_>) -> Result<(), StoreError> {
     tx.execute_batch(SCHEMA)?;
     tx.execute_batch(segment::SCHEMA)?;
     tx.execute_batch(source::SCHEMA)?;
-    tx.execute_batch(index::SCHEMA)?;
+    tx.execute_batch(search_index::SCHEMA)?;
     record_settings(tx)?;
     let mut insert = tx.prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
     for (key, value) in [
@@ -1426,7 +1434,10 @@ fn create(tx: &rusqlite::Transaction<'_>) -> Result<(), StoreError> {
 }
 
 /// Indexes the events of `chunk` that still have their content.
-fn index_chunk(indexing: &mut index::Indexing<'_>, chunk: &[Stored]) -> Result<(), StoreError> {
+fn index_chunk(
+    indexing: &mut search_index::Indexing<'_>,
+    chunk: &[Stored],
+) -> Result<(), StoreError> {
     for stored in chunk {
         let seq = stored.link.header.address.seq;
         stored
@@ -1438,12 +1449,16 @@ fn index_chunk(indexing: &mut index::Indexing<'_>, chunk: &[Stored]) -> Result<(
     Ok(())
 }
 
+/// The columns a preview reads, and those a hit's classes.
+const PREVIEW_ROW: &str = "SELECT content, preview FROM events WHERE writer = ?1 AND seq = ?2";
+const CLASS_ROW: &str = "SELECT kind, provenance FROM events WHERE writer = ?1 AND seq = ?2";
+
 /// Records a setting in `meta`.
 const SET_SETTING: &str = "INSERT OR REPLACE INTO meta (key, value) VALUES (?1, ?2)";
 
 /// Records the settings the search index is built under in `meta`.
 fn record_settings(conn: &Connection) -> Result<(), StoreError> {
-    for (key, value) in index::settings() {
+    for (key, value) in search_index::settings() {
         conn.execute(SET_SETTING, params![key, value])?;
     }
 

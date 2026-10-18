@@ -133,7 +133,7 @@ pub struct Context<'a> {
     /// How long a search may run before it is cancelled, in place of
     /// the default 2 s (SEC-04): a development build's seam for the
     /// tests, never set in a release build.
-    pub search_deadline: Option<Duration>,
+    pub query_deadline: Option<Duration>,
 }
 
 impl Context<'_> {
@@ -964,14 +964,14 @@ fn mcp(
         Ok(server) => server,
         Err(e) => return failed("mcp", &e, stderr),
     };
-    if let Some(deadline) = ctx.search_deadline {
-        server = server.with_search_deadline(deadline);
+    if let Some(deadline) = ctx.query_deadline {
+        server = server.with_query_deadline(deadline);
     }
     // The panic and the cancelled search each audit, and say on stderr
     // when the audit log takes no entry, so both write through it.
     let stderr = RefCell::new(stderr);
     let (mut panic_err, mut cancel_err) = (Shared(&stderr), Shared(&stderr));
-    let mut cancelled = on_search_cancelled(&home, ctx.clock, &mut cancel_err);
+    let mut cancelled = on_query_cancelled(&home, ctx.clock, &mut cancel_err);
     let served = mcp::serve(
         &mut |l| {
             let reply = server.handle(l);
@@ -1005,14 +1005,14 @@ impl Write for Shared<'_, '_> {
 /// What the MCP server does with each search the deadline cancelled:
 /// audit and count it, saying on `stderr` when the audit log takes no
 /// entry (SEC-04, I6).
-fn on_search_cancelled<'a>(
+fn on_query_cancelled<'a>(
     home: &'a Home,
     clock: &'a dyn Fn() -> u64,
     stderr: &'a mut dyn Write,
 ) -> impl FnMut(u64) + 'a {
     move |cancelled| {
         for _ in 0..cancelled {
-            if let Err(e) = search_cancelled(home, clock()) {
+            if let Err(e) = query_cancelled(home, clock()) {
                 let _ = writeln!(stderr, "cairn mcp: audit a cancelled search: {e}");
             }
         }
@@ -1020,12 +1020,12 @@ fn on_search_cancelled<'a>(
 }
 
 /// Audits a search the deadline cancelled.
-fn search_cancelled(home: &Home, time: u64) -> Result<Entry, AuditError> {
+fn query_cancelled(home: &Home, time: u64) -> Result<Entry, AuditError> {
     let occurrence = Occurrence::Degraded {
         kind: Kind::TimedOut,
-        counter: Counter::SearchCancelled,
+        counter: Counter::QueryCancelled,
         operation: "mcp",
-        detail: "search cancelled at its deadline",
+        detail: "query cancelled at its deadline",
     };
 
     Log::new(home.audit()).append(&occurrence, time)

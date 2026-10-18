@@ -15,7 +15,7 @@ use record::event::{EventKind, Provenance};
 use record::id::{RoomId, SeatId, WriterId};
 use search::Request;
 use serde_json::json;
-use store::index::DEFAULT_CAP;
+use store::search_index::DEFAULT_CAP;
 use store::{NewEvent, Search, Store, StoredSeat};
 use testkit::TempDir;
 
@@ -67,7 +67,7 @@ fn found(store: &Store, word: &str) -> usize {
         .search(&Search {
             query: &query,
             room: room(),
-            run: None,
+            writer: None,
             provenance: &[],
             kinds: &[],
             since: None,

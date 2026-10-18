@@ -36,7 +36,7 @@ pub(crate) struct Process {
     pub(crate) node_identity: Option<std::path::PathBuf>,
     /// How long a search may run, as a development build's seam lets a
     /// test say; the default when none.
-    pub(crate) search_deadline: Option<Duration>,
+    pub(crate) query_deadline: Option<Duration>,
 }
 
 /// The time every test's clock reads.
@@ -59,7 +59,7 @@ impl Process {
             terminal: true,
             os_user: OsUser::Known(u32::MAX),
             node_identity: None,
-            search_deadline: None,
+            query_deadline: None,
         }
     }
 
@@ -105,7 +105,7 @@ impl Process {
             os_user: self.os_user,
             input: &input,
             clock: &|| NOW,
-            search_deadline: self.search_deadline,
+            query_deadline: self.query_deadline,
         };
         let (mut out, mut err) = (Vec::new(), Vec::new());
         let code = run(
@@ -295,7 +295,7 @@ fn a_failed_write_is_a_failure() {
             os_user: OsUser::Known(u32::MAX),
             input: &input,
             clock: &|| NOW,
-            search_deadline: None,
+            query_deadline: None,
         };
 
         let code = run(
@@ -1011,7 +1011,7 @@ fn mcp_reports_a_reply_it_cannot_write() {
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
-        search_deadline: None,
+        query_deadline: None,
     };
     let mut err = Vec::new();
 
@@ -1037,7 +1037,7 @@ fn a_command_without_a_home_fails() {
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
-        search_deadline: None,
+        query_deadline: None,
     };
     for command in ["ingest", "mcp", "verify", "status", "doctor", "counter"] {
         let mut args = vec![command.to_owned()];
@@ -1195,7 +1195,7 @@ fn a_hook_input_that_trickles_past_its_wait_is_rejected() {
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| NOW,
-        search_deadline: None,
+        query_deadline: None,
     };
     let (mut out, mut err) = (Vec::new(), Vec::new());
 
@@ -1235,7 +1235,7 @@ fn a_panic_while_auditing_a_hook_failure_still_exits_0() {
         os_user: OsUser::Known(u32::MAX),
         input: &input,
         clock: &|| panic!("the clock fails"),
-        search_deadline: None,
+        query_deadline: None,
     };
     let (mut out, mut err) = (Vec::new(), Vec::new());
 
@@ -2593,7 +2593,7 @@ fn a_search_the_deadline_cancels_is_told_in_fixed_text_and_audited() {
         ],
         &DEV,
     );
-    p.search_deadline = Some(Duration::ZERO);
+    p.query_deadline = Some(Duration::ZERO);
     p.lines = vec![
         r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#.into(),
         r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"event_search","arguments":{"query":"alpha","scope":"room"}}}"#.into(),
@@ -2606,7 +2606,7 @@ fn a_search_the_deadline_cancels_is_told_in_fixed_text_and_audited() {
     assert_eq!(reply["result"]["isError"], true);
     let cancelled: Vec<_> = audited(&p)
         .into_iter()
-        .filter(|e| e.counter.as_deref() == Some("search_cancelled"))
+        .filter(|e| e.counter.as_deref() == Some("query_cancelled"))
         .collect();
     assert_eq!(cancelled.len(), 1);
     assert_eq!(
@@ -2614,7 +2614,7 @@ fn a_search_the_deadline_cancels_is_told_in_fixed_text_and_audited() {
             cancelled[0].operation.as_str(),
             cancelled[0].detail.as_str()
         ),
-        ("mcp", "search cancelled at its deadline")
+        ("mcp", "query cancelled at its deadline")
     );
 }
 
@@ -2625,7 +2625,7 @@ fn a_cancelled_search_the_audit_log_cannot_take_is_said_on_stderr() {
     let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
     let mut err = Vec::new();
 
-    on_search_cancelled(&home, &|| NOW, &mut err)(2);
+    on_query_cancelled(&home, &|| NOW, &mut err)(2);
 
     let err = String::from_utf8(err).unwrap();
     assert_eq!(
@@ -2641,7 +2641,7 @@ fn no_cancelled_search_is_audited_when_none_was_cancelled() {
     let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
     let mut err = Vec::new();
 
-    on_search_cancelled(&home, &|| NOW, &mut err)(0);
+    on_query_cancelled(&home, &|| NOW, &mut err)(0);
 
     assert!(err.is_empty());
     assert!(!p.cairn_home().join("audit").exists());

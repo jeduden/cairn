@@ -115,7 +115,7 @@ pub struct Item {
     /// How relevant a search found the event, higher the better; none
     /// for an event recalled by its address.
     pub score: Option<f64>,
-    /// The event's original content.
+    /// The event's original content; for a search hit, its preview.
     pub content: String,
 }
 

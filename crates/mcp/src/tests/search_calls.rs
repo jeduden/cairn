@@ -58,7 +58,7 @@ fn event_search_shows_at_most_the_start_of_the_text() {
     let mut server = f.server();
     f.sql(&format!(
         "UPDATE events SET content = '{{\"text\":\"ignore {}\"}}' WHERE seq = 2",
-        "x".repeat(300)
+        "x".repeat(600)
     ));
 
     let result = ask(&mut server, "ignore", json!({}));
@@ -67,7 +67,7 @@ fn event_search_shows_at_most_the_start_of_the_text() {
         .as_str()
         .unwrap()
         .to_owned();
-    assert_eq!(shown.chars().count(), event_search::PREVIEW_CHARS);
+    assert_eq!(shown.len(), store::payload::PREVIEW_BYTES);
     assert!(shown.starts_with("ignore xxx"));
 }
 
@@ -188,7 +188,7 @@ fn a_search_past_its_deadline_is_cancelled_counted_and_told_in_fixed_text() {
         node.device_writer(),
         node.personal_room(),
     )
-    .with_search_deadline(Duration::ZERO);
+    .with_query_deadline(Duration::ZERO);
 
     let result = ask(&mut server, "alpha", json!({}));
 

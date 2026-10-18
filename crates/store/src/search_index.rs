@@ -1,7 +1,7 @@
 //! The search index (§8.2, REC-11, RCL-02, SEC-04): an FTS5 table over
 //! each event's text in `store.db`, beside the record it derives from.
 //! It is a derived artifact (I10): a function of the writer logs the
-//! store holds, whatever order they arrived in, and `Store::rebuild_index`
+//! store holds, whatever order they arrived in, and `Store::rebuild_search_index`
 //! derives it again from the record alone.
 //!
 //! - It keeps no text of its own (contentless): the record stays the one
@@ -12,10 +12,10 @@
 //!   the low ones. Newer events of a writer so have the larger ids.
 //!   Where two writers' ids share a slot the smaller writer id keeps it
 //!   and the other's events are left out, whichever arrived first; they
-//!   are named by `Store::index_displaced`. A seq of [`SEQ_LIMIT`] or more is left
+//!   are named by `Store::search_index_unindexed_writers`. A seq of [`SEQ_LIMIT`] or more is left
 //!   out too.
 //! - Search ranks bounded: BM25 with length normalization over the
-//!   newest [`WINDOW`] matches after the filters (S2), damped per run,
+//!   newest [`RANKED_MATCHES`] matches after the filters (S2), damped per writer,
 //!   under a deadline (SEC-04).
 
 use std::sync::mpsc::{self, RecvTimeoutError};
@@ -36,7 +36,7 @@ use crate::StoreError;
 pub const DEFAULT_CAP: usize = 1 << 20;
 
 /// How many of the newest matches a search ranks (S2).
-pub const WINDOW: usize = 2_000;
+pub const RANKED_MATCHES: usize = 2_000;
 
 /// The tokenizer the index is built with, part of its content (§8.3).
 pub const TOKENIZER: &str = "unicode61 remove_diacritics 2";
@@ -79,7 +79,7 @@ const CLEAR: &str =
     "INSERT INTO events_fts (events_fts) VALUES ('delete-all'); DELETE FROM search_writers;";
 
 /// The writers with events but no slot.
-const DISPLACED: &str = "SELECT DISTINCT writer FROM events
+const UNINDEXED: &str = "SELECT DISTINCT writer FROM events
     WHERE writer NOT IN (SELECT writer FROM search_writers) ORDER BY writer";
 
 /// What the canonical digest reads of the index.
@@ -92,7 +92,7 @@ const POSTINGS: &str =
 pub(crate) fn settings() -> [(&'static str, String); 2] {
     [
         ("search_tokenizer", TOKENIZER.to_owned()),
-        ("search_index_cap", DEFAULT_CAP.to_string()),
+        ("search_index.indexing_cap", DEFAULT_CAP.to_string()),
     ]
 }
 
@@ -206,10 +206,9 @@ pub(crate) fn clear(conn: &Connection) -> Result<(), StoreError> {
     Ok(())
 }
 
-/// The writers with events whose slot another writer holds, so their
-/// events are not searchable (I6).
-pub(crate) fn displaced(conn: &Connection) -> Result<Vec<String>, StoreError> {
-    let mut statement = conn.prepare(DISPLACED)?;
+/// The writers a search leaves out: they have events but no slot.
+pub(crate) fn unindexed_writers(conn: &Connection) -> Result<Vec<String>, StoreError> {
+    let mut statement = conn.prepare(UNINDEXED)?;
     let rows = statement.query_map([], |r| r.get::<_, String>(0))?;
 
     Ok(rows.collect::<Result<_, _>>()?)
@@ -221,8 +220,8 @@ pub struct Search<'a> {
     pub query: &'a Compiled,
     /// The room whose writers are searched.
     pub room: RoomId,
-    /// One run, by its writer id.
-    pub run: Option<WriterId>,
+    /// One writer: a run, until runs derive from their seats.
+    pub writer: Option<WriterId>,
     /// Provenance classes, by name; none means any.
     pub provenance: &'a [String],
     /// Event kinds, by name; none means any.
@@ -237,8 +236,8 @@ pub struct Search<'a> {
     pub deadline: Duration,
 }
 
-/// The SQL and arguments of the window query for `search`.
-fn window(search: &Search<'_>) -> (String, Vec<Sql>) {
+/// The SQL and arguments of the query for the newest matches for `search`.
+fn ranked_matches(search: &Search<'_>) -> (String, Vec<Sql>) {
     let mut sql = String::from(
         "SELECT events_fts.rowid, bm25(events_fts), w.writer
          FROM events_fts
@@ -251,9 +250,9 @@ fn window(search: &Search<'_>) -> (String, Vec<Sql>) {
         Sql::Text(search.query.expression().to_owned()),
         Sql::Text(search.room.to_string()),
     ];
-    if let Some(run) = search.run {
+    if let Some(writer) = search.writer {
         sql.push_str(" AND w.writer = ?");
-        args.push(Sql::Text(run.to_string()));
+        args.push(Sql::Text(writer.to_string()));
     }
     for (column, values) in [("provenance", search.provenance), ("kind", search.kinds)] {
         if !values.is_empty() {
@@ -270,14 +269,16 @@ fn window(search: &Search<'_>) -> (String, Vec<Sql>) {
         sql.push_str(" AND substr(e.transcript_timestamp, 1, length(?)) <= ?");
         args.extend([Sql::Text(until.to_owned()), Sql::Text(until.to_owned())]);
     }
-    sql.push_str(&format!(" ORDER BY events_fts.rowid DESC LIMIT {WINDOW}"));
+    sql.push_str(&format!(
+        " ORDER BY events_fts.rowid DESC LIMIT {RANKED_MATCHES}"
+    ));
 
     (sql, args)
 }
 
-/// The newest [`WINDOW`] matches of `search`.
+/// The newest [`RANKED_MATCHES`] matches of `search`.
 fn candidates(conn: &Connection, search: &Search<'_>) -> Result<Vec<Candidate>, StoreError> {
-    let (sql, args) = window(search);
+    let (sql, args) = ranked_matches(search);
     let mut statement = conn.prepare(&sql)?;
     let rows = statement.query_map(params_from_iter(args), |r| {
         Ok((

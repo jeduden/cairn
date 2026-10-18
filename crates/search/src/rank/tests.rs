@@ -13,7 +13,7 @@ fn candidate(writer: WriterId, seq: u64, relevance: f64) -> Candidate {
 }
 
 #[test]
-fn a_hit_of_a_short_run_outranks_the_repeats_of_a_long_run() {
+fn a_hit_of_a_writer_with_few_matches_outranks_the_repeats_of_one_with_many() {
     let (long, short) = (writer(1), writer(2));
     let mut found: Vec<Candidate> = (1..=5).map(|n| candidate(long, n, 4.0)).collect();
     found.push(candidate(short, 1, 3.0));

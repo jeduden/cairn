@@ -1,6 +1,6 @@
-//! Ranking the hits of a search (RCL-02): the best `k` of a window of
+//! Ranking the hits of a search (RCL-02): the best `k` of the newest
 //! matches, each already scored by BM25 with length normalization, with
-//! each further hit of one run damped so a run that matches over and
+//! each further hit of one writer damped so a writer that matches over and
 //! over cannot crowd out the others. The order is a function of the
 //! matches alone: ties go to the smaller address, whatever order the
 //! matches came in (I10).
@@ -12,11 +12,11 @@ use record::id::{Address, WriterId};
 /// The most hits a search returns, RCL-02's maximum.
 pub const MAX_HITS: usize = 50;
 
-/// How much each further hit of one run is damped: its relevance is
-/// divided by one plus this times the hits already taken from the run.
+/// How much each further hit of one writer is damped: its relevance is
+/// divided by one plus this times the hits already taken from the writer.
 pub const DAMPING: f64 = 0.5;
 
-/// A match of the window, before damping.
+/// One of the newest matches, before damping.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Candidate {
     pub address: Address,
@@ -32,7 +32,7 @@ pub struct Hit {
 }
 
 /// The `k` best of `candidates`, at most [`MAX_HITS`], each further hit
-/// of one run damped by [`DAMPING`].
+/// of one writer damped by [`DAMPING`].
 #[must_use]
 pub fn rank(candidates: &[Candidate], k: usize) -> Vec<Hit> {
     let mut taken: BTreeMap<WriterId, u32> = BTreeMap::new();

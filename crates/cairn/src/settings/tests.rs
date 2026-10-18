@@ -200,7 +200,7 @@ pub(crate) fn ctx_of(p: &Process) -> Context<'static> {
         os_user: OsUser::Known(u32::MAX),
         input,
         clock: &|| 0,
-        search_deadline: None,
+        query_deadline: None,
     }
 }
 

@@ -154,7 +154,7 @@ fn answers(store: &Store) -> Vec<Vec<(String, u64)>> {
             let search = Search {
                 query: &query,
                 room: room(),
-                run: None,
+                writer: None,
                 provenance: &[],
                 kinds: &[],
                 since: None,
@@ -188,11 +188,19 @@ fn the_index_kept_per_append_has_the_digest_of_a_rebuild_whatever_order_writers_
         let mut first = arrive(&one, &record, &mut Rng::new(seed + 1_000));
         let second = arrive(&two, &record, &mut Rng::new(seed + 2_000));
 
-        let kept = first.index_digest().unwrap();
-        assert_eq!(second.index_digest().unwrap(), kept, "seed {seed}: order");
+        let kept = first.search_index_digest().unwrap();
+        assert_eq!(
+            second.search_index_digest().unwrap(),
+            kept,
+            "seed {seed}: order"
+        );
         assert_eq!(answers(&first), answers(&second), "seed {seed}: answers");
-        first.rebuild_index().unwrap();
-        assert_eq!(first.index_digest().unwrap(), kept, "seed {seed}: rebuild");
+        first.rebuild_search_index().unwrap();
+        assert_eq!(
+            first.search_index_digest().unwrap(),
+            kept,
+            "seed {seed}: rebuild"
+        );
         assert_eq!(answers(&first), answers(&second), "seed {seed}: rebuilt");
     }
 }

@@ -47,8 +47,8 @@ fn main() -> ExitCode {
         clock: &now,
         // A development build's seam for the `@SEC-04` scenario, which
         // needs a search past its deadline; a release build keeps 2 s.
-        search_deadline: cfg!(debug_assertions)
-            .then(|| std::env::var("CAIRN_TEST_SEARCH_DEADLINE_MS").ok())
+        query_deadline: cfg!(debug_assertions)
+            .then(|| std::env::var("CAIRN_TEST_QUERY_DEADLINE_MS").ok())
             .flatten()
             .and_then(|ms| ms.parse().ok())
             .map(std::time::Duration::from_millis),
