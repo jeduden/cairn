@@ -20,6 +20,7 @@ libfuzzer-sys = "0.4.13"
 configuration = { path = "../crates/configuration" }
 provenance = { path = "../crates/provenance" }
 redaction = { path = "../crates/redaction" }
+search = { path = "../crates/search" }
 transcript = { path = "../crates/transcript" }
 
 # Its own workspace: the repository's does not build it.
@@ -36,6 +37,13 @@ bench = false
 [[bin]]
 name = "redactor"
 path = "fuzz_targets/redactor.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "query_parser"
+path = "fuzz_targets/query_parser.rs"
 test = false
 doc = false
 bench = false
