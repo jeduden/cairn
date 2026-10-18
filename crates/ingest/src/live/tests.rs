@@ -269,3 +269,18 @@ fn a_transcript_that_is_not_utf8_records_nothing() {
 
     assert!(matches!(err, IngestError::NotUtf8(_)), "{err}");
 }
+
+#[test]
+fn a_transcript_rewritten_shorter_starts_a_new_generation() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let path = main_transcript(&dir, &(1..=3).map(line).collect::<String>());
+    let mut seats = RunSeats::default();
+    ingest(&home, &path, &mut seats, None).unwrap();
+
+    std::fs::write(&path, line(9)).unwrap();
+    let rewritten = ingest(&home, &path, &mut seats, None).unwrap();
+
+    assert!(rewritten.new_generation);
+    assert_eq!((rewritten.generation, rewritten.events), (2, 1));
+}

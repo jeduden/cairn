@@ -22,9 +22,10 @@ use administration::home::Home;
 use administration::node::Node;
 use key::random::Entropy;
 use key::signing::SeatKey;
+use record::digest::Digest;
 use record::id::WriterId;
 use redaction::Redactor;
-use store::Store;
+use store::{Position, Store};
 
 use crate::observed::Observed;
 use crate::run::{Defaults, RunKey};
@@ -121,7 +122,7 @@ pub fn ingest_live(
         source,
     })?;
     let complete = complete_lines(&bytes, limit);
-    if !gained(home, path, complete as u64)? {
+    if !gained(home, path, &bytes, complete as u64)? {
         return Ok(None);
     }
     let text = String::from_utf8(bytes[..complete].to_vec())
@@ -139,15 +140,16 @@ pub fn ingest_live(
     .map(Some)
 }
 
-/// Whether the transcript source at `path`, whose complete lines take
-/// `complete` bytes, gained a line past its ingest position or holds a
-/// hook observation not yet in the record.
-fn gained(home: &Home, path: &Path, complete: u64) -> Result<bool, IngestError> {
+/// Whether the transcript source at `path`, whose bytes are `bytes` and
+/// whose complete lines take `complete` of them, gained a line past its
+/// ingest position, was rewritten, or holds a hook observation not yet
+/// in the record.
+fn gained(home: &Home, path: &Path, bytes: &[u8], complete: u64) -> Result<bool, IngestError> {
     home.create().map_err(IngestError::Admin)?;
     let store = Store::open(&home.store())?;
     let position = store
         .source(&path.to_string_lossy())?
-        .map_or(0, |s| s.position.offset);
+        .map_or_else(Position::start, |s| s.position);
     let session = Defaults::of(path).own();
     // An observation whose hook fired past the complete lines waits.
     let held = session.agent_id.is_none()
@@ -155,9 +157,14 @@ fn gained(home: &Home, path: &Path, complete: u64) -> Result<bool, IngestError> 
             .pending(&session.harness_session)
             .iter()
             .any(|h| h.observation.offset.is_none_or(|o| o <= complete));
+    // A position past the complete lines is another ingest's, ahead,
+    // unless what it consumed changed: a new transcript generation.
+    let consumed = bytes
+        .get(..usize::try_from(position.offset).unwrap_or(usize::MAX))
+        .map(|prefix| Digest::of(&[prefix]));
+    let rewritten = consumed != Some(position.prefix);
 
-    // A position past the complete lines is another ingest's, ahead.
-    Ok(position < complete || (held && position == complete))
+    Ok(position.offset < complete || rewritten || (held && position.offset == complete))
 }
 
 /// How many of `bytes` its complete lines take: up to the last line
