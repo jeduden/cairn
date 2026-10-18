@@ -276,11 +276,17 @@ impl<'j> Recording<'j> {
             (self.job.hook == Hook::SessionStart).then(|| in_background(self.job.ancestry));
         // A handler leaves the store's log to the next opener: its
         // commit is durable already, and a checkpoint would cost it its
-        // hook budget (NFR-02).
-        let mut store = Store::open(&self.home.store())
-            .and_then(Store::without_checkpoint_on_close)
+        // hook budget (NFR-02). A hook that holds nothing creates no
+        // store: none holds an act or a binding to count yet.
+        let holds_nothing = self.job.hook == Hook::PermissionRequest;
+        let mut opened = (!holds_nothing || self.home.store().exists())
+            .then(|| Store::open(&self.home.store()).and_then(Store::without_checkpoint_on_close))
+            .transpose()
             .map_err(|_| "store could not be opened")?;
-        let acts = settings::acts_in(self.home, &store).unwrap_or_default();
+        let acts = opened
+            .as_ref()
+            .map(|store| settings::acts_in(self.home, store).unwrap_or_default())
+            .unwrap_or_default();
         let in_force = settings::in_force_loaded(loaded, &acts);
         let settings = &in_force.resolved.settings;
         let patterns = extra_patterns(settings);
@@ -299,7 +305,9 @@ impl<'j> Recording<'j> {
                 key: &described,
             });
         }
-        count_untaken(&mut store, self.job.now, &|o| self.audit(o));
+        if let Some(store) = opened.as_mut() {
+            count_untaken(store, self.job.now, &|o| self.audit(o));
+        }
         let input = &decoded.input;
         let (Some(session), Some(path)) = (&input.session_id, &input.transcript_path) else {
             return Ok(());
@@ -335,13 +343,13 @@ impl<'j> Recording<'j> {
             }
             _ => None,
         };
-        if self.job.hook == Hook::PermissionRequest {
-            return Ok(());
+        match opened {
+            Some(mut store) if !holds_nothing => store
+                .hold_observation(&observation, commitment.as_ref())
+                .map(drop)
+                .map_err(|_| "hook observation could not be held"),
+            _ => Ok(()),
         }
-        store
-            .hold_observation(&observation, commitment.as_ref())
-            .map(drop)
-            .map_err(|_| "hook observation could not be held")
     }
 
     /// The size of the transcript at `path` when its hook fired: where
