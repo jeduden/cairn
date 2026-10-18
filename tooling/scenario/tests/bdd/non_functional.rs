@@ -92,6 +92,12 @@ fn runs_within_budget(w: &mut World, hook: String) -> Result<(), String> {
 #[then(regex = r"^the hook handler exits 0 within its hook budget, below the harness timeout$")]
 fn exits_within_budget(w: &mut World) -> Result<(), String> {
     answered_empty(w)?;
+    // A handler stopped at its budget also exits 0 with an empty answer,
+    // so only no count of an overrun proves it honoured the budget.
+    match counted(w, "hook_budget_exceeded")? {
+        0 => {}
+        n => return Err(format!("the hook overran its budget: counted {n} times")),
+    }
     let (took, timeout) = w
         .section::<BudgetSteps>()
         .took
