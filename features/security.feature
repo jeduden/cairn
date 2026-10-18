@@ -201,7 +201,7 @@ Feature: Security (SEC)
     Then no telemetry, crash-reporting, or update-check code or dependency is found
     And the full test suite, with each component confined to its boundary, records no connection opened or tried outside that boundary
 
-  @SEC-16 @P0 @I6 @I9 @pending
+  @SEC-16 @P0 @I6 @I9
   Scenario: a hook input that fails schema validation is rejected fail-open and audited
     Given an isolated Cairn home
     When the hook "SessionStart" runs with a hook input whose "session_id" is a number
