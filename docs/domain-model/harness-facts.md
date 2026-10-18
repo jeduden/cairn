@@ -16,11 +16,11 @@ them, Cairn changes only harness configuration, under I7.
 - **Harness session**: The harness's own unit, which yields one transcript, plus
   one per subagent where the harness writes them apart (ASM-03). Named only when
   describing the harness, never as a Cairn unit. One whose harness process
-  descends from a run's tool call, a **nested** harness session, records no
-  `user` event (PRV-08); recall taint passes between its runs and that run
-  (SEC-13). Its **process ancestry** is the chain of processes a hook handler of
-  it descends from, read inside the core: a harness process above the harness
-  session's own makes it nested.
+  descends from a run's tool call records no `user` event (PRV-08); recall
+  taint passes between its runs and that run (SEC-13). Such a harness session
+  is **nested**. Its **process ancestry** is the chain of processes a hook
+  handler of it descends from, read inside the core: a harness process above
+  the harness session's own makes it nested.
 - **Transcript**: The harness's file of what a harness session did. A
   **transcript source** is a transcript Cairn ingests (Ingest marker, `cairn
   ingest`); a shrunk transcript or a rewritten prefix starts a new **transcript
