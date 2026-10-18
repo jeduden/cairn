@@ -42,12 +42,19 @@ pub(crate) fn sources(ctx: &Context, home: &Home) -> Sources {
 /// The principal acts this node recorded; none before its first start
 /// finished: no store, a store with no seat, or a start still staged.
 pub(crate) fn recorded_acts(home: &Home) -> Result<Vec<Recorded>, String> {
+    opened_acts(home).map(|(_, acts)| acts)
+}
+
+/// `home`'s store, opened when it exists, with the principal acts it
+/// holds, as [`recorded_acts`] reads them.
+pub(crate) fn opened_acts(home: &Home) -> Result<(Option<Store>, Vec<Recorded>), String> {
     if !home.store().exists() {
-        return Ok(Vec::new());
+        return Ok((None, Vec::new()));
     }
     let store = Store::open(&home.store()).map_err(|e| e.to_string())?;
+    let acts = acts_in(home, &store)?;
 
-    acts_in(home, &store)
+    Ok((Some(store), acts))
 }
 
 /// The principal acts `store`, `home`'s open store, holds; none before

@@ -246,21 +246,25 @@ impl<'j> Recording<'j> {
 
     /// Records what `decoded` observed: its format drift audited, every
     /// session binding left untaken counted, then the hook's own
-    /// observation held at its transcript's ingest marker.
+    /// observation held at its transcript's ingest marker. A failure is
+    /// audited and counted, and the hook still answers (I9).
     fn record(&self, decoded: &Decoded) {
-        let mut store = match Store::open(&self.home.store()) {
-            Ok(store) => store,
-            Err(_) => return self.failed("store could not be opened"),
-        };
+        if let Err(detail) = self.held(decoded) {
+            self.failed(detail);
+        }
+    }
+
+    /// [`Self::record`]'s work, failing with what could not be done.
+    fn held(&self, decoded: &Decoded) -> Result<(), &'static str> {
+        let mut store = Store::open(&self.home.store()).map_err(|_| "store could not be opened")?;
         let acts = settings::acts_in(self.home, &store).unwrap_or_default();
         let in_force = settings::in_force_from(self.sources, &acts);
         let settings = &in_force.resolved.settings;
         let patterns = settings.texts("redaction.extra_patterns");
         // The rule set always compiles (the redaction crate's tests prove
         // it); were it not to, nothing could be written.
-        let Ok((redactor, _)) = Redactor::new(patterns) else {
-            return self.failed("redaction rules could not be built");
-        };
+        let (redactor, _) =
+            Redactor::new(patterns).map_err(|_| "redaction rules could not be built")?;
         let redact = |t: &str| redactor.redact_text(t).text;
         if let Some(drift) = &decoded.drift {
             let described = drift.describe(&redact);
@@ -275,7 +279,7 @@ impl<'j> Recording<'j> {
         count_untaken(&mut store, self.job.now, &|o| self.audit(o));
         let input = &decoded.input;
         let (Some(session), Some(path)) = (&input.session_id, &input.transcript_path) else {
-            return;
+            return Ok(());
         };
         let roots = settings.texts("transcript.roots");
         let observation = Observation {
@@ -308,14 +312,12 @@ impl<'j> Recording<'j> {
             _ => None,
         };
         if self.job.hook == Hook::PermissionRequest {
-            return;
+            return Ok(());
         }
-        if store
+        store
             .hold_observation(&observation, commitment.as_ref())
-            .is_err()
-        {
-            self.failed("hook observation could not be held");
-        }
+            .map(drop)
+            .map_err(|_| "hook observation could not be held")
     }
 
     /// The size of the transcript at `path` when its hook fired: where

@@ -450,10 +450,10 @@ fn ingest(
     // The rule set always compiles (its unit test proves it); were it
     // not to, each transcript would fail with why.
     let redactor = redactor(ctx, settings, stderr);
-    if let Err(e) = start_node(ctx, &home, stderr) {
-        return failed("ingest", &e, stderr);
+    match start_node(ctx, &home, stderr) {
+        Ok(mut store) => count_untaken_bindings(ctx, &mut store),
+        Err(e) => return failed("ingest", &e, stderr),
     }
-    count_untaken_bindings(ctx, &home);
     let inputs = ingest::Inputs {
         payload: payload_settings(settings),
         // Ingest reads the fork observations the hook handlers held from
@@ -510,12 +510,10 @@ fn ingest_all(
 
 /// Counts, once each, every session binding no MCP server took within
 /// 30 s of its `SessionStart` hook observation (REC-19, I6).
-fn count_untaken_bindings(ctx: &Context, home: &Home) {
-    if let Ok(mut store) = Store::open(&home.store()) {
-        hook_handlers::count_untaken(&mut store, (ctx.clock)(), &|o| {
-            let _ = ctx.audit(o);
-        });
-    }
+fn count_untaken_bindings(ctx: &Context, store: &mut Store) {
+    hook_handlers::count_untaken(store, (ctx.clock)(), &|o| {
+        let _ = ctx.audit(o);
+    });
 }
 
 /// The transcript sources an ingest marker holds, each resolved again
@@ -827,11 +825,12 @@ fn audit_parsing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Wr
 /// is audited and counted. A device key missing from the key store, or
 /// a key store that is locked or cannot be read, refuses the command,
 /// audited and counted (I6).
-fn start_node(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> Result<(), String> {
+fn start_node(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> Result<Store, String> {
     home.create().map_err(|e| e.to_string())?;
     let mut store = Store::open(&home.store()).map_err(|e| e.to_string())?;
+    open_node(ctx, home, &mut store, stderr)?;
 
-    open_node(ctx, home, &mut store, stderr).map(drop)
+    Ok(store)
 }
 
 /// The node in `home`, opened in `store` as [`start_node`] opens it:
@@ -1597,8 +1596,8 @@ fn status(
         Ok(s) => s,
         Err(e) => return store_failed("status", &e, stderr),
     };
-    let acts = match settings::recorded_acts(&home) {
-        Ok(acts) => acts,
+    let (mut store, acts) = match settings::opened_acts(&home) {
+        Ok(opened) => opened,
         Err(e) => return failed("status", &e, stderr),
     };
     let in_force = settings::in_force(ctx, &home, &acts);
@@ -1610,8 +1609,8 @@ fn status(
     if home.root().exists() {
         hook_handlers::count_unfinished(&home, (ctx.clock)(), None);
     }
-    if home.store().exists() {
-        count_untaken_bindings(ctx, &home);
+    if let Some(store) = store.as_mut() {
+        count_untaken_bindings(ctx, store);
     }
     let counted = match home_counts("status", &home, &acts, stderr) {
         Ok(c) => c,
