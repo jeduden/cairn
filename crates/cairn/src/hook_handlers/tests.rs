@@ -291,6 +291,18 @@ fn a_permission_request_is_decoded_and_holds_nothing() {
 }
 
 #[test]
+fn a_permission_request_in_a_home_with_no_store_creates_none() {
+    let mut p = Process::new();
+
+    let ran = hook(&mut p, "PermissionRequest", |_| {
+        json!({"session_id": "s1", "transcript_path": "/x", "tool_name": "Bash"}).to_string()
+    });
+
+    assert_eq!(ran.0, EXIT_OK);
+    assert!(!p.cairn_home().join("store.db").exists());
+}
+
+#[test]
 fn a_hook_input_without_a_session_holds_nothing() {
     let mut p = Process::new();
 
