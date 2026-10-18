@@ -1100,6 +1100,57 @@ fn a_bound_mcp_server_serves_a_call_under_its_tool_use_ids_run_and_counts_each_r
     );
 }
 
+/// Leaves, in `p`'s home, the start marker an MCP server killed before
+/// it stopped would, naming the transcript at `path`.
+fn stale_marker(p: &Process, path: &str) {
+    let dir = p.cairn_home().join("mcp");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("0011223344556677.marker"), format!("{path}\n")).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700)).unwrap();
+        std::fs::set_permissions(
+            dir.join("0011223344556677.marker"),
+            std::fs::Permissions::from_mode(0o600),
+        )
+        .unwrap();
+    }
+}
+
+#[test]
+fn the_next_reader_audits_what_a_killed_mcp_server_left() {
+    for command in [&["ingest", "--all"][..], &["mcp"]] {
+        let p = Process::new();
+        let path = p.transcript(CLEAN_LINE);
+        p.invoke(&["counter", "ack"], &DEV);
+        let resolved = std::fs::canonicalize(&path).unwrap();
+        stale_marker(&p, &resolved.display().to_string());
+
+        let (code, _, err) = p.invoke(command, &DEV);
+
+        assert_eq!((code, err.as_str()), (EXIT_OK, ""), "{command:?}");
+        let entries: Vec<(Option<String>, String)> = audited(&p)
+            .into_iter()
+            .map(|e| (e.counter, e.operation))
+            .collect();
+        let operation = if command[0] == "mcp" { "mcp" } else { "ingest" };
+        assert!(
+            entries.contains(&(
+                Some("ingest_remainder_left".to_owned()),
+                operation.to_owned()
+            )),
+            "{command:?}: {entries:?}"
+        );
+        assert!(
+            !p.cairn_home()
+                .join("mcp")
+                .join("0011223344556677.marker")
+                .exists()
+        );
+    }
+}
+
 #[test]
 fn ambiguous_calls_are_counted_on_their_own() {
     use mcp::tool_call::{Cause, Found};
