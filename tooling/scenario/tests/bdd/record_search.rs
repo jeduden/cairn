@@ -126,7 +126,7 @@ fn query_of(w: &mut World, described: &str) -> String {
             // A development build's seam shortens the deadline: no
             // search over a bounded window runs for 2 s, so the step
             // asks the core to cancel at once.
-            set_env(w, "CAIRN_TEST_SEARCH_DEADLINE_MS", "0");
+            set_env(w, "CAIRN_TEST_QUERY_DEADLINE_MS", "0");
             "filler".to_owned()
         }
         literal => literal.to_owned(),
@@ -309,7 +309,7 @@ fn store_with_a_million_events(w: &mut World) -> Result<(), String> {
         seat.writer,
         Seq::new(last).ok_or("the last seq is not one")?,
     );
-    let row_of_last = store::index::row_id_of(at).ok_or("the last seq is not indexed")?;
+    let row_of_last = store::search_index::row_id_of(at).ok_or("the last seq is not indexed")?;
     drop(store);
 
     bulk_insert(&home.store(), &seat.writer.to_string(), last, row_of_last)
@@ -322,7 +322,7 @@ fn bulk_insert(path: &Path, writer: &str, last: u64, row_of_last: i64) -> Result
     let mut conn = rusqlite::Connection::open(path).map_err(|e| e.to_string())?;
     conn.execute_batch("PRAGMA synchronous = OFF")
         .map_err(|e| e.to_string())?;
-    let slot_part = row_of_last - ((last as i64) << store::index::SLOT_BITS);
+    let slot_part = row_of_last - ((last as i64) << store::search_index::SLOT_BITS);
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     let numbers = "WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < ?1)";
     tx.execute(
@@ -346,7 +346,7 @@ fn bulk_insert(path: &Path, writer: &str, last: u64, row_of_last: i64) -> Result
         rusqlite::params![
             EVENTS as i64,
             last as i64,
-            i64::from(store::index::SLOT_BITS),
+            i64::from(store::search_index::SLOT_BITS),
             slot_part
         ],
     )
@@ -426,7 +426,7 @@ fn cancelled(w: &mut World, answer: &Reply) -> Result<(), String> {
     if !answer.is_error || !answer.text.contains("cancelled") {
         return Err(format!("the search was not cancelled: {}", answer.text));
     }
-    match audited(w, "search_cancelled")? {
+    match audited(w, "query_cancelled")? {
         1.. => Ok(()),
         0 => Err("the audit log counts no cancelled search".to_owned()),
     }
