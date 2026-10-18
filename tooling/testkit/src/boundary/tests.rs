@@ -702,6 +702,18 @@ fn a_spawned_program_that_outlives_its_deadline_or_is_killed_is_stopped() {
 }
 
 #[test]
+fn a_confined_start_killed_before_its_trace_began_made_no_call() {
+    let dir = TempDir::new().unwrap();
+    let mut started = unconfined()
+        .spawn(Path::new("/bin/true"), &[], dir.path(), &[])
+        .unwrap();
+    started.confinement.mode = Mode::Confined;
+    started.trace = dir.path().join("never-written");
+
+    assert!(started.checked().is_ok());
+}
+
+#[test]
 fn a_spawned_program_left_running_is_stopped_when_dropped() {
     let dir = TempDir::new().unwrap();
     let sleeper = unconfined()

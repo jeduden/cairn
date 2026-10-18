@@ -428,11 +428,14 @@ impl Started {
         drop(self.child.stdin.take());
         let started = std::time::Instant::now();
         let exited = loop {
-            match self.child.try_wait() {
-                Ok(Some(_)) => break true,
-                Ok(None) if started.elapsed() >= deadline => break false,
-                Ok(None) => std::thread::sleep(std::time::Duration::from_millis(20)),
-                Err(source) => return Err(Error::Trace { source }),
+            let status = self
+                .child
+                .try_wait()
+                .map_err(|source| Error::Trace { source })?;
+            match status {
+                Some(_) => break true,
+                None if started.elapsed() >= deadline => break false,
+                None => std::thread::sleep(std::time::Duration::from_millis(20)),
             }
         };
         if !exited {
