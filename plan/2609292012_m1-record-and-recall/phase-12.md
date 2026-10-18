@@ -1,7 +1,7 @@
 ---
 n: 12
 title: "Search: the search index, the query compiler and event_search"
-status: "🔳"
+status: "✅"
 result: false
 ---
 # Phase 12: search
@@ -18,9 +18,9 @@ The search index, in `store.db` beside the record (§8.2, I10):
   the indexing cap of 1 MiB per event. No text is copied into the
   index (contentless), so the record stays the one place content lives.
 - A row's id derives from its address, never from arrival (S12): its
-  seq in the high bits, a hash of its writer in the low ones. Two
-  events of one id keep the smaller address; the other is counted as
-  an index collision and shown (I6).
+  seq in the high bits, a slot taken from its writer id in the low
+  ones. Where two writers share a slot the smaller id keeps it, and
+  `Store::index_displaced` names the other (I6).
 - An event is indexed in the transaction that appends it. A store
   without an index, one phases 1 to 8 made, gets it built the first
   time it opens for writing. `Store::rebuild_index` derives it from the
@@ -29,13 +29,16 @@ The search index, in `store.db` beside the record (§8.2, I10):
   index's canonical digest (§8.3), which hashes every value a read can
   return, row by row in address order, never a row id.
 
-The query compiler, a new `query` crate with no dependency:
+The query compiler and the ranking, a new `search` crate that knows no
+SQLite (CODEOWNERS reserves its name as security-sensitive):
 
 - Caller text is literal terms: split on whitespace, each term quoted
   for FTS5, so `OR`, `NEAR(x)` and `"` run nothing. `any_of`, `all_of`
   and `phrase` are the only operators, as structured parameters.
 - At most 16 terms (across all parameters) of at most 64 characters; a
   leading `*` is refused. Each refusal is fixed text.
+- The ranking is pure: the best `k` of a window of scored matches, damped
+  per run, ties to the smaller address.
 
 Bounded BM25 (RCL-02, S2): the match window is the newest 2,000 matches
 after the filters, newest by seq then writer hash. BM25 with length
@@ -58,8 +61,8 @@ Where the gate's scenarios go live:
   a store of 1M events built by the step.
 - `@RCL-02`: needs the session binding (phase 9), live ingest (phase
   10), trust levels (phase 11) and the `rooms` scope (phase 13), and
-  its transcript "mixed-provenance" has no steps; its M1 part is bound
-  and proven by named tests. Raised if it cannot pass as written.
+  its transcript "mixed-provenance" has no steps. It stays pending and
+  is raised; named tests prove its M1 part.
 
 Gate: `@REC-11` and `@SEC-04` pass. `@RCL-02` passes or is raised.
 NFR-03 is benchmarked and the rebuild-digest property holds. The query
