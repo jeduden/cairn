@@ -228,3 +228,31 @@ fn a_store_with_no_index_makes_a_search_say_to_run_verify() {
 
     assert_eq!(refusal(&result), NO_INDEX);
 }
+
+#[test]
+fn hits_of_one_run_share_its_author_and_origin() {
+    let dir = TempDir::new().unwrap();
+    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    let path = dir.path().join("t.jsonl");
+    std::fs::write(&path, "alpha one\nalpha two\nbeta\n").unwrap();
+    let ingested = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+    let store = Store::open(&home.store()).unwrap();
+    let node = Node::find(&home, &store).unwrap();
+    let mut server = Server::new(
+        store,
+        "v9",
+        node.device().public(),
+        node.device_writer(),
+        node.personal_room(),
+    );
+
+    let result = ask(&mut server, "alpha", json!({}));
+
+    let envelope = envelope_of(&result);
+    let items = envelope["items"].as_array().unwrap();
+    assert_eq!(items.len(), 2);
+    for item in items {
+        assert_eq!(item["author"], ingested.seat.to_string());
+        assert_eq!(item["origin"], "ingested");
+    }
+}

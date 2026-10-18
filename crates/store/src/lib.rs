@@ -393,12 +393,9 @@ impl Store {
             return Ok(());
         }
         self.conn.execute_batch("BEGIN IMMEDIATE")?;
-        // Another opener may have built it since the first look.
-        let built = match index::exists(&self.conn) {
-            Ok(true) => Ok(()),
-            Ok(false) => self.create_index(),
-            Err(e) => Err(e),
-        };
+        // Another opener may build it meanwhile: its tables are made
+        // only if missing, and a rebuild is the same whoever runs it.
+        let built = self.create_index();
         self.finish(built)
     }
 
@@ -1431,21 +1428,23 @@ fn create(tx: &rusqlite::Transaction<'_>) -> Result<(), StoreError> {
 /// Indexes the events of `chunk` that still have their content.
 fn index_chunk(indexing: &mut index::Indexing<'_>, chunk: &[Stored]) -> Result<(), StoreError> {
     for stored in chunk {
-        if let Some(content) = &stored.content {
-            indexing.add(stored.link.header.address.seq, content)?;
-        }
+        let seq = stored.link.header.address.seq;
+        stored
+            .content
+            .iter()
+            .try_for_each(|c| indexing.add(seq, c))?;
     }
 
     Ok(())
 }
 
+/// Records a setting in `meta`.
+const SET_SETTING: &str = "INSERT OR REPLACE INTO meta (key, value) VALUES (?1, ?2)";
+
 /// Records the settings the search index is built under in `meta`.
 fn record_settings(conn: &Connection) -> Result<(), StoreError> {
     for (key, value) in index::settings() {
-        conn.execute(
-            "INSERT OR REPLACE INTO meta (key, value) VALUES (?1, ?2)",
-            params![key, value],
-        )?;
+        conn.execute(SET_SETTING, params![key, value])?;
     }
 
     Ok(())

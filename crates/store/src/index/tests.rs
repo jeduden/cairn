@@ -666,3 +666,36 @@ fn work_that_fails_for_another_reason_keeps_its_error() {
 
     assert!(matches!(out, Err(StoreError::NoIndex)));
 }
+
+#[test]
+fn a_rebuild_leaves_out_an_event_whose_content_was_removed() {
+    let dir = TempDir::new().unwrap();
+    let mut store = with(&dir, &texts(&["deploy", "lunch"]));
+    store
+        .conn
+        .execute("UPDATE events SET content = NULL WHERE seq = 1", [])
+        .unwrap();
+
+    assert_eq!(store.rebuild_index().unwrap(), 2);
+
+    assert!(find(&store, "deploy").is_empty());
+    assert_eq!(seqs(&find(&store, "lunch")), [2]);
+}
+
+#[test]
+fn opening_a_store_twice_before_it_has_an_index_builds_it_once_whole() {
+    let dir = TempDir::new().unwrap();
+    let store = with(&dir, &texts(&["deploy"]));
+    let kept = store.index_digest().unwrap();
+    store
+        .conn
+        .execute_batch("DROP TABLE events_vocab; DROP TABLE events_fts; DROP TABLE search_writers;")
+        .unwrap();
+    drop(store);
+
+    drop(open(&dir));
+    let again = open(&dir);
+
+    assert_eq!(again.index_digest().unwrap(), kept);
+    assert_eq!(seqs(&find(&again, "deploy")), [1]);
+}

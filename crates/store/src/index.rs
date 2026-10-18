@@ -12,7 +12,7 @@
 //!   the low ones. Newer events of a writer so have the larger ids.
 //!   Where two writers' ids share a slot the smaller writer id keeps it
 //!   and the other's events are left out, whichever arrived first; they
-//!   are named by [`displaced`]. A seq of [`SEQ_LIMIT`] or more is left
+//!   are named by `Store::index_displaced`. A seq of [`SEQ_LIMIT`] or more is left
 //!   out too.
 //! - Search ranks bounded: BM25 with length normalization over the
 //!   newest [`WINDOW`] matches after the filters (S2), damped per run,
@@ -59,14 +59,34 @@ pub(crate) const CHUNK: i64 = 100;
 
 /// The tables of the search index.
 pub(crate) const SCHEMA: &str = "
-CREATE VIRTUAL TABLE events_fts USING fts5(
+CREATE VIRTUAL TABLE IF NOT EXISTS events_fts USING fts5(
     text, content = '', contentless_delete = 1, tokenize = 'unicode61 remove_diacritics 2');
-CREATE VIRTUAL TABLE events_vocab USING fts5vocab(events_fts, 'instance');
-CREATE TABLE search_writers (
+CREATE VIRTUAL TABLE IF NOT EXISTS events_vocab USING fts5vocab(events_fts, 'instance');
+CREATE TABLE IF NOT EXISTS search_writers (
     slot INTEGER PRIMARY KEY,
     writer TEXT NOT NULL UNIQUE
 ) STRICT;
 ";
+
+/// Gives a slot to a writer, takes it from the writer that held it, and
+/// drops that writer's rows.
+const CLAIM_SLOT: &str = "INSERT INTO search_writers (slot, writer) VALUES (?1, ?2)";
+const TAKE_SLOT: &str = "UPDATE search_writers SET writer = ?2 WHERE slot = ?1";
+const DROP_SLOT_ROWS: &str = "DELETE FROM events_fts WHERE (rowid & ?1) = ?2";
+
+/// Empties the index.
+const CLEAR: &str =
+    "INSERT INTO events_fts (events_fts) VALUES ('delete-all'); DELETE FROM search_writers;";
+
+/// The writers with events but no slot.
+const DISPLACED: &str = "SELECT DISTINCT writer FROM events
+    WHERE writer NOT IN (SELECT writer FROM search_writers) ORDER BY writer";
+
+/// What the canonical digest reads of the index.
+const SCHEMA_OBJECTS: &str = "SELECT sql FROM sqlite_master
+    WHERE name IN ('events_fts', 'events_vocab', 'search_writers') ORDER BY name";
+const POSTINGS: &str =
+    "SELECT term, doc, col, offset FROM events_vocab ORDER BY term, doc, col, offset";
 
 /// The settings the index is built under, kept in `meta` (§8.3).
 pub(crate) fn settings() -> [(&'static str, String); 2] {
@@ -147,21 +167,12 @@ impl<'t> Indexing<'t> {
             Some(_) => {
                 // The smaller writer id keeps the slot: the one that
                 // held it is left out, whichever arrived first.
-                conn.execute(
-                    "DELETE FROM events_fts WHERE (rowid & ?1) = ?2",
-                    [SLOT_MASK, slot],
-                )?;
-                conn.execute(
-                    "UPDATE search_writers SET writer = ?2 WHERE slot = ?1",
-                    params![slot, mine],
-                )?;
+                conn.execute(DROP_SLOT_ROWS, [SLOT_MASK, slot])?;
+                conn.execute(TAKE_SLOT, params![slot, mine])?;
                 true
             }
             None => {
-                conn.execute(
-                    "INSERT INTO search_writers (slot, writer) VALUES (?1, ?2)",
-                    params![slot, mine],
-                )?;
+                conn.execute(CLAIM_SLOT, params![slot, mine])?;
                 true
             }
         };
@@ -190,9 +201,7 @@ impl<'t> Indexing<'t> {
 
 /// Empties the index, leaving its tables.
 pub(crate) fn clear(conn: &Connection) -> Result<(), StoreError> {
-    conn.execute_batch(
-        "INSERT INTO events_fts (events_fts) VALUES ('delete-all'); DELETE FROM search_writers;",
-    )?;
+    conn.execute_batch(CLEAR)?;
 
     Ok(())
 }
@@ -200,10 +209,7 @@ pub(crate) fn clear(conn: &Connection) -> Result<(), StoreError> {
 /// The writers with events whose slot another writer holds, so their
 /// events are not searchable (I6).
 pub(crate) fn displaced(conn: &Connection) -> Result<Vec<String>, StoreError> {
-    let mut statement = conn.prepare(
-        "SELECT DISTINCT writer FROM events
-         WHERE writer NOT IN (SELECT writer FROM search_writers) ORDER BY writer",
-    )?;
+    let mut statement = conn.prepare(DISPLACED)?;
     let rows = statement.query_map([], |r| r.get::<_, String>(0))?;
 
     Ok(rows.collect::<Result<_, _>>()?)
@@ -355,10 +361,7 @@ pub(crate) fn digest(conn: &Connection) -> Result<Digest, StoreError> {
             conn.query_row("SELECT value FROM meta WHERE key = ?1", [key], |r| r.get(0))?;
         state.add(&[key.as_bytes(), b"\0", value.as_bytes(), b"\0"]);
     }
-    let mut schema = conn.prepare(
-        "SELECT sql FROM sqlite_master WHERE name IN ('events_fts', 'events_vocab', 'search_writers')
-         ORDER BY name",
-    )?;
+    let mut schema = conn.prepare(SCHEMA_OBJECTS)?;
     for sql in schema.query_map([], |r| r.get::<_, String>(0))? {
         state.add(&[sql?.as_bytes(), b"\0"]);
     }
@@ -367,9 +370,7 @@ pub(crate) fn digest(conn: &Connection) -> Result<Digest, StoreError> {
         let (slot, writer) = row?;
         state.add(&[&slot.to_be_bytes(), writer.as_bytes(), b"\0"]);
     }
-    let mut postings = conn.prepare(
-        "SELECT term, doc, col, offset FROM events_vocab ORDER BY term, doc, col, offset",
-    )?;
+    let mut postings = conn.prepare(POSTINGS)?;
     let rows = postings.query_map([], |r| {
         Ok((
             r.get::<_, String>(0)?,
