@@ -657,3 +657,63 @@ fn a_start_killed_before_its_trace_began_passes() {
 
     assert!(running);
 }
+
+#[test]
+fn a_spawned_program_talks_over_its_pipes_and_finishes_when_its_input_closes() {
+    use std::io::{BufRead, BufReader};
+    let dir = TempDir::new().unwrap();
+    let Some(core) = confined().or(Some(unconfined())) else {
+        return;
+    };
+    let mut started = core
+        .spawn(Path::new("/bin/cat"), &[], dir.path(), &[])
+        .unwrap();
+    writeln!(started.stdin().unwrap(), "hello").unwrap();
+    let mut out = BufReader::new(started.take_stdout().unwrap());
+    let mut line = String::new();
+    out.read_line(&mut line).unwrap();
+    assert_eq!(line, "hello\n");
+    assert!(started.take_stdout().is_none());
+
+    assert!(started.finish(std::time::Duration::from_secs(10)).unwrap());
+}
+
+#[test]
+fn a_spawned_program_that_outlives_its_deadline_or_is_killed_is_stopped() {
+    let dir = TempDir::new().unwrap();
+    let core = unconfined();
+    let sleeper = core
+        .spawn(Path::new("/bin/sleep"), &["30"], dir.path(), &[])
+        .unwrap();
+    assert!(
+        !sleeper
+            .finish(std::time::Duration::from_millis(50))
+            .unwrap()
+    );
+
+    let mut killed = core
+        .spawn(Path::new("/bin/sleep"), &["30"], dir.path(), &[])
+        .unwrap();
+    assert!(killed.stdin().is_some());
+    killed.kill().unwrap();
+
+    let missing = core.spawn(Path::new("/nonexistent/program"), &[], dir.path(), &[]);
+    assert!(matches!(missing, Err(Error::Start { .. })));
+}
+
+#[test]
+fn a_spawned_program_that_opens_a_socket_fails_its_end() {
+    let Some(core) = confined() else {
+        return;
+    };
+    let dir = TempDir::new().unwrap();
+    let probe = core
+        .spawn(&this_test_binary(), &probe_args(), dir.path(), &[])
+        .unwrap();
+
+    let err = probe
+        .finish(std::time::Duration::from_secs(30))
+        .unwrap_err();
+
+    assert!(matches!(err, Error::Socket { .. }), "{err}");
+}
