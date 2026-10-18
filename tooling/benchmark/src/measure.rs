@@ -3,8 +3,9 @@
 //! slow sample, so a hung benchmark fails the run instead of stalling
 //! the CI job until its timeout.
 
+use std::io::{self, Write};
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::{Command, ExitStatus, Stdio};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -14,6 +15,9 @@ use crate::suite::{Benchmark, Fixture};
 
 /// How long one sample may take before it is an error.
 pub const DEADLINE: Duration = Duration::from_secs(10);
+
+/// How long preparing a sample's fixture may take.
+pub const PREPARE_DEADLINE: Duration = Duration::from_secs(120);
 
 /// Times `program` started with `args` until it exits, its standard
 /// streams discarded. The time is taken on the thread that waits, so it
@@ -48,6 +52,15 @@ pub fn time_benchmark(
                     .map_err(|e| format!("make the fixture of {}: {e}", benchmark.name))?;
             time_program_in(program, benchmark.args, &home.env(), deadline)
         }
+        Fixture::Search { lines, prepare } => {
+            let home =
+                fixture::Home::with_transcript(&std::env::temp_dir(), &fixture::transcript(lines))
+                    .map_err(|e| format!("make the fixture of {}: {e}", benchmark.name))?;
+            time_program_in(program, prepare, &home.env(), PREPARE_DEADLINE)
+                .map_err(|e| format!("prepare the fixture of {}: {e}", benchmark.name))?;
+            let input = Some(fixture::SEARCH_REQUESTS);
+            time_program_fed(program, benchmark.args, &home.env(), input, deadline)
+        }
     }
 }
 
@@ -63,6 +76,22 @@ pub fn time_program_in(
     env: &[(&str, std::path::PathBuf)],
     deadline: Duration,
 ) -> Result<Duration, String> {
+    time_program_fed(program, args, env, None, deadline)
+}
+
+/// Times `program` as [`time_program_in`] does, `input` written to its
+/// standard input, which then closes; none gives it no input at all.
+///
+/// # Errors
+///
+/// As [`time_program`].
+pub fn time_program_fed(
+    program: &Path,
+    args: &[&str],
+    env: &[(&str, std::path::PathBuf)],
+    input: Option<&'static str>,
+    deadline: Duration,
+) -> Result<Duration, String> {
     let mut command = Command::new(program);
     command
         .args(args)
@@ -73,7 +102,7 @@ pub fn time_program_in(
     let (done, result) = mpsc::channel();
     thread::spawn(move || {
         let started = Instant::now();
-        let status = command.status();
+        let status = run(command, input);
         let _ = done.send((started.elapsed(), status));
     });
 
@@ -87,6 +116,19 @@ pub fn time_program_in(
             args.join(" ")
         )),
     }
+}
+
+/// Runs `command` to its exit, `input` on its standard input when given.
+fn run(mut command: Command, input: Option<&str>) -> io::Result<ExitStatus> {
+    let Some(input) = input else {
+        return command.status();
+    };
+    let mut child = command.stdin(Stdio::piped()).spawn()?;
+    if let Some(mut stdin) = child.stdin.take() {
+        stdin.write_all(input.as_bytes())?;
+    }
+
+    child.wait()
 }
 
 /// Takes `count` samples of `benchmark` with `time`, after one warm-up

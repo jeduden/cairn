@@ -63,9 +63,24 @@ fn the_core_start_up_is_a_floor_not_a_hook_handler() {
 }
 
 #[test]
-fn every_nfr_id_eng_15_names_but_nfr_04_is_awaiting_a_benchmark_of_real_code() {
+fn every_nfr_id_eng_15_names_but_nfr_03_and_nfr_04_is_awaiting_a_benchmark_of_real_code() {
     let ids: Vec<&str> = AWAITING.iter().map(|a| a.requirement).collect();
 
-    assert_eq!(ids, ["NFR-01", "NFR-02", "NFR-03", "NFR-05"]);
+    assert_eq!(ids, ["NFR-01", "NFR-02", "NFR-05"]);
     assert!(AWAITING.iter().all(|a| !a.on.is_empty()));
+}
+
+#[test]
+fn search_is_timed_over_an_ingested_store_fed_one_recall_request() {
+    let search = SUITE.iter().find(|b| b.requirement == "NFR-03").unwrap();
+
+    assert_eq!(search.coverage, Coverage::Target);
+    assert_eq!(search.args, ["mcp"]);
+    assert_eq!(
+        search.fixture,
+        Fixture::Search {
+            lines: SEARCH_LINES,
+            prepare: &["ingest", "--all"],
+        }
+    );
 }
