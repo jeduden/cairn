@@ -61,7 +61,7 @@ impl Fixture {
             sessions: Vec::new(),
             transcripts: BTreeMap::new(),
             refused: BTreeSet::new(),
-            lock: None,
+            marker: None,
             closed: now_instant(),
             close_every: SEGMENT_EVERY,
         }
@@ -70,12 +70,17 @@ impl Fixture {
     /// Holds a `SessionStart` hook observation of `session` naming
     /// `path`, of the harness process `harness`.
     fn bind(&self, session: &str, path: &Path, harness: u32) {
+        self.bind_in(session, path, harness, Path::new("/w"));
+    }
+
+    /// [`bind`](Self::bind), its harness session's worktree `cwd`.
+    fn bind_in(&self, session: &str, path: &Path, harness: u32, cwd: &Path) {
         let mut store = Store::open(&self.home.store()).unwrap();
         let observation = Observation {
             hook: "SessionStart".to_owned(),
             harness_session: session.to_owned(),
             transcript_path: path.to_string_lossy().into_owned(),
-            cwd: "/w".to_owned(),
+            cwd: cwd.to_string_lossy().into_owned(),
             offset: Some(0),
             source: Some("startup".to_owned()),
             prompt_id: None,
@@ -97,8 +102,8 @@ impl Fixture {
             .collect()
     }
 
-    fn locks(&self) -> Vec<PathBuf> {
-        std::fs::read_dir(self.home.root().join(LOCKS))
+    fn markers(&self) -> Vec<PathBuf> {
+        std::fs::read_dir(self.home.root().join(MARKERS))
             .map(|l| l.flatten().map(|e| e.path()).collect())
             .unwrap_or_default()
     }
@@ -195,10 +200,10 @@ fn live_ingest_takes_only_its_own_harness_process_s_binding_and_reads_its_tool_u
     );
     assert_eq!(f.shared.runs_of("toolu_m"), [SESSION]);
     assert_eq!(f.shared.runs_of("toolu_a"), [format!("{SESSION}/a1")]);
-    assert_eq!(f.locks().len(), 1, "its server lock");
+    assert_eq!(f.markers().len(), 1, "its start marker");
     running.poll();
     running.stop();
-    assert!(f.locks().is_empty(), "removed as it stopped");
+    assert!(f.markers().is_empty(), "cleared as it stopped");
     assert!(!f.counted().contains(&"ingest_remainder_left".to_owned()));
 }
 
@@ -233,23 +238,23 @@ fn a_killed_server_s_remainder_is_audited_once_by_the_next_reader() {
     };
 
     assert_eq!(count_stopped(&f.home, "ingest", &audit), 0, "it still runs");
-    // Killed: its lock is released, its file left.
+    // Killed: its marker's lock is released, its file left.
     drop(running);
     assert_eq!(count_stopped(&f.home, "ingest", &audit), 1);
     assert_eq!(count_stopped(&f.home, "ingest", &audit), 0);
     assert_eq!(f.counted(), ["ingest_remainder_left"]);
-    assert!(f.locks().is_empty());
+    assert!(f.markers().is_empty());
 }
 
 #[test]
-fn no_lock_directory_and_files_that_are_not_locks_are_passed_over() {
+fn no_marker_directory_and_files_that_are_not_markers_are_passed_over() {
     let f = Fixture::new();
     let audit = |_: &Occurrence| panic!("nothing to audit");
     assert_eq!(count_stopped(&f.home, "ingest", &audit), 0);
 
-    std::fs::create_dir_all(f.home.root().join(LOCKS)).unwrap();
-    std::fs::write(f.home.root().join(LOCKS).join("x.staged"), "").unwrap();
-    std::fs::create_dir(f.home.root().join(LOCKS).join("d.lock")).unwrap();
+    std::fs::create_dir_all(f.home.root().join(MARKERS)).unwrap();
+    std::fs::write(f.home.root().join(MARKERS).join("x.staged"), "").unwrap();
+    std::fs::create_dir(f.home.root().join(MARKERS).join("d.marker")).unwrap();
     assert_eq!(count_stopped(&f.home, "ingest", &audit), 0);
 }
 
@@ -370,18 +375,18 @@ fn a_witnessed_line_repeating_another_transcript_is_audited() {
 }
 
 #[test]
-fn a_server_lock_rewritten_keeps_its_path_and_one_it_cannot_write_keeps_the_old() {
+fn a_start_marker_rewritten_keeps_its_path_and_one_it_cannot_write_keeps_the_old() {
     let f = Fixture::new();
-    let first = ServerLock::hold(&f.home, &[f.main()], None).unwrap();
+    let first = StartMarker::leave(&f.home, &[f.main()], None).unwrap();
     let path = first.path.clone();
-    let second = ServerLock::hold(&f.home, &[f.main(), f.subagent("a")], Some(first)).unwrap();
+    let second = StartMarker::leave(&f.home, &[f.main(), f.subagent("a")], Some(first)).unwrap();
     assert_eq!(second.path, path);
     assert_eq!(std::fs::read_to_string(&path).unwrap().lines().count(), 2);
 
-    std::fs::remove_dir_all(f.home.root().join(LOCKS)).unwrap();
-    let kept = ServerLock::hold(&f.home, &[f.main()], Some(second)).unwrap();
+    std::fs::remove_dir_all(f.home.root().join(MARKERS)).unwrap();
+    let kept = StartMarker::leave(&f.home, &[f.main()], Some(second)).unwrap();
     assert_eq!(kept.path, path);
-    assert!(ServerLock::hold(&f.home, &[], None).is_some());
+    assert!(StartMarker::leave(&f.home, &[], None).is_some());
 }
 
 #[test]
@@ -406,7 +411,7 @@ fn live_ingest_starts_bound_and_stops_when_told() {
     f.shared.stop();
     started.run();
 
-    assert!(f.locks().is_empty());
+    assert!(f.markers().is_empty());
 }
 
 #[test]
@@ -447,4 +452,21 @@ fn a_run_seat_s_open_segment_closes_every_30_s_while_live_ingest_appends() {
     running.poll();
 
     assert!(!open());
+}
+
+#[test]
+fn a_transcript_in_the_run_s_worktree_is_read() {
+    let f = Fixture::new();
+    let worktree = f.dir.path().join("repo");
+    std::fs::create_dir_all(worktree.join(".git")).unwrap();
+    let path = worktree.join(format!("{SESSION}.jsonl"));
+    std::fs::write(&path, line(1, None)).unwrap();
+    f.bind_in(SESSION, &path, HARNESS, &worktree);
+    let mut running = f.running(Some(HARNESS), None);
+
+    running.bind();
+    running.poll();
+
+    assert_eq!(running.sessions.len(), 1);
+    assert!(f.counted().is_empty());
 }

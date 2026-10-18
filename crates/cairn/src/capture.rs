@@ -12,14 +12,15 @@
 //!   server to find each tool call's run by (PRV-14).
 //! - When it stops, it audits each transcript it left short of its end
 //!   under `ingest_remainder_left`, closes its run seats' open segments
-//!   (REC-19) and removes its server lock. A server killed first leaves
-//!   the lock, which the next MCP server or `cairn ingest` finds, and
+//!   (REC-19) and clears its start marker. A server killed first leaves
+//!   the marker, which the next MCP server or `cairn ingest` finds, and
 //!   audits the remainder for it ([`count_stopped`]).
 //!
-//! A server lock is a file in the home's `mcp` directory naming the
-//! transcripts its server ingests, locked by the server while it runs:
-//! one whose lock a reader can take belongs to a server that stopped
-//! without removing it.
+//! The MCP server's start marker is a file in the home's `mcp`
+//! directory naming the transcripts its server ingests, which the server
+//! holds a file lock on while it runs: one whose lock a reader can take
+//! was left by a server that stopped without clearing it (NFR-02's start
+//! marker, of the MCP server).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -51,8 +52,8 @@ pub(crate) const SEGMENT_EVERY: Duration = Duration::from_secs(30);
 /// How often a call waiting for its tool-use id looks again.
 const LOOK: Duration = Duration::from_millis(10);
 
-/// The directory of server locks, in the home.
-const LOCKS: &str = "mcp";
+/// The directory of the MCP servers' start markers, in the home.
+const MARKERS: &str = "mcp";
 
 /// What live ingest shares with the server: the runs of each tool-use
 /// id its ingest read, whether it holds a session binding, and whether
@@ -166,7 +167,7 @@ pub(crate) struct Running {
     transcripts: BTreeMap<PathBuf, u64>,
     /// The paths refused, each audited once.
     refused: BTreeSet<PathBuf>,
-    lock: Option<ServerLock>,
+    marker: Option<StartMarker>,
     /// When its run seats' open segments last closed, and how often
     /// they close while it appends (REC-19).
     closed: Instant,
@@ -184,7 +185,7 @@ impl Capture {
             sessions: Vec::new(),
             transcripts: BTreeMap::new(),
             refused: BTreeSet::new(),
-            lock: None,
+            marker: None,
             closed: now_instant(),
             close_every: SEGMENT_EVERY,
         };
@@ -197,7 +198,7 @@ impl Capture {
 
 impl Running {
     /// Runs live ingest until told to stop, then audits what it left,
-    /// closes its run seats' segments and removes its server lock.
+    /// closes its run seats' segments and clears its start marker.
     pub(crate) fn run(mut self) {
         while !self.capture.shared.stopping() {
             std::thread::sleep(POLL);
@@ -214,7 +215,8 @@ impl Running {
     }
 
     /// Takes every session binding of its harness process no MCP server
-    /// took, each transcript path resolved within the transcript roots.
+    /// took, each transcript path resolved within the transcript roots or
+    /// the run's worktree.
     fn bind(&mut self) {
         let Some(harness) = self.capture.harness else {
             return;
@@ -226,6 +228,10 @@ impl Running {
         };
         for held in taken {
             self.capture.shared.serving.store(true, Ordering::SeqCst);
+            // The run's worktree, from the cwd of the session binding it
+            // holds, is an allowed root for reading (SEC-18).
+            let cwd = Path::new(&held.observation.cwd);
+            self.capture.roots = self.capture.roots.clone().with_worktree(cwd);
             let path = PathBuf::from(&held.observation.transcript_path);
             if let Some(main) = self.resolve(&path) {
                 self.sessions.push(Bound { main });
@@ -233,7 +239,7 @@ impl Running {
         }
     }
 
-    /// `path` resolved within the transcript roots; none, audited once,
+    /// `path` resolved within the allowed roots; none, audited once,
     /// when it lies outside them (SEC-18).
     fn resolve(&mut self, path: &Path) -> Option<PathBuf> {
         match self.capture.roots.resolve(path, Access::Read) {
@@ -297,7 +303,7 @@ impl Running {
             self.transcripts.entry(path.clone()).or_insert(0);
         }
         if new {
-            self.lock = ServerLock::hold(&self.capture.home, &transcripts, self.lock.take());
+            self.marker = StartMarker::leave(&self.capture.home, &transcripts, self.marker.take());
         }
         for path in transcripts {
             let read = ingest_live(
@@ -429,15 +435,15 @@ impl Running {
     }
 
     /// Audits each transcript left short of its end, closes the run
-    /// seats' open segments, and removes the server lock.
+    /// seats' open segments, and clears the start marker.
     fn stop(self) {
         let home = &self.capture.home;
         for name in remainders(home, self.transcripts.keys()) {
             self.audit(&remainder(&name, "mcp"));
         }
         self.close_segments();
-        if let Some(lock) = self.lock {
-            lock.remove();
+        if let Some(marker) = self.marker {
+            marker.clear();
         }
     }
 }
@@ -520,21 +526,21 @@ fn now_instant() -> Instant {
     Instant::now()
 }
 
-/// A server lock: a file naming the transcripts its MCP server
+/// The MCP server's start marker: a file naming the transcripts it
 /// ingests, locked while the server runs.
 #[derive(Debug)]
-struct ServerLock {
+struct StartMarker {
     path: PathBuf,
     _file: fs::File,
 }
 
-impl ServerLock {
-    /// A server lock in `home` naming `transcripts`, written anew in
+impl StartMarker {
+    /// A start marker in `home` naming `transcripts`, written anew in
     /// place of `old`; none, with `old` kept, when it cannot be.
-    fn hold(home: &Home, transcripts: &[PathBuf], old: Option<Self>) -> Option<Self> {
+    fn leave(home: &Home, transcripts: &[PathBuf], old: Option<Self>) -> Option<Self> {
         let path = match &old {
-            Some(lock) => lock.path.clone(),
-            None => new_lock_path(home).ok()?,
+            Some(marker) => marker.path.clone(),
+            None => new_marker_path(home).ok()?,
         };
         let staged = path.with_extension("staged");
         let written = write_owner_only(&staged, transcripts).and_then(|()| {
@@ -552,14 +558,14 @@ impl ServerLock {
         }
     }
 
-    fn remove(self) {
+    fn clear(self) {
         let _ = fs::remove_file(&self.path);
     }
 }
 
-/// A path for a new server lock in `home`, its directory made.
-fn new_lock_path(home: &Home) -> io::Result<PathBuf> {
-    let dir = home.root().join(LOCKS);
+/// A path for a new start marker in `home`, its directory made.
+fn new_marker_path(home: &Home) -> io::Result<PathBuf> {
+    let dir = home.root().join(MARKERS);
     let mut builder = fs::DirBuilder::new();
     builder.recursive(true);
     #[cfg(unix)]
@@ -568,7 +574,7 @@ fn new_lock_path(home: &Home) -> io::Result<PathBuf> {
     let nonce: [u8; 8] = draw(&mut OsEntropy).map_err(io::Error::other)?;
     let name: String = nonce.iter().map(|b| format!("{b:02x}")).collect();
 
-    Ok(dir.join(format!("{name}.lock")))
+    Ok(dir.join(format!("{name}.marker")))
 }
 
 /// Writes each of `transcripts` on its own line to a new file at `path`
@@ -586,27 +592,27 @@ fn write_owner_only(path: &Path, transcripts: &[PathBuf]) -> io::Result<()> {
 }
 
 /// Audits through `audit`, under `operation`, the remainder each MCP
-/// server that stopped without removing its server lock left of its
-/// transcripts, and removes the lock; one whose server still runs is
+/// server that stopped without clearing its start marker left of its
+/// transcripts, and clears the marker; one whose server still runs is
 /// left (REC-13, I6). Returns how many remainders it audited.
 pub(crate) fn count_stopped(
     home: &Home,
     operation: &'static str,
     audit: &dyn Fn(&Occurrence),
 ) -> usize {
-    let Ok(listing) = fs::read_dir(home.root().join(LOCKS)) else {
+    let Ok(listing) = fs::read_dir(home.root().join(MARKERS)) else {
         return 0;
     };
     let mut audited = 0;
     for entry in listing.flatten() {
         let path = entry.path();
-        if path.extension().is_none_or(|e| e != "lock") {
+        if path.extension().is_none_or(|e| e != "marker") {
             continue;
         }
         let Ok(file) = fs::File::open(&path) else {
             continue;
         };
-        // A server that still runs holds its lock.
+        // A server that still runs holds its marker's lock.
         if file.try_lock().is_err() {
             continue;
         }
