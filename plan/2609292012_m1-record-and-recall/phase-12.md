@@ -17,17 +17,17 @@ The search index, in `store.db` beside the record (§8.2, I10):
   full text, also when the content went to the payload store, up to
   the indexing cap of 1 MiB per event. No text is copied into the
   index (contentless), so the record stays the one place content lives.
-- A row's id derives from its address, never from arrival (S12): its
-  seq in the high bits, a slot taken from its writer id in the low
-  ones. Where two writers share a slot the smaller id keeps it, and
-  `Store::index_displaced` names the other (I6).
+- A row's id derives from its address (S12): its seq in the high
+  bits, a slot taken from its writer id in the low ones. Where two
+  writers share a slot the smaller id keeps it, and a writer the search
+  index leaves out is named by `Store::search_index_unindexed_writers`.
 - An event is indexed in the transaction that appends it. A store
   without an index, one phases 1 to 8 made, gets it built the first
-  time it opens for writing. `Store::rebuild_index` derives it from the
+  time it opens for writing. `Store::rebuild_search_index` derives it from the
   record alone.
-- The tokenizer and the cap are kept in `meta` and are part of the
-  index's canonical digest (§8.3), which hashes every value a read can
-  return, row by row in address order, never a row id.
+- The tokenizer and the indexing cap are kept in `meta` and are part of
+  the index's canonical digest (§8.3), which hashes the settings, the
+  schema, the writers' slots and every posting, in key order.
 
 The query compiler and the ranking, a new `search` crate that knows no
 SQLite (CODEOWNERS reserves its name as security-sensitive):
@@ -37,21 +37,26 @@ SQLite (CODEOWNERS reserves its name as security-sensitive):
   and `phrase` are the only operators, as structured parameters.
 - At most 16 terms (across all parameters) of at most 64 characters; a
   leading `*` is refused. Each refusal is fixed text.
-- The ranking is pure: the best `k` of a window of scored matches, damped
-  per run, ties to the smaller address.
+- The ranking is pure: the best `k` of the scored matches, damped per
+  writer, ties to the smaller address.
 
-Bounded BM25 (RCL-02, S2): the match window is the newest 2,000 matches
-after the filters, newest by seq then writer hash. BM25 with length
-normalization ranks the window; per-run damping divides each further
-hit of one run by `1 + 0.5 * hits already taken`; the best `k` (default
-10, at most 50) return. A deadline (default 2 s) interrupts the query;
-the cancelled search is counted `search_cancelled` and audited.
+Bounded BM25 (S2): only the newest 2,000 matches after the filters are
+ranked, newest by seq then writer hash. BM25 with length normalization
+ranks them. Damping divides each further hit of one writer by one plus
+half the hits already taken. The best `k` (default 10, at most 50) return.
+The query deadline (default 2 s) interrupts the query. A cancelled
+query is counted `query_cancelled` and audited.
+
+M1 deviates from RCL-02 and §9.2, for the stakeholder. A run cannot yet
+be derived from its seats' writers, so the `run` parameter takes a
+writer id and damping is per writer. RCL-02 also says nothing of ranking
+only the newest 2,000 matches.
 
 `event_search` over MCP, in the envelope `event_get` already uses,
 each hit one item whose content is its preview and which carries its
 score. Filters: `scope` (`room`; `run` needs the session binding, as
-`event_get`, and `rooms` is RCL-05's), `room`, `run` (a run's writer
-id), `provenance[]`, `kind[]`, `trust`, `since`, `until`, `k`. Trust is
+`event_get`, and `rooms` is RCL-05's), `room`, `run` (a writer id),
+`provenance[]`, `kind[]`, `trust`, `since`, `until`, `k`. Trust is
 `untrusted` for every ingested event until PRV-02 (phase 11).
 
 Where the gate's scenarios go live:

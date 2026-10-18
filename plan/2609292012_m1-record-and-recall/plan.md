@@ -108,8 +108,8 @@ ENG-08 prove CON-05.
   freeze when M1 builds what uses them (§12.3): NFR-09's overhead,
   REC-11's cap, REC-17's secret, RCL-02's hits, RCL-03's cap and
   SEC-04's terms.
-- **S12** (plan 2610012322): search-index row ids derive from the address,
-  never arrival. A purge sets SQLite's `secure_delete` and FTS5's
+- **S12** (plan 2610012322): search-index row ids derive from
+  addresses. A purge sets SQLite's `secure_delete` and FTS5's
   `secure-delete` and checkpoints the WAL. The trust of a `user` event
   needs the recorded deployment mode.
 
