@@ -40,6 +40,7 @@ mod provenance_seats;
 mod provenance_tool_calls;
 mod provenance_trust;
 mod record;
+mod record_homes;
 mod record_hooks;
 mod record_ingest;
 mod record_keys;
