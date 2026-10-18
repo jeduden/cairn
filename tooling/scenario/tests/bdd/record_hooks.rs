@@ -3,13 +3,13 @@
 //! handler of the built core runs on a hook input in Claude Code
 //! 2.1.296's recorded shape and holds what it observed at the
 //! transcript's ingest marker, appending nothing to any writer, until
-//! the run's MCP server holds its run-seat key (phase 10); a session
+//! the run's MCP server holds its run-seat key; a session
 //! binding no MCP server took within 30 s is counted once.
 //!
-//! `@REC-19` stays pending: its run seats, sealing and paired phone are
-//! M7's and OQ-39's, and its MCP server phase 10's. Its holding step
-//! checks the hold and fails naming what the MCP server must still do;
-//! its untaken session binding step passes.
+//! `@REC-19` stays pending: its rooms, sealing and paired phone are M7's
+//! and OQ-39's. Its holding step passes: the run's MCP server, started
+//! after the hook handler, appends the held observation to its run
+//! seat (phase 10); its untaken session binding step passes.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -185,23 +185,34 @@ fn second_run_held(w: &mut World) -> Result<(), String> {
     let mode = recorded("a mode line", |l| l["type"] == "mode")?;
     fs::write(&path, format!("{mode}\n")).map_err(|e| e.to_string())?;
     let before = events(w)?;
+    // Its harness runs the hook before it starts its MCP server.
+    let mut harness = crate::live::Harness::start(w, false, &[])?;
     let input = session_start(w, session, "startup")?;
-    run_hook(w, "SessionStart", &input, &[])?;
+    harness.hook("SessionStart", &input)?;
     let appended = events(w)? - before;
     let size = fs::metadata(&path).map_err(|e| e.to_string())?.len();
     let hold = held(w)?
         .into_iter()
         .find(|h| h.observation.harness_session == session && h.observation.offset == Some(size));
     if appended != 0 || hold.is_none() {
+        let _ = harness.kill();
         return Err(format!(
             "the hook handler appended {appended} events and held {hold:?}"
         ));
     }
-    Err(
-        "held at the ingest marker; the MCP server appending it once it holds its run-seat key \
-         awaits the MCP server of phase 10 of plan 2609292012"
-            .to_owned(),
-    )
+    harness.start_mcp()?;
+    let appended = crate::live::wait_until("the MCP server to append the hook observation", || {
+        crate::record_live::observation_in_run_seat(w, session)
+    });
+    harness.stop()?;
+    appended?;
+    match held(w)?
+        .into_iter()
+        .find(|h| h.observation.harness_session == session)
+    {
+        Some(h) if h.appended && h.taken => Ok(()),
+        other => Err(format!("the hook observation stands {other:?}")),
+    }
 }
 
 /// Runs `args` with the clock standing at `at`.

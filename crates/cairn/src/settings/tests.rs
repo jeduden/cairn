@@ -204,6 +204,7 @@ pub(crate) fn ctx_of(p: &Process) -> Context<'static> {
         attended: false,
         hook_budget: None,
         ancestry: || None,
+        live_limit: None,
     }
 }
 

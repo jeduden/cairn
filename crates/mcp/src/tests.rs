@@ -694,3 +694,79 @@ fn a_panic_is_answered_with_the_request_s_id_and_a_notification_not_at_all() {
 fn redactor() -> redaction::Redactor {
     redaction::Redactor::new(&[]).unwrap().0
 }
+
+/// Runs that find one tool-use id's run, once serving.
+struct OneRun {
+    serving: bool,
+}
+
+impl tool_call::Runs for OneRun {
+    fn serving(&self) -> bool {
+        self.serving
+    }
+
+    fn find(&self, tool_use_id: &str, _wait: Duration) -> (Vec<String>, Duration) {
+        let runs = if tool_use_id == "toolu_main" {
+            vec!["s/main".to_owned()]
+        } else {
+            Vec::new()
+        };
+        (runs, Duration::from_millis(5))
+    }
+}
+
+fn tool_call(server: &mut Server, tool_use_id: Option<&str>, address: &str) -> Value {
+    let mut params =
+        json!({"name": "event_get", "arguments": {"address": address, "scope": "room"}});
+    if let Some(id) = tool_use_id {
+        params["_meta"] = json!({"claudecode/toolUseId": id});
+    }
+    call(
+        server,
+        json!({"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": params}),
+    )["result"]
+        .clone()
+}
+
+#[test]
+fn a_bound_server_serves_a_call_under_the_run_its_tool_use_id_names_and_refuses_the_rest() {
+    let f = fixture();
+    let address = format!("{}:1", f.ingested.writer);
+    let mut server = f.server().with_runs(Box::new(OneRun { serving: true }));
+
+    let served = tool_call(&mut server, Some("toolu_main"), &address);
+    let missing = tool_call(&mut server, Some("toolu_none"), &address);
+    let bare = tool_call(&mut server, None, &address);
+
+    envelope_of(&served);
+    assert_eq!(missing["isError"], true);
+    assert_eq!(
+        missing["content"][0]["text"],
+        tool_call::Cause::NotFound.refusal()
+    );
+    assert_eq!(
+        bare["content"][0]["text"],
+        tool_call::Cause::NoToolUseId.refusal()
+    );
+    let found = server.take_found();
+    assert_eq!(
+        found.iter().map(|f| f.run.clone()).collect::<Vec<_>>(),
+        [
+            Ok("s/main".to_owned()),
+            Err(tool_call::Cause::NotFound),
+            Err(tool_call::Cause::NoToolUseId)
+        ]
+    );
+    assert!(server.take_found().is_empty());
+    assert!(format!("{server:?}").starts_with("Server"));
+}
+
+#[test]
+fn a_server_holding_no_session_binding_serves_a_call_under_no_run() {
+    let f = fixture();
+    let address = format!("{}:1", f.ingested.writer);
+    let mut server = f.server().with_runs(Box::new(OneRun { serving: false }));
+
+    envelope_of(&tool_call(&mut server, None, &address));
+    assert!(server.take_found().is_empty());
+}

@@ -20,6 +20,7 @@ fn observed(hook: &str, session: &str, at: u64) -> Observation {
         prompt_id: None,
         attended: false,
         ancestry: Some((1, false)),
+        harness: Some(40),
         at,
     }
 }
@@ -59,12 +60,14 @@ fn a_held_observation_reads_back_with_its_fields_not_appended() {
             Held {
                 id: first,
                 observation: start,
-                appended: false
+                appended: false,
+                taken: false,
             },
             Held {
                 id: second,
                 observation: prompt,
-                appended: false
+                appended: false,
+                taken: false,
             }
         ]
     );
@@ -133,6 +136,44 @@ fn an_untaken_session_binding_is_counted_by_one_reader_only() {
     assert!(store.count_binding(old).unwrap());
     assert!(!store.count_binding(old).unwrap());
     assert_eq!(store.untaken_bindings(41).unwrap(), Vec::new());
+}
+
+#[test]
+fn an_mcp_server_takes_its_own_harness_processs_bindings_once_and_none_is_counted_untaken() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let own = store
+        .hold_observation(&observed("SessionStart", "s1", 10), None)
+        .unwrap();
+    let mut other = observed("SessionStart", "s2", 10);
+    other.harness = Some(41);
+    store.hold_observation(&other, None).unwrap();
+    let mut unread = observed("SessionStart", "s3", 10);
+    unread.harness = None;
+    store.hold_observation(&unread, None).unwrap();
+    let mut prompt = observed("UserPromptSubmit", "s1", 10);
+    prompt.prompt_id = Some("p1".into());
+    store.hold_observation(&prompt, None).unwrap();
+
+    let taken = store.take_bindings(40).unwrap();
+
+    assert_eq!(taken.iter().map(|h| h.id).collect::<Vec<_>>(), [own]);
+    assert!(taken[0].taken);
+    assert_eq!(store.take_bindings(40).unwrap(), Vec::new());
+    let untaken: Vec<String> = store
+        .untaken_bindings(100)
+        .unwrap()
+        .into_iter()
+        .map(|h| h.observation.harness_session)
+        .collect();
+    assert_eq!(untaken, ["s2", "s3"]);
+    assert!(
+        store
+            .hook_observations()
+            .unwrap()
+            .iter()
+            .any(|h| h.id == own && h.taken)
+    );
 }
 
 #[test]

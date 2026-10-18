@@ -136,6 +136,67 @@ fn an_append_that_fails_leaves_the_position_where_it_was() {
 }
 
 #[test]
+fn an_append_behind_a_position_another_ingest_moved_is_refused_whole() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let source = store.start_generation("/t/a.jsonl", "/t").unwrap();
+    store
+        .append_lines(
+            writer(1),
+            &[event(EventKind::TranscriptLine, 1)],
+            &[place(1, None)],
+            &[true],
+            source.id,
+            &position(10, 1),
+        )
+        .unwrap();
+
+    // A second ingest read the source before the first appended, and
+    // starts again at line 1.
+    let err = store
+        .append_lines(
+            writer(2),
+            &[
+                event(EventKind::TranscriptLine, 1),
+                event(EventKind::TranscriptLine, 2),
+            ],
+            &[place(1, None), place(2, None)],
+            &[false, true],
+            source.id,
+            &position(20, 2),
+        )
+        .unwrap_err();
+
+    assert!(
+        matches!(err, crate::StoreError::PositionMoved { source: id } if id == source.id),
+        "{err}"
+    );
+    assert!(err.to_string().contains("moved"), "{err}");
+    assert!(store.log(writer(2)).unwrap().is_empty());
+    assert_eq!(store.placed(source.id).unwrap().len(), 1);
+    assert_eq!(
+        store.source("/t/a.jsonl").unwrap().unwrap().position,
+        position(10, 1)
+    );
+}
+
+#[test]
+fn a_position_moves_only_forward() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let source = store.start_generation("/t/a.jsonl", "/t").unwrap();
+
+    store.advance(source.id, &position(20, 2)).unwrap();
+    store.advance(source.id, &position(10, 1)).unwrap();
+
+    assert_eq!(
+        store.source("/t/a.jsonl").unwrap().unwrap().position,
+        position(20, 2),
+        "an ingest that read less leaves the position another moved"
+    );
+}
+
+#[test]
 fn advance_hold_and_lose_change_only_the_state() {
     let dir = TempDir::new().unwrap();
     let mut store = open(&dir);

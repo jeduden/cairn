@@ -121,21 +121,21 @@ summary: >-
   events; turning it off is widening (OWN-11, ADM-02).
 - **Ingest marker**: What ingest leaves when it stops short of a transcript's
   end, so the next MCP server or `cairn ingest` resumes it (REC-13); a hook
-  handler holds its observation there, at the offset where its hook fired, for
-  its MCP server to append (REC-19). A **start marker** is what a hook handler
-  leaves as it starts and clears as it finishes; one left behind is counted and
-  audited (NFR-02). **Ingest** is reading a transcript into the record, by the
-  harness session's MCP server as the transcript grows (REC-13) or by `cairn
-  ingest` (REC-22). A line a harness fork repeats is recorded once, in the
-  writer of the run it belongs to; every other run that repeats it records a
-  **repeat reference** to that event's address, never a copy (REC-04). The
+  handler holds its observation there, where its hook fired, for its MCP server
+  to append (REC-19). A **start marker** is what a hook handler
+  or MCP server leaves as it starts and clears as it finishes; one left behind
+  is counted and audited (NFR-02), an MCP server's with each transcript it left
+  short (REC-13). **Ingest** reads a transcript into the record: the MCP
+  server's **live ingest** as it grows (REC-13), or `cairn ingest` (REC-22). A
+  line a harness fork repeats is recorded once, in the writer of the run it
+  belongs to; every other run that repeats it records a **repeat reference**
+  to that event's address, never a copy (REC-04). The
   run it belongs to is the one no **fork observation**, a `SessionStart` hook
   observation with `source` = `fork`, names; with none, the run that first
   recorded it, as a structural **repeat owner** event in the device seat
   records. A fork's line read before its owner's is **held** at an ingest
-  marker until the owner's transcript is ingested or gone, or 30 s pass. A
-  transcript source's **ingest position** is how far ingest has read it
-  (REC-03).
+  marker until its owner's transcript is ingested or gone, or 30 s pass. An
+  **ingest position** is how far ingest read a transcript source (REC-03).
 - **Worktree checkpoint**: An event recording a worktree's commit, branch and
   redacted diff since the previous worktree checkpoint (REC-20).
 - **Derived artifact**: Anything computed from the record and the node's key

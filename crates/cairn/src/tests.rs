@@ -44,13 +44,20 @@ pub(crate) struct Process {
     pub(crate) now: u64,
     /// The process ancestry a hook handler reads.
     pub(crate) ancestry: fn() -> Option<hook::ancestry::Ancestry>,
+    /// How many lines of a transcript live ingest reads at most.
+    pub(crate) live_limit: Option<usize>,
 }
+
+/// The harness process the tests' hook handlers and MCP servers run
+/// below.
+pub(crate) const HARNESS: u32 = 4242;
 
 /// The ancestry of a hook handler below its own harness alone.
 pub(crate) fn own_harness() -> Option<hook::ancestry::Ancestry> {
     Some(hook::ancestry::Ancestry {
         harnesses: 1,
         nested: false,
+        harness: Some(HARNESS),
     })
 }
 
@@ -82,6 +89,7 @@ impl Process {
             attended: false,
             hook_budget: Some(LENIENT),
             ancestry: own_harness,
+            live_limit: None,
             now: NOW,
         }
     }
@@ -133,6 +141,7 @@ impl Process {
             attended: self.attended,
             hook_budget: self.hook_budget,
             ancestry: self.ancestry,
+            live_limit: self.live_limit,
         };
         let (mut out, mut err) = (Vec::new(), Vec::new());
         let code = run(
@@ -326,6 +335,7 @@ fn a_failed_write_is_a_failure() {
             attended: false,
             hook_budget: Some(LENIENT),
             ancestry: own_harness,
+            live_limit: None,
         };
 
         let code = run(
@@ -1011,27 +1021,187 @@ fn mcp_refuses_flags_and_reports_a_store_it_cannot_open() {
 }
 
 #[test]
-fn mcp_without_a_store_or_a_node_fails_and_makes_nothing() {
+fn mcp_starts_the_node_it_records_in_and_refuses_one_whose_device_key_is_missing() {
     let p = Process::new();
 
     let (code, _, err) = p.invoke(&["mcp"], &DEV);
 
-    assert_eq!(code, EXIT_FAILURE);
-    assert_eq!(
-        err,
-        format!(
-            "cairn mcp: no store at {}: run cairn ingest first\n",
-            p.cairn_home().join("store.db").display()
-        )
-    );
-    assert!(!p.cairn_home().exists());
-    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    assert!(p.cairn_home().join("store.db").exists());
     std::fs::remove_file(p.cairn_home().join("keys/device.key")).unwrap();
     let (code, _, err) = p.invoke(&["mcp"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
+    assert!(err.contains("the device key is missing"), "{err}");
+}
+
+/// A `tools/call` of `event_get`, carrying the tool-use id `tool_use_id`
+/// when given.
+fn tool_call(id: u64, tool_use_id: Option<&str>) -> String {
+    let mut params = serde_json::json!({"name": "event_get", "arguments": {"address": "x"}});
+    if let Some(t) = tool_use_id {
+        params["_meta"] = serde_json::json!({"claudecode/toolUseId": t});
+    }
+    serde_json::json!({"jsonrpc": "2.0", "id": id, "method": "tools/call", "params": params})
+        .to_string()
+}
+
+#[test]
+fn a_bound_mcp_server_serves_a_call_under_its_tool_use_ids_run_and_counts_each_refusal() {
+    let mut p = Process::new();
+    let session = "5e55a0de-0000-4000-8000-0000000000e1";
+    let start = crate::hook_handlers::tests::session_start(&p, session, "startup");
+    let path: String =
+        serde_json::from_str::<serde_json::Value>(&start).unwrap()["transcript_path"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+    let call = serde_json::json!({"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "id": "toolu_1", "name": "event_get"}
+    ]}});
+    std::fs::write(&path, format!("{call}\n")).unwrap();
+    p.lines = vec![start];
+    p.invoke(&["hook", "SessionStart"], &DEV);
+    p.lines = vec![
+        tool_call(1, Some("toolu_1")),
+        tool_call(2, None),
+        tool_call(3, Some("toolu_none")),
+    ];
+
+    let (code, out, err) = p.invoke(&["mcp"], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let texts: Vec<String> = out
+        .lines()
+        .map(|l| {
+            let reply: serde_json::Value = serde_json::from_str(l).unwrap();
+            reply["result"]["content"][0]["text"]
+                .as_str()
+                .unwrap()
+                .to_owned()
+        })
+        .collect();
+    assert!(!texts[0].contains("tool-use id"), "served: {}", texts[0]);
+    assert!(texts[1].contains("carries no tool-use id"), "{}", texts[1]);
+    assert!(texts[2].contains("within 2 s"), "{}", texts[2]);
+    let counters: Vec<Option<String>> = audited(&p).into_iter().map(|e| e.counter).collect();
+    for counter in ["tool_call_without_tool_use_id", "tool_call_run_not_found"] {
+        assert_eq!(
+            counters
+                .iter()
+                .filter(|c| c.as_deref() == Some(counter))
+                .count(),
+            1,
+            "{counter}: {counters:?}"
+        );
+    }
     assert!(
-        err.contains("no key in the key store entry device"),
-        "{err}"
+        !counters.contains(&Some("session_binding_not_taken".to_owned())),
+        "taken"
+    );
+}
+
+/// Leaves, in `p`'s home, the start marker an MCP server killed before
+/// it stopped would, naming the transcript at `path`.
+fn stale_marker(p: &Process, path: &str) {
+    let dir = p.cairn_home().join("mcp");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("0011223344556677.marker"), format!("{path}\n")).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700)).unwrap();
+        std::fs::set_permissions(
+            dir.join("0011223344556677.marker"),
+            std::fs::Permissions::from_mode(0o600),
+        )
+        .unwrap();
+    }
+}
+
+#[test]
+fn the_next_reader_audits_what_a_killed_mcp_server_left() {
+    for command in [&["ingest", "--all"][..], &["mcp"]] {
+        let p = Process::new();
+        let path = p.transcript(CLEAN_LINE);
+        p.invoke(&["counter", "ack"], &DEV);
+        let resolved = std::fs::canonicalize(&path).unwrap();
+        stale_marker(&p, &resolved.display().to_string());
+
+        let (code, _, err) = p.invoke(command, &DEV);
+
+        assert_eq!((code, err.as_str()), (EXIT_OK, ""), "{command:?}");
+        let entries: Vec<(Option<String>, String)> = audited(&p)
+            .into_iter()
+            .map(|e| (e.counter, e.operation))
+            .collect();
+        let operation = if command[0] == "mcp" { "mcp" } else { "ingest" };
+        assert!(
+            entries.contains(&(
+                Some("ingest_remainder_left".to_owned()),
+                operation.to_owned()
+            )),
+            "{command:?}: {entries:?}"
+        );
+        assert!(
+            !p.cairn_home()
+                .join("mcp")
+                .join("0011223344556677.marker")
+                .exists()
+        );
+    }
+}
+
+#[test]
+fn ambiguous_calls_are_counted_on_their_own() {
+    use mcp::tool_call::{Cause, Found};
+    let p = Process::new();
+    p.invoke(&["counter", "ack"], &DEV);
+    let input = || mpsc::channel().1;
+    let ctx = Context {
+        build: &DEV,
+        cairn_home: Some(p.cairn_home().into_os_string()),
+        home: None,
+        home_id: None,
+        hook_panics: false,
+        hook_hangs: false,
+        terminal: true,
+        working_dir: None,
+        managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
+        node_identity: None,
+        os_user: OsUser::Known(u32::MAX),
+        input: &input,
+        clock: &|| NOW,
+        attended: false,
+        hook_budget: Some(LENIENT),
+        ancestry: own_harness,
+        live_limit: None,
+    };
+
+    record_found(
+        &ctx,
+        &[Found {
+            tool_use_id: Some("toolu_2".to_owned()),
+            run: Err(Cause::Ambiguous),
+            waited: std::time::Duration::ZERO,
+        }],
+    );
+
+    let counters: Vec<Option<String>> = audited(&p).into_iter().map(|e| e.counter).collect();
+    assert!(counters.contains(&Some("tool_call_run_ambiguous".to_owned())));
+}
+
+#[test]
+fn an_mcp_server_serves_without_live_ingest_while_a_settings_layer_fails() {
+    let p = Process::new();
+    p.configure("recal.max_k = 10\n");
+
+    let (code, _, _) = p.invoke(&["mcp"], &DEV);
+
+    assert_eq!(code, EXIT_OK);
+    let counters: Vec<Option<String>> = audited(&p).into_iter().map(|e| e.counter).collect();
+    assert!(
+        counters.contains(&Some("ingest_refused_settings_invalid".to_owned())),
+        "{counters:?}"
     );
 }
 
@@ -1064,6 +1234,7 @@ fn mcp_reports_a_reply_it_cannot_write() {
         attended: false,
         hook_budget: Some(LENIENT),
         ancestry: own_harness,
+        live_limit: None,
     };
     let mut err = Vec::new();
 
@@ -1093,6 +1264,7 @@ fn a_command_without_a_home_fails() {
         attended: false,
         hook_budget: Some(LENIENT),
         ancestry: own_harness,
+        live_limit: None,
     };
     for command in ["ingest", "mcp", "verify", "status", "doctor", "counter"] {
         let mut args = vec![command.to_owned()];
@@ -1256,6 +1428,7 @@ fn a_hook_input_that_trickles_past_its_wait_is_rejected() {
         attended: false,
         hook_budget: Some(LENIENT),
         ancestry: own_harness,
+        live_limit: None,
     };
     let (mut out, mut err) = (Vec::new(), Vec::new());
 
@@ -1299,6 +1472,7 @@ fn a_panic_while_auditing_a_hook_failure_still_exits_0() {
         attended: false,
         hook_budget: Some(LENIENT),
         ancestry: own_harness,
+        live_limit: None,
     };
     let (mut out, mut err) = (Vec::new(), Vec::new());
 

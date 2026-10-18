@@ -30,6 +30,7 @@
 //! from the whole transcript first, so a line before the one that names
 //! them is redacted too.
 
+pub mod live;
 pub mod observed;
 pub mod prompt;
 pub mod read;
@@ -117,6 +118,9 @@ pub struct Ingested {
     /// How many matched prompt lines' hook handlers found no attended
     /// mark in deployment mode `interactive` (PRV-04).
     pub not_attended: usize,
+    /// How many witnessed lines repeating another transcript's event
+    /// were recorded as their own, never repeat references (REC-04).
+    pub witnessed_repeats: usize,
 }
 
 /// Why an ingest recorded nothing, or stopped part way.
@@ -255,7 +259,10 @@ pub fn ingest_path(
 /// redacted by `redactor` and the harness account identifiers the
 /// transcript names, each appended to its run's writer. A writer closes
 /// a segment at each turn end and subagent end the transcript records,
-/// and at the end of what this ingest appends to it (REC-19).
+/// and at the end of what this ingest appends to it (REC-19). When the
+/// MCP server ingesting the same source live got ahead of an append, the
+/// source is read again from where it left off, up to [`ATTEMPTS`]
+/// times; the report is the last read's (REC-06).
 ///
 /// # Errors
 ///
@@ -263,6 +270,42 @@ pub fn ingest_path(
 /// line, or when an identifier cannot be redacted, or the random
 /// source, the home, the node or the store fails.
 pub fn ingest_with(
+    home: &Home,
+    path: &Path,
+    redactor: &Redactor,
+    inputs: &Inputs,
+    entropy: &mut dyn Entropy,
+) -> Result<Ingested, IngestError> {
+    let mut attempt = 1;
+    loop {
+        match ingest_once(home, path, redactor, inputs, entropy) {
+            Err(e) if e.position_moved() && attempt < ATTEMPTS => attempt += 1,
+            done => return done,
+        }
+    }
+}
+
+/// How many times [`ingest_with`] reads a source another ingest keeps
+/// getting ahead of.
+pub const ATTEMPTS: usize = 8;
+
+impl IngestError {
+    /// Whether another ingest moved the ingest position first.
+    #[must_use]
+    pub fn position_moved(&self) -> bool {
+        matches!(
+            self,
+            Self::Store(StoreError::PositionMoved { .. })
+                | Self::Partial {
+                    source: StoreError::PositionMoved { .. },
+                    ..
+                }
+        )
+    }
+}
+
+/// One read of the source [`ingest_with`] ingests.
+fn ingest_once(
     home: &Home,
     path: &Path,
     redactor: &Redactor,
@@ -278,7 +321,15 @@ pub fn ingest_with(
         return Err(IngestError::Empty(path.to_path_buf()));
     }
 
-    reading::ingest(home, path, &text, redactor, inputs, entropy)
+    reading::ingest(
+        home,
+        path,
+        &text,
+        redactor,
+        inputs,
+        &mut reading::Recorder::Cli,
+        entropy,
+    )
 }
 
 /// The transcripts under `root`: every `.jsonl` file in it or a

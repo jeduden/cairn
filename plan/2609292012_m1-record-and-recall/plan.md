@@ -91,13 +91,11 @@ ENG-08 prove CON-05.
 ### What the spikes left
 
 - **S2** ([ADR-2610110553], proposed): `rusqlite` without default
-  features, SQLite built without extension loading, and a C compiler
-  plus both musl targets' headers pinned on the Linux builder. BM25
-  ranks only the newest 2,000 matches, 172 ms p95 against NFR-03.
-  Ingest commits 100 events per transaction, 26.1k events per second.
+  features, SQLite without extension loading, a C compiler and both musl
+  targets' headers pinned on the Linux builder. BM25 ranks the newest
+  2,000 matches, 172 ms p95 (NFR-03); 100 events a transaction, 26.1k/s.
 - **S7** ([ADR-2610102211], proposed): an in-house stdio MCP server on
-  `serde_json`. The reach test then allows `serde_json` and its four
-  crates.
+  `serde_json`, which the reach test allows with its four crates.
 - **S1, S3 and S13**: Claude Code 2.1.296's hook inputs and
   transcripts under `testdata/claude-code`. The transcript parser gets
   its cargo-fuzz target in the change that adds it, seeded from them
@@ -211,10 +209,10 @@ changed M1's row in §12.2.
 
 ## Execution
 
-Phase 1 runs first and fixes the test approach the others copy. ENG-18's
-rewording (ruling 1) landed on its own before phases 4, 5 and 7. Four tracks
-run in parallel: 2 then 3; 4; 5 then 6; 7. Phases 8 to 16 follow in order,
-but 12 may start once 8 lands. A phase's spec is written at its turn.
+Phase 1 fixed the test approach the others copy. ENG-18's rewording
+(ruling 1) landed before phases 4, 5 and 7. Tracks 2 then 3; 4; 5 then 6;
+7 ran in parallel. Phases 8 to 16 follow in order, 12 once 8 lands. A
+phase's spec is written at its turn.
 
 | Phase | Model  | Gate                                                                                                                                                    |
 | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -276,6 +274,8 @@ footer: |
 |     | ↳      | @REC-01, @REC-03 and @REC-07 off @pending and passing. Ingest resumes each transcript source past its ingest position, splits it by run, starts a new generation on a shrink or rewrite, and records a repeated line once. REC-02, REC-04, REC-08 and PRV-05's bound steps pass narrowed; both ENG-08 properties hold; NFR-04 benchmarked, not met.              |
 | 9   | ✅     | [The hook handlers: hook observations held at the ingest marker](phase-9.md)                                                                                                                                                                                                                                                                                     |
 |     | ↳      | @SEC-16 and @NFR-02 off @pending and passing. Hook handlers decode each hook input against its schema and recorded shapes, and hold their observations at the ingest marker within their hook budgets; ingest uses them for user lines and prompt matches. PRV-04 rows 1-3, PRV-08, REC-19 and REC-26's hook steps pass narrowed; NFR-01 and NFR-02 benchmarked. |
+| 10  | ✅     | [The MCP server and live ingest](phase-10.md)                                                                                                                                                                                                                                                                                                                    |
+|     | ↳      | @REC-13 off @pending and passing against a live MCP server. It takes its own harness process's session binding, ingests its transcripts into run seats whose keys it holds in memory, and leaves an ingest marker when it stops short. @REC-06 and @PRV-14 pass narrowed: purge (phase 14) and event_search (phase 12) keep them pending.                        |
 <?/catalog?>
 
 ## Acceptance Criteria

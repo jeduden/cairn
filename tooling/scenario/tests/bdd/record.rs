@@ -198,7 +198,7 @@ pub fn run_core_at_terminal(w: &mut World, args: &[&str]) -> Result<(), String> 
 /// never the machine's (ENG-14), a hook budget no development build
 /// reaches on a loaded machine unless a step sets the hook's own
 /// (NFR-02), then what the steps set.
-fn environment(w: &mut World) -> Vec<(String, String)> {
+pub fn environment(w: &mut World) -> Vec<(String, String)> {
     let managed = w.home.join(MANAGED_POLICY).display().to_string();
     let mut env = vec![
         ("CAIRN_TEST_MANAGED_POLICY".to_owned(), managed),

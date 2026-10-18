@@ -138,9 +138,14 @@ pub struct Context<'a> {
     /// A hook budget in place of each hook's own: a development build's
     /// seam for the tests, never set in a release build.
     pub hook_budget: Option<Duration>,
-    /// Reads a hook handler's process ancestry (PRV-08): this process's
-    /// own, or what a test stands in for it.
+    /// Reads a hook handler's process ancestry (PRV-08), and the MCP
+    /// server's own harness process (REC-13): this process's own, or
+    /// what a test stands in for it.
     pub ancestry: fn() -> Option<hook::ancestry::Ancestry>,
+    /// How many lines of a transcript the MCP server's live ingest reads
+    /// at most: a development build's seam for the tests, never set in a
+    /// release build.
+    pub live_limit: Option<usize>,
 }
 
 impl Context<'_> {
@@ -454,6 +459,11 @@ fn ingest(
         Ok(mut store) => count_untaken_bindings(ctx, &mut store),
         Err(e) => return failed("ingest", &e, stderr),
     }
+    // What an MCP server killed before it stopped left is audited by
+    // the reader that finds its ingest marker (REC-13).
+    capture::count_stopped(&home, "ingest", &|o| {
+        let _ = ctx.audit(o);
+    });
     let inputs = ingest::Inputs {
         payload: payload_settings(settings),
         // Ingest reads the fork observations the hook handlers held from
@@ -1024,42 +1034,159 @@ fn mcp(
     if home.root().exists() {
         hook_handlers::count_unfinished(&home, (ctx.clock)(), None);
     }
-    // Recall reads a record a start made; it makes no home or store.
-    if !home.store().exists() {
-        let why = format!(
-            "no store at {}: run cairn ingest first",
-            home.store().display()
-        );
-        return failed("mcp", &why, stderr);
-    }
-    let served = Store::open(&home.store())
-        .map_err(|e| e.to_string())
-        .and_then(|store| {
-            let node = Node::find(&home, &store).map_err(|e| e.to_string())?;
-            let key = node.device().public();
-            let (writer, room) = (node.device_writer(), node.personal_room());
-            Ok(mcp::Server::new(
-                store,
-                ctx.build.version,
-                key,
-                writer,
-                room,
-            ))
-        });
-    let mut server = match served {
+    // It records its harness session's runs, so it starts the node as
+    // ingest does (REC-13).
+    let served = start_node(ctx, &home, stderr).and_then(|store| {
+        let node = Node::find(&home, &store).map_err(|e| e.to_string())?;
+        let key = node.device().public();
+        let (writer, room) = (node.device_writer(), node.personal_room());
+        Ok(mcp::Server::new(
+            store,
+            ctx.build.version,
+            key,
+            writer,
+            room,
+        ))
+    });
+    let server = match served {
         Ok(server) => server,
         Err(e) => return failed("mcp", &e, stderr),
     };
+    // What an MCP server killed before it stopped left is audited by
+    // the next one, as it starts (REC-13).
+    capture::count_stopped(&home, "mcp", &|o| {
+        let _ = ctx.audit(o);
+    });
+    let shared = std::sync::Arc::new(capture::Shared::default());
+    let mut server = server.with_runs(Box::new(capture::Finder(shared.clone())));
+    let live = live_capture(ctx, &home, &shared, stderr)
+        .map(capture::Capture::start)
+        .map(spawn_capture);
     let served = mcp::serve(
-        &mut |l| server.handle(l),
+        &mut |l| {
+            let reply = server.handle(l);
+            record_found(ctx, &server.take_found());
+            reply
+        },
         &(ctx.input)(),
         stdout,
         IDLE,
         &mut on_mcp_panic(&home, ctx.clock, stderr),
     );
+    // Its input closed: live ingest stops, audits what it left and closes
+    // its segments, within a bound; past it the next reader audits it.
+    shared.stop();
+    if let Some(done) = live {
+        let _ = done.recv_timeout(CAPTURE_STOP);
+    }
     match served {
         Ok(()) => EXIT_OK,
         Err(e) => failed("mcp", &e, stderr),
+    }
+}
+
+/// How long `cairn mcp` waits for live ingest to stop once its input
+/// closes.
+const CAPTURE_STOP: Duration = Duration::from_secs(5);
+
+/// The MCP server's live ingest in `home` (REC-13): its own harness
+/// process's session bindings, its transcripts resolved within the
+/// transcript roots, redacted by the settings in force. None while a
+/// settings layer fails, as no line may be written without the
+/// redaction patterns it names (SEC-08); the refusal is audited.
+fn live_capture(
+    ctx: &Context,
+    home: &Home,
+    shared: &std::sync::Arc<capture::Shared>,
+    stderr: &mut dyn Write,
+) -> Option<capture::Capture> {
+    let in_force = audit_settings(ctx, home, stderr);
+    if in_force.loaded.principal_layer_failed() {
+        refuse_ingest(ctx, stderr);
+        return None;
+    }
+    let settings = &in_force.resolved.settings;
+    let redactor = redactor(ctx, settings, stderr).ok()?;
+    let os_home = ctx.home.as_deref().map(Path::new);
+    let roots = settings
+        .texts("transcript.roots")
+        .iter()
+        .fold(AllowedRoots::default(), |allowed, root| {
+            allowed.with(&allowed_root::expand_home(root, os_home), Access::Read)
+        });
+    let base = (ctx.clock)();
+    let started = now_instant();
+
+    Some(capture::Capture {
+        home: home.clone(),
+        roots,
+        redactor,
+        inputs: ingest::Inputs {
+            payload: payload_settings(settings),
+            forks: std::collections::BTreeSet::new(),
+            now_ms: base.saturating_mul(1000),
+            interactive: settings.deployment_mode() == "interactive",
+        },
+        harness: (ctx.ancestry)().and_then(|a| a.harness),
+        limit: ctx.live_limit,
+        clock: Box::new(move || base + started.elapsed().as_secs()),
+        shared: shared.clone(),
+    })
+}
+
+/// Now, for live ingest's audit clock.
+#[expect(
+    clippy::disallowed_methods,
+    reason = "live ingest's audit entries record when they were made; no derived artifact \
+              reads it (I10)"
+)]
+fn now_instant() -> Instant {
+    Instant::now()
+}
+
+/// Runs `capture` on a thread of its own; what it sends tells it ended.
+fn spawn_capture(capture: capture::Running) -> Receiver<()> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        capture.run();
+        let _ = tx.send(());
+    });
+
+    rx
+}
+
+/// Logs what finding each tool call's run came to (PRV-14, OPS-05),
+/// through redaction: its tool-use id, the run or why none was found,
+/// and how long it waited; each refusal counted and audited (I6).
+fn record_found(ctx: &Context, found: &[mcp::tool_call::Found]) {
+    use mcp::tool_call::Cause;
+    for f in found {
+        let id = f.tool_use_id.as_deref().unwrap_or_default();
+        let waited_ms = u64::try_from(f.waited.as_millis()).unwrap_or(u64::MAX);
+        let cause = match &f.run {
+            Ok(run) => {
+                tracing::info!(tool_use_id = id, run = run.as_str(), waited_ms, "tool call");
+                continue;
+            }
+            Err(cause) => *cause,
+        };
+        tracing::info!(
+            tool_use_id = id,
+            cause = cause.as_str(),
+            waited_ms,
+            "tool call refused"
+        );
+        let counter = match cause {
+            Cause::NoToolUseId => Counter::ToolCallWithoutToolUseId,
+            Cause::NotFound => Counter::ToolCallRunNotFound,
+            Cause::Ambiguous => Counter::ToolCallRunAmbiguous,
+        };
+        let _ = ctx.audit(&Occurrence::Degraded {
+            kind: Kind::Rejected,
+            counter,
+            operation: "mcp",
+            detail: "a tool call whose run could not be found was refused",
+        });
     }
 }
 
@@ -1722,6 +1849,7 @@ pub(crate) fn invalid_layers(command: &str, loaded: &Loaded, stderr: &mut dyn Wr
 }
 
 mod act;
+mod capture;
 mod hook_handlers;
 mod segments;
 mod settings;

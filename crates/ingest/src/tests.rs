@@ -1045,6 +1045,7 @@ fn observation(hook: &str, session: &str) -> store::Observation {
         prompt_id: None,
         attended: false,
         ancestry: None,
+        harness: None,
         at: 1,
     }
 }
@@ -1237,4 +1238,19 @@ fn a_fork_observation_the_store_holds_names_a_harness_fork() {
 
     // The fork's lines wait for their owner, though no input named it.
     assert!(first.held);
+}
+
+#[test]
+fn only_a_position_another_ingest_moved_is_read_again() {
+    let moved = || store::StoreError::PositionMoved { source: 1 };
+    let partial = IngestError::Partial {
+        writer: WriterId::derive(&[1; 32]),
+        landed: 1,
+        lines: 2,
+        source: moved(),
+    };
+
+    assert!(IngestError::Store(moved()).position_moved());
+    assert!(partial.position_moved());
+    assert!(!IngestError::Empty(std::path::PathBuf::new()).position_moved());
 }

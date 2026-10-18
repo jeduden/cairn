@@ -264,6 +264,50 @@ impl Confinement {
         self.finish(quiet, trace, caller).map(|_| running)
     }
 
+    /// Starts `program` as [`run_in`](Self::run_in) does, in a process
+    /// group of its own, and leaves it running with its standard input
+    /// and output piped to the caller: a server a test talks to, such as
+    /// the MCP server under a stand-in harness. Its trace is checked as
+    /// it ends, through [`Started::finish`] or [`Started::kill`].
+    ///
+    /// # Errors
+    ///
+    /// Fails when the program, or the tools around it, cannot start.
+    #[track_caller]
+    pub fn spawn(
+        &self,
+        program: &Path,
+        args: &[&str],
+        home: &Path,
+        env: &[(&str, &str)],
+    ) -> Result<Started, Error> {
+        let caller = caller(std::thread::current().name(), Location::caller());
+        let dir = TempDir::new().map_err(|source| Error::Trace { source })?;
+        let trace = dir.path().join("trace");
+        let mut command = self.command(program, args, &trace);
+        command.envs(env.iter().copied());
+        isolate(&mut command, home);
+        #[cfg(unix)]
+        std::os::unix::process::CommandExt::process_group(&mut command, 0);
+        let child = command
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|source| Error::Start {
+                program: program.to_path_buf(),
+                source,
+            })?;
+
+        Ok(Started {
+            child,
+            confinement: *self,
+            trace,
+            _dir: dir,
+            caller,
+        })
+    }
+
     fn start(
         &self,
         program: &Path,
@@ -336,6 +380,99 @@ impl Confinement {
                 calls,
             })
         }
+    }
+}
+
+/// A program [`Confinement::spawn`] started, still running.
+#[derive(Debug)]
+pub struct Started {
+    child: std::process::Child,
+    confinement: Confinement,
+    trace: PathBuf,
+    _dir: TempDir,
+    caller: String,
+}
+
+impl Started {
+    /// The program's standard input, until it is closed.
+    pub fn stdin(&mut self) -> Option<&mut std::process::ChildStdin> {
+        self.child.stdin.as_mut()
+    }
+
+    /// The program's standard output, taken once.
+    pub fn take_stdout(&mut self) -> Option<std::process::ChildStdout> {
+        self.child.stdout.take()
+    }
+
+    /// Closes the program's standard input and waits up to `deadline`
+    /// for it to exit, killing it and everything it started past that;
+    /// whether it exited by itself. Its trace is then checked.
+    ///
+    /// # Errors
+    ///
+    /// Fails when it cannot be waited for or killed, when its trace
+    /// cannot be read, or when it, or anything it started, made a
+    /// network call.
+    pub fn finish(mut self, deadline: std::time::Duration) -> Result<bool, Error> {
+        drop(self.child.stdin.take());
+        let started = std::time::Instant::now();
+        let exited = loop {
+            match self.child.try_wait() {
+                Ok(Some(_)) => break true,
+                Ok(None) if started.elapsed() >= deadline => break false,
+                Ok(None) => std::thread::sleep(std::time::Duration::from_millis(20)),
+                Err(source) => return Err(Error::Trace { source }),
+            }
+        };
+        if !exited {
+            self.kill_group()?;
+        }
+        self.checked().map(|()| exited)
+    }
+
+    /// Kills the program and everything it started with `SIGKILL`, as a
+    /// crash would, then checks its trace.
+    ///
+    /// # Errors
+    ///
+    /// As [`finish`](Self::finish).
+    pub fn kill(mut self) -> Result<(), Error> {
+        self.kill_group()?;
+        self.checked()
+    }
+
+    fn kill_group(&mut self) -> Result<(), Error> {
+        let group = format!("-{}", self.child.id());
+        let killed = Command::new("kill")
+            .args(["-KILL", "--", &group])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status();
+        killed.map_err(|source| Error::Trace { source })?;
+        let _ = self.child.kill();
+        self.child
+            .wait()
+            .map(drop)
+            .map_err(|source| Error::Trace { source })
+    }
+
+    fn checked(&self) -> Result<(), Error> {
+        if self.confinement.mode == Mode::Unconfined {
+            return Ok(());
+        }
+        let trace = match fs::read_to_string(&self.trace) {
+            Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(String::new()),
+            read => read,
+        };
+        let quiet = Output {
+            status: std::process::ExitStatus::default(),
+            stdout: Vec::new(),
+            stderr: Vec::new(),
+        };
+
+        self.confinement
+            .finish(quiet, trace, self.caller.clone())
+            .map(drop)
     }
 }
 

@@ -18,9 +18,10 @@ use record::id::{Address, WriterId};
 use redaction::Redactor;
 use redaction::account::HarnessAccountIdentifiers;
 use serde_json::{Value, json};
-use store::{IngestedRun, NewEvent, Place, Placed, Position, Source, Store};
+use store::{Held, IngestedRun, NewEvent, Place, Placed, Position, Source, Store};
 use transcript::shape::Shapes;
 
+use crate::live::RunSeats;
 use crate::observed::{self, Observed};
 use crate::prompt::{self, Outcome, PromptLine};
 use crate::read::{self, Line};
@@ -28,14 +29,25 @@ use crate::repeat::{self, Decision, Facts, Owner, Rule};
 use crate::run::{Defaults, RunKey};
 use crate::{IngestError, Ingested, Inputs, RunReport, content, turn_end, well_formed};
 
+/// Who records what an ingest reads, and in which seats.
+pub(crate) enum Recorder<'r> {
+    /// `cairn ingest`: each run in an ingest seat whose key the core
+    /// keeps (REC-22).
+    Cli,
+    /// The harness session's MCP server: each run in a run seat whose
+    /// key it holds in memory (REC-13, SEC-10).
+    Live(&'r mut RunSeats),
+}
+
 /// Ingests the transcript at `path`, whose text is `text`, as
-/// [`crate::ingest_with`] describes.
+/// [`crate::ingest_with`] describes, `recorder` recording it.
 pub(crate) fn ingest(
     home: &Home,
     path: &Path,
     text: &str,
     redactor: &Redactor,
     inputs: &Inputs,
+    recorder: &mut Recorder<'_>,
     entropy: &mut dyn Entropy,
 ) -> Result<Ingested, IngestError> {
     let lines = read::lines(text);
@@ -59,7 +71,7 @@ pub(crate) fn ingest(
     let named = Named::of(path, &redactor);
     let resume = Resume::find(&mut store, &named, text.as_bytes(), &lines, &redactor)?;
     let defaults = Defaults::of(path);
-    let mut runs = Runs::load(&store, &named.path)?;
+    let mut runs = Runs::load(&store, &named.path, recorder)?;
     let own = runs.ensure(&mut store, &node, home, &defaults.own(), entropy)?;
     let mut planner = Planner::new(&store, &named, inputs, &resume.source, &runs)?;
     let plan = planner.plan(
@@ -77,23 +89,26 @@ pub(crate) fn ingest(
         },
         entropy,
     )?;
-    let (appended, addresses) = append(&mut store, &resume, text.as_bytes(), &plan)?;
-    let hold_started = hold(&mut store, &resume.source, plan.hold, inputs.now_ms)?;
-    let owners_chosen = choose_owners(&mut store, &node, &plan.chosen, entropy)?;
     let main = defaults.own().agent_id.is_none().then_some(own);
     let seen = Seen {
         observed: &observed,
         session: &defaults.own().harness_session,
         main,
         interactive: inputs.interactive,
+        live: live_observations(&observed, &defaults, main, runs.live()),
     };
+    let landed = append(&mut store, &resume, text.as_bytes(), &plan, &seen, entropy)?;
+    let (appended, addresses) = (landed.lines, landed.addresses);
+    let hold_started = hold(&mut store, &resume.source, plan.hold, inputs.now_ms)?;
+    let owners_chosen = choose_owners(&mut store, &node, &plan.chosen, entropy)?;
     let observations = record_observed(&mut store, &node, &seen, &plan, &addresses, entropy)?;
 
     Ok(Ingested {
+        witnessed_repeats: plan.witnessed_repeats,
         matched: observations.matched,
         prompt_conflicts: observations.conflicts,
         not_attended: observations.not_attended,
-        observations: observations.appended,
+        observations: observations.appended + landed.observations,
         writer: own,
         seat: seat_of(&store, own)?,
         room: node.personal_room(),
@@ -282,21 +297,32 @@ fn text_of(store: &Store, placed: &Placed) -> Result<String, IngestError> {
 
 /// The ingested runs of one transcript source, by the harness's agent
 /// id, and the harness session of every ingested run, by writer.
-struct Runs {
+struct Runs<'r> {
     path: String,
     of_source: BTreeMap<Option<String>, WriterId>,
     sessions: BTreeMap<WriterId, String>,
     /// The writers whose seat this node's device key is known to certify.
     certified: BTreeSet<WriterId>,
+    /// The run seats of the MCP server ingesting live, when one is.
+    live: Option<&'r mut RunSeats>,
 }
 
-impl Runs {
-    fn load(store: &Store, path: &str) -> Result<Self, IngestError> {
+impl<'r> Runs<'r> {
+    fn load(
+        store: &Store,
+        path: &str,
+        recorder: &'r mut Recorder<'_>,
+    ) -> Result<Self, IngestError> {
+        let live = match recorder {
+            Recorder::Live(seats) => Some(&mut **seats),
+            Recorder::Cli => None,
+        };
         let mut runs = Self {
             path: path.to_owned(),
             of_source: BTreeMap::new(),
             sessions: BTreeMap::new(),
             certified: BTreeSet::new(),
+            live,
         };
         for run in store.ingested_runs()? {
             runs.keep(&run);
@@ -305,8 +331,15 @@ impl Runs {
         Ok(runs)
     }
 
+    /// Whether the MCP server ingests live.
+    fn live(&self) -> bool {
+        self.live.is_some()
+    }
+
     fn keep(&mut self, run: &IngestedRun) {
-        if run.path == self.path {
+        // Live, a run's lines go to its run seat, never an ingested run's
+        // seat (REC-19).
+        if run.path == self.path && self.live.is_none() {
             self.of_source.insert(run.agent_id.clone(), run.writer);
         }
         self.sessions
@@ -323,6 +356,11 @@ impl Runs {
         key: &RunKey,
         entropy: &mut dyn Entropy,
     ) -> Result<WriterId, IngestError> {
+        if let Some(seats) = self.live.as_mut() {
+            let writer = seats.ensure(store, node, key, entropy)?;
+            self.of_source.insert(key.agent_id.clone(), writer);
+            return Ok(writer);
+        }
         // After a node identity change, what remains of a run goes to a
         // new ingest seat the new device key certifies (REC-19, REC-24):
         // the old writer gets nothing more.
@@ -392,6 +430,9 @@ struct Plan {
     /// Each prompt line's event, by its index, with its `prompt_id` and
     /// what became of the prompt commitment it names (PRV-08).
     prompts: Vec<(usize, String, Outcome)>,
+    /// How many witnessed lines repeating another transcript's event
+    /// were recorded as their own (REC-04).
+    witnessed_repeats: usize,
 }
 
 impl Plan {
@@ -422,6 +463,10 @@ struct Planner<'a> {
     /// The prompt commitments, by harness session and `prompt_id`, a
     /// line this ingest read used up.
     used: BTreeSet<(String, String)>,
+    /// Whether the MCP server ingests live, its lines witnessed.
+    live: bool,
+    /// How many witnessed lines repeat another transcript's event.
+    witnessed_repeats: usize,
 }
 
 impl<'a> Planner<'a> {
@@ -430,7 +475,7 @@ impl<'a> Planner<'a> {
         named: &'a Named,
         inputs: &'a Inputs,
         source: &Source,
-        runs: &Runs,
+        runs: &Runs<'_>,
     ) -> Result<Self, IngestError> {
         let others = store
             .sources()?
@@ -450,6 +495,8 @@ impl<'a> Planner<'a> {
             forked,
             others,
             used: BTreeSet::new(),
+            live: runs.live(),
+            witnessed_repeats: 0,
         })
     }
 
@@ -457,7 +504,7 @@ impl<'a> Planner<'a> {
     fn plan(
         &mut self,
         store: &mut Store,
-        runs: &mut Runs,
+        runs: &mut Runs<'_>,
         session: &Session,
         read: Read<'_, '_>,
         entropy: &mut dyn Entropy,
@@ -495,6 +542,7 @@ impl<'a> Planner<'a> {
                     .push((plan.events.len() - 1, prompt_id, outcome));
             }
         }
+        plan.witnessed_repeats = self.witnessed_repeats;
 
         Ok(plan)
     }
@@ -546,6 +594,17 @@ impl<'a> Planner<'a> {
         let Some(uuid) = line["uuid"].as_str() else {
             return Ok(Decision::Own);
         };
+        if self.live {
+            // A witnessed line is never a repeat reference, nor held
+            // (REC-04): one another transcript recorded is its own event.
+            let named = self.named;
+            let repeats = self.others
+                && store
+                    .line_owner(&named.directory, uuid, &named.path)?
+                    .is_some();
+            self.witnessed_repeats += usize::from(repeats);
+            return Ok(Decision::Own);
+        }
         let owner = self.owner(store, uuid)?;
         let fork = self.inputs.forks.contains(&key.harness_session);
         let in_sibling = fork && owner.is_none() && self.siblings().contains(uuid);
@@ -697,18 +756,31 @@ impl Plan {
     }
 }
 
+/// What [`append`] appended.
+struct Landed {
+    /// How many line events, and the address of each.
+    lines: usize,
+    addresses: Vec<Address>,
+    /// How many hook observations, live, in the main run's run seat.
+    observations: usize,
+}
+
 /// Appends `plan` to its writers a transaction at a time, each moving
 /// the source's position past the lines it covers, then records how many
 /// bytes the source held. A transaction holds one writer's run of
 /// consecutive lines, at most a batch; its segments close at each turn
-/// end and subagent end, and after a writer's last line. Returns how many
-/// events it appended, and the address of each.
+/// end and subagent end, and after a writer's last line. Live, each hook
+/// observation `hooks` holds goes to the main run's run seat in a
+/// transaction of its own, before the first line its hook fired before
+/// (REC-13, REC-19).
 fn append(
     store: &mut Store,
     resume: &Resume,
     bytes: &[u8],
     plan: &Plan,
-) -> Result<(usize, Vec<Address>), IngestError> {
+    hooks: &Seen<'_>,
+    entropy: &mut dyn Entropy,
+) -> Result<Landed, IngestError> {
     let seen = bytes.len() as u64;
     let mut running = Running::default();
     running.update(
@@ -731,9 +803,12 @@ fn append(
         .collect();
     let mut landed = 0;
     let mut addresses = Vec::with_capacity(plan.events.len());
-    for range in transactions(&plan.ends) {
+    let mut observing = Observing::new(hooks);
+    let starts = observing.breaks(&plan.places);
+    for range in transactions(&plan.ends, &starts) {
         let (writer, _, end) = plan.ends[range.end - 1];
         let first = plan.places[range.start].offset;
+        observing.flush(store, Some(first), entropy)?;
         running.update(
             bytes
                 .get(as_index(first)..as_index(end))
@@ -762,8 +837,98 @@ fn append(
         landed += range.len();
     }
     store.advance(resume.source.id, &position)?;
+    observing.flush(store, Some(position.offset), entropy)?;
 
-    Ok((landed, addresses))
+    Ok(Landed {
+        lines: landed,
+        addresses,
+        observations: observing.appended,
+    })
+}
+
+/// The hook observations a live ingest appends to the main run's run
+/// seat, each before the first line written after its hook fired.
+struct Observing<'s> {
+    /// The main run's writer, and its observations by offset.
+    pending: Option<(WriterId, Vec<&'s Held>)>,
+    appended: usize,
+}
+
+impl<'s> Observing<'s> {
+    fn new(seen: &Seen<'s>) -> Self {
+        let pending = seen.main.zip(seen.live.clone()).map(|(run, mut held)| {
+            held.sort_by_key(|h| h.observation.offset);
+            (run, held)
+        });
+
+        Self {
+            pending,
+            appended: 0,
+        }
+    }
+
+    /// The indices of `places` a transaction must start at, so an
+    /// observation lands between the lines on either side of its offset.
+    fn breaks(&self, places: &[Place]) -> BTreeSet<usize> {
+        let offsets = self
+            .pending
+            .iter()
+            .flat_map(|(_, held)| held.iter().filter_map(|h| h.observation.offset));
+        offsets
+            .filter_map(|o| places.iter().position(|p| p.offset >= o))
+            .collect()
+    }
+
+    /// Appends each observation whose hook fired at or before `upto`,
+    /// none when it has no offset, to the main run's run seat.
+    fn flush(
+        &mut self,
+        store: &mut Store,
+        upto: Option<u64>,
+        entropy: &mut dyn Entropy,
+    ) -> Result<(), IngestError> {
+        let Some((run, held)) = self.pending.as_mut() else {
+            return Ok(());
+        };
+        let due = held
+            .iter()
+            .take_while(|h| h.observation.offset.zip(upto).is_none_or(|(o, u)| o <= u))
+            .count();
+        if due == 0 {
+            return Ok(());
+        }
+        let ready: Vec<&Held> = held.drain(..due).collect();
+        let events = ready
+            .iter()
+            .map(|h| {
+                structural(
+                    EventKind::HookObservation,
+                    observed::content(h, *run),
+                    entropy,
+                )
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let ids: Vec<i64> = ready.iter().map(|h| h.id).collect();
+        store.append_observed(*run, &events, &ids, &[])?;
+        self.appended += ids.len();
+
+        Ok(())
+    }
+}
+
+/// A structural event of `kind` holding `content`.
+fn structural(
+    kind: EventKind,
+    content: Value,
+    entropy: &mut dyn Entropy,
+) -> Result<NewEvent, IngestError> {
+    Ok(NewEvent {
+        kind,
+        provenance: Provenance::Structural,
+        content,
+        commitment_key: CommitmentKey::from_bytes(draw(entropy).map_err(IngestError::Key)?),
+        transcript_timestamp: None,
+    })
 }
 
 /// What one ingest found of the hook observations of the harness
@@ -777,6 +942,26 @@ struct Seen<'s> {
     main: Option<WriterId>,
     /// Whether the deployment mode is `interactive` (PRV-04).
     interactive: bool,
+    /// Live, the hook observations the main run's run seat takes; none
+    /// when `cairn ingest` reads, which puts them in the device seat.
+    live: Option<Vec<&'s Held>>,
+}
+
+/// The hook observations a live ingest of the transcript whose main run
+/// is `main` appends to that run's run seat: those its harness session
+/// holds; none for `cairn ingest`.
+fn live_observations<'o>(
+    observed: &'o Observed,
+    defaults: &Defaults,
+    main: Option<WriterId>,
+    live: bool,
+) -> Option<Vec<&'o Held>> {
+    let pending = match main {
+        Some(_) => observed.pending(&defaults.own().harness_session),
+        None => Vec::new(),
+    };
+
+    live.then_some(pending)
 }
 
 /// What [`record_observed`] recorded.
@@ -825,8 +1010,10 @@ fn record_observed(
             }),
         ));
     }
+    // Live, the main run's run seat took them (REC-19).
     let pending = seen
         .main
+        .filter(|_| seen.live.is_none())
         .map(|run| (run, seen.observed.pending(seen.session)));
     let mut ids = Vec::new();
     for (run, held) in pending
@@ -842,15 +1029,7 @@ fn record_observed(
     }
     let events = contents
         .into_iter()
-        .map(|(kind, content)| {
-            Ok(NewEvent {
-                kind,
-                provenance: Provenance::Structural,
-                content,
-                commitment_key: CommitmentKey::from_bytes(draw(entropy).map_err(IngestError::Key)?),
-                transcript_timestamp: None,
-            })
-        })
+        .map(|(kind, content)| structural(kind, content, entropy))
         .collect::<Result<Vec<_>, IngestError>>()?;
     store.append_observed(node.device_writer(), &events, &ids, &used)?;
 
@@ -866,13 +1045,17 @@ fn last_of_each_writer(ends: &[(WriterId, bool, u64)]) -> BTreeMap<WriterId, usi
 }
 
 /// The ranges of `ends` each append transaction takes: consecutive
-/// events of one writer, at most a batch.
-fn transactions(ends: &[(WriterId, bool, u64)]) -> Vec<std::ops::Range<usize>> {
+/// events of one writer, at most a batch, each index in `starts`
+/// beginning one.
+fn transactions(
+    ends: &[(WriterId, bool, u64)],
+    starts: &BTreeSet<usize>,
+) -> Vec<std::ops::Range<usize>> {
     let mut out = Vec::new();
     let mut start = 0;
     for (i, (writer, _, _)) in ends.iter().enumerate() {
         let next_differs = ends.get(i + 1).is_none_or(|(w, _, _)| w != writer);
-        if next_differs || i + 1 - start == store::BATCH {
+        if next_differs || starts.contains(&(i + 1)) || i + 1 - start == store::BATCH {
             out.push(start..i + 1);
             start = i + 1;
         }
@@ -941,7 +1124,7 @@ fn reports(
     store: &Store,
     own: WriterId,
     appended: &BTreeMap<WriterId, usize>,
-    runs: &Runs,
+    runs: &Runs<'_>,
 ) -> Result<Vec<RunReport>, IngestError> {
     let all = store.ingested_runs()?;
     let mut writers: Vec<WriterId> = runs.of_source.values().copied().collect();

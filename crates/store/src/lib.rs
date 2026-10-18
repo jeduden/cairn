@@ -131,6 +131,11 @@ pub enum StoreError {
         address: Address,
         source: std::io::Error,
     },
+    /// Another ingest moved the ingest position of the transcript source
+    /// generation `source` past where this append starts, so its lines
+    /// are recorded already: the append is refused whole, for the caller
+    /// to read the source again (REC-06, REC-13).
+    PositionMoved { source: i64 },
 }
 
 impl fmt::Display for StoreError {
@@ -168,6 +173,10 @@ impl fmt::Display for StoreError {
             Self::Payload { address, source } => {
                 write!(f, "the payload of {address}: {source}")
             }
+            Self::PositionMoved { source } => write!(
+                f,
+                "another ingest moved the ingest position of transcript source {source} first"
+            ),
         }
     }
 }
@@ -711,7 +720,8 @@ impl Store {
     }
 
     /// Moves the position of the transcript source generation `id` to
-    /// `position`, appending nothing.
+    /// `position`, appending nothing; never back from where another
+    /// ingest moved it.
     ///
     /// # Errors
     ///
@@ -748,7 +758,9 @@ impl Store {
     ///
     /// # Errors
     ///
-    /// As [`append`](Self::append); nothing is appended or moved then.
+    /// As [`append`](Self::append), and [`StoreError::PositionMoved`]
+    /// when another ingest moved the position past the first line;
+    /// nothing is appended or moved then.
     pub fn append_lines(
         &mut self,
         writer: WriterId,
@@ -765,6 +777,12 @@ impl Store {
         let tx = self
             .conn
             .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        // An ingest that read the source before another appended starts
+        // behind the position that one moved: its lines are recorded.
+        let first = places.first().map_or(position.offset, |p| p.offset);
+        if source::offset(&tx, id)? > first {
+            return Err(StoreError::PositionMoved { source: id });
+        }
         let mut out = Vec::with_capacity(new_events.len());
         let mut start = 0;
         for i in 0..new_events.len() {

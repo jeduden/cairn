@@ -19,7 +19,14 @@
 //! verify` requires; any other seat shows as `peer`. A refusal is fixed
 //! text, naming at most an address it parsed and renders anew; it never
 //! repeats what the call passed (RCL-04).
+//!
+//! Once its harness session's session binding is held, each tool call
+//! is served under the run its tool-use id names through what the
+//! server's ingest read, or refused ([`tool_call`], PRV-14).
 
+pub mod tool_call;
+
+use std::cell::RefCell;
 use std::io::{self, Write};
 use std::panic::{self, AssertUnwindSafe};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
@@ -66,13 +73,25 @@ const NO_SEAT: &str = "the event's writer has no seat";
 const NO_TOOL: &str = "no such tool: this server offers event_get";
 
 /// The server over one store, for one node.
-#[derive(Debug)]
 pub struct Server {
     store: Store,
     version: String,
     device_key: PublicKey,
     device_writer: WriterId,
     personal_room: RoomId,
+    /// What finds the run of each tool call: the server's live ingest.
+    runs: Option<Box<dyn tool_call::Runs>>,
+    /// What finding each call's run came to since `take_found`.
+    found: RefCell<Vec<tool_call::Found>>,
+}
+
+impl std::fmt::Debug for Server {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Server")
+            .field("store", &self.store)
+            .field("version", &self.version)
+            .finish_non_exhaustive()
+    }
 }
 
 impl Server {
@@ -94,7 +113,36 @@ impl Server {
             device_key,
             device_writer,
             personal_room,
+            runs: None,
+            found: RefCell::new(Vec::new()),
         }
+    }
+
+    /// This server, finding each tool call's run through `runs`
+    /// (PRV-14).
+    #[must_use]
+    pub fn with_runs(mut self, runs: Box<dyn tool_call::Runs>) -> Self {
+        self.runs = Some(runs);
+        self
+    }
+
+    /// What finding each call's run came to since this was last asked,
+    /// for the caller to log, and to count and audit each refusal
+    /// (PRV-14, I6).
+    pub fn take_found(&self) -> Vec<tool_call::Found> {
+        self.found.take()
+    }
+
+    /// The refusal of the call whose params are `params` when its run
+    /// cannot be found; none when it is, or while no session binding is
+    /// held, before which a call is served under no run.
+    fn refused(&self, params: &Value) -> Option<&'static str> {
+        let runs = self.runs.as_deref().filter(|r| r.serving())?;
+        let found = tool_call::find(runs, params);
+        let refusal = found.run.as_ref().err().map(|cause| cause.refusal());
+        self.found.borrow_mut().push(found);
+
+        refusal
     }
 
     /// The reply to one message, as one line of JSON; none for a
@@ -135,9 +183,10 @@ impl Server {
     }
 
     fn call(&self, params: &Value) -> Value {
-        let outcome = match params["name"].as_str() {
-            Some("event_get") => self.event_get(&params["arguments"]),
-            _ => Err(NO_TOOL.to_owned()),
+        let outcome = match (self.refused(params), params["name"].as_str()) {
+            (Some(refusal), _) => Err(refusal.to_owned()),
+            (None, Some("event_get")) => self.event_get(&params["arguments"]),
+            (None, _) => Err(NO_TOOL.to_owned()),
         };
         match outcome {
             Ok(envelope) => json!({

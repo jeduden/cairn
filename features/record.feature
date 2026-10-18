@@ -186,7 +186,7 @@ Feature: Record (REC)
     And a second fresh home that ingests "main-run" under the same writer id derives the same chain head hash
     And "cairn event expand" returns line 10 before line 11
 
-  @REC-13 @P0 @I1 @I9 @pending
+  @REC-13 @P0 @I1 @I9
   Scenario Outline: the harness session's MCP server ingests its transcripts as they grow, once bound to its harness session, and marks what it leaves when it stops
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run" and a subagent transcript "explore-agent"

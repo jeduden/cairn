@@ -15,9 +15,11 @@ fn held(id: i64, hook: &str, session: &str) -> Held {
             prompt_id: None,
             attended: false,
             ancestry: None,
+            harness: None,
             at: 1,
         },
         appended: false,
+        taken: false,
     }
 }
 

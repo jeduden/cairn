@@ -61,6 +61,12 @@ fn main() -> ExitCode {
         // A development build's seam for the tests; a release build
         // keeps each hook's own budget (NFR-02).
         ancestry: hook::ancestry::own,
+        // A development build's seam for the tests; a release build's
+        // live ingest reads every line.
+        live_limit: cfg!(debug_assertions)
+            .then(|| std::env::var("CAIRN_TEST_INGEST_LIMIT").ok())
+            .flatten()
+            .and_then(|n| n.parse().ok()),
         hook_budget: cairn::budget_override(
             cfg!(debug_assertions)
                 .then(|| std::env::var("CAIRN_TEST_HOOK_BUDGET_MS").ok())

@@ -147,6 +147,25 @@ pub enum Counter {
     /// A matched `user` event's hook handler found no attended mark in
     /// deployment mode `interactive` (PRV-04).
     HarnessSessionNotAttended,
+    /// The MCP server stopped short of a transcript's end, leaving the
+    /// rest past its ingest marker: no failure, as `cairn ingest` or the
+    /// next MCP server resumes it (REC-13).
+    IngestRemainderLeft,
+    /// A witnessed line repeating another transcript's event was
+    /// recorded as its own event, never a repeat reference (REC-04).
+    WitnessedRepeatRecorded,
+    /// A tool call carried no tool-use id, so its run was not found and
+    /// it was refused (PRV-14).
+    ToolCallWithoutToolUseId,
+    /// No transcript line carried a tool call's tool-use id within 2 s,
+    /// and the call was refused (PRV-14).
+    ToolCallRunNotFound,
+    /// Transcript lines of two runs carried a tool call's tool-use id,
+    /// and the call was refused (PRV-14).
+    ToolCallRunAmbiguous,
+    /// The MCP server failed to ingest a transcript of its harness
+    /// session; the next read tries again (REC-13, I6).
+    LiveIngestFailed,
 }
 
 impl Counter {
@@ -189,6 +208,12 @@ impl Counter {
             Self::PromptCommitmentDropped => "prompt_commitment_dropped",
             Self::PromptMatchConflicts => "prompt_match_conflicts",
             Self::HarnessSessionNotAttended => "harness_session_not_attended",
+            Self::IngestRemainderLeft => "ingest_remainder_left",
+            Self::WitnessedRepeatRecorded => "witnessed_repeat_recorded",
+            Self::ToolCallWithoutToolUseId => "tool_call_without_tool_use_id",
+            Self::ToolCallRunNotFound => "tool_call_run_not_found",
+            Self::ToolCallRunAmbiguous => "tool_call_run_ambiguous",
+            Self::LiveIngestFailed => "live_ingest_failed",
         }
     }
 }
