@@ -592,6 +592,54 @@ fn trusted_provenance_outside_a_device_seat_is_named() {
 }
 
 #[test]
+fn a_witnessed_run_seat_records_structural_events_but_no_operator_s() {
+    let mut f = fixture();
+    let key = key::signing::SeatKey::mint(&mut key::random::OsEntropy).unwrap();
+    let seat = f
+        .node
+        .certify_run_seat(&mut f.store, &key, &mut key::random::OsEntropy)
+        .unwrap();
+    let event = |provenance| NewEvent {
+        kind: EventKind::HookObservation,
+        provenance,
+        content: json!({"hook": "SessionStart"}),
+        commitment_key: CommitmentKey::from_bytes([2; 32]),
+        transcript_timestamp: None,
+    };
+    f.store
+        .append(seat.writer, &[event(Provenance::Structural)])
+        .unwrap();
+    assert!(verify(&f.store, &f.node.device().public()).is_ok());
+
+    f.store
+        .append(seat.writer, &[event(Provenance::Operator)])
+        .unwrap();
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+    assert_eq!(err.class(), "provenance");
+}
+
+#[test]
+fn structural_provenance_in_an_ingest_seat_is_named() {
+    let mut f = fixture();
+    f.store
+        .append(
+            f.ingest.writer,
+            &[NewEvent {
+                kind: EventKind::HookObservation,
+                provenance: Provenance::Structural,
+                content: json!({"hook": "SessionStart"}),
+                commitment_key: CommitmentKey::from_bytes([3; 32]),
+                transcript_timestamp: None,
+            }],
+        )
+        .unwrap();
+
+    let err = verify(&f.store, &f.node.device().public()).unwrap_err();
+
+    assert_eq!(err.class(), "provenance");
+}
+
+#[test]
 fn a_transcripts_untrusted_harness_meta_verifies_in_an_ingest_seat() {
     // A transcript line's harness_meta is untrusted (PRV-08): only what
     // the launcher records is the trusted kind.

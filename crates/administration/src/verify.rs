@@ -220,7 +220,8 @@ impl From<StoreError> for VerifyError {
     }
 }
 
-/// The provenance classes only a device seat records: this node's own
+/// The provenance classes only a device seat records, and, for
+/// structural events alone, a witnessed run's run seat: this node's own
 /// operator and structural events (I2). A transcript line's
 /// `harness_meta` is untrusted and recorded in an ingest seat (PRV-08);
 /// where the launcher's trusted kind is recorded is M7's.
@@ -287,10 +288,12 @@ pub fn verify(store: &Store, node_key: &PublicKey) -> Result<Report, VerifyError
     let recorded = certificate_records(&held, &certs, &inceptions, &full)?;
     seats_counted(&certs, &inceptions, &recorded)?;
     for (writer, log) in &held {
-        let device = certs
-            .get(writer)
-            .is_some_and(|c| c.seat_kind == SeatKind::Device);
-        events(log, device, &full)?;
+        let cert = certs.get(writer);
+        let device = cert.is_some_and(|c| c.seat_kind == SeatKind::Device);
+        // A witnessed run's MCP server records its hook observations in
+        // its run seat (REC-19): structural, never an operator's.
+        let witnessed = cert.is_some_and(|c| c.seat_kind == SeatKind::Run && !c.ingest_seat);
+        events(log, device, witnessed, &full)?;
     }
     let order = chain::causal_order(&record).map_err(broken)?;
 
@@ -629,15 +632,19 @@ fn certificate_records(
 
 /// Checks each event of one writer's `log`: a key event's content is a
 /// key event, a node identity change event's is one, and trusted
-/// provenance appears only when `device`, the writer a device seat's.
+/// provenance appears only when `device`, the writer a device seat's,
+/// or, for structural provenance alone, when `witnessed`, the writer a
+/// run seat's that is no ingest seat.
 fn events(
     log: &[Stored],
     device: bool,
+    witnessed: bool,
     full: &dyn Fn(Address) -> String,
 ) -> Result<(), VerifyError> {
     for stored in log {
         let header = &stored.link.header;
-        if !device && TRUSTED.contains(&header.provenance) {
+        let structural = witnessed && header.provenance == Provenance::Structural;
+        if !device && !structural && TRUSTED.contains(&header.provenance) {
             return Err(VerifyError::Provenance {
                 address: full(header.address),
                 provenance: header.provenance.name(),
