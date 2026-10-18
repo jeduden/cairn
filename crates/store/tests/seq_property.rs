@@ -3,8 +3,11 @@
 //! two events share an address (writer, `seq`) (REC-06). Each record is
 //! a random sequence of appends, open appends, appends a failing event
 //! rolls back, segment closes, payloads and appends from a second
-//! connection, all to a few writers. Every case is seeded, so a failure
-//! names a seed that reproduces it; `CAIRN_PROPERTY_CASES` runs more.
+//! connection, all to a few writers. The property runs again with the
+//! records on several threads at once, each its own connection, as a
+//! run's MCP server and `cairn ingest` append beside each other in two
+//! processes (REC-06, REC-13). Every case is seeded, so a failure names
+//! a seed that reproduces it; `CAIRN_PROPERTY_CASES` runs more.
 
 #![allow(
     clippy::unwrap_used,
@@ -144,5 +147,36 @@ fn within_each_writer_s_log_seq_is_strictly_increasing_and_gap_free() {
             step(&mut rng, &mut stores, &writers);
         }
         check(&path, seed);
+    }
+}
+
+#[test]
+fn seq_stays_gap_free_with_appends_on_several_threads_at_once() {
+    let cases = std::env::var("CAIRN_PROPERTY_CASES")
+        .ok()
+        .and_then(|n| n.parse().ok())
+        .unwrap_or(CASES / 4);
+    let writers: Vec<WriterId> = (1..=3).map(|n| WriterId::derive(&[n; 32])).collect();
+    for seed in 0..cases {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("store.db");
+        drop(Store::open(&path).unwrap());
+        std::thread::scope(|scope| {
+            for thread in 0..3 {
+                let (path, writers) = (&path, &writers);
+                scope.spawn(move || record(path, writers, seed * 7 + thread));
+            }
+        });
+        check(&path, seed);
+    }
+}
+
+/// One random record of up to eight steps, seeded by `seed`, over its
+/// own connection to the store at `path`.
+fn record(path: &std::path::Path, writers: &[WriterId], seed: u64) {
+    let mut stores = [Store::open(path).unwrap()];
+    let mut rng = Rng::new(seed);
+    for _ in 0..1 + rng.below(8) {
+        step(&mut rng, &mut stores, writers);
     }
 }
