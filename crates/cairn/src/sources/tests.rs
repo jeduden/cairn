@@ -92,3 +92,16 @@ fn a_home_with_no_store_has_no_sources_and_a_store_reads_them() {
     assert_eq!(status.held.len(), 1);
     assert_eq!(status.lost.len(), 1);
 }
+
+#[cfg(unix)]
+#[test]
+fn a_store_holding_no_schema_yet_has_no_sources() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = TempDir::new().unwrap();
+    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    home.create().unwrap();
+    std::fs::write(home.store(), "").unwrap();
+    std::fs::set_permissions(home.store(), std::fs::Permissions::from_mode(0o600)).unwrap();
+
+    assert_eq!(read(&home).unwrap(), None);
+}

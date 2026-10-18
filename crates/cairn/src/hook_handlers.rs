@@ -335,8 +335,14 @@ impl<'j> Recording<'j> {
             });
             return None;
         };
-        match fs::metadata(resolved.path()) {
-            Ok(meta) => Some(meta.len()),
+        self.size(fs::metadata(resolved.path()).map(|meta| meta.len()))
+    }
+
+    /// The transcript size `read` found: none, audited, when it could
+    /// not be read; 0 for one not written yet.
+    fn size(&self, read: io::Result<u64>) -> Option<u64> {
+        match read {
+            Ok(len) => Some(len),
             Err(e) if e.kind() == io::ErrorKind::NotFound => Some(0),
             Err(_) => {
                 self.failed("transcript path could not be read");

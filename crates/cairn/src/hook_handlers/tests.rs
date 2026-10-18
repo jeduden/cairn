@@ -428,16 +428,15 @@ fn cairn_ingest_counts_an_untaken_session_binding() {
     assert_eq!(untaken(&p), 1);
 }
 
-#[test]
-fn ingest_matches_a_prompt_and_counts_a_conflict_and_a_missing_attended_mark() {
-    let mut p = Process::new();
+/// A transcript of harness session `s1` in deployment mode
+/// `interactive`, its prompt `p1` held unattended by the hook handlers,
+/// whose two lines both carry `p1`: one matches, one conflicts.
+fn prompt_matched_twice(p: &mut Process) -> PathBuf {
     p.configure("[node]\ndeployment_mode = \"interactive\"\n");
     let (accepted, _, err) = p.invoke(&["configuration", "accept"], &DEV);
     assert_eq!(accepted, EXIT_OK, "{err}");
-    hook(&mut p, "SessionStart", |p| {
-        session_start(p, "s1", "startup")
-    });
-    hook(&mut p, "UserPromptSubmit", |p| {
+    hook(p, "SessionStart", |p| session_start(p, "s1", "startup"));
+    hook(p, "UserPromptSubmit", |p| {
         user_prompt_submit(p, "s1", "p1", "hello")
     });
     let recorded = fs::read_to_string(
@@ -457,8 +456,16 @@ fn ingest_matches_a_prompt_and_counts_a_conflict_and_a_missing_attended_mark() {
         line["uuid"] = json!(text);
         line.to_string()
     };
-    let path = transcript_path(&p, "s1");
+    let path = transcript_path(p, "s1");
     fs::write(&path, format!("{}\n{}\n", line("hello"), line("again"))).unwrap();
+
+    path
+}
+
+#[test]
+fn ingest_matches_a_prompt_and_counts_a_conflict_and_a_missing_attended_mark() {
+    let mut p = Process::new();
+    let path = prompt_matched_twice(&mut p);
 
     let (code, _, err) = p.invoke(&["ingest", "--path", &path.display().to_string()], &DEV);
 
@@ -565,4 +572,112 @@ fn a_source_names_only_a_known_start_and_a_budget_parses_as_milliseconds() {
     assert_eq!(budget_override(Some("75")), Some(Duration::from_millis(75)));
     assert_eq!(budget_override(Some("x")), None);
     assert_eq!(budget_override(None), None);
+}
+
+#[test]
+fn a_transcript_size_that_cannot_be_read_is_none_and_counted() {
+    let p = Process::new();
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    home.create().unwrap();
+    let sources = Sources {
+        configuration: p.dir.path().join("configuration.toml"),
+        repository: None,
+        managed: p.dir.path().join("managed"),
+        running: configuration::source::OsUser::Known(u32::MAX),
+    };
+    let job = Job {
+        hook: Hook::SessionStart,
+        text: String::new(),
+        home: None,
+        os_home: None,
+        now: NOW,
+        attended: false,
+        ancestry: || None,
+        panics: false,
+        hangs: false,
+    };
+    let recording = Recording::new(&job, &home, &sources);
+
+    assert_eq!(recording.size(Ok(7)), Some(7));
+    assert_eq!(recording.size(Err(io::ErrorKind::NotFound.into())), Some(0));
+    assert_eq!(entries(&p), Vec::new());
+    assert_eq!(
+        recording.size(Err(io::ErrorKind::PermissionDenied.into())),
+        None
+    );
+    assert_eq!(
+        entries(&p),
+        [(
+            Some("hook_failed".into()),
+            "transcript path could not be read".into()
+        )]
+    );
+}
+
+#[test]
+fn a_hook_observation_the_store_cannot_hold_is_counted_and_the_hook_answers_empty() {
+    let mut p = Process::new();
+    hold_start(&p, "old", NOW - 31);
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute_batch("DROP TABLE hook_observations").unwrap();
+    drop(conn);
+
+    let ran = hook(&mut p, "SessionStart", |p| {
+        session_start(p, "s1", "startup")
+    });
+
+    assert_eq!(ran, (EXIT_OK, String::new(), String::new()));
+    assert_eq!(
+        entries(&p),
+        [(
+            Some("hook_failed".into()),
+            "hook observation could not be held".into()
+        )],
+        "no untaken session binding is counted from a store that cannot list them"
+    );
+}
+
+#[test]
+fn session_bindings_a_store_cannot_list_are_left_uncounted() {
+    let p = Process::new();
+    hold_start(&p, "old", NOW - 31);
+    let mut store = store(&p);
+    rusqlite::Connection::open(p.cairn_home().join("store.db"))
+        .unwrap()
+        .execute_batch("DROP TABLE hook_observations")
+        .unwrap();
+    let audits = std::cell::Cell::new(0);
+
+    count_untaken(&mut store, NOW, &|_| audits.set(audits.get() + 1));
+
+    assert_eq!(audits.get(), 0);
+}
+
+#[test]
+fn a_prompt_input_without_its_prompt_has_no_prompt_commitment() {
+    let input = HookInput {
+        session_id: Some("s1".into()),
+        prompt_id: Some("p1".into()),
+        ..HookInput::default()
+    };
+    let redactor = Redactor::new(&[]).unwrap().0;
+
+    assert_eq!(committed(&input, &redactor), None);
+}
+
+#[test]
+fn ingest_says_which_prompt_match_it_cannot_audit() {
+    let mut p = Process::new();
+    let path = prompt_matched_twice(&mut p);
+    // Nothing was audited yet, so a file takes the audit log's place.
+    let audit_dir = p.cairn_home().join("audit");
+    fs::write(&audit_dir, "").unwrap();
+    crate::tests::set_mode(&audit_dir, 0o600);
+
+    let (_, _, err) = p.invoke(&["ingest", "--path", &path.display().to_string()], &DEV);
+
+    assert!(
+        err.contains("cairn ingest: audit a prompt match: "),
+        "{err}"
+    );
 }

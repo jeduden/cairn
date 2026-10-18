@@ -175,3 +175,25 @@ fn counts_and_offsets_stay_within_what_sqlite_holds() {
     assert_eq!(count(5), 5);
     assert_eq!(sql_count(u64::MAX), i64::MAX);
 }
+
+#[test]
+fn holding_and_counting_fail_when_sqlite_does() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let id = store
+        .hold_observation(&observed("SessionStart", "s1", 1), None)
+        .unwrap();
+    store
+        .conn
+        .execute_batch("DROP TABLE hook_observations")
+        .unwrap();
+
+    assert!(matches!(
+        store.hold_observation(&observed("SessionStart", "s2", 2), None),
+        Err(StoreError::Sqlite(_))
+    ));
+    assert!(matches!(
+        store.count_binding(id),
+        Err(StoreError::Sqlite(_))
+    ));
+}
