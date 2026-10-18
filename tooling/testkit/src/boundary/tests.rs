@@ -702,6 +702,19 @@ fn a_spawned_program_that_outlives_its_deadline_or_is_killed_is_stopped() {
 }
 
 #[test]
+fn a_spawned_program_left_running_is_stopped_when_dropped() {
+    let dir = TempDir::new().unwrap();
+    let sleeper = unconfined()
+        .spawn(Path::new("/bin/sleep"), &["30"], dir.path(), &[])
+        .unwrap();
+    let pid = sleeper.child.id();
+
+    drop(sleeper);
+
+    assert!(!Path::new(&format!("/proc/{pid}")).exists());
+}
+
+#[test]
 fn a_spawned_program_that_opens_a_socket_fails_its_end() {
     let Some(core) = confined() else {
         return;
