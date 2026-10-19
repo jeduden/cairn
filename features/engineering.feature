@@ -190,6 +190,28 @@ Feature: Engineering quality (ENG)
     And only the release-only build workflow publishes each binary's SLSA Build Level 3 provenance as a GitHub artifact attestation, verified against that workflow's signing identity at main
     And an SPDX SBOM is attached, published as a GitHub artifact attestation and verified once published
 
+  @ENG-30 @P0 @pending
+  Scenario: a dependency with no recoverable license text stops the build in the pull request that adds it
+    Given the repository checkout
+    When every crate in "Cargo.lock" is read through "cargo metadata" and the sources cargo has fetched
+    Then each crate has a license file in its source, or a text the repository keeps for its name and version
+    And each license file's text matches the license the crate declares
+    And the CI workflow runs the check on every pull request, with the locked dependency tree
+    And the check adds no dependency to any shipped executable
+
+  @ENG-31 @P0 @pending
+  Scenario: every release publishes, signed and reproducible, the license texts of what each binary links
+    Given the repository checkout
+    When the third-party license file is generated twice for each release target
+    Then both runs give the same bytes, with no timestamp, host path or randomness
+    And each file holds the license text and copyright lines of every crate a normal-dependency path from a binary under "crates/" reaches for that target
+    And no build-only, proc-macro, test, fuzz or tooling crate appears in it
+    And it names the bundled SQLite and, on the musl targets, the C library
+    When the release workflows are read
+    Then the file is generated from the commit being released and listed in the signed checksum file
+    And the file is covered by the attestation of the binaries it describes
+    And the verify job fails the release when a published file is missing, differs from a regeneration, or lacks a linked crate
+
   @ENG-21 @P0 @pending
   Scenario: main only moves through reviewed, signed pull requests
     Given the repository's branch protection for main
