@@ -30,8 +30,17 @@ const CHUNK: usize = 64;
 /// `rounds` rounds of integer mixing from `seed`.
 #[must_use]
 pub fn mix(seed: u64, rounds: u64) -> u64 {
-    let _ = (seed, rounds);
-    0
+    let mut x = seed;
+    for i in 0..rounds {
+        x ^= x >> 30;
+        x = x.wrapping_mul(0xbf58_476d_1ce4_e5b9);
+        x ^= x >> 27;
+        x = x.wrapping_mul(0x94d0_49bb_1331_11eb);
+        x ^= x >> 31;
+        x = x.wrapping_add(i);
+    }
+
+    x
 }
 
 /// `rounds` rounds of creating, writing, reading and inspecting a file
@@ -42,8 +51,34 @@ pub fn mix(seed: u64, rounds: u64) -> u64 {
 ///
 /// Fails when the file cannot be created, read or removed.
 pub fn touch_files(dir: &Path, rounds: u32) -> io::Result<u64> {
-    let _ = (dir, rounds, CHUNK);
-    Ok(0)
+    let path = dir.join(format!("calibrate-{}.tmp", std::process::id()));
+    let mut sum = 0u64;
+    let mut outcome = Ok(());
+    for round in 0..rounds {
+        outcome = one_round(&path, round, &mut sum);
+        if outcome.is_err() {
+            break;
+        }
+    }
+    let removed = std::fs::remove_file(&path);
+    outcome?;
+    removed?;
+
+    Ok(sum)
+}
+
+/// One round of [`touch_files`] on `path`, adding what it read and
+/// measured to `sum`.
+fn one_round(path: &Path, round: u32, sum: &mut u64) -> io::Result<()> {
+    let chunk = [u8::try_from(round % 251).unwrap_or(0); CHUNK];
+    std::fs::File::create(path)?.write_all(&chunk)?;
+    let mut back = [0u8; CHUNK];
+    std::fs::File::open(path)?.read_exact(&mut back)?;
+    *sum += back.iter().map(|b| u64::from(*b)).sum::<u64>();
+    *sum += std::fs::metadata(path)?.len();
+    black_box((std::process::id(), Instant::now()));
+
+    Ok(())
 }
 
 /// The workload with its own parameters: the mixed seed combined with
@@ -53,8 +88,10 @@ pub fn touch_files(dir: &Path, rounds: u32) -> io::Result<u64> {
 ///
 /// Fails as [`touch_files`] does.
 pub fn run_with(dir: &Path, seed: u64, mix_rounds: u64, file_rounds: u32) -> io::Result<u64> {
-    let _ = (dir, seed, mix_rounds, file_rounds);
-    Ok(0)
+    let mixed = mix(black_box(seed), black_box(mix_rounds));
+    let files = touch_files(dir, file_rounds)?;
+
+    Ok(black_box(mixed ^ files))
 }
 
 /// The frozen workload, in `dir`.
