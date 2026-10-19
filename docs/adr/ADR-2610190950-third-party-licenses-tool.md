@@ -116,7 +116,8 @@ a hand-kept entry for each non-crate library.
   ENG-30 or ENG-31. The in-repository tool keeps a short list of the
   canonical texts of the licenses on the allow-list and of those a
   `deny.toml` exception grants, with the holder, year and name a template
-  fills in left free, and does its own comparison; it does not reach `cargo-deny`'s matcher.
+  fills in left free, and does its own comparison; it does not reach
+  `cargo-deny`'s matcher.
 - **The SBOM (ENG-20).** SPDX lists license identifiers, not texts or
   copyright lines.
 - **A separate release asset.** Rejected by the stakeholder: a file
