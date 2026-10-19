@@ -322,6 +322,10 @@ fn bulk_insert(path: &Path, writer: &str, last: u64, row_of_last: i64) -> Result
     let mut conn = rusqlite::Connection::open(path).map_err(|e| e.to_string())?;
     conn.execute_batch("PRAGMA synchronous = OFF")
         .map_err(|e| e.to_string())?;
+    let index = path.with_file_name(store::search_index::FILE);
+    let index = index.to_str().ok_or("the index path is not text")?;
+    conn.execute("ATTACH DATABASE ?1 AS idx", [index])
+        .map_err(|e| e.to_string())?;
     let slot_part = row_of_last - ((last as i64) << store::search_index::SLOT_BITS);
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     let numbers = "WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < ?1)";
@@ -340,7 +344,7 @@ fn bulk_insert(path: &Path, writer: &str, last: u64, row_of_last: i64) -> Result
     .map_err(|e| e.to_string())?;
     tx.execute(
         &format!(
-            "{numbers} INSERT INTO events_fts (rowid, text)
+            "{numbers} INSERT INTO idx.events_fts (rowid, text)
              SELECT ((?2 + i) << ?3) + ?4, 'filler line ' || (i % 5000) FROM n"
         ),
         rusqlite::params![
@@ -349,6 +353,11 @@ fn bulk_insert(path: &Path, writer: &str, last: u64, row_of_last: i64) -> Result
             i64::from(store::search_index::SLOT_BITS),
             slot_part
         ],
+    )
+    .map_err(|e| e.to_string())?;
+    tx.execute(
+        "UPDATE idx.search_writers SET indexed_to = ?1 WHERE writer = ?2",
+        rusqlite::params![last as i64 + EVENTS as i64, writer],
     )
     .map_err(|e| e.to_string())?;
     tx.commit().map_err(|e| e.to_string())

@@ -66,6 +66,19 @@ const HAS_META: &str = "SELECT count(*) FROM sqlite_master WHERE name = 'meta'";
 /// The store's schema version (ADM-05, ADM-11).
 const VERSION: &str = "SELECT value FROM meta WHERE key = 'schema_version'";
 
+/// Every writer of the record and its newest seq, walking the events'
+/// key writer by writer.
+const NEWEST_SEQS: &str = "WITH RECURSIVE w(writer) AS (
+        SELECT min(writer) FROM events
+        UNION ALL
+        SELECT (SELECT min(writer) FROM events WHERE writer > w.writer) FROM w
+        WHERE w.writer IS NOT NULL
+    ), all_writers(writer) AS (
+        SELECT writer FROM w WHERE writer IS NOT NULL UNION SELECT writer FROM seats
+    )
+    SELECT writer, (SELECT max(seq) FROM events e WHERE e.writer = a.writer)
+    FROM all_writers a ORDER BY writer";
+
 /// The heads one event cites.
 const CITED: &str = "SELECT other_writer, other_seq, other_hash FROM event_heads
      WHERE writer = ?1 AND seq = ?2 ORDER BY other_writer";
@@ -457,15 +470,21 @@ impl Store {
         self.finish(built)
     }
 
-    /// Whether the index holds what the record does.
+    /// Whether the index holds what the record does. It reads each
+    /// writer's newest seq by the record's key, never a scan of the
+    /// events, as a hook handler's open stays within its budget (NFR-02).
     fn index_is_current(&self) -> Result<bool, StoreError> {
+        let mut statement = self.conn.prepare(NEWEST_SEQS)?;
+        let rows = statement.query_map([], |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, Option<i64>>(1)?))
+        })?;
         let mut heads = Vec::new();
-        for writer in self.writers()? {
-            let newest: Option<i64> = self.conn.query_row(
-                "SELECT max(seq) FROM events WHERE writer = ?1",
-                [writer.to_string()],
-                |r| r.get(0),
-            )?;
+        for row in rows {
+            let (text, newest) = row?;
+            let writer = WriterId::parse(&text).map_err(|_| StoreError::Corrupt {
+                address: None,
+                what: format!("writer id {text:?}"),
+            })?;
             heads.push((
                 writer,
                 newest.and_then(|n| u64::try_from(n).ok()).unwrap_or(0),

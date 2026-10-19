@@ -66,6 +66,11 @@ fn build(dir: &TempDir, count: u64) -> Store {
 
     let mut conn = rusqlite::Connection::open(&path).unwrap();
     conn.execute_batch("PRAGMA synchronous = OFF").unwrap();
+    conn.execute(
+        "ATTACH DATABASE ?1 AS idx",
+        [dir.path().join("search_index").to_str().unwrap()],
+    )
+    .unwrap();
     let slot_part = row_of_first - (1_i64 << SLOT_BITS);
     let text = "'message line ' || (i % 5000) || CASE WHEN i % 3 = 0 THEN ' deploy' ELSE '' END
                 || CASE WHEN i % 1000 = 0 THEN ' rarity' ELSE '' END";
@@ -85,10 +90,15 @@ fn build(dir: &TempDir, count: u64) -> Store {
     .unwrap();
     tx.execute(
         &format!(
-            "{numbers} INSERT INTO events_fts (rowid, text)
+            "{numbers} INSERT INTO idx.events_fts (rowid, text)
              SELECT ((1 + i) << ?2) + ?3, {text} FROM n"
         ),
         rusqlite::params![count as i64, i64::from(SLOT_BITS), slot_part],
+    )
+    .unwrap();
+    tx.execute(
+        "UPDATE idx.search_writers SET indexed_to = 1 + ?1 WHERE writer = ?2",
+        rusqlite::params![count as i64, writer.to_string()],
     )
     .unwrap();
     tx.commit().unwrap();

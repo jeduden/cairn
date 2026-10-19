@@ -211,8 +211,8 @@ fn a_search_whose_hit_cannot_be_read_says_to_run_verify() {
 #[test]
 fn a_store_with_no_index_makes_a_search_say_to_run_verify() {
     let f = fixture();
-    for table in ["events_vocab", "events_fts", "search_writers"] {
-        f.sql(&format!("DROP TABLE {table}"));
+    for suffix in ["", "-wal", "-shm"] {
+        let _ = std::fs::remove_file(f.home.root().join(format!("search_index{suffix}")));
     }
     let store = Store::open_read_only(&f.home.store()).unwrap();
     let node = Node::find(&f.home, &store).unwrap();
