@@ -31,7 +31,8 @@ of these cases:
   one;
 - an accepted ADR names a module no manifest requires any more,
   `fuzz/Cargo.toml`'s included;
-- a row leaves a column empty, or its license is off the allow-list;
+- a row leaves a column empty, or its license is off the allow-list
+  and named by no per-crate exception in [deny.toml](deny.toml);
 - this file does not list a dependency ADR;
 - more than ten direct dependencies link into a shipped executable,
   reached by normal dependencies from a binary under `crates/`.

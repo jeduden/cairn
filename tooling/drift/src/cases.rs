@@ -154,6 +154,17 @@ fn dependency_cases() -> Vec<Case> {
             scenario("ENG-18"),
             "libfuzzer-sys is named by 0 accepted ADRs",
         ),
+        case(
+            "a license beyond the allow-list with no exception for its crate",
+            "ENG-18",
+            Injection::replace(
+                "deny.toml",
+                r#"  { crate = "libfuzzer-sys", allow = ["NCSA"] },"#,
+                "",
+            ),
+            scenario("ENG-18"),
+            r#"libfuzzer-sys is licensed "(MIT OR Apache-2.0) AND NCSA", not on the allow-list"#,
+        ),
     ]
 }
 

@@ -53,10 +53,17 @@ fn deps_justified(w: &mut World) -> Result<(), String> {
     outcome(dependencies::deps_justified(&eng(w).adrs))
 }
 
-#[then(regex = r"^each license is on the allow-list the ENG-18 requirement states$")]
-fn licenses_allowed(w: &mut World) -> Result<(), String> {
+#[then(
+    regex = r#"^each license is on the allow-list the ENG-18 requirement states, or a crate's exception in "([^"]+)"$"#
+)]
+fn licenses_allowed(w: &mut World, deny: String) -> Result<(), String> {
     let allowed = dependencies::allow_list(&eng(w).checkout()?.requirement("ENG-18")?.text)?;
-    outcome(dependencies::licenses_allowed(&eng(w).adrs, &allowed))
+    let exceptions = dependencies::license_exceptions(&eng(w).checkout()?.read(&deny)?);
+    outcome(dependencies::licenses_allowed(
+        &eng(w).adrs,
+        &allowed,
+        &exceptions,
+    ))
 }
 
 #[then(
