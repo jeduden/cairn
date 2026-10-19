@@ -118,7 +118,7 @@ footer: |
   publishes `THIRD_PARTY_LICENSES` per target, listed in the signed
   checksum file and attested with the binaries
 - [ ] Generating the file twice gives identical bytes; it names every
-  crate linked into its target, the bundled SQLite and the musl C
+  crate linked into its target, the SQLite and the musl C
   library, and no build-only, test, fuzz or tooling crate
 - [ ] Drift cases for the ENG-30 check and the ENG-31 verification are
   caught (ENG-27)

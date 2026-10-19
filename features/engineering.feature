@@ -201,7 +201,7 @@ Feature: Engineering quality (ENG)
     And the check adds no dependency to any shipped executable
 
   @ENG-31 @P0 @pending
-  Scenario: every executable carries the license texts of what it links for its own target, kept in step by CI
+  Scenario: the core executable carries the license texts of what it links for its own target, kept in step by CI
     Given the repository checkout
     When the release targets are read from the build workflow
     Then each target has a committed "licenses/<target-triple>/THIRD_PARTY_LICENSES" and no other target has one
@@ -210,11 +210,12 @@ Feature: Engineering quality (ENG)
     And the committed file equals the regeneration
     And it holds the license text and copyright lines of every crate a normal-dependency path from a binary under "crates/" reaches for that target
     And no build-only, proc-macro, test, fuzz or tooling crate appears in it
-    And it names the bundled SQLite and the C library or runtime that target links statically
+    And it names the SQLite and, on the musl targets, the C library, both compiled in
     And the Windows file names a Windows-only crate that no Linux file names
     When each target's build selects its embedded file
     Then the embedded text equals that target's committed file
-    And the built "cairn" executable's "cairn licenses" output equals it
+    And the built core executable's "cairn licenses" output equals it
+    And any other executable a component ships in carries the same for the crates linked into it
     And the CI workflow fails a pull request whose committed file differs from a regeneration
     And the release build fails when a built executable's output differs from its target's regenerated file
     And the core gains no dependency and opens no socket

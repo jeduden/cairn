@@ -26,9 +26,9 @@ with the binary wherever it goes. The stakeholder wants this to work
 with no manual step when a dependency arrives.
 
 The ENG-18 allow-list licenses (MIT, BSD, ISC, Apache-2.0) require the
-text and copyright line to travel with a binary. The bundled SQLite
+text and copyright line to travel with a binary. The SQLite
 (public domain) and, on the musl targets, the C library (MIT) are
-compiled in without being crates, so no crate-based tool sees them.
+both compiled in without being crates, so no crate-based tool sees them.
 
 ## Decision
 
@@ -101,10 +101,10 @@ How the three candidates compare, for the tool that writes the file:
 
 **Recommendation, and the ruling.** The in-repository tool: it is the
 only candidate that knows the non-crate code, reproduces byte for
-byte by construction and adds no external binary to the release chain. `cargo-about` is the
-fallback if the stakeholder prefers a maintained tool; it would need its
-own accepted ADR, a drift case, and a hand-kept entry for each
-non-crate library.
+byte by construction and adds no external binary to the release
+chain. `cargo-about` is the fallback if the stakeholder prefers a
+maintained tool. It would need its own accepted ADR, a drift case, and
+a hand-kept entry for each non-crate library.
 
 - **`cargo-deny`'s license check alone.** It already runs in CI and
   checks the declared SPDX expression, but it never reads or ships a
