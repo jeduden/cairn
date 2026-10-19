@@ -33,6 +33,15 @@ fn the_files_sum_what_they_wrote_and_leave_nothing_behind() {
 }
 
 #[test]
+fn no_rounds_make_no_file_and_still_succeed() {
+    let dir = scratch("none");
+
+    assert_eq!(touch_files(&dir, 0).unwrap(), 0);
+    assert_eq!(run_with(&dir, SEED, 0, 0).unwrap(), SEED);
+    std::fs::remove_dir(&dir).unwrap();
+}
+
+#[test]
 fn a_directory_that_is_not_there_fails() {
     let dir = std::env::temp_dir().join("calibrate-missing/none");
 
