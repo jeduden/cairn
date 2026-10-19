@@ -60,7 +60,11 @@ pub fn touch_files(dir: &Path, rounds: u32) -> io::Result<u64> {
             break;
         }
     }
-    let removed = std::fs::remove_file(&path);
+    let removed = if rounds == 0 {
+        Ok(())
+    } else {
+        std::fs::remove_file(&path)
+    };
     outcome?;
     removed?;
 
