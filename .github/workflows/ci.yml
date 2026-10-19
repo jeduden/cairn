@@ -61,8 +61,8 @@ jobs:
       # times the release build of the core, never the development
       # build (testkit::release_core_executable), against the frozen
       # calibration workload (testkit::calibrate_executable). Built once
-      # here, with
-      # the real HOME, before the suite; no cache, as in release.yml.
+      # here, with the real HOME, before the suite; no cache, as in
+      # release.yml.
       - name: Build the release core the budget rows time
         run: cargo build --release --locked -p cairn -p calibrate
       # ENG-14: the suite runs with HOME pointed at an empty decoy
