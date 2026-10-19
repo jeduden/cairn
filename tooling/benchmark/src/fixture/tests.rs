@@ -64,7 +64,11 @@ fn a_home_reports_whether_its_audit_log_counted_a_counter() {
 
     let audit = home.env()[1].1.join("audit");
     fs::create_dir_all(&audit).unwrap();
-    fs::write(audit.join("audit-000001.jsonl"), "{\"counter\":\"other\"}\n").unwrap();
+    fs::write(
+        audit.join("audit-000001.jsonl"),
+        "{\"counter\":\"other\"}\n",
+    )
+    .unwrap();
     assert!(!home.counted("hook_budget_exceeded").unwrap());
 
     fs::write(

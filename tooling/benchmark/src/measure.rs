@@ -56,7 +56,8 @@ pub fn time_benchmark(
             )
             .map_err(|e| format!("make the fixture of {}: {e}", benchmark.name))?;
             let input = home.hook_input(hook).into_bytes();
-            time_program_fed(program, benchmark.args, &home.env(), input, deadline)
+            let took = time_program_fed(program, benchmark.args, &home.env(), input, deadline)?;
+            unexceeded(&home, benchmark.name).map(|()| took)
         }
     }
 }
@@ -65,7 +66,16 @@ pub fn time_benchmark(
 /// overran its hook budget (NFR-02): the benchmark times the unconfined
 /// release core, where the absolute budget is meaningful.
 fn unexceeded(home: &fixture::Home, name: &str) -> Result<(), String> {
-    let _ = (home, name);
+    const COUNTER: &str = "hook_budget_exceeded";
+    let counted = home
+        .counted(COUNTER)
+        .map_err(|e| format!("{name}: read the audit log: {e}"))?;
+    if counted {
+        return Err(format!(
+            "{name}: the handler counted {COUNTER}: it overran its hook budget"
+        ));
+    }
+
     Ok(())
 }
 

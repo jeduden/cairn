@@ -89,7 +89,16 @@ impl Home {
     ///
     /// Fails when the audit directory exists and cannot be read.
     pub fn counted(&self, counter: &str) -> io::Result<bool> {
-        let _ = counter;
+        let Ok(listing) = fs::read_dir(self.root.join(".cairn").join("audit")) else {
+            return Ok(false);
+        };
+        let wanted = format!("\"{counter}\"");
+        for file in listing {
+            if fs::read_to_string(file?.path()).is_ok_and(|text| text.contains(&wanted)) {
+                return Ok(true);
+            }
+        }
+
         Ok(false)
     }
 
