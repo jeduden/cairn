@@ -62,8 +62,18 @@ pub fn interleaved(
     reference: Timing<'_>,
     program: Timing<'_>,
 ) -> Result<(Vec<Duration>, Vec<Duration>), String> {
-    let _ = (rounds, reference, program);
-    Ok((Vec::new(), Vec::new()))
+    let (mut own, mut base) = (Vec::new(), Vec::new());
+    for round in 0..rounds {
+        if round % 2 == 0 {
+            base.push(reference()?);
+            own.push(program()?);
+        } else {
+            own.push(program()?);
+            base.push(reference()?);
+        }
+    }
+
+    Ok((own, base))
 }
 
 #[cfg(test)]
