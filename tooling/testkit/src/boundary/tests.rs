@@ -191,6 +191,20 @@ fn every_line_of_the_trace_is_a_network_call() {
 }
 
 #[test]
+fn a_detach_note_of_a_call_strace_could_not_name_is_no_network_call() {
+    // strace prints this when it exits while a thread of the program is
+    // still in a call; it names no call, and about 1 in 40 traced runs of
+    // a hook handler leaves one (NFR-02).
+    let trace = "24575 ???( <detached ...>\n\
+                 24576 connect(3, {sa_family=AF_INET} <detached ...>\n";
+
+    assert_eq!(
+        network_calls(trace),
+        ["connect(3, {sa_family=AF_INET} <detached ...>"]
+    );
+}
+
+#[test]
 fn the_caller_is_the_test_thread_and_the_place() {
     let here = Location::caller();
 
