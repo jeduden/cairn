@@ -8,8 +8,8 @@ summary: >-
   indexed in the append transaction up to 1 MiB, and event_search finds
   it by literal terms, ranked by BM25 over the newest 2,000 matches,
   damped per run. @RCL-02 cannot pass in M1 and is raised; NFR-03 is
-  benchmarked; the index lifts the store to 2.1x its text, past
-  NFR-09's frozen 1.5x, which is raised.
+  benchmarked; the index is a derived file of its own, so the record
+  holds 1.42x its text, within NFR-09's 1.5x; the index is 0.75x.
 ---
 # Phase 12 result
 
@@ -58,12 +58,13 @@ Inherited:
 
 For the stakeholder:
 
-- NFR-09 conflicts with REC-11. The store held every recorded
-  transcript at 1.41 times its text, frozen at 1.5. With the index it
-  holds 2.095 times, so `crates/ingest/tests/store_overhead.rs` fails;
-  an index of raw lines costs about 0.7 times the text, and 0.09 is
-  left. S2 had seen 1.96 with an index. Rule: loosen the target for the
-  store with its index, or measure the index apart. The test stands.
+- NFR-09 conflicted with REC-11 (2.095x with the index in `store.db`).
+  The owner ruled: measure the index apart. It is now a derived
+  file, `search_index`, beside `store.db` (I10). The store overhead
+  test (`store_overhead.rs`) measures the record alone: 1.418 times the
+  stored text of the 23 recorded transcripts, within the frozen 1.5. It
+  prints the index apart: 2,801,664 bytes, 0.751 times. The SRS sets no
+  index target; the owner may freeze one.
 - M1 deviates from RCL-02 and §9.2 twice. A run cannot yet be derived
   from its seats' writers, so `run` takes a writer id and damping is
   per writer. RCL-02 says nothing of ranking only the newest 2,000

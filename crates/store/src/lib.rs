@@ -466,7 +466,10 @@ impl Store {
                 [writer.to_string()],
                 |r| r.get(0),
             )?;
-            heads.push((writer, newest.and_then(|n| u64::try_from(n).ok()).unwrap_or(0)));
+            heads.push((
+                writer,
+                newest.and_then(|n| u64::try_from(n).ok()).unwrap_or(0),
+            ));
         }
 
         search_index::is_current(&self.conn, &heads)

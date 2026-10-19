@@ -716,3 +716,44 @@ fn opening_a_store_twice_before_it_has_an_index_builds_it_once_whole() {
     assert_eq!(again.search_index_digest().unwrap(), kept);
     assert_eq!(seqs(&find(&again, "deploy")), [1]);
 }
+
+/// The index's view of the record `heads` describes.
+fn current(store: &Store, heads: &[(WriterId, u64)]) -> bool {
+    is_current(&store.conn, heads).unwrap()
+}
+
+#[test]
+fn an_index_is_current_only_where_it_holds_every_writer_s_newest_event_and_no_more() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    seat(&mut store, writer(1), room());
+    store.append(writer(1), &texts(&["a", "b"])).unwrap();
+
+    assert!(current(&store, &[(writer(1), 2)]));
+    assert!(!current(&store, &[(writer(1), 3)]), "behind the record");
+    assert!(!current(&store, &[(writer(1), 1)]), "ahead of the record");
+    assert!(!current(&store, &[]), "a writer the record lacks");
+    assert!(current(&store, &[(writer(1), 2), (writer(2), 0)]));
+    assert!(!current(&store, &[(writer(1), 2), (writer(2), 5)]));
+}
+
+#[test]
+fn a_writer_that_lost_its_slot_to_a_smaller_id_leaves_the_index_current_and_one_that_did_not_does_not()
+ {
+    let (a, b) = (writer(1), sharing_the_slot(0));
+    let (small, large) = if a < b { (a, b) } else { (b, a) };
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    seat(&mut store, small, room());
+    store.append(small, &texts(&["shared"])).unwrap();
+
+    assert!(current(&store, &[(small, 1), (large, 3)]), "the loser");
+    store
+        .conn
+        .execute("UPDATE search_writers SET writer = ?1", [large.to_string()])
+        .unwrap();
+    assert!(
+        !current(&store, &[(small, 1), (large, 1)]),
+        "a larger id holds the slot a smaller one should"
+    );
+}

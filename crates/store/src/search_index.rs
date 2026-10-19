@@ -169,14 +169,15 @@ pub(crate) fn write_settings(conn: &Connection) -> Result<(), StoreError> {
 /// holds a slot is indexed to its newest event and no further, no slot
 /// is held by a writer the record lacks, and a writer without a slot
 /// has lost it to a smaller writer id.
-pub(crate) fn is_current(
-    conn: &Connection,
-    heads: &[(WriterId, u64)],
-) -> Result<bool, StoreError> {
+pub(crate) fn is_current(conn: &Connection, heads: &[(WriterId, u64)]) -> Result<bool, StoreError> {
     let mut held = std::collections::BTreeMap::new();
     let mut statement = conn.prepare("SELECT writer, slot, indexed_to FROM search_writers")?;
     let rows = statement.query_map([], |r| {
-        Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, i64>(2)?))
+        Ok((
+            r.get::<_, String>(0)?,
+            r.get::<_, i64>(1)?,
+            r.get::<_, i64>(2)?,
+        ))
     })?;
     for row in rows {
         let (writer, slot, indexed) = row?;
