@@ -16,6 +16,9 @@ use crate::suite::{Benchmark, Fixture, HOOK_LINES};
 /// How long one sample may take before it is an error.
 pub const DEADLINE: Duration = Duration::from_secs(10);
 
+/// How long preparing a sample's fixture may take.
+pub const PREPARE_DEADLINE: Duration = Duration::from_secs(120);
+
 /// Times `program` started with `args` until it exits, its standard
 /// streams discarded. The time is taken on the thread that waits, so it
 /// counts the program's start and run and nothing of the wait for the
@@ -48,6 +51,15 @@ pub fn time_benchmark(
                 fixture::Home::with_transcript(&std::env::temp_dir(), &fixture::transcript(lines))
                     .map_err(|e| format!("make the fixture of {}: {e}", benchmark.name))?;
             time_program_in(program, benchmark.args, &home.env(), deadline)
+        }
+        Fixture::Search { lines, prepare } => {
+            let home =
+                fixture::Home::with_transcript(&std::env::temp_dir(), &fixture::transcript(lines))
+                    .map_err(|e| format!("make the fixture of {}: {e}", benchmark.name))?;
+            time_program_in(program, prepare, &home.env(), PREPARE_DEADLINE)
+                .map_err(|e| format!("prepare the fixture of {}: {e}", benchmark.name))?;
+            let input = fixture::SEARCH_REQUESTS.as_bytes().to_vec();
+            time_program_fed(program, benchmark.args, &home.env(), input, deadline)
         }
         Fixture::HookInput { hook } => {
             let home = fixture::Home::with_transcript(

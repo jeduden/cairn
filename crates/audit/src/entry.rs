@@ -166,6 +166,8 @@ pub enum Counter {
     /// The MCP server failed to ingest a transcript of its harness
     /// session; the next read tries again (REC-13, I6).
     LiveIngestFailed,
+    /// A search ran past its deadline and was cancelled (SEC-04).
+    QueryCancelled,
 }
 
 impl Counter {
@@ -214,6 +216,7 @@ impl Counter {
             Self::ToolCallRunNotFound => "tool_call_run_not_found",
             Self::ToolCallRunAmbiguous => "tool_call_run_ambiguous",
             Self::LiveIngestFailed => "live_ingest_failed",
+            Self::QueryCancelled => "query_cancelled",
         }
     }
 }

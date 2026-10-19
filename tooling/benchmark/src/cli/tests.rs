@@ -68,13 +68,15 @@ fn run_writes_every_benchmark_s_samples_against_the_core() {
         "# benchmark nanoseconds\ncore_start_up 812\ncore_start_up 812\n\
          ingest_transcript 812\ningest_transcript 812\n\
          hook_session_start 812\nhook_session_start 812\n\
-         hook_user_prompt_submit 812\nhook_user_prompt_submit 812\n"
+         hook_user_prompt_submit 812\nhook_user_prompt_submit 812\n\
+         search_events 812\nsearch_events 812\n"
     );
     // One warm-up and the two samples, of each benchmark.
-    assert_eq!(seen.borrow().len(), 12);
+    assert_eq!(seen.borrow().len(), 15);
     assert_eq!(seen.borrow()[0], "target/release/cairn version");
     assert_eq!(seen.borrow()[3], "target/release/cairn ingest --all");
     assert_eq!(seen.borrow()[6], "target/release/cairn hook SessionStart");
+    assert_eq!(seen.borrow()[12], "target/release/cairn mcp");
 }
 
 #[test]

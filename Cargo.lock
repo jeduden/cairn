@@ -997,6 +997,7 @@ dependencies = [
  "record",
  "redaction",
  "rusqlite",
+ "search",
  "serde_json",
  "store",
  "testkit",
@@ -1315,6 +1316,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "search"
+version = "0.0.0"
+dependencies = [
+ "record",
+]
+
+[[package]]
 name = "security-framework"
 version = "3.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1466,6 +1474,7 @@ version = "0.0.0"
 dependencies = [
  "record",
  "rusqlite",
+ "search",
  "serde_json",
  "testkit",
 ]

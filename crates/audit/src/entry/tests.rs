@@ -106,6 +106,7 @@ fn each_counter_of_the_mcp_server_has_its_name() {
         (Counter::ToolCallRunNotFound, "tool_call_run_not_found"),
         (Counter::ToolCallRunAmbiguous, "tool_call_run_ambiguous"),
         (Counter::LiveIngestFailed, "live_ingest_failed"),
+        (Counter::QueryCancelled, "query_cancelled"),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

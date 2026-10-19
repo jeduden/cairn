@@ -50,7 +50,18 @@ fn time_benchmark_times_each_benchmark_over_its_fixture() {
     const QUIET: [&str; 2] = ["--exact", "no_test_has_this_name"];
     let (program, _) = quiet();
     for b in SUITE {
-        let quiet_benchmark = Benchmark { args: &QUIET, ..b };
+        let fixture = match b.fixture {
+            Fixture::Search { lines, .. } => Fixture::Search {
+                lines,
+                prepare: &QUIET,
+            },
+            other => other,
+        };
+        let quiet_benchmark = Benchmark {
+            args: &QUIET,
+            fixture,
+            ..b
+        };
 
         let took = time_benchmark(&program, &quiet_benchmark, DEADLINE).unwrap();
 
@@ -130,4 +141,46 @@ fn sample_saturates_a_time_too_long_for_nanoseconds() {
     let mut time = |_: &Benchmark| Ok(Duration::MAX);
 
     assert_eq!(sample(&SUITE[0], 1, &mut time), Ok(vec![u64::MAX]));
+}
+
+#[test]
+fn time_program_fed_hands_the_program_its_input() {
+    let (program, args) = quiet();
+
+    let took = time_program_fed(&program, &args, &[], Some("input\n"), DEADLINE).unwrap();
+
+    assert!(took > Duration::ZERO);
+}
+
+#[test]
+fn time_program_fed_reports_a_program_it_cannot_start() {
+    let err = time_program_fed(
+        Path::new("/no/such/program"),
+        &[],
+        &[],
+        Some("input"),
+        DEADLINE,
+    )
+    .unwrap_err();
+
+    assert!(err.starts_with("start /no/such/program"), "{err}");
+}
+
+#[test]
+fn a_search_fixture_that_cannot_be_prepared_names_the_benchmark() {
+    let (program, _) = quiet();
+    let failing = Benchmark {
+        fixture: Fixture::Search {
+            lines: 1,
+            prepare: &["--no-such-flag"],
+        },
+        ..SUITE[2]
+    };
+
+    let err = time_benchmark(&program, &failing, DEADLINE).unwrap_err();
+
+    assert!(
+        err.starts_with("prepare the fixture of search_events: "),
+        "{err}"
+    );
 }

@@ -15,6 +15,16 @@ const RECORDED: &str = include_str!(
     "../../../testdata/claude-code/2.1.296/transcripts/projects/-w-my-app/686aa14f-b535-45bc-9ed0-5400ea84bec7.jsonl"
 );
 
+/// The recall requests the search benchmark feeds the core: it
+/// initializes, then asks `event_search` for a word nearly every line
+/// holds, so the search ranks the newest 2,000 matches (NFR-03).
+pub const SEARCH_REQUESTS: &str = concat!(
+    r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}"#,
+    "\n",
+    r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"event_search","arguments":{"query":"message","scope":"room","k":50}}}"#,
+    "\n",
+);
+
 /// A transcript of `lines` lines: the recorded transcript's, repeated,
 /// each copy's `uuid`s made its own, so no line repeats another's.
 #[must_use]

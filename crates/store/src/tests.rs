@@ -1271,3 +1271,106 @@ fn a_seat_recorded_with_no_event_opens_no_segment() {
     assert_eq!(store.seats().unwrap().len(), 1);
     assert!(store.segments(writer(1)).unwrap().is_empty());
 }
+
+fn address(seq: u64) -> Address {
+    Address::new(writer(1), Seq::new(seq).unwrap())
+}
+
+#[test]
+fn a_preview_is_the_start_of_the_text_and_the_classes_are_the_events() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &new_events(1)).unwrap();
+
+    assert_eq!(
+        store.preview(address(1)).unwrap().as_deref(),
+        Some("line 1")
+    );
+    assert_eq!(
+        store.kind_and_provenance(address(1)).unwrap(),
+        Some((EventKind::UnparsedLine, Provenance::Unparsed))
+    );
+}
+
+#[test]
+fn a_long_text_is_previewed_to_512_bytes_inline_or_in_the_payload_store() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let long = |n| NewEvent {
+        content: json!({"text": "é".repeat(n)}),
+        ..new_event(1)
+    };
+    store.append(writer(1), &[long(300)]).unwrap();
+    let mut spilled = open(&TempDir::new().unwrap()).with_payload_threshold(10);
+    spilled.append(writer(1), &[long(2000)]).unwrap();
+
+    assert_eq!(store.preview(address(1)).unwrap().unwrap().len(), 512);
+    assert_eq!(
+        spilled.preview(address(1)).unwrap().unwrap().len(),
+        payload::PREVIEW_BYTES
+    );
+}
+
+#[test]
+fn the_preview_of_content_with_no_text_is_its_encoding() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    let bare = NewEvent {
+        content: json!({"k": 1}),
+        ..new_event(1)
+    };
+    store.append(writer(1), &[bare]).unwrap();
+
+    assert_eq!(
+        store.preview(address(1)).unwrap().as_deref(),
+        Some(r#"{"k":1}"#)
+    );
+}
+
+#[test]
+fn an_event_that_is_not_there_has_no_preview_and_one_without_content_none_to_show() {
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    store.append(writer(1), &new_events(1)).unwrap();
+    store
+        .conn
+        .execute("UPDATE events SET content = NULL", [])
+        .unwrap();
+
+    assert!(store.preview(address(2)).unwrap().is_none());
+    assert!(store.kind_and_provenance(address(2)).unwrap().is_none());
+    assert_eq!(store.preview(address(1)).unwrap().as_deref(), Some(""));
+}
+
+#[test]
+fn a_row_that_does_not_parse_is_corrupt_for_a_preview_or_its_classes() {
+    for (column, value) in [("content", "{"), ("kind", "bad"), ("provenance", "bad")] {
+        let dir = TempDir::new().unwrap();
+        let mut store = open(&dir);
+        store.append(writer(1), &new_events(1)).unwrap();
+        store
+            .conn
+            .execute(&format!("UPDATE events SET {column} = '{value}'"), [])
+            .unwrap();
+
+        let err = if column == "content" {
+            store.preview(address(1)).unwrap_err()
+        } else {
+            store.kind_and_provenance(address(1)).unwrap_err()
+        };
+
+        assert!(matches!(err, StoreError::Corrupt { .. }), "{column}: {err}");
+    }
+}
+
+#[test]
+fn a_search_error_reads_as_fixed_text() {
+    assert_eq!(
+        StoreError::NoIndex.to_string(),
+        "the store has no search index: open it for writing once"
+    );
+    assert_eq!(
+        StoreError::Cancelled.to_string(),
+        "the search ran past its deadline and was cancelled"
+    );
+}
