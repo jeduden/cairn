@@ -625,9 +625,17 @@ fn network_calls(trace: &str) -> Vec<String> {
                 .trim_start_matches(|c: char| c.is_ascii_digit())
                 .trim()
         })
-        .filter(|l| !l.is_empty())
+        .filter(|l| !l.is_empty() && !is_unnamed_detach(l))
         .map(str::to_owned)
         .collect()
+}
+
+/// Whether `line` is strace's note that it detached from a thread in a
+/// call it could not name (`???( <detached ...>`): no call was made
+/// that the trace could show, a note a thread still running when the
+/// program exits leaves now and then.
+fn is_unnamed_detach(line: &str) -> bool {
+    line.starts_with("???(") && line.ends_with("<detached ...>")
 }
 
 /// Names the caller: the thread, which libtest names after the test,
