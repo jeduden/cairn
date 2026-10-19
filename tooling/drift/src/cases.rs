@@ -894,7 +894,11 @@ fn ci_gate_cases() -> Vec<Case> {
         case(
             "CI no longer running cargo-audit",
             "the_ci_workflow_gates_on_the_static_checks",
-            Injection::replace(CI, "      - run: cargo audit\n", ""),
+            Injection::replace(
+                CI,
+                "      - run: cargo audit\n      - run: cargo audit --file fuzz/Cargo.lock\n",
+                "",
+            ),
             gates(),
             "no CI job runs cargo-audit: cargo audit",
         ),
