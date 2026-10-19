@@ -52,8 +52,11 @@ file fails the check; the repository keeps no substitute text, and the
 crate is removed or replaced.
 
 Guards against a wrong selection. A test per target proves the build
-embeds that target's own file: the Windows file names a Windows-only
-crate that no Linux file names, and the reverse for a Linux-only one.
+embeds that target's own file: it compares the embedded text with the
+target's committed file and, for each pair of targets whose linked crates
+differ, checks that each file names a crate only that target links. Targets
+that link the same crates, such as the two musl targets, carry identical
+files.
 A target in the workflow with no file, or a file for no target, fails
 the build. The release build runs each built executable's
 `cairn licenses` on its own platform and compares it with that target's

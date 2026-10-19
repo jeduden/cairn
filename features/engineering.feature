@@ -211,7 +211,7 @@ Feature: Engineering quality (ENG)
     And it holds the license text and copyright lines of every crate a normal-dependency path from a binary under "crates/" reaches for that target
     And no build-only, proc-macro, test, fuzz or tooling crate appears in it
     And it names the SQLite and, on the musl targets, the C library, both compiled in
-    And the Windows file names a Windows-only crate that no Linux file names
+    And for each pair of targets whose linked crates differ, each file names a crate that only that target links
     When each target's build selects its embedded file
     Then the embedded text equals that target's committed file
     And the built core executable's "cairn licenses" output equals it

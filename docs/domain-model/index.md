@@ -145,7 +145,9 @@ requirement naming its fields. The domain-model agent skips them.
 
 Build and packaging words have no Cairn meaning: crate, lockfile, release
 build, executable and release target. They are engineering-tooling words.
-Requirements in §10 may use them.
+Requirements may use them in their ordinary sense wherever they name a
+built artifact, as ADM-01 does with "core executable" and the `licenses`
+row of the command-line section does.
 
 ## Changing the model
 

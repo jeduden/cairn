@@ -1,6 +1,6 @@
 ---
 id: 2610190944
-title: "Ship third-party license texts with every release"
+title: "Ship third-party license texts inside every executable"
 status: "🔲"
 summary: >-
   Fail the pull request that adds a crate with no license text
@@ -114,9 +114,10 @@ footer: |
 - [ ] ENG-30 is off `@pending` and its scenario passes in the scenario
   suite; a crate with no recoverable license text fails CI in the pull
   request that adds it
-- [ ] ENG-31 is off `@pending` and its scenario passes; each release
-  publishes `THIRD_PARTY_LICENSES` per target, listed in the signed
-  checksum file and attested with the binaries
+- [ ] ENG-31 is off `@pending` and its scenario passes; each target's
+  committed `THIRD_PARTY_LICENSES` is embedded in the core executable
+  and printed by `cairn licenses`, and the release build fails when a
+  built executable's output differs from its target's regenerated file
 - [ ] Generating the file twice gives identical bytes; it names every
   crate linked into its target, the SQLite and the musl C
   library, and no build-only, test, fuzz or tooling crate
