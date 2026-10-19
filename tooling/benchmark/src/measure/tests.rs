@@ -159,8 +159,56 @@ fn a_hook_sample_whose_handler_counted_an_overrun_is_an_error() {
 
     assert_eq!(
         unexceeded(&home, "hook_session_start"),
-        Err("hook_session_start: the handler counted hook_budget_exceeded: it overran its hook budget".to_owned())
+        Err(Attempt::Overran("hook_session_start: the handler counted hook_budget_exceeded: it overran its hook budget".to_owned()))
     );
+}
+
+#[test]
+fn a_sample_whose_handler_overran_once_is_taken_again() {
+    let mut calls = 0;
+    let took = twice(|| {
+        calls += 1;
+        if calls == 1 {
+            Err(Attempt::Overran("overran".to_owned()))
+        } else {
+            Ok(Duration::from_millis(7))
+        }
+    });
+
+    assert_eq!((took, calls), (Ok(Duration::from_millis(7)), 2));
+}
+
+#[test]
+fn a_handler_that_overruns_twice_in_a_row_is_an_error() {
+    let mut calls = 0;
+    let took = twice(|| {
+        calls += 1;
+        Err(Attempt::Overran(format!("overran {calls}")))
+    });
+
+    assert_eq!((took, calls), (Err("overran 2".to_owned()), 2));
+}
+
+#[test]
+fn a_sample_that_cannot_be_taken_is_not_taken_again() {
+    let mut calls = 0;
+    let took = twice(|| {
+        calls += 1;
+        Err(Attempt::Failed("no fixture".to_owned()))
+    });
+
+    assert_eq!((took, calls), (Err("no fixture".to_owned()), 1));
+}
+
+#[test]
+fn a_sample_that_gives_a_time_is_taken_once() {
+    let mut calls = 0;
+    let took = twice(|| {
+        calls += 1;
+        Ok(Duration::from_millis(3))
+    });
+
+    assert_eq!((took, calls), (Ok(Duration::from_millis(3)), 1));
 }
 
 #[test]

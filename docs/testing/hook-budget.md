@@ -111,7 +111,9 @@ confinement alone can reach the core's own 50 ms stop. The absolute
 budget is held on the unconfined release core instead. The benchmark
 suite's hook samples (`hook_session_start`, `hook_user_prompt_submit`)
 fail when the handler counted `hook_budget_exceeded` in the sample's
-home (ENG-15).
+home (ENG-15). A sample whose handler overran is taken once more on a
+fresh home, because a stall of the runner under one sample is not the
+handler's; a handler that overruns twice in a row fails the benchmark.
 
 ## What proves the check
 

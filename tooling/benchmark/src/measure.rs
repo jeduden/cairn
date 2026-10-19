@@ -61,31 +61,62 @@ pub fn time_benchmark(
             let input = fixture::SEARCH_REQUESTS.as_bytes().to_vec();
             time_program_fed(program, benchmark.args, &home.env(), input, deadline)
         }
-        Fixture::HookInput { hook } => {
-            let home = fixture::Home::with_transcript(
-                &std::env::temp_dir(),
-                &fixture::transcript(HOOK_LINES),
-            )
-            .map_err(|e| format!("make the fixture of {}: {e}", benchmark.name))?;
-            let input = home.hook_input(hook).into_bytes();
-            let took = time_program_fed(program, benchmark.args, &home.env(), input, deadline)?;
-            unexceeded(&home, benchmark.name).map(|()| took)
-        }
+        Fixture::HookInput { hook } => twice(|| hook_sample(program, benchmark, hook, deadline)),
     }
+}
+
+/// How one attempt at a sample ended when it did not give a time.
+#[derive(Debug, PartialEq, Eq)]
+enum Attempt {
+    /// The hook handler counted that it overran its hook budget.
+    Overran(String),
+    /// The sample could not be taken at all.
+    Failed(String),
+}
+
+/// The time `attempt` gives, taken once more when the first attempt's
+/// handler overran its hook budget: a stall of the machine under one
+/// sample passes on a fresh home, and a handler that overruns twice in
+/// a row fails the benchmark. Any other failure is final.
+fn twice(mut attempt: impl FnMut() -> Result<Duration, Attempt>) -> Result<Duration, String> {
+    match attempt() {
+        Ok(took) => Ok(took),
+        Err(Attempt::Failed(e)) => Err(e),
+        Err(Attempt::Overran(_)) => attempt().map_err(|e| match e {
+            Attempt::Overran(e) | Attempt::Failed(e) => e,
+        }),
+    }
+}
+
+/// One sample of a hook handler over a fresh home, failed as
+/// [`Attempt::Overran`] when its handler counted an overrun.
+fn hook_sample(
+    program: &Path,
+    benchmark: &Benchmark,
+    hook: &str,
+    deadline: Duration,
+) -> Result<Duration, Attempt> {
+    let home =
+        fixture::Home::with_transcript(&std::env::temp_dir(), &fixture::transcript(HOOK_LINES))
+            .map_err(|e| Attempt::Failed(format!("make the fixture of {}: {e}", benchmark.name)))?;
+    let input = home.hook_input(hook).into_bytes();
+    let took = time_program_fed(program, benchmark.args, &home.env(), input, deadline)
+        .map_err(Attempt::Failed)?;
+    unexceeded(&home, benchmark.name).map(|()| took)
 }
 
 /// Fails when the hook handler that ran over `home` counted that it
 /// overran its hook budget (NFR-02): the benchmark times the unconfined
 /// release core, where the absolute budget is meaningful.
-fn unexceeded(home: &fixture::Home, name: &str) -> Result<(), String> {
+fn unexceeded(home: &fixture::Home, name: &str) -> Result<(), Attempt> {
     const COUNTER: &str = "hook_budget_exceeded";
     let counted = home
         .counted(COUNTER)
-        .map_err(|e| format!("{name}: read the audit log: {e}"))?;
+        .map_err(|e| Attempt::Failed(format!("{name}: read the audit log: {e}")))?;
     if counted {
-        return Err(format!(
+        return Err(Attempt::Overran(format!(
             "{name}: the handler counted {COUNTER}: it overran its hook budget"
-        ));
+        )));
     }
 
     Ok(())
