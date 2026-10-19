@@ -210,7 +210,7 @@ Feature: Engineering quality (ENG)
     And the committed file equals the regeneration
     And it holds the license text and copyright lines of every crate a normal-dependency path from a binary under "crates/" reaches for that target
     And no build-only, proc-macro, test, fuzz or tooling crate appears in it
-    And it names the SQLite and, on the musl targets, the C library, both compiled in
+    And it names SQLite, the Rust standard library, on the musl targets the C library, and any other runtime the target links statically
     And the committed files of any two targets whose linked crates differ differ in bytes
     When each target's build selects its embedded file
     Then the embedded text equals that target's committed file

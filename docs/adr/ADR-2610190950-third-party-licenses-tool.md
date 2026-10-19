@@ -11,11 +11,9 @@ summary: >-
 ---
 # ADR-2610190950: Third-party license texts embedded from an in-repository tool
 
-Ruling. The stakeholder's ruling of 19 October 2026, given in chat,
-chose the in-repository tool, a file per release target, and the
-command name `cairn licenses`. It is to be confirmed as a consent
-comment on the pull request; this ADR stays `proposed` until that
-comment.
+Proposal. This record proposes the in-repository tool, a file per
+release target, and the command name `cairn licenses`. It stays
+`proposed` until the stakeholder rules on the pull request.
 
 ## Context
 
@@ -86,7 +84,7 @@ pass. The tool uses `serde_json`, which ADR-2610142221 accepts, and
 adds no module. Each binary grows by the size of its target's text, a
 few hundred kilobytes at most for the current tree; no requirement
 bounds binary size. `cairn licenses` is a new node-wide utility name.
-The stakeholder approved it, and the domain model's list names it.
+The domain model's list names it.
 
 ## Alternatives
 
@@ -106,9 +104,9 @@ How the three candidates compare, for the tool that writes the file:
 **Recommendation, and the ruling.** The in-repository tool: it is the
 only candidate that knows the non-crate code, reproduces byte for
 byte by construction and adds no external binary to the release
-chain. `cargo-about` is the fallback if the stakeholder prefers a
-maintained tool. It would need its own accepted ADR, a drift case, and
-a hand-kept entry for each non-crate library.
+chain. `cargo-about` would need its own accepted ADR, a drift case, a
+hand-kept entry for each non-crate library, and a change to ENG-30 and
+ENG-31, which name a tool in the repository.
 
 - **`cargo-deny`'s license check alone.** It already runs in CI and
   checks the declared SPDX expression, but it never ships a text and
@@ -133,5 +131,5 @@ a hand-kept entry for each non-crate library.
 - The non-crate entries are a short list in the tool, reviewed on the
   stakeholder's paths; a new compiled-in library needs a line there.
 - Every executable is a little larger and answers `cairn licenses`.
-- The requirements do not name a tool, so `cargo-about` stays a
-  fallback.
+- The requirements name a tool in the repository (ENG-30, ENG-31), so
+  choosing `cargo-about` instead would change those rows.

@@ -21,11 +21,11 @@ dependency without regenerating `THIRD_PARTY_LICENSES`.
 
 ## Context
 
-The stakeholder ruled that third-party license texts ship with
-releases, inside each executable and not as a separate asset, and that
-a crate with no license text is never allowed. Today a release
-publishes bare `cairn-*` binaries, an SPDX SBOM, a signed
-`checksums.txt` and attestations (ENG-20). Nothing carries a license
+The proposal is that third-party license texts ship with releases,
+inside each executable and not as a separate asset, and that a crate
+with no license text is never allowed; the stakeholder rules on it here.
+Today a release publishes bare `cairn-*` binaries, an SPDX SBOM, a
+signed `checksums.txt` and attestations (ENG-20). Nothing carries a license
 text. `deny.toml` checks each crate's declared license against the
 ENG-18 allow-list but never reads a text.
 
@@ -42,10 +42,8 @@ regenerated file. The ENG-20 signature and attestations cover the text
 because it is inside the binary.
 
 Core rules. The text is a compiled-in string: no dependency (ENG-18),
-no socket (I4, SEC-01). The stakeholder approved `cairn licenses`, and
-the domain model's list names it. Its ruling of 19 October 2026 is to be
-confirmed as a consent comment on the pull request; the ADR stays
-`proposed` until then.
+no socket (I4, SEC-01). The domain model's list names `cairn licenses`;
+the ADR stays `proposed` until the stakeholder rules on the pull request.
 
 Reuse, searched first:
 
@@ -119,7 +117,7 @@ footer: |
   and printed by `cairn licenses`, and the release build fails when a
   built executable's output differs from its target's regenerated file
 - [ ] Generating the file twice gives identical bytes; it names every
-  crate linked into its target, the SQLite and the musl C
+  crate linked into its target, SQLite, the Rust standard library and the musl C
   library, and no build-only, test, fuzz or tooling crate
 - [ ] Drift cases for the ENG-30 check and the ENG-31 verification are
   caught (ENG-27)
