@@ -241,6 +241,11 @@ a workflow or script line that builds the benchmark suite without
 integration test or bench function that reads a clock and starts the
 development core. A drift case proves each.
 
+The `@NFR-02` budget row compares a hook handler's median time with the
+core's own start-up, timed in alternating pairs under the same
+confinement, instead of reading the wall clock. Its limits and their
+derivation are in [testing/hook-budget.md](testing/hook-budget.md).
+
 ## Keeping tests off real state
 
 ENG-14 holds in three layers, so a test cannot touch the real `HOME`, a
