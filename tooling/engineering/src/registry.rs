@@ -25,7 +25,7 @@ pub const CHECKOUT_STEP: &str = "the repository checkout";
 /// injectable I/O traits, ENG-20's three workflow gates, the gate that
 /// holds every crate to the complexity limits, and the gate that holds
 /// CI to the TOML checks.
-pub const GATE_TESTS: [&str; 35] = [
+pub const GATE_TESTS: [&str; 36] = [
     "specification_parses",
     "decision_records_parse",
     "specification_and_features_agree",
@@ -47,6 +47,7 @@ pub const GATE_TESTS: [&str; 35] = [
     "the_benchmark_suite_registers_every_nfr_id_eng_15_names",
     "ci_gates_on_the_benchmark_job",
     "benchmarks_and_timed_steps_run_release_builds",
+    "the_calibration_workload_is_frozen",
     "the_checkout_s_ruleset_rejects_direct_pushes",
     "the_checkout_s_ruleset_requires_signed_commits",
     "the_checkout_s_ruleset_needs_an_approval_from_another_reviewer",

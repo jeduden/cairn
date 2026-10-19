@@ -6,7 +6,7 @@
 //! NFR-01..05.
 
 use benchmark::suite::{AWAITING, SUITE};
-use engineering::{Checkout, benchmarks, outcome, release_budgets, review_workflow};
+use engineering::{Checkout, benchmarks, calibration, outcome, release_budgets, review_workflow};
 
 fn checkout() -> Checkout {
     Checkout::new(&testkit::repo_root())
@@ -24,6 +24,11 @@ fn the_benchmark_suite_registers_every_nfr_id_eng_15_names() {
 #[test]
 fn benchmarks_and_timed_steps_run_release_builds() {
     outcome(release_budgets::problems(&checkout())).unwrap();
+}
+
+#[test]
+fn the_calibration_workload_is_frozen() {
+    outcome(calibration::frozen(&checkout().root)).unwrap();
 }
 
 #[test]
