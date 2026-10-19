@@ -18,7 +18,8 @@ tooling under `tooling/`. Its Rust release is fixed in
 [rust-toolchain.toml](../rust-toolchain.toml) (ENG-01), and rustup
 installs it on the first `cargo` command.
 
-- `cargo test --workspace` — every test, scenarios included
+- `cargo build --release -p cairn`, then `cargo test --workspace` — every
+  test, scenarios included; `@NFR-02` times the release core
 - `cargo run -p cairn -- version` — the core executable, built for
   this machine
 - `cargo test -p scenario --test bdd` — every scenario, pending ones
