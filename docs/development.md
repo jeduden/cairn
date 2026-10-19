@@ -12,34 +12,9 @@ measured, is in [testing.md](testing.md).
 
 ## Build & test commands
 
-The repository is one Cargo workspace: the product's crates under
-`crates/`, today the `cairn` core executable, and the repository
-tooling under `tooling/`. Its Rust release is fixed in
-[rust-toolchain.toml](../rust-toolchain.toml) (ENG-01), and rustup
-installs it on the first `cargo` command.
-
-- `cargo build --release -p cairn`, then `cargo test --workspace` — every
-  test, scenarios included; `@NFR-02` times the release core
-- `cargo run -p cairn -- version` — the core executable, built for
-  this machine
-- `cargo test -p scenario --test bdd` — every scenario, pending ones
-  counted
-- `cargo test -p scenario --test bdd -- --tags @REC-03` — one scenario
-  by its requirement id
-- `cargo test -p srs --test gates` and `cargo test -p scenario --test
-  gate` — the gates alone
-- `cargo run -p coverage` — line coverage per test layer and per crate,
-  held to the floors (see [testing.md](testing.md))
-- `cargo build --release -p cairn && cargo run --release -p benchmark
-  -- run --core target/release/cairn` — sample the benchmark suite;
-  `cargo run -p benchmark -- gate --base FILE --head FILE` decides
-  from two samples files (ENG-15, see [testing.md](testing.md))
-- `cargo fmt --all --check` and `cargo clippy --workspace --all-targets
-  -- -D warnings` — layout and lint (ENG-16)
-- `cargo deny check licenses bans sources` and `cargo audit` — the
-  supply chain (ENG-16), over `fuzz/` too, by [deny.toml](../deny.toml)
-- `mdsmith check .` — lint the Markdown; `mdsmith fix .` rewrites
-  what it can, including the generated catalogs
+See [tooling.md](tooling.md) for setup, tool pins, check commands and
+cache behavior. Its configuration examples are imported from the source
+files; `mdsmith check .` rejects them when they drift.
 
 ## Static analysis
 
@@ -134,8 +109,9 @@ list exempts.
 ## CI, nightly and release
 
 Every workflow lives in `.github/workflows`. Every action is fixed
-to a commit SHA with its version in a trailing comment, and dependabot
-proposes the bumps after a seven-day cooldown.
+to a commit SHA with its version in a trailing comment. Dependabot
+proposes bumps under the policy in
+[dependabot.yml](../.github/dependabot.yml).
 
 [ci.yml](../.github/workflows/ci.yml) runs on every push and pull request to
 `main`. It runs every test and scenario, with `HOME` pointed at an empty
@@ -143,7 +119,8 @@ decoy that must stay empty (ENG-14), the core's end-to-end tests confined
 (ENG-12), clippy and rustfmt, cargo-deny and cargo-audit, the drift suite,
 the benchmark gate, and the release build of every target (NFR-10, CON-02).
 It also runs `mdsmith check .`, [taplo](../.taplo.toml), and zizmor over the
-workflows. A final job named `CI` passes only when every other job passed.
+workflows and local actions. A final job named `CI` passes only when
+every other job passed.
 It is the one check the branch and release-tag rulesets require, because
 GitHub names a required check after a job, never after the workflow.
 
@@ -157,11 +134,10 @@ from its corpus under `fuzz/corpus`, on the nightly
 the soak (ENG-09) and the live contract test (ENG-17) join it later.
 
 [build.yml](../.github/workflows/build.yml) is the release build.
-CI runs it on every change, and the release workflow runs it too. One
-x86_64 Linux runner builds `linux/amd64` and `linux/arm64`, linked
-statically against musl with the rust-lld Rust ships (CON-02), and
-`windows/amd64` with mingw-w64, pinned to Ubuntu 24.04's exact
-packages. One arm64 macOS runner builds `darwin/arm64`.
+CI runs it on every change, and the release workflow runs it too.
+The workflow defines the targets, builder platforms and exact system
+dependency pins. Linux binaries link statically against musl with the
+rust-lld Rust ships (CON-02).
 `--remap-path-prefix` keeps the builder's paths out. `CAIRN_VERSION`
 and `CAIRN_COMMIT` stamp the version and the commit (ENG-01). Each
 binary then runs once on its own platform and must report what it

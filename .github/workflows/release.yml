@@ -61,12 +61,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install the pinned Rust toolchain
-        run: >-
-          rustup toolchain install
-          "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)"
-          --profile minimal --component clippy,rustfmt,llvm-tools-preview
-          --no-self-update
+      - name: Install pinned Rust with mise
+        uses: ./.github/actions/setup-mise
+        with:
+          tools: rust
+          cache: false
       # CI already ran this on main, but main may have moved since.
       # Run it again against the commit actually released.
       # No cache anywhere in this workflow: a cache is writable by any
@@ -108,6 +107,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Install pinned release tools with mise
+        uses: ./.github/actions/setup-mise
+        with:
+          tools: "aqua:anchore/syft aqua:sigstore/cosign"
+          cache: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: "*-cairn"
@@ -117,14 +121,7 @@ jobs:
         # ENG-20: an SPDX SBOM of the Cargo workspace the binaries were
         # built from, read from Cargo.lock. syft is pinned, never
         # "latest".
-        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
-        with:
-          path: .
-          format: spdx-json
-          output-file: dist/cairn.spdx.json
-          syft-version: v1.52.0
-          upload-artifact: false
-          upload-release-assets: false
+        run: syft . --output spdx-json=dist/cairn.spdx.json
       - name: Create checksums
         # The SBOM is listed too, so the signed checksums cover it.
         working-directory: dist
@@ -136,10 +133,6 @@ jobs:
         with:
           subject-path: "dist/cairn-*"
           sbom-path: dist/cairn.spdx.json
-      - name: Install cosign
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
-        with:
-          cosign-release: "v3.0.6"
       - name: Sign the checksum file
         # Keyless: the GitHub OIDC token binds the signature to this
         # workflow file at this ref. The bundle carries signature and
@@ -178,10 +171,14 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Install cosign
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          cosign-release: "v3.0.6"
+          persist-credentials: false
+      - name: Install pinned cosign with mise
+        uses: ./.github/actions/setup-mise
+        with:
+          tools: aqua:sigstore/cosign
+          cache: false
       - name: Download the published release
         env:
           GH_TOKEN: ${{ github.token }}

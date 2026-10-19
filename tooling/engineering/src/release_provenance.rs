@@ -52,8 +52,8 @@ const PROVENANCE: &str = "actions/attest-build-provenance@";
 /// The action that attests an SBOM.
 const ATTEST_SBOM: &str = "actions/attest-sbom@";
 
-/// The action that generates the SBOM.
-const MAKE_SBOM: &str = "anchore/sbom-action@";
+/// The pinned CLI command that generates the SBOM.
+const MAKE_SBOM: &str = "syft . --output ";
 
 /// The action that checks out the repository's code.
 const CHECKOUT: &str = "actions/checkout@";
@@ -351,10 +351,20 @@ impl Release {
             problems.push("release.yml does not generate an SBOM".to_owned());
             return None;
         };
-        if value_of(&job.text, "format").as_deref() != Some("spdx-json") {
+        let output = job.text.lines().find_map(|line| {
+            line.trim()
+                .strip_prefix("- ")
+                .unwrap_or(line.trim())
+                .strip_prefix("run: ")?
+                .strip_prefix(MAKE_SBOM)
+        });
+        let (format, file) = output
+            .and_then(|spec| spec.split_once('='))
+            .unwrap_or(("", ""));
+        if format != "spdx-json" {
             problems.push(format!("job {} does not generate an SPDX SBOM", job.name));
         }
-        let file = value_of(&job.text, "output-file");
+        let file = (!file.trim().is_empty()).then(|| file.trim().to_owned());
         if file.is_none() {
             problems.push(format!("job {} names no SBOM file", job.name));
         }

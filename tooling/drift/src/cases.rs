@@ -1248,10 +1248,25 @@ fn release_build_cases() -> Vec<Case> {
     ]
 }
 
+/// Changing the SBOM format must fail the ENG-20 format gate.
+fn sbom_format_case() -> Case {
+    release_case(
+        "the release generating a non-SPDX SBOM",
+        Injection::replace(
+            RELEASE_WORKFLOW,
+            "syft . --output spdx-json=dist/cairn.spdx.json",
+            "syft . --output cyclonedx-json=dist/cairn.spdx.json",
+        ),
+        SBOM_GATE,
+        "job publish does not generate an SPDX SBOM",
+    )
+}
+
 /// The ENG-20 drifts in what the release publishes and how its verify
 /// job checks it.
 fn release_verify_cases() -> Vec<Case> {
     vec![
+        sbom_format_case(),
         release_case(
             "no job verifying the published release",
             Injection::replace(
@@ -1348,16 +1363,30 @@ fn protection_case(
     )
 }
 
+/// The CI and release tool pins must remain owned by the stakeholder.
+fn mise_owner_case() -> Case {
+    protection_case(
+        "the mise toolchain pin without the stakeholder",
+        Injection::replace(CODEOWNERS, "/mise.toml                    @jeduden\n", ""),
+        "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
+        "mise.toml (gate, CI,) is owned by [], want @jeduden",
+    )
+}
+
+fn signed_commits_case() -> Case {
+    protection_case(
+        "commits no longer required to be signed",
+        Injection::replace(RULESET, "    { \"type\": \"required_signatures\" },\n", ""),
+        "the_checkout_s_ruleset_requires_signed_commits",
+        "the ruleset has no required_signatures rule",
+    )
+}
+
 /// The drifts ENG-21 exists to catch: main's committed ruleset or
 /// CODEOWNERS weaker than the requirement says.
 fn protection_cases() -> Vec<Case> {
     vec![
-        protection_case(
-            "commits no longer required to be signed",
-            Injection::replace(RULESET, "    { \"type\": \"required_signatures\" },\n", ""),
-            "the_checkout_s_ruleset_requires_signed_commits",
-            "the ruleset has no required_signatures rule",
-        ),
+        signed_commits_case(),
         protection_case(
             "an actor allowed to bypass the ruleset",
             Injection::replace(
@@ -1410,6 +1439,7 @@ fn protection_cases() -> Vec<Case> {
             "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
             "CLAUDE.md (the agent instructions) is owned by [], want @jeduden",
         ),
+        mise_owner_case(),
         protection_case(
             "an owner on a path outside the allowed classes",
             Injection::replace(
