@@ -12,26 +12,9 @@ measured, is in [testing.md](testing.md).
 
 ## Build & test commands
 
-The repository is one Cargo workspace. Install mise 2026.9.1 or newer,
-then run `mise install --locked`. [mise.toml](../mise.toml) lists the
-tools; [mise.lock](../mise.lock) pins releases and available checksums
-for Linux and macOS on x64 and arm64. mise reads Rust's version and
-components from [rust-toolchain.toml](../rust-toolchain.toml) (ENG-01),
-which remains the single Rust pin. Update the lock with `mise lock
---platform linux-x64,linux-arm64,macos-arm64,macos-x64`.
-Taplo publishes no checksums, so verify and record its four asset
-SHA-256 values in the lockfile when bumping it.
-
-Run `mise run test`, `mise run lint`, `mise run supply-chain`,
-`mise run coverage`, or `mise run drift` for common checks. For one
-command, use `mise exec -- COMMAND`. CI's SHA-pinned mise action
-installs only each job's tools; the cache key covers the config,
-lockfile, platform, mise version, and selected tools. A separate
-Rustup cache shares the exact compiler across jobs. Release jobs use
-neither cache. Linux end-to-end tests need the host's `unshare`,
-`script`, and `strace`; release builds use Rustup targets and the
-exact mingw, clang, and musl pins in
-[build.yml](../.github/workflows/build.yml).
+See [tooling.md](tooling.md) for setup, tool pins, check commands and
+cache behavior. Its configuration examples are imported from the source
+files; `mdsmith check .` rejects them when they drift.
 
 ## Static analysis
 
@@ -125,8 +108,9 @@ list exempts.
 ## CI, nightly and release
 
 Every workflow lives in `.github/workflows`. Every action is fixed
-to a commit SHA with its version in a trailing comment, and dependabot
-proposes the bumps after a seven-day cooldown.
+to a commit SHA with its version in a trailing comment. Dependabot
+proposes bumps under the policy in
+[dependabot.yml](../.github/dependabot.yml).
 
 [ci.yml](../.github/workflows/ci.yml) runs on every push and pull request to
 `main`. It runs every test and scenario, with `HOME` pointed at an empty
@@ -150,11 +134,10 @@ crash-consistency test (ENG-06), the concurrency soak (ENG-09) and the
 live Claude Code contract test (ENG-17) join it as their plans land.
 
 [build.yml](../.github/workflows/build.yml) is the release build.
-CI runs it on every change, and the release workflow runs it too. One
-x86_64 Linux runner builds `linux/amd64` and `linux/arm64`, linked
-statically against musl with the rust-lld Rust ships (CON-02), and
-`windows/amd64` with mingw-w64, pinned to Ubuntu 24.04's exact
-packages. One arm64 macOS runner builds `darwin/arm64`.
+CI runs it on every change, and the release workflow runs it too.
+The workflow defines the targets, builder platforms and exact system
+dependency pins. Linux binaries link statically against musl with the
+rust-lld Rust ships (CON-02).
 `--remap-path-prefix` keeps the builder's paths out. `CAIRN_VERSION`
 and `CAIRN_COMMIT` stamp the version and the commit (ENG-01). Each
 binary then runs once on its own platform and must report what it
