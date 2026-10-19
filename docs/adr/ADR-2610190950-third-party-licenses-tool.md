@@ -5,10 +5,17 @@ status: proposed
 summary: >-
   A small tool under tooling/ reads Cargo.lock and cargo metadata to
   check every crate's license text and to regenerate one committed
-  THIRD_PARTY_LICENSES file, which each executable embeds and prints
-  with cairn licenses. It adds no dependency to the core or the repository.
+  THIRD_PARTY_LICENSES file per release target, which that target's
+  executable embeds and prints with cairn licenses. It adds no
+  dependency to the core or the repository.
 ---
 # ADR-2610190950: Third-party license texts embedded from an in-repository tool
+
+Ruling. The stakeholder's ruling of 19 October 2026, given in chat,
+chose the in-repository tool, a file per release target, and the
+command name `cairn licenses`. It is to be confirmed as a consent
+comment on the pull request; this ADR stays `proposed` until that
+comment.
 
 ## Context
 
@@ -32,44 +39,50 @@ under `crates/`) and the crate sources `cargo` has fetched. A short
 fixed list in the tool names the code compiled in without being a
 crate.
 
-**One committed file, the union of the targets (option a).** The tool
-writes `THIRD_PARTY_LICENSES` at the repository root, covering every
-crate linked on any release target. The core embeds it with
-`include_str!` and prints it with `cairn licenses`. CI regenerates the
-file and fails the pull request when the committed one differs, so a
-developer who adds a dependency regenerates it in the same change. A
-crate with no license file fails the check; the repository keeps no
-substitute text, and the crate is removed or replaced.
+**One committed file per release target (option b).** The tool writes
+`licenses/<target-triple>/THIRD_PARTY_LICENSES` for each release target,
+a closed list read from the build workflow. Each file covers exactly the
+crates linked for that target, from `cargo metadata --filter-platform`,
+plus that target's non-crate code. A target's build embeds its own file
+with `include_str!` through a `cfg`-selected path, and `cairn licenses`
+prints it. CI regenerates every target's file and fails the pull
+request when any committed file differs, so a developer who adds a
+dependency regenerates them in the same change. A crate with no license
+file fails the check; the repository keeps no substitute text, and the
+crate is removed or replaced.
 
-The release build runs each built executable's `cairn licenses` on its
-own platform and compares it with the file regenerated at the released
-commit. The file is inside the executable, so the existing signature and
-attestations (ENG-20) cover it and no separate asset exists.
+Guards against a wrong selection. A test per target proves the build
+embeds that target's own file: the Windows file names a Windows-only
+crate that no Linux file names, and the reverse for a Linux-only one.
+A target in the workflow with no file, or a file for no target, fails
+the build. The release build runs each built executable's
+`cairn licenses` on its own platform and compares it with that target's
+regenerated file. The file is inside the executable, so the existing
+signature and attestations (ENG-20) cover it and no separate asset
+exists.
 
-**Why the union, not a file per target (option b).** Per-target
-embedding through `cfg` would list exactly what each binary links.
+Why a file per target, and not one union (option a):
 
-| Question              | (a) One file, union                          | (b) Per-target file through `cfg`                    |
-| --------------------- | -------------------------------------------- | ---------------------------------------------------- |
-| Exactness             | Windows-only crates appear in the Linux text | Each binary lists exactly its own crates             |
-| Compliance            | Over-discloses, never under                  | Exact, but a wrong `cfg` silently ships a wrong text |
-| Files and checks      | One file, one regeneration check             | One file per target, one check each, a `cfg` map     |
-| Where CI can check it | Any host, since it needs no target toolchain | Same, plus a build per target to test the `cfg`      |
-| Size cost             | The union's text in every binary             | Smaller on the targets with fewer crates             |
+| Question         | (a) One file, union                          | (b) A file per target through `cfg`                           |
+| ---------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| Exactness        | Windows-only crates appear in the Linux text | Each binary lists exactly its own crates                      |
+| Compliance       | Over-discloses, never under                  | Exact                                                         |
+| Files and checks | One file, one regeneration check             | A file per target, one regeneration each, a closed list       |
+| Wrong selection  | Cannot happen                                | Caught by the per-target embedding test and the release check |
+| Size cost        | The union's text in every binary             | Smaller on the targets with fewer crates                      |
 
-(a) is recommended: the extra text costs a few kilobytes, while (b) adds
-a failure mode (the `cfg` picking the wrong file) for no compliance gain.
-Switch to (b) only if a target's binary size ever matters.
+The stakeholder chose (b) for exactness. Its one extra failure mode, the
+`cfg` picking the wrong file, is mitigated by the guards above.
 
 **Constraints.** The core gains no dependency: the text is a `&str`
 compiled in, so ENG-18's list and its ten-dependency target are
 unchanged. It gains no network access: `cairn licenses` only prints,
 which I4 and SEC-01 allow, and the crate's clippy and reach test still
 pass. The tool uses `serde_json`, which ADR-2610142221 accepts, and
-adds no module. The binary grows by the size of the text, a few hundred
-kilobytes at most for the current tree; no requirement bounds binary
-size. `cairn licenses` is a new node-wide utility name, proposed for the
-domain model's list in this change; the stakeholder may rule otherwise.
+adds no module. Each binary grows by the size of its target's text, a
+few hundred kilobytes at most for the current tree; no requirement
+bounds binary size. `cairn licenses` is a new node-wide utility name.
+The stakeholder approved it, and the domain model's list names it.
 
 ## Alternatives
 
@@ -86,9 +99,9 @@ How the three candidates compare, for the tool that writes the file:
 | Review surface                  | The tool's source, in stakeholder paths                 | Its config and template, plus a trust decision           | Its output only; less control                        |
 | Fit with ENG-18 and ENG-27      | No new module; drift cases written against our own code | A tool outside the manifests; its own ADR and drift case | Same as `cargo-about`                                |
 
-**Recommendation.** The in-repository tool: it is the only candidate
-that knows the non-crate code, reproduces byte for byte by construction
-and adds no external binary to the release chain. `cargo-about` is the
+**Recommendation, and the ruling.** The in-repository tool: it is the
+only candidate that knows the non-crate code, reproduces byte for
+byte by construction and adds no external binary to the release chain. `cargo-about` is the
 fallback if the stakeholder prefers a maintained tool; it would need its
 own accepted ADR, a drift case, and a hand-kept entry for each
 non-crate library.
@@ -105,10 +118,11 @@ non-crate library.
 
 - A crate with no license file blocks its pull request, and the crate
   is removed or replaced; the repository keeps no text for it.
-- A pull request that changes `Cargo.lock` regenerates
+- A pull request that changes `Cargo.lock` regenerates every target's
   `THIRD_PARTY_LICENSES` in the same change, or CI fails it.
+- Adding a release target adds its file; the build fails until it has one.
 - The non-crate entries are a short list in the tool, reviewed on the
   stakeholder's paths; a new compiled-in library needs a line there.
 - Every executable is a little larger and answers `cairn licenses`.
-- The stakeholder may still choose `cargo-about`; the requirements do
-  not name a tool.
+- The requirements do not name a tool, so `cargo-about` stays a
+  fallback.

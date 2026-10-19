@@ -201,18 +201,22 @@ Feature: Engineering quality (ENG)
     And the check adds no dependency to any shipped executable
 
   @ENG-31 @P0 @pending
-  Scenario: every executable carries the license texts of what it links, kept in step by CI
+  Scenario: every executable carries the license texts of what it links for its own target, kept in step by CI
     Given the repository checkout
-    When "THIRD_PARTY_LICENSES" is regenerated twice
+    When the release targets are read from the build workflow
+    Then each target has a committed "licenses/<target-triple>/THIRD_PARTY_LICENSES" and no other target has one
+    When each target's file is regenerated twice with "cargo metadata --filter-platform <target-triple>"
     Then both runs give the same bytes, with no timestamp, host path or randomness
     And the committed file equals the regeneration
-    And it holds the license text and copyright lines of every crate a normal-dependency path from a binary under "crates/" reaches for any release target
+    And it holds the license text and copyright lines of every crate a normal-dependency path from a binary under "crates/" reaches for that target
     And no build-only, proc-macro, test, fuzz or tooling crate appears in it
-    And it names the bundled SQLite and, on the musl targets, the C library
-    When the built "cairn" executable runs "cairn licenses"
-    Then its output equals the committed file
+    And it names the bundled SQLite and the C library or runtime that target links statically
+    And the Windows file names a Windows-only crate that no Linux file names
+    When each target's build selects its embedded file
+    Then the embedded text equals that target's committed file
+    And the built "cairn" executable's "cairn licenses" output equals it
     And the CI workflow fails a pull request whose committed file differs from a regeneration
-    And the release build fails when a built executable's output differs from the file regenerated at the released commit
+    And the release build fails when a built executable's output differs from its target's regenerated file
     And the core gains no dependency and opens no socket
 
   @ENG-21 @P0 @pending

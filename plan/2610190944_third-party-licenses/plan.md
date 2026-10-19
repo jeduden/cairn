@@ -4,9 +4,9 @@ title: "Ship third-party license texts with every release"
 status: "🔲"
 summary: >-
   Fail the pull request that adds a crate with no license text
-  (ENG-30), and embed a committed, regenerated THIRD_PARTY_LICENSES in
-  every executable, shown by cairn licenses (ENG-31), so a new
-  dependency is covered the moment it is added.
+  (ENG-30), and embed in every executable its release target's
+  committed, regenerated THIRD_PARTY_LICENSES, shown by cairn licenses
+  (ENG-31), so a new dependency is covered the moment it is added.
 model: sonnet
 depends-on: []
 ---
@@ -31,18 +31,21 @@ ENG-18 allow-list but never reads a text.
 
 Mechanism, as the proposed
 [ADR](../../docs/adr/ADR-2610190950-third-party-licenses-tool.md)
-sets out: one committed `THIRD_PARTY_LICENSES` at the repository root,
-the union of the crates linked on any release target. The core embeds
-it with `include_str!` and prints it with `cairn licenses`. A CI gate
-fails when the committed file differs from a regeneration. The release
-build fails when a built executable's output differs from the file
-regenerated at the released commit. The ENG-20 signature and
-attestations cover the file because it is inside the binary.
+sets out: one committed `licenses/<target-triple>/THIRD_PARTY_LICENSES`
+per release target, the closed list the build workflow names. Each
+target's build embeds its own file with a `cfg`-selected `include_str!`,
+and `cairn licenses` prints it. A CI gate regenerates every file with
+`cargo metadata --filter-platform` and fails on any difference. A test
+per target proves the build embeds its own file. The release build
+fails when a built executable's output differs from its target's
+regenerated file. The ENG-20 signature and attestations cover the text
+because it is inside the binary.
 
 Core rules. The text is a compiled-in string: no dependency (ENG-18),
-no socket (I4, SEC-01). `licenses` is a new node-wide utility name; this
-change proposes it for the domain model's list. The stakeholder rules
-on it before phase 2.
+no socket (I4, SEC-01). The stakeholder approved `cairn licenses`, and
+the domain model's list names it. Its ruling of 19 October 2026 is to be
+confirmed as a consent comment on the pull request; the ADR stays
+`proposed` until then.
 
 Reuse, searched first:
 
@@ -64,12 +67,13 @@ ADR, plan) is its own change set.
 1. Proving slice: the ENG-30 check with the shared linked-set reader,
    fixtures, its scenario bound, its drift case and its CI step
    (phase 1)
-2. The generator: a deterministic `THIRD_PARTY_LICENSES` for the union
-   of release targets, the non-crate entries, and the CI regeneration
-   gate with its drift case (phase 2)
-3. Embedding: `cairn licenses` prints the file, the release build
-   compares each built executable's output with the regeneration, and
-   ENG-31 closes (phase 3)
+2. The generator: a deterministic file for every release target, the
+   non-crate entries per target, and the CI gate that regenerates all
+   of them, with its drift case (phase 2)
+3. Embedding: each target's build selects its own file, a test per
+   target proves it, `cairn licenses` prints it, the release build
+   compares each built executable's output with its target's
+   regeneration, and ENG-31 closes (phase 3)
 
 ## Execution
 
