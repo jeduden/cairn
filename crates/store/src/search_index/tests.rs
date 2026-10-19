@@ -131,12 +131,20 @@ fn a_new_store_has_its_index_and_records_how_it_is_built() {
     let store = open(&dir);
 
     assert!(exists(&store.conn).unwrap());
+    let setting = |key: &str| -> Option<String> {
+        store
+            .conn
+            .query_row(
+                "SELECT value FROM idx.search_settings WHERE key = ?1",
+                [key],
+                |r| r.get(0),
+            )
+            .optional()
+            .unwrap()
+    };
+    assert_eq!(setting("search_tokenizer").as_deref(), Some(TOKENIZER));
     assert_eq!(
-        store.meta("search_tokenizer").unwrap().as_deref(),
-        Some(TOKENIZER)
-    );
-    assert_eq!(
-        store.meta("search_index.indexing_cap").unwrap(),
+        setting("search_index.indexing_cap"),
         Some(DEFAULT_CAP.to_string())
     );
 }

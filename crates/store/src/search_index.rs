@@ -1,8 +1,12 @@
 //! The search index (§8.2, REC-11, RCL-02, SEC-04): an FTS5 table over
-//! each event's text in `store.db`, beside the record it derives from.
-//! It is a derived artifact (I10): a function of the writer logs the
-//! store holds, whatever order they arrived in, and `Store::rebuild_search_index`
-//! derives it again from the record alone.
+//! each event's text, in a file of its own, [`FILE`], beside the
+//! `store.db` that holds the record it derives from. It is a derived
+//! artifact (I10): a function of the writer logs the store holds,
+//! whatever order they arrived in. `Store::rebuild_search_index` derives
+//! it again from the record alone, and so does the next opener of a
+//! store whose index file is missing, or lags or leads the record (a
+//! crash between the two files' commits). NFR-09 measures the record
+//! and the index apart.
 //!
 //! - It keeps no text of its own (contentless): the record stays the one
 //!   place content lives. An event's text is its content's `text`, in the
@@ -18,6 +22,7 @@
 //!   newest [`RANKED_MATCHES`] matches after the filters (S2), damped per writer,
 //!   under a deadline (SEC-04).
 
+use std::path::Path;
 use std::sync::mpsc::{self, RecvTimeoutError};
 use std::thread;
 use std::time::Duration;
@@ -31,6 +36,12 @@ use search::rank::{self, Candidate, Hit};
 use serde_json::Value;
 
 use crate::StoreError;
+
+/// The index's file name, beside `store.db`.
+pub const FILE: &str = "search_index";
+
+/// The name the index file is attached to the store's connection under.
+const SCHEMA_NAME: &str = "idx";
 
 /// REC-11's indexing cap: the most bytes of one event's text indexed.
 pub const DEFAULT_CAP: usize = 1 << 20;
@@ -59,12 +70,17 @@ pub(crate) const CHUNK: i64 = 100;
 
 /// The tables of the search index.
 pub(crate) const SCHEMA: &str = "
-CREATE VIRTUAL TABLE IF NOT EXISTS events_fts USING fts5(
+CREATE VIRTUAL TABLE IF NOT EXISTS idx.events_fts USING fts5(
     text, content = '', contentless_delete = 1, tokenize = 'unicode61 remove_diacritics 2');
-CREATE VIRTUAL TABLE IF NOT EXISTS events_vocab USING fts5vocab(events_fts, 'instance');
-CREATE TABLE IF NOT EXISTS search_writers (
+CREATE VIRTUAL TABLE IF NOT EXISTS idx.events_vocab USING fts5vocab(events_fts, 'instance');
+CREATE TABLE IF NOT EXISTS idx.search_writers (
     slot INTEGER PRIMARY KEY,
-    writer TEXT NOT NULL UNIQUE
+    writer TEXT NOT NULL UNIQUE,
+    indexed_to INTEGER NOT NULL DEFAULT 0
+) STRICT;
+CREATE TABLE IF NOT EXISTS idx.search_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
 ) STRICT;
 ";
 
@@ -83,12 +99,12 @@ const UNINDEXED: &str = "SELECT DISTINCT writer FROM events
     WHERE writer NOT IN (SELECT writer FROM search_writers) ORDER BY writer";
 
 /// What the canonical digest reads of the index.
-const SCHEMA_OBJECTS: &str = "SELECT sql FROM sqlite_master
+const SCHEMA_OBJECTS: &str = "SELECT sql FROM idx.sqlite_master
     WHERE name IN ('events_fts', 'events_vocab', 'search_writers') ORDER BY name";
 const POSTINGS: &str =
     "SELECT term, doc, col, offset FROM events_vocab ORDER BY term, doc, col, offset";
 
-/// The settings the index is built under, kept in `meta` (§8.3).
+/// The settings the index is built under, kept in the index file (§8.3).
 pub(crate) fn settings() -> [(&'static str, String); 2] {
     [
         ("search_tokenizer", TOKENIZER.to_owned()),
@@ -96,15 +112,97 @@ pub(crate) fn settings() -> [(&'static str, String); 2] {
     ]
 }
 
+/// Whether the index file is attached to `conn`.
+fn attached(conn: &Connection) -> Result<bool, StoreError> {
+    let found = conn.query_row(
+        "SELECT count(*) FROM pragma_database_list WHERE name = ?1",
+        [SCHEMA_NAME],
+        |r| r.get::<_, bool>(0),
+    );
+
+    Ok(found?)
+}
+
+/// Attaches the index file at `path` to `conn`. A writer sets the file's
+/// journal to a write-ahead log and relaxes its sync: what a crash
+/// loses of it the next opener derives again from the record.
+pub(crate) fn attach(conn: &Connection, path: &Path, writable: bool) -> Result<(), StoreError> {
+    let text = path.to_str().ok_or_else(|| {
+        StoreError::Io(std::io::Error::other("the index file's path is not text"))
+    })?;
+    conn.execute("ATTACH DATABASE ?1 AS idx", [text])?;
+    if writable {
+        conn.execute_batch("PRAGMA idx.journal_mode = WAL; PRAGMA idx.synchronous = NORMAL")?;
+    }
+
+    Ok(())
+}
+
 /// Whether the store has its search index yet.
 pub(crate) fn exists(conn: &Connection) -> Result<bool, StoreError> {
+    if !attached(conn)? {
+        return Ok(false);
+    }
     let found = conn.query_row(
-        "SELECT count(*) FROM sqlite_master WHERE name = 'events_fts'",
+        "SELECT count(*) FROM idx.sqlite_master WHERE name = 'events_fts'",
         [],
         |r| r.get::<_, bool>(0),
     );
 
     Ok(found?)
+}
+
+/// Records the settings the index is built under.
+pub(crate) fn write_settings(conn: &Connection) -> Result<(), StoreError> {
+    for (key, value) in settings() {
+        conn.execute(
+            "INSERT OR REPLACE INTO idx.search_settings (key, value) VALUES (?1, ?2)",
+            params![key, value],
+        )?;
+    }
+
+    Ok(())
+}
+
+/// Whether the index holds what the record does, given each writer's
+/// newest seq (none for a writer with no events): every writer that
+/// holds a slot is indexed to its newest event and no further, no slot
+/// is held by a writer the record lacks, and a writer without a slot
+/// has lost it to a smaller writer id.
+pub(crate) fn is_current(
+    conn: &Connection,
+    heads: &[(WriterId, u64)],
+) -> Result<bool, StoreError> {
+    let mut held = std::collections::BTreeMap::new();
+    let mut statement = conn.prepare("SELECT writer, slot, indexed_to FROM search_writers")?;
+    let rows = statement.query_map([], |r| {
+        Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, i64>(2)?))
+    })?;
+    for row in rows {
+        let (writer, slot, indexed) = row?;
+        held.insert(writer, (slot, indexed));
+    }
+    let owners: std::collections::BTreeMap<i64, &String> =
+        held.iter().map(|(w, (slot, _))| (*slot, w)).collect();
+    let mut known = 0;
+    for (writer, newest) in heads {
+        let name = writer.to_string();
+        match held.get(&name) {
+            Some((_, indexed)) => {
+                known += 1;
+                if u64::try_from(*indexed).ok() != Some(*newest) {
+                    return Ok(false);
+                }
+            }
+            None if *newest == 0 => {}
+            None => match owners.get(&slot_of(*writer)) {
+                Some(owner) if **owner < name => {}
+                _ => return Ok(false),
+            },
+        }
+    }
+
+    Ok(known == held.len())
 }
 
 /// The slot a writer takes in row ids: five bytes of its id.
@@ -147,6 +245,8 @@ pub fn text_of(content: &Value, cap: usize) -> Option<&str> {
 pub(crate) struct Indexing<'t> {
     insert: Option<rusqlite::Statement<'t>>,
     slot: i64,
+    writer: String,
+    conn: &'t Connection,
 }
 
 impl<'t> Indexing<'t> {
@@ -182,7 +282,24 @@ impl<'t> Indexing<'t> {
             None
         };
 
-        Ok(Self { insert, slot })
+        Ok(Self {
+            insert,
+            slot,
+            writer: mine,
+            conn,
+        })
+    }
+
+    /// Records that the writer's events are indexed through `seq`.
+    pub(crate) fn done_to(&self, seq: u64) -> Result<(), StoreError> {
+        if self.insert.is_some() {
+            self.conn.execute(
+                "UPDATE search_writers SET indexed_to = ?2 WHERE writer = ?1",
+                params![self.writer, i64::try_from(seq).unwrap_or(i64::MAX)],
+            )?;
+        }
+
+        Ok(())
     }
 
     /// Indexes the event at `seq` whose content is `content`.
@@ -358,8 +475,11 @@ pub(crate) fn run(conn: &Connection, search: &Search<'_>) -> Result<Vec<Hit>, St
 pub(crate) fn digest(conn: &Connection) -> Result<Digest, StoreError> {
     let mut state = Fold(Digest::of(&[b"cairn search index digest v1"]));
     for (key, _) in settings() {
-        let value: String =
-            conn.query_row("SELECT value FROM meta WHERE key = ?1", [key], |r| r.get(0))?;
+        let value: String = conn.query_row(
+            "SELECT value FROM idx.search_settings WHERE key = ?1",
+            [key],
+            |r| r.get(0),
+        )?;
         state.add(&[key.as_bytes(), b"\0", value.as_bytes(), b"\0"]);
     }
     let mut schema = conn.prepare(SCHEMA_OBJECTS)?;

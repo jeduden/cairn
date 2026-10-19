@@ -296,7 +296,7 @@ impl Store {
     /// version, or when its version does not parse.
     pub fn open(path: &Path) -> Result<Self, StoreError> {
         create_owner_only(path)?;
-        let store = Self::over(Connection::open(path)?, path)?;
+        let mut store = Self::over(Connection::open(path)?, path)?;
         // A store of a newer version is refused before anything in it
         // changes, its journal mode included (ADM-05).
         if store.has_meta()? {
@@ -304,8 +304,8 @@ impl Store {
         }
         store.conn.pragma_update(None, "journal_mode", "WAL")?;
         store.conn.pragma_update(None, "synchronous", "FULL")?;
-        let mut store = store;
         store.migrate()?;
+        store.attach_index(true)?;
         store.ensure_index()?;
 
         Ok(store)
@@ -341,8 +341,30 @@ impl Store {
             return Ok(None);
         }
         store.check_format()?;
+        store.attach_index(false)?;
 
         Ok(Some(store))
+    }
+
+    /// Attaches the search index's file, beside the store's: a writer
+    /// makes it, readable only by its owner, where it is missing; a
+    /// reader attaches the one there is (SEC-02).
+    fn attach_index(&self, writable: bool) -> Result<(), StoreError> {
+        let path = self
+            .conn
+            .path()
+            .map(Path::new)
+            .and_then(Path::parent)
+            .unwrap_or_else(|| Path::new("."))
+            .join(search_index::FILE);
+        if writable {
+            create_owner_only(&path)?;
+        } else if !path.exists() {
+            return Ok(());
+        }
+        owner_only(&path)?;
+
+        search_index::attach(&self.conn, &path, writable)
     }
 
     /// The store over `conn`, the file at `path` once checked readable
@@ -420,10 +442,12 @@ impl Store {
         self.check_format()
     }
 
-    /// Gives a store the search index it lacks, built from its record:
-    /// one a cairn before the index made (REC-11).
+    /// Gives a store the search index it lacks, or holds out of step with
+    /// its record, derived from the record (REC-11, I10): its file
+    /// deleted, one a cairn before the index made, or one a crash between
+    /// the two files' commits left behind.
     fn ensure_index(&self) -> Result<(), StoreError> {
-        if search_index::exists(&self.conn)? {
+        if search_index::exists(&self.conn)? && self.index_is_current()? {
             return Ok(());
         }
         self.conn.execute_batch("BEGIN IMMEDIATE")?;
@@ -433,11 +457,26 @@ impl Store {
         self.finish(built)
     }
 
+    /// Whether the index holds what the record does.
+    fn index_is_current(&self) -> Result<bool, StoreError> {
+        let mut heads = Vec::new();
+        for writer in self.writers()? {
+            let newest: Option<i64> = self.conn.query_row(
+                "SELECT max(seq) FROM events WHERE writer = ?1",
+                [writer.to_string()],
+                |r| r.get(0),
+            )?;
+            heads.push((writer, newest.and_then(|n| u64::try_from(n).ok()).unwrap_or(0)));
+        }
+
+        search_index::is_current(&self.conn, &heads)
+    }
+
     /// Makes the index's tables and settings, and fills them from the
     /// record.
     fn create_index(&self) -> Result<(), StoreError> {
         self.conn.execute_batch(search_index::SCHEMA)?;
-        record_settings(&self.conn)?;
+        search_index::write_settings(&self.conn)?;
 
         self.reindex().map(drop)
     }
@@ -489,6 +528,7 @@ impl Store {
                 index_chunk(&mut indexing, &chunk)?;
                 count += chunk.len() as u64;
             }
+            indexing.done_to(u64::try_from(after).unwrap_or(0))?;
         }
 
         Ok(count)
@@ -1278,6 +1318,7 @@ impl Out<'_> {
             prev_hash = hash;
             next += 1;
         }
+        indexing.done_to(next - 1)?;
         if let (Some(first), Some(last)) = (out.first(), out.last()) {
             segment::extend(tx, writer, first.seq, last.seq, close)?;
         }
@@ -1472,8 +1513,6 @@ fn create(tx: &rusqlite::Transaction<'_>) -> Result<(), StoreError> {
     tx.execute_batch(segment::SCHEMA)?;
     tx.execute_batch(source::SCHEMA)?;
     tx.execute_batch(hook::SCHEMA)?;
-    tx.execute_batch(search_index::SCHEMA)?;
-    record_settings(tx)?;
     let mut insert = tx.prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
     for (key, value) in [
         ("schema_version", SCHEMA_VERSION.to_string()),
@@ -1505,18 +1544,6 @@ fn index_chunk(
 /// The columns a preview reads, and those a hit's classes.
 const PREVIEW_ROW: &str = "SELECT content, preview FROM events WHERE writer = ?1 AND seq = ?2";
 const CLASS_ROW: &str = "SELECT kind, provenance FROM events WHERE writer = ?1 AND seq = ?2";
-
-/// Records a setting in `meta`.
-const SET_SETTING: &str = "INSERT OR REPLACE INTO meta (key, value) VALUES (?1, ?2)";
-
-/// Records the settings the search index is built under in `meta`.
-fn record_settings(conn: &Connection) -> Result<(), StoreError> {
-    for (key, value) in search_index::settings() {
-        conn.execute(SET_SETTING, params![key, value])?;
-    }
-
-    Ok(())
-}
 
 /// Every other writer's newest event, of a writer whose seat is in
 /// `writer`'s room, that lies beyond what `writer` last cited of it. A
