@@ -151,7 +151,12 @@ fn exits_within_budget(w: &mut World) -> Result<(), String> {
         .relative
         .take()
         .ok_or("no step ran a hook within its budget")?
-        .map_err(|e| format!("the {} hook handler is too slow for its budget: {e}", state.hook))?;
+        .map_err(|e| {
+            format!(
+                "the {} hook handler is too slow for its budget: {e}",
+                state.hook
+            )
+        })?;
     let (took, timeout) = w
         .section::<BudgetSteps>()
         .took
