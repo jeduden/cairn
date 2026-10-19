@@ -61,6 +61,14 @@ pub fn time_benchmark(
     }
 }
 
+/// Fails when the hook handler that ran over `home` counted that it
+/// overran its hook budget (NFR-02): the benchmark times the unconfined
+/// release core, where the absolute budget is meaningful.
+fn unexceeded(home: &fixture::Home, name: &str) -> Result<(), String> {
+    let _ = (home, name);
+    Ok(())
+}
+
 /// Times `program` as [`time_program_in`] does, with `input` on its
 /// stdin, which is then closed, as a harness hands a hook handler its
 /// hook input.

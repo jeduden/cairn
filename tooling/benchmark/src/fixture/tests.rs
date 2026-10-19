@@ -55,3 +55,22 @@ fn a_home_holds_its_transcript_and_is_removed_when_dropped() {
     assert!(!root.exists());
     assert!(Home::with_transcript(&base.path().join("f\0"), "").is_err());
 }
+
+#[test]
+fn a_home_reports_whether_its_audit_log_counted_a_counter() {
+    let base = TempDir::new().unwrap();
+    let home = Home::with_transcript(base.path(), "x\n").unwrap();
+    assert!(!home.counted("hook_budget_exceeded").unwrap());
+
+    let audit = home.env()[1].1.join("audit");
+    fs::create_dir_all(&audit).unwrap();
+    fs::write(audit.join("audit-000001.jsonl"), "{\"counter\":\"other\"}\n").unwrap();
+    assert!(!home.counted("hook_budget_exceeded").unwrap());
+
+    fs::write(
+        audit.join("audit-000002.jsonl"),
+        "{\"counter\":\"hook_budget_exceeded\"}\n",
+    )
+    .unwrap();
+    assert!(home.counted("hook_budget_exceeded").unwrap());
+}

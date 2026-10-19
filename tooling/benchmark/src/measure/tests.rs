@@ -131,3 +131,23 @@ fn sample_saturates_a_time_too_long_for_nanoseconds() {
 
     assert_eq!(sample(&SUITE[0], 1, &mut time), Ok(vec![u64::MAX]));
 }
+
+#[test]
+fn a_hook_sample_whose_handler_counted_an_overrun_is_an_error() {
+    let base = testkit::TempDir::new().unwrap();
+    let home = fixture::Home::with_transcript(base.path(), "x\n").unwrap();
+    assert_eq!(unexceeded(&home, "hook_session_start"), Ok(()));
+
+    let audit = home.env()[1].1.join("audit");
+    std::fs::create_dir_all(&audit).unwrap();
+    std::fs::write(
+        audit.join("audit-000001.jsonl"),
+        "{\"counter\":\"hook_budget_exceeded\"}\n",
+    )
+    .unwrap();
+
+    assert_eq!(
+        unexceeded(&home, "hook_session_start"),
+        Err("hook_session_start: the handler counted hook_budget_exceeded: it overran its hook budget".to_owned())
+    );
+}

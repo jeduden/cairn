@@ -83,6 +83,16 @@ impl Home {
         )
     }
 
+    /// Whether this home's audit log holds an entry counting `counter`.
+    ///
+    /// # Errors
+    ///
+    /// Fails when the audit directory exists and cannot be read.
+    pub fn counted(&self, counter: &str) -> io::Result<bool> {
+        let _ = counter;
+        Ok(false)
+    }
+
     /// The variables the core starts with: `HOME` and `CAIRN_HOME`, both
     /// inside this home.
     #[must_use]
