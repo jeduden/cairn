@@ -9,6 +9,7 @@ pub mod agent_instructions;
 pub mod architecture;
 pub mod benchmarks;
 pub mod branch_protection;
+pub mod calibration;
 pub mod codeowners;
 pub mod complexity;
 pub mod confinement;
