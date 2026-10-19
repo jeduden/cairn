@@ -90,8 +90,9 @@ errors and logs use the model's words.
   `list`, `search` and `expand`.
 - A CLI command that acts on a concept is `cairn <concept> <verb>`. Node-wide
   utilities keep one word: `install`, `uninstall`, `status`, `doctor`, `verify`,
-  `rebuild`, `migrate`, `ingest`, `import`, `export`, `purge`, `audit`,
-  `canary`, `ui`, `why`, `open`, `launch`, `hook`, `mcp` and `kernel-worker`.
+  `rebuild`, `migrate`, `licenses`, `ingest`, `import`, `export`, `purge`,
+  `audit`, `canary`, `ui`, `why`, `open`, `launch`, `hook`, `mcp` and
+  `kernel-worker`.
 - An option that selects a concept is named for it: `--author`, `--seat`,
   `--writer`, `--run`, `--room`.
 - A **settings key** names one setting in a settings layer:
@@ -139,6 +140,12 @@ in that tool's meaning in files an outside tool writes and maintains, or that
 name its fields. Examples are frit's plan skills and plan files, and the
 repository's own engineering tooling, such as ENG-28's review gate and the
 requirement naming its fields. The domain-model agent skips them.
+
+Build and packaging words have no Cairn meaning: crate, lockfile, release
+build, executable and release target. They are engineering-tooling words.
+Requirements may use them in their ordinary sense wherever they name a
+built artifact, as ADM-01 does with "core executable" and the `licenses`
+row of the command-line section does.
 
 ## Changing the model
 

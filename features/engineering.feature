@@ -190,6 +190,36 @@ Feature: Engineering quality (ENG)
     And only the release-only build workflow publishes each binary's SLSA Build Level 3 provenance as a GitHub artifact attestation, verified against that workflow's signing identity at main
     And an SPDX SBOM is attached, published as a GitHub artifact attestation and verified once published
 
+  @ENG-30 @P0 @pending
+  Scenario: a dependency with no license text stops the build in the pull request that adds it
+    Given the repository checkout
+    When every crate in "Cargo.lock" is read through "cargo metadata" and the sources cargo has fetched
+    Then each crate has a license file in its source
+    And the repository keeps no license text for any crate by name and version
+    And each license file's text fits the canonical text of a license in the crate's declared expression, from the allow-list in "deny.toml" or granted by one of its exceptions, ignoring case, whitespace and copyright lines, with holder, year and name left free and the Apache-2.0 appendix optional
+    And the CI workflow runs the check on every pull request, with the locked dependency tree
+    And the check adds no dependency to any shipped executable
+
+  @ENG-31 @P0 @pending
+  Scenario: the core executable carries the license texts of what it links for its own target, kept in step by CI
+    Given the repository checkout
+    When the release targets are read from the build workflow
+    Then each target has a committed "licenses/<target-triple>/THIRD_PARTY_LICENSES" and no other target has one
+    When each target's file is regenerated twice with "cargo metadata --filter-platform <target-triple>"
+    Then both runs give the same bytes, with no timestamp, host path or randomness
+    And the committed file equals the regeneration
+    And it holds the license text and copyright lines of every crate a normal-dependency path from a binary under "crates/" reaches for that target
+    And no build-only, proc-macro, test, fuzz or tooling crate appears in it
+    And it names SQLite, the Rust standard library, on the musl targets the C library, and any other runtime the target links statically
+    And the committed files of any two targets whose linked crates differ differ in bytes
+    When each target's build selects its embedded file
+    Then the embedded text equals that target's committed file
+    And the built core executable's "cairn licenses" output equals it
+    And any other executable a component ships in carries the same for the crates linked into it
+    And the CI workflow fails a pull request whose committed file differs from a regeneration
+    And the release build fails when a built executable's output differs from its target's regenerated file
+    And the core gains no dependency and opens no socket
+
   @ENG-21 @P0 @pending
   Scenario: main only moves through reviewed, signed pull requests
     Given the repository's branch protection for main
