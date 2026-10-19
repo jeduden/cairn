@@ -74,7 +74,9 @@ fn timed(w: &mut World) {
 
     assert_eq!(
         debug_core_in_timed_fns("bdd/x.rs", source),
-        ["bdd/x.rs:5 fn timed reads a clock and starts the development core with run_core_with(: a step that times the core runs the release build"]
+        [
+            "bdd/x.rs:5 fn timed reads a clock and starts the development core with run_core_with(: a step that times the core runs the release build"
+        ]
     );
 }
 
@@ -142,7 +144,10 @@ fn the_checkout_scan_reads_workflows_scripts_tests_and_benches() {
         "tooling/x/tests/bdd/c.rs:1",
         "crates/y/benches/d.rs:1",
     ] {
-        assert!(found.iter().any(|p| p.starts_with(file)), "{file}: {found:?}");
+        assert!(
+            found.iter().any(|p| p.starts_with(file)),
+            "{file}: {found:?}"
+        );
     }
 }
 
