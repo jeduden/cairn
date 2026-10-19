@@ -57,6 +57,12 @@ jobs:
           command -v strace >/dev/null || {
             sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
           }
+      # NFR-02: the scenario that holds a hook handler to its budget
+      # times the release build of the core, never the development
+      # build (testkit::release_core_executable). Built once here, with
+      # the real HOME, before the suite; no cache, as in release.yml.
+      - name: Build the release core the budget rows time
+        run: cargo build --release --locked -p cairn
       # ENG-14: the suite runs with HOME pointed at an empty decoy
       # directory, the toolchain keeping its own homes. The isolation
       # guard (testkit::guard) aborts a test that resolves real
@@ -121,6 +127,9 @@ jobs:
             sudo apt-get update && sudo apt-get install -y --no-install-recommends strace
           }
       - run: cargo install --locked cargo-llvm-cov@0.9.1
+      # NFR-02: the budget rows time the release core, which the
+      # instrumented run does not build.
+      - run: cargo build --release --locked -p cairn
       - run: cargo run --locked -p coverage
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}

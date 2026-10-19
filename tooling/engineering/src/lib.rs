@@ -17,6 +17,7 @@ pub mod dependencies;
 pub mod isolation_guard;
 pub mod product_crates;
 pub mod registry;
+pub mod release_budgets;
 pub mod release_provenance;
 pub mod review_workflow;
 pub mod static_analysis;

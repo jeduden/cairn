@@ -72,6 +72,9 @@ jobs:
       # No cache anywhere in this workflow: a cache is writable by any
       # branch, and a release must not build from something a branch
       # could have poisoned.
+      # The NFR-02 rows time the release core (testkit::release_core_executable),
+      # so it is built first; it is a test fixture here, never released.
+      - run: cargo build --release --locked -p cairn
       - run: cargo test --workspace --locked
 
   # Every target built, by the same build.yml CI runs on every change,
