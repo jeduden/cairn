@@ -1472,6 +1472,33 @@ fn protection_cases() -> Vec<Case> {
 /// The drifts the release-build gate exists to catch: the benchmark
 /// job building or running the suite in debug, and the NFR-02 budget row
 /// timing the development core.
+/// The drifts of the calibration workload the NFR-02 hook budget rows
+/// measure against: a constant, and its mixing without a constant.
+fn calibration_cases() -> Vec<Case> {
+    const FROZEN: &str = "the_calibration_workload_is_frozen";
+    const SOURCE: &str = "tooling/calibrate/src/lib.rs";
+    vec![
+        case(
+            "the calibration workload's mixing rounds changed",
+            FROZEN,
+            Injection::replace(
+                SOURCE,
+                "pub const MIX_ROUNDS: u64 = 1_200_000;",
+                "pub const MIX_ROUNDS: u64 = 1_000_000;",
+            ),
+            cargo_test("engineering", "benchmark_gate", FROZEN),
+            "the calibration mixing rounds are 1000000, not the recorded 1200000",
+        ),
+        case(
+            "the calibration workload's mixing changed without a constant",
+            FROZEN,
+            Injection::replace(SOURCE, "x ^= x >> 27;", "x ^= x >> 28;"),
+            cargo_test("engineering", "benchmark_gate", FROZEN),
+            "the calibration workload's source hashes to",
+        ),
+    ]
+}
+
 fn release_budget_cases() -> Vec<Case> {
     const CI: &str = ".github/workflows/ci.yml";
     const RELEASE: &str = "benchmarks_and_timed_steps_run_release_builds";
@@ -1510,36 +1537,6 @@ fn release_budget_cases() -> Vec<Case> {
             "reads a clock and starts the development core with run_core_with(",
         ),
         case(
-            "the calibration workload's mixing rounds changed",
-            "the_calibration_workload_is_frozen",
-            Injection::replace(
-                "tooling/calibrate/src/lib.rs",
-                "pub const MIX_ROUNDS: u64 = 1_200_000;",
-                "pub const MIX_ROUNDS: u64 = 1_000_000;",
-            ),
-            cargo_test(
-                "engineering",
-                "benchmark_gate",
-                "the_calibration_workload_is_frozen",
-            ),
-            "the calibration mixing rounds are 1000000, not the recorded 1200000",
-        ),
-        case(
-            "the calibration workload's mixing changed without a constant",
-            "the_calibration_workload_is_frozen",
-            Injection::replace(
-                "tooling/calibrate/src/lib.rs",
-                "x ^= x >> 27;",
-                "x ^= x >> 28;",
-            ),
-            cargo_test(
-                "engineering",
-                "benchmark_gate",
-                "the_calibration_workload_is_frozen",
-            ),
-            "the calibration workload's source hashes to",
-        ),
-        case(
             "the NFR-02 relative check letting a hook slowed against the reference through",
             "a_hook_made_slow_against_the_reference_fails_the_check",
             Injection::replace(
@@ -1566,6 +1563,7 @@ fn benchmark_cases() -> Vec<Case> {
     const GATED: &str = "ci_gates_on_the_benchmark_job";
     [
         release_budget_cases(),
+        calibration_cases(),
         vec![
             case(
                 "an NFR id ENG-15 names dropped from the benchmark suite",
