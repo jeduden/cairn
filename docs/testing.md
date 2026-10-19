@@ -241,10 +241,12 @@ a workflow or script line that builds the benchmark suite without
 integration test or bench function that reads a clock and starts the
 development core. A drift case proves each.
 
-The `@NFR-02` budget row compares a hook handler's median time with the
-core's own start-up, timed in alternating pairs under the same
-confinement, instead of reading the wall clock. Its limits and their
-derivation are in [testing/hook-budget.md](testing/hook-budget.md).
+The `@NFR-02` budget row times a hook handler against the frozen
+`calibrate` workload, one unit of 10 ms by definition, in alternating
+pairs under the same confinement. The path `CAIRN_CALIBRATE` names, else
+`target/release/calibrate`, is found as the core is. Build it with
+`cargo build --release -p cairn -p calibrate`, as CI does. The limits
+and the freeze are in [testing/hook-budget.md](testing/hook-budget.md).
 
 ## Keeping tests off real state
 
