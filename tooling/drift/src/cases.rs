@@ -839,7 +839,7 @@ fn core_wait_cases() -> Vec<Case> {
                 "checkout",
                 "no_product_crate_keeps_mutable_global_state",
             ),
-            "crates/cairn/src/lib.rs:15: mutable global state: pub static SEQ",
+            "crates/cairn/src/lib.rs:16: mutable global state: pub static SEQ",
         ),
     ]
 }
