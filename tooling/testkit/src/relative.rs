@@ -10,8 +10,13 @@ use std::time::Duration;
 /// for no samples.
 #[must_use]
 pub fn twice_median_nanos(samples: &[Duration]) -> Option<u128> {
-    let _ = samples;
-    None
+    let mut sorted: Vec<u128> = samples.iter().map(Duration::as_nanos).collect();
+    sorted.sort_unstable();
+    let n = sorted.len();
+    let low = sorted.get(n.checked_sub(1)? / 2)?;
+    let high = sorted.get(n / 2)?;
+
+    Some(low + high)
 }
 
 /// Judges the median of `program` against `limit` times the median of
@@ -27,8 +32,18 @@ pub fn within_multiple(
     reference: &[Duration],
     limit: u32,
 ) -> Result<(), String> {
-    let _ = (program, reference, limit);
-    Ok(())
+    let (Some(own), Some(base)) = (twice_median_nanos(program), twice_median_nanos(reference))
+    else {
+        return Err("a relative time check needs samples of both programs".to_owned());
+    };
+    if own <= base * u128::from(limit) {
+        return Ok(());
+    }
+    Err(format!(
+        "the median time {:?} is more than {limit} times the reference's {:?}",
+        Duration::from_nanos(u64::try_from(own / 2).unwrap_or(u64::MAX)),
+        Duration::from_nanos(u64::try_from(base / 2).unwrap_or(u64::MAX)),
+    ))
 }
 
 #[cfg(test)]
