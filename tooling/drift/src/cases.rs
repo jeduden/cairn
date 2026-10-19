@@ -1453,7 +1453,41 @@ fn benchmark_cases() -> Vec<Case> {
     const CI: &str = ".github/workflows/ci.yml";
     const REGISTERED: &str = "the_benchmark_suite_registers_every_nfr_id_eng_15_names";
     const GATED: &str = "ci_gates_on_the_benchmark_job";
+    const RELEASE: &str = "benchmarks_and_timed_steps_run_release_builds";
     vec![
+        case(
+            "the benchmark job building the suite in debug",
+            RELEASE,
+            Injection::replace(
+                CI,
+                "cargo build --release --locked -p benchmark -p cairn",
+                "cargo build --locked -p benchmark -p cairn",
+            ),
+            cargo_test("engineering", "benchmark_gate", RELEASE),
+            "builds the benchmark suite without --release",
+        ),
+        case(
+            "the benchmark pointed at a debug core",
+            RELEASE,
+            Injection::replace(
+                CI,
+                "--core \"$head/cairn\"",
+                "--core \"$GITHUB_WORKSPACE/target/debug/cairn\"",
+            ),
+            cargo_test("engineering", "benchmark_gate", RELEASE),
+            "points the benchmark at a debug build",
+        ),
+        case(
+            "the NFR-02 budget row timing the development core",
+            RELEASE,
+            Injection::replace(
+                "tooling/scenario/tests/bdd/non_functional.rs",
+                "run_release_core(w, &[\"hook\", &hook], Some(input.as_bytes()))?;",
+                "run_core_with(w, &[\"hook\", &hook], Some(input.as_bytes()), &[])?;",
+            ),
+            cargo_test("engineering", "benchmark_gate", RELEASE),
+            "reads a clock and starts the development core with run_core_with(",
+        ),
         case(
             "an NFR id ENG-15 names dropped from the benchmark suite",
             REGISTERED,
