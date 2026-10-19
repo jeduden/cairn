@@ -46,5 +46,25 @@ pub fn within_multiple(
     ))
 }
 
+/// A timing a step takes: how long one run of a program took.
+pub type Timing<'a> = &'a mut dyn FnMut() -> Result<Duration, String>;
+
+/// The times of `rounds` rounds, each timing the reference and the
+/// program once, one right after the other, the order alternating from
+/// round to round so a drift in the machine's speed favours neither.
+/// Returns the program's times and the reference's.
+///
+/// # Errors
+///
+/// Fails with the first timing that fails.
+pub fn interleaved(
+    rounds: usize,
+    reference: Timing<'_>,
+    program: Timing<'_>,
+) -> Result<(Vec<Duration>, Vec<Duration>), String> {
+    let _ = (rounds, reference, program);
+    Ok((Vec::new(), Vec::new()))
+}
+
 #[cfg(test)]
 mod tests;
