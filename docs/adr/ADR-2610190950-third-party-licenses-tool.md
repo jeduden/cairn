@@ -53,10 +53,11 @@ crate is removed or replaced.
 
 Guards against a wrong selection. A test per target proves the build
 embeds that target's own file: it compares the embedded text with the
-target's committed file and, for each pair of targets whose linked crates
-differ, checks that each file names a crate only that target links. Targets
-that link the same crates, such as the two musl targets, carry identical
-files.
+target's committed file, and the committed files of any two targets whose
+linked crates differ differ in bytes, so the comparison catches a swap
+between them in both directions, even when one target links a strict subset
+of the other's crates. Targets that link the same crates, such as the two
+musl targets, carry identical files.
 A target in the workflow with no file, or a file for no target, fails
 the build. The release build runs each built executable's
 `cairn licenses` on its own platform and compares it with that target's
@@ -110,8 +111,11 @@ maintained tool. It would need its own accepted ADR, a drift case, and
 a hand-kept entry for each non-crate library.
 
 - **`cargo-deny`'s license check alone.** It already runs in CI and
-  checks the declared SPDX expression, but it never reads or ships a
-  text, so it cannot satisfy ENG-30 or ENG-31.
+  checks the declared SPDX expression, but it never ships a text and
+  does not compare a license file with that expression, so it cannot satisfy
+  ENG-30 or ENG-31. The in-repository tool keeps a short list of the
+  canonical texts of the licenses on the allow-list and does its own
+  comparison; it does not reach `cargo-deny`'s matcher.
 - **The SBOM (ENG-20).** SPDX lists license identifiers, not texts or
   copyright lines.
 - **A separate release asset.** Rejected by the stakeholder: a file

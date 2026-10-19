@@ -196,7 +196,7 @@ Feature: Engineering quality (ENG)
     When every crate in "Cargo.lock" is read through "cargo metadata" and the sources cargo has fetched
     Then each crate has a license file in its source
     And the repository keeps no license text for any crate by name and version
-    And each license file's text matches the license the crate declares
+    And each license file's text, with copyright lines dropped, equals the canonical text of a license in the crate's declared expression, ignoring case and whitespace
     And the CI workflow runs the check on every pull request, with the locked dependency tree
     And the check adds no dependency to any shipped executable
 
@@ -211,7 +211,7 @@ Feature: Engineering quality (ENG)
     And it holds the license text and copyright lines of every crate a normal-dependency path from a binary under "crates/" reaches for that target
     And no build-only, proc-macro, test, fuzz or tooling crate appears in it
     And it names the SQLite and, on the musl targets, the C library, both compiled in
-    And for each pair of targets whose linked crates differ, each file names a crate that only that target links
+    And the committed files of any two targets whose linked crates differ differ in bytes
     When each target's build selects its embedded file
     Then the embedded text equals that target's committed file
     And the built core executable's "cairn licenses" output equals it
