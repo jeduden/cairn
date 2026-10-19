@@ -3,81 +3,81 @@ id: 2610190944
 title: "Ship third-party license texts with every release"
 status: "🔲"
 summary: >-
-  Check on every pull request that each crate has a recoverable license
-  text (ENG-30), and publish per release target a signed, reproducible
-  THIRD_PARTY_LICENSES file for the crates that binary links (ENG-31),
-  so a new dependency is covered the moment it is added.
+  Fail the pull request that adds a crate with no license text
+  (ENG-30), and embed a committed, regenerated THIRD_PARTY_LICENSES in
+  every executable, shown by cairn licenses (ENG-31), so a new
+  dependency is covered the moment it is added.
 model: sonnet
 depends-on: []
 ---
-# Ship third-party license texts with every release
+# Ship third-party license texts inside every executable
 
 ## Goal
 
 A new dependency reaches a release with its license text and copyright
-lines shipped beside the binaries, and no manual step. CI stops the pull
-request that adds a crate with no recoverable text. The release
-publishes a signed `THIRD_PARTY_LICENSES` file per target.
+lines inside the executable, and no manual step. CI stops the pull
+request that adds a crate with no license text, and the one that adds a
+dependency without regenerating `THIRD_PARTY_LICENSES`.
 
 ## Context
 
 The stakeholder ruled that third-party license texts ship with
-releases, and that it must work automatically as soon as there is a new
-dependency. Today a release publishes bare `cairn-*` binaries, an SPDX
-SBOM, a signed `checksums.txt` and attestations (ENG-20). Nothing
-carries a license text. `deny.toml` checks each crate's declared
-license against the ENG-18 allow-list but never reads a text.
+releases, inside each executable and not as a separate asset, and that
+a crate with no license text is never allowed. Today a release
+publishes bare `cairn-*` binaries, an SPDX SBOM, a signed
+`checksums.txt` and attestations (ENG-20). Nothing carries a license
+text. `deny.toml` checks each crate's declared license against the
+ENG-18 allow-list but never reads a text.
+
+Mechanism, as the proposed
+[ADR](../../docs/adr/ADR-2610190950-third-party-licenses-tool.md)
+sets out: one committed `THIRD_PARTY_LICENSES` at the repository root,
+the union of the crates linked on any release target. The core embeds
+it with `include_str!` and prints it with `cairn licenses`. A CI gate
+fails when the committed file differs from a regeneration. The release
+build fails when a built executable's output differs from the file
+regenerated at the released commit. The ENG-20 signature and
+attestations cover the file because it is inside the binary.
+
+Core rules. The text is a compiled-in string: no dependency (ENG-18),
+no socket (I4, SEC-01). `licenses` is a new node-wide utility name; this
+change proposes it for the domain model's list. The stakeholder rules
+on it before phase 2.
 
 Reuse, searched first:
 
-- **`cargo-deny`** (already in CI): declared licenses only, no texts.
-  Kept for what it does.
-- **The SBOM** (syft, ENG-20): identifiers, not texts. Kept; it is not
-  the answer.
-- **`tooling/engineering`**: already reads `cargo metadata` for
-  ENG-18, including the walk from the binaries under `crates/` that
-  counts linked dependencies. The linked-set walk is reused, not
-  copied.
-- **`cargo-about`, `cargo-bundle-licenses`**: weighed in the proposed
-  [ADR-2610190950](../../docs/adr/ADR-2610190950-third-party-licenses-tool.md);
-  neither knows the bundled SQLite or the musl C library, and one more
-  pinned binary is not needed. The ADR stays `proposed` until the
-  stakeholder rules.
+- **`cargo-deny`** (in CI): declared licenses only. Kept for that.
+- **The SBOM** (syft, ENG-20): identifiers, not texts. Kept.
+- **`tooling/engineering`**: reads `cargo metadata` for ENG-18 and walks
+  from the binaries under `crates/`. The linked-set walk is reused.
+- **`cargo-about`, `cargo-bundle-licenses`**: compared in the ADR's
+  table; the ADR stays `proposed` and recommends the in-repository tool.
 
-The release already attests each binary and signs `checksums.txt`. The
-new files join `dist/` before the checksums are created. That puts them
-under the existing signature (ENG-20) with no second mechanism.
-
-Stakeholder paths. Phases 1 and 3 touch `/tooling/` and
-`/.github/workflows/`, both owned by the stakeholder in
-[CODEOWNERS](../../.github/CODEOWNERS), so each waits for the
-stakeholder's approval; keep them out of any other pull request. The
-requirement change (the SRS rows, the scenarios, the ADR and this plan)
-is its own change set.
-
-The file is named `THIRD_PARTY_LICENSES`, not `THIRD_PARTY_NOTICES`:
-the domain model gives "notice" one meaning, the opt-in notice
-(INJ-10).
+Stakeholder paths: phases 1 to 3 touch `/tooling/`, `/.github/` and
+`/DEPENDENCIES.md` if the tool needs a line, all owned in
+[CODEOWNERS](../../.github/CODEOWNERS); each waits for the
+stakeholder's approval. The requirement change (SRS rows, scenarios,
+ADR, plan) is its own change set.
 
 ## Tasks
 
-1. Proving slice: the check behind ENG-30, with the shared linked-set
-   reader, a failing and a passing fixture, its scenario bound, its
-   drift case and its CI step (phase 1)
-2. The generator: a deterministic `THIRD_PARTY_LICENSES` for any
-   target, with entries for code compiled in without being a crate, and
-   a regeneration check (phase 2)
-3. Release wiring: generate per target from the released commit, list
-   in `checksums.txt`, attest with the binaries, verify after
-   publishing (phase 3)
+1. Proving slice: the ENG-30 check with the shared linked-set reader,
+   fixtures, its scenario bound, its drift case and its CI step
+   (phase 1)
+2. The generator: a deterministic `THIRD_PARTY_LICENSES` for the union
+   of release targets, the non-crate entries, and the CI regeneration
+   gate with its drift case (phase 2)
+3. Embedding: `cairn licenses` prints the file, the release build
+   compares each built executable's output with the regeneration, and
+   ENG-31 closes (phase 3)
 
 ## Execution
 
-| Phase | Model  | Gate                                                                                                                   |
-| ----- | ------ | ---------------------------------------------------------------------------------------------------------------------- |
-| 1     | sonnet | `cargo test -p scenario` runs ENG-30; a scratch copy with a license-less crate added fails the new CI step             |
-| 2     | sonnet | The built tool, run twice for each release target, gives identical bytes naming every linked crate and no dev-only one |
-| 3     | opus   | A dry run of the release workflow on a branch publishes the file, and its verify job fails when the file is removed    |
+| Phase | Model  | Gate                                                                                                                    |
+| ----- | ------ | ----------------------------------------------------------------------------------------------------------------------- |
+| 1     | sonnet | `cargo test -p scenario` runs ENG-30; a scratch copy with a license-less crate added fails the new CI step              |
+| 2     | sonnet | The built tool, run twice, gives identical bytes naming every linked crate; a stale committed file fails the gate       |
+| 3     | opus   | The built `cairn licenses` equals the committed file in an isolated `CAIRN_HOME`; the release build fails on a mismatch |
 
 ## Phases
 

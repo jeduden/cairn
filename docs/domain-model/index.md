@@ -90,8 +90,9 @@ errors and logs use the model's words.
   `list`, `search` and `expand`.
 - A CLI command that acts on a concept is `cairn <concept> <verb>`. Node-wide
   utilities keep one word: `install`, `uninstall`, `status`, `doctor`, `verify`,
-  `rebuild`, `migrate`, `ingest`, `import`, `export`, `purge`, `audit`,
-  `canary`, `ui`, `why`, `open`, `launch`, `hook`, `mcp` and `kernel-worker`.
+  `rebuild`, `migrate`, `licenses`, `ingest`, `import`, `export`, `purge`,
+  `audit`, `canary`, `ui`, `why`, `open`, `launch`, `hook`, `mcp` and
+  `kernel-worker`.
 - An option that selects a concept is named for it: `--author`, `--seat`,
   `--writer`, `--run`, `--room`.
 - A **settings key** names one setting in a settings layer:

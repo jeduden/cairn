@@ -191,26 +191,29 @@ Feature: Engineering quality (ENG)
     And an SPDX SBOM is attached, published as a GitHub artifact attestation and verified once published
 
   @ENG-30 @P0 @pending
-  Scenario: a dependency with no recoverable license text stops the build in the pull request that adds it
+  Scenario: a dependency with no license text stops the build in the pull request that adds it
     Given the repository checkout
     When every crate in "Cargo.lock" is read through "cargo metadata" and the sources cargo has fetched
-    Then each crate has a license file in its source, or a text the repository keeps for its name and version
+    Then each crate has a license file in its source
+    And the repository keeps no license text for any crate by name and version
     And each license file's text matches the license the crate declares
     And the CI workflow runs the check on every pull request, with the locked dependency tree
     And the check adds no dependency to any shipped executable
 
   @ENG-31 @P0 @pending
-  Scenario: every release publishes, signed and reproducible, the license texts of what each binary links
+  Scenario: every executable carries the license texts of what it links, kept in step by CI
     Given the repository checkout
-    When the third-party license file is generated twice for each release target
+    When "THIRD_PARTY_LICENSES" is regenerated twice
     Then both runs give the same bytes, with no timestamp, host path or randomness
-    And each file holds the license text and copyright lines of every crate a normal-dependency path from a binary under "crates/" reaches for that target
+    And the committed file equals the regeneration
+    And it holds the license text and copyright lines of every crate a normal-dependency path from a binary under "crates/" reaches for any release target
     And no build-only, proc-macro, test, fuzz or tooling crate appears in it
     And it names the bundled SQLite and, on the musl targets, the C library
-    When the release workflows are read
-    Then the file is generated from the commit being released and listed in the signed checksum file
-    And the file is covered by the attestation of the binaries it describes
-    And the verify job fails the release when a published file is missing, differs from a regeneration, or lacks a linked crate
+    When the built "cairn" executable runs "cairn licenses"
+    Then its output equals the committed file
+    And the CI workflow fails a pull request whose committed file differs from a regeneration
+    And the release build fails when a built executable's output differs from the file regenerated at the released commit
+    And the core gains no dependency and opens no socket
 
   @ENG-21 @P0 @pending
   Scenario: main only moves through reviewed, signed pull requests
