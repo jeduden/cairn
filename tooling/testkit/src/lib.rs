@@ -124,8 +124,13 @@ fn release_executable(
     if path.is_file() {
         Ok(path)
     } else {
+        let var = if name == "calibrate" {
+            CALIBRATE_VAR
+        } else {
+            RELEASE_CORE_VAR
+        };
         Err(format!(
-            "no release {name} executable at {}: build it first, with cargo build --release -p {name}, or name it in {RELEASE_CORE_VAR}",
+            "no release {name} executable at {}: build it first, with cargo build --release -p {name}, or name it in {var}",
             path.display()
         ))
     }
