@@ -757,3 +757,68 @@ fn a_writer_that_lost_its_slot_to_a_smaller_id_leaves_the_index_current_and_one_
         "a larger id holds the slot a smaller one should"
     );
 }
+
+#[test]
+fn a_reader_of_a_store_whose_index_file_is_gone_finds_no_index() {
+    let dir = TempDir::new().unwrap();
+    drop(with(&dir, &texts(&["deploy"])));
+    for suffix in ["", "-wal", "-shm"] {
+        let _ = std::fs::remove_file(dir.path().join(format!("{FILE}{suffix}")));
+    }
+
+    let read = Store::open_read_only(&dir.path().join("store.db")).unwrap();
+
+    assert!(!exists(&read.conn).unwrap());
+    assert!(matches!(
+        read.search(&base(&compiled("deploy"))),
+        Err(StoreError::NoIndex)
+    ));
+}
+
+#[cfg(unix)]
+#[test]
+fn an_index_file_whose_path_is_not_text_cannot_be_attached() {
+    use std::os::unix::ffi::OsStrExt;
+    let dir = TempDir::new().unwrap();
+    let conn = Connection::open_in_memory().unwrap();
+    let path = dir.path().join(std::ffi::OsStr::from_bytes(b"idx\xff"));
+
+    assert!(matches!(attach(&conn, &path, true), Err(StoreError::Io(_))));
+}
+
+#[test]
+fn a_writer_id_of_the_record_that_does_not_parse_makes_the_currency_check_corrupt() {
+    let dir = TempDir::new().unwrap();
+    let store = with(&dir, &texts(&["deploy"]));
+    store
+        .conn
+        .execute(
+            "INSERT INTO seats (writer, seat, room, certificate) VALUES ('nope', 's', 'r', '{}')",
+            [],
+        )
+        .unwrap();
+
+    assert!(matches!(
+        store.index_is_current(),
+        Err(StoreError::Corrupt { .. })
+    ));
+}
+
+#[test]
+fn an_index_missing_its_tables_fails_to_take_settings_to_note_progress_or_to_digest() {
+    let dir = TempDir::new().unwrap();
+    let store = with(&dir, &texts(&["deploy"]));
+    let indexing = Indexing::open(&store.conn, writer(1)).unwrap();
+    store
+        .conn
+        .execute_batch("DROP TABLE search_writers")
+        .unwrap();
+    assert!(indexing.done_to(1).is_err());
+    store
+        .conn
+        .execute_batch("DROP TABLE search_settings")
+        .unwrap();
+
+    assert!(write_settings(&store.conn).is_err());
+    assert!(digest(&store.conn).is_err());
+}
