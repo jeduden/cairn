@@ -230,6 +230,10 @@ jobs:
       - run: cargo install --locked cargo-deny@0.20.2 cargo-audit@0.22.2
       - run: cargo deny check licenses bans sources
       - run: cargo audit
+      # The fuzz workspace has its own manifest and lockfile (ENG-07),
+      # so the same policy reads them too.
+      - run: cargo deny --manifest-path fuzz/Cargo.toml check licenses bans sources
+      - run: cargo audit --file fuzz/Cargo.lock
 
   # ENG-27: every check that keeps the specification, its scenarios
   # and the repository's records in step is proven here. The suite

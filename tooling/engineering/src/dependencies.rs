@@ -165,6 +165,9 @@ pub struct DirectDeps {
 /// The direct dependencies the manifest `file` names: the registry
 /// crates `metadata` lists for the Cargo workspace a `Cargo.toml` roots,
 /// with the product's crates where the architecture check finds them.
+/// The fuzz workspace's `fuzz/Cargo.toml` is read the same way, but
+/// nothing there links into a shipped executable: its crates are not
+/// under the product.
 ///
 /// # Errors
 ///
@@ -182,6 +185,10 @@ pub fn direct_deps(
                 shipped: cargo_shipped_deps(&json, Path::new(architecture::PRODUCT))?,
             })
         }
+        "fuzz/Cargo.toml" => Ok(DirectDeps {
+            all: cargo_direct_deps(&metadata(&checkout.root.join(file))?)?,
+            shipped: Vec::new(),
+        }),
         other => Err(format!("no reader for the dependencies in {other}")),
     }
 }

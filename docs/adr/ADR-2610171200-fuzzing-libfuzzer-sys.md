@@ -1,14 +1,15 @@
 ---
 id: ADR-2610171200
 title: "Fuzzing: cargo-fuzz targets on libfuzzer-sys"
-status: proposed
+status: accepted
 scope: dependencies
 summary: >-
   The fuzz targets of ENG-07 run under cargo-fuzz on libfuzzer-sys,
   LLVM's libFuzzer compiled in, in a fuzz/ crate that is its own cargo
   workspace and builds on a pinned nightly. Nothing it links reaches a
   shipped executable. Its license adds NCSA, which the allow-list does
-  not name.
+  not name; the stakeholder's ruling of 19 October 2026 admits it for
+  this one crate only.
 ---
 # ADR-2610171200: Fuzzing on libfuzzer-sys
 
@@ -60,11 +61,20 @@ fuzzes each in turn; a crash fails the job and keeps its input.
 
 - The license expression adds NCSA, the University of Illinois/NCSA
   Open Source License libFuzzer ships under: BSD-style, but not a name
-  ENG-18's allow-list holds. The stakeholder rules on it before this
-  record is accepted.
-- ENG-18's check reads the product's workspace through `cargo
-  metadata`, so it does not see `fuzz/Cargo.toml`, and cargo-deny does
-  not scan `fuzz/Cargo.lock`. Accepting this record should extend both
-  to the fuzz workspace, with a drift case.
+  ENG-18's allow-list holds. The stakeholder's ruling of 19 October
+  2026 accepts `libfuzzer-sys` with a per-crate license exception for
+  NCSA, not a general allow-list entry. [deny.toml](../../deny.toml)
+  names the exception for `libfuzzer-sys` alone. No other crate in
+  `fuzz/Cargo.lock` carries NCSA: `arbitrary`, `cc`, `shlex` and the
+  rest are MIT or Apache-2.0. A crate that does later gets its own
+  reviewed line there. ENG-18's allow-list text is unchanged.
+- The ruling was given in the session chat. It must be confirmed as a
+  consent comment on jeduden/cairn#60 before the pull request lands.
+- ENG-18's check reads `fuzz/Cargo.toml` beside the product's
+  workspace: each direct dependency there needs an accepted ADR and a
+  line in `DEPENDENCIES.md`. None of them counts toward the shipped
+  executable's limit, since the fuzz crates sit outside `crates/`.
+  CI runs cargo-deny and cargo-audit over `fuzz/Cargo.lock` too, and a
+  drift case proves the check fails when a fuzz dependency has no ADR.
 - No crate linked into a shipped executable changes; the core's
   direct set stays at eight.

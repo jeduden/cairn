@@ -36,7 +36,7 @@ installs it on the first `cargo` command.
 - `cargo fmt --all --check` and `cargo clippy --workspace --all-targets
   -- -D warnings` — layout and lint (ENG-16)
 - `cargo deny check licenses bans sources` and `cargo audit` — the
-  supply chain (ENG-16), with [deny.toml](../deny.toml)'s policy
+  supply chain (ENG-16), over `fuzz/` too, by [deny.toml](../deny.toml)
 - `mdsmith check .` — lint the Markdown; `mdsmith fix .` rewrites
   what it can, including the generated catalogs
 
