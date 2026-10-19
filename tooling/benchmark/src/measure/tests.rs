@@ -147,7 +147,7 @@ fn sample_saturates_a_time_too_long_for_nanoseconds() {
 fn time_program_fed_hands_the_program_its_input() {
     let (program, args) = quiet();
 
-    let took = time_program_fed(&program, &args, &[], Some("input\n"), DEADLINE).unwrap();
+    let took = time_program_fed(&program, &args, &[], b"input\n".to_vec(), DEADLINE).unwrap();
 
     assert!(took > Duration::ZERO);
 }
@@ -158,7 +158,7 @@ fn time_program_fed_reports_a_program_it_cannot_start() {
         Path::new("/no/such/program"),
         &[],
         &[],
-        Some("input"),
+        b"input".to_vec(),
         DEADLINE,
     )
     .unwrap_err();
@@ -174,7 +174,7 @@ fn a_search_fixture_that_cannot_be_prepared_names_the_benchmark() {
             lines: 1,
             prepare: &["--no-such-flag"],
         },
-        ..SUITE[2]
+        ..SUITE[4]
     };
 
     let err = time_benchmark(&program, &failing, DEADLINE).unwrap_err();

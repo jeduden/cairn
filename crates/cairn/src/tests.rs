@@ -336,6 +336,7 @@ fn a_failed_write_is_a_failure() {
             node_identity: None,
             os_user: OsUser::Known(u32::MAX),
             input: &input,
+            clock: &|| NOW,
             attended: false,
             hook_budget: Some(LENIENT),
             ancestry: own_harness,
@@ -1180,6 +1181,7 @@ fn ambiguous_calls_are_counted_on_their_own() {
         hook_budget: Some(LENIENT),
         ancestry: own_harness,
         live_limit: None,
+        query_deadline: None,
     };
 
     log_with(&p, None, || {
