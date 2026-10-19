@@ -73,6 +73,33 @@ pub fn core_executable() -> Result<PathBuf, String> {
     sibling_executable(&test, "cairn")
 }
 
+/// The environment variable that names the release build of the core, a
+/// path, when it is not at `target/release/cairn` of the checkout.
+pub const RELEASE_CORE_VAR: &str = "CAIRN_RELEASE_CORE";
+
+/// The release build of the `cairn` core, which every step that holds
+/// the core to a time budget runs (NFR-02): a development build is
+/// slower by an order of magnitude and flakes on a loaded runner. It is
+/// the path `CAIRN_RELEASE_CORE` names, else `target/release/cairn` of
+/// the checkout; the test run never builds it.
+///
+/// # Errors
+///
+/// Fails, saying how to build it, when it is not there.
+pub fn release_core_executable() -> Result<PathBuf, String> {
+    release_executable(std::env::var_os(RELEASE_CORE_VAR), &repo_root(), "cairn")
+}
+
+/// The release build of `name`: `named` when given, else under `root`.
+fn release_executable(
+    named: Option<std::ffi::OsString>,
+    root: &Path,
+    name: &str,
+) -> Result<PathBuf, String> {
+    let _ = (named, root, name);
+    Err(String::new())
+}
+
 /// The executable `name` in the directory above the one holding `test`.
 fn sibling_executable(test: &Path, name: &str) -> Result<PathBuf, String> {
     let profile = test

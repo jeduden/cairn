@@ -146,3 +146,41 @@ fn place_transcript_copies_under_the_default_transcript_root() {
     let top = place_transcript(&home, Path::new("relative.jsonl"));
     assert!(top.is_err());
 }
+
+#[test]
+fn the_release_executable_is_the_named_path_else_the_checkout_s_release_build() {
+    let dir = TempDir::new().unwrap();
+    let exe = format!("cairn{}", std::env::consts::EXE_SUFFIX);
+    let built = dir.path().join("target/release").join(&exe);
+    let named = dir.path().join("elsewhere").join(&exe);
+    fs::create_dir_all(built.parent().unwrap()).unwrap();
+    fs::create_dir_all(named.parent().unwrap()).unwrap();
+
+    let missing = release_executable(None, dir.path(), "cairn").unwrap_err();
+    fs::write(&built, "").unwrap();
+    let found = release_executable(None, dir.path(), "cairn").unwrap();
+    let unnamed = release_executable(Some(named.clone().into()), dir.path(), "cairn").unwrap_err();
+    fs::write(&named, "").unwrap();
+    let chosen = release_executable(Some(named.clone().into()), dir.path(), "cairn").unwrap();
+
+    assert_eq!(
+        missing,
+        format!(
+            "no release cairn executable at {}: build it first, with cargo build --release -p cairn, or name it in CAIRN_RELEASE_CORE",
+            built.display()
+        )
+    );
+    assert_eq!(found, built);
+    assert!(unnamed.contains(&named.display().to_string()), "{unnamed}");
+    assert_eq!(chosen, named);
+}
+
+#[test]
+fn the_release_core_executable_reads_the_variable_and_the_checkout() {
+    // The unit run builds no release core, so the answer is a file or
+    // the error that says how to build one.
+    match release_core_executable() {
+        Ok(path) => assert!(path.is_file()),
+        Err(e) => assert!(e.contains("cargo build --release -p cairn"), "{e}"),
+    }
+}
