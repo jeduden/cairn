@@ -96,8 +96,21 @@ fn release_executable(
     root: &Path,
     name: &str,
 ) -> Result<PathBuf, String> {
-    let _ = (named, root, name);
-    Err(String::new())
+    let path = named.map_or_else(
+        || {
+            root.join("target/release")
+                .join(format!("{name}{}", std::env::consts::EXE_SUFFIX))
+        },
+        PathBuf::from,
+    );
+    if path.is_file() {
+        Ok(path)
+    } else {
+        Err(format!(
+            "no release {name} executable at {}: build it first, with cargo build --release -p {name}, or name it in {RELEASE_CORE_VAR}",
+            path.display()
+        ))
+    }
 }
 
 /// The executable `name` in the directory above the one holding `test`.
