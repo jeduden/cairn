@@ -176,6 +176,25 @@ fn the_release_executable_is_the_named_path_else_the_checkout_s_release_build() 
 }
 
 #[test]
+fn the_calibration_executable_is_found_as_the_release_core_is() {
+    let base = TempDir::new().unwrap();
+    let named = base.path().join("calibrate-here");
+    std::fs::write(&named, "").unwrap();
+
+    let found = release_executable(Some(named.clone().into_os_string()), base.path(), "calibrate");
+    let missing = release_executable(None, base.path(), "calibrate").unwrap_err();
+
+    assert_eq!(found, Ok(named));
+    assert!(missing.contains("cargo build --release -p calibrate"), "{missing}");
+    assert!(missing.contains(CALIBRATE_VAR), "{missing}");
+    assert_eq!(CALIBRATE_VAR, "CAIRN_CALIBRATE");
+    match calibrate_executable() {
+        Ok(path) => assert!(path.is_file()),
+        Err(e) => assert!(e.contains("cargo build --release -p calibrate"), "{e}"),
+    }
+}
+
+#[test]
 fn the_release_core_executable_reads_the_variable_and_the_checkout() {
     // The unit run builds no release core, so the answer is a file or
     // the error that says how to build one.

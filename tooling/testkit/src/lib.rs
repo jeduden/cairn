@@ -91,6 +91,23 @@ pub fn release_core_executable() -> Result<PathBuf, String> {
     release_executable(std::env::var_os(RELEASE_CORE_VAR), &repo_root(), "cairn")
 }
 
+/// The environment variable that names the release build of the
+/// calibration workload, a path, when it is not at
+/// `target/release/calibrate` of the checkout.
+pub const CALIBRATE_VAR: &str = "CAIRN_CALIBRATE";
+
+/// The release build of the `calibrate` workload, the reference the
+/// hook budget rows measure a hook handler against (NFR-02): the path
+/// `CAIRN_CALIBRATE` names, else `target/release/calibrate` of the
+/// checkout; the test run never builds it.
+///
+/// # Errors
+///
+/// Fails, saying how to build it, when it is not there.
+pub fn calibrate_executable() -> Result<PathBuf, String> {
+    release_executable(std::env::var_os(CALIBRATE_VAR), &repo_root(), "calibrate")
+}
+
 /// The release build of `name`: `named` when given, else under `root`.
 fn release_executable(
     named: Option<std::ffi::OsString>,
