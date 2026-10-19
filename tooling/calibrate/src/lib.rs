@@ -19,10 +19,10 @@ use std::time::Instant;
 pub const SEED: u64 = 0x9e37_79b9_7f4a_7c15;
 
 /// How many rounds of mixing the workload runs.
-pub const MIX_ROUNDS: u64 = 0;
+pub const MIX_ROUNDS: u64 = 1_200_000;
 
 /// How many times the workload creates, reads and removes its file.
-pub const FILE_ROUNDS: u32 = 0;
+pub const FILE_ROUNDS: u32 = 50;
 
 /// The bytes the workload writes to its file each round.
 const CHUNK: usize = 64;
@@ -53,20 +53,15 @@ pub fn mix(seed: u64, rounds: u64) -> u64 {
 pub fn touch_files(dir: &Path, rounds: u32) -> io::Result<u64> {
     let path = dir.join(format!("calibrate-{}.tmp", std::process::id()));
     let mut sum = 0u64;
-    let mut outcome = Ok(());
     for round in 0..rounds {
-        outcome = one_round(&path, round, &mut sum);
-        if outcome.is_err() {
-            break;
-        }
+        // A new file each round: rewriting an existing one makes the
+        // file system flush it on close, which times the disk and not
+        // the work.
+        let step = one_round(&path, round, &mut sum);
+        let removed = std::fs::remove_file(&path);
+        step?;
+        removed?;
     }
-    let removed = if rounds == 0 {
-        Ok(())
-    } else {
-        std::fs::remove_file(&path)
-    };
-    outcome?;
-    removed?;
 
     Ok(sum)
 }
