@@ -50,6 +50,16 @@ fn a_directory_that_is_not_there_fails() {
 }
 
 #[test]
+fn the_frozen_workload_gives_the_result_it_was_recorded_with() {
+    let dir = scratch("frozen");
+
+    let got = run(&dir).unwrap();
+
+    assert_eq!(got, 0);
+    std::fs::remove_dir(&dir).unwrap();
+}
+
+#[test]
 fn the_workload_combines_the_mix_and_the_files() {
     let dir = scratch("run");
 
