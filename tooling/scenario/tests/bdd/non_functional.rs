@@ -7,7 +7,9 @@
 //! Each hook's budget and harness timeout are §9.1's and those Cairn
 //! installs it with (ASM-10). The development build's seams stand the
 //! clock still (`CAIRN_TEST_CLOCK`) and hang a handler until it is
-//! killed (`CAIRN_TEST_FAULT=hook-hang`).
+//! killed (`CAIRN_TEST_FAULT=hook-hang`). The row that times a handler
+//! against its budget runs the release build, which has no seams, so
+//! it needs `cargo build --release -p cairn` first.
 
 use std::fs;
 use std::time::{Duration, Instant};
@@ -16,7 +18,7 @@ use cucumber::{then, when};
 use serde_json::{Value, json};
 
 use crate::World;
-use crate::record::{HOOK_BUDGET, home, run_core_killed, run_core_with};
+use crate::record::{HOOK_BUDGET, home, run_core_killed, run_core_with, run_release_core};
 use crate::record_hooks::{SESSION, answered_empty, counted, prompt_submit, session_start};
 
 /// When the killed handlers' clock stands.
@@ -74,14 +76,11 @@ fn markers(w: &World) -> Result<Vec<String>, String> {
 fn runs_within_budget(w: &mut World, hook: String) -> Result<(), String> {
     let (budget, _) = budget_of(&hook);
     let input = input_of(w, &hook)?.to_string();
-    let millis = budget.as_millis().to_string();
+    // The release build, which keeps each hook's own budget: the
+    // development build is an order of magnitude slower and flakes on a
+    // loaded machine, and its budget seam is not the one users get.
     let started = Instant::now();
-    run_core_with(
-        w,
-        &["hook", &hook],
-        Some(input.as_bytes()),
-        &[(HOOK_BUDGET, &millis)],
-    )?;
+    run_release_core(w, &["hook", &hook], Some(input.as_bytes()))?;
     let took = started.elapsed();
     let state = w.section::<BudgetSteps>();
     state.took = Some((took, budget + JUST_ABOVE));

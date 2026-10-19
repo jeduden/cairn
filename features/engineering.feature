@@ -174,11 +174,12 @@ Feature: Engineering quality (ENG)
   Scenario: every direct dependency is justified by an accepted ADR with an allow-listed license
     Given the repository checkout
     When the direct dependencies are read from "Cargo.toml"
+    And the direct dependencies are read from "fuzz/Cargo.toml"
     And the ADRs are read from "docs/adr"
     Then each direct dependency is named by exactly one accepted ADR
     And every module an accepted ADR names is a direct dependency
     And each named module has a purpose, a license and a maintenance status, and its ADR weighs alternatives
-    And each license is on the allow-list the ENG-18 requirement states
+    And each license is on the allow-list the ENG-18 requirement states, or a crate's exception in "deny.toml"
     And the direct dependencies linked into a shipped executable stay within the target the ENG-18 requirement states
     And "DEPENDENCIES.md" lists every ADR that names a module
 

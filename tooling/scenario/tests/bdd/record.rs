@@ -130,6 +130,14 @@ pub fn run_core_with(
     run_program_with(w, &exe, args, input, extra)
 }
 
+/// [`run_core_with`] starting the release build of the core, which
+/// ignores every development seam (NFR-02): a step that holds the core
+/// to a time budget starts it this way, so it times the build users run.
+pub fn run_release_core(w: &mut World, args: &[&str], input: Option<&[u8]>) -> Result<(), String> {
+    let exe = testkit::release_core_executable()?;
+    run_program_with(w, &exe, args, input, &[])
+}
+
 /// [`run_core_with`] starting `program`, such as a script standing in
 /// for a harness that starts the core, in the core's confinement.
 pub fn run_program_with(
