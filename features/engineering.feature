@@ -196,7 +196,7 @@ Feature: Engineering quality (ENG)
     When every crate in "Cargo.lock" is read through "cargo metadata" and the sources cargo has fetched
     Then each crate has a license file in its source
     And the repository keeps no license text for any crate by name and version
-    And each license file's text, with copyright lines dropped, equals the canonical text of a license in the crate's declared expression, ignoring case and whitespace
+    And each license file's text fits the canonical text of a license in the crate's declared expression, from the allow-list in "deny.toml" or granted by one of its exceptions, ignoring case, whitespace and copyright lines, with holder, year and name left free and the Apache-2.0 appendix optional
     And the CI workflow runs the check on every pull request, with the locked dependency tree
     And the check adds no dependency to any shipped executable
 
