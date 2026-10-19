@@ -20,7 +20,9 @@ use serde_json::{Value, json};
 use testkit::relative;
 
 use crate::World;
-use crate::record::{HOOK_BUDGET, home, run_core_killed, run_core_with, run_release_core};
+use crate::record::{
+    HOOK_BUDGET, home, last_run, run_core_killed, run_core_with, run_program_with, run_release_core,
+};
 use crate::record_hooks::{SESSION, answered_empty, counted, prompt_submit, session_start};
 
 /// When the killed handlers' clock stands.
@@ -38,22 +40,21 @@ const JUST_ABOVE: Duration = Duration::from_secs(1);
 /// read.
 const ROUNDS: usize = 11;
 
-/// The time, in milliseconds, the release core takes to start and exit
-/// with `version`: the floor every hook handler pays (the benchmark
-/// suite's `core_start_up`, whose median is about 1.8 ms on the
-/// development machine that measured it, rounded up). A constant for the
-/// stakeholder to confirm or move; docs/testing.md shows the derivation.
-const REFERENCE_START_UP_MS: u128 = 2;
+/// The nominal time, in milliseconds, of one calibration unit: the
+/// frozen workload of the `calibrate` crate, by definition. The number
+/// never changes; the workload was tuned to it once, and a gate test
+/// holds the workload's source to its recorded hash.
+const CALIBRATION_UNIT_MS: u128 = 10;
 
-/// How many times the release core's start-up a hook handler may take at
-/// the median: its hook budget in units of [`REFERENCE_START_UP_MS`],
-/// which is 25 for the 50 ms hooks and 75 for `SessionStart`'s 150 ms.
-/// The run is confined (ENG-12) and the confinement adds tens of
-/// milliseconds to every run, a hook handler's and the reference's alike,
-/// so the row compares the two medians, not a hook with the wall clock.
+/// How many calibration units a hook handler may take at the median: its
+/// hook budget in units, which is 5 for the 50 ms hooks and 15 for
+/// `SessionStart`'s 150 ms. The run is confined (ENG-12) and the
+/// confinement adds tens of milliseconds to every run, a hook handler's
+/// and the calibration workload's alike, so the row compares the two
+/// medians, not a hook with the wall clock.
 fn limit_of(hook: &str) -> u32 {
     let (budget, _) = budget_of(hook);
-    u32::try_from(budget.as_millis() / REFERENCE_START_UP_MS).unwrap_or(u32::MAX)
+    u32::try_from(budget.as_millis() / CALIBRATION_UNIT_MS).unwrap_or(u32::MAX)
 }
 
 /// What the NFR-02 steps track: how long the hook runs took, against the
@@ -110,13 +111,21 @@ fn runs_within_budget(w: &mut World, hook: String) -> Result<(), String> {
     // development build is an order of magnitude slower and flakes on a
     // loaded machine, and its budget seam is not the one users get.
     // Under the confinement a hook handler's 5-10 ms gains 25-30 ms, so
-    // the wall clock cannot hold it to 50 ms; the reference, the release
-    // core started with `version`, gains the same, and the ratio of the
-    // medians of alternating pairs does not.
+    // the wall clock cannot hold it to 50 ms. The reference is the
+    // frozen calibration workload, which shares no code with the
+    // product and gains the same from the same confinement: the ratio
+    // of the medians of alternating pairs does not.
+    let calibrate = testkit::calibrate_executable()?;
     let mut reference = || {
+        let mut w = world.borrow_mut();
         let started = Instant::now();
-        run_release_core(&mut world.borrow_mut(), &["version"], None)?;
-        Ok(started.elapsed())
+        run_program_with(&mut w, &calibrate, &[], None, &[])?;
+        let took = started.elapsed();
+        if last_run(&mut w)?.status.success() {
+            Ok(took)
+        } else {
+            Err("the calibration workload failed".to_owned())
+        }
     };
     let mut handler = || {
         let mut w = world.borrow_mut();

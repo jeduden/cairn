@@ -181,11 +181,18 @@ fn the_calibration_executable_is_found_as_the_release_core_is() {
     let named = base.path().join("calibrate-here");
     std::fs::write(&named, "").unwrap();
 
-    let found = release_executable(Some(named.clone().into_os_string()), base.path(), "calibrate");
+    let found = release_executable(
+        Some(named.clone().into_os_string()),
+        base.path(),
+        "calibrate",
+    );
     let missing = release_executable(None, base.path(), "calibrate").unwrap_err();
 
     assert_eq!(found, Ok(named));
-    assert!(missing.contains("cargo build --release -p calibrate"), "{missing}");
+    assert!(
+        missing.contains("cargo build --release -p calibrate"),
+        "{missing}"
+    );
     assert!(missing.contains(CALIBRATE_VAR), "{missing}");
     assert_eq!(CALIBRATE_VAR, "CAIRN_CALIBRATE");
     match calibrate_executable() {
