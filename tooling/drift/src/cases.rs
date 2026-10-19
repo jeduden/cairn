@@ -1445,14 +1445,11 @@ fn protection_cases() -> Vec<Case> {
     ]
 }
 
-/// The drifts ENG-15's gate tests exist to catch while its scenario is
-/// pending: an NFR id ENG-15 names dropped from the benchmark suite's
-/// registry, and the benchmark job no longer gating CI.
-fn benchmark_cases() -> Vec<Case> {
-    const SUITE: &str = "tooling/benchmark/src/suite.rs";
+/// The drifts the release-build gate exists to catch: the benchmark
+/// job building or running the suite in debug, and the NFR-02 budget row
+/// timing the development core.
+fn release_budget_cases() -> Vec<Case> {
     const CI: &str = ".github/workflows/ci.yml";
-    const REGISTERED: &str = "the_benchmark_suite_registers_every_nfr_id_eng_15_names";
-    const GATED: &str = "ci_gates_on_the_benchmark_job";
     const RELEASE: &str = "benchmarks_and_timed_steps_run_release_builds";
     vec![
         case(
@@ -1488,62 +1485,78 @@ fn benchmark_cases() -> Vec<Case> {
             cargo_test("engineering", "benchmark_gate", RELEASE),
             "reads a clock and starts the development core with run_core_with(",
         ),
-        case(
-            "an NFR id ENG-15 names dropped from the benchmark suite",
-            REGISTERED,
-            Injection::replace(
-                SUITE,
-                "requirement: \"NFR-04\",",
-                "requirement: \"NFR-40\",",
-            ),
-            cargo_test("engineering", "benchmark_gate", REGISTERED),
-            "NFR-04 has no benchmark of real code and is not declared awaiting one",
-        ),
-        case(
-            "the benchmark job no longer running the gate",
-            GATED,
-            Injection::replace(CI, "\"$head/benchmark\" gate --base", "true --base"),
-            cargo_test("engineering", "benchmark_gate", GATED),
-            "job benchmark does not run",
-        ),
-        case(
-            "the benchmark job left out of the CI aggregator",
-            GATED,
-            Injection::replace(CI, ", benchmark", ""),
-            cargo_test("engineering", "benchmark_gate", GATED),
-            "job ci does not need benchmark",
-        ),
-        case(
-            "SQLite built with extension loading",
-            "sqlite_is_built_without_extension_loading",
-            Injection::replace(
-                ".cargo/config.toml",
-                "LIBSQLITE3_FLAGS = {",
-                "UNUSED_SQLITE_FLAGS = {",
-            ),
-            cargo_test(
-                "store",
-                "sqlite_build",
-                "sqlite_is_built_without_extension_loading",
-            ),
-            "SQLite was built with extension loading",
-        ),
-        case(
-            "an accepted regression recorded with no reason",
-            "the_accepted_regressions_parse",
-            Injection::replace(
-                "tooling/benchmark/accepted.txt",
-                "with the stakeholder's acceptance.\n",
-                "with the stakeholder's acceptance.\ncore_start_up\n",
-            ),
-            cargo_test(
-                "benchmark",
-                "accepted_file",
-                "the_accepted_regressions_parse",
-            ),
-            "want <benchmark> <percent> <reason>",
-        ),
     ]
+}
+
+/// The drifts ENG-15's gate tests exist to catch while its scenario is
+/// pending: an NFR id ENG-15 names dropped from the benchmark suite's
+/// registry, and the benchmark job no longer gating CI.
+fn benchmark_cases() -> Vec<Case> {
+    const SUITE: &str = "tooling/benchmark/src/suite.rs";
+    const CI: &str = ".github/workflows/ci.yml";
+    const REGISTERED: &str = "the_benchmark_suite_registers_every_nfr_id_eng_15_names";
+    const GATED: &str = "ci_gates_on_the_benchmark_job";
+    [
+        release_budget_cases(),
+        vec![
+            case(
+                "an NFR id ENG-15 names dropped from the benchmark suite",
+                REGISTERED,
+                Injection::replace(
+                    SUITE,
+                    "requirement: \"NFR-04\",",
+                    "requirement: \"NFR-40\",",
+                ),
+                cargo_test("engineering", "benchmark_gate", REGISTERED),
+                "NFR-04 has no benchmark of real code and is not declared awaiting one",
+            ),
+            case(
+                "the benchmark job no longer running the gate",
+                GATED,
+                Injection::replace(CI, "\"$head/benchmark\" gate --base", "true --base"),
+                cargo_test("engineering", "benchmark_gate", GATED),
+                "job benchmark does not run",
+            ),
+            case(
+                "the benchmark job left out of the CI aggregator",
+                GATED,
+                Injection::replace(CI, ", benchmark", ""),
+                cargo_test("engineering", "benchmark_gate", GATED),
+                "job ci does not need benchmark",
+            ),
+            case(
+                "SQLite built with extension loading",
+                "sqlite_is_built_without_extension_loading",
+                Injection::replace(
+                    ".cargo/config.toml",
+                    "LIBSQLITE3_FLAGS = {",
+                    "UNUSED_SQLITE_FLAGS = {",
+                ),
+                cargo_test(
+                    "store",
+                    "sqlite_build",
+                    "sqlite_is_built_without_extension_loading",
+                ),
+                "SQLite was built with extension loading",
+            ),
+            case(
+                "an accepted regression recorded with no reason",
+                "the_accepted_regressions_parse",
+                Injection::replace(
+                    "tooling/benchmark/accepted.txt",
+                    "with the stakeholder's acceptance.\n",
+                    "with the stakeholder's acceptance.\ncore_start_up\n",
+                ),
+                cargo_test(
+                    "benchmark",
+                    "accepted_file",
+                    "the_accepted_regressions_parse",
+                ),
+                "want <benchmark> <percent> <reason>",
+            ),
+        ],
+    ]
+    .concat()
 }
 
 /// The drifts the isolation guard exists to catch (ENG-14): the guard
