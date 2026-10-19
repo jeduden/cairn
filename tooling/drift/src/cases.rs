@@ -6,6 +6,9 @@ use crate::{Case, Check, Injection, cargo_test, clippy, mdsmith, scenario, taplo
 /// The dependency decision the ENG-18 and ENG-26 cases drift.
 const TEST_STACK: &str = "docs/adr/ADR-2610142221-json-serde-json.md";
 
+/// The decision the fuzz workspace's dependency rests on.
+const FUZZING: &str = "docs/adr/ADR-2610171200-fuzzing-libfuzzer-sys.md";
+
 /// The decision [`TEST_STACK`] superseded.
 const OLD_TEST_STACK: &str = "docs/adr/ADR-2610101913-test-stack-after-go.md";
 
@@ -143,6 +146,13 @@ fn dependency_cases() -> Vec<Case> {
             ),
             scenario("ENG-18"),
             "direct dependencies linked into a shipped executable, want at most 2",
+        ),
+        case(
+            "a fuzz dependency no ADR justifies",
+            "ENG-18",
+            Injection::replace(FUZZING, "| `libfuzzer-sys` |", "| `libfuzzer_sys` |"),
+            scenario("ENG-18"),
+            "libfuzzer-sys is named by 0 accepted ADRs",
         ),
     ]
 }

@@ -396,6 +396,11 @@ fn direct_deps_reads_each_manifest_with_its_reader() {
     let deps = direct_deps(&checkout, "Cargo.toml", metadata).unwrap();
     assert_eq!(deps.all, ["serde", "sha2"]);
     assert_eq!(deps.shipped, ["sha2"]);
+    // The fuzz workspace's dependencies need their ADRs but never ship,
+    // even from a binary target, since it is no crate under the product.
+    let fuzz = direct_deps(&checkout, "fuzz/Cargo.toml", metadata).unwrap();
+    assert_eq!(fuzz.all, ["serde", "sha2"]);
+    assert!(fuzz.shipped.is_empty());
     assert_eq!(
         direct_deps(&checkout, "package.json", metadata).unwrap_err(),
         "no reader for the dependencies in package.json"
