@@ -139,6 +139,17 @@ pub fn cargo_test(package: &str, target: &str, name: &str) -> Check {
     )
 }
 
+/// Runs the one unit test `name` in the library of `package`.
+#[must_use]
+pub fn cargo_lib_test(package: &str, name: &str) -> Check {
+    Check::new(
+        "cargo",
+        &[
+            "test", "--locked", "-p", package, "--lib", "--", "--exact", name,
+        ],
+    )
+}
+
 /// Lints `package`'s shipped code with clippy, every warning an error.
 #[must_use]
 pub fn clippy(package: &str) -> Check {

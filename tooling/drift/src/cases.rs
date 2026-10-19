@@ -1,7 +1,10 @@
 //! The registry: every drift a check that keeps the records in step
 //! exists to catch.
 
-use crate::{Case, Check, Injection, cargo_test, clippy, mdsmith, scenario, taplo_fmt, taplo_lint};
+use crate::{
+    Case, Check, Injection, cargo_lib_test, cargo_test, clippy, mdsmith, scenario, taplo_fmt,
+    taplo_lint,
+};
 
 /// The dependency decision the ENG-18 and ENG-26 cases drift.
 const TEST_STACK: &str = "docs/adr/ADR-2610142221-json-serde-json.md";
@@ -1500,11 +1503,25 @@ fn release_budget_cases() -> Vec<Case> {
             RELEASE,
             Injection::replace(
                 "tooling/scenario/tests/bdd/non_functional.rs",
-                "run_release_core(w, &[\"hook\", &hook], Some(input.as_bytes()))?;",
-                "run_core_with(w, &[\"hook\", &hook], Some(input.as_bytes()), &[])?;",
+                "run_release_core(&mut w, &[\"hook\", &hook], Some(input.as_bytes()))?;",
+                "run_core_with(&mut w, &[\"hook\", &hook], Some(input.as_bytes()), &[])?;",
             ),
             cargo_test("engineering", "benchmark_gate", RELEASE),
             "reads a clock and starts the development core with run_core_with(",
+        ),
+        case(
+            "the NFR-02 relative check letting a hook slowed against the reference through",
+            "a_hook_made_slow_against_the_reference_fails_the_check",
+            Injection::replace(
+                "tooling/testkit/src/relative.rs",
+                "if own <= base * u128::from(limit) {",
+                "if own <= base * u128::from(limit) * 1_000 {",
+            ),
+            cargo_lib_test(
+                "testkit",
+                "relative::tests::a_hook_made_slow_against_the_reference_fails_the_check",
+            ),
+            "a_hook_made_slow_against_the_reference_fails_the_check",
         ),
     ]
 }
