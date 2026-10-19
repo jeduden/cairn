@@ -36,13 +36,27 @@ fn time_program_names_a_program_it_cannot_start() {
     assert!(err.starts_with("start /no/such/program: "), "{err}");
 }
 
+/// A test the deadline test starts as a program of its own, and which
+/// holds still for longer than that test's deadline: ignored, so no
+/// run of the suite starts it.
+#[test]
+#[ignore = "run only as the program the deadline test times"]
+fn holds_still_past_the_deadline() {
+    thread::sleep(Duration::from_secs(5));
+}
+
 #[test]
 fn time_program_gives_up_at_its_deadline() {
-    let (program, args) = quiet();
+    let program = env::current_exe().unwrap();
+    let args = [
+        "--exact",
+        "measure::tests::holds_still_past_the_deadline",
+        "--ignored",
+    ];
 
-    let err = time_program(&program, &args, Duration::ZERO).unwrap_err();
+    let err = time_program(&program, &args, Duration::from_millis(50)).unwrap_err();
 
-    assert!(err.ends_with(" did not exit within 0ns"), "{err}");
+    assert!(err.ends_with(" did not exit within 50ms"), "{err}");
 }
 
 #[test]
