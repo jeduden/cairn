@@ -46,6 +46,9 @@ pub(crate) struct Process {
     pub(crate) ancestry: fn() -> Option<hook::ancestry::Ancestry>,
     /// How many lines of a transcript live ingest reads at most.
     pub(crate) live_limit: Option<usize>,
+    /// How long a search may run, as a development build's seam lets a
+    /// test say; the default when none.
+    pub(crate) query_deadline: Option<Duration>,
 }
 
 /// The harness process the tests' hook handlers and MCP servers run
@@ -91,6 +94,7 @@ impl Process {
             ancestry: own_harness,
             live_limit: None,
             now: NOW,
+            query_deadline: None,
         }
     }
 
@@ -142,6 +146,7 @@ impl Process {
             hook_budget: self.hook_budget,
             ancestry: self.ancestry,
             live_limit: self.live_limit,
+            query_deadline: self.query_deadline,
         };
         let (mut out, mut err) = (Vec::new(), Vec::new());
         let code = run(
@@ -336,6 +341,7 @@ fn a_failed_write_is_a_failure() {
             hook_budget: Some(LENIENT),
             ancestry: own_harness,
             live_limit: None,
+            query_deadline: None,
         };
 
         let code = run(
@@ -1175,6 +1181,7 @@ fn ambiguous_calls_are_counted_on_their_own() {
         hook_budget: Some(LENIENT),
         ancestry: own_harness,
         live_limit: None,
+        query_deadline: None,
     };
 
     log_with(&p, None, || {
@@ -1242,6 +1249,7 @@ fn mcp_reports_a_reply_it_cannot_write() {
         hook_budget: Some(LENIENT),
         ancestry: own_harness,
         live_limit: None,
+        query_deadline: None,
     };
     let mut err = Vec::new();
 
@@ -1272,6 +1280,7 @@ fn a_command_without_a_home_fails() {
         hook_budget: Some(LENIENT),
         ancestry: own_harness,
         live_limit: None,
+        query_deadline: None,
     };
     for command in ["ingest", "mcp", "verify", "status", "doctor", "counter"] {
         let mut args = vec![command.to_owned()];
@@ -1436,6 +1445,7 @@ fn a_hook_input_that_trickles_past_its_wait_is_rejected() {
         hook_budget: Some(LENIENT),
         ancestry: own_harness,
         live_limit: None,
+        query_deadline: None,
     };
     let (mut out, mut err) = (Vec::new(), Vec::new());
 
@@ -1480,6 +1490,7 @@ fn a_panic_while_auditing_a_hook_failure_still_exits_0() {
         hook_budget: Some(LENIENT),
         ancestry: own_harness,
         live_limit: None,
+        query_deadline: None,
     };
     let (mut out, mut err) = (Vec::new(), Vec::new());
 
@@ -2824,4 +2835,84 @@ fn verify_of_a_home_whose_first_start_was_cut_short_before_it_recorded_exits_0()
     let (_, out, _) = p.invoke(&["verify", "--json"], &DEV);
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();
     assert_eq!(v["staged"], serde_json::json!(false));
+}
+
+#[test]
+fn a_search_the_deadline_cancels_is_told_in_fixed_text_and_audited() {
+    let mut p = Process::new();
+    p.invoke(
+        &[
+            "ingest",
+            "--path",
+            &p.transcript(&"alpha pad\n".repeat(2100)),
+        ],
+        &DEV,
+    );
+    p.query_deadline = Some(Duration::ZERO);
+    p.lines = vec![
+        r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#.into(),
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"event_search","arguments":{"query":"alpha","scope":"room"}}}"#.into(),
+    ];
+
+    let (code, out, err) = p.invoke(&["mcp"], &DEV);
+
+    assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    let reply: serde_json::Value = serde_json::from_str(out.lines().nth(1).unwrap()).unwrap();
+    assert_eq!(reply["result"]["isError"], true);
+    let cancelled: Vec<_> = audited(&p)
+        .into_iter()
+        .filter(|e| e.counter.as_deref() == Some("query_cancelled"))
+        .collect();
+    assert_eq!(cancelled.len(), 1);
+    assert_eq!(
+        (
+            cancelled[0].operation.as_str(),
+            cancelled[0].detail.as_str()
+        ),
+        ("mcp", "query cancelled at its deadline")
+    );
+}
+
+#[test]
+fn a_cancelled_search_the_audit_log_cannot_take_is_said_on_stderr() {
+    let p = Process::new();
+    owner_only_dirs(&p.cairn_home().join("audit/audit-000001.jsonl"));
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let mut err = Vec::new();
+
+    on_query_cancelled(&home, &|| NOW, &mut err)(2);
+
+    let err = String::from_utf8(err).unwrap();
+    assert_eq!(
+        err.matches("cairn mcp: audit a cancelled search: ").count(),
+        2,
+        "{err}"
+    );
+}
+
+#[test]
+fn no_cancelled_search_is_audited_when_none_was_cancelled() {
+    let p = Process::new();
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let mut err = Vec::new();
+
+    on_query_cancelled(&home, &|| NOW, &mut err)(0);
+
+    assert!(err.is_empty());
+    assert!(!p.cairn_home().join("audit").exists());
+}
+
+#[test]
+fn two_closures_share_one_writer_through_shared() {
+    let mut sink: Vec<u8> = Vec::new();
+    {
+        let cell = RefCell::new(&mut sink as &mut dyn Write);
+        let (mut a, mut b) = (Shared(&cell), Shared(&cell));
+
+        a.write_all(b"one ").unwrap();
+        b.write_all(b"two").unwrap();
+        a.flush().unwrap();
+    }
+
+    assert_eq!(sink, b"one two");
 }

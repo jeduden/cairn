@@ -1,8 +1,10 @@
 //! NFR-09's store overhead, the evidence that freezes it (§12.3): every
 //! recorded Claude Code transcript ingested into one fresh home takes
-//! at most 1.5 times its stored text in the store, `store.db` with its
+//! at most 1.5 times its stored text in the record, `store.db` with its
 //! journal and the payload store together. The stored text is what the
-//! record keeps of each line: its text after redaction.
+//! record keeps of each line: its text after redaction. The search index
+//! is a derived artifact (I10) in a file of its own, `search_index`; it
+//! is measured apart, printed as evidence, and the bound does not cover it.
 
 #![allow(
     clippy::unwrap_used,
@@ -53,7 +55,7 @@ fn bytes(dir: &Path) -> u64 {
 }
 
 #[test]
-fn the_store_holds_every_recorded_transcript_within_1_5_times_its_stored_text() {
+fn the_record_holds_every_recorded_transcript_within_1_5_times_its_stored_text() {
     let dir = TempDir::new().unwrap();
     let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
     let mut found = Vec::new();
@@ -82,19 +84,28 @@ fn the_store_holds_every_recorded_transcript_within_1_5_times_its_stored_text() 
         }
     }
     drop(store);
-    let held = ["store.db", "store.db-wal", "store.db-shm"]
-        .iter()
-        .map(|f| fs::metadata(home.root().join(f)).map_or(0, |m| m.len()))
-        .sum::<u64>()
-        + bytes(&home.root().join("payloads"));
+    let files = |names: [&str; 3]| {
+        names
+            .iter()
+            .map(|f| fs::metadata(home.root().join(f)).map_or(0, |m| m.len()))
+            .sum::<u64>()
+    };
+    let held =
+        files(["store.db", "store.db-wal", "store.db-shm"]) + bytes(&home.root().join("payloads"));
+    let index = files(["search_index", "search_index-wal", "search_index-shm"]);
 
     let overhead = held as f64 / text as f64;
     println!(
-        "{} transcripts: {text} bytes of stored text in {held} bytes of store, {overhead:.3} times",
+        "{} transcripts: {text} bytes of stored text in {held} bytes of record, {overhead:.3} times",
         found.len()
     );
+    println!(
+        "search index, measured apart: {index} bytes, {:.3} times the stored text",
+        index as f64 / text as f64
+    );
+    assert!(index > 0, "the search index has a file of its own");
     assert!(
         overhead <= OVERHEAD,
-        "the store holds {held} bytes for {text} bytes of stored text: {overhead:.3} times"
+        "the record holds {held} bytes for {text} bytes of stored text: {overhead:.3} times"
     );
 }

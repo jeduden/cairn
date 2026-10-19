@@ -40,7 +40,7 @@ Feature: Security (SEC)
     And the error states that the home id does not match
     And no store file is opened
 
-  @SEC-04 @P0 @I9 @pending
+  @SEC-04 @P0 @I9
   Scenario Outline: the code that builds a search query treats caller text as literal terms within bounds
     Given an isolated Cairn home
     And a store with 1M events

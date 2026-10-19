@@ -47,6 +47,14 @@ pub enum Fixture {
     /// input of the hook this names, in Claude Code 2.1.296's recorded
     /// shape, naming that transcript.
     HookInput { hook: &'static str },
+    /// A fresh home as for [`Fixture::Transcript`], prepared by running
+    /// the core with `prepare`, outside the time. The core under test
+    /// then reads the recall requests of [`crate::fixture::SEARCH_REQUESTS`]
+    /// on its standard input.
+    Search {
+        lines: usize,
+        prepare: &'static [&'static str],
+    },
 }
 
 /// The lines the transcript a hook handler's benchmark names holds.
@@ -81,8 +89,11 @@ pub struct Awaiting {
 /// The lines the ingestion benchmark's transcript holds.
 pub const INGEST_LINES: usize = 2_000;
 
+/// The events the search benchmark's store holds.
+pub const SEARCH_LINES: usize = 2_000;
+
 /// The suite.
-pub const SUITE: [Benchmark; 4] = [
+pub const SUITE: [Benchmark; 5] = [
     Benchmark {
         name: "core_start_up",
         requirement: "NFR-01",
@@ -128,18 +139,27 @@ pub const SUITE: [Benchmark; 4] = [
             hook: "UserPromptSubmit",
         },
     },
+    Benchmark {
+        name: "search_events",
+        requirement: "NFR-03",
+        coverage: Coverage::Target,
+        measures: "`cairn mcp` answering one `event_search` for a common word over a store \
+                   of 2,000 ingested Claude Code lines, until its input closes: a search \
+                   ranking the newest 2,000 matches, with the process start it pays",
+        args: &["mcp"],
+        fixture: Fixture::Search {
+            lines: SEARCH_LINES,
+            prepare: &["ingest", "--all"],
+        },
+    },
 ];
 
 /// The NFR ids ENG-15 names that have no benchmark of real code yet.
-pub const AWAITING: [Awaiting; 3] = [
+pub const AWAITING: [Awaiting; 2] = [
     Awaiting {
         requirement: "NFR-01",
         on: "the hook handlers timed on a store of 1M events with the room view open and \
              ten harnesses writing (plans 2609292012 and M7's)",
-    },
-    Awaiting {
-        requirement: "NFR-03",
-        on: "the MCP server's event_search and event_expand on a store of 10M events (plan 2609292012)",
     },
     Awaiting {
         requirement: "NFR-05",

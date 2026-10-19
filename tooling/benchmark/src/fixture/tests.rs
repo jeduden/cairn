@@ -78,3 +78,14 @@ fn a_home_reports_whether_its_audit_log_counted_a_counter() {
     .unwrap();
     assert!(home.counted("hook_budget_exceeded").unwrap());
 }
+
+#[test]
+fn the_search_requests_initialize_then_ask_event_search_in_the_room() {
+    let lines: Vec<&str> = SEARCH_REQUESTS.lines().collect();
+
+    assert_eq!(lines.len(), 2);
+    assert!(lines[0].contains(r#""method":"initialize""#));
+    assert!(lines[1].contains(r#""name":"event_search""#));
+    assert!(lines[1].contains(r#""scope":"room""#));
+    assert!(SEARCH_REQUESTS.ends_with('\n'));
+}

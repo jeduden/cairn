@@ -64,7 +64,7 @@ pub(crate) fn attachment(kind: &str) -> Result<Value, String> {
 }
 
 /// A recorded user line typed at the harness's input.
-fn typed() -> Result<Value, String> {
+pub(crate) fn typed() -> Result<Value, String> {
     recorded_where("user", "promptSource", &json!("typed"))
 }
 
