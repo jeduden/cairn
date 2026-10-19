@@ -1510,6 +1510,36 @@ fn release_budget_cases() -> Vec<Case> {
             "reads a clock and starts the development core with run_core_with(",
         ),
         case(
+            "the calibration workload's mixing rounds changed",
+            "the_calibration_workload_is_frozen",
+            Injection::replace(
+                "tooling/calibrate/src/lib.rs",
+                "pub const MIX_ROUNDS: u64 = 1_200_000;",
+                "pub const MIX_ROUNDS: u64 = 1_000_000;",
+            ),
+            cargo_test(
+                "engineering",
+                "benchmark_gate",
+                "the_calibration_workload_is_frozen",
+            ),
+            "the calibration mixing rounds are 1000000, not the recorded 1200000",
+        ),
+        case(
+            "the calibration workload's mixing changed without a constant",
+            "the_calibration_workload_is_frozen",
+            Injection::replace(
+                "tooling/calibrate/src/lib.rs",
+                "x ^= x >> 27;",
+                "x ^= x >> 28;",
+            ),
+            cargo_test(
+                "engineering",
+                "benchmark_gate",
+                "the_calibration_workload_is_frozen",
+            ),
+            "the calibration workload's source hashes to",
+        ),
+        case(
             "the NFR-02 relative check letting a hook slowed against the reference through",
             "a_hook_made_slow_against_the_reference_fails_the_check",
             Injection::replace(
