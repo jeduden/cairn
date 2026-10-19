@@ -20,13 +20,14 @@ release target, and the command name `cairn licenses`. It stays
 ENG-30 asks CI to stop a pull request that brings in a crate with no
 license text. ENG-31 asks every shipped executable to carry the license
 text and copyright lines of every crate it links, so the texts travel
-with the binary wherever it goes. The stakeholder wants this to work
-with no manual step when a dependency arrives.
+with the binary wherever it goes. The aim is that this works with no
+manual step when a dependency arrives.
 
 The ENG-18 allow-list licenses (MIT, BSD, ISC, Apache-2.0) require the
-text and copyright line to travel with a binary. The SQLite
-(public domain) and, on the musl targets, the C library (MIT) are
-both compiled in without being crates, so no crate-based tool sees them.
+text and copyright line to travel with a binary. SQLite
+(public domain), the Rust standard library (MIT or Apache-2.0) and, on
+the musl targets, the C library (MIT) are compiled in without being
+listed as crates, so no crate-based tool sees them.
 
 ## Decision
 
@@ -73,7 +74,7 @@ Why a file per target, and not one union (option a):
 | Wrong selection  | Cannot happen                                | Caught by the per-target embedding test and the release check |
 | Size cost        | The union's text in every binary             | Smaller on the targets with fewer crates                      |
 
-The stakeholder chose (b) for exactness. Its one extra failure mode, the
+This record proposes (b) for exactness. Its one extra failure mode, the
 `cfg` picking the wrong file, is mitigated by the guards above.
 
 **Constraints.** The core gains no dependency: the text is a `&str`
@@ -90,18 +91,18 @@ The domain model's list names it.
 
 How the three candidates compare, for the tool that writes the file:
 
-| Question                        | In-repository tool                                      | `cargo-about`                                            | `cargo-bundle-licenses`                              |
-| ------------------------------- | ------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------- |
-| Maintenance burden              | Ours: a few hundred lines to keep with `cargo metadata` | Upstream's; we track its config and releases             | Upstream's, a smaller project with fewer releases    |
-| License-file discovery          | Our rules; wrong guesses show in the tests we write     | Mature, with per-crate clarifications in a config        | Takes the first license-like file; no clarifications |
-| Non-crate code (SQLite, musl)   | A fixed list in the tool                                | A clarification entry or a template addition, by hand    | None; appended by hand                               |
-| Reproducibility, byte stability | We fix the order and format; tested twice per run       | Template-driven; stable for one pinned version           | Output order and metadata shift between versions     |
-| Supply-chain trust              | Our code, under the ENG-21 review                       | A pinned external binary fetched in CI                   | A pinned external binary fetched in CI               |
-| CI time                         | Builds with the workspace, seconds                      | Install or cache the binary, then run                    | Install or cache the binary, then run                |
-| Review surface                  | The tool's source, in stakeholder paths                 | Its config and template, plus a trust decision           | Its output only; less control                        |
-| Fit with ENG-18 and ENG-27      | No new module; drift cases written against our own code | A tool outside the manifests; its own ADR and drift case | Same as `cargo-about`                                |
+| Question                           | In-repository tool                                      | `cargo-about`                                            | `cargo-bundle-licenses`                              |
+| ---------------------------------- | ------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------- |
+| Maintenance burden                 | Ours: a few hundred lines to keep with `cargo metadata` | Upstream's; we track its config and releases             | Upstream's, a smaller project with fewer releases    |
+| License-file discovery             | Our rules; wrong guesses show in the tests we write     | Mature, with per-crate clarifications in a config        | Takes the first license-like file; no clarifications |
+| Non-crate code (SQLite, std, musl) | A fixed list in the tool                                | A clarification entry or a template addition, by hand    | None; appended by hand                               |
+| Reproducibility, byte stability    | We fix the order and format; tested twice per run       | Template-driven; stable for one pinned version           | Output order and metadata shift between versions     |
+| Supply-chain trust                 | Our code, under the ENG-21 review                       | A pinned external binary fetched in CI                   | A pinned external binary fetched in CI               |
+| CI time                            | Builds with the workspace, seconds                      | Install or cache the binary, then run                    | Install or cache the binary, then run                |
+| Review surface                     | The tool's source, in stakeholder paths                 | Its config and template, plus a trust decision           | Its output only; less control                        |
+| Fit with ENG-18 and ENG-27         | No new module; drift cases written against our own code | A tool outside the manifests; its own ADR and drift case | Same as `cargo-about`                                |
 
-**Recommendation, and the ruling.** The in-repository tool: it is the
+**Recommendation.** The in-repository tool: it is the
 only candidate that knows the non-crate code, reproduces byte for
 byte by construction and adds no external binary to the release
 chain. `cargo-about` would need its own accepted ADR, a drift case, a
@@ -118,7 +119,7 @@ ENG-31, which name a tool in the repository.
   `cargo-deny`'s matcher.
 - **The SBOM (ENG-20).** SPDX lists license identifiers, not texts or
   copyright lines.
-- **A separate release asset.** Rejected by the stakeholder: a file
+- **A separate release asset.** Rejected here: a file
   beside the binary can be lost when the binary is copied.
 
 ## Consequences
