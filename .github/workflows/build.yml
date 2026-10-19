@@ -57,6 +57,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Install pinned Rust with mise
+        uses: ./.github/actions/setup-mise
+        with:
+          tools: rust
+          # Release builds must never consume a branch-writable cache.
+          cache: ${{ github.event_name != 'workflow_dispatch' }}
       - name: Pick this builder's targets
         run: |
           if [ "$OS" = linux ]; then targets="$LINUX_TARGETS"; else targets="$DARWIN_TARGETS"; fi
@@ -83,13 +89,9 @@ jobs:
             make -s -C "$src/musl-$MUSL_VERSION" ARCH="$arch" prefix="$RUNNER_TEMP/musl-$arch" install-headers
           done
           echo "MUSL_HEADERS=$RUNNER_TEMP" >> "$GITHUB_ENV"
-      - name: Install the pinned Rust toolchain and the targets
+      - name: Install the pinned Rust targets
         run: |
-          list=""
-          for pair in $TARGETS; do list="$list,${pair%%:*}"; done
-          rustup toolchain install \
-            "$(sed -n 's/^channel = "\(.*\)"$/\1/p' rust-toolchain.toml)" \
-            --profile minimal --no-self-update --target "${list#,}"
+          for pair in $TARGETS; do rustup target add "${pair%%:*}"; done
       - name: Build
         env:
           # ENG-01: the version and the commit, stamped into the

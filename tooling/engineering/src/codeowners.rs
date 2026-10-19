@@ -35,6 +35,8 @@ const ENFORCING: &[(&str, &[&str])] = &[
         &[
             "Cargo.toml",
             "rust-toolchain.toml",
+            "mise.toml",
+            "mise.lock",
             "clippy.toml",
             "deny.toml",
             "codecov.yml",

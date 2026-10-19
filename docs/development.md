@@ -12,33 +12,26 @@ measured, is in [testing.md](testing.md).
 
 ## Build & test commands
 
-The repository is one Cargo workspace: the product's crates under
-`crates/`, today the `cairn` core executable, and the repository
-tooling under `tooling/`. Its Rust release is fixed in
-[rust-toolchain.toml](../rust-toolchain.toml) (ENG-01), and rustup
-installs it on the first `cargo` command.
+The repository is one Cargo workspace. Install mise 2026.9.1 or newer,
+then run `mise install --locked`. [mise.toml](../mise.toml) lists the
+tools; [mise.lock](../mise.lock) pins releases and available checksums
+for Linux and macOS on x64 and arm64. mise reads Rust's version and
+components from [rust-toolchain.toml](../rust-toolchain.toml) (ENG-01),
+which remains the single Rust pin. Update the lock with `mise lock
+--platform linux-x64,linux-arm64,macos-arm64,macos-x64`.
+Taplo publishes no checksums, so verify and record its four asset
+SHA-256 values in the lockfile when bumping it.
 
-- `cargo test --workspace` — every test, scenarios included
-- `cargo run -p cairn -- version` — the core executable, built for
-  this machine
-- `cargo test -p scenario --test bdd` — every scenario, pending ones
-  counted
-- `cargo test -p scenario --test bdd -- --tags @REC-03` — one scenario
-  by its requirement id
-- `cargo test -p srs --test gates` and `cargo test -p scenario --test
-  gate` — the gates alone
-- `cargo run -p coverage` — line coverage per test layer and per crate,
-  held to the floors (see [testing.md](testing.md))
-- `cargo build --release -p cairn && cargo run --release -p benchmark
-  -- run --core target/release/cairn` — sample the benchmark suite;
-  `cargo run -p benchmark -- gate --base FILE --head FILE` decides
-  from two samples files (ENG-15, see [testing.md](testing.md))
-- `cargo fmt --all --check` and `cargo clippy --workspace --all-targets
-  -- -D warnings` — layout and lint (ENG-16)
-- `cargo deny check licenses bans sources` and `cargo audit` — the
-  supply chain (ENG-16), with [deny.toml](../deny.toml)'s policy
-- `mdsmith check .` — lint the Markdown; `mdsmith fix .` rewrites
-  what it can, including the generated catalogs
+Run `mise run test`, `mise run lint`, `mise run supply-chain`,
+`mise run coverage`, or `mise run drift` for common checks. For one
+command, use `mise exec -- COMMAND`. CI's SHA-pinned mise action
+installs only each job's tools; the cache key covers the config,
+lockfile, platform, mise version, and selected tools. A separate
+Rustup cache shares the exact compiler across jobs. Release jobs use
+neither cache. Linux end-to-end tests need the host's `unshare`,
+`script`, and `strace`; release builds use Rustup targets and the
+exact mingw, clang, and musl pins in
+[build.yml](../.github/workflows/build.yml).
 
 ## Static analysis
 
@@ -141,7 +134,8 @@ decoy that must stay empty (ENG-14), the core's end-to-end tests confined
 (ENG-12), clippy and rustfmt, cargo-deny and cargo-audit, the drift suite,
 the benchmark gate, and the release build of every target (NFR-10, CON-02).
 It also runs `mdsmith check .`, [taplo](../.taplo.toml), and zizmor over the
-workflows. A final job named `CI` passes only when every other job passed.
+workflows and local actions. A final job named `CI` passes only when
+every other job passed.
 It is the one check the branch and release-tag rulesets require, because
 GitHub names a required check after a job, never after the workflow.
 

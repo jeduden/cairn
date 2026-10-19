@@ -74,10 +74,7 @@ jobs:
       id-token: write
       attestations: write
     steps:
-      - uses: anchore/sbom-action@abc
-        with:
-          format: spdx-json
-          output-file: dist/cairn.spdx.json
+      - run: syft . --output spdx-json=dist/cairn.spdx.json
       - uses: actions/attest-sbom@abc
         with:
           sbom-path: dist/cairn.spdx.json
@@ -498,16 +495,19 @@ fn the_verify_job_checks_the_bundle_against_the_release_workflow_s_identity_at_m
 
 #[test]
 fn the_sbom_is_generated_as_spdx_attested_and_attached() {
-    let r = drifted("anchore/sbom-action@", "anchore/other@");
+    let r = drifted("syft . --output", "syft . --other");
     has(&r.sbom_attached_and_attested(), "does not generate an SBOM");
 
-    let r = drifted("format: spdx-json", "format: cyclonedx-json");
+    let r = drifted("--output spdx-json=", "--output cyclonedx-json=");
     has(
         &r.sbom_attached_and_attested(),
         "job publish does not generate an SPDX SBOM",
     );
 
-    let r = drifted("          output-file: dist/cairn.spdx.json\n", "");
+    let r = drifted(
+        "--output spdx-json=dist/cairn.spdx.json",
+        "--output spdx-json=",
+    );
     has(
         &r.sbom_attached_and_attested(),
         "job publish names no SBOM file",
