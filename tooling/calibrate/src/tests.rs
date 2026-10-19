@@ -55,7 +55,7 @@ fn the_frozen_workload_gives_the_result_it_was_recorded_with() {
 
     let got = run(&dir).unwrap();
 
-    assert_eq!(got, 0);
+    assert_eq!(got, 0x6abb_56e1_e7d0_b6ba);
     std::fs::remove_dir(&dir).unwrap();
 }
 
