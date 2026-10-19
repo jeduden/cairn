@@ -14,6 +14,7 @@ use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub mod boundary;
+pub mod relative;
 
 /// How many names a [`TempDir`] tries before it gives up.
 const ATTEMPTS: u32 = 1000;
