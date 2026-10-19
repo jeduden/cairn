@@ -196,11 +196,16 @@ fn a_detach_note_of_a_call_strace_could_not_name_is_no_network_call() {
     // still in a call; it names no call, and about 1 in 40 traced runs of
     // a hook handler leaves one (NFR-02).
     let trace = "24575 ???( <detached ...>\n\
-                 24576 connect(3, {sa_family=AF_INET} <detached ...>\n";
+                 24575 ???( <unfinished ...>\n\
+                 24576 connect(3, {sa_family=AF_INET} <detached ...>\n\
+                 24576 connect(3, {sa_family=AF_INET} <unfinished ...>\n";
 
     assert_eq!(
         network_calls(trace),
-        ["connect(3, {sa_family=AF_INET} <detached ...>"]
+        [
+            "connect(3, {sa_family=AF_INET} <detached ...>",
+            "connect(3, {sa_family=AF_INET} <unfinished ...>"
+        ]
     );
 }
 
