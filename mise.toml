@@ -2,12 +2,13 @@
 # mise reads that file through its rustup backend.
 [settings]
 idiomatic_version_file_enable_tools = ["rust"]
+cargo.binstall = false
 
 [tools]
 "github:jeduden/mdsmith" = { version = "0.55.1", bin = "mdsmith" }
 "github:taiki-e/cargo-llvm-cov" = "0.9.1"
 "github:EmbarkStudios/cargo-deny" = "0.20.2"
-"cargo:cargo-audit" = "0.22.2"
+"cargo:cargo-audit" = { version = "0.22.2", locked = true }
 "aqua:tamasfe/taplo" = "0.10.0"
 "aqua:zizmorcore/zizmor" = "1.29.0"
 "aqua:anchore/syft" = "1.52.0"
@@ -27,3 +28,18 @@ run = "cargo run --locked -p coverage"
 
 [tasks.drift]
 run = "cargo test --locked -p drift --test suite -- --ignored"
+
+[tasks.core]
+run = "cargo run --locked -p cairn --"
+
+[tasks.scenarios]
+run = "cargo test --locked -p scenario --test bdd --"
+
+[tasks.gates]
+run = ["cargo test --locked -p srs --test gates", "cargo test --locked -p scenario --test gate"]
+
+[tasks.benchmark]
+run = ["cargo build --release --locked -p cairn", 'cargo run --release --locked -p benchmark -- run --core "${CARGO_TARGET_DIR:-target}/release/cairn"']
+
+[tasks.benchmark-gate]
+run = "cargo run --locked -p benchmark -- gate"

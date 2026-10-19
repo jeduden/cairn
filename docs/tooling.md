@@ -13,6 +13,11 @@ resolved releases and available checksums for the supported platforms.
 The tool pins and check commands below are imported from
 [mise.toml](../mise.toml). List tasks with `mise tasks`, run one with
 `mise run TASK`, or run a single command with `mise exec -- COMMAND`.
+Task arguments follow `--`: `mise run core -- version` runs the core,
+and `mise run scenarios -- --tags @REC-03` selects one requirement.
+Use `mise run gates` for the specification gates and `mise run benchmark`
+to sample the suite. Compare samples with `mise run benchmark-gate --
+--base FILE --head FILE`.
 
 <?include
 file: ../mise.toml
@@ -24,12 +29,13 @@ wrap: toml
 # mise reads that file through its rustup backend.
 [settings]
 idiomatic_version_file_enable_tools = ["rust"]
+cargo.binstall = false
 
 [tools]
 "github:jeduden/mdsmith" = { version = "0.55.1", bin = "mdsmith" }
 "github:taiki-e/cargo-llvm-cov" = "0.9.1"
 "github:EmbarkStudios/cargo-deny" = "0.20.2"
-"cargo:cargo-audit" = "0.22.2"
+"cargo:cargo-audit" = { version = "0.22.2", locked = true }
 "aqua:tamasfe/taplo" = "0.10.0"
 "aqua:zizmorcore/zizmor" = "1.29.0"
 "aqua:anchore/syft" = "1.52.0"
@@ -49,6 +55,21 @@ run = "cargo run --locked -p coverage"
 
 [tasks.drift]
 run = "cargo test --locked -p drift --test suite -- --ignored"
+
+[tasks.core]
+run = "cargo run --locked -p cairn --"
+
+[tasks.scenarios]
+run = "cargo test --locked -p scenario --test bdd --"
+
+[tasks.gates]
+run = ["cargo test --locked -p srs --test gates", "cargo test --locked -p scenario --test gate"]
+
+[tasks.benchmark]
+run = ["cargo build --release --locked -p cairn", 'cargo run --release --locked -p benchmark -- run --core "${CARGO_TARGET_DIR:-target}/release/cairn"']
+
+[tasks.benchmark-gate]
+run = "cargo run --locked -p benchmark -- gate"
 ```
 
 <?/include?>
@@ -81,6 +102,7 @@ record its asset SHA-256 values in the lockfile when bumping it.
 
 The shared setup action installs each job's selected tools and caches
 mise's installs and the exact Rustup toolchain. Release jobs disable
-both caches. Linux end-to-end tests need the host's `unshare`, `script`,
+both caches, as do the review jobs that handle credentials. Linux
+end-to-end tests need the host's `unshare`, `script`,
 and `strace`; release builds use the toolchain and system dependency
 pins in [build.yml](../.github/workflows/build.yml).

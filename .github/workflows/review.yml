@@ -181,7 +181,8 @@ jobs:
         uses: ./.github/actions/setup-mise
         with:
           tools: rust
-          cache: true
+          # Jobs handling review credentials never restore executable caches.
+          cache: false
       # The review class sets how deep the review goes, from the paths that
       # changed: light for Markdown no stakeholder path holds, deep for
       # any path CODEOWNERS assigns, standard otherwise. A deep review
@@ -302,7 +303,8 @@ jobs:
         uses: ./.github/actions/setup-mise
         with:
           tools: rust
-          cache: true
+          # Jobs handling review credentials never restore executable caches.
+          cache: false
       # Built, its crates fetched and their build scripts run, before the
       # app's token exists; the decide step below runs it offline.
       - name: Build the review gate

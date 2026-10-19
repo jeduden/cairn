@@ -368,6 +368,8 @@ jobs:
           tools: "aqua:zizmorcore/zizmor"
           cache: true
       - name: Run zizmor
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: zizmor .github
 
   # The one check the branch and release-tag rulesets require (main's is

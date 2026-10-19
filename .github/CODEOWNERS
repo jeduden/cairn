@@ -30,8 +30,8 @@
 /scripts/                     @jeduden
 /Cargo.toml                   @jeduden
 /rust-toolchain.toml          @jeduden
-/mise.toml                   @jeduden
-/mise.lock                   @jeduden
+/mise.toml                    @jeduden
+/mise.lock                    @jeduden
 /clippy.toml                  @jeduden
 /deny.toml                    @jeduden
 /codecov.yml                  @jeduden

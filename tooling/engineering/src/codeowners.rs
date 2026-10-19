@@ -29,14 +29,15 @@ pub struct Entry {
 const ENFORCING: &[(&str, &[&str])] = &[
     ("`docs/srs/`", &["docs/srs/"]),
     ("the requirement–scenario gate", &["tooling/"]),
-    ("gate, CI,", &[".github/", "scripts/"]),
+    (
+        "gate, CI,",
+        &[".github/", "scripts/", "mise.toml", "mise.lock"],
+    ),
     (
         "the lint and coverage configuration",
         &[
             "Cargo.toml",
             "rust-toolchain.toml",
-            "mise.toml",
-            "mise.lock",
             "clippy.toml",
             "deny.toml",
             "codecov.yml",

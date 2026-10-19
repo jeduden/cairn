@@ -1205,8 +1205,7 @@ fn release_build_cases() -> Vec<Case> {
     ]
 }
 
-/// The ENG-20 drifts in what the release publishes and how its verify
-/// job checks it.
+/// Changing the SBOM format must fail the ENG-20 format gate.
 fn sbom_format_case() -> Case {
     release_case(
         "the release generating a non-SPDX SBOM",
@@ -1220,6 +1219,8 @@ fn sbom_format_case() -> Case {
     )
 }
 
+/// The ENG-20 drifts in what the release publishes and how its verify
+/// job checks it.
 fn release_verify_cases() -> Vec<Case> {
     vec![
         sbom_format_case(),
@@ -1319,14 +1320,13 @@ fn protection_case(
     )
 }
 
-/// The drifts ENG-21 exists to catch: main's committed ruleset or
-/// CODEOWNERS weaker than the requirement says.
+/// The CI and release tool pins must remain owned by the stakeholder.
 fn mise_owner_case() -> Case {
     protection_case(
         "the mise toolchain pin without the stakeholder",
-        Injection::replace(CODEOWNERS, "/mise.toml                   @jeduden\n", ""),
+        Injection::replace(CODEOWNERS, "/mise.toml                    @jeduden\n", ""),
         "the_checkout_s_codeowners_name_the_stakeholder_on_the_enforcing_paths",
-        "mise.toml (the lint and coverage configuration) is owned by [], want @jeduden",
+        "mise.toml (gate, CI,) is owned by [], want @jeduden",
     )
 }
 
@@ -1339,6 +1339,8 @@ fn signed_commits_case() -> Case {
     )
 }
 
+/// The drifts ENG-21 exists to catch: main's committed ruleset or
+/// CODEOWNERS weaker than the requirement says.
 fn protection_cases() -> Vec<Case> {
     vec![
         signed_commits_case(),
