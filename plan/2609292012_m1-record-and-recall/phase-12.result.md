@@ -70,8 +70,9 @@ For the stakeholder:
   per writer. RCL-02 says nothing of ranking only the newest 2,000
   matches. `recall.feature` line 26 ("a short run ... a long run") is
   proven only per writer.
-- The search index leaves out a writer whose slot another holds, and
-  those events are uncounted: an I6 gap.
+- The index leaves out a writer whose slot another holds, and seqs from
+  2^28: counted `search_index_writer_unindexed` and
+  `search_index_seq_beyond_limit` (I6).
 - `@RCL-02` stays `@pending`, no step bound. Its calls name no scope,
   so `run` needs the session binding (phase 9). Its transcript
   "mixed-provenance" has no steps, and no live ingest (phase 10) reads
