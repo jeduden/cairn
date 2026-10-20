@@ -122,7 +122,7 @@ fn a_gap_is_audited_once_and_then_noted_so_the_next_ingest_does_not_audit_it_aga
     assert_eq!(gaps.len(), 1);
 
     let audit = |o: &Occurrence| Log::new(home.audit()).append(o, NOW).is_ok();
-    report(&home, &gaps, "ingest", &mut { audit }).unwrap();
+    assert_eq!(report(&home, &gaps, "ingest", &mut { audit }).unwrap(), 0);
 
     let seen = entries(&home);
     assert_eq!(seen.len(), 1);
@@ -141,7 +141,7 @@ fn a_gap_whose_entry_the_audit_log_refused_stays_unreported_for_the_next_ingest(
         .unreported_search_index_gaps()
         .unwrap();
 
-    report(&home, &gaps, "ingest", &mut |_| false).unwrap();
+    assert_eq!(report(&home, &gaps, "ingest", &mut |_| false).unwrap(), 1);
 
     let store = Store::open(&home.store()).unwrap();
     assert_eq!(store.unreported_search_index_gaps().unwrap(), gaps);
@@ -152,7 +152,7 @@ fn no_gap_opens_no_store() {
     let dir = TempDir::new().unwrap();
     let home = Home::locate(Some(dir.path().join("missing").as_os_str()), None).unwrap();
 
-    report(&home, &[], "ingest", &mut |_| false).unwrap();
+    assert_eq!(report(&home, &[], "ingest", &mut |_| false).unwrap(), 0);
 
     assert!(!home.store().exists());
 }

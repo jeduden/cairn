@@ -34,7 +34,8 @@ fn occurrence<'a>(gap: IndexGap, writer: &'a str, operation: &'static str) -> Oc
 
 /// Audits each of `gaps` through `audit`, which says whether the audit
 /// log took the entry, and notes the gaps it took in the index of
-/// `home`'s store. Opens no store when there is no gap.
+/// `home`'s store. Opens no store when there is no gap. Returns how
+/// many entries the audit log refused.
 ///
 /// # Errors
 ///
@@ -44,9 +45,9 @@ pub(crate) fn report(
     gaps: &[IndexGap],
     operation: &'static str,
     audit: &mut dyn FnMut(&Occurrence<'_>) -> bool,
-) -> Result<(), StoreError> {
+) -> Result<usize, StoreError> {
     if gaps.is_empty() {
-        return Ok(());
+        return Ok(0);
     }
     let taken: Vec<IndexGap> = gaps
         .iter()
@@ -54,7 +55,9 @@ pub(crate) fn report(
         .filter(|gap| audit(&occurrence(*gap, &gap.writer.to_string(), operation)))
         .collect();
 
-    Store::open(&home.store())?.mark_search_index_gaps_reported(&taken)
+    Store::open(&home.store())?.mark_search_index_gaps_reported(&taken)?;
+
+    Ok(gaps.len() - taken.len())
 }
 
 #[cfg(test)]

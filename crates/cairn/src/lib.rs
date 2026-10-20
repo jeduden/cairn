@@ -641,10 +641,16 @@ fn audit_index_gaps(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn
         return;
     }
     let done = ctx.home().map_err(|e| e.to_string()).and_then(|home| {
-        index_gaps::report(&home, &ingested.index_gaps, "ingest", &mut |o| {
+        let refused = index_gaps::report(&home, &ingested.index_gaps, "ingest", &mut |o| {
             ctx.audit(o).is_ok()
         })
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+        match refused {
+            0 => Ok(()),
+            n => Err(format!(
+                "the audit log refused {n} entries; the next ingest tries again"
+            )),
+        }
     });
     if let Err(e) = done {
         let _ = writeln!(stderr, "cairn ingest: audit the search index gaps: {e}");

@@ -2947,3 +2947,41 @@ fn ingest_audits_each_gap_of_the_search_index_once_and_status_counts_it() {
         "{status}"
     );
 }
+
+#[test]
+fn ingest_says_which_search_index_gap_it_cannot_audit_and_reports_it_at_the_next_ingest() {
+    let p = Process::new();
+    let path = p.transcript("a\n");
+    let (_, out, _) = p.invoke(&["ingest", &format!("--path={path}"), "--json"], &DEV);
+    let first: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let small = record::id::WriterId::parse(first["writer"].as_str().unwrap()).unwrap();
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    index_gaps::tests::leave_out_a_writer_sharing_the_slot_of(&home, small);
+    let audit_dir = p.cairn_home().join("audit");
+    let kept = std::fs::read_dir(&audit_dir).unwrap().count();
+    assert!(kept > 0);
+    std::fs::rename(&audit_dir, p.cairn_home().join("audit-kept")).unwrap();
+    std::fs::write(&audit_dir, "").unwrap();
+    set_mode(&audit_dir, 0o600);
+
+    let other = transcript_in(&p, "p", "b.jsonl", b"b\n");
+    let (code, _, err) = p.invoke(&["ingest", "--path", &other.display().to_string()], &DEV);
+
+    assert_eq!(code, EXIT_OK, "{err}");
+    assert!(
+        err.contains(
+            "cairn ingest: audit the search index gaps: the audit log refused 1 entries; \
+             the next ingest tries again"
+        ),
+        "{err}"
+    );
+    std::fs::remove_file(&audit_dir).unwrap();
+    std::fs::rename(p.cairn_home().join("audit-kept"), &audit_dir).unwrap();
+    let again = transcript_in(&p, "p", "c.jsonl", b"c\n");
+    p.invoke(&["ingest", "--path", &again.display().to_string()], &DEV);
+    let gaps = audited(&p)
+        .into_iter()
+        .filter(|e| e.counter.as_deref() == Some("search_index_writer_unindexed"))
+        .count();
+    assert_eq!(gaps, 1);
+}
