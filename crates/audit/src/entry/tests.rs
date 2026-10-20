@@ -107,6 +107,14 @@ fn each_counter_of_the_mcp_server_has_its_name() {
         (Counter::ToolCallRunAmbiguous, "tool_call_run_ambiguous"),
         (Counter::LiveIngestFailed, "live_ingest_failed"),
         (Counter::QueryCancelled, "query_cancelled"),
+        (
+            Counter::SearchIndexWriterUnindexed,
+            "search_index_writer_unindexed",
+        ),
+        (
+            Counter::SearchIndexSeqBeyondLimit,
+            "search_index_seq_beyond_limit",
+        ),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

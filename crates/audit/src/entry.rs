@@ -168,6 +168,12 @@ pub enum Counter {
     LiveIngestFailed,
     /// A search ran past its deadline and was cancelled (SEC-04).
     QueryCancelled,
+    /// The search index leaves out the events of a writer whose slot a
+    /// smaller writer id holds (REC-11, I6).
+    SearchIndexWriterUnindexed,
+    /// The search index leaves out the events of a writer from seq 2^28
+    /// on (REC-11, I6).
+    SearchIndexSeqBeyondLimit,
 }
 
 impl Counter {
@@ -217,6 +223,8 @@ impl Counter {
             Self::ToolCallRunAmbiguous => "tool_call_run_ambiguous",
             Self::LiveIngestFailed => "live_ingest_failed",
             Self::QueryCancelled => "query_cancelled",
+            Self::SearchIndexWriterUnindexed => "search_index_writer_unindexed",
+            Self::SearchIndexSeqBeyondLimit => "search_index_seq_beyond_limit",
         }
     }
 }
