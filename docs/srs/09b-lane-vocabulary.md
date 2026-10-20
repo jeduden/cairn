@@ -160,7 +160,7 @@ field sends text, not shortcuts.
 | `I`                   | interrupt (run pane)                                            | `W`             | witness check                                                            |
 | `p`                   | pause / resume                                                  | `c` / `C`       | post on the selection / verdict sheet                                    |
 | `S`                   | stop (opens the stop sheet)                                     | `P`             | pick what the outcome window shows                                       |
-| `F`                   | follow a seat                                                   | `l`             | branch and pull-request links                                            |
+| `F`                   | follow a seat                                                   | `l`             | branch, pull-request and issue links                                     |
 | `t`                   | terminal takeover, only at the launcher's own terminal (OWN-19) | `V` / `s`       | compare versions / since my verdict                                      |
 | `h`                   | hand back                                                       | `(` / `)`       | previous / next post with a range link                                   |
 | `Q`                   | turn an away policy on / off                                    | `<` / `>`       | down / up the stack                                                      |

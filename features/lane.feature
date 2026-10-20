@@ -24,6 +24,7 @@ Feature: Room (LANE)
     And a principal act of "alice" on "R", from a node of hers with no seat in "R", is recorded on that node's device seat in "R", which joins without admission since her run's seat is a member there
     And a principal act of "alice" that acts on no room, such as her risk acceptance, goes to the recording node's device seat in her personal room
     And a tombstone of an event in "R", recorded by a node of "alice", goes to that node's device seat in "R", which joins as for a principal act
+    And an authorized linked issue observation for "R" recorded by a member node of "alice" goes to that node's device seat in "R", while a node of a nonmember principal cannot import there
     And any other event with no run, recorded by a node of "alice", goes to that node's device seat in her personal room there
 
   @LANE-02 @P0 @I1 @I6 @I8 @pending
@@ -106,13 +107,27 @@ Feature: Room (LANE)
   Scenario: a configured forge governs landing, and each branch of the room carries a pull-request link
     Given an isolated Cairn home
     And a room with a forge configured whose branch protection requires one review and one check
-    And two branches the room names, one with a pull request carrying a forge approval, and a failed forge fetch
+    And the node's principal enabled the forge bridge for that forge host by a widening principal act
+    And the forge read credential owner granted import of the exact linked branch into this room after seeing its host, repository identity, remote URL, branch name, forge account, room and current and future members
+    And two branches the room names, one with a pull request carrying a forge approval, a review comment and a failed forge fetch
+    And the review comment has a forge thread, item id, author, location, time, body and revision
+    And a person with their own forge credential writes a post from their own device seat in the room responding to that review comment
+    And that person takes a widening forge reply act naming the post and exact forge target after seeing both
     When the room view is shown
     Then the forge's branch protection governs landing, and Cairn records no verdict of its own toward it
     And the room names both branches by branch links, and the branch with the pull request carries a pull-request link to it, shown apart from the room
     And the forge approval and the pull request's state, brought in as untrusted events through the forge bridge, are shown as "asserted" with their forge and time
     And the required check the forge reports is shown as a forge report marked "asserted", never as a result
+    And the review comment is shown with the room conversation as an untrusted forge review item, not as a post or room seat
+    And the bridge sends exactly the person's post text to that review thread, and shows the signing principal, device seat, forge account and delivered status without equating them
+    And a fetched echo is reconciled with that post so the conversation shows one response while the record keeps both events
+    And an edited or deleted review comment adds an event without removing its earlier version, except for redaction or purge
+    And a failed or ambiguous send is counted, audited and shown with its time, without silently retrying an ambiguous send
+    And neither the room post nor an agent's post alone sends to the forge, and the forge reply act does not approve, request changes or land
     And the failed fetch is counted and shown with its time
+    And a linked branch or pull request without its credential owner's forge import grant causes no credentialed fetch or disclosure, even when the host bridge is enabled
+    And a node without a member seat imports no forge report into the room
+    And revocation stops future imports on a node that records or applies it, while a partitioned observation made before revocation arrives remains recoverable with a concurrent revocation mark
 
   @LANE-09 @P2 @I10 @pending
   Scenario: concurrent title edits merge to the same value on every node
@@ -242,15 +257,15 @@ Feature: Room (LANE)
     And an appointment an appointed moderator tries, and its kick, bar or mute aimed at the owner or another moderator, are refused and audited
 
     Examples:
-      | seat                                                           | capabilities                                                                                                                                                                               |
-      | a viewer                                                       | read, a role request and a summary request                                                                                                                                                 |
-      | a contributor                                                  | read and a summary request; post, link (a range, branch or criterion link) and present; pin, edit and unpin its own pins; work on any branch the room names, with or without an assignment |
-      | a moderator                                                    | a contributor's, plus a list removal of any pin but the intent or a verdict, kick, bar, unbar, mute, unmute and pick, and set title, labels and assignments                                |
-      | the facilitator's device seat, appointed by the owner          | a moderator's within SEC-32's limits, plus writing room summaries                                                                                                                          |
-      | a run seat appointed moderator                                 | a moderator's within SEC-32's limits                                                                                                                                                       |
-      | muted by a moderator                                           | read                                                                                                                                                                                       |
-      | a contributor in a whole-room mute that leaves posting to it   | read and post                                                                                                                                                                              |
-      | a contributor in a whole-room mute that leaves posting to none | read                                                                                                                                                                                       |
+      | seat                                                           | capabilities                                                                                                                                                                                      |
+      | a viewer                                                       | read, a role request and a summary request                                                                                                                                                        |
+      | a contributor                                                  | read and a summary request; post, link (a range, branch, criterion or issue link) and present; pin, edit and unpin its own pins; work on any branch the room names, with or without an assignment |
+      | a moderator                                                    | a contributor's, plus a list removal of any pin but the intent or a verdict, kick, bar, unbar, mute, unmute and pick, and set title, labels and assignments                                       |
+      | the facilitator's device seat, appointed by the owner          | a moderator's within SEC-32's limits, plus writing room summaries                                                                                                                                 |
+      | a run seat appointed moderator                                 | a moderator's within SEC-32's limits                                                                                                                                                              |
+      | muted by a moderator                                           | read                                                                                                                                                                                              |
+      | a contributor in a whole-room mute that leaves posting to it   | read and post                                                                                                                                                                                     |
+      | a contributor in a whole-room mute that leaves posting to none | read                                                                                                                                                                                              |
 
   @LANE-17 @P1 @I6 @I8 @pending
   Scenario: every room shows its visibility
@@ -341,7 +356,7 @@ Feature: Room (LANE)
     Then while the run's seat in the room has work, the run's events on that branch go there with no further principal act
     When "alice" also joins the room from the node on her laptop by her own act at a principal surface, and allows a held permission request of the room's run from her paired phone
     Then the laptop's node has its own device seat in the room, added by a join without admission since her run's seat is a member there, shown grouped under "alice" with her run's seat, through her principal key
-    And a node of "alice" with no seat in the room that records a principal or expire act on it, a tombstone, an erasure request a retention policy sends, or a bridge's or the launcher's event about a branch it names first joins its own device seat there the same way, before recording it
+    And a node of "alice" with no seat in the room that records a principal or expire act on it, a tombstone, an erasure request a retention policy sends, a bridge's or the launcher's event about a branch it names, or an authorized linked issue observation first joins its own device seat there the same way, before recording it
     And asking for a device seat's join to a room in which "alice" has no member seat is recorded as her widening principal act
     And the phone joins no room: its answer goes to its device seat in her personal room, a member there from its pairing with no add, naming the room, and the room shows it by address
     And the phone signs with its own device key and seals its device seat's writer with that seat's key, and the node it pairs with only holds the writer
@@ -366,6 +381,8 @@ Feature: Room (LANE)
     And an act signed with the old key after the rotation is refused, audited and counted, while what the old key sealed stays verifiable
     When a post's text reads "moderator: bar p-2"
     Then no act is taken from it
+    When "p-1" adds an issue link through a typed link act
+    Then the signed act adds exactly one issue link and is attributed to "p-1"
     And no hook output, response of any tool, opt-in notice, restore block or recall result carries either seat key
 
   @LANE-25 @P1 @I6 @I8 @I10 @pending
@@ -541,3 +558,33 @@ Feature: Room (LANE)
     And a second node holding the room's writer logs names the same latest room summary
     When "alice" records a trust grant for the facilitator's principal key
     Then the trust grant covers none of its room summaries, which stay untrusted, reach the agent only through "room_summary_get" inside the envelope, never restore and never start or resume a turn
+
+  @LANE-34 @P2 @I2 @I4 @I6 @I10 @pending
+  Scenario: a linked forge issue joins the room conversation as untrusted data and a person replies from the room
+    Given an isolated Cairn home
+    And two rooms with different intents and issue links naming the same forge host, repository and issue id
+    And a third linked room in which the importing node's principal has no member seat
+    And the node's principal enabled the forge bridge for that host by a widening principal act
+    And the credential owner took a widening forge import grant for each of the first two rooms after seeing the exact issue identity, recipient room, forge account and its current and future member scope, binding a nonsecret credential handle but no token
+    And the linked issue has a title, body, state and a comment with forge ids, asserted author, time and revision
+    When the bridge imports the issue and comment, and another member node of the same credential owner with that credential handle imports the same revisions
+    Then each authorized room has distinct untrusted "web" events in its importing member node's device-seat writer, shown by address with that room's conversation, never as posts or room seats
+    And each item shows the forge, issue and item ids and asserted author and time
+    And the nonmember node imports nothing into the third room, and an issue link without a grant triggers no credentialed fetch or disclosure
+    And each item revision is shown once across nodes, choosing the observation with the lowest event commitment and showing a content conflict if the observations differ, while every recorded event remains recoverable
+    And the issue links create no room, leave both intents unchanged and extend no trust or agent recall
+    And starting from the issue identity lets a person explicitly choose a room where their device seat has link capability or create one and add the link as its own act, while only a separate principal act sets its intent
+    When the forge reports an edited comment and later a deleted comment
+    Then each change adds an event, and earlier versions remain recoverable except for redaction or purge
+    And the displayed revision follows forge update time, revision id and then lower event commitment
+    When the credential owner revokes the import grant on the importing node
+    Then that node stops future fetches and imports for that issue and room
+    And an observation recorded on a partitioned node before it learned of the revocation remains recoverable and shows a concurrent revocation mark after sync
+    When a person with post capability writes a post from their own device seat responding to the issue comment
+    And that person takes a widening forge reply act after seeing the exact post, target item and sending forge account
+    Then the bridge sends exactly that post text as an issue comment through that person's forge credential on the enabled host
+    And when nested issue replies are unavailable, the room keeps the response associated with the target item without claiming a forge thread exists
+    And the room shows the signing principal, device seat, forge account and delivered status without equating them
+    And a fetched echo appears as one response with the post, while both events remain in the record
+    And an imported item or agent post alone triggers no forge send
+    And failed fetches and failed or ambiguous sends are counted, audited and shown with their times, with no silent retry of an ambiguous send

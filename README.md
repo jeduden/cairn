@@ -18,6 +18,16 @@ mean.
   address, and find any of them again by a word you remember, so people
   and agents know what you are talking about.
 
+In a room with an intent, people and agents discuss the work, review results
+and correct course in one conversation. Cairn aims to replace the pull request
+as that collaboration experience. A branch can be linked to the room; a pull
+request, when used, remains the forge's review object for that branch. A forge
+issue can link directly to the room without defining its intent. After the
+forge read credential owner authorizes sharing that exact issue or linked
+branch with the room, its discussion or pull-request review comments appear
+in the conversation. A person can respond
+in the room and explicitly send that response back to the forge.
+
 Underneath, every run stays on your machines unless you turn on peers.
 Your pinned constraints come back word for word after each compaction,
 or named when the budget leaves them out. Agents recall history only
@@ -51,7 +61,7 @@ row: "| [{title}]({filename}) | {status} | {summary} |"
 | [M4: the hermetic compute kernel](plan/2609292015_m4-compute-kernel.md)            | 🔲     | A per-run SQL kernel in a resource-limited worker with read-only, quarantine-aware access to the record.                                                                                          |
 | [M5: hardening and evaluation](plan/2609292016_m5-hardening-and-evaluation.md)     | 🔲     | The remaining P1 requirements, the full §11 evaluation, an external security review and a two-week pilot.                                                                                         |
 | [M8: peer network](plan/2610112058_m8-peer-network.md)                             | 🔲     | Peers enrolled by key: machines and other principals sync rooms after any partition with no central service, ephemeral nodes hand over their record, and invites, directed posts and endorsement. |
-| [M9: review, publishing, bridges](plan/2610112059_m9-review-publishing-bridges.md) | 🔲     | Forge review beside the room, handover, bundles that carry a room with a pull request, read-only publishing and outbound bridges, each through its own proposal.                                  |
+| [M9: review, publishing, bridges](plan/2610112059_m9-review-publishing-bridges.md) | 🔲     | Forge review and linked issues in the room with replies sent to the forge, handover, bundles, read-only publishing and outbound bridges, each through its own proposal.                           |
 <?/catalog?>
 
 Marking part of an event or an image, and sharing that mark, are
