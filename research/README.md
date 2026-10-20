@@ -43,6 +43,15 @@ from.
 - [T3 Code](notes/t3code/t3code.md): a local GUI over coding agents,
   read from its source: event sourced in SQLite with no tamper
   evidence, remote access and telemetry built in.
+- [Multica](notes/multica/multica.md): an issue-centered agent workspace with
+  run transcripts, squads and review; compared with Cairn's record, trust and
+  network boundaries.
+- [LobeHub](notes/lobehub/lobehub.md): an agent workspace connecting coding
+  agents, Topics, Tasks, Groups and memory; compared with Cairn's room, record
+  and trust contract.
+- [Warp](notes/warp/warp.md): shared agent sessions, inline code review and
+  Factory work from issues and pull requests; compared with Cairn's
+  intent-centered room, forge discussion and trust boundaries.
 - [Live-PR pitch review](notes/live-pr-pitch-review/): a blind
   adversarial review of the "live pull request" pitch in three lenses:
   missing process, existing products, and inconsistencies with the
