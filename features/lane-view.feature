@@ -52,6 +52,7 @@ Feature: Room view (VIEW)
     When the person answers one item in the CLI
     Then every client lists the open items in the order of §9.7.4, the same for the same record
     And no Q1 or Q2 item can be dismissed, except the overlap item, which clears on acknowledgement
+    And each item shows its room, class, exact event address and available principal action, and opening it shows the evidence without pre-filling a verdict or act
     And the answered item clears in every other client as soon as the answer's event arrives there
     And while a key event log inception awaits a confirm, the Needs you queue holds a Q2 item in the personal room naming the seat that recorded it and whether the key it replaces is still in the key store, offering "cairn key-event-log reject" before "confirm", and a recovery key still on the node is a Q3 item (PRV-12)
 
@@ -88,6 +89,7 @@ Feature: Room view (VIEW)
     And it lists capture gaps, uningested transcripts, risen failure counters and unsynced writers apart from rooms with no activity
     And it checks each writer's chain head against the named head receipt and shows per writer whether that head is still a prefix of its chain
     And its lines run integrity status and capture gaps, Needs you, failures, then finished runs, with the newest seq it covers per writer and no model-written line
+    And for each room with activity since the starting point, shown or opened from a collapsed count it shows what changed, what needs the person and the available principal action or that no action is needed, with exact event addresses rather than model-written summaries
     And Catch up lists each key event and change of the current key event log since the starting point, counting by room the writers whose origin it changed (PRV-12)
 
   @VIEW-09 @P1 @I6 @I8 @pending

@@ -29,6 +29,19 @@ tampering by anyone but a process of the same OS user until a head receipt
 leaves the machine. Every component beyond the core is opt-in, bounded and
 reviewed.
 
+For a room with an intent, the room's conversation is where people and agents
+discuss the work and review its results and evidence. A principal steers or
+records a correction through a principal act. Cairn aims to replace the pull
+request as the collaboration experience for that intent. A branch link can
+connect the room to a branch; a pull request, when used, is the forge's review
+object for a branch, connected by a pull-request link. The forge retains
+authority over landing where one is configured. An issue link can connect a
+forge issue to the room without setting its intent. The forge read credential
+owner must authorize sharing that exact issue or linked branch with the room
+before its discussion or pull-request review
+comments appear in the conversation. A person can respond
+there and explicitly send the response to the forge.
+
 Existing tools treat memory as a convenience feature and add security
 afterwards. Cairn treats the store as security-critical infrastructure from
 the first line of code. Where usefulness and safety conflict, Cairn chooses

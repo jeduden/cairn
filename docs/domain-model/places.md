@@ -37,8 +37,9 @@ summary: >-
 - **Sandbox**: A confinement around a run that blocks some residual risks
   (OWN-22).
 - **Room**: Where an intent is worked on: at most one intent, a **conversation**
-  (its ordered posts), seats, pins, and branches in any repositories, each named
-  by a branch link. The unit Cairn shows and shares.
+  (its ordered posts and the forge discussion items shown with them),
+  seats, pins, issue links, and branches in any repositories, each named by a
+  branch link. The unit Cairn shows and shares.
 - **Personal room**: A principal's private room on each of its nodes, created as
   ADM-02 says, or carried over to a node clone, which shares it (LANE-01,
   LANE-17). Every run its node records has a seat in it from its first event,

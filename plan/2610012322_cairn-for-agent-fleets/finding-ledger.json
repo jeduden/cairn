@@ -70,7 +70,7 @@
      "quote": "Once PRV-10 ships, no one may kick, bar or mute the owner or any key that chains to its principal key (LANE-25)."
     },
     {
-     "file": "docs/srs/05b-lane-requirements.md",
+     "file": "docs/srs/05b-room-collaboration-requirements.md",
      "quote": "Until PRV-10 ships, a room MUST admit no seat of another principal, and admission, invites, bars and the owner's protection"
     },
     {
@@ -201,7 +201,7 @@
      "quote": "or, before PRV-10 ships, refuse every later use of the access token."
     },
     {
-     "file": "docs/srs/05b-lane-requirements.md",
+     "file": "docs/srs/05b-room-collaboration-requirements.md",
      "quote": "only a delegation or acceptance grant or an access token MAY set an expiry (OWN-23, PEER-05)"
     }
    ]
@@ -212,11 +212,11 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/srs/05b-lane-requirements.md",
+     "file": "docs/srs/05b-room-collaboration-requirements.md",
      "quote": "Once its clock passes the expiry of a bar, a mute or a handover offer, the setter's or offerer's node MUST record that expire act"
     },
     {
-     "file": "docs/srs/05b-lane-requirements.md",
+     "file": "docs/srs/05b-room-collaboration-requirements.md",
      "quote": "while it has not, another node of its principal or of the owner MAY (open: OQ-41), and no other node's expire act MAY end it."
     }
    ]
@@ -391,7 +391,7 @@
      "quote": "or, once PRV-10 ships, one the run's principal stamped, its stamp so trusted"
     },
     {
-     "file": "docs/srs/05b-lane-requirements.md",
+     "file": "docs/srs/05b-room-collaboration-requirements.md",
      "quote": "Once PRV-10 ships, a stamped version of a type that restores MUST restore to the stamper's own agents only, as PIN-10 says"
     }
    ]
@@ -410,7 +410,7 @@
      "quote": "Of a pin's versions that qualify for a run, only the newest MAY restore, but one qualifying only through a trust grant MUST NOT displace one the run's principal stamped"
     },
     {
-     "file": "docs/srs/05b-lane-requirements.md",
+     "file": "docs/srs/05b-room-collaboration-requirements.md",
      "quote": "a cut principal act, or PIN-10 restores a newer one instead."
     }
    ]
@@ -508,7 +508,7 @@
      "quote": "among them a seat in each room its parent's run seat is a member of when it starts, joined then with that seat's role and no appointment, under its parent's join (LANE-23)"
     },
     {
-     "file": "docs/srs/05b-lane-requirements.md",
+     "file": "docs/srs/05b-room-collaboration-requirements.md",
      "quote": "a subagent's join MUST ride on its parent's: at its start it joins each room its parent's run seat is a member of, with that seat's role and no appointment."
     }
    ]
@@ -609,7 +609,7 @@
      "quote": "its act joining its own run assigns that seat contributor (LANE-16)"
     },
     {
-     "file": "docs/srs/05b-lane-requirements.md",
+     "file": "docs/srs/05b-room-collaboration-requirements.md",
      "quote": "the owner's act joining its own run MUST assign that seat contributor"
     }
    ]
@@ -732,7 +732,7 @@
      "quote": "among them a seat in each room its parent's run seat is a member of when it starts, joined then with that seat's role and no appointment, under its parent's join (LANE-23)"
     },
     {
-     "file": "docs/srs/05b-lane-requirements.md",
+     "file": "docs/srs/05b-room-collaboration-requirements.md",
      "quote": "a subagent's join MUST ride on its parent's: at its start it joins each room its parent's run seat is a member of, with that seat's role and no appointment."
     },
     {
@@ -1324,7 +1324,7 @@
      "quote": "No mute, a whole-room one included, covers its device seats"
     },
     {
-     "file": "docs/srs/05b-lane-requirements.md",
+     "file": "docs/srs/05b-room-collaboration-requirements.md",
      "quote": "from one seat or the whole room, never the owner's device seats"
     }
    ]
