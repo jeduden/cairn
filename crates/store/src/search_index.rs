@@ -15,9 +15,12 @@
 //!   (S12): its seq in the high bits, a slot taken from its writer id in
 //!   the low ones. Newer events of a writer so have the larger ids.
 //!   Where two writers' ids share a slot the smaller writer id keeps it
-//!   and the other's events are left out, whichever arrived first; they
-//!   are named by `Store::search_index_unindexed_writers`. A seq of [`SEQ_LIMIT`] or more is left
-//!   out too.
+//!   and the other's events are left out, whichever arrived first. A
+//!   seq of [`SEQ_LIMIT`] or more is left out too. No layout of a 64-bit
+//!   row id is free of such limits and the same for any arrival order
+//!   (I10), so each is an [`IndexGap`]: named by `Store::search_index_gaps`
+//!   and reported once, as the counters `search_index_writer_unindexed`
+//!   and `search_index_seq_beyond_limit` (I6).
 //! - Search ranks bounded: BM25 with length normalization over the
 //!   newest [`RANKED_MATCHES`] matches after the filters (S2), damped per writer,
 //!   under a deadline (SEC-04).
@@ -77,6 +80,11 @@ CREATE TABLE IF NOT EXISTS idx.search_writers (
     slot INTEGER PRIMARY KEY,
     writer TEXT NOT NULL UNIQUE,
     indexed_to INTEGER NOT NULL DEFAULT 0
+) STRICT;
+CREATE TABLE IF NOT EXISTS idx.search_gaps_reported (
+    writer TEXT NOT NULL,
+    class TEXT NOT NULL,
+    PRIMARY KEY (writer, class)
 ) STRICT;
 CREATE TABLE IF NOT EXISTS idx.search_settings (
     key TEXT PRIMARY KEY,
@@ -315,6 +323,96 @@ impl<'t> Indexing<'t> {
 
         Ok(())
     }
+}
+
+/// How the search index leaves a writer's events out.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum GapClass {
+    /// Another writer id holds its slot.
+    WriterUnindexed,
+    /// Its events from [`SEQ_LIMIT`] on do not fit a row id.
+    SeqBeyondLimit,
+}
+
+impl GapClass {
+    /// Its name in the note of what was reported.
+    #[must_use]
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::WriterUnindexed => "writer_unindexed",
+            Self::SeqBeyondLimit => "seq_beyond_limit",
+        }
+    }
+}
+
+/// Events of one writer the search index leaves out, one class of them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct IndexGap {
+    pub writer: WriterId,
+    pub class: GapClass,
+}
+
+/// The gaps of the index, given each writer's newest seq (none for a
+/// writer with no events): a writer with events and no slot, and a
+/// writer whose newest seq is [`SEQ_LIMIT`] or more.
+pub(crate) fn gaps(
+    conn: &Connection,
+    heads: &[(WriterId, u64)],
+) -> Result<Vec<IndexGap>, StoreError> {
+    let mut statement = conn.prepare("SELECT 1 FROM search_writers WHERE writer = ?1")?;
+    let mut found = Vec::new();
+    for (writer, newest) in heads.iter().filter(|(_, newest)| *newest > 0) {
+        if !statement.exists([writer.to_string()])? {
+            found.push(IndexGap {
+                writer: *writer,
+                class: GapClass::WriterUnindexed,
+            });
+        }
+        if *newest >= SEQ_LIMIT {
+            found.push(IndexGap {
+                writer: *writer,
+                class: GapClass::SeqBeyondLimit,
+            });
+        }
+    }
+
+    Ok(found)
+}
+
+/// Whether `gap` was reported before.
+fn reported(conn: &Connection, gap: &IndexGap) -> Result<bool, StoreError> {
+    Ok(conn.query_row(
+        "SELECT count(*) FROM search_gaps_reported WHERE writer = ?1 AND class = ?2",
+        params![gap.writer.to_string(), gap.class.name()],
+        |r| r.get::<_, bool>(0),
+    )?)
+}
+
+/// The gaps of `all` not reported yet.
+pub(crate) fn unreported(
+    conn: &Connection,
+    all: Vec<IndexGap>,
+) -> Result<Vec<IndexGap>, StoreError> {
+    let mut out = Vec::new();
+    for gap in all {
+        if !reported(conn, &gap)? {
+            out.push(gap);
+        }
+    }
+
+    Ok(out)
+}
+
+/// Notes that `gaps` were reported.
+pub(crate) fn mark_reported(conn: &Connection, gaps: &[IndexGap]) -> Result<(), StoreError> {
+    for gap in gaps {
+        conn.execute(
+            "INSERT OR IGNORE INTO search_gaps_reported (writer, class) VALUES (?1, ?2)",
+            params![gap.writer.to_string(), gap.class.name()],
+        )?;
+    }
+
+    Ok(())
 }
 
 /// Empties the index, leaving its tables.

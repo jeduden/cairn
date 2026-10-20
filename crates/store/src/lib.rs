@@ -42,7 +42,7 @@ use serde_json::Value;
 pub use hook::{Held, Observation, PromptCommitment};
 pub use payload::{Disk, OsDisk, Payloads};
 pub use search::rank::Hit;
-pub use search_index::Search;
+pub use search_index::{GapClass, IndexGap, Search};
 pub use segment::{SEGMENT_VERSION, Segment};
 pub use source::{IngestedRun, Place, Placed, Position, Source};
 
@@ -474,6 +474,11 @@ impl Store {
     /// writer's newest seq by the record's key, never a scan of the
     /// events, as a hook handler's open stays within its budget (NFR-02).
     fn index_is_current(&self) -> Result<bool, StoreError> {
+        search_index::is_current(&self.conn, &self.newest_seqs()?)
+    }
+
+    /// Each writer's newest seq, none counted as 0, by the record's key.
+    fn newest_seqs(&self) -> Result<Vec<(WriterId, u64)>, StoreError> {
         let mut statement = self.conn.prepare(NEWEST_SEQS)?;
         let rows = statement.query_map([], |r| {
             Ok((r.get::<_, String>(0)?, r.get::<_, Option<i64>>(1)?))
@@ -491,7 +496,7 @@ impl Store {
             ));
         }
 
-        search_index::is_current(&self.conn, &heads)
+        Ok(heads)
     }
 
     /// Makes the index's tables and settings, and fills them from the
@@ -598,6 +603,36 @@ impl Store {
                 })
             })
             .collect()
+    }
+
+    /// The events the search index leaves out (REC-11, I6): a writer
+    /// whose slot another holds, and a writer from seq 2^28 on.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or an id does not parse.
+    pub fn search_index_gaps(&self) -> Result<Vec<IndexGap>, StoreError> {
+        search_index::gaps(&self.conn, &self.newest_seqs()?)
+    }
+
+    /// The gaps of the search index not yet reported.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does, an id does not parse or the store has no
+    /// search index.
+    pub fn unreported_search_index_gaps(&self) -> Result<Vec<IndexGap>, StoreError> {
+        search_index::unreported(&self.conn, self.search_index_gaps()?)
+    }
+
+    /// Notes that `gaps` were reported, so the next ingest does not
+    /// report them again.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or the store has no search index.
+    pub fn mark_search_index_gaps_reported(&self, gaps: &[IndexGap]) -> Result<(), StoreError> {
+        search_index::mark_reported(&self.conn, gaps)
     }
 
     /// Checks the store's schema version, header field set and encoding
