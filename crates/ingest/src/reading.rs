@@ -104,6 +104,7 @@ pub(crate) fn ingest(
     let observations = record_observed(&mut store, &node, &seen, &plan, &addresses, entropy)?;
 
     Ok(Ingested {
+        index_gaps: store.unreported_search_index_gaps()?,
         witnessed_repeats: plan.witnessed_repeats,
         matched: observations.matched,
         prompt_conflicts: observations.conflicts,

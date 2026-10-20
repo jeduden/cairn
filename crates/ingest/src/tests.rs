@@ -1254,3 +1254,65 @@ fn only_a_position_another_ingest_moved_is_read_again() {
     assert!(partial.position_moved());
     assert!(!IngestError::Empty(std::path::PathBuf::new()).position_moved());
 }
+
+/// A writer id larger than `writer` that shares its slot in the search
+/// index: the same first five bytes of its digest.
+fn sharing_the_slot_of(writer: record::id::WriterId) -> record::id::WriterId {
+    let mut bytes = *writer.digest().as_bytes();
+    bytes[5..].fill(0xff);
+
+    record::id::WriterId::parse(&record::digest::Digest::from_bytes(bytes).to_hex()).unwrap()
+}
+
+#[test]
+fn an_ingest_reports_the_search_index_gaps_not_yet_reported_and_only_those() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let path = transcript(&dir, "{\"a\":1}\n");
+    let first = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+    assert!(first.index_gaps.is_empty());
+
+    let other = sharing_the_slot_of(first.writer);
+    assert!(first.writer < other);
+    let mut store = Store::open(&home.store()).unwrap();
+    store
+        .add_seat(&store::StoredSeat {
+            writer: other,
+            seat: record::id::SeatId::derive(&first.room, other.digest().as_bytes()),
+            room: first.room,
+            certificate: serde_json::json!({}),
+        })
+        .unwrap();
+    store
+        .append(
+            other,
+            &[store::NewEvent {
+                kind: EventKind::UnparsedLine,
+                provenance: Provenance::Unparsed,
+                content: serde_json::json!({"line": 1, "text": "left out"}),
+                commitment_key: record::commitment::CommitmentKey::from_bytes([7; 32]),
+                transcript_timestamp: None,
+            }],
+        )
+        .unwrap();
+    drop(store);
+    let second = dir.path().join("b.jsonl");
+    std::fs::write(&second, "{\"b\":2}\n").unwrap();
+    let second = ingest_path(&home, &second, &redactor(), &mut OsEntropy).unwrap();
+
+    assert_eq!(
+        second.index_gaps,
+        [store::IndexGap {
+            writer: other,
+            class: store::GapClass::WriterUnindexed
+        }]
+    );
+    let store = Store::open(&home.store()).unwrap();
+    store
+        .mark_search_index_gaps_reported(&second.index_gaps)
+        .unwrap();
+    let third = dir.path().join("c.jsonl");
+    std::fs::write(&third, "{\"c\":3}\n").unwrap();
+    let third = ingest_path(&home, &third, &redactor(), &mut OsEntropy).unwrap();
+    assert!(third.index_gaps.is_empty());
+}
