@@ -770,3 +770,35 @@ fn a_server_holding_no_session_binding_serves_a_call_under_no_run() {
     envelope_of(&tool_call(&mut server, None, &address));
     assert!(server.take_found().is_empty());
 }
+
+#[test]
+fn a_server_without_a_test_override_cancels_a_search_at_2_s() {
+    let f = fixture();
+    let server = f.server();
+
+    assert_eq!(server.deadline, std::time::Duration::from_secs(2));
+    assert_eq!(event_search::DEADLINE, std::time::Duration::from_secs(2));
+    assert!(CANCELLED.contains("deadline of 2 s"));
+}
+
+#[test]
+fn event_search_says_its_run_is_a_writer_id_and_its_damping_is_per_writer() {
+    let f = fixture();
+    let mut server = f.server();
+
+    let tools = call(
+        &mut server,
+        json!({"jsonrpc": "2.0", "id": 6, "method": "tools/list"}),
+    )["result"]["tools"]
+        .clone();
+
+    let description = tools[0]["description"].as_str().unwrap();
+    assert!(
+        description.contains("run takes a writer id and further hits of one writer are damped"),
+        "{description}"
+    );
+    let run = tools[0]["inputSchema"]["properties"]["run"]["description"]
+        .as_str()
+        .unwrap();
+    assert_eq!(run, "a writer id: a run is named by its writer for now");
+}
