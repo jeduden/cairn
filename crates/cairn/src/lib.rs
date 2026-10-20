@@ -634,6 +634,23 @@ fn root_transcripts(
     Ok(found)
 }
 
+/// Audits, once each, the events the search index leaves out that no
+/// ingest reported yet (REC-11, I6), saying on `stderr` what it cannot.
+fn audit_index_gaps(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
+    if ingested.index_gaps.is_empty() {
+        return;
+    }
+    let done = ctx.home().map_err(|e| e.to_string()).and_then(|home| {
+        index_gaps::report(&home, &ingested.index_gaps, "ingest", &mut |o| {
+            ctx.audit(o).is_ok()
+        })
+        .map_err(|e| e.to_string())
+    });
+    if let Err(e) = done {
+        let _ = writeln!(stderr, "cairn ingest: audit the search index gaps: {e}");
+    }
+}
+
 /// Audits what one ingest found, each redaction, unparsed line and
 /// format drift, and logs it.
 fn record_ingested(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
@@ -641,6 +658,7 @@ fn record_ingested(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn 
     audit_parsing(ctx, ingested, stderr);
     audit_sourcing(ctx, ingested, stderr);
     audit_prompts(ctx, ingested, stderr);
+    audit_index_gaps(ctx, ingested, stderr);
     tracing::info!(
         transcript = %ingested.redacted_path,
         writer = %ingested.writer,
@@ -1907,6 +1925,7 @@ pub(crate) fn invalid_layers(command: &str, loaded: &Loaded, stderr: &mut dyn Wr
 mod act;
 mod capture;
 mod hook_handlers;
+mod index_gaps;
 mod segments;
 mod settings;
 mod sources;

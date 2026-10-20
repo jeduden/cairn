@@ -519,3 +519,33 @@ fn a_marker_that_cannot_be_opened_is_passed_over() {
     assert_eq!(count_stopped(&f.home, "ingest", &audit), 0);
     assert!(link.symlink_metadata().is_ok(), "left as it is");
 }
+
+#[test]
+fn a_gap_of_the_search_index_is_audited_once_by_the_live_ingest() {
+    let f = Fixture::new();
+    let other = f.projects().join("other.jsonl");
+    std::fs::write(&other, line(1, None)).unwrap();
+    let first = ingest::ingest_path(
+        &f.home,
+        &other,
+        &Redactor::new(&[]).unwrap().0,
+        &mut OsEntropy,
+    )
+    .unwrap();
+    crate::index_gaps::tests::leave_out_a_writer_sharing_the_slot_of(&f.home, first.writer);
+    std::fs::write(f.main(), line(2, None)).unwrap();
+    f.bind(SESSION, &f.main(), HARNESS);
+    let mut running = f.running(Some(HARNESS), None);
+    running.bind();
+
+    running.poll();
+    std::fs::write(f.main(), format!("{}{}", line(2, None), line(3, None))).unwrap();
+    running.poll();
+
+    let gaps = f
+        .counted()
+        .into_iter()
+        .filter(|c| c == "search_index_writer_unindexed")
+        .count();
+    assert_eq!(gaps, 1);
+}

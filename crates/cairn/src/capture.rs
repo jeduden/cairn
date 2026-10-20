@@ -30,6 +30,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use crate::index_gaps;
 use administration::home::Home;
 use allowed_root::{Access, AllowedRoots};
 use audit::entry::{Counter, Kind, Occurrence};
@@ -211,7 +212,14 @@ impl Running {
 
 impl Running {
     fn audit(&self, occurrence: &Occurrence) {
-        let _ = Log::new(self.capture.home.audit()).append(occurrence, (self.capture.clock)());
+        self.audited(occurrence);
+    }
+
+    /// Whether the audit log took `occurrence`.
+    fn audited(&self, occurrence: &Occurrence) -> bool {
+        Log::new(self.capture.home.audit())
+            .append(occurrence, (self.capture.clock)())
+            .is_ok()
     }
 
     /// Takes every session binding of its harness process no MCP server
@@ -401,6 +409,9 @@ impl Running {
                 &ingested.name,
             ));
         }
+        let _ = index_gaps::report(&self.capture.home, &ingested.index_gaps, "mcp", &mut |o| {
+            self.audited(o)
+        });
     }
 
     /// Reads the tool-use ids of the lines of the transcript at `path`

@@ -2916,3 +2916,34 @@ fn two_closures_share_one_writer_through_shared() {
 
     assert_eq!(sink, b"one two");
 }
+
+#[test]
+fn ingest_audits_each_gap_of_the_search_index_once_and_status_counts_it() {
+    let p = Process::new();
+    let path = p.transcript("a\n");
+    let (_, out, _) = p.invoke(&["ingest", &format!("--path={path}"), "--json"], &DEV);
+    let first: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let small = record::id::WriterId::parse(first["writer"].as_str().unwrap()).unwrap();
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let large = index_gaps::tests::leave_out_a_writer_sharing_the_slot_of(&home, small);
+
+    for name in ["b.jsonl", "c.jsonl"] {
+        let other = transcript_in(&p, "p", name, b"b\n");
+        let (code, _, err) = p.invoke(&["ingest", "--path", &other.display().to_string()], &DEV);
+        assert_eq!((code, err.as_str()), (EXIT_OK, ""));
+    }
+
+    let gaps: Vec<_> = audited(&p)
+        .into_iter()
+        .filter(|e| e.counter.as_deref() == Some("search_index_writer_unindexed"))
+        .collect();
+    assert_eq!(gaps.len(), 1, "once, not per ingest");
+    assert_eq!(gaps[0].kind, "dropped");
+    assert_eq!(gaps[0].operation, "ingest");
+    assert!(gaps[0].detail.ends_with(&large.to_string()));
+    let (_, status, _) = p.invoke(&["status"], &DEV);
+    assert!(
+        status.contains("search_index_writer_unindexed 1 (1 since acknowledged)"),
+        "{status}"
+    );
+}
