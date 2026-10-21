@@ -52,7 +52,8 @@ a file the core can read, or a call through that shim.
 - **A hint, not the guard.** The identity only tells a home that it
   moved. Two nodes with one identity, or a machine cloned for backup,
   are fine. What must never happen is one seat key active in two
-  homes, a fork of (writer, seq); PEER-10 detects that after the fact.
+  homes, a second event at one (writer, seq); PEER-10 refuses that after
+  the fact.
 - **Tests.** A development build reads the value from the file
   `CAIRN_TEST_NODE_IDENTITY` names, as it reads managed policy from
   `CAIRN_TEST_MANAGED_POLICY`; a release build never does.

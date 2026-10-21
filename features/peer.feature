@@ -108,16 +108,19 @@ Feature: Peer network (PEER)
     And no presence hint or typing hint is stored in the record
     And the draft is not sent to the other seat
 
-  @PEER-10 @P2 @I6 @I10 @pending
-  Scenario: a writer that seals two different events at one seq is marked equivocated
+  @PEER-10 @P1 @I6 @I10 @pending
+  Scenario: a second event at one seq is refused, and a writer that sealed two is marked equivocated
     Given an isolated Cairn home
-    And a writer that sealed two different events at seq 42
-    When both events reach the node, from a peer, a backup restore or a room bundle import, or both lie in segments the node holds and "cairn verify" runs
-    Then both events are kept for forensics, the first head seen winning
-    And the writer is marked "equivocated"
+    And a writer with two different events at seq 42, held in segments the node holds, in a backup, in a room bundle or by a peer
+    When "cairn verify" runs, a backup restore or a room bundle import reads them, or a peer's sync brings them
+    Then the later head's segment is refused under REC-21, kept unrewritten for forensics, audited and counted, the first head seen winning
+    And "cairn verify" reports the conflict with the integrity status "refused", and "cairn fork choose" is not offered
+    And while no seal covers both events, the writer is not marked "equivocated"
+    When the writer's key has sealed both events
+    Then both events are kept and the writer is marked "equivocated"
     And the room shows its integrity status as "equivocated"
     And the derived artifacts for that writer stop at the fork until the node's principal chooses which fork to keep with "cairn fork choose", a widening principal act
-    And a fork found in the segments the node already holds, by "cairn verify", a backup restore or a room bundle import, needs no network
+    And the refusal of two events in the segments the node already holds, by "cairn verify" or a backup restore, needs no network
 
   @PEER-11 @P2 @I5 @I6 @pending
   Scenario: erasure and quarantine requests reach every peer signed, and each peer's state is shown
