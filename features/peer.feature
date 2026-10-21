@@ -112,11 +112,12 @@ Feature: Peer network (PEER)
   Scenario: a writer that seals two different events at one seq is marked equivocated
     Given an isolated Cairn home
     And a writer that sealed two different events at seq 42
-    When both events reach the peer
-    Then both events are kept for forensics
+    When both events reach the node, from a peer, a backup restore or a room bundle import, or both lie in segments the node holds and "cairn verify" runs
+    Then both events are kept for forensics, the first head seen winning
     And the writer is marked "equivocated"
     And the room shows its integrity status as "equivocated"
-    And the derived artifacts for that writer stop at the fork until the node's principal chooses which fork to keep as a widening principal act
+    And the derived artifacts for that writer stop at the fork until the node's principal chooses which fork to keep with "cairn fork choose", a widening principal act
+    And a fork found in the segments the node already holds, by "cairn verify", a backup restore or a room bundle import, needs no network
 
   @PEER-11 @P2 @I5 @I6 @pending
   Scenario: erasure and quarantine requests reach every peer signed, and each peer's state is shown
