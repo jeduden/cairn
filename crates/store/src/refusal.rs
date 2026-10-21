@@ -83,9 +83,8 @@ fn parse((writer, first, last, held, offered): Row) -> Result<Fork, StoreError> 
             .and_then(Seq::new)
             .ok_or_else(|| corrupt(format!("fork {what} {n}")))
     };
-    let digest = |text: &str| {
-        Digest::from_hex(text).map_err(|_| corrupt(format!("fork digest {text:?}")))
-    };
+    let digest =
+        |text: &str| Digest::from_hex(text).map_err(|_| corrupt(format!("fork digest {text:?}")));
 
     Ok(Fork {
         writer: WriterId::parse(&writer).map_err(|_| corrupt(format!("fork writer {writer:?}")))?,

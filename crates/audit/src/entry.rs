@@ -174,6 +174,9 @@ pub enum Counter {
     /// The search index leaves out the events of a writer from seq 2^28
     /// on (REC-11, I6).
     SearchIndexSeqBeyondLimit,
+    /// A history held two different events at one (writer, seq): the
+    /// later head was refused, the first kept (PEER-10, REC-21).
+    ForkConflict,
 }
 
 impl Counter {
@@ -225,6 +228,7 @@ impl Counter {
             Self::QueryCancelled => "query_cancelled",
             Self::SearchIndexWriterUnindexed => "search_index_writer_unindexed",
             Self::SearchIndexSeqBeyondLimit => "search_index_seq_beyond_limit",
+            Self::ForkConflict => "fork_conflict",
         }
     }
 }

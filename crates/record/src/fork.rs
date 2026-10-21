@@ -43,8 +43,7 @@ impl fmt::Display for Fork {
 /// node does not hold yet is no conflict.
 #[must_use]
 pub fn find(held: &[Link], offered: &[Link]) -> Vec<Fork> {
-    let held: BTreeMap<Address, Digest> =
-        held.iter().map(|l| (l.header.address, l.hash)).collect();
+    let held: BTreeMap<Address, Digest> = held.iter().map(|l| (l.header.address, l.hash)).collect();
     let mut forks: BTreeMap<WriterId, Fork> = BTreeMap::new();
     for link in offered {
         let address = link.header.address;

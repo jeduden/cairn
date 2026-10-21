@@ -1301,6 +1301,10 @@ fn verify_command(
         Ok(status) => status.lost,
         Err(e) => return failed("verify", &e, stderr),
     };
+    let forks = match store.refused_forks() {
+        Ok(forks) => forks,
+        Err(e) => return failed("verify", &e, stderr),
+    };
     let verified = match verify_record(&home, &store) {
         Ok(verified) => verified,
         Err(e) => return failed("verify", &e, stderr),
@@ -1313,6 +1317,9 @@ fn verify_command(
         Err(e) => Err(Ok(e)),
     };
     let (code, line) = match checked {
+        Ok((r, staged, _)) if !forks.is_empty() => {
+            refused_report(as_json, &r, staged, &forks, stderr)
+        }
         Ok((r, staged, a)) => (EXIT_OK, verified_line(as_json, &r, staged, &a, &lost)),
         Err(Ok(VerifyError::Store(e))) => return failed("verify", &e, stderr),
         Err(Err(e @ AuditError::Broken { .. })) => {
@@ -1381,6 +1388,7 @@ fn verified_line(
             "lost_sources": lost,
             "staged": staged,
             "audit": {"files": a.files, "entries": a.entries},
+            "refused": [],
             "broken": null,
         })
         .to_string();
@@ -1401,6 +1409,36 @@ fn verified_line(
         open_text(&r.open_segments),
         lost_line(lost)
     )
+}
+
+/// What `cairn verify` says of a record whose chains hold but which
+/// refused a second event at one (writer, seq): each fork on `stderr`,
+/// exiting 3, with the integrity status `refused` and the forks as JSON
+/// when asked (PEER-10, VIEW-10). The writer is not marked, and no
+/// choice between forks is offered: only the two digests are shown.
+fn refused_report(
+    as_json: bool,
+    r: &Report,
+    staged: bool,
+    forks: &[store::Fork],
+    stderr: &mut dyn Write,
+) -> (u8, String) {
+    for line in forks::lines(forks) {
+        let _ = writeln!(stderr, "cairn verify: {line}");
+    }
+    if !as_json {
+        return (EXIT_INTEGRITY, String::new());
+    }
+    let line = json!({
+        "integrity": "refused",
+        "writers": r.writers,
+        "events": r.events,
+        "staged": staged,
+        "refused": forks::json(forks),
+        "broken": null,
+    });
+
+    (EXIT_INTEGRITY, line.to_string())
 }
 
 /// What `cairn verify` adds for transcript sources gone before they
@@ -1937,6 +1975,7 @@ pub(crate) fn invalid_layers(command: &str, loaded: &Loaded, stderr: &mut dyn Wr
 
 mod act;
 mod capture;
+pub mod forks;
 mod hook_handlers;
 mod identity_status;
 mod index_gaps;

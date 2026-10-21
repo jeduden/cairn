@@ -50,7 +50,10 @@ fn a_refusal_row_that_does_not_parse_names_what() {
     };
     let digest = Digest::of(&[b"x"]).to_hex();
     let corrupt = |e: StoreError| match e {
-        StoreError::Corrupt { address: None, what } => what,
+        StoreError::Corrupt {
+            address: None,
+            what,
+        } => what,
         other => panic!("not corrupt: {other:?}"),
     };
 

@@ -115,6 +115,7 @@ fn each_counter_of_the_mcp_server_has_its_name() {
             Counter::SearchIndexSeqBeyondLimit,
             "search_index_seq_beyond_limit",
         ),
+        (Counter::ForkConflict, "fork_conflict"),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

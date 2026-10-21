@@ -900,6 +900,127 @@ fn verify_exits_3_naming_where_the_chain_breaks() {
     );
 }
 
+/// Brings a second history of the writer of `p`'s transcript into its
+/// home: a copy of that writer's log that disagrees from seq 2 on.
+/// Returns the writer and what the refusal said.
+fn refuse_a_disagreeing_copy(p: &Process) -> (String, crate::forks::Refused) {
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let store = Store::open(&home.store()).unwrap();
+    let writer = store
+        .writers()
+        .unwrap()
+        .into_iter()
+        .max_by_key(|w| store.log(*w).unwrap().len())
+        .unwrap();
+    let mut copy: Vec<record::chain::Link> = store
+        .log(writer)
+        .unwrap()
+        .into_iter()
+        .map(|s| s.link)
+        .collect();
+    for link in copy.iter_mut().skip(1) {
+        link.hash = record::digest::Digest::of(&[b"another history"]);
+    }
+    drop(store);
+    let audit = |o: &audit::entry::Occurrence| ctx_audit(p, o);
+    let refused = crate::forks::refuse(&home, &copy, "restore", &mut { audit }).unwrap();
+
+    (writer.to_string(), refused)
+}
+
+fn ctx_audit(p: &Process, o: &audit::entry::Occurrence) -> bool {
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    Log::new(home.audit()).append(o, p.now).is_ok()
+}
+
+#[test]
+fn verify_exits_3_reporting_a_refused_fork_by_writer_range_and_digests() {
+    let p = Process::new();
+    let path = p.transcript("a\nb\nc\n");
+    p.invoke(&["ingest", "--path", &path], &DEV);
+    let before = p.invoke(&["verify"], &DEV);
+    assert_eq!(before.0, EXIT_OK);
+    let (writer, refused) = refuse_a_disagreeing_copy(&p);
+    let fork = refused.forks[0];
+
+    let (code, out, err) = p.invoke(&["verify"], &DEV);
+    let (json_code, json, _) = p.invoke(&["verify", "--json"], &DEV);
+
+    assert_eq!((code, out.as_str()), (EXIT_INTEGRITY, ""));
+    assert_eq!(
+        err,
+        format!(
+            "cairn verify: refused: writer {writer} holds two events at seq 2 to {}: {} held, {} offered\n",
+            fork.last, fork.held, fork.offered
+        )
+    );
+    assert!(!err.contains("fork choose"), "{err}");
+    assert_eq!(json_code, EXIT_INTEGRITY);
+    let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(v["integrity"], "refused");
+    assert_eq!(v["broken"], serde_json::Value::Null);
+    assert_eq!(
+        v["refused"],
+        serde_json::json!([{
+            "writer": writer,
+            "first": 2,
+            "last": fork.last.get(),
+            "held": fork.held.to_hex(),
+            "offered": fork.offered.to_hex(),
+        }])
+    );
+}
+
+#[test]
+fn a_refused_fork_is_audited_counted_and_leaves_the_record_as_it_was() {
+    let p = Process::new();
+    let path = p.transcript("a\nb\nc\n");
+    p.invoke(&["ingest", "--path", &path], &DEV);
+    let digest = |p: &Process| {
+        let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+        let store = Store::open(&home.store()).unwrap();
+        store
+            .writers()
+            .unwrap()
+            .into_iter()
+            .map(|w| store.log(w).unwrap())
+            .collect::<Vec<_>>()
+    };
+    let held = digest(&p);
+
+    refuse_a_disagreeing_copy(&p);
+
+    assert_eq!(digest(&p), held);
+    let audit = audit_text(&p);
+    assert_eq!(
+        audit.matches("\"counter\":\"fork_conflict\"").count(),
+        1,
+        "{audit}"
+    );
+    let (_, status, _) = p.invoke(&["status", "--json"], &DEV);
+    let v: serde_json::Value = serde_json::from_str(&status).unwrap();
+    assert_eq!(v["counters"]["fork_conflict"]["total"], 1);
+}
+
+#[test]
+fn verify_names_a_broken_chain_before_a_refused_fork() {
+    let p = Process::new();
+    let path = p.transcript("a\nb\nc\n");
+    p.invoke(&["ingest", "--path", &path], &DEV);
+    refuse_a_disagreeing_copy(&p);
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute(
+        "UPDATE events SET provenance = 'user' WHERE kind = 'unparsed_line' AND seq = 2",
+        [],
+    )
+    .unwrap();
+
+    let (code, _, err) = p.invoke(&["verify"], &DEV);
+
+    assert_eq!(code, EXIT_INTEGRITY);
+    assert!(err.starts_with("cairn verify: chain broken at"), "{err}");
+}
+
 #[test]
 fn verify_without_a_store_or_with_a_failing_one_fails() {
     let p = Process::new();
