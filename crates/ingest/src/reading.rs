@@ -142,8 +142,22 @@ fn gaps(
 ) -> (Vec<store::IndexGap>, Option<String>) {
     match found {
         Ok(gaps) => (gaps, None),
-        Err(e) => (Vec::new(), Some(e.to_string())),
+        Err(e) => (Vec::new(), Some(with_causes(&e))),
     }
+}
+
+/// `error` and each cause behind it, joined, so the cause chain survives
+/// the string the caller logs.
+fn with_causes(error: &dyn std::error::Error) -> String {
+    let mut said = error.to_string();
+    let mut cause = error.source();
+    while let Some(c) = cause {
+        said.push_str(": ");
+        said.push_str(&c.to_string());
+        cause = c.source();
+    }
+
+    said
 }
 
 /// A transcript source's names: its path as the store keys it, its

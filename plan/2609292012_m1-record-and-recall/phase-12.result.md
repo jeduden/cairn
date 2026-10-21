@@ -33,11 +33,9 @@ Outcome:
   BM25 over the newest 2,000 matches after the filters, each further
   hit of one writer damped.
 - The search index is a derived artifact (I10) whose row ids derive from
-  the address. ENG-08's property holds over 32 seeded records in either
-  arrival order: the index kept per append, a rebuild and the other
-  order share one canonical digest.
-- The `query_parser` fuzz target ran 3.4M inputs in 60 s without a
-  crash, from eight committed seeds.
+  the address. ENG-08's property holds over 32 seeded records: either
+  arrival order and a rebuild share one canonical digest.
+- The `query_parser` fuzz target ran 3.4M inputs without a crash.
 - NFR-03 is benchmarked: `search_events` is 11 ms median over 2,000
   lines; on 1M events 166 ms p95 at worst (`search_latency.rs`).
 - Frozen with evidence, in their own commit: REC-11's 1 MiB cap,
@@ -45,12 +43,9 @@ Outcome:
 
 Inherited:
 
-- Crate `search`: `compile`, `Request`, `rank::{rank, Hit}`.
-- `store::search_index`, `Store::{search, rebuild_search_index,
-  search_index_digest, search_index_unindexed_writers, preview}`;
-  `Item::score`; `Server::take_cancelled`.
-- `Context::query_deadline`, a debug build's seam; benchmark
-  `search_events`; steps in `record_search.rs`.
+- Crate `search`; `store::search_index` and `Store::search`;
+  `Server::take_cancelled`; `Context::query_deadline`, a debug build's
+  seam; benchmark `search_events`; steps in `record_search.rs`.
 
 For the stakeholder:
 
@@ -94,3 +89,7 @@ Parked:
   M7.
 
 Phase 13 needs `score` in its golden files, RCL-05's scopes and RCL-07.
+
+- `cairn::forks::refuse` and `fork_conflict` (PEER-10, REC-21) are
+  groundwork: no M1 path brings two histories together. ADM-06's restore
+  (M3), REC-23's import (M9) and a peer's sync (M8) will call it.

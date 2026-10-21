@@ -22,6 +22,17 @@ fn a_failed_lookup_of_the_gaps_is_said_beside_the_ingest_not_as_its_failure() {
 }
 
 #[test]
+fn an_error_is_said_with_each_cause_behind_it() {
+    let io = std::io::Error::new(std::io::ErrorKind::NotFound, "no such file");
+    let failed = store::StoreError::Io(io);
+
+    let said = with_causes(&failed);
+
+    assert!(said.starts_with(&failed.to_string()), "{said}");
+    assert!(said.ends_with("no such file"), "{said}");
+}
+
+#[test]
 fn a_transaction_holds_one_writer_s_consecutive_lines() {
     let (a, b) = (writer(1), writer(2));
     let ends = [
