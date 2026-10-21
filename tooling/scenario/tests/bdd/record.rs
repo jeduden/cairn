@@ -101,6 +101,7 @@ fn two_writers(w: &mut World, count: usize) -> Result<(), String> {
                 commitment_key: CommitmentKey::from_bytes(
                     key::random::draw(&mut OsEntropy).map_err(|e| e.to_string())?,
                 ),
+                transcript_timestamp: None,
             };
             store.append(*writer, &[new]).map_err(|e| e.to_string())?;
             times.push(time);
@@ -115,15 +116,73 @@ fn two_writers(w: &mut World, count: usize) -> Result<(), String> {
 /// given; the outcome is the one `the command exits` and the steps after
 /// it read.
 pub fn run_core(w: &mut World, args: &[&str], input: Option<&[u8]>) -> Result<(), String> {
-    let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
+    run_core_with(w, args, input, &[])
+}
+
+/// [`run_core`] with `extra` set in this one command's environment.
+pub fn run_core_with(
+    w: &mut World,
+    args: &[&str],
+    input: Option<&[u8]>,
+    extra: &[(&str, &str)],
+) -> Result<(), String> {
     let exe = testkit::core_executable()?;
-    let set = environment(w);
+    run_program_with(w, &exe, args, input, extra)
+}
+
+/// [`run_core_with`] starting the release build of the core, which
+/// ignores every development seam (NFR-02): a step that holds the core
+/// to a time budget starts it this way, so it times the build users run.
+pub fn run_release_core(w: &mut World, args: &[&str], input: Option<&[u8]>) -> Result<(), String> {
+    let exe = testkit::release_core_executable()?;
+    run_program_with(w, &exe, args, input, &[])
+}
+
+/// [`run_core_with`] starting `program`, such as a script standing in
+/// for a harness that starts the core, in the core's confinement.
+pub fn run_program_with(
+    w: &mut World,
+    exe: &std::path::Path,
+    args: &[&str],
+    input: Option<&[u8]>,
+    extra: &[(&str, &str)],
+) -> Result<(), String> {
+    let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
+    let mut set = environment(w);
+    set.extend(
+        extra
+            .iter()
+            .map(|(k, v)| ((*k).to_owned(), (*v).to_owned())),
+    );
     let env: Vec<(&str, &str)> = set.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
     let out = core
-        .run_in(&exe, args, &w.home, &env, input)
+        .run_in(exe, args, &w.home, &env, input)
         .map_err(|e| e.to_string())?;
     rec(w).ran = Some(out);
     Ok(())
+}
+
+/// Starts the built core with `args` as [`run_core_with`] does, with no
+/// input, and kills it with everything it started once `after` passed,
+/// as a harness stops a hook handler at its harness timeout. Returns
+/// whether it was still running.
+pub fn run_core_killed(
+    w: &mut World,
+    args: &[&str],
+    extra: &[(&str, &str)],
+    after: std::time::Duration,
+) -> Result<bool, String> {
+    let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
+    let exe = testkit::core_executable()?;
+    let mut set = environment(w);
+    set.extend(
+        extra
+            .iter()
+            .map(|(k, v)| ((*k).to_owned(), (*v).to_owned())),
+    );
+    let env: Vec<(&str, &str)> = set.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    core.run_killed(&exe, args, &w.home, &env, after)
+        .map_err(|e| e.to_string())
 }
 
 /// [`run_core`] with a pseudo-terminal as the core's standard input and
@@ -144,16 +203,29 @@ pub fn run_core_at_terminal(w: &mut World, args: &[&str]) -> Result<(), String> 
 
 /// The environment a command starts with beside `HOME` and
 /// `CAIRN_HOME`: managed policy read from inside the scenario's home,
-/// never the machine's (ENG-14), then what the steps set.
-fn environment(w: &mut World) -> Vec<(String, String)> {
+/// never the machine's (ENG-14), a hook budget no development build
+/// reaches on a loaded machine unless a step sets the hook's own
+/// (NFR-02), then what the steps set.
+pub fn environment(w: &mut World) -> Vec<(String, String)> {
     let managed = w.home.join(MANAGED_POLICY).display().to_string();
-    let mut env = vec![("CAIRN_TEST_MANAGED_POLICY".to_owned(), managed)];
+    let mut env = vec![
+        ("CAIRN_TEST_MANAGED_POLICY".to_owned(), managed),
+        (HOOK_BUDGET.to_owned(), LENIENT_BUDGET_MS.to_owned()),
+    ];
     env.extend(rec(w).env.iter().cloned());
     env
 }
 
 /// Where a scenario's managed policy lies, in its home.
 pub const MANAGED_POLICY: &str = "managed_policy.toml";
+
+/// The development build's seam for a hook budget in place of each
+/// hook's own, in milliseconds.
+pub const HOOK_BUDGET: &str = "CAIRN_TEST_HOOK_BUDGET_MS";
+
+/// The hook budget every scenario's hook handler gets unless a step sets
+/// another.
+const LENIENT_BUDGET_MS: &str = "20000";
 
 /// Sets `key` to `value` in the environment of every command the
 /// scenario starts from now on.

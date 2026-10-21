@@ -91,17 +91,17 @@ fn every_failed_layer_and_ignored_key_has_its_occurrence() {
     assert_eq!(details(&p, "managed_policy_invalid").len(), 1);
     assert_eq!(
         details(&p, "repository_configuration_key_ignored"),
-        ["ignored repository configuration key node.deployment_mode"]
+        ["rejected repository setting node.deployment_mode"]
     );
     assert_eq!(
         details(&p, "trust_policy_key_ignored"),
-        ["ignored trust policy key in repository configuration for web"]
+        ["repository configuration: rejected trust override for web"]
     );
     assert_eq!(
         details(&q, "trust_policy_key_ignored"),
         [
-            "ignored trust policy key in configuration for file",
-            "ignored trust policy key in managed policy for mcp:github",
+            "configuration: rejected trust override for file",
+            "managed policy: rejected trust override for mcp:github",
         ]
     );
 }
@@ -193,12 +193,19 @@ pub(crate) fn ctx_of(p: &Process) -> Context<'static> {
         home: None,
         home_id: None,
         hook_panics: false,
+        hook_hangs: false,
         terminal: true,
         working_dir: Some(p.dir.path().to_path_buf()),
         managed_policy: p.dir.path().join("managed").join("managed_policy.toml"),
+        node_identity: None,
         os_user: OsUser::Known(u32::MAX),
         input,
         clock: &|| 0,
+        attended: false,
+        hook_budget: None,
+        ancestry: || None,
+        live_limit: None,
+        query_deadline: None,
     }
 }
 
@@ -216,7 +223,7 @@ fn recorded_acts_are_none_while_the_first_start_is_unfinished() {
     let q = Process::new();
     q.invoke(&["ingest", "--path", &q.transcript("a\n")], &DEV);
     std::fs::remove_file(q.cairn_home().join("keys/device.key")).unwrap();
-    std::fs::create_dir_all(p_home(&q).genesis()).unwrap();
+    std::fs::write(p_home(&q).staged(), "change").unwrap();
     assert_eq!(recorded_acts(&p_home(&q)), Ok(Vec::new()));
 }
 

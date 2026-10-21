@@ -14,6 +14,7 @@ use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub mod boundary;
+pub mod relative;
 
 /// How many names a [`TempDir`] tries before it gives up.
 const ATTEMPTS: u32 = 1000;
@@ -71,6 +72,68 @@ pub fn place_transcript(home: &Path, source: &Path) -> io::Result<PathBuf> {
 pub fn core_executable() -> Result<PathBuf, String> {
     let test = std::env::current_exe().map_err(|e| format!("locate the running test: {e}"))?;
     sibling_executable(&test, "cairn")
+}
+
+/// The environment variable that names the release build of the core, a
+/// path, when it is not at `target/release/cairn` of the checkout.
+pub const RELEASE_CORE_VAR: &str = "CAIRN_RELEASE_CORE";
+
+/// The release build of the `cairn` core, which every step that holds
+/// the core to a time budget runs (NFR-02): a development build is
+/// slower by an order of magnitude and flakes on a loaded runner. It is
+/// the path `CAIRN_RELEASE_CORE` names, else `target/release/cairn` of
+/// the checkout; the test run never builds it.
+///
+/// # Errors
+///
+/// Fails, saying how to build it, when it is not there.
+pub fn release_core_executable() -> Result<PathBuf, String> {
+    release_executable(std::env::var_os(RELEASE_CORE_VAR), &repo_root(), "cairn")
+}
+
+/// The environment variable that names the release build of the
+/// calibration workload, a path, when it is not at
+/// `target/release/calibrate` of the checkout.
+pub const CALIBRATE_VAR: &str = "CAIRN_CALIBRATE";
+
+/// The release build of the `calibrate` workload, the reference the
+/// hook budget rows measure a hook handler against (NFR-02): the path
+/// `CAIRN_CALIBRATE` names, else `target/release/calibrate` of the
+/// checkout; the test run never builds it.
+///
+/// # Errors
+///
+/// Fails, saying how to build it, when it is not there.
+pub fn calibrate_executable() -> Result<PathBuf, String> {
+    release_executable(std::env::var_os(CALIBRATE_VAR), &repo_root(), "calibrate")
+}
+
+/// The release build of `name`: `named` when given, else under `root`.
+fn release_executable(
+    named: Option<std::ffi::OsString>,
+    root: &Path,
+    name: &str,
+) -> Result<PathBuf, String> {
+    let path = named.map_or_else(
+        || {
+            root.join("target/release")
+                .join(format!("{name}{}", std::env::consts::EXE_SUFFIX))
+        },
+        PathBuf::from,
+    );
+    if path.is_file() {
+        Ok(path)
+    } else {
+        let var = if name == "calibrate" {
+            CALIBRATE_VAR
+        } else {
+            RELEASE_CORE_VAR
+        };
+        Err(format!(
+            "no release {name} executable at {}: build it first, with cargo build --release -p {name}, or name it in {var}",
+            path.display()
+        ))
+    }
 }
 
 /// The executable `name` in the directory above the one holding `test`.

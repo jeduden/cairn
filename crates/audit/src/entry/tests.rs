@@ -57,6 +57,69 @@ fn each_kind_and_counter_has_its_name() {
             Counter::IngestRefusedSettingsInvalid,
             "ingest_refused_settings_invalid",
         ),
+        (Counter::EventsUnparsed, "events_unparsed"),
+        (Counter::FormatDrift, "format_drift"),
+        (Counter::NodeIdentityChanged, "node_identity_changed"),
+        (Counter::DeviceKeyMissing, "device_key_missing"),
+        (Counter::KeyStoreUnavailable, "key_store_unavailable"),
+        (
+            Counter::NewTranscriptGeneration,
+            "new_transcript_generation",
+        ),
+        (Counter::RepeatConflicts, "repeat_conflicts"),
+        (Counter::RepeatOwnerChosen, "repeat_owner_chosen"),
+        (Counter::RepeatHeld, "repeat_held"),
+        (Counter::RepeatReleased, "repeat_released"),
+        (Counter::TranscriptSourceLost, "transcript_source_lost"),
+        (Counter::HookInputRejected, "hook_input_rejected"),
+        (Counter::HookBudgetExceeded, "hook_budget_exceeded"),
+        (Counter::HookFailed, "hook_failed"),
+        (Counter::HookUnfinished, "hook_unfinished"),
+        (Counter::SessionBindingNotTaken, "session_binding_not_taken"),
+        (
+            Counter::PromptCommitmentDropped,
+            "prompt_commitment_dropped",
+        ),
+        (Counter::PromptMatchConflicts, "prompt_match_conflicts"),
+        (
+            Counter::HarnessSessionNotAttended,
+            "harness_session_not_attended",
+        ),
+    ];
+    for (counter, name) in counters {
+        assert_eq!(counter.as_str(), name);
+    }
+}
+
+#[test]
+fn each_counter_of_the_mcp_server_has_its_name() {
+    let counters = [
+        (Counter::IngestRemainderLeft, "ingest_remainder_left"),
+        (
+            Counter::WitnessedRepeatRecorded,
+            "witnessed_repeat_recorded",
+        ),
+        (
+            Counter::ToolCallWithoutToolUseId,
+            "tool_call_without_tool_use_id",
+        ),
+        (Counter::ToolCallRunNotFound, "tool_call_run_not_found"),
+        (Counter::ToolCallRunAmbiguous, "tool_call_run_ambiguous"),
+        (Counter::LiveIngestFailed, "live_ingest_failed"),
+        (Counter::QueryCancelled, "query_cancelled"),
+        (
+            Counter::SearchIndexWriterUnindexed,
+            "search_index_writer_unindexed",
+        ),
+        (
+            Counter::SearchIndexSeqBeyondLimit,
+            "search_index_seq_beyond_limit",
+        ),
+        (Counter::ForkConflict, "fork_conflict"),
+        (
+            Counter::SearchIndexGapLookupFailed,
+            "search_index_gap_lookup_failed",
+        ),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);
@@ -79,7 +142,7 @@ const IGNORED: Occurrence = Occurrence::Keyed {
     kind: Kind::Rejected,
     counter: Counter::RepositoryConfigurationKeyIgnored,
     operation: "ingest",
-    detail: "ignored repository configuration key",
+    detail: "rejected repository setting",
     key: "node.deployment_mode",
 };
 
@@ -92,10 +155,7 @@ fn a_keyed_entry_names_its_key_after_the_detail() {
         Some("repository_configuration_key_ignored")
     );
     assert_eq!(e.operation, "ingest");
-    assert_eq!(
-        e.detail,
-        "ignored repository configuration key node.deployment_mode"
-    );
+    assert_eq!(e.detail, "rejected repository setting node.deployment_mode");
 }
 
 #[test]
@@ -104,7 +164,7 @@ fn a_keyed_entry_never_holds_a_key_no_settings_key_spells() {
         kind: Kind::Rejected,
         counter: Counter::RepositoryConfigurationKeyIgnored,
         operation: "ingest",
-        detail: "ignored repository configuration key",
+        detail: "rejected repository setting",
         key,
     };
     let long = "a".repeat(161);
@@ -113,7 +173,7 @@ fn a_keyed_entry_never_holds_a_key_no_settings_key_spells() {
         let e = Entry::next(&occurrence, 1, 5, Digest::ZERO).unwrap();
         assert_eq!(
             e.detail,
-            "ignored repository configuration key a key no settings key spells"
+            "rejected repository setting a key no settings key spells"
         );
     }
     let plain = keyed("trust_policy.mcp:git-hub*");

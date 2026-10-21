@@ -15,13 +15,13 @@ cargo.binstall = false
 "aqua:sigstore/cosign" = "3.0.6"
 
 [tasks.test]
-run = "cargo test --workspace --locked"
+run = ["cargo build --release --locked -p cairn -p calibrate", "cargo test --workspace --locked"]
 
 [tasks.lint]
 run = ["cargo fmt --all --check", "cargo clippy --workspace --all-targets --locked -- -D warnings", "taplo fmt --check", "taplo lint", "mdsmith check .", "zizmor .github"]
 
 [tasks.supply-chain]
-run = ["cargo deny check licenses bans sources", "cargo audit"]
+run = ["cargo deny check licenses bans sources", "cargo audit", "cargo deny --manifest-path fuzz/Cargo.toml check licenses bans sources", "cargo audit --file fuzz/Cargo.lock"]
 
 [tasks.coverage]
 run = "cargo run --locked -p coverage"

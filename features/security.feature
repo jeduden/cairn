@@ -40,7 +40,7 @@ Feature: Security (SEC)
     And the error states that the home id does not match
     And no store file is opened
 
-  @SEC-04 @P0 @I9 @pending
+  @SEC-04 @P0 @I9
   Scenario Outline: the code that builds a search query treats caller text as literal terms within bounds
     Given an isolated Cairn home
     And a store with 1M events
@@ -129,8 +129,9 @@ Feature: Security (SEC)
     And every credential of another component is resolved per use from an explicit secret reference and loaded only by the component that uses it, never by a core process
     And a run ingested by "cairn ingest --path" has a seat key that ingest minted, kept like the device key in a file only the person's OS user can read
     And the seat "cairn ingest" starts beside a witnessed run's run seat has a seat key the core keeps the same way
-    When the harness hands the run-seat private keys of a harness session's main run and of its subagent's run to that harness session's MCP server at launch
-    Then each key lives only in that server's memory, and no file, log, event, backup or output carries either
+    When a harness session's MCP server mints the run-seat private keys of the session's main run and of its subagent's run
+    Then each key lives only in that server's memory, and no file, log, event, backup, environment variable, hook input or output carries either
+    And nothing is handed to that server at launch
 
   @SEC-11 @P0 @I2 @I7 @pending
   Scenario Outline: repository configuration may only tighten security settings
@@ -201,7 +202,7 @@ Feature: Security (SEC)
     Then no telemetry, crash-reporting, or update-check code or dependency is found
     And the full test suite, with each component confined to its boundary, records no connection opened or tried outside that boundary
 
-  @SEC-16 @P0 @I6 @I9 @pending
+  @SEC-16 @P0 @I6 @I9
   Scenario: a hook input that fails schema validation is rejected fail-open and audited
     Given an isolated Cairn home
     When the hook "SessionStart" runs with a hook input whose "session_id" is a number

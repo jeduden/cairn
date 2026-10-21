@@ -37,10 +37,20 @@ fn cairn(home: &Path, args: &[&str]) -> Output {
         .unwrap_or_else(|e| panic!("{e}"))
 }
 
+/// Runs the `UserPromptSubmit` hook handler on `input`, with a hook
+/// budget the development build's seam sets long enough for reading a
+/// 1 MiB input under the confinement's trace.
 #[track_caller]
 fn hook(home: &Path, input: &[u8]) -> Output {
+    let env = [("CAIRN_TEST_HOOK_BUDGET_MS", "20000")];
     core()
-        .run_with_input(Path::new(CORE), &["hook", "UserPromptSubmit"], home, input)
+        .run_in(
+            Path::new(CORE),
+            &["hook", "UserPromptSubmit"],
+            home,
+            &env,
+            Some(input),
+        )
         .unwrap_or_else(|e| panic!("{e}"))
 }
 

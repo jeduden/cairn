@@ -27,7 +27,7 @@ use serde_json::Value;
 /// its reach when it joined (plan 2609292012, phase 1). `cargo
 /// metadata` resolves every platform and unifies features across the
 /// workspace, so the list holds a few crates a given build leaves out.
-const REACHABLE: [&str; 67] = [
+const REACHABLE: [&str; 77] = [
     // The core's own library crates, each with the same clippy bans.
     "administration",
     "allowed_root",
@@ -38,10 +38,14 @@ const REACHABLE: [&str; 67] = [
     "ingest",
     "key",
     "mcp",
+    "platform",
+    "provenance",
     "record",
     "redaction",
+    "search",
     "store",
     "structured_log",
+    "transcript",
     // SHA-256 (ADR-2610142218): pure computation over bytes, with its
     // digest traits and the CPU feature probe of its fast paths.
     "sha2",
@@ -71,6 +75,18 @@ const REACHABLE: [&str; 67] = [
     "getrandom",
     "libc",
     "r-efi",
+    // The key stores (ADR-2610171300): the macOS Keychain through
+    // Security.framework and Core Foundation, items in the user's
+    // keychain and the types that carry them, never a socket or a
+    // program start; on Windows, DPAPI's declarations and the link
+    // stubs windows-sys calls them through, reached only from the
+    // platform shim.
+    "security-framework",
+    "security-framework-sys",
+    "core-foundation",
+    "core-foundation-sys",
+    "windows-sys",
+    "windows-link",
     // The store (ADR-2610110553): SQLite compiled in with extension
     // loading compiled out, so it opens files and no socket, and starts
     // no program.

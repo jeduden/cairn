@@ -1,10 +1,16 @@
 //! The registry: every drift a check that keeps the records in step
 //! exists to catch.
 
-use crate::{Case, Check, Injection, cargo_test, clippy, mdsmith, scenario, taplo_fmt, taplo_lint};
+use crate::{
+    Case, Check, Injection, cargo_lib_test, cargo_test, clippy, mdsmith, scenario, taplo_fmt,
+    taplo_lint,
+};
 
 /// The dependency decision the ENG-18 and ENG-26 cases drift.
 const TEST_STACK: &str = "docs/adr/ADR-2610142221-json-serde-json.md";
+
+/// The decision the fuzz workspace's dependency rests on.
+const FUZZING: &str = "docs/adr/ADR-2610171200-fuzzing-libfuzzer-sys.md";
 
 /// The decision [`TEST_STACK`] superseded.
 const OLD_TEST_STACK: &str = "docs/adr/ADR-2610101913-test-stack-after-go.md";
@@ -71,6 +77,7 @@ pub fn cases() -> Vec<Case> {
         benchmark_cases(),
         isolation_cases(),
         instruction_cases(),
+        transcript_contract_cases(),
     ]
     .concat()
 }
@@ -142,6 +149,24 @@ fn dependency_cases() -> Vec<Case> {
             ),
             scenario("ENG-18"),
             "direct dependencies linked into a shipped executable, want at most 2",
+        ),
+        case(
+            "a fuzz dependency no ADR justifies",
+            "ENG-18",
+            Injection::replace(FUZZING, "| `libfuzzer-sys` |", "| `libfuzzer_sys` |"),
+            scenario("ENG-18"),
+            "libfuzzer-sys is named by 0 accepted ADRs",
+        ),
+        case(
+            "a license beyond the allow-list with no exception for its crate",
+            "ENG-18",
+            Injection::replace(
+                "deny.toml",
+                r#"  { crate = "libfuzzer-sys", allow = ["NCSA"] },"#,
+                "",
+            ),
+            scenario("ENG-18"),
+            r#"libfuzzer-sys is licensed "(MIT OR Apache-2.0) AND NCSA", not on the allow-list"#,
         ),
     ]
 }
@@ -814,7 +839,7 @@ fn core_wait_cases() -> Vec<Case> {
                 "checkout",
                 "no_product_crate_keeps_mutable_global_state",
             ),
-            "crates/cairn/src/lib.rs:15: mutable global state: pub static SEQ",
+            "crates/cairn/src/lib.rs:16: mutable global state: pub static SEQ",
         ),
     ]
 }
@@ -869,7 +894,11 @@ fn ci_gate_cases() -> Vec<Case> {
         case(
             "CI no longer running cargo-audit",
             "the_ci_workflow_gates_on_the_static_checks",
-            Injection::replace(CI, "      - run: cargo audit\n", ""),
+            Injection::replace(
+                CI,
+                "      - run: cargo audit\n      - run: cargo audit --file fuzz/Cargo.lock\n",
+                "",
+            ),
             gates(),
             "no CI job runs cargo-audit: cargo audit",
         ),
@@ -916,6 +945,17 @@ fn static_analysis_cases() -> Vec<Case> {
             Injection::replace("crates/cairn/Cargo.toml", "[lints]\nworkspace = true\n", ""),
             unsafe_ban(),
             "crate crates/cairn neither inherits the workspace lints nor forbids unsafe code in src/lib.rs",
+        ),
+        case(
+            "the unsafe shim no longer denying unsafe code",
+            "every_crate_forbids_unsafe_code",
+            Injection::replace(
+                "crates/platform/Cargo.toml",
+                "unsafe_code = \"deny\"",
+                "unsafe_code = \"allow\"",
+            ),
+            unsafe_ban(),
+            "crate crates/platform, the one unsafe shim, does not deny unsafe code in its own lints",
         ),
         case(
             "the workspace lints no longer forbidding unsafe code",
@@ -1023,6 +1063,17 @@ fn complexity_cases() -> Vec<Case> {
             Injection::replace("Cargo.toml", "too_many_lines = \"deny\"\n", ""),
             gate(),
             "the workspace lints do not deny clippy::too_many_lines",
+        ),
+        case(
+            "the unsafe shim no longer denying too_many_lines",
+            GATE,
+            Injection::replace(
+                "crates/platform/Cargo.toml",
+                "too_many_lines = \"deny\"\n",
+                "",
+            ),
+            gate(),
+            "crate crates/platform, the one unsafe shim, does not deny clippy::too_many_lines",
         ),
         case(
             "a product crate's clippy.toml raising a complexity ceiling",
@@ -1456,6 +1507,90 @@ fn protection_cases() -> Vec<Case> {
     ]
 }
 
+/// The drifts the release-build gate exists to catch: the benchmark
+/// job building or running the suite in debug, and the NFR-02 budget row
+/// timing the development core.
+/// The drifts of the calibration workload the NFR-02 hook budget rows
+/// measure against: a constant, and its mixing without a constant.
+fn calibration_cases() -> Vec<Case> {
+    const FROZEN: &str = "the_calibration_workload_is_frozen";
+    const SOURCE: &str = "tooling/calibrate/src/lib.rs";
+    vec![
+        case(
+            "the calibration workload's mixing rounds changed",
+            FROZEN,
+            Injection::replace(
+                SOURCE,
+                "pub const MIX_ROUNDS: u64 = 1_200_000;",
+                "pub const MIX_ROUNDS: u64 = 1_000_000;",
+            ),
+            cargo_test("engineering", "benchmark_gate", FROZEN),
+            "the calibration mixing rounds are 1000000, not the recorded 1200000",
+        ),
+        case(
+            "the calibration workload's mixing changed without a constant",
+            FROZEN,
+            Injection::replace(SOURCE, "x ^= x >> 27;", "x ^= x >> 28;"),
+            cargo_test("engineering", "benchmark_gate", FROZEN),
+            "the calibration workload's source hashes to",
+        ),
+    ]
+}
+
+fn release_budget_cases() -> Vec<Case> {
+    const CI: &str = ".github/workflows/ci.yml";
+    const RELEASE: &str = "benchmarks_and_timed_steps_run_release_builds";
+    vec![
+        case(
+            "the benchmark job building the suite in debug",
+            RELEASE,
+            Injection::replace(
+                CI,
+                "cargo build --release --locked -p benchmark -p cairn",
+                "cargo build --locked -p benchmark -p cairn",
+            ),
+            cargo_test("engineering", "benchmark_gate", RELEASE),
+            "builds the benchmark suite without --release",
+        ),
+        case(
+            "the benchmark pointed at a debug core",
+            RELEASE,
+            Injection::replace(
+                CI,
+                "--core \"$head/cairn\"",
+                "--core \"$GITHUB_WORKSPACE/target/debug/cairn\"",
+            ),
+            cargo_test("engineering", "benchmark_gate", RELEASE),
+            "points the benchmark at a debug build",
+        ),
+        case(
+            "the NFR-02 budget row timing the development core",
+            RELEASE,
+            Injection::replace(
+                "tooling/scenario/tests/bdd/non_functional.rs",
+                "run_release_core(&mut w, &[\"hook\", &hook], Some(input.as_bytes()))?;",
+                "run_core_with(&mut w, &[\"hook\", &hook], Some(input.as_bytes()), &[])?;",
+            ),
+            cargo_test("engineering", "benchmark_gate", RELEASE),
+            "reads a clock and starts the development core with run_core_with(",
+        ),
+        case(
+            "the NFR-02 relative check letting a hook slowed against the reference through",
+            "a_hook_made_slow_against_the_reference_fails_the_check",
+            Injection::replace(
+                "tooling/testkit/src/relative.rs",
+                "if own <= base * u128::from(limit) {",
+                "if own <= base * u128::from(limit) * 1_000 {",
+            ),
+            cargo_lib_test(
+                "testkit",
+                "relative::tests::a_hook_made_slow_against_the_reference_fails_the_check",
+            ),
+            "a_hook_made_slow_against_the_reference_fails_the_check",
+        ),
+    ]
+}
+
 /// The drifts ENG-15's gate tests exist to catch while its scenario is
 /// pending: an NFR id ENG-15 names dropped from the benchmark suite's
 /// registry, and the benchmark job no longer gating CI.
@@ -1464,63 +1599,68 @@ fn benchmark_cases() -> Vec<Case> {
     const CI: &str = ".github/workflows/ci.yml";
     const REGISTERED: &str = "the_benchmark_suite_registers_every_nfr_id_eng_15_names";
     const GATED: &str = "ci_gates_on_the_benchmark_job";
-    vec![
-        case(
-            "an NFR id ENG-15 names dropped from the benchmark suite",
-            REGISTERED,
-            Injection::replace(
-                SUITE,
-                "requirement: \"NFR-04\",",
-                "requirement: \"NFR-40\",",
+    [
+        release_budget_cases(),
+        calibration_cases(),
+        vec![
+            case(
+                "an NFR id ENG-15 names dropped from the benchmark suite",
+                REGISTERED,
+                Injection::replace(
+                    SUITE,
+                    "requirement: \"NFR-04\",",
+                    "requirement: \"NFR-40\",",
+                ),
+                cargo_test("engineering", "benchmark_gate", REGISTERED),
+                "NFR-04 has no benchmark of real code and is not declared awaiting one",
             ),
-            cargo_test("engineering", "benchmark_gate", REGISTERED),
-            "NFR-04 has no benchmark of real code and is not declared awaiting one",
-        ),
-        case(
-            "the benchmark job no longer running the gate",
-            GATED,
-            Injection::replace(CI, "\"$head/benchmark\" gate --base", "true --base"),
-            cargo_test("engineering", "benchmark_gate", GATED),
-            "job benchmark does not run",
-        ),
-        case(
-            "the benchmark job left out of the CI aggregator",
-            GATED,
-            Injection::replace(CI, ", benchmark", ""),
-            cargo_test("engineering", "benchmark_gate", GATED),
-            "job ci does not need benchmark",
-        ),
-        case(
-            "SQLite built with extension loading",
-            "sqlite_is_built_without_extension_loading",
-            Injection::replace(
-                ".cargo/config.toml",
-                "LIBSQLITE3_FLAGS = {",
-                "UNUSED_SQLITE_FLAGS = {",
+            case(
+                "the benchmark job no longer running the gate",
+                GATED,
+                Injection::replace(CI, "\"$head/benchmark\" gate --base", "true --base"),
+                cargo_test("engineering", "benchmark_gate", GATED),
+                "job benchmark does not run",
             ),
-            cargo_test(
-                "store",
-                "sqlite_build",
+            case(
+                "the benchmark job left out of the CI aggregator",
+                GATED,
+                Injection::replace(CI, ", benchmark", ""),
+                cargo_test("engineering", "benchmark_gate", GATED),
+                "job ci does not need benchmark",
+            ),
+            case(
+                "SQLite built with extension loading",
                 "sqlite_is_built_without_extension_loading",
+                Injection::replace(
+                    ".cargo/config.toml",
+                    "LIBSQLITE3_FLAGS = {",
+                    "UNUSED_SQLITE_FLAGS = {",
+                ),
+                cargo_test(
+                    "store",
+                    "sqlite_build",
+                    "sqlite_is_built_without_extension_loading",
+                ),
+                "SQLite was built with extension loading",
             ),
-            "SQLite was built with extension loading",
-        ),
-        case(
-            "an accepted regression recorded with no reason",
-            "the_accepted_regressions_parse",
-            Injection::replace(
-                "tooling/benchmark/accepted.txt",
-                "with the stakeholder's acceptance.\n",
-                "with the stakeholder's acceptance.\ncore_start_up\n",
-            ),
-            cargo_test(
-                "benchmark",
-                "accepted_file",
+            case(
+                "an accepted regression recorded with no reason",
                 "the_accepted_regressions_parse",
+                Injection::replace(
+                    "tooling/benchmark/accepted.txt",
+                    "with the stakeholder's acceptance.\n",
+                    "with the stakeholder's acceptance.\ncore_start_up\n",
+                ),
+                cargo_test(
+                    "benchmark",
+                    "accepted_file",
+                    "the_accepted_regressions_parse",
+                ),
+                "want <benchmark> <percent> <reason>",
             ),
-            "want <benchmark> <percent> <reason>",
-        ),
+        ],
     ]
+    .concat()
 }
 
 /// The drifts the isolation guard exists to catch (ENG-14): the guard
@@ -1624,6 +1764,73 @@ fn instruction_cases() -> Vec<Case> {
             ),
             scenario("ENG-14"),
             ".claude/settings.json:",
+        ),
+    ]
+}
+
+/// The drifts the transcript and hook input contract's checks exist to
+/// catch (ENG-17, REC-26, SEC-16): a fixture carrying a residual
+/// identifier, recorded or hook input shapes that no longer match the
+/// recordings, a recorded transcript the core's parser no longer reads
+/// without format drift, and a recorded hook input the core's decoder
+/// rejects.
+fn transcript_contract_cases() -> Vec<Case> {
+    let contract = |name| cargo_test("harness-contract", "contract", name);
+    vec![
+        case(
+            "a recorded fixture carrying an account's email address",
+            "ENG-17",
+            Injection::replace(
+                "testdata/claude-code/2.1.296/transcripts/projects/-w-my-app/72c55a35-095c-4ec1-a79e-834f2cc8d630.jsonl",
+                "user@example.com",
+                "jane.doe@gmail.com",
+            ),
+            contract("recorded_fixtures_hold_no_residual_identifier"),
+            "an email address jane.doe@gmail.com",
+        ),
+        case(
+            "recorded shapes that differ from what the recordings give",
+            "REC-26",
+            Injection::replace(
+                "crates/transcript/shapes/claude-code/2.1.296.json",
+                "\"harness\": \"claude-code\",",
+                "\"harness\":  \"claude-code\",",
+            ),
+            contract("recorded_shapes_regenerate_byte_for_byte"),
+            "differs from the shapes 2.1.296 records",
+        ),
+        case(
+            "a recorded transcript line of a type no supported version records",
+            "ENG-17",
+            Injection::replace(
+                "testdata/claude-code/2.1.296/transcripts/rewind/1-before-rewind.jsonl",
+                "\"type\":\"ai-title\"",
+                "\"type\":\"ai-titles\"",
+            ),
+            contract("every_recorded_transcript_replays_without_an_unparsed_line_or_format_drift"),
+            "format drift claude-code:unversioned:ai-titles:unrecorded-type",
+        ),
+        case(
+            "hook input shapes that differ from what the recorded hook inputs give",
+            "REC-26",
+            Injection::replace(
+                "crates/hook/shapes/claude-code/2.1.296.json",
+                "\"harness\": \"claude-code\",",
+                "\"harness\":  \"claude-code\",",
+            ),
+            contract("hook_input_shapes_regenerate_byte_for_byte"),
+            "differs from the shapes 2.1.296 records",
+        ),
+        case(
+            "a recorded hook input that fails the schema",
+            "SEC-16",
+            Injection::replace(
+                "testdata/claude-code/2.1.296/hooks/startup/01-SessionStart.json",
+                "\"session_id\":\"205beaae-e4b8-4798-a1aa-cdf50c807136\"",
+                "\"session_id\":205",
+            ),
+            contract("every_recorded_hook_input_decodes_without_rejection_or_format_drift"),
+            "hook input failed schema validation",
         ),
     ]
 }

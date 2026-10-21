@@ -262,6 +262,30 @@ fn a_crate_with_its_own_lints_forbids_unsafe_in_each_crate_root() {
 }
 
 #[test]
+fn the_one_unsafe_shim_denies_unsafe_code_in_its_own_lints() {
+    let shim = "[package]\nname = \"platform\"\n\n[lints.rust]\nunsafe_code = \"deny\"\n";
+    let (_dir, c) = checkout(
+        ROOT,
+        &[(UNSAFE_SHIM, shim, &[]), ("tools/one", INHERITS, &[])],
+    );
+    assert!(
+        crates_forbid_unsafe(&c).is_empty(),
+        "{:?}",
+        crates_forbid_unsafe(&c)
+    );
+
+    let allowing = shim.replace("\"deny\"", "\"allow\"");
+    let (_dir, c) = checkout(
+        ROOT,
+        &[(UNSAFE_SHIM, &allowing, &[]), ("tools/one", INHERITS, &[])],
+    );
+    assert_eq!(
+        crates_forbid_unsafe(&c),
+        ["crate crates/platform, the one unsafe shim, does not deny unsafe code in its own lints"]
+    );
+}
+
+#[test]
 fn a_workspace_that_stops_forbidding_unsafe_code_fails() {
     let root = ROOT.replace("\"forbid\"", "\"warn\"");
     let (_dir, c) = checkout(

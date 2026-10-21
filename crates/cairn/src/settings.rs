@@ -40,20 +40,27 @@ pub(crate) fn sources(ctx: &Context, home: &Home) -> Sources {
 }
 
 /// The principal acts this node recorded; none before its first start
-/// finished: no store, a store with no seat, or a genesis still staged.
+/// finished: no store, a store with no seat, or a start still staged.
 pub(crate) fn recorded_acts(home: &Home) -> Result<Vec<Recorded>, String> {
+    opened_acts(home).map(|(_, acts)| acts)
+}
+
+/// `home`'s store, opened when it exists, with the principal acts it
+/// holds, as [`recorded_acts`] reads them.
+pub(crate) fn opened_acts(home: &Home) -> Result<(Option<Store>, Vec<Recorded>), String> {
     if !home.store().exists() {
-        return Ok(Vec::new());
+        return Ok((None, Vec::new()));
     }
     let store = Store::open(&home.store()).map_err(|e| e.to_string())?;
+    let acts = acts_in(home, &store)?;
 
-    acts_in(home, &store)
+    Ok((Some(store), acts))
 }
 
 /// The principal acts `store`, `home`'s open store, holds; none before
 /// the node's first start finished.
 pub(crate) fn acts_in(home: &Home, store: &Store) -> Result<Vec<Recorded>, String> {
-    if home.genesis().exists() || store.seats().map_err(|e| e.to_string())?.is_empty() {
+    if home.staged().exists() || store.seats().map_err(|e| e.to_string())?.is_empty() {
         return Ok(Vec::new());
     }
     let node = Node::find(home, store).map_err(|e| e.to_string())?;
@@ -73,7 +80,18 @@ pub(crate) fn accepted(acts: &[Recorded]) -> LayerValues {
 
 /// The settings layers in force for `home`, given its principal acts.
 pub(crate) fn in_force(ctx: &Context, home: &Home, acts: &[Recorded]) -> InForce {
-    let loaded = load(&sources(ctx, home));
+    in_force_from(&sources(ctx, home), acts)
+}
+
+/// The settings layers in force as read from `sources`, given the
+/// principal acts the record holds.
+pub(crate) fn in_force_from(sources: &Sources, acts: &[Recorded]) -> InForce {
+    in_force_loaded(load(sources), acts)
+}
+
+/// The settings layers in force as `loaded` holds them, given the
+/// principal acts the record holds.
+pub(crate) fn in_force_loaded(loaded: Loaded, acts: &[Recorded]) -> InForce {
     let resolved = configuration::resolve(&loaded.layers, &accepted(acts));
 
     InForce { loaded, resolved }
@@ -125,11 +143,11 @@ fn ignored<'a>(operation: &'static str, i: &'a IgnoredKey) -> Occurrence<'a> {
         (Reason::TrustPolicy, Some(class)) => (
             Counter::TrustPolicyKeyIgnored,
             match i.layer {
-                SettingsLayer::Configuration => "ignored trust policy key in configuration for",
+                SettingsLayer::Configuration => "configuration: rejected trust override for",
                 SettingsLayer::RepositoryConfiguration => {
-                    "ignored trust policy key in repository configuration for"
+                    "repository configuration: rejected trust override for"
                 }
-                SettingsLayer::ManagedPolicy => "ignored trust policy key in managed policy for",
+                SettingsLayer::ManagedPolicy => "managed policy: rejected trust override for",
             },
             class,
         ),
@@ -140,7 +158,7 @@ fn ignored<'a>(operation: &'static str, i: &'a IgnoredKey) -> Occurrence<'a> {
         ),
         _ => (
             Counter::RepositoryConfigurationKeyIgnored,
-            "ignored repository configuration key",
+            "rejected repository setting",
             i.key.name(),
         ),
     };

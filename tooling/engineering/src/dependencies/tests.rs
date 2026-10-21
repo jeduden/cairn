@@ -1,4 +1,5 @@
 use super::*;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 pub(crate) fn dep_adr(
@@ -121,7 +122,7 @@ fn licenses_and_target_come_from_the_requirement_text() {
         "x",
         vec![module("a", "MIT"), module("b", "BSD-3-Clause")],
     )];
-    assert!(licenses_allowed(&ok, &allowed).is_empty());
+    assert!(licenses_allowed(&ok, &allowed, &BTreeMap::new()).is_empty());
 
     let bad = [dep_adr(
         "ADR-01",
@@ -130,7 +131,7 @@ fn licenses_and_target_come_from_the_requirement_text() {
         vec![module("a", "GPL-3.0"), module("b", "BSDish")],
     )];
     assert_eq!(
-        licenses_allowed(&bad, &allowed),
+        licenses_allowed(&bad, &allowed, &BTreeMap::new()),
         [
             r#"a is licensed "GPL-3.0", not on the allow-list [MIT BSD]"#,
             r#"b is licensed "BSDish", not on the allow-list [MIT BSD]"#,
@@ -192,6 +193,41 @@ fn license_family_admits_only_its_permissive_variants() {
     ] {
         assert!(!license_allowed(license, &allowed), "{license}");
     }
+}
+
+#[test]
+fn an_and_expression_wants_every_conjunct_allowed() {
+    let allowed = strings(&["Apache-2.0", "MIT"]);
+    let both = "(MIT OR Apache-2.0) AND NCSA";
+
+    assert!(!license_allowed(both, &allowed));
+    assert!(license_allowed(both, &strings(&["MIT", "NCSA"])));
+    assert!(license_allowed("MIT AND Apache-2.0", &allowed));
+    assert!(!license_allowed("MIT AND GPL-3.0", &allowed));
+}
+
+#[test]
+fn a_per_crate_exception_admits_one_crate_alone() {
+    let deny = "# { crate = \"commented\", allow = [\"NCSA\"] },\nexceptions = [\n  { crate = \"libfuzzer-sys\", allow = [\"NCSA\"] },\n  { crate = \"two\", allow = [\"A\", \"B\"] },\n]\n";
+    let exceptions = license_exceptions(deny);
+    assert_eq!(exceptions.len(), 2);
+    assert_eq!(exceptions["libfuzzer-sys"], ["NCSA"]);
+    assert_eq!(exceptions["two"], ["A", "B"]);
+
+    let allowed = strings(&["MIT"]);
+    let adrs = [dep_adr(
+        "ADR-01",
+        adr::ACCEPTED,
+        "x",
+        vec![
+            module("libfuzzer-sys", "MIT AND NCSA"),
+            module("other", "MIT AND NCSA"),
+        ],
+    )];
+    assert_eq!(
+        licenses_allowed(&adrs, &allowed, &exceptions),
+        [r#"other is licensed "MIT AND NCSA", not on the allow-list [MIT]"#]
+    );
 }
 
 #[test]
@@ -396,6 +432,11 @@ fn direct_deps_reads_each_manifest_with_its_reader() {
     let deps = direct_deps(&checkout, "Cargo.toml", metadata).unwrap();
     assert_eq!(deps.all, ["serde", "sha2"]);
     assert_eq!(deps.shipped, ["sha2"]);
+    // The fuzz workspace's dependencies need their ADRs but never ship,
+    // even from a binary target, since it is no crate under the product.
+    let fuzz = direct_deps(&checkout, "fuzz/Cargo.toml", metadata).unwrap();
+    assert_eq!(fuzz.all, ["serde", "sha2"]);
+    assert!(fuzz.shipped.is_empty());
     assert_eq!(
         direct_deps(&checkout, "package.json", metadata).unwrap_err(),
         "no reader for the dependencies in package.json"

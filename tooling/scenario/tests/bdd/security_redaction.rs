@@ -39,7 +39,7 @@ fn red(w: &mut World) -> &mut RedactionSteps {
 }
 
 /// The transcript the run `name` leaves.
-fn transcript(w: &mut World, name: &str) -> Result<PathBuf, String> {
+pub(crate) fn transcript(w: &mut World, name: &str) -> Result<PathBuf, String> {
     red(w)
         .transcripts
         .iter()
@@ -48,8 +48,15 @@ fn transcript(w: &mut World, name: &str) -> Result<PathBuf, String> {
         .ok_or_else(|| format!("no agent run left a transcript {name:?}"))
 }
 
+/// Names the transcript at `path` `name`, in place of any it named.
+pub(crate) fn name_transcript(w: &mut World, name: &str, path: PathBuf) {
+    let transcripts = &mut red(w).transcripts;
+    transcripts.retain(|(n, _)| n != name);
+    transcripts.push((name.to_owned(), path));
+}
+
 /// Appends `line` to the transcript of the run `name`.
-fn append(w: &mut World, name: &str, line: &serde_json::Value) -> Result<(), String> {
+pub(crate) fn append(w: &mut World, name: &str, line: &serde_json::Value) -> Result<(), String> {
     let path = transcript(w, name)?;
     let mut text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
     text.push_str(&line.to_string());

@@ -2,8 +2,9 @@
 //! bound: the core refuses a home, or a file in it, that another OS user
 //! can reach or owns, and a home bound to another home id, before it
 //! opens any store file. `@SEC-05`'s first two rows are bound: a hook
-//! input past 1 MiB or nested past depth 64 is refused and audited; its
-//! third waits for phase 6's payload store.
+//! input past 1 MiB or nested past depth 64 is refused and audited. Its
+//! third, a long line streamed to the payload store, is raised: SEC-08
+//! redacts each JSON string whole and PRV-08 parses the line whole.
 //!
 //! A path goes to another OS user directly when the scenarios run as
 //! root, else through `sudo -n`, as CI's runner allows; each is given
@@ -73,7 +74,7 @@ fn owner(path: &Path) -> Result<u32, String> {
 
 /// Gives `path` to the OS user `uid`: directly as root, else through
 /// `sudo -n`.
-fn give(path: &Path, uid: u32) -> Result<(), String> {
+pub(crate) fn give(path: &Path, uid: u32) -> Result<(), String> {
     if running_as_root()? {
         return std::os::unix::fs::chown(path, Some(uid), None)
             .map_err(|e| format!("chown {}: {e}", path.display()));
@@ -252,7 +253,7 @@ fn hook_input_of(bytes: usize) -> Vec<u8> {
 
 /// `@SEC-05`: the hook runs with an oversized or deeply nested hook
 /// input. The third row, a transcript line streamed to the payload
-/// store, waits for phase 6's payload store.
+/// store without holding it whole, is raised (plan 2609292012, phase 6).
 #[when(
     regex = r#"^the hook "([A-Za-z]+)" runs with (stdin of 1 MiB plus one byte|a JSON object nested 65 levels deep)$"#
 )]

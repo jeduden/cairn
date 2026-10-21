@@ -235,7 +235,7 @@ fn a_repository_can_neither_require_an_authenticator_nor_forbid_risk_acceptance(
         .map(|e| e.detail)
         .collect();
     assert!(
-        ignored.contains(&"ignored repository configuration key authenticator.required".to_owned()),
+        ignored.contains(&"rejected repository setting authenticator.required".to_owned()),
         "{ignored:?}"
     );
 }

@@ -7,6 +7,8 @@ use serde_json::{Value, json};
 use std::sync::mpsc;
 use testkit::TempDir;
 
+mod search_calls;
+
 struct Fixture {
     _dir: TempDir,
     home: Home,
@@ -143,15 +145,13 @@ fn tools_list_offers_event_get_with_its_schema() {
     )["result"]["tools"]
         .clone();
 
-    assert_eq!(tools.as_array().unwrap().len(), 1);
-    assert_eq!(tools[0]["name"], "event_get");
-    assert_eq!(tools[0]["inputSchema"]["required"], json!(["address"]));
-    assert!(
-        tools[0]["description"]
-            .as_str()
-            .unwrap()
-            .contains("envelope")
-    );
+    assert_eq!(tools.as_array().unwrap().len(), 2);
+    assert_eq!(tools[0]["name"], "event_search");
+    assert_eq!(tools[1]["name"], "event_get");
+    assert_eq!(tools[1]["inputSchema"]["required"], json!(["address"]));
+    for tool in tools.as_array().unwrap() {
+        assert!(tool["description"].as_str().unwrap().contains("envelope"));
+    }
 }
 
 #[test]
@@ -295,7 +295,7 @@ fn an_unknown_tool_is_a_tool_error() {
 
     assert_eq!(
         refusal(&result),
-        "no such tool: this server offers event_get"
+        "no such tool: this server offers event_get and event_search"
     );
 }
 
@@ -330,6 +330,7 @@ fn a_store_failure_or_a_writer_without_a_seat_is_a_tool_error() {
                 provenance: record::event::Provenance::Unparsed,
                 content: json!({"text": "x"}),
                 commitment_key: record::commitment::CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
@@ -492,6 +493,7 @@ fn foreign_seat(
                 provenance: record::event::Provenance::Unparsed,
                 content: json!({"line": 1, "text": "x"}),
                 commitment_key: record::commitment::CommitmentKey::from_bytes([1; 32]),
+                transcript_timestamp: None,
             }],
         )
         .unwrap();
@@ -517,7 +519,11 @@ fn an_event_of_a_seat_this_node_did_not_certify_shows_its_origin_as_peer() {
 #[test]
 fn the_room_scope_is_the_personal_room_unless_a_room_is_named() {
     let f = fixture();
-    let device = key::signing::DeviceKey::load(&f.home.device_key()).unwrap();
+    let device = key::signing::DeviceKey::fetch(
+        f.home.key_store().as_ref(),
+        &key::key_store::Entry::device(),
+    )
+    .unwrap();
     let other = record::id::RoomId::derive(&[2; 32], &[2; 16]);
     let writer = foreign_seat(&f, &device, other);
     let mut server = f.server();
@@ -543,7 +549,11 @@ fn a_seat_the_node_certified_but_never_recorded_shows_its_origin_as_peer() {
     // device seat lacks (PRV-12), so recall does not count it as this
     // node's own either.
     let f = fixture();
-    let device = key::signing::DeviceKey::load(&f.home.device_key()).unwrap();
+    let device = key::signing::DeviceKey::fetch(
+        f.home.key_store().as_ref(),
+        &key::key_store::Entry::device(),
+    )
+    .unwrap();
     let writer = foreign_seat(&f, &device, f.ingested.room);
     let mut server = f.server();
 
@@ -683,4 +693,112 @@ fn a_panic_is_answered_with_the_request_s_id_and_a_notification_not_at_all() {
 
 fn redactor() -> redaction::Redactor {
     redaction::Redactor::new(&[]).unwrap().0
+}
+
+/// Runs that find one tool-use id's run, once serving.
+struct OneRun {
+    serving: bool,
+}
+
+impl tool_call::Runs for OneRun {
+    fn serving(&self) -> bool {
+        self.serving
+    }
+
+    fn find(&self, tool_use_id: &str, _wait: Duration) -> (Vec<String>, Duration) {
+        let runs = if tool_use_id == "toolu_main" {
+            vec!["s/main".to_owned()]
+        } else {
+            Vec::new()
+        };
+        (runs, Duration::from_millis(5))
+    }
+}
+
+fn tool_call(server: &mut Server, tool_use_id: Option<&str>, address: &str) -> Value {
+    let mut params =
+        json!({"name": "event_get", "arguments": {"address": address, "scope": "room"}});
+    if let Some(id) = tool_use_id {
+        params["_meta"] = json!({"claudecode/toolUseId": id});
+    }
+    call(
+        server,
+        json!({"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": params}),
+    )["result"]
+        .clone()
+}
+
+#[test]
+fn a_bound_server_serves_a_call_under_the_run_its_tool_use_id_names_and_refuses_the_rest() {
+    let f = fixture();
+    let address = format!("{}:1", f.ingested.writer);
+    let mut server = f.server().with_runs(Box::new(OneRun { serving: true }));
+
+    let served = tool_call(&mut server, Some("toolu_main"), &address);
+    let missing = tool_call(&mut server, Some("toolu_none"), &address);
+    let bare = tool_call(&mut server, None, &address);
+
+    envelope_of(&served);
+    assert_eq!(missing["isError"], true);
+    assert_eq!(
+        missing["content"][0]["text"],
+        tool_call::Cause::NotFound.refusal()
+    );
+    assert_eq!(
+        bare["content"][0]["text"],
+        tool_call::Cause::NoToolUseId.refusal()
+    );
+    let found = server.take_found();
+    assert_eq!(
+        found.iter().map(|f| f.run.clone()).collect::<Vec<_>>(),
+        [
+            Ok("s/main".to_owned()),
+            Err(tool_call::Cause::NotFound),
+            Err(tool_call::Cause::NoToolUseId)
+        ]
+    );
+    assert!(server.take_found().is_empty());
+    assert!(format!("{server:?}").starts_with("Server"));
+}
+
+#[test]
+fn a_server_holding_no_session_binding_serves_a_call_under_no_run() {
+    let f = fixture();
+    let address = format!("{}:1", f.ingested.writer);
+    let mut server = f.server().with_runs(Box::new(OneRun { serving: false }));
+
+    envelope_of(&tool_call(&mut server, None, &address));
+    assert!(server.take_found().is_empty());
+}
+
+#[test]
+fn a_server_without_a_test_override_cancels_a_search_at_2_s() {
+    let f = fixture();
+    let server = f.server();
+
+    assert_eq!(server.deadline, std::time::Duration::from_secs(2));
+    assert_eq!(event_search::DEADLINE, std::time::Duration::from_secs(2));
+    assert!(CANCELLED.contains("deadline of 2 s"));
+}
+
+#[test]
+fn event_search_says_its_run_is_a_writer_id_and_its_damping_is_per_writer() {
+    let f = fixture();
+    let mut server = f.server();
+
+    let tools = call(
+        &mut server,
+        json!({"jsonrpc": "2.0", "id": 6, "method": "tools/list"}),
+    )["result"]["tools"]
+        .clone();
+
+    let description = tools[0]["description"].as_str().unwrap();
+    assert!(
+        description.contains("run takes a writer id and further hits of one writer are damped"),
+        "{description}"
+    );
+    let run = tools[0]["inputSchema"]["properties"]["run"]["description"]
+        .as_str()
+        .unwrap();
+    assert_eq!(run, "a writer id: a run is named by its writer for now");
 }

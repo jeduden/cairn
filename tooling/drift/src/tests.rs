@@ -93,6 +93,10 @@ fn check_constructors_name_the_command() {
         cargo_test("srs", "gates", "x").to_string(),
         "cargo test --locked -p srs --test gates -- --exact x"
     );
+    assert_eq!(
+        cargo_lib_test("testkit", "relative::tests::x").to_string(),
+        "cargo test --locked -p testkit --lib -- --exact relative::tests::x"
+    );
     assert_eq!(mdsmith().to_string(), "mdsmith check .");
     assert_eq!(taplo_fmt().to_string(), "taplo fmt --check");
     assert_eq!(taplo_lint().to_string(), "taplo lint");

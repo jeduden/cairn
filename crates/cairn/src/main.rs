@@ -18,6 +18,13 @@ fn main() -> ExitCode {
         // panic and audits it.
         std::panic::set_hook(Box::new(|_| {}));
     }
+    // A development build's seam for the tests: the clock stands still
+    // at the time it names; a release build reads the wall clock.
+    let fixed: Option<u64> = cfg!(debug_assertions)
+        .then(|| std::env::var("CAIRN_TEST_CLOCK").ok())
+        .flatten()
+        .and_then(|t| t.parse().ok());
+    let clock = move || fixed.unwrap_or_else(now);
     let ctx = cairn::Context {
         build: &cairn::BUILD,
         cairn_home: std::env::var_os("CAIRN_HOME"),
@@ -25,6 +32,9 @@ fn main() -> ExitCode {
         home_id: std::env::var_os("CAIRN_HOME_ID"),
         // The development build's seam for the `@ENG-04` scenario; a
         // release build never reads it.
+        // The development build's seam for the `@NFR-02` scenario.
+        hook_hangs: cfg!(debug_assertions)
+            && std::env::var_os("CAIRN_TEST_FAULT").is_some_and(|v| v == "hook-hang"),
         hook_panics: cfg!(debug_assertions)
             && std::env::var_os("CAIRN_TEST_FAULT").is_some_and(|v| v == "hook-panic"),
         terminal: terminal(),
@@ -36,9 +46,40 @@ fn main() -> ExitCode {
                 .then(|| std::env::var_os("CAIRN_TEST_MANAGED_POLICY"))
                 .flatten(),
         ),
+        // A development build's seam for the tests; a release build
+        // reads only this OS's node identity.
+        node_identity: cfg!(debug_assertions)
+            .then(|| std::env::var_os("CAIRN_TEST_NODE_IDENTITY"))
+            .flatten()
+            .map(std::path::PathBuf::from),
         os_user: os_user(),
         input: &stdin_lines,
-        clock: &now,
+        clock: &clock,
+        // The harness's attended mark (ASM-22), which only a hook
+        // handler reads (PRV-04).
+        attended: std::env::var_os("CLAUDE_CODE_SESSION_ATTENDED").is_some_and(|v| v == "1"),
+        // A development build's seam for the tests; a release build
+        // keeps each hook's own budget (NFR-02).
+        ancestry: hook::ancestry::own,
+        // A development build's seam for the tests; a release build's
+        // live ingest reads every line.
+        live_limit: cfg!(debug_assertions)
+            .then(|| std::env::var("CAIRN_TEST_INGEST_LIMIT").ok())
+            .flatten()
+            .and_then(|n| n.parse().ok()),
+        hook_budget: cairn::budget_override(
+            cfg!(debug_assertions)
+                .then(|| std::env::var("CAIRN_TEST_HOOK_BUDGET_MS").ok())
+                .flatten()
+                .as_deref(),
+        ),
+        // A development build's seam for the `@SEC-04` scenario, which
+        // needs a search past its deadline; a release build keeps 2 s.
+        query_deadline: cfg!(debug_assertions)
+            .then(|| std::env::var("CAIRN_TEST_QUERY_DEADLINE_MS").ok())
+            .flatten()
+            .and_then(|ms| ms.parse().ok())
+            .map(std::time::Duration::from_millis),
     };
 
     let log = cairn::structured_log(

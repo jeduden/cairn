@@ -5,7 +5,7 @@ Feature: Record (REC)
   declared but not yet written: its steps are bound when the plan that
   implements the requirement lands.
 
-  @REC-01 @P0 @I1 @pending
+  @REC-01 @P0 @I1
   Scenario Outline: harness transcripts are ingested from the configured transcript roots
     Given an isolated Cairn home
     And the person's configuration <roots>
@@ -40,7 +40,7 @@ Feature: Record (REC)
     And that new run belongs to the agent of "parent-run" only when the harness gives an agent id stable across harness sessions, else it is its own agent
     And a later run of an agent reaches the agent's rooms through the "rooms" recall scope and its restore blocks, but holds no seat, add or role there until it joins under LANE-23
 
-  @REC-03 @P0 @I1 @I10 @pending
+  @REC-03 @P0 @I1 @I10
   Scenario: re-ingesting a transcript source creates no duplicate events
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
@@ -93,7 +93,7 @@ Feature: Record (REC)
     When a harness fork of "parent-run" with the transcript "late-fork", repeating those 40 lines, is ingested
     Then none of those lines is recorded again, each refusal is counted and audited, and the record keeps only their uuids beside the tombstones
 
-  @REC-05 @P0 @I1 @I6 @pending
+  @REC-05 @P0 @I1 @I6
   Scenario: unreadable transcript lines are kept as redacted unparsed events
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
@@ -114,7 +114,7 @@ Feature: Record (REC)
     And each seq was assigned by its writer inside the append transaction that wrote its event
     And a local index position is never shown or accepted as an address
 
-  @REC-07 @P0 @I1 @I6 @pending
+  @REC-07 @P0 @I1 @I6
   Scenario Outline: a shrunk or rewritten transcript source starts a new transcript generation without losing events
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
@@ -139,7 +139,7 @@ Feature: Record (REC)
     Then the output names "cut-short", and only it, as a transcript source that disappeared before it was fully ingested
     And "cairn event expand" still returns all 40 events of "main-run"
 
-  @REC-09 @P0 @I1 @pending
+  @REC-09 @P0 @I1
   Scenario: content above the payload threshold goes to a payload store under a name that reveals nothing off the node
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
@@ -160,7 +160,7 @@ Feature: Record (REC)
     And the header contains only the address, kind, provenance class, prev_hash, the heads of the other writers' logs the writer had seen, and the commitment
     And events of the two writers are ordered by the heads each cites, never by wall-clock time
 
-  @REC-11 @P0 @pending
+  @REC-11 @P0
   Scenario: event and payload text is full-text indexed up to the indexing cap, with ranked search
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run"
@@ -186,7 +186,7 @@ Feature: Record (REC)
     And a second fresh home that ingests "main-run" under the same writer id derives the same chain head hash
     And "cairn event expand" returns line 10 before line 11
 
-  @REC-13 @P0 @I1 @I9 @pending
+  @REC-13 @P0 @I1 @I9
   Scenario Outline: the harness session's MCP server ingests its transcripts as they grow, once bound to its harness session, and marks what it leaves when it stops
     Given an isolated Cairn home
     And an agent run with a Claude Code transcript "main-run" and a subagent transcript "explore-agent"
@@ -373,6 +373,8 @@ Feature: Record (REC)
     And the new seat's writer reads origin "peer" until a confirm signed by a managed-policy confirmation key names that inception, then "witnessed"
     And no event is appended under the old device key or the old seat key
     And an unavailable node identity value read again within the hook budgets and found unchanged counts as no change
+    And the home keeps only a digest of the node identity value, never the value
+    And an unavailable node identity value counts as one changed identity, so a node that never reads a value changes once and not at every later start
 
     Examples:
       | change                                                       |
@@ -380,6 +382,8 @@ Feature: Record (REC)
       | the home is a copied volume mounted on another machine       |
       | the home is recovered from a snapshot on another machine     |
       | the node identity value is unavailable on every read        |
+      | the home is part of a cloned runner image on macOS, whose hardware UUID differs |
+      | the home is a copied volume on Windows, whose MachineGuid differs |
 
   @REC-25 @P1 @I1 @I10 @pending
   Scenario: closed segments are merged later, outside every hook budget, so a writer has at most 48 segments a day

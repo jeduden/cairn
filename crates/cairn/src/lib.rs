@@ -1,17 +1,17 @@
 //! The Cairn core executable, specified in docs/srs: the hook
 //! handlers, the MCP server and the CLI so far.
 //!
-//! It runs `version`, `ingest --path`, `mcp`, `verify`, `hook`,
+//! It runs `version`, `ingest`, `mcp`, `verify`, `hook`,
 //! `status`, `doctor`, and the principal acts `counter ack`,
 //! `configuration accept` and `risk-acceptance`. Every other
 //! command in the SRS's §9.5 is a pending scenario under features/, and
 //! lands with the plan that makes its scenario pass.
 
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::fs;
 use std::io::{self, Write};
-use std::panic::{self, AssertUnwindSafe};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::{Duration, Instant};
@@ -19,7 +19,8 @@ use std::time::{Duration, Instant};
 use administration::act as act_record;
 use administration::home::Home;
 use administration::node::Node;
-use administration::verify::{VerifyError, verify};
+use administration::node_identity::IdentitySource;
+use administration::verify::{Report, VerifyError, verify};
 use allowed_root::{Access, AllowedPath, AllowedRoots};
 use audit::AuditError;
 use audit::counters::{Counts, counts};
@@ -27,9 +28,9 @@ use audit::entry::{Counter, Entry, Kind, Occurrence};
 use audit::log::Log;
 use configuration::source::OsUser;
 use configuration::{Loaded, SettingsLayer};
-use hook::{Failure, Hook};
+use hook::Failure;
+use key::key_store::KeyStoreKind;
 use key::random::OsEntropy;
-use key::signing::DeviceKey;
 use redaction::Redactor;
 use serde_json::{Value, json};
 use store::Store;
@@ -50,9 +51,8 @@ const IDLE: Duration = Duration::from_secs(1);
 /// limit (SEC-05); the MCP server's requests are held to it too.
 pub const INPUT_LINE_LIMIT: usize = hook::HOOK_INPUT_LIMIT;
 
-/// How long `cairn hook` waits for its whole hook input, however its
-/// lines arrive. The hook budgets of NFR-02 replace it with phase 9's
-/// handlers.
+/// The longest `cairn hook` waits for its whole hook input, however its
+/// lines arrive; its hook budget ends the wait sooner (NFR-02).
 const HOOK_INPUT_WAIT: Duration = Duration::from_millis(500);
 
 /// What a build stamps into the executable. The release build sets
@@ -83,7 +83,7 @@ commands:
   counter ack [--json]                   acknowledge the counters (neutral)
   doctor [--json]                        fail while a counter rose since the last acknowledgement
   hook <hook>                            run the hook handler on the hook input on stdin
-  ingest --path P [--json]               record the transcript at P
+  ingest --all | --path P [--json]       record every transcript under the roots, or the one at P
   mcp                                    serve the MCP tools over stdio
   risk-acceptance show [--json]          show the residual risks open on this node
   risk-acceptance record [--json]        accept the open residual risks (widening)
@@ -107,6 +107,10 @@ pub struct Context<'a> {
     /// Whether the hook handler panics: a development build's seam for
     /// the `@ENG-04` scenario, never set in a release build.
     pub hook_panics: bool,
+    /// Whether the hook handler hangs, as one the harness kills before
+    /// it finishes: a development build's seam for the `@NFR-02`
+    /// scenario, never set in a release build.
+    pub hook_hangs: bool,
     /// Whether the process's standard input and output are both a
     /// terminal, which a verb that writes a principal act needs
     /// (OWN-12): a person's are, an agent's tool call's are not.
@@ -116,14 +120,37 @@ pub struct Context<'a> {
     pub working_dir: Option<PathBuf>,
     /// Where managed policy is read from (ADM-04).
     pub managed_policy: PathBuf,
+    /// Where the node identity is read from instead of this OS's source
+    /// (REC-24): a development build's seam for the tests, never set in
+    /// a release build.
+    pub node_identity: Option<PathBuf>,
     /// The running OS user, whom managed policy's files must not let
     /// write (ADM-04).
     pub os_user: OsUser,
     /// Starts reading the process's input, one line at a time.
     pub input: &'a dyn Fn() -> Receiver<io::Result<String>>,
     /// The wall clock, in seconds since the Unix epoch, which only
-    /// audit entries read.
+    /// audit entries, ingest's holds, start markers and session
+    /// bindings read.
     pub clock: &'a dyn Fn() -> u64,
+    /// Whether the harness's attended mark is in the process's
+    /// environment (ASM-22): only a hook handler reads it (PRV-04).
+    pub attended: bool,
+    /// A hook budget in place of each hook's own: a development build's
+    /// seam for the tests, never set in a release build.
+    pub hook_budget: Option<Duration>,
+    /// Reads a hook handler's process ancestry (PRV-08), and the MCP
+    /// server's own harness process (REC-13): this process's own, or
+    /// what a test stands in for it.
+    pub ancestry: fn() -> Option<hook::ancestry::Ancestry>,
+    /// How many lines of a transcript the MCP server's live ingest reads
+    /// at most: a development build's seam for the tests, never set in a
+    /// release build.
+    pub live_limit: Option<usize>,
+    /// How long a search may run before it is cancelled, in place of
+    /// the default 2 s (SEC-04): a development build's seam for the
+    /// tests, never set in a release build.
+    pub query_deadline: Option<Duration>,
 }
 
 impl Context<'_> {
@@ -131,7 +158,10 @@ impl Context<'_> {
     /// everything in it owner-only (SEC-02), and its home id the one the
     /// environment supplies (SEC-03).
     fn home(&self) -> Result<Home, administration::AdminError> {
-        let home = Home::locate(self.cairn_home.as_deref(), self.home.as_deref())?;
+        let mut home = Home::locate(self.cairn_home.as_deref(), self.home.as_deref())?;
+        if let Some(path) = &self.node_identity {
+            home = home.with_identity(IdentitySource::Files(vec![path.clone()]));
+        }
         home.check()?;
         home.check_home_id(self.home_id.as_deref())?;
 
@@ -274,7 +304,7 @@ pub fn run(
         Some("configuration") => act::configuration(args, ctx, stdout, stderr),
         Some("counter") => act::counter(args, ctx, stdout, stderr),
         Some("doctor") => doctor(args, ctx, stdout, stderr),
-        Some("hook") => hook_command(args.next().as_deref(), ctx, stdout),
+        Some("hook") => hook_handlers::hook_command(args.next().as_deref(), ctx, stdout),
         Some("ingest") => ingest(args, ctx, stdout, stderr),
         Some("mcp") => mcp(args, ctx, stdout, stderr),
         Some("risk-acceptance") => act::risk_acceptance(args, ctx, stdout, stderr),
@@ -346,80 +376,544 @@ pub(crate) fn failed(command: &str, e: &dyn std::fmt::Display, stderr: &mut dyn 
     EXIT_FAILURE
 }
 
-/// `cairn ingest --path P [--json]`: records the transcript at `P` in a
-/// new ingest seat.
+/// Reports a store that failed to open: one of a newer schema version is
+/// an integrity failure, refused and named, exiting 3 (ADM-05); any other
+/// a failure.
+fn store_failed(command: &str, e: &store::StoreError, stderr: &mut dyn Write) -> u8 {
+    let code = failed(command, e, stderr);
+    if matches!(e, store::StoreError::Newer { .. }) {
+        EXIT_INTEGRITY
+    } else {
+        code
+    }
+}
+
+/// The payload threshold the settings in force set (REC-09).
+fn payload_settings(settings: &configuration::resolve::Settings) -> ingest::PayloadSettings {
+    // The key has a default and takes only an integer it bounds.
+    let threshold = settings
+        .get("payload.threshold_bytes")
+        .and_then(|v| v.to_json().as_u64())
+        .and_then(|n| usize::try_from(n).ok());
+
+    ingest::PayloadSettings {
+        payload_threshold: threshold.unwrap_or(store::DEFAULT_PAYLOAD_THRESHOLD),
+    }
+}
+
+/// What `cairn ingest` reads.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum IngestTarget {
+    /// Every transcript under the transcript roots (REC-01).
+    All,
+    /// The transcript at this path.
+    Path(String),
+}
+
+/// `cairn ingest --all | --path P [--json]`: records every transcript
+/// under the transcript roots, or the one at `P`, each in a new ingest
+/// seat. A transcript that cannot be ingested is reported and the rest
+/// still are; the command then fails.
 fn ingest(
-    mut args: impl Iterator<Item = String>,
+    args: impl Iterator<Item = String>,
     ctx: &Context,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> u8 {
-    let usage = |stderr: &mut dyn Write, why: &str| {
-        let _ = writeln!(stderr, "cairn ingest: {why}");
-        EXIT_USAGE
+    let (target, as_json) = match ingest_args(args) {
+        Ok(parsed) => parsed,
+        Err(why) => {
+            let _ = writeln!(stderr, "cairn ingest: {why}");
+            return EXIT_USAGE;
+        }
     };
-    let (mut path, mut as_json) = (None, false);
+    let home = match ctx.home() {
+        Ok(home) => home,
+        Err(e) => return failed("ingest", &e, stderr),
+    };
+    let in_force = audit_settings(ctx, &home, stderr);
+    if in_force.loaded.principal_layer_failed() {
+        return failed("ingest", &refuse_ingest(ctx, stderr), stderr);
+    }
+    let settings = &in_force.resolved.settings;
+    let candidates = match &target {
+        IngestTarget::Path(path) => vec![PathBuf::from(path)],
+        IngestTarget::All => match root_transcripts(ctx, settings) {
+            Ok(found) => found,
+            Err(e) => return failed("ingest", &e, stderr),
+        },
+    };
+    let mut failures = 0;
+    let mut allowed = Vec::new();
+    for path in &candidates {
+        match allowed_transcript(ctx, settings, path, stderr) {
+            Ok(transcript) => allowed.push(transcript),
+            Err(e) => {
+                failed("ingest", &e, stderr);
+                failures += 1;
+            }
+        }
+    }
+    if allowed.is_empty() && failures > 0 {
+        return EXIT_FAILURE;
+    }
+    // The rule set always compiles (its unit test proves it); were it
+    // not to, each transcript would fail with why.
+    let redactor = redactor(ctx, settings, stderr);
+    match start_node(ctx, &home, stderr) {
+        Ok(mut store) => count_untaken_bindings(ctx, &mut store),
+        Err(e) => return failed("ingest", &e, stderr),
+    }
+    // What an MCP server killed before it stopped left is audited by
+    // the reader that finds its ingest marker (REC-13).
+    capture::count_stopped(&home, "ingest", &|o| {
+        let _ = ctx.audit(o);
+    });
+    let inputs = ingest::Inputs {
+        payload: payload_settings(settings),
+        // Ingest reads the fork observations the hook handlers held from
+        // the store itself (REC-04).
+        forks: std::collections::BTreeSet::new(),
+        now_ms: (ctx.clock)().saturating_mul(1000),
+        interactive: settings.deployment_mode() == "interactive",
+    };
+    let paths: Vec<&Path> = allowed.iter().map(AllowedPath::path).collect();
+    let (reports, failed_ingests) = ingest_all(ctx, &home, &paths, &redactor, &inputs, stderr);
+    failures += failed_ingests;
+    let held = held_sources(ctx, settings, &home, stderr);
+    let held: Vec<&Path> = held.iter().map(AllowedPath::path).collect();
+    failures += ingest_all(ctx, &home, &held, &redactor, &inputs, stderr).1;
+    if target == IngestTarget::All {
+        audit_lost(ctx, &home, stderr);
+    }
+    let shown = ingest_report(&target, &reports, failures, as_json);
+    let code = written(write!(stdout, "{shown}"), stderr);
+
+    if failures > 0 { EXIT_FAILURE } else { code }
+}
+
+/// Ingests each transcript source at `paths`. Returns a report of each
+/// ingested, and how many failed, each said on `stderr`.
+fn ingest_all(
+    ctx: &Context,
+    home: &Home,
+    paths: &[&Path],
+    redactor: &Result<Redactor, String>,
+    inputs: &ingest::Inputs,
+    stderr: &mut dyn Write,
+) -> (Vec<ingest::Ingested>, usize) {
+    let mut reports = Vec::new();
+    let mut failures = 0;
+    for path in paths {
+        let ingested = redactor.as_ref().map_err(Clone::clone).and_then(|r| {
+            ingest::ingest_with(home, path, r, inputs, &mut OsEntropy).map_err(|e| e.to_string())
+        });
+        match ingested {
+            Ok(i) => {
+                record_ingested(ctx, &i, stderr);
+                reports.push(i);
+            }
+            Err(e) => {
+                failed("ingest", &e, stderr);
+                failures += 1;
+            }
+        }
+    }
+
+    (reports, failures)
+}
+
+/// Counts, once each, every session binding no MCP server took within
+/// 30 s of its `SessionStart` hook observation (REC-19, I6).
+fn count_untaken_bindings(ctx: &Context, store: &mut Store) {
+    hook_handlers::count_untaken(store, (ctx.clock)(), &|o| {
+        let _ = ctx.audit(o);
+    });
+}
+
+/// The transcript sources an ingest marker holds, each resolved again
+/// within the transcript roots: what a harness fork read before its
+/// owner left waiting, read again once its owner is ingested or gone
+/// (REC-04, REC-08).
+fn held_sources(
+    ctx: &Context,
+    settings: &configuration::resolve::Settings,
+    home: &Home,
+    stderr: &mut dyn Write,
+) -> Vec<AllowedPath> {
+    let held: Vec<PathBuf> = Store::open(&home.store())
+        .and_then(|store| store.sources())
+        .map(|sources| {
+            sources
+                .into_iter()
+                .filter(|s| s.held_since.is_some() && !s.lost)
+                .map(|s| PathBuf::from(s.path))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    held.iter()
+        .filter_map(|path| allowed_transcript(ctx, settings, path, stderr).ok())
+        .collect()
+}
+
+/// Audits and counts, once each, every transcript source `cairn ingest
+/// --all` finds gone before it was fully ingested (REC-08, I6).
+fn audit_lost(ctx: &Context, home: &Home, stderr: &mut dyn Write) {
+    let found = Store::open(&home.store()).and_then(|mut store| {
+        let sources = store.sources()?;
+        let fresh: Vec<store::Source> = sources::lost(&sources)
+            .into_iter()
+            .filter(|s| !s.lost)
+            .cloned()
+            .collect();
+        for source in &fresh {
+            store.lose(source.id)?;
+        }
+        Ok(fresh)
+    });
+    let fresh = match found {
+        Ok(fresh) => fresh,
+        Err(e) => {
+            let _ = writeln!(stderr, "cairn ingest: find lost transcript sources: {e}");
+            return;
+        }
+    };
+    for source in fresh {
+        let name = Path::new(&source.path)
+            .file_stem()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let occurrence = Occurrence::Keyed {
+            kind: Kind::Dropped,
+            counter: Counter::TranscriptSourceLost,
+            operation: "ingest",
+            detail: "transcript source gone before it was fully ingested:",
+            key: &name,
+        };
+        if let Err(e) = ctx.audit(&occurrence) {
+            let _ = writeln!(stderr, "cairn ingest: audit a lost transcript source: {e}");
+        }
+    }
+}
+
+/// What `cairn ingest`'s command line asks for, or why it is refused.
+fn ingest_args(mut args: impl Iterator<Item = String>) -> Result<(IngestTarget, bool), String> {
+    let (mut all, mut path, mut as_json) = (false, None, false);
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--json" => as_json = true,
-            "--path" => match args.next() {
-                Some(p) => path = Some(p),
-                None => return usage(stderr, "--path needs a transcript"),
-            },
-            "--all" => return usage(stderr, "--all is not supported yet; pass --path"),
+            "--all" => all = true,
+            "--path" => path = Some(args.next().ok_or("--path needs a transcript")?),
             other => match other.strip_prefix("--path=") {
                 Some(p) => path = Some(p.to_owned()),
-                None => return usage(stderr, &format!("unknown flag {other:?}")),
+                None => return Err(format!("unknown flag {other:?}")),
             },
         }
     }
-    let Some(path) = path else {
-        return usage(stderr, "want --path P");
+    match (all, path) {
+        (true, Some(_)) => Err("want --all or --path P, not both".to_owned()),
+        (true, None) => Ok((IngestTarget::All, as_json)),
+        (false, Some(path)) => Ok((IngestTarget::Path(path), as_json)),
+        (false, None) => Err("want --all or --path P".to_owned()),
+    }
+}
+
+/// The transcripts under every transcript root (REC-01), root by root.
+fn root_transcripts(
+    ctx: &Context,
+    settings: &configuration::resolve::Settings,
+) -> Result<Vec<PathBuf>, String> {
+    let os_home = ctx.home.as_deref().map(Path::new);
+    let mut found = Vec::new();
+    for root in settings.texts("transcript.roots") {
+        let root = allowed_root::expand_home(root, os_home);
+        found.extend(ingest::transcripts(&root).map_err(|e| e.to_string())?);
+    }
+
+    Ok(found)
+}
+
+/// Audits, once each, the events the search index leaves out that no
+/// ingest reported yet (REC-11, I6), saying on `stderr` what it cannot.
+fn audit_index_gaps(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
+    if let Some(why) = &ingested.index_gaps_unread {
+        let _ = ctx.audit(&index_gaps::lookup_failed("ingest"));
+        let _ = writeln!(stderr, "cairn ingest: look up the search index gaps: {why}");
+    }
+    if ingested.index_gaps.is_empty() {
+        return;
+    }
+    let problem = match ctx.home() {
+        Ok(home) => index_gaps::problem(&index_gaps::report(
+            &home,
+            &ingested.index_gaps,
+            "ingest",
+            &mut |o| ctx.audit(o).is_ok(),
+        )),
+        Err(e) => Some(e.to_string()),
     };
-    let ingested = match ctx.home() {
-        Ok(home) => {
-            let in_force = audit_settings(ctx, &home, stderr);
-            if in_force.loaded.principal_layer_failed() {
-                return failed("ingest", &refuse_ingest(ctx, stderr), stderr);
-            }
-            let settings = &in_force.resolved.settings;
-            let transcript = allowed_transcript(ctx, settings, Path::new(&path), stderr);
-            transcript.and_then(|transcript| {
-                let redactor = redactor(ctx, settings, stderr)?;
-                ingest::ingest_path(&home, transcript.path(), &redactor, &mut OsEntropy)
-                    .map_err(|e| e.to_string())
-            })
-        }
-        Err(e) => Err(e.to_string()),
-    };
-    let ingested = match ingested {
-        Ok(i) => i,
-        Err(e) => return failed("ingest", &e, stderr),
-    };
+    if let Some(e) = problem {
+        let _ = writeln!(stderr, "cairn ingest: audit the search index gaps: {e}");
+    }
+}
+
+/// Audits what one ingest found, each redaction, unparsed line and
+/// format drift, and logs it.
+fn record_ingested(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
     audit_redactions(ctx, &ingested.redactions, stderr);
+    audit_parsing(ctx, ingested, stderr);
+    audit_sourcing(ctx, ingested, stderr);
+    audit_prompts(ctx, ingested, stderr);
+    audit_index_gaps(ctx, ingested, stderr);
     tracing::info!(
         transcript = %ingested.redacted_path,
         writer = %ingested.writer,
         events = ingested.events as u64,
         redactions = ingested.redactions.len() as u64,
+        unparsed = ingested.unparsed as u64,
+        format_drift = ingested.drifts.len() as u64,
         "ingested"
     );
-    let line = if as_json {
-        json!({
-            "writer": ingested.writer.to_string(),
-            "seat": ingested.seat.to_string(),
-            "room": ingested.room.to_string(),
-            "events": ingested.events,
-        })
-        .to_string()
-    } else {
-        format!(
-            "ingested {} lines into writer {}",
-            ingested.events, ingested.writer
-        )
-    };
+}
 
-    written(writeln!(stdout, "{line}"), stderr)
+/// What `cairn ingest` prints of the transcripts it recorded: for
+/// `--path`, the one; for `--all`, each, or that there was none.
+fn ingest_report(
+    target: &IngestTarget,
+    reports: &[ingest::Ingested],
+    failures: usize,
+    as_json: bool,
+) -> String {
+    let one = |i: &ingest::Ingested| {
+        json!({
+            "writer": i.writer.to_string(),
+            "seat": i.seat.to_string(),
+            "room": i.room.to_string(),
+            "events": i.events,
+            "generation": i.generation,
+            "held": i.held,
+            "runs": runs_json(&i.runs),
+        })
+    };
+    if as_json && *target == IngestTarget::All {
+        let all: Vec<Value> = reports.iter().map(one).collect();
+        return format!("{}\n", json!({"transcripts": all}));
+    }
+    if reports.is_empty() && failures == 0 && *target == IngestTarget::All {
+        return "ingested no transcript\n".to_owned();
+    }
+    reports
+        .iter()
+        .map(|i| {
+            if as_json {
+                format!("{}\n", one(i))
+            } else {
+                format!("ingested {} lines into writer {}\n", i.events, i.writer)
+            }
+        })
+        .collect()
+}
+
+/// Each run an ingest appended to, as `cairn ingest --json` shows it:
+/// its writer and seat, the harness's agent id, the run its parent link
+/// ties it to, and how many events it gained (REC-02).
+fn runs_json(runs: &[ingest::RunReport]) -> Value {
+    runs.iter()
+        .map(|r| {
+            json!({
+                "writer": r.writer.to_string(),
+                "seat": r.seat.to_string(),
+                "agent_id": r.agent_id,
+                "parent": r.parent.map(|p| p.to_string()),
+                "events": r.events,
+            })
+        })
+        .collect()
+}
+
+/// Audits what an ingest found of its transcript source, one entry
+/// each, naming the source by its redacted name: a new transcript
+/// generation (REC-07); each line repeating a `uuid` with other
+/// content, each repeat owner no fork observation chose, a hold begun
+/// and each line released from one (REC-04).
+fn audit_sourcing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
+    let keyed = |kind, counter, detail| Occurrence::Keyed {
+        kind,
+        counter,
+        operation: "ingest",
+        detail,
+        key: &ingested.name,
+    };
+    let occurrences = [
+        (
+            usize::from(ingested.new_generation),
+            keyed(
+                Kind::Truncated,
+                Counter::NewTranscriptGeneration,
+                "new transcript generation of",
+            ),
+        ),
+        (
+            ingested.conflicts,
+            keyed(
+                Kind::Rejected,
+                Counter::RepeatConflicts,
+                "repeated uuid with other content, recorded as its own event, in",
+            ),
+        ),
+        (
+            ingested.owners_chosen,
+            keyed(
+                Kind::Coalesced,
+                Counter::RepeatOwnerChosen,
+                "repeated lines owned by the run that first recorded them, repeated in",
+            ),
+        ),
+        (
+            usize::from(ingested.hold_started),
+            keyed(
+                Kind::Truncated,
+                Counter::RepeatHeld,
+                "repeated lines held at an ingest marker in",
+            ),
+        ),
+        (
+            ingested.released,
+            keyed(
+                Kind::TimedOut,
+                Counter::RepeatReleased,
+                "repeated line released into its own run in",
+            ),
+        ),
+    ];
+    for (times, occurrence) in &occurrences {
+        for _ in 0..*times {
+            if let Err(e) = ctx.audit(occurrence) {
+                let _ = writeln!(stderr, "cairn ingest: audit the transcript source: {e}");
+            }
+        }
+    }
+}
+
+/// Audits each prompt line an ingest found carrying a `prompt_id`
+/// already used up (PRV-08), and each matched `user` event whose hook
+/// handler found no attended mark in deployment mode `interactive`,
+/// which stays untrusted (PRV-04).
+fn audit_prompts(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
+    let occurrences = [
+        (
+            ingested.prompt_conflicts,
+            Occurrence::Degraded {
+                kind: Kind::Rejected,
+                counter: Counter::PromptMatchConflicts,
+                operation: "ingest",
+                detail: "a line carried the prompt_id of a prompt commitment already used up",
+            },
+        ),
+        (
+            ingested.not_attended,
+            Occurrence::Degraded {
+                kind: Kind::Rejected,
+                counter: Counter::HarnessSessionNotAttended,
+                operation: "ingest",
+                detail: "a matched user event stays untrusted: its hook handler found no \
+                         attended mark",
+            },
+        ),
+    ];
+    for (times, occurrence) in &occurrences {
+        for _ in 0..*times {
+            if let Err(e) = ctx.audit(occurrence) {
+                let _ = writeln!(stderr, "cairn ingest: audit a prompt match: {e}");
+            }
+        }
+    }
+}
+
+/// Audits each line an ingest stored as `unparsed` (REC-05) and each
+/// format drift it found (REC-26), one entry each, naming the harness
+/// version and what differed and nothing of the line's content.
+fn audit_parsing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
+    let unparsed = Occurrence::Degraded {
+        kind: Kind::Failed,
+        counter: Counter::EventsUnparsed,
+        operation: "ingest",
+        detail: "stored a transcript line it cannot parse as an unparsed event",
+    };
+    for _ in 0..ingested.unparsed {
+        if let Err(e) = ctx.audit(&unparsed) {
+            let _ = writeln!(stderr, "cairn ingest: audit an unparsed line: {e}");
+        }
+    }
+    for drift in &ingested.drifts {
+        let occurrence = Occurrence::Keyed {
+            kind: Kind::Rejected,
+            counter: Counter::FormatDrift,
+            operation: "ingest",
+            detail: "format drift",
+            key: drift,
+        };
+        if let Err(e) = ctx.audit(&occurrence) {
+            let _ = writeln!(stderr, "cairn ingest: audit a format drift: {e}");
+        }
+    }
+}
+
+/// Opens the node before anything is appended: its first start, or the
+/// node identity check every later start makes first (REC-24). A change
+/// is audited and counted. A device key missing from the key store, or
+/// a key store that is locked or cannot be read, refuses the command,
+/// audited and counted (I6).
+fn start_node(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> Result<Store, String> {
+    home.create().map_err(|e| e.to_string())?;
+    let mut store = Store::open(&home.store()).map_err(|e| e.to_string())?;
+    open_node(ctx, home, &mut store, stderr)?;
+
+    Ok(store)
+}
+
+/// The node in `home`, opened in `store` as [`start_node`] opens it:
+/// a node identity change audited and counted, and a missing device key
+/// or a key store that cannot be read refused, audited and counted.
+pub(crate) fn open_node(
+    ctx: &Context,
+    home: &Home,
+    store: &mut Store,
+    stderr: &mut dyn Write,
+) -> Result<Node, String> {
+    let opened = Node::open(home, store, &mut OsEntropy);
+    let occurrence = match &opened {
+        Ok(node) if node.identity_change().is_some() => Some(Occurrence::Degraded {
+            kind: Kind::Dropped,
+            counter: Counter::NodeIdentityChanged,
+            operation: "start",
+            detail: "node identity changed: a new device key and device seat replace the old",
+        }),
+        Ok(_) => None,
+        Err(administration::AdminError::DeviceKeyMissing) => Some(Occurrence::Degraded {
+            kind: Kind::Failed,
+            counter: Counter::DeviceKeyMissing,
+            operation: "start",
+            detail: "device key missing from the key store",
+        }),
+        Err(administration::AdminError::Key(e)) if e.is_unavailable() => {
+            Some(Occurrence::Degraded {
+                kind: Kind::Failed,
+                counter: Counter::KeyStoreUnavailable,
+                operation: "start",
+                detail: "key store locked or unreadable",
+            })
+        }
+        Err(_) => None,
+    };
+    if let Some(occurrence) = occurrence
+        && let Err(e) = ctx.audit(&occurrence)
+    {
+        let _ = writeln!(stderr, "cairn: audit the node's start: {e}");
+    }
+
+    opened.map_err(|e| e.to_string())
 }
 
 /// Refuses an ingest while the principal's configuration or the
@@ -565,43 +1059,216 @@ fn mcp(
         Ok(home) => home,
         Err(e) => return failed("mcp", &e, stderr),
     };
-    // Recall reads a record a start made; it makes no home or store.
-    if !home.store().exists() {
-        let why = format!(
-            "no store at {}: run cairn ingest first",
-            home.store().display()
-        );
-        return failed("mcp", &why, stderr);
+    // The MCP server counts each start marker a stopped hook handler
+    // left behind, as it starts (NFR-02).
+    if home.root().exists() {
+        hook_handlers::count_unfinished(&home, (ctx.clock)(), None);
     }
-    let served = Store::open(&home.store())
-        .map_err(|e| e.to_string())
-        .and_then(|store| {
-            let node = Node::find(&home, &store).map_err(|e| e.to_string())?;
-            let key = node.device().public();
-            let (writer, room) = (node.device_writer(), node.personal_room());
-            Ok(mcp::Server::new(
-                store,
-                ctx.build.version,
-                key,
-                writer,
-                room,
-            ))
-        });
-    let mut server = match served {
+    // It records its harness session's runs, so it starts the node as
+    // ingest does (REC-13).
+    let served = start_node(ctx, &home, stderr).and_then(|store| {
+        let node = Node::find(&home, &store).map_err(|e| e.to_string())?;
+        let key = node.device().public();
+        let (writer, room) = (node.device_writer(), node.personal_room());
+        Ok(mcp::Server::new(
+            store,
+            ctx.build.version,
+            key,
+            writer,
+            room,
+        ))
+    });
+    let server = match served {
         Ok(server) => server,
         Err(e) => return failed("mcp", &e, stderr),
     };
+    // What an MCP server killed before it stopped left is audited by
+    // the next one, as it starts (REC-13).
+    capture::count_stopped(&home, "mcp", &|o| {
+        let _ = ctx.audit(o);
+    });
+    let shared = std::sync::Arc::new(capture::Shared::default());
+    let mut server = server.with_runs(Box::new(capture::Finder(shared.clone())));
+    let live = live_capture(ctx, &home, &shared, stderr)
+        .map(capture::Capture::start)
+        .map(spawn_capture);
+    if let Some(deadline) = ctx.query_deadline {
+        server = server.with_query_deadline(deadline);
+    }
+    // The panic and the cancelled search each audit, and say on stderr
+    // when the audit log takes no entry, so both write through it.
+    let stderr = RefCell::new(stderr);
+    let (mut panic_err, mut cancel_err) = (Shared(&stderr), Shared(&stderr));
+    let mut cancelled = on_query_cancelled(&home, ctx.clock, &mut cancel_err);
     let served = mcp::serve(
-        &mut |l| server.handle(l),
+        &mut |l| {
+            let reply = server.handle(l);
+            record_found(ctx, &server.take_found());
+            cancelled(server.take_cancelled());
+            reply
+        },
         &(ctx.input)(),
         stdout,
         IDLE,
-        &mut on_mcp_panic(&home, ctx.clock, stderr),
+        &mut on_mcp_panic(&home, ctx.clock, &mut panic_err),
     );
+    // Its input closed: live ingest stops, audits what it left and closes
+    // its segments, within a bound; past it the next reader audits it.
+    shared.stop();
+    if let Some(done) = live {
+        let _ = done.recv_timeout(CAPTURE_STOP);
+    }
     match served {
         Ok(()) => EXIT_OK,
-        Err(e) => failed("mcp", &e, stderr),
+        Err(e) => failed("mcp", &e, &mut **stderr.borrow_mut()),
     }
+}
+
+/// How long `cairn mcp` waits for live ingest to stop once its input
+/// closes.
+const CAPTURE_STOP: Duration = Duration::from_secs(5);
+
+/// The MCP server's live ingest in `home` (REC-13): its own harness
+/// process's session bindings, its transcripts resolved within the
+/// transcript roots, redacted by the settings in force. None while a
+/// settings layer fails, as no line may be written without the
+/// redaction patterns it names (SEC-08); the refusal is audited.
+fn live_capture(
+    ctx: &Context,
+    home: &Home,
+    shared: &std::sync::Arc<capture::Shared>,
+    stderr: &mut dyn Write,
+) -> Option<capture::Capture> {
+    let in_force = audit_settings(ctx, home, stderr);
+    if in_force.loaded.principal_layer_failed() {
+        refuse_ingest(ctx, stderr);
+        return None;
+    }
+    let settings = &in_force.resolved.settings;
+    let redactor = redactor(ctx, settings, stderr).ok()?;
+    let os_home = ctx.home.as_deref().map(Path::new);
+    let roots = settings
+        .texts("transcript.roots")
+        .iter()
+        .fold(AllowedRoots::default(), |allowed, root| {
+            allowed.with(&allowed_root::expand_home(root, os_home), Access::Read)
+        });
+    let base = (ctx.clock)();
+    let started = now_instant();
+
+    Some(capture::Capture {
+        home: home.clone(),
+        roots,
+        redactor,
+        inputs: ingest::Inputs {
+            payload: payload_settings(settings),
+            forks: std::collections::BTreeSet::new(),
+            now_ms: base.saturating_mul(1000),
+            interactive: settings.deployment_mode() == "interactive",
+        },
+        harness: (ctx.ancestry)().and_then(|a| a.harness),
+        limit: ctx.live_limit,
+        clock: Box::new(move || base + started.elapsed().as_secs()),
+        shared: shared.clone(),
+    })
+}
+
+/// Now, for live ingest's audit clock.
+#[expect(
+    clippy::disallowed_methods,
+    reason = "live ingest's audit entries record when they were made; no derived artifact \
+              reads it (I10)"
+)]
+fn now_instant() -> Instant {
+    Instant::now()
+}
+
+/// Runs `capture` on a thread of its own; what it sends tells it ended.
+fn spawn_capture(capture: capture::Running) -> Receiver<()> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        capture.run();
+        let _ = tx.send(());
+    });
+
+    rx
+}
+
+/// Logs what finding each tool call's run came to (PRV-14, OPS-05),
+/// through redaction: its tool-use id, the run or why none was found,
+/// and how long it waited; each refusal counted and audited (I6).
+fn record_found(ctx: &Context, found: &[mcp::tool_call::Found]) {
+    use mcp::tool_call::Cause;
+    for f in found {
+        let id = f.tool_use_id.as_deref().unwrap_or_default();
+        let waited_ms = u64::try_from(f.waited.as_millis()).unwrap_or(u64::MAX);
+        let cause = match &f.run {
+            Ok(run) => {
+                tracing::info!(tool_use_id = id, run = run.as_str(), waited_ms, "tool call");
+                continue;
+            }
+            Err(cause) => *cause,
+        };
+        tracing::info!(
+            tool_use_id = id,
+            cause = cause.as_str(),
+            waited_ms,
+            "tool call refused"
+        );
+        let counter = match cause {
+            Cause::NoToolUseId => Counter::ToolCallWithoutToolUseId,
+            Cause::NotFound => Counter::ToolCallRunNotFound,
+            Cause::Ambiguous => Counter::ToolCallRunAmbiguous,
+        };
+        let _ = ctx.audit(&Occurrence::Degraded {
+            kind: Kind::Rejected,
+            counter,
+            operation: "mcp",
+            detail: "a tool call whose run could not be found was refused",
+        });
+    }
+}
+
+/// A writer two closures share, each writing in turn.
+struct Shared<'a, 'w>(&'a RefCell<&'w mut dyn Write>);
+
+impl Write for Shared<'_, '_> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.0.borrow_mut().write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.0.borrow_mut().flush()
+    }
+}
+
+/// What the MCP server does with each search the deadline cancelled:
+/// audit and count it, saying on `stderr` when the audit log takes no
+/// entry (SEC-04, I6).
+fn on_query_cancelled<'a>(
+    home: &'a Home,
+    clock: &'a dyn Fn() -> u64,
+    stderr: &'a mut dyn Write,
+) -> impl FnMut(u64) + 'a {
+    move |cancelled| {
+        for _ in 0..cancelled {
+            if let Err(e) = query_cancelled(home, clock()) {
+                let _ = writeln!(stderr, "cairn mcp: audit a cancelled search: {e}");
+            }
+        }
+    }
+}
+
+/// Audits a search the deadline cancelled.
+fn query_cancelled(home: &Home, time: u64) -> Result<Entry, AuditError> {
+    let occurrence = Occurrence::Degraded {
+        kind: Kind::TimedOut,
+        counter: Counter::QueryCancelled,
+        operation: "mcp",
+        detail: "query cancelled at its deadline",
+    };
+
+    Log::new(home.audit()).append(&occurrence, time)
 }
 
 /// `cairn verify [--json]`: checks the record against this node's
@@ -629,38 +1296,32 @@ fn verify_command(
     }
     let store = match Store::open(&home.store()) {
         Ok(store) => store,
+        Err(e) => return store_failed("verify", &e, stderr),
+    };
+    let lost = match sources::of(&store) {
+        Ok(status) => status.lost,
         Err(e) => return failed("verify", &e, stderr),
     };
-    let device = match DeviceKey::load(&home.device_key()) {
-        Ok(device) => device,
+    let forks = match store.refused_forks() {
+        Ok(forks) => forks,
         Err(e) => return failed("verify", &e, stderr),
     };
-    let checked = match verify(&store, &device.public()) {
-        Ok(r) => Log::new(home.audit()).verify().map(|a| (r, a)).map_err(Err),
+    let verified = match verify_record(&home, &store) {
+        Ok(verified) => verified,
+        Err(e) => return failed("verify", &e, stderr),
+    };
+    let checked = match verified {
+        Ok((r, staged)) => Log::new(home.audit())
+            .verify()
+            .map(|a| (r, staged, a))
+            .map_err(Err),
         Err(e) => Err(Ok(e)),
     };
     let (code, line) = match checked {
-        Ok((r, a)) if as_json => (
-            EXIT_OK,
-            json!({
-                "integrity": "unsigned",
-                "writers": r.writers,
-                "events": r.events,
-                "order": r.full_order(),
-                "audit": {"files": a.files, "entries": a.entries},
-                "broken": null,
-            })
-            .to_string(),
-        ),
-        Ok((r, a)) => (
-            EXIT_OK,
-            format!(
-                "checked {} writers and {} events: every chain, commitment and seat certificate \
-                 holds; integrity unsigned, as no log is signed yet; the audit log's chain holds \
-                 over {} entries",
-                r.writers, r.events, a.entries
-            ),
-        ),
+        Ok((r, staged, _)) if !forks.is_empty() => {
+            refused_report(as_json, &r, staged, &forks, stderr)
+        }
+        Ok((r, staged, a)) => (EXIT_OK, verified_line(as_json, &r, staged, &a, &lost)),
         Err(Ok(VerifyError::Store(e))) => return failed("verify", &e, stderr),
         Err(Err(e @ AuditError::Broken { .. })) => {
             broken_json(as_json, "audit", None, &e.to_string(), stderr)
@@ -684,6 +1345,145 @@ fn verify_command(
     }
 }
 
+/// The record in `store`, verified against the device key `home` keeps,
+/// or against the key an interrupted first start staged, which its next
+/// start places, with whether it was staged; an empty record while that
+/// start has recorded nothing yet, as a crash can leave a home (ENG-06).
+fn verify_record(
+    home: &Home,
+    store: &Store,
+) -> Result<Result<(Report, bool), VerifyError>, administration::AdminError> {
+    Ok(match administration::node::verifying_key(home, store)? {
+        Some((key, staged)) => verify(store, &key).map(|r| (r, staged)),
+        None => Ok((
+            Report {
+                writers: 0,
+                events: 0,
+                order: Vec::new(),
+                rooms: BTreeMap::new(),
+                seats: Vec::new(),
+                open_segments: Vec::new(),
+            },
+            true,
+        )),
+    })
+}
+
+/// What `cairn verify` says of a record that verified, `staged` while
+/// the node's first start is still to finish, as JSON when asked.
+fn verified_line(
+    as_json: bool,
+    r: &Report,
+    staged: bool,
+    a: &audit::log::Checked,
+    lost: &[String],
+) -> String {
+    if as_json {
+        return json!({
+            "integrity": "unsigned",
+            "writers": r.writers,
+            "events": r.events,
+            "order": r.full_order(),
+            "seats": seats_json(&r.seats),
+            "open_segments": segments::open_json(&r.open_segments),
+            "lost_sources": lost,
+            "staged": staged,
+            "audit": {"files": a.files, "entries": a.entries},
+            "refused": [],
+            "broken": null,
+        })
+        .to_string();
+    }
+    let staged = if staged {
+        "; the node's first start was interrupted, and its next start finishes it"
+    } else {
+        ""
+    };
+
+    format!(
+        "checked {} writers and {} events: every chain, commitment and seat certificate \
+         holds; integrity unsigned, as no log is signed yet; the audit log's chain holds \
+         over {} entries{}{}{staged}",
+        r.writers,
+        r.events,
+        a.entries,
+        open_text(&r.open_segments),
+        lost_line(lost)
+    )
+}
+
+/// What `cairn verify` says of a record whose chains hold but which
+/// refused a second event at one (writer, seq): each fork on `stderr`,
+/// exiting 3, with the integrity status `refused` and the forks as JSON
+/// when asked (PEER-10, VIEW-10). The writer is not marked, and no
+/// choice between forks is offered: only the two digests are shown.
+fn refused_report(
+    as_json: bool,
+    r: &Report,
+    staged: bool,
+    forks: &[store::Fork],
+    stderr: &mut dyn Write,
+) -> (u8, String) {
+    for line in forks::lines(forks) {
+        let _ = writeln!(stderr, "cairn verify: {line}");
+    }
+    if !as_json {
+        return (EXIT_INTEGRITY, String::new());
+    }
+    let line = json!({
+        "integrity": "refused",
+        "writers": r.writers,
+        "events": r.events,
+        "staged": staged,
+        "refused": forks::json(forks),
+        "broken": null,
+    });
+
+    (EXIT_INTEGRITY, line.to_string())
+}
+
+/// What `cairn verify` adds for transcript sources gone before they
+/// were fully ingested: nothing when none was (REC-08).
+fn lost_line(lost: &[String]) -> String {
+    if lost.is_empty() {
+        return String::new();
+    }
+
+    format!("; {}", sources::lost_text(lost))
+}
+
+/// What `cairn verify` adds for writer chains that ended without a
+/// closed segment: nothing when none did (REC-19).
+fn open_text(open: &[store::Segment]) -> String {
+    if open.is_empty() {
+        return String::new();
+    }
+
+    format!(
+        "; writer chains ended without a closed segment: {}",
+        segments::open_list(open)
+    )
+}
+
+/// Each seat as `cairn verify --json` reports it: its writer, and its
+/// seat id, room, seat kind, ingest flag and seat certificate, all read
+/// from that certificate (PRV-11).
+fn seats_json(seats: &[administration::verify::SeatReport]) -> Value {
+    seats
+        .iter()
+        .map(|s| {
+            json!({
+                "writer": s.writer.to_string(),
+                "seat": s.seat.to_string(),
+                "room": s.room.to_string(),
+                "seat_kind": s.seat_kind.as_str(),
+                "ingest_seat": s.ingest_seat,
+                "certificate": s.certificate,
+            })
+        })
+        .collect()
+}
+
 /// Reports a broken record or audit log on `stderr`, exiting 3, with
 /// the failure's class, address and message as JSON when asked; the
 /// line is empty when no JSON was asked for.
@@ -703,47 +1503,12 @@ fn broken_json(
         "writers": null,
         "events": null,
         "order": null,
+        "seats": null,
         "audit": null,
         "broken": {"class": class, "address": address, "message": message},
     });
 
     (EXIT_INTEGRITY, line.to_string())
-}
-
-/// `cairn hook <hook>`: the hook handlers' entry point (§9.1). It reads
-/// the hook input from stdin and writes at most the handler's output to
-/// stdout, never anything to stderr, and exits 0 on every path: a
-/// failure, a panic among them, is audited and the agent goes on
-/// (ENG-04, I9). A home it must refuse is left untouched (I8).
-fn hook_command(name: Option<&str>, ctx: &Context, stdout: &mut dyn Write) -> u8 {
-    let hook = name.and_then(Hook::parse);
-    let ran = match hook {
-        None => Err(Failure::UnknownHook),
-        Some(h) => hook::guarded(|| {
-            if ctx.hook_panics {
-                seam_panic();
-            }
-            let hook_input = hook_input(ctx)?;
-            hook::handle(h, &hook_input)
-        }),
-    };
-    match ran {
-        Ok(out) => {
-            let _ = stdout.write_all(out.as_bytes());
-        }
-        Err(failure) => {
-            let operation = hook.map_or("hook", Hook::operation);
-            // Nowhere to report an audit log that takes no entry: the
-            // hook writes nothing to stderr. `cairn status` and `cairn
-            // doctor` name what keeps the home from taking it. A panic
-            // while auditing stops here too (ENG-04).
-            let _ = panic::catch_unwind(AssertUnwindSafe(|| {
-                ctx.audit(&failure.occurrence(operation))
-            }));
-        }
-    }
-
-    EXIT_OK
 }
 
 /// The development build's seam for the `@ENG-04` scenario: the hook
@@ -756,8 +1521,8 @@ fn seam_panic() {
     panic!("the hook handler panics, as CAIRN_TEST_FAULT asked");
 }
 
-/// The hook input on stdin, its lines joined, once the input closes.
-/// Reading stops once it holds more than 1 MiB (SEC-05).
+/// The hook input on stdin, its lines joined, once the input closes
+/// by `deadline`. Reading stops once it holds more than 1 MiB (SEC-05).
 ///
 /// # Errors
 ///
@@ -768,9 +1533,8 @@ fn seam_panic() {
     clippy::disallowed_methods,
     reason = "the deadline on reading the hook input (ENG-03); no derived artifact reads it (I10)"
 )]
-fn hook_input(ctx: &Context) -> Result<String, Failure> {
+fn hook_input(ctx: &Context, deadline: Instant) -> Result<String, Failure> {
     let input = (ctx.input)();
-    let deadline = Instant::now() + HOOK_INPUT_WAIT;
     let (mut text, mut lines) = (String::new(), 0usize);
     loop {
         let left = deadline
@@ -975,6 +1739,14 @@ struct Status {
     awaiting_acceptance: Vec<String>,
     /// Why managed policy is refused, when it is.
     managed_policy: Option<String>,
+    /// The key store the home's keys are kept in (SEC-10).
+    keys: KeyStoreKind,
+    /// Where the node identity is read from (REC-24).
+    identity: IdentitySource,
+    /// The store's open and newer segments, once there is a store.
+    segments: Option<segments::SegmentsStatus>,
+    /// The transcript sources held or lost, once there is a store.
+    sources: Option<sources::SourcesStatus>,
 }
 
 impl Status {
@@ -992,6 +1764,15 @@ impl Status {
             "deployment_mode": self.deployment_mode,
             "awaiting_acceptance": self.awaiting_acceptance,
             "managed_policy": {"refused": self.managed_policy},
+            "keys": {
+                "store": self.keys.as_str(),
+                "readable_by_agents": self.keys.readable_by_agents(),
+                "where": self.keys.describe(),
+            },
+            "node_identity": identity_status::json(&self.identity),
+            "fork_detection": identity_status::fork_detection_json(),
+            "segments": self.segments.as_ref().map(segments::SegmentsStatus::json),
+            "transcript_sources": self.sources.as_ref().map(sources::SourcesStatus::json),
         })
         .to_string()
     }
@@ -1030,6 +1811,15 @@ impl Status {
         if let Some(why) = &self.managed_policy {
             lines.push(format!("managed policy refused: {why}"));
         }
+        lines.push(format!("keys: {}", self.keys.describe()));
+        lines.push(identity_status::node_identity_line(&self.identity));
+        lines.push(identity_status::FORK_DETECTION_LINE.to_owned());
+        lines.extend(
+            self.segments
+                .iter()
+                .flat_map(segments::SegmentsStatus::lines),
+        );
+        lines.extend(self.sources.iter().flat_map(sources::SourcesStatus::lines));
 
         lines.join("\n")
     }
@@ -1048,30 +1838,55 @@ fn status(
     let Some(as_json) = json_flag("status", args, stderr) else {
         return EXIT_USAGE;
     };
-    let read = ctx
-        .home()
-        .map_err(|e| e.to_string())
-        .and_then(|home| Ok((settings::recorded_acts(&home)?, home)));
-    let (acts, home) = match read {
-        Ok(read) => read,
+    let home = match ctx.home() {
+        Ok(home) => home,
+        Err(e) => return failed("status", &e, stderr),
+    };
+    // The store's version is read first, and nothing in a newer store is
+    // opened for writing (ADM-05).
+    let segments = match segments::read(&home) {
+        Ok(s) => s,
+        Err(e) => return store_failed("status", &e, stderr),
+    };
+    let (mut store, acts) = match settings::opened_acts(&home) {
+        Ok(opened) => opened,
         Err(e) => return failed("status", &e, stderr),
     };
     let in_force = settings::in_force(ctx, &home, &acts);
     if in_force.loaded.principal_layer_failed() {
         return invalid_layers("status", &in_force.loaded, stderr);
     }
+    // Each start marker left behind and each session binding left
+    // untaken is counted before the counters are read (NFR-02, REC-19).
+    if home.root().exists() {
+        hook_handlers::count_unfinished(&home, (ctx.clock)(), None);
+    }
+    if let Some(store) = store.as_mut() {
+        count_untaken_bindings(ctx, store);
+    }
     let counted = match home_counts("status", &home, &acts, stderr) {
         Ok(c) => c,
         Err(code) => return code,
     };
-    let status = status_of(&home, counted, &in_force);
+    let refused = segments.as_ref().is_some_and(|s| !s.newer.is_empty());
+    let mut status = status_of(&home, counted, &in_force);
+    status.segments = segments;
+    status.sources = match sources::read(&home) {
+        Ok(s) => s,
+        Err(e) => return store_failed("status", &e, stderr),
+    };
     let text = if as_json {
         status.json()
     } else {
         status.text()
     };
 
-    written(writeln!(stdout, "{text}"), stderr)
+    // A refused segment of a newer format version is named and exits 3
+    // (ADM-05).
+    match written(writeln!(stdout, "{text}"), stderr) {
+        EXIT_OK if refused => EXIT_INTEGRITY,
+        other => other,
+    }
 }
 
 /// The status of `home`, given its audit log's counts.
@@ -1095,6 +1910,10 @@ fn status_of(home: &Home, counted: Option<(Counts, u64)>, in_force: &settings::I
             .iter()
             .find(|f| f.layer == SettingsLayer::ManagedPolicy)
             .map(ToString::to_string),
+        keys: home.key_store().kind(),
+        identity: home.identity().clone(),
+        segments: None,
+        sources: None,
     };
     if let Some((counts, entries)) = counted {
         let bytes = fs::metadata(&store).ok().map(|m| m.len());
@@ -1156,8 +1975,16 @@ pub(crate) fn invalid_layers(command: &str, loaded: &Loaded, stderr: &mut dyn Wr
 }
 
 mod act;
+mod capture;
+pub mod forks;
+mod hook_handlers;
+mod identity_status;
+mod index_gaps;
+mod segments;
 mod settings;
+mod sources;
 
+pub use hook_handlers::budget_override;
 pub use settings::managed_policy;
 
 #[cfg(test)]

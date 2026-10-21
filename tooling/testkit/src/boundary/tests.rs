@@ -191,6 +191,25 @@ fn every_line_of_the_trace_is_a_network_call() {
 }
 
 #[test]
+fn a_detach_note_of_a_call_strace_could_not_name_is_no_network_call() {
+    // strace prints this when it exits while a thread of the program is
+    // still in a call; it names no call, and about 1 in 40 traced runs of
+    // a hook handler leaves one (NFR-02).
+    let trace = "24575 ???( <detached ...>\n\
+                 24575 ???( <unfinished ...>\n\
+                 24576 connect(3, {sa_family=AF_INET} <detached ...>\n\
+                 24576 connect(3, {sa_family=AF_INET} <unfinished ...>\n";
+
+    assert_eq!(
+        network_calls(trace),
+        [
+            "connect(3, {sa_family=AF_INET} <detached ...>",
+            "connect(3, {sa_family=AF_INET} <unfinished ...>"
+        ]
+    );
+}
+
+#[test]
 fn the_caller_is_the_test_thread_and_the_place() {
     let here = Location::caller();
 
@@ -559,4 +578,186 @@ fn a_start_at_a_terminal_passes_the_program_exit_code() {
         .unwrap();
 
     assert_eq!(out.status.code(), Some(7));
+}
+
+#[test]
+fn a_start_killed_while_it_runs_is_killed_with_everything_it_started() {
+    let home = TempDir::new().unwrap();
+    let left = home.path().join("left");
+    let script = format!("sleep 0.5; touch {}", left.display());
+    let starts: Vec<Confinement> = confined().into_iter().chain([unconfined()]).collect();
+
+    for c in starts {
+        let running = c
+            .run_killed(
+                Path::new("sh"),
+                &["-c", &script],
+                home.path(),
+                &[],
+                std::time::Duration::from_millis(100),
+            )
+            .unwrap();
+
+        assert!(running);
+        std::thread::sleep(std::time::Duration::from_millis(700));
+        assert!(!left.exists(), "nothing it started outlived the kill");
+    }
+}
+
+#[test]
+fn a_start_that_exits_before_its_kill_is_left_to_finish() {
+    let home = TempDir::new().unwrap();
+    let starts: Vec<Confinement> = confined().into_iter().chain([unconfined()]).collect();
+
+    for c in starts {
+        let running = c
+            .run_killed(
+                Path::new("true"),
+                &[],
+                home.path(),
+                &[],
+                std::time::Duration::from_millis(500),
+            )
+            .unwrap();
+
+        assert!(!running);
+    }
+}
+
+#[test]
+fn a_killed_start_that_cannot_run_names_the_program() {
+    let home = TempDir::new().unwrap();
+
+    let err = unconfined()
+        .run_killed(
+            Path::new("/no/such/program"),
+            &[],
+            home.path(),
+            &[],
+            std::time::Duration::from_millis(1),
+        )
+        .unwrap_err();
+
+    assert!(matches!(err, Error::Start { .. }), "{err}");
+}
+
+#[test]
+fn a_socket_a_killed_start_opened_fails_it() {
+    let Some(c) = confined() else { return };
+    let home = TempDir::new().unwrap();
+
+    let err = c
+        .run_killed(
+            &this_test_binary(),
+            &probe_args(),
+            home.path(),
+            &[],
+            std::time::Duration::from_millis(2000),
+        )
+        .unwrap_err();
+
+    assert!(matches!(err, Error::Socket { .. }), "{err}");
+}
+
+#[test]
+fn a_start_killed_before_its_trace_began_passes() {
+    let Some(c) = confined() else { return };
+    let home = TempDir::new().unwrap();
+
+    let running = c
+        .run_killed(
+            Path::new("sleep"),
+            &["5"],
+            home.path(),
+            &[],
+            std::time::Duration::ZERO,
+        )
+        .unwrap();
+
+    assert!(running);
+}
+
+#[test]
+fn a_spawned_program_talks_over_its_pipes_and_finishes_when_its_input_closes() {
+    use std::io::{BufRead, BufReader};
+    let dir = TempDir::new().unwrap();
+    let Some(core) = confined().or(Some(unconfined())) else {
+        return;
+    };
+    let mut started = core
+        .spawn(Path::new("/bin/cat"), &[], dir.path(), &[])
+        .unwrap();
+    writeln!(started.stdin().unwrap(), "hello").unwrap();
+    let mut out = BufReader::new(started.take_stdout().unwrap());
+    let mut line = String::new();
+    out.read_line(&mut line).unwrap();
+    assert_eq!(line, "hello\n");
+    assert!(started.take_stdout().is_none());
+
+    assert!(started.finish(std::time::Duration::from_secs(10)).unwrap());
+}
+
+#[test]
+fn a_spawned_program_that_outlives_its_deadline_or_is_killed_is_stopped() {
+    let dir = TempDir::new().unwrap();
+    let core = unconfined();
+    let sleeper = core
+        .spawn(Path::new("/bin/sleep"), &["30"], dir.path(), &[])
+        .unwrap();
+    assert!(
+        !sleeper
+            .finish(std::time::Duration::from_millis(50))
+            .unwrap()
+    );
+
+    let mut killed = core
+        .spawn(Path::new("/bin/sleep"), &["30"], dir.path(), &[])
+        .unwrap();
+    assert!(killed.stdin().is_some());
+    killed.kill().unwrap();
+
+    let missing = core.spawn(Path::new("/nonexistent/program"), &[], dir.path(), &[]);
+    assert!(matches!(missing, Err(Error::Start { .. })));
+}
+
+#[test]
+fn a_confined_start_killed_before_its_trace_began_made_no_call() {
+    let dir = TempDir::new().unwrap();
+    let mut started = unconfined()
+        .spawn(Path::new("/bin/true"), &[], dir.path(), &[])
+        .unwrap();
+    started.confinement.mode = Mode::Confined;
+    started.trace = dir.path().join("never-written");
+
+    assert!(started.checked().is_ok());
+}
+
+#[test]
+fn a_spawned_program_left_running_is_stopped_when_dropped() {
+    let dir = TempDir::new().unwrap();
+    let sleeper = unconfined()
+        .spawn(Path::new("/bin/sleep"), &["30"], dir.path(), &[])
+        .unwrap();
+    let pid = sleeper.child.id();
+
+    drop(sleeper);
+
+    assert!(!Path::new(&format!("/proc/{pid}")).exists());
+}
+
+#[test]
+fn a_spawned_program_that_opens_a_socket_fails_its_end() {
+    let Some(core) = confined() else {
+        return;
+    };
+    let dir = TempDir::new().unwrap();
+    let probe = core
+        .spawn(&this_test_binary(), &probe_args(), dir.path(), &[])
+        .unwrap();
+
+    let err = probe
+        .finish(std::time::Duration::from_secs(30))
+        .unwrap_err();
+
+    assert!(matches!(err, Error::Socket { .. }), "{err}");
 }

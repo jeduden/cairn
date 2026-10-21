@@ -458,6 +458,7 @@ pub fn record(
         provenance: Provenance::Operator,
         content: act.content(),
         commitment_key: CommitmentKey::from_bytes(draw(entropy)?),
+        transcript_timestamp: None,
     };
     let addresses = store.append(node.device_writer(), &[event])?;
 

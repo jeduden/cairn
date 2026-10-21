@@ -213,10 +213,40 @@ State a section tracks lives in its own struct, reached through
 `World::section::<T>()`, never as a new field on the world.
 
 A step starts the core through `run_core` in `record.rs`, confined, with
-the variables earlier steps set through `set_env`. One of them exists
-only for tests: a development build's hook handler panics when
-`CAIRN_TEST_FAULT` is `hook-panic`, so the `@ENG-04` scenario can prove
-the hook's entry point catches it. A release build never reads it.
+the variables earlier steps set through `set_env`. Some exist only for
+tests, and a release build never reads them. A development build's hook
+handler panics when `CAIRN_TEST_FAULT` is `hook-panic`, so the `@ENG-04`
+scenario can prove the hook's entry point catches it, and hangs when it
+is `hook-hang`, so `@NFR-02` can kill it. `CAIRN_TEST_CLOCK` stands the
+clock still at a time it names. `CAIRN_TEST_HOOK_BUDGET_MS` sets every
+hook's budget; `run_core` sets it lenient unless a step sets a hook's
+own, so a loaded machine fails no scenario on a budget it does not test.
+
+A benchmark, and a step that holds the core to a time budget, run a
+release build. A development build is an order of magnitude slower and
+flakes on a loaded runner. The `@NFR-02` row that times a hook handler
+starts the core through `run_release_core`. That runs
+`testkit::release_core_executable`: the path `CAIRN_RELEASE_CORE` names,
+else `target/release/cairn`. The test run never builds it. It fails
+naming `cargo build --release -p cairn` when the core is absent, so
+build it before `cargo test --workspace` or `cargo run -p coverage`.
+CI's `test`, `coverage` and release preflight jobs do.
+
+A release build has no seams. That row gives the handler its own
+budget, and the rows that kill a hung handler (`CAIRN_TEST_FAULT`,
+`CAIRN_TEST_CLOCK`) stay on the development build. The gate test
+`benchmarks_and_timed_steps_run_release_builds` (ENG-15, ENG-27) fails on
+a workflow or script line that builds the benchmark suite without
+`--release` or points it at a `debug` directory. It also fails on an
+integration test or bench function that reads a clock and starts the
+development core. A drift case proves each.
+
+The `@NFR-02` budget row times a hook handler against the frozen
+`calibrate` workload, one unit of 10 ms by definition, in alternating
+pairs under the same confinement. The path `CAIRN_CALIBRATE` names, else
+`target/release/calibrate`, is found as the core is. Build it with
+`cargo build --release -p cairn -p calibrate`, as CI does. The limits
+and the freeze are in [testing/hook-budget.md](testing/hook-budget.md).
 
 ## Keeping tests off real state
 

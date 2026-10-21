@@ -165,6 +165,9 @@ pub struct DirectDeps {
 /// The direct dependencies the manifest `file` names: the registry
 /// crates `metadata` lists for the Cargo workspace a `Cargo.toml` roots,
 /// with the product's crates where the architecture check finds them.
+/// The fuzz workspace's `fuzz/Cargo.toml` is read the same way, but
+/// nothing there links into a shipped executable: its crates are not
+/// under the product.
 ///
 /// # Errors
 ///
@@ -182,6 +185,10 @@ pub fn direct_deps(
                 shipped: cargo_shipped_deps(&json, Path::new(architecture::PRODUCT))?,
             })
         }
+        "fuzz/Cargo.toml" => Ok(DirectDeps {
+            all: cargo_direct_deps(&metadata(&checkout.root.join(file))?)?,
+            shipped: Vec::new(),
+        }),
         other => Err(format!("no reader for the dependencies in {other}")),
     }
 }
@@ -257,12 +264,25 @@ pub fn deps_justified(adrs: &[Adr]) -> Vec<String> {
     problems
 }
 
-/// Checks every accepted module's license against `allowed`.
+/// Checks every accepted module's license against `allowed`, and, for
+/// a module `exceptions` names, against the licenses its exception
+/// adds.
 #[must_use]
-pub fn licenses_allowed(adrs: &[Adr], allowed: &[String]) -> Vec<String> {
+pub fn licenses_allowed(
+    adrs: &[Adr],
+    allowed: &[String],
+    exceptions: &BTreeMap<String, Vec<String>>,
+) -> Vec<String> {
     accepted(adrs)
         .flat_map(|a| &a.modules)
-        .filter(|m| !license_allowed(&m.license, allowed))
+        .filter(|m| {
+            let extra = exceptions
+                .get(&m.name)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            let all: Vec<String> = allowed.iter().chain(extra).cloned().collect();
+            !license_allowed(&m.license, &all)
+        })
         .map(|m| {
             format!(
                 "{} is licensed {:?}, not on the allow-list {}",
@@ -274,18 +294,43 @@ pub fn licenses_allowed(adrs: &[Adr], allowed: &[String]) -> Vec<String> {
         .collect()
 }
 
+/// The per-crate license exceptions `deny_toml` names: each
+/// `{ crate = "name", allow = ["License", ...] }` line, comments
+/// skipped.
+#[must_use]
+pub fn license_exceptions(deny_toml: &str) -> BTreeMap<String, Vec<String>> {
+    deny_toml
+        .lines()
+        .map(str::trim)
+        .filter_map(|line| {
+            let rest = line.strip_prefix("{ crate = \"")?;
+            let (name, rest) = rest.split_once("\", allow = [")?;
+            let (licenses, _) = rest.split_once(']')?;
+            let licenses = licenses
+                .split(',')
+                .map(|l| l.trim().trim_matches('"').to_owned())
+                .filter(|l| !l.is_empty())
+                .collect();
+            Some((name.to_owned(), licenses))
+        })
+        .collect()
+}
+
 /// Whether `license` is on `allowed`. A family name admits only its
 /// named permissive variants, never a bare family or any other id
 /// sharing its prefix: "BSD" admits BSD-2-Clause and BSD-3-Clause, not
 /// BSD-4-Clause or BSD-Protection. An SPDX `OR` expression, such as
 /// "MIT OR Apache-2.0", offers a choice, so one allowed choice admits
-/// it.
+/// it. An `AND` expression, such as "(MIT OR Apache-2.0) AND NCSA",
+/// binds the crate to every part, so each must be allowed.
 #[must_use]
 pub fn license_allowed(license: &str, allowed: &[String]) -> bool {
-    license.split(" OR ").any(|choice| {
-        allowed.iter().any(|a| match a.as_str() {
-            "BSD" => ["BSD-2-Clause", "BSD-3-Clause"].contains(&choice),
-            a => choice == a,
+    license.split(" AND ").all(|part| {
+        part.trim_matches(['(', ')']).split(" OR ").any(|choice| {
+            allowed.iter().any(|a| match a.as_str() {
+                "BSD" => ["BSD-2-Clause", "BSD-3-Clause"].contains(&choice),
+                a => choice == a,
+            })
         })
     })
 }

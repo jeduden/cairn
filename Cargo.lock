@@ -7,6 +7,7 @@ name = "administration"
 version = "0.0.0"
 dependencies = [
  "key",
+ "platform",
  "record",
  "rusqlite",
  "serde_json",
@@ -164,6 +165,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "calibrate"
+version = "0.0.0"
+
+[[package]]
 name = "cc"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -262,6 +267,22 @@ checksum = "633458d4ef8c78b72454de2d54fd6ab2e60f9e02be22f3c6104cdc8a4e0fceb9"
 dependencies = [
  "unicode-segmentation",
 ]
+
+[[package]]
+name = "core-foundation"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2a6cd9ae233e7f62ba4e9353e81a88df7fc8a5987b8d445b4d90c879bd156f6"
+dependencies = [
+ "core-foundation-sys",
+ "libc",
+]
+
+[[package]]
+name = "core-foundation-sys"
+version = "0.8.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
 name = "coverage"
@@ -491,6 +512,7 @@ version = "0.0.0"
 dependencies = [
  "adr",
  "benchmark",
+ "calibrate",
  "drift",
  "review-gate",
  "scenario",
@@ -699,8 +721,12 @@ dependencies = [
 name = "harness-contract"
 version = "0.0.0"
 dependencies = [
+ "hook",
+ "provenance",
+ "redaction",
  "serde_json",
  "testkit",
+ "transcript",
 ]
 
 [[package]]
@@ -721,6 +747,8 @@ version = "0.0.0"
 dependencies = [
  "audit",
  "serde_json",
+ "testkit",
+ "transcript",
 ]
 
 [[package]]
@@ -863,12 +891,14 @@ version = "0.0.0"
 dependencies = [
  "administration",
  "key",
+ "provenance",
  "record",
  "redaction",
  "rusqlite",
  "serde_json",
  "store",
  "testkit",
+ "transcript",
 ]
 
 [[package]]
@@ -907,7 +937,9 @@ version = "0.0.0"
 dependencies = [
  "ed25519-dalek",
  "getrandom",
+ "platform",
  "record",
+ "security-framework",
  "serde_json",
  "testkit",
 ]
@@ -964,6 +996,7 @@ dependencies = [
  "record",
  "redaction",
  "rusqlite",
+ "search",
  "serde_json",
  "store",
  "testkit",
@@ -1067,6 +1100,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 
 [[package]]
+name = "platform"
+version = "0.0.0"
+dependencies = [
+ "windows-sys",
+]
+
+[[package]]
 name = "potential_utf"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1084,6 +1124,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "provenance"
+version = "0.0.0"
+dependencies = [
+ "record",
+ "redaction",
+ "serde_json",
+ "transcript",
 ]
 
 [[package]]
@@ -1248,13 +1298,16 @@ dependencies = [
  "drift",
  "engineering",
  "harness-contract",
+ "ingest",
  "key",
  "record",
+ "redaction",
  "rusqlite",
  "serde_json",
  "srs",
  "store",
  "testkit",
+ "transcript",
 ]
 
 [[package]]
@@ -1266,6 +1319,36 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "search"
+version = "0.0.0"
+dependencies = [
+ "record",
+]
+
+[[package]]
+name = "security-framework"
+version = "3.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7f4bc775c73d9a02cde8bf7b2ec4c9d12743edf609006c7facc23998404cd1d"
+dependencies = [
+ "bitflags",
+ "core-foundation",
+ "core-foundation-sys",
+ "libc",
+ "security-framework-sys",
+]
+
+[[package]]
+name = "security-framework-sys"
+version = "2.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ce2691df843ecc5d231c0b14ece2acc3efb62c0a398c7e1d875f3983ce020e3"
+dependencies = [
+ "core-foundation-sys",
+ "libc",
 ]
 
 [[package]]
@@ -1397,6 +1480,7 @@ version = "0.0.0"
 dependencies = [
  "record",
  "rusqlite",
+ "search",
  "serde_json",
  "testkit",
 ]
@@ -1601,6 +1685,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "transcript"
+version = "0.0.0"
+dependencies = [
+ "serde_json",
 ]
 
 [[package]]
