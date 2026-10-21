@@ -39,13 +39,9 @@ Outcome:
 - The `query_parser` fuzz target ran 3.4M inputs in 60 s without a
   crash, from eight committed seeds.
 - NFR-03 is benchmarked: `search_events` is 11 ms median over 2,000
-  lines, process start included. On 1M events a release build took
-  166 ms p95 at worst (`search_latency.rs`, ignored by default).
-- Frozen with evidence, in their own commit: REC-11's 1 MiB cap (290 ms
-  to index one event at it, release build), RCL-02's 50 hits and
-  SEC-04's 16 terms of 64 characters.
-- I2, I6, I9 and I10 hold: hits reach the model only in the envelope,
-  refusals are fixed text, a cancelled query is audited.
+  lines; on 1M events 166 ms p95 at worst (`search_latency.rs`).
+- Frozen with evidence, in their own commit: REC-11's 1 MiB cap,
+  RCL-02's 50 hits and SEC-04's 16 terms of 64 characters.
 
 Inherited:
 
@@ -70,9 +66,13 @@ For the stakeholder:
   per writer. RCL-02 says nothing of ranking only the newest 2,000
   matches. `recall.feature` line 26 ("a short run ... a long run") is
   proven only per writer.
-- The index leaves out a writer whose slot another holds, and seqs from
-  2^28: counted `search_index_writer_unindexed` and
-  `search_index_seq_beyond_limit` (I6).
+- Deviation from REC-11, for the stakeholder: `event_search` cannot
+  find the events of a writer whose slot a smaller writer id holds, nor
+  any from seq 2^28 on. Counted `search_index_writer_unindexed` and
+  `search_index_seq_beyond_limit`, audited per writer and class, said at
+  each ingest (I6). They count gaps, not events: the audit detail is
+  fixed text and a writer id, so a count of events needs a numeric
+  field the stakeholder must allow. A wider row id lifts it.
 - `@RCL-02` stays `@pending`, no step bound. Its calls name no scope,
   so `run` needs the session binding (phase 9). Its transcript
   "mixed-provenance" has no steps, and no live ingest (phase 10) reads
@@ -83,7 +83,6 @@ For the stakeholder:
   evidence is 1M.
 - Stakeholder paths, each in its own commit: the `search` crate, the
   fuzz target, the steps and features, the benchmark, the SRS freeze.
-- Terms: indexing cap, damping, score, literal term. "Slot" is code only.
 
 Parked:
 
