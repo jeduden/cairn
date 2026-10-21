@@ -426,20 +426,22 @@ fn the_personal_room_is_the_one_whose_device_seat_holds_the_genesis() {
     let node = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
     // Device seats the device key certified in other rooms, as joins
     // will add, with no genesis of their own; the store lists seats by
-    // writer, so at least one must come before the genesis.
+    // writer, so at least one must come before the genesis. A genesis
+    // writer is random and may sort low, so seats are added until one
+    // sorts before it, never a fixed few.
     let mut before = 0;
-    for n in 0..64u8 {
+    let mut n = 0u32;
+    while before == 0 || n < 5 {
         let seat = SeatKey::mint(&mut OsEntropy).unwrap();
-        let room = RoomId::derive(&[n; 32], &[n; 16]);
+        let mut tag = [0u8; 16];
+        tag[..4].copy_from_slice(&n.to_le_bytes());
+        let room = RoomId::derive(&[0; 32], &tag);
         let cert =
             SeatCertificate::issue(node.device(), &seat, room, SeatKind::Device, false).unwrap();
         before += usize::from(cert.writer_id() < node.device_writer());
         store.add_seat(&seat_record(&cert)).unwrap();
-        if before > 0 && n >= 4 {
-            break;
-        }
+        n += 1;
     }
-    assert!(before > 0, "no device seat sorts before the genesis");
 
     let again = Node::open(&home, &mut store, &mut OsEntropy).unwrap();
 
