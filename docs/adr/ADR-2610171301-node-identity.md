@@ -6,8 +6,11 @@ summary: >-
   REC-24 names no source for the node identity. On Linux Cairn reads
   systemd's machine id, /etc/machine-id or D-Bus's copy, and the home
   keeps only its digest. An unavailable value has a digest of its own,
-  so a node that never reads one changes once. macOS and Windows read
-  none yet, so no change is found there until a shim reads one.
+  so a node that never reads one changes once. On macOS it is the
+  hardware UUID gethostuuid(2) returns, on Windows the MachineGuid
+  registry value, both read in the platform crate, the one crate with
+  unsafe code. cairn status says per OS whether the identity is
+  checked.
 ---
 # ADR-2610171301: The node identity
 
@@ -23,7 +26,7 @@ of plan [2609292012](../../plan/2609292012_m1-record-and-recall/plan.md)
 builds the check.
 
 The core opens no socket and starts no program but its kernel worker
-(I4, SEC-01), and only the `dpapi` shim may hold unsafe code
+(I4, SEC-01), and only the `platform` shim may hold unsafe code
 ([ADR-2610171300](ADR-2610171300-key-stores.md)). So the source must be
 a file the core can read, or a call through that shim.
 
@@ -39,11 +42,26 @@ a file the core can read, or a call through that shim.
 - **Unavailable.** A value still unavailable after a second read counts
   as a change, as REC-24 says. Its digest is a fixed one of its own, so
   a node that never reads a value changes once, not at every start.
-- **macOS and Windows** read none yet: no change is found there. Each
-  needs a call outside the core's safe code: `gethostuuid` on macOS,
-  the `MachineGuid` registry value on Windows. Both could join the
-  `dpapi` shim, which then becomes the platform shim. That widens
-  ruling 2's one listed shim, so it waits for the stakeholder.
+- **macOS** reads the hardware UUID `gethostuuid(2)` returns, the value
+  `ioreg` shows as `IOPlatformUUID`. It is a system call, not a program
+  start (I4, SEC-01), made with a 100 ms wait (ENG-03); a timeout or a
+  failure is an unavailable value.
+- **Windows** reads the `MachineGuid` value under
+  `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography`, read-only
+  through the 64-bit registry view, which needs no administrator. A
+  value that is missing, not a string, of an odd or oversized length,
+  not UTF-16 or empty is unavailable.
+- **The `platform` crate.** The `dpapi` shim is renamed `platform` and
+  holds a second module, `identity`, beside `dpapi`; each module allows
+  unsafe code, justifies each unsafe block and sits behind a trait a
+  test fakes, so Miri checks the pointer logic on any OS (ENG-09). The
+  macOS call is declared in the crate with `extern "C"`, so no
+  dependency is added; the Windows reads use `windows-sys`, with the
+  `Win32_System_Registry` feature added.
+- **Status.** `cairn status` says whether the node identity is checked
+  on this OS and against what, and that finding a fork across nodes
+  arrives with the peer network (PEER-10) while `cairn verify` scans
+  the writer logs held here.
 - **Tests.** A development build reads the value from the file
   `CAIRN_TEST_NODE_IDENTITY` names, as it reads managed policy from
   `CAIRN_TEST_MANAGED_POLICY`; a release build never does.
@@ -63,5 +81,6 @@ a file the core can read, or a call through that shim.
   its keys while the value stays unavailable. A copy of that home on
   another machine without one is not found changed; the deployment
   documentation should require a machine id per runner.
-- Until macOS and Windows read a value, REC-24's check holds on Linux
-  alone, and `@REC-24`'s outline passes only there.
+- REC-24's check holds on Linux, macOS and Windows. The macOS and
+  Windows reads are built for their targets in CI but not run there,
+  and Miri runs their pointer logic over fakes.

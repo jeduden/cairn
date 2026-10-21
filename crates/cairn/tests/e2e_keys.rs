@@ -99,6 +99,17 @@ fn keys_stay_in_the_key_store_and_a_changed_node_identity_starts_a_new_device_se
         text.contains("an unsandboxed agent of the same OS user could read them"),
         "{text}"
     );
+    // The development build reads the identity from the test seam's
+    // file, and says so; a fork is found by a local scan for now.
+    assert!(text.contains("node identity: checked (a file)\n"), "{text}");
+    assert!(
+        text.contains(
+            "fork detection: local scan by cairn verify; peer detection with the peer network\n"
+        ),
+        "{text}"
+    );
+    assert_eq!(status["node_identity"]["checked"], true);
+    assert_eq!(status["fork_detection"]["local"], "cairn verify");
 
     fs::write(home.join("machine-id"), "second\n").unwrap();
     let second = ingest(home, "two");
