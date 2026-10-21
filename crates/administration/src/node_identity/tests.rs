@@ -10,22 +10,87 @@ fn home(dir: &TempDir) -> Home {
     home
 }
 
+/// A host id that reads `value`.
+struct Fixed(Option<&'static str>);
+
+impl platform::identity::HostId for Fixed {
+    fn read(&self) -> Option<String> {
+        self.0.map(str::to_owned)
+    }
+}
+
+fn linux() -> IdentitySource {
+    IdentitySource::Files(vec![
+        PathBuf::from("/etc/machine-id"),
+        PathBuf::from("/var/lib/dbus/machine-id"),
+    ])
+}
+
 #[test]
-fn this_os_reads_its_machine_id_or_nothing() {
+fn this_os_reads_its_own_source() {
     let source = IdentitySource::platform();
 
     if cfg!(target_os = "linux") {
-        assert_eq!(
-            source,
-            IdentitySource::Files(vec![
-                PathBuf::from("/etc/machine-id"),
-                PathBuf::from("/var/lib/dbus/machine-id"),
-            ])
-        );
+        assert_eq!(source, linux());
+    } else if cfg!(target_os = "macos") {
+        assert_eq!(source, IdentitySource::HardwareUuid);
+    } else if cfg!(windows) {
+        assert_eq!(source, IdentitySource::MachineGuid);
     } else {
         assert_eq!(source, IdentitySource::Unsupported);
     }
     assert_eq!(IdentitySource::Unsupported.read(), None);
+}
+
+#[test]
+fn the_hardware_uuid_and_the_machine_guid_read_through_the_host_id() {
+    for source in [IdentitySource::HardwareUuid, IdentitySource::MachineGuid] {
+        assert_eq!(
+            source.read_with(&Fixed(Some("abc"))).as_deref(),
+            Some("abc")
+        );
+        assert_eq!(source.read_with(&Fixed(None)), None);
+    }
+}
+
+#[test]
+fn a_file_source_and_an_unsupported_one_ignore_the_host_id() {
+    let files = IdentitySource::Files(vec![PathBuf::from("/nonexistent/id")]);
+
+    assert_eq!(files.read_with(&Fixed(Some("abc"))), None);
+    assert_eq!(
+        IdentitySource::Unsupported.read_with(&Fixed(Some("abc"))),
+        None
+    );
+}
+
+#[test]
+fn a_source_says_what_the_identity_is_checked_against() {
+    assert_eq!(linux().describe(), Some("Linux machine id"));
+    assert_eq!(
+        IdentitySource::HardwareUuid.describe(),
+        Some("macOS hardware UUID")
+    );
+    assert_eq!(
+        IdentitySource::MachineGuid.describe(),
+        Some("Windows MachineGuid")
+    );
+    assert_eq!(
+        IdentitySource::Files(vec![PathBuf::from("/x")]).describe(),
+        Some("a file")
+    );
+    assert_eq!(IdentitySource::Unsupported.describe(), None);
+}
+
+#[test]
+fn a_host_source_is_checked_like_a_file_one() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir).with_identity(IdentitySource::HardwareUuid);
+
+    // A first start records whatever the host id reads, or its
+    // unavailability, and counts as unchanged.
+    assert_eq!(changed(&home).unwrap(), None);
+    assert!(home.node_identity().exists());
 }
 
 #[test]
