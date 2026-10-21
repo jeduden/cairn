@@ -85,9 +85,11 @@ a file the core can read, or a call through that shim.
 - **A crate (`machine-uid` 0.6.0, MIT).** It holds unsafe code of its
   own and would be a new direct dependency in a core already at
   ENG-18's ten.
-- **Extending the `dpapi` shim crate into a platform shim.** It keeps
-  the unsafe code in one crate, but it widens the scope ADR-2610171300
-  gave that shim. Proposed; the shim crate scope is open.
+- **Extending the `dpapi` shim crate into a platform shim** (chosen).
+  It keeps the unsafe code in one crate, `platform`, in two modules,
+  but it widens the scope ADR-2610171300 gave that shim. The
+  stakeholder consented to the widening and the rename on 21 October
+  2026.
 
 ## Consequences
 
