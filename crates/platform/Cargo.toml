@@ -1,5 +1,5 @@
 [package]
-name = "dpapi"
+name = "platform"
 version = "0.0.0"
 description = "Protects a key's bytes for the running OS user through Windows' DPAPI: the one crate that holds unsafe code (SEC-10, ENG-09)"
 edition.workspace = true
@@ -13,7 +13,7 @@ windows-sys.workspace = true
 # The one crate that does not inherit the workspace lints, which forbid
 # unsafe code: it calls DPAPI through windows-sys (the plan's ruling 2).
 # It denies unsafe code instead, so only the module that allows it,
-# src/shim.rs, holds any, and every unsafe block says why it is sound.
+# src/dpapi.rs, holds any, and every unsafe block says why it is sound.
 # Miri runs its tests over a fake of DPAPI (ENG-09). The static-analysis
 # gate lists it, and holds it to the workspace's other lints.
 [lints.rust]

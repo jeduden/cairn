@@ -950,12 +950,12 @@ fn static_analysis_cases() -> Vec<Case> {
             "the unsafe shim no longer denying unsafe code",
             "every_crate_forbids_unsafe_code",
             Injection::replace(
-                "crates/dpapi/Cargo.toml",
+                "crates/platform/Cargo.toml",
                 "unsafe_code = \"deny\"",
                 "unsafe_code = \"allow\"",
             ),
             unsafe_ban(),
-            "crate crates/dpapi, the one unsafe shim, does not deny unsafe code in its own lints",
+            "crate crates/platform, the one unsafe shim, does not deny unsafe code in its own lints",
         ),
         case(
             "the workspace lints no longer forbidding unsafe code",
@@ -1067,9 +1067,9 @@ fn complexity_cases() -> Vec<Case> {
         case(
             "the unsafe shim no longer denying too_many_lines",
             GATE,
-            Injection::replace("crates/dpapi/Cargo.toml", "too_many_lines = \"deny\"\n", ""),
+            Injection::replace("crates/platform/Cargo.toml", "too_many_lines = \"deny\"\n", ""),
             gate(),
-            "crate crates/dpapi, the one unsafe shim, does not deny clippy::too_many_lines",
+            "crate crates/platform, the one unsafe shim, does not deny clippy::too_many_lines",
         ),
         case(
             "a product crate's clippy.toml raising a complexity ceiling",

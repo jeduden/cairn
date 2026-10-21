@@ -1,4 +1,4 @@
-//! The one module in the workspace that holds unsafe code. It hands
+//! A module of the one crate that holds unsafe code. It hands
 //! DPAPI a blob over the caller's bytes, copies out the blob DPAPI
 //! returns, and frees it once; every unsafe block says why it is sound.
 

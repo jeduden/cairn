@@ -6,8 +6,8 @@ scope: dependencies
 summary: >-
   The core keeps each key in an entry named per home: on macOS in the
   Keychain through security-framework, on Windows in a file DPAPI
-  protects through windows-sys in the dpapi shim, the one crate with
-  unsafe code, which Miri checks; on Linux in a 0600 file, and cairn
+  protects through windows-sys in the platform crate (once the dpapi shim),
+  the one crate with unsafe code, which Miri checks; on Linux in a 0600 file, and cairn
   status says so. The stakeholder's ruling 2 of 14 October 2026.
 ---
 # ADR-2610171300: Key stores
@@ -44,12 +44,15 @@ here.
   stays inside that crate.
 - **Windows.** Each key is a file in the home's keys directory holding
   the key's bytes as DPAPI protected them for the running OS user, with
-  no prompt. `windows-sys` is reached only from the `dpapi` crate, the
+  no prompt. `windows-sys` is reached only from the `platform` crate, the
   one crate in the workspace that does not forbid unsafe code. It
   denies it instead, allows it in one module, and documents every
   unsafe block. That module calls DPAPI through a trait a test fakes,
   so Miri runs its pointer and buffer handling on Linux (ENG-09). The
-  static-analysis gate lists the crate as its one exception.
+  static-analysis gate lists the crate as its one exception. The crate
+  was first called `dpapi`; it is `platform` now, and
+  [ADR-2610171301](ADR-2610171301-node-identity.md) adds its second
+  module.
 - **Linux and other Unix.** Each key is a `0600` file in the home's
   keys directory. The Secret Service needs D-Bus, a socket the core may
   not open (I4), and the kernel keyring does not survive a reboot. A
@@ -74,7 +77,7 @@ links only on macOS, `windows-sys` only on Windows.
 
 - The core's reach test allows `security-framework`,
   `security-framework-sys`, `core-foundation`, `core-foundation-sys`,
-  `windows-sys`, `windows-link` and `dpapi`. None opens a socket or
+  `windows-sys`, `windows-link` and `platform`. None opens a socket or
   starts a program.
 - The direct set linked into the core is ten, ENG-18's target.
 - The Keychain and DPAPI stores are checked with `cargo check` for
