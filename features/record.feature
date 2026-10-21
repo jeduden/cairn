@@ -373,6 +373,9 @@ Feature: Record (REC)
     And the new seat's writer reads origin "peer" until a confirm signed by a managed-policy confirmation key names that inception, then "witnessed"
     And no event is appended under the old device key or the old seat key
     And an unavailable node identity value read again within the hook budgets and found unchanged counts as no change
+    And the home keeps only a digest of the node identity value, never the value
+    And an unavailable node identity value counts as one changed identity, so a node that never reads a value changes once and not at every later start
+    And "cairn status" says, for this OS, whether node identity is checked, and that fork detection beyond the local scan arrives with the peer network
 
     Examples:
       | change                                                       |
@@ -380,6 +383,8 @@ Feature: Record (REC)
       | the home is a copied volume mounted on another machine       |
       | the home is recovered from a snapshot on another machine     |
       | the node identity value is unavailable on every read        |
+      | the home is part of a cloned runner image on macOS, whose hardware UUID differs |
+      | the home is a copied volume on Windows, whose MachineGuid differs |
 
   @REC-25 @P1 @I1 @I10 @pending
   Scenario: closed segments are merged later, outside every hook budget, so a writer has at most 48 segments a day
