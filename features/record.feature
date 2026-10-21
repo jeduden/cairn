@@ -375,7 +375,6 @@ Feature: Record (REC)
     And an unavailable node identity value read again within the hook budgets and found unchanged counts as no change
     And the home keeps only a digest of the node identity value, never the value
     And an unavailable node identity value counts as one changed identity, so a node that never reads a value changes once and not at every later start
-    And "cairn status" says, for this OS, whether node identity is checked, and that fork detection beyond the local scan arrives with the peer network
 
     Examples:
       | change                                                       |

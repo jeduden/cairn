@@ -183,6 +183,8 @@ Feature: Administration and lifecycle (ADM)
     Then the command exits 0
     And the output shows the store location, its size, the schema version and the deployment mode "automation"
     And the output shows the counter "hook_budget_exceeded" with value 2
+    And the output says, for this OS, whether node identity is checked
+    And the output says that a second event at one (writer, seq) is refused for the segments the node holds, that the "equivocated" mark waits for seals and that the check between peers arrives with the peer network
 
   @ADM-12 @P1 @I2 @pending
   Scenario: export writes only trusted events with provenance as JSONL
