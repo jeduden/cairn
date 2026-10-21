@@ -1,7 +1,7 @@
 ---
 id: ADR-2610171301
 title: "The node identity is the machine id, kept in the home only as a digest"
-status: proposed
+status: accepted
 summary: >-
   REC-24 names no source for the node identity. On Linux Cairn reads
   systemd's machine id, /etc/machine-id or D-Bus's copy, and the home
@@ -89,7 +89,7 @@ a file the core can read, or a call through that shim.
   It keeps the unsafe code in one crate, `platform`, in two modules,
   but it widens the scope ADR-2610171300 gave that shim. The
   stakeholder consented to the widening and the rename on 21 October
-  2026.
+  2026, and accepted this record the same day.
 
 ## Consequences
 
