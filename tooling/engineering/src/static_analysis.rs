@@ -75,7 +75,7 @@ const FORBID: &str = "#![forbid(unsafe_code)]";
 /// key store calls DPAPI (ADR-2610171300). It denies unsafe code in its
 /// own lints instead of inheriting the workspace's forbid, allows it in
 /// one module, and Miri runs its tests (ENG-09).
-pub const UNSAFE_SHIM: &str = "crates/dpapi";
+pub const UNSAFE_SHIM: &str = "crates/platform";
 
 /// The jobs `job` needs: an inline list or a single job.
 #[must_use]

@@ -4,7 +4,7 @@
 //! - macOS: the Keychain, through `security-framework`, under an
 //!   account named for the home.
 //! - Windows: a file in the home whose bytes DPAPI protects for the OS
-//!   user, through the `dpapi` crate.
+//!   user, through the `platform` crate.
 //! - Linux and other Unix: a file in the home only the principal's OS
 //!   user can read. Linux's Secret Service needs D-Bus, a socket the
 //!   core may not open (I4), and its kernel keyring does not survive a

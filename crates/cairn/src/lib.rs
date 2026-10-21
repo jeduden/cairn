@@ -1702,6 +1702,8 @@ struct Status {
     managed_policy: Option<String>,
     /// The key store the home's keys are kept in (SEC-10).
     keys: KeyStoreKind,
+    /// Where the node identity is read from (REC-24).
+    identity: IdentitySource,
     /// The store's open and newer segments, once there is a store.
     segments: Option<segments::SegmentsStatus>,
     /// The transcript sources held or lost, once there is a store.
@@ -1728,6 +1730,8 @@ impl Status {
                 "readable_by_agents": self.keys.readable_by_agents(),
                 "where": self.keys.describe(),
             },
+            "node_identity": identity_status::json(&self.identity),
+            "fork_detection": identity_status::fork_detection_json(),
             "segments": self.segments.as_ref().map(segments::SegmentsStatus::json),
             "transcript_sources": self.sources.as_ref().map(sources::SourcesStatus::json),
         })
@@ -1769,6 +1773,8 @@ impl Status {
             lines.push(format!("managed policy refused: {why}"));
         }
         lines.push(format!("keys: {}", self.keys.describe()));
+        lines.push(identity_status::node_identity_line(&self.identity));
+        lines.push(identity_status::FORK_DETECTION_LINE.to_owned());
         lines.extend(
             self.segments
                 .iter()
@@ -1866,6 +1872,7 @@ fn status_of(home: &Home, counted: Option<(Counts, u64)>, in_force: &settings::I
             .find(|f| f.layer == SettingsLayer::ManagedPolicy)
             .map(ToString::to_string),
         keys: home.key_store().kind(),
+        identity: home.identity().clone(),
         segments: None,
         sources: None,
     };
@@ -1931,6 +1938,7 @@ pub(crate) fn invalid_layers(command: &str, loaded: &Loaded, stderr: &mut dyn Wr
 mod act;
 mod capture;
 mod hook_handlers;
+mod identity_status;
 mod index_gaps;
 mod segments;
 mod settings;

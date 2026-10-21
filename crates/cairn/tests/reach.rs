@@ -33,12 +33,12 @@ const REACHABLE: [&str; 77] = [
     "allowed_root",
     "audit",
     "configuration",
-    "dpapi",
     "envelope",
     "hook",
     "ingest",
     "key",
     "mcp",
+    "platform",
     "provenance",
     "record",
     "redaction",
@@ -80,7 +80,7 @@ const REACHABLE: [&str; 77] = [
     // keychain and the types that carry them, never a socket or a
     // program start; on Windows, DPAPI's declarations and the link
     // stubs windows-sys calls them through, reached only from the
-    // dpapi shim.
+    // platform shim.
     "security-framework",
     "security-framework-sys",
     "core-foundation",

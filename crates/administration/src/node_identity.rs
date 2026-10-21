@@ -3,14 +3,14 @@
 //! append of each start. The home keeps only its digest, never the value.
 //!
 //! On Linux it is the machine id systemd keeps, `/etc/machine-id`, or
-//! D-Bus's copy of it. macOS and Windows read none yet, so a home there
-//! is never found changed (for the stakeholder: plan 2609292012,
-//! phase 5).
+//! D-Bus's copy of it. On macOS it is the hardware UUID, on Windows the
+//! `MachineGuid`, both read through the `platform` crate.
 
 use std::fs;
 use std::path::PathBuf;
 
 use key::file::{staging, sync_directory, write_secret};
+use platform::identity::{HostId, Os};
 use record::digest::Digest;
 
 use crate::AdminError;
@@ -24,8 +24,11 @@ const LABEL: &[u8] = b"cairn node identity v1\0";
 pub enum IdentitySource {
     /// The first of these files that holds a value.
     Files(Vec<PathBuf>),
-    /// This OS has no source Cairn reads yet: the identity is not
-    /// checked.
+    /// The macOS hardware UUID.
+    HardwareUuid,
+    /// The Windows `MachineGuid`.
+    MachineGuid,
+    /// This OS has no source Cairn reads: the identity is not checked.
     Unsupported,
 }
 
@@ -34,32 +37,72 @@ impl IdentitySource {
     #[cfg(target_os = "linux")]
     #[must_use]
     pub fn platform() -> Self {
+        Self::linux()
+    }
+
+    /// This OS's source: the hardware UUID on macOS.
+    #[cfg(target_os = "macos")]
+    #[must_use]
+    pub fn platform() -> Self {
+        Self::HardwareUuid
+    }
+
+    /// This OS's source: the `MachineGuid` on Windows.
+    #[cfg(windows)]
+    #[must_use]
+    pub fn platform() -> Self {
+        Self::MachineGuid
+    }
+
+    /// This OS's source: none.
+    #[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
+    #[must_use]
+    pub fn platform() -> Self {
+        Self::Unsupported
+    }
+
+    /// What the identity is checked against, or none when it is not
+    /// checked.
+    #[must_use]
+    pub fn describe(&self) -> Option<&'static str> {
+        match self {
+            Self::Files(_) if *self == Self::linux() => Some("Linux machine id"),
+            Self::Files(_) => Some("a file"),
+            Self::HardwareUuid => Some("macOS hardware UUID"),
+            Self::MachineGuid => Some("Windows MachineGuid"),
+            Self::Unsupported => None,
+        }
+    }
+
+    /// Linux's source, whatever the running OS.
+    fn linux() -> Self {
         Self::Files(vec![
             PathBuf::from("/etc/machine-id"),
             PathBuf::from("/var/lib/dbus/machine-id"),
         ])
     }
 
-    /// This OS's source: none yet.
-    #[cfg(not(target_os = "linux"))]
-    #[must_use]
-    pub fn platform() -> Self {
-        Self::Unsupported
-    }
-
-    /// The value the first file that holds one holds, trimmed; none when
-    /// no file holds one.
+    /// The value the first file that holds one holds, trimmed, or the
+    /// running OS's host id; none when unavailable.
     #[must_use]
     pub fn read(&self) -> Option<String> {
-        let Self::Files(files) = self else {
-            return None;
-        };
-        files.iter().find_map(|f| {
-            fs::read_to_string(f)
-                .ok()
-                .map(|v| v.trim().to_owned())
-                .filter(|v| !v.is_empty())
-        })
+        self.read_with(&Os)
+    }
+
+    /// As [`read`](Self::read), with `host` standing for the running
+    /// OS's host id.
+    #[must_use]
+    pub fn read_with(&self, host: &dyn HostId) -> Option<String> {
+        match self {
+            Self::Files(files) => files.iter().find_map(|f| {
+                fs::read_to_string(f)
+                    .ok()
+                    .map(|v| v.trim().to_owned())
+                    .filter(|v| !v.is_empty())
+            }),
+            Self::HardwareUuid | Self::MachineGuid => host.read(),
+            Self::Unsupported => None,
+        }
     }
 
     /// The value, read again once when the first read finds none

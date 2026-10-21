@@ -3,12 +3,14 @@ id: ADR-2610171301
 title: "The node identity is the machine id, kept in the home only as a digest"
 status: proposed
 summary: >-
-  REC-24 names no source for the node identity. Linux reads systemd's
-  machine id, macOS the hardware UUID gethostuuid(2) returns, Windows
-  the MachineGuid registry value; the home keeps only a digest. An
-  unavailable value has a digest of its own, so a node that never reads
-  one changes once. The macOS and Windows reads need native calls, so
-  unsafe code: proposed; the shim crate scope is open.
+  REC-24 names no source for the node identity. On Linux Cairn reads
+  systemd's machine id, /etc/machine-id or D-Bus's copy, and the home
+  keeps only its digest. An unavailable value has a digest of its own,
+  so a node that never reads one changes once. On macOS it is the
+  hardware UUID gethostuuid(2) returns, on Windows the MachineGuid
+  registry value, both read in the platform crate, the one crate with
+  unsafe code. cairn status says per OS whether the identity is
+  checked.
 ---
 # ADR-2610171301: The node identity
 
@@ -24,7 +26,7 @@ of plan [2609292012](../../plan/2609292012_m1-record-and-recall/plan.md)
 builds the check.
 
 The core opens no socket and starts no program but its kernel worker
-(I4, SEC-01), and only the `dpapi` shim may hold unsafe code
+(I4, SEC-01), and only the `platform` shim may hold unsafe code
 ([ADR-2610171300](ADR-2610171300-key-stores.md)). So the source must be
 a file the core can read, or a call through that shim.
 
@@ -40,20 +42,32 @@ a file the core can read, or a call through that shim.
 - **Unavailable.** A value still unavailable after a second read counts
   as a change, as REC-24 says. Its digest is a fixed one of its own, so
   a node that never reads a value changes once, not at every start.
-- **macOS.** The hardware UUID `gethostuuid(2)` returns, the value
-  `ioreg` shows as `IOPlatformUUID`.
-- **Windows.** The `MachineGuid` value under
-  `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography`.
-- **Unsafe code.** Reading the macOS and Windows values takes native
-  calls (`gethostuuid`; a registry read), which need unsafe code. The
-  shim crate that holds it is proposed; the shim crate scope is open
-  and awaits the owner's ruling. Until it is ruled, those two reads
-  do not ship and the check holds on Linux alone.
+- **macOS** reads the hardware UUID `gethostuuid(2)` returns, the value
+  `ioreg` shows as `IOPlatformUUID`. It is a system call, not a program
+  start (I4, SEC-01), made with a 100 ms wait (ENG-03); a timeout or a
+  failure is an unavailable value.
+- **Windows** reads the `MachineGuid` value under
+  `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography`. The read is
+  read-only, through the 64-bit registry view, and needs no administrator.
+  A missing value is unavailable. So is a value of the wrong type, an odd
+  or oversized length, text that is not UTF-16, or an empty string.
+- **The `platform` crate.** The `dpapi` shim is renamed `platform` and
+  holds a second module, `identity`, beside `dpapi`; each module allows
+  unsafe code, justifies each unsafe block and sits behind a trait a
+  test fakes, so Miri checks the pointer logic on any OS (ENG-09). The
+  macOS call is declared in the crate with `extern "C"`, so no
+  dependency is added; the Windows reads use `windows-sys`, with the
+  `Win32_System_Registry` feature added.
+- **Status.** `cairn status` says whether the node identity is checked
+  on this OS and against what, and that finding a fork across nodes
+  arrives with the peer network (PEER-10) while `cairn verify` scans
+  the writer logs held here.
 - **A hint, not the guard.** The identity only tells a home that it
   moved. Two nodes with one identity, or a machine cloned for backup,
   are fine. What must never happen is one seat key active in two
   homes, a second event at one (writer, seq); PEER-10 refuses that after
   the fact.
+
 - **Tests.** A development build reads the value from the file
   `CAIRN_TEST_NODE_IDENTITY` names, as it reads managed policy from
   `CAIRN_TEST_MANAGED_POLICY`; a release build never does.
@@ -81,11 +95,9 @@ a file the core can read, or a call through that shim.
   its keys while the value stays unavailable. A copy of that home on
   another machine without one is not found changed; the deployment
   documentation should require a machine id per runner.
-- Until the shim crate scope is ruled and the two reads ship, REC-24's
-  check holds on Linux alone, and `@REC-24`'s outline passes only
-  there. `cairn status` says, per OS, whether node identity is checked
-  and that fork detection beyond the local scan arrives with the peer
-  network (I6).
+- REC-24's check holds on Linux, macOS and Windows. The macOS and
+  Windows reads are built for their targets in CI but not run there,
+  and Miri runs their pointer logic over fakes.
 - A fork the check misses, or a cloned home it cannot tell apart, is
   caught by PEER-10: the first head seen wins and the later is kept for
   forensics.

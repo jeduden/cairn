@@ -263,7 +263,7 @@ fn a_crate_with_its_own_lints_forbids_unsafe_in_each_crate_root() {
 
 #[test]
 fn the_one_unsafe_shim_denies_unsafe_code_in_its_own_lints() {
-    let shim = "[package]\nname = \"dpapi\"\n\n[lints.rust]\nunsafe_code = \"deny\"\n";
+    let shim = "[package]\nname = \"platform\"\n\n[lints.rust]\nunsafe_code = \"deny\"\n";
     let (_dir, c) = checkout(
         ROOT,
         &[(UNSAFE_SHIM, shim, &[]), ("tools/one", INHERITS, &[])],
@@ -281,7 +281,7 @@ fn the_one_unsafe_shim_denies_unsafe_code_in_its_own_lints() {
     );
     assert_eq!(
         crates_forbid_unsafe(&c),
-        ["crate crates/dpapi, the one unsafe shim, does not deny unsafe code in its own lints"]
+        ["crate crates/platform, the one unsafe shim, does not deny unsafe code in its own lints"]
     );
 }
 

@@ -1810,12 +1810,13 @@ fn doctor_and_status_refuse_unknown_flags() {
 fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
     let mut p = Process::new();
     let home = p.cairn_home().display().to_string();
+    let id = identity_lines();
     assert_eq!(
         p.invoke(&["status"], &DEV),
         (
             EXIT_OK,
             format!(
-                "home: {home} (none yet)\ndeployment mode: automation\nkeys: files only this OS user can read; an unsandboxed agent of the same OS user could read them\n"
+                "home: {home} (none yet)\ndeployment mode: automation\nkeys: files only this OS user can read; an unsandboxed agent of the same OS user could read them\n{id}"
             ),
             String::new()
         )
@@ -1828,7 +1829,7 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
         p.invoke(&["status"], &DEV).1,
         format!(
             "home: {home}\nstore: {home}/store.db (none yet)\naudit log: {home}/audit (0 entries)\n\
-             counters: none\ndeployment mode: automation\nkeys: files only this OS user can read; an unsandboxed agent of the same OS user could read them\n"
+             counters: none\ndeployment mode: automation\nkeys: files only this OS user can read; an unsandboxed agent of the same OS user could read them\n{id}"
         )
     );
     p.invoke(&["ingest", "--path", &p.transcript(CLEAN_LINE)], &DEV);
@@ -1844,7 +1845,7 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
         out,
         format!(
             "home: {home}\nstore: {home}/store.db ({bytes} bytes)\naudit log: {home}/audit (1 entries)\n\
-             counters: hook_rejected 1 (1 since acknowledged)\ndeployment mode: automation\nkeys: files only this OS user can read; an unsandboxed agent of the same OS user could read them\n"
+             counters: hook_rejected 1 (1 since acknowledged)\ndeployment mode: automation\nkeys: files only this OS user can read; an unsandboxed agent of the same OS user could read them\n{id}"
         )
     );
     let (code, out, _) = p.invoke(&["status", "--json"], &DEV);
@@ -1865,6 +1866,8 @@ fn status_shows_the_home_the_store_the_audit_log_and_the_counters() {
                 "readable_by_agents": true,
                 "where": "files only this OS user can read; an unsandboxed agent of the same OS user could read them",
             },
+            "node_identity": identity_json(),
+            "fork_detection": fork_detection_json(),
             "segments": {"open": [], "newer": []},
             "transcript_sources": {"held": [], "lost": []},
         })
@@ -1891,6 +1894,8 @@ fn status_of_a_home_not_made_yet_shows_no_store() {
                 "readable_by_agents": true,
                 "where": "files only this OS user can read; an unsandboxed agent of the same OS user could read them",
             },
+            "node_identity": identity_json(),
+            "fork_detection": fork_detection_json(),
             "segments": null,
             "transcript_sources": null,
         })
@@ -2984,4 +2989,42 @@ fn ingest_says_which_search_index_gap_it_cannot_audit_and_reports_it_at_the_next
         .filter(|e| e.counter.as_deref() == Some("search_index_writer_unindexed"))
         .count();
     assert_eq!(gaps, 1);
+}
+
+/// The two lines `cairn status` ends its facts with on this OS, each
+/// followed by a newline.
+fn identity_lines() -> String {
+    let against = match identity_against() {
+        Some(against) => format!("checked ({against})"),
+        None => "not checked on this OS".to_owned(),
+    };
+
+    format!(
+        "node identity: {against}\nfork detection: local scan by cairn verify; peer detection with the peer network\n"
+    )
+}
+
+/// What the node identity is checked against on this OS.
+fn identity_against() -> Option<&'static str> {
+    if cfg!(target_os = "linux") {
+        Some("Linux machine id")
+    } else if cfg!(target_os = "macos") {
+        Some("macOS hardware UUID")
+    } else if cfg!(windows) {
+        Some("Windows MachineGuid")
+    } else {
+        None
+    }
+}
+
+/// `cairn status --json`'s node identity on this OS.
+fn identity_json() -> serde_json::Value {
+    let against = identity_against();
+
+    serde_json::json!({"checked": against.is_some(), "against": against})
+}
+
+/// `cairn status --json`'s fork detection.
+fn fork_detection_json() -> serde_json::Value {
+    serde_json::json!({"local": "cairn verify", "peer": "with the peer network"})
 }

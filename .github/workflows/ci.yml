@@ -170,7 +170,7 @@ jobs:
           disable_search: true
           fail_ci_if_error: false
 
-  # ENG-09: Miri runs the tests of the dpapi shim, the one crate with
+  # ENG-09: Miri runs the tests of the platform shim, the one crate with
   # unsafe code, over its fake of DPAPI, on the exact dated nightly
   # ENG-01 pins for Miri here. The Windows and macOS key stores
   # (ADR-2610171300) then build for their own targets, which a Linux
@@ -187,7 +187,7 @@ jobs:
         run: >-
           rustup toolchain install "$MIRI_NIGHTLY"
           --profile minimal --component miri,rust-src --no-self-update
-      - run: cargo "+$MIRI_NIGHTLY" miri test -p dpapi --locked
+      - run: cargo "+$MIRI_NIGHTLY" miri test -p platform --locked
       - name: Install the pinned Rust toolchain with the Windows and macOS targets
         run: >-
           rustup toolchain install
@@ -195,7 +195,7 @@ jobs:
           --profile minimal --component clippy,rustfmt,llvm-tools-preview
           --target x86_64-pc-windows-gnu,aarch64-apple-darwin
           --no-self-update
-      - run: cargo check -p key -p dpapi --all-targets --locked --target x86_64-pc-windows-gnu
+      - run: cargo check -p key -p platform --all-targets --locked --target x86_64-pc-windows-gnu
       - run: cargo check -p key --all-targets --locked --target aarch64-apple-darwin
 
   # ENG-16: clippy with warnings denied, and rustfmt's layout.

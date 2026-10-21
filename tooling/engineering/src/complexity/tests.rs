@@ -150,7 +150,7 @@ fn a_crate_with_its_own_lints_escapes_the_limits_and_fails() {
 
 #[test]
 fn the_unsafe_shim_holds_the_limits_through_its_own_lints() {
-    let shim = "[package]\nname = \"dpapi\"\n\n[lints.clippy]\ncognitive_complexity = \"deny\"\ntoo_many_lines = \"deny\"\nexcessive_nesting = \"deny\"\nfn_params_excessive_bools = \"deny\"\n";
+    let shim = "[package]\nname = \"platform\"\n\n[lints.clippy]\ncognitive_complexity = \"deny\"\ntoo_many_lines = \"deny\"\nexcessive_nesting = \"deny\"\nfn_params_excessive_bools = \"deny\"\n";
     let shim_crate = crate::static_analysis::UNSAFE_SHIM;
     let (_d, c) = checkout(
         &denying(),
@@ -171,7 +171,7 @@ fn the_unsafe_shim_holds_the_limits_through_its_own_lints() {
     );
     assert_eq!(
         crates_hold_limits(&c),
-        ["crate crates/dpapi, the one unsafe shim, does not deny clippy::too_many_lines"]
+        ["crate crates/platform, the one unsafe shim, does not deny clippy::too_many_lines"]
     );
 }
 

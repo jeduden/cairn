@@ -30,8 +30,8 @@ rusqlite = { version = "0.40.2", default-features = false, features = ["bundled"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 sha2 = "0.11.1"
-# DPAPI and the last error, for the dpapi shim alone (ADR-2610171300).
-windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Security_Cryptography"] }
+# DPAPI, the last error and the registry, for the platform shim alone (ADR-2610171300, ADR-2610171301).
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Security_Cryptography", "Win32_System_Registry"] }
 # Linear-time matching, Unicode classes and the literal fast paths
 # kept, nothing else (ADR-2610161200).
 regex = { version = "1.13.1", default-features = false, features = ["std", "unicode", "perf"] }
@@ -45,7 +45,7 @@ administration = { path = "crates/administration" }
 allowed_root = { path = "crates/allowed_root" }
 audit = { path = "crates/audit" }
 configuration = { path = "crates/configuration" }
-dpapi = { path = "crates/dpapi" }
+platform = { path = "crates/platform" }
 envelope = { path = "crates/envelope" }
 hook = { path = "crates/hook" }
 ingest = { path = "crates/ingest" }

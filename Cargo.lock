@@ -7,6 +7,7 @@ name = "administration"
 version = "0.0.0"
 dependencies = [
  "key",
+ "platform",
  "record",
  "rusqlite",
  "serde_json",
@@ -462,13 +463,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.7",
-]
-
-[[package]]
-name = "dpapi"
-version = "0.0.0"
-dependencies = [
- "windows-sys",
 ]
 
 [[package]]
@@ -941,9 +935,9 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 name = "key"
 version = "0.0.0"
 dependencies = [
- "dpapi",
  "ed25519-dalek",
  "getrandom",
+ "platform",
  "record",
  "security-framework",
  "serde_json",
@@ -1104,6 +1098,13 @@ name = "pkg-config"
 version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
+
+[[package]]
+name = "platform"
+version = "0.0.0"
+dependencies = [
+ "windows-sys",
+]
 
 [[package]]
 name = "potential_utf"
