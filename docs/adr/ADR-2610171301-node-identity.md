@@ -3,11 +3,12 @@ id: ADR-2610171301
 title: "The node identity is the machine id, kept in the home only as a digest"
 status: proposed
 summary: >-
-  REC-24 names no source for the node identity. On Linux Cairn reads
-  systemd's machine id, /etc/machine-id or D-Bus's copy, and the home
-  keeps only its digest. An unavailable value has a digest of its own,
-  so a node that never reads one changes once. macOS and Windows read
-  none yet, so no change is found there until a shim reads one.
+  REC-24 names no source for the node identity. Linux reads systemd's
+  machine id, macOS the hardware UUID gethostuuid(2) returns, Windows
+  the MachineGuid registry value; the home keeps only a digest. An
+  unavailable value has a digest of its own, so a node that never reads
+  one changes once. The macOS and Windows reads need native calls, so
+  unsafe code: proposed; the shim crate scope is open.
 ---
 # ADR-2610171301: The node identity
 
@@ -39,11 +40,19 @@ a file the core can read, or a call through that shim.
 - **Unavailable.** A value still unavailable after a second read counts
   as a change, as REC-24 says. Its digest is a fixed one of its own, so
   a node that never reads a value changes once, not at every start.
-- **macOS and Windows** read none yet: no change is found there. Each
-  needs a call outside the core's safe code: `gethostuuid` on macOS,
-  the `MachineGuid` registry value on Windows. Both could join the
-  `dpapi` shim, which then becomes the platform shim. That widens
-  ruling 2's one listed shim, so it waits for the stakeholder.
+- **macOS.** The hardware UUID `gethostuuid(2)` returns, the value
+  `ioreg` shows as `IOPlatformUUID`.
+- **Windows.** The `MachineGuid` value under
+  `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography`.
+- **Unsafe code.** Reading the macOS and Windows values takes native
+  calls (`gethostuuid`; a registry read), which need unsafe code. The
+  shim crate that holds it is proposed; the shim crate scope is open
+  and awaits the owner's ruling. Until it is ruled, those two reads
+  do not ship and the check holds on Linux alone.
+- **A hint, not the guard.** The identity only tells a home that it
+  moved. Two nodes with one identity, or a machine cloned for backup,
+  are fine. What must never happen is one seat key active in two
+  homes, a fork of (writer, seq); PEER-10 detects that after the fact.
 - **Tests.** A development build reads the value from the file
   `CAIRN_TEST_NODE_IDENTITY` names, as it reads managed policy from
   `CAIRN_TEST_MANAGED_POLICY`; a release build never does.
@@ -56,6 +65,14 @@ a file the core can read, or a call through that shim.
   the case REC-24 exists to catch.
 - **The boot id.** It changes at every boot, so every restart would
   mint new keys.
+- **A process start on macOS (`ioreg`).** I4 refuses it: the core
+  starts no program but its kernel worker.
+- **A crate (`machine-uid` 0.6.0, MIT).** It holds unsafe code of its
+  own and would be a new direct dependency in a core already at
+  ENG-18's ten.
+- **Extending the `dpapi` shim crate into a platform shim.** It keeps
+  the unsafe code in one crate, but it widens the scope ADR-2610171300
+  gave that shim. Proposed; the shim crate scope is open.
 
 ## Consequences
 
@@ -63,5 +80,11 @@ a file the core can read, or a call through that shim.
   its keys while the value stays unavailable. A copy of that home on
   another machine without one is not found changed; the deployment
   documentation should require a machine id per runner.
-- Until macOS and Windows read a value, REC-24's check holds on Linux
-  alone, and `@REC-24`'s outline passes only there.
+- Until the shim crate scope is ruled and the two reads ship, REC-24's
+  check holds on Linux alone, and `@REC-24`'s outline passes only
+  there. `cairn status` says, per OS, whether node identity is checked
+  and that fork detection beyond the local scan arrives with the peer
+  network (I6).
+- A fork the check misses, or a cloned home it cannot tell apart, is
+  caught by PEER-10: the first head seen wins and the later is kept for
+  forensics.
