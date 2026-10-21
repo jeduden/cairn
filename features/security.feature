@@ -352,10 +352,20 @@ Feature: Security (SEC)
   Scenario: outbound bridges run only in the bridge component, per enabled destination, and carry little
     Given an isolated Cairn home
     And the node's principal enabled one forge bridge destination and one notification bridge destination by a principal act
-    When the bridge component runs, as it does while any bridge stands enabled, and a held request and a pull-request review from the forge arrive
+    And a person takes a widening forge reply act naming their room post and a review thread on the enabled forge host
+    And the person takes another widening forge reply act naming their own device-seat post and a linked issue on that forge host
+    And the forge read credential owner grants import of that exact issue and the exact linked branch into the room after seeing each target, forge account and the room's current and future member scope
+    When the bridge component runs, as it does while any bridge stands enabled, and a held request, a pull-request review and a linked issue item from the forge arrive
     Then every outbound bridge runs only in the bridge component, which is listed in the register, outbound only, and off for every destination not enabled
     And the bridge component stays off until a bridge is enabled for a host, and its entry point, whoever starts it, runs only while a bridge stands enabled
     And the pull-request review is recorded by the bridge component only as an untrusted event of origin "witnessed" and provenance "web"
+    And the linked issue item is recorded under the same untrusted origin and provenance
+    And a link or enabled host alone never authorizes a credentialed issue or branch fetch or sharing into the room, and a node without a member seat imports neither
+    And each forge import grant binds the issuing credential owner's forge account and a nonsecret handle to its exact target and room, contains no token or reusable secret-derived verifier, and only that owner can revoke it
+    And revocation stops that node importing while a partitioned observation before revocation arrives remains recoverable with a concurrent revocation mark
+    And the forge bridge sends only that person's exact post text to that review thread through their own forge credential held outside the core
+    And the issue post's exact text is sent only as a comment on the linked issue through that person's own forge credential
+    And no room post or forge event alone causes a send, and no approval, review verdict or landing request is sent
     And the notification carries only the room's petname, else its id, the queue class and a count, and no answer to it is accepted
     And every send and failure is counted and audited
     And with B3 disabled by managed policy, enabling a bridge for a host starts no bridge component, and Cairn audits the refusal

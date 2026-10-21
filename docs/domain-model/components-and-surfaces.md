@@ -38,9 +38,12 @@ summary: >-
     does not yet hold (PRV-10), it refuses none and drops no pin (PEER-01).
   - **Publish component (B3):** read-only publishing (SEC-26).
   - **Bridge component (B3):** outbound exchange with hosts the node's principal
-    names, through three **bridges**: the **forge bridge** (reads pull requests,
-    reviews and the checks the forge reports), the **CI bridge** (fetches CI
-    attestations) and the **notification bridge**.
+    names, through three **bridges**: the **forge bridge** (reads linked issues
+    and branches, associated pull requests, reviews and checks only under the
+    room's exact forge import grant, records forge issue and review items, and
+    sends person-confirmed responses to issue discussions and pull-request
+    review threads), the **CI bridge**
+    (fetches CI attestations) and the **notification bridge**.
 - **Boundary**: One of B0 core, B1 machine, B2 peer and B3 public (I4).
   Unqualified, "boundary" means a network boundary; any other boundary is
   qualified, such as a span boundary or a crate boundary.

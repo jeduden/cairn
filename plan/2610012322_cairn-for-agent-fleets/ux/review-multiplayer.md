@@ -312,30 +312,36 @@ shown. Graphite's queue is the reference for stack-aware batching
 
 ### Review: coexisting with GitHub or another forge
 
+The 20 October 2026 decision in
+[LANE-08](../../../docs/srs/05b-lane-requirements.md) and
+[SEC-28](../../../docs/srs/06-security.md) makes the room the place for review
+conversation. Linked pull-request review items appear there, and a person can
+send a room response to the forge thread through an explicit forge reply act.
+Linked issues follow [LANE-34](../../../docs/srs/05b-room-collaboration-requirements.md):
+their discussion appears in the room, and a person can respond there too.
+
 Most teams keep the forge (gap 5). Branch protection, required
 reviews, CI, Copilot code review and the Claude Code GitHub Action live
-there. Cairn does not compete with them. Everything from the forge
-enters through an opt-in bridge process, outside the core, at the peer
-or public boundary, as foreign untrusted content with the forge's
+there. Cairn replaces the pull request as the place for discussion while the
+forge governs approval and landing. Forge content enters through the opt-in
+B3 bridge component, outside the core, as untrusted content with the forge's
 identity attached (I2, I4).
 
-| Cairn shows (its own)                         | Cairn mirrors (read-only, from the forge)          | Cairn never duplicates                      |
-| --------------------------------------------- | -------------------------------------------------- | ------------------------------------------- |
-| The lane record: story, turns, tool runs      | PR number, state, title, labels                    | CI execution                                |
-| Local and witness runs, with marks            | Check runs: name, status, SHA, link                | Branch protection enforcement               |
-| Signed Cairn approvals and change requests    | Forge review verdicts, with reviewer login         | The forge's merge button or queue           |
-| Gate pre-check, including record verification | Forge review comments and bot comments, as foreign | Bot conversations (Copilot review, Actions) |
-| The derived landed link and its proof         | Merge commit SHA and merge method                  | Forge notifications                         |
-| Landed ≠ approved                             | Code-owner and required-review status              | Two-way comment sync                        |
+| Cairn shows (its own)                         | Cairn shows from the forge                 | Cairn never duplicates                      |
+| --------------------------------------------- | ------------------------------------------ | ------------------------------------------- |
+| The lane record: story, turns, tool runs      | PR number, state, title, labels            | CI execution                                |
+| Local and witness runs, with marks            | Check runs: name, status, SHA, link        | Branch protection enforcement               |
+| Signed Cairn approvals and change requests    | Forge review verdicts, with reviewer login | The forge's merge button or queue           |
+| Gate pre-check, including record verification | Forge review items, as untrusted content   | Bot conversations (Copilot review, Actions) |
+| The derived landed link and its proof         | Merge commit SHA and merge method          | Forge notifications                         |
+| Landed ≠ approved                             | Code-owner and required-review status      | Forge approval or landing write-back        |
 
 Rules of the road:
 
-- **One place to reply.** A forge comment shows inline in the timeline
-  with a forge glyph and **Reply on GitHub ↗**. Cairn does not post it
-  back, so two threads never drift. Origin syncs both ways
-  ([mirror GitHub](https://cursor.com/docs/origin/mirror-github)); a
-  one-way mirror is lossless where a bridge is not (webhooks are not
-  retried, gap 5).
+- **One place to reply.** A forge review item shows in the room with its forge
+  attribution. A person responds with a room post and explicitly sends its
+  exact text to the forge thread. The bridge records delivery or failure and
+  reconciles a fetched echo with that post (LANE-08).
 - **Forge text is data.** A bot's "LGTM" or a reviewer's "please fix"
   from the forge reaches an agent exactly as a co-author's message does
   (area 5): never pushed, only recalled, enveloped.

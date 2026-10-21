@@ -72,7 +72,9 @@ summary: >-
   post may carry range links; a **comment** is a post on a **marked range**, the
   address range a range link names. A seat's unsent post is a **draft**,
   ephemeral like a presence hint (PEER-09). A **cross-room post** is a post a
-  seat sends to another room, which shows it by address (LANE-29).
+  seat sends to another room, which shows it by address (LANE-29). A post
+  responding to a forge review or issue item stays in the room whether or not
+  its author's separate forge reply act succeeds (LANE-08, LANE-34).
 - **Directed post**: A post directed to one agent, waiting in its principal's
   Needs you queue for an endorsement (LANE-12).
 - **Room summary**: A facilitator's summary of a room, always untrusted, linked

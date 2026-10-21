@@ -110,7 +110,8 @@ row: "- [{title}]({filename}) — {summary}"
 - [4. Reference architecture (non-normative)](04-reference-architecture.md) — Non-normative reference architecture: components, event-sourced state, the compaction and aggregation scenarios, and design decisions ADR-01..10.
 - [5. Functional requirements](05-functional-requirements.md) — Normative functional requirements for the record (REC). The other families continue in 05a to 05f.
 - [5. Functional requirements: administration, memory and observability](05a-administration-requirements.md) — Normative functional requirements for administration and lifecycle (ADM), the boundary to durable memory (MEM) and observability (OPS). Part of §5.
-- [5. Functional requirements: room](05b-lane-requirements.md) — Normative functional requirements for the room (LANE): identity, composition, joining, roles and capabilities, moderation, pins, authors, results, evidence, room trailers and landing. Part of §5.
+- [5. Functional requirements: room](05b-lane-requirements.md) — Room identity, branches, evidence and landing (LANE). Part of §5.11.
+- [5. Functional requirements: room collaboration](05b-room-collaboration-requirements.md) — Room acts, roles, pins and linked issues (LANE). Part of §5.11.
 - [5. Functional requirements: room view](05b-room-view-requirements.md) — Normative functional requirements for the room view (VIEW): what a person reads on every surface, the outcome window included. Part of §5.
 - [5. Functional requirements: principal acts](05c-principal-and-peer-requirements.md) — Normative functional requirements for principal acts (OWN): answers to held requests, run controls, endorsement, the principal-act classes and the sandbox state they rest on. Part of §5; the peer network continues in 05d.
 - [5. Functional requirements: peer network](05d-peer-requirements.md) — Normative functional requirements for the peer network (PEER): enrollment, sync, ephemeral nodes, blind peers and what peers exchange. Part of §5.
@@ -123,7 +124,7 @@ row: "- [{title}]({filename}) — {summary}"
 - [9. Interfaces](09-interfaces.md) — Normative interfaces: the hook contract, the MCP tools, the envelope, the restore block and the settings keys of every settings layer, which repository configuration may only tighten; the CLI continues in 09a.
 - [9.5 Command-line interface](09a-command-line-interface.md) — The `cairn` command-line interface: every command, the act and class each records, and the rules shared by all commands. Part of §9.
 - [9.7 Room vocabulary](09b-lane-vocabulary.md) — The one vocabulary every surface uses (VIEW-14): run status and freshness, room status, evidence and proof classes, the Needs you order, integrity status, trust marks and the keymap. Part of §9.
-- [10. Engineering quality (ENG)](10-engineering-quality.md) — Engineering quality requirements ENG-01..29: code organisation, testing, static analysis, supply chain, and process.
+- [10. Engineering quality (ENG)](10-engineering-quality.md) — Engineering quality requirements ENG-01..31: code organisation, testing, static analysis, supply chain, and process.
 - [11. Verification and acceptance](11-verification-and-acceptance.md) — The evaluation plan with baselines and acceptance targets, and the definition of done for v1.0.
 - [12. Delivery plan](12-delivery-plan.md) — Milestone M0 spikes S1–S13 and milestones M1–M9 with their scope and exit criteria; what freezes each initial target.
 - [13. Open questions and risks](13-open-questions-and-risks.md) — Open questions OQ-01..56 with their resolution path, and the risk register with mitigations.
