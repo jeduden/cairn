@@ -1374,3 +1374,72 @@ fn a_search_error_reads_as_fixed_text() {
         "the search ran past its deadline and was cancelled"
     );
 }
+
+/// Two stores whose writer 1 recorded `shared` same events, then the
+/// first `held` more and the second `other` more, of other content.
+fn two_histories(shared: u64, held: u64, other: u64) -> (TempDir, Store, TempDir, Store) {
+    let (da, db) = (TempDir::new().unwrap(), TempDir::new().unwrap());
+    let (mut a, mut b) = (open(&da), open(&db));
+    a.append(writer(1), &new_events(shared)).unwrap();
+    b.append(writer(1), &new_events(shared)).unwrap();
+    let more = |from: u64, n: u64, tag: &str| -> Vec<NewEvent> {
+        (from..from + n)
+            .map(|k| NewEvent {
+                content: json!({"text": format!("{tag} {k}")}),
+                ..new_event(k)
+            })
+            .collect()
+    };
+    a.append(writer(1), &more(shared + 1, held, "a")).unwrap();
+    b.append(writer(1), &more(shared + 1, other, "b")).unwrap();
+
+    (da, a, db, b)
+}
+
+fn links(store: &Store, w: WriterId) -> Vec<Link> {
+    store.log(w).unwrap().into_iter().map(|s| s.link).collect()
+}
+
+#[test]
+fn a_second_history_of_one_writer_is_refused_and_the_first_head_stays() {
+    let (_da, mut a, _db, b) = two_histories(2, 3, 2);
+    let first = links(&a, writer(1));
+
+    let new = a.refuse_forks(&links(&b, writer(1))).unwrap();
+
+    assert_eq!(new.len(), 1);
+    let fork = new[0];
+    assert_eq!(fork.writer, writer(1));
+    assert_eq!((fork.first.get(), fork.last.get()), (3, 4));
+    assert_eq!(fork.held, first[2].hash);
+    assert_eq!(fork.offered, links(&b, writer(1))[2].hash);
+    assert_eq!(links(&a, writer(1)), first);
+    assert_eq!(a.refused_forks().unwrap(), new);
+}
+
+#[test]
+fn a_fork_refused_twice_is_new_once() {
+    let (_da, mut a, _db, b) = two_histories(1, 2, 2);
+    let offered = links(&b, writer(1));
+
+    assert_eq!(a.refuse_forks(&offered).unwrap().len(), 1);
+    assert_eq!(a.refuse_forks(&offered).unwrap(), vec![]);
+    assert_eq!(a.refused_forks().unwrap().len(), 1);
+}
+
+#[test]
+fn a_copy_of_the_same_history_refuses_nothing_and_makes_no_table() {
+    let (_da, mut a, _db, b) = two_histories(3, 0, 2);
+
+    assert_eq!(a.refuse_forks(&links(&b, writer(1))).unwrap(), vec![]);
+    assert_eq!(a.refused_forks().unwrap(), vec![]);
+    let table: i64 = a
+        .conn
+        .query_row(
+            "SELECT count(*) FROM sqlite_master WHERE name = 'fork_refusals'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(table, 0);
+}

@@ -17,6 +17,7 @@
 
 pub mod hook;
 pub mod payload;
+mod refusal;
 pub mod search_index;
 pub mod segment;
 pub mod source;
@@ -31,6 +32,7 @@ pub use record::commitment::CommitmentKey;
 use record::commitment::{Commitment, commit_encoded};
 use record::digest::Digest;
 use record::event::{EventKind, Provenance};
+pub use record::fork::Fork;
 pub use record::header::{ENCODING, EventHeader, FIELD_SET, SeenHead};
 pub use record::id::{Address, RoomId, SeatId, Seq, WriterId};
 use rusqlite::config::DbConfig;
@@ -860,6 +862,49 @@ impl Store {
         }
 
         Ok(out)
+    }
+
+    /// Refuses the part of `offered`, a history brought in from elsewhere,
+    /// that differs from an event this store holds at the same (writer,
+    /// seq): the first head seen wins, so the held events stay as they
+    /// are and the offered ones are never stored as events. Each fork is
+    /// recorded, by writer, seq range and the two digests, and the new
+    /// ones returned for the caller to count and audit (PEER-10, REC-21,
+    /// I1, I6). A fork recorded already is not new.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does, a held writer holds a segment of a newer
+    /// format version, or a held row does not parse.
+    pub fn refuse_forks(&mut self, offered: &[Link]) -> Result<Vec<Fork>, StoreError> {
+        let mut writers: Vec<WriterId> = offered.iter().map(|l| l.header.address.writer).collect();
+        writers.sort();
+        writers.dedup();
+        let mut held = Vec::new();
+        for writer in writers {
+            held.extend(self.log(writer)?.into_iter().map(|s| s.link));
+        }
+        let forks = record::fork::find(&held, offered);
+        if forks.is_empty() {
+            return Ok(forks);
+        }
+        let tx = self
+            .conn
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        tx.execute_batch(refusal::SCHEMA)?;
+        let new = refusal::record(&tx, &forks)?;
+        tx.commit()?;
+
+        Ok(new)
+    }
+
+    /// Every fork this store refused, by writer then first seq (PEER-10).
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or a row does not parse.
+    pub fn refused_forks(&self) -> Result<Vec<Fork>, StoreError> {
+        refusal::all(&self.conn)
     }
 
     /// Closes `writer`'s open segment, if it has one (REC-19).
