@@ -78,8 +78,9 @@ For the stakeholder:
   Merged, it should pass as written; the merge meets this phase in
   `mcp::Server` and `call`, `StoreError`, the counters and `cairn mcp`.
 - `@REC-06` needs `cairn purge --range` (phase 14) for its purged range.
-- `@SEC-10`'s last step hands run-seat keys over at launch; the MCP
-  server mints them, OQ-55's recommended option. Rule which holds.
+- `@SEC-10`'s last step handed run-seat keys over at launch; the MCP
+  server mints them, OQ-55's recommended option. SEC-10 and its step now
+  say the server mints every key, pending the stakeholder's comment.
 - REC-22 stays unbound: SEC-18 still refuses its transcript from
   outside the roots (raised in phase 8).
 - A session binding is matched by the harness process's id; a reused
