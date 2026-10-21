@@ -637,6 +637,16 @@ impl Store {
         search_index::mark_reported(&self.conn, gaps)
     }
 
+    /// Takes back the note that `gaps` were reported, for the ones whose
+    /// report did not reach the audit log.
+    ///
+    /// # Errors
+    ///
+    /// Fails when SQLite does or the store has no search index.
+    pub fn unmark_search_index_gaps_reported(&self, gaps: &[IndexGap]) -> Result<(), StoreError> {
+        search_index::unmark_reported(&self.conn, gaps)
+    }
+
     /// Checks the store's schema version, header field set and encoding
     /// against this cairn's (§8.3, ADM-05).
     fn check_format(&self) -> Result<(), StoreError> {

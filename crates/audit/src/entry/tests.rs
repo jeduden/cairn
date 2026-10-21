@@ -116,6 +116,10 @@ fn each_counter_of_the_mcp_server_has_its_name() {
             "search_index_seq_beyond_limit",
         ),
         (Counter::ForkConflict, "fork_conflict"),
+        (
+            Counter::SearchIndexGapLookupFailed,
+            "search_index_gap_lookup_failed",
+        ),
     ];
     for (counter, name) in counters {
         assert_eq!(counter.as_str(), name);

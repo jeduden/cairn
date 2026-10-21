@@ -1271,6 +1271,7 @@ fn an_ingest_reports_the_search_index_gaps_not_yet_reported_and_only_those() {
     let path = transcript(&dir, "{\"a\":1}\n");
     let first = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
     assert!(first.index_gaps.is_empty());
+    assert_eq!(first.index_gaps_unread, None);
 
     let other = sharing_the_slot_of(first.writer);
     assert!(first.writer < other);

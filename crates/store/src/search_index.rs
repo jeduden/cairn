@@ -415,6 +415,19 @@ pub(crate) fn mark_reported(conn: &Connection, gaps: &[IndexGap]) -> Result<(), 
     Ok(())
 }
 
+/// Takes back the note that `gaps` were reported, so the next ingest
+/// reports them.
+pub(crate) fn unmark_reported(conn: &Connection, gaps: &[IndexGap]) -> Result<(), StoreError> {
+    for gap in gaps {
+        conn.execute(
+            "DELETE FROM search_gaps_reported WHERE writer = ?1 AND class = ?2",
+            params![gap.writer.to_string(), gap.class.name()],
+        )?;
+    }
+
+    Ok(())
+}
+
 /// Empties the index, leaving its tables.
 pub(crate) fn clear(conn: &Connection) -> Result<(), StoreError> {
     conn.execute_batch(CLEAR)?;

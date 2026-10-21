@@ -5,6 +5,23 @@ fn writer(n: u8) -> WriterId {
 }
 
 #[test]
+fn a_failed_lookup_of_the_gaps_is_said_beside_the_ingest_not_as_its_failure() {
+    let gap = store::IndexGap {
+        writer: writer(1),
+        class: store::GapClass::WriterUnindexed,
+    };
+
+    assert_eq!(gaps(Ok(vec![gap])), (vec![gap], None));
+    assert_eq!(
+        gaps(Err(store::StoreError::NoIndex)),
+        (
+            Vec::new(),
+            Some("the store has no search index: open it for writing once".to_owned())
+        )
+    );
+}
+
+#[test]
 fn a_transaction_holds_one_writer_s_consecutive_lines() {
     let (a, b) = (writer(1), writer(2));
     let ends = [

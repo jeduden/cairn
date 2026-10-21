@@ -521,6 +521,56 @@ fn a_marker_that_cannot_be_opened_is_passed_over() {
 }
 
 #[test]
+fn a_lookup_of_the_search_index_gaps_that_failed_is_counted_by_the_live_ingest() {
+    let f = Fixture::new();
+    let other = f.projects().join("other.jsonl");
+    std::fs::write(&other, line(1, None)).unwrap();
+    let mut ingested = ingest::ingest_path(
+        &f.home,
+        &other,
+        &Redactor::new(&[]).unwrap().0,
+        &mut OsEntropy,
+    )
+    .unwrap();
+    ingested.index_gaps_unread = Some("the store has no search index".to_owned());
+
+    f.running(None, None).audit_ingested(&ingested);
+
+    assert_eq!(f.counted(), ["search_index_gap_lookup_failed"]);
+}
+
+#[test]
+fn a_gap_the_audit_log_refused_in_the_live_ingest_is_logged_and_reported_at_the_next() {
+    let f = Fixture::new();
+    let other = f.projects().join("other.jsonl");
+    std::fs::write(&other, line(1, None)).unwrap();
+    let first = ingest::ingest_path(
+        &f.home,
+        &other,
+        &Redactor::new(&[]).unwrap().0,
+        &mut OsEntropy,
+    )
+    .unwrap();
+    crate::index_gaps::tests::leave_out_a_writer_sharing_the_slot_of(&f.home, first.writer);
+    let ingested = ingest::ingest_path(
+        &f.home,
+        &other,
+        &Redactor::new(&[]).unwrap().0,
+        &mut OsEntropy,
+    )
+    .unwrap();
+    assert_eq!(ingested.index_gaps.len(), 1);
+    let audit_dir = f.home.root().join("audit");
+    std::fs::write(&audit_dir, "").unwrap();
+
+    f.running(None, None).audit_ingested(&ingested);
+
+    std::fs::remove_file(&audit_dir).unwrap();
+    let store = Store::open(&f.home.store()).unwrap();
+    assert_eq!(store.unreported_search_index_gaps().unwrap().len(), 1);
+}
+
+#[test]
 fn a_gap_of_the_search_index_is_audited_once_by_the_live_ingest() {
     let f = Fixture::new();
     let other = f.projects().join("other.jsonl");

@@ -103,8 +103,11 @@ pub(crate) fn ingest(
     let owners_chosen = choose_owners(&mut store, &node, &plan.chosen, entropy)?;
     let observations = record_observed(&mut store, &node, &seen, &plan, &addresses, entropy)?;
 
+    let (index_gaps, index_gaps_unread) = gaps(store.unreported_search_index_gaps());
+
     Ok(Ingested {
-        index_gaps: store.unreported_search_index_gaps()?,
+        index_gaps,
+        index_gaps_unread,
         witnessed_repeats: plan.witnessed_repeats,
         matched: observations.matched,
         prompt_conflicts: observations.conflicts,
@@ -129,6 +132,18 @@ pub(crate) fn ingest(
         redacted_path: named.redacted_path,
         name: named.name,
     })
+}
+
+/// The gaps a lookup found, or none and why it failed: the events are
+/// recorded by then, so a failed lookup is reported beside the ingest,
+/// never as its failure (I6).
+fn gaps(
+    found: Result<Vec<store::IndexGap>, store::StoreError>,
+) -> (Vec<store::IndexGap>, Option<String>) {
+    match found {
+        Ok(gaps) => (gaps, None),
+        Err(e) => (Vec::new(), Some(e.to_string())),
+    }
 }
 
 /// A transcript source's names: its path as the store keys it, its

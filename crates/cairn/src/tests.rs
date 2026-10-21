@@ -3112,6 +3112,60 @@ fn ingest_says_which_search_index_gap_it_cannot_audit_and_reports_it_at_the_next
     assert_eq!(gaps, 1);
 }
 
+#[test]
+fn ingest_counts_and_says_a_lookup_of_the_search_index_gaps_that_failed() {
+    let p = Process::new();
+    let path = p.transcript("a\n");
+    p.invoke(&["ingest", &format!("--path={path}")], &DEV);
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let mut ingested = ingest::ingest_path(
+        &home,
+        std::path::Path::new(&path),
+        &Redactor::new(&[]).unwrap().0,
+        &mut key::random::OsEntropy,
+    )
+    .unwrap();
+    ingested.index_gaps_unread = Some("the store has no search index".to_owned());
+    let input = || mpsc::channel().1;
+    let ctx = Context {
+        build: &DEV,
+        cairn_home: Some(p.cairn_home().into_os_string()),
+        home: None,
+        home_id: None,
+        hook_panics: false,
+        hook_hangs: false,
+        terminal: true,
+        working_dir: None,
+        managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
+        node_identity: None,
+        os_user: OsUser::Known(u32::MAX),
+        input: &input,
+        clock: &|| NOW,
+        attended: false,
+        hook_budget: Some(LENIENT),
+        ancestry: own_harness,
+        live_limit: None,
+        query_deadline: None,
+    };
+    let mut err = Vec::new();
+
+    audit_index_gaps(&ctx, &ingested, &mut err);
+
+    assert_eq!(
+        String::from_utf8(err).unwrap(),
+        "cairn ingest: look up the search index gaps: the store has no search index\n"
+    );
+    let counted: Vec<_> = audited(&p)
+        .into_iter()
+        .filter(|e| e.counter.as_deref() == Some("search_index_gap_lookup_failed"))
+        .collect();
+    assert_eq!(counted.len(), 1);
+    assert_eq!(
+        (counted[0].kind.as_str(), counted[0].operation.as_str()),
+        ("failed", "ingest")
+    );
+}
+
 /// The two lines `cairn status` ends its facts with on this OS, each
 /// followed by a newline.
 fn identity_lines() -> String {

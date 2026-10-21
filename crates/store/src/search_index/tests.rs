@@ -942,6 +942,29 @@ fn a_store_whose_index_lacks_the_note_of_reported_gaps_cannot_say_which_are() {
             .mark_search_index_gaps_reported(&[gap(large, GapClass::WriterUnindexed)])
             .is_err()
     );
+    assert!(
+        store
+            .unmark_search_index_gaps_reported(&[gap(large, GapClass::WriterUnindexed)])
+            .is_err()
+    );
+}
+
+#[test]
+fn a_gap_whose_report_did_not_reach_the_audit_log_can_be_unmarked_to_be_reported_again() {
+    let (small, large) = colliding();
+    let dir = TempDir::new().unwrap();
+    let mut store = open(&dir);
+    for w in [small, large] {
+        seat(&mut store, w, room());
+        store.append(w, &texts(&["shared word"])).unwrap();
+    }
+    let found = store.unreported_search_index_gaps().unwrap();
+    store.mark_search_index_gaps_reported(&found).unwrap();
+
+    store.unmark_search_index_gaps_reported(&found).unwrap();
+    store.unmark_search_index_gaps_reported(&found).unwrap();
+
+    assert_eq!(store.unreported_search_index_gaps().unwrap(), found);
 }
 
 #[test]

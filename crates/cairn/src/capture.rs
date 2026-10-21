@@ -409,9 +409,22 @@ impl Running {
                 &ingested.name,
             ));
         }
-        let _ = index_gaps::report(&self.capture.home, &ingested.index_gaps, "mcp", &mut |o| {
+        self.audit_index_gaps(ingested);
+    }
+
+    /// Audits, once each, the events the search index leaves out that no
+    /// ingest reported yet, and logs what it could not (REC-11, I6).
+    fn audit_index_gaps(&self, ingested: &Ingested) {
+        if let Some(why) = &ingested.index_gaps_unread {
+            self.audit(&index_gaps::lookup_failed("mcp"));
+            tracing::warn!(error = why.as_str(), "look up the search index gaps");
+        }
+        let done = index_gaps::report(&self.capture.home, &ingested.index_gaps, "mcp", &mut |o| {
             self.audited(o)
         });
+        if let Some(problem) = index_gaps::problem(&done) {
+            tracing::warn!(error = problem.as_str(), "audit the search index gaps");
+        }
     }
 
     /// Reads the tool-use ids of the lines of the transcript at `path`

@@ -125,6 +125,10 @@ pub struct Ingested {
     /// reported yet (REC-11, I6): the caller audits each, then notes it
     /// with `Store::mark_search_index_gaps_reported`.
     pub index_gaps: Vec<store::IndexGap>,
+    /// Why the lookup of `index_gaps` failed, when it did: the ingest
+    /// recorded its events all the same, and the caller counts and says
+    /// the failure (I6).
+    pub index_gaps_unread: Option<String>,
 }
 
 /// Why an ingest recorded nothing, or stopped part way.

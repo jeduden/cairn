@@ -177,6 +177,9 @@ pub enum Counter {
     /// A history held two different events at one (writer, seq): the
     /// later head was refused, the first kept (PEER-10, REC-21).
     ForkConflict,
+    /// The search index's unreported gaps could not be looked up after
+    /// an ingest recorded its events (REC-11, I6).
+    SearchIndexGapLookupFailed,
 }
 
 impl Counter {
@@ -229,6 +232,7 @@ impl Counter {
             Self::SearchIndexWriterUnindexed => "search_index_writer_unindexed",
             Self::SearchIndexSeqBeyondLimit => "search_index_seq_beyond_limit",
             Self::ForkConflict => "fork_conflict",
+            Self::SearchIndexGapLookupFailed => "search_index_gap_lookup_failed",
         }
     }
 }

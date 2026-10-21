@@ -637,22 +637,23 @@ fn root_transcripts(
 /// Audits, once each, the events the search index leaves out that no
 /// ingest reported yet (REC-11, I6), saying on `stderr` what it cannot.
 fn audit_index_gaps(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
+    if let Some(why) = &ingested.index_gaps_unread {
+        let _ = ctx.audit(&index_gaps::lookup_failed("ingest"));
+        let _ = writeln!(stderr, "cairn ingest: look up the search index gaps: {why}");
+    }
     if ingested.index_gaps.is_empty() {
         return;
     }
-    let done = ctx.home().map_err(|e| e.to_string()).and_then(|home| {
-        let refused = index_gaps::report(&home, &ingested.index_gaps, "ingest", &mut |o| {
-            ctx.audit(o).is_ok()
-        })
-        .map_err(|e| e.to_string())?;
-        match refused {
-            0 => Ok(()),
-            n => Err(format!(
-                "the audit log refused {n} entries; the next ingest tries again"
-            )),
-        }
-    });
-    if let Err(e) = done {
+    let problem = match ctx.home() {
+        Ok(home) => index_gaps::problem(&index_gaps::report(
+            &home,
+            &ingested.index_gaps,
+            "ingest",
+            &mut |o| ctx.audit(o).is_ok(),
+        )),
+        Err(e) => Some(e.to_string()),
+    };
+    if let Some(e) = problem {
         let _ = writeln!(stderr, "cairn ingest: audit the search index gaps: {e}");
     }
 }
