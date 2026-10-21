@@ -231,7 +231,7 @@
      "quote": "a widening act taken only after that principal is shown its exact text, pin type and priority, makes it a new pin its device seat authors"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "taken only after that principal is shown its exact text, pin type and priority"
     },
     {
@@ -269,7 +269,7 @@
      "quote": "But for a stamped version, it restores only by its newest version (PIN-10)"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "its own event trusted on this node under its recorded deployment mode (for the intent, only its newest version"
     }
    ]
@@ -387,7 +387,7 @@
      "quote": "Once PRV-10 ships, a stamped version of a type that restores restores to that principal's own agents only, as PIN-10 says"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "or, once PRV-10 ships, one the run's principal stamped, its stamp so trusted"
     },
     {
@@ -406,7 +406,7 @@
      "quote": "At most one version of a pin restores to an agent, the one PIN-10 chooses."
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "Of a pin's versions that qualify for a run, only the newest MAY restore, but one qualifying only through a trust grant MUST NOT displace one the run's principal stamped"
     },
     {
@@ -578,7 +578,7 @@
      "quote": "inherit its rooms for recall (the `rooms` scope), for restore and for its directed posts, never a seat, add or role"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "MUST inject first the pins of the rooms the run has had a seat in during the run, its personal room included, then those of rooms only its agent's earlier runs had a seat in"
     },
     {
@@ -586,7 +586,7 @@
      "quote": "whose join to the room the retry itself asks for (OWN-28, LANE-23)"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "and of every room its agent's earlier runs had a seat in (REC-02), name those rooms"
     },
     {
@@ -620,7 +620,7 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "A restore block MUST contain the qualifying pins of every room its run has had a seat in during the run, its personal room included, and of every room its agent's earlier runs had a seat in (REC-02)"
     }
    ]
@@ -650,7 +650,7 @@
      "quote": "or bar never drops a pin from any restore block, even where it makes the room foreign (Foreign room)."
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "A branch switch, a leave, a kick or a bar MUST NOT drop a pin from any restore block"
     }
    ]
@@ -717,7 +717,7 @@
      "quote": "by which PIN-08 orders qualifying pins in the pin budget"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "Cairn MUST inject first the pins of the rooms the run has had a seat in during the run, its personal room included, then those of rooms only its agent's earlier runs had a seat in"
     }
    ]
@@ -959,7 +959,7 @@
      "quote": "A quarantine and its release MUST NOT change room state or the key set, but for which pin version PIN-10 restores"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "A version MUST count as absent wherever this requirement chooses which version of a pin restores, the intent's included, while it is quarantined (SEC-12)"
     }
    ]
@@ -970,7 +970,7 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "or until a certificate it qualified through is revoked (PRV-10) or the trust grant it qualified by covers nothing (OWN-29), as in any other room"
     }
    ]
@@ -1067,11 +1067,11 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "whatever Cairn returns to a tool call, its errors and a CLI verb's output that is not a terminal included, MUST carry only fixed text Cairn ships"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "whatever Cairn returns to a tool call, its errors and a CLI verb's output that is not a terminal"
     },
     {
@@ -1103,7 +1103,7 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "once it is purged, however purged (SEC-31), its tombstone never restoring"
     }
    ]
@@ -1114,7 +1114,7 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "and the pins PIN-10 keeps after a leave, kick or bar, trusted for restore"
     }
    ]
@@ -1125,7 +1125,7 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "after a change of ownership, the intent MUST restore in such a room only as LANE-11 says"
     }
    ]
@@ -1258,11 +1258,11 @@
    "milestone": "M8",
    "texts": [
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "Whether a call may name a room of its principal's that every run seat of the agent has left or lost to a kick or a bar"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "which neither scope reaches, is open (OQ-45)"
     }
    ]
@@ -1386,7 +1386,7 @@
      "quote": "A pin keeps the priority and pin type it was written with (PIN-04)"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "changing a pin's type, priority or room MUST be an unpin then a new pin"
     }
    ]
@@ -1838,7 +1838,7 @@
     },
     {
      "file": "docs/srs/05-functional-requirements.md",
-     "quote": "and carry over the record from before the change only as ADM-06 says"
+     "quote": "and carry over earlier events only as ADM-06 says"
     }
    ]
   },
@@ -1924,7 +1924,7 @@
      "quote": "`user` event trusted on this node, never in an ingested or other untrusted"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "Cairn SHOULD detect constraints stated in trusted `user` events as pin candidates"
     }
    ]
@@ -1954,7 +1954,7 @@
      "quote": "reset when what it read is quarantined or purged (CMP-07)"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "a quarantine or purge MUST reset each namespace that read what it covers (CMP-05)"
     }
    ]
@@ -1988,7 +1988,7 @@
      "quote": "by which PIN-08 orders qualifying pins in the pin budget"
     },
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "each with intents first (LANE-20), then by pin priority"
     }
    ]
@@ -1999,7 +1999,7 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "the pin's room (its creating event's room, or its principal's personal room where that principal has no member seat left there)"
     },
     {
@@ -2029,7 +2029,7 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "verbatim text (≤ 1,000 characters†, holding none of INJ-08's delimiter sequences)"
     }
    ]
@@ -2040,7 +2040,7 @@
    "status": "fixed",
    "texts": [
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "which bounds all but what PIN-08 and PIN-10 make it carry"
     }
    ]
@@ -2341,7 +2341,7 @@
    "milestone": "M6",
    "texts": [
     {
-     "file": "docs/srs/05-functional-requirements.md",
+     "file": "docs/srs/05f-pins-recall-and-restore-requirements.md",
      "quote": "Parallel model sub-calls over record data MAY be supported only through harness mechanisms. Cairn MUST NOT call model APIs itself."
     },
     {
