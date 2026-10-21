@@ -1067,7 +1067,11 @@ fn complexity_cases() -> Vec<Case> {
         case(
             "the unsafe shim no longer denying too_many_lines",
             GATE,
-            Injection::replace("crates/platform/Cargo.toml", "too_many_lines = \"deny\"\n", ""),
+            Injection::replace(
+                "crates/platform/Cargo.toml",
+                "too_many_lines = \"deny\"\n",
+                "",
+            ),
             gate(),
             "crate crates/platform, the one unsafe shim, does not deny clippy::too_many_lines",
         ),
