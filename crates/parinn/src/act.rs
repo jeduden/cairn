@@ -1,5 +1,5 @@
-//! The verbs that take a principal act (§9.5): `cairn counter ack`,
-//! `cairn configuration accept` and `cairn risk-acceptance`. Each
+//! The verbs that take a principal act (§9.5): `parinn counter ack`,
+//! `parinn configuration accept` and `parinn risk-acceptance`. Each
 //! refuses without a terminal before any other check (OWN-12), audits
 //! and counts every refusal (OWN-02, I6), and records the act in this
 //! node's device seat (OWN-02).
@@ -126,7 +126,7 @@ fn refused(
         detail,
     };
     if let Err(e) = ctx.audit(&occurrence) {
-        let _ = writeln!(stderr, "cairn {operation}: audit the refusal: {e}");
+        let _ = writeln!(stderr, "parinn {operation}: audit the refusal: {e}");
     }
 
     failed(operation, &why, stderr)
@@ -142,7 +142,7 @@ fn at_terminal(ctx: &Context, operation: &'static str, stderr: &mut dyn Write) -
     }
 }
 
-/// `cairn counter ack [--json]`: acknowledges the counters through the
+/// `parinn counter ack [--json]`: acknowledges the counters through the
 /// audit log's last entry, named by number and hash (OPS-03), a neutral
 /// principal act. Only once the act is recorded does the audit log note
 /// it, so the log never notes an acknowledgement the record lacks.
@@ -154,7 +154,7 @@ pub(crate) fn counter(
 ) -> u8 {
     const OP: &str = "counter ack";
     if args.next().as_deref() != Some("ack") {
-        let _ = writeln!(stderr, "cairn counter: want ack");
+        let _ = writeln!(stderr, "parinn counter: want ack");
         return EXIT_USAGE;
     }
     let Some(as_json) = json_flag(OP, args, stderr) else {
@@ -195,7 +195,7 @@ pub(crate) fn counter(
     written(writeln!(stdout, "{line}"), stderr)
 }
 
-/// `cairn configuration accept [--json]`: accepts the principal's
+/// `parinn configuration accept [--json]`: accepts the principal's
 /// configuration, recording its digest and settings (ADM-04), a
 /// widening principal act.
 pub(crate) fn configuration(
@@ -206,7 +206,7 @@ pub(crate) fn configuration(
 ) -> u8 {
     const OP: &str = "configuration accept";
     if args.next().as_deref() != Some("accept") {
-        let _ = writeln!(stderr, "cairn configuration: want accept");
+        let _ = writeln!(stderr, "parinn configuration: want accept");
         return EXIT_USAGE;
     }
     let Some(as_json) = json_flag(OP, args, stderr) else {
@@ -275,7 +275,7 @@ fn acceptance(taking: &Taking, stderr: &mut dyn Write) -> Result<(Digest, Act), 
     Ok((digest, act))
 }
 
-/// `cairn risk-acceptance show|record|withdraw [--json]` (OWN-22).
+/// `parinn risk-acceptance show|record|withdraw [--json]` (OWN-22).
 pub(crate) fn risk_acceptance(
     mut args: impl Iterator<Item = String>,
     ctx: &Context,
@@ -290,7 +290,7 @@ pub(crate) fn risk_acceptance(
         _ => {
             let _ = writeln!(
                 stderr,
-                "cairn risk-acceptance: want show, record or withdraw"
+                "parinn risk-acceptance: want show, record or withdraw"
             );
             return EXIT_USAGE;
         }
@@ -310,7 +310,7 @@ fn ids(risks: &BTreeSet<ResidualRisk>) -> Vec<&'static str> {
     risks.iter().map(|r| r.id()).collect()
 }
 
-/// `cairn risk-acceptance show`: the residual risks open on this node,
+/// `parinn risk-acceptance show`: the residual risks open on this node,
 /// the runs leaving them open, and the standing risk acceptance.
 /// Read-only; it shows ids and fixed text, no record content.
 fn show(ctx: &Context, as_json: bool, stdout: &mut dyn Write, stderr: &mut dyn Write) -> u8 {
@@ -365,7 +365,7 @@ fn show_text(open: &OpenRisks, standing: Option<&BTreeSet<ResidualRisk>>) -> Str
     lines.join("\n")
 }
 
-/// `cairn risk-acceptance record`: accepts every residual risk open on
+/// `parinn risk-acceptance record`: accepts every residual risk open on
 /// the node, naming each and that an unsandboxed agent can forge the
 /// acceptance; widening, but exempt from OWN-22's condition.
 fn record_acceptance(
@@ -414,7 +414,7 @@ fn record_acceptance(
     written(writeln!(stdout, "{text}"), stderr)
 }
 
-/// `cairn risk-acceptance withdraw`: withdraws the standing risk
+/// `parinn risk-acceptance withdraw`: withdraws the standing risk
 /// acceptance, a cut act.
 fn withdraw(ctx: &Context, as_json: bool, stdout: &mut dyn Write, stderr: &mut dyn Write) -> u8 {
     const OP: &str = "risk-acceptance withdraw";

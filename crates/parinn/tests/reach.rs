@@ -1,5 +1,5 @@
 //! The dependency half of the core executable's reach evidence (SEC-01,
-//! ENG-16): no crate links into `cairn` that could open a socket or
+//! ENG-16): no crate links into `parinn` that could open a socket or
 //! start a program behind clippy's back. clippy's disallowed types,
 //! in this crate's clippy.toml, hold its own code; this holds what it
 //! links. A dependency joins `REACHABLE` in the same change that adds
@@ -199,7 +199,7 @@ fn the_core_executable_links_only_crates_its_reach_allows() {
     );
     let metadata: Value = serde_json::from_slice(&out.stdout).unwrap();
 
-    let extra: Vec<String> = linked(&metadata, "cairn")
+    let extra: Vec<String> = linked(&metadata, "parinn")
         .unwrap()
         .into_iter()
         .filter(|name| !REACHABLE.contains(&name.as_str()))
@@ -207,7 +207,7 @@ fn the_core_executable_links_only_crates_its_reach_allows() {
 
     assert!(
         extra.is_empty(),
-        "cairn links crates its reach does not allow: {extra:?}"
+        "parinn links crates its reach does not allow: {extra:?}"
     );
 }
 
@@ -215,7 +215,7 @@ fn the_core_executable_links_only_crates_its_reach_allows() {
 fn linked_follows_normal_dependencies_only() {
     let metadata = serde_json::json!({
         "packages": [
-            {"id": "a", "name": "cairn"},
+            {"id": "a", "name": "parinn"},
             {"id": "b", "name": "lib"},
             {"id": "c", "name": "deep"},
             {"id": "d", "name": "devonly"},
@@ -230,7 +230,7 @@ fn linked_follows_normal_dependencies_only() {
         ]},
     });
 
-    let got = linked(&metadata, "cairn").unwrap();
+    let got = linked(&metadata, "parinn").unwrap();
 
     assert_eq!(got, BTreeSet::from(["deep".to_owned(), "lib".to_owned()]));
     assert_eq!(
@@ -238,7 +238,7 @@ fn linked_follows_normal_dependencies_only() {
         Err("no package other".to_owned())
     );
     assert_eq!(
-        linked(&serde_json::json!({}), "cairn"),
+        linked(&serde_json::json!({}), "parinn"),
         Err("no packages".to_owned())
     );
 }

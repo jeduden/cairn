@@ -43,10 +43,10 @@ fn a_home_holds_its_transcript_and_is_removed_when_dropped() {
     let base = TempDir::new().unwrap();
 
     let home = Home::with_transcript(base.path(), "x\n").unwrap();
-    let [(home_var, root), (cairn_var, cairn)] = home.env();
+    let [(home_var, root), (parinn_var, parinn)] = home.env();
 
-    assert_eq!((home_var, cairn_var), ("HOME", "CAIRN_HOME"));
-    assert_eq!(cairn, root.join(".cairn"));
+    assert_eq!((home_var, parinn_var), ("HOME", "CAIRN_HOME"));
+    assert_eq!(parinn, root.join(".cairn"));
     let placed = root.join(".claude/projects/-w-bench/bench.jsonl");
     assert_eq!(fs::read_to_string(placed).unwrap(), "x\n");
     let other = Home::with_transcript(base.path(), "y\n").unwrap();

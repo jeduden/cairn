@@ -134,7 +134,7 @@ pub fn block_on<F: Future>(future: F) -> F::Output {
 
 /// The variable that marks the runner's own process as isolated: its
 /// value is the home the parent created for it.
-pub const ISOLATED_HOME: &str = "CAIRN_BDD_HOME";
+pub const ISOLATED_HOME: &str = "PARINN_BDD_HOME";
 
 /// Whether a process with `HOME` set to `home`, and the marker set to
 /// `marker`, runs isolated (ENG-14): the marker names its `HOME`, and

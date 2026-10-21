@@ -106,7 +106,7 @@ fn time_program_fed_hands_its_input_and_fails_as_time_program_does() {
 #[test]
 fn time_program_in_sets_the_variables_it_is_given() {
     let (program, _) = quiet();
-    let env = [("CAIRN_BENCHMARK_PROBE", std::path::PathBuf::from("x"))];
+    let env = [("PARINN_BENCHMARK_PROBE", std::path::PathBuf::from("x"))];
 
     let err = time_program_in(&program, &["--no-such-flag"], &env, DEADLINE).unwrap_err();
 

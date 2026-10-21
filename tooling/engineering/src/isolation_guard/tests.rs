@@ -103,7 +103,7 @@ fn script(dir: &Path, name: &str, body: &str) -> PathBuf {
 /// directory, and refuses any other.
 #[cfg(unix)]
 const GOOD_GUARD: &str = r#"case "$HOME" in
-  "$TMPDIR"/*) echo "$HOME/$CAIRN_GUARD_PROBE"; exit 0 ;;
+  "$TMPDIR"/*) echo "$HOME/$PARINN_GUARD_PROBE"; exit 0 ;;
   *) echo "refusing to resolve $HOME (ENG-14)" >&2; exit 134 ;;
 esac"#;
 
@@ -115,7 +115,7 @@ fn a_probe_runs_with_nothing_but_its_home_its_temporary_directory_and_its_place(
 
     let got = run_probe(
         &exe,
-        "cairn-home",
+        "parinn-home",
         Path::new("/h"),
         Path::new("/t"),
         Duration::from_secs(30),
@@ -129,7 +129,7 @@ fn a_probe_runs_with_nothing_but_its_home_its_temporary_directory_and_its_place(
             // A coverage run's profile file, which the probe keeps.
             .filter(|l| !l.starts_with("PWD=") && !l.starts_with("LLVM_PROFILE_FILE="))
             .collect::<Vec<_>>(),
-        ["CAIRN_GUARD_PROBE=cairn-home", "HOME=/h", "TMPDIR=/t"]
+        ["PARINN_GUARD_PROBE=parinn-home", "HOME=/h", "TMPDIR=/t"]
     );
 }
 
@@ -205,11 +205,11 @@ fn a_guard_that_lets_the_real_home_through_does_not_hold() {
     let exe = script(dir.path(), "open.sh", r#"echo "$HOME""#);
     let scratch = dir.path().join("scratch");
 
-    let got = guard_holds(&exe, &scratch, &["user-home", "cairn-home"]);
+    let got = guard_holds(&exe, &scratch, &["user-home", "parinn-home"]);
 
     assert_eq!(got.len(), 2, "{got:?}");
     assert!(got[0].starts_with("place user-home: resolved real state"));
-    assert!(got[1].starts_with("place cairn-home: resolved real state"));
+    assert!(got[1].starts_with("place parinn-home: resolved real state"));
 }
 
 #[cfg(unix)]

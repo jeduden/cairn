@@ -57,7 +57,7 @@ fn run_writes_every_benchmark_s_samples_against_the_core() {
     };
 
     let (code, out, err) = invoke_timed(
-        &["run", "--core", "target/release/cairn", "--samples=2"],
+        &["run", "--core", "target/release/parinn", "--samples=2"],
         &BTreeMap::new(),
         &time,
     );
@@ -73,15 +73,15 @@ fn run_writes_every_benchmark_s_samples_against_the_core() {
     );
     // One warm-up and the two samples, of each benchmark.
     assert_eq!(seen.borrow().len(), 15);
-    assert_eq!(seen.borrow()[0], "target/release/cairn version");
-    assert_eq!(seen.borrow()[3], "target/release/cairn ingest --all");
-    assert_eq!(seen.borrow()[6], "target/release/cairn hook SessionStart");
-    assert_eq!(seen.borrow()[12], "target/release/cairn mcp");
+    assert_eq!(seen.borrow()[0], "target/release/parinn version");
+    assert_eq!(seen.borrow()[3], "target/release/parinn ingest --all");
+    assert_eq!(seen.borrow()[6], "target/release/parinn hook SessionStart");
+    assert_eq!(seen.borrow()[12], "target/release/parinn mcp");
 }
 
 #[test]
 fn run_takes_ten_samples_unless_told() {
-    let (code, out, _) = invoke(&["run", "--core", "cairn"], &BTreeMap::new());
+    let (code, out, _) = invoke(&["run", "--core", "parinn"], &BTreeMap::new());
 
     assert_eq!(code, EXIT_OK);
     assert_eq!(
@@ -92,20 +92,20 @@ fn run_takes_ten_samples_unless_told() {
 
 #[test]
 fn run_fails_naming_the_benchmark_it_could_not_sample() {
-    let time = |_: &Path, _: &suite::Benchmark| Err("cairn version exited 3".to_owned());
+    let time = |_: &Path, _: &suite::Benchmark| Err("parinn version exited 3".to_owned());
 
-    let (code, out, err) = invoke_timed(&["run", "--core", "cairn"], &BTreeMap::new(), &time);
+    let (code, out, err) = invoke_timed(&["run", "--core", "parinn"], &BTreeMap::new(), &time);
 
     assert_eq!(code, EXIT_FAILURE);
     assert_eq!(out, "");
-    assert_eq!(err, "benchmark: core_start_up: cairn version exited 3\n");
+    assert_eq!(err, "benchmark: core_start_up: parinn version exited 3\n");
 }
 
 #[test]
 fn run_refuses_a_sample_count_that_is_not_positive() {
     for n in ["0", "-1", "ten"] {
         let (code, _, err) = invoke(
-            &["run", "--core", "cairn", "--samples", n],
+            &["run", "--core", "parinn", "--samples", n],
             &BTreeMap::new(),
         );
 
@@ -186,7 +186,7 @@ fn the_command_line_is_checked() {
         (&[][..], r#"unknown command """#),
         (&["bench"][..], r#"unknown command "bench""#),
         (&["run"][..], "--core is required"),
-        (&["run", "cairn"][..], r#"unexpected argument "cairn""#),
+        (&["run", "parinn"][..], r#"unexpected argument "parinn""#),
         (&["run", "--core"][..], "--core needs a value"),
         (&["run", "--core="][..], "--core needs a value"),
         (&["run", "--base", "x"][..], r#"unknown flag "--base""#),
@@ -221,7 +221,7 @@ fn a_refused_write_fails_the_command() {
 
     for (args, want) in [
         (
-            ["run", "--core", "cairn", "", ""],
+            ["run", "--core", "parinn", "", ""],
             "write the samples: disk full",
         ),
         (

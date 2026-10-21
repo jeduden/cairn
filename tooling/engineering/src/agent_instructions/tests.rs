@@ -68,8 +68,8 @@ fn every_way_to_destroy_counts() {
         "trash ~/x",
         "find ~ -name x -delete",
         "git clean -fdx ~",
-        "cairn purge --home ~/.cairn",
-        "cairn uninstall ~/.claude",
+        "parinn purge --home ~/.cairn",
+        "parinn uninstall ~/.claude",
         "sed -i s/a/b/ ~/.claude/settings.json",
         "echo x | tee ~/.claude/x",
         "echo {} > ~/.claude/settings.json",
@@ -126,7 +126,7 @@ fn a_statement_that_isolates_first_is_no_directive() {
 fn a_command_isolates_by_assigning_a_temporary_home() {
     for command in [
         "HOME=$(mktemp -d) rm -rf $HOME/.cairn",
-        "CAIRN_HOME=\"$TMPDIR/c\" cairn purge ~/.cairn",
+        "CAIRN_HOME=\"$TMPDIR/c\" parinn purge ~/.cairn",
         "export HOME=/tmp/h; rm -rf ~/.cairn",
         "env HOME=$tmp/home rm -rf ~/x",
     ] {
@@ -136,7 +136,10 @@ fn a_command_isolates_by_assigning_a_temporary_home() {
 
 #[test]
 fn a_real_home_assignment_does_not_isolate() {
-    for command in ["HOME=/root rm -rf ~", "CAIRN_HOME=$HOME/.cairn cairn purge"] {
+    for command in [
+        "HOME=/root rm -rf ~",
+        "CAIRN_HOME=$HOME/.cairn parinn purge",
+    ] {
         assert_eq!(flagged(&fenced(command)), vec![4], "{command}");
     }
 }

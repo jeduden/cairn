@@ -68,7 +68,7 @@ fn enter(w: &mut World, name: &str) -> Result<(), String> {
     let dir = base.join("homes").join(name);
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     homes(w).homes.insert(name.to_owned(), dir.clone());
-    w.cairn_home = dir.join(".cairn");
+    w.parinn_home = dir.join(".cairn");
     w.home = dir;
     Ok(())
 }
@@ -113,13 +113,13 @@ fn ingest(w: &mut World, name: &str) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "cairn ingest exited {}: {}",
+        "parinn ingest exited {}: {}",
         out.status,
         String::from_utf8_lossy(&out.stderr)
     ))
 }
 
-#[given(regex = r#"^two fresh isolated Cairn homes "([^"]+)" and "([^"]+)"$"#)]
+#[given(regex = r#"^two fresh isolated ParleyInn homes "([^"]+)" and "([^"]+)"$"#)]
 fn two_homes(w: &mut World, a: String, b: String) -> Result<(), String> {
     enter(w, &a)?;
     enter(w, &b)
@@ -266,7 +266,7 @@ fn homes_alike(w: &mut World) -> Result<(), String> {
 }
 
 #[given(
-    regex = r#"^a fresh isolated Cairn home "([^"]+)" where the lines of "forked-run" are held for "parent-run"$"#
+    regex = r#"^a fresh isolated ParleyInn home "([^"]+)" where the lines of "forked-run" are held for "parent-run"$"#
 )]
 fn home_holding(w: &mut World, home: String) -> Result<(), String> {
     enter(w, &home)?;

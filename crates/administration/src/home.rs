@@ -13,7 +13,7 @@ use key::key_store::{self, KeyStore};
 use crate::AdminError;
 use crate::node_identity::IdentitySource;
 
-/// A Cairn home.
+/// A ParleyInn home.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Home {
     root: PathBuf,
@@ -27,9 +27,9 @@ impl Home {
     /// # Errors
     ///
     /// Fails when neither names one.
-    pub fn locate(cairn_home: Option<&OsStr>, home: Option<&OsStr>) -> Result<Self, AdminError> {
+    pub fn locate(parinn_home: Option<&OsStr>, home: Option<&OsStr>) -> Result<Self, AdminError> {
         let set = |v: Option<&OsStr>| v.filter(|v| !v.is_empty()).map(PathBuf::from);
-        let root = set(cairn_home)
+        let root = set(parinn_home)
             .or_else(|| set(home).map(|h| h.join(".cairn")))
             .ok_or(AdminError::NoHome)?;
 

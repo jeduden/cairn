@@ -3,7 +3,7 @@
 //! recorded for its harness version ([`shape`]): a known line type, the
 //! keys its shape needs, and a version among the supported ones. A line
 //! that is not a JSON object with a textual type, or whose type no
-//! supported version records, is one Cairn cannot parse: stored as an
+//! supported version records, is one ParleyInn cannot parse: stored as an
 //! `unparsed` event. A line that fails the check otherwise is format
 //! drift, kept whole as untrusted `harness_text` and never classified
 //! by its fields. Nothing here reads a file, a clock or randomness.
@@ -115,7 +115,7 @@ impl Fit<'_> {
 /// What [`parse`] made of one line.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Parsed<'a> {
-    /// A line Cairn cannot parse (REC-05), with its drift when it is a
+    /// A line ParleyInn cannot parse (REC-05), with its drift when it is a
     /// JSON object whose type no supported version records.
     Unparsed(Option<Drift>),
     /// Format drift: kept whole, never classified by its fields.

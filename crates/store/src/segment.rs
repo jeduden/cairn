@@ -3,7 +3,7 @@
 //! the record, not a storage layout: no address, commitment or chain
 //! head changes with it (REC-25). Each append extends its writer's open
 //! segment, or opens one at its first new `seq`; closing it ends the
-//! range. A segment of a newer format version than this cairn's is
+//! range. A segment of a newer format version than this parinn's is
 //! refused, never rewritten.
 
 use std::fmt;
@@ -11,7 +11,7 @@ use std::fmt;
 use record::id::{Seq, WriterId};
 use rusqlite::{Connection, params};
 
-/// The format version of every segment this cairn writes.
+/// The format version of every segment this parinn writes.
 pub const SEGMENT_VERSION: u32 = 1;
 
 /// The segments' table, part of the store's schema.
@@ -78,7 +78,7 @@ fn parse((writer, first, last, version, closed): Row) -> Result<Segment, BadRow>
 }
 
 /// The segments `filter` selects, by writer then first seq. `filter`
-/// names both `?1`, which is `arg`, and `?2`, this cairn's
+/// names both `?1`, which is `arg`, and `?2`, this parinn's
 /// [`SEGMENT_VERSION`].
 pub(crate) fn select(
     conn: &Connection,

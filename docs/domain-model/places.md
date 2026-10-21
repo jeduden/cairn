@@ -2,11 +2,11 @@
 title: "Places"
 order: "03"
 summary: >-
-  Where Cairn's state lives and is shared: homes, nodes, devices and paired phones, sandboxes, rooms and their kinds, visibility, peers and blind peers.
+  Where ParleyInn's state lives and is shared: homes, nodes, devices and paired phones, sandboxes, rooms and their kinds, visibility, peers and blind peers.
 ---
 # Places
 
-- **Home**: The directory with one principal's Cairn state on a node
+- **Home**: The directory with one principal's ParleyInn state on a node
   (`CAIRN_HOME`, default `~/.cairn`), belonging to one OS user, holding the keys
   SEC-10 binds to it, and optionally bound to a **home id** (`home.id`) that the
   environment must supply to open it (SEC-03). The unit of isolation (I8).
@@ -39,7 +39,7 @@ summary: >-
 - **Room**: Where an intent is worked on: at most one intent, a **conversation**
   (its ordered posts and the forge discussion items shown with them),
   seats, pins, issue links, and branches in any repositories, each named by a
-  branch link. The unit Cairn shows and shares.
+  branch link. The unit ParleyInn shows and shares.
 - **Personal room**: A principal's private room on each of its nodes, created as
   ADM-02 says, or carried over to a node clone, which shares it (LANE-01,
   LANE-17). Every run its node records has a seat in it from its first event,

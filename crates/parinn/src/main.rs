@@ -1,4 +1,4 @@
-//! The `cairn` executable. Everything it does is [`cairn::run`]; this
+//! The `parinn` executable. Everything it does is [`parinn::run`]; this
 //! entry point only hands it the process's arguments, environment and
 //! streams.
 
@@ -21,13 +21,13 @@ fn main() -> ExitCode {
     // A development build's seam for the tests: the clock stands still
     // at the time it names; a release build reads the wall clock.
     let fixed: Option<u64> = cfg!(debug_assertions)
-        .then(|| std::env::var("CAIRN_TEST_CLOCK").ok())
+        .then(|| std::env::var("PARINN_TEST_CLOCK").ok())
         .flatten()
         .and_then(|t| t.parse().ok());
     let clock = move || fixed.unwrap_or_else(now);
-    let ctx = cairn::Context {
-        build: &cairn::BUILD,
-        cairn_home: std::env::var_os("CAIRN_HOME"),
+    let ctx = parinn::Context {
+        build: &parinn::BUILD,
+        parinn_home: std::env::var_os("CAIRN_HOME"),
         home: std::env::var_os("HOME"),
         home_id: std::env::var_os("CAIRN_HOME_ID"),
         // The development build's seam for the `@ENG-04` scenario; a
@@ -41,7 +41,7 @@ fn main() -> ExitCode {
         working_dir: std::env::current_dir().ok(),
         // A development build's seam for the tests; a release build
         // reads only the documented path.
-        managed_policy: cairn::managed_policy(
+        managed_policy: parinn::managed_policy(
             cfg!(debug_assertions)
                 .then(|| std::env::var_os("CAIRN_TEST_MANAGED_POLICY"))
                 .flatten(),
@@ -49,7 +49,7 @@ fn main() -> ExitCode {
         // A development build's seam for the tests; a release build
         // reads only this OS's node identity.
         node_identity: cfg!(debug_assertions)
-            .then(|| std::env::var_os("CAIRN_TEST_NODE_IDENTITY"))
+            .then(|| std::env::var_os("PARINN_TEST_NODE_IDENTITY"))
             .flatten()
             .map(std::path::PathBuf::from),
         os_user: os_user(),
@@ -64,29 +64,29 @@ fn main() -> ExitCode {
         // A development build's seam for the tests; a release build's
         // live ingest reads every line.
         live_limit: cfg!(debug_assertions)
-            .then(|| std::env::var("CAIRN_TEST_INGEST_LIMIT").ok())
+            .then(|| std::env::var("PARINN_TEST_INGEST_LIMIT").ok())
             .flatten()
             .and_then(|n| n.parse().ok()),
-        hook_budget: cairn::budget_override(
+        hook_budget: parinn::budget_override(
             cfg!(debug_assertions)
-                .then(|| std::env::var("CAIRN_TEST_HOOK_BUDGET_MS").ok())
+                .then(|| std::env::var("PARINN_TEST_HOOK_BUDGET_MS").ok())
                 .flatten()
                 .as_deref(),
         ),
         // A development build's seam for the `@SEC-04` scenario, which
         // needs a search past its deadline; a release build keeps 2 s.
         query_deadline: cfg!(debug_assertions)
-            .then(|| std::env::var("CAIRN_TEST_QUERY_DEADLINE_MS").ok())
+            .then(|| std::env::var("PARINN_TEST_QUERY_DEADLINE_MS").ok())
             .flatten()
             .and_then(|ms| ms.parse().ok())
             .map(std::time::Duration::from_millis),
     };
 
-    let log = cairn::structured_log(
+    let log = parinn::structured_log(
         std::env::var_os("CAIRN_HOME"),
         std::env::var_os("HOME"),
         std::env::var_os("CAIRN_HOME_ID"),
-        cairn::LogSettings {
+        parinn::LogSettings {
             managed: ctx.managed_policy.clone(),
             os_user: ctx.os_user,
         },
@@ -95,9 +95,9 @@ fn main() -> ExitCode {
     let log = std::sync::Arc::new(log);
     let dispatch = tracing::Dispatch::from(log.clone());
     let code = tracing::dispatcher::with_default(&dispatch, || {
-        cairn::run(args, &ctx, &mut io::stdout(), &mut io::stderr())
+        parinn::run(args, &ctx, &mut io::stdout(), &mut io::stderr())
     });
-    cairn::audit_dropped_log_lines(&ctx, log.dropped());
+    parinn::audit_dropped_log_lines(&ctx, log.dropped());
 
     ExitCode::from(code)
 }
@@ -113,7 +113,7 @@ fn now() -> u64 {
         .map_or(0, |d| d.as_secs())
 }
 
-/// The running OS user, on an OS whose file modes Cairn checks; unknown
+/// The running OS user, on an OS whose file modes ParleyInn checks; unknown
 /// there when it cannot be learnt, which refuses managed policy.
 fn os_user() -> configuration::source::OsUser {
     use configuration::source::OsUser;
@@ -147,7 +147,7 @@ fn stdin_lines() -> Receiver<io::Result<String>> {
         )]
         let stdin = io::stdin();
         // Reading stops once the reader is gone.
-        cairn::bounded_lines(stdin.lock(), cairn::INPUT_LINE_LIMIT)
+        parinn::bounded_lines(stdin.lock(), parinn::INPUT_LINE_LIMIT)
             .map_while(|line| tx.send(line).ok())
             .for_each(drop);
     });

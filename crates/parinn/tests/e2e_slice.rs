@@ -1,9 +1,9 @@
 //! The proving slice of plan 2609292012, phase 1, end to end: one
 //! recorded Claude Code 2.1.296 transcript ingested by the built core,
 //! recalled through `event_get` inside the envelope, and checked by
-//! `cairn verify`, in an isolated home, every start confined to the
+//! `parinn verify`, in an isolated home, every start confined to the
 //! core's boundary (ENG-12). Then one byte of one stored header changes,
-//! and `cairn verify` names that event (REC-10).
+//! and `parinn verify` names that event (REC-10).
 
 #![allow(
     clippy::unwrap_used,
@@ -32,7 +32,7 @@ fn transcript() -> PathBuf {
 }
 
 /// The transcript placed under the home's default transcript root, the
-/// only place `cairn ingest` reads from in a fresh home (SEC-18).
+/// only place `parinn ingest` reads from in a fresh home (SEC-18).
 fn placed(home: &Path) -> PathBuf {
     testkit::place_transcript(home, &transcript()).unwrap()
 }
@@ -43,20 +43,20 @@ fn core() -> Confinement {
 
 /// Runs the core with `args` in `home`, confined.
 #[track_caller]
-fn cairn(home: &Path, args: &[&str]) -> Output {
+fn parinn(home: &Path, args: &[&str]) -> Output {
     core()
-        .run(Path::new(env!("CARGO_BIN_EXE_cairn")), args, home)
+        .run(Path::new(env!("CARGO_BIN_EXE_parinn")), args, home)
         .unwrap_or_else(|e| panic!("{e}"))
 }
 
-/// Runs `cairn mcp` in `home`, confined, with `requests` as its input,
+/// Runs `parinn mcp` in `home`, confined, with `requests` as its input,
 /// one JSON-RPC message a line, and returns its replies.
 #[track_caller]
 fn mcp(home: &Path, requests: &[Value]) -> Vec<Value> {
     let input: String = requests.iter().map(|r| format!("{r}\n")).collect();
     let out = core()
         .run_with_input(
-            Path::new(env!("CARGO_BIN_EXE_cairn")),
+            Path::new(env!("CARGO_BIN_EXE_parinn")),
             &["mcp"],
             home,
             input.as_bytes(),
@@ -84,7 +84,7 @@ fn one_transcript_is_recorded_recalled_in_the_envelope_and_verified() {
         .map(str::to_owned)
         .collect();
 
-    let ingest = cairn(
+    let ingest = parinn(
         home.path(),
         &[
             "ingest",
@@ -143,7 +143,7 @@ fn one_transcript_is_recorded_recalled_in_the_envelope_and_verified() {
         (Some("ingested"), Some("untrusted"))
     );
 
-    let verified = cairn(home.path(), &["verify", "--json"]);
+    let verified = parinn(home.path(), &["verify", "--json"]);
     assert_eq!(
         verified.status.code(),
         Some(0),
@@ -166,7 +166,7 @@ fn one_transcript_is_recorded_recalled_in_the_envelope_and_verified() {
 #[test]
 fn a_changed_header_byte_fails_verify_naming_the_event_s_address() {
     let home = testkit::TempDir::new().unwrap();
-    let ingest = cairn(
+    let ingest = parinn(
         home.path(),
         &[
             "ingest",
@@ -206,13 +206,13 @@ fn a_changed_header_byte_fails_verify_naming_the_event_s_address() {
         .unwrap();
     drop(store);
 
-    let out = cairn(home.path(), &["verify"]);
+    let out = parinn(home.path(), &["verify"]);
 
     assert_eq!(out.status.code(), Some(3));
     assert_eq!(
         String::from_utf8_lossy(&out.stderr),
         format!(
-            "cairn verify: chain broken at cairn:room/{room}/w/{writer}/10: the stored hash does not match the event's header\n"
+            "parinn verify: chain broken at cairn:room/{room}/w/{writer}/10: the stored hash does not match the event's header\n"
         )
     );
 }

@@ -1,4 +1,4 @@
-//! The Cairn core executable, specified in docs/srs: the hook
+//! The ParleyInn core executable, specified in docs/srs: the hook
 //! handlers, the MCP server and the CLI so far.
 //!
 //! It runs `version`, `ingest`, `mcp`, `verify`, `hook`,
@@ -44,19 +44,19 @@ pub const EXIT_USAGE: u8 = 2;
 /// The record failed an integrity check.
 pub const EXIT_INTEGRITY: u8 = 3;
 
-/// How long `cairn mcp` waits for a line before it waits again.
+/// How long `parinn mcp` waits for a line before it waits again.
 const IDLE: Duration = Duration::from_secs(1);
 
 /// The longest line the process's input may carry, the hook input's
 /// limit (SEC-05); the MCP server's requests are held to it too.
 pub const INPUT_LINE_LIMIT: usize = hook::HOOK_INPUT_LIMIT;
 
-/// The longest `cairn hook` waits for its whole hook input, however its
+/// The longest `parinn hook` waits for its whole hook input, however its
 /// lines arrive; its hook budget ends the wait sooner (NFR-02).
 const HOOK_INPUT_WAIT: Duration = Duration::from_millis(500);
 
 /// What a build stamps into the executable. The release build sets
-/// `CAIRN_VERSION` and `CAIRN_COMMIT` (ENG-01); a local build reports
+/// `PARINN_VERSION` and `PARINN_COMMIT` (ENG-01); a local build reports
 /// version "dev" and no commit.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Build<'a> {
@@ -69,14 +69,14 @@ const BUILD_DEV: &str = "dev";
 
 /// This executable's build.
 pub const BUILD: Build<'static> = Build {
-    version: match option_env!("CAIRN_VERSION") {
+    version: match option_env!("PARINN_VERSION") {
         Some(v) => v,
         None => BUILD_DEV,
     },
-    commit: option_env!("CAIRN_COMMIT"),
+    commit: option_env!("PARINN_COMMIT"),
 };
 
-const USAGE: &str = "usage: cairn <command> [flags]
+const USAGE: &str = "usage: parinn <command> [flags]
 
 commands:
   configuration accept [--json]          accept the configuration (widening)
@@ -99,7 +99,7 @@ commands:
 pub struct Context<'a> {
     pub build: &'a Build<'a>,
     /// `CAIRN_HOME`, as the process found it.
-    pub cairn_home: Option<OsString>,
+    pub parinn_home: Option<OsString>,
     /// `HOME`, as the process found it.
     pub home: Option<OsString>,
     /// `CAIRN_HOME_ID`, the home id the environment supplies (SEC-03).
@@ -158,7 +158,7 @@ impl Context<'_> {
     /// everything in it owner-only (SEC-02), and its home id the one the
     /// environment supplies (SEC-03).
     fn home(&self) -> Result<Home, administration::AdminError> {
-        let mut home = Home::locate(self.cairn_home.as_deref(), self.home.as_deref())?;
+        let mut home = Home::locate(self.parinn_home.as_deref(), self.home.as_deref())?;
         if let Some(path) = &self.node_identity {
             home = home.with_identity(IdentitySource::Files(vec![path.clone()]));
         }
@@ -206,13 +206,13 @@ impl Default for LogSettings {
 /// so no line is written; each is counted as dropped.
 #[must_use]
 pub fn structured_log(
-    cairn_home: Option<OsString>,
+    parinn_home: Option<OsString>,
     home: Option<OsString>,
     home_id: Option<OsString>,
     settings: LogSettings,
     clock: fn() -> u64,
 ) -> structured_log::StructuredLog {
-    let (compile_home, compile_os_home) = (cairn_home.clone(), home.clone());
+    let (compile_home, compile_os_home) = (parinn_home.clone(), home.clone());
     // With no home there are no settings layers to read and nowhere to
     // write: the rule set alone, and the log opens nothing.
     let compile: structured_log::Compile =
@@ -225,7 +225,7 @@ pub fn structured_log(
             },
         );
     let open: structured_log::Open = Box::new(move || {
-        let Ok(home) = Home::locate(cairn_home.as_deref(), home.as_deref()) else {
+        let Ok(home) = Home::locate(parinn_home.as_deref(), home.as_deref()) else {
             return Ok(None);
         };
         if !home.root().exists() || home.check().is_err() {
@@ -313,13 +313,13 @@ pub fn run(
         Some("version") => version(args, ctx.build, stdout, stderr),
         Some("help" | "-h" | "--help") => written(stdout.write_all(USAGE.as_bytes()), stderr),
         Some(other) => {
-            let _ = write!(stderr, "cairn: unknown command {other:?}\n\n{USAGE}");
+            let _ = write!(stderr, "parinn: unknown command {other:?}\n\n{USAGE}");
             EXIT_USAGE
         }
     }
 }
 
-/// `cairn version [--json]`: the stamped version as a bare line, or as
+/// `parinn version [--json]`: the stamped version as a bare line, or as
 /// `{"version": ..., "commit": ...}`, the commit left out when the
 /// build stamped none.
 fn version(
@@ -340,7 +340,7 @@ fn version(
     written(writeln!(stdout, "{line}"), stderr)
 }
 
-/// The JSON object `cairn version --json` prints.
+/// The JSON object `parinn version --json` prints.
 fn version_json(build: &Build) -> String {
     let mut out = format!("{{\"version\":{}", json_string(build.version));
     if let Some(commit) = build.commit {
@@ -361,7 +361,7 @@ pub(crate) fn json_flag(
     let mut as_json = false;
     for arg in args {
         if arg != "--json" {
-            let _ = writeln!(stderr, "cairn {command}: unknown flag {arg:?}");
+            let _ = writeln!(stderr, "parinn {command}: unknown flag {arg:?}");
             return None;
         }
         as_json = true;
@@ -372,7 +372,7 @@ pub(crate) fn json_flag(
 
 /// Reports a failure of `command` on `stderr`.
 pub(crate) fn failed(command: &str, e: &dyn std::fmt::Display, stderr: &mut dyn Write) -> u8 {
-    let _ = writeln!(stderr, "cairn {command}: {e}");
+    let _ = writeln!(stderr, "parinn {command}: {e}");
     EXIT_FAILURE
 }
 
@@ -401,7 +401,7 @@ fn payload_settings(settings: &configuration::resolve::Settings) -> ingest::Payl
     }
 }
 
-/// What `cairn ingest` reads.
+/// What `parinn ingest` reads.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum IngestTarget {
     /// Every transcript under the transcript roots (REC-01).
@@ -410,7 +410,7 @@ enum IngestTarget {
     Path(String),
 }
 
-/// `cairn ingest --all | --path P [--json]`: records every transcript
+/// `parinn ingest --all | --path P [--json]`: records every transcript
 /// under the transcript roots, or the one at `P`, each in a new ingest
 /// seat. A transcript that cannot be ingested is reported and the rest
 /// still are; the command then fails.
@@ -423,7 +423,7 @@ fn ingest(
     let (target, as_json) = match ingest_args(args) {
         Ok(parsed) => parsed,
         Err(why) => {
-            let _ = writeln!(stderr, "cairn ingest: {why}");
+            let _ = writeln!(stderr, "parinn ingest: {why}");
             return EXIT_USAGE;
         }
     };
@@ -557,7 +557,7 @@ fn held_sources(
         .collect()
 }
 
-/// Audits and counts, once each, every transcript source `cairn ingest
+/// Audits and counts, once each, every transcript source `parinn ingest
 /// --all` finds gone before it was fully ingested (REC-08, I6).
 fn audit_lost(ctx: &Context, home: &Home, stderr: &mut dyn Write) {
     let found = Store::open(&home.store()).and_then(|mut store| {
@@ -575,7 +575,7 @@ fn audit_lost(ctx: &Context, home: &Home, stderr: &mut dyn Write) {
     let fresh = match found {
         Ok(fresh) => fresh,
         Err(e) => {
-            let _ = writeln!(stderr, "cairn ingest: find lost transcript sources: {e}");
+            let _ = writeln!(stderr, "parinn ingest: find lost transcript sources: {e}");
             return;
         }
     };
@@ -592,12 +592,12 @@ fn audit_lost(ctx: &Context, home: &Home, stderr: &mut dyn Write) {
             key: &name,
         };
         if let Err(e) = ctx.audit(&occurrence) {
-            let _ = writeln!(stderr, "cairn ingest: audit a lost transcript source: {e}");
+            let _ = writeln!(stderr, "parinn ingest: audit a lost transcript source: {e}");
         }
     }
 }
 
-/// What `cairn ingest`'s command line asks for, or why it is refused.
+/// What `parinn ingest`'s command line asks for, or why it is refused.
 fn ingest_args(mut args: impl Iterator<Item = String>) -> Result<(IngestTarget, bool), String> {
     let (mut all, mut path, mut as_json) = (false, None, false);
     while let Some(arg) = args.next() {
@@ -639,7 +639,10 @@ fn root_transcripts(
 fn audit_index_gaps(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Write) {
     if let Some(why) = &ingested.index_gaps_unread {
         let _ = ctx.audit(&index_gaps::lookup_failed("ingest"));
-        let _ = writeln!(stderr, "cairn ingest: look up the search index gaps: {why}");
+        let _ = writeln!(
+            stderr,
+            "parinn ingest: look up the search index gaps: {why}"
+        );
     }
     if ingested.index_gaps.is_empty() {
         return;
@@ -654,7 +657,7 @@ fn audit_index_gaps(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn
         Err(e) => Some(e.to_string()),
     };
     if let Some(e) = problem {
-        let _ = writeln!(stderr, "cairn ingest: audit the search index gaps: {e}");
+        let _ = writeln!(stderr, "parinn ingest: audit the search index gaps: {e}");
     }
 }
 
@@ -677,7 +680,7 @@ fn record_ingested(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn 
     );
 }
 
-/// What `cairn ingest` prints of the transcripts it recorded: for
+/// What `parinn ingest` prints of the transcripts it recorded: for
 /// `--path`, the one; for `--all`, each, or that there was none.
 fn ingest_report(
     target: &IngestTarget,
@@ -715,7 +718,7 @@ fn ingest_report(
         .collect()
 }
 
-/// Each run an ingest appended to, as `cairn ingest --json` shows it:
+/// Each run an ingest appended to, as `parinn ingest --json` shows it:
 /// its writer and seat, the harness's agent id, the run its parent link
 /// ties it to, and how many events it gained (REC-02).
 fn runs_json(runs: &[ingest::RunReport]) -> Value {
@@ -790,7 +793,7 @@ fn audit_sourcing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn W
     for (times, occurrence) in &occurrences {
         for _ in 0..*times {
             if let Err(e) = ctx.audit(occurrence) {
-                let _ = writeln!(stderr, "cairn ingest: audit the transcript source: {e}");
+                let _ = writeln!(stderr, "parinn ingest: audit the transcript source: {e}");
             }
         }
     }
@@ -825,7 +828,7 @@ fn audit_prompts(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Wr
     for (times, occurrence) in &occurrences {
         for _ in 0..*times {
             if let Err(e) = ctx.audit(occurrence) {
-                let _ = writeln!(stderr, "cairn ingest: audit a prompt match: {e}");
+                let _ = writeln!(stderr, "parinn ingest: audit a prompt match: {e}");
             }
         }
     }
@@ -843,7 +846,7 @@ fn audit_parsing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Wr
     };
     for _ in 0..ingested.unparsed {
         if let Err(e) = ctx.audit(&unparsed) {
-            let _ = writeln!(stderr, "cairn ingest: audit an unparsed line: {e}");
+            let _ = writeln!(stderr, "parinn ingest: audit an unparsed line: {e}");
         }
     }
     for drift in &ingested.drifts {
@@ -855,7 +858,7 @@ fn audit_parsing(ctx: &Context, ingested: &ingest::Ingested, stderr: &mut dyn Wr
             key: drift,
         };
         if let Err(e) = ctx.audit(&occurrence) {
-            let _ = writeln!(stderr, "cairn ingest: audit a format drift: {e}");
+            let _ = writeln!(stderr, "parinn ingest: audit a format drift: {e}");
         }
     }
 }
@@ -910,7 +913,7 @@ pub(crate) fn open_node(
     if let Some(occurrence) = occurrence
         && let Err(e) = ctx.audit(&occurrence)
     {
-        let _ = writeln!(stderr, "cairn: audit the node's start: {e}");
+        let _ = writeln!(stderr, "parinn: audit the node's start: {e}");
     }
 
     opened.map_err(|e| e.to_string())
@@ -929,7 +932,7 @@ fn refuse_ingest(ctx: &Context, stderr: &mut dyn Write) -> String {
         detail: "ingest refused while a settings layer fails",
     };
     if let Err(e) = ctx.audit(&occurrence) {
-        let _ = writeln!(stderr, "cairn ingest: audit a refused ingest: {e}");
+        let _ = writeln!(stderr, "parinn ingest: audit a refused ingest: {e}");
     }
 
     "a settings layer failed, so its redaction patterns are unknown; fix it and ingest again"
@@ -937,7 +940,7 @@ fn refuse_ingest(ctx: &Context, stderr: &mut dyn Write) -> String {
 }
 
 /// The transcript at `path` resolved within the transcript roots, the
-/// only allowed roots `cairn ingest` reads from (SEC-18): nothing in
+/// only allowed roots `parinn ingest` reads from (SEC-18): nothing in
 /// the home, its keys and store among it, is a transcript. A path
 /// outside them is refused, audited and counted, and nothing is read
 /// from it.
@@ -964,7 +967,7 @@ fn allowed_transcript(
         if let Err(e) = ctx.audit(&occurrence) {
             let _ = writeln!(
                 stderr,
-                "cairn ingest: audit a path outside allowed roots: {e}"
+                "parinn ingest: audit a path outside allowed roots: {e}"
             );
         }
         refused.to_string()
@@ -992,7 +995,7 @@ fn redactor(
         if let Err(e) = ctx.audit(&occurrence) {
             let _ = writeln!(
                 stderr,
-                "cairn ingest: audit a refused redaction pattern: {e}"
+                "parinn ingest: audit a refused redaction pattern: {e}"
             );
         }
     }
@@ -1012,7 +1015,7 @@ fn audit_redactions(ctx: &Context, rules: &[String], stderr: &mut dyn Write) {
             key: rule,
         };
         if let Err(e) = ctx.audit(&occurrence) {
-            let _ = writeln!(stderr, "cairn ingest: audit a redaction: {e}");
+            let _ = writeln!(stderr, "parinn ingest: audit a redaction: {e}");
         }
     }
 }
@@ -1023,7 +1026,10 @@ fn audit_redactions(ctx: &Context, rules: &[String], stderr: &mut dyn Write) {
 /// settings in force.
 fn audit_settings(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> settings::InForce {
     let acts = settings::recorded_acts(home).unwrap_or_else(|e| {
-        let _ = writeln!(stderr, "cairn ingest: read the accepted configuration: {e}");
+        let _ = writeln!(
+            stderr,
+            "parinn ingest: read the accepted configuration: {e}"
+        );
         Vec::new()
     });
     let in_force = settings::in_force(ctx, home, &acts);
@@ -1034,16 +1040,16 @@ fn audit_settings(ctx: &Context, home: &Home, stderr: &mut dyn Write) -> setting
             configuration::SettingsLayer::ManagedPolicy => format!("recording without {failure}"),
             _ => failure.to_string(),
         };
-        let _ = writeln!(stderr, "cairn ingest: {line}");
+        let _ = writeln!(stderr, "parinn ingest: {line}");
     }
     for e in settings::audit(ctx, "ingest", &in_force) {
-        let _ = writeln!(stderr, "cairn ingest: audit the settings: {e}");
+        let _ = writeln!(stderr, "parinn ingest: audit the settings: {e}");
     }
 
     in_force
 }
 
-/// `cairn mcp`: serves the MCP tools over the process's input and
+/// `parinn mcp`: serves the MCP tools over the process's input and
 /// `stdout` until the input closes.
 fn mcp(
     args: impl Iterator<Item = String>,
@@ -1052,7 +1058,7 @@ fn mcp(
     stderr: &mut dyn Write,
 ) -> u8 {
     if let Some(arg) = args.into_iter().next() {
-        let _ = writeln!(stderr, "cairn mcp: unknown flag {arg:?}");
+        let _ = writeln!(stderr, "parinn mcp: unknown flag {arg:?}");
         return EXIT_USAGE;
     }
     let home = match ctx.home() {
@@ -1124,7 +1130,7 @@ fn mcp(
     }
 }
 
-/// How long `cairn mcp` waits for live ingest to stop once its input
+/// How long `parinn mcp` waits for live ingest to stop once its input
 /// closes.
 const CAPTURE_STOP: Duration = Duration::from_secs(5);
 
@@ -1253,7 +1259,7 @@ fn on_query_cancelled<'a>(
     move |cancelled| {
         for _ in 0..cancelled {
             if let Err(e) = query_cancelled(home, clock()) {
-                let _ = writeln!(stderr, "cairn mcp: audit a cancelled search: {e}");
+                let _ = writeln!(stderr, "parinn mcp: audit a cancelled search: {e}");
             }
         }
     }
@@ -1271,7 +1277,7 @@ fn query_cancelled(home: &Home, time: u64) -> Result<Entry, AuditError> {
     Log::new(home.audit()).append(&occurrence, time)
 }
 
-/// `cairn verify [--json]`: checks the record against this node's
+/// `parinn verify [--json]`: checks the record against this node's
 /// device key, exiting 3 at the first failure, which it names. No log
 /// is signed yet, so a record that passes is `unsigned` (§9.7.5).
 fn verify_command(
@@ -1369,7 +1375,7 @@ fn verify_record(
     })
 }
 
-/// What `cairn verify` says of a record that verified, `staged` while
+/// What `parinn verify` says of a record that verified, `staged` while
 /// the node's first start is still to finish, as JSON when asked.
 fn verified_line(
     as_json: bool,
@@ -1412,7 +1418,7 @@ fn verified_line(
     )
 }
 
-/// What `cairn verify` says of a record whose chains hold but which
+/// What `parinn verify` says of a record whose chains hold but which
 /// refused a second event at one (writer, seq): each fork on `stderr`,
 /// exiting 3, with the integrity status `refused` and the forks as JSON
 /// when asked (PEER-10, VIEW-10). The writer is not marked, and no
@@ -1425,7 +1431,7 @@ fn refused_report(
     stderr: &mut dyn Write,
 ) -> (u8, String) {
     for line in forks::lines(forks) {
-        let _ = writeln!(stderr, "cairn verify: {line}");
+        let _ = writeln!(stderr, "parinn verify: {line}");
     }
     if !as_json {
         return (EXIT_INTEGRITY, String::new());
@@ -1442,7 +1448,7 @@ fn refused_report(
     (EXIT_INTEGRITY, line.to_string())
 }
 
-/// What `cairn verify` adds for transcript sources gone before they
+/// What `parinn verify` adds for transcript sources gone before they
 /// were fully ingested: nothing when none was (REC-08).
 fn lost_line(lost: &[String]) -> String {
     if lost.is_empty() {
@@ -1452,7 +1458,7 @@ fn lost_line(lost: &[String]) -> String {
     format!("; {}", sources::lost_text(lost))
 }
 
-/// What `cairn verify` adds for writer chains that ended without a
+/// What `parinn verify` adds for writer chains that ended without a
 /// closed segment: nothing when none did (REC-19).
 fn open_text(open: &[store::Segment]) -> String {
     if open.is_empty() {
@@ -1465,7 +1471,7 @@ fn open_text(open: &[store::Segment]) -> String {
     )
 }
 
-/// Each seat as `cairn verify --json` reports it: its writer, and its
+/// Each seat as `parinn verify --json` reports it: its writer, and its
 /// seat id, room, seat kind, ingest flag and seat certificate, all read
 /// from that certificate (PRV-11).
 fn seats_json(seats: &[administration::verify::SeatReport]) -> Value {
@@ -1494,7 +1500,7 @@ fn broken_json(
     message: &str,
     stderr: &mut dyn Write,
 ) -> (u8, String) {
-    let _ = writeln!(stderr, "cairn verify: {message}");
+    let _ = writeln!(stderr, "parinn verify: {message}");
     if !as_json {
         return (EXIT_INTEGRITY, String::new());
     }
@@ -1616,7 +1622,7 @@ fn on_mcp_panic<'a>(
 ) -> impl FnMut() + 'a {
     move || {
         if let Err(e) = mcp_panicked(home, clock()) {
-            let _ = writeln!(stderr, "cairn mcp: audit a caught panic: {e}");
+            let _ = writeln!(stderr, "parinn mcp: audit a caught panic: {e}");
         }
     }
 }
@@ -1646,7 +1652,7 @@ fn audit_counts(
     match Log::new(home.audit()).entries() {
         Ok(entries) => Ok((counts(&entries, acknowledged), entries.len() as u64)),
         Err(e @ AuditError::Broken { .. }) => {
-            let _ = writeln!(stderr, "cairn {command}: {e}");
+            let _ = writeln!(stderr, "parinn {command}: {e}");
             Err(EXIT_INTEGRITY)
         }
         Err(e) => Err(failed(command, &e, stderr)),
@@ -1669,7 +1675,7 @@ fn home_counts(
     audit_counts(command, home, act_record::acknowledged(acts), stderr).map(Some)
 }
 
-/// `cairn doctor [--json]`: read-only (ADM-10); exits 1 while a counter
+/// `parinn doctor [--json]`: read-only (ADM-10); exits 1 while a counter
 /// rose since the counters were last acknowledged, naming each
 /// (OPS-03).
 fn doctor(
@@ -1726,7 +1732,7 @@ fn doctor(
     }
 }
 
-/// What `cairn status` shows.
+/// What `parinn status` shows.
 struct Status {
     home: String,
     /// The store's path and size, once the home exists.
@@ -1804,7 +1810,7 @@ impl Status {
         lines.push(format!("deployment mode: {}", self.deployment_mode));
         if !self.awaiting_acceptance.is_empty() {
             lines.push(format!(
-                "awaiting acceptance (cairn configuration accept): {}",
+                "awaiting acceptance (parinn configuration accept): {}",
                 self.awaiting_acceptance.join(", ")
             ));
         }
@@ -1825,7 +1831,7 @@ impl Status {
     }
 }
 
-/// `cairn status [--json]`: the home, the store, the audit log, the
+/// `parinn status [--json]`: the home, the store, the audit log, the
 /// non-zero counters and the settings in force (ADM-11, which phase 15
 /// completes). It exits 2 while the configuration or the repository
 /// configuration fails validation (ADM-04).
@@ -1954,7 +1960,7 @@ pub(crate) fn written(result: std::io::Result<()>, stderr: &mut dyn Write) -> u8
     match result {
         Ok(()) => EXIT_OK,
         Err(e) => {
-            let _ = writeln!(stderr, "cairn: write the output: {e}");
+            let _ = writeln!(stderr, "parinn: write the output: {e}");
             EXIT_FAILURE
         }
     }
@@ -1968,7 +1974,7 @@ pub(crate) fn invalid_layers(command: &str, loaded: &Loaded, stderr: &mut dyn Wr
         .iter()
         .filter(|f| f.layer != SettingsLayer::ManagedPolicy)
     {
-        let _ = writeln!(stderr, "cairn {command}: {failure}");
+        let _ = writeln!(stderr, "parinn {command}: {failure}");
     }
 
     EXIT_USAGE

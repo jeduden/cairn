@@ -10,7 +10,7 @@
 //!   repeat references (REC-04).
 //!
 //! Every case is seeded, so a failure names a seed that reproduces it;
-//! `CAIRN_PROPERTY_CASES` runs more.
+//! `PARINN_PROPERTY_CASES` runs more.
 
 #![allow(
     clippy::unwrap_used,
@@ -35,7 +35,7 @@ use testkit::TempDir;
 const CASES: u64 = 16;
 
 fn cases() -> u64 {
-    std::env::var("CAIRN_PROPERTY_CASES")
+    std::env::var("PARINN_PROPERTY_CASES")
         .ok()
         .and_then(|n| n.parse().ok())
         .unwrap_or(CASES)

@@ -108,7 +108,8 @@ summary: >-
   restore block. Landmarks roll up into **tiers** of **landmark blocks**, each
   a sequence of landmarks; a full tier collapses its older ones to one line
   each, listing one address range per writer (LMK-05).
-- **Structural field**: A field Cairn derives from an event's shape, never from
+- **Structural field**: A field ParleyInn derives from an event's shape, never
+from
   its text: ids, kinds, counts, tool names, key fingerprints, addresses, version
   numbers, paths and exit status. Sanitized under LMK-03, it is trusted
   whatever the event's trust level (PRV-06).
@@ -120,13 +121,13 @@ summary: >-
 - **Capture**: This node's MCP servers and hook handlers recording its runs'
   events; turning it off is widening (OWN-11, ADM-02).
 - **Ingest marker**: What ingest leaves when it stops short of a transcript's
-  end, so the next MCP server or `cairn ingest` resumes it (REC-13); a hook
+  end, so the next MCP server or `parinn ingest` resumes it (REC-13); a hook
   handler holds its observation there, where its hook fired, for its MCP server
   to append (REC-19). A **start marker** is what a hook handler
   or MCP server leaves as it starts and clears as it finishes; one left behind
   is counted and audited (NFR-02), an MCP server's with each transcript it left
   short (REC-13). **Ingest** reads a transcript into the record: the MCP
-  server's **live ingest** as it grows (REC-13), or `cairn ingest` (REC-22). A
+  server's **live ingest** as it grows (REC-13), or `parinn ingest` (REC-22). A
   line a harness fork repeats is recorded once, in the writer of the run it
   belongs to; every other run that repeats it records a **repeat reference**
   to that event's address, never a copy (REC-04). The
@@ -150,7 +151,7 @@ summary: >-
 - **Redaction**: Removing secrets from content before it is stored, on import,
   or from what an export's, a publish's or an invite's review step sends,
   recorded (I1, SEC-08). Three kinds of **redaction rule** apply: the
-  **redaction rule set**, Cairn's maintained and versioned rules for known
+  **redaction rule set**, ParleyInn's maintained and versioned rules for known
   secret shapes; the **harness account identifiers**, the account email and
   organization id a transcript's own harness fields name, learnt from each
   transcript; and the principal's **redaction patterns**
@@ -158,7 +159,7 @@ summary: >-
 - **Retention policy**: A rule (`retention_policy.*`), set by the node's
   principal (ADM-04) or managed policy, that purges content per room and
   provenance class after a time (I1, SEC-22).
-- **Flag**: A mark Cairn sets on an event whose text matches an injection
+- **Flag**: A mark ParleyInn sets on an event whose text matches an injection
   pattern (PRV-07); flagged text contributes only counts to landmarks (LMK-04).
 - **Quarantine**: Recorded, reversible exclusion of an event, span, run, writer
   or derived artifact from every path that carries content to an agent and from
@@ -185,10 +186,10 @@ summary: >-
   VIEW-10 and SEC-27; a **purge receipt** states what a purge erased and what it
   could not (SEC-31).
 - **Backup**: A copy of a home's store and audit log, with none of its keys
-  (`cairn backup create`, ADM-06, SEC-10); reading it back is a backup
+  (`parinn backup create`, ADM-06, SEC-10); reading it back is a backup
   restore (Node). Creating one records no principal act, only an audited event
   (§9.5), and a copy the principal takes off the machine is its own tool,
-  outside Cairn's components (I4).
+  outside ParleyInn's components (I4).
 - **At-rest key**: The key that encrypts the store when encryption at rest is on
   (SEC-09).
 - **Bundle**: A reviewed export of a room, signed by the device key of the
@@ -197,13 +198,14 @@ summary: >-
 - **Trusted-only export**: The JSONL of the events trusted for the principal's
   agents, with full provenance, that downstream memory systems read (ADM-12,
   MEM-02); an export like a bundle (SEC-26).
-- **Export**: Writing a bundle, a rendering or a trusted-only export (`cairn
+- **Export**: Writing a bundle, a rendering or a trusted-only export (`parinn
   export`), a widening principal act under SEC-26. To **publish** is to serve a
   room's bundle read-only through the publish component, only as the room's
   visibility allows; it is widening, and stopping it cut (OWN-11).
 - **Rendering**: A room rendered for people to read, with no keys or commitments
-  (`cairn export --rendering`, SEC-26).
-- **Import**: Reading a bundle into this node's record (`cairn import`, REC-23).
+  (`parinn export --rendering`, SEC-26).
+- **Import**: Reading a bundle into this node's record (`parinn import`,
+REC-23).
   A transcript is ingested and a peer's segments are received; neither is
   imported.
 - **Kernel**: The hermetic environment where an agent runs code over

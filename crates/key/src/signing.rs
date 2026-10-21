@@ -99,7 +99,7 @@ impl std::error::Error for KeyError {
     }
 }
 
-/// The kinds of signature Cairn makes so far; PRV-12 names confirm,
+/// The kinds of signature ParleyInn makes so far; PRV-12 names confirm,
 /// choose and reject besides, which land with their acts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SignatureKind {

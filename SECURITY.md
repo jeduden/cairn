@@ -1,12 +1,12 @@
 ---
 summary: >-
-  How to report a vulnerability in Cairn privately, the 90-day
+  How to report a vulnerability in ParleyInn privately, the 90-day
   coordinated disclosure policy, which versions get fixes, and how to
   verify a release (ENG-24, ENG-20).
 ---
 # Security policy
 
-Cairn stores long agent histories and feeds recalled content back to
+ParleyInn stores long agent histories and feeds recalled content back to
 a model. Its invariants — no automatic path from untrusted content to
 the model, no network in the core and every other component inside
 its declared boundary, isolation per principal — are security
@@ -34,7 +34,7 @@ calls for it.
 
 ## Supported versions
 
-Cairn has not shipped a release yet. From the first release on,
+ParleyInn has not shipped a release yet. From the first release on,
 security fixes are backported to the latest minor release. Older
 minor releases get no fixes; upgrade to the latest.
 
@@ -49,7 +49,7 @@ attestation a branch made names that branch, and fails. In short:
 
 ```sh
 commit="$(gh api repos/jeduden/cairn/commits/v0.1.0 --jq .sha)"
-gh attestation verify cairn-linux-amd64 --repo jeduden/cairn \
+gh attestation verify parinn-linux-amd64 --repo jeduden/cairn \
   --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \
   --source-ref refs/heads/main --source-digest "$commit" \
   --deny-self-hosted-runners

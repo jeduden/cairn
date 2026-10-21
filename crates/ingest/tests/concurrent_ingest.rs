@@ -1,5 +1,5 @@
 //! REC-06 and REC-13 under concurrency: the harness session's MCP server
-//! ingests a transcript live, on one thread, while `cairn ingest` reads
+//! ingests a transcript live, on one thread, while `parinn ingest` reads
 //! the same transcript source again and again on another, as the
 //! harness appends to it. Whichever appends a line first records it;
 //! the other's append behind it is refused in its transaction and reads
@@ -50,7 +50,7 @@ fn until(done: &AtomicBool, mut read: impl FnMut()) {
 }
 
 #[test]
-fn the_mcp_server_and_cairn_ingest_together_record_every_line_once() {
+fn the_mcp_server_and_parinn_ingest_together_record_every_line_once() {
     let dir = TempDir::new().unwrap();
     let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
     let path = dir

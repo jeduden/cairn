@@ -1,14 +1,14 @@
 //! ENG-06 over ingest (plan 2609292012, phase 6): the built core is
-//! killed with `SIGKILL` at a random point while `cairn ingest` records
+//! killed with `SIGKILL` at a random point while `parinn ingest` records
 //! a transcript with payloads, turn ends and a subagent, in an isolated
-//! home, every start confined (ENG-12). After every kill `cairn verify`
+//! home, every start confined (ENG-12). After every kill `parinn verify`
 //! exits 0: every writer's chain gap-free and whole, every payload its
 //! event names present and opening its commitment, and every writer's
 //! segments tiling its log. A kill before the store exists leaves
 //! nothing to verify.
 //!
 //! The kill points come from a seeded generator, so a failing iteration
-//! names a seed that replays it. CI runs `CAIRN_CRASH_ITERATIONS`
+//! names a seed that replays it. CI runs `PARINN_CRASH_ITERATIONS`
 //! iterations, a few by default; the nightly job runs 10,000.
 //! Purge, migration and rebuild join as their phases land.
 
@@ -31,7 +31,7 @@ use testkit::boundary::{Component, Confinement};
 /// payload threshold, with turn ends and a subagent's result.
 const TRANSCRIPT: &str = "testdata/claude-code/2.1.296/transcripts/projects/-w-my-app/205beaae-e4b8-4798-a1aa-cdf50c807136.jsonl";
 
-/// Iterations when `CAIRN_CRASH_ITERATIONS` names none.
+/// Iterations when `PARINN_CRASH_ITERATIONS` names none.
 const ITERATIONS: u64 = 6;
 
 /// Iterations a home takes before a fresh one, so a long run also kills
@@ -46,7 +46,7 @@ fn core() -> Confinement {
 }
 
 fn program() -> &'static Path {
-    Path::new(env!("CARGO_BIN_EXE_cairn"))
+    Path::new(env!("CARGO_BIN_EXE_parinn"))
 }
 
 /// A number from the environment variable `name`, or `default`.
@@ -66,8 +66,8 @@ fn kill_point(seed: u64, n: u64) -> u64 {
     (z ^ (z >> 31)) % LATEST
 }
 
-/// Kills `cairn ingest --path transcript` in `home` at `after`, then
-/// checks the record: `cairn verify` exits 0 once a store exists.
+/// Kills `parinn ingest --path transcript` in `home` at `after`, then
+/// checks the record: `parinn verify` exits 0 once a store exists.
 fn kill_and_verify(home: &Path, transcript: &Path, after: Duration, label: &str) -> bool {
     let path = transcript.display().to_string();
     let killed = core()
@@ -81,7 +81,7 @@ fn kill_and_verify(home: &Path, transcript: &Path, after: Duration, label: &str)
         .unwrap_or_else(|e| panic!("{label}: {e}"));
     assert!(
         out.status.success(),
-        "{label}: after a kill at {after:?}, cairn verify exited {}: {}",
+        "{label}: after a kill at {after:?}, parinn verify exited {}: {}",
         out.status,
         String::from_utf8_lossy(&out.stderr)
     );
@@ -118,10 +118,10 @@ fn iterate(first: u64, threads: u64, iterations: u64, seed: u64) -> u64 {
 
 #[test]
 fn every_kill_during_ingest_leaves_a_record_that_verifies() {
-    let iterations = setting("CAIRN_CRASH_ITERATIONS", ITERATIONS);
-    let seed = setting("CAIRN_CRASH_SEED", 0);
+    let iterations = setting("PARINN_CRASH_ITERATIONS", ITERATIONS);
+    let seed = setting("PARINN_CRASH_SEED", 0);
     let cores = std::thread::available_parallelism().map_or(1, |n| n.get() as u64);
-    let threads = setting("CAIRN_CRASH_THREADS", cores).clamp(1, iterations.max(1));
+    let threads = setting("PARINN_CRASH_THREADS", cores).clamp(1, iterations.max(1));
     let killed = std::sync::atomic::AtomicU64::new(0);
     // Each thread kills in homes of its own; the scope ends once every
     // thread has, and a failing iteration fails the test.

@@ -14,7 +14,7 @@ client. The reach decides:
 - `rmcp` puts 50 crates in the core executable's normal dependency
   graph, among them `tokio`, `tokio-util`, `futures`, `chrono`,
   `uuid`, `getrandom` and `schemars`. The reach test
-  ([reach.rs](../../crates/cairn/tests/reach.rs)) would need an entry
+  ([reach.rs](../../crates/parinn/tests/reach.rs)) would need an entry
   for each.
 - The in-house server puts 5 there: `serde_json` and its own
   `serde_core`, `itoa`, `memchr` and `zmij`.

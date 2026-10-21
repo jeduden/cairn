@@ -1,7 +1,7 @@
 [package]
-name = "cairn"
+name = "parinn"
 version = "0.0.0"
-description = "The Cairn core executable: the hook handlers, the MCP server and the CLI so far"
+description = "The ParleyInn core executable: the hook handlers, the MCP server and the CLI so far"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -33,7 +33,7 @@ workspace = true
 # ENG-02: the one thing this crate does, and the workspace crates it may
 # depend on (a product crate never depends on tooling, tests aside). The
 # architecture check reads both.
-[package.metadata.cairn]
+[package.metadata.parinn]
 responsibility = "Runs the core executable: the hook handlers, the MCP server and the CLI"
 may-depend-on = ["administration", "allowed_root", "audit", "configuration", "hook", "ingest", "key", "mcp", "record", "redaction", "store", "structured_log"]
 may-dev-depend-on = ["testkit"]

@@ -35,7 +35,7 @@ fn interactive(w: &mut World) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "cairn configuration accept exited {}: {}",
+        "parinn configuration accept exited {}: {}",
         out.status,
         String::from_utf8_lossy(&out.stdout).trim()
     ))

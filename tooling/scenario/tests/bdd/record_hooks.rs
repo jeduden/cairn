@@ -218,11 +218,11 @@ fn second_run_held(w: &mut World) -> Result<(), String> {
 /// Runs `args` with the clock standing at `at`.
 fn run_at(w: &mut World, args: &[&str], input: Option<&[u8]>, at: u64) -> Result<(), String> {
     let at = at.to_string();
-    run_core_with(w, args, input, &[("CAIRN_TEST_CLOCK", &at)])
+    run_core_with(w, args, input, &[("PARINN_TEST_CLOCK", &at)])
 }
 
 #[then(
-    regex = r#"^a third harness session, for whose "SessionStart" hook observation no MCP server took the session binding within 30 s, is counted and audited as a failure once, by whichever of its next hook handler, "cairn status" and "cairn ingest" finds it first$"#
+    regex = r#"^a third harness session, for whose "SessionStart" hook observation no MCP server took the session binding within 30 s, is counted and audited as a failure once, by whichever of its next hook handler, "parinn status" and "parinn ingest" finds it first$"#
 )]
 fn third_session_counted(w: &mut World) -> Result<(), String> {
     let session = "5e55a0de-0000-4000-8000-000000000003";

@@ -1,7 +1,7 @@
 //! Phase 4 of plan 2609292012 end to end, against the built core in an
 //! isolated home, every start confined: a hook input past 1 MiB or
 //! nested past depth 64 is refused and audited, and the hook exits 0
-//! with no injection (SEC-05); `cairn ingest` redacts a secret, the
+//! with no injection (SEC-05); `parinn ingest` redacts a secret, the
 //! person's pattern and the harness account identifiers before anything
 //! is written (SEC-08); and it reads nothing outside the transcript
 //! roots (SEC-18).
@@ -24,14 +24,14 @@ use serde_json::{Value, json};
 use testkit::TempDir;
 use testkit::boundary::{Component, Confinement};
 
-const CORE: &str = env!("CARGO_BIN_EXE_cairn");
+const CORE: &str = env!("CARGO_BIN_EXE_parinn");
 
 fn core() -> Confinement {
     Confinement::of(Component::Core).unwrap_or_else(|e| panic!("{e}"))
 }
 
 #[track_caller]
-fn cairn(home: &Path, args: &[&str]) -> Output {
+fn parinn(home: &Path, args: &[&str]) -> Output {
     core()
         .run(Path::new(CORE), args, home)
         .unwrap_or_else(|e| panic!("{e}"))
@@ -42,7 +42,7 @@ fn cairn(home: &Path, args: &[&str]) -> Output {
 /// 1 MiB input under the confinement's trace.
 #[track_caller]
 fn hook(home: &Path, input: &[u8]) -> Output {
-    let env = [("CAIRN_TEST_HOOK_BUDGET_MS", "20000")];
+    let env = [("PARINN_TEST_HOOK_BUDGET_MS", "20000")];
     core()
         .run_in(
             Path::new(CORE),
@@ -68,7 +68,7 @@ fn audited(home: &Path) -> Vec<Value> {
     out
 }
 
-/// Every byte the Cairn home holds, file by file.
+/// Every byte the ParleyInn home holds, file by file.
 fn home_bytes(dir: &Path, out: &mut Vec<u8>) {
     for entry in fs::read_dir(dir).unwrap() {
         let path = entry.unwrap().path();
@@ -128,10 +128,10 @@ fn secrets(home: &Path) -> PathBuf {
 #[test]
 fn ingest_redacts_before_anything_is_written() {
     let home = TempDir::new().unwrap();
-    let cairn_home = home.path().join(".cairn");
-    fs::create_dir_all(&cairn_home).unwrap();
-    fs::set_permissions(&cairn_home, fs::Permissions::from_mode(0o700)).unwrap();
-    let config = cairn_home.join("config.toml");
+    let parinn_home = home.path().join(".cairn");
+    fs::create_dir_all(&parinn_home).unwrap();
+    fs::set_permissions(&parinn_home, fs::Permissions::from_mode(0o700)).unwrap();
+    let config = parinn_home.join("config.toml");
     fs::write(
         &config,
         "[redaction]\nextra_patterns = [\"ACME-[0-9]{8}\"]\n",
@@ -140,7 +140,7 @@ fn ingest_redacts_before_anything_is_written() {
     fs::set_permissions(&config, fs::Permissions::from_mode(0o600)).unwrap();
     let path = secrets(home.path());
 
-    let out = cairn(home.path(), &["ingest", "--path", path.to_str().unwrap()]);
+    let out = parinn(home.path(), &["ingest", "--path", path.to_str().unwrap()]);
 
     assert!(
         out.status.success(),
@@ -183,12 +183,12 @@ fn ingest_reads_nothing_outside_the_transcript_roots() {
     std::os::unix::fs::symlink(&outside, root.join("link.jsonl")).unwrap();
 
     for path in [outside, root.join("link.jsonl")] {
-        let out = cairn(home.path(), &["ingest", "--path", path.to_str().unwrap()]);
+        let out = parinn(home.path(), &["ingest", "--path", path.to_str().unwrap()]);
 
         assert_eq!(out.status.code(), Some(1));
         assert_eq!(
             String::from_utf8_lossy(&out.stderr),
-            "cairn ingest: path outside allowed roots\n"
+            "parinn ingest: path outside allowed roots\n"
         );
     }
     let refused = audited(home.path())

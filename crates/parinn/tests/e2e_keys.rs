@@ -2,11 +2,11 @@
 //! phase 5), every start of the built core confined to its boundary
 //! (ENG-12) in an isolated home:
 //!
-//! - SEC-10: the keys are kept in this OS's key store, `cairn status`
+//! - SEC-10: the keys are kept in this OS's key store, `parinn status`
 //!   names it and says an unsandboxed agent of the same OS user could
 //!   read a key file, and no key reaches the store, a log, the audit log
 //!   or any output;
-//! - PRV-11: `cairn verify --json` reports each seat's kind and ingest
+//! - PRV-11: `parinn verify --json` reports each seat's kind and ingest
 //!   flag from its seat certificate;
 //! - REC-24 and SEC-27: a changed node identity mints a new device key
 //!   and a new device seat in the same personal room before the next
@@ -32,32 +32,32 @@ use testkit::boundary::{Component, Confinement};
 /// Runs the core with `args` in `home`, confined, its node identity read
 /// from `home/machine-id`.
 #[track_caller]
-fn cairn(home: &Path, args: &[&str]) -> Output {
+fn parinn(home: &Path, args: &[&str]) -> Output {
     let identity = home.join("machine-id").display().to_string();
     let out = Confinement::of(Component::Core)
         .unwrap_or_else(|e| panic!("{e}"))
         .run_in(
-            Path::new(env!("CARGO_BIN_EXE_cairn")),
+            Path::new(env!("CARGO_BIN_EXE_parinn")),
             args,
             home,
-            &[("CAIRN_TEST_NODE_IDENTITY", &identity)],
+            &[("PARINN_TEST_NODE_IDENTITY", &identity)],
             None,
         )
         .unwrap_or_else(|e| panic!("{e}"));
     assert!(
         out.status.success(),
-        "cairn {args:?}: {}",
+        "parinn {args:?}: {}",
         String::from_utf8_lossy(&out.stderr)
     );
     out
 }
 
-/// `cairn <args> --json`'s output.
+/// `parinn <args> --json`'s output.
 #[track_caller]
 fn json(home: &Path, args: &[&str]) -> Value {
     let mut args = args.to_vec();
     args.push("--json");
-    serde_json::from_slice(&cairn(home, &args).stdout).unwrap()
+    serde_json::from_slice(&parinn(home, &args).stdout).unwrap()
 }
 
 /// Ingests a transcript of one line, `text`.
@@ -94,7 +94,7 @@ fn keys_stay_in_the_key_store_and_a_changed_node_identity_starts_a_new_device_se
     let status = json(home, &["status"]);
     assert_eq!(status["keys"]["store"], "file");
     assert_eq!(status["keys"]["readable_by_agents"], true);
-    let text = String::from_utf8(cairn(home, &["status"]).stdout).unwrap();
+    let text = String::from_utf8(parinn(home, &["status"]).stdout).unwrap();
     assert!(
         text.contains("an unsandboxed agent of the same OS user could read them"),
         "{text}"
@@ -104,12 +104,12 @@ fn keys_stay_in_the_key_store_and_a_changed_node_identity_starts_a_new_device_se
     assert!(text.contains("node identity: checked (a file)\n"), "{text}");
     assert!(
         text.contains(
-            "fork detection: local scan by cairn verify; peer detection with the peer network\n"
+            "fork detection: local scan by parinn verify; peer detection with the peer network\n"
         ),
         "{text}"
     );
     assert_eq!(status["node_identity"]["checked"], true);
-    assert_eq!(status["fork_detection"]["local"], "cairn verify");
+    assert_eq!(status["fork_detection"]["local"], "parinn verify");
 
     fs::write(home.join("machine-id"), "second\n").unwrap();
     let second = ingest(home, "two");
@@ -121,7 +121,7 @@ fn keys_stay_in_the_key_store_and_a_changed_node_identity_starts_a_new_device_se
     no_seed_outside_its_key_file(home);
 }
 
-/// Checks that `verified`, `cairn verify --json`'s report, names two
+/// Checks that `verified`, `parinn verify --json`'s report, names two
 /// device seats in `room` and two ingest seats the two device keys
 /// certified, each seat's kind read from its certificate.
 fn two_device_seats_in_one_room(verified: &Value, room: &Value) {
@@ -158,7 +158,7 @@ fn no_seed_outside_its_key_file(home: &Path) {
     let mut elsewhere = files(&home.join(".cairn"));
     elsewhere.retain(|(path, _)| !path.contains("/keys/"));
     for args in [&["status", "--json"][..], &["verify", "--json"]] {
-        elsewhere.push(("output".to_owned(), cairn(home, args).stdout));
+        elsewhere.push(("output".to_owned(), parinn(home, args).stdout));
     }
     for (_, seed) in &keys {
         let seed = String::from_utf8(seed.clone()).unwrap();

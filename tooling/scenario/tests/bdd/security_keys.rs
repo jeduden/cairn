@@ -4,7 +4,7 @@
 //! output.
 //!
 //! The scenario stays pending: encryption at rest is SEC-09's (M5),
-//! `cairn backup create` ADM-06's (M3), the credentials of other
+//! `parinn backup create` ADM-06's (M3), the credentials of other
 //! components come with them (M7), and the run-seat keys an MCP server
 //! keeps in memory are phase 10's. Those steps are unbound.
 
@@ -93,11 +93,11 @@ fn parent_environment(w: &mut World) -> Result<(), String> {
     let set = [
         (
             "ANTHROPIC_API_KEY",
-            "sk-ant-api03-cairn-scenario-0000000000000000",
+            "sk-ant-api03-parinn-scenario-0000000000000000",
         ),
-        ("GITHUB_TOKEN", "ghp_cairnScenario000000000000000000000000"),
-        ("CAIRN_DEVICE_KEY", &"ab".repeat(32)),
-        ("CAIRN_AT_REST_KEY", &"cd".repeat(32)),
+        ("GITHUB_TOKEN", "ghp_parinnScenario000000000000000000000000"),
+        ("PARINN_DEVICE_KEY", &"ab".repeat(32)),
+        ("PARINN_AT_REST_KEY", &"cd".repeat(32)),
     ];
     for (name, value) in set {
         set_env(w, name, value);
@@ -248,7 +248,7 @@ fn recovery_key_kept_apart(w: &mut World) -> Result<(), String> {
 }
 
 #[then(
-    regex = r#"^a run ingested by "cairn ingest --path" has a seat key that ingest minted, kept like the device key in a file only the person's OS user can read$"#
+    regex = r#"^a run ingested by "parinn ingest --path" has a seat key that ingest minted, kept like the device key in a file only the person's OS user can read$"#
 )]
 fn ingest_seat_key(w: &mut World) -> Result<(), String> {
     ingest_one_line(w, "ingested")?;
@@ -257,7 +257,7 @@ fn ingest_seat_key(w: &mut World) -> Result<(), String> {
     let writer = text
         .split_whitespace()
         .last()
-        .ok_or("cairn ingest named no writer")?
+        .ok_or("parinn ingest named no writer")?
         .to_owned();
     let home = home(w)?;
     let store = Store::open(&home.store()).map_err(|e| e.to_string())?;

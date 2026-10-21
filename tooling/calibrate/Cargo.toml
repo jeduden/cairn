@@ -10,6 +10,6 @@ publish.workspace = true
 [lints]
 workspace = true
 
-[package.metadata.cairn]
+[package.metadata.parinn]
 responsibility = "Runs the fixed calibration workload the NFR-02 hook budget rows use as their unit of time"
 may-depend-on = []

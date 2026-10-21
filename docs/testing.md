@@ -1,6 +1,6 @@
 ---
 summary: >-
-  How Cairn is tested: the test pyramid of unit, integration and
+  How ParleyInn is tested: the test pyramid of unit, integration and
   end-to-end tests, line coverage and test counts per test layer with
   their floors, the executable requirement matrix (one Gherkin scenario
   per SRS id), drift injection, and the test-engineer agents that
@@ -64,7 +64,7 @@ The measure counts shipped code only. Unit-test files (`tests.rs`)
 and every `tests/` directory, step bindings included, are left out.
 That is why a binding stays thin: the logic it calls lives in a library
 crate, where the unit tests reach it. Every cargo the tool starts
-carries `CAIRN_COVERAGE_MEASURING`, and a run that finds it set refuses
+carries `PARINN_COVERAGE_MEASURING`, and a run that finds it set refuses
 to start, so a test cannot set off a measurement inside a measurement.
 
 CI's `coverage` job writes the table and the test counts into its
@@ -163,7 +163,7 @@ that fails on a statistically significant regression greater than
   target hold the suite to every NFR id ENG-15 names and CI to the
   job, each with its drift cases.
 
-- **Accepted regressions:** a change may make Cairn slower on
+- **Accepted regressions:** a change may make ParleyInn slower on
   purpose, with the stakeholder's acceptance. It then records the
   benchmark, a ceiling in percent and the reason in
   [tooling/benchmark/accepted.txt](../tooling/benchmark/accepted.txt).
@@ -172,7 +172,7 @@ that fails on a statistically significant regression greater than
   that benchmark, so an acceptance lasts one change. A drift case proves
   the record's check fails on a malformed line.
 
-`cargo run -p benchmark -- run --core target/release/cairn` samples
+`cargo run -p benchmark -- run --core target/release/parinn` samples
 the suite; `cargo run -p benchmark -- gate --base FILE --head FILE`
 decides from two samples files. CI's `benchmark` job runs both.
 
@@ -217,8 +217,8 @@ the variables earlier steps set through `set_env`. Some exist only for
 tests, and a release build never reads them. A development build's hook
 handler panics when `CAIRN_TEST_FAULT` is `hook-panic`, so the `@ENG-04`
 scenario can prove the hook's entry point catches it, and hangs when it
-is `hook-hang`, so `@NFR-02` can kill it. `CAIRN_TEST_CLOCK` stands the
-clock still at a time it names. `CAIRN_TEST_HOOK_BUDGET_MS` sets every
+is `hook-hang`, so `@NFR-02` can kill it. `PARINN_TEST_CLOCK` stands the
+clock still at a time it names. `PARINN_TEST_HOOK_BUDGET_MS` sets every
 hook's budget; `run_core` sets it lenient unless a step sets a hook's
 own, so a loaded machine fails no scenario on a budget it does not test.
 
@@ -226,15 +226,15 @@ A benchmark, and a step that holds the core to a time budget, run a
 release build. A development build is an order of magnitude slower and
 flakes on a loaded runner. The `@NFR-02` row that times a hook handler
 starts the core through `run_release_core`. That runs
-`testkit::release_core_executable`: the path `CAIRN_RELEASE_CORE` names,
-else `target/release/cairn`. The test run never builds it. It fails
-naming `cargo build --release -p cairn` when the core is absent, so
+`testkit::release_core_executable`: the path `PARINN_RELEASE_CORE` names,
+else `target/release/parinn`. The test run never builds it. It fails
+naming `cargo build --release -p parinn` when the core is absent, so
 build it before `cargo test --workspace` or `cargo run -p coverage`.
 CI's `test`, `coverage` and release preflight jobs do.
 
 A release build has no seams. That row gives the handler its own
 budget, and the rows that kill a hung handler (`CAIRN_TEST_FAULT`,
-`CAIRN_TEST_CLOCK`) stay on the development build. The gate test
+`PARINN_TEST_CLOCK`) stay on the development build. The gate test
 `benchmarks_and_timed_steps_run_release_builds` (ENG-15, ENG-27) fails on
 a workflow or script line that builds the benchmark suite without
 `--release` or points it at a `debug` directory. It also fails on an
@@ -243,17 +243,17 @@ development core. A drift case proves each.
 
 The `@NFR-02` budget row times a hook handler against the frozen
 `calibrate` workload, one unit of 10 ms by definition, in alternating
-pairs under the same confinement. The path `CAIRN_CALIBRATE` names, else
+pairs under the same confinement. The path `PARINN_CALIBRATE` names, else
 `target/release/calibrate`, is found as the core is. Build it with
-`cargo build --release -p cairn -p calibrate`, as CI does. The limits
+`cargo build --release -p parinn -p calibrate`, as CI does. The limits
 and the freeze are in [testing/hook-budget.md](testing/hook-budget.md).
 
 ## Keeping tests off real state
 
 ENG-14 holds in three layers, so a test cannot touch the real `HOME`, a
-real Cairn home or real Claude Code configuration.
+real ParleyInn home or real Claude Code configuration.
 
-- **The guard.** A test resolves the user's `HOME`, a Cairn home or Claude
+- **The guard.** A test resolves the user's `HOME`, a ParleyInn home or Claude
   Code's configuration through
   [`testkit::guard`](../tooling/testkit/src/guard.rs), which aborts the
   process when the answer is not under the system's temporary directory

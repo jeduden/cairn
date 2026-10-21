@@ -32,12 +32,12 @@ are unchanged.
 ## The reference is the calibration workload
 
 The reference is the `calibrate` executable (`tooling/calibrate`), not a
-run of the core. A run of the core, such as `cairn version`, is the code
+run of the core. A run of the core, such as `parinn version`, is the code
 base itself. A change that slows the core would slow the reference too,
 and the ratio would hide it.
 
 The calibration workload has none of that. It imports no crate and
-reads nothing of Cairn. It does a fixed amount of work with the same
+reads nothing of ParleyInn. It does a fixed amount of work with the same
 shape as a hook's, so the confinement taxes both alike:
 
 - **A computation.** A fixed seed run through 1,200,000 rounds of

@@ -1,13 +1,13 @@
-//! What `cairn status` and `cairn verify` say of the store's segments
+//! What `parinn status` and `parinn verify` say of the store's segments
 //! (REC-19, ADM-05): each writer chain that ended without a closed
-//! segment, and each segment refused as newer than this cairn's format
+//! segment, and each segment refused as newer than this parinn's format
 //! version.
 
 use administration::home::Home;
 use serde_json::{Value, json};
 use store::{Segment, Store, StoreError};
 
-/// The segments `cairn status` reports.
+/// The segments `parinn status` reports.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SegmentsStatus {
     /// Each writer's open segment.
@@ -40,7 +40,7 @@ pub(crate) fn read(home: &Home) -> Result<Option<SegmentsStatus>, StoreError> {
 }
 
 impl SegmentsStatus {
-    /// The segments as `cairn status --json` shows them.
+    /// The segments as `parinn status --json` shows them.
     pub(crate) fn json(&self) -> Value {
         let newer: Vec<Value> = self
             .newer
@@ -55,7 +55,7 @@ impl SegmentsStatus {
         json!({"open": open_json(&self.open), "newer": newer})
     }
 
-    /// The lines `cairn status` shows: none while every segment closed
+    /// The lines `parinn status` shows: none while every segment closed
     /// and none is newer.
     pub(crate) fn lines(&self) -> Vec<String> {
         let mut lines = Vec::new();
@@ -75,7 +75,7 @@ impl SegmentsStatus {
     }
 }
 
-/// Each open segment, as `cairn verify --json` and `cairn status --json`
+/// Each open segment, as `parinn verify --json` and `parinn status --json`
 /// show it.
 pub(crate) fn open_json(open: &[Segment]) -> Value {
     open.iter().map(range_json).collect()

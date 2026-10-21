@@ -52,7 +52,7 @@ pub fn replay_file(
 
 /// The problems replaying the recorded hook input at `path` through the
 /// core's hook input decoder finds (SEC-16, REC-26): none for a hook
-/// Cairn does not install, else one when the decoder rejects it or
+/// ParleyInn does not install, else one when the decoder rejects it or
 /// finds format drift.
 ///
 /// # Errors

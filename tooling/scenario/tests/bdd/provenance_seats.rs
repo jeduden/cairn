@@ -1,7 +1,7 @@
 //! The steps of SRS §5.6, provenance (PRV), that phase 5 of plan
 //! 2609292012 carries. `@PRV-11` is bound: the node's device key
 //! certifies each seat key with a seat certificate naming its seat kind
-//! and whether it is an ingest seat, and `cairn verify --json` reports
+//! and whether it is an ingest seat, and `parinn verify --json` reports
 //! each seat's kind from that certificate alone. The first steps of
 //! PRV-12 are bound too: the genesis log's `minted`.
 //!
@@ -85,28 +85,28 @@ fn seats_start(w: &mut World) -> Result<(), String> {
     Ok(())
 }
 
-/// The seats the last `cairn verify --json` reported.
+/// The seats the last `parinn verify --json` reported.
 fn reported(w: &mut World) -> Result<Vec<Value>, String> {
     let out = last_run(w)?;
     let v: Value = serde_json::from_slice(&out.stdout).map_err(|e| {
         format!(
-            "cairn verify --json printed no JSON ({e}): {}",
+            "parinn verify --json printed no JSON ({e}): {}",
             String::from_utf8_lossy(&out.stderr)
         )
     })?;
     v["seats"]
         .as_array()
         .cloned()
-        .ok_or_else(|| format!("cairn verify --json reported no seats: {v}"))
+        .ok_or_else(|| format!("parinn verify --json reported no seats: {v}"))
 }
 
-/// The seat of `writer` the last `cairn verify --json` reported.
+/// The seat of `writer` the last `parinn verify --json` reported.
 fn reported_seat(w: &mut World, writer: Option<WriterId>) -> Result<Value, String> {
     let writer = writer.ok_or("no step started that seat")?.to_string();
     reported(w)?
         .into_iter()
         .find(|s| s["writer"] == writer.as_str())
-        .ok_or_else(|| format!("cairn verify --json reported no seat of writer {writer}"))
+        .ok_or_else(|| format!("parinn verify --json reported no seat of writer {writer}"))
 }
 
 /// Checks that `seat` carries a seat certificate the node's device key
@@ -239,21 +239,21 @@ fn i2_review(_w: &mut World) -> Result<(), String> {
         .ok_or_else(|| "no accepted ADR records PRV-11's I2 security review".to_owned())
 }
 
-#[given(regex = r"^an isolated Cairn home with no authenticator$")]
+#[given(regex = r"^an isolated ParleyInn home with no authenticator$")]
 fn home_without_authenticator(w: &mut World) -> Result<(), String> {
     // No authenticator can be enrolled before OWN-11's ship; the home is
     // as fresh as any isolated one.
-    if w.cairn_home.starts_with(&w.home) && !w.cairn_home.exists() {
+    if w.parinn_home.starts_with(&w.home) && !w.parinn_home.exists() {
         Ok(())
     } else {
         Err(format!(
-            "the Cairn home {} is not a fresh one inside the scenario's home",
-            w.cairn_home.display()
+            "the ParleyInn home {} is not a fresh one inside the scenario's home",
+            w.parinn_home.display()
         ))
     }
 }
 
-#[when(regex = r"^Cairn starts for the first time$")]
+#[when(regex = r"^ParleyInn starts for the first time$")]
 fn starts_first(w: &mut World) -> Result<(), String> {
     crate::record_keys::ingest_one_line(w, "first")
 }

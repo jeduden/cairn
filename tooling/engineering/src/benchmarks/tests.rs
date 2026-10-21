@@ -111,7 +111,7 @@ jobs:
   benchmark:
     steps:
       - run: |
-          \"$bin/benchmark\" run --core \"$bin/cairn\"
+          \"$bin/benchmark\" run --core \"$bin/parinn\"
           \"$head/benchmark\" gate --base base --head head
   ci:
     needs: [test, benchmark, build]

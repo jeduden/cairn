@@ -1,15 +1,15 @@
 //! The steps of REC-01 to REC-04, REC-07 and REC-08 that phase 8 of plan
-//! 2609292012 carries: `cairn ingest` reads the transcript roots, splits
+//! 2609292012 carries: `parinn ingest` reads the transcript roots, splits
 //! each transcript by run, resumes each transcript source past its
 //! ingest position, starts a new transcript generation when a source
-//! shrinks or is rewritten, records a repeated line once, and `cairn
+//! shrinks or is rewritten, records a repeated line once, and `parinn
 //! verify` names a source gone before it was fully ingested.
 //!
 //! `@REC-01`, `@REC-03` and `@REC-07` are bound. `@REC-02` stays pending:
 //! the rooms a later run reaches through the `rooms` scope and its
 //! restore blocks are M2's and M7's. `@REC-04` stays pending: fork
 //! observations are phase 9's hook observations, live ingest phase 10's
-//! and purge phase 14's. `@REC-08` stays pending: `cairn event expand`
+//! and purge phase 14's. `@REC-08` stays pending: `parinn event expand`
 //! is phase 13's.
 //!
 //! A transcript a step writes holds lines of a type no supported version
@@ -66,7 +66,7 @@ fn fill(w: &mut World, name: &str, n: u64) -> Result<PathBuf, String> {
     Ok(path)
 }
 
-/// Runs `cairn ingest --all`, failing unless it exits 0.
+/// Runs `parinn ingest --all`, failing unless it exits 0.
 fn ingest_all(w: &mut World) -> Result<(), String> {
     run_core(w, &["ingest", "--all"], None)?;
     let out = last_run(w)?;
@@ -74,7 +74,7 @@ fn ingest_all(w: &mut World) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "cairn ingest exited {}: {}",
+        "parinn ingest exited {}: {}",
         out.status,
         String::from_utf8_lossy(&out.stderr).trim()
     ))
@@ -328,7 +328,7 @@ fn names_lost(w: &mut World, name: String) -> Result<(), String> {
     if lost.len() == 1 && lost.iter().all(named) {
         return Ok(());
     }
-    Err(format!("cairn verify names {lost:?} as lost"))
+    Err(format!("parinn verify names {lost:?} as lost"))
 }
 
 /// The transcript directory of the run `name`.

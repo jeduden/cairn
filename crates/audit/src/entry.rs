@@ -148,7 +148,7 @@ pub enum Counter {
     /// deployment mode `interactive` (PRV-04).
     HarnessSessionNotAttended,
     /// The MCP server stopped short of a transcript's end, leaving the
-    /// rest past its ingest marker: no failure, as `cairn ingest` or the
+    /// rest past its ingest marker: no failure, as `parinn ingest` or the
     /// next MCP server resumes it (REC-13).
     IngestRemainderLeft,
     /// A witnessed line repeating another transcript's event was
@@ -237,7 +237,7 @@ impl Counter {
     }
 }
 
-/// What one entry reports. Every field is text Cairn ships, or a
+/// What one entry reports. Every field is text ParleyInn ships, or a
 /// settings key's name, so no record content or secret can reach the
 /// log.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

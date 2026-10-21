@@ -1,4 +1,4 @@
-//! The hook handlers (§9.1). `cairn hook <hook>` reads the hook input,
+//! The hook handlers (§9.1). `parinn hook <hook>` reads the hook input,
 //! decodes it (SEC-16, REC-26) and holds what it observed at the
 //! transcript's ingest marker (REC-19), within its hook budget (NFR-02).
 //! It writes nothing to stderr and exits 0 on every path: a failure, a
@@ -8,10 +8,10 @@
 //!
 //! - Each handler leaves a start marker it clears when it finishes; one
 //!   left past its hook's harness timeout is counted, once, by the next
-//!   hook handler, the MCP server as it starts, or `cairn status`.
+//!   hook handler, the MCP server as it starts, or `parinn status`.
 //! - A `SessionStart` hook observation is the harness session's session
 //!   binding; one no MCP server took within 30 s is counted, once, by the
-//!   next hook handler, `cairn status` or `cairn ingest`.
+//!   next hook handler, `parinn status` or `parinn ingest`.
 //! - The handler's work runs on a thread of its own, holding only what
 //!   it owns, so the entry point answers within the hook budget whatever
 //!   the work waits on.
@@ -53,7 +53,7 @@ const MARKERS: &str = "hooks";
 /// field.
 const SOURCES: [&str; 5] = ["startup", "resume", "clear", "compact", "fork"];
 
-/// `cairn hook <hook>`: runs the hook handler `name` names on the hook
+/// `parinn hook <hook>`: runs the hook handler `name` names on the hook
 /// input on stdin, writing at most its output to `stdout`.
 pub(crate) fn hook_command(name: Option<&str>, ctx: &Context, stdout: &mut dyn Write) -> u8 {
     // A panic anywhere, the clock's or an audit's among them, stops
@@ -63,7 +63,7 @@ pub(crate) fn hook_command(name: Option<&str>, ctx: &Context, stdout: &mut dyn W
     EXIT_OK
 }
 
-/// What `cairn hook` does, short of catching a panic.
+/// What `parinn hook` does, short of catching a panic.
 #[expect(
     clippy::disallowed_methods,
     reason = "the hook budget is wall-clock time from the handler's start (NFR-02); \
@@ -139,8 +139,8 @@ fn budget_exceeded(ctx: &Context, hook: Hook, marker: Option<StartMarker>) {
 }
 
 /// Audits `failure` under `operation`. Nowhere to report an audit log
-/// that takes no entry: the hook writes nothing to stderr. `cairn
-/// status` and `cairn doctor` name what keeps the home from taking it.
+/// that takes no entry: the hook writes nothing to stderr. `parinn
+/// status` and `parinn doctor` name what keeps the home from taking it.
 fn audit_failure(ctx: &Context, operation: &'static str, failure: Failure) {
     audit(ctx, &failure.occurrence(operation));
 }

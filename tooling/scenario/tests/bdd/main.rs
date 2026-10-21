@@ -74,7 +74,7 @@ use testkit::guard::{self, Place};
 #[world(init = Self::new)]
 pub struct World {
     pub home: PathBuf,
-    pub cairn_home: PathBuf,
+    pub parinn_home: PathBuf,
     sections: runner::Sections,
     _dir: TempDir,
 }
@@ -94,7 +94,7 @@ impl World {
         let home = dir.path().to_path_buf();
 
         Ok(Self {
-            cairn_home: home.join(".cairn"),
+            parinn_home: home.join(".cairn"),
             home,
             sections: runner::Sections::default(),
             _dir: dir,
@@ -148,7 +148,7 @@ fn probe(name: &OsStr) -> ExitCode {
 
 /// Runs this same executable again with `HOME` and `CAIRN_HOME` pointed
 /// at a fresh temporary directory, so nothing the scenarios run can
-/// reach the real `HOME`, a Cairn home or Claude Code's configuration
+/// reach the real `HOME`, a ParleyInn home or Claude Code's configuration
 /// (ENG-14).
 fn isolate() -> ExitCode {
     let started = TempDir::new().and_then(|home| {

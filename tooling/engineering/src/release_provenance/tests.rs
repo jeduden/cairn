@@ -74,15 +74,15 @@ jobs:
       id-token: write
       attestations: write
     steps:
-      - run: syft . --output spdx-json=dist/cairn.spdx.json
+      - run: syft . --output spdx-json=dist/parinn.spdx.json
       - uses: actions/attest-sbom@abc
         with:
-          sbom-path: dist/cairn.spdx.json
+          sbom-path: dist/parinn.spdx.json
       - run: cosign sign-blob --bundle checksums.txt.sigstore.json checksums.txt
       - run: |
           gh release create \"$VERSION\" \\
             --generate-notes \\
-            cairn-* cairn.spdx.json checksums.txt checksums.txt.sigstore.json
+            parinn-* parinn.spdx.json checksums.txt checksums.txt.sigstore.json
   verify:
     needs: publish
     steps:
@@ -91,7 +91,7 @@ jobs:
             --certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \\
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \\
             checksums.txt
-          for bin in cairn-*; do
+          for bin in parinn-*; do
             gh attestation verify \"$bin\" --repo jeduden/cairn \\
               --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \\
               --source-ref refs/heads/main --deny-self-hosted-runners
@@ -400,10 +400,10 @@ fn the_verify_job_pins_the_release_build_workflow_s_identity_and_ref() {
 
     let problems = provenance(
         File::Release,
-        "for bin in cairn-*; do",
-        "for bin in cairn-linux-amd64; do",
+        "for bin in parinn-*; do",
+        "for bin in parinn-linux-amd64; do",
     );
-    has(&problems, "does not verify every binary (cairn-*)");
+    has(&problems, "does not verify every binary (parinn-*)");
 }
 
 #[test]
@@ -440,8 +440,8 @@ fn the_checksums_are_signed_keyless_and_published_with_their_bundle() {
     );
 
     let r = drifted(
-        "cairn-* cairn.spdx.json checksums.txt checksums.txt.sigstore.json",
-        "cairn-* cairn.spdx.json",
+        "parinn-* parinn.spdx.json checksums.txt checksums.txt.sigstore.json",
+        "parinn-* parinn.spdx.json",
     );
     let problems = r.checksums_signed_keyless();
     has(&problems, "the release does not attach checksums.txt");
@@ -505,7 +505,7 @@ fn the_sbom_is_generated_as_spdx_attested_and_attached() {
     );
 
     let r = drifted(
-        "--output spdx-json=dist/cairn.spdx.json",
+        "--output spdx-json=dist/parinn.spdx.json",
         "--output spdx-json=",
     );
     has(
@@ -517,21 +517,21 @@ fn the_sbom_is_generated_as_spdx_attested_and_attached() {
     has(&r.sbom_attached_and_attested(), "does not attest the SBOM");
 
     let r = drifted(
-        "sbom-path: dist/cairn.spdx.json",
+        "sbom-path: dist/parinn.spdx.json",
         "sbom-path: dist/other.spdx.json",
     );
     has(
         &r.sbom_attached_and_attested(),
-        "does not attest the generated SBOM dist/cairn.spdx.json",
+        "does not attest the generated SBOM dist/parinn.spdx.json",
     );
 
     let r = drifted(
-        "cairn-* cairn.spdx.json checksums.txt",
-        "cairn-* checksums.txt",
+        "parinn-* parinn.spdx.json checksums.txt",
+        "parinn-* checksums.txt",
     );
     has(
         &r.sbom_attached_and_attested(),
-        "the release does not attach the SBOM cairn.spdx.json",
+        "the release does not attach the SBOM parinn.spdx.json",
     );
 }
 

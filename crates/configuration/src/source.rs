@@ -59,7 +59,7 @@ pub enum Failure {
     /// The running OS user cannot be learnt, so nothing shows that it
     /// could not have written the file (ADM-04).
     OsUserUnknown,
-    /// The OS has no file modes Cairn checks yet, so nothing shows that
+    /// The OS has no file modes ParleyInn checks yet, so nothing shows that
     /// the running OS user could not have written the file (ADM-04).
     Unverifiable,
 }
@@ -125,7 +125,7 @@ pub enum OsUser {
     /// The OS has file modes, but the running OS user could not be
     /// learnt: any managed policy is refused, as nothing shows it safe.
     Unknown,
-    /// The OS has no file modes Cairn checks yet: any managed policy is
+    /// The OS has no file modes ParleyInn checks yet: any managed policy is
     /// refused until Windows' ACLs are checked.
     Unchecked,
 }

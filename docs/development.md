@@ -7,7 +7,7 @@ summary: >-
 # Development
 
 Build and release reference, plus the mechanics behind the rules in
-[CLAUDE.md](../CLAUDE.md). How Cairn is tested, and how the tests are
+[CLAUDE.md](../CLAUDE.md). How ParleyInn is tested, and how the tests are
 measured, is in [testing.md](testing.md).
 
 ## Build & test commands
@@ -30,7 +30,7 @@ only source. cargo-audit refuses a crate with a known vulnerability.
 [CodeQL](../.github/workflows/codeql.yml) scans all but the tests.
 
 Crates may only depend on the crates they declare (ENG-02). Each
-crate's `Cargo.toml` holds a `cairn` metadata table with three keys:
+crate's `Cargo.toml` holds a `parinn` metadata table with three keys:
 
 - `responsibility`: the one thing the library crate does.
 - `may-depend-on`: the workspace crates it may depend on, an empty
@@ -53,9 +53,9 @@ does not exist yet (M7); its dependency boundary joins this check
 when it lands.
 
 The core executable's reach is held two ways (SEC-01, ENG-16). Its
-own [clippy.toml](../crates/cairn/clippy.toml) refuses the
+own [clippy.toml](../crates/parinn/clippy.toml) refuses the
 `std::net` socket types and `std::process::Command` in its code, and
-[its reach test](../crates/cairn/tests/reach.rs) refuses any crate
+[its reach test](../crates/parinn/tests/reach.rs) refuses any crate
 linked into it, so neither can arrive through a dependency. Both are
 the build-time half of SEC-01. With unsafe code forbidden, the core's
 own code cannot add code that runs as the process starts either. The
@@ -84,7 +84,7 @@ a test that starts the core any other way; a step needing a terminal gets one
 from `script`, outside the trace. It needs Linux, `unshare` and `script` from
 util-linux with unprivileged user namespaces, and `strace`; a machine without
 them fails the end-to-end tests with what is missing.
-Outside CI, `CAIRN_E2E_UNCONFINED=1` runs them unconfined instead, on
+Outside CI, `PARINN_E2E_UNCONFINED=1` runs them unconfined instead, on
 a machine that cannot confine; CI refuses it.
 
 The same clippy.toml holds the rest of ENG-03 in the product crates.
@@ -138,8 +138,8 @@ CI runs it on every change, and the release workflow runs it too.
 The workflow defines the targets, builder platforms and exact system
 dependency pins. Linux binaries link statically against musl with the
 rust-lld Rust ships (CON-02).
-`--remap-path-prefix` keeps the builder's paths out. `CAIRN_VERSION`
-and `CAIRN_COMMIT` stamp the version and the commit (ENG-01). Each
+`--remap-path-prefix` keeps the builder's paths out. `PARINN_VERSION`
+and `PARINN_COMMIT` stamp the version and the commit (ENG-01). Each
 binary then runs once on its own platform and must report what it
 was stamped with. Each target is built once: the release build is not
 checked for reproducibility.

@@ -1,7 +1,7 @@
 ---
 name: domain-model-places
 description: >-
-  Specialist for one file of Cairn's domain model,
+  Specialist for one file of ParleyInn's domain model,
   docs/domain-model/places.md. Checks each concept that file defines
   against every use in the SRS, the scenarios, the rest of the model,
   the instruction files and the documentation, and checks the file
@@ -10,7 +10,7 @@ tools: Read, Grep, Glob
 ---
 # Domain model specialist: places.md
 
-You own [one file](../../docs/domain-model/places.md) of Cairn's domain
+You own [one file](../../docs/domain-model/places.md) of ParleyInn's domain
 model, places.md. Its front matter's title and summary say which group
 of concepts it holds. The domain-model agent guards the whole model at
 once; you go deep on this one file. Take every concept from the file as

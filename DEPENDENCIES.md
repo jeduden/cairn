@@ -70,7 +70,7 @@ footer: |
 | [ADR-2610171300](docs/adr/ADR-2610171300-key-stores.md)               | accepted   | The core keeps each key in an entry named per home: on macOS in the Keychain through security-framework, on Windows in a file DPAPI protects through windows-sys in the platform crate (once the dpapi shim), the one crate with unsafe code, which Miri checks; on Linux in a 0600 file, and cairn status says so. The stakeholder's ruling 2 of 14 October 2026.        |
 <?/catalog?>
 
-Twelve direct dependencies. Ten link into the shipped `cairn`
+Twelve direct dependencies. Ten link into the shipped `parinn`
 executable, at the target of ten: `sha2`, `ed25519-dalek`,
 `getrandom`, `rusqlite`, `serde_json`, `toml`, `regex` and `tracing`,
 with `security-framework` on macOS and `windows-sys` on Windows only.
@@ -80,7 +80,7 @@ workspace of its own that the check above reads too, so it counts
 toward no limit. Its NCSA license is admitted for that one crate by an
 exception in [deny.toml](deny.toml), on the stakeholder's ruling of 19
 October 2026, not by the allow-list. The executable's reach test,
-[crates/cairn/tests/reach.rs](crates/cairn/tests/reach.rs), fails the
+[crates/parinn/tests/reach.rs](crates/parinn/tests/reach.rs), fails the
 build when a crate links into it that its list does not allow, each
 listed crate weighed for its reach when it joined.
 

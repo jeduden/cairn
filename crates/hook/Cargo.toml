@@ -18,8 +18,8 @@ testkit.workspace = true
 [lints]
 workspace = true
 
-# ENG-02: see crates/cairn/Cargo.toml.
-[package.metadata.cairn]
+# ENG-02: see crates/parinn/Cargo.toml.
+[package.metadata.parinn]
 responsibility = "Decodes each hook input against its schema and recorded shapes, reads the hook handler's process ancestry, catches a panic, and types each failure for its counter"
 may-depend-on = ["audit", "transcript"]
 may-dev-depend-on = ["testkit"]

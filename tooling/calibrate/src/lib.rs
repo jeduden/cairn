@@ -2,7 +2,7 @@
 //! number of file system calls shaped like a hook handler's. The
 //! `@NFR-02` hook budget rows time it beside a hook handler, under the
 //! same confinement, and hold the handler to a multiple of it. It reads
-//! nothing of Cairn and imports no crate, so it stays the same when the
+//! nothing of ParleyInn and imports no crate, so it stays the same when the
 //! product changes.
 //!
 //! One calibration unit is a nominal 10 ms, by definition. The

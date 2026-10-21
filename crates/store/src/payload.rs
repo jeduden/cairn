@@ -19,7 +19,7 @@ use record::commitment::{CommitmentKey, hmac_sha256};
 use serde_json::Value;
 
 /// The label every payload name's message is.
-const NAME_LABEL: &[u8] = b"cairn payload name v1\0";
+const NAME_LABEL: &[u8] = b"parinn payload name v1\0";
 
 /// The most bytes a preview holds (REC-09).
 pub const PREVIEW_BYTES: usize = 512;

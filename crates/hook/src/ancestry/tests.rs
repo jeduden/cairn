@@ -35,7 +35,7 @@ fn chain(names: &[&'static str]) -> Table {
 
 #[test]
 fn a_handler_below_its_own_harness_alone_is_not_nested() {
-    let table = chain(&["cairn", "sh", "claude", "bash", "init"]);
+    let table = chain(&["parinn", "sh", "claude", "bash", "init"]);
 
     assert_eq!(
         observe(&table, 100),
@@ -49,7 +49,7 @@ fn a_handler_below_its_own_harness_alone_is_not_nested() {
 
 #[test]
 fn a_harness_above_the_sessions_own_makes_it_nested() {
-    let table = chain(&["cairn", "sh", "claude", "bash", "claude", "zsh"]);
+    let table = chain(&["parinn", "sh", "claude", "bash", "claude", "zsh"]);
 
     assert_eq!(
         observe(&table, 100),
@@ -65,7 +65,7 @@ fn a_harness_above_the_sessions_own_makes_it_nested() {
 #[test]
 fn a_handler_no_harness_started_counts_none() {
     assert_eq!(
-        observe(&chain(&["cairn", "bash"]), 100),
+        observe(&chain(&["parinn", "bash"]), 100),
         Some(Ancestry {
             harnesses: 0,
             nested: false,
@@ -76,11 +76,11 @@ fn a_handler_no_harness_started_counts_none() {
 
 #[test]
 fn an_unreadable_parent_a_loop_or_a_chain_past_the_limit_is_no_observation() {
-    let mut unreadable = chain(&["cairn", "sh"]);
+    let mut unreadable = chain(&["parinn", "sh"]);
     unreadable.0.insert(101, (None, vec!["sh"]));
     assert_eq!(observe(&unreadable, 100), None);
 
-    let mut looped = chain(&["cairn", "sh"]);
+    let mut looped = chain(&["parinn", "sh"]);
     looped.0.insert(101, (Some(101), vec!["sh"]));
     assert_eq!(
         observe(&looped, 100).map(|a| a.harnesses),

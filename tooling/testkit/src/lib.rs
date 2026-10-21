@@ -28,7 +28,7 @@ pub fn repo_root() -> PathBuf {
 
 /// Points `command` at `home` (ENG-14): its `HOME`, a `CAIRN_HOME`
 /// inside it, and its working directory, so an executable a test starts
-/// cannot reach the real `HOME`, a Cairn home, Claude Code's
+/// cannot reach the real `HOME`, a ParleyInn home, Claude Code's
 /// configuration, or the repository configuration of the checkout the
 /// test runs in.
 pub fn isolate<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
@@ -61,7 +61,7 @@ pub fn place_transcript(home: &Path, source: &Path) -> io::Result<PathBuf> {
     Ok(placed)
 }
 
-/// The `cairn` executable cargo built beside the running test. `cargo
+/// The `parinn` executable cargo built beside the running test. `cargo
 /// test` builds a workspace member's executables into the profile
 /// directory whose `deps` directory holds every test, so a scenario
 /// starts the same build of the core the end-to-end tests do.
@@ -71,34 +71,34 @@ pub fn place_transcript(home: &Path, source: &Path) -> io::Result<PathBuf> {
 /// Fails, saying how to build it, when it is not there.
 pub fn core_executable() -> Result<PathBuf, String> {
     let test = std::env::current_exe().map_err(|e| format!("locate the running test: {e}"))?;
-    sibling_executable(&test, "cairn")
+    sibling_executable(&test, "parinn")
 }
 
 /// The environment variable that names the release build of the core, a
-/// path, when it is not at `target/release/cairn` of the checkout.
-pub const RELEASE_CORE_VAR: &str = "CAIRN_RELEASE_CORE";
+/// path, when it is not at `target/release/parinn` of the checkout.
+pub const RELEASE_CORE_VAR: &str = "PARINN_RELEASE_CORE";
 
-/// The release build of the `cairn` core, which every step that holds
+/// The release build of the `parinn` core, which every step that holds
 /// the core to a time budget runs (NFR-02): a development build is
 /// slower by an order of magnitude and flakes on a loaded runner. It is
-/// the path `CAIRN_RELEASE_CORE` names, else `target/release/cairn` of
+/// the path `PARINN_RELEASE_CORE` names, else `target/release/parinn` of
 /// the checkout; the test run never builds it.
 ///
 /// # Errors
 ///
 /// Fails, saying how to build it, when it is not there.
 pub fn release_core_executable() -> Result<PathBuf, String> {
-    release_executable(std::env::var_os(RELEASE_CORE_VAR), &repo_root(), "cairn")
+    release_executable(std::env::var_os(RELEASE_CORE_VAR), &repo_root(), "parinn")
 }
 
 /// The environment variable that names the release build of the
 /// calibration workload, a path, when it is not at
 /// `target/release/calibrate` of the checkout.
-pub const CALIBRATE_VAR: &str = "CAIRN_CALIBRATE";
+pub const CALIBRATE_VAR: &str = "PARINN_CALIBRATE";
 
 /// The release build of the `calibrate` workload, the reference the
 /// hook budget rows measure a hook handler against (NFR-02): the path
-/// `CAIRN_CALIBRATE` names, else `target/release/calibrate` of the
+/// `PARINN_CALIBRATE` names, else `target/release/calibrate` of the
 /// checkout; the test run never builds it.
 ///
 /// # Errors
@@ -178,7 +178,7 @@ impl TempDir {
             .unwrap_or_default()
             .as_nanos();
         let mut names = (0..ATTEMPTS)
-            .map(|n| OsString::from(format!("cairn-{}-{stamp}-{n}", std::process::id())));
+            .map(|n| OsString::from(format!("parinn-{}-{stamp}-{n}", std::process::id())));
         create_unique(&std::env::temp_dir(), &mut names).map(|path| Self { path })
     }
 

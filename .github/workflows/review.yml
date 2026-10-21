@@ -317,7 +317,7 @@ jobs:
         with:
           client-id: Iv23lie5LIUdOU49SrG9
           private-key: ${{ secrets.JEDUDEN_REVIEW_AGENT_KEY }}
-          repositories: cairn
+          repositories: parinn
           permission-pull-requests: write
           permission-checks: read
       - name: Read the head and its checks

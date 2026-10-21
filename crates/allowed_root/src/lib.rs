@@ -1,4 +1,4 @@
-//! The allowed roots (SEC-18). Every path Cairn receives from a hook
+//! The allowed roots (SEC-18). Every path ParleyInn receives from a hook
 //! input, a transcript or configuration is resolved, symbolic links
 //! included, and must lie within an allowed root once resolved: the
 //! transcript roots (`transcript.roots`), the home, or, for reading

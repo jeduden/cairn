@@ -69,7 +69,7 @@ pub struct Session {
 /// One line's class.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Classified {
-    /// A line Cairn cannot parse: an `unparsed` event (REC-05), with its
+    /// A line ParleyInn cannot parse: an `unparsed` event (REC-05), with its
     /// drift when its type is one no supported version records.
     Unparsed(Option<Drift>),
     /// A transcript line of this class, with its drift when it drifted

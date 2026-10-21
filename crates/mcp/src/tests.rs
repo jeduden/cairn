@@ -83,7 +83,7 @@ fn initialize_agrees_on_a_protocol_version_and_names_the_server() {
     assert_eq!(known["result"]["protocolVersion"], "2025-06-18");
     assert_eq!(
         known["result"]["serverInfo"],
-        json!({"name": "cairn", "version": "v9"})
+        json!({"name": "parinn", "version": "v9"})
     );
     assert_eq!(known["result"]["capabilities"], json!({"tools": {}}));
     assert_eq!(unknown["result"]["protocolVersion"], PROTOCOL_VERSIONS[0]);
@@ -317,7 +317,7 @@ fn a_store_failure_or_a_writer_without_a_seat_is_a_tool_error() {
     let result = event_get(&mut server, json!({"address": address, "scope": "room"}));
     assert_eq!(
         refusal(&result),
-        "the record cannot be read at this address: run cairn verify"
+        "the record cannot be read at this address: run parinn verify"
     );
 
     let stray = record::id::WriterId::derive(&[9; 32]);
@@ -454,7 +454,7 @@ fn an_event_that_does_not_check_against_its_chain_is_refused() {
         assert_eq!(
             refusal(&result),
             format!(
-                "the event at cairn:room/{}/w/{}/{seq} does not check against the record: run cairn verify",
+                "the event at cairn:room/{}/w/{}/{seq} does not check against the record: run parinn verify",
                 f.ingested.room, f.ingested.writer
             ),
             "{statement}"
@@ -545,7 +545,7 @@ fn the_room_scope_is_the_personal_room_unless_a_room_is_named() {
 
 #[test]
 fn a_seat_the_node_certified_but_never_recorded_shows_its_origin_as_peer() {
-    // cairn verify refuses a seat whose certificate record the genesis
+    // parinn verify refuses a seat whose certificate record the genesis
     // device seat lacks (PRV-12), so recall does not count it as this
     // node's own either.
     let f = fixture();

@@ -47,7 +47,8 @@ review** (only after the principal act of OWN-21 marking the room ready),
 **Quiet** (never while a run is `unrecorded` or `behind`, VIEW-04). The
 pull-request states a forge reports (Pre-review, In review, Changes requested,
 Approved, Queued, Merging) live on the pull-request pill (P2, LANE-08), marked
-`asserted`, not in the room status; Cairn keeps no approval state of its own. A
+`asserted`, not in the room status; ParleyInn keeps no approval state of its
+own. A
 check's check state, computed where shown, is one of Pending, Executing, Passed,
 Failed, Stale and Absent; a result resting on edits not fully recorded is marked
 `unbound` (LANE-05), a mark like `from checkpoint` and `outside intent`, not a

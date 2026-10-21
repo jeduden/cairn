@@ -7,7 +7,7 @@
 //! refused history but the writer, the seq range and the two digests
 //! (I1), counts and audits each new refusal as `fork_conflict` (I6), and
 //! marks no writer `equivocated`: until seals ship (REC-18, M7) nothing
-//! authenticates a copy. `cairn verify` reads the refusals back and
+//! authenticates a copy. `parinn verify` reads the refusals back and
 //! reports them as integrity `refused` (VIEW-10).
 
 use administration::home::Home;
@@ -24,7 +24,7 @@ pub struct Refused {
     /// refused its entry.
     pub forks: Vec<Fork>,
     /// How many of those entries the audit log refused. The fork stays
-    /// recorded and `cairn verify` reports it; the caller says on
+    /// recorded and `parinn verify` reports it; the caller says on
     /// stderr that its entry is missing (I6).
     pub unaudited: usize,
 }
@@ -68,7 +68,7 @@ pub fn refuse(
     Ok(Refused { forks, unaudited })
 }
 
-/// The refusals as `cairn verify --json` shows them: writer, seq range
+/// The refusals as `parinn verify --json` shows them: writer, seq range
 /// and the two digests.
 pub(crate) fn json(forks: &[Fork]) -> Value {
     forks
@@ -85,7 +85,7 @@ pub(crate) fn json(forks: &[Fork]) -> Value {
         .collect()
 }
 
-/// One line per refusal, for `cairn verify` and `cairn status`.
+/// One line per refusal, for `parinn verify` and `parinn status`.
 pub(crate) fn lines(forks: &[Fork]) -> Vec<String> {
     forks.iter().map(|f| format!("refused: {f}")).collect()
 }

@@ -13,8 +13,8 @@ record.workspace = true
 [lints]
 workspace = true
 
-# ENG-02: see crates/cairn/Cargo.toml.
-[package.metadata.cairn]
+# ENG-02: see crates/parinn/Cargo.toml.
+[package.metadata.parinn]
 responsibility = "Compiles caller text to literal terms and ranks the hits of a search, without touching the store"
 may-depend-on = ["record"]
 may-dev-depend-on = []

@@ -110,7 +110,7 @@ fn bound_keys(w: &mut World) -> Result<(), String> {
     let identity: PathBuf = w.home.join(IDENTITY);
     fs::write(&identity, "the-first-machine\n").map_err(|e| e.to_string())?;
     let identity = identity.display().to_string();
-    set_env(w, "CAIRN_TEST_NODE_IDENTITY", &identity);
+    set_env(w, "PARINN_TEST_NODE_IDENTITY", &identity);
     ingest_one_line(w, "before")?;
     let (node, _) = node(w)?;
     let steps = keys(w);
@@ -133,7 +133,7 @@ fn before_the_change(w: &mut World) -> Result<(), String> {
 }
 
 #[given(
-    regex = r#"^a configuration setting "node\.deployment_mode" to "interactive", accepted by "cairn configuration accept"$"#
+    regex = r#"^a configuration setting "node\.deployment_mode" to "interactive", accepted by "parinn configuration accept"$"#
 )]
 fn interactive_accepted(w: &mut World) -> Result<(), String> {
     configure(w, "[node]\ndeployment_mode = \"interactive\"\n")?;
@@ -184,7 +184,7 @@ fn new_device_seat(w: &mut World) -> Result<(WriterId, SeatCertificate, Vec<Stor
 }
 
 #[then(
-    regex = r"^Cairn mints a new device key and a new seat key before that append, the new seat key starting a new seat and writer that names the old seat$"
+    regex = r"^ParleyInn mints a new device key and a new seat key before that append, the new seat key starting a new seat and writer that names the old seat$"
 )]
 fn new_keys(w: &mut World) -> Result<(), String> {
     let (old_key, old_writer) = {

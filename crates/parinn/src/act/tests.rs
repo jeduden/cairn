@@ -36,26 +36,29 @@ fn refusals(p: &Process) -> Vec<(String, String)> {
 #[test]
 fn each_verb_wants_its_subcommand_and_takes_only_json() {
     for (args, why) in [
-        (&["configuration"][..], "cairn configuration: want accept\n"),
+        (
+            &["configuration"][..],
+            "parinn configuration: want accept\n",
+        ),
         (
             &["configuration", "show"],
-            "cairn configuration: want accept\n",
+            "parinn configuration: want accept\n",
         ),
         (
             &["configuration", "accept", "--yes"],
-            "cairn configuration accept: unknown flag \"--yes\"\n",
+            "parinn configuration accept: unknown flag \"--yes\"\n",
         ),
         (
             &["risk-acceptance"],
-            "cairn risk-acceptance: want show, record or withdraw\n",
+            "parinn risk-acceptance: want show, record or withdraw\n",
         ),
         (
             &["risk-acceptance", "grant"],
-            "cairn risk-acceptance: want show, record or withdraw\n",
+            "parinn risk-acceptance: want show, record or withdraw\n",
         ),
         (
             &["risk-acceptance", "record", "--all"],
-            "cairn risk-acceptance record: unknown flag \"--all\"\n",
+            "parinn risk-acceptance record: unknown flag \"--all\"\n",
         ),
     ] {
         assert_eq!(
@@ -84,7 +87,7 @@ fn every_act_refuses_without_a_terminal_before_any_other_check_and_audits_it() {
             "{err}"
         );
         assert_eq!(refusals(&p).len(), 1, "{args:?}");
-        assert!(!p.cairn_home().join("store.db").exists());
+        assert!(!p.parinn_home().join("store.db").exists());
     }
 }
 
@@ -94,7 +97,7 @@ fn configuration_accept_needs_a_configuration() {
     let (code, _, err) = p.invoke(&["configuration", "accept"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
     assert!(
-        err.starts_with("cairn configuration accept: no configuration at "),
+        err.starts_with("parinn configuration accept: no configuration at "),
         "{err}"
     );
     assert!(err.ends_with("config.toml to accept\n"), "{err}");
@@ -119,7 +122,7 @@ fn configuration_accept_records_the_digest_and_settings_and_they_apply() {
     let (_, before, _) = p.invoke(&["status"], &DEV);
     assert!(before.contains("deployment mode: automation\n"), "{before}");
     assert!(
-        before.contains("awaiting acceptance (cairn configuration accept): node.deployment_mode"),
+        before.contains("awaiting acceptance (parinn configuration accept): node.deployment_mode"),
         "{before}"
     );
 
@@ -467,8 +470,8 @@ fn risk_acceptance_show_runs_without_a_terminal() {
 #[test]
 fn a_verb_reports_a_home_it_cannot_open() {
     let p = Process::new();
-    std::fs::create_dir_all(p.cairn_home()).unwrap();
-    crate::tests::set_mode(&p.cairn_home(), 0o750);
+    std::fs::create_dir_all(p.parinn_home()).unwrap();
+    crate::tests::set_mode(&p.parinn_home(), 0o750);
     for args in [
         &["configuration", "accept"][..],
         &["risk-acceptance", "record"],
@@ -485,7 +488,7 @@ fn a_verb_reports_a_home_it_cannot_open() {
 /// Makes the store refuse every principal act whose content holds
 /// `holding`, as a store that fails mid-act would.
 fn refuse_acts(p: &Process, holding: &str) {
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute_batch(&format!(
         "CREATE TRIGGER refuse BEFORE INSERT ON events \
          WHEN NEW.kind = 'principal_act' AND NEW.content LIKE '%{holding}%' \
@@ -513,7 +516,7 @@ fn a_store_that_takes_no_act_fails_the_verb() {
 #[test]
 fn a_run_seat_whose_certificate_does_not_read_fails_risk_acceptance() {
     let p = with_a_run();
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute(
         "UPDATE seats SET certificate = '{}' WHERE certificate NOT LIKE '%\"device\"%'",
         [],
@@ -527,7 +530,7 @@ fn a_run_seat_whose_certificate_does_not_read_fails_risk_acceptance() {
         let (code, _, err) = p.invoke(args, &DEV);
         assert_eq!(code, EXIT_FAILURE, "{args:?}");
         assert!(
-            err.starts_with(&format!("cairn {} {}: ", args[0], args[1])),
+            err.starts_with(&format!("parinn {} {}: ", args[0], args[1])),
             "{err}"
         );
     }
@@ -539,7 +542,7 @@ fn a_run_seat_whose_certificate_does_not_read_fails_risk_acceptance() {
 fn cut_and_neutral_acts_need_no_open_residual_risks() {
     let p = with_a_run();
     assert_eq!(p.invoke(&["risk-acceptance", "record"], &DEV).0, EXIT_OK);
-    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    let conn = rusqlite::Connection::open(p.parinn_home().join("store.db")).unwrap();
     conn.execute(
         "UPDATE seats SET certificate = '{}' WHERE certificate NOT LIKE '%\"device\"%'",
         [],
@@ -556,15 +559,15 @@ fn cut_and_neutral_acts_need_no_open_residual_risks() {
 fn a_refusal_the_audit_log_cannot_take_is_still_reported() {
     let mut p = Process::new();
     p.terminal = false;
-    let blocked = p.cairn_home().join("audit/audit-000001.jsonl");
+    let blocked = p.parinn_home().join("audit/audit-000001.jsonl");
     std::fs::create_dir_all(&blocked).unwrap();
-    for dir in [p.cairn_home(), p.cairn_home().join("audit"), blocked] {
+    for dir in [p.parinn_home(), p.parinn_home().join("audit"), blocked] {
         crate::tests::set_mode(&dir, 0o700);
     }
     let (code, _, err) = p.invoke(&["counter", "ack"], &DEV);
     assert_eq!(code, EXIT_FAILURE);
     assert!(
-        err.contains("cairn counter ack: audit the refusal: "),
+        err.contains("parinn counter ack: audit the refusal: "),
         "{err}"
     );
     assert!(err.contains("needs a terminal"), "{err}");

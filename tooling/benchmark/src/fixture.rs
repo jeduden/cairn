@@ -2,7 +2,7 @@
 //! outside its time: for ingestion (NFR-04), a fresh home holding one
 //! transcript under its transcript roots. `HOME` and `CAIRN_HOME` both
 //! point inside it, so a sample never reaches the machine's own home,
-//! Cairn home or Claude Code configuration (ENG-14).
+//! ParleyInn home or Claude Code configuration (ENG-14).
 
 use std::fs;
 use std::io;
@@ -59,7 +59,7 @@ impl Home {
     /// Fails when the home or the transcript cannot be written.
     pub fn with_transcript(base: &Path, transcript: &str) -> io::Result<Self> {
         let n = MADE.fetch_add(1, Ordering::Relaxed);
-        let root = base.join(format!("cairn-benchmark-{}-{n}", std::process::id()));
+        let root = base.join(format!("parinn-benchmark-{}-{n}", std::process::id()));
         let projects = root.join(".claude").join("projects").join("-w-bench");
         fs::create_dir_all(&projects)?;
         let home = Self { root };

@@ -1,4 +1,4 @@
-//! `cairn mcp` (ADR-2610102211): a stdio MCP server of Cairn's own,
+//! `parinn mcp` (ADR-2610102211): a stdio MCP server of ParleyInn's own,
 //! one per harness session, reading and writing one JSON-RPC message
 //! per line through `serde_json`. It speaks `initialize`, `ping`,
 //! `tools/list` and `tools/call`, and serves the recall tool
@@ -17,7 +17,7 @@
 //! its content opens its commitment, its header hashes to its stored
 //! hash, and its `prev_hash` names its predecessor. Its origin comes
 //! from its seat certificate, checked against this node's device key and
-//! recorded in the genesis device seat's certificate records, as `cairn
+//! recorded in the genesis device seat's certificate records, as `parinn
 //! verify` requires; any other seat shows as `peer`. A refusal is fixed
 //! text, naming at most an address it parsed and renders anew; it never
 //! repeats what the call passed (RCL-04).
@@ -81,11 +81,11 @@ const BAD_SCOPE: &str = "the scope is none of run, room or rooms";
 const BAD_ROOM: &str = "the room is not a room id";
 const ROOM_CONFLICT: &str = "the address and the room argument name different rooms";
 const OTHER_ROOM: &str = "the event lies in another room";
-const UNREADABLE: &str = "the record cannot be read at this address: run cairn verify";
+const UNREADABLE: &str = "the record cannot be read at this address: run parinn verify";
 const NO_SEAT: &str = "the event's writer has no seat";
 const NO_TOOL: &str = "no such tool: this server offers event_get and event_search";
 const CANCELLED: &str = "the search ran past its deadline of 2 s and was cancelled";
-const NO_INDEX: &str = "the search index cannot be read: run cairn verify";
+const NO_INDEX: &str = "the search index cannot be read: run parinn verify";
 
 /// The server over one store, for one node.
 pub struct Server {
@@ -117,7 +117,7 @@ impl Server {
     /// A server answering from `store` for the node whose device key is
     /// `device_key`, whose genesis device seat's writer is
     /// `device_writer` and whose personal room is `personal_room`,
-    /// naming itself as cairn `version`.
+    /// naming itself as parinn `version`.
     #[must_use]
     pub fn new(
         store: Store,
@@ -212,7 +212,7 @@ impl Server {
         json!({
             "protocolVersion": version,
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "cairn", "version": self.version},
+            "serverInfo": {"name": "parinn", "version": self.version},
         })
     }
 
@@ -273,7 +273,7 @@ impl Server {
         };
         if !self.checks(&stored).map_err(unreadable)? {
             return Err(format!(
-                "the event at {full} does not check against the record: run cairn verify"
+                "the event at {full} does not check against the record: run parinn verify"
             ));
         }
         let header = &stored.link.header;

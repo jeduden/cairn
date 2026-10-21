@@ -1,4 +1,4 @@
-//! What `cairn status`, `cairn verify` and `cairn ingest` say of the
+//! What `parinn status`, `parinn verify` and `parinn ingest` say of the
 //! transcript sources (REC-04, REC-08): each source an ingest marker
 //! holds repeated lines of, and each source that disappeared before it
 //! was fully ingested.
@@ -9,7 +9,7 @@ use administration::home::Home;
 use serde_json::{Value, json};
 use store::{Source, Store, StoreError};
 
-/// The transcript sources `cairn status` reports.
+/// The transcript sources `parinn status` reports.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SourcesStatus {
     /// The path of each source an ingest marker holds.
@@ -38,7 +38,7 @@ pub(crate) fn read(home: &Home) -> Result<Option<SourcesStatus>, StoreError> {
     Ok(Some(of(&store)?))
 }
 
-/// The transcript sources `store` holds, as `cairn status` reports them.
+/// The transcript sources `store` holds, as `parinn status` reports them.
 ///
 /// # Errors
 ///
@@ -70,12 +70,12 @@ pub(crate) fn lost(sources: &[Source]) -> Vec<&Source> {
 }
 
 impl SourcesStatus {
-    /// The sources as `cairn status --json` shows them.
+    /// The sources as `parinn status --json` shows them.
     pub(crate) fn json(&self) -> Value {
         json!({"held": self.held, "lost": self.lost})
     }
 
-    /// The lines `cairn status` shows: none while no source is held or
+    /// The lines `parinn status` shows: none while no source is held or
     /// lost.
     pub(crate) fn lines(&self) -> Vec<String> {
         let mut lines = Vec::new();
@@ -93,7 +93,7 @@ impl SourcesStatus {
     }
 }
 
-/// What `cairn status` and `cairn verify` say of the sources `lost`.
+/// What `parinn status` and `parinn verify` say of the sources `lost`.
 pub(crate) fn lost_text(lost: &[String]) -> String {
     format!(
         "transcript sources gone before they were fully ingested: {}",

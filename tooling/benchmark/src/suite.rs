@@ -7,7 +7,7 @@
 //! phases, so they are declared [`AWAITING`] here rather than stood in
 //! for by a benchmark of something else. [`SUITE`]'s core start-up is a
 //! [`Coverage::Floor`]: a cost every hook handler pays, not a hook
-//! handler. Its ingestion benchmark times `cairn ingest` over a
+//! handler. Its ingestion benchmark times `parinn ingest` over a
 //! synthetic transcript in a fresh home (NFR-04). Its hook handler
 //! benchmarks time each handler on a hook input over a fresh home:
 //! `SessionStart` against its hook budget (NFR-02), `UserPromptSubmit`
@@ -108,7 +108,7 @@ pub const SUITE: [Benchmark; 5] = [
         name: "ingest_transcript",
         requirement: "NFR-04",
         coverage: Coverage::Target,
-        measures: "`cairn ingest --all` over one transcript of 2,000 recorded Claude Code \
+        measures: "`parinn ingest --all` over one transcript of 2,000 recorded Claude Code \
                    lines in a fresh home, until it exits: ingestion's events per second",
         args: &["ingest", "--all"],
         fixture: Fixture::Transcript {
@@ -119,7 +119,7 @@ pub const SUITE: [Benchmark; 5] = [
         name: "hook_session_start",
         requirement: "NFR-02",
         coverage: Coverage::Target,
-        measures: "`cairn hook SessionStart` on a recorded-shape hook input in a fresh home, \
+        measures: "`parinn hook SessionStart` on a recorded-shape hook input in a fresh home, \
                    until it exits: the handler holding its session binding at the \
                    transcript's ingest marker, against its 150 ms hook budget",
         args: &["hook", "SessionStart"],
@@ -131,7 +131,7 @@ pub const SUITE: [Benchmark; 5] = [
         name: "hook_user_prompt_submit",
         requirement: "NFR-01",
         coverage: Coverage::Floor,
-        measures: "`cairn hook UserPromptSubmit` on a recorded-shape hook input in a fresh \
+        measures: "`parinn hook UserPromptSubmit` on a recorded-shape hook input in a fresh \
                    home, until it exits: the handler keeping its prompt commitment, on a \
                    fresh home rather than a store of 1M events under fleet load",
         args: &["hook", "UserPromptSubmit"],
@@ -143,7 +143,7 @@ pub const SUITE: [Benchmark; 5] = [
         name: "search_events",
         requirement: "NFR-03",
         coverage: Coverage::Target,
-        measures: "`cairn mcp` answering one `event_search` for a common word over a store \
+        measures: "`parinn mcp` answering one `event_search` for a common word over a store \
                    of 2,000 ingested Claude Code lines, until its input closes: a search \
                    ranking the newest 2,000 matches, with the process start it pays",
         args: &["mcp"],

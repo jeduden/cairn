@@ -26,8 +26,8 @@ testkit.workspace = true
 [lints]
 workspace = true
 
-# ENG-02: see crates/cairn/Cargo.toml.
-[package.metadata.cairn]
+# ENG-02: see crates/parinn/Cargo.toml.
+[package.metadata.parinn]
 responsibility = "Mints and keeps keys, and makes and checks the signatures, seat certificates and key events they sign"
 may-depend-on = ["platform", "record"]
 may-dev-depend-on = ["testkit"]

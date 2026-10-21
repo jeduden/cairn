@@ -2,14 +2,14 @@
 //! handler of the built core answers within its hook budget, leaving a
 //! start marker it clears; one the harness kills leaves its marker
 //! behind, counted once, past its hook's harness timeout, by the next
-//! hook handler, the MCP server as it starts, or `cairn status`.
+//! hook handler, the MCP server as it starts, or `parinn status`.
 //!
-//! Each hook's budget and harness timeout are §9.1's and those Cairn
+//! Each hook's budget and harness timeout are §9.1's and those ParleyInn
 //! installs it with (ASM-10). The development build's seams stand the
-//! clock still (`CAIRN_TEST_CLOCK`) and hang a handler until it is
+//! clock still (`PARINN_TEST_CLOCK`) and hang a handler until it is
 //! killed (`CAIRN_TEST_FAULT=hook-hang`). The row that times a handler
 //! against its budget runs the release build, which has no seams, so
-//! it needs `cargo build --release -p cairn` first.
+//! it needs `cargo build --release -p parinn` first.
 
 use std::cell::RefCell;
 use std::fs;
@@ -68,7 +68,7 @@ struct BudgetSteps {
     hook: String,
 }
 
-/// A hook's budget (§9.1) and the harness timeout Cairn installs it
+/// A hook's budget (§9.1) and the harness timeout ParleyInn installs it
 /// with (ASM-10).
 fn budget_of(hook: &str) -> (Duration, Duration) {
     match hook {
@@ -199,7 +199,7 @@ fn kill_hook(w: &mut World, hook: &str, at: u64) -> Result<(), String> {
         &["hook", hook],
         &[
             ("CAIRN_TEST_FAULT", "hook-hang"),
-            ("CAIRN_TEST_CLOCK", &at),
+            ("PARINN_TEST_CLOCK", &at),
             (HOOK_BUDGET, "60000"),
         ],
         KILLED_AFTER,
@@ -232,7 +232,7 @@ fn marker_left(w: &mut World) -> Result<(), String> {
 /// Runs the reader `next` names with the clock at `at`.
 fn read_markers(w: &mut World, next: &str, at: u64) -> Result<(), String> {
     let at = at.to_string();
-    let clock = [("CAIRN_TEST_CLOCK", at.as_str())];
+    let clock = [("PARINN_TEST_CLOCK", at.as_str())];
     match next {
         "the next hook handler" => {
             let input = input_of(w, "SessionStart")?.to_string();
@@ -253,7 +253,7 @@ fn past_timeout(w: &mut World) -> u64 {
 }
 
 #[then(
-    regex = r#"^(the next hook handler|the MCP server of the next harness session as it starts|"cairn status") counts and audits it under "hook_unfinished"$"#
+    regex = r#"^(the next hook handler|the MCP server of the next harness session as it starts|"parinn status") counts and audits it under "hook_unfinished"$"#
 )]
 fn next_counts(w: &mut World, next: String) -> Result<(), String> {
     let at = past_timeout(w);
@@ -273,7 +273,7 @@ fn next_counts(w: &mut World, next: String) -> Result<(), String> {
 #[then(regex = r"^a second reader does not count the same start marker again$")]
 fn second_reader(w: &mut World) -> Result<(), String> {
     let at = past_timeout(w) + 60;
-    read_markers(w, "\"cairn status\"", at)?;
+    read_markers(w, "\"parinn status\"", at)?;
     match counted(w, "hook_unfinished")? {
         1 => Ok(()),
         n => Err(format!("hook_unfinished was counted {n} times")),
@@ -287,7 +287,7 @@ fn within_timeout(w: &mut World) -> Result<(), String> {
     let hook = w.section::<BudgetSteps>().hook.clone();
     let again = STARTED + 1_000;
     kill_hook(w, &hook, again)?;
-    read_markers(w, "\"cairn status\"", again + 1)?;
+    read_markers(w, "\"parinn status\"", again + 1)?;
     let (count, left) = (counted(w, "hook_unfinished")?, markers(w)?);
     if count == 1 && left.len() == 1 {
         return Ok(());

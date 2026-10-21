@@ -8,7 +8,7 @@
 //!
 //! `@REC-26` stays pending: its harness session's MCP server ingests
 //! live (REC-13, phase 10). Until then its drift steps ingest with
-//! `cairn ingest`, its typed lines matching a prompt the hook handlers
+//! `parinn ingest`, its typed lines matching a prompt the hook handlers
 //! got (phase 9).
 
 use std::collections::BTreeMap;
@@ -164,7 +164,7 @@ fn text(stored: &Stored) -> &str {
         .unwrap_or_default()
 }
 
-/// Ingests the transcript at `path` with `cairn ingest --path`, and
+/// Ingests the transcript at `path` with `parinn ingest --path`, and
 /// keeps its last line's event as the scenario's item.
 pub fn ingest(w: &mut World, path: &Path) -> Result<(), String> {
     remember_counters(w)?;
@@ -173,7 +173,7 @@ pub fn ingest(w: &mut World, path: &Path) -> Result<(), String> {
     let out = last_run(w)?;
     if !out.status.success() {
         return Err(format!(
-            "cairn ingest exited {}: {}",
+            "parinn ingest exited {}: {}",
             out.status,
             String::from_utf8_lossy(&out.stderr).trim()
         ));
@@ -511,14 +511,14 @@ fn drift_counted_and_named(w: &mut World) -> Result<(), String> {
     ))
 }
 
-#[then(regex = r#"^"cairn status" shows the format drift$"#)]
+#[then(regex = r#"^"parinn status" shows the format drift$"#)]
 fn status_shows_drift(w: &mut World) -> Result<(), String> {
     run_core(w, &["status"], None)?;
     let shown = String::from_utf8_lossy(&last_run(w)?.stdout).into_owned();
     if shown.contains("format_drift 1") {
         return Ok(());
     }
-    Err(format!("cairn status shows no format drift:\n{shown}"))
+    Err(format!("parinn status shows no format drift:\n{shown}"))
 }
 
 #[then(regex = r#"^ingest goes on with the next line of "([^"]+)"$"#)]

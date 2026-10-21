@@ -13,7 +13,7 @@
 //! - When it stops, it audits each transcript it left short of its end
 //!   under `ingest_remainder_left`, closes its run seats' open segments
 //!   (REC-19) and clears its start marker. A server killed first leaves
-//!   the marker, which the next MCP server or `cairn ingest` finds, and
+//!   the marker, which the next MCP server or `parinn ingest` finds, and
 //!   audits the remainder for it ([`count_stopped`]).
 //!
 //! The MCP server's start marker is a file in the home's `mcp`
