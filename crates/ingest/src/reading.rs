@@ -213,6 +213,13 @@ impl Resume {
                 new_generation: false,
             });
         }
+        // Bytes read before another ingest moved the position past their
+        // end are no rewrite: the source only grew since (REC-06).
+        if behind(&source.position, bytes, Path::new(&named.path)) {
+            return Err(IngestError::Store(store::StoreError::PositionMoved {
+                source: source.id,
+            }));
+        }
         let earlier = earlier_texts(store, &named.path)?;
         let same = lines
             .iter()
@@ -264,6 +271,15 @@ fn continues(position: &Position, bytes: &[u8]) -> bool {
     bytes
         .get(..as_index(position.offset))
         .is_some_and(|prefix| Digest::of(&[prefix]) == position.prefix)
+}
+
+/// Whether `bytes`, which end before `position`, were read before another
+/// ingest moved it: the source at `path` now reads on from the prefix
+/// `position` consumed. A source that cannot be read again, or that no
+/// longer holds that prefix, was rewritten: REC-07's.
+fn behind(position: &Position, bytes: &[u8], path: &Path) -> bool {
+    bytes.len() < as_index(position.offset)
+        && read::transcript(path).is_ok_and(|now| continues(position, &now))
 }
 
 /// The redacted lines the newest generation of the source at `path`

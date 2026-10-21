@@ -1255,6 +1255,83 @@ fn only_a_position_another_ingest_moved_is_read_again() {
     assert!(!IngestError::Empty(std::path::PathBuf::new()).position_moved());
 }
 
+/// The lines `from` to `to` of a transcript of numbered lines.
+fn numbered_lines(from: u64, to: u64) -> String {
+    (from..=to).map(|n| format!("{{\"n\":{n}}}\n")).collect()
+}
+
+#[test]
+fn a_read_from_before_another_ingest_moved_the_position_is_refused_and_starts_no_generation() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let path = transcript(&dir, &numbered_lines(1, 6));
+    // Another ingest read the whole source and moved the position to its
+    // end; this one had read only the first three lines by then.
+    ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+
+    let stale = reading::ingest(
+        &home,
+        &path,
+        &numbered_lines(1, 3),
+        &redactor(),
+        &Inputs::default(),
+        &mut reading::Recorder::Cli,
+        &mut OsEntropy,
+    )
+    .unwrap_err();
+
+    assert!(stale.position_moved(), "{stale}");
+    // The refused read left nothing behind: the next ingest finds the
+    // source read to its end, in its one generation, each line once.
+    let again = ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+    assert_eq!((again.events, again.new_generation), (0, false));
+    let store = Store::open(&home.store()).unwrap();
+    let generations = store.generations(&path.to_string_lossy()).unwrap();
+    assert_eq!(generations.len(), 1);
+    let lines: Vec<u64> = store
+        .placed(generations[0].id)
+        .unwrap()
+        .iter()
+        .map(|p| p.place.line)
+        .collect();
+    assert_eq!(lines, (1..=6).collect::<Vec<_>>());
+}
+
+#[test]
+fn a_source_read_shorter_than_its_position_and_found_shorter_still_starts_a_new_generation() {
+    let dir = TempDir::new().unwrap();
+    let home = home(&dir);
+    let path = transcript(&dir, &numbered_lines(1, 6));
+    ingest_path(&home, &path, &redactor(), &mut OsEntropy).unwrap();
+    // The source was rewritten shorter: the read is no stale one, and
+    // REC-07 starts a generation, whether or not the file reads again.
+    std::fs::write(&path, numbered_lines(7, 8)).unwrap();
+    let rewritten = reading::ingest(
+        &home,
+        &path,
+        &numbered_lines(7, 8),
+        &redactor(),
+        &Inputs::default(),
+        &mut reading::Recorder::Cli,
+        &mut OsEntropy,
+    )
+    .unwrap();
+    assert!(rewritten.new_generation);
+
+    std::fs::remove_file(&path).unwrap();
+    let gone = reading::ingest(
+        &home,
+        &path,
+        &numbered_lines(9, 9),
+        &redactor(),
+        &Inputs::default(),
+        &mut reading::Recorder::Cli,
+        &mut OsEntropy,
+    )
+    .unwrap();
+    assert!(gone.new_generation);
+}
+
 /// A writer id larger than `writer` that shares its slot in the search
 /// index: the same first five bytes of its digest.
 fn sharing_the_slot_of(writer: record::id::WriterId) -> record::id::WriterId {
