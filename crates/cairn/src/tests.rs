@@ -1081,6 +1081,21 @@ fn verify_reports_a_store_that_fails_while_checking() {
 }
 
 #[test]
+fn verify_fails_naming_the_store_when_its_refused_forks_cannot_be_read() {
+    let p = Process::new();
+    p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
+    let conn = rusqlite::Connection::open(p.cairn_home().join("store.db")).unwrap();
+    conn.execute("CREATE TABLE fork_refusals (unrelated TEXT)", [])
+        .unwrap();
+
+    let (code, out, err) = p.invoke(&["verify"], &DEV);
+
+    assert_eq!(code, EXIT_FAILURE);
+    assert_eq!(out, "");
+    assert!(err.starts_with("cairn verify: the store: "), "{err}");
+}
+
+#[test]
 fn verify_of_a_home_without_its_device_key_fails() {
     let p = Process::new();
     p.invoke(&["ingest", "--path", &p.transcript("a\n")], &DEV);
@@ -3163,6 +3178,55 @@ fn ingest_counts_and_says_a_lookup_of_the_search_index_gaps_that_failed() {
     assert_eq!(
         (counted[0].kind.as_str(), counted[0].operation.as_str()),
         ("failed", "ingest")
+    );
+}
+
+#[test]
+fn ingest_says_a_search_index_gap_it_cannot_audit_when_the_home_cannot_be_found() {
+    let p = Process::new();
+    let path = p.transcript("a\n");
+    p.invoke(&["ingest", &format!("--path={path}")], &DEV);
+    let home = Home::locate(Some(p.cairn_home().as_os_str()), None).unwrap();
+    let mut ingested = ingest::ingest_path(
+        &home,
+        std::path::Path::new(&path),
+        &Redactor::new(&[]).unwrap().0,
+        &mut key::random::OsEntropy,
+    )
+    .unwrap();
+    ingested.index_gaps = vec![store::IndexGap {
+        writer: record::id::WriterId::derive(&[7; 32]),
+        class: store::GapClass::WriterUnindexed,
+    }];
+    let input = || mpsc::channel().1;
+    let ctx = Context {
+        build: &DEV,
+        cairn_home: None,
+        home: None,
+        home_id: None,
+        hook_panics: false,
+        hook_hangs: false,
+        terminal: true,
+        working_dir: None,
+        managed_policy: std::path::PathBuf::from("/nonexistent/managed_policy.toml"),
+        node_identity: None,
+        os_user: OsUser::Known(u32::MAX),
+        input: &input,
+        clock: &|| NOW,
+        attended: false,
+        hook_budget: Some(LENIENT),
+        ancestry: own_harness,
+        live_limit: None,
+        query_deadline: None,
+    };
+    let mut err = Vec::new();
+
+    audit_index_gaps(&ctx, &ingested, &mut err);
+
+    let said = String::from_utf8(err).unwrap();
+    assert!(
+        said.starts_with("cairn ingest: audit the search index gaps: "),
+        "{said}"
     );
 }
 

@@ -1428,6 +1428,35 @@ fn a_fork_refused_twice_is_new_once() {
 }
 
 #[test]
+fn a_fork_that_cannot_be_recorded_fails_the_store_and_keeps_no_refusal() {
+    let (_da, mut a, _db, b) = two_histories(2, 3, 2);
+    a.conn
+        .execute_batch(&format!(
+            "{} CREATE TRIGGER refuse BEFORE INSERT ON fork_refusals
+             BEGIN SELECT RAISE(ABORT, 'refused'); END;",
+            refusal::SCHEMA
+        ))
+        .unwrap();
+
+    let err = a.refuse_forks(&links(&b, writer(1))).unwrap_err();
+
+    assert!(matches!(err, StoreError::Sqlite(_)), "{err}");
+    assert_eq!(a.refused_forks().unwrap(), vec![]);
+}
+
+#[test]
+fn refusals_that_cannot_be_read_fail_the_store() {
+    let dir = TempDir::new().unwrap();
+    let store = open(&dir);
+    store
+        .conn
+        .execute_batch("CREATE TABLE fork_refusals (unrelated TEXT)")
+        .unwrap();
+
+    assert!(matches!(store.refused_forks(), Err(StoreError::Sqlite(_))));
+}
+
+#[test]
 fn a_copy_of_the_same_history_refuses_nothing_and_makes_no_table() {
     let (_da, mut a, _db, b) = two_histories(3, 0, 2);
 
