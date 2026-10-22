@@ -14,10 +14,10 @@ its upgrade notes (ENG-23). ParleyInn follows semantic versioning.
   (`parinn-*`, `parinn.spdx.json`), its MCP server name and every
   command's name change, and so do the home (`~/.parinn`), `PARINN_HOME`
   and the other `PARINN_` variables, `parinn:` addresses, the
-  `ParleyInn-Room:` and `ParleyInn-Link:` trailers, `.parinn.toml` and
-  `logs/parinn.jsonl`. Scripts and hook entries that call `cairn` must
-  call `parinn`. No release shipped under the old name, so nothing is
-  migrated.
+  `ParleyInn-Room:`, `ParleyInn-Link:` and `ParleyInn-Session:`
+  trailers, `.parinn.toml` and `logs/parinn.jsonl`. Scripts and hook
+  entries that call `cairn` must call `parinn`. No release shipped under
+  the old name, so nothing is migrated.
 - Repository bootstrap: the SRS, one pending scenario per requirement,
   CI, a nightly fuzz job and the release pipeline. `parinn version` is
   the only command.

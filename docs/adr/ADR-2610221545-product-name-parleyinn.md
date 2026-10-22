@@ -74,4 +74,10 @@ migration, and the format versions stay at 1.
   none is known.
 - The stakeholder, jeduden, is the named human security reviewer. They
   accepted this record on 22 October 2026, which is ENG-29's approval for
-  the invariant and PRV-10 to PRV-13 edits.
+  the invariant and PRV-10 to PRV-13 edits. Their consenting comments on
+  [pull request 66][c1], [its second consent][c2] and
+  [the ruling on the on-disk labels][c3] are the evidence.
+
+[c1]: https://github.com/jeduden/cairn/pull/66#issuecomment-6344684337
+[c2]: https://github.com/jeduden/cairn/pull/66#issuecomment-6344690911
+[c3]: https://github.com/jeduden/cairn/pull/66#issuecomment-6344871015
