@@ -159,9 +159,9 @@ fn isolate_points_home_parinn_home_and_the_marker_at_the_home() {
     assert_eq!(
         envs,
         [
-            ("PARINN_BDD_HOME".to_owned(), "/tmp/h".to_owned()),
             ("CAIRN_HOME".to_owned(), "/tmp/h/.cairn".to_owned()),
             ("HOME".to_owned(), "/tmp/h".to_owned()),
+            ("PARINN_BDD_HOME".to_owned(), "/tmp/h".to_owned()),
         ]
     );
 }
