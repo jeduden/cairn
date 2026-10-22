@@ -1,15 +1,15 @@
 ---
 id: ADR-2610221545
 title: "The product is named ParleyInn and every spelling follows"
-status: proposed
+status: accepted
 summary: >-
   The invariants I1 to I10, PRV-10 to PRV-13 and the rest of the SRS name
   the product ParleyInn instead of Cairn. The executable, crate, home,
   environment variables, addresses, trailers, file names, on-disk labels
   and Keychain service follow as parinn or ParleyInn. No invariant or
   requirement changes meaning. There are no installations to migrate.
-  Setting the status to accepted records the security reviewer's
-  approval, as ENG-29 asks.
+  The stakeholder, jeduden, approved it as the named human security
+  reviewer on 22 October 2026, as ENG-29 asks.
 ---
 # ADR-2610221545: The product is named ParleyInn
 
@@ -72,5 +72,6 @@ migration, and the format versions stay at 1.
   section of CHANGELOG.md says so (ENG-23).
 - A home made under the old names is not read. No release has shipped, so
   none is known.
-- Status stays `proposed` until the named human security reviewer, the
-  stakeholder, approves. Setting it to `accepted` records that approval.
+- The stakeholder, jeduden, is the named human security reviewer. They
+  accepted this record on 22 October 2026, which is ENG-29's approval for
+  the invariant and PRV-10 to PRV-13 edits.
