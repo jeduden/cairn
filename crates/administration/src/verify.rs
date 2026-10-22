@@ -1,4 +1,4 @@
-//! `cairn verify`'s check of the record (ADM-08's first part), read from
+//! `parinn verify`'s check of the record (ADM-08's first part), read from
 //! one snapshot of the store and checked against this node's device key:
 //!
 //! - every writer's chain (REC-10) and every cited head;
@@ -59,7 +59,7 @@ pub struct Report {
     pub open_segments: Vec<Segment>,
 }
 
-/// A seat as `cairn verify` reports it: everything but its writer read
+/// A seat as `parinn verify` reports it: everything but its writer read
 /// from its seat certificate alone, never from its events (PRV-11).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SeatReport {
@@ -106,7 +106,7 @@ pub enum VerifyError {
     Seat { writer: WriterId, reason: String },
     /// This node's genesis does not check.
     Genesis(&'static str),
-    /// A segment is of a newer format version than this cairn's: it is
+    /// A segment is of a newer format version than this parinn's: it is
     /// refused and left as it is (ADM-05).
     NewerSegment(Segment),
     /// A writer's segments do not tile its log.
@@ -120,7 +120,7 @@ pub enum VerifyError {
 }
 
 impl VerifyError {
-    /// The failure's class, as `cairn verify --json` names it.
+    /// The failure's class, as `parinn verify --json` names it.
     #[must_use]
     pub fn class(&self) -> &'static str {
         match self {

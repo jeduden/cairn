@@ -23,8 +23,8 @@ Outcome:
 - NFR-02 holds: `@NFR-02` is off `@pending`. Each handler answers by
   its §9.1 budget on a thread of its own, else `hook_budget_exceeded`.
   Its start marker, left past its harness timeout, is counted once
-  (`hook_unfinished`) by the next hook handler, `cairn mcp` as it
-  starts, or `cairn status`.
+  (`hook_unfinished`) by the next hook handler, `parinn mcp` as it
+  starts, or `parinn status`.
 - REC-19's hold: no handler appends to a writer. `SessionStart` holds
   the session binding, `source`, worktree and process ancestry;
   `UserPromptSubmit` the `prompt_id`, the attended mark and a prompt
@@ -32,7 +32,7 @@ Outcome:
   binding untaken 30 s is counted once (`session_binding_not_taken`).
 - Phase 4's question: while a principal settings layer fails, a hook
   keeps its observation but drops the commitment, counted.
-- `cairn ingest` appends each held observation and each prompt match
+- `parinn ingest` appends each held observation and each prompt match
   as structural events of the device seat. A typed line is `user` once
   ancestry is observed, not nested. Conflicts, and matches without the
   attended mark in `interactive` mode, are counted. A fork observation
@@ -59,10 +59,10 @@ Inherited:
 - `ingest`: `observed`, `prompt`; `Inputs::interactive`; four new
   `Ingested` counts. Event kinds `hook_observation`, `prompt_match`;
   eight counters.
-- `cairn::hook_handlers`: `count_unfinished`, `count_untaken`;
+- `parinn::hook_handlers`: `count_unfinished`, `count_untaken`;
   `Context` gains `attended`, `hook_budget`, `ancestry`, `hook_hangs`.
-  Seams `CAIRN_TEST_CLOCK`, `CAIRN_TEST_HOOK_BUDGET_MS`,
-  `CAIRN_TEST_FAULT=hook-hang`.
+  Seams `PARINN_TEST_CLOCK`, `PARINN_TEST_HOOK_BUDGET_MS`,
+  `PARINN_TEST_FAULT=hook-hang`.
 - Steps in `record_hooks.rs`, `provenance_hooks.rs`,
   `security_hooks.rs`, `non_functional.rs`.
 

@@ -11,7 +11,7 @@ fn its_keys_are_files_in_its_keys_directory_on_this_os() {
 use testkit::TempDir;
 
 #[test]
-fn the_home_is_cairn_home_when_set_else_dot_cairn_in_home() {
+fn the_home_is_parinn_home_when_set_else_dot_parinn_in_home() {
     assert_eq!(
         Home::locate(Some(OsStr::new("/c")), Some(OsStr::new("/h")))
             .unwrap()
@@ -20,13 +20,13 @@ fn the_home_is_cairn_home_when_set_else_dot_cairn_in_home() {
     );
     assert_eq!(
         Home::locate(None, Some(OsStr::new("/h"))).unwrap().root(),
-        Path::new("/h/.cairn")
+        Path::new("/h/.parinn")
     );
     assert_eq!(
         Home::locate(Some(OsStr::new("")), Some(OsStr::new("/h")))
             .unwrap()
             .root(),
-        Path::new("/h/.cairn")
+        Path::new("/h/.parinn")
     );
 }
 
@@ -34,7 +34,7 @@ fn the_home_is_cairn_home_when_set_else_dot_cairn_in_home() {
 fn no_home_at_all_is_refused() {
     for home in [None, Some(OsStr::new(""))] {
         let err = Home::locate(None, home).unwrap_err();
-        assert_eq!(err.to_string(), "no home: set CAIRN_HOME or HOME");
+        assert_eq!(err.to_string(), "no home: set PARINN_HOME or HOME");
     }
 }
 
@@ -52,7 +52,7 @@ fn a_home_names_its_files() {
 #[test]
 fn create_makes_the_home_and_its_keys_directory_for_its_owner_alone() {
     let dir = TempDir::new().unwrap();
-    let home = Home::locate(Some(dir.path().join("a/.cairn").as_os_str()), None).unwrap();
+    let home = Home::locate(Some(dir.path().join("a/.parinn").as_os_str()), None).unwrap();
 
     home.create().unwrap();
     home.create().unwrap();
@@ -103,7 +103,7 @@ fn a_home_names_its_audit_log_and_its_home_id_binding() {
 /// A home made by `create`, with a file in it, readable only by this
 /// OS user.
 fn made_home(dir: &TempDir) -> Home {
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
     home.create().unwrap();
     owner_only_file(&home.store());
     home
@@ -298,13 +298,13 @@ fn a_bound_home_opens_only_for_its_own_home_id() {
     assert!(matches!(err, AdminError::HomeIdMismatch), "{err:?}");
     assert_eq!(
         err.to_string(),
-        "the home id CAIRN_HOME_ID supplies does not match the home's"
+        "the home id PARINN_HOME_ID supplies does not match the home's"
     );
     let err = home.check_home_id(None).unwrap_err();
     assert!(matches!(err, AdminError::HomeIdMissing), "{err:?}");
     assert_eq!(
         err.to_string(),
-        "the home is bound to a home id, and CAIRN_HOME_ID supplies none"
+        "the home is bound to a home id, and PARINN_HOME_ID supplies none"
     );
 }
 

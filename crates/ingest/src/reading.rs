@@ -31,7 +31,7 @@ use crate::{IngestError, Ingested, Inputs, RunReport, content, turn_end, well_fo
 
 /// Who records what an ingest reads, and in which seats.
 pub(crate) enum Recorder<'r> {
-    /// `cairn ingest`: each run in an ingest seat whose key the core
+    /// `parinn ingest`: each run in an ingest seat whose key the core
     /// keeps (REC-22).
     Cli,
     /// The harness session's MCP server: each run in a run seat whose
@@ -989,13 +989,13 @@ struct Seen<'s> {
     /// Whether the deployment mode is `interactive` (PRV-04).
     interactive: bool,
     /// Live, the hook observations the main run's run seat takes; none
-    /// when `cairn ingest` reads, which puts them in the device seat.
+    /// when `parinn ingest` reads, which puts them in the device seat.
     live: Option<Vec<&'s Held>>,
 }
 
 /// The hook observations a live ingest of the transcript whose main run
 /// is `main` appends to that run's run seat: those its harness session
-/// holds; none for `cairn ingest`.
+/// holds; none for `parinn ingest`.
 fn live_observations<'o>(
     observed: &'o Observed,
     defaults: &Defaults,

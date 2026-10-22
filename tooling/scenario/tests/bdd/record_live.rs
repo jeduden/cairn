@@ -3,11 +3,11 @@
 //! harness process ([`crate::live`]), takes only its own harness
 //! process's session binding, ingests its transcripts as they grow into
 //! its runs' run seats, and leaves an ingest marker when it stops short,
-//! from which the next MCP server or `cairn ingest` resumes; with `cairn
+//! from which the next MCP server or `parinn ingest` resumes; with `parinn
 //! ingest` reading the same transcript at once, every line is recorded
 //! once and each writer's `seq` stays gap-free.
 //!
-//! `@REC-06` stays pending: its purged range needs `cairn purge
+//! `@REC-06` stays pending: its purged range needs `parinn purge
 //! --range` (phase 14), so its first step fails naming it.
 
 use std::collections::BTreeMap;
@@ -186,7 +186,7 @@ fn other_binding(w: &mut World, name: String) -> Result<(), String> {
 )]
 fn server_starts_unbound(w: &mut World, count: u64, name: String) -> Result<(), String> {
     // The run stops at line 120, as the rows' stops ask.
-    let harness = Harness::start(w, true, &[("CAIRN_TEST_INGEST_LIMIT", "120")])?;
+    let harness = Harness::start(w, true, &[("PARINN_TEST_INGEST_LIMIT", "120")])?;
     live(w).harness = Some(harness);
     append_lines(&named(w, &name)?, count)?;
     // Several of its reads pass.
@@ -357,7 +357,7 @@ fn marker_records_remainder(w: &mut World) -> Result<(), String> {
 }
 
 #[then(
-    regex = r#"^(the next MCP server for "main-run"|"cairn ingest --all") resumes from the ingest marker, and the record then holds every line once$"#
+    regex = r#"^(the next MCP server for "main-run"|"parinn ingest --all") resumes from the ingest marker, and the record then holds every line once$"#
 )]
 fn resumes(w: &mut World, who: String) -> Result<(), String> {
     let main = named(w, "main-run")?;
@@ -374,7 +374,7 @@ fn resumes(w: &mut World, who: String) -> Result<(), String> {
         let out = last_run(w)?;
         if !out.status.success() {
             return Err(format!(
-                "cairn ingest --all exited {}: {}",
+                "parinn ingest --all exited {}: {}",
                 out.status,
                 String::from_utf8_lossy(&out.stderr)
             ));
@@ -390,7 +390,7 @@ fn resumes(w: &mut World, who: String) -> Result<(), String> {
 }
 
 #[then(
-    regex = r#"^(the MCP server|"cairn ingest --all", finding the marker,) audits the stop under a named counter that is not a failure counter, shown by "cairn status"$"#
+    regex = r#"^(the MCP server|"parinn ingest --all", finding the marker,) audits the stop under a named counter that is not a failure counter, shown by "parinn status"$"#
 )]
 fn stop_audited(w: &mut World, auditor: String) -> Result<(), String> {
     let operation = if auditor == "the MCP server" {
@@ -413,7 +413,7 @@ fn stop_audited(w: &mut World, auditor: String) -> Result<(), String> {
     if shown.contains("ingest_remainder_left") {
         return Ok(());
     }
-    Err(format!("cairn status does not show the stop:\n{shown}"))
+    Err(format!("parinn status does not show the stop:\n{shown}"))
 }
 
 #[when(
@@ -467,7 +467,7 @@ fn appended_and_purged(w: &mut World, name: String) -> Result<(), String> {
     make_run(w, &name, 20, None)?;
     run_core(w, &["ingest", "--all"], None)?;
     Err(
-        "the record holds seq 1 to 20; purging seq 5-9 awaits cairn purge --range, phase 14 of \
+        "the record holds seq 1 to 20; purging seq 5-9 awaits parinn purge --range, phase 14 of \
          plan 2609292012"
             .to_owned(),
     )
@@ -509,7 +509,7 @@ fn rolled_back(w: &mut World) -> Result<(), String> {
 }
 
 #[when(
-    regex = r#"^the person runs "cairn ingest --all" while the run's MCP server ingests "([^"]+)" concurrently$"#
+    regex = r#"^the person runs "parinn ingest --all" while the run's MCP server ingests "([^"]+)" concurrently$"#
 )]
 fn ingest_beside_server(w: &mut World, name: String) -> Result<(), String> {
     let path = named(w, &name)?;
@@ -519,7 +519,7 @@ fn ingest_beside_server(w: &mut World, name: String) -> Result<(), String> {
         run_core(w, &["ingest", "--all"], None)?;
         if !last_run(w)?.status.success() {
             return Err(format!(
-                "cairn ingest --all failed: {}",
+                "parinn ingest --all failed: {}",
                 String::from_utf8_lossy(&last_run(w)?.stderr)
             ));
         }
@@ -596,7 +596,7 @@ fn assigned_in_transaction(w: &mut World) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "cairn verify exited {}: {}",
+        "parinn verify exited {}: {}",
         out.status,
         String::from_utf8_lossy(&out.stdout)
     ))
@@ -606,7 +606,7 @@ fn assigned_in_transaction(w: &mut World) -> Result<(), String> {
 fn no_local_index(w: &mut World) -> Result<(), String> {
     let mut harness = Harness::start(w, true, &[])?;
     let mut refusals = Vec::new();
-    for address in ["1", "cairn:1", "#21"] {
+    for address in ["1", "parinn:1", "#21"] {
         let reply = harness.request(
             "tools/call",
             json!({"name": "event_get", "arguments": {"address": address, "scope": "room"}}),

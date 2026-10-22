@@ -11,7 +11,7 @@ use super::*;
 const SESSION: &str = "5e55a0de-0000-4000-8000-00000000000a";
 
 fn home(dir: &TempDir) -> Home {
-    Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap()
+    Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap()
 }
 
 fn redactor() -> Redactor {

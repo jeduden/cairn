@@ -115,7 +115,7 @@ impl ResidualRisk {
         match self {
             Self::R1 => "the agent types into the harness's own prompt to approve itself",
             Self::R2 => {
-                "the agent edits the harness's settings or hooks, or replaces Cairn's executables"
+                "the agent edits the harness's settings or hooks, or replaces ParleyInn's executables"
             }
             Self::R3 => {
                 "the agent writes to, deletes or rolls back the home, or signs with its keys"
@@ -396,7 +396,7 @@ impl fmt::Display for Refusal {
                 write!(
                     f,
                     "refused: these residual risks are open and no risk acceptance names them \
-                     (OWN-22); record one with cairn risk-acceptance record:\n{risks}\
+                     (OWN-22); record one with parinn risk-acceptance record:\n{risks}\
                      runs leaving them open, as no run records a sandbox state: {}",
                     runs.join(", ")
                 )

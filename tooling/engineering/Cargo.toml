@@ -27,8 +27,8 @@ testkit.workspace = true
 [lints]
 workspace = true
 
-# ENG-02: see crates/cairn/Cargo.toml.
-[package.metadata.cairn]
+# ENG-02: see crates/parinn/Cargo.toml.
+[package.metadata.parinn]
 responsibility = "Checks the repository against the requirements of SRS section 10 for the bound scenarios"
 may-depend-on = ["adr", "benchmark", "calibrate", "drift", "review-gate", "scenario", "srs"]
 may-dev-depend-on = ["testkit"]

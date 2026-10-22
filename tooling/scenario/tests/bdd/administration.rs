@@ -1,5 +1,5 @@
 //! The steps of SRS §5.1a, administration (ADM). `@ADM-04`'s rows are
-//! bound here: a settings layer that fails validation fails `cairn
+//! bound here: a settings layer that fails validation fails `parinn
 //! status`, naming the key and the problem; a widening setting stands
 //! until a widening principal act accepts it; a repository
 //! configuration's widening key is ignored and counted; managed policy
@@ -23,7 +23,7 @@ use crate::record::{MANAGED_POLICY, home, last_run, run_core};
 const TRANSCRIPT: &str = "testdata/claude-code/2.1.296/transcripts/projects/-w-my-app/686aa14f-b535-45bc-9ed0-5400ea84bec7.jsonl";
 
 /// What the administration steps track: the lines the agent's run left,
-/// the events `cairn ingest` recorded of them, and its refusal when it
+/// the events `parinn ingest` recorded of them, and its refusal when it
 /// refused.
 #[derive(Debug, Default)]
 pub struct AdministrationSteps {
@@ -41,12 +41,12 @@ fn adm(w: &mut World) -> &mut AdministrationSteps {
 pub fn configure(w: &World, text: &str) -> Result<(), String> {
     let home = crate::record::home(w)?;
     home.create().map_err(|e| e.to_string())?;
-    let path = w.cairn_home.join("config.toml");
+    let path = w.parinn_home.join("config.toml");
     fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
     fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).map_err(|e| e.to_string())
 }
 
-/// An agent's run: the core ingests its transcript, as `cairn ingest`
+/// An agent's run: the core ingests its transcript, as `parinn ingest`
 /// does, and the step keeps how many lines it left and how many events
 /// were recorded; it fails when the ingest does.
 pub fn agent_runs(w: &mut World) -> Result<(), String> {
@@ -69,7 +69,7 @@ fn agent_runs_or_refused(w: &mut World) -> Result<(), String> {
     let lines = text.lines().count();
     if !out.status.success() {
         let refused = format!(
-            "cairn ingest exited {}: {}",
+            "parinn ingest exited {}: {}",
             out.status,
             String::from_utf8_lossy(&out.stderr).trim()
         );
@@ -89,13 +89,13 @@ fn config_containing(w: &mut World, setting: String) -> Result<(), String> {
     configure(w, &format!("{setting}\n"))
 }
 
-/// A repository holding the scenario's home: `.cairn.toml` beside a
+/// A repository holding the scenario's home: `.parinn.toml` beside a
 /// `.git` at its top, the working directory every command starts in.
-#[given(regex = r#"^a repository "\.cairn\.toml" containing "([^"]*)"$"#)]
+#[given(regex = r#"^a repository "\.parinn\.toml" containing "([^"]*)"$"#)]
 fn repository_containing(w: &mut World, setting: String) -> Result<(), String> {
     let git = w.home.join(".git");
     fs::create_dir_all(&git).map_err(|e| format!("{}: {e}", git.display()))?;
-    let path = w.home.join(".cairn.toml");
+    let path = w.home.join(".parinn.toml");
     fs::write(&path, format!("{setting}\n")).map_err(|e| format!("{}: {e}", path.display()))
 }
 
@@ -106,7 +106,7 @@ fn writable_managed_policy(w: &mut World, setting: String) -> Result<(), String>
     fs::write(&path, format!("{setting}\n")).map_err(|e| format!("{}: {e}", path.display()))
 }
 
-#[when(regex = r#"^an agent runs and the person starts "cairn ([^"]+)"$"#)]
+#[when(regex = r#"^an agent runs and the person starts "parinn ([^"]+)"$"#)]
 fn agent_runs_and_person_starts(w: &mut World, args: String) -> Result<(), String> {
     agent_runs_or_refused(w)?;
     let args: Vec<&str> = args.split_whitespace().collect();
@@ -114,7 +114,7 @@ fn agent_runs_and_person_starts(w: &mut World, args: String) -> Result<(), Strin
 }
 
 #[then(
-    regex = r#"^"cairn [^"]+" exits (\d+), and the error names the key "([^"]+)" and the problem "([^"]+)"$"#
+    regex = r#"^"parinn [^"]+" exits (\d+), and the error names the key "([^"]+)" and the problem "([^"]+)"$"#
 )]
 fn exits_naming(w: &mut World, code: i32, key: String, problem: String) -> Result<(), String> {
     let out = last_run(w)?;
@@ -131,19 +131,19 @@ fn exits_naming(w: &mut World, code: i32, key: String, problem: String) -> Resul
 }
 
 #[then(
-    regex = r#"^"cairn [^"]+" exits 0, shows deployment mode "([^"]+)" and "([^"]+)" awaiting acceptance: it stands as it stood until a widening principal act records that file's digest$"#
+    regex = r#"^"parinn [^"]+" exits 0, shows deployment mode "([^"]+)" and "([^"]+)" awaiting acceptance: it stands as it stood until a widening principal act records that file's digest$"#
 )]
 fn shows_awaiting(w: &mut World, mode: String, key: String) -> Result<(), String> {
     let shown = succeeded(w)?;
     let lines = [
         format!("deployment mode: {mode}"),
-        format!("awaiting acceptance (cairn configuration accept): {key}"),
+        format!("awaiting acceptance (parinn configuration accept): {key}"),
     ];
     shows_lines(&shown, &lines)
 }
 
 #[then(
-    regex = r#"^"cairn [^"]+" exits 0, shows deployment mode "([^"]+)" and counts "([^"]+)": repository configuration only tightens$"#
+    regex = r#"^"parinn [^"]+" exits 0, shows deployment mode "([^"]+)" and counts "([^"]+)": repository configuration only tightens$"#
 )]
 fn shows_ignored(w: &mut World, mode: String, counter: String) -> Result<(), String> {
     let shown = succeeded(w)?;
@@ -152,7 +152,7 @@ fn shows_ignored(w: &mut World, mode: String, counter: String) -> Result<(), Str
 }
 
 #[then(
-    regex = r#"^"cairn [^"]+" exits 0, shows managed policy refused as writable by the person's OS user and counts "([^"]+)"$"#
+    regex = r#"^"parinn [^"]+" exits 0, shows managed policy refused as writable by the person's OS user and counts "([^"]+)"$"#
 )]
 fn shows_managed_refused(w: &mut World, counter: String) -> Result<(), String> {
     let shown = succeeded(w)?;
@@ -190,7 +190,7 @@ fn shows_lines(shown: &str, lines: &[String]) -> Result<(), String> {
     }
 }
 
-/// Checks `cairn status`'s counters line counts `counter` at least once.
+/// Checks `parinn status`'s counters line counts `counter` at least once.
 fn counted(shown: &str, counter: &str) -> Result<(), String> {
     let line = shown
         .lines()

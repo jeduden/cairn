@@ -57,7 +57,7 @@ fn bytes(dir: &Path) -> u64 {
 #[test]
 fn the_record_holds_every_recorded_transcript_within_1_5_times_its_stored_text() {
     let dir = TempDir::new().unwrap();
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap();
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap();
     let mut found = Vec::new();
     transcripts(
         &testkit::repo_root().join("testdata/claude-code/2.1.296/transcripts"),

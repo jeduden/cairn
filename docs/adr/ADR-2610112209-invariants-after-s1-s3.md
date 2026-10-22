@@ -18,7 +18,7 @@ Spikes S1 and S3 recorded Claude Code 2.1.296's hook contract and
 transcripts. On 11 October 2026 the stakeholder ruled on their findings
 (OQ-51):
 
-- Cairn installs only the hooks through which it writes to an agent.
+- ParleyInn installs only the hooks through which it writes to an agent.
   The harness session's MCP server records each run from its transcripts
   (REC-13), so no hook handler records `user` or `harness_meta` events
   any more.
@@ -108,7 +108,7 @@ approval ENG-29 asks for, and it can be checked apart from this record.
   smallest wording change, but trust would rest on a file the agent can
   write to through its tools. The stakeholder chose the match.
 - **Keep a hook that records `user` events.** That contradicts the
-  ruling that Cairn installs only the hooks through which it writes.
+  ruling that ParleyInn installs only the hooks through which it writes.
 - **Leave I3 and treat the omission as a budget omission.** The reviews
   would keep flagging it, and the reason for an omission would not be
   stated.
@@ -117,12 +117,12 @@ approval ENG-29 asks for, and it can be checked apart from this record.
 
 - **Fail closed until OQ-40.** An agent of the same OS user can append
   transcript lines, run a hook handler with an input it made, and write the
-  Cairn home, so no transcript line, hook observation or unsigned sandbox state
-  is unforgeable for it (§6.1, R3 and R8). Until sandbox states are signed out
-  of the agent's reach, which needs the launcher (M7) and OQ-40, no `user` event
-  is trusted: PIN-05 finds no pin candidates, and a compaction stays ambiguous
-  from a subagent's start to the end of its harness session (INJ-05). Pins still
-  restore, since they come from principal acts.
+  ParleyInn home, so no transcript line, hook observation or unsigned sandbox
+  state is unforgeable for it (§6.1, R3 and R8). Until sandbox states are signed
+  out of the agent's reach, which needs the launcher (M7) and OQ-40, no `user`
+  event is trusted: PIN-05 finds no pin candidates, and a compaction stays
+  ambiguous from a subagent's start to the end of its harness session (INJ-05).
+  Pins still restore, since they come from principal acts.
 - **Small cost where rooms match.** Where every candidate run qualifies for the
   same pins, an ambiguous compaction loses only the landmark index.
 - **Seals.** Before seals ship (REC-18, M7), any record in a home the agent can

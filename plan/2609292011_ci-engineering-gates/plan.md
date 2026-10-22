@@ -30,7 +30,7 @@ them. CI already gates on:
   starts, clocks and hash collections, held to every crate under
   `crates/` by the gate tests `the_product_crates_keep_their_bans`
   and `no_product_crate_keeps_mutable_global_state`
-- the core's reach test, `crates/cairn/tests/reach.rs`, which refuses
+- the core's reach test, `crates/parinn/tests/reach.rs`, which refuses
   any crate linked into it
 - the testkit's `isolate` and the scenario runner's `is_isolated`,
   which point every process a test starts at a temporary home

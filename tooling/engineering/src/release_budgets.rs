@@ -30,7 +30,7 @@ const DEBUG_CORE: [&str; 6] = [
     "run_core_with(",
     "run_core_killed(",
     "run_core_at_terminal(",
-    "CARGO_BIN_EXE_cairn",
+    "CARGO_BIN_EXE_parinn",
 ];
 
 /// What starts the release build of the core in a step.

@@ -42,7 +42,7 @@ cargo.binstall = false
 "aqua:sigstore/cosign" = "3.0.6"
 
 [tasks.test]
-run = ["cargo build --release --locked -p cairn -p calibrate", "cargo test --workspace --locked"]
+run = ["cargo build --release --locked -p parinn -p calibrate", "cargo test --workspace --locked"]
 
 [tasks.lint]
 run = ["cargo fmt --all --check", "cargo clippy --workspace --all-targets --locked -- -D warnings", "taplo fmt --check", "taplo lint", "mdsmith check .", "zizmor .github"]
@@ -57,7 +57,7 @@ run = "cargo run --locked -p coverage"
 run = "cargo test --locked -p drift --test suite -- --ignored"
 
 [tasks.core]
-run = "cargo run --locked -p cairn --"
+run = "cargo run --locked -p parinn --"
 
 [tasks.scenarios]
 run = "cargo test --locked -p scenario --test bdd --"
@@ -66,7 +66,7 @@ run = "cargo test --locked -p scenario --test bdd --"
 run = ["cargo test --locked -p srs --test gates", "cargo test --locked -p scenario --test gate"]
 
 [tasks.benchmark]
-run = ["cargo build --release --locked -p cairn", 'cargo run --release --locked -p benchmark -- run --core "${CARGO_TARGET_DIR:-target}/release/cairn"']
+run = ["cargo build --release --locked -p parinn", 'cargo run --release --locked -p benchmark -- run --core "${CARGO_TARGET_DIR:-target}/release/parinn"']
 
 [tasks.benchmark-gate]
 run = "cargo run --locked -p benchmark -- gate"

@@ -130,9 +130,9 @@ pub enum StoreError {
     /// The store file can be read by others: its mode, refused rather
     /// than quietly fixed (SEC-02).
     Permissions { mode: u32 },
-    /// The store is of a newer schema version than this cairn's.
+    /// The store is of a newer schema version than this parinn's.
     Newer { found: u32 },
-    /// The store records a header field set or encoding this cairn does
+    /// The store records a header field set or encoding this parinn does
     /// not write, so its hashes would not check here.
     Format { key: String, found: String },
     /// A stored value does not parse; the event it belongs to, if any.
@@ -144,7 +144,7 @@ pub enum StoreError {
     Encoding(canonical::Error),
     /// A writer has used every seq.
     Full(WriterId),
-    /// A segment is of a newer format version than this cairn's: it is
+    /// A segment is of a newer format version than this parinn's: it is
     /// refused and left as it is (ADM-05).
     NewerSegment(Segment),
     /// The payload of the event at `address` cannot be written or read.
@@ -157,7 +157,7 @@ pub enum StoreError {
     /// are recorded already: the append is refused whole, for the caller
     /// to read the source again (REC-06, REC-13).
     PositionMoved { source: i64 },
-    /// The store has no search index: one a cairn that never wrote to
+    /// The store has no search index: one a parinn that never wrote to
     /// it made.
     NoIndex,
     /// A search ran past its deadline and was cancelled (SEC-04).
@@ -175,11 +175,11 @@ impl fmt::Display for StoreError {
             ),
             Self::Newer { found } => write!(
                 f,
-                "the store is schema version {found}, newer than this cairn's {SCHEMA_VERSION}"
+                "the store is schema version {found}, newer than this parinn's {SCHEMA_VERSION}"
             ),
             Self::Format { key, found } => write!(
                 f,
-                "the store records {key} {found:?}, which this cairn does not write"
+                "the store records {key} {found:?}, which this parinn does not write"
             ),
             Self::Corrupt {
                 address: Some(a),
@@ -193,7 +193,7 @@ impl fmt::Display for StoreError {
             Self::Full(w) => write!(f, "writer {w} has no seq left"),
             Self::NewerSegment(s) => write!(
                 f,
-                "{s} is format version {}, newer than this cairn's {SEGMENT_VERSION}",
+                "{s} is format version {}, newer than this parinn's {SEGMENT_VERSION}",
                 s.format_version
             ),
             Self::Payload { address, source } => {
@@ -459,7 +459,7 @@ impl Store {
 
     /// Gives a store the search index it lacks, or holds out of step with
     /// its record, derived from the record (REC-11, I10): its file
-    /// deleted, one a cairn before the index made, or one a crash between
+    /// deleted, one a parinn before the index made, or one a crash between
     /// the two files' commits left behind.
     fn ensure_index(&self) -> Result<(), StoreError> {
         if search_index::exists(&self.conn)? && self.index_is_current()? {
@@ -648,7 +648,7 @@ impl Store {
     }
 
     /// Checks the store's schema version, header field set and encoding
-    /// against this cairn's (§8.3, ADM-05).
+    /// against this parinn's (§8.3, ADM-05).
     fn check_format(&self) -> Result<(), StoreError> {
         let version: String = self.conn.query_row(VERSION, [], |r| r.get(0))?;
         let found: u32 = version.parse().map_err(|_| StoreError::Corrupt {
@@ -948,7 +948,7 @@ impl Store {
         self.select_segments("WHERE closed = 0 AND ?1 = ?1 AND ?2 = ?2", "")
     }
 
-    /// Every segment of a newer format version than this cairn's, by
+    /// Every segment of a newer format version than this parinn's, by
     /// writer (ADM-05).
     ///
     /// # Errors

@@ -7,7 +7,7 @@ summary: >-
   The core keeps each key in an entry named per home: on macOS in the
   Keychain through security-framework, on Windows in a file DPAPI
   protects through windows-sys in the platform crate (once the dpapi shim),
-  the one crate with unsafe code, which Miri checks; on Linux in a 0600 file, and cairn
+  the one crate with unsafe code, which Miri checks; on Linux in a 0600 file, and parinn
   status says so. The stakeholder's ruling 2 of 14 October 2026.
 ---
 # ADR-2610171300: Key stores
@@ -17,7 +17,7 @@ summary: >-
 SEC-10 keeps the device key, the recovery key and every seat key the
 core holds in a platform key store the core reaches from inside the
 core, with no socket and no program start, where one exists; else in a
-file only the principal's OS user can read, and `cairn status` says
+file only the principal's OS user can read, and `parinn status` says
 when a key is such a file. Each key sits in an entry named per home, so
 two homes of one OS user never share a key. PRV-12 tells a missing key
 apart from a key store that is locked or cannot be read: only the first
@@ -34,10 +34,10 @@ here.
 
 | Module               | Purpose                                                                                                  | License           | Maintenance                                                                 |
 | -------------------- | -------------------------------------------------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------- |
-| `security-framework` | Keeps each key as a generic password of the service `cairn` in the user's macOS Keychain                 | MIT OR Apache-2.0 | Active; kornelski, the bindings most macOS Rust crates use for the Keychain |
+| `security-framework` | Keeps each key as a generic password of the service `parinn` in the user's macOS Keychain                | MIT OR Apache-2.0 | Active; kornelski, the bindings most macOS Rust crates use for the Keychain |
 | `windows-sys`        | Declares DPAPI's `CryptProtectData` and `CryptUnprotectData`, `LocalFree` and `GetLastError` for Windows | MIT OR Apache-2.0 | Active; Microsoft, generated from Windows' own metadata                     |
 
-- **macOS.** Each key is a generic password of the service `cairn`,
+- **macOS.** Each key is a generic password of the service `parinn`,
   its account named `home-<digest>/<entry>`, the digest taken over the
   home's path, so two homes never share an entry. `security-framework`
   goes in without default features: the TLS ones are off. Its `unsafe`
@@ -57,7 +57,7 @@ here.
   keys directory. The Secret Service needs D-Bus, a socket the core may
   not open (I4), and the kernel keyring does not survive a reboot. A
   key file an unsandboxed agent of the same OS user could read is what
-  `cairn status` names.
+  `parinn status` names.
 
 Both crates are target-specific dependencies: `security-framework`
 links only on macOS, `windows-sys` only on Windows.

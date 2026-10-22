@@ -2,13 +2,13 @@
 //! 2609292012 carries: content above the payload threshold goes to the
 //! payload store under a name that confirms no guess, transcript lines
 //! are appended in transcript order with their transcript timestamps
-//! kept as metadata, `cairn verify` and `cairn status` report each
-//! writer chain ended without a closed segment, and `cairn status`
+//! kept as metadata, `parinn verify` and `parinn status` report each
+//! writer chain ended without a closed segment, and `parinn status`
 //! exits 3 on a store of a newer schema version, leaving it unchanged.
 //!
-//! `@REC-12` stays pending: its last step runs `cairn event expand`,
+//! `@REC-12` stays pending: its last step runs `parinn event expand`,
 //! the principal's recall (phase 13). `@REC-19`'s other steps need the
-//! live MCP server (phase 10) and seals (M7); `@ADM-05`'s `cairn
+//! live MCP server (phase 10) and seals (M7); `@ADM-05`'s `parinn
 //! migrate` and its backup are M3's. Those steps are unbound.
 
 use std::fs;
@@ -388,7 +388,7 @@ impl Entropy for Seeded {
 /// The writer id and chain head an ingest of `transcript` gives in a
 /// fresh home under `dir`, its random source seeded with `seed`.
 fn seeded_ingest(dir: &Path, transcript: &Path, seed: u64) -> Result<(WriterId, Digest), String> {
-    let home = administration::home::Home::locate(Some(dir.join(".cairn").as_os_str()), None)
+    let home = administration::home::Home::locate(Some(dir.join(".parinn").as_os_str()), None)
         .map_err(|e| e.to_string())?;
     let redactor = redaction::Redactor::new(&[]).map_err(|e| e.to_string())?.0;
     let ingested = ingest::ingest_path(&home, transcript, &redactor, &mut Seeded(seed))
@@ -457,7 +457,7 @@ fn ended_open(w: &mut World) -> Result<(), String> {
 }
 
 #[then(
-    regex = r#"^"cairn verify" and "cairn status" each report the other writer's chain as ended without a closed segment$"#
+    regex = r#"^"parinn verify" and "parinn status" each report the other writer's chain as ended without a closed segment$"#
 )]
 fn reported_open(w: &mut World) -> Result<(), String> {
     let writer = steps(w)
@@ -471,13 +471,13 @@ fn reported_open(w: &mut World) -> Result<(), String> {
         run_core(w, &args, None)?;
         let out = last_run(w)?;
         let report: Value =
-            serde_json::from_slice(&out.stdout).map_err(|e| format!("cairn {}: {e}", args[0]))?;
+            serde_json::from_slice(&out.stdout).map_err(|e| format!("parinn {}: {e}", args[0]))?;
         let named = report
             .pointer(pointer)
             .and_then(Value::as_array)
             .is_some_and(|open| open.iter().any(|s| s["writer"] == writer.as_str()));
         if !out.status.success() || !named {
-            return Err(format!("cairn {} reports {report}", args[0]));
+            return Err(format!("parinn {} reports {report}", args[0]));
         }
     }
     Ok(())

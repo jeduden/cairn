@@ -1,5 +1,5 @@
 # The Cargo workspace (ENG-02): the product's crates under crates/,
-# the `cairn` core executable and the library crates it links, and the
+# the `parinn` core executable and the library crates it links, and the
 # repository tooling under tooling/. The product's other crates join it
 # as their plans land.
 #

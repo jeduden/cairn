@@ -14,7 +14,7 @@ pub use crate::digest::hmac_sha256;
 use crate::digest::{Digest, HexError, hex, unhex};
 
 /// The label every commitment's message starts with.
-const LABEL: &[u8] = b"cairn commitment v1\0";
+const LABEL: &[u8] = b"parinn commitment v1\0";
 
 /// An event's commitment key: 256 random bits the caller draws. It
 /// never shows in `Debug`, so no log can leak it.

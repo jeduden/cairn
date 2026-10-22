@@ -22,7 +22,7 @@ T2), and so is a pattern a principal pastes in, so matching must stay
 linear in the input whatever the pattern. Phase 4 of plan
 [2609292012](../../plan/2609292012_m1-record-and-recall/plan.md)
 builds redaction. The stakeholder chose this crate over a matcher of
-Cairn's own on 16 October 2026.
+ParleyInn's own on 16 October 2026.
 
 ## Decision
 
@@ -40,7 +40,7 @@ and counted, and the rest still apply.
 
 ## Alternatives
 
-- **A matcher of Cairn's own.** A linear-time subset with no
+- **A matcher of ParleyInn's own.** A linear-time subset with no
   dependency, but parser and automaton code the core must fuzz and
   keep correct, where a miss leaves a secret in the append-only
   record.

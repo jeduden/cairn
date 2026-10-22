@@ -1,5 +1,5 @@
 //! ENG-07, SEC-16: the hook input decoder on hostile hook inputs. Each
-//! input is decoded as every hook Cairn installs decodes it: held to
+//! input is decoded as every hook ParleyInn installs decodes it: held to
 //! its limits, parsed, checked against the schema and the recorded hook
 //! input shapes. The decoder must never panic, and every input gets
 //! exactly one outcome.

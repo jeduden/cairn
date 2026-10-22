@@ -5,8 +5,8 @@ use testkit::TempDir;
 #[test]
 fn a_release_benchmark_build_and_run_pass() {
     let text = "\
-      - run: cargo build --release --locked -p benchmark -p cairn
-      - run: target/release/benchmark run --core target/release/cairn
+      - run: cargo build --release --locked -p benchmark -p parinn
+      - run: target/release/benchmark run --core target/release/parinn
       - run: cargo run --release -p benchmark -- gate --base a --head b
 ";
 
@@ -15,7 +15,7 @@ fn a_release_benchmark_build_and_run_pass() {
 
 #[test]
 fn a_benchmark_build_without_release_is_named_with_its_line() {
-    let text = "name: x\n      - run: cargo build --locked -p benchmark -p cairn\n";
+    let text = "name: x\n      - run: cargo build --locked -p benchmark -p parinn\n";
 
     assert_eq!(
         debug_benchmark_lines("ci.yml", text),
@@ -38,7 +38,7 @@ fn every_cargo_verb_that_builds_the_suite_needs_release() {
 
 #[test]
 fn a_benchmark_pointed_at_a_debug_core_is_named() {
-    let text = "benchmark run --core target/debug/cairn --samples 3\n";
+    let text = "benchmark run --core target/debug/parinn --samples 3\n";
 
     assert_eq!(
         debug_benchmark_lines("nightly.yml", text),
@@ -50,9 +50,9 @@ fn a_benchmark_pointed_at_a_debug_core_is_named() {
 fn a_comment_and_other_packages_are_left_alone() {
     let text = "\
 # cargo build -p benchmark is the debug build
-cargo build -p cairn
+cargo build -p parinn
 cargo test --workspace --locked
-echo target/debug/cairn
+echo target/debug/parinn
 ";
 
     assert!(debug_benchmark_lines("ci.yml", text).is_empty());

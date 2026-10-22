@@ -129,7 +129,7 @@ fn a_store_of_a_newer_version_is_refused_and_named() {
     assert!(matches!(err, StoreError::Newer { found: 2 }), "{err}");
     assert_eq!(
         err.to_string(),
-        "the store is schema version 2, newer than this cairn's 1"
+        "the store is schema version 2, newer than this parinn's 1"
     );
 }
 
@@ -568,7 +568,7 @@ fn a_store_whose_header_field_set_or_encoding_differs_is_refused() {
         );
         assert_eq!(
             err.to_string(),
-            format!("the store records {key} \"other\", which this cairn does not write")
+            format!("the store records {key} \"other\", which this parinn does not write")
         );
     }
 }
@@ -1025,7 +1025,7 @@ fn a_segment_of_a_newer_format_version_is_refused_named_and_left_unchanged() {
         assert_eq!(
             err.to_string(),
             format!(
-                "the segment of writer {} from seq 4 to 5 is format version 2, newer than this cairn's 1",
+                "the segment of writer {} from seq 4 to 5 is format version 2, newer than this parinn's 1",
                 writer(1)
             )
         );

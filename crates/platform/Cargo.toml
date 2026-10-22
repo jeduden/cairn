@@ -30,8 +30,8 @@ excessive_nesting = "deny"
 fn_params_excessive_bools = "deny"
 undocumented_unsafe_blocks = "deny"
 
-# ENG-02: see crates/cairn/Cargo.toml.
-[package.metadata.cairn]
+# ENG-02: see crates/parinn/Cargo.toml.
+[package.metadata.parinn]
 responsibility = "Reads the host's node identity and protects a key's bytes for the running OS user, through the native calls only this crate may make"
 may-depend-on = []
 may-dev-depend-on = []

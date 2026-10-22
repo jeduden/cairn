@@ -1,5 +1,5 @@
 //! NFR-03's search latency, the evidence behind the bounded ranking
-//! (S2, RCL-02): a store of events (default 1,000,000; `CAIRN_SEARCH_EVENTS`
+//! (S2, RCL-02): a store of events (default 1,000,000; `PARINN_SEARCH_EVENTS`
 //! sets another number), each searched for a word nearly every event
 //! holds, a word a third of them hold and a word one in a thousand
 //! holds. The test is `#[ignore]` because it builds a large store; run
@@ -34,7 +34,7 @@ fn room() -> RoomId {
 }
 
 fn events() -> u64 {
-    std::env::var("CAIRN_SEARCH_EVENTS")
+    std::env::var("PARINN_SEARCH_EVENTS")
         .ok()
         .and_then(|n| n.parse().ok())
         .unwrap_or(1_000_000)

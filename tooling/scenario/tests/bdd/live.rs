@@ -1,6 +1,6 @@
 //! A stand-in harness process for the steps that need a live MCP
 //! server: a script named `claude`, started confined to the core's
-//! boundary (ENG-12), that starts `cairn mcp` as its child, its
+//! boundary (ENG-12), that starts `parinn mcp` as its child, its
 //! standard input and output the script's, and runs each hook handler
 //! a step asks for as another child, so the hook handlers and the MCP
 //! server share one harness process, as Claude Code's do (REC-13).
@@ -131,7 +131,7 @@ impl Harness {
             "initialize",
             json!({"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "claude-code", "version": "2.1.296"}}),
         )?;
-        if reply["result"]["serverInfo"]["name"] != "cairn" {
+        if reply["result"]["serverInfo"]["name"] != "parinn" {
             return Err(format!("the MCP server answered initialize with {reply}"));
         }
         self.notify("notifications/initialized")

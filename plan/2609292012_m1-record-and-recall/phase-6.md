@@ -33,15 +33,15 @@ Segments and format versions (REC-19, ADM-05, ruling 3):
   changes with it (REC-25). Each append extends the writer's open
   segment or opens one at its next `seq`.
 - A core append closes the segment it ends, in the same transaction.
-  `cairn ingest` closes one at each turn end and subagent end its
+  `parinn ingest` closes one at each turn end and subagent end its
   transcripts record and at the end of each transcript; a writer may
   also append and leave its segment open, for phase 10's MCP server.
-- `cairn verify` checks the segments tile each writer's log, and
-  `cairn verify` and `cairn status` report every writer chain ended
+- `parinn verify` checks the segments tile each writer's log, and
+  `parinn verify` and `parinn status` report every writer chain ended
   without a closed segment.
 - The store's version is checked before any write. A store or segment
-  of a newer version is refused and named and left unchanged: `cairn
-  status` and `cairn verify` exit 3, other commands refuse.
+  of a newer version is refused and named and left unchanged: `parinn
+  status` and `parinn verify` exit 3, other commands refuse.
 
 Transcript order (REC-12): events are appended in transcript order.
 A line's transcript timestamp, when well formed, is kept as metadata.
@@ -51,8 +51,8 @@ Properties and crash consistency:
 
 - ENG-08: random appends, rollbacks, payloads, closes and concurrent
   writers keep each writer's `seq` gap-free.
-- ENG-06: a test kills `cairn ingest` at random points, then checks
-  `cairn verify` exits 0. CI runs a few iterations; a nightly job runs
+- ENG-06: a test kills `parinn ingest` at random points, then checks
+  `parinn verify` exits 0. CI runs a few iterations; a nightly job runs
   10,000. A first start cut short verifies against its staged key.
 
 Freezes (§12.3): NFR-09's store overhead, measured over every recorded
@@ -62,12 +62,12 @@ Removing their † and rows is an SRS change, for the stakeholder.
 Where the gate's scenarios go live:
 
 - `@REC-09`: here.
-- `@REC-12`: its last step runs `cairn event expand`, the principal's
+- `@REC-12`: its last step runs `parinn event expand`, the principal's
   recall (phase 13). Raised; its other steps bound and passing.
 - `@REC-19`: its segment steps bound and passing narrowed; the rest
   needs the live MCP server (phase 10) and seals (M7).
-- `@ADM-05`: `cairn migrate` and its backup are M3's; the refusal of a
-  newer store by `cairn status` bound and passing narrowed.
+- `@ADM-05`: `parinn migrate` and its backup are M3's; the refusal of a
+  newer store by `parinn status` bound and passing narrowed.
 - `@ENG-06` and `@ENG-08`: purge, migration and rebuild, and the other
   properties, come later; the ingest half and the first property here.
 

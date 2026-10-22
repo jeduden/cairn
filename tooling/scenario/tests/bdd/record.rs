@@ -1,9 +1,9 @@
 //! The steps of SRS §5.1, the record (REC). `@REC-10` is bound: each
 //! writer's hash chain, its header and the causal order its cited
 //! heads give. The steps every record scenario shares are here too: an
-//! isolated home, and the person running a `cairn` command, which
+//! isolated home, and the person running a `parinn` command, which
 //! starts the built core executable confined to its boundary (ENG-12)
-//! with `HOME` and `CAIRN_HOME` in the scenario's own home (ENG-14).
+//! with `HOME` and `PARINN_HOME` in the scenario's own home (ENG-14).
 //!
 //! A record a scenario needs before its command runs is built through
 //! the product crates directly, as the core itself would build it.
@@ -37,7 +37,7 @@ pub struct RecordSteps {
     /// the wall-clock time its transcript gave each of its events.
     writers: Vec<(WriterId, Vec<String>)>,
     /// Variables a step set in the environment of every command the
-    /// scenario starts after it, beside `HOME` and `CAIRN_HOME`.
+    /// scenario starts after it, beside `HOME` and `PARINN_HOME`.
     env: Vec<(String, String)>,
 }
 
@@ -47,7 +47,7 @@ fn rec(w: &mut World) -> &mut RecordSteps {
 
 /// The scenario's home, as the core finds it.
 pub fn home(w: &World) -> Result<Home, String> {
-    Home::locate(Some(w.cairn_home.as_os_str()), None).map_err(|e| e.to_string())
+    Home::locate(Some(w.parinn_home.as_os_str()), None).map_err(|e| e.to_string())
 }
 
 /// The node's first start in the scenario's home, as the core makes
@@ -60,12 +60,12 @@ pub fn first_start(w: &World) -> Result<Home, String> {
     Ok(home)
 }
 
-#[given(regex = r"^an isolated Cairn home$")]
+#[given(regex = r"^an isolated ParleyInn home$")]
 fn isolated_home(w: &mut World) -> Result<(), String> {
-    if !w.cairn_home.starts_with(&w.home) || w.cairn_home.exists() {
+    if !w.parinn_home.starts_with(&w.home) || w.parinn_home.exists() {
         return Err(format!(
-            "the Cairn home {} is not a fresh one inside the scenario's home",
-            w.cairn_home.display()
+            "the ParleyInn home {} is not a fresh one inside the scenario's home",
+            w.parinn_home.display()
         ));
     }
     Ok(())
@@ -202,14 +202,14 @@ pub fn run_core_at_terminal(w: &mut World, args: &[&str]) -> Result<(), String> 
 }
 
 /// The environment a command starts with beside `HOME` and
-/// `CAIRN_HOME`: managed policy read from inside the scenario's home,
+/// `PARINN_HOME`: managed policy read from inside the scenario's home,
 /// never the machine's (ENG-14), a hook budget no development build
 /// reaches on a loaded machine unless a step sets the hook's own
 /// (NFR-02), then what the steps set.
 pub fn environment(w: &mut World) -> Vec<(String, String)> {
     let managed = w.home.join(MANAGED_POLICY).display().to_string();
     let mut env = vec![
-        ("CAIRN_TEST_MANAGED_POLICY".to_owned(), managed),
+        ("PARINN_TEST_MANAGED_POLICY".to_owned(), managed),
         (HOOK_BUDGET.to_owned(), LENIENT_BUDGET_MS.to_owned()),
     ];
     env.extend(rec(w).env.iter().cloned());
@@ -221,7 +221,7 @@ pub const MANAGED_POLICY: &str = "managed_policy.toml";
 
 /// The development build's seam for a hook budget in place of each
 /// hook's own, in milliseconds.
-pub const HOOK_BUDGET: &str = "CAIRN_TEST_HOOK_BUDGET_MS";
+pub const HOOK_BUDGET: &str = "PARINN_TEST_HOOK_BUDGET_MS";
 
 /// The hook budget every scenario's hook handler gets unless a step sets
 /// another.
@@ -241,20 +241,20 @@ pub fn last_run(w: &mut World) -> Result<&Output, String> {
         .ok_or_else(|| "no step ran a command".to_owned())
 }
 
-#[when(regex = r#"^the person runs "cairn ([^"]*)"$"#)]
+#[when(regex = r#"^the person runs "parinn ([^"]*)"$"#)]
 fn person_runs(w: &mut World, args: String) -> Result<(), String> {
     let args: Vec<&str> = args.split_whitespace().collect();
     run_core(w, &args, None)
 }
 
-#[when(regex = r#"^the person runs "cairn ([^"]*)" at a terminal$"#)]
+#[when(regex = r#"^the person runs "parinn ([^"]*)" at a terminal$"#)]
 fn person_runs_at_terminal(w: &mut World, args: String) -> Result<(), String> {
     let args: Vec<&str> = args.split_whitespace().collect();
     run_core_at_terminal(w, &args)
 }
 
 #[when(
-    regex = r#"^the agent's tool call runs "cairn ([^"]*)" with its standard input and output not a terminal$"#
+    regex = r#"^the agent's tool call runs "parinn ([^"]*)" with its standard input and output not a terminal$"#
 )]
 fn tool_call_runs(w: &mut World, args: String) -> Result<(), String> {
     let args: Vec<&str> = args.split_whitespace().collect();
@@ -405,7 +405,7 @@ fn causal_not_wall_clock(w: &mut World) -> Result<(), String> {
         .flat_map(|i| writers.iter().map(move |(writer, _)| (*writer, i)))
         .filter_map(|(writer, i)| record[&writer].get(i).map(|l| l.header.address))
         .collect();
-    // The order `cairn verify` reports, of the two writers' events.
+    // The order `parinn verify` reports, of the two writers' events.
     let ours: Vec<WriterId> = writers.iter().map(|(writer, _)| *writer).collect();
     let order: Vec<Address> = verified_order(w)?
         .into_iter()
@@ -413,12 +413,12 @@ fn causal_not_wall_clock(w: &mut World) -> Result<(), String> {
         .collect();
     if order != turns {
         return Err(format!(
-            "cairn verify orders the {} events otherwise than their cited heads do",
+            "parinn verify orders the {} events otherwise than their cited heads do",
             turns.len()
         ));
     }
     if chain::causal_order(&record).map_err(|e| e.to_string())? != order {
-        return Err("the record's causal order is not the one cairn verify reports".to_owned());
+        return Err("the record's causal order is not the one parinn verify reports".to_owned());
     }
     let mut by_clock: Vec<(String, Address)> = writers
         .iter()
@@ -440,7 +440,7 @@ fn causal_not_wall_clock(w: &mut World) -> Result<(), String> {
     Ok(())
 }
 
-/// The causal order `cairn verify --json` reports, run confined.
+/// The causal order `parinn verify --json` reports, run confined.
 fn verified_order(w: &World) -> Result<Vec<Address>, String> {
     let core = Confinement::of(Component::Core).map_err(|e| e.to_string())?;
     let exe = testkit::core_executable()?;
@@ -448,10 +448,10 @@ fn verified_order(w: &World) -> Result<Vec<Address>, String> {
         .run(&exe, &["verify", "--json"], &w.home)
         .map_err(|e| e.to_string())?;
     let report: serde_json::Value =
-        serde_json::from_slice(&out.stdout).map_err(|e| format!("cairn verify --json: {e}"))?;
+        serde_json::from_slice(&out.stdout).map_err(|e| format!("parinn verify --json: {e}"))?;
     let order = report["order"]
         .as_array()
-        .ok_or_else(|| format!("cairn verify --json reports no order: {report}"))?;
+        .ok_or_else(|| format!("parinn verify --json reports no order: {report}"))?;
     order
         .iter()
         .map(|a| {

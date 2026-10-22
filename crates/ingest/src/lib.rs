@@ -1,4 +1,4 @@
-//! `cairn ingest` (REC-01 to REC-04, REC-07, REC-08, REC-22): reads a
+//! `parinn ingest` (REC-01 to REC-04, REC-07, REC-08, REC-22): reads a
 //! transcript source into the record, incrementally and idempotently.
 //!
 //! - Each transcript is split by run (REC-02): each line belongs to the

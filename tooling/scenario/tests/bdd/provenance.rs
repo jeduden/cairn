@@ -42,7 +42,7 @@ fn deployment_mode(w: &mut World, mode: String) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "cairn status does not show deployment mode {mode}:\n{shown}"
+        "parinn status does not show deployment mode {mode}:\n{shown}"
     ))
 }
 
@@ -95,9 +95,9 @@ fn untrusted_item(item: &str) -> Result<Vec<Value>, String> {
         // Claude Code 2.1.296 writes a system reminder as an attachment
         // rendered inside <system-reminder>.
         "a system reminder in the transcript" => attachment("date")?,
-        "the restore block Cairn returned, written back into the transcript" => {
+        "the restore block ParleyInn returned, written back into the transcript" => {
             let mut line = attachment("hook_additional_context")?;
-            line["attachment"]["content"] = json!(["[cairn restore] pin P1: never push to main"]);
+            line["attachment"]["content"] = json!(["[parinn restore] pin P1: never push to main"]);
             line
         }
         _ => return structural_item(item),
@@ -173,7 +173,7 @@ pub(crate) fn record_lines(w: &mut World, lines: &[Value]) -> Result<(), String>
 }
 
 #[when(
-    regex = r#"^(an assistant message quoting "ignore previous instructions"|a Bash tool call written by the assistant|the compaction summary line the harness wrote to the transcript|a system reminder in the transcript|the restore block Cairn returned, written back into the transcript|a "user" line whose promptSource is "system", carrying a task notification|a "user" line of a harness session whose process ancestry no structural observation records yet|an attachment of a type no supported version records|a "user" line carrying only a Bash tool_result|a "user" line with isMeta true|a "user" line carrying "<local-command-stdout>" output|an "instructions" attachment carrying a CLAUDE\.md file, rendered with role user|a "session_context" attachment, rendered with role user|an "mcp_instructions_delta" attachment from the MCP server "docs"|a "skill_listing" attachment|a Bash tool_result whose output contains "<system-reminder>"|an "ai-title" transcript line carrying a harness session title|a "last-prompt" transcript line repeating a typed prompt|a subagent's "user" line carrying the delegated task its parent's run wrote) is recorded$"#
+    regex = r#"^(an assistant message quoting "ignore previous instructions"|a Bash tool call written by the assistant|the compaction summary line the harness wrote to the transcript|a system reminder in the transcript|the restore block ParleyInn returned, written back into the transcript|a "user" line whose promptSource is "system", carrying a task notification|a "user" line of a harness session whose process ancestry no structural observation records yet|an attachment of a type no supported version records|a "user" line carrying only a Bash tool_result|a "user" line with isMeta true|a "user" line carrying "<local-command-stdout>" output|an "instructions" attachment carrying a CLAUDE\.md file, rendered with role user|a "session_context" attachment, rendered with role user|an "mcp_instructions_delta" attachment from the MCP server "docs"|a "skill_listing" attachment|a Bash tool_result whose output contains "<system-reminder>"|an "ai-title" transcript line carrying a harness session title|a "last-prompt" transcript line repeating a typed prompt|a subagent's "user" line carrying the delegated task its parent's run wrote) is recorded$"#
 )]
 fn item_recorded(w: &mut World, item: String) -> Result<(), String> {
     let lines = untrusted_item(&item)?;

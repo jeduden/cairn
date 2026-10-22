@@ -1,11 +1,11 @@
 ---
 id: ADR-2610161201
-title: "Structured logs: the tracing crate, with a subscriber of Cairn's own"
+title: "Structured logs: the tracing crate, with a subscriber of ParleyInn's own"
 status: accepted
 scope: dependencies
 summary: >-
-  Cairn logs through the tracing crate's events and macros, default
-  features off, std on. A subscriber of Cairn's own writes each event as
+  ParleyInn logs through the tracing crate's events and macros, default
+  features off, std on. A subscriber of ParleyInn's own writes each event as
   one JSON line to the home's log file, every field redacted first; no
   tracing-subscriber, no log bridge, no proc-macro attributes.
 ---
@@ -23,16 +23,16 @@ counts `tracing` among the core's dependencies.
 
 ## Decision
 
-| Module    | Purpose                                                                                      | License | Maintenance                                                  |
-| --------- | -------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------ |
-| `tracing` | The events, fields and macros the core logs through; the `Subscriber` trait Cairn implements | MIT     | Active; the tokio-rs organisation, the de-facto Rust log API |
+| Module    | Purpose                                                                                          | License | Maintenance                                                  |
+| --------- | ------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| `tracing` | The events, fields and macros the core logs through; the `Subscriber` trait ParleyInn implements | MIT     | Active; the tokio-rs organisation, the de-facto Rust log API |
 
 The core takes it without default features, with `std`. The
 `attributes` feature, a proc macro for `#[instrument]`, stays off, as
 does `log`, a bridge to the `log` crate. The `structured_log` crate
 implements `Subscriber` itself: it encodes each event's fields as
 JSON through `serde_json`, redacts each text by the maintained
-redaction rule set, and appends the line to `logs/cairn.jsonl`, owner
+redaction rule set, and appends the line to `logs/parinn.jsonl`, owner
 only. It installs as the scoped default for one run, so no global
 state is set.
 
@@ -43,7 +43,7 @@ state is set.
   redact it.
 - **The `log` crate.** ENG-05 names `tracing`, and `log` carries no
   typed fields.
-- **A logger of Cairn's own.** ENG-05 names `tracing`.
+- **A logger of ParleyInn's own.** ENG-05 names `tracing`.
 
 ## Consequences
 

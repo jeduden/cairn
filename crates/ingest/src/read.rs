@@ -56,7 +56,7 @@ fn open(path: &Path) -> io::Result<File> {
     options.open(path)
 }
 
-/// `O_NONBLOCK` where this cairn knows it; an open with it never waits
+/// `O_NONBLOCK` where this parinn knows it; an open with it never waits
 /// for a FIFO's writer.
 #[cfg(any(target_os = "linux", target_os = "android"))]
 const NONBLOCK: i32 = 0o4000;

@@ -1,6 +1,6 @@
 ---
 n: 8
-title: "cairn ingest: runs, ingest positions, generations and repeated lines"
+title: "parinn ingest: runs, ingest positions, generations and repeated lines"
 status: "✅"
 result: true
 summary: >-
@@ -30,8 +30,8 @@ Outcome:
   counted conflict. With no fork observation the first recorder owns it,
   noted by a repeat owner event in the device seat. A fork's line read
   first is held, up to 30 s, on the clock ingest is given.
-- REC-08's M1 part: `cairn verify` and `cairn status` name each source
-  gone before it was fully ingested; `cairn ingest --all` audits it once.
+- REC-08's M1 part: `parinn verify` and `parinn status` name each source
+  gone before it was fully ingested; `parinn ingest --all` audits it once.
 - PRV-05: each layer's trust policy key is audited as "<layer>: rejected
   trust override for <class>"; every ingested event stays untrusted.
 - ENG-08: `ingest_property.rs` proves ingest twice equals once, and
@@ -51,7 +51,7 @@ Inherited:
 - `ingest::Inputs` (payload settings, fork observations, clock),
   `RunReport`, `Ingested::runs`; modules `read`, `run`, `repeat`.
 - Event kinds `repeat_reference`, `repeat_owner`; six new counters.
-- `cairn::sources`; steps in `record_ingest.rs`, `provenance_trust.rs`.
+- `parinn::sources`; steps in `record_ingest.rs`, `provenance_trust.rs`.
 - The benchmark `ingest_transcript` and `benchmark::fixture`.
 
 For the stakeholder:
@@ -73,4 +73,4 @@ Parked:
 - Live ingest and a witnessed line never a repeat reference: phase 10.
 - A purged line refused, keyed hashes for a new generation: phase 14.
 - The `rooms` scope and restore for a later run: M2, M7.
-- `cairn event expand` for `@REC-08`: phase 13.
+- `parinn event expand` for `@REC-08`: phase 13.

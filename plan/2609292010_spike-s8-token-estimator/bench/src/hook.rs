@@ -58,7 +58,7 @@ pub fn session_start(db: &Path, source: i64, room: &str) -> Result<()> {
         store::append(&tx, &Event { source, line, kind: "session_start", tool: None, body: &body })?;
         tx.commit()?;
     }
-    let mut block = String::from("<cairn-restore>\n");
+    let mut block = String::from("<parinn-restore>\n");
     let mut used = estimate(&block);
     let mut st = db.prepare_cached(
         "SELECT id, body FROM pins WHERE room = ? AND active = 1 ORDER BY priority, id",
@@ -96,7 +96,7 @@ pub fn session_start(db: &Path, source: i64, room: &str) -> Result<()> {
         used += cost;
         block.push_str(&line);
     }
-    block.push_str(&format!("{omitted} pins omitted\n</cairn-restore>\n"));
+    block.push_str(&format!("{omitted} pins omitted\n</parinn-restore>\n"));
     let out = serde_json::json!({
         "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": block}
     });

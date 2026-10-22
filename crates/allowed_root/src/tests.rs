@@ -23,7 +23,7 @@ impl Layout {
             "src/app/docs",
             "src/app/.git",
             ".ssh",
-            ".cairn",
+            ".parinn",
         ] {
             fs::create_dir_all(p.join(d)).unwrap();
         }
@@ -41,7 +41,7 @@ impl Layout {
     fn roots(&self) -> AllowedRoots {
         AllowedRoots::default()
             .with(&self.at(".claude/projects"), Access::Read)
-            .with(&self.at(".cairn"), Access::ReadWrite)
+            .with(&self.at(".parinn"), Access::ReadWrite)
             .with_worktree(&self.at("src/app/pkg"))
     }
 }
@@ -62,7 +62,7 @@ fn a_path_within_a_root_resolves_to_its_real_path() {
         found.path(),
         fs::canonicalize(l.at(".claude/projects/p/t.jsonl")).unwrap()
     );
-    assert!(roots.resolve(&l.at(".cairn"), Access::ReadWrite).is_ok());
+    assert!(roots.resolve(&l.at(".parinn"), Access::ReadWrite).is_ok());
 }
 
 #[test]

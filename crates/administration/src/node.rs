@@ -113,7 +113,7 @@ impl Node {
     /// seat whose log holds that key's inception. It writes nothing, so
     /// it finds only a node a start made. A seat whose certificate does
     /// not read is passed over: it cannot be the seat the device key
-    /// certified, and `cairn verify` reports it.
+    /// certified, and `parinn verify` reports it.
     ///
     /// # Errors
     ///
@@ -264,7 +264,7 @@ fn prepare(
     }
 }
 
-/// The device key `cairn verify` checks the record in `store` against:
+/// The device key `parinn verify` checks the record in `store` against:
 /// the one `home`'s key store holds, or, while an interrupted first
 /// start is staged, the key it staged, which its next start places, as
 /// a crash can leave it (ENG-06). The flag says the key is staged.

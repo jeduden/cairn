@@ -57,11 +57,11 @@ const CLIPPY: (&str, &str) = STATIC_CHECKS[0];
 const CUSTOM: (&str, &str) = STATIC_CHECKS[4];
 
 /// The core's crate, by its directory under `crates/`.
-const CORE: &str = "cairn";
+const CORE: &str = "parinn";
 
 /// The core's reach test, and the test in it.
 const REACH_TEST: (&str, &str) = (
-    "crates/cairn/tests/reach.rs",
+    "crates/parinn/tests/reach.rs",
     "the_core_executable_links_only_crates_its_reach_allows",
 );
 

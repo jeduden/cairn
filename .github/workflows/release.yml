@@ -73,7 +73,7 @@ jobs:
       # could have poisoned.
       # The NFR-02 rows time the release core (testkit::release_core_executable),
       # so it is built first; it is a test fixture here, never released.
-      - run: cargo build --release --locked -p cairn -p calibrate
+      - run: cargo build --release --locked -p parinn -p calibrate
       - run: cargo test --workspace --locked
 
   # Every target built, by the same build.yml CI runs on every change,
@@ -114,25 +114,25 @@ jobs:
           cache: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          pattern: "*-cairn"
+          pattern: "*-parinn"
           path: dist
           merge-multiple: true
       - name: Generate the SPDX SBOM
         # ENG-20: an SPDX SBOM of the Cargo workspace the binaries were
         # built from, read from Cargo.lock. syft is pinned, never
         # "latest".
-        run: syft . --output spdx-json=dist/cairn.spdx.json
+        run: syft . --output spdx-json=dist/parinn.spdx.json
       - name: Create checksums
         # The SBOM is listed too, so the signed checksums cover it.
         working-directory: dist
-        run: sha256sum cairn-* cairn.spdx.json > checksums.txt
+        run: sha256sum parinn-* parinn.spdx.json > checksums.txt
       - name: Attest the SBOM
         # Ties the SBOM to each binary's SHA-256, signed through
         # Sigstore. The build provenance is release-build.yml's.
         uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
         with:
-          subject-path: "dist/cairn-*"
-          sbom-path: dist/cairn.spdx.json
+          subject-path: "dist/parinn-*"
+          sbom-path: dist/parinn.spdx.json
       - name: Sign the checksum file
         # Keyless: the GitHub OIDC token binds the signature to this
         # workflow file at this ref. The bundle carries signature and
@@ -154,7 +154,7 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "$VERSION" \
             --generate-notes \
-            cairn-* cairn.spdx.json checksums.txt checksums.txt.sigstore.json
+            parinn-* parinn.spdx.json checksums.txt checksums.txt.sigstore.json
 
   # ENG-20: checks the release as published, not the files this run
   # built. It downloads the release's own assets and verifies the
@@ -196,7 +196,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for bin in cairn-*; do
+          for bin in parinn-*; do
             gh attestation verify "$bin" --repo jeduden/cairn \
               --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \
               --source-ref refs/heads/main --source-digest "$GITHUB_SHA" \

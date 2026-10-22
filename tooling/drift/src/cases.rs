@@ -611,26 +611,26 @@ fn reach_cases() -> Vec<Case> {
             "a crate linked into the core executable",
             "the_core_executable_links_only_crates_its_reach_allows",
             Injection::replace(
-                "crates/cairn/Cargo.toml",
+                "crates/parinn/Cargo.toml",
                 "tracing.workspace = true\n\n[dev-dependencies]\nrusqlite.workspace = true\ntestkit.workspace = true\n",
                 "tracing.workspace = true\ntestkit.workspace = true\n\n[dev-dependencies]\nrusqlite.workspace = true\n",
             ),
             cargo_test(
-                "cairn",
+                "parinn",
                 "reach",
                 "the_core_executable_links_only_crates_its_reach_allows",
             ),
-            "cairn links crates its reach does not allow",
+            "parinn links crates its reach does not allow",
         ),
         case(
             "the core executable opening a socket",
             "SEC-01",
             Injection::replace(
-                "crates/cairn/src/lib.rs",
+                "crates/parinn/src/lib.rs",
                 "use std::io::{self, Write};",
                 "use std::io::{self, Write};\n\npub fn dial() -> Option<std::net::TcpStream> {\n    None\n}",
             ),
-            clippy("cairn"),
+            clippy("parinn"),
             "use of a disallowed type `std::net::TcpStream`",
         ),
     ]
@@ -648,12 +648,12 @@ fn architecture_cases() -> Vec<Case> {
             "the core executable depending on a tooling crate",
             "ENG-02",
             Injection::replace(
-                "crates/cairn/Cargo.toml",
+                "crates/parinn/Cargo.toml",
                 "tracing.workspace = true\n\n[dev-dependencies]\nrusqlite.workspace = true\ntestkit.workspace = true\n",
                 "tracing.workspace = true\ntestkit.workspace = true\n\n[dev-dependencies]\nrusqlite.workspace = true\n",
             ),
             scenario("ENG-02"),
-            "product crate cairn depends on tooling crate testkit, which a product crate never does",
+            "product crate parinn depends on tooling crate testkit, which a product crate never does",
         ),
         case(
             "a tooling crate depending where its declared directions forbid",
@@ -692,14 +692,14 @@ fn architecture_cases() -> Vec<Case> {
 /// reading a clock or a random order (I10). [`deadline_cases`] holds
 /// ENG-03's.
 fn product_crate_cases() -> Vec<Case> {
-    const LIB: &str = "crates/cairn/src/lib.rs";
+    const LIB: &str = "crates/parinn/src/lib.rs";
     const AT: &str = "use std::io::{self, Write};";
     vec![
         case(
             "a product crate's clippy.toml dropping a reach ban",
             "the_product_crates_keep_their_bans",
             Injection::replace(
-                "crates/cairn/clippy.toml",
+                "crates/parinn/clippy.toml",
                 "  { path = \"std::net::UdpSocket\", reason = \"the core opens no socket (SEC-01)\" },\n",
                 "",
             ),
@@ -708,13 +708,13 @@ fn product_crate_cases() -> Vec<Case> {
                 "checkout",
                 "the_product_crates_keep_their_bans",
             ),
-            "crates/cairn/clippy.toml does not ban std::net::UdpSocket in disallowed-types",
+            "crates/parinn/clippy.toml does not ban std::net::UdpSocket in disallowed-types",
         ),
         case(
             "a product crate's clippy.toml dropping a determinism ban",
             "I10",
             Injection::replace(
-                "crates/cairn/clippy.toml",
+                "crates/parinn/clippy.toml",
                 "  { path = \"std::time::SystemTime::now\", reason = \"derived artifacts read no clock (I10)\" },\n",
                 "",
             ),
@@ -723,7 +723,7 @@ fn product_crate_cases() -> Vec<Case> {
                 "checkout",
                 "the_product_crates_keep_their_bans",
             ),
-            "crates/cairn/clippy.toml does not ban std::time::SystemTime::now in disallowed-methods",
+            "crates/parinn/clippy.toml does not ban std::time::SystemTime::now in disallowed-methods",
         ),
         case(
             "the core reading the clock",
@@ -733,7 +733,7 @@ fn product_crate_cases() -> Vec<Case> {
                 AT,
                 "use std::io::{self, Write};\n\npub fn now() -> std::time::Instant {\n    std::time::Instant::now()\n}",
             ),
-            clippy("cairn"),
+            clippy("parinn"),
             "use of a disallowed method `std::time::Instant::now`",
         ),
         case(
@@ -744,7 +744,7 @@ fn product_crate_cases() -> Vec<Case> {
                 AT,
                 "use std::io::{self, Write};\n\npub type Index = std::collections::HashMap<u8, u8>;",
             ),
-            clippy("cairn"),
+            clippy("parinn"),
             "use of a disallowed type `std::collections::HashMap`",
         ),
     ]
@@ -758,7 +758,7 @@ fn deadline_cases() -> Vec<Case> {
             "a product crate's clippy.toml dropping a deadline ban",
             "the_product_crates_ban_every_wait_with_no_deadline",
             Injection::replace(
-                "crates/cairn/clippy.toml",
+                "crates/parinn/clippy.toml",
                 "  { path = \"std::sync::mpsc::Receiver::recv\", reason = \"it waits with no deadline; use recv_timeout (ENG-03)\" },\n",
                 "",
             ),
@@ -767,13 +767,13 @@ fn deadline_cases() -> Vec<Case> {
                 "checkout",
                 "the_product_crates_ban_every_wait_with_no_deadline",
             ),
-            "crates/cairn/clippy.toml does not ban std::sync::mpsc::Receiver::recv in disallowed-methods",
+            "crates/parinn/clippy.toml does not ban std::sync::mpsc::Receiver::recv in disallowed-methods",
         ),
         case(
             "a product crate's clippy.toml dropping the file lock's deadline ban",
             "the_product_crates_ban_every_wait_with_no_deadline",
             Injection::replace(
-                "crates/cairn/clippy.toml",
+                "crates/parinn/clippy.toml",
                 "  { path = \"std::fs::File::lock\", reason = \"it waits for another process with no deadline; poll try_lock up to a deadline (ENG-03)\" },\n",
                 "",
             ),
@@ -782,7 +782,7 @@ fn deadline_cases() -> Vec<Case> {
                 "checkout",
                 "the_product_crates_ban_every_wait_with_no_deadline",
             ),
-            "crates/cairn/clippy.toml does not ban std::fs::File::lock in disallowed-methods",
+            "crates/parinn/clippy.toml does not ban std::fs::File::lock in disallowed-methods",
         ),
     ]
 }
@@ -790,7 +790,7 @@ fn deadline_cases() -> Vec<Case> {
 /// The drifts ENG-03 exists to catch in the core's code: a wait with no
 /// deadline, and mutable global state.
 fn core_wait_cases() -> Vec<Case> {
-    const LIB: &str = "crates/cairn/src/lib.rs";
+    const LIB: &str = "crates/parinn/src/lib.rs";
     const AT: &str = "use std::io::{self, Write};";
     vec![
         case(
@@ -801,7 +801,7 @@ fn core_wait_cases() -> Vec<Case> {
                 AT,
                 "use std::io::{self, Write};\n\npub fn wait(rx: &std::sync::mpsc::Receiver<u8>) -> Option<u8> {\n    rx.recv().ok()\n}",
             ),
-            clippy("cairn"),
+            clippy("parinn"),
             "use of a disallowed method `std::sync::mpsc::Receiver::recv`",
         ),
         case(
@@ -812,7 +812,7 @@ fn core_wait_cases() -> Vec<Case> {
                 AT,
                 "use std::io::{self, Write};\n\npub fn wait(h: std::thread::JoinHandle<()>) {\n    let _ = h.join();\n}",
             ),
-            clippy("cairn"),
+            clippy("parinn"),
             "use of a disallowed method `std::thread::JoinHandle::join`",
         ),
         case(
@@ -823,7 +823,7 @@ fn core_wait_cases() -> Vec<Case> {
                 AT,
                 "use std::io::{self, Write};\n\npub fn input() -> std::io::Stdin {\n    std::io::stdin()\n}",
             ),
-            clippy("cairn"),
+            clippy("parinn"),
             "use of a disallowed method `std::io::stdin`",
         ),
         case(
@@ -839,7 +839,7 @@ fn core_wait_cases() -> Vec<Case> {
                 "checkout",
                 "no_product_crate_keeps_mutable_global_state",
             ),
-            "crates/cairn/src/lib.rs:16: mutable global state: pub static SEQ",
+            "crates/parinn/src/lib.rs:16: mutable global state: pub static SEQ",
         ),
     ]
 }
@@ -853,26 +853,26 @@ fn confinement_cases() -> Vec<Case> {
             "the core started outside the end-to-end suite's confinement",
             "the_core_s_tests_start_it_confined",
             Injection::replace(
-                "crates/cairn/tests/e2e_cairn.rs",
+                "crates/parinn/tests/e2e_parinn.rs",
                 "use testkit::boundary::{Component, Confinement};",
-                "use testkit::boundary::{Component, Confinement};\n\nfn _unconfined() -> std::process::Command {\n    std::process::Command::new(env!(\"CARGO_BIN_EXE_cairn\"))\n}",
+                "use testkit::boundary::{Component, Confinement};\n\nfn _unconfined() -> std::process::Command {\n    std::process::Command::new(env!(\"CARGO_BIN_EXE_parinn\"))\n}",
             ),
             cargo_test(
                 "engineering",
                 "confinement",
                 "the_core_s_tests_start_it_confined",
             ),
-            "crates/cairn/tests/e2e_cairn.rs starts a component's executable outside the end-to-end suite's confinement (ENG-12)",
+            "crates/parinn/tests/e2e_parinn.rs starts a component's executable outside the end-to-end suite's confinement (ENG-12)",
         ),
         case(
             "the core opening a socket in the confined suite",
             "ENG-12",
             Injection::replace(
-                "crates/cairn/src/lib.rs",
+                "crates/parinn/src/lib.rs",
                 "        Some(\"version\") => version(args, ctx.build, stdout, stderr),",
                 "        Some(\"version\") => {\n            let _ = std::net::UdpSocket::bind((\"127.0.0.1\", 0));\n            version(args, ctx.build, stdout, stderr)\n        }",
             ),
-            cargo_test("cairn", "e2e_cairn", "version_prints_the_build_s_version"),
+            cargo_test("parinn", "e2e_parinn", "version_prints_the_build_s_version"),
             "ENG-12: the core opened a socket outside its boundary, which denies all network; started by version_prints_the_build_s_version",
         ),
     ]
@@ -934,7 +934,7 @@ fn ci_gate_cases() -> Vec<Case> {
 /// crate switching the unsafe ban off, and the core's reach evidence or
 /// the determinism bans going missing.
 fn static_analysis_cases() -> Vec<Case> {
-    const CLIPPY: &str = "crates/cairn/clippy.toml";
+    const CLIPPY: &str = "crates/parinn/clippy.toml";
     let check = |name| cargo_test("engineering", "static_analysis", name);
     let unsafe_ban = || check("every_crate_forbids_unsafe_code");
     let reach = || check("the_core_s_reach_evidence_is_present_and_gated");
@@ -942,9 +942,13 @@ fn static_analysis_cases() -> Vec<Case> {
         case(
             "a crate no longer inheriting the workspace lints",
             "every_crate_forbids_unsafe_code",
-            Injection::replace("crates/cairn/Cargo.toml", "[lints]\nworkspace = true\n", ""),
+            Injection::replace(
+                "crates/parinn/Cargo.toml",
+                "[lints]\nworkspace = true\n",
+                "",
+            ),
             unsafe_ban(),
-            "crate crates/cairn neither inherits the workspace lints nor forbids unsafe code in src/lib.rs",
+            "crate crates/parinn neither inherits the workspace lints nor forbids unsafe code in src/lib.rs",
         ),
         case(
             "the unsafe shim no longer denying unsafe code",
@@ -971,9 +975,9 @@ fn static_analysis_cases() -> Vec<Case> {
         case(
             "the core's reach test removed",
             "the_core_s_reach_evidence_is_present_and_gated",
-            Injection::remove("crates/cairn/tests/reach.rs"),
+            Injection::remove("crates/parinn/tests/reach.rs"),
             reach(),
-            "the core's reach evidence is missing: read crates/cairn/tests/reach.rs",
+            "the core's reach evidence is missing: read crates/parinn/tests/reach.rs",
         ),
         case(
             "the core's clippy.toml no longer banning a program start",
@@ -984,7 +988,7 @@ fn static_analysis_cases() -> Vec<Case> {
                 "",
             ),
             reach(),
-            "the core's reach evidence is missing: crates/cairn/clippy.toml does not ban std::process::Command",
+            "the core's reach evidence is missing: crates/parinn/clippy.toml does not ban std::process::Command",
         ),
         case(
             "code that computes derived artifacts no longer refused the monotonic clock",
@@ -995,7 +999,7 @@ fn static_analysis_cases() -> Vec<Case> {
                 "",
             ),
             check("derived_code_is_refused_a_clock_or_randomness_at_build_time"),
-            "code that computes derived artifacts may read a clock or randomness: crate cairn: crates/cairn/clippy.toml does not ban std::time::Instant::now in disallowed-methods",
+            "code that computes derived artifacts may read a clock or randomness: crate parinn: crates/parinn/clippy.toml does not ban std::time::Instant::now in disallowed-methods",
         ),
     ]
 }
@@ -1027,7 +1031,7 @@ fn toml_cases() -> Vec<Case> {
             "a manifest key misspelt",
             "taplo lint",
             Injection::replace(
-                "crates/cairn/Cargo.toml",
+                "crates/parinn/Cargo.toml",
                 "edition.workspace = true\n",
                 "edition.workspace = true\nlicence = \"MIT\"\n",
             ),
@@ -1079,12 +1083,12 @@ fn complexity_cases() -> Vec<Case> {
             "a product crate's clippy.toml raising a complexity ceiling",
             GATE,
             Injection::replace(
-                "crates/cairn/clippy.toml",
+                "crates/parinn/clippy.toml",
                 "too-many-lines-threshold = 80",
                 "too-many-lines-threshold = 200",
             ),
             gate(),
-            "crates/cairn/clippy.toml sets too-many-lines-threshold to 200, above 80",
+            "crates/parinn/clippy.toml sets too-many-lines-threshold to 200, above 80",
         ),
         case(
             "the workspace's clippy.toml dropping a complexity ceiling",
@@ -1097,22 +1101,22 @@ fn complexity_cases() -> Vec<Case> {
             "a product crate's clippy.toml switching excessive_nesting off",
             GATE,
             Injection::replace(
-                "crates/cairn/clippy.toml",
+                "crates/parinn/clippy.toml",
                 "excessive-nesting-threshold = 5",
                 "excessive-nesting-threshold = 0",
             ),
             gate(),
-            "crates/cairn/clippy.toml sets excessive-nesting-threshold to 0, which switches the lint off",
+            "crates/parinn/clippy.toml sets excessive-nesting-threshold to 0, which switches the lint off",
         ),
         case(
             "the core nesting a block past the ceiling",
             "ENG-16",
             Injection::replace(
-                "crates/cairn/src/lib.rs",
+                "crates/parinn/src/lib.rs",
                 "use std::io::{self, Write};",
                 "use std::io::{self, Write};\n\npub fn deep(x: u8) -> u8 {\n    if x > 0 { if x > 1 { if x > 2 { if x > 3 { if x > 4 { if x > 5 { return 6; } } } } } }\n    0\n}",
             ),
-            clippy("cairn"),
+            clippy("parinn"),
             "this block is too nested",
         ),
     ]
@@ -1180,7 +1184,7 @@ fn release_signer_cases() -> Vec<Case> {
             Injection::replace(
                 RELEASE_WORKFLOW,
                 ATTEST_SBOM_STEP,
-                "        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2\n        with:\n          subject-path: \"dist/cairn-*\"\n      - name: Attest the SBOM again\n        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0\n",
+                "        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2\n        with:\n          subject-path: \"dist/parinn-*\"\n      - name: Attest the SBOM again\n        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0\n",
             ),
             PROVENANCE_GATE,
             "release.yml attests build provenance outside release-build.yml, in job publish",
@@ -1189,8 +1193,8 @@ fn release_signer_cases() -> Vec<Case> {
             "the build workflow CI runs attesting build provenance",
             Injection::replace(
                 BUILD_WORKFLOW,
-                "        run: scripts/check-stamp.sh dist/cairn-windows-amd64.exe \"$VERSION\" \"$COMMIT\"\n",
-                "        run: scripts/check-stamp.sh dist/cairn-windows-amd64.exe \"$VERSION\" \"$COMMIT\"\n\n  attest:\n    needs: windows\n    runs-on: ubuntu-latest\n    permissions:\n      id-token: write\n      attestations: write\n    steps:\n      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2\n        with:\n          subject-path: \"dist/cairn-*\"\n",
+                "        run: scripts/check-stamp.sh dist/parinn-windows-amd64.exe \"$VERSION\" \"$COMMIT\"\n",
+                "        run: scripts/check-stamp.sh dist/parinn-windows-amd64.exe \"$VERSION\" \"$COMMIT\"\n\n  attest:\n    needs: windows\n    runs-on: ubuntu-latest\n    permissions:\n      id-token: write\n      attestations: write\n    steps:\n      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2\n        with:\n          subject-path: \"dist/parinn-*\"\n",
             ),
             PROVENANCE_GATE,
             "build.yml attests build provenance in job attest; only release-build.yml may",
@@ -1262,8 +1266,8 @@ fn sbom_format_case() -> Case {
         "the release generating a non-SPDX SBOM",
         Injection::replace(
             RELEASE_WORKFLOW,
-            "syft . --output spdx-json=dist/cairn.spdx.json",
-            "syft . --output cyclonedx-json=dist/cairn.spdx.json",
+            "syft . --output spdx-json=dist/parinn.spdx.json",
+            "syft . --output cyclonedx-json=dist/parinn.spdx.json",
         ),
         SBOM_GATE,
         "job publish does not generate an SPDX SBOM",
@@ -1335,11 +1339,11 @@ fn release_verify_cases() -> Vec<Case> {
             "the SBOM left off the release",
             Injection::replace(
                 RELEASE_WORKFLOW,
-                "cairn-* cairn.spdx.json checksums.txt checksums.txt.sigstore.json",
-                "cairn-* checksums.txt checksums.txt.sigstore.json",
+                "parinn-* parinn.spdx.json checksums.txt checksums.txt.sigstore.json",
+                "parinn-* checksums.txt checksums.txt.sigstore.json",
             ),
             SBOM_GATE,
-            "the release does not attach the SBOM cairn.spdx.json",
+            "the release does not attach the SBOM parinn.spdx.json",
         ),
         release_case(
             "the SBOM attestation no longer verified",
@@ -1453,10 +1457,10 @@ fn protection_cases() -> Vec<Case> {
             Injection::replace(
                 CODEOWNERS,
                 "/SECURITY.md                  @jeduden\n",
-                "/SECURITY.md                  @jeduden\n/crates/cairn/src/            @jeduden\n",
+                "/SECURITY.md                  @jeduden\n/crates/parinn/src/            @jeduden\n",
             ),
             "the_checkout_s_codeowners_name_no_owner_on_any_other_path",
-            "/crates/cairn/src/ names an owner on a path outside the allowed classes",
+            "/crates/parinn/src/ names an owner on a path outside the allowed classes",
         ),
         protection_case(
             "a security-sensitive crate without the security reviewer",
@@ -1546,8 +1550,8 @@ fn release_budget_cases() -> Vec<Case> {
             RELEASE,
             Injection::replace(
                 CI,
-                "cargo build --release --locked -p benchmark -p cairn",
-                "cargo build --locked -p benchmark -p cairn",
+                "cargo build --release --locked -p benchmark -p parinn",
+                "cargo build --locked -p benchmark -p parinn",
             ),
             cargo_test("engineering", "benchmark_gate", RELEASE),
             "builds the benchmark suite without --release",
@@ -1557,8 +1561,8 @@ fn release_budget_cases() -> Vec<Case> {
             RELEASE,
             Injection::replace(
                 CI,
-                "--core \"$head/cairn\"",
-                "--core \"$GITHUB_WORKSPACE/target/debug/cairn\"",
+                "--core \"$head/parinn\"",
+                "--core \"$GITHUB_WORKSPACE/target/debug/parinn\"",
             ),
             cargo_test("engineering", "benchmark_gate", RELEASE),
             "points the benchmark at a debug build",
@@ -1737,19 +1741,19 @@ fn instruction_cases() -> Vec<Case> {
             "ENG-14",
             Injection::replace(
                 "CLAUDE.md",
-                "Never run a command that writes to, deletes from, or purges the real `~/.cairn`,",
-                "Run a command that writes to, deletes from, or purges the real `~/.cairn`,",
+                "Never run a command that writes to, deletes from, or purges the real",
+                "Run a command that writes to, deletes from, or purges the real",
             ),
             scenario("ENG-14"),
             "CLAUDE.md:",
         ),
         case(
-            "a skill telling agents to delete the real Cairn home",
+            "a skill telling agents to delete the real ParleyInn home",
             "the_agent_instructions_direct_no_destructive_command_at_real_state",
             Injection::replace(
                 ".claude/skills/plan-tidy/SKILL.md",
                 "## Read the mess\n",
-                "## Read the mess\n\n```sh\nrm -rf ~/.cairn\n```\n",
+                "## Read the mess\n\n```sh\nrm -rf ~/.parinn\n```\n",
             ),
             instructions(),
             ".claude/skills/plan-tidy/SKILL.md:",

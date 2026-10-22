@@ -2,8 +2,8 @@
 //! and harness account identifiers are redacted before anything is
 //! written. The agent's run leaves its transcript under the scenario's
 //! default transcript root; each step that adds to it appends a line in
-//! Claude Code's shape. The scenario stays pending: its `cairn ingest
-//! --all` is phase 8's, and `cairn purge --run` is ADM-07's run scope,
+//! Claude Code's shape. The scenario stays pending: its `parinn ingest
+//! --all` is phase 8's, and `parinn purge --run` is ADM-07's run scope,
 //! in M3.
 
 use std::fs;
@@ -205,7 +205,7 @@ fn no_value_confirms_a_guess(w: &mut World) -> Result<(), String> {
     regex = r"^any correlation of the repeated AWS access key lives only in a node-local index keyed under this node's own at-rest key$"
 )]
 fn no_correlation_index(w: &mut World) -> Result<(), String> {
-    // Cairn keeps no correlation index, so none can confirm a guess:
+    // ParleyInn keeps no correlation index, so none can confirm a guess:
     // the store holds the record's tables and nothing beside them.
     let store = home(w)?.store();
     let db =
@@ -228,19 +228,19 @@ fn no_correlation_index(w: &mut World) -> Result<(), String> {
 }
 
 #[then(
-    regex = r#"^with a repository "\.cairn\.toml" adding the redaction pattern "([^"]+)", no stored text is redacted by that pattern, and an audit entry and a counter record the repository setting as ignored$"#
+    regex = r#"^with a repository "\.parinn\.toml" adding the redaction pattern "([^"]+)", no stored text is redacted by that pattern, and an audit entry and a counter record the repository setting as ignored$"#
 )]
 fn repository_pattern_ignored(w: &mut World, pattern: String) -> Result<(), String> {
     let git = w.home.join(".git");
     fs::create_dir_all(&git).map_err(|e| e.to_string())?;
     let setting = format!("[redaction]\nextra_patterns = [{pattern:?}]\n");
-    fs::write(w.home.join(".cairn.toml"), setting).map_err(|e| e.to_string())?;
+    fs::write(w.home.join(".parinn.toml"), setting).map_err(|e| e.to_string())?;
     let name = red(w).transcripts.first().map(|(n, _)| n.clone());
     let path = transcript(w, &name.ok_or("no agent run left a transcript")?)?;
     let shown = path.display().to_string();
     run_core(w, &["ingest", "--path", &shown], None)?;
     if !last_run(w)?.status.success() {
-        return Err("cairn ingest failed with the repository pattern".to_owned());
+        return Err("parinn ingest failed with the repository pattern".to_owned());
     }
     none_in_home(w, &["[REDACTED:extra_pattern_2]"])?;
     // Text no rule matches survives whole: the repository's pattern

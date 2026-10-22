@@ -183,7 +183,7 @@ impl Envelope {
     #[must_use]
     pub fn to_value(&self) -> Value {
         json!({
-            "cairn_envelope": VERSION,
+            "parinn_envelope": VERSION,
             "warning": WARNING,
             "items": self.items.iter().map(Item::to_value).collect::<Vec<_>>(),
             "tombstones": [],
@@ -201,7 +201,7 @@ impl Envelope {
         let items: Vec<String> = self.items.iter().map(Item::render).collect();
 
         format!(
-            "{{\"cairn_envelope\":{VERSION},\"warning\":{},\"items\":[{}],\"tombstones\":[],\"truncated\":{},\"next_cursor\":{}}}",
+            "{{\"parinn_envelope\":{VERSION},\"warning\":{},\"items\":[{}],\"tombstones\":[],\"truncated\":{},\"next_cursor\":{}}}",
             Value::from(WARNING),
             items.join(","),
             self.truncated,

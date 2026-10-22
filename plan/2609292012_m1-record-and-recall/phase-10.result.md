@@ -17,7 +17,7 @@ summary: >-
 Outcome:
 
 - REC-13 holds: `@REC-13` is off `@pending`, both rows passing
-  against `cairn mcp` under a stand-in harness process, confined. A
+  against `parinn mcp` under a stand-in harness process, confined. A
   `SessionStart` hook handler records its nearest harness process; the
   MCP server takes only that harness process's session bindings,
   marked taken, and ingests nothing as witnessed before. It polls its
@@ -28,7 +28,7 @@ Outcome:
 - A stop short of a transcript's end is audited under
   `ingest_remainder_left` (truncated, no failure) by the MCP server.
   A killed server leaves its start marker; the next MCP server or
-  `cairn ingest` audits the remainder. Either resumes at the ingest
+  `parinn ingest` audits the remainder. Either resumes at the ingest
   marker, every line recorded once.
 - SEC-10's M1 part: each run-seat key is minted in the MCP server's
   memory (OQ-55's option a) and certified as a run seat and no ingest
@@ -43,9 +43,9 @@ Outcome:
   refused in its transaction (`PositionMoved`) and read again; a
   position moves only forward. `@REC-06` passes narrowed but for its
   purged range. ENG-08's seq property runs on three threads at once;
-  `concurrent_ingest.rs` races live ingest against `cairn ingest`.
+  `concurrent_ingest.rs` races live ingest against `parinn ingest`.
 - REC-19: the holding step passes; live ingest closes its run seats'
-  segments every 30 s and when its input closes. `cairn verify`
+  segments every 30 s and when its input closes. `parinn verify`
   accepts structural events in a run seat that is no ingest seat.
 - REC-04: homes A, B and H bound and passing narrowed. A witnessed
   line is never a repeat reference nor held, audited
@@ -62,8 +62,8 @@ Inherited:
   `IngestError::position_moved`, `ATTEMPTS`.
 - `mcp::tool_call`: `Runs`, `Found`, `Cause`, `WAIT`;
   `Server::with_runs`, `take_found`.
-- `cairn::capture`: `Capture`, `Running`, `Finder`, `count_stopped`;
-  `Context::live_limit`, seam `CAIRN_TEST_INGEST_LIMIT`. `cairn mcp`
+- `parinn::capture`: `Capture`, `Running`, `Finder`, `count_stopped`;
+  `Context::live_limit`, seam `PARINN_TEST_INGEST_LIMIT`. `parinn mcp`
   now starts the node.
 - Counters `ingest_remainder_left`, `witnessed_repeat_recorded`,
   `live_ingest_failed`, `tool_call_without_tool_use_id`,
@@ -76,8 +76,8 @@ For the stakeholder:
 
 - `@PRV-14` names `event_search`, phase 12's, held on its branch.
   Merged, it should pass as written; the merge meets this phase in
-  `mcp::Server` and `call`, `StoreError`, the counters and `cairn mcp`.
-- `@REC-06` needs `cairn purge --range` (phase 14) for its purged range.
+  `mcp::Server` and `call`, `StoreError`, the counters and `parinn mcp`.
+- `@REC-06` needs `parinn purge --range` (phase 14) for its purged range.
 - `@SEC-10`'s last step handed run-seat keys over at launch; the MCP
   server mints them, OQ-55's recommended option. SEC-10 and its step now
   say the server mints every key, pending the stakeholder's comment.
@@ -86,7 +86,7 @@ For the stakeholder:
 - A session binding is matched by the harness process's id; a reused
   process id could match a stale binding. Off Linux no binding is taken.
 - Unit line coverage (`cargo llvm-cov --lib`): mcp and hook 100%,
-  ingest 99.9%, audit 99.7%, administration 99.6%, store 99.0%, cairn
+  ingest 99.9%, audit 99.7%, administration 99.6%, store 99.0%, parinn
   98.4%, its misses mostly hook handler and audit-failure paths.
 - Stakeholder paths: `tooling/` (testkit, steps), `features/`.
   New terms: live ingest; an MCP server's start marker.

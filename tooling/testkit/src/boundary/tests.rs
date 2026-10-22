@@ -76,7 +76,7 @@ fn ci_refuses_the_opt_out() {
     assert!(matches!(err, Error::Refused));
     assert_eq!(
         err.to_string(),
-        "ENG-12: CAIRN_E2E_UNCONFINED is set, but CI runs every component confined: unset it"
+        "ENG-12: PARINN_E2E_UNCONFINED is set, but CI runs every component confined: unset it"
     );
 }
 
@@ -107,7 +107,7 @@ fn a_machine_that_cannot_confine_fails_loudly() {
         ),
         "{msg}"
     );
-    assert!(msg.contains("set CAIRN_E2E_UNCONFINED=1"), "{msg}");
+    assert!(msg.contains("set PARINN_E2E_UNCONFINED=1"), "{msg}");
 }
 
 #[test]
@@ -119,9 +119,9 @@ fn preflight_passes_where_the_tools_run() {
 
 #[test]
 fn preflight_names_a_tool_that_will_not_start() {
-    let err = preflight_with("cairn-no-such-unshare").unwrap_err();
+    let err = preflight_with("parinn-no-such-unshare").unwrap_err();
 
-    assert!(err.starts_with("start cairn-no-such-unshare: "), "{err}");
+    assert!(err.starts_with("start parinn-no-such-unshare: "), "{err}");
 }
 
 #[test]
@@ -138,7 +138,11 @@ fn a_confined_command_runs_the_program_under_the_namespace_and_the_trace() {
         mode: Mode::Confined,
     };
 
-    let command = c.command(Path::new("/bin/cairn"), &["version"], Path::new("/t/trace"));
+    let command = c.command(
+        Path::new("/bin/parinn"),
+        &["version"],
+        Path::new("/t/trace"),
+    );
 
     assert_eq!(command.get_program(), "unshare");
     let args: Vec<&OsStr> = command.get_args().collect();
@@ -160,7 +164,7 @@ fn a_confined_command_runs_the_program_under_the_namespace_and_the_trace() {
             "-o",
             "/t/trace",
             "--",
-            "/bin/cairn",
+            "/bin/parinn",
             "version",
         ]
     );
@@ -168,9 +172,9 @@ fn a_confined_command_runs_the_program_under_the_namespace_and_the_trace() {
 
 #[test]
 fn an_unconfined_command_runs_the_program_as_is() {
-    let command = unconfined().command(Path::new("/bin/cairn"), &["version"], Path::new("/t"));
+    let command = unconfined().command(Path::new("/bin/parinn"), &["version"], Path::new("/t"));
 
-    assert_eq!(command.get_program(), "/bin/cairn");
+    assert_eq!(command.get_program(), "/bin/parinn");
     assert_eq!(command.get_args().collect::<Vec<_>>(), ["version"]);
 }
 
@@ -286,12 +290,12 @@ fn a_start_that_cannot_run_names_the_program() {
     let home = TempDir::new().unwrap();
 
     let err = unconfined()
-        .run(Path::new("/cairn/no/such/program"), &[], home.path())
+        .run(Path::new("/parinn/no/such/program"), &[], home.path())
         .unwrap_err();
 
     assert!(
         err.to_string()
-            .starts_with("ENG-12: start /cairn/no/such/program: "),
+            .starts_with("ENG-12: start /parinn/no/such/program: "),
         "{err}"
     );
     assert!(std::error::Error::source(&err).is_some());
@@ -422,7 +426,7 @@ fn a_start_with_input_that_cannot_run_names_the_program() {
     let home = TempDir::new().unwrap();
 
     let err = unconfined()
-        .run_with_input(Path::new("/cairn/no/such/program"), &[], home.path(), b"x")
+        .run_with_input(Path::new("/parinn/no/such/program"), &[], home.path(), b"x")
         .unwrap_err();
 
     assert!(matches!(err, Error::Start { .. }), "{err}");
@@ -435,9 +439,9 @@ fn an_unconfined_start_hands_its_environment_and_input_to_the_program() {
     let out = unconfined()
         .run_in(
             Path::new("sh"),
-            &["-c", "printf '%s:' \"$CAIRN_HOME_ID\"; cat"],
+            &["-c", "printf '%s:' \"$PARINN_HOME_ID\"; cat"],
             home.path(),
-            &[("CAIRN_HOME_ID", "home-b")],
+            &[("PARINN_HOME_ID", "home-b")],
             Some(b"in"),
         )
         .unwrap();
@@ -453,9 +457,9 @@ fn a_confined_start_hands_its_environment_to_the_program() {
     let out = c
         .run_in(
             Path::new("sh"),
-            &["-c", "printf '%s' \"$CAIRN_TEST_FAULT\""],
+            &["-c", "printf '%s' \"$PARINN_TEST_FAULT\""],
             home.path(),
-            &[("CAIRN_TEST_FAULT", "hook-panic")],
+            &[("PARINN_TEST_FAULT", "hook-panic")],
             None,
         )
         .unwrap();
@@ -471,9 +475,12 @@ fn a_start_s_environment_never_moves_it_out_of_its_isolated_home() {
     let out = unconfined()
         .run_in(
             Path::new("sh"),
-            &["-c", "printf '%s|%s' \"$HOME\" \"$CAIRN_HOME\""],
+            &["-c", "printf '%s|%s' \"$HOME\" \"$PARINN_HOME\""],
             home.path(),
-            &[("HOME", "/elsewhere"), ("CAIRN_HOME", "/elsewhere/.cairn")],
+            &[
+                ("HOME", "/elsewhere"),
+                ("PARINN_HOME", "/elsewhere/.parinn"),
+            ],
             None,
         )
         .unwrap();
@@ -483,19 +490,19 @@ fn a_start_s_environment_never_moves_it_out_of_its_isolated_home() {
         format!(
             "{}|{}",
             home.path().display(),
-            home.path().join(".cairn").display()
+            home.path().join(".parinn").display()
         )
     );
 }
 
 #[test]
 fn a_shell_line_quotes_every_word() {
-    let mut command = Command::new("/bin/cairn");
+    let mut command = Command::new("/bin/parinn");
     command.args(["counter", "it's"]);
 
     assert_eq!(
         shell_line(&command),
-        r"exec '/bin/cairn' 'counter' 'it'\''s'"
+        r"exec '/bin/parinn' 'counter' 'it'\''s'"
     );
 }
 
@@ -506,7 +513,7 @@ fn a_command_at_a_terminal_runs_the_whole_confined_line_under_script() {
         mode: Mode::Confined,
     };
     let inner = c.command(
-        Path::new("/bin/cairn"),
+        Path::new("/bin/parinn"),
         &["counter", "ack"],
         Path::new("/t"),
     );
@@ -524,7 +531,7 @@ fn a_command_at_a_terminal_runs_the_whole_confined_line_under_script() {
     assert!(
         args[1]
             .to_string_lossy()
-            .ends_with(" '/bin/cairn' 'counter' 'ack'"),
+            .ends_with(" '/bin/parinn' 'counter' 'ack'"),
         "{:?}",
         args[1]
     );
@@ -538,9 +545,9 @@ fn an_unconfined_start_at_a_terminal_gives_the_program_one() {
     let out = unconfined()
         .run_at_terminal(
             Path::new("sh"),
-            &["-c", "test -t 0 && test -t 1 && echo \"$CAIRN_HOME_ID\""],
+            &["-c", "test -t 0 && test -t 1 && echo \"$PARINN_HOME_ID\""],
             home.path(),
-            &[("CAIRN_HOME_ID", "h1")],
+            &[("PARINN_HOME_ID", "h1")],
         )
         .unwrap();
 

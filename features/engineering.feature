@@ -12,7 +12,7 @@ Feature: Engineering quality (ENG)
     Given the repository checkout
     Then "rust-toolchain.toml" pins the Rust toolchain to an exact release
     And the release workflow builds with "--remap-path-prefix"
-    And the release workflow builds with "CAIRN_COMMIT"
+    And the release workflow builds with "PARINN_COMMIT"
     And the release workflow builds with "x86_64-unknown-linux-musl"
     And the release workflow builds with "aarch64-unknown-linux-musl"
 
@@ -33,7 +33,7 @@ Feature: Engineering quality (ENG)
 
   @ENG-04 @P0
   Scenario: errors keep their cause, are typed per counter, and panics stop at the entry points
-    Given an isolated Cairn home
+    Given an isolated ParleyInn home
     And a hook handler that panics
     When the hook "SessionStart" runs with a valid input
     Then the command exits 0
@@ -43,17 +43,17 @@ Feature: Engineering quality (ENG)
 
   @ENG-05 @P0
   Scenario: structured logs pass through redaction
-    Given an isolated Cairn home
+    Given an isolated ParleyInn home
     And a log field containing an AWS access key
-    When Cairn writes the log line
+    When ParleyInn writes the log line
     Then the log line is JSON emitted through tracing
     And the key appears only as a "[REDACTED:" marker
 
   @ENG-06 @P0 @pending
-  Scenario: the crash-consistency test kills Cairn mid-operation and every invariant stays true
-    Given an isolated Cairn home
-    When the crash-consistency test kills Cairn at randomized points during ingestion, purge, migration and rebuild
-    Then after every kill "cairn verify" exits 0
+  Scenario: the crash-consistency test kills ParleyInn mid-operation and every invariant stays true
+    Given an isolated ParleyInn home
+    When the crash-consistency test kills ParleyInn at randomized points during ingestion, purge, migration and rebuild
+    Then after every kill "parinn verify" exits 0
     And each nightly job completes at least 10000 iterations
 
   @ENG-07 @P0 @pending
@@ -88,10 +88,10 @@ Feature: Engineering quality (ENG)
 
   @ENG-09 @P0 @pending
   Scenario: data races are excluded and the store survives a concurrency soak
-    Given an isolated Cairn home
+    Given an isolated ParleyInn home
     When 50 concurrent writers append 1000000 events
     Then no two events share an address (writer, seq), and no seq is duplicated or skipped within any writer's log
-    And "cairn verify" exits 0
+    And "parinn verify" exits 0
     And every unsafe block that shares memory between threads passes under Miri or ThreadSanitizer
 
   @ENG-10 @P0 @pending
@@ -215,7 +215,7 @@ Feature: Engineering quality (ENG)
     And the committed files of any two targets whose linked crates differ differ in bytes
     When each target's build selects its embedded file
     Then the embedded text equals that target's committed file
-    And the built core executable's "cairn licenses" output equals it
+    And the built core executable's "parinn licenses" output equals it
     And any other executable a component ships in carries the same for the crates linked into it
     And the CI workflow fails a pull request whose committed file differs from a regeneration
     And the release build fails when a built executable's output differs from its target's regenerated file

@@ -6,7 +6,7 @@ use store::Store;
 use testkit::TempDir;
 
 fn home(dir: &TempDir) -> Home {
-    Home::locate(Some(dir.path().join(".cairn").as_os_str()), None).unwrap()
+    Home::locate(Some(dir.path().join(".parinn").as_os_str()), None).unwrap()
 }
 
 fn redactor() -> Redactor {

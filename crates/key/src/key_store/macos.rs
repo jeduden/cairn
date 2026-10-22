@@ -1,5 +1,5 @@
-//! The macOS Keychain (the plan's ruling 2): Cairn's keys as generic
-//! passwords of the service `cairn`, through `security-framework`,
+//! The macOS Keychain (the plan's ruling 2): ParleyInn's keys as generic
+//! passwords of the service `parinn`, through `security-framework`,
 //! whose `unsafe` stays inside that crate.
 
 use security_framework::passwords::{
@@ -8,8 +8,8 @@ use security_framework::passwords::{
 
 use super::Keychain;
 
-/// The keychain service every Cairn key is kept under.
-const SERVICE: &str = "cairn";
+/// The keychain service every ParleyInn key is kept under.
+const SERVICE: &str = "parinn";
 /// The status the Keychain answers when it holds no such item.
 const ITEM_NOT_FOUND: i32 = -25300;
 

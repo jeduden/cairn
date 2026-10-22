@@ -18,7 +18,7 @@ What landed:
   `socketpair` and `io_uring_setup` with `EACCES` and records every
   network call. Any recorded call fails the start, naming the
   component and the test that started it (thread and source place).
-- `crates/cairn/tests/e2e_cairn.rs` starts the core only through it,
+- `crates/parinn/tests/e2e_parinn.rs` starts the core only through it,
   and names no `Command`, so the core crate's clippy.toml refuses an
   unconfined start there. The gate test
   `the_core_s_tests_start_it_confined` (engineering crate,
@@ -28,14 +28,14 @@ What landed:
   filtered to a probe test that opens a socket, under the
   confinement, and require the failure to name the core and the
   calling test. The scenario runner hosts the same probe behind
-  `--cairn-boundary-probe` for the ENG-12 steps.
+  `--parinn-boundary-probe` for the ENG-12 steps.
 - A machine that cannot confine fails every start, loudly. Outside
-  CI, `CAIRN_E2E_UNCONFINED=1` runs the tests unconfined; CI refuses
+  CI, `PARINN_E2E_UNCONFINED=1` runs the tests unconfined; CI refuses
   it.
 - CI: the test, coverage and drift jobs lift the runner's AppArmor
   limit on user namespaces and install strace when it is missing.
 - Drift cases: the core started outside the confinement, and the
-  core opening a socket (the `e2e_cairn` test then fails naming the
+  core opening a socket (the `e2e_parinn` test then fails naming the
   core and the test).
 - The ENG-12 steps are bound in `engineering_boundary.rs`. With the
   outline narrowed locally to its core row, all three pass.

@@ -18,7 +18,7 @@ Key stores (SEC-10, ruling 2), in the `key` crate, with an ADR:
 - A missing key and a locked or unreadable key store are told apart;
   only the first counts as missing (PRV-12). The second is refused,
   audited and counted.
-- `cairn status` names the key store, and says when a key is a file an
+- `parinn status` names the key store, and says when a key is a file an
   unsandboxed agent of the same OS user could read.
 
 The Windows shim, a `dpapi` crate: the one crate holding `unsafe`,
@@ -30,7 +30,7 @@ Seats (PRV-11, LANE-16, LANE-23):
 
 - `Node::certify_run_seat` certifies a run seat whose key its caller
   keeps in memory, for phase 10's MCP server.
-- `cairn verify --json` reports each seat's writer, id, room, seat
+- `parinn verify --json` reports each seat's writer, id, room, seat
   kind and ingest flag, read only from its seat certificate.
 - M1's roles: the owner's device seat has every capability but writing
   a room summary; a run's personal-room seat is a contributor; the
@@ -43,13 +43,13 @@ Node identity (REC-24, SEC-27), with a proposed ADR:
   `/etc/machine-id` on Linux. The home keeps only its digest. A value
   still unavailable on a second read counts as a change. macOS and
   Windows read none yet: for the stakeholder.
-- On a change Cairn mints a new device key, recovery key and device
+- On a change ParleyInn mints a new device key, recovery key and device
   seat key and keeps the personal room's id. The new device seat
   records a node identity change event, carrying only both keys'
   fingerprints and the chain head of the key event log it leaves, then
   the new key's `minted`, then its certificate record. The change is
   audited and counted; nothing is appended under an old key.
-- `Node::find` and `cairn verify` follow the key event logs: a seat
+- `Node::find` and `parinn verify` follow the key event logs: a seat
   counts when a key with an inception in the record certified it, and
   that key's device seat holds its certificate record.
 
@@ -70,8 +70,8 @@ Tests. Unit tests beside each function, 99% per crate.
 node identity change through the built core, confined. The other key
 stores pass `cargo check --target`.
 
-Parked. Rotation and `cairn device-key rotate`. Also `minted anew`,
-`recovered`, confirms, chooses, rejects and duplicities. `cairn
+Parked. Rotation and `parinn device-key rotate`. Also `minted anew`,
+`recovered`, confirms, chooses, rejects and duplicities. `parinn
 recovery-key write` needs a key derivation crate past ENG-18's budget.
 
 Gate: `@PRV-11` passes; the M1 steps above pass narrowed. `@PRV-09`

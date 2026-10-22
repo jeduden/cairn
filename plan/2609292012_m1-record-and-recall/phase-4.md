@@ -6,7 +6,7 @@ result: false
 ---
 # Phase 4: redaction before anything is written, input limits and paths
 
-Requirements. SEC-08's redaction of everything `cairn ingest`
+Requirements. SEC-08's redaction of everything `parinn ingest`
 writes, SEC-05's hook input limits, SEC-18's allowed roots and
 ENG-05's logs. `@ENG-05` comes off `@pending`; the other three keep
 rows a later phase reaches, their M1 part bound and passing. A release
@@ -32,13 +32,13 @@ here, the stakeholder's choice of 16 October 2026):
   `[REDACTED:<rule>]` (`extra_pattern_<n>` for the principal's),
   carrying nothing derived from the secret. No correlation index is
   kept, so none can confirm a guess.
-- `cairn ingest` redacts every line before it draws a commitment key
+- `parinn ingest` redacts every line before it draws a commitment key
   or writes. An event's content records its redactions; each is
   counted.
 
 Input limits (SEC-05):
 
-- `cairn hook` stops reading the hook input past 1 MiB. Such input,
+- `parinn hook` stops reading the hook input past 1 MiB. Such input,
   or input nested deeper than 64 levels, is refused before it is
   parsed. Each refusal is audited with the scenario's text and counted
   on its own counter. The hook still exits 0 and injects nothing (I9).
@@ -50,7 +50,7 @@ Allowed roots (SEC-18):
 - A path is resolved, symbolic links included, and must lie within an
   allowed root once resolved: `transcript.roots`, the home, or, for
   reading only, the run's worktree and its repository's git directory.
-- `cairn ingest --path` reads only within `transcript.roots`, never
+- `parinn ingest --path` reads only within `transcript.roots`, never
   the home's keys or store. A path outside is refused, audited as
   "path outside allowed roots" and counted; nothing is read from it.
 - The worktree comes from the session binding (phases 9 and 10);
@@ -60,7 +60,7 @@ Logs (ENG-05, OPS-05's file):
 
 - `tracing` (its ADR lands here) through an in-house subscriber, a
   `structured_log` module: one JSON object per line in
-  `logs/cairn.jsonl`, `0600`, each field redacted by the rule set.
+  `logs/parinn.jsonl`, `0600`, each field redacted by the rule set.
 
 Where the gate's scenarios go live:
 
@@ -68,7 +68,7 @@ Where the gate's scenarios go live:
 - `@SEC-05`: rows 1 and 2 pass here; row 3 needs phase 6's payload
   store.
 - `@SEC-08`: the ingest steps pass here. Its hook input step needs
-  phase 9's handlers, and `cairn purge --run` is ADM-07's run scope, in
+  phase 9's handlers, and `parinn purge --run` is ADM-07's run scope, in
   M3. Raise this with the stakeholder.
 - `@SEC-18`: its step needs phases 9 and 10; unit tests prove its
   rows on the allowed roots.

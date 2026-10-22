@@ -1,6 +1,6 @@
 //! The steps of ENG-05: the core logs through `tracing`, one JSON line
 //! per event in the home's log file, every field redacted first. The
-//! log field is the transcript path `cairn ingest` logs, and the path
+//! log field is the transcript path `parinn ingest` logs, and the path
 //! carries an AWS access key in its file name.
 
 use std::fs;
@@ -28,7 +28,7 @@ fn logs(w: &mut World) -> &mut LogSteps {
 
 /// The home's log file's lines.
 fn log_lines(w: &World) -> Result<Vec<String>, String> {
-    let path = home(w)?.root().join("logs").join("cairn.jsonl");
+    let path = home(w)?.root().join("logs").join("parinn.jsonl");
     let text = fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     Ok(text.lines().map(str::to_owned).collect())
 }
@@ -43,8 +43,8 @@ fn log_field_with_key(w: &mut World) -> Result<(), String> {
     Ok(())
 }
 
-#[when(regex = r"^Cairn writes the log line$")]
-fn cairn_writes_log_line(w: &mut World) -> Result<(), String> {
+#[when(regex = r"^ParleyInn writes the log line$")]
+fn parinn_writes_log_line(w: &mut World) -> Result<(), String> {
     let path = logs(w).transcript.clone().ok_or("no log field was given")?;
     let path = path.to_str().ok_or("the transcript path is not UTF-8")?;
     run_core(w, &["ingest", "--path", path], None)
@@ -58,7 +58,7 @@ fn log_line_is_json(w: &mut World) -> Result<(), String> {
         .find(|l| l.contains("\"ingested\""))
         .ok_or(format!("no log line says ingested among {lines:?}"))?;
     let value: Value = serde_json::from_str(line).map_err(|e| format!("{line}: {e}"))?;
-    let traced = value["target"] == "cairn"
+    let traced = value["target"] == "parinn"
         && value["level"] == "info"
         && value["fields"]["message"] == "ingested"
         && value["fields"]["transcript"].is_string();

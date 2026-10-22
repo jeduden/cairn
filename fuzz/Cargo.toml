@@ -5,7 +5,7 @@
 # `cargo +<the nightly fuzz/rust-toolchain.toml pins> fuzz run <target>`
 # runs one; the nightly workflow runs every target.
 [package]
-name = "cairn-fuzz"
+name = "parinn-fuzz"
 version = "0.0.0"
 edition = "2021"
 license = "MIT"

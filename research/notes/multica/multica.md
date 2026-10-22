@@ -49,37 +49,37 @@ Sources: <https://multica.ai/docs/comments>,
 <https://multica.ai/docs/mentioning-agents>,
 <https://multica.ai/docs/tutorial>.
 
-This is a stronger shipped assignment and review surface than Cairn currently
-has. Cairn's room view is specified in M7, while the peer network and forge
-review come later in M8 and M9. A Cairn room can hold an intent, conversation,
+This is a stronger shipped assignment and review surface than ParleyInn currently
+has. ParleyInn's room view is specified in M7, while the peer network and forge
+review come later in M8 and M9. A ParleyInn room can hold an intent, conversation,
 seats, pins and branches; it is not tied to an issue in a project.
-Sources: [Cairn status](../../../README.md),
+Sources: [ParleyInn status](../../../README.md),
 [milestones](../../../PLAN.md),
 [domain model](../../../docs/domain-model/index.md).
 
 ## Record, context and trust
 
 Multica's issue and run history helps a returning person reconstruct a piece
-of work. Its documentation does not establish Cairn's stronger I1, I3 and I10
+of work. Its documentation does not establish ParleyInn's stronger I1, I3 and I10
 properties: stable addresses for every event, verbatim pin restoration after
 compaction, or deterministic rebuilding of derived artifacts. The documented
 transcript is a useful view; whether it captures every edit or is tamper-evident
 remains unknown from the sources reviewed. Sources:
 <https://multica.ai/docs/issues>,
 <https://multica.ai/docs/tasks>,
-[Cairn invariants](../../../docs/srs/invariants.md).
+[ParleyInn invariants](../../../docs/srs/invariants.md).
 
 Multica adds workspace context to every agent in that workspace and project
 description and resource data to runs in a project. Squad instructions are
 appended to the leader's instructions, and an agent's mention can trigger a
-member's run. Those documented paths do not offer Cairn's I2 rule that
+member's run. Those documented paths do not offer ParleyInn's I2 rule that
 untrusted stored content reaches a model only on explicit recall inside an
 untrusted envelope, or through a principal act's closed path. This is a
 comparison of documented behavior, not a claim that Multica lacks other access
 controls. Sources: <https://multica.ai/docs/workspaces>,
 <https://multica.ai/docs/projects>,
 <https://multica.ai/docs/squads>,
-[Cairn invariants](../../../docs/srs/invariants.md).
+[ParleyInn invariants](../../../docs/srs/invariants.md).
 
 ## Execution and network boundary
 
@@ -93,31 +93,31 @@ approval prompts are answered automatically on its default path. Source:
 
 The server and daemon exchange run data over the network. In a self-hosted
 deployment the API server sends a daily, aggregate deployment telemetry
-snapshot by default; `DO_NOT_TRACK=1` disables it. This differs from Cairn's
+snapshot by default; `DO_NOT_TRACK=1` disables it. This differs from ParleyInn's
 I4 network-free core and no-telemetry contract. Multica can be self-hosted, but
 that does not make its core socket-free or turn off telemetry by default.
 Sources: <https://multica.ai/docs/how-multica-works>,
 <https://github.com/multica-ai/multica/blob/main/SELF_HOSTING.md>,
-[Cairn invariants](../../../docs/srs/invariants.md).
+[ParleyInn invariants](../../../docs/srs/invariants.md).
 
 ## Competitive reading
 
 Multica is a direct competitor for the experience of assigning work, following
 many agents, catching up on a run and handing its result to review. It is an
-adjacent rather than exact match for Cairn's room: Multica's issue gathers
+adjacent rather than exact match for ParleyInn's room: Multica's issue gathers
 its own discussion and separate runs, and links to pull requests whose review
-threads remain on the forge. Cairn aims to keep the full addressed record of
+threads remain on the forge. ParleyInn aims to keep the full addressed record of
 the work and the trust rules that govern recall. The existing
 [pitch comparison](../live-pr-pitch-review/competitors.md) still places Zed
 Delta closer to the live shared-branch claim. Multica puts more pressure on the
-usefulness of Cairn's planned room view than on the novelty of its I2 and I4
+usefulness of ParleyInn's planned room view than on the novelty of its I2 and I4
 contracts.
 
 The review-thread split is also a product distinction, not just a missing
-integration detail. Cairn's intended room keeps the conversation about an
+integration detail. ParleyInn's intended room keeps the conversation about an
 intent with any branches it names and its results; a pull request, when used,
 is the forge's review object for a branch rather than a second place to
-continue that conversation. Cairn's M9 contract brings both linked issue
+continue that conversation. ParleyInn's M9 contract brings both linked issue
 discussion and pull-request review items into the room, each only after
 the forge read credential owner grants that exact issue or branch to the room, and lets a person
 explicitly send a room response to the forge; the
@@ -125,11 +125,11 @@ explicitly send a room response to the forge; the
 criterion.
 
 The implementation gap is decisive for a user choosing software today:
-Multica's assignment, run and review surfaces are available; Cairn's M7 to M9
-surfaces are planned. Cairn can claim a differentiated contract, but the
+Multica's assignment, run and review surfaces are available; ParleyInn's M7 to M9
+surfaces are planned. ParleyInn can claim a differentiated contract, but the
 comparison cannot establish a better delivered experience before those
 milestones ship. Sources: <https://github.com/multica-ai/multica>,
-[Cairn status](../../../README.md),
+[ParleyInn status](../../../README.md),
 [milestones](../../../PLAN.md).
 
 Multica is source-available under its own license. It incorporates Apache 2.0

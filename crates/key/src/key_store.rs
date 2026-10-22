@@ -23,7 +23,7 @@ use crate::KeyError;
 use crate::file::{read_secret, write_secret};
 
 /// The label a home's keychain account is derived under.
-const ACCOUNT: &[u8] = b"cairn key store account v1\0";
+const ACCOUNT: &[u8] = b"parinn key store account v1\0";
 
 /// One entry of a key store: the place of one key.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -81,7 +81,7 @@ pub enum KeyStoreKind {
 }
 
 impl KeyStoreKind {
-    /// The kind's name, as `cairn status --json` shows it.
+    /// The kind's name, as `parinn status --json` shows it.
     #[must_use]
     pub fn as_str(self) -> &'static str {
         match self {
@@ -98,7 +98,7 @@ impl KeyStoreKind {
         matches!(self, Self::File | Self::Dpapi)
     }
 
-    /// Where it keeps keys, as `cairn status` says it.
+    /// Where it keeps keys, as `parinn status` says it.
     #[must_use]
     pub fn describe(self) -> &'static str {
         match self {
@@ -263,7 +263,7 @@ pub fn account(home: &Path, entry: &Entry) -> String {
     format!("home-{}/{}", &digest[..32], entry.0)
 }
 
-/// What a keychain does for a key store: Cairn's own generic passwords,
+/// What a keychain does for a key store: ParleyInn's own generic passwords,
 /// by account.
 pub trait Keychain {
     /// The secret kept under `account`, none when nothing is.

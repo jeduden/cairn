@@ -21,9 +21,9 @@ fn placeholders_pass() {
 #[test]
 fn an_email_address_other_than_the_placeholders_is_residual() {
     assert_eq!(
-        residual("mail jane.doe+cairn@gmail.com. or ops@corp.example.org-"),
+        residual("mail jane.doe+parinn@gmail.com. or ops@corp.example.org-"),
         [
-            "an email address jane.doe+cairn@gmail.com",
+            "an email address jane.doe+parinn@gmail.com",
             "an email address ops@corp.example.org"
         ]
     );

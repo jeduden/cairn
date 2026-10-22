@@ -1,9 +1,9 @@
-//! Cairn's structured logs (ENG-05, OPS-05): a `tracing` subscriber
+//! ParleyInn's structured logs (ENG-05, OPS-05): a `tracing` subscriber
 //! that writes each event as one JSON object per line, every field
 //! value redacted first by the redactor its caller compiles, so no
 //! secret a log field carries reaches the log file. It writes only to
-//! the home's log file, `logs/cairn.jsonl`, which a hook handler logs
-//! to and nowhere else; Cairn ships no log anywhere (OPS-05).
+//! the home's log file, `logs/parinn.jsonl`, which a hook handler logs
+//! to and nowhere else; ParleyInn ships no log anywhere (OPS-05).
 //!
 //! The log file opens at the first event, through a closure the caller
 //! hands in, so a home that does not exist yet, or that the caller
@@ -23,7 +23,7 @@ use tracing::span::{Attributes, Id, Record};
 use tracing::{Event, Level, Metadata, Subscriber};
 
 /// The log file's name in the home's `logs` directory.
-pub const LOG_FILE: &str = "cairn.jsonl";
+pub const LOG_FILE: &str = "parinn.jsonl";
 
 /// Opens where log lines go: none when there is nowhere yet, as before
 /// the home exists.

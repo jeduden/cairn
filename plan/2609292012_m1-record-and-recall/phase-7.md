@@ -7,7 +7,7 @@ result: false
 # Phase 7: the transcript parser and provenance
 
 Requirements. REC-05, REC-26, PRV-08, PRV-03 and PRV-01's closed set
-on every line `cairn ingest` records; ENG-17's contract replay and
+on every line `parinn ingest` records; ENG-17's contract replay and
 residual-identifier check; ENG-07's first `fuzz/` crate. `@REC-05` and
 `@PRV-03` come off `@pending`; the other rows keep steps a later phase
 reaches, their M1 part bound and passing.
@@ -50,9 +50,9 @@ Ingest:
 
 - Kind `transcript_line` with its class, or `unparsed_line` with
   `unparsed`, audited and counted (`events_unparsed`).
-- `cairn ingest --all` reads every transcript under `transcript.roots`
+- `parinn ingest --all` reads every transcript under `transcript.roots`
   as `--path` reads one; positions and runs stay phase 8's.
-- `cairn verify` accepts `harness_meta` outside device seats: a
+- `parinn verify` accepts `harness_meta` outside device seats: a
   transcript's is untrusted (PRV-08), only the launcher's trusted.
 
 ENG-17, in `harness-contract`: each recorded transcript parses with

@@ -1,4 +1,4 @@
-//! Transcript sources (§8.2, REC-03, REC-07, REC-08): the state `cairn
+//! Transcript sources (§8.2, REC-03, REC-07, REC-08): the state `parinn
 //! ingest` keeps beside the record. Each transcript source has one row
 //! per transcript generation, holding its ingest position: how far
 //! ingest has read it, as a byte offset and the SHA-256 of the consumed

@@ -1,5 +1,5 @@
-//! Where the home is and what it holds (§8.1): `CAIRN_HOME` when set,
-//! else `.cairn` in `HOME`. The home and its `keys` directory are
+//! Where the home is and what it holds (§8.1): `PARINN_HOME` when set,
+//! else `.parinn` in `HOME`. The home and its `keys` directory are
 //! readable only by their owner. Its keys are kept in this OS's key
 //! store, each in an entry named per home (SEC-10), and it remembers
 //! the digest of the node identity it was last started under (REC-24).
@@ -13,7 +13,7 @@ use key::key_store::{self, KeyStore};
 use crate::AdminError;
 use crate::node_identity::IdentitySource;
 
-/// A Cairn home.
+/// A ParleyInn home.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Home {
     root: PathBuf,
@@ -21,16 +21,16 @@ pub struct Home {
 }
 
 impl Home {
-    /// The home `CAIRN_HOME` names, else `.cairn` in `HOME`; an empty
+    /// The home `PARINN_HOME` names, else `.parinn` in `HOME`; an empty
     /// variable counts as unset.
     ///
     /// # Errors
     ///
     /// Fails when neither names one.
-    pub fn locate(cairn_home: Option<&OsStr>, home: Option<&OsStr>) -> Result<Self, AdminError> {
+    pub fn locate(parinn_home: Option<&OsStr>, home: Option<&OsStr>) -> Result<Self, AdminError> {
         let set = |v: Option<&OsStr>| v.filter(|v| !v.is_empty()).map(PathBuf::from);
-        let root = set(cairn_home)
-            .or_else(|| set(home).map(|h| h.join(".cairn")))
+        let root = set(parinn_home)
+            .or_else(|| set(home).map(|h| h.join(".parinn")))
             .ok_or(AdminError::NoHome)?;
 
         Ok(Self {

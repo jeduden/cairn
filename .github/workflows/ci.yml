@@ -62,7 +62,7 @@ jobs:
       # here, with the real HOME, before the suite; no cache, as in
       # release.yml.
       - name: Build the release core the budget rows time
-        run: cargo build --release --locked -p cairn -p calibrate
+        run: cargo build --release --locked -p parinn -p calibrate
       # ENG-14: the suite runs with HOME pointed at an empty decoy
       # directory, the toolchain keeping its own homes. The isolation
       # guard (testkit::guard) aborts a test that resolves real
@@ -125,7 +125,7 @@ jobs:
           }
       # NFR-02: the budget rows time the release core, which the
       # instrumented run does not build.
-      - run: cargo build --release --locked -p cairn -p calibrate
+      - run: cargo build --release --locked -p parinn -p calibrate
       - run: cargo run --locked -p coverage
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
@@ -303,14 +303,16 @@ jobs:
           base_version="$(sed -n 's/^channel = "\(.*\)"$/\1/p' "$RUNNER_TEMP/base/rust-toolchain.toml")"
           mise install "rust@$base_version"
       - name: Build the head's suite and core
-        run: cargo build --release --locked -p benchmark -p cairn
+        run: cargo build --release --locked -p benchmark -p parinn
       # Until the suite reaches main, the base has none to build.
       - name: Build the base's suite and core
         shell: bash
         run: |
           cd "$RUNNER_TEMP/base"
           if [ -f tooling/benchmark/Cargo.toml ]; then
-            cargo build --release --locked -p benchmark -p cairn
+            core=cairn
+            [ -f crates/parinn/Cargo.toml ] && core=parinn
+            cargo build --release --locked -p benchmark -p "$core"
           fi
       - name: Sample both sides and gate
         shell: bash
@@ -318,10 +320,12 @@ jobs:
           set -euo pipefail
           head="$GITHUB_WORKSPACE/target/release"
           base="$RUNNER_TEMP/base/target/release"
+          base_core=cairn
+          [ -x "$base/parinn" ] && base_core=parinn
           out="$RUNNER_TEMP/samples"
           mkdir -p "$out"
           if [ ! -x "$base/benchmark" ]; then
-            "$head/benchmark" run --core "$head/cairn" --samples "$SAMPLES" > "$out/head.samples"
+            "$head/benchmark" run --core "$head/parinn" --samples "$SAMPLES" > "$out/head.samples"
             msg="the base has no benchmark suite to compare with; the head's suite ran"
             echo "::warning::$msg"
             echo "$msg" >> "$GITHUB_STEP_SUMMARY"
@@ -333,7 +337,9 @@ jobs:
             for side in $order; do
               bin="$head"
               [ "$side" = base ] && bin="$base"
-              "$bin/benchmark" run --core "$bin/cairn" --samples "$SAMPLES" >> "$out/$side.samples"
+              core="$bin/parinn"
+              [ "$side" = base ] && core="$base/$base_core"
+              "$bin/benchmark" run --core "$core" --samples "$SAMPLES" >> "$out/$side.samples"
             done
           done
           status=0

@@ -39,7 +39,7 @@ writer: no MCP server holds a run-seat key before phase 10 (REC-19).
 - Each held at the transcript's ingest marker, at the transcript's size
   when its hook fired.
 
-`cairn ingest` uses them. A fork observation names a harness fork
+`parinn ingest` uses them. A fork observation names a harness fork
 (REC-04); the ancestry lets a typed line be `user`. The first prompt
 line carrying a prompt commitment's `prompt_id` uses it up: matched
 when marked typed and its redacted text matches; later ones conflict,
@@ -54,9 +54,9 @@ Budgets (NFR-02, §9.1): `SessionStart` 150 ms, `UserPromptSubmit` and
 handler answers empty, audited as `hook_budget_exceeded`. Each leaves a
 start marker it clears. One left past its hook's harness timeout is
 counted `hook_unfinished`, once, by the next hook handler, the MCP
-server as it starts, or `cairn status`. A session binding no MCP server
-took within 30 s is counted once, by the next hook handler, `cairn
-status` or `cairn ingest`.
+server as it starts, or `parinn status`. A session binding no MCP server
+took within 30 s is counted once, by the next hook handler, `parinn
+status` or `parinn ingest`.
 
 Benchmarks (ENG-15): each hook handler over a fresh home, for NFR-02.
 NFR-01's store of 1M events stays awaiting.
@@ -67,7 +67,7 @@ Where the gate's scenarios go live:
   state (OQ-40); rows 1 to 3 bound.
 - `@REC-19`: the holding steps bound; sealing is M7's, the MCP server
   phase 10's.
-- `@NFR-02`: `cairn mcp` counts a marker as it starts, so all rows
+- `@NFR-02`: `parinn mcp` counts a marker as it starts, so all rows
   pass.
 - `@REC-04`'s homes and `@REC-22`'s ingest marker need several homes:
   with phase 10.

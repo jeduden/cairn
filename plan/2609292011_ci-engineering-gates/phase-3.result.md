@@ -10,7 +10,7 @@ summary: >-
 
 What landed:
 
-- `crates/cairn/clippy.toml` bans the standard library's blocking
+- `crates/parinn/clippy.toml` bans the standard library's blocking
   calls that take no deadline, each reason naming the deadline form:
   channel receive and send, condition and barrier waits, thread join
   and park, child waits, `Command::output` and `status`, file locks and

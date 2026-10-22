@@ -95,7 +95,7 @@ fn acknowledgement_recorded(w: &mut World) -> Result<(), String> {
     let out = last_run(w)?;
     if !out.status.success() {
         return Err(format!(
-            "cairn counter ack exited {}: {}",
+            "parinn counter ack exited {}: {}",
             out.status,
             String::from_utf8_lossy(&out.stdout).trim()
         ));

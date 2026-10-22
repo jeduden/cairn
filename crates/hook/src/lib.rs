@@ -1,6 +1,6 @@
-//! The hook handlers' entry point (§9.1): it names the hooks Cairn
+//! The hook handlers' entry point (§9.1): it names the hooks ParleyInn
 //! installs, decodes each hook input, and catches a handler's panic, so
-//! `cairn hook` fails open on every path (ENG-04, I9). Each failure is
+//! `parinn hook` fails open on every path (ENG-04, I9). Each failure is
 //! typed for the counter its audit entry feeds (OPS-01).
 //!
 //! - [`input`]: the hook input decoder. A hook input is held to its
@@ -29,7 +29,7 @@ pub const HOOK_INPUT_LIMIT: usize = 1 << 20;
 /// The deepest a hook input's JSON may nest (SEC-05).
 pub const NESTING_LIMIT: usize = 64;
 
-/// A hook Cairn installs: only those through which it writes to an
+/// A hook ParleyInn installs: only those through which it writes to an
 /// agent (§9.1).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Hook {
@@ -81,7 +81,7 @@ impl Hook {
         }
     }
 
-    /// The harness timeout Cairn installs it with (ASM-10), above its
+    /// The harness timeout ParleyInn installs it with (ASM-10), above its
     /// hook budget: a start marker older than this was left by a
     /// handler the harness stopped (NFR-02).
     #[must_use]
@@ -96,7 +96,7 @@ impl Hook {
 /// Why a hook handler injected nothing; each feeds its own counter.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Failure {
-    /// `cairn hook` named no hook Cairn installs.
+    /// `parinn hook` named no hook ParleyInn installs.
     UnknownHook,
     /// The hook input is no JSON object.
     Malformed,

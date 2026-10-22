@@ -7,7 +7,7 @@
 //! shapes the recordings give, and no fixture carries a residual
 //! identifier.
 //!
-//! `CAIRN_REGENERATE_SHAPES=1 cargo test -p harness-contract --test
+//! `PARINN_REGENERATE_SHAPES=1 cargo test -p harness-contract --test
 //! contract` writes the shapes afresh after a new recording.
 
 use std::path::PathBuf;
@@ -22,7 +22,7 @@ fn recordings() -> PathBuf {
 
 #[test]
 fn recorded_shapes_regenerate_byte_for_byte() {
-    let write = std::env::var_os("CAIRN_REGENERATE_SHAPES").is_some();
+    let write = std::env::var_os("PARINN_REGENERATE_SHAPES").is_some();
     let problems = shapes::regenerate(
         &recordings(),
         &testkit::repo_root().join(shapes::SHAPES_DIR),
@@ -52,7 +52,7 @@ fn every_recorded_transcript_replays_without_an_unparsed_line_or_format_drift() 
 
 #[test]
 fn hook_input_shapes_regenerate_byte_for_byte() {
-    let write = std::env::var_os("CAIRN_REGENERATE_SHAPES").is_some();
+    let write = std::env::var_os("PARINN_REGENERATE_SHAPES").is_some();
     let problems = shapes::regenerate_hooks(
         &recordings(),
         &testkit::repo_root().join(shapes::HOOK_SHAPES_DIR),

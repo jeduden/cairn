@@ -17,7 +17,7 @@ use crate::AdminError;
 use crate::home::Home;
 
 /// The label a node identity's digest is derived under.
-const LABEL: &[u8] = b"cairn node identity v1\0";
+const LABEL: &[u8] = b"parinn node identity v1\0";
 
 /// Where a node identity is read from.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,7 +28,7 @@ pub enum IdentitySource {
     HardwareUuid,
     /// The Windows `MachineGuid`.
     MachineGuid,
-    /// This OS has no source Cairn reads: the identity is not checked.
+    /// This OS has no source ParleyInn reads: the identity is not checked.
     Unsupported,
 }
 
@@ -106,7 +106,7 @@ impl IdentitySource {
     }
 
     /// The value, read again once when the first read finds none
-    /// (REC-24 lets Cairn retry within the hook budgets).
+    /// (REC-24 lets ParleyInn retry within the hook budgets).
     #[must_use]
     pub fn observe(&self) -> Option<String> {
         self.read().or_else(|| self.read())

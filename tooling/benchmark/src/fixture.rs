@@ -1,8 +1,8 @@
 //! What a benchmark's core runs over, made before each sample and
 //! outside its time: for ingestion (NFR-04), a fresh home holding one
-//! transcript under its transcript roots. `HOME` and `CAIRN_HOME` both
+//! transcript under its transcript roots. `HOME` and `PARINN_HOME` both
 //! point inside it, so a sample never reaches the machine's own home,
-//! Cairn home or Claude Code configuration (ENG-14).
+//! ParleyInn home or Claude Code configuration (ENG-14).
 
 use std::fs;
 use std::io;
@@ -59,7 +59,7 @@ impl Home {
     /// Fails when the home or the transcript cannot be written.
     pub fn with_transcript(base: &Path, transcript: &str) -> io::Result<Self> {
         let n = MADE.fetch_add(1, Ordering::Relaxed);
-        let root = base.join(format!("cairn-benchmark-{}-{n}", std::process::id()));
+        let root = base.join(format!("parinn-benchmark-{}-{n}", std::process::id()));
         let projects = root.join(".claude").join("projects").join("-w-bench");
         fs::create_dir_all(&projects)?;
         let home = Self { root };
@@ -99,7 +99,7 @@ impl Home {
     ///
     /// Fails when the audit directory exists and cannot be read.
     pub fn counted(&self, counter: &str) -> io::Result<bool> {
-        let Ok(listing) = fs::read_dir(self.root.join(".cairn").join("audit")) else {
+        let Ok(listing) = fs::read_dir(self.root.join(".parinn").join("audit")) else {
             return Ok(false);
         };
         let wanted = format!("\"{counter}\"");
@@ -112,13 +112,13 @@ impl Home {
         Ok(false)
     }
 
-    /// The variables the core starts with: `HOME` and `CAIRN_HOME`, both
+    /// The variables the core starts with: `HOME` and `PARINN_HOME`, both
     /// inside this home.
     #[must_use]
     pub fn env(&self) -> [(&'static str, PathBuf); 2] {
         [
             ("HOME", self.root.clone()),
-            ("CAIRN_HOME", self.root.join(".cairn")),
+            ("PARINN_HOME", self.root.join(".parinn")),
         ]
     }
 }

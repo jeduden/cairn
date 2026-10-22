@@ -276,7 +276,7 @@ fn cargo_direct_deps_reads_every_registry_dependency_of_the_members() {
 #[test]
 fn cargo_shipped_deps_counts_what_links_into_a_product_executable() {
     let metadata = r#"{"workspace_root": "/w", "packages": [
-        {"name": "cairn", "manifest_path": "/w/crates/cairn/Cargo.toml",
+        {"name": "parinn", "manifest_path": "/w/crates/parinn/Cargo.toml",
          "targets": [{"kind": ["bin"]}, {"kind": ["test"]}],
          "dependencies": [
             {"name": "store", "source": null, "kind": null},
@@ -291,7 +291,7 @@ fn cargo_shipped_deps_counts_what_links_into_a_product_executable() {
             {"name": "rusqlite", "source": "registry+x", "kind": null},
             {"name": "forked", "source": "git+https://example.com/forked", "kind": null},
             {"name": "sha2", "source": "registry+x", "kind": null},
-            {"name": "cairn", "source": null, "kind": null}
+            {"name": "parinn", "source": null, "kind": null}
         ]},
         {"name": "testkit", "manifest_path": "/w/tooling/testkit/Cargo.toml",
          "targets": [{"kind": ["lib"]}],
@@ -323,13 +323,13 @@ fn cargo_shipped_deps_counts_what_links_into_a_product_executable() {
         Vec::<String>::new()
     );
     let stray = r#"{"workspace_root": "/w", "packages": [
-        {"name": "cairn", "manifest_path": "/w/crates/cairn/Cargo.toml",
+        {"name": "parinn", "manifest_path": "/w/crates/parinn/Cargo.toml",
          "targets": [{"kind": ["bin"]}],
          "dependencies": [{"name": "vendored", "source": null, "kind": null}]}
     ]}"#;
     assert_eq!(
         cargo_shipped_deps(stray, product).unwrap_err(),
-        "cairn depends by path on vendored, which is no workspace member"
+        "parinn depends by path on vendored, which is no workspace member"
     );
 }
 
@@ -339,7 +339,7 @@ fn ships_wants_a_binary_target_under_the_product_root() {
     let package = |manifest: &str, kind: &str| serde_json::json!({"manifest_path": manifest, "targets": [{"kind": ["lib"]}, {"kind": [kind]}]});
 
     assert!(ships(
-        &package("/w/crates/cairn/Cargo.toml", "bin"),
+        &package("/w/crates/parinn/Cargo.toml", "bin"),
         product
     ));
     assert!(!ships(
@@ -396,7 +396,7 @@ fn cargo_metadata_reads_a_workspace_and_names_a_failure() {
         ),
         ("src/lib.rs", ""),
     ]);
-    let home = dir.path().join(".cairn");
+    let home = dir.path().join(".parinn");
 
     let json = cargo_metadata(&cargo(), &dir.path().join("Cargo.toml"), &home).unwrap();
     assert!(json.contains("\"name\":\"t\""), "{json}");
@@ -414,7 +414,7 @@ fn cargo_metadata_reads_a_workspace_and_names_a_failure() {
 #[test]
 fn direct_deps_reads_each_manifest_with_its_reader() {
     let (_dir, checkout) = crate::tests::checkout(&[]);
-    let shipped = checkout.root.join("crates/cairn/Cargo.toml");
+    let shipped = checkout.root.join("crates/parinn/Cargo.toml");
     let json = format!(
         r#"{{"workspace_root": {}, "packages": [
             {{"manifest_path": {}, "targets": [{{"kind": ["bin"]}}],

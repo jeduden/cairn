@@ -11,7 +11,7 @@ use testkit::TempDir;
 /// holds "first".
 fn home(dir: &TempDir) -> Home {
     fs::write(dir.path().join("machine-id"), "first\n").unwrap();
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None)
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None)
         .unwrap()
         .with_identity(IdentitySource::Files(vec![dir.path().join("machine-id")]));
     home.create().unwrap();

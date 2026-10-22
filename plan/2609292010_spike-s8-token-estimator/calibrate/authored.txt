@@ -13,7 +13,7 @@ pin-en
 The customer's staging database is read-only for us. Do not run migrations against db-staging-03.
 %%
 pin-en
-Keep the public API of crates/cairn stable: no renamed functions, no changed signatures, until v1.0.
+Keep the public API of crates/parinn stable: no renamed functions, no changed signatures, until v1.0.
 %%
 pin-en
 Use UTC everywhere. Timestamps in logs are RFC 3339 with a trailing Z.

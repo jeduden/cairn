@@ -46,7 +46,8 @@ fn ties_go_to_the_smaller_address_whatever_the_order_of_the_matches() {
     reversed.reverse();
 
     assert_eq!(rank(&found, 10), rank(&reversed, 10));
-    assert_eq!(rank(&found, 1)[0].address, found[2].address);
+    let smallest = found.iter().map(|c| c.address).min();
+    assert_eq!(Some(rank(&found, 1)[0].address), smallest);
 }
 
 #[test]

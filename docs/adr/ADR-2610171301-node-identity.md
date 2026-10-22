@@ -3,13 +3,13 @@ id: ADR-2610171301
 title: "The node identity is the machine id, kept in the home only as a digest"
 status: accepted
 summary: >-
-  REC-24 names no source for the node identity. On Linux Cairn reads
+  REC-24 names no source for the node identity. On Linux ParleyInn reads
   systemd's machine id, /etc/machine-id or D-Bus's copy, and the home
   keeps only its digest. An unavailable value has a digest of its own,
   so a node that never reads one changes once. On macOS it is the
   hardware UUID gethostuuid(2) returns, on Windows the MachineGuid
   registry value, both read in the platform crate, the one crate with
-  unsafe code. cairn status says per OS whether the identity is
+  unsafe code. parinn status says per OS whether the identity is
   checked.
 ---
 # ADR-2610171301: The node identity
@@ -18,9 +18,9 @@ summary: >-
 
 REC-24 checks a node identity before the first append of each start:
 a value outside the home that a cloned runner image, a copied volume
-or a restored snapshot cannot carry over. On a change Cairn mints a new
+or a restored snapshot cannot carry over. On a change ParleyInn mints a new
 device key and new seat keys and records a node identity change event.
-An unavailable value counts as a change, though Cairn may read it again
+An unavailable value counts as a change, though ParleyInn may read it again
 within the hook budgets. The SRS names no source for the value. Phase 5
 of plan [2609292012](../../plan/2609292012_m1-record-and-recall/plan.md)
 builds the check.
@@ -58,9 +58,9 @@ a file the core can read, or a call through that shim.
   macOS call is declared in the crate with `extern "C"`, so no
   dependency is added; the Windows reads use `windows-sys`, with the
   `Win32_System_Registry` feature added.
-- **Status.** `cairn status` says whether the node identity is checked
+- **Status.** `parinn status` says whether the node identity is checked
   on this OS and against what, and that finding a fork across nodes
-  arrives with the peer network (PEER-10) while `cairn verify` scans
+  arrives with the peer network (PEER-10) while `parinn verify` scans
   the writer logs held here.
 - **A hint, not the guard.** The identity only tells a home that it
   moved. Two nodes with one identity, or a machine cloned for backup,
@@ -69,8 +69,8 @@ a file the core can read, or a call through that shim.
   the fact.
 
 - **Tests.** A development build reads the value from the file
-  `CAIRN_TEST_NODE_IDENTITY` names, as it reads managed policy from
-  `CAIRN_TEST_MANAGED_POLICY`; a release build never does.
+  `PARINN_TEST_NODE_IDENTITY` names, as it reads managed policy from
+  `PARINN_TEST_MANAGED_POLICY`; a release build never does.
 
 ## Alternatives
 

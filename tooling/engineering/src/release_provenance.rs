@@ -506,9 +506,9 @@ fn provenance_verify_problems(verify: &Job) -> Vec<String> {
             ));
         }
     }
-    if !verify.text.contains("cairn-*") {
+    if !verify.text.contains("parinn-*") {
         problems.push(format!(
-            "job {} does not verify every binary (cairn-*)",
+            "job {} does not verify every binary (parinn-*)",
             verify.name
         ));
     }

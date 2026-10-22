@@ -29,7 +29,7 @@ What landed:
   `--deny-self-hosted-runners`. The SBOM attestation and `cosign
   verify-blob` pin `release.yml@refs/heads/main` the same way.
 - `release.yml` attests the SBOM and signs the checksums, now listing
-  the SBOM, and attaches `cairn.spdx.json` to the release.
+  the SBOM, and attaches `parinn.spdx.json` to the release.
 - The `engineering` crate's `release_provenance` module reads the four
   workflows. Three gate tests in `tooling/engineering/tests/checkout.rs`
   hold them, registered in the drift registry's gate tests; sixteen

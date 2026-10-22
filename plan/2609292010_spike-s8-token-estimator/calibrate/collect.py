@@ -119,7 +119,7 @@ def tool_outputs(repo, commit):
     tree = git(repo, "ls-tree", "-r", "-l", commit)
     grep = git(repo, "grep", "-n", "-e", "fn ", "-e", "MUST", commit, "--", "crates", "tooling", "docs/srs")
     blame = git(repo, "blame", "-l", commit, "--", "Cargo.toml") + git(
-        repo, "blame", commit, "--", "crates/cairn/src/main.rs"
+        repo, "blame", commit, "--", "crates/parinn/src/main.rs"
     )
     listing = subprocess.run(
         ["ls", "-laR", "--time-style=long-iso", "crates", "tooling"],

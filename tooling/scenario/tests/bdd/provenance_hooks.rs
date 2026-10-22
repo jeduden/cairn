@@ -35,20 +35,20 @@ fn interactive(w: &mut World) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "cairn configuration accept exited {}: {}",
+        "parinn configuration accept exited {}: {}",
         out.status,
         String::from_utf8_lossy(&out.stdout).trim()
     ))
 }
 
 #[given(
-    regex = r#"^the person's configuration sets (no deployment mode, and the repository's "\.cairn\.toml" sets "node\.deployment_mode" to "interactive"|"node\.deployment_mode" to "interactive"|"node\.deployment_mode" to "interactive", and the MCP server's environment has "CLAUDE_CODE_SESSION_ATTENDED" set to "1")$"#
+    regex = r#"^the person's configuration sets (no deployment mode, and the repository's "\.parinn\.toml" sets "node\.deployment_mode" to "interactive"|"node\.deployment_mode" to "interactive"|"node\.deployment_mode" to "interactive", and the MCP server's environment has "CLAUDE_CODE_SESSION_ATTENDED" set to "1")$"#
 )]
 fn deployment_configured(w: &mut World, how: String) -> Result<(), String> {
     if how.starts_with("no deployment mode") {
         let git = w.home.join(".git");
         fs::create_dir_all(&git).map_err(|e| e.to_string())?;
-        let path = w.home.join(".cairn.toml");
+        let path = w.home.join(".parinn.toml");
         return fs::write(&path, "[node]\ndeployment_mode = \"interactive\"\n")
             .map_err(|e| format!("{}: {e}", path.display()));
     }

@@ -14,9 +14,9 @@ use crate::key_store::{Entry, KeyStore};
 use crate::random::{Entropy, draw};
 
 /// The label every signed message starts with.
-const LABEL: &[u8] = b"cairn signature v1\0";
+const LABEL: &[u8] = b"parinn signature v1\0";
 /// The label a key's fingerprint is derived under.
-const FINGERPRINT: &[u8] = b"cairn key fingerprint v1\0";
+const FINGERPRINT: &[u8] = b"parinn key fingerprint v1\0";
 
 /// What can go wrong with a key or a signature.
 #[derive(Debug)]
@@ -99,7 +99,7 @@ impl std::error::Error for KeyError {
     }
 }
 
-/// The kinds of signature Cairn makes so far; PRV-12 names confirm,
+/// The kinds of signature ParleyInn makes so far; PRV-12 names confirm,
 /// choose and reject besides, which land with their acts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SignatureKind {

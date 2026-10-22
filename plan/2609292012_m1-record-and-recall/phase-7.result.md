@@ -35,8 +35,8 @@ Outcome:
 - ENG-07: `fuzz/` fuzzes the transcript parser, the redactor and the
   configuration parser. Each ran 90 to 120 s locally under cargo-fuzz
   0.13.2, no crash; the nightly job runs each for 15 minutes.
-- `cairn ingest --all` reads every transcript under the roots, as
-  `--path` reads one; `cairn verify` accepts a transcript's untrusted
+- `parinn ingest --all` reads every transcript under the roots, as
+  `--path` reads one; `parinn verify` accepts a transcript's untrusted
   `harness_meta` in an ingest seat.
 - I1, I2 and I6 hold: no line is dropped, no transcript line is
   trusted, and every unparsed line and drift is counted.
@@ -48,7 +48,7 @@ Inherited:
 - `ingest::transcripts`; `Ingested::unparsed`, `drifts`; event kind
   `transcript_line`.
 - `harness-contract`: `replay`, `residual`, `shapes`;
-  `CAIRN_REGENERATE_SHAPES=1` rewrites the shapes.
+  `PARINN_REGENERATE_SHAPES=1` rewrites the shapes.
 - Steps in `record_transcript.rs`, `provenance.rs`,
   `engineering_contract.rs`; three drift cases.
 

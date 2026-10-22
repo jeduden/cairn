@@ -2,7 +2,7 @@
 //! carries: event and payload text is full-text indexed up to the
 //! indexing cap and searched with ranked results, and the code that
 //! builds a search query treats caller text as literal terms within
-//! bounds. The agent's `event_search` call is a request to `cairn mcp`
+//! bounds. The agent's `event_search` call is a request to `parinn mcp`
 //! on its standard input, as the harness sends it; the scope is `room`,
 //! as `event_get` takes until the session binding names a run (phase 9)
 //! and RCL-05 builds the recall scopes (phase 13).
@@ -76,7 +76,7 @@ fn reply(w: &mut World) -> Result<Reply, String> {
         .ok_or_else(|| "no step called event_search".to_owned())
 }
 
-/// Asks the MCP server `cairn mcp` for `event_search` with `arguments`,
+/// Asks the MCP server `parinn mcp` for `event_search` with `arguments`,
 /// the scope `room` unless they name one, and keeps its answer.
 pub fn call_search(w: &mut World, mut arguments: Value) -> Result<Reply, String> {
     if arguments.get("scope").is_none() {
@@ -126,7 +126,7 @@ fn query_of(w: &mut World, described: &str) -> String {
             // A development build's seam shortens the deadline: no
             // search over a bounded window runs for 2 s, so the step
             // asks the core to cancel at once.
-            set_env(w, "CAIRN_TEST_QUERY_DEADLINE_MS", "0");
+            set_env(w, "PARINN_TEST_QUERY_DEADLINE_MS", "0");
             "filler".to_owned()
         }
         literal => literal.to_owned(),

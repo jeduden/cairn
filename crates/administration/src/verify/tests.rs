@@ -36,7 +36,7 @@ fn new_event(n: u8) -> NewEvent {
 fn fixture() -> Fixture {
     let dir = TempDir::new().unwrap();
     std::fs::write(dir.path().join("machine-id"), "first").unwrap();
-    let home = Home::locate(Some(dir.path().join(".cairn").as_os_str()), None)
+    let home = Home::locate(Some(dir.path().join(".parinn").as_os_str()), None)
         .unwrap()
         .with_identity(IdentitySource::Files(vec![dir.path().join("machine-id")]));
     home.create().unwrap();
@@ -1044,7 +1044,7 @@ fn a_segment_of_a_newer_format_version_is_refused_and_named() {
     assert_eq!(
         err.to_string(),
         format!(
-            "the segment of writer {} from seq 1 to 3 is format version 2, newer than this cairn's 1",
+            "the segment of writer {} from seq 1 to 3 is format version 2, newer than this parinn's 1",
             f.ingest.writer
         )
     );

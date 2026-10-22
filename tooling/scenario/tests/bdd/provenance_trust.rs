@@ -1,7 +1,7 @@
 //! The steps of PRV-05 that phase 8 of plan 2609292012 carries: no
 //! settings layer can trust a provenance class beyond PRV-02. Managed
 //! policy, the person's configuration and the repository's
-//! `.cairn.toml` each set a class's trust; every ingested event stays
+//! `.parinn.toml` each set a class's trust; every ingested event stays
 //! untrusted, and each layer's key is audited as a rejected trust
 //! override.
 //!
@@ -45,23 +45,23 @@ fn managed_policy(w: &mut World, text: &str) -> Result<(), String> {
     for p in [&path, &dir] {
         crate::security::give(p, other)?;
     }
-    set_env(w, "CAIRN_TEST_MANAGED_POLICY", &path.display().to_string());
+    set_env(w, "PARINN_TEST_MANAGED_POLICY", &path.display().to_string());
     Ok(())
 }
 
 #[given(
-    regex = r#"^managed policy, the person's configuration and the repository's "\.cairn\.toml" each set the trust of "([^"]+)" to "trusted"$"#
+    regex = r#"^managed policy, the person's configuration and the repository's "\.parinn\.toml" each set the trust of "([^"]+)" to "trusted"$"#
 )]
 fn every_layer_trusts(w: &mut World, class: String) -> Result<(), String> {
     managed_policy(w, &trusting(&class))?;
     let home = home(w)?;
     home.create().map_err(|e| e.to_string())?;
-    let config = w.cairn_home.join("config.toml");
+    let config = w.parinn_home.join("config.toml");
     append_to(&config, &trusting(&class))?;
     use std::os::unix::fs::PermissionsExt;
     fs::set_permissions(&config, fs::Permissions::from_mode(0o600)).map_err(|e| e.to_string())?;
     fs::create_dir_all(w.home.join(".git")).map_err(|e| e.to_string())?;
-    append_to(&w.home.join(".cairn.toml"), &trusting(&class))
+    append_to(&w.home.join(".parinn.toml"), &trusting(&class))
 }
 
 /// The lines whose last is an event of `class`.
