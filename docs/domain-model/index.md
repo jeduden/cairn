@@ -109,7 +109,7 @@ errors and logs use the model's words.
   CLI; a skill's call is the agent's own tool call, never a principal act, and
   acts only from its run seat (Device seat).
 
-## Not Cairn concepts
+## Not ParleyInn concepts
 
 | Term                                                                              | Why                                                                                                         | Where else it may appear                                                                                                     |
 | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |

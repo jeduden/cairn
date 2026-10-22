@@ -570,11 +570,11 @@ fn domain_model_cases() -> Vec<Case> {
             "mdsmith check",
             Injection::replace(
                 "docs/domain-model/index.md",
-                "## Not Cairn concepts",
+                "## Not ParleyInn concepts",
                 "## Excluded terms",
             ),
             mdsmith(),
-            "Not Cairn concepts",
+            "Not ParleyInn concepts",
         ),
         case(
             "a domain-model concept file losing its summary",
