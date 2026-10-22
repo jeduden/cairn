@@ -34,11 +34,11 @@ pub const RELEASE_REF: &str = "refs/heads/main";
 
 /// The repository the release belongs to, as `gh attestation verify`
 /// names it.
-const REPO: &str = "jeduden/cairn";
+const REPO: &str = "jeduden/parleyinn";
 
 /// A workflow of the repository as a Sigstore certificate names it,
 /// before its `@ref`.
-const WORKFLOWS: &str = "https://github.com/jeduden/cairn/.github/workflows/";
+const WORKFLOWS: &str = "https://github.com/jeduden/parleyinn/.github/workflows/";
 
 /// The call of the reusable build workflow.
 const CALLS_BUILD: &str = "uses: ./.github/workflows/build.yml";

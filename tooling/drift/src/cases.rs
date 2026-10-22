@@ -1293,8 +1293,8 @@ fn release_verify_cases() -> Vec<Case> {
             "an unpinned verify: --signer-workflow without a ref",
             Injection::replace(
                 RELEASE_WORKFLOW,
-                "              --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \\\n              --source-ref refs/heads/main --source-digest \"$GITHUB_SHA\" \\\n",
-                "              --signer-workflow jeduden/cairn/.github/workflows/release-build.yml \\\n",
+                "              --cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release-build.yml@refs/heads/main \\\n              --source-ref refs/heads/main --source-digest \"$GITHUB_SHA\" \\\n",
+                "              --signer-workflow jeduden/parleyinn/.github/workflows/release-build.yml \\\n",
             ),
             PROVENANCE_GATE,
             "job verify verifies an attestation with --signer-workflow, which pins no ref",
@@ -1307,7 +1307,7 @@ fn release_verify_cases() -> Vec<Case> {
                 "release-build.yml@refs/heads/feature",
             ),
             PROVENANCE_GATE,
-            "job verify does not verify build provenance with --repo jeduden/cairn --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main --source-ref refs/heads/main --deny-self-hosted-runners",
+            "job verify does not verify build provenance with --repo jeduden/parleyinn --cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release-build.yml@refs/heads/main --source-ref refs/heads/main --deny-self-hosted-runners",
         ),
         release_case(
             "the checksum bundle no longer verified",
@@ -1319,11 +1319,11 @@ fn release_verify_cases() -> Vec<Case> {
             "the checksum bundle verified at any ref",
             Injection::replace(
                 RELEASE_WORKFLOW,
-                "--certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
-                "--certificate-identity-regexp '^https://github.com/jeduden/cairn/.github/workflows/release.yml@'",
+                "--certificate-identity https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main",
+                "--certificate-identity-regexp '^https://github.com/jeduden/parleyinn/.github/workflows/release.yml@'",
             ),
             CHECKSUMS_GATE,
-            "job verify does not pin the certificate identity to https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
+            "job verify does not pin the certificate identity to https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main",
         ),
         release_case(
             "the SBOM generated but not attested",

@@ -92,15 +92,15 @@ f23fa79e1b9ff27414ce35d90fae1c33764ca2e1f12540aede2dda129ea6ac5c
 
 Until a security reviewer is named, the stakeholder holds that role.
 The stakeholder, `@jeduden`, approved this record as security reviewer
-on 13 October 2026 by a [comment on jeduden/cairn#39][approval] naming
+on 13 October 2026 by a [comment on jeduden/parleyinn#39][approval] naming
 the record's id, first of the three records it approves. The comment
-came on a later pull request than jeduden/cairn#38, which adds this
+came on a later pull request than jeduden/parleyinn#38, which adds this
 record and had merged. It names
 neither the hash above nor a commit, so the hash binds the approval to
 the text in force when this record was added. That comment is the
 approval ENG-29 asks for, and it can be checked apart from this record.
 
-[approval]: https://github.com/jeduden/cairn/pull/39#issuecomment-6149850310
+[approval]: https://github.com/jeduden/parleyinn/pull/39#issuecomment-6149850310
 
 ## Alternatives
 

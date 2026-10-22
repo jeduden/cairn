@@ -28,7 +28,7 @@ plan [2609292012](../../plan/2609292012_m1-record-and-recall/plan.md),
 and consented to it on [pull request #46][pr46]. Phase 5 records it
 here.
 
-[pr46]: https://github.com/jeduden/cairn/pull/46
+[pr46]: https://github.com/jeduden/parleyinn/pull/46
 
 ## Decision
 

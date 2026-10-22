@@ -36,7 +36,7 @@ that adds this record. The file's SHA-256 is:
 ```
 
 The stakeholder, @jeduden, approved this record as security reviewer on
-9 October 2026 by a [comment on jeduden/cairn#18][approval] naming the
+9 October 2026 by a [comment on jeduden/parleyinn#18][approval] naming the
 record's id and the hash above. That comment is the approval
 ENG-29 asks for, and it can be checked apart from this record.
 
@@ -62,4 +62,4 @@ which CLAUDE.md, AGENTS.md and README include.
 - The file's hash above lets a reviewer check that invariants.md still
   matches what was approved.
 
-[approval]: https://github.com/jeduden/cairn/pull/18#issuecomment-6087607800
+[approval]: https://github.com/jeduden/parleyinn/pull/18#issuecomment-6087607800

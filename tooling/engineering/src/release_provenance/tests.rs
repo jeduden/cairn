@@ -88,22 +88,22 @@ jobs:
     steps:
       - run: |
           cosign verify-blob --bundle checksums.txt.sigstore.json \\
-            --certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \\
+            --certificate-identity https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main \\
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \\
             checksums.txt
           for bin in parinn-*; do
-            gh attestation verify \"$bin\" --repo jeduden/cairn \\
-              --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \\
+            gh attestation verify \"$bin\" --repo jeduden/parleyinn \\
+              --cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release-build.yml@refs/heads/main \\
               --source-ref refs/heads/main --deny-self-hosted-runners
-            gh attestation verify \"$bin\" --repo jeduden/cairn \\
-              --cert-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \\
+            gh attestation verify \"$bin\" --repo jeduden/parleyinn \\
+              --cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main \\
               --source-ref refs/heads/main --predicate-type https://spdx.dev/Document/v2.3
           done
 ";
 
 /// The verify job's check of the build provenance, as it stands in
 /// [`RELEASE_YML`].
-const PINNED: &str = "--cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \\
+const PINNED: &str = "--cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release-build.yml@refs/heads/main \\
               --source-ref refs/heads/main";
 
 /// Which of the four workflows a drift edits.
@@ -193,7 +193,7 @@ fn load_reads_the_four_workflows_or_names_the_missing_one() {
 fn identity_names_a_workflow_at_the_release_ref() {
     assert_eq!(
         identity("release.yml"),
-        "https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main"
+        "https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main"
     );
 }
 
@@ -359,14 +359,14 @@ fn a_release_nobody_creates_has_no_publish_job() {
 
 #[test]
 fn the_verify_job_pins_the_release_build_workflow_s_identity_and_ref() {
-    let want = "job verify does not verify build provenance with --repo jeduden/cairn \
-                --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \
+    let want = "job verify does not verify build provenance with --repo jeduden/parleyinn \
+                --cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release-build.yml@refs/heads/main \
                 --source-ref refs/heads/main --deny-self-hosted-runners";
 
     let problems = provenance(
         File::Release,
         PINNED,
-        "--signer-workflow jeduden/cairn/.github/workflows/release-build.yml",
+        "--signer-workflow jeduden/parleyinn/.github/workflows/release-build.yml",
     );
     has(&problems, want);
     has(
@@ -391,7 +391,7 @@ fn the_verify_job_pins_the_release_build_workflow_s_identity_and_ref() {
     let problems = provenance(
         File::Release,
         PINNED,
-        "--cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main",
+        "--cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release-build.yml@refs/heads/main",
     );
     has(&problems, want);
 
@@ -410,8 +410,8 @@ fn the_verify_job_pins_the_release_build_workflow_s_identity_and_ref() {
 fn a_verify_by_regular_expression_is_named_unpinned() {
     let problems = provenance(
         File::Release,
-        "--cert-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
-        "--cert-identity-regex '^https://github.com/jeduden/cairn/'",
+        "--cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main",
+        "--cert-identity-regex '^https://github.com/jeduden/parleyinn/'",
     );
 
     has(
@@ -454,7 +454,7 @@ fn the_checksums_are_signed_keyless_and_published_with_their_bundle() {
 #[test]
 fn the_verify_job_checks_the_bundle_against_the_release_workflow_s_identity_at_main() {
     let want = "job verify does not pin the certificate identity to \
-                https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main";
+                https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main";
 
     let r = drifted("cosign verify-blob", "cosign version");
     has(
@@ -463,14 +463,14 @@ fn the_verify_job_checks_the_bundle_against_the_release_workflow_s_identity_at_m
     );
 
     let r = drifted(
-        "--certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
-        "--certificate-identity-regexp '^https://github.com/jeduden/cairn/.github/workflows/release.yml@'",
+        "--certificate-identity https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main",
+        "--certificate-identity-regexp '^https://github.com/jeduden/parleyinn/.github/workflows/release.yml@'",
     );
     has(&r.checksums_signed_keyless(), want);
 
     let r = drifted(
-        "--certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main",
-        "--certificate-identity=https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/x",
+        "--certificate-identity https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main",
+        "--certificate-identity=https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/x",
     );
     has(&r.checksums_signed_keyless(), want);
 
@@ -539,7 +539,7 @@ fn the_sbom_is_generated_as_spdx_attested_and_attached() {
 fn the_sbom_attestation_is_verified_against_the_release_workflow_at_main() {
     let want = "job verify does not verify the SBOM attestation \
                 (--predicate-type https://spdx.dev/Document/v2.3) with \
-                --cert-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \
+                --cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main \
                 --source-ref refs/heads/main";
 
     let r = drifted(" --predicate-type https://spdx.dev/Document/v2.3", "");

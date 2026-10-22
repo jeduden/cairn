@@ -69,7 +69,7 @@ fuzzes each in turn; a crash fails the job and keeps its input.
   rest are MIT or Apache-2.0. A crate that does later gets its own
   reviewed line there. ENG-18's allow-list text is unchanged.
 - The ruling was given in the session chat. It must be confirmed as a
-  consent comment on jeduden/cairn#60 before the pull request lands.
+  consent comment on jeduden/parleyinn#60 before the pull request lands.
 - ENG-18's check reads `fuzz/Cargo.toml` beside the product's
   workspace: each direct dependency there needs an accepted ADR and a
   line in `DEPENDENCIES.md`. None of them counts toward the shipped

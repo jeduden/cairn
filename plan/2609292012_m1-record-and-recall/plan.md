@@ -309,4 +309,4 @@ footer: |
 [ADR-2610042341]: ../../docs/adr/ADR-2610042341-app-shell-tauri.md
 [ADR-2610110553]: ../../docs/adr/ADR-2610110553-sqlite-rusqlite.md
 [ADR-2610102211]: ../../docs/adr/ADR-2610102211-mcp-server-in-house.md
-[pr46]: https://github.com/jeduden/cairn/pull/46
+[pr46]: https://github.com/jeduden/parleyinn/pull/46

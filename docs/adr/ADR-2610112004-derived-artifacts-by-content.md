@@ -45,7 +45,7 @@ index file. Its [report][s12] found:
 The stakeholder chose, on 11 October 2026, to compare derived artifacts
 by content, and to narrow PEER-03 to what is the same on every node.
 
-[s12]: https://github.com/jeduden/cairn/pull/35
+[s12]: https://github.com/jeduden/parleyinn/pull/35
 [keri]: https://trustoverip.github.io/kswg-keri-specification/
 [ik]: ../../research/notes/identity-keys/identity-keys.md
 
@@ -160,8 +160,8 @@ the approved text, which in turn replaced
 [ADR-2610091555](ADR-2610091555-initial-invariants.md)'s.
 
 The stakeholder approved this record as security reviewer on 13 October
-2026 by a [comment on jeduden/cairn#39][approval], after
-ADR-2610112209 in the same comment, naming the record's id. The comment
+2026 by a [comment on jeduden/parleyinn#39][approval]. The comment
+listed ADR-2610112209 first and then named the record's id. It
 came at that pull request's head commit `de59777`, where invariants.md
 has the hash above, and on a later pull request than the one that adds
 this record. It names neither the hash nor the commit, so this record
@@ -169,7 +169,7 @@ binds the approval to both from the pull request's state at that time.
 
 Approval: [given][approval].
 
-[approval]: https://github.com/jeduden/cairn/pull/39#issuecomment-6149850310
+[approval]: https://github.com/jeduden/parleyinn/pull/39#issuecomment-6149850310
 
 ### Security analysis (author)
 

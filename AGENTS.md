@@ -184,7 +184,7 @@ that enforce it, CI and its tooling, the supply-chain policy, the agent
 instructions, and the security-sensitive packages until a security reviewer is
 named — also waits for the stakeholder's approval. Keep such changes out of code
 pull requests. On GitHub, write every `@`-word in backticks: a bare one, such as
-`@I2`, mentions that GitHub user (jeduden/cairn#22).
+`@I2`, mentions that GitHub user (jeduden/parleyinn#22).
 
 ## Requirements and Scenarios
 
