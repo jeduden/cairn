@@ -12,13 +12,13 @@ strip-frontmatter: "true"
 
 ## Project
 
-ParleyInn — a lossless, security-first context layer for Claude agents.
-It keeps an append-only record of every agent run, restores pins verbatim after
-compaction, and lets Claude recall exact history on demand. Stored history never
-becomes a prompt-injection channel.
+ParleyInn — a lossless, security-first context layer for long-running Claude
+agents. It keeps an append-only record of every agent run, restores pins
+verbatim after compaction, and lets Claude recall exact history on demand.
+Stored history never becomes a prompt-injection channel.
 
-Status: pre-implementation. The Rust specification, requirement matrix,
-CI/release pipeline and `parinn` executable are here; plans add the rest.
+Status: pre-implementation. The specification, requirement matrix, CI and
+release pipeline, and `parinn` core executable are here; plans add the rest.
 
 ## The Invariants Come First
 
