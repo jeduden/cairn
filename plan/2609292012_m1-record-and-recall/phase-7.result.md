@@ -67,7 +67,7 @@ For the stakeholder:
 - ADR-2610171200 is accepted on the stakeholder's ruling of 19
   October 2026: libfuzzer-sys adds NCSA, admitted by a per-crate
   exception in `deny.toml`, not on the allow-list. The ruling was given
-  in chat and awaits its consent comment on jeduden/cairn#60. ENG-18's
+  in chat and awaits its consent comment on jeduden/parleyinn#60. ENG-18's
   check now reads `fuzz/Cargo.toml`, and CI runs cargo-deny and
   cargo-audit over `fuzz/Cargo.lock`.
 - `nightly.yml` changed. CODEOWNERS names `crates/provenance/`, not

@@ -15,7 +15,7 @@ summary: >-
 
 ## Context
 
-[Pull request 66](https://github.com/jeduden/cairn/pull/66) renames the
+[Pull request 66](https://github.com/jeduden/parleyinn/pull/66) renames the
 product from Cairn to ParleyInn and its executable and core crate from
 `cairn` to `parinn`. The rename edits the invariants in
 `docs/srs/invariants.md` (§1.3), which CLAUDE.md and AGENTS.md include. It
@@ -78,6 +78,6 @@ migration, and the format versions stay at 1.
   [pull request 66][c1], [its second consent][c2] and
   [the ruling on the on-disk labels][c3] are the evidence.
 
-[c1]: https://github.com/jeduden/cairn/pull/66#issuecomment-6344684337
-[c2]: https://github.com/jeduden/cairn/pull/66#issuecomment-6344690911
-[c3]: https://github.com/jeduden/cairn/pull/66#issuecomment-6344871015
+[c1]: https://github.com/jeduden/parleyinn/pull/66#issuecomment-6344684337
+[c2]: https://github.com/jeduden/parleyinn/pull/66#issuecomment-6344690911
+[c3]: https://github.com/jeduden/parleyinn/pull/66#issuecomment-6344871015

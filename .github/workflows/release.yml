@@ -41,7 +41,7 @@ jobs:
   # shell, so a crafted input cannot inject commands.
   preflight:
     runs-on: ubuntu-latest
-    if: github.repository == 'jeduden/cairn'
+    if: github.repository == 'jeduden/parleyinn'
     steps:
       - name: Validate the version
         run: |
@@ -95,7 +95,7 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    if: github.repository == 'jeduden/cairn'
+    if: github.repository == 'jeduden/parleyinn'
     permissions:
       # contents to create the tag and the release; id-token for the
       # keyless Sigstore signature and the SBOM attestation;
@@ -167,7 +167,7 @@ jobs:
   verify:
     needs: publish
     runs-on: ubuntu-latest
-    if: github.repository == 'jeduden/cairn'
+    if: github.repository == 'jeduden/parleyinn'
     permissions:
       contents: read
     steps:
@@ -188,7 +188,7 @@ jobs:
         run: |
           sha256sum --check checksums.txt
           cosign verify-blob --bundle checksums.txt.sigstore.json \
-            --certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \
+            --certificate-identity https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             checksums.txt
       - name: Verify each binary's provenance and SBOM
@@ -197,13 +197,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           for bin in parinn-*; do
-            gh attestation verify "$bin" --repo jeduden/cairn \
-              --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \
+            gh attestation verify "$bin" --repo jeduden/parleyinn \
+              --cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release-build.yml@refs/heads/main \
               --source-ref refs/heads/main --source-digest "$GITHUB_SHA" \
               --deny-self-hosted-runners \
               --predicate-type https://slsa.dev/provenance/v1
-            gh attestation verify "$bin" --repo jeduden/cairn \
-              --cert-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \
+            gh attestation verify "$bin" --repo jeduden/parleyinn \
+              --cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main \
               --source-ref refs/heads/main --source-digest "$GITHUB_SHA" \
               --deny-self-hosted-runners \
               --predicate-type https://spdx.dev/Document/v2.3

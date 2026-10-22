@@ -18,7 +18,7 @@ model.
 
 Do not open a public issue. Report privately through GitHub's
 private vulnerability reporting:
-<https://github.com/jeduden/cairn/security/advisories/new>.
+<https://github.com/jeduden/parleyinn/security/advisories/new>.
 
 Include the version or commit, the steps to reproduce, and the
 invariant or requirement id you believe is broken. We confirm
@@ -48,13 +48,13 @@ to `release-build.yml`, the checksums and the SBOM to `release.yml`. An
 attestation a branch made names that branch, and fails. In short:
 
 ```sh
-commit="$(gh api repos/jeduden/cairn/commits/v0.1.0 --jq .sha)"
-gh attestation verify parinn-linux-amd64 --repo jeduden/cairn \
-  --cert-identity https://github.com/jeduden/cairn/.github/workflows/release-build.yml@refs/heads/main \
+commit="$(gh api repos/jeduden/parleyinn/commits/v0.1.0 --jq .sha)"
+gh attestation verify parinn-linux-amd64 --repo jeduden/parleyinn \
+  --cert-identity https://github.com/jeduden/parleyinn/.github/workflows/release-build.yml@refs/heads/main \
   --source-ref refs/heads/main --source-digest "$commit" \
   --deny-self-hosted-runners
 cosign verify-blob --bundle checksums.txt.sigstore.json \
-  --certificate-identity https://github.com/jeduden/cairn/.github/workflows/release.yml@refs/heads/main \
+  --certificate-identity https://github.com/jeduden/parleyinn/.github/workflows/release.yml@refs/heads/main \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   checksums.txt
 sha256sum -c checksums.txt --ignore-missing

@@ -159,5 +159,5 @@ footer: |
   and `cargo fmt --all --check` are clean
 - [x] `mdsmith check .` is clean
 
-[ruling]: https://github.com/jeduden/cairn/pull/44#issuecomment-6157262395
+[ruling]: https://github.com/jeduden/parleyinn/pull/44#issuecomment-6157262395
 [m1]: ../2609292012_m1-record-and-recall/plan.md

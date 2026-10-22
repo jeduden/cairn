@@ -122,7 +122,7 @@ requirements listed above.
 
 Approval: [given][approval].
 
-[approval]: https://github.com/jeduden/cairn/pull/39#issuecomment-6149850310
+[approval]: https://github.com/jeduden/parleyinn/pull/39#issuecomment-6149850310
 
 ### Security analysis (author)
 

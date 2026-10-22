@@ -47,4 +47,4 @@ release run is the first live test of the `verify` job and of the SPDX
 predicate type `https://spdx.dev/Document/v2.3`; adjust it there if the
 attest-sbom action names another.
 
-[ruling]: https://github.com/jeduden/cairn/pull/44#issuecomment-6157262395
+[ruling]: https://github.com/jeduden/parleyinn/pull/44#issuecomment-6157262395
