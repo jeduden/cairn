@@ -8,7 +8,8 @@ summary: >-
   environment variables, addresses, trailers, file names, on-disk labels
   and Keychain service follow as parinn or ParleyInn. No invariant or
   requirement changes meaning. There are no installations to migrate.
-  The security reviewer's approval is recorded here, as ENG-29 asks.
+  Setting the status to accepted records the security reviewer's
+  approval, as ENG-29 asks.
 ---
 # ADR-2610221545: The product is named ParleyInn
 
